@@ -457,6 +457,10 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Döşemenin ve kaplamanın katman takımı (19 Kasım 2026; [ADR 8166](../adr/8166-slab-and-covering-layer-sets.md),
+    K428–K432):** katmanlı döşeme ve her kaplama IFC'de `IfcMaterialLayerSet` (üstten; LoadBearing, Insulation, iç/dış
+    kaplama), düz olanlar `IfcMaterialLayerSetUsage` (AXIS3, NEGATIVE, taban çizgisi üstü); katmansız döşeme tek
+    malzemesini korur; görüntüleyicinin Özellikler'inde Malzeme katmanları ve Katmanların malzemesi.
   - **Çatı örtüsünü aşan duvarlar (19 Kasım 2026; [ADR 8165](../adr/8165-walls-over-the-roof-covering.md),
     K426–K427):** PAİY 40/5; eğimli çatının dış hattındaki duvarın üstünün örtüden yüksekliği (`roofs[].form.walls`,
     türü yanındaki mahallerden); merdiven evi, ışıklık, alın ve kalkan duvarı en çok 0,60 m, asansör kulesi muaf,

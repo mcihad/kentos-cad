@@ -1,5 +1,100 @@
 {
   "file": "kesit-binasi-tipli.ifc",
+  "slabs": [
+    {
+      "id": "0192f5a1-4242-7000-8000-000000000029",
+      "layers": [
+        {
+          "material": null,
+          "name": "Kaplama",
+          "thickness": 0.02
+        },
+        {
+          "material": null,
+          "name": "Şap",
+          "thickness": 0.05
+        },
+        {
+          "material": null,
+          "name": "Isı yalıtımı",
+          "thickness": 0.05
+        },
+        {
+          "material": null,
+          "name": "Su yalıtımı",
+          "thickness": 0.01
+        },
+        {
+          "material": "Betonarme",
+          "name": "Taşıyıcı",
+          "thickness": 0.15
+        }
+      ],
+      "top": 0.0
+    },
+    {
+      "id": "0192f5a1-4242-7000-8000-00000000002a",
+      "layers": [
+        {
+          "material": null,
+          "name": "Kaplama",
+          "thickness": 0.02
+        },
+        {
+          "material": null,
+          "name": "Şap",
+          "thickness": 0.05
+        },
+        {
+          "material": "Betonarme",
+          "name": "Taşıyıcı",
+          "thickness": 0.15
+        },
+        {
+          "material": null,
+          "name": "Sıva",
+          "thickness": 0.02
+        }
+      ],
+      "top": 0.0
+    },
+    {
+      "id": "0192f5a1-4242-7000-8000-00000000002b",
+      "layers": [
+        {
+          "material": null,
+          "name": "Kaplama",
+          "thickness": 0.03
+        },
+        {
+          "material": null,
+          "name": "Su yalıtımı",
+          "thickness": 0.01
+        },
+        {
+          "material": null,
+          "name": "Şap",
+          "thickness": 0.05
+        },
+        {
+          "material": null,
+          "name": "Isı yalıtımı",
+          "thickness": 0.08
+        },
+        {
+          "material": "Betonarme",
+          "name": "Taşıyıcı",
+          "thickness": 0.15
+        },
+        {
+          "material": null,
+          "name": "Sıva",
+          "thickness": 0.02
+        }
+      ],
+      "top": 3.0
+    }
+  ],
   "styles": [
     {
       "id": "kentos-dis-duvar-25",

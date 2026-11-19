@@ -415,7 +415,8 @@ impl Viewer {
                 sheet = sheet.row(l.name.as_str(), cell);
             }
         }
-        column![head, scrollable(sheet).height(Fill)].into()
+        // Room for the scroll bar beside the units: a long sheet (a layered slab's, docs/adr/8166) scrolls.
+        column![head, scrollable(container(sheet).padding(iced::Padding::ZERO.right(14))).height(Fill)].into()
     }
 
     fn status<'a, M>(&'a self, host: &Host<'a, M>) -> Element<'a, Message> {

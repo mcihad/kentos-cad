@@ -415,6 +415,10 @@ pub struct Building {
     /// The layered elements' material layer sets (docs/adr/8071 §8): an element (by its index), its set's name and its
     /// layers top down, in place of a single material.
     pub layer_sets: Vec<(usize, String, Vec<Layer>)>,
+    /// The elements whose set is laid along their z axis from their top downwards (docs/adr/8166; a level slab's or a
+    /// covering's `IfcMaterialLayerSetUsage`: AXIS3, NEGATIVE): an element (by its index) and its top over its storey,
+    /// metres (the usage's `OffsetFromReferenceLine`). The element is associated with the usage, not the set.
+    pub layer_usages: Vec<(usize, f64)>,
     /// The element types (docs/adr/8105; IFC 4.3 `IfcTypeObject`): each a wall style's `IfcWallType`, its layer set and
     /// the elements it types.
     pub types: Vec<TypeObject>,
@@ -1446,19 +1450,34 @@ pub fn write(b: &Building) -> String {
         set
     };
     let mut by_set: Vec<(usize, String, Vec<usize>)> = Vec::new();
+    // The elements laid from their top (docs/adr/8166): by their set and their top, one usage each.
+    let mut by_usage: Vec<(usize, f64, String, Vec<usize>)> = Vec::new();
     for (i, n) in sets {
         let Some((_, name, layers)) = b.layer_sets.iter().find(|(k, ..)| *k == i) else {
             continue;
         };
         let set = set_of(&mut w, name, layers, &mut material_ids);
+        let key = format!("{name}|{layers:?}");
+        if let Some(&(_, top)) = b.layer_usages.iter().find(|(k, _)| *k == i) {
+            match by_usage.iter_mut().find(|(s, t, ..)| *s == set && t.to_bits() == top.to_bits()) {
+                Some((.., list)) => list.push(n),
+                None => by_usage.push((set, top, key, vec![n])),
+            }
+            continue;
+        }
         match by_set.iter_mut().find(|(s, ..)| *s == set) {
             Some((_, _, list)) => list.push(n),
-            None => by_set.push((set, format!("{name}|{layers:?}"), vec![n])),
+            None => by_set.push((set, key, vec![n])),
         }
     }
     for (set, key, list) in &by_set {
         let g = w.st.derived("layer-set", &[building], key);
         w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{set})", Step::refs(list)));
+    }
+    for (set, top, key, list) in &by_usage {
+        let usage = w.st.add(format!("IFCMATERIALLAYERSETUSAGE(#{set},.AXIS3.,.NEGATIVE.,{},$)", real(*top)));
+        let g = w.st.derived("layer-usage", &[building], &format!("{key}|{top}"));
+        w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{usage})", Step::refs(list)));
     }
     // The element types (docs/adr/8105): each its own GlobalId, its layer set associated, its occurrences typed by it
     // (`IfcRelDefinesByType`), all declared in the project (`IfcRelDeclares`).
@@ -1727,6 +1746,54 @@ mod tests {
         let roof = f.lines().find(|l| l.contains("IFCROOF(")).expect("the roof").split('=').next().unwrap().to_owned();
         let set_id = set.split('=').next().unwrap().to_owned();
         assert!(f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.contains(&format!("({roof}),{set_id})"))));
+    }
+
+    /// A level slab's set laid from its top (docs/adr/8166): the slab is associated with one usage of the set, along
+    /// its z axis downwards from its top over its storey; two slabs of the same set and top share the usage, another
+    /// top is another usage of the same set.
+    #[test]
+    fn a_level_slab_s_set_is_laid_from_its_top() {
+        let mut b = door_building();
+        b.elements[0].class = Class::Slab;
+        b.elements[0].predefined = "FLOOR";
+        b.elements.push(b.elements[0].clone());
+        b.elements.push(b.elements[0].clone());
+        for (i, e) in b.elements.iter_mut().enumerate() {
+            e.id = Some(900 + i as u128);
+        }
+        let n = b.elements.len();
+        let layer = |name: &str, material: &str, thickness: f64, category: Option<&'static str>| Layer {
+            name: name.into(),
+            material: Some(material.into()),
+            thickness,
+            category,
+        };
+        let layers = vec![
+            layer("Kaplama", "Seramik", 0.02, Some("Inner finish")),
+            layer("Şap", "Çimento harcı", 0.05, None),
+            layer("Taşıyıcı", "Betonarme", 0.15, Some("LoadBearing")),
+            layer("Sıva", "Alçı sıva", 0.02, Some("Inner finish")),
+        ];
+        let slab_at: Vec<usize> = (0..n).filter(|&k| b.elements[k].class == Class::Slab).collect();
+        assert_eq!(slab_at.len(), 3);
+        b.layer_sets = slab_at.iter().map(|&k| (k, "Döşeme katmanları".to_owned(), layers.clone())).collect();
+        b.layer_usages = vec![(slab_at[0], 0.0), (slab_at[1], 0.0), (slab_at[2], -0.3)];
+        let f = write(&b);
+        assert_eq!(f.matches("IFCMATERIALLAYERSET(").count(), 1, "one set shared");
+        let set = f.lines().find(|l| l.contains("IFCMATERIALLAYERSET(")).expect("the set").split('=').next().unwrap();
+        let usages: Vec<&str> = f.lines().filter(|l| l.contains("IFCMATERIALLAYERSETUSAGE(")).collect();
+        assert_eq!(usages.len(), 2, "{usages:?}");
+        let laid = |top: &str| format!("IFCMATERIALLAYERSETUSAGE({set},.AXIS3.,.NEGATIVE.,{top},$);");
+        assert!(usages[0].ends_with(&laid("0.")), "{}", usages[0]);
+        assert!(usages[1].ends_with(&laid("-0.3")), "{}", usages[1]);
+        // Each slab's one association is its usage's; none is the set's own.
+        let slabs: Vec<String> =
+            f.lines().filter(|l| l.contains("IFCSLAB(")).map(|l| l.split('=').next().unwrap().to_owned()).collect();
+        assert_eq!(slabs.len(), 3);
+        let usage = |i: usize| usages[i].split('=').next().unwrap().to_owned();
+        assert!(f.contains(&format!("({},{}),{})", slabs[0], slabs[1], usage(0))), "the first two share the usage");
+        assert!(f.contains(&format!("({}),{})", slabs[2], usage(1))));
+        assert!(!f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.ends_with(&format!(",{set});"))));
     }
 
     /// A body with faces and a prism (a ramp's sloped run beside its landing, docs/adr/8133) is one tessellation: the

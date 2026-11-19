@@ -1,7 +1,8 @@
 //! The chosen object's details for the viewer's properties panel (feature `view`; docs/adr/8061 §5 "Özellikler",
-//! docs/adr/8073 §2): its attributes, its type, its material, its storey, then its property and quantity sets (its
-//! own, then its type's) as the file writes them, each value with its unit: its own, else the project's for the
-//! measure it is written with. Nothing is converted and nothing is measured from the triangles (CLAUDE.md §23.3).
+//! docs/adr/8073 §2): its attributes, its type, its material, its storey, its material layers and how a usage lays them
+//! (docs/adr/8166), then its property and quantity sets (its own, then its type's) as the file writes them, each value
+//! with its unit: its own, else the project's for the measure it is written with. Nothing is converted and nothing is
+//! measured from the triangles (CLAUDE.md §23.3).
 
 use ifc_lite_core::SchemaVersion;
 use kentos_model_view::{Details, Group, Line};
@@ -35,6 +36,35 @@ impl Model {
         add("Malzeme", self.materials(bytes, object).ok().filter(|m| !m.is_empty()).map(|m| m.join("; ")));
         add("Kayıt", Some(format!("#{}", o.step)));
         let mut groups = vec![own];
+        // Its material layers (docs/adr/8166): how a usage lays them, then each in order, its thickness in the
+        // project's length unit.
+        if let Some(list) = self.layers(bytes, object)? {
+            let length = self.summary.units.length.as_ref().map(|u| symbol(u.prefix.as_deref(), &u.name));
+            let mut lines = Vec::new();
+            if let Some((direction, sense, offset)) = &list.usage {
+                let value = laid(direction, sense);
+                lines.push(Line { name: "Diziliş".to_owned(), value, unit: None, numeric: false });
+                lines.push(Line {
+                    name: "Taban çizgisi".to_owned(),
+                    value: offset.to_string(),
+                    unit: length.clone(),
+                    numeric: true,
+                });
+            }
+            let mut materials = Vec::new();
+            for (i, (name, material, thickness)) in list.layers.iter().enumerate() {
+                let name = format!("{}. {name}", i + 1);
+                if let Some(m) = material {
+                    materials.push(Line { name: name.clone(), value: m.clone(), unit: None, numeric: false });
+                }
+                lines.push(Line { name, value: thickness.to_string(), unit: length.clone(), numeric: true });
+            }
+            groups.push(Group { title: "Malzeme katmanları".to_owned(), lines });
+            // What each layer is made of, apart: a name and a material side by side would not fit the panel.
+            if !materials.is_empty() {
+                groups.push(Group { title: "Katmanların malzemesi".to_owned(), lines: materials });
+            }
+        }
         for set in self.property_sets(bytes, object)? {
             let title = if set.from_type { format!("{} (tipten)", set.name) } else { set.name.clone() };
             groups.push(Group { title, lines: set.values.iter().map(|v| line(v, &self.summary.units)).collect() });
@@ -67,6 +97,23 @@ impl Model {
         }
         None
     }
+}
+
+/// How a usage lays its set, in words (docs/adr/8166): along the object's x, y or z axis (AXIS1–3), in its plus or
+/// minus direction from the base line (“z ekseni, eksi yön”); a word the file writes otherwise stays as written.
+fn laid(direction: &str, sense: &str) -> String {
+    let axis = match direction {
+        "AXIS1" => "x",
+        "AXIS2" => "y",
+        "AXIS3" => "z",
+        other => other,
+    };
+    let sign = match sense {
+        "POSITIVE" => "artı",
+        "NEGATIVE" => "eksi",
+        other => other,
+    };
+    format!("{axis} ekseni, {sign} yön")
 }
 
 /// A property or a quantity as a line: its value as written, its unit.
@@ -184,8 +231,11 @@ mod tests {
         assert_eq!(value("GlobalId"), Some(m.objects[wall].global_id.as_str()));
         assert!(value("Kat").is_some(), "{own:?}");
         let sets = m.property_sets(bytes, wall).expect("the sets");
-        assert_eq!(d.groups.len(), 1 + sets.len());
-        for (g, s) in d.groups[1..].iter().zip(&sets) {
+        // Its own lines, its material layers and their materials (docs/adr/8166), its sets.
+        assert_eq!(d.groups.len(), 3 + sets.len());
+        let titles = (d.groups[1].title.as_str(), d.groups[2].title.as_str());
+        assert_eq!(titles, ("Malzeme katmanları", "Katmanların malzemesi"));
+        for (g, s) in d.groups[3..].iter().zip(&sets) {
             assert!(g.title.starts_with(&s.name));
             assert_eq!(g.lines.len(), s.values.len());
         }
@@ -201,6 +251,49 @@ mod tests {
         let common = d.groups.iter().find(|g| g.title == "Pset_WallCommon").expect("the common set");
         assert_eq!(common.lines[0].value, "Doğru");
         assert_eq!(value("Grup"), None, "a wall is in no group");
+    }
+
+    /// A layered slab's details (docs/adr/8166): how its usage lays its set — along its z axis, downwards, from its
+    /// top — and its layers from the top with their thicknesses in metres, the structure with its material; a wall's
+    /// set has no usage and lists its layers from its left face.
+    #[test]
+    fn a_layered_slab_s_details_list_its_layers_and_how_they_are_laid() {
+        let (_, bytes) = WRITTEN[0];
+        let m = read_ok(bytes);
+        let floors: Vec<usize> = (0..m.objects.len()).filter(|&i| m.objects[i].class == "IfcSlab").collect();
+        let lines = |i: usize| -> Vec<(String, String, Option<String>)> {
+            let d = m.details(bytes, i).expect("the details");
+            let g = d.groups.iter().find(|g| g.title == "Malzeme katmanları").expect("its layers");
+            g.lines.iter().map(|l| (l.name.clone(), l.value.clone(), l.unit.clone())).collect()
+        };
+        let m_ = || Some("m".to_owned());
+        let ground = floors
+            .iter()
+            .map(|&i| lines(i))
+            .find(|l| l.len() == 7)
+            .expect("the ground floor: two lines of its usage and five layers");
+        assert_eq!(
+            ground,
+            [
+                ("Diziliş".to_owned(), "z ekseni, eksi yön".to_owned(), None),
+                ("Taban çizgisi".to_owned(), "0".to_owned(), m_()),
+                ("1. Kaplama".to_owned(), "0.02".to_owned(), m_()),
+                ("2. Şap".to_owned(), "0.05".to_owned(), m_()),
+                ("3. Isı yalıtımı".to_owned(), "0.05".to_owned(), m_()),
+                ("4. Su yalıtımı".to_owned(), "0.01".to_owned(), m_()),
+                ("5. Taşıyıcı".to_owned(), "0.15".to_owned(), m_()),
+            ]
+        );
+        // Their materials apart: the structure's alone is given.
+        let ground_at = *floors.iter().find(|&&i| lines(i).len() == 7).expect("the ground floor");
+        let d = m.details(bytes, ground_at).expect("the details");
+        let made = d.groups.iter().find(|g| g.title == "Katmanların malzemesi").expect("their materials");
+        let made: Vec<(&str, &str)> = made.lines.iter().map(|l| (l.name.as_str(), l.value.as_str())).collect();
+        assert_eq!(made, [("5. Taşıyıcı", "Betonarme")]);
+        let wall = m.objects.iter().position(|o| o.class == "IfcWall").expect("a wall");
+        let w = lines(wall);
+        assert!(w.iter().all(|(n, ..)| n != "Diziliş"), "{w:?}");
+        assert_eq!(w.len(), 4, "the style's four layers: {w:?}");
     }
 
     /// A space of the file written with fire compartments (docs/adr/8088) says its compartment's zone.

@@ -2216,7 +2216,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 3015,
+   "step": 3039,
    "tag": null,
    "type": null
   },
@@ -2356,7 +2356,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 3012,
+   "step": 3036,
    "tag": null,
    "type": null
   },
@@ -2517,7 +2517,7 @@
  },
  "precision": 1e-05,
  "reader": "IfcOpenShell 0.9.0.post1",
- "records": 3018,
+ "records": 3042,
  "schema": "IFC4X3_ADD2",
  "sets": {
   "01alMXGa9m08000000000$": {

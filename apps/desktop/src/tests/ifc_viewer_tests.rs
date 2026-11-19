@@ -64,8 +64,14 @@ fn opened(app: &mut App, path: PathBuf) {
 
 /// A click on the `k`th wall mesh's first triangle seen from the viewer's camera; the object chosen.
 fn click_a_wall(app: &mut App) -> usize {
+    click_one(app, Category::Wall)
+}
+
+/// A click on the first triangle of the meshes in turn seen from the viewer's camera until an object of `category` is
+/// chosen; that object.
+fn click_one(app: &mut App, category: Category) -> usize {
     let vp = Viewport { width: 1000.0, height: 700.0 };
-    for k in 0..40 {
+    for k in 0..400 {
         let w = app.ifc_viewer.as_ref().expect("the viewer");
         let cam = w.viewer.camera();
         let Some(m) = w.viewer.scene().meshes().iter().filter(|m| m.part == 0).nth(k) else { break };
@@ -75,11 +81,49 @@ fn click_a_wall(app: &mut App) -> usize {
         let Some((x, y, _)) = cam.project(middle, &vp) else { continue };
         send(app, Event::Viewer(V::Gesture(Gesture::Pick(x as f32, y as f32, 1000.0, 700.0))));
         let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
-        if let Some(o) = v.selected().filter(|&o| v.input().objects[o].category == Category::Wall) {
+        if let Some(o) = v.selected().filter(|&o| v.input().objects[o].category == category) {
             return o;
         }
     }
-    panic!("no wall met a click");
+    panic!("no {category:?} met a click");
+}
+
+/// Malzeme katmanları (docs/adr/8166), light and dark: the section building's file in IFC modeli, a layered slab
+/// clicked, its details listing how its usage lays its set and its layers from the top.
+/// `.run/gui-evidence/doseme-katmanlari-8166/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::layer_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn layer_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out =
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/doseme-katmanlari-8166");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = open(building());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let path = exported(&mut app, &format!("katman-{name}"));
+        opened(&mut app, path.clone());
+        let slab = click_one(&mut app, Category::Slab);
+        let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
+        assert_eq!(v.selected(), Some(slab));
+        let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        let file = out.join(format!("1-doseme-katmanlari-{name}.png"));
+        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
+    }
 }
 
 #[test]

@@ -346,8 +346,10 @@ durum durum emsal tablosuyla ([ADR 8126](../docs/adr/8126-far-zones-storey-by-st
 (`IfcRelCoversSpaces`, [ADR 8127](../docs/adr/8127-covering-covers-its-room.md)), merdivenin ve rampanın korkulukları
 parçaları (`IfcRailing`, [ADR 8128](../docs/adr/8128-stair-and-ramp-railings-in-section-and-ifc.md)), giydirme cephede
 kapı ve pencere parçaları ([ADR 8129](../docs/adr/8129-doors-and-windows-in-curtain-walls.md)), eğimli eleman
-(`Pset_MemberCommon.Slope`, [ADR 8130](../docs/adr/8130-sloped-members.md)) 18 Kasım'da. **Kalan:** kaplamanın katman
-takımı; RADIAL aks; mobilya ve vitrifiyenin gerçek biçimi; `IfcGroup`'un katalogdaki yeri.
+(`Pset_MemberCommon.Slope`, [ADR 8130](../docs/adr/8130-sloped-members.md)) 18 Kasım'da. Kaplamanın katman takımı ve
+kullanımı 19 Kasım'da ([ADR 8166](../docs/adr/8166-slab-and-covering-layer-sets.md): EK-6 Tablo 6.20'nin kaplama
+malzemesi ve kalınlığı kaplama nesnesinde). **Kalan:** RADIAL aks; mobilya ve vitrifiyenin gerçek biçimi; `IfcGroup`'un
+katalogdaki yeri.
 
 **Kullanıcı sonucu:** Modeldeki her yapı nesnesi kendi sınıfıyla dışa gider; emsal alanları ve bağımsız bölümler dosyadadır.
 Nesneleri BIM-08 ve BIM-09'dan gelir.
@@ -389,6 +391,13 @@ tipidir: `IfcColumnType` (dikmede `IfcMemberType`), `IfcBeamType`, `IfcSlabType`
 `IfcRoofType`, `IfcRailingType`, `IfcStairType`; elemanları ona bağlı, tipler projede bildirilmiş. IfcOpenShell kesit
 binasında 16 kolonu, 8 kirişi, döşemeleri ve merdiveni tiplerinde okur. **Kalan:** kolon ve kiriş tipinin profil takımı
 (`IfcMaterialProfileSet` ve kullanımı), katman takımının kullanımı, çok kata uzanan eleman.
+
+**Durum (19 Kasım 2026, [ADR 8166](../docs/adr/8166-slab-and-covering-layer-sets.md)):** katmanlı döşemenin ve her
+kaplamanın `IfcMaterialLayerSet`'i (üstten: üstteki katmanlar, taşıyıcı, alttakiler; LoadBearing, Insulation, iç ve dış
+kaplama rolleri) ve düz olanların `IfcMaterialLayerSetUsage`'ı (AXIS3, NEGATIVE, taban çizgisi döşemenin üstü);
+IfcOpenShell kullanımı, sırayı, kalınlıkları ve gövdenin takım kalınlığınca indiğini okur; görüntüleyici katmanları
+gösterir. **Kalan:** kolon ve kiriş tipinin profil takımı, duvarın (AXIS2), çatının ve eğik döşemenin kullanımı, çok kata
+uzanan eleman.
 
 #### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [x]
 

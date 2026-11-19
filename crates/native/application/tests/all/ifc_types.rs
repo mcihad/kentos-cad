@@ -2,7 +2,8 @@
 //! written each as one `IfcWallType`, every wall of a style typed by it, its layers in order with their thickness. The
 //! file is kept (fixtures/arch/v1/ifc/kesit-binasi-tipli.ifc) with the styles as the drawing says them
 //! (kesit-binasi-tipli.json), for the independent reader (scripts/fixtures/ifc_types_check.py). `KENTOS_WRITE_IFC_TYPES=1`
-//! writes them again.
+//! writes them again. The note carries the layered slabs as the drawing says them too, for
+//! scripts/fixtures/slab_layers_check.py (docs/adr/8166).
 
 use std::path::PathBuf;
 
@@ -64,7 +65,34 @@ fn every_wall_style_is_one_type_and_its_walls_are_typed_by_it() {
             }));
             out
         });
-    let note = serde_json::to_string_pretty(&json!({"file": "kesit-binasi-tipli.ifc", "styles": styles})).unwrap() + "\n";
+    // The layered slabs as the drawing says them (docs/adr/8166): each its id, its top over its storey and its layers
+    // from the top, the structure among them, each its kind's word, its material and its thickness.
+    let slabs: Vec<serde_json::Value> = doc
+        .entities_with_uids()
+        .filter_map(|(u, e)| match e {
+            Entity::Slab(sl) if sl.slab.covering.is_none() && !sl.slab.layers.is_empty() => {
+                let s = &sl.slab;
+                let layer = |l: &kentos_commands::SlabLayer| {
+                    json!({"name": l.kind.label(), "material": l.material, "thickness": l.thickness})
+                };
+                let layers: Vec<serde_json::Value> = s
+                    .layers
+                    .over
+                    .iter()
+                    .map(layer)
+                    .chain(std::iter::once(
+                        json!({"name": "Taşıyıcı", "material": s.material, "thickness": s.thickness}),
+                    ))
+                    .chain(s.layers.under.iter().map(layer))
+                    .collect();
+                Some(json!({"id": u.to_string(), "top": s.offset, "layers": layers}))
+            }
+            _ => None,
+        })
+        .collect();
+    assert!(!slabs.is_empty(), "the declared section building's slabs are layered");
+    let kept = json!({"file": "kesit-binasi-tipli.ifc", "styles": styles, "slabs": slabs});
+    let note = serde_json::to_string_pretty(&kept).unwrap() + "\n";
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc");
     if std::env::var_os("KENTOS_WRITE_IFC_TYPES").is_some() {
         std::fs::write(dir.join("kesit-binasi-tipli.ifc"), &text).unwrap();

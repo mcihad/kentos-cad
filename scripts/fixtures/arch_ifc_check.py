@@ -30,7 +30,8 @@ It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
 - a column carries (Pset_ColumnCommon.LoadBearing), a terrace slab is outside and a floor slab is not
   (Pset_SlabCommon.IsExternal);
 - materials (EK-6): walls their core layer's (Tuğla; a wall style's layer set holds it in the core component's place,
-  docs/adr/8105), slabs theirs (Betonarme), columns and beams Betonarme;
+  docs/adr/8105), slabs theirs (Betonarme; a layered slab's set, laid from its top, holds it in its one LoadBearing
+  layer, docs/adr/8166), columns and beams Betonarme;
 - the grids (docs/adr/8070 §4) are one rectangular IfcGrid of the building, its U and V axes the definition's lines with
   their names and points; the U stair is a HALF_TURN_STAIR of Betonarme (§2);
 - every element and room gives IfcOpenShell a shape;
@@ -211,7 +212,11 @@ def main() -> int:
             # A wall style as its layer set (docs/adr/8105): its layers in the drawing's order of components, so the
             # core component is the layer in its place.
             layers = list(m.MaterialLayers)
-            if place is None or place >= len(layers) or layers[place].Material is None:
+            if place is None:
+                # A layered slab (docs/adr/8166): its structure is its one load-bearing layer.
+                bearing = [x for x in layers if x.Category == "LoadBearing"]
+                return bearing[0].Material.Name if len(bearing) == 1 and bearing[0].Material is not None else None
+            if place >= len(layers) or layers[place].Material is None:
                 return None
             return layers[place].Material.Name
         return m.Name if m is not None and m.is_a("IfcMaterial") else None

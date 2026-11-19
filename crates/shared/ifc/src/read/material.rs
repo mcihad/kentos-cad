@@ -1,6 +1,6 @@
 //! An object's materials by the names the file gives them (`IfcRelAssociatesMaterial`): a material's own name, a layer
 //! set's, a usage's set's, or its members' (layers, constituents, profiles, a list). The viewer's details and the
-//! written file's facts read them.
+//! written file's facts read them. A layer set's layers and how a usage lays them (docs/adr/8166) for the details.
 
 use ifc_lite_core::{AttributeValue, EntityDecoder, SchemaVersion};
 
@@ -22,6 +22,69 @@ impl Model {
                 .filter(|r| schema.is_subtype_of(&r.class, "IfcRelAssociatesMaterial") && r.related.contains(&o.step))
                 .filter_map(|r| material_name(&mut decoder, schema, r.relating?, 0))
                 .collect())
+        })
+    }
+}
+
+/// A material layer set as the file writes it (docs/adr/8166): how a usage lays it (its direction, its sense and its
+/// base line's offset, as written) and its layers in order, each its name, its material's name and its thickness.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LayerList {
+    pub usage: Option<(String, String, f64)>,
+    pub layers: Vec<(String, Option<String>, f64)>,
+}
+
+impl Model {
+    /// The material layer set object `object` (an index into [`Model::objects`]) is associated with, directly or
+    /// through a usage; none when its material is another kind.
+    pub fn layers(&self, bytes: &[u8], object: usize) -> Result<Option<LayerList>, ReadError> {
+        let Some(o) = self.objects.get(object) else { return Ok(None) };
+        let schema = header::version(self.summary.family);
+        guarded(|| {
+            let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
+            let associations: Vec<u32> = self
+                .relations_of(o.step)
+                .iter()
+                .map(|&r| &self.relations[r])
+                .filter(|r| schema.is_subtype_of(&r.class, "IfcRelAssociatesMaterial") && r.related.contains(&o.step))
+                .filter_map(|r| r.relating)
+                .collect();
+            for m in associations {
+                let Ok(e) = decoder.decode_by_id(m) else { continue };
+                let mut out = LayerList::default();
+                let set = match named(schema, &e, "ForLayerSet").and_then(AttributeValue::as_entity_ref) {
+                    Some(set) => {
+                        let word = |n: &str| {
+                            let v = named(schema, &e, n).and_then(AttributeValue::as_enum);
+                            v.map(str::to_owned).unwrap_or_default()
+                        };
+                        let offset = named(schema, &e, "OffsetFromReferenceLine").and_then(AttributeValue::as_float);
+                        let offset = offset.unwrap_or(0.0);
+                        out.usage = Some((word("LayerSetDirection"), word("DirectionSense"), offset));
+                        set
+                    }
+                    None => m,
+                };
+                let Ok(s) = decoder.decode_by_id(set) else { continue };
+                let Some(list) = named(schema, &s, "MaterialLayers").and_then(AttributeValue::as_list) else {
+                    continue;
+                };
+                let refs: Vec<u32> = list.iter().filter_map(AttributeValue::as_entity_ref).collect();
+                for l in refs {
+                    let Ok(layer) = decoder.decode_by_id(l) else { continue };
+                    let name = named(schema, &layer, "Name").and_then(AttributeValue::as_string);
+                    let name = name.unwrap_or("").to_owned();
+                    let thickness =
+                        named(schema, &layer, "LayerThickness").and_then(AttributeValue::as_float).unwrap_or(0.0);
+                    let material = named(schema, &layer, "Material")
+                        .and_then(AttributeValue::as_entity_ref)
+                        .and_then(|x| decoder.decode_by_id(x).ok())
+                        .and_then(|x| named(schema, &x, "Name").and_then(AttributeValue::as_string).map(str::to_owned));
+                    out.layers.push((name, material, thickness));
+                }
+                return Ok(Some(out));
+            }
+            Ok(None)
         })
     }
 }

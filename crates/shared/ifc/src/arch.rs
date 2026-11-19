@@ -2433,6 +2433,53 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
         }
     }
+    // The layered slabs' and the coverings' sets (docs/adr/8166; IFC-03, IFC-04; EK-6 Tablo 6.20's second way): from
+    // the top, each layer over the structure, the structure (its material and thickness; a covering's plate its type's
+    // words) and each layer under it; each its kind's word, its material and its role (`IfcMaterialLayer.Category`): a
+    // slab's structure load bearing, the insulation insulating, the top finish an inner finish on a floor and an outer
+    // one on a balcony or a terrace, the plaster under an inner finish unless open air is under it (a balcony, a floor
+    // declared exterior). A slab with no layers keeps its one material. A level one's usage
+    // (`IfcMaterialLayerSetUsage`): along its z axis (AXIS3), downwards (NEGATIVE) from its top, its offset over its
+    // storey; a sloped one's none.
+    let mut layer_usages: Vec<(usize, f64)> = Vec::new();
+    for (owner, &k) in &index {
+        let Some(&(_, Entity::Slab(sl))) = by_uid.get(owner) else { continue };
+        let s = &sl.slab;
+        if !elements.get(k).is_some_and(|e| matches!(e.class, Class::Slab | Class::Covering))
+            || layer_sets.iter().any(|(i, ..)| *i == k)
+            || (s.covering.is_none() && s.layers.is_empty())
+        {
+            continue;
+        }
+        use kentos_contracts::SlabLayerKind as L;
+        let outside_top = s.role != SlabRole::Floor;
+        let open_under = s.role == SlabRole::Balcony
+            || (s.role == SlabRole::Floor && s.arch.external.as_ref().is_some_and(|x| x.external));
+        let layer = |l: &kentos_contracts::SlabLayer, over: bool| crate::building::Layer {
+            name: l.kind.label().to_owned(),
+            material: material(l.material.clone()),
+            thickness: l.thickness,
+            category: match l.kind {
+                L::Insulation => Some("Insulation"),
+                L::Finish if over => Some(if outside_top { "Outer finish" } else { "Inner finish" }),
+                L::Plaster if !over => Some(if open_under { "Outer finish" } else { "Inner finish" }),
+                _ => None,
+            },
+        };
+        let mut layers: Vec<crate::building::Layer> = s.layers.over.iter().map(|l| layer(l, true)).collect();
+        layers.push(crate::building::Layer {
+            name: s.covering.as_ref().map_or_else(|| "Taşıyıcı".to_owned(), |c| c.words()),
+            material: material(s.material.clone()),
+            thickness: s.thickness,
+            category: s.covering.is_none().then_some("LoadBearing"),
+        });
+        layers.extend(s.layers.under.iter().map(|l| layer(l, false)));
+        let name = if s.covering.is_some() { "Kaplama katmanları" } else { "Döşeme katmanları" };
+        layer_sets.push((k, name.to_owned(), layers));
+        if s.slope.is_none() {
+            layer_usages.push((k, s.offset));
+        }
+    }
     // The element types (docs/adr/8106, BIM-12): each project type of a column, beam, slab, roof, railing or stair is an
     // IFC type of the class its values make (a post's IfcMemberType, a covering's IfcCoveringType), its elements of
     // that class typed by it — one an exception made another class stays untyped. Its predefined type theirs when they
@@ -2651,6 +2698,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         true_north: north.as_ref().ok().map(|a| [-crate::math::sin(*a), crate::math::cos(*a)]),
         north_why: north.err(),
         layer_sets,
+        layer_usages,
         types,
         zero,
     };

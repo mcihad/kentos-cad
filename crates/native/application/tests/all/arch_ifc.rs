@@ -16,6 +16,70 @@ fn building() -> Document {
     Document::from_snapshot_v2(snap).unwrap()
 }
 
+/// The usages the file writes (docs/adr/8166): one for each set and top among the elements laid from their top.
+fn usages(b: &kentos_ifc::building::Building) -> usize {
+    let mut seen: Vec<(String, String, u64)> = Vec::new();
+    for (k, top) in &b.layer_usages {
+        let Some((_, name, layers)) = b.layer_sets.iter().find(|(i, ..)| i == k) else { continue };
+        let key = (name.clone(), format!("{layers:?}"), top.to_bits());
+        if !seen.contains(&key) {
+            seen.push(key);
+        }
+    }
+    seen.len()
+}
+
+/// A layered slab (docs/adr/8166; IFC-04): its build-up as a layer set from the top, laid down from its top over its
+/// storey, in place of its one material. The section building's ground floor (on the ground: kaplama 2, şap 5, ısı
+/// yalıtımı 5, su yalıtımı 1 over 15 cm of Betonarme): Kaplama an inner finish, Isı yalıtımı insulating, the structure
+/// load bearing; every layered slab's layers add up to its whole thickness.
+#[test]
+fn a_layered_slab_is_its_build_up_laid_from_its_top() {
+    let doc = building();
+    let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    let mut layered = 0;
+    for (uid, e) in doc.entities_with_uids() {
+        let Entity::Slab(sl) = e else { continue };
+        let id = uid.as_u128();
+        let at = b.elements.iter().position(|el| el.id == Some(id)).expect("its element");
+        let set = b.layer_sets.iter().find(|(k, ..)| *k == at);
+        if sl.slab.layers.is_empty() {
+            assert!(set.is_none(), "a plain slab keeps its one material");
+            continue;
+        }
+        layered += 1;
+        let (_, name, layers) = set.expect("a layered slab's set");
+        assert_eq!(name, "Döşeme katmanları");
+        let total: f64 = layers.iter().map(|l| l.thickness).sum();
+        assert!((total - sl.slab.whole_thickness()).abs() < 1e-9, "{total} {}", sl.slab.whole_thickness());
+        let structure = &layers[sl.slab.layers.over.len()];
+        assert_eq!(
+            (structure.name.as_str(), structure.material.as_deref(), structure.thickness, structure.category),
+            ("Taşıyıcı", sl.slab.material.as_deref(), sl.slab.thickness, Some("LoadBearing"))
+        );
+        assert_eq!(b.layer_usages.iter().find(|(k, _)| *k == at).map(|(_, t)| *t), Some(sl.slab.offset));
+        if sl.slab.arch.level.as_deref() == Some("zemin") && sl.slab.layers.under.is_empty() {
+            let rows: Vec<(&str, f64, Option<&str>)> =
+                layers.iter().map(|l| (l.name.as_str(), l.thickness, l.category)).collect();
+            assert_eq!(
+                rows,
+                [
+                    ("Kaplama", 0.02, Some("Inner finish")),
+                    ("Şap", 0.05, None),
+                    ("Isı yalıtımı", 0.05, Some("Insulation")),
+                    ("Su yalıtımı", 0.01, None),
+                    ("Taşıyıcı", 0.15, Some("LoadBearing")),
+                ]
+            );
+        }
+    }
+    assert!(layered > 0, "the section building's slabs are layered");
+    let text = kentos_ifc::building::write(&b);
+    assert_eq!(text.matches("IFCMATERIALLAYERSETUSAGE(").count(), usages(&b));
+    let laid = |l: &&str| l.contains(",.AXIS3.,.NEGATIVE.,");
+    assert!(text.lines().filter(|l| l.contains("IFCMATERIALLAYERSETUSAGE(")).all(|l| laid(&l)));
+}
+
 #[test]
 fn the_drawing_s_walls_doors_windows_and_rooms_are_the_files() {
     let doc = building();
@@ -929,6 +993,21 @@ fn a_ceiling_from_a_room_and_a_floor_covering_are_ifc_coverings() {
     let room_at = b.spaces.iter().position(|sp| sp.id.map(|i| kentos_domain::Uuid::from_u128(i).to_string()) == Some(room.clone()));
     assert_eq!(b.covers, vec![(room_at.expect("the room"), vec![ceiling_at])]);
     assert_eq!(text.matches("IFCRELCOVERSSPACES(").count(), 1);
+    // Each covering's plate is a layer set of one, its words, material and thickness (docs/adr/8166; EK-6 Tablo 6.20's
+    // Kaplama Malzemesi and Kaplama Kalınlığı), laid down from its top: the ceiling's 2.60 m, the floor's 0.02 m.
+    let set_of = |at: usize| b.layer_sets.iter().find(|(k, ..)| *k == at).map(|(_, n, l)| (n.clone(), l.clone()));
+    let floor_at = b.elements.iter().position(|e| e.id == element(&floor).id).expect("the floor covering");
+    let (name, layers) = set_of(ceiling_at).expect("the ceiling's set");
+    assert_eq!(name, "Kaplama katmanları");
+    let plate: Vec<(&str, Option<&str>, f64, Option<&str>)> =
+        layers.iter().map(|l| (l.name.as_str(), l.material.as_deref(), l.thickness, l.category)).collect();
+    assert_eq!(plate, [("Asma tavan", Some("Alçıpan"), 0.0125, None)]);
+    let (_, layers) = set_of(floor_at).expect("the floor covering's set");
+    assert_eq!(layers.iter().map(|l| (l.name.as_str(), l.thickness)).collect::<Vec<_>>(), [("Zemin kaplaması", 0.02)]);
+    assert_eq!(b.layer_usages.iter().find(|(k, _)| *k == ceiling_at).map(|(_, t)| *t), Some(2.6));
+    assert_eq!(b.layer_usages.iter().find(|(k, _)| *k == floor_at).map(|(_, t)| *t), Some(0.02));
+    assert!(usages(&b) >= 2);
+    assert_eq!(text.matches("IFCMATERIALLAYERSETUSAGE(").count(), usages(&b), "one for each set and top");
     if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_COVERINGS") {
         std::fs::write(path, &text).expect("the file kept");
     }

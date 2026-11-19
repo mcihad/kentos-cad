@@ -1013,7 +1013,7 @@
     "IfcWindow": "PNC"
   },
   "file": {
-    "bytes": 173584,
+    "bytes": 175515,
     "extension": "ifc",
     "header": {
       "author": [
@@ -1032,7 +1032,7 @@
       "timeStamp": "2026-11-17T12:00:00"
     },
     "name": "kesit-binasi-tam.ifc",
-    "records": 3143,
+    "records": 3167,
     "schema": "IFC4X3_ADD2"
   },
   "findings": [],
@@ -2021,7 +2021,7 @@
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Betonarme"
+        "Döşeme katmanları"
       ],
       "name": "MM-DSM-Döşeme",
       "objectType": null,
@@ -2066,7 +2066,7 @@
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Betonarme"
+        "Döşeme katmanları"
       ],
       "name": "MM-DSM-Döşeme",
       "objectType": null,
@@ -2111,7 +2111,7 @@
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Betonarme"
+        "Döşeme katmanları"
       ],
       "name": "MM-DSM-Döşeme",
       "objectType": null,
@@ -4829,7 +4829,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3137,
+      "step": 3161,
       "storey": null,
       "tag": null,
       "type": null,
@@ -4855,7 +4855,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3140,
+      "step": 3164,
       "storey": null,
       "tag": null,
       "type": null,
