@@ -31,6 +31,10 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   mesafelerine göre: yol cephesinde yapı yaklaşma sınırından en çok 1,50 m; yan, arka ve kamusal alan bahçesinde en çok
   1,50 m ve parsel sınırına en az 3,00 m; bitişik nizamda açık çıkma komşu sınırına en az 2,00 m (41/1); çıkma altı
   zeminden en az 2,40 m (41/2).
+- **Çatının ölçüleri** (`cati_olculeri`, docs/adr/8159): mahya saçak seviyesinden en çok 5,00 m (40/4), saçak 1,00 m
+  (42/1), hava bacası çatı örtüsünü en çok 0,60 m aşar (40/5), duman bacası mahyanın en az 0,80 m üstüne çıkar (BYKHY
+  58/2); Sivas'ta mahya 4,00 m ve eğim %40 (40/5-g), çatı penceresi 1,20 × 1,50 m, cepheye 1 m, birbirine 2 m (40/5-e),
+  kar siperliği (42/5). Bulgunun düzeltmesi çatıya yazar.
 - **Merdiven altı** (`merdiven_alti`, docs/adr/8080): 1,80 m'den alçak merdiven altı kapatılır (31/6); alçak boşluk bir
   mahale açıksa kaldı.
 - **Yangın kompartımanları** (`kompartiman`, docs/adr/8081, 8086): mahaller arasındaki ayrımlardan ve katlar arası

@@ -34,15 +34,15 @@
 //!   needs an elevator or its place (34/1) and which storeys it serves (34/8) changed on 1.7.2026 and are read by the
 //!   application date's version: the standards package's Python (catalog/standards/mimari-mevzuat, docs/adr/8078).
 //!
-//! - **Çatılar (40, 42; docs/adr/8044 §9):** the ridge over the saçak seviyesi 5.00 m (40/4), the eaves 1.00 m (42/1),
-//!   a vent 0.60 m over the roof (40/5), a chimney 0.80 m over the ridge (BYKHY 58/2); see [`crate::roof_audit`].
+//! - **Çatılar (40, 42; docs/adr/8044 §9):** the ridge over the saçak seviyesi (40/4), the eaves (42/1), a vent over the
+//!   roof (40/5) and a chimney over the ridge (BYKHY 58/2) are the standards package's rules (docs/adr/8159), on the
+//!   roofs' measures ([`crate::roof_audit`]) the audit facts carry.
 //!
 //! **Yerel yönetmelik** (`ArchSettings::local_rules`): the municipality's values are read over these where they differ,
 //! as PAİY 69/3 applies them. Sivas İmar Yönetmeliği (10.11.2022): common stairs 1.30 m and their intermediate landings
 //! 1.30 m (31/1-a); an air shaft's narrow side 0.30 m and 0.36 m² (32/3); a light well by the storeys it serves
-//! (32/2-a); a roof's ridge 4.00 m and its slope 40 % (40/5-g), its windows 1.20 × 1.50 m, 1 m from the facade lines and
-//! 2 m apart (40/5-e), its snow guard (42/5). Its elevator, storey height and door articles (34/1, 34/8, 28/1-c, 39/1)
-//! are the standards package's too.
+//! (32/2-a). Its roof (40/5-e, 40/5-g, 42/5), elevator, storey height and door articles (34/1, 34/8, 28/1-c, 39/1) are
+//! the standards package's.
 //! A stricter value binds and the other layer's is named beside it; a looser one a drawing keeps while missing the
 //! national value is a conflict (`regulation_conflict`) the administration decides.
 //!
@@ -198,7 +198,7 @@ pub const SIVAS_AIR_SHAFT_ARTICLE: Article = Article::sivas("32/3");
 /// (docs/adr/8035). Only the codes this group makes: an exception on a standards package's finding (34/1's and 34/8's,
 /// 28/1-c's and 39/1's, the rule set's own; catalog/standards/mimari-mevzuat, docs/adr/8078, 8083) is never stale to
 /// it, nor pruned by it.
-pub const CODES: [&str; 45] = [
+pub const CODES: [&str; 37] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -236,14 +236,6 @@ pub const CODES: [&str; 45] = [
     codes::SHELTER_SHORT,
     codes::SHELTER_EXIT_COUNT,
     codes::SHELTER_HEIGHT_LOW,
-    codes::PAIY_RIDGE_HIGH,
-    codes::PAIY_EAVES_WIDE,
-    codes::PAIY_ROOF_VENT_HIGH,
-    codes::BYKHY_CHIMNEY_LOW,
-    codes::LOCAL_ROOF_SLOPE_STEEP,
-    codes::LOCAL_SNOW_GUARD_MISSING,
-    codes::LOCAL_ROOF_WINDOW_LARGE,
-    codes::LOCAL_ROOF_WINDOW_CLOSE,
 ];
 
 /// A fix a finding offers (docs/adr/8034): `cad.arch.edit`'s operation on its first object (a stair, a ramp) and the
@@ -1706,8 +1698,6 @@ pub fn findings(
     crate::provisions_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
     // Doğramaların U değeri (docs/adr/8038): TS 825:2024.
     crate::joinery_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
-    // Çatılar (docs/adr/8044 §9): PAİY 40 ve 42, BYKHY 58/2, yerel yönetmelik.
-    crate::roof_audit::findings(doc, &mut |s, slots, at, fix| push(s, slots, at, fix));
     // Korkuluklar (docs/adr/8045 §4): PAİY 38; galeri boşlukları, balkonlar ve teraslar.
     crate::railing_audit::findings(doc, &mut |s, slots, at, fix| push(s, slots, at, fix));
     // Otopark yerleri (docs/adr/8045 §6): Otopark Yönetmeliği 4/1-ç, ı, 5/1-h, j.

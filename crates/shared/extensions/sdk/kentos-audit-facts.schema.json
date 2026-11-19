@@ -1813,6 +1813,17 @@
     "RoofFacts": {
       "description": "A roof (docs/adr/8134; BYKHY 28/2, 28/3): its persistent id, its storey and its layers top down. A roof drawn without\nlayers is one covering of its own material (KentOS's Kiremit when it names none). The slabs it sits on (docs/adr/8139).",
       "properties": {
+        "form": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoofFormFacts"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its form as the roof rules read it (docs/adr/8159; PAİY 40/4, 40/5, 42/1, BYKHY 58/2, Sivas 40/5, 42/5); none\nfor a roof whose shape cannot be built."
+        },
         "layers": {
           "items": {
             "$ref": "#/$defs/RoofLayerFacts"
@@ -1839,6 +1850,66 @@
       "required": [
         "uid",
         "layers"
+      ],
+      "type": "object"
+    },
+    "RoofFormFacts": {
+      "description": "A roof's form (docs/adr/8159): whether one of its edges slopes; the ridge's top over the saçak seviyesi, its kot\nfarkı counted (m; none for a flat roof); its overhang over the walls it was drawn from (m; none: not drawn from\nwalls); each edge's slope (per cent; none: a gable or a level edge); whether it has a snow guard; its middle in\nplan; its parts in their drawn order and the windows' gaps.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "overhang": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/$defs/RoofPartFacts"
+          },
+          "type": "array"
+        },
+        "ridge": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "slopes": {
+          "items": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "type": "array"
+        },
+        "sloping": {
+          "type": "boolean"
+        },
+        "snowGuard": {
+          "type": "boolean"
+        },
+        "windowGaps": {
+          "items": {
+            "$ref": "#/$defs/WindowGapFacts"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "at"
       ],
       "type": "object"
     },
@@ -1869,6 +1940,66 @@
       },
       "required": [
         "kind"
+      ],
+      "type": "object"
+    },
+    "RoofPartFacts": {
+      "description": "A part standing through a roof or set in it (docs/adr/8159): its kind (`chimney`, `vent`, `window`, `downpipe`), its\ndrawn middle, width, depth, turn (radians) and rise (m) as the roof keeps them (a rule's fix writes them back), a\nchimney's top over the ridge or a vent's over the roof at its highest corner as read (its own rise, else its kind's;\nm) and a window's outline's nearest distance to the building's facade lines (m).",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "depth": {
+          "format": "double",
+          "type": "number"
+        },
+        "facade": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": "string"
+        },
+        "rise": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rotation": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "top": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "width": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "at",
+        "width",
+        "depth"
       ],
       "type": "object"
     },
@@ -2795,6 +2926,31 @@
           "type": "string"
         }
       ]
+    },
+    "WindowGapFacts": {
+      "description": "Two roof windows (their indices among the roof's parts) and the shortest distance between their outlines on the\nroof, m (docs/adr/8159).",
+      "properties": {
+        "a": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "apart": {
+          "format": "double",
+          "type": "number"
+        },
+        "b": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "apart"
+      ],
+      "type": "object"
     },
     "ZoningFacts": {
       "description": "The parcel's zoning and the building's areas against it, m² (PAİY 4/1-tt, 4/1-cccc, 5/5, 5/8, 21, 22).",

@@ -58,8 +58,8 @@ use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
     BuildingFacts, CoveringFacts, DoorExitFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, FinishFacts,
     InsulationFacts, LinkFacts, MasonryFacts, MasonryStorey, PartyFacts, PlanNoteFacts, ProjectionEdgeFacts,
-    ProjectionFacts, RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts,
-    ShaftVentFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom
+    ProjectionFacts, RoofFacts, RoofFormFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts,
+    ShaftFacts, ShaftVentFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -591,6 +591,7 @@ fn seat_slabs(
 fn roofs(doc: &Document) -> Vec<RoofFacts> {
     let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
     let slabs = seat_candidates(doc);
+    let mut forms = roof_forms(doc);
     let layer = |kind: &str, material: Option<String>| {
         let found = material.as_deref().and_then(|name| {
             let folded = name.to_lowercase();
@@ -620,9 +621,54 @@ fn roofs(doc: &Document) -> Vec<RoofFacts> {
                     .collect()
             };
             let seat = seat_slabs(doc, &slabs, &r.roof);
-            Some(RoofFacts { uid: uid.to_string(), level: e.own_level().map(str::to_owned), layers, seat })
+            let form = forms.remove(&e.base().id);
+            Some(RoofFacts { uid: uid.to_string(), level: e.own_level().map(str::to_owned), layers, seat, form })
         })
         .collect()
+}
+
+/// Each roof's form as the roof rules read it (docs/adr/8159), by its object: the application's measures.
+#[cfg(feature = "mod-arch")]
+fn roof_forms(doc: &Document) -> std::collections::HashMap<u32, RoofFormFacts> {
+    use kentos_extensions::audit_facts::building::{RoofPartFacts, WindowGapFacts};
+    kentos_native_application::roof_audit::measures(doc)
+        .into_iter()
+        .map(|m| {
+            let parts = m
+                .parts
+                .iter()
+                .map(|p| RoofPartFacts {
+                    kind: serde_json::to_value(p.part.kind)
+                        .ok()
+                        .and_then(|v| v.as_str().map(str::to_owned))
+                        .unwrap_or_default(),
+                    at: [p.part.at.x, p.part.at.y],
+                    width: p.part.width,
+                    depth: p.part.depth,
+                    rotation: p.part.rotation,
+                    rise: p.part.rise,
+                    top: p.top,
+                    facade: p.facade,
+                })
+                .collect();
+            let form = RoofFormFacts {
+                sloping: m.sloping,
+                ridge: m.ridge,
+                overhang: m.overhang,
+                slopes: m.slopes,
+                snow_guard: m.snow_guard,
+                at: [m.at.x, m.at.y],
+                parts,
+                window_gaps: m.window_gaps.into_iter().map(|(a, b, apart)| WindowGapFacts { a, b, apart }).collect(),
+            };
+            (m.slot.0, form)
+        })
+        .collect()
+}
+
+#[cfg(not(feature = "mod-arch"))]
+fn roof_forms(_doc: &Document) -> std::collections::HashMap<u32, RoofFormFacts> {
+    std::collections::HashMap::new()
 }
 
 /// Each shaft and what encloses it (docs/adr/8087), the walls' and openings' declared classes read as the separations'.

@@ -309,6 +309,9 @@ projede çatı planını ister.
 
 ### 9. Çatının mevzuat denetimi (5. bölümün son adımı)
 
+> 19 Kasım 2026: kurallar standart pakete taşındı (ADR [8159](8159-roof-rules-in-the-package.md)): `roof_audit` ölçer,
+> paketin `cati_olculeri` kuralı aynı ölçüler, iletiler ve düzeltmelerle karar verir.
+
 Denetim › Mevzuat her çatıyı çizimden ölçer (`roof_audit`), bulgu ölçüyü, sınırı, maddeyi ve Resmî Gazete'yi yazar.
 Maddeler resmî metinden okundu: PAİY 40 ve 42 (RG 3.7.2017/30113; 40/5'e 25.2.2022'de yalnız fotovoltaik panel ibaresi
 eklendi), Sivas İmar Yönetmeliği 40/5 ve 42/5 (RG 10.11.2022/32009), BYKHY 58/2 (RG 19.12.2007/26735).

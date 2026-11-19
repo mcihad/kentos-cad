@@ -2329,6 +2329,152 @@
           "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 9/1-c; 9/1-a (28 inci maddenin kat yükseklikleri ile kat adedinin çarpımı) ve 28/2; Sivas İmar Yönetmeliği (RG 10.11.2022/32009) 9/1-c; docs/adr/8157 §2."
         }
       ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "40/4",
+      "title": "Mahya yüksekliği",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); derlenmiş metinde bu fıkrada değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "most": 5.0,
+          "text": "(4) Mahya yüksekliği 5.00 metreyi geçmemek kaydıyla; ayrık binalarda kırma, ikili blok binalarda bloğu ile müşterek kırma, iki taraftan da bitişik binalarda ise ön ve arka cepheye akıntılı beşik çatı kurulacağı varsayılarak belirlenir.",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 40/4; docs/adr/8044 §9, 8159 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "40/5",
+      "title": "Çatı örtüsünü aşan yapılar (hava bacası)",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi; RG 25.2.2022/31761'in ek ibaresi (fotovoltaik paneller) 0.60 metreyi değiştirmedi.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113; 25.2.2022/31761 ek ibare",
+          "most": 0.6,
+          "text": "(5) Merdiven evleri, ışıklıklar, hava bacaları, alın ve kalkan duvarları dördüncü fıkraya göre belirlenen çatı örtüsü düzlemlerini en fazla 0.60 metre aşabilir. …",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 40/5; docs/adr/8044 §9, 8159 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "42/1",
+      "title": "Saçak genişliği",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi; derlenmiş metinde bu fıkrada değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "most": 1.0,
+          "text": "(1) Uygulama imar planında belirlenmemiş ise 1.00 metreyi geçmeyen saçak yapılabilir. Saçakların şekli ve genişliği, yörenin mimari karakterine ve yapılacak yapıların özelliğine göre mimari estetik komisyonu kararı alınarak ilgili idarece de tayin edilebilir.",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 42/1; docs/adr/8044 §9, 8159 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "58/2",
+      "title": "Bacanın mahyayı aşması",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 58'e 10.8.2009 kararıyla eklenen 12 nci fıkra 2'yi değiştirmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "least": 0.8,
+          "text": "(2) Kazan dairesi için ayrıca havalandırma bacası yapılır. Baca çekişinin azalmaması bakımından, bacaların mümkün ise, komşu yüksek binalardan en az 6 m uzaklıkta yapılması ve ait olduğu bina mahyasının en az 0.8 m üzerine kadar çıkarılması gerekir.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 58 inci madde; docs/adr/8044, 8159 §2"
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "40/5-g",
+      "title": "Mahya ve çatı eğimi (Sivas)",
+      "transition": "Sivas İmar Yönetmeliği yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "most": 4.0,
+          "slope": 40.0,
+          "text": "Çatılarda, mahya yüksekliği 4.00 m'yi geçmemek kaydıyla çatı yüzeyi en fazla % 40 eğimle yapılabilir.",
+          "source": "Sivas Belediyesi İmar Yönetmeliği (RG 10.11.2022/32009), Lexpera'nın metni: 40/5-g; docs/adr/8044, 8159 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "40/5-e-2",
+      "title": "Çatı penceresinin ölçüleri (Sivas)",
+      "transition": "Sivas İmar Yönetmeliği yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "width": 1.2,
+          "length": 1.5,
+          "text": "Çatı yüzeyine paralel pencere ölçüleri (en çok): 1.20 mX1.50 m (en/boy).",
+          "source": "Sivas Belediyesi İmar Yönetmeliği (RG 10.11.2022/32009), Lexpera'nın metni: 40/5-e-2; docs/adr/8044, 8159 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "40/5-e-3",
+      "title": "Çatı penceresinin yeri (Sivas)",
+      "transition": "Sivas İmar Yönetmeliği yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "facade": 1.0,
+          "apart": 2.0,
+          "text": "Pencereler; bina cephe hatlarına 1 m'den ve birbirilerine 2 m'den fazla yaklaşamaz, mahyaları kesemez.",
+          "source": "Sivas Belediyesi İmar Yönetmeliği (RG 10.11.2022/32009), Lexpera'nın metni: 40/5-e-3; docs/adr/8044, 8159 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "42/5",
+      "title": "Kar siperliği (Sivas)",
+      "transition": "Sivas İmar Yönetmeliği yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "text": "Çatılarda biriken karların yola ve kaldırıma düşmemesi için saçak uçlarında kar siperliklerinin yapılması mecburidir.",
+          "source": "Sivas Belediyesi İmar Yönetmeliği (RG 10.11.2022/32009), Lexpera'nın metni: 42/5; docs/adr/8044, 8159 §2."
+        }
+      ]
     }
   ]
 }

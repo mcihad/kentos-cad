@@ -1,0 +1,1638 @@
+{
+  "format": "kentos.regulationCases",
+  "version": 1,
+  "about": "Çatının ölçülerinin bağımsız durumları (docs/adr/8159): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 40/4 (5,00 m), 40/5 (0,60 m), 42/1 (1,00 m), Binaların Yangından Korunması Hakkında Yönetmelik 58/2 (0,80 m) ve Sivas İmar Yönetmeliği 40/5-g (4,00 m, %40), 40/5-e-2 (1,20 × 1,50 m), 40/5-e-3 (1 m, 2 m), 42/5'in metninden elle; kuralın kodundan üretilmedi. Olgular KentOS'un çatı ölçüsüdür (building.roofs[].form); düzeltmenin beklenenleri cad.arch.edit'in işlemidir.",
+  "cases": [
+    {
+      "id": "mahya-icinde",
+      "neden": "Eğimli çatının mahyası saçak seviyesinden 4,47 m: 40/4 en çok 5,00 m → geçer; hava bacası, saçak ölçüsü, duman bacası yok.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mahya-asar",
+      "neden": "Mahya 5,20 m > 5,00 m → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 5.2,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_ridge_high",
+            "has": [
+              "Mahya yüksekliği (saçak seviyesinden) 5.20 m > 5.00 m",
+              "PAİY 40/4"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "failed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mahya-sivas",
+      "neden": "Sivas: mahya 4,47 m, 40/5-g en çok 4,00 m bağlar (PAİY 5,00 m yanında yazılır); eğim %40 ve kar siperliği var.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ],
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_ridge_high",
+            "has": [
+              "4.47 m > 4.00 m — Sivas 40/5-g",
+              "PAİY 40/4 (1.10.2017): 5.00 m"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Sivas 40/5-g": [
+            "failed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-2": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-3": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 42/5": [
+            "passed",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sacak-genis",
+      "neden": "Duvarlarından çizilen çatının saçağı 1,20 m > 1,00 m → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "overhang": 1.2,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_eaves_wide",
+            "has": [
+              "Saçak genişliği 1.20 m > 1.00 m — PAİY 42/1"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "failed",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sacak-tam",
+      "neden": "Saçak tam 1,00 m → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "overhang": 1.0,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "passed",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "hava-bacasi",
+      "neden": "Hava bacası çatı örtüsünü 0,90 m aşıyor > 0,60 m → kalır; düzeltme 0,60 m'ye indirir.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "parts": [
+                {
+                  "kind": "vent",
+                  "at": [
+                    10.0,
+                    8.0
+                  ],
+                  "width": 0.4,
+                  "depth": 0.4,
+                  "rise": 0.9,
+                  "top": 0.9
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_roof_vent_high",
+            "has": [
+              "Hava bacasının çatı örtüsünü aşan yüksekliği 0.90 m > 0.60 m — PAİY 40/5"
+            ],
+            "fix": {
+              "label": "Hava bacasını 0,60 m'ye indir",
+              "rise": [
+                0,
+                0.6
+              ]
+            }
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "failed",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "duman-bacasi",
+      "neden": "Duman bacası mahyayı 0,50 m aşıyor < 0,80 m → kalır; düzeltme 0,80 m'ye çıkarır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "parts": [
+                {
+                  "kind": "chimney",
+                  "at": [
+                    7.0,
+                    8.5
+                  ],
+                  "width": 0.4,
+                  "depth": 0.4,
+                  "rise": 0.5,
+                  "top": 0.5
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_chimney_low",
+            "has": [
+              "Duman bacasının mahyayı aşan yüksekliği 0.50 m < 0.80 m — BYKHY 58/2"
+            ],
+            "fix": {
+              "label": "Bacayı mahyanın 0,80 m üstüne çıkar",
+              "rise": [
+                0,
+                0.8
+              ]
+            }
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "failed",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "duman-bacasi-varsayilan",
+      "neden": "Yüksekliği yazılmamış duman bacası türünün 0,80 m'siyle okunur → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "parts": [
+                {
+                  "kind": "chimney",
+                  "at": [
+                    7.0,
+                    8.5
+                  ],
+                  "width": 0.4,
+                  "depth": 0.4,
+                  "top": 0.8
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "passed",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-egim",
+      "neden": "Sivas: eğim %75 > %40 (40/5-g) → kalır; düzeltme dik kenarları %40'a indirir, kalkan kenarı boş kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 3.9,
+              "slopes": [
+                75.0,
+                75.0,
+                null,
+                75.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ],
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "local_roof_slope_steep",
+            "has": [
+              "Çatının eğimi %75 > %40 — Sivas 40/5-g"
+            ],
+            "fix": {
+              "label": "Eğimi %40'a indir",
+              "slopes": [
+                40.0,
+                40.0,
+                null,
+                40.0
+              ]
+            }
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Sivas 40/5-g": [
+            "failed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-2": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-3": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 42/5": [
+            "passed",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-kar-siperligi",
+      "neden": "Sivas: eğimli çatının saçağında kar siperliği yok (42/5) → kalır; düzeltme saçaktan 30 cm içeride verir.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 3.9,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ]
+            }
+          }
+        ],
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "local_snow_guard_missing",
+            "has": [
+              "Eğimli çatının saçağında kar siperliği yok — Sivas 42/5"
+            ],
+            "fix": {
+              "label": "Kar siperliği ver (saçaktan 30 cm)",
+              "snowGuard": 0.3
+            }
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Sivas 40/5-g": [
+            "passed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-2": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-3": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 42/5": [
+            "failed",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-pencere-buyuk",
+      "neden": "Sivas: çatı penceresi 1,40 × 1,60 m, en çok 1,20 × 1,50 m (40/5-e-2) → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 3.9,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "parts": [
+                {
+                  "kind": "window",
+                  "at": [
+                    4.0,
+                    2.5
+                  ],
+                  "width": 1.4,
+                  "depth": 1.6,
+                  "facade": 1.5
+                }
+              ]
+            }
+          }
+        ],
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "local_roof_window_large",
+            "has": [
+              "Çatı penceresi 1.40 × 1.60 m, en çok 1.20 × 1.50 m (en/boy) — Sivas 40/5-e-2"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Sivas 40/5-g": [
+            "passed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-2": [
+            "failed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-3": [
+            "passed",
+            "10.11.2022"
+          ],
+          "Sivas 42/5": [
+            "passed",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-pencere-cephe",
+      "neden": "Sivas: pencerenin cephe hattına uzaklığı 0,66 m < 1,00 m (40/5-e-3) → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 3.9,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "parts": [
+                {
+                  "kind": "window",
+                  "at": [
+                    4.0,
+                    2.5
+                  ],
+                  "width": 1.0,
+                  "depth": 1.2,
+                  "facade": 0.66
+                }
+              ]
+            }
+          }
+        ],
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "local_roof_window_close",
+            "has": [
+              "Çatı penceresinin bina cephe hattına uzaklığı 0.66 m < 1.00 m — Sivas 40/5-e-3"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Sivas 40/5-g": [
+            "passed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-2": [
+            "passed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-3": [
+            "failed",
+            "10.11.2022"
+          ],
+          "Sivas 42/5": [
+            "passed",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-pencere-arasi",
+      "neden": "Sivas: iki pencere arası 1,50 m < 2,00 m (40/5-e-3) → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 3.9,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "parts": [
+                {
+                  "kind": "window",
+                  "at": [
+                    4.0,
+                    2.5
+                  ],
+                  "width": 1.0,
+                  "depth": 1.2,
+                  "facade": 1.5
+                },
+                {
+                  "kind": "window",
+                  "at": [
+                    6.6,
+                    3.5
+                  ],
+                  "width": 0.78,
+                  "depth": 1.18,
+                  "facade": 1.4
+                }
+              ],
+              "windowGaps": [
+                {
+                  "a": 0,
+                  "b": 1,
+                  "apart": 1.5
+                }
+              ]
+            }
+          }
+        ],
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "local_roof_window_close",
+            "has": [
+              "İki çatı penceresi arası 1.50 m < 2.00 m — Sivas 40/5-e-3"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Sivas 40/5-g": [
+            "passed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-2": [
+            "passed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-3": [
+            "failed",
+            "10.11.2022"
+          ],
+          "Sivas 42/5": [
+            "passed",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "duz-cati",
+      "neden": "Düz çatı (eğimli kenarı yok): mahya, eğim, kar siperliği ve pencere yeri kuralı yok; Sivas seçili → hepsi kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "slopes": [
+                null,
+                null,
+                null,
+                null
+              ]
+            }
+          }
+        ],
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Sivas 40/5-g": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-2": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-3": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 42/5": [
+            "outOfScope",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "catisiz",
+      "neden": "Çatı yok: dört madde kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": []
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-oncesi",
+      "neden": "Sivas seçili ama başvuru 1.6.2021: Sivas İmar Yönetmeliği 10.11.2022'de yürürlüğe girdi → yalnız PAİY'nin 5,00 m'si: 4,47 m geçer, Sivas satırı yok.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2021"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ],
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    }
+  ]
+}

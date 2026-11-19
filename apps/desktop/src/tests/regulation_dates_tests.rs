@@ -150,14 +150,15 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
     // common room under the ground, docs/adr/8147; 22/1-g: no shelter, docs/adr/8149; 49/1-a,
     // 50/1-a, 50/1-b, 52: a block of flats, docs/adr/8107; 50/4: no hotel or dormitory, docs/adr/8156; 96/2: 9 m, no
     // car park, docs/adr/8108; 28/2, 28/3: no roof, docs/adr/8134; 39/4, 25/1, 25/2: no site plan edge against a
-    // neighbour, docs/adr/8142; 41/1, 41/2: no site plan, no projection, docs/adr/8152) out of it.
+    // neighbour, docs/adr/8142; 41/1, 41/2: no site plan, no projection, docs/adr/8152; 40/4, 40/5, 42/1, 58/2: no roof,
+    // docs/adr/8159) out of it.
     let line = app.arch.arch_audit.rule_set.as_ref().expect("the rule set").line();
     assert_eq!(
         line,
         "Kural seti — Başvuru tarihi künyeden: 30.6.2026 · PAİY 34/1 (11.7.2021) geçti · BYKHY 24/2 (19.12.2007) kaldı \
          · BYKHY 24/6 (9.9.2009) geçti · BYKHY 62/2 (19.12.2007) eksik veri · BYKHY 62/4 (19.12.2007) eksik veri · PAİY \
          22/1-k (25.7.2019) geçti · PAİY 28/1-c (12.8.2023) geçti · PAİY 4/1-yyy (1.10.2017) geçti · BYKHY 54/2 \
-         (19.12.2007) kaldı · BYKHY 54/4 (9.9.2009) eksik veri · BYKHY 54/5 (19.12.2007) eksik veri · 38 madde kapsam dışı"
+         (19.12.2007) kaldı · BYKHY 54/4 (9.9.2009) eksik veri · BYKHY 54/5 (19.12.2007) eksik veri · 42 madde kapsam dışı"
     );
     // Applied for on 2.7.2026: as of 1.7.2026 the basement of annexes counts, four storeys ask for an elevator and
     // 34/8 for it to reach the basement, which it does not.

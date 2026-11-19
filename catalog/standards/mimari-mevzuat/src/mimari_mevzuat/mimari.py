@@ -6,14 +6,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import (asansor, bina_yuksekligi, bitisik, catilar, cikmalar, dayanim, emsal, kapi_olculeri, kapilar,
-               kaplamalar, kat_yuksekligi, kazan, kompartiman, konaklama, kullanim, kuyular, merdiven_alti, saglik,
-               subasman, tahvil, yagmurlama, yatak_kacisi)
+from . import (asansor, bina_yuksekligi, bitisik, cati_olculeri, catilar, cikmalar, dayanim, emsal, kapi_olculeri,
+               kapilar, kaplamalar, kat_yuksekligi, kazan, kompartiman, konaklama, kullanim, kuyular, merdiven_alti,
+               saglik, subasman, tahvil, yagmurlama, yatak_kacisi)
 from . import yururluk as y
 
 #: Sırayla çalışan kurallar: her biri ``kontrol(facts, gun, neden) -> yururluk.Sonuc``.
-KURALLAR = (asansor, kapilar, kompartiman, dayanim, kaplamalar, catilar, kuyular, bitisik, cikmalar, emsal,
-            merdiven_alti, kat_yuksekligi, bina_yuksekligi, tahvil, subasman, kapi_olculeri, kullanim, konaklama,
+KURALLAR = (asansor, kapilar, kompartiman, dayanim, kaplamalar, catilar, cati_olculeri, kuyular, bitisik, cikmalar,
+            emsal, merdiven_alti, kat_yuksekligi, bina_yuksekligi, tahvil, subasman, kapi_olculeri, kullanim, konaklama,
             yatak_kacisi, saglik, yagmurlama, kazan)
 
 

@@ -457,6 +457,9 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Çatı kuralları pakette (19 Kasım 2026; [ADR 8159](../adr/8159-roof-rules-in-the-package.md), K409–K411):**
+    PAİY 40/4, 40/5, 42/1, BYKHY 58/2, Sivas 40/5-e, 40/5-g, 42/5 `cati_olculeri`'de; Rust ölçer (`roof_audit::measures`,
+    olgularda `roofs[].form`), iletiler ve düzeltmeler aynı (paketin bulgusu `fix`'i ve `at`'i başsız denetimde de taşır).
   - **Planın subasman hükmü (19 Kasım 2026; [ADR 8158](../adr/8158-plan-subasman-notes.md), K406–K408):** Plan
     notları'nda Subasman kotu (en çok, en az; `plinthMost`, `plinthLeast`, −10 ile +10 m, en az en çoğu aşmaz) 4/1-yyy'nin
     uçlarının yerine; iki uç da plandaysa 4/1-yyy kapsam dışı; `.kcad` Mimari verisi 32 (31 diyen dosya reddedilir).

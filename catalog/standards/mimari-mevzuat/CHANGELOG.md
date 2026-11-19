@@ -1,5 +1,16 @@
 # Değişiklikler
 
+## 0.46.0 — 19 Kasım 2026
+
+- Çatının ölçüleri (`cati_olculeri`; docs/adr/8159; Mimari denetimin Rust kurallarından taşındı): PAİY 40/4 mahya
+  saçak seviyesinden en çok 5,00 m, 42/1 saçak 1,00 m, 40/5 hava bacası çatı örtüsünü en çok 0,60 m aşar, BYKHY 58/2
+  duman bacası mahyanın en az 0,80 m üstüne çıkar; Sivas seçiliyse 40/5-g mahya 4,00 m ve eğim %40, 40/5-e-2 çatı
+  penceresi 1,20 × 1,50 m, 40/5-e-3 cepheye 1 m ve birbirine 2 m, 42/5 kar siperliği. Olguların çatılarında `form`
+  (eğimli mi, mahya, saçak, eğimler, kar siperliği, ortası, parçalar, pencere aralıkları). Bulgular yerini (`at`) ve
+  düzeltmesini (`fix`: `cad.arch.edit`'in çatı üstündeki işlemi; hava bacası 0,60 m'ye, duman bacası 0,80 m'ye, eğim
+  %40'a, kar siperliği saçaktan 30 cm) taşır. Sürüm tablosunda 40/4, 40/5, 42/1, 58/2 ve Sivas'ın 40/5-g, 40/5-e-2,
+  40/5-e-3, 42/5'i. 16 bağımsız durum.
+
 ## 0.45.0 — 19 Kasım 2026
 
 - Planın subasman kotu hükmü (`subasman`; docs/adr/8158): projenin plan notları `plinthMost` (en çok) ve `plinthLeast`

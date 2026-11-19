@@ -281,6 +281,68 @@ pub struct RoofFacts {
     /// drawn under it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub seat: Vec<String>,
+    /// Its form as the roof rules read it (docs/adr/8159; PAİY 40/4, 40/5, 42/1, BYKHY 58/2, Sivas 40/5, 42/5); none
+    /// for a roof whose shape cannot be built.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub form: Option<RoofFormFacts>,
+}
+
+/// A roof's form (docs/adr/8159): whether one of its edges slopes; the ridge's top over the saçak seviyesi, its kot
+/// farkı counted (m; none for a flat roof); its overhang over the walls it was drawn from (m; none: not drawn from
+/// walls); each edge's slope (per cent; none: a gable or a level edge); whether it has a snow guard; its middle in
+/// plan; its parts in their drawn order and the windows' gaps.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct RoofFormFacts {
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub sloping: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ridge: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub overhang: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub slopes: Vec<Option<f64>>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub snow_guard: bool,
+    pub at: [f64; 2],
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parts: Vec<RoofPartFacts>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub window_gaps: Vec<WindowGapFacts>,
+}
+
+/// A part standing through a roof or set in it (docs/adr/8159): its kind (`chimney`, `vent`, `window`, `downpipe`), its
+/// drawn middle, width, depth, turn (radians) and rise (m) as the roof keeps them (a rule's fix writes them back), a
+/// chimney's top over the ridge or a vent's over the roof at its highest corner as read (its own rise, else its kind's;
+/// m) and a window's outline's nearest distance to the building's facade lines (m).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct RoofPartFacts {
+    pub kind: String,
+    pub at: [f64; 2],
+    pub width: f64,
+    pub depth: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rise: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub top: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub facade: Option<f64>,
+}
+
+/// Two roof windows (their indices among the roof's parts) and the shortest distance between their outlines on the
+/// roof, m (docs/adr/8159).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowGapFacts {
+    pub a: usize,
+    pub b: usize,
+    pub apart: f64,
 }
 
 /// A roof's layer: its kind (`covering`, `battens`, `waterproofing`, `boarding`, `insulation`, `rafters`), its material
@@ -784,6 +846,19 @@ impl BuildingFacts {
         self.basement_depth = round(self.basement_depth, LENGTH);
         self.structure_height = round(self.structure_height, LENGTH);
         self.coverings.sort_by(|a, b| a.uid.cmp(&b.uid));
+        for r in &mut self.roofs {
+            if let Some(f) = &mut r.form {
+                f.ridge = f.ridge.map(|v| round(v, LENGTH));
+                f.at = [round(f.at[0], LENGTH), round(f.at[1], LENGTH)];
+                for p in &mut f.parts {
+                    p.top = p.top.map(|v| round(v, LENGTH));
+                    p.facade = p.facade.map(|v| round(v, LENGTH));
+                }
+                for g in &mut f.window_gaps {
+                    g.apart = round(g.apart, LENGTH);
+                }
+            }
+        }
         for i in &mut self.insulations {
             i.rooms.sort();
         }

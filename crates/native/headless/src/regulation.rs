@@ -163,6 +163,22 @@ fn findings(answer: &Value) -> Vec<ArchAuditFinding> {
             Some("expertReview") => Some(ArchAuditState::ExpertReview),
             _ => None,
         };
+        // Where it is and its fix as one step, as the desktop's Denetim reads them (docs/adr/8159).
+        let at = f["at"]
+            .as_array()
+            .and_then(|a| Some(Vec2 { x: a.first()?.as_f64()?, y: a.get(1)?.as_f64()? }))
+            .unwrap_or(Vec2 { x: 0.0, y: 0.0 });
+        let fix = Some(&f["fix"]).filter(|x| !x.is_null()).and_then(|x| {
+            Some(kentos_commands::ArchAuditFix {
+                label: x["label"].as_str()?.to_owned(),
+                step: kentos_commands::ChangesetStep {
+                    command: x["command"].as_str()?.to_owned(),
+                    version: None,
+                    input: x.get("input")?.clone(),
+                    name: None,
+                },
+            })
+        });
         out.push(ArchAuditFinding {
             key,
             check: ArchAuditCheck::Regulation,
@@ -170,8 +186,8 @@ fn findings(answer: &Value) -> Vec<ArchAuditFinding> {
             message: text("message"),
             repair: text("repair"),
             uids,
-            at: Vec2 { x: 0.0, y: 0.0 },
-            fix: None,
+            at,
+            fix,
             exception: false,
             lapsed: false,
             note: None,
