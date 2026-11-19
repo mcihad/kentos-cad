@@ -88,6 +88,8 @@ pub struct Class {
     pub max_scale: Option<f64>,
     pub min_feature_px: Option<f64>,
     pub point: PointMode,
+    /// A plain point identifier whose automatic position the survey model view may anchor.
+    pub survey_identifier: bool,
     pub line: LineMode,
     pub area: AreaMode,
     pub position: Position,
@@ -318,6 +320,20 @@ pub fn read_class(v: &Json, rule: Option<String>) -> Result<Class, String> {
     };
     let priority = num(v, "priority")?.unwrap_or(5.0);
     Ok(Class {
+        survey_identifier: rule.is_none()
+            && placement == "beside"
+            && [
+                "point",
+                "text",
+                "overlap",
+                "callout",
+                "distance",
+                "priority",
+                "duplicates",
+            ]
+            .iter()
+            .all(|key| matches!(v.get(key), Json::Null))
+            && matches!(name(v, "template")?, None | Some("{label}")),
         name: rule,
         size,
         grow: num(v, "grow")?.unwrap_or(0.0),

@@ -57,6 +57,12 @@ impl App {
         kentos_native_style::color::ColorMode::from_key(&self.settings.text("graphics.colorMode"))
     }
 
+    pub(crate) fn map_cad_project(&self) -> bool {
+        self.document
+            .as_ref()
+            .is_some_and(|doc| doc.settings().cad_work() == Some(kentos_commands::CadWork::Map))
+    }
+
     /// What the label engine is asked besides the labels (docs/adr/0212 §4):
     /// Yerleşmeyen etiketleri göster, Etiketi gizle's Göster, Sabit etiketleri
     /// vurgula; the drawing area's labels are kept for the tools' hit test.
@@ -65,6 +71,7 @@ impl App {
             options: kentos_geometry_core::store::placing::PlaceOptions {
                 unplaced: self.settings.bool("graphics.unplacedLabels"),
                 hidden: self.session.shows_hidden_labels(),
+                fixed_survey_names: self.map_cad_project(),
             },
             pinned: self.settings.bool("graphics.pinnedLabels"),
             keep: true,

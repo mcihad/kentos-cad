@@ -339,6 +339,7 @@ fn report(
             PlaceOptions {
                 unplaced: true,
                 hidden: true,
+                ..Default::default()
             },
             None,
             None,

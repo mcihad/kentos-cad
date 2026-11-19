@@ -137,7 +137,7 @@ fn a_local_project_edits_its_points_in_its_unit() {
     assert_eq!((p.p.x, p.p.y, p.z), (0.1, 0.25, Some(0.0125)));
     // 0.1 m reads as 100, not 100.00000000000001.
     let texts =
-        [EditColumn::East, EditColumn::North, EditColumn::Z].map(|c| cell_text(&p, c, 1000.0));
+        [EditColumn::East, EditColumn::North, EditColumn::Z].map(|c| cell_text(&p, c, 1000.0, false));
     assert_eq!(texts, ["100", "250", "12.5"]);
     let out = write_cell(&mut doc, slot, EditColumn::East, "1500", false);
     assert!(out.step.is_some(), "{:?}", out.said);
@@ -173,7 +173,7 @@ fn a_point_reads_its_label_place_elevation_kod_layer_and_selection() {
         z: Some(100.5),
         parts: None,
     };
-    let row = row_of(&p, "Nokta", true);
+    let row = row_of(&p, "Nokta", true, false);
     assert_eq!(
         (
             row.name.as_deref(),

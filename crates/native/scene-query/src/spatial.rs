@@ -1920,6 +1920,7 @@ impl Spatial {
             *self.kept.borrow_mut() = (shown.placed.records, LABEL_STRIDE, scale);
         }
         LabelParts {
+            survey_names: shown.placed.survey_names,
             parts,
             placed: placed.into(),
         }
@@ -2234,6 +2235,8 @@ struct Typed {
 /// [`Spatial::labels_shown_in`] gives.
 #[derive(Clone, Debug, Default)]
 pub struct LabelParts {
+    /// A survey identifier in the queried area needs the exact camera scale.
+    pub survey_names: bool,
     pub parts: Vec<SpotPart>,
     pub placed: SpotPart,
 }

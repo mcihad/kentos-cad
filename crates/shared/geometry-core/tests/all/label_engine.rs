@@ -145,6 +145,7 @@ fn place_with_prior(case: &Value) -> (Shown, Prior) {
     let options = PlaceOptions {
         unplaced: case["options"]["unplaced"].as_bool().unwrap_or(false),
         hidden: case["options"]["hidden"].as_bool().unwrap_or(false),
+        ..Default::default()
     };
     let window = Bounds {
         min_x: w[0],

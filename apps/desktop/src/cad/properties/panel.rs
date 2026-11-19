@@ -117,6 +117,14 @@ impl App {
         );
         panel.types = types.into_iter().collect();
         panel.total = panel.types.iter().map(|(_, n)| n).sum();
+        if self.map_cad_project() && selected.iter().all(|s| matches!(doc.model.get(*s), Some(Entity::Point(_)))) {
+            let active = self.properties_scope.survey_point
+                .filter(|(session, selection, _)| *session == doc.session && *selection == self.selection.version())
+                .map(|(_, _, slot)| slot);
+            if let Some(section) = rows::survey_identity_section(doc, &selected, active) {
+                panel.sections.insert(0, section);
+            }
+        }
         if self.properties_kind(doc).is_some() {
             panel.meta = Some(format!("{} / {} nesne", selected.len(), panel.total));
         }
@@ -483,6 +491,15 @@ impl App {
         }
         match row.editor {
             None => property_grid::value(row.value, row.numeric, unit.map(|u| u.into_owned())),
+            Some(Editor::SurveyNavigation { previous, next }) => {
+                use kentos_ui::widget::strip::icon_button;
+                let browse = |slot| Message::Properties(Event::SurveyPoint(slot));
+                row![
+                    icon_button(Icon::ChevronLeft, "Önceki seçili nokta", previous.map(browse)),
+                    label::caption(row.value),
+                    icon_button(Icon::ChevronRight, "Sonraki seçili nokta", next.map(browse)),
+                ].spacing(5).align_y(Center).into()
+            }
             Some(Editor::Text(field) | Editor::Number(field)) => {
                 EditCell::new(row.value, move |text| {
                     Message::Properties(Event::Commit(field.clone(), text))
@@ -575,6 +592,17 @@ impl App {
         if let Event::Kind(kind) = event {
             self.properties_scope.kind = self.document.as_ref().and_then(|doc| kind.map(|kind| (doc.session, self.selection.version(), kind)));
             self.properties_scope.epoch = self.properties_scope.epoch.wrapping_add(1);
+            return;
+        }
+        if let Event::SurveyPoint(slot) = event {
+            if let Some(doc) = &self.document
+                && self.map_cad_project()
+                && self.selection.contains(slot)
+                && matches!(doc.model.get(slot), Some(Entity::Point(_)))
+            {
+                self.properties_scope.survey_point = Some((doc.session, self.selection.version(), slot));
+                self.properties_scope.epoch = self.properties_scope.epoch.wrapping_add(1);
+            }
             return;
         }
         if let Event::Toggle(id) = event {
@@ -678,7 +706,7 @@ impl App {
         let drawing = doc.path.clone();
         let model = &mut doc.model;
         let said = match event {
-            Event::Toggle(_) | Event::ToggleGroup(_) | Event::SelectObject(_) | Event::Kind(_) | Event::Query | Event::Guarded(_, _) | Event::TextLayoutPreview(_, _) => Vec::new(),
+            Event::Toggle(_) | Event::ToggleGroup(_) | Event::SelectObject(_) | Event::Kind(_) | Event::SurveyPoint(_) | Event::Query | Event::Guarded(_, _) | Event::TextLayoutPreview(_, _) => Vec::new(),
             Event::Unlink(ids) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::Unlink);
                 input.unlink = true;

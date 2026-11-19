@@ -369,6 +369,7 @@ impl Store {
             PlaceOptions {
                 unplaced: true,
                 hidden: false,
+                ..Default::default()
             },
         );
         texts_of(

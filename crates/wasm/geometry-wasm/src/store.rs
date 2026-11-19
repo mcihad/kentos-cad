@@ -298,6 +298,7 @@ fn place_options(flags: u32) -> kentos_geometry_core::store::placing::PlaceOptio
     kentos_geometry_core::store::placing::PlaceOptions {
         unplaced: flags & 1 != 0,
         hidden: flags & 2 != 0,
+        ..Default::default()
     }
 }
 

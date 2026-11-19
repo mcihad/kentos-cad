@@ -248,6 +248,7 @@ pub fn options() -> PlaceOptions {
     PlaceOptions {
         unplaced: true,
         hidden: false,
+        ..Default::default()
     }
 }
 

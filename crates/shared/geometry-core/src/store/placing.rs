@@ -92,6 +92,8 @@ pub struct Labels {
 /// What a window's text is: the records and their texts.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Shown {
+    /// The queried area contains an automatic survey name, including one below its display scale.
+    pub survey_names: bool,
     pub records: Vec<f64>,
     pub texts: Vec<String>,
 }
@@ -156,6 +158,8 @@ impl Prior {
 pub struct PlaceOptions {
     /// Labels with no free place, at their best one (Yerleşmeyen etiketleri göster).
     pub unplaced: bool,
+    /// Keep unstyled survey point identifiers on the same side of their marker in the map model view.
+    pub fixed_survey_names: bool,
     /// Labels hidden by hand (Etiketi gizle's Göster).
     pub hidden: bool,
 }
@@ -795,6 +799,7 @@ impl Store {
                 })
             })
             .collect();
+        let mut survey_names = false;
         for it in &items {
             if !visible(it) {
                 continue;
@@ -812,6 +817,20 @@ impl Store {
             let line = kind_of(&it.shape) == Some(Kind::Line);
             if !(point || obstacle.is_some() || line) || !self.view_shown(it.id) {
                 continue;
+            }
+            if options.fixed_survey_names && point && !survey_names {
+                survey_names = self
+                    .labelling
+                    .objects
+                    .get(&it.id.to_bits())
+                    .is_some_and(|labels| {
+                        labels.texts.iter().any(|(class, text)| {
+                            !text.is_empty()
+                                && self
+                                    .class_of(it, *class)
+                                    .is_some_and(|style| style.survey_identifier)
+                        })
+                    });
             }
             self.room_of(it, page, &mut obstacles);
             if line
@@ -907,6 +926,9 @@ impl Store {
                     rank,
                     class: *class,
                     cls,
+                    fixed_survey_name: options.fixed_survey_names
+                        && cls.survey_identifier
+                        && matches!(it.shape, Shape::Point { .. }),
                     text,
                     chunk,
                     geo,
@@ -1087,6 +1109,7 @@ impl Store {
                     rank,
                     class,
                     cls,
+                    fixed_survey_name: false,
                     text,
                     chunk,
                     geo,
@@ -1132,7 +1155,10 @@ impl Store {
             },
         };
         let outcome = engine::place(&scene);
-        let mut shown = Shown::default();
+        let mut shown = Shown {
+            survey_names,
+            ..Shown::default()
+        };
         let mut next = Prior {
             scale,
             spots: HashMap::new(),

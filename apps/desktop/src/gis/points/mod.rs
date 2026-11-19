@@ -156,29 +156,44 @@ pub fn click_pick(
 /// column, right (Kod to the next row's Ad), left (Ad to the row above's
 /// Kod); none past the ends.
 pub fn next_cell(ids: &[Slot], id: Slot, col: EditColumn, how: Walk) -> Option<(Slot, EditColumn)> {
+    walk_columns(ids, id, col, how, &EDIT_COLUMNS)
+}
+
+fn walk_columns(
+    ids: &[Slot],
+    id: Slot,
+    col: EditColumn,
+    how: Walk,
+    columns: &[EditColumn],
+) -> Option<(Slot, EditColumn)> {
     let at = ids.iter().position(|&s| s == id)?;
     if how == Walk::Down {
         return ids.get(at + 1).map(|&s| (s, col));
     }
-    let c = EDIT_COLUMNS.iter().position(|&c| c == col)?;
+    let c = columns.iter().position(|&c| c == col)?;
     let right = how == Walk::Right;
     let next = if right { c + 1 } else { c.wrapping_sub(1) };
-    if next < EDIT_COLUMNS.len() {
-        return Some((id, EDIT_COLUMNS[next]));
+    if next < columns.len() {
+        return Some((id, columns[next]));
     }
     let row = if right { at + 1 } else { at.checked_sub(1)? };
     let col = if right {
-        EDIT_COLUMNS[0]
+        columns[0]
     } else {
-        EDIT_COLUMNS[EDIT_COLUMNS.len() - 1]
+        columns[columns.len() - 1]
     };
     ids.get(row).map(|&s| (s, col))
 }
 
 /// A point as the table reads it (the core's `TableRow`; the web's `rowOf`).
-pub fn row_of(p: &kentos_commands::PointEntity, layer: &str, selected: bool) -> TableRow {
+pub fn row_of(
+    p: &kentos_commands::PointEntity,
+    layer: &str,
+    selected: bool,
+    map: bool,
+) -> TableRow {
     TableRow {
-        name: p.base.label.clone(),
+        name: edit::point_name(p, map).cloned(),
         east: p.p.x,
         north: p.p.y,
         z: p.z,
@@ -233,8 +248,12 @@ pub enum Event {
     Show,
     /// A value cell double-clicked: the row (the draft after the points) and the column.
     Edit(usize, usize),
+    /// A name or code cell in the selected points' coordinate list.
+    EditCoordinate(Slot, EditColumn),
     /// The editor's text typed.
     Input(String),
+    /// The previous cell may lose focus in the same mouse event that opens the next.
+    Leave(Target, EditColumn),
     /// The edit ends: written and gone a way (Enter, Tab, Shift+Tab), or
     /// stopped (a press elsewhere).
     Finish(Option<Walk>),
@@ -343,6 +362,14 @@ impl PointsPanel {
         self.version += 1;
     }
 
+    pub(crate) fn leave_document(&mut self) {
+        self.editing = None;
+        self.text.clear();
+        self.draft = None;
+        self.anchor = None;
+        self.show_groups(None);
+    }
+
     /// Whether a cell is being edited: Tab is its key then.
     pub(crate) fn editing(&self) -> bool {
         self.editing.is_some()
@@ -395,6 +422,7 @@ impl App {
         let model = &doc.model;
         let mut points = Vec::new();
         let mut data = Vec::new();
+        let map = self.map_cad_project();
         let mut counts: Vec<(String, usize)> = Vec::new();
         for e in model.entities() {
             // A multi-point object is no row: its points share one name (docs/adr/0174).
@@ -410,7 +438,7 @@ impl App {
                 Some((_, n)) => *n += 1,
                 None => counts.push((p.base.layer_id.clone(), 1)),
             }
-            data.push(row_of(p, &name, self.selection.contains(slot)));
+            data.push(row_of(p, &name, self.selection.contains(slot), map));
             points.push(slot);
         }
         // In the layer list's order.
@@ -529,7 +557,41 @@ impl App {
                     None if self.gis.points.draft.is_some() => Target::Draft,
                     None => return Task::none(),
                 };
-                return self.edit_cell(Some((target, col)));
+                if let Target::Point(slot) = target
+                    && self.map_cad_project()
+                    && matches!(col, EditColumn::Name | EditColumn::Code | EditColumn::Z)
+                {
+                    if self.modifiers.control() || self.modifiers.shift() {
+                        return self.points_event(Event::Press(at));
+                    }
+                    if !self.selection.contains(slot) {
+                        self.selection.set([slot]);
+                    }
+                    self.gis.points.anchor = Some(at);
+                    if !self.editable_coordinate_point(slot) {
+                        self.warn(
+                            "Nokta kilitli katmanda. Düzenlemek için katmanın kilidini açın."
+                                .to_owned(),
+                        );
+                        return Task::none();
+                    }
+                }
+                return self.begin_point_cell(target, col);
+            }
+            Event::EditCoordinate(slot, col) => {
+                if self.bottom_tab == crate::bottom::BottomTab::Coords
+                    && self.map_cad_project()
+                    && self.selection.contains(slot)
+                    && matches!(col, EditColumn::Name | EditColumn::Code | EditColumn::Z)
+                    && self.editable_coordinate_point(slot)
+                {
+                    return self.begin_point_cell(Target::Point(slot), col);
+                }
+            }
+            Event::Leave(target, col) => {
+                if self.gis.points.editing == Some((target, col)) {
+                    return self.finish_cell(None);
+                }
             }
             Event::Input(text) => self.gis.points.text = text,
             Event::Finish(walk) => return self.finish_cell(walk),
@@ -616,6 +678,24 @@ impl App {
         self.open_field_send(points, from)
     }
 
+    pub(crate) fn editable_coordinate_point(&self, slot: Slot) -> bool {
+        self.document.as_ref().is_some_and(|doc|
+            matches!(doc.model.get(slot), Some(Entity::Point(p)) if !doc.model.layers().is_locked(&p.base.layer_id))
+        )
+    }
+
+    fn begin_point_cell(&mut self, target: Target, col: EditColumn) -> Task<Message> {
+        if self
+            .gis
+            .points
+            .editing
+            .is_some_and(|old| old != (target, col))
+        {
+            let _ = self.finish_cell(None);
+        }
+        self.edit_cell(Some((target, col)))
+    }
+
     /// The cell edited from now (none: no editor), its text the value's.
     fn edit_cell(&mut self, to: Option<(Target, EditColumn)>) -> Task<Message> {
         self.gis.points.editing = to;
@@ -639,7 +719,9 @@ impl App {
                 .and_then(|d| Some((d.model.get(slot)?, d.settings().unit())))
             {
                 // In a local project's unit (docs/adr/0165 §2).
-                Some((Entity::Point(p), unit)) => edit::cell_text(p, col, unit.per_metre()),
+                Some((Entity::Point(p), unit)) => {
+                    edit::cell_text(p, col, unit.per_metre(), self.map_cad_project())
+                }
                 _ => String::new(),
             },
         };
@@ -649,7 +731,7 @@ impl App {
     /// The edit ends with the editor's text: written, then the editor goes
     /// `walk`'s way (none: it stops). A value refused keeps the cell open
     /// with what was typed when a key ended it.
-    fn finish_cell(&mut self, walk: Option<Walk>) -> Task<Message> {
+    pub(crate) fn finish_cell(&mut self, walk: Option<Walk>) -> Task<Message> {
         let Some((target, col)) = self.gis.points.editing else {
             return Task::none();
         };
@@ -710,7 +792,20 @@ impl App {
             }
             Target::Point(slot) => {
                 // Where to go next, by the rows' order before the write (a sort may move the row).
-                let next = walk.and_then(|w| next_cell(&self.shown_points(), slot, col, w));
+                let next = walk.and_then(|w| {
+                    if self.bottom_tab == crate::bottom::BottomTab::Coords {
+                        let rows: Vec<_> = self
+                            .selection
+                            .ids()
+                            .iter()
+                            .copied()
+                            .filter(|s| self.editable_coordinate_point(*s))
+                            .collect();
+                        walk_columns(&rows, slot, col, w, &[EditColumn::Name, EditColumn::Code, EditColumn::Z])
+                    } else {
+                        next_cell(&self.shown_points(), slot, col, w)
+                    }
+                });
                 let follow = self.gis.points.follow;
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();

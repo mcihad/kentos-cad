@@ -129,7 +129,7 @@ impl Store {
         }
         Shown {
             records,
-            texts: shown.texts,
+            ..shown
         }
     }
 
@@ -156,7 +156,7 @@ impl Store {
         }
         Shown {
             records,
-            texts: labels.texts,
+            ..labels
         }
     }
 

@@ -61,6 +61,8 @@ pub enum Event {
     Guarded(PanelKey, Box<Event>),
     /// Only narrow the property inspector; preserve the actual scene selection.
     Kind(Option<String>),
+    /// Browse one point inside the current selection without changing its other members.
+    SurveyPoint(Slot),
     Query,
     /// A section's header: closes or opens it.
     Toggle(&'static str),
@@ -289,6 +291,7 @@ pub enum Field {
     /// A point's Y (east) and X (north).
     PointX(Slot),
     PointY(Slot),
+    SurveyPoint(Slot, crate::points::edit::EditColumn),
     /// A line's end or a circle's centre coordinate, or a circle's radius, typed in the project's unit.
     Geometry(Slot, Coord),
     DimensionOffset(Slot),
@@ -537,6 +540,7 @@ pub type PanelKey = (u64, u64, u64, u64);
 #[derive(Default)]
 pub(crate) struct InspectScope {
     kind: Option<(u64, u64, String)>,
+    survey_point: Option<(u64, u64, Slot)>,
     epoch: u64,
 }
 

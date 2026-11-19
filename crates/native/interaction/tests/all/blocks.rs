@@ -126,6 +126,7 @@ fn visibility_changes_keep_attribute_labels_and_their_moved_positions() {
                 PlaceOptions {
                     unplaced: true,
                     hidden: true,
+                    ..Default::default()
                 },
                 false,
             )
@@ -254,6 +255,7 @@ fn a_blocks_text_carries_its_own_colour_or_the_layer_it_follows() {
             PlaceOptions {
                 unplaced: true,
                 hidden: true,
+                ..Default::default()
             },
             false,
         )

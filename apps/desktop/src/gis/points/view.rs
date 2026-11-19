@@ -303,6 +303,43 @@ impl App {
         }
     }
 
+    /// Inline editor shared with the Noktalar table; multipart child rows carry the parent identity.
+    pub(crate) fn coordinate_point_cell(
+        &self,
+        slot: Option<kentos_domain::Slot>,
+        col: EditColumn,
+        value: String,
+        index: usize,
+        count: usize,
+    ) -> Element<'_, Message> {
+        let numeric = col == EditColumn::Z;
+        let shown = if numeric { label::mono(value) } else { label::body(value) };
+        let Some(slot) = slot.filter(|s| self.editable_coordinate_point(*s)) else {
+            return shown.into();
+        };
+        if self.gis.points.editing == Some((Target::Point(slot), col)) {
+            return cell::edit_box(
+                &self.gis.points.text,
+                numeric,
+                kentos_ui::widget::table::cell_pads(index, count),
+                |s| msg(Event::Input(s)),
+                msg(Event::Finish(Some(Walk::Down))),
+                msg(Event::Leave(Target::Point(slot), col)),
+                msg(Event::Cancel),
+            );
+        }
+        mouse_area(
+            container(shown)
+                .width(Fill)
+                .height(kentos_ui::widget::table::row_height())
+                .align_y(Center)
+                .align_x(if numeric { iced::alignment::Horizontal::Right } else { iced::alignment::Horizontal::Left }),
+        )
+        .interaction(iced::mouse::Interaction::Text)
+        .on_press(msg(Event::EditCoordinate(slot, col)))
+        .into()
+    }
+
     /// The Noktalar tab: its bar over the table.
     pub(crate) fn points_tab(&self) -> Element<'_, Message> {
         let Some(doc) = &self.document else {
@@ -354,6 +391,7 @@ impl App {
                     column
                 }
             });
+        let map = self.map_cad_project();
         let model = &doc.model;
         let selection = &self.selection;
         let shown = rows.shown.clone();
@@ -376,7 +414,7 @@ impl App {
                         kentos_ui::widget::table::cell_pads(j, COLUMNS.len()),
                         |t| msg(Event::Input(t)),
                         msg(Event::Finish(Some(Walk::Down))),
-                        msg(Event::Finish(None)),
+                        msg(Event::Leave(target, col)),
                         msg(Event::Cancel),
                     );
                 }
@@ -400,8 +438,19 @@ impl App {
                 // file list (docs/adr/1540); any edited cell takes a double click.
                 let alone = matches!(target, Target::Point(s)
                     if selection.len() == 1 && selection.contains(s));
+                let survey_cell = map && !draft_row && matches!(col, Some(EditColumn::Name | EditColumn::Code | EditColumn::Z));
+                let shown = if survey_cell {
+                    container(shown)
+                        .width(Fill)
+                        .height(kentos_ui::widget::table::row_height())
+                        .align_y(Center)
+                        .align_x(if numeric { iced::alignment::Horizontal::Right } else { iced::alignment::Horizontal::Left })
+                        .into()
+                } else {
+                    shown
+                };
                 match col {
-                    Some(EditColumn::Name | EditColumn::Code) if alone => mouse_area(shown)
+                    Some(col) if survey_cell || (alone && matches!(col, EditColumn::Name | EditColumn::Code)) => mouse_area(shown)
                         .on_press(msg(Event::Edit(i, j)))
                         .into(),
                     Some(_) => mouse_area(shown)
@@ -441,7 +490,7 @@ impl App {
                     EditColumn::East => format.coord(p.p.x),
                     EditColumn::North => format.coord(p.p.y),
                     EditColumn::Z => p.z.map(|z| format.length_bare(z)).unwrap_or_default(),
-                    _ => cell_text(p, col, 1.0),
+                    _ => cell_text(p, col, 1.0, map),
                 };
                 let values = [
                     // Under Çiftleri göster, Sıra is the group's number.

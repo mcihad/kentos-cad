@@ -112,7 +112,11 @@ impl Spots {
         match kept.as_ref() {
             Some((known, _, spots, _, at)) if *known == key => (spots.clone(), *at),
             Some((_, same, spots, asked, at))
-                if moving && *same == content && inside(asked) && near(*at) =>
+                if moving
+                    && *same == content
+                    && inside(asked)
+                    && near(*at)
+                    && (!spots.survey_names || *at == scale) =>
             {
                 (spots.clone(), *at)
             }
@@ -371,6 +375,10 @@ fn build<'a>(
     // typed; the colours, the typeface and the number formats (a dimension's text).
     let mut look = DefaultHasher::new();
     content.hash(&mut look);
+    if spots.survey_names {
+        // A cached picture scaled during a wheel gesture would scale the marker-to-name gap as well.
+        camera.scale.to_bits().hash(&mut look);
+    }
     if let Some(p) = &preview {
         p.text.hash(&mut look);
         format!("{:?}", p.runs).hash(&mut look);
@@ -456,6 +464,7 @@ fn build<'a>(
 /// Labels as one part (a sheet's map's, a measurement's).
 pub(crate) fn parts_of(spots: Vec<(LabelSpot, Grow)>) -> Shown {
     Rc::new(LabelParts {
+        survey_names: false,
         parts: vec![spots.into()],
         placed: Rc::new([]),
     })

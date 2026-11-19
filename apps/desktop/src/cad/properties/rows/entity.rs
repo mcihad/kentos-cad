@@ -1290,11 +1290,15 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
             rows,
         });
     }
+    let survey_point = doc.settings().cad_work() == Some(kentos_commands::CadWork::Map) && matches!(e, Entity::Point(_));
     let others: Vec<(&String, &String)> = base
         .attrs
         .iter()
         .filter(|(key, _)| !tags.iter().any(|(tag, _)| tag == *key))
         .filter(|(key, _)| !fields.iter().any(|f| f.name == **key))
+        // The point identity section owns the survey code and any attribute mirroring its name.
+        .filter(|(key, value)| !(survey_point && (key.as_str() == "Kod"
+            || (key.as_str() == "Ad" && base.label.as_ref().is_none_or(|name| name == *value)))))
         // A run's data is its run's: its section edits it (docs/adr/0727 §5).
         .filter(|(key, _)| !(run_member && matches!(key.as_str(), "Modül" | "Tür" | "Açılma")))
         .collect();

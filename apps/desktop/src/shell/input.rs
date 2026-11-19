@@ -205,6 +205,7 @@ impl App {
     pub(crate) fn leave_document_interaction(&mut self) {
         self.scene_browse = None;
         self.session.leave_document();
+        self.gis.points.leave_document();
         self.field = None;
         // These editors hold object slots from the drawing being left. Do
         // not blur/commit them against the next drawing, even if ids match.

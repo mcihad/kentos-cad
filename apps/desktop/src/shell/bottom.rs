@@ -183,6 +183,8 @@ fn next_in(rings: &[Ring], i: usize) -> Option<usize> {
 }
 
 struct Point {
+    editable_slot: Option<kentos_domain::Slot>,
+    code: String,
     name: String,
     x: f64,
     y: f64,
@@ -338,6 +340,9 @@ impl App {
         } else {
             BottomTab::History
         };
+        if self.bottom_tab != tab && self.gis.points.editing() {
+            let _ = self.finish_cell(None);
+        }
         self.bottom_tab = tab;
         self.command_expanded = true;
         if tab == BottomTab::Messages {
@@ -348,6 +353,9 @@ impl App {
     /// `view.bottomPanel` (F2): opens or closes the panel.
     pub(crate) fn toggle_bottom(&mut self) {
         if self.command_expanded {
+            if self.gis.points.editing() {
+                let _ = self.finish_cell(None);
+            }
             self.command_expanded = false;
         } else {
             self.show_bottom(self.bottom_tab);
@@ -386,6 +394,7 @@ impl App {
         };
         if entities.iter().all(|e| matches!(e, Entity::Point(_))) {
             // Every point of a multi-point object, its name followed by its place in it (docs/adr/0174 §6).
+            let map = self.map_cad_project();
             return Listing::Points(
                 entities
                     .iter()
@@ -394,15 +403,15 @@ impl App {
                         _ => None,
                     })
                     .flat_map(|p| {
-                        let name = p
-                            .base
-                            .label
-                            .clone()
+                        let name = crate::points::edit::point_name(p, map)
+                            .cloned()
                             .unwrap_or_else(|| format!("#{}", p.base.id));
                         let layer = layer_name(&p.base.layer_id);
                         let others = p.parts.iter().flatten().map(|q| (q.p, q.z));
                         std::iter::once((p.p, p.z)).chain(others).enumerate().map(
                             move |(k, (at, z))| Point {
+                                editable_slot: (k == 0).then_some(kentos_domain::Slot(p.base.id)),
+                                code: p.base.attrs.get("Kod").cloned().unwrap_or_default(),
                                 name: if k == 0 {
                                     name.clone()
                                 } else {
@@ -555,25 +564,58 @@ impl App {
             }
             Listing::Points(points) => {
                 let count = points.len();
-                let table = Table::new([
-                    TableColumn::new("Nokta").width(Length::FillPortion(2)),
+                let map = self.map_cad_project();
+                let mut columns = vec![
+                    TableColumn::new(if map { "Ad" } else { "Nokta" })
+                        .width(Length::FillPortion(2)),
                     number(east),
                     number(north),
                     number("Z (kot)".to_owned()),
                     TableColumn::new("Katman").width(Length::FillPortion(2)),
-                ])
-                .virtualized(count, move |i| {
+                ];
+                if map {
+                    columns.insert(1, TableColumn::new("Kod").width(Length::FillPortion(2)));
+                }
+                let column_count = columns.len();
+                let table = Table::new(columns).virtualized(count, move |i| {
+                    use crate::points::edit::EditColumn;
                     let p = &points[i];
-                    TableRow::new([
-                        label::body(p.name.clone()).into(),
-                        label::mono(format.coord(p.x)).into(),
-                        label::mono(format.coord(p.y)).into(),
-                        label::mono(p.z.map_or_else(|| "—".to_owned(), |z| format.length_bare(z)))
-                            .into(),
-                        label::body(p.layer.clone()).into(),
-                    ])
+                    let mut cells = Vec::with_capacity(column_count);
+                    if map {
+                        cells.push(self.coordinate_point_cell(
+                            p.editable_slot,
+                            EditColumn::Name,
+                            p.name.clone(),
+                            0,
+                            column_count,
+                        ));
+                        cells.push(self.coordinate_point_cell(
+                            p.editable_slot,
+                            EditColumn::Code,
+                            p.code.clone(),
+                            1,
+                            column_count,
+                        ));
+                    } else {
+                        cells.push(label::body(p.name.clone()).into());
+                    }
+                    cells.push(label::mono(format.coord(p.x)).into());
+                    cells.push(label::mono(format.coord(p.y)).into());
+                    let z = p.z.map_or_else(|| "—".to_owned(), |z| format.length_bare(z));
+                    cells.push(if map {
+                        self.coordinate_point_cell(p.editable_slot, EditColumn::Z, z, 4, column_count)
+                    } else {
+                        label::mono(z).into()
+                    });
+                    cells.push(label::body(p.layer.clone()).into());
+                    TableRow::new(cells)
                 });
-                (table, format!("{count} nokta"))
+                let footer = if map {
+                    format!("{count} nokta  ·  Düzenlemek için ad, kod veya kot hücresine tıklayın.")
+                } else {
+                    format!("{count} nokta")
+                };
+                (table, footer)
             }
             Listing::Vertices { pts, rings, footer } => {
                 let count = pts.len();
@@ -624,7 +666,15 @@ impl App {
 /// A circle's, an arc's or an ellipse's points by their names (UR-036): the centre; an arc's start and end; an
 /// ellipse's major and minor axes' ends (and an elliptical arc's ends). None for any other kind.
 fn named_points(e: &Entity, layer: &str) -> Option<Vec<Point>> {
-    let point = |name: &str, x: f64, y: f64| Point { name: name.to_owned(), x, y, z: None, layer: layer.to_owned() };
+    let point = |name: &str, x: f64, y: f64| Point {
+        editable_slot: None,
+        code: String::new(),
+        name: name.to_owned(),
+        x,
+        y,
+        z: None,
+        layer: layer.to_owned(),
+    };
     Some(match e {
         Entity::Circle(c) => vec![point("Merkez", c.c.x, c.c.y)],
         Entity::Arc(a) => vec![

@@ -78,10 +78,18 @@ fn js_number(v: f64) -> String {
     format!("{v}")
 }
 
+/// Imported survey data may carry its point name only in the Ad attribute.
+pub fn point_name(p: &PointEntity, map: bool) -> Option<&String> {
+    p.base
+        .label
+        .as_ref()
+        .or_else(|| if map { p.base.attrs.get("Ad") } else { None })
+}
+
 /// The text a cell's editor opens with: the name and the code as written, a
 /// number whole (the web's `cellText`), in a local project's unit
 /// (`per_metre`, docs/adr/0165 §2) without the multiplication's last-digit noise.
-pub fn cell_text(p: &PointEntity, col: EditColumn, per_metre: f64) -> String {
+pub fn cell_text(p: &PointEntity, col: EditColumn, per_metre: f64, map: bool) -> String {
     let shown = |v: f64| {
         if per_metre == 1.0 {
             js_number(v)
@@ -94,7 +102,7 @@ pub fn cell_text(p: &PointEntity, col: EditColumn, per_metre: f64) -> String {
         }
     };
     match col {
-        EditColumn::Name => p.base.label.clone().unwrap_or_default(),
+        EditColumn::Name => point_name(p, map).cloned().unwrap_or_default(),
         EditColumn::Code => p.base.attrs.get("Kod").cloned().unwrap_or_default(),
         EditColumn::East => shown(p.p.x),
         EditColumn::North => shown(p.p.y),
@@ -111,9 +119,10 @@ fn metres_of(doc: &Document) -> impl Fn(f64) -> f64 + use<> {
 
 /// Whether another point has the name (trimmed).
 fn named(doc: &Document, name: &str, except: Option<u32>) -> bool {
+    let map = doc.settings().cad_work() == Some(kentos_commands::CadWork::Map);
     doc.entities().any(|e| match e {
         Entity::Point(p) => {
-            Some(p.base.id) != except && p.base.label.as_deref().map(js_trim) == Some(name)
+            Some(p.base.id) != except && point_name(p, map).map(|s| js_trim(s)) == Some(name)
         }
         _ => false,
     })
@@ -167,11 +176,10 @@ pub fn write_cell(
     let uid = uid.to_string();
     if matches!(col, EditColumn::Name | EditColumn::Code) {
         let v = Some(js_trim(text).to_owned()).filter(|v| !v.is_empty());
+        let map = doc.settings().cad_work() == Some(kentos_commands::CadWork::Map);
         let old = match col {
-            EditColumn::Name => p
-                .base
-                .label
-                .as_deref()
+            EditColumn::Name => point_name(&p, map)
+                .map(String::as_str)
                 .map(js_trim)
                 .filter(|v| !v.is_empty())
                 .map(str::to_owned),
@@ -180,6 +188,18 @@ pub fn write_cell(
         if v == old {
             return Outcome::default();
         }
+        let attr = match col {
+            EditColumn::Code => Some("Kod"),
+            EditColumn::Name
+                if map
+                    && p.base.attrs.get("Ad").is_some_and(|ad| {
+                        p.base.label.as_ref().is_none_or(|label| ad == label)
+                    }) =>
+            {
+                Some("Ad")
+            }
+            _ => None,
+        };
         let refused = in_step(doc, STEP, |doc| {
             let input = EntitiesSetProperties {
                 line_pattern: None,
@@ -192,8 +212,7 @@ pub fn write_cell(
                 color: None,
                 line_weight: None,
                 symbol: None,
-                attrs: (col == EditColumn::Code)
-                    .then(|| BTreeMap::from([("Kod".to_owned(), v.clone())])),
+                attrs: attr.map(|key| BTreeMap::from([(key.to_owned(), v.clone())])),
                 label: (col == EditColumn::Name).then(|| v.clone()),
                 operation: if col == EditColumn::Name {
                     PropertiesOperation::Label

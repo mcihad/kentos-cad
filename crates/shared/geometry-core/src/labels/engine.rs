@@ -78,6 +78,7 @@ pub struct Unit<'a> {
     /// Its class's index (in its layer's list, or its kind's default slot).
     pub class: u16,
     pub cls: &'a Class,
+    pub fixed_survey_name: bool,
     pub text: &'a str,
     /// A repeated path's piece.
     pub chunk: u32,
@@ -1032,6 +1033,7 @@ fn plan(f: &Form, u: &Unit<'_>, out: &mut Vec<Group>) -> (f64, f64) {
     }
     match &u.geo {
         Geo::Point { p, .. } => match u.cls.point {
+            PointMode::Around if u.fixed_survey_name => out.push(one(0.0001, 0, Make::Point(0))),
             PointMode::Corner => out.push(one(0.0001, 0, Make::Corner(*p))),
             PointMode::Center => out.push(one(0.0001, 0, Make::Point(POINT_ON))),
             PointMode::Around => {

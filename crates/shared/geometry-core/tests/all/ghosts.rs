@@ -50,6 +50,7 @@ fn middle(s: &Store) -> [f64; 2] {
         PlaceOptions {
             unplaced: true,
             hidden: false,
+            ..Default::default()
         },
     );
     let r = shown

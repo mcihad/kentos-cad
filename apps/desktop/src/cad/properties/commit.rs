@@ -296,7 +296,12 @@ pub(super) fn commit(
     field: &Field,
     text: &str,
 ) -> Vec<String> {
-    // Lengths and coordinates are typed in the project's unit (docs/adr/0165 §2).
+    if let Field::SurveyPoint(slot, column) = field {
+        if model.settings().cad_work() != Some(kentos_commands::CadWork::Map) {
+            return Vec::new();
+        }
+        return crate::points::edit::write_cell(model, *slot, *column, text, false).said;
+    }
     let f = kentos_interaction::Format::of(model.settings());
     // Only physical architectural length cells opt in. Angles, paper sizes,
     // coordinates and the legacy GIS readers keep their existing grammar.
@@ -1638,7 +1643,7 @@ pub(super) fn commit(
         | Field::CloudClear(s)
         | Field::Attribute(s, _) => *s,
         // Taken above.
-        Field::WallWidth(_)
+        Field::SurveyPoint(..) | Field::WallWidth(_)
         | Field::WallOffset(_)
         | Field::WallHeight(_)
         | Field::CurtainSpacing(_)

@@ -174,6 +174,7 @@ fn changed(
     input: &EntitiesSetProperties,
     attrs: Option<&BTreeMap<String, Option<String>>>,
     nearest: &kentos_commands::LineType,
+    map: bool,
 ) -> Option<Entity> {
     let mut next = e.clone();
     let mut unlinked = false;
@@ -230,6 +231,12 @@ fn changed(
     }
     if let Some(label) = &input.label {
         base.label.clone_from(label);
+    } else if map && matches!(e, Entity::Point(_))
+        && let Some(name) = attrs.and_then(|fields| fields.get("Ad"))
+        && base.attrs.get("Ad").is_some_and(|old| base.label.as_ref().is_none_or(|label| label == old))
+    {
+        // The imported name may also appear as a typed or shared attribute in the Inspector.
+        base.label.clone_from(name);
     }
     if let Some(list) = &input.attachments {
         base.attachments.clone_from(list);
@@ -442,11 +449,12 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
                 .find(|t| kentos_commands::same_line_type_name(&t.name, name))
         })
         .map_or(kentos_commands::LineType::Continuous, |t| t.nearest());
+    let map = doc.settings().cad_work() == Some(kentos_commands::CadWork::Map);
     let changes: Vec<Change> = found
         .iter()
         .zip(&given)
         .filter_map(|(&(_, slot, e, uid), attrs)| {
-            let entity = changed(e, input, attrs.as_ref(), &nearest)?;
+            let entity = changed(e, input, attrs.as_ref(), &nearest, map)?;
             Some(Change {
                 slot,
                 uid: uid.clone(),

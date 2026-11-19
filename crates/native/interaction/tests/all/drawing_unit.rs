@@ -107,6 +107,7 @@ fn label_texts(b: &mut Bench) -> Vec<String> {
     let options = kentos_geometry_core::store::placing::PlaceOptions {
         unplaced: true,
         hidden: true,
+        ..Default::default()
     };
     let mut texts = b
         .spatial

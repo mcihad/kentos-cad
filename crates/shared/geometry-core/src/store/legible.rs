@@ -537,7 +537,7 @@ impl ShownParts {
         (
             Shown {
                 records: out,
-                texts: self.placed.texts,
+                ..self.placed
             },
             self.prior,
         )
