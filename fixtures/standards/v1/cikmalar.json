@@ -1,0 +1,1082 @@
+{
+  "format": "kentos.regulationCases",
+  "version": 1,
+  "about": "Çıkmaların bağımsız durumları (docs/adr/8152): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 41/1 ve 41/2'nin (RG 3.7.2017/30113; (b)-5 RG 30.9.2017/30196 ile mülga) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.projections: mahal, kat, açık mı, alanı, katın kotu, alt kotu, kenarlar: türü, istenen bahçe mesafesi, en yakın uzaklık); durumlar sınırları sınar, ölçümün kendisini Rust'ın sınamaları sınar.",
+  "cases": [
+    {
+      "id": "balkon-on-120",
+      "neden": "Ön bahçesi 5,00 m'lik parselde 1. katın balkonu ön sınıra 3,80 m: yapı yaklaşma sınırından 1,20 m taşıyor (≤ 1,50 m); altı 2,85 m → iki madde de geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000601",
+            "level": "k01",
+            "area": 4.8,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 3.8
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 6.0
+              }
+            ],
+            "open": true,
+            "underside": 2.85
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 41/1": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "balkon-on-200",
+      "neden": "Balkon ön sınıra 3,00 m: yapı yaklaşma sınırından 2,00 m taşıyor, 41/1-b-1 en çok 1,50 m → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000601",
+            "level": "k01",
+            "area": 8.0,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 3.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 6.0
+              }
+            ],
+            "open": true,
+            "underside": 2.85
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_projection_over",
+            "has": [
+              "1. kat: açık çıkma",
+              "1. kenar (ön bahçe): yapı yaklaşma sınırından 2.00 m taşıyor, en çok 1.50 m",
+              "PAİY 41/1"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 41/1": [
+            "failed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapali-yan-250",
+      "neden": "Kapalı çıkma yan sınıra 2,50 m: yan bahçe mesafesinden 0,50 m taşıyor (≤ 1,50), ama 41/1-a-2 parsel sınırına 3,00 m'den fazla yaklaşamaz → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000602",
+            "level": "k01",
+            "area": 3.0,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 8.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 2.5
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 9.0
+              }
+            ],
+            "underside": 2.85
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_projection_over",
+            "has": [
+              "kapalı çıkma",
+              "2. kenar (yan bahçe): parsel sınırına 2.50 m, en az 3.00 m"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 41/1": [
+            "failed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapali-arka-yuksek-bahce",
+      "neden": "Arka bahçesi 4,50 m (5 kattan fazla, 23/1-ç) parselde kapalı çıkma arka sınıra 3,00 m: 1,50 m taşıyor, sınıra 3,00 m → geçer (sınırda).",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000603",
+            "level": "k01",
+            "area": 6.0,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 9.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 4.5,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 4.5,
+                "distance": 3.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 4.5,
+                "distance": 5.0
+              }
+            ],
+            "underside": 2.85
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 41/1": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapali-arka-iki-neden",
+      "neden": "Kapalı çıkma arka sınıra 1,00 m: arka bahçe mesafesinden 2,00 m taşıyor ve sınıra 3,00 m'den yakın → kalır, iki neden tek bulguda.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000604",
+            "level": "k01",
+            "area": 6.0,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 9.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 1.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 5.0
+              }
+            ],
+            "underside": 2.85
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_projection_over",
+            "has": [
+              "3. kenar (arka bahçe): bahçe mesafesinden 2.00 m taşıyor, en çok 1.50 m, parsel sınırına 1.00 m, en az 3.00 m"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 41/1": [
+            "failed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bitisik-acik-150",
+      "neden": "Bitişik nizam: 4. kenar komşu binaya bitişik; açık balkon komşu sınırına 1,50 m, 41/1-b-4 en az 2,00 m → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000605",
+            "level": "k01",
+            "area": 4.0,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 3.5
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "party",
+                "required": 0.0,
+                "distance": 1.5
+              }
+            ],
+            "open": true,
+            "underside": 2.85
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_projection_over",
+            "has": [
+              "4. kenar (bitişik komşu): açık çıkma komşu sınırına 1.50 m, en az 2.00 m"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 41/1": [
+            "failed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bitisik-kapali-150",
+      "neden": "Aynı yerde kapalı çıkma: 41/1-b-4 yalnız açık çıkmayı okur; kapalı çıkma yol cephesinde 1,00 m taşıyor → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000606",
+            "level": "k01",
+            "area": 4.0,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 3.5
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "party",
+                "required": 0.0,
+                "distance": 1.5
+              }
+            ],
+            "underside": 2.85
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 41/1": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kamusal-yan-gibi",
+      "neden": "Kamusal alana (park) komşu kenar, istenen 5,00 m: çıkma o sınıra 2,80 m, 2,20 m taşıyor ve 3,00 m'den yakın → yan ve arka bahçe gibi okunur, kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000607",
+            "level": "k01",
+            "area": 5.0,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 8.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "public",
+                "required": 5.0,
+                "distance": 2.8
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 6.0
+              }
+            ],
+            "underside": 2.85
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_projection_over",
+            "has": [
+              "3. kenar (kamusal alan bahçe)"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 41/1": [
+            "failed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "alt-alcak",
+      "neden": "Asma kat gibi 2,60 m kotlu katın çıkmasının döşemesinin altı 2,30 m → 41/2 en az 2,40 m, kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000608",
+            "level": "k01",
+            "area": 4.0,
+            "floor": 2.6,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 6.0
+              }
+            ],
+            "open": true,
+            "underside": 2.3
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_projection_low",
+            "has": [
+              "çıkma altı zeminden 2.30 m, en az 2.40 m",
+              "PAİY 41/2"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 41/1": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "dosemesiz",
+      "neden": "Çıkmanın altında döşeme çizilmemiş, katın kotu 3,00 m → çıkma altı okunmuyor, eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000609",
+            "level": "k01",
+            "area": 4.0,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 6.0
+              }
+            ],
+            "open": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_projection_low",
+            "state": "missingData",
+            "has": [
+              "altında döşeme çizilmemiş"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 41/1": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "missingData",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "dosemesiz-alcak-kat",
+      "neden": "Döşemesiz çıkmanın katının kotu 2,20 m: çıkma altı ondan da alçak → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000610",
+            "level": "k01",
+            "area": 4.0,
+            "floor": 2.2,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 6.0
+              }
+            ],
+            "open": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_projection_low",
+            "has": [
+              "katın kotu 2.20 m"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 41/1": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "cikma-yok",
+      "neden": "Zemin katın dışına taşan çıkma yok → iki madde kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": []
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 41/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "outOfScope",
+            "1.10.2017"
+          ]
+        }
+      }
+    }
+  ]
+}

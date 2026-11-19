@@ -1648,6 +1648,9 @@ mod wall_insulation_tests;
 #[path = "tests/party_wall_tests.rs"]
 mod party_wall_tests;
 #[cfg(test)]
+#[path = "tests/projection_tests.rs"]
+mod projection_tests;
+#[cfg(test)]
 #[path = "tests/double_door_tests.rs"]
 mod double_door_tests;
 #[cfg(test)]

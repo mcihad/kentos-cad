@@ -91,6 +91,13 @@ def kuyu_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     return _bulgular(facts, ("bykhy_shaft_", "bykhy_elevator_"))
 
 
+@ext.audit("cikmalar")
+def cikma_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Çıkmalar (PAİY 41/1 bahçe mesafesine en çok 1,50 m, yan ve arka sınıra en az 3,00 m, bitişik komşuya açık çıkma
+    en az 2,00 m; 41/2 çıkma altı en az 2,40 m): vaziyet planının parsel kenarlarına göre."""
+    return _bulgular(facts, ("paiy_projection_",))
+
+
 @ext.audit("bitisik")
 def bitisik_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Komşu binaya bitişik duvar (PAİY 39/4 pencere ve kapı yok; BYKHY 25/1 en az 90 dakikalık yangın duvarı, 25/2

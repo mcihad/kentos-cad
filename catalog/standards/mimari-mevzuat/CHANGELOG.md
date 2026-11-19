@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.40.0 — 19 Kasım 2026
+
+- Çıkmalar (`cikmalar`; docs/adr/8152): PAİY 41/1 ve 41/2. Olguların `projections`'ı (zemin katın üstündeki katlarda
+  mahallerin taban alanı dışındaki parçaları: açık ya da kapalı, alanı, katın kotu, alt kotu, parsel kenarlarına
+  uzaklıkları). Yol cephesinde yapı yaklaşma sınırından en çok 1,50 m; yan, arka ve kamusal alan bahçesinde en çok
+  1,50 m ve parsel sınırına en az 3,00 m; bitişik nizamda açık çıkma komşu sınırına en az 2,00 m; çıkma altı zeminden
+  en az 2,40 m (döşemesiz çıkmada eksik veri). 12 bağımsız durum. Sürüm tablosunda 41/1 ve 41/2'nin 1.10.2017 hâli.
+
 ## 0.39.0 — 19 Kasım 2026
 
 - 20/3'ün içte uygulanan ısı ve ses yalıtımı (`kaplamalar`; docs/adr/8151): olguların `insulations`'ı (duvarın iç

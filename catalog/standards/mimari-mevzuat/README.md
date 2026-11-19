@@ -21,6 +21,10 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   eyvanı zemin dahil 3 kata kadar binada ve zemin katta mı (22/1-m, docs/adr/8094); kalın taş duvarların payı (5/8,
   20/8-j, docs/adr/8095): beyansız kalın duvar, katı (her binanınki kendi katlarıyla, docs/adr/8150) ve başvuru günü; Sivas'ta duvarlar %30'un içinde (22/k,
   docs/adr/8096).
+- **Çıkmalar** (`cikmalar`, docs/adr/8152): zemin katın dışına taşan açık ve kapalı çıkmalar vaziyet planının bahçe
+  mesafelerine göre: yol cephesinde yapı yaklaşma sınırından en çok 1,50 m; yan, arka ve kamusal alan bahçesinde en çok
+  1,50 m ve parsel sınırına en az 3,00 m; bitişik nizamda açık çıkma komşu sınırına en az 2,00 m (41/1); çıkma altı
+  zeminden en az 2,40 m (41/2).
 - **Merdiven altı** (`merdiven_alti`, docs/adr/8080): 1,80 m'den alçak merdiven altı kapatılır (31/6); alçak boşluk bir
   mahale açıksa kaldı.
 - **Yangın kompartımanları** (`kompartiman`, docs/adr/8081, 8086): mahaller arasındaki ayrımlardan ve katlar arası

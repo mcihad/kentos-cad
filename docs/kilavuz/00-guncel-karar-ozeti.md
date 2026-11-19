@@ -448,6 +448,10 @@
   - **Duvarların içte uygulanan yalıtımı (19 Kasım 2026; [ADR 8151](../adr/8151-inner-insulation-20-3.md), K389–K391):**
     Yalıtım kategorili malzemeli katmanlar; iç duvarda hepsi, dış duvarda iç yüzden (mahalin yanı) ilk Taşıyıcı katmana
     kadar; 20/3 duvar kaplamasının isteğiyle okur; iç yüz bulunamazsa uzman incelemesi.
+  - **Çıkmalar (19 Kasım 2026; [ADR 8152](../adr/8152-projections-paiy-41.md), K392–K394):** zemin katın üstündeki
+    katlarda mahalin taban alanı dışındaki parçası çıkma (dış mekânsa açık); taşma kenarın istediği mesafeden ölçülür;
+    PAİY 41/1 ön bahçede 1,50 m, yan, arka ve kamusal bahçede 1,50 m ve sınıra 3,00 m, bitişik komşuya açık çıkma
+    2,00 m; 41/2 çıkma altı 2,40 m (döşemesiz eksik veri).
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

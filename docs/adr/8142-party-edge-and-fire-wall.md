@@ -99,6 +99,7 @@ PAİY ve BYKHY derlenmiş resmî metinlerinden (mevzuat.gov.tr PDF'leri, `pdftot
 - Bitişik nizamda ortak alandan arka bahçeye çıkış (4/1-pppp-2): binanın ortak alanı ve arka bahçesi çizimde yok.
 - BYKHY 25/2'nin tesisat geçişleri; 27/2-c (farklı yükseklikteki bitişik binalarda yüksek binanın alçak binanın çatı
   hizasındaki cephe kaplaması); 28/1-f (çatıdan komşu çatıya yangın).
-- PAİY 41: bitişik nizamda çıkma bitişik olduğu komşu sınırına 2,00 m'den fazla yaklaşamaz.
+- PAİY 41: bitişik nizamda çıkma bitişik olduğu komşu sınırına 2,00 m'den fazla yaklaşamaz — yapıldı: ADR
+  [8152](8152-projections-paiy-41.md) (41/1-b-4: açık çıkma).
 - Bitişik kenar boyunca açık kalan kısım (bina komşu sınırına bir kısmıyla dayanıyor) bulgu değildir; olgularda uzunluğu
   var.

@@ -56,11 +56,10 @@ use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts,
-    MasonryStorey, PartyFacts, PlanNoteFacts,
-    FinishFacts, InsulationFacts, RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts,
-    ShaftVentFacts,
-    SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
+    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, FinishFacts, InsulationFacts,
+    LinkFacts, MasonryFacts, MasonryStorey, PartyFacts, PlanNoteFacts, ProjectionEdgeFacts, ProjectionFacts, RoofFacts,
+    RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts, ShaftVentFacts, SpaceFacts, StoreyHolds,
+    UnderStairFacts, UnderStairRoom
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -315,6 +314,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         shafts: enclosed,
         coverings: coverings(doc),
         insulations: insulations(doc),
+        projections: projections(doc),
         roofs: roofs(doc),
     }
 }
@@ -434,6 +434,39 @@ fn coverings(doc: &Document) -> Vec<CoveringFacts> {
                 material,
                 reaction,
             })
+        })
+        .collect()
+}
+
+/// The projections (docs/adr/8152; PAİY 41), each parcel edge numbered from 1 and named as the rules read it.
+fn projections(doc: &Document) -> Vec<ProjectionFacts> {
+    use kentos_commands::SiteEdgeKind as K;
+    doc.projections()
+        .into_iter()
+        .map(|p| ProjectionFacts {
+            room: p.room,
+            level: p.level,
+            open: p.open,
+            area: p.area,
+            floor: p.floor,
+            underside: p.underside,
+            edges: p
+                .edges
+                .into_iter()
+                .map(|e| ProjectionEdgeFacts {
+                    edge: e.edge + 1,
+                    kind: match e.kind {
+                        K::Front => "front",
+                        K::Side => "side",
+                        K::Back => "back",
+                        K::Public => "public",
+                        K::Party => "party",
+                    }
+                    .to_owned(),
+                    required: e.required,
+                    distance: e.distance,
+                })
+                .collect(),
         })
         .collect()
 }

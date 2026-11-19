@@ -2182,6 +2182,44 @@
       ]
     },
     {
+      "regulation": "PAİY",
+      "article": "41/1",
+      "title": "Çıkmalar: bahçeye taşma",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); (b) bendinin (5) numaralı alt bendi RG 30.9.2017/30196 ile yürürlüğe girmeden kaldırıldı; derlenmiş metinde başka değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113; 30.9.2017/30196 mülga (b)-5",
+          "over": 1.5,
+          "clear": 3.0,
+          "party": 2.0,
+          "text": "Binalarda taban alanı dışında kendi bahçe hudutları dışına taşmamak şartı ile binanın her cephesinde açık ve kapalı çıkma yapılabilir. Ancak: a) Kapalı çıkmalar; 1) Parsellerin yol cephelerinde parsel sınırları içerisinde kalmak koşuluyla yapı yaklaşma sınırından itibaren en fazla 1.50 metre taşacak şekilde yapılabilir. 2) Arka ve yan bahçe mesafelerine, parsel sınırlarına 3.00 metreden fazla yaklaşmamak kaydı ile 1.50 metre taşabilir. 3) Bina tabanı zeminde yapı yaklaşma sınırlarından daha içeri çekilerek bu fıkranın (a) bendinin (1) ve (2) numaralı alt bentlerindeki mesafelere tecavüz etmemek şartı ile istenilen ölçülerde yapılabilir. b) Açık çıkmalar; 1)–3) aynı ölçülerle; 4) Bitişik nizamda bitişik olduğu komşu sınırına 2.00 metreden fazla yaklaşamaz.",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 41/1; (b)-5 RG 30.9.2017/30196 ile mülga; docs/adr/8152 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "41/2",
+      "title": "Çıkma altının zeminden yüksekliği",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); derlenmiş metinde 41/2'de değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "height": 2.4,
+          "text": "(2) Açık ve kapalı çıkmaların tabii zeminden veya tesviye edilmiş zeminden çıkma altına kadar en yakın şakûli mesafesi en az 2.40 metre olmak zorundadır. Ön bahçe mesafesi 3 metre ve daha az olan parsellerde; ön bahçeye yapılacak çıkmalarda, yol kotu ile çıkma altı arasındaki düşey mesafe hiçbir yerde 2.40 metreden az olamaz.",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 41/2; docs/adr/8152 §2."
+        }
+      ]
+    },
+    {
       "regulation": "BYKHY",
       "article": "25/1",
       "title": "Bitişik nizam yapılarını ayıran yangın duvarı",

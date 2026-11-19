@@ -184,6 +184,13 @@
           },
           "type": "array"
         },
+        "projections": {
+          "description": "The projections (docs/adr/8152; PAİY 41): the rooms' parts outside the footprint on the storeys over the ground\nstorey, each with its distances to the site plan's parcel edges and its underside; none without the site plan.",
+          "items": {
+            "$ref": "#/$defs/ProjectionFacts"
+          },
+          "type": "array"
+        },
         "roofs": {
           "description": "The roofs and their layers (docs/adr/8134; BYKHY 28/2, 28/3): each layer's material and the material's declared\nreaction to fire class and roof class.",
           "items": {
@@ -1697,6 +1704,79 @@
         "key",
         "value",
         "source"
+      ],
+      "type": "object"
+    },
+    "ProjectionEdgeFacts": {
+      "description": "A parcel edge as a projection reads it (docs/adr/8152): its number in the site plan (from 1), its kind, the distance\nit asks and the projection's nearest distance to it, m.",
+      "properties": {
+        "distance": {
+          "format": "double",
+          "type": "number"
+        },
+        "edge": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "required": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "edge",
+        "kind",
+        "required",
+        "distance"
+      ],
+      "type": "object"
+    },
+    "ProjectionFacts": {
+      "description": "A projection (docs/adr/8152; PAİY 41): the room's persistent id and storey, whether it is open (açık çıkma: an\noutdoor room, a balcony or a terrace) or closed, its part outside the footprint (m²), its storey's floor and its\nunderside over ±0.00 (the floor slab's under it, m; absent: no slab drawn there), and each parcel edge with its kind\nas the gardens read it (`front`, `side`, `back`, `public`, `party`; a party edge in ayrık nizam is `side`), the\ndistance it asks and the projection's nearest distance to it (m).",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/ProjectionEdgeFacts"
+          },
+          "type": "array"
+        },
+        "floor": {
+          "format": "double",
+          "type": "number"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "open": {
+          "type": "boolean"
+        },
+        "room": {
+          "type": "string"
+        },
+        "underside": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "room",
+        "area",
+        "floor",
+        "edges"
       ],
       "type": "object"
     },

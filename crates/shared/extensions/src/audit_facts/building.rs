@@ -92,6 +92,10 @@ pub struct BuildingFacts {
     /// (docs/adr/8142; PAİY 39/4, BYKHY 25); none in ayrık nizam.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub party: Vec<PartyFacts>,
+    /// The projections (docs/adr/8152; PAİY 41): the rooms' parts outside the footprint on the storeys over the ground
+    /// storey, each with its distances to the site plan's parcel edges and its underside; none without the site plan.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub projections: Vec<ProjectionFacts>,
     /// The openings between storeys (docs/adr/8086): galleries, atriums, stair wells, stairs.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub links: Vec<LinkFacts>,
@@ -342,6 +346,38 @@ pub struct FinishFacts {
     pub material: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reaction: Option<String>,
+}
+
+/// A projection (docs/adr/8152; PAİY 41): the room's persistent id and storey, whether it is open (açık çıkma: an
+/// outdoor room, a balcony or a terrace) or closed, its part outside the footprint (m²), its storey's floor and its
+/// underside over ±0.00 (the floor slab's under it, m; absent: no slab drawn there), and each parcel edge with its kind
+/// as the gardens read it (`front`, `side`, `back`, `public`, `party`; a party edge in ayrık nizam is `side`), the
+/// distance it asks and the projection's nearest distance to it (m).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectionFacts {
+    pub room: String,
+    pub level: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub open: bool,
+    pub area: f64,
+    pub floor: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub underside: Option<f64>,
+    pub edges: Vec<ProjectionEdgeFacts>,
+}
+
+/// A parcel edge as a projection reads it (docs/adr/8152): its number in the site plan (from 1), its kind, the distance
+/// it asks and the projection's nearest distance to it, m.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectionEdgeFacts {
+    pub edge: usize,
+    pub kind: String,
+    pub required: f64,
+    pub distance: f64,
 }
 
 /// A wall's insulation layer on its inner side (docs/adr/8151; BYKHY 20/3: "içte uygulanacak ısı ve ses yalıtımları"):
@@ -722,6 +758,16 @@ impl BuildingFacts {
         for i in &mut self.insulations {
             i.rooms.sort();
         }
+        for p in &mut self.projections {
+            p.area = round(p.area, AREA);
+            p.floor = round(p.floor, LENGTH);
+            p.underside = p.underside.map(|u| round(u, LENGTH));
+            for e in &mut p.edges {
+                e.required = round(e.required, LENGTH);
+                e.distance = round(e.distance, LENGTH);
+            }
+        }
+        self.projections.sort_by(|a, b| a.room.cmp(&b.room));
         self.insulations.sort_by(|a, b| (&a.wall, &a.component).cmp(&(&b.wall, &b.component)));
         for x in &mut self.shafts {
             x.open = round(x.open, LENGTH);
