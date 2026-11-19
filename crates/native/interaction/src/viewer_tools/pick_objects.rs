@@ -10,19 +10,32 @@
 //! host hears [`ViewChange::PickedObjects`]. The tool is not in the catalog
 //! and is not repeated ([`crate::Session::run`]).
 //!
+//! A field's objects are read, not selected for an edit: they come from every
+//! shown layer, Otomatik seçim on or off, as the edge-picking steps take
+//! theirs (docs/adr/0622 §5); the selection filter still holds (docs/adr/0278
+//! §2). The field's own scopes (Görünen, Tümü, Katman) take every layer too;
+//! with Otomatik seçim off a parcel on Kadastro was not taken while Taslak
+//! was active, and nothing said why (the owner, 19 November 2026). A click
+//! that takes nothing though an object lies under it says why.
+//!
 //! [`PickObjects::one`] picks a single object (the expression builder's
 //! preview object): a click on one takes it and ends the pick; there is no
 //! box. [`PickObjects::on_layer`] picks one object of a layer (a form's list
 //! from that layer, docs/adr/0759 §1): the selection filter and Otomatik
-//! seçim do not narrow it, the layer does.
+//! seçim do not narrow it, the layer does. [`PickObjects::selection`] picks
+//! the selection a window works on (Çizimden seç, docs/adr/8006): a
+//! selecting step, Otomatik seçim narrows it to the active layer.
 
 use kentos_domain::Slot;
 use kentos_geometry_core::jsmath::js_hypot;
 
 use crate::Vec2;
+use crate::data_search::kind_name;
 use crate::format::Format;
+use crate::log::Level;
 use crate::prompt::Prompt;
 use crate::select::SelectBox;
+use crate::selectable;
 use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tool, ViewChange};
 
 /// The tool's id, as the traces would read it.
@@ -54,10 +67,13 @@ pub struct PickObjects {
     one: bool,
     /// Only this layer's objects, whatever the selection filter says.
     layer: Option<String>,
+    /// The selection a window works on, not a field's objects: Otomatik seçim narrows it as every selecting step.
+    selects: bool,
     done: bool,
 }
 
 impl PickObjects {
+    /// A field's objects of these kinds (none: any), read from every shown layer.
     pub fn new(field: impl Into<String>, kinds: Option<Vec<String>>) -> Self {
         Self {
             field: field.into(),
@@ -66,7 +82,17 @@ impl PickObjects {
             count: 0,
             one: false,
             layer: None,
+            selects: false,
             done: false,
+        }
+    }
+
+    /// The selection a window works on (Çizimden seç, docs/adr/8006): any kind, and with Otomatik seçim off the
+    /// active layer's alone (docs/adr/0622 §5).
+    pub fn selection(field: impl Into<String>) -> Self {
+        Self {
+            selects: true,
+            ..Self::new(field, None)
         }
     }
 
@@ -89,24 +115,54 @@ impl PickObjects {
 
     /// Whether the field takes this object.
     fn takes(&self, slot: Slot, cx: &Context<'_>) -> bool {
+        let Some(e) = cx.doc.get(slot) else {
+            return false;
+        };
         if let Some(layer) = &self.layer {
-            return cx
-                .doc
-                .get(slot)
-                .is_some_and(|e| e.base().layer_id == *layer);
+            return e.base().layer_id == *layer;
         }
-        // The selection filter's kinds and Otomatik seçim's layer too, as every selecting step (docs/adr/0278,
-        // 0622 §5).
-        let filtered = cx
-            .doc
-            .get(slot)
-            .is_some_and(|e| crate::selectable::entity_selectable(cx, e));
-        filtered
-            && self.kinds.as_ref().is_none_or(|kinds| {
-                cx.doc
-                    .get(slot)
-                    .is_some_and(|e| kinds.iter().any(|k| k == e.kind()))
-            })
+        // The selection filter's kinds, as every step that picks objects (docs/adr/0278 §2); Otomatik seçim's layer
+        // only for the selection a window works on (docs/adr/0622 §5).
+        let allowed = if self.selects {
+            selectable::entity_selectable(cx, e)
+        } else {
+            selectable::entity_allowed(cx.draft.select_kinds, e)
+        };
+        allowed
+            && self
+                .kinds
+                .as_ref()
+                .is_none_or(|kinds| kinds.iter().any(|k| k == e.kind()))
+    }
+
+    /// A click that took nothing though an object lies under it (or holds it) says why: the layer a form's list
+    /// is from, the selection filter, Otomatik seçim's layer or a kind the field does not take (docs/adr/0278 §4,
+    /// 0622 §5).
+    fn say_left(&self, at: Vec2, cx: &mut Context<'_>) {
+        let tol = cx.pick_tolerance();
+        let Some(e) = cx
+            .spatial
+            .pick(at, tol)
+            .or_else(|| cx.spatial.enclosing(at))
+            .and_then(|s| cx.doc.get(s))
+        else {
+            return;
+        };
+        let kind = kind_name(e);
+        let words = if let Some(layer) = &self.layer {
+            let name = cx.doc.layers().get(layer).map_or(layer.as_str(), |l| l.name.as_str());
+            format!(
+                "{}: yalnız “{name}” katmanının nesneleri alınır; tıklanan nesne ({kind}) başka katmanda.",
+                self.field
+            )
+        } else if !selectable::entity_allowed(cx.draft.select_kinds, e) {
+            format!("Seçim süzgeci tıklanan nesneyi ({kind}) dışarıda bıraktı.")
+        } else if self.selects && !selectable::on_selected_layer(cx.doc, e) {
+            selectable::other_layer_words(cx.doc)
+        } else {
+            format!("{}: tıklanan nesne ({kind}) bu alana alınmaz.", self.field)
+        };
+        cx.say(Level::Info, words);
     }
 
     /// The object of the field's kinds under the pointer: the most specific
@@ -217,10 +273,15 @@ impl Tool for PickObjects {
         };
         if self.one {
             // One object: a click on it takes it; a drag takes nothing.
-            if let (false, Some(hit)) = (press.dragging, self.hit(p.raw, cx)) {
-                cx.selection.set([hit]);
-                self.count = 1;
-                self.finish(true, cx);
+            if !press.dragging {
+                match self.hit(p.raw, cx) {
+                    Some(hit) => {
+                        cx.selection.set([hit]);
+                        self.count = 1;
+                        self.finish(true, cx);
+                    }
+                    None => self.say_left(p.raw, cx),
+                }
             }
             return;
         }
@@ -232,13 +293,17 @@ impl Tool for PickObjects {
                 worlds: None,
             }
             .crossing();
-            let ids: Vec<Slot> = crate::selectable::in_box(cx, press.from_world, p.raw, crossing)
-                .into_iter()
-                .filter(|s| self.takes(*s, cx))
-                .collect();
+            let found = if self.selects {
+                selectable::in_box(cx, press.from_world, p.raw, crossing)
+            } else {
+                selectable::in_box_read(cx, press.from_world, p.raw, crossing)
+            };
+            let ids: Vec<Slot> = found.into_iter().filter(|s| self.takes(*s, cx)).collect();
             cx.selection.add(ids);
         } else if let Some(hit) = self.hit(p.raw, cx) {
             cx.selection.toggle(hit);
+        } else {
+            self.say_left(p.raw, cx);
         }
         self.count = cx.selection.len();
     }

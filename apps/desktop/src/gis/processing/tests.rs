@@ -473,6 +473,35 @@ fn input_objects_are_picked_on_the_drawing_of_the_fields_kinds() {
     assert_eq!(app.selection.ids(), &[Slot(4)], "back as it was");
 }
 
+/// Otomatik seçim off, a CBS project's own: Kenar uzunluklarını yaz's Sahneden seç still takes the parcel on the
+/// Parsel layer while Çizim is active. The field reads the objects it takes, as its Görünen scope does (docs/adr/0622
+/// §5; the owner, 19 November 2026: the polygon on the drawing could not be picked).
+#[test]
+fn input_objects_are_picked_from_another_layer_with_otomatik_secim_off() {
+    use crate::selecting::tests::{click, objects};
+    use iced::keyboard::key::Named;
+
+    let mut app = objects();
+    let _ = app.update(Message::Run("edit.autoSelect"));
+    assert!(!app.auto_select_on(), "Otomatik seçim off");
+    // A plain click is a selection: the parcel is another layer's, so nothing.
+    click(&mut app, -18.0, 9.0);
+    assert!(app.selection.is_empty());
+    let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    event(&mut app, Event::PickObjects("input".into()));
+    assert_eq!(app.dialog, None, "the window steps aside");
+    click(&mut app, -18.0, 9.0);
+    assert_eq!(app.selection.ids(), &[Slot(4)]);
+    assert!(app.session.prompt().text().contains("(1 seçili)"));
+    key(&mut app, Named::Enter);
+    let window = app.gis.processing.dialog.as_ref().expect("back");
+    assert_eq!(
+        window.values.get("input"),
+        Some(&json!({ "scope": "selection" }))
+    );
+    assert_eq!(window.inputs.get("input").map(|f| f.count), Some(1));
+}
+
 #[test]
 fn an_alias_on_the_command_line_opens_the_tool_and_last_values_come_back() {
     let mut app = app_with_parcels();

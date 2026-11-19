@@ -102,6 +102,14 @@ pub fn layer_left_words(doc: &Document, n: usize) -> Option<String> {
     })
 }
 
+/// What a click on another layer's object says while Otomatik seçim is off: why nothing was selected and what to do.
+pub fn other_layer_words(doc: &Document) -> String {
+    let name = active_name(doc);
+    format!(
+        "Tıklanan nesne başka katmanda. Otomatik seçim kapalıyken yalnız etkin katmanın (“{name}”) nesneleri seçilir: katmanı etkin yapın ya da Otomatik seçim'i açın."
+    )
+}
+
 /// The active layer's name as a sentence says it.
 fn active_name(doc: &Document) -> String {
     let id = doc.layers().active();
@@ -148,16 +156,38 @@ pub fn query(cx: &mut Context<'_>, region: SelectRegion) -> Vec<Slot> {
 /// two world corners, the filter's kinds with it and what it left out said; every tool that selects with a box asks
 /// here.
 pub fn in_box(cx: &mut Context<'_>, a: Vec2, b: Vec2, crossing: bool) -> Vec<Slot> {
+    let region = box_region(cx, a, b, crossing);
+    query(cx, region)
+}
+
+/// [`in_box`] for a step that reads the objects it takes rather than selecting them (a window field's Sahneden seç,
+/// docs/adr/0088, 0622 §5): every shown layer's, Otomatik seçim on or off, as the edge-picking steps take theirs; the
+/// filter's kinds still (docs/adr/0278 §2), what it left out said.
+pub fn in_box_read(cx: &mut Context<'_>, a: Vec2, b: Vec2, crossing: bool) -> Vec<Slot> {
+    let input = EntitiesSelect {
+        model_scope: cx.spatial.sheet_model_scope(),
+        region: box_region(cx, a, b, crossing),
+        kinds: cx.draft.select_kinds.map(entities_select::kinds_of_mask),
+        layers: None,
+    };
+    let Ok(found) = entities_select::select(cx.doc, cx.spatial.store(), &input) else {
+        return Vec::new();
+    };
+    say_filtered(cx, found.left_out.kinds as usize);
+    found.slots
+}
+
+/// The query's region for a box between two world corners: the box as a twisted view draws it, else the world's own.
+fn box_region(cx: &Context<'_>, a: Vec2, b: Vec2, crossing: bool) -> SelectRegion {
     if let Some(ring) = twisted_ring(cx, a, b, crossing) {
-        return query(cx, ring);
+        return ring;
     }
     let (a, b) = (point(a), point(b));
-    let region = if crossing {
+    if crossing {
         SelectRegion::Crossing { a, b }
     } else {
         SelectRegion::Window { a, b }
-    };
-    query(cx, region)
+    }
 }
 
 /// The box between two world corners as a twisted view draws it (docs/adr/0285 §2): its four screen corners'
@@ -215,13 +245,8 @@ pub fn candidates(cx: &mut Context<'_>, at: Vec2) -> Vec<Slot> {
         .map_or((Vec::new(), 0), |f| (f.slots, f.left_out.layers));
     if all.is_empty() && other_layers > 0 {
         // The click fell on another layer's object while Otomatik seçim is off (docs/adr/0622 §5).
-        let name = active_name(cx.doc);
-        cx.say(
-            Level::Info,
-            format!(
-                "Tıklanan nesne başka katmanda. Otomatik seçim kapalıyken yalnız etkin katmanın (“{name}”) nesneleri seçilir: katmanı etkin yapın ya da Otomatik seçim'i açın."
-            ),
-        );
+        let words = other_layer_words(cx.doc);
+        cx.say(Level::Info, words);
     }
     if cx.draft.select_kinds.is_none() {
         return all;

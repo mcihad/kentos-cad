@@ -92,3 +92,51 @@ Aynı düğme ve araçlar başka pencerelerde de kullanılacak:
   - Enter'da alan Seçili olur;
   - Esc'te önceki seçim geri gelir.
 - **Görüntüler:** `processing::tests::screens`, koyu ve açık tema, 1440×900 ve 1100×650.
+
+## Güncelleme (19 Kasım 2026): alanın nesneleri her görünen katmandan; alınmayan tıklama nedenini söyler
+
+**Sahibin bildirdiği:** “sahneden araç seçip processing tool ile kenar uzunluklarını yazdırma aracı çalışmıyor,
+sahnedeki poligonu seçemiyoruz, seçmeye uygun”.
+
+**Gerçek pencerede yeniden üretildi (macOS, gerçek fare ve klavye):**
+
+- CBS projesi açıldı. Otomatik seçim projenin kendi ayarıyla kapalı, etkin katman Taslak.
+- Düzenle › Kapalı alan ile bir alan çizildi ve Kadastro / Parsel sınırı katmanına taşındı.
+- Kenar uzunluklarını yaz › Sahneden seç: alanın içine de kenarına da tıklamak hiçbir şey almadı. Satır “(0 seçili)” kaldı,
+  hiçbir ileti çıkmadı, üzerine gelince vurgu da yoktu.
+- Nedeni: `PickObjects::takes`, Otomatik seçim kapalıyken seçen adımlar gibi yalnız etkin katmanın nesnelerini alıyordu
+  (ADR 0622 §5).
+
+**Karar:**
+
+- **Alanın nesneleri okunur, düzenlemek için seçilmez.** Sahneden seç, alanın türlerini Otomatik seçim açık da kapalı da her
+  görünen katmandan alır: tıklama, üzerine gelme ve kutu (`selectable::in_box_read`). ADR 0622 §5'in nesneden okuyan
+  adımları (Buda'nın sınırları gibi kenar seçen adımlar) da böyledir. Alanın kendi kapsamları (Görünen, Tümü, Katman) zaten her
+  katmandan alır.
+- **Seçim süzgeci geçerli kalır** (ADR 0278 §2).
+- **Pencerenin üzerinde çalışacağı seçim bir seçimdir.** Bu, Çizimden seç'tir (ADR 8006: Oda modülleri, Tasarım seçenekleri;
+  `PickObjects::selection`). Otomatik seçim kapalıyken etkin katmanla sınırlı kalır.
+- **Hiçbir şey almayan tıklama, imlecin altında ya da çevresinde bir nesne varsa nedenini söyler:**
+  - formun listesi başka katmandan: “Parsel: yalnız “Çizim” katmanının nesneleri alınır; tıklanan nesne (Kapalı alan) başka
+    katmanda.”;
+  - seçim süzgeci: “Seçim süzgeci tıklanan nesneyi (Kapalı alan) dışarıda bıraktı.”;
+  - Çizimden seç'te Otomatik seçim'in katmanı: seçim aracının iletisi;
+  - alanın almadığı tür: “Alanlar: tıklanan nesne (Nokta) bu alana alınmaz.”
+
+  Boş yere tıklamak bir şey söylemez.
+
+**Doğrulama:**
+
+- `kentos-interaction` testleri:
+  - `pick_objects::a_fields_pick_takes_another_layers_area_with_otomatik_secim_off` (içine, kenarına, pencereyle);
+  - `pick_objects::a_windows_selection_pick_keeps_to_the_active_layer_and_says_why`;
+  - `pick_objects::a_click_that_takes_nothing_says_why`.
+
+  Bütün `--test all` geçer: 994 test.
+- Masaüstü testleri:
+  - `processing::tests::input_objects_are_picked_from_another_layer_with_otomatik_secim_off`: düz tıklama almaz,
+    Sahneden seç alır, alan “1 kapalı alan” der;
+  - Oda modülleri testleri değişmeden geçer.
+- Gerçek pencerede: Parsel sınırı'ndaki alan üzerine gelince vurgulandı ve tıklayınca alındı (“1 seçili”). Pencere “1
+  kapalı alan; seçili nesneler” dedi. Çalıştır “1 nesneye 4 kenar uzunluğu yazıldı.” dedi; üst kenarda “306.505” okundu.
+- **Web:** ertelendi (ADR 0228; TODOS.md §0.2).

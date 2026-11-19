@@ -22,7 +22,7 @@ impl App {
         self.field = None;
         self.snap = None;
         self.say(Level::Command, format!("Çizimden seç: {label}. Enter pencereye döner, Esc seçimi geri alır."));
-        self.session.run(Box::new(kentos_interaction::pick_objects::PickObjects::new(label, None)));
+        self.session.run(Box::new(kentos_interaction::pick_objects::PickObjects::selection(label)));
         self.with_tool(|s, cx| s.activate(cx));
     }
 

@@ -2449,6 +2449,10 @@ Liste:
 - [ ] Merdiven ve rampa korkuluğu (ADR 8128, 18 Kasım 2026): web'in kesiti, görünüşü ve 3B'si merdivenin ve rampanın
   korkuluğunu ortak çekirdeğin `geom::stair_rails`'ından çizsin (küpeşte ve çubuklar; kolda burun çizgisinden, rampada
   yüzeyden 1,10 m); web'in IFC yazımı varsa yan yan `IfcRailing` parçaları ve çubuk gövdeleri.
+- [ ] Sahneden seç'in nesneleri her görünen katmandan (ADR 0088'in 19 Kasım 2026 güncellemesi, ADR 0622 §5): web'in İşlemler
+  (`apps/web/src/ui/processing/`), Kenar eşleme, tablo ve ifade önizlemesi pencerelerindeki nesne seçicisi Otomatik seçim
+  kapalıyken de alanın türlerini her görünen katmandan alsın (seçim süzgeci geçerli); hiçbir şey almayan tıklama nedenini
+  söylesin (süzgeç, alanın almadığı tür, formun katmanı).
 
 ## 1. Koddan doğrulanan mevcut durum
 

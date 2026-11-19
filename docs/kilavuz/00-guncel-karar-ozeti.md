@@ -17,6 +17,12 @@
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Sahneden seç alanın nesnelerini her görünen katmandan alır (19 Kasım 2026, sahibin bildirdiği hata;
+  [ADR 0088](../adr/0088-pick-from-the-scene.md) güncellemesi, [ADR 0622](../adr/0622-interface-arrangement.md) §5).**
+  Otomatik seçim kapalıyken (CBS projesinin kendi ayarı) pencerelerin alanlarına alınan nesneler etkin katmanla sınırlanmaz:
+  İşlemler'in girdileri, Tablo ekle, ifade önizlemesi, yazı alanının nesnesi, Kenar eşleme'nin sınırı. Seçim süzgeci geçerli
+  kalır. Çizimden seç (ADR 8006) bir seçimdir, sınırlı kalır. Hiçbir şey almayan tıklama nedenini söyler.
+
 - **BIM yönetmeliği ve IFC uyum planı (15 Kasım 2026; [plan/bim-plan.md](../../plan/bim-plan.md), [plan/ifc-uyum.md](../../plan/ifc-uyum.md), dal `codex/bim-ifc-uyum`).**
   - **Bu tur plandır;** uygulama kodu değişmedi. Paket numaraları (BIM-01…20, IFC-01…12) TODOS.md §18 ile aynıdır; o bölümün
     eski on maddesi yeni paketlere eşlendi.

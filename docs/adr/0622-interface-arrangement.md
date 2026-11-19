@@ -248,7 +248,10 @@ Nesneden katman okuyan adımlar seçim değildir; bütün görünen katmanlardan
 
 - Katmanı etkin yap, gizle, yalıt ve kilitle;
 - Katmanı eşle'nin hedefi;
-- araçların kenar seçen adımları (Buda'nın sınırları gibi).
+- araçların kenar seçen adımları (Buda'nın sınırları gibi);
+- pencerelerin alanlarına Sahneden seç ile alınan nesneler: İşlemler'in girdileri, Tablo ekle, ifade oluşturucunun önizleme
+  nesnesi, yazıya eklenen alanın nesnesi, Kenar eşleme'nin sınırı (19 Kasım 2026, ADR 0088 güncellemesi). Pencerenin üzerinde
+  çalışacağı seçimi alan Çizimden seç (ADR 8006) bir seçimdir, etkin katmanla sınırlıdır.
 
 Ayar `edit.autoSelect` ("Otomatik seçim") ile açılıp kapanır ve `cad.settings.set`'in `autoSelect`'iyle yazılır. Çizimi
 kaydedilmemiş yapar ama geri alma adımı değildir. Yeri:
