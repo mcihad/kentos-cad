@@ -187,6 +187,7 @@ pub struct Fixture {
 /// (even-odd, the rooms' contours together) and, counted in, the part of its storey's balconies past their units' 20 %
 /// (m²; PAİY 22/1-l) and of its other limited uses past their limits (docs/adr/8079): storage annexes past their
 /// units' 50 % (22/1-k), caretaker flats past 70 m² together (22/1-ç), library rooms past 50 m² (22/1-f), the
+/// shelter past the building's needed shelter area (22/1-g, docs/adr/8149), the
 /// residents' common rooms under the ground past 5 % of katlar alanı and 1000 m² (22/1-j, docs/adr/8147); and, within
 /// its rings, a traditional cut stone masonry building's stone walls past 25 cm and 12.50 cm, out apart from the 30 %
 /// (5/8, docs/adr/8095); and its rooms' part 5/8's basement list moves apart from the 30 % (docs/adr/8148).
@@ -199,6 +200,7 @@ pub struct EmsalArea {
     pub storage: f64,
     pub caretaker: f64,
     pub library: f64,
+    pub shelter: f64,
     pub amenity: f64,
     pub walls: f64,
     pub apart: f64,
@@ -222,12 +224,13 @@ pub struct UnitGroup {
 
 /// The limited uses' parts an emsal zone names (docs/adr/8079): each clause's words up to its part's area, and how a zone
 /// counted in ends them (Turkish vowel harmony: “balkon da”, “eklentisi de”).
-fn limited_parts(a: &EmsalArea) -> [(f64, &'static str, &'static str); 5] {
+fn limited_parts(a: &EmsalArea) -> [(f64, &'static str, &'static str); 6] {
     [
         (a.moved, "22/1-l: bağımsız bölüm net alanının %20'sini aşan {} m² balkon", " da dahil"),
         (a.storage, "22/1-k: bağımsız bölüm net alanının %50'sini aşan {} m² depo eklentisi", " de dahil"),
         (a.caretaker, "22/1-ç: kapıcı dairelerinin toplam 70 m²'sini aşan {} m²", " de dahil"),
         (a.library, "22/1-f: kütüphanenin 50 m²'sini aşan {} m²", " de dahil"),
+        (a.shelter, "22/1-g: sığınağın gerekli alanını aşan {} m²", " de dahil"),
         (a.amenity, "22/1-j: bodrumdaki ortak mekânların sınırını aşan {} m²", " de dahil"),
     ]
 }

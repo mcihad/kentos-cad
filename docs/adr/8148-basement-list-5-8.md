@@ -88,6 +88,7 @@ metni sayar (8095'teki gibi); eski hâllerin metni kural setinde yoktur (§6).
 - b'nin öbür mahallerinin asgari alanları (merdiven, şaft, baca, ışıklık, tesisat, depo, jeneratör, enerji odası,
   kömürlük): standartlarına göre hesap.
 - 22/1-g: "Bina için gerekli minimum sığınak alanı" emsal harici; gerekli alanı aşan sığınak emsale dahil olmalı
-  (bugün bütün sığınak emsal harici sayılıyor).
+  (bugün bütün sığınak emsal harici sayılıyor) — yapıldı: ADR [8149](8149-shelter-needed-area-22-1-g.md); 5/8-b artık
+  22/1-g'nin bıraktığı kısmın hepsini %30 dışına alır (bu ADR'nin b sahnesi 8149'da yeniden çözüldü).
 - Listenin eski hâlleri (31.12.2022'den önceki a, 25.7.2019'dan önceki b ve c) kural setinde yok.
 - Kısmen açığa çıkan cephe (eğimli arsa): cephe cephe tesviye kotu (8079 §6, 8147 §6).

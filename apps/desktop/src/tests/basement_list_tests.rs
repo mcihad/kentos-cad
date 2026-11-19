@@ -12,9 +12,10 @@
 //!   30 m² car park apart; two car parks of 60 m², 40 m² of them. The stair hall and the boiler room (b: no least area
 //!   computed) within.
 //! - ç and e: the common masjid's 30 m² apart (a building with dwellings: up to 150 m²), the common children's play
-//!   room's 30 m² (up to 100 m²); the shelter within, Sığınak Yönetmeliği 7/a asking none of a dwelling building of
-//!   fewer than 10 units.
-//! - b: ten flats (eight with no room yet, two people each, 8/a): 20 people, 20 m² of the 30 m² shelter apart.
+//!   room's 30 m² (up to 100 m²); the shelter counted in whole: Sığınak Yönetmeliği 7/a asks none of a dwelling
+//!   building of fewer than 10 units, so 22/1-g lets none out (docs/adr/8149).
+//! - b: ten flats (eight with no room yet, two people each, 8/a): 20 people, 20 m² net. 22/1-g lets out the shelter's
+//!   gross by its net, 20 × 30 / 25.7125 = 23.33495… m² (6.66504… m² in); b takes it all apart from the 30 %.
 //!
 //! ```text
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib basement_list_tests::screens -- --ignored --nocapture
@@ -75,22 +76,21 @@ fn a_basement_half_out_of_the_ground_keeps_its_car_park_apart_up_to_twice_the_ma
 }
 
 #[test]
-fn the_masjid_and_the_children_s_room_are_apart_and_a_shelter_none_asks_is_not() {
+fn the_masjid_and_the_children_s_room_are_apart_and_a_shelter_none_asks_counts_in() {
     let app = building([("Mescit", "o"), ("Çocuk oyun alanı", "o"), ("Sığınak", "o")], -2.0);
-    assert_eq!(
-        bents(&app),
-        [(B::Shelter, 1, 30.0, 0.0, 0.0), (B::Masjid, 1, 30.0, 150.0, 30.0), (B::Children, 1, 30.0, 100.0, 30.0)]
-    );
-    assert_eq!(counted(&app), (60.0, 60.0, 60.0));
+    assert_eq!(bents(&app), [(B::Masjid, 1, 30.0, 150.0, 30.0), (B::Children, 1, 30.0, 100.0, 30.0)]);
+    assert_eq!(counted(&app), (90.0, 30.0, 60.0));
+    assert!(near(report(&app).shelter_over, 30.0));
+    assert_eq!(row(&app, "Sığınağın gerekli alanı aşan kısmı").as_deref(), Some("30.00"));
     assert_eq!(row(&app, "— bodrumda mescit, 150 m²'ye kadar").as_deref(), Some("30.00"));
     assert_eq!(row(&app, "— bodrumda çocuk oyun ve bakım alanları, 100 m²'ye kadar").as_deref(), Some("30.00"));
     assert_eq!(row(&app, "— bodrumda sığınak"), None);
 }
 
-#[test]
-fn the_shelter_s_least_area_is_apart() {
+/// The shelter, the basement's stair hall and the boiler room in the basement half out of the ground, and eight more
+/// flats with no room tied to them yet: ten dwellings, Sığınak Yönetmeliği 7/a no longer spares the building.
+fn ten_flats() -> App {
     let mut app = building([("Sığınak", "o"), ("Merdiven", "o"), ("Kazan dairesi", "o")], -2.0);
-    // Eight more flats, no room tied to them yet: ten dwellings, 7/a no longer spares the building.
     let mut units = vec![
         json!({"id": "d1", "number": "1", "nature": "Daire"}),
         json!({"id": "d2", "number": "2", "nature": "Daire"}),
@@ -100,11 +100,53 @@ fn the_shelter_s_least_area_is_apart() {
     ];
     units.extend((3..=10).map(|n| json!({"id": format!("d{n}"), "number": n.to_string(), "nature": "Daire"})));
     command(&mut app, "cad.program.edit", json!({"program": {"units": units}}));
+    app
+}
+
+#[test]
+fn the_shelter_s_least_area_is_apart() {
+    let app = ten_flats();
     let shelter = app.document.as_ref().expect("a drawing").model.shelter_report();
     assert_eq!((shelter.persons, shelter.exempt), (20, None));
-    assert_eq!(bents(&app), [(B::Shelter, 1, 30.0, 20.0, 20.0)]);
-    assert_eq!(counted(&app), (60.0, 100.0, 20.0));
-    assert_eq!(row(&app, "— bodrumda sığınak, gerekli alanı kadar").as_deref(), Some("20.00"));
+    // 22/1-g: the needed 20 m² net in the shelter's gross by its net (its end bay: 25.7125 m² net of 30 m²).
+    let kept = 20.0 * 30.0 / 25.7125;
+    assert!(near(report(&app).shelter_over, 30.0 - kept), "{:?}", report(&app).shelter_over);
+    assert_eq!(bents(&app), [(B::Shelter, 1, 23.335, 23.335, 23.335)]);
+    assert_eq!(counted(&app), (66.665, 90.0, 23.335));
+    assert_eq!(row(&app, "Sığınağın gerekli alanı aşan kısmı").as_deref(), Some("6.67"));
+    assert_eq!(row(&app, "— bodrumda sığınak, gerekli alanı kadar").as_deref(), Some("23.33"));
+}
+
+/// Emsal ve TAKS tablosu beside the ten flats' shelter (22/1-g: the part past the needed area in, the rest apart from
+/// the 30 % under 5/8-b), light and dark; `.run/gui-evidence/siginak-8149/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn shelter_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/siginak-8149");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut app = ten_flats();
+        basement_alone(&mut app);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("arch.zoningTable"));
+        let _ = app.submit_line("17,6");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        app.selection.set(Vec::new());
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-siginak-emsal-tablosu-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
 }
 
 /// Emsal ve TAKS tablosu beside the basement under the ground (its common rooms apart) and beside the basement half out

@@ -341,6 +341,7 @@ fn a_caretaker_flat_no_rule_makes_obligatory_is_a_finding_of_the_standards_packa
         [
             ("PAİY 22/1-ç", O::Failed),
             ("PAİY 22/1-f", O::OutOfScope),
+            ("PAİY 22/1-g", O::OutOfScope),
             ("PAİY 22/1-j", O::OutOfScope),
             ("PAİY 22/1-k", O::OutOfScope),
             ("PAİY 22/1-l", O::OutOfScope)

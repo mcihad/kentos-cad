@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.37.0 — 19 Kasım 2026
+
+- 22/1-g (`emsal`; docs/adr/8149): olguların `shelter` sınırı (sığınağın alanı, binanın gerekli sığınak alanı brütüyle,
+  aşanı). Satır sayımı söyler, geçti; başvuru 7.11.2025'ten önceyse gerekli alan Sığınak Yönetmeliği'nin önceki
+  hâline bağlı: uzman incelemesi; bina programında bağımsız bölüm yoksa ve sığınak varsa eksik veri. Sürüm tablosunda
+  22/1-g'nin 1.10.2017 hâli. Emsal 50 bağımsız durum (4'ü yeni); eski durumların satırlarına 22/1-g eklendi.
+
 ## 0.36.0 — 19 Kasım 2026
 
 - 22/1-j (`emsal`; docs/adr/8147): toprak altındaki bodrumun ortak yönetim, toplantı, spor ve sosyal mekânları

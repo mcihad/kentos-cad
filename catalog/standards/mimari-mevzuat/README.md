@@ -12,10 +12,12 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   ve yangın güvenlik holü kapısının sınıfı).
 - **Emsal sınırları** (`emsal`, docs/adr/8079): KentOS Emsal ve TAKS tablosunda 22/1'in sınırlarını sayar (balkon %20,
   toprak altında depo eklentisi %50, kapıcı daireleri 70 m², kütüphane 50 m², toprak altındaki bodrumda ortak yönetim,
-  toplantı, spor ve sosyal mekânlar katlar alanının %5'i ve en çok 1000 m²); kural koşullarına bakar: emsal harici
+  toplantı, spor ve sosyal mekânlar katlar alanının %5'i ve en çok 1000 m², sığınak binanın gerekli sığınak alanı);
+  kural koşullarına bakar: emsal harici
   kapıcı dairesi 44/1'e göre zorunlu mu (22/1-ç), kütüphane alışveriş merkezinde ya da 40'tan fazla bağımsız bölümlü
   binada, normal katta ve ortak alan mı (22/1-f), bodrumdaki mekânlar ortak alan mı (22/1-j, docs/adr/8147; ticari
-  amacı ve kullananları uzman incelemesi), geleneksel kesme taş yığma binanın emsal harici taşlık, dış sofa ve
+  amacı ve kullananları uzman incelemesi), sığınağın gerekli alanı hangi hâlle hesaplandı (22/1-g, docs/adr/8149;
+  bağımsız bölüm yoksa eksik veri), geleneksel kesme taş yığma binanın emsal harici taşlık, dış sofa ve
   eyvanı zemin dahil 3 kata kadar binada ve zemin katta mı (22/1-m, docs/adr/8094); kalın taş duvarların payı (5/8,
   20/8-j, docs/adr/8095): beyansız kalın duvar, katı ve başvuru günü; Sivas'ta duvarlar %30'un içinde (22/k,
   docs/adr/8096).

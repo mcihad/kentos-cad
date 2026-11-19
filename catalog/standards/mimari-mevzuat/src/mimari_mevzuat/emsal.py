@@ -1,10 +1,11 @@
-"""Emsalin 22. madde sınırları: Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -j, -k, -l, -m ve 44/1 (docs/adr/8079, 8094,
-8147).
+"""Emsalin 22. madde sınırları: Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -g, -j, -k, -l, -m ve 44/1 (docs/adr/8079,
+8094, 8147, 8149).
 
 KentOS Emsal ve TAKS tablosunda sınırları sayar (``kentos_domain::zoning``): balkonlar bağımsız bölüm net alanının
 %20'sine (22/1-l), toprak altındaki katta depo eklentileri bölüm net alanının %50'sine (22/1-k), kapıcı daireleri toplam
-70 m²'ye (22/1-ç), kütüphane 50 m²'ye (22/1-f), toprak altındaki bodrumda ortak yönetim, toplantı, spor ve sosyal
-mekânlar katlar alanının %5'ine ve 1000 m²'ye (22/1-j) kadar dışarıdadır; aşan kısım emsale girer. Bu kural sınırların
+70 m²'ye (22/1-ç), kütüphane 50 m²'ye (22/1-f), sığınak binanın gerekli sığınak alanına (22/1-g), toprak altındaki
+bodrumda ortak yönetim, toplantı, spor ve sosyal mekânlar katlar alanının %5'ine ve 1000 m²'ye (22/1-j) kadar
+dışarıdadır; aşan kısım emsale girer. Bu kural sınırların
 binanın bütününe bağlı koşullarına bakar ve sayımı özet satırında söyler:
 
 - **22/1-ç:** yalnız "bu Yönetmelik uyarınca yapılması zorunlu olan" kapıcı dairesi emsal harici sayılır. 44/1'e göre
@@ -15,6 +16,10 @@ binanın bütününe bağlı koşullarına bakar ve sayımı özet satırında s
 - **22/1-f:** kütüphane alışveriş merkezinde ya da 40'tan fazla bağımsız bölümlü binada, normal katta (bodrum, zemin,
   tesisat katı ve çatı arası dışında, 4/1-ııı) ve ortak alan niteliğinde olur; biri tutmuyorsa kaldı. Ortak merdivenle
   bağlantısı, dışarıdan erişiminin olmaması ve ticari kullanıma konu edilmemesi çizimden okunmaz: uzman incelemesi.
+- **22/1-g** (docs/adr/8149): "bina için gerekli minimum sığınak alanı" katlar alanına girmez. Gerekli alanı tablo
+  Sığınak Yönetmeliği 7 ve 8/a'nın 7.11.2025 hâliyle hesaplar (kişi başına net 1 m²; 7 sığınak istemiyorsa hiç); satır
+  sayımı söyler, geçti. Başvuru 7.11.2025'ten önceyse Sığınak Yönetmeliği'nin önceki hâli bağlar: uzman incelemesi.
+  Bina programında bağımsız bölüm yoksa gerekli alan hesaplanamaz, tablo sığınağı emsal harici sayar: eksik veri.
 - **22/1-j** (docs/adr/8147): bütün cepheleri toprağın altındaki bodrumda, tek başına bağımsız bölüm ve bir bölümün
   eklentisi olmayan, ortak alan niteliğindeki yönetim ve toplantı odaları ile spor ve sosyal mekânlar toplamda emsal
   hesabına konu alanın (katlar alanı; 21/2, 21/3'ün kullanımı) %5'ine ve 1000 m²'ye kadar katlar alanına girmez. Tablo
@@ -52,8 +57,12 @@ from typing import Any
 from . import kat_yuksekligi
 from . import yururluk as y
 
-MADDELER = [("PAİY", "22/1-ç"), ("PAİY", "22/1-f"), ("PAİY", "22/1-j"), ("PAİY", "22/1-k"), ("PAİY", "22/1-l"),
-            ("PAİY", "22/1-m"), ("PAİY", "20/8-j"), ("PAİY", "5/8")]
+MADDELER = [("PAİY", "22/1-ç"), ("PAİY", "22/1-f"), ("PAİY", "22/1-g"), ("PAİY", "22/1-j"), ("PAİY", "22/1-k"),
+            ("PAİY", "22/1-l"), ("PAİY", "22/1-m"), ("PAİY", "20/8-j"), ("PAİY", "5/8")]
+
+#: Sığınak Yönetmeliği'nin 6–8. maddelerini değiştiren RG 7.11.2025/33070'in günü: KentOS gerekli sığınak alanını bu
+#: hâlle hesaplar (docs/adr/8036); daha önceki başvuruda önceki hâl bağlar (docs/adr/8149).
+_SIGINAK_2025 = date(2025, 11, 7)
 
 #: Yerel yönetmelik Sivas seçiliyse okunan maddeler.
 YEREL = [("Sivas", "22/k")]
@@ -214,6 +223,38 @@ def kutuphane(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], d
             _satir(hal, y.UZMAN, "ortak merdivenle bağlantısı ve dışarıdan erişimi çizimden okunmuyor"))
 
 
+def siginak(bina: dict[str, Any], hal: y.Hal, gun: date) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """22/1-g: sığınağın gerekli alanı emsal harici, fazlası emsalde (tablonun sayımı); gerekli alanın hesabı Sığınak
+    Yönetmeliği'nin 7.11.2025 hâliyledir."""
+    sinirlar = _sinirlar(bina, "shelter")
+    if not sinirlar:
+        siginaklar = [m for m in bina.get("spaces") or [] if "SIGINAK" in _katla(m.get("name") or "")]
+        if siginaklar and not int(bina.get("units") or 0):
+            alan = sum(float(m.get("area") or 0.0) for m in siginaklar)
+            return ([_bulgu("paiy_shelter_need_unknown",
+                            f"Sığınak emsal harici sayıldı ({_m2(alan)} m²), ama bina programında bağımsız bölüm yok: "
+                            f"gerekli sığınak alanı (Sığınak Yönetmeliği 7, 8/a) hesaplanamıyor — {hal.kisa()}",
+                            "Bina programında bağımsız bölümleri tanımlayıp mahallerini bağlayın; gerekli alanı aşan "
+                            "sığınak emsale girer.", hal.kural(), [m["uid"] for m in siginaklar][:20], "bölüm yok",
+                            y.EKSIK_VERI)],
+                    _satir(hal, y.EKSIK_VERI, "bina programında bağımsız bölüm yok: gerekli sığınak alanı "
+                                              "hesaplanamıyor"))
+        return [], _satir(hal, y.KAPSAM_DISI, "emsal harici sayılan sığınak yok")
+    s = sinirlar[0]
+    alan, izin, asan, uids = float(s["area"]), float(s["allowed"]), float(s["over"]), list(s["rooms"])
+    gerekli = (f"gerekli alanı {_m2(izin)} m² (Sığınak Yönetmeliği 8/a)" if izin > 0
+               else "gerekli sığınak yok (Sığınak Yönetmeliği 7)")
+    sayim = f"sığınak {_m2(alan)} m², {gerekli}" + (f"; {_m2(asan)} m²'si emsale eklendi" if asan > 0 else "")
+    if gun < _SIGINAK_2025:
+        return ([_bulgu("paiy_shelter_need_dated",
+                        f"Sığınağın gerekli alanı Sığınak Yönetmeliği'nin 7.11.2025 hâliyle hesaplandı ({sayim}); "
+                        f"başvuru günü ({y.yaz(gun)}) önceki hâli bağlar — {hal.kisa()}",
+                        "Gerekli sığınak alanını başvuru günündeki Sığınak Yönetmeliği'ne göre uzman incelesin; "
+                        "uygunsa uzman onayıyla işaretleyin.", hal.kural(), uids, "sığınak 7.11.2025", y.UZMAN)],
+                _satir(hal, y.UZMAN, f"{sayim}; gerekli alan Sığınak Yönetmeliği'nin 7.11.2025 hâliyle"))
+    return [], _satir(hal, y.GECTI, sayim)
+
+
 def ortak_mekan(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """22/1-j: toprak altındaki bodrumda emsal harici sayılan ortak yönetim, toplantı, spor ve sosyal mekânların
     koşulları."""
@@ -327,8 +368,8 @@ def geleneksel(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], 
                                  "okunmuyor"))
 
 
-_ADLAR = {"22/1-ç": "caretaker", "22/1-f": "library", "22/1-j": "amenity", "22/1-k": "storage", "22/1-l": "balcony",
-          "22/1-m": "traditional"}
+_ADLAR = {"22/1-ç": "caretaker", "22/1-f": "library", "22/1-g": "shelter", "22/1-j": "amenity", "22/1-k": "storage",
+          "22/1-l": "balcony", "22/1-m": "traditional"}
 
 
 def duvarlar(bina: dict[str, Any], gun: date) -> y.Sonuc:
@@ -471,8 +512,8 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     """Başvuru günü ``gun`` olan projenin emsal sınırı bulguları ve maddelerin satırları."""
     bulgular: list[dict[str, Any]] = []
     satirlar: list[dict[str, Any]] = []
-    for madde, denetim in (("22/1-ç", kapici), ("22/1-f", kutuphane), ("22/1-j", ortak_mekan), ("22/1-k", depo),
-                           ("22/1-l", balkon)):
+    for madde, denetim in (("22/1-ç", kapici), ("22/1-f", kutuphane), ("22/1-g", lambda b, h: siginak(b, h, gun)),
+                           ("22/1-j", ortak_mekan), ("22/1-k", depo), ("22/1-l", balkon)):
         hal = y.hal("PAİY", madde, gun)
         if hal is None:
             sinirlar = _sinirlar(bina, _ADLAR[madde])

@@ -29,6 +29,9 @@
 //!   on a storey under the ground (its top at or below its building's ±0.00, where the model's graded ground lies) is
 //!   out up to 50 % of its unit's net area; what passes counts in. Elsewhere a store counts in.
 //! - **The library** (22/1-f): the rooms named or used as Kütüphane together at most 50 m²; what passes counts in.
+//! - **The shelter** (22/1-g, docs/adr/8149): a room named or used as Sığınak is out up to the building's needed
+//!   shelter area (Sığınak Yönetmeliği 8/a's net square metre a person, none where 7 asks none) in its gross by its
+//!   net; what passes counts in. With no unit in the program the need is not known: no limit.
 //! - **The residents' common rooms** (22/1-j, docs/adr/8147): a room named or used as Yönetim, Toplantı, Spor or Sosyal
 //!   (or of a group named so), no unit's own or annex, on a storey under the ground, is out; together at most 5 % of
 //!   katlar alanı (the rooms counted in and the other limits' excess) and 1000 m², what passes counts in. Elsewhere it
@@ -116,6 +119,8 @@ pub struct ZoningReport {
     pub storage_over: f64,
     /// The library rooms past 50 m² together (22/1-f), counted in `included`.
     pub library_over: f64,
+    /// The shelter past the building's needed shelter area (22/1-g, docs/adr/8149), counted in `included`.
+    pub shelter_over: f64,
     /// The residents' common rooms under the ground past 5 % of katlar alanı and 1000 m² (22/1-j, docs/adr/8147),
     /// counted in `included`.
     pub amenity_over: f64,
@@ -541,7 +546,16 @@ impl Document {
         let walls_of: Vec<f64> = outer_part.iter().zip(&inner_part).map(|(a, b)| a + b).collect();
         let kept: Vec<f64> = gross.iter().zip(&walls_of).map(|(g, w)| g - w).collect();
         // The limits of 22/1 (docs/adr/8069, 8079): each limited use's part past its limit counted in.
-        let (moved, limit_of, used) = limits::apply(&rooms, &kept, &uids, program);
+        // 22/1-g (docs/adr/8149): the building's needed shelter area, net, when the program's units tell it.
+        let shelter_need = if rooms.iter().any(|r| !r.void && r.shelter && r.count == EmsalCount::Exempt)
+            && program.units.iter().any(|u| u.kind == kentos_contracts::UnitKind::Unit)
+        {
+            let s = self.shelter_report();
+            Some(if s.exempt.is_some() { 0.0 } else { s.area_needed })
+        } else {
+            None
+        };
+        let (moved, limit_of, used) = limits::apply(&rooms, &kept, &uids, program, shelter_need);
         // 5/8's basement list (docs/adr/8148): of each room counted out, its part within the 30 % moved apart.
         let within: Vec<f64> = rooms
             .iter()
@@ -554,12 +568,11 @@ impl Document {
                 }
             })
             .collect();
+        let levels = basement::basement_levels(arch);
         let (apart, bent_of, basements) =
-            basement::apply(&rooms, &within, &uids, program, &basement::basement_levels(arch), &buried, || {
-                let shelter = self.shelter_report();
+            basement::apply(&rooms, &within, &uids, program, &levels, &buried, shelter_need.is_some(), || {
                 basement::Needs {
                     parking: f64::from(self.parking_report().required) * crate::provisions::PARKING_UNIT,
-                    shelter: if shelter.exempt.is_some() { 0.0 } else { shelter.area_needed },
                     dwellings: program.units.iter().any(|u| {
                         u.kind == kentos_contracts::UnitKind::Unit
                             && crate::provisions::parking_use(u.nature.as_deref())
@@ -615,6 +628,7 @@ impl Document {
                         Some(ZoningLimit::Storage) => out.storage_over += m,
                         Some(ZoningLimit::Caretaker) => out.caretaker_over += m,
                         Some(ZoningLimit::Library) => out.library_over += m,
+                        Some(ZoningLimit::Shelter) => out.shelter_over += m,
                         Some(ZoningLimit::Amenity) => out.amenity_over += m,
                         Some(ZoningLimit::Traditional) | None => {}
                     }
@@ -852,6 +866,7 @@ impl Document {
             (r.storage_over, "Depo eklentilerinin %50'yi aşan kısmı, emsale eklenen"),
             (r.caretaker_over, "Kapıcı dairelerinin 70 m²'yi aşan kısmı, emsale eklenen"),
             (r.library_over, "Kütüphanenin 50 m²'yi aşan kısmı, emsale eklenen"),
+            (r.shelter_over, "Sığınağın gerekli alanı aşan kısmı, emsale eklenen"),
             (r.amenity_over, "Bodrumdaki ortak mekânların sınırı aşan kısmı, emsale eklenen"),
         ] {
             if over > 0.0 {

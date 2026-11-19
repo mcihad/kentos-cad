@@ -17,8 +17,9 @@ pub enum BasementBent {
     /// all of it.
     Buried,
     /// b: the shelter's least area ("Sığınak … ilgili mevzuat, standart ya da bu Yönetmeliğe göre hesap edilen asgari
-    /// alanları"): Sığınak Yönetmeliği 8/a's net square metre for each person. The other rooms of b (stairs, shafts,
-    /// plant rooms …) have no least area KentOS computes: they stay within the 30 %.
+    /// alanları"): what 22/1-g leaves out of katlar alanı, the building's needed shelter area (Sığınak Yönetmeliği 8/a,
+    /// docs/adr/8149), all of it; none when the need is not known. The other rooms of b (stairs, shafts, plant rooms …)
+    /// have no least area KentOS computes: they stay within the 30 %.
     Shelter,
     /// ç: "Ortak alan niteliğindeki mescit ve müştemilatın konutlarda 150 m²'si, konut dışı yapılarda 300 m²'si".
     Masjid,
@@ -68,12 +69,10 @@ pub const CHILDREN_AREA: f64 = 100.0;
 
 /// What the bents read of the building beside its rooms (docs/adr/8148): the mandatory car parks' area (the places
 /// Ek-1 asks, docs/adr/8036, times Otopark Yönetmeliği 4/1-ç's 20 m² a car with its manoeuvre,
-/// [`crate::provisions::PARKING_UNIT`]: "en az 20 m2", so its least), the shelter's least area (none when Sığınak
-/// Yönetmeliği asks none) and whether a unit of it is a dwelling.
+/// [`crate::provisions::PARKING_UNIT`]: "en az 20 m2", so its least) and whether a unit of it is a dwelling.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(super) struct Needs {
     pub parking: f64,
-    pub shelter: f64,
     pub dwellings: bool,
 }
 
@@ -103,7 +102,8 @@ pub(super) fn basement_levels(arch: &ArchSettings) -> Vec<String> {
 
 /// 5/8's basement list on the rooms counted out: each room's part moved apart from the 30 %, the bent it is under, and
 /// each bent's rooms. `within` is each room's part within the 30 % (0 for a room not counted out); `basement` the
-/// basements, `buried` the storeys under the ground; `needs` is asked only when a, b or ç reads a room.
+/// basements, `buried` the storeys under the ground; `shelter_known` whether 22/1-g knew the needed shelter area (the
+/// shelter's part within the 30 % is then that area); `needs` is asked only when a or ç reads a room.
 ///
 /// A room is under the first bent that reads it, in the order d, b, ç, e, a; a capped bent's part is shared among its
 /// rooms by their areas. The car parks d takes apart count against a's twice (docs/adr/8148 K380).
@@ -114,6 +114,7 @@ pub(super) fn apply(
     program: &BuildingProgram,
     basement: &[String],
     buried: &[String],
+    shelter_known: bool,
     needs: impl FnOnce() -> Needs,
 ) -> (Vec<f64>, Vec<Option<BasementBent>>, Vec<BasementApart>) {
     use BasementBent::{Buried, Children, Masjid, Parking, Shelter};
@@ -133,8 +134,7 @@ pub(super) fn apply(
         Children => on(i, basement) && rooms[i].children && common(i),
         Parking => on(i, basement) && rooms[i].parking,
     };
-    let asks =
-        [Shelter, Masjid, Parking].into_iter().any(|b| (0..n).any(|i| open(i) && !reads(Buried, i) && reads(b, i)));
+    let asks = [Masjid, Parking].into_iter().any(|b| (0..n).any(|i| open(i) && !reads(Buried, i) && reads(b, i)));
     let needs = if asks { needs() } else { Needs::default() };
     let mut buried_parking = 0.0;
     for bent in [Buried, Shelter, Masjid, Children, Parking] {
@@ -145,7 +145,8 @@ pub(super) fn apply(
         let area: f64 = members.iter().map(|&i| within[i]).sum();
         let allowed = match bent {
             Buried => area,
-            Shelter => needs.shelter,
+            Shelter if shelter_known => area,
+            Shelter => 0.0,
             Masjid if needs.dwellings => MASJID_DWELLINGS,
             Masjid => MASJID_OTHERS,
             Children => CHILDREN_AREA,

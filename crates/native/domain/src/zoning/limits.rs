@@ -1,9 +1,9 @@
 //! Emsalin 22. madde sınırları (docs/adr/8069, 8079): the uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar
 //! alanı only up to a limit — an independent unit's open balconies (22/1-l) and its storage annexes under the ground
-//! (22/1-k), the caretaker flats (22/1-ç), the library (22/1-f), the residents' common rooms under the ground (22/1-j,
-//! docs/adr/8147) — what passes each limit, and the storeys under the ground; and a traditional cut stone masonry
-//! building's taşlık, dış sofa and eyvan (22/1-m, docs/adr/8094), let out only in such a building. The rooms are
-//! [`super::Room`]s, as the ratios read them.
+//! (22/1-k), the caretaker flats (22/1-ç), the library (22/1-f), the shelter past its needed area (22/1-g,
+//! docs/adr/8149), the residents' common rooms under the ground (22/1-j, docs/adr/8147) — what passes each limit, and
+//! the storeys under the ground; and a traditional cut stone masonry building's taşlık, dış sofa and eyvan (22/1-m,
+//! docs/adr/8094), let out only in such a building. The rooms are [`super::Room`]s, as the ratios read them.
 
 use kentos_contracts::{ArchLevel, BuildingProgram, EmsalCount};
 
@@ -21,6 +21,9 @@ pub enum ZoningLimit {
     Caretaker,
     /// 22/1-f: the library rooms, 50 m² together.
     Library,
+    /// 22/1-g (docs/adr/8149): the shelter rooms, up to the building's needed shelter area (Sığınak Yönetmeliği 8/a's
+    /// net square metre a person, none where 7 asks no shelter) in their own gross by their net.
+    Shelter,
     /// 22/1-m (docs/adr/8094): a traditional cut stone masonry building's taşlık, dış sofa and eyvan; no area of their
     /// own (the 30 % of 5/8 holds them with the others), the building's storeys and the rooms' place are the rule's.
     Traditional,
@@ -37,6 +40,7 @@ impl ZoningLimit {
             ZoningLimit::Storage => "storage",
             ZoningLimit::Caretaker => "caretaker",
             ZoningLimit::Library => "library",
+            ZoningLimit::Shelter => "shelter",
             ZoningLimit::Traditional => "traditional",
             ZoningLimit::Amenity => "amenity",
         }
@@ -153,6 +157,9 @@ pub(super) fn buried_levels(arch: &kentos_contracts::ArchSettings) -> Vec<String
 ///   count;
 /// - k: a unit's storage annexes under the ground up to 50 % of its net area;
 /// - ç: the caretaker flats 70 m² together; f: the library rooms 50 m² together;
+/// - g: the shelter rooms up to the building's needed shelter area `shelter_need` (net, m²; docs/adr/8149 K384), in
+///   their gross by their net: the need times their gross over their net; none: the need not known (no unit in the
+///   program), no limit;
 /// - m: a traditional cut stone masonry building's taşlık, dış sofa and eyvan, all of them (no area of their own);
 /// - j: the residents' common rooms under the ground, together 5 % of katlar alanı and at most 1000 m² (docs/adr/8147
 ///   K376): katlar alanı as the rooms counted in and the other limits' excess make it, last; neither its own excess nor
@@ -164,6 +171,7 @@ pub(super) fn apply(
     gross: &[f64],
     uids: &[String],
     program: &BuildingProgram,
+    shelter_need: Option<f64>,
 ) -> (Vec<f64>, Vec<Option<ZoningLimit>>, Vec<ZoningLimitUse>) {
     let mut moved = vec![0.0; rooms.len()];
     let mut limit_of: Vec<Option<ZoningLimit>> = vec![None; rooms.len()];
@@ -193,6 +201,9 @@ pub(super) fn apply(
     }
     asks.push((ZoningLimit::Caretaker, None, Some(CARETAKER_AREA)));
     asks.push((ZoningLimit::Library, None, Some(LIBRARY_AREA)));
+    if shelter_need.is_some() {
+        asks.push((ZoningLimit::Shelter, None, None));
+    }
     asks.push((ZoningLimit::Traditional, None, None));
     asks.push((ZoningLimit::Amenity, None, None));
     for (limit, unit, allowed) in asks {
@@ -207,6 +218,7 @@ pub(super) fn apply(
                         ZoningLimit::Storage => r.storage_of.as_deref() == unit,
                         ZoningLimit::Caretaker => r.caretaker,
                         ZoningLimit::Library => r.library,
+                        ZoningLimit::Shelter => r.shelter,
                         ZoningLimit::Traditional => r.traditional,
                         ZoningLimit::Amenity => r.amenity,
                     }
@@ -227,6 +239,12 @@ pub(super) fn apply(
                     .sum::<f64>()
                     + moved.iter().sum::<f64>(),
             ),
+            // The needed net area in the rooms' gross: their walls' share with it.
+            ZoningLimit::Shelter => {
+                let need = shelter_need.unwrap_or(0.0);
+                let net: f64 = members.iter().map(|&i| rooms[i].net).sum();
+                if net > 0.0 { (need * area / net).min(area) } else { need.min(area) }
+            }
             _ => allowed.unwrap_or(area),
         };
         let over = (area - allowed).max(0.0);

@@ -163,6 +163,23 @@
     },
     {
       "regulation": "PAİY",
+      "article": "22/1-g",
+      "title": "Bina için gerekli asgari sığınak alanı (katlar alanına dahil edilmeyen)",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); derlenmiş metinde bu bentte değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "text": "Bina için gerekli minimum sığınak alanı, katlar alanına dâhil edilmez.",
+          "source": "RG 3.7.2017/30113, 22 nci maddenin birinci fıkrası; 1.7.2026'ya kadar işlenmiş birleştirilmiş metinde (g) bendinde değişiklik işareti yok. Gerekli alan Sığınak Yönetmeliği 7 ve 8/a'dan (RG 7.11.2025/33070 ile değişik; docs/adr/8036); docs/adr/8149 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
       "article": "22/1-j",
       "title": "Bodrumdaki ortak yönetim, toplantı, spor ve sosyal mekânlar (katlar alanına dahil edilmeyen)",
       "transition": "Değişiklik yönetmeliği yayımı günü yürürlüğe girdi (RG 25.7.2019/30842, 15 inci madde); geçiş hükmü yok.",

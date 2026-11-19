@@ -423,10 +423,12 @@ pub struct UnderStairRoom {
 pub struct EmsalLimit {
     /// `balcony` (22/1-l: a unit's open balconies, 20 % of its net area), `storage` (22/1-k: a unit's storage annexes
     /// on a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together),
-    /// `library` (22/1-f: the library rooms, 50 m² together) or `traditional` (22/1-m, docs/adr/8094: a traditional cut
-    /// stone masonry building's taşlık, dış sofa and eyvan, no area of their own; the building's conditions are the
-    /// rule's) or `amenity` (22/1-j, docs/adr/8147: the common management, meeting, sport and social rooms on a storey
-    /// under the ground, no unit's own or annex; together 5 % of katlar alanı and at most 1000 m²).
+    /// `library` (22/1-f: the library rooms, 50 m² together), `shelter` (22/1-g, docs/adr/8149: the shelter rooms, up
+    /// to the building's needed shelter area in their gross by their net; absent with no unit in the program, the need
+    /// not known), `traditional` (22/1-m, docs/adr/8094: a traditional cut stone masonry building's taşlık, dış sofa
+    /// and eyvan, no area of their own; the building's conditions are the rule's) or `amenity` (22/1-j,
+    /// docs/adr/8147: the common management, meeting, sport and social rooms on a storey under the ground, no unit's
+    /// own or annex; together 5 % of katlar alanı and at most 1000 m²).
     pub limit: String,
     /// The independent unit whose net area the limit is a share of, by program id (a balcony's, a storage annex's).
     #[serde(default, skip_serializing_if = "Option::is_none")]

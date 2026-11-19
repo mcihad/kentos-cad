@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Emsal sınırlarının bağımsız durumları (docs/adr/8079): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1'in metninden (RG 25.7.2019/30842, 23.1.2021/31373, 11.7.2021/31538; 44/1 RG 3.7.2017/30113) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un sayımıdır (building.limits): durumlar sınırların koşullarını sınar, sayımın kendisini Rust'ın sınamaları sınar. 22/1-m'nin durumları (docs/adr/8094) bendin RG 9.10.2021/31623 ve 31.12.2022/32060 hâllerinden elle (building.structuralSystem, building.traditional: projenin beyanı; spaces: mahallerin adları). Kalın taş duvarların durumları (docs/adr/8095) 20/8-j'nin RG 9.10.2021/31623, 5/8'in RG 31.12.2022/32060 metninden ve 22/1-m'nin iki hâlinden elle (building.masonry: tablonun saydığı paylar). Sivas 22/k'nin durumları (docs/adr/8096) Sivas İmar Yönetmeliği'nin (RG 10.11.2022/32009) “toplamı %30'u geçmemek üzere”sinden elle (building.exemptCap: tablonun %30'u ve içinde saydığı). 22/1-j'nin durumları (docs/adr/8147) bendin RG 25.7.2019/30842 metninden elle (building.limits'in amenity sınırı: tablonun saydığı alan, katlar alanının %5'i ve en çok 1000 m² olan sınırı, aşan); bu bendin satırı eski durumlara eklendi (böyle mekân yok: kapsam dışı; 25.7.2019'dan önceki başvuruda satır yok).",
+  "about": "Emsal sınırlarının bağımsız durumları (docs/adr/8079): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1'in metninden (RG 25.7.2019/30842, 23.1.2021/31373, 11.7.2021/31538; 44/1 RG 3.7.2017/30113) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un sayımıdır (building.limits): durumlar sınırların koşullarını sınar, sayımın kendisini Rust'ın sınamaları sınar. 22/1-m'nin durumları (docs/adr/8094) bendin RG 9.10.2021/31623 ve 31.12.2022/32060 hâllerinden elle (building.structuralSystem, building.traditional: projenin beyanı; spaces: mahallerin adları). Kalın taş duvarların durumları (docs/adr/8095) 20/8-j'nin RG 9.10.2021/31623, 5/8'in RG 31.12.2022/32060 metninden ve 22/1-m'nin iki hâlinden elle (building.masonry: tablonun saydığı paylar). Sivas 22/k'nin durumları (docs/adr/8096) Sivas İmar Yönetmeliği'nin (RG 10.11.2022/32009) “toplamı %30'u geçmemek üzere”sinden elle (building.exemptCap: tablonun %30'u ve içinde saydığı). 22/1-j'nin durumları (docs/adr/8147) bendin RG 25.7.2019/30842 metninden elle (building.limits'in amenity sınırı: tablonun saydığı alan, katlar alanının %5'i ve en çok 1000 m² olan sınırı, aşan); bu bendin satırı eski durumlara eklendi (böyle mekân yok: kapsam dışı; 25.7.2019'dan önceki başvuruda satır yok). 22/1-g'nin durumları (docs/adr/8149) bendin RG 3.7.2017/30113 metninden ve Sığınak Yönetmeliği'nin RG 7.11.2025/33070 hâlinden elle (building.limits'in shelter sınırı: tablonun saydığı alan, gerekli sığınak alanı brütüyle, aşan); bu bendin satırı eski durumlara eklendi (sığınak yok: kapsam dışı).",
   "cases": [
     {
       "id": "kapici-70-konut",
@@ -86,6 +86,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -186,6 +190,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -285,6 +293,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -383,6 +395,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -492,6 +508,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -599,6 +619,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -704,6 +728,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -813,6 +841,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -919,6 +951,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -1027,6 +1063,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -1130,6 +1170,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -1235,6 +1279,10 @@
           "PAİY 22/1-ç": [
             "expertReview",
             null
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ]
         }
       }
@@ -1335,6 +1383,10 @@
           "PAİY 22/1-f": [
             "expertReview",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -1450,6 +1502,10 @@
             "expertReview",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -1560,6 +1616,10 @@
           "PAİY 22/1-f": [
             "failed",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -1672,6 +1732,10 @@
             "failed",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -1783,6 +1847,10 @@
             "failed",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -1891,6 +1959,10 @@
           "PAİY 22/1-f": [
             "failed",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -2003,6 +2075,10 @@
             "failed",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -2112,6 +2188,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -2223,6 +2303,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -2311,6 +2395,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -2418,6 +2506,10 @@
             "outOfScope",
             "25.7.2019"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -2524,6 +2616,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -2738,6 +2834,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -2882,6 +2982,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -2991,6 +3095,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -3096,6 +3204,10 @@
             "outOfScope",
             "25.7.2019"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -3187,6 +3299,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -3294,6 +3410,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -3403,6 +3523,10 @@
             "missingData",
             null
           ],
+          "PAİY 22/1-g": [
+            "missingData",
+            null
+          ],
           "PAİY 22/1-j": [
             "missingData",
             null
@@ -3498,6 +3622,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -3613,6 +3741,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -3759,6 +3891,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -3870,6 +4006,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -3984,6 +4124,10 @@
             "outOfScope",
             "25.7.2019"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -4076,6 +4220,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -4182,6 +4330,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -4300,6 +4452,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "outOfScope",
             "25.7.2019"
@@ -4413,6 +4569,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -4528,6 +4688,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "outOfScope",
@@ -4659,6 +4823,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "expertReview",
             "25.7.2019"
@@ -4770,6 +4938,10 @@
           "PAİY 22/1-f": [
             "outOfScope",
             "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
           ],
           "PAİY 22/1-j": [
             "expertReview",
@@ -4885,6 +5057,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "expertReview",
             "25.7.2019"
@@ -4995,6 +5171,10 @@
             "outOfScope",
             "23.1.2021"
           ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "failed",
             "25.7.2019"
@@ -5100,9 +5280,452 @@
           }
         ],
         "rules": {
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
           "PAİY 22/1-j": [
             "expertReview",
             null
+          ]
+        }
+      }
+    },
+    {
+      "id": "siginak-gerekli",
+      "neden": "12 konutluk yapı: Sığınak Yönetmeliği 7 sığınak ister; tablo gerekli alanı 32 m² (brütüyle) sayar, 40 m²'lik sığınağın 8 m²'si emsale eklendi → 22/1-g 'bina için gerekli minimum sığınak alanı'nı emsal harici sayar, sayım satırda, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 12,
+        "dwellings": 12,
+        "limits": [
+          {
+            "limit": "shelter",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 40.0,
+            "allowed": 32.0,
+            "over": 8.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 22/1-j": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "siginak-aranmiyor",
+      "neden": "Sığınak Yönetmeliği 7 sığınak istemiyor (gerekli alan 0): bina için gerekli sığınak alanı yok, 30 m²'lik sığınak bütünüyle emsale eklendi → satır sayımı söyler, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 6,
+        "dwellings": 6,
+        "limits": [
+          {
+            "limit": "shelter",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 30.0,
+            "allowed": 0.0,
+            "over": 30.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 22/1-j": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "siginak-2024-basvuru",
+      "neden": "Başvuru 1.6.2024: 22/1-g'nin 1.10.2017 hâli; gerekli alanı tablo Sığınak Yönetmeliği'nin 7.11.2025 hâliyle hesapladı, başvuru gününde önceki hâli bağlar → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2024"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 12,
+        "dwellings": 12,
+        "limits": [
+          {
+            "limit": "shelter",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 40.0,
+            "allowed": 32.0,
+            "over": 8.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_shelter_need_dated",
+            "state": "expertReview",
+            "has": [
+              "7.11.2025",
+              "1.6.2024",
+              "gerekli alanı 32.00 m²",
+              "PAİY 22/1-g"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "expertReview",
+            "1.10.2017"
+          ],
+          "PAİY 22/1-j": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "siginak-bolumsuz",
+      "neden": "Bina programında bağımsız bölüm yok: gerekli sığınak alanı hesaplanamıyor, tablo sığınağa sınır koymadı (olgularda sınır yok); bodrumda Sığınak adlı mahal var → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "limits": [],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "b01",
+            "name": "Sığınak",
+            "area": 30.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_shelter_need_unknown",
+            "state": "missingData",
+            "has": [
+              "bağımsız bölüm yok",
+              "30.00 m²"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "missingData",
+            "1.10.2017"
+          ],
+          "PAİY 22/1-j": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
           ]
         }
       }
