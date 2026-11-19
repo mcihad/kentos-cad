@@ -2635,6 +2635,9 @@ mod tests {
                     crate::CAD_ARCH_AUDIT => {
                         serde_json::from_value::<crate::ArchAudit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ARCH_WALK => {
+                        serde_json::from_value::<crate::ArchWalk>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ARCH_EXCEPTIONS => {
                         serde_json::from_value::<crate::ArchExceptions>(e.input.clone()).map(|_| ())
                     }
@@ -4508,6 +4511,9 @@ mod tests {
                         }
                         crate::CAD_ARCH_AUDIT => {
                             serde_json::from_value::<crate::ArchAudited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_ARCH_WALK => {
+                            serde_json::from_value::<crate::ArchWalked>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ARCH_EXCEPTIONS => {
                             serde_json::from_value::<crate::ArchExceptionsEdited>(output.clone())

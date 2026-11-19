@@ -545,6 +545,7 @@ impl Tool for SlabTool {
             None => {}
         }
         let step = match (self.hole, self.draws()) {
+            (_, true) if self.pts.len() == 2 => "sınırın üçüncü köşesini belirtin",
             (true, false) => "döşemeden kesilecek odaya tıklayın",
             (true, true) if self.pts.len() < 3 => "kesilecek alanın köşelerine tıklayın",
             (false, false) if self.bound == Bound::Room => "döşemesi yapılacak odaya tıklayın",
@@ -787,6 +788,9 @@ impl Tool for SlabTool {
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        if self.draws() && points::incomplete_boundary(self.pts.len(), cx) {
+            return Flow::Stay;
+        }
         if self.draws() && self.pts.len() >= 3 {
             let corners = self.pts.clone();
             self.write(None, Some(&corners), cx);

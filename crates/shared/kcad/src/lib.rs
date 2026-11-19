@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_BUILDING_PLAN_NOTES),
+    ("arch", "mimari", ARCH_WITH_CASEWORK_PLACEMENT),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1002,8 +1002,15 @@ pub const ARCH_WITH_PERFORMANCE: u16 = 1;
 /// Whether `doc` holds architecture data 1 ([`ARCH_WITH_PERFORMANCE`]): what its writer names and an older reader
 /// refuses.
 pub fn uses_performance(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_performance_in(doc, doc.entities.iter())
+}
+
+fn uses_performance_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
     use kentos_contracts::Entity;
-    let objects = doc.entities.iter().any(|e| match e {
+    let stamped = objects.any(|e| match e {
         Entity::Opening(o) => o.opening.fire_rating.is_some() || o.opening.exit.is_some(),
         _ => e.arch_info().is_some_and(|a| a.fire_rating.is_some() || a.exit.is_some()),
     });
@@ -1013,7 +1020,7 @@ pub fn uses_performance(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
             || a.opening_types.iter().any(|t| t.fire_rating.is_some())
             || a.materials.iter().any(|m| m.strength.is_some())
     });
-    objects || styles || arch
+    stamped || styles || arch
 }
 
 /// Architecture data version 2 (docs/adr/8070 §5): a block card's building element (`card.element`: its class, type and
@@ -1034,8 +1041,15 @@ pub const ARCH_WITH_CURTAIN_WALLS: u16 = 3;
 
 /// Whether `doc` holds architecture data 3 ([`ARCH_WITH_CURTAIN_WALLS`]): a curtain wall.
 pub fn uses_curtain_walls(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_curtain_walls_in(doc, doc.entities.iter())
+}
+
+fn uses_curtain_walls_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
     let wall = |e: &kentos_contracts::Entity| matches!(e, kentos_contracts::Entity::Wall(w) if w.wall.curtain.is_some());
-    doc.entities.iter().any(wall) || doc.blocks.iter().any(|b| b.entities.iter().any(wall))
+    objects.any(wall) || doc.blocks.iter().any(|b| b.entities.iter().any(wall))
 }
 
 /// Architecture data version 4 (docs/adr/8070 §8): a post or a rail (a column's or a beam's `member`) and a column's own
@@ -1045,12 +1059,19 @@ pub const ARCH_WITH_MEMBERS: u16 = 4;
 /// Whether `doc` holds architecture data 4 ([`ARCH_WITH_MEMBERS`]): a post, a rail or a column of its own height, in
 /// the drawing or a block.
 pub fn uses_members(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_members_in(doc, doc.entities.iter())
+}
+
+fn uses_members_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
     let member = |e: &kentos_contracts::Entity| match e {
         kentos_contracts::Entity::Column(c) => c.column.member.is_some() || c.column.height.is_some(),
         kentos_contracts::Entity::Beam(b) => b.beam.member.is_some(),
         _ => false,
     };
-    doc.entities.iter().any(member) || doc.blocks.iter().any(|b| b.entities.iter().any(member))
+    objects.any(member) || doc.blocks.iter().any(|b| b.entities.iter().any(member))
 }
 
 /// Architecture data version 5 (docs/adr/8070 §10): a covering (a slab's `covering`). Version 5 holds versions 1–4's data
@@ -1059,7 +1080,13 @@ pub const ARCH_WITH_COVERINGS: u16 = 5;
 
 /// Whether `doc` holds architecture data 5 ([`ARCH_WITH_COVERINGS`]): a covering.
 pub fn uses_coverings(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.entities.iter().any(kentos_contracts::is_covering)
+    uses_coverings_in(doc.entities.iter())
+}
+
+fn uses_coverings_in<'a>(
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
+    objects.any(kentos_contracts::is_covering)
 }
 
 /// Architecture data version 6 (docs/adr/8070 §11): a schedule of beams or of coverings. Version 6 holds versions 1–5's
@@ -1068,6 +1095,13 @@ pub const ARCH_WITH_ELEMENT_SCHEDULES: u16 = 6;
 
 /// Whether `doc` holds architecture data 6 ([`ARCH_WITH_ELEMENT_SCHEDULES`]): a beams' or coverings' schedule.
 pub fn uses_element_schedules(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_element_schedules_in(doc, doc.entities.iter())
+}
+
+fn uses_element_schedules_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
     use kentos_contracts::{Entity, ScheduleOf, TableSource};
     let schedule = |e: &Entity| {
         matches!(e, Entity::Table(t) if matches!(
@@ -1075,7 +1109,7 @@ pub fn uses_element_schedules(doc: &kentos_contracts::DocumentSnapshotV2) -> boo
             Some(TableSource::Schedule { of: ScheduleOf::Beams | ScheduleOf::Coverings, .. })
         ))
     };
-    doc.entities.iter().any(schedule) || doc.blocks.iter().any(|b| b.entities.iter().any(schedule))
+    objects.any(schedule) || doc.blocks.iter().any(|b| b.entities.iter().any(schedule))
 }
 
 /// Architecture data version 7 (docs/adr/8071 §6): a sloped slab (a slab's `slope`). Version 7 holds versions 1–6's
@@ -1084,8 +1118,15 @@ pub const ARCH_WITH_SLAB_SLOPES: u16 = 7;
 
 /// Whether `doc` holds architecture data 7 ([`ARCH_WITH_SLAB_SLOPES`]): a sloped slab, in the drawing or a block.
 pub fn uses_slab_slopes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_slab_slopes_in(doc, doc.entities.iter())
+}
+
+fn uses_slab_slopes_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
     let sloped = |e: &kentos_contracts::Entity| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.slope.is_some());
-    doc.entities.iter().any(sloped) || doc.blocks.iter().any(|b| b.entities.iter().any(sloped))
+    objects.any(sloped) || doc.blocks.iter().any(|b| b.entities.iter().any(sloped))
 }
 
 /// Architecture data version 8 (docs/adr/8071 §8): a roof's layers. Version 8 holds versions 1–7's data too. The
@@ -1094,8 +1135,15 @@ pub const ARCH_WITH_ROOF_LAYERS: u16 = 8;
 
 /// Whether `doc` holds architecture data 8 ([`ARCH_WITH_ROOF_LAYERS`]): a roof with layers, in the drawing or a block.
 pub fn uses_roof_layers(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_roof_layers_in(doc, doc.entities.iter())
+}
+
+fn uses_roof_layers_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
     let layered = |e: &kentos_contracts::Entity| matches!(e, kentos_contracts::Entity::Roof(r) if !r.roof.layers.is_empty());
-    doc.entities.iter().any(layered) || doc.blocks.iter().any(|b| b.entities.iter().any(layered))
+    objects.any(layered) || doc.blocks.iter().any(|b| b.entities.iter().any(layered))
 }
 
 /// Architecture data version 9 (docs/adr/8072 §1): a program building's code, use or ±0.00, a shared level's building.
@@ -1141,8 +1189,14 @@ pub const ARCH_WITH_DECLARED_ROLES: u16 = 13;
 
 /// Whether `doc` holds architecture data 13 ([`ARCH_WITH_DECLARED_ROLES`]).
 pub fn uses_declared_roles(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_declared_roles_in(doc.entities.iter())
+}
+
+fn uses_declared_roles_in<'a>(
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
     use kentos_contracts::Entity;
-    doc.entities.iter().any(|e| {
+    objects.any(|e| {
         e.arch_info().is_some_and(|a| a.load_bearing.is_some() || (matches!(e, Entity::Roof(_)) && a.exit.is_some()))
     })
 }
@@ -1200,8 +1254,15 @@ pub const ARCH_WITH_ELEMENT_TYPES: u16 = 19;
 
 /// Whether `doc` holds architecture data 19 ([`ARCH_WITH_ELEMENT_TYPES`]).
 pub fn uses_element_types(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_element_types_in(doc, doc.entities.iter())
+}
+
+fn uses_element_types_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
     doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_element_types)
-        || doc.entities.iter().any(|e| e.arch_info().is_some_and(|a| a.element_type.is_some()))
+        || objects.any(|e| e.arch_info().is_some_and(|a| a.element_type.is_some()))
 }
 
 /// Architecture data version 20 (docs/adr/8124): a wall's or a slab's declared exterior role (`arch.external`) and a
@@ -1211,8 +1272,14 @@ pub const ARCH_WITH_DECLARED_READINGS: u16 = 20;
 
 /// Whether `doc` holds architecture data 20 ([`ARCH_WITH_DECLARED_READINGS`]).
 pub fn uses_declared_readings(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_declared_readings_in(doc.entities.iter())
+}
+
+fn uses_declared_readings_in<'a>(
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
     use kentos_contracts::Entity;
-    doc.entities.iter().any(|e| {
+    objects.any(|e| {
         e.arch_info().is_some_and(|a| a.external.is_some() || (matches!(e, Entity::Column(_)) && a.load_bearing.is_some()))
     })
 }
@@ -1223,7 +1290,13 @@ pub const ARCH_WITH_ROOM_EMSAL: u16 = 21;
 
 /// Whether `doc` holds architecture data 21 ([`ARCH_WITH_ROOM_EMSAL`]).
 pub fn uses_room_emsal(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.entities.iter().any(|e| matches!(e, kentos_contracts::Entity::Space(s) if s.space.emsal.is_some()))
+    uses_room_emsal_in(doc.entities.iter())
+}
+
+fn uses_room_emsal_in<'a>(
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
+    objects.any(|e| matches!(e, kentos_contracts::Entity::Space(s) if s.space.emsal.is_some()))
 }
 
 /// Architecture data version 22 (docs/adr/8130): a sloped member (a beam's `rise`). Version 22 holds versions 1–21's
@@ -1232,7 +1305,14 @@ pub const ARCH_WITH_SLOPED_MEMBERS: u16 = 22;
 
 /// Whether `doc` holds architecture data 22 ([`ARCH_WITH_SLOPED_MEMBERS`]): a sloped member, in the drawing or a block.
 pub fn uses_sloped_members(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.entities.iter().any(kentos_contracts::is_sloped_member)
+    uses_sloped_members_in(doc, doc.entities.iter())
+}
+
+fn uses_sloped_members_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
+    objects.any(kentos_contracts::is_sloped_member)
         || doc.blocks.iter().any(|b| b.entities.iter().any(kentos_contracts::is_sloped_member))
 }
 
@@ -1250,6 +1330,44 @@ pub fn uses_roof_classes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
 /// (`settings.arch.program.buildings[].planNotes`). Version 35 holds versions 1–34's data too. The document schema stays
 /// as it is.
 pub const ARCH_WITH_BUILDING_PLAN_NOTES: u16 = 35;
+
+/// Architecture data version 36: individually bound slab edges, in the drawing or a block.
+pub const ARCH_WITH_SLAB_EDGE_BINDINGS: u16 = 36;
+/// Architecture data version 37: an upward view interval in a named recipe or view template.
+pub const ARCH_WITH_CEILING_RECIPE: u16 = 37;
+
+/// First architecture reader that preserves electrical appliance cards.
+pub const ARCH_WITH_ELECTRIC_APPLIANCES: u16 = 38;
+/// Storey and per-leg filler choice in a kitchen recipe.
+pub const ARCH_WITH_CASEWORK_PLACEMENT: u16 = 39;
+
+pub fn uses_casework_placement(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.casework.iter().map(|r| &r.recipe)
+        .chain(doc.settings.arch.iter().flat_map(|a| &a.modules).flat_map(|m| &m.runs).map(|r| &r.recipe))
+        .any(|r| r.level.is_some() || !r.filler_ends.is_empty())
+}
+
+pub fn uses_electric_appliances(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.blocks.iter().filter_map(|b| b.card.as_ref()?.element.as_ref())
+        .any(|e| e.class == kentos_contracts::BlockElementClass::ElectricAppliance)
+}
+
+pub fn uses_ceiling_recipe(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings.named_views.iter().any(|v| v.recipe.as_ref().is_some_and(|r| r.ceiling.is_some()))
+        || doc.settings.view_templates.iter().any(|t| t.recipe.ceiling.is_some())
+}
+
+pub fn uses_slab_edge_bindings(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_slab_edge_bindings_in(doc, doc.entities.iter())
+}
+
+fn uses_slab_edge_bindings_in<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
+    let mixed = |e: &kentos_contracts::Entity| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.bound.as_ref().is_some_and(|b| b.edges.is_some()));
+    objects.any(mixed) || doc.blocks.iter().any(|b| b.entities.iter().any(mixed))
+}
 
 /// Whether `doc` holds architecture data 35 ([`ARCH_WITH_BUILDING_PLAN_NOTES`]).
 pub fn uses_building_plan_notes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
@@ -1350,7 +1468,13 @@ pub const ARCH_WITH_FIRE_STOPS: u16 = 25;
 
 /// Whether `doc` holds architecture data 25 ([`ARCH_WITH_FIRE_STOPS`]).
 pub fn uses_fire_stops(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.entities.iter().any(|e| e.arch_info().is_some_and(|a| a.protected.is_some() || a.fire_stop.is_some()))
+    uses_fire_stops_in(doc.entities.iter())
+}
+
+fn uses_fire_stops_in<'a>(
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
+    objects.any(|e| e.arch_info().is_some_and(|a| a.protected.is_some() || a.fire_stop.is_some()))
 }
 
 /// Architecture data version 24 (docs/adr/8135): a lift shaft room's declared vent or pressurisation
@@ -1360,10 +1484,18 @@ pub const ARCH_WITH_SHAFT_VENTS: u16 = 24;
 
 /// Whether `doc` holds architecture data 24 ([`ARCH_WITH_SHAFT_VENTS`]).
 pub fn uses_shaft_vents(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.entities.iter().any(|e| e.arch_info().is_some_and(|a| a.shaft_vent.is_some()))
+    uses_shaft_vents_in(doc.entities.iter())
 }
 
-/// The architecture data version `doc` needs: 35 for a building's own plan notes, 34 for a plan note of the
+fn uses_shaft_vents_in<'a>(
+    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
+) -> bool {
+    objects.any(|e| e.arch_info().is_some_and(|a| a.shaft_vent.is_some()))
+}
+
+/// The architecture data version `doc` needs: 39 for kitchen storey or filler placement, 38 for an electrical
+/// appliance card, 37 for a ceiling view recipe, 36 for individual slab edge links,
+/// 35 for a building's own plan notes, 34 for a plan note of the
 /// projections or basements, 33 for one of the
 /// roof, 32 for one of the subasman, 31 for a
 /// building's own structural
@@ -1383,7 +1515,23 @@ pub fn uses_shaft_vents(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_building_plan_notes(doc) {
+    arch_version_of(doc, doc.entities.iter())
+}
+
+/// Architecture requirements of the persisted objects, including desktop saves with a separate object store.
+fn arch_version_of<'a>(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+    objects: impl Iterator<Item = &'a kentos_contracts::Entity> + Clone,
+) -> u16 {
+    if uses_casework_placement(doc) {
+        ARCH_WITH_CASEWORK_PLACEMENT
+    } else if uses_electric_appliances(doc) {
+        ARCH_WITH_ELECTRIC_APPLIANCES
+    } else if uses_ceiling_recipe(doc) {
+        ARCH_WITH_CEILING_RECIPE
+    } else if uses_slab_edge_bindings_in(doc, objects.clone()) {
+        ARCH_WITH_SLAB_EDGE_BINDINGS
+    } else if uses_building_plan_notes(doc) {
         ARCH_WITH_BUILDING_PLAN_NOTES
     } else if uses_plan_mass(doc) {
         ARCH_WITH_PLAN_MASS
@@ -1403,19 +1551,19 @@ pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
         ARCH_WITH_ZONING_SOURCES
     } else if uses_style_bearing(doc) {
         ARCH_WITH_STYLE_BEARING
-    } else if uses_fire_stops(doc) {
+    } else if uses_fire_stops_in(objects.clone()) {
         ARCH_WITH_FIRE_STOPS
-    } else if uses_shaft_vents(doc) {
+    } else if uses_shaft_vents_in(objects.clone()) {
         ARCH_WITH_SHAFT_VENTS
     } else if uses_roof_classes(doc) {
         ARCH_WITH_ROOF_CLASSES
-    } else if uses_sloped_members(doc) {
+    } else if uses_sloped_members_in(doc, objects.clone()) {
         ARCH_WITH_SLOPED_MEMBERS
-    } else if uses_room_emsal(doc) {
+    } else if uses_room_emsal_in(objects.clone()) {
         ARCH_WITH_ROOM_EMSAL
-    } else if uses_declared_readings(doc) {
+    } else if uses_declared_readings_in(objects.clone()) {
         ARCH_WITH_DECLARED_READINGS
-    } else if uses_element_types(doc) {
+    } else if uses_element_types_in(doc, objects.clone()) {
         ARCH_WITH_ELEMENT_TYPES
     } else if uses_underlays(doc) {
         ARCH_WITH_UNDERLAYS
@@ -1427,7 +1575,7 @@ pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
         ARCH_WITH_STRUCTURE
     } else if uses_material_reactions(doc) {
         ARCH_WITH_MATERIAL_REACTIONS
-    } else if uses_declared_roles(doc) {
+    } else if uses_declared_roles_in(objects.clone()) {
         ARCH_WITH_DECLARED_ROLES
     } else if uses_zone(doc) {
         ARCH_WITH_ZONE
@@ -1437,21 +1585,21 @@ pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
         ARCH_WITH_FORM_ANSWERS
     } else if uses_building_places(doc) {
         ARCH_WITH_BUILDING_PLACES
-    } else if uses_roof_layers(doc) {
+    } else if uses_roof_layers_in(doc, objects.clone()) {
         ARCH_WITH_ROOF_LAYERS
-    } else if uses_slab_slopes(doc) {
+    } else if uses_slab_slopes_in(doc, objects.clone()) {
         ARCH_WITH_SLAB_SLOPES
-    } else if uses_element_schedules(doc) {
+    } else if uses_element_schedules_in(doc, objects.clone()) {
         ARCH_WITH_ELEMENT_SCHEDULES
-    } else if uses_coverings(doc) {
+    } else if uses_coverings_in(objects.clone()) {
         ARCH_WITH_COVERINGS
-    } else if uses_members(doc) {
+    } else if uses_members_in(doc, objects.clone()) {
         ARCH_WITH_MEMBERS
-    } else if uses_curtain_walls(doc) {
+    } else if uses_curtain_walls_in(doc, objects.clone()) {
         ARCH_WITH_CURTAIN_WALLS
     } else if uses_elements(doc) {
         ARCH_WITH_ELEMENTS
-    } else if uses_performance(doc) {
+    } else if uses_performance_in(doc, objects.clone()) {
         ARCH_WITH_PERFORMANCE
     } else {
         0

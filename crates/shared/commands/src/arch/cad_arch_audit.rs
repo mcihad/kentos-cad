@@ -20,6 +20,8 @@ use crate::entity::Vec2;
 
 pub const CAD_ARCH_AUDIT: &str = "cad.arch.audit";
 pub const CAD_ARCH_AUDIT_VERSION: u32 = 1;
+pub const CAD_ARCH_WALK: &str = "cad.arch.walk";
+pub const CAD_ARCH_WALK_VERSION: u32 = 1;
 /// Marks findings as left on purpose, takes the mark away, or drops those whose finding is gone (docs/adr/0732 §3).
 pub const CAD_ARCH_EXCEPTIONS: &str = "cad.arch.exceptions";
 pub const CAD_ARCH_EXCEPTIONS_VERSION: u32 = 1;
@@ -387,6 +389,10 @@ pub struct ArchAudit {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_clear_width: Option<f64>,
+    /// Design clearance profile for front approaches, separately on the pull and push faces.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub door_approach: Option<DoorApproachProfile>,
     /// The part of the drawing reported on; absent: all of it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -395,6 +401,77 @@ pub struct ArchAudit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub exceptions: Option<ArchAuditExceptionView>,
+}
+
+/// Front clearance dimensions for the project's single hinged doors, in metres.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DoorApproachProfile {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pull_depth: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pull_latch: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub push_depth: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub push_latch: f64,
+}
+
+impl DoorApproachProfile {
+    /// Design preset for a front approach without additional push-side latch clearance.
+    pub const FRONT: Self = Self {
+        pull_depth: 1.525,
+        pull_latch: 0.455,
+        push_depth: 1.220,
+        push_latch: 0.0,
+    };
+}
+
+/// Point-to-point design route on one storey. Width is the envelope's diameter, in metres.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ArchWalk {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub start: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub end: Vec2,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    /// Exclude movable furniture and equipment when inspecting the architectural shell.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub shell_only: bool,
+}
+
+/// A verified centreline, or a location to inspect when no route was found.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ArchWalked {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub points: Vec<Vec2>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub blocked: Option<Vec2>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub obstacle: Option<String>,
 }
 
 /// What resolves a finding: in words, and as the command call that does it (`cad.changeset.apply`'s step, run as it
@@ -494,6 +571,11 @@ pub struct ArchAuditFinding {
     /// Where to look.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
+    /// Boundary of the affected area in model coordinates, when the finding has one.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec2>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub outline: Vec<Vec2>,
     /// The call that resolves it, when one plainly does and the object it writes is on an unlocked layer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

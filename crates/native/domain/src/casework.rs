@@ -400,6 +400,14 @@ impl Document {
     ) -> Result<Laid, CaseworkStop> {
         let through = recipe.through.clone().unwrap_or_default();
         let pts = recipe.path();
+        if let Some(level) = &recipe.level
+            && !self.settings().arch.as_ref().is_some_and(|a| a.levels.iter().any(|l| &l.id == level))
+        {
+            return Err(invalid(format!("Mutfak dizisinin katı projede bulunamadı: {level}."), "level"));
+        }
+        if recipe.filler_ends.len() > pts.len() - 1 {
+            return Err(invalid("Dolgu ucu yalnızca dizide bulunan kollar için seçilebilir.".into(), "fillerEnds"));
+        }
         let mut names: Vec<(String, String)> = vec![("from".into(), "Dizinin başının".into())];
         names.extend((0..through.len()).map(|i| (format!("through[{i}]"), format!("{}. köşenin", i + 1))));
         names.push(("to".into(), "Dizinin sonunun".into()));
@@ -734,7 +742,10 @@ impl Document {
         let mut fills: Vec<(usize, f64, f64, usize)> = Vec::new();
         let mut legs = Vec::with_capacity(n);
         for (j, s0, s1, laid, total) in &spans {
-            let back = *j == 0 && n > 1;
+            let back = match recipe.filler_ends.get(*j).copied().flatten() {
+                Some(end) => end == CaseworkEnd::Start,
+                None => *j == 0 && n > 1,
+            };
             let mut x = if back { s1 - total } else { *s0 };
             let gap = if back { (*s0, s1 - total) } else { (s0 + total, *s1) };
             for &(number, w) in laid {
@@ -1044,7 +1055,10 @@ impl Document {
             });
             let leftover = z - a;
             filler += leftover;
-            let (message, path) = if n == 1 {
+            let at_start = (a - legs[j].start).abs() < SLACK;
+            let (message, path) = if n == 1 && at_start {
+                (format!("Dizinin başında {} m dolgu kalıyor.", fixed(leftover, 3)), "from".to_owned())
+            } else if n == 1 {
                 (
                     format!("{laid} modülden sonra dizinin sonunda {} m dolgu kalıyor.", fixed(leftover, 3)),
                     "to".to_owned(),
@@ -1052,7 +1066,7 @@ impl Document {
             } else {
                 (
                     format!("{}. kolda {} m dolgu kalıyor.", j + 1, fixed(leftover, 3)),
-                    if j == 0 { "from".to_owned() } else { leg_path(j, n) },
+                    if at_start && j == 0 { "from".to_owned() } else if at_start { leg_path(j - 1, n) } else { leg_path(j, n) },
                 )
             };
             warnings.push(CaseworkWarning {
@@ -1128,7 +1142,7 @@ impl Document {
             index: None,
             entity: path_entity(&base, counter, (!holes.is_empty()).then_some(holes), true),
         });
-        let ties: Vec<Option<CaseworkTie>> = (0..n).map(|j| self.casework_tie(pts[j], pts[j + 1])).collect();
+        let ties: Vec<Option<CaseworkTie>> = (0..n).map(|j| self.casework_tie(pts[j], pts[j + 1], recipe.level.as_deref())).collect();
         for (j, tie) in ties.iter().enumerate() {
             let Some(tie) = tie else { continue };
             legs[j].wall = Some(tie.wall.to_text());
@@ -1136,12 +1150,12 @@ impl Document {
             warnings.extend(self.casework_swing_clashes(tie.wall, &frames[j], depth, j, n));
         }
         // Its modules stand on their wall's level (docs/adr/0733 §1): the first wall's.
-        let level = ties.iter().flatten().find_map(|t| {
+        let level = recipe.level.clone().or_else(|| ties.iter().flatten().find_map(|t| {
             let slot = crate::identity::Uuid::parse_str(&t.wall.to_text())
                 .ok()
                 .and_then(|u| self.slot_of(u))?;
             self.get(slot)?.own_level().map(str::to_owned)
-        });
+        }));
         if let Some(level) = level {
             for m in &mut members {
                 if let Entity::Insert(i) = &mut m.entity {
@@ -1163,9 +1177,10 @@ impl Document {
 
     /// The wall face edge a leg from `a` to `b` stands on: the first wall's (document order), its left face before
     /// its right; none.
-    fn casework_tie(&self, a: Vec2, b: Vec2) -> Option<CaseworkTie> {
+    fn casework_tie(&self, a: Vec2, b: Vec2, level: Option<&str>) -> Option<CaseworkTie> {
         for s in self.store.iter() {
             let Entity::Wall(w) = &*s.entity else { continue };
+            if level.is_some() && w.wall.arch.level.as_deref() != level { continue; }
             let Some(faces) = wall_faces(&s.entity) else { continue };
             for (face, (pts, straight)) in [CaseworkFace::Left, CaseworkFace::Right].into_iter().zip(&faces) {
                 let n = pts.len();

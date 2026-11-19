@@ -18,6 +18,27 @@ fn at() -> Vec2 {
     Vec2::new(crate::tools_scenes::E + 3.0, crate::tools_scenes::N + 5.0)
 }
 
+#[test]
+fn undo_in_an_empty_command_line_takes_a_drawing_point_but_keeps_partial_input() {
+    let mut app = wall_started();
+    let undo = crate::keys::KeyPress {
+        key: iced::keyboard::Key::Character("z".into()),
+        physical: iced::keyboard::key::Physical::Code(iced::keyboard::key::Code::KeyZ),
+        modifiers: iced::keyboard::Modifiers::COMMAND,
+        text: None,
+        repeat: false,
+    };
+    app.line_focused = true;
+    app.command_input = "2,".into();
+    let _ = app.key(undo.clone());
+    assert_eq!(app.session.point_count(), 1);
+    assert_eq!(app.command_input, "2,");
+    app.command_input.clear();
+    let _ = app.key(undo);
+    assert_eq!(app.session.point_count(), 0);
+    assert!(app.session.is_running());
+}
+
 fn setting(app: &App) -> Option<&'static str> {
     app.field
         .as_ref()

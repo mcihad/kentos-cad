@@ -92,7 +92,10 @@ const CODES: [(ArchAuditCheck, &[&str]); 18] = [
     (ArchAuditCheck::Casework, &[codes::ARCH_CASEWORK_BROKEN]),
     (
         ArchAuditCheck::Doors,
-        &[codes::ARCH_DOOR_SWING_CLASH, codes::ARCH_DOOR_FRONT_BLOCKED, codes::ARCH_DOOR_CLEAR_NARROW],
+        &[
+            codes::ARCH_DOOR_SWING_CLASH, codes::ARCH_DOOR_FRONT_BLOCKED, codes::ARCH_DOOR_CLEAR_NARROW,
+            codes::ARCH_DOOR_PULL_BLOCKED, codes::ARCH_DOOR_PUSH_BLOCKED,
+        ],
     ),
     (ArchAuditCheck::Program, &crate::program_check::CODES),
     (ArchAuditCheck::Fixtures, &[codes::ARCH_FIXTURE_ZONE_BLOCKED, codes::ARCH_FIXTURE_ZONE_DOOR]),
@@ -145,6 +148,22 @@ fn limits(input: &ArchAudit) -> Result<Limits, Stop> {
                 format!("{what} {v} {unit}; sıfır ya da daha büyük olmalı."),
                 Some(path.into()),
             )));
+        }
+    }
+    if let Some(profile) = input.door_approach {
+        for (length, key, positive) in [
+            (profile.pull_depth, "pullDepth", true),
+            (profile.push_depth, "pushDepth", true),
+            (profile.pull_latch, "pullLatch", false),
+            (profile.push_latch, "pushLatch", false),
+        ] {
+            if !length.is_finite() || length < 0.0 || (positive && length == 0.0) {
+                return Err(Stop::failed(error(
+                    codes::INVALID_ARCH_AUDIT,
+                    "Kapı yaklaşım derinlikleri pozitif, kol tarafı payları sıfır veya pozitif olmalı.".into(),
+                    Some(format!("doorApproach.{key}")),
+                )));
+            }
         }
     }
     Ok(Limits {
@@ -232,6 +251,7 @@ fn finding(
         repair: repair.into(),
         uids,
         at: wire(at),
+        outline: Vec::new(),
         fix,
         exception: false,
         lapsed: false,
@@ -1879,6 +1899,8 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
         run.extend(codes.iter().copied().filter(|c| {
             (ramp_rules.is_some() || !RAMP_PROFILE_CODES.contains(c))
                 && (stair_rules.is_some() || !STAIR_PROFILE_CODES.contains(c))
+                && (input.door_approach.is_some()
+                    || ![codes::ARCH_DOOR_PULL_BLOCKED, codes::ARCH_DOOR_PUSH_BLOCKED].contains(c))
         }));
         let mut found = match check {
             ArchAuditCheck::Walls => {
@@ -1902,6 +1924,7 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
             ArchAuditCheck::Doors => crate::door_audit::findings(
                 doc,
                 input.min_clear_width,
+                input.door_approach,
                 |code, message, repair, slots, at, nature, turn| {
                     // Its fix: the door turned (docs/adr/0787 §1), not on a locked layer.
                     let fix = turn.zip(slots.first()).and_then(|((label, what), door)| {

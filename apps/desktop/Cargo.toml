@@ -133,6 +133,13 @@ kentos-digital-project = { path = "../../crates/shared/digital-project" }
 # The IFC viewer reads files through the reading face and its engine (docs/adr/8061 §11, docs/adr/8073 §5).
 kentos-ifc = { path = "../../crates/shared/ifc", features = ["view"] }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+# AppKit's native accessibility tree for the Winit content view. These packages are already in the lockfile.
+objc2 = "=0.6.4"
+objc2-app-kit = { version = "=0.3.2", default-features = false, features = ["NSAccessibility", "NSAccessibilityElement", "NSAccessibilityConstants", "NSAccessibilityProtocols", "NSResponder", "NSView", "NSWindow"] }
+objc2-foundation = { version = "=0.3.2", default-features = false, features = ["NSArray", "NSDictionary", "NSGeometry", "NSObject", "NSString", "NSValue"] }
+raw-window-handle = "=0.6.2"
+
 [features]
 # The e-signature's software test card and in-process test server for demos and the real-window acceptance
 # (docs/adr/9002 §6): KENTOS_IMZA_DENEME_KARTI=1 and KENTOS_IMZA_DENEME_SUNUCU=1 pick them. Never in a release build.

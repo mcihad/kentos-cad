@@ -138,6 +138,7 @@ struct Tab<'a, Message> {
     count: Option<String>,
     /// A narrow strip keeps it in sight, open or not: a module program's own tab (docs/adr/8005).
     pinned: bool,
+    layout_id: Option<iced::advanced::widget::Id>,
 }
 
 enum Panel<'a, Message> {
@@ -268,6 +269,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             on_press,
             count: None,
             pinned: false,
+            layout_id: None,
         });
         self
     }
@@ -281,7 +283,16 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             on_press,
             count: None,
             pinned: true,
+            layout_id: None,
         });
+        self
+    }
+
+    /// Identifies the most recently added tab's rendered bounds for a widget operation.
+    pub fn tab_layout_id(mut self, id: impl Into<iced::advanced::widget::Id>) -> Self {
+        if let Some(tab) = self.tabs.last_mut() {
+            tab.layout_id = Some(id.into());
+        }
         self
     }
 
@@ -301,6 +312,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             on_press,
             count: Some(count.into()),
             pinned: false,
+            layout_id: None,
         });
         self
     }
@@ -432,6 +444,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
                 on_press: tab.on_press,
                 count: tab.count,
                 pinned: tab.pinned,
+                layout_id: tab.layout_id,
                 tip: tab_tips.get(i).cloned().flatten(),
             })
             .collect();
@@ -709,6 +722,7 @@ struct TabSpec<Message> {
     count: Option<String>,
     pinned: bool,
     tip: Option<KeyTip>,
+    layout_id: Option<iced::advanced::widget::Id>,
 }
 
 /// The ⋯ button's width: its glyph and padding.
@@ -745,6 +759,10 @@ fn tab_element<'a, Message: Clone + 'a>(spec: &TabSpec<Message>, collapsed: bool
     };
     // The tab's key tip under its middle (the web's KeyTips).
     let tab_button = key_tip(tab_button, spec.tip.clone(), Place::Under);
+    let tab_button = match &spec.layout_id {
+        Some(id) => container(tab_button).id(id.clone()).into(),
+        None => tab_button,
+    };
     if !contextual {
         return tab_button;
     }

@@ -4,4 +4,4 @@
  * What a bound slab's outline comes from (docs/adr/0771 §4): the walls round a point (their outer faces, a storey's
  * floor; or a room's inner faces), or a space's rings (a floor finish, a wet room's slab).
  */
-export type SlabSourceKind = "walls" | "space";
+export type SlabSourceKind = "walls" | "space" | "edges";

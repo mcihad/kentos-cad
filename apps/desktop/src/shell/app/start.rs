@@ -38,6 +38,8 @@ impl App {
         // The drawing's typefaces before the first frame (docs/adr/0055).
         crate::drawing_fonts::load();
         let mut app = Self {
+            #[cfg(target_os = "macos")]
+            accessibility: Default::default(),
             document: None,
             tab: catalog()
                 .tabs()
@@ -164,6 +166,7 @@ impl App {
             styles: crate::style::Styles::new(),
             memory: Memory::default(),
             selection: Selection::new(),
+            scene_browse: None,
             clipboard: Clipboard::new(),
             snap: None,
             snap_cycle: None,

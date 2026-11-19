@@ -721,6 +721,7 @@ pub fn level_of(e: &Entity) -> Option<&str> {
         Entity::Stair(s) => s.stair.arch.level.as_deref(),
         Entity::Ramp(r) => r.ramp.arch.level.as_deref(),
         Entity::Space(s) => s.space.arch.level.as_deref(),
+        Entity::Insert(i) => i.arch.level.as_deref(),
         _ => None,
     }
 }
@@ -1689,9 +1690,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // The blocks that are building elements (docs/adr/8070 §5; EK-6 Tablo 6.35, 6.53, 6.64): each its class and type
     // (USERDEFINED: its block's name its object type), named for its block, its body a box over its outline from its
     // underside up its height; with no height it has no body. A lift carries its rated capacity.
+    let mut fixture_plans = BTreeMap::new();
     for f in &fixtures {
         let class = match f.element.class {
             kentos_contracts::BlockElementClass::Furniture => Class::Furniture,
+            kentos_contracts::BlockElementClass::ElectricAppliance => Class::ElectricAppliance,
             kentos_contracts::BlockElementClass::SanitaryTerminal => Class::SanitaryTerminal,
             kentos_contracts::BlockElementClass::TransportElement => Class::TransportElement,
         };
@@ -1707,6 +1710,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             None => "NOTDEFINED",
         };
         let bottom = f.element.elevation.unwrap_or(0.0);
+        if f.element.height.is_none() && f.ring.len() >= 3 {
+            fixture_plans.insert(f.id, (f.ring.clone(), bottom));
+        }
         let shapes = f
             .element
             .height
@@ -2655,6 +2661,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         },
         storeys,
         elements,
+        fixture_plans,
         openings,
         spaces,
         zones,

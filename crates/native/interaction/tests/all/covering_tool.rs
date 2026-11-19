@@ -16,6 +16,48 @@ fn bench() -> Bench {
 }
 
 #[test]
+fn early_enter_keeps_manual_space_slab_and_covering_corners() {
+    for tool in ["space", "slab", "covering"] {
+        let mut b = bench();
+        b.start(tool);
+        assert!(b.run(|s, cx| s.configure("S", "draw", cx)));
+        let before = b.doc.to_snapshot_v2();
+        for (i, (x, y)) in [(0., 0.), (4., 0.)].into_iter().enumerate() {
+            b.click(x, y);
+            b.confirm();
+            assert_eq!(b.session.tool_id(), tool);
+            assert_eq!(b.points(), i + 1);
+            assert_eq!(b.doc.to_snapshot_v2(), before);
+        }
+        b.click(4., 3.);
+        b.confirm();
+        assert_eq!(b.doc.entities().count(), before.entities.len() + 1);
+        assert_eq!(b.points(), 0);
+        b.confirm();
+        assert_eq!(b.session.tool_id(), "select");
+        b.doc.undo().unwrap();
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+    }
+}
+
+#[test]
+fn covering_thickness_shows_the_same_editable_dimension_in_panel_and_prompt() {
+    for unit in [DrawingUnit::M, DrawingUnit::Mm] {
+        let mut b = bench();
+        let mut settings = b.doc.settings().clone();
+        settings.drawing_unit = Some(unit);
+        b.doc.set_settings(settings);
+        b.start("covering");
+        let f = b.run(|_, cx| cx.format());
+        let rows = b.session.settings(&f);
+        let field = &rows.iter().find(|r| r.key == "E").unwrap().value;
+        assert_eq!(b.session.prompt().options.iter().find(|o| o.key == "E").unwrap().value.as_ref(), Some(field));
+        assert_eq!(b.run(|_, cx| cx.typed_length(field)), Some(0.0125));
+        assert!(b.run(|s, cx| s.configure("E", field, cx)));
+    }
+}
+
+#[test]
 fn the_covering_tool_draws_a_ceiling_and_a_floor_covering() {
     let mut b = bench();
     assert_eq!(b.session.tool_id(), "covering");

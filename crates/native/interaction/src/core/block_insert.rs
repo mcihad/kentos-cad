@@ -63,6 +63,28 @@ enum Ask {
     Rotation,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum FixtureAnchor {
+    #[default]
+    Base,
+    BackCenter,
+    BackLeft,
+    BackRight,
+}
+
+impl FixtureAnchor {
+    const CHOICES: [(Self, &'static str, &'static str); 4] = [
+        (Self::Base, "base", "Kitaplık noktası"),
+        (Self::BackCenter, "backCenter", "Arka orta"),
+        (Self::BackLeft, "backLeft", "Arka sol"),
+        (Self::BackRight, "backRight", "Arka sağ"),
+    ];
+
+    fn label(self) -> &'static str {
+        Self::CHOICES.iter().find(|(anchor, _, _)| *anchor == self).map_or("Kitaplık noktası", |x| x.2)
+    }
+}
+
 /// The Blok ekle tool.
 #[derive(Clone, Debug, Default)]
 pub struct BlockInsert {
@@ -84,6 +106,8 @@ pub struct BlockInsert {
     values_of: Option<BlockId>,
     /// What the tool knows of the chosen block, as of the last call.
     chosen: Chosen,
+    anchor: FixtureAnchor,
+    clearance: Option<(Vec2, Vec2, f64, &'static str)>,
 }
 
 /// The keys of a dynamic block's parameters in the settings pane, in their order (at most eight).
@@ -122,6 +146,7 @@ struct Chosen {
     unitless: bool,
     /// The factor its inserts take for its unit.
     unit_factor: f64,
+    fixture: bool,
     /// The definition's box with the values, about its base point; none when it draws nothing.
     bbox: Option<[f64; 4]>,
     /// The values resolved as the command resolves them, for the ghost.
@@ -173,7 +198,22 @@ fn chosen_of(
         }
         _ => (None, None),
     };
-    let bbox = kentos_native_application::blocks::definition_box(doc, def.id, resolved.as_ref());
+    let fixture = def.card.as_ref().and_then(|card| card.category.as_deref())
+        .and_then(|category| category.split('/').next())
+        .is_some_and(|category| matches!(category.trim(), "Mobilya" | "Islak hacim" | "Mutfak"));
+    // A dashed working zone can be displayed without making the physical footprint larger.
+    let body = resolved.as_ref().filter(|_| fixture).and_then(|values| {
+        let zone = def.dynamic.as_ref()?.parameters.iter().find_map(|p| match p {
+            BlockParameter::Visibility { name, .. }
+                if matches!(values.get(name), Some(ParamValue::Text(state))
+                    if name_key(state) == name_key(kentos_domain::arch_values::ZONE_STATE)) => Some(name),
+            _ => None,
+        })?;
+        let mut body = values.clone();
+        body.remove(zone);
+        Some(body)
+    });
+    let bbox = kentos_native_application::blocks::definition_box(doc, def.id, body.as_ref().or(resolved.as_ref()));
     // A value as the click places it: resolved (a lookup's row sets its lengths), else as given.
     let given = |name: &str| resolved.as_ref().and_then(|r| r.get(name)).or_else(|| values.get(name));
     let offers = def
@@ -218,6 +258,7 @@ fn chosen_of(
         units: unit_words(def.units).to_owned(),
         unitless: def.units == Some(BlockUnits::Unitless),
         unit_factor: blocks_insert::unit_factor(doc, def),
+        fixture,
         bbox,
         resolved,
         blocks,
@@ -247,6 +288,7 @@ pub fn fixture_kind(def: &kentos_commands::BlockDefinition) -> Option<crate::arc
 
 /// How near a wall's face Duvara hizala takes the block, logical pixels.
 const WALL_REACH_PX: f64 = 40.0;
+const CLEARANCE_LIMIT: f64 = 10.0;
 
 /// The wall face nearest `p` within `reach`: the point on it and the turn (degrees, counter-clockwise) that lays a
 /// block's x along the face, its +y away from the wall toward `p` (docs/adr/0702). Straight face segments only.
@@ -256,7 +298,7 @@ pub fn wall_fit(p: Vec2, reach: f64, cx: &Context<'_>) -> Option<(Vec2, f64)> {
         let Some(e) = cx.doc.get(Slot(item.id as u32)) else {
             continue;
         };
-        if !matches!(e, Entity::Wall(_)) {
+        if !matches!(e, Entity::Wall(_)) || e.own_level() != cx.level {
             continue;
         }
         let kentos_geometry_core::entity::Shape::Wall { pts, bulges, wall } =
@@ -336,6 +378,24 @@ impl BlockInsert {
         let x = (m.block_scale * unit).abs();
         let y = (m.block_y_scale.unwrap_or(m.block_scale) * unit).abs();
         Some(((b[2] - b[0]) * x, (b[3] - b[1]) * y))
+    }
+
+    /// The insertion point the command accepts for the chosen fixture anchor at the cursor.
+    fn insertion_at(&self, at: Vec2, turn: f64, cx: &Context<'_>) -> Vec2 {
+        let Some([left, back, right, _]) = self.chosen.bbox.filter(|_| self.chosen.fixture) else { return at };
+        let along = match self.anchor {
+            FixtureAnchor::Base => return at,
+            FixtureAnchor::BackCenter => (left + right) / 2.0,
+            FixtureAnchor::BackLeft => left,
+            FixtureAnchor::BackRight => right,
+        };
+        let m = &*cx.memory;
+        let unit = self.chosen.unit_factor;
+        let shift = kentos_geometry_core::block::placement_xy(
+            Vec2::new(0.0, 0.0), m.block_scale * unit,
+            m.block_y_scale.unwrap_or(m.block_scale) * unit, turn_of(turn), m.block_mirror,
+        );
+        Vec2::new(at.x - shift[0] * along - shift[2] * back, at.y - shift[1] * along - shift[3] * back)
     }
 
     /// The first list of the block's sizes or views stepped to its next label (Varyant).
@@ -478,11 +538,13 @@ impl BlockInsert {
     }
 
     fn accept(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        self.see(cx);
         self.d.begin(p, cx);
         let (None, None, Some(block)) = (self.ask, self.pending, cx.memory.block_insert) else {
             return;
         };
         let turn = self.turn(cx);
+        let p = self.insertion_at(p, turn, cx);
         // A block with attributes to ask asks their values first (§7): not a constant, a preset or a field one
         // (docs/adr/0317 §1).
         if cx.doc.block(block).is_some_and(|b| {
@@ -537,6 +599,7 @@ impl BlockInsert {
         self.see(cx);
         self.ghost.clear();
         self.marks.clear();
+        self.clearance = None;
         let (Some(h), None, Some(block)) = (self.d.hover, self.ask, cx.memory.block_insert) else {
             return;
         };
@@ -553,15 +616,34 @@ impl BlockInsert {
             .resolved
             .as_ref()
             .and_then(kentos_native_application::blocks::core_params);
+        let turn = self.turn(cx);
+        let insertion = self.insertion_at(h, turn, cx);
         let paths = cx.spatial.store().insert_outlines_with(
             &block.to_text(),
-            h,
+            insertion,
             (x, y),
-            turn_of(self.turn(cx)),
+            turn_of(turn),
             m.block_mirror,
             params,
         );
         (self.ghost, self.marks) = ghosts(&paths);
+        if let Some([left, _, right, front]) = self.chosen.bbox.filter(|_| self.chosen.fixture) {
+            let [a, b, c, d, tx, ty] = kentos_geometry_core::block::placement_xy(insertion, x, y, turn_of(turn), m.block_mirror);
+            let p = |u| Vec2::new(tx + a * u + c * front, ty + b * u + d * front);
+            let norm = c.hypot(d);
+            if norm > 0.0 {
+                let outward = Vec2::new(c / norm, d / norm);
+                let edge = [p(left), p(right)];
+                let middle = p((left + right) * 0.5);
+                let reach = CLEARANCE_LIMIT + ((right - left) * x).abs() * 0.5;
+                let candidates = cx.spatial.store().near(middle, reach);
+                self.clearance = kentos_native_application::fixture_front(
+                    cx.doc, candidates.iter().map(|item| Slot(item.id as u32)), edge, outward, cx.level, CLEARANCE_LIMIT,
+                ).map(|(from, length, what)| (
+                    from, Vec2::new(from.x + outward.x * length, from.y + outward.y * length), length, what,
+                ));
+            }
+        }
     }
 
     /// What the tag beside the cursor says (docs/adr/0726 §3): the footprint, the unit, the turn and the mirror.
@@ -580,6 +662,9 @@ impl BlockInsert {
             None => lines.push(format!("{name}: çizecek nesnesi yok")),
         }
         let mut more = vec![format!("birimi {}", self.chosen.units)];
+        if self.chosen.fixture {
+            more.push(self.anchor.label().into());
+        }
         match self.fit {
             Some((_, t)) => more.push(format!("dönüş {}° duvara göre", fixed(t, 1))),
             None if m.block_rotation != 0.0 => more.push(format!("dönüş {}°", fixed(m.block_rotation, 1))),
@@ -589,6 +674,12 @@ impl BlockInsert {
             more.push("aynalı".to_owned());
         }
         lines.push(more.join(" · "));
+        if self.chosen.fixture {
+            lines.push(match self.clearance {
+                Some((_, _, length, what)) => format!("Ön boşluk {} · {what}", f.length(length)),
+                None => format!("Önde {} içinde engel yok", f.length(CLEARANCE_LIMIT)),
+            });
+        }
         lines
     }
 }
@@ -761,7 +852,7 @@ impl Tool for BlockInsert {
     fn preview(&self, format: &crate::format::Format) -> Preview {
         let shown = self.ask.is_none() && !self.ghost.is_empty();
         let at = self.d.hover.filter(|_| shown);
-        Preview {
+        let mut preview = Preview {
             strokes: self.ghost.clone(),
             marks: self.marks.clone(),
             tracking: self.d.tracking,
@@ -779,7 +870,14 @@ impl Tool for BlockInsert {
                 lines: self.tag_lines(format),
             }),
             ..Preview::default()
+        };
+        if let Some((from, to, length, _)) = self.clearance.filter(|_| shown) {
+            if length > 0.001 {
+                preview.strokes.push(Stroke::dashed(vec![from, to], false, [5.0, 4.0]).tone(Tone::Snap));
+            }
+            preview.markers.push(Marker { at: to, shape: MarkerShape::Plus(5.0), tone: if length <= 0.001 { Tone::Danger } else { Tone::Snap } });
         }
+        preview
     }
 
     /// The pane's rows (docs/adr/0726 §4): the block, its size and unit, a dynamic block's sizes and views, the
@@ -813,14 +911,22 @@ impl Tool for BlockInsert {
                 .collect(),
         )];
         if let Some((w, d)) = self.footprint() {
+            let size = |n| {
+                let words = format.length_bare(n);
+                if c.fixture && format.length_unit_label() == "mm" && words.contains('.') {
+                    words.trim_end_matches('0').trim_end_matches('.').to_owned()
+                } else {
+                    words
+                }
+            };
             rows.push(
                 Setting::text(
                     "size",
                     "En × boy",
                     format!(
                         "{} × {} {}",
-                        format.length_bare(w),
-                        format.length_bare(d),
+                        size(w),
+                        size(d),
                         format.length_unit_label()
                     ),
                 )
@@ -828,6 +934,16 @@ impl Tool for BlockInsert {
             );
         }
         rows.push(Setting::text("units", "Bloğun birimi", c.units.clone()).read_only());
+        if c.fixture {
+            rows.push(Setting::choice("anchor", "Tutma noktası", FixtureAnchor::CHOICES.iter().map(|(anchor, key, label)| OptionChoice {
+                label: (*label).to_owned(),
+                typed: (*key).to_owned(),
+                icon: None,
+                preview: None,
+                checked: *anchor == self.anchor,
+                command: None,
+            }).collect()));
+        }
         for (offer, key) in c.offers.iter().zip(PARAM_KEYS) {
             rows.push(match offer {
                 Offer::Choice { name, labels, chosen } => {
@@ -925,6 +1041,11 @@ impl Tool for BlockInsert {
             }
             "wall" => {
                 cx.memory.block_to_wall = value == "yes";
+                true
+            }
+            "anchor" if self.chosen.fixture => {
+                let Some((anchor, _, _)) = FixtureAnchor::CHOICES.iter().find(|(_, key, _)| *key == value) else { return false };
+                self.anchor = *anchor;
                 true
             }
             _ => match PARAM_KEYS.iter().position(|k| *k == key) {

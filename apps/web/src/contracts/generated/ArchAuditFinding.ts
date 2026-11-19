@@ -96,6 +96,10 @@ uids: Array<string>,
  */
 at: Vec2, 
 /**
+ * Boundary of the affected area in model coordinates, when the finding has one.
+ */
+outline?: Array<Vec2>, 
+/**
  * The call that resolves it, when one plainly does and the object it writes is on an unlocked layer.
  */
 fix?: ArchAuditFix, 

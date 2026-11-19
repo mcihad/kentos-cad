@@ -818,6 +818,75 @@ fn plan_dimensions_writes_four_sides_and_two_chains_each_way_in_one_step() {
     assert_eq!(dims(&app), 0, "one undo takes them all");
 }
 
+#[test]
+fn refreshing_plan_dimensions_preserves_manual_work_and_reads_the_new_jambs() {
+    use kentos_commands::{DimensionEntity, DimensionSetRow, Entity, EntityId, TextShift, Vec2};
+    use kentos_domain::{Document, Uuid};
+
+    let (mut app, [_, door, _]) = building();
+    let generate = |app: &mut App| {
+        let _ = app.update(Message::Run("tool.planDimensions"));
+        app.with_tool(|s, cx| s.configure("A", "construction", cx));
+        let _ = app.submit_line("");
+    };
+    generate(&mut app);
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let door_uid = doc.uid(door).unwrap();
+    let members: Vec<_> = doc.dimension_sets().iter().flat_map(|set| &set.members).collect();
+    let jamb = members.iter().find(|member| {
+        member.row == DimensionSetRow::Openings
+            && member.a.uid.0 == *door_uid.as_bytes()
+            && member.b.uid.0 == *door_uid.as_bytes()
+    }).expect("a dimension joining both jambs").uid;
+    let dimension = |doc: &Document, id: EntityId| -> DimensionEntity {
+        let Some(Entity::Dimension(d)) = doc.slot_of(Uuid::from_bytes(id.0)).and_then(|s| doc.get(s)) else {
+            panic!("dimension {id} was lost");
+        };
+        d.clone()
+    };
+    let length = |d: &DimensionEntity| (d.b.x - d.a.x).hypot(d.b.y - d.a.y);
+    // If the wall or openings row already measures the whole side, the overall row suppresses the duplicate.
+    let overall: Vec<_> = members.iter().filter_map(|member| {
+        let width = length(&dimension(doc, member.uid));
+        (width >= 4.0).then_some(member.uid)
+    }).collect();
+    assert!(!overall.is_empty());
+    let totals: Vec<_> = overall.iter().map(|&id| length(&dimension(doc, id))).collect();
+    let jamb_dim = dimension(doc, jamb);
+    assert!((length(&jamb_dim) - 0.9).abs() < 1e-8);
+    let mut manual = jamb_dim;
+    manual.base.attrs.clear();
+    manual.refs = None;
+    manual.a = Vec2 { x: 7.0, y: 0.0 };
+    manual.b = Vec2 { x: 9.0, y: 0.0 };
+    manual.text = Some("Elle eklenen ölçü".into());
+    let manual_slot = doc.add_many(vec![Entity::Dimension(manual)], "Elle ölçü").unwrap()[0];
+    let manual_uid = EntityId(*doc.uid(manual_slot).unwrap().as_bytes());
+    let manual = dimension(doc, manual_uid);
+    let shift = TextShift { along: 0.25, across: 0.10 };
+    command(&mut app, "cad.dimensions.edit", json!({"edit": {
+        "kind": "moveText", "uid": jamb.to_string(), "along": shift.along, "across": shift.across
+    }}));
+    command(&mut app, "cad.openings.edit", json!({
+        "uids": [door_uid.to_string()], "operation": {"kind": "set", "width": 1.0}
+    }));
+    generate(&mut app);
+    let doc = &app.document.as_ref().unwrap().model;
+    let reopened = Document::from_snapshot_v2(
+        kentos_kcad::decode(&kentos_kcad::encode(&doc.to_snapshot_v2()).unwrap()).unwrap(),
+    ).unwrap();
+    for model in [doc, &reopened] {
+        assert_eq!(model.dimension_sets().len(), 4);
+        let updated = dimension(model, jamb);
+        assert!((length(&updated) - 1.0).abs() < 1e-8);
+        assert_eq!(updated.text_shift, Some(shift));
+        for (&id, total) in overall.iter().zip(&totals) {
+            assert!((length(&dimension(model, id)) - total).abs() < 1e-8);
+        }
+        assert_eq!(dimension(model, manual_uid), manual);
+    }
+}
+
 /// EK-3 numbering (M27, docs/adr/8027): four rooms in the four quarters of Zemin kat; EK-3 on and the section D01;
 /// Enter with none clicked numbers the storey Kat_Bölüm_Sıra, clockwise from north: KD, GD, GB, KB.
 #[test]

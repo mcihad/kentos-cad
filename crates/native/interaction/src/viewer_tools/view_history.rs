@@ -32,11 +32,12 @@ pub const WHEEL_PAUSE: Duration = Duration::from_millis(500);
 /// Where the camera stands: the world point in the middle of the area,
 /// logical pixels per world unit and the view's twist (radians, docs/adr/0285
 /// §2). The area's size is not part of it.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Viewpoint {
     pub center: Vec2,
     pub scale: f64,
     pub twist: f64,
+    pub ceiling: Option<(Option<String>, kentos_commands::CeilingRange)>,
 }
 
 /// The views left behind and the ones gone back from.
@@ -157,6 +158,7 @@ mod tests {
             center: Vec2::new(f64::from(n) * 10.0, f64::from(n) * -3.0),
             scale: 1.0 + f64::from(n) / 8.0,
             twist: 0.0,
+            ceiling: None,
         }
     }
 
@@ -190,7 +192,7 @@ mod tests {
         }
         assert_eq!(here, view(1), "view 0 was dropped");
         assert!(!h.can_back());
-        assert_eq!(h.back(here), None);
+        assert_eq!(h.back(here.clone()), None);
         assert!(h.can_forward());
         for k in 2..=31 {
             let went = h.forward(here).expect("a view to go forward to");

@@ -100,6 +100,8 @@ pub(super) fn placed_recipe(
 /// modules' own values in order: two recipes that lay the same run compare the same.
 pub(super) fn normalized(r: &CaseworkRun) -> CaseworkRun {
     let mut out = r.clone();
+    // A definition carries relative storeys. Each placed run gets its instance's absolute level.
+    out.level = None;
     out.expected_revision = None;
     if out.side == Some(CaseworkSide::Left) {
         out.side = None;
@@ -247,6 +249,7 @@ pub(super) fn lays_of(
     keys: Option<&[String]>,
 ) -> Vec<Lay> {
     let mx = matrix(inst.at, inst.rotation, inst.mirror);
+    let order = crate::modules_edit::storey_order(doc);
     m.runs
         .iter()
         .filter(|r| holds(inst, r))
@@ -255,7 +258,12 @@ pub(super) fn lays_of(
             module: m.id.clone(),
             instance: inst.id.clone(),
             key: r.key.clone(),
-            recipe: placed_recipe(doc, &r.recipe, &mx, inst.mirror),
+            recipe: {
+                let mut recipe = placed_recipe(doc, &r.recipe, &mx, inst.mirror);
+                let rise = r.storey.saturating_sub(inst.storey.unwrap_or(0));
+                recipe.level = crate::modules_edit::storey_level(&order, inst.level.as_deref(), rise).flatten();
+                recipe
+            },
             record: inst
                 .runs
                 .iter()

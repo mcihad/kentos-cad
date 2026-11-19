@@ -463,6 +463,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> Comman
                 gap: drawn.gap,
                 members: members_of(doc, &roles, &slots),
                 digest: elevations::digest(&drawn.items),
+                member_hashes: elevations::member_hashes(&drawn.items),
             };
             if let Err(why) = stamp(doc, &target.layer, &record, before) {
                 return refused(doc, group, why);
@@ -544,6 +545,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> Comman
             }
             record.members = members;
             record.digest = elevations::digest(&drawn.items);
+            record.member_hashes = elevations::member_hashes(&drawn.items);
             if let Err(why) = stamp(doc, &layer, &record, before) {
                 return refused(doc, group, why);
             }

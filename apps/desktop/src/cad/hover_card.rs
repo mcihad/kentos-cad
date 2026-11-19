@@ -378,7 +378,7 @@ impl App {
     /// its other side near the drawing's edges.
     pub(crate) fn hover_card_view(&self) -> Option<Element<'_, Message>> {
         let slot = self.hover_card?;
-        if self.session.is_running() || self.session.grip_active() {
+        if self.session.is_running() || self.session.grip_active() || self.scene_browse.is_some() {
             return None;
         }
         let doc = self.document.as_ref()?;

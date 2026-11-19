@@ -9,11 +9,13 @@ impl App {
     /// Built at its own width: options it has no room for go into its “Diğer”
     /// chip (the web's `CommandLine.fit`).
     pub(crate) fn command_line(&self) -> Element<'_, Message> {
-        container(iced::widget::responsive(move |size| {
+        let line = container(iced::widget::responsive(move |size| {
             self.command_line_at(size.width)
         }))
-        .height(kentos_ui::widget::command_line::height(0, false))
-        .into()
+        .height(kentos_ui::widget::command_line::height(0, false));
+        #[cfg(target_os = "macos")]
+        let line = line.id(crate::accessibility::COMMAND_LINE);
+        line.into()
     }
 
     pub(super) fn command_line_at(&self, width: f32) -> Element<'_, Message> {

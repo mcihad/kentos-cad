@@ -1101,6 +1101,17 @@
             ],
             "description": "A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`), or a roof's as an escape route (docs/adr/8090,\nBYKHY Ek-3/B 4-a); absent: unknown (missing)."
           },
+          "external": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclaredExternal"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A wall's or a slab's declared exterior role (docs/adr/8124, EK-6 `IsExternal`), over what the drawing says (a wall\non its storey's outline, a balcony's or a terrace's slab); absent: the drawing's."
+          },
           "fireRating": {
             "anyOf": [
               {
@@ -1111,6 +1122,17 @@
               }
             ],
             "description": "Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's (a wall style's); absent: its\ntype's, else none (missing)."
+          },
+          "fireStop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclaredFireStop"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A wall's or a slab's declared fire stop role (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10); absent: not declared."
           },
           "level": {
             "type": [
@@ -1138,6 +1160,28 @@
                 "type": "null"
               }
             ]
+          },
+          "protected": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclaredProtected"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A shaft room's declared protected role (docs/adr/8136, BYKHY Ek-3/B 8), said for the whole shaft; absent: not\ndeclared (a shaft is protected only when said so)."
+          },
+          "shaftVent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclaredShaftVent"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A lift shaft room's declared ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for\nthe whole shaft; absent: unknown (missing)."
           },
           "status": {
             "anyOf": [
@@ -1234,6 +1278,17 @@
               }
             ],
             "description": "Its reaction to fire class (docs/adr/8091; TS EN 13501-1, BYKHY Ek-2/Ç): `A2-s1,d0`, `B-s2,d0`, `E`, a floor\ncovering's `Bfl-s1` (`crate::reaction_problem`), with its basis. Absent: not declared (missing)."
+          },
+          "roofClass": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Declared"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its external fire performance as a roof covering (docs/adr/8134; TS EN 13501-5, BYKHY 28/2 and Ek-2/Ç):\n`BROOF`, `BROOF(t1)` … `FROOF(t4)` (`crate::roof_class_problem`), with its basis. Absent: not declared."
           },
           "strength": {
             "description": "Its strength class (docs/adr/8068; EK-6: the model's material is named `Ad_Dayanım`, “Beton_C25”, “Çelik_S355”):\nC25, S355 (`crate::strength_problem`). Absent: not given (a load-bearing material without one is missing).",
@@ -1362,6 +1417,17 @@
               "$ref": "#/components/schemas/FormAnswer"
             },
             "type": "array"
+          },
+          "layout": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuildingLayout"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Yapı nizamı (docs/adr/8141; `.kcad` Mimari data 28): the building's layout the plan sets (PAİY 4/1-pppp), as\nPAİY 5/6 reads the TAKS and BYKHY 26/4 and 28/3 their scope by it. Absent: not said (where the plan sets none,\nayrık applies, PAİY 8/5: the architect says so)."
           },
           "levelView": {
             "anyOf": [
@@ -2559,6 +2625,15 @@
             "type": "array",
             "x-unit": "length"
           },
+          "rise": {
+            "description": "How much higher its axis's end is than its start, metres (docs/adr/8130): a sloped member (a rafter, a brace)\nrising evenly along its straight axis, its start where a level one's is, its depth across its axis as a level\none's; absent: level. Only a member's, on two points; never 0.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
           "role": {
             "$ref": "#/components/schemas/BeamRole",
             "description": "What it is (docs/adr/8041 §3): a beam (absent), a lintel or a bond beam."
@@ -3021,6 +3096,11 @@
             "const": "transportElement",
             "description": "Taşıma elemanı (`IfcTransportElement`, TSM): a lift.",
             "type": "string"
+          },
+          {
+            "const": "electricAppliance",
+            "description": "Elektrikli cihaz (IfcElectricAppliance, ECZ), EK-6 Tablo 6.29.",
+            "type": "string"
           }
         ]
       },
@@ -3367,6 +3447,31 @@
           {
             "const": "second",
             "description": "The second.",
+            "type": "string"
+          }
+        ]
+      },
+      "BuildingLayout": {
+        "description": "Yapı nizamı (docs/adr/8141; Planlı Alanlar İmar Yönetmeliği 4/1-pppp): ayrık, bitişik or blok, as the plan sets it;\nikiz (attached on one side, detached on the other) as the plan writes it, which the regulation reads as blok.",
+        "oneOf": [
+          {
+            "const": "detached",
+            "description": "Ayrık nizam (4/1-pppp-1): attached to no building on a neighbouring parcel.",
+            "type": "string"
+          },
+          {
+            "const": "attached",
+            "description": "Bitişik nizam (4/1-pppp-2): attached to one or more buildings on neighbouring parcels.",
+            "type": "string"
+          },
+          {
+            "const": "block",
+            "description": "Blok nizam (4/1-pppp-3): a mass of set length, depth and height on its parcel or across parcels, with gardens.",
+            "type": "string"
+          },
+          {
+            "const": "twin",
+            "description": "İkiz nizam: attached on one side, detached on the other; blok nizam to the regulation (4/1-pppp-3).",
             "type": "string"
           }
         ]
@@ -4025,6 +4130,20 @@
               "null"
             ]
           },
+          "fillerEnds": {
+            "description": "End of each leg receiving the leftover filler, in path order. An omitted entry uses the layout default.",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CaseworkEnd"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array"
+          },
           "fridge": {
             "anyOf": [
               {
@@ -4044,6 +4163,13 @@
           "layerId": {
             "description": "The layer the run goes on, a layer's id.",
             "type": "string"
+          },
+          "level": {
+            "description": "Storey of this run and its fixtures. Without an explicit storey a run follows its supporting wall.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "lineWeight": {
             "format": "double",
@@ -4160,6 +4286,27 @@
           "wall",
           "edge",
           "face"
+        ],
+        "type": "object"
+      },
+      "CeilingRange": {
+        "additionalProperties": false,
+        "description": "A reflected ceiling plan's upward view interval above the selected storey's reference floor, metres.",
+        "properties": {
+          "high": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "low": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "low",
+          "high"
         ],
         "type": "object"
       },
@@ -6852,6 +6999,86 @@
         },
         "required": [
           "exit",
+          "basis"
+        ],
+        "type": "object"
+      },
+      "DeclaredExternal": {
+        "additionalProperties": false,
+        "description": "A declared exterior role and its basis (docs/adr/8124; EK-6 `IsExternal` of a wall, a slab): what changes the\ndrawing's own reading, a wall on its storey's outline or a balcony's or a terrace's slab being outside.",
+        "properties": {
+          "basis": {
+            "$ref": "#/components/schemas/DeclaredBasis"
+          },
+          "external": {
+            "description": "Evet: it faces the outside (an outer wall, a slab over open air); hayır: it does not.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "external",
+          "basis"
+        ],
+        "type": "object"
+      },
+      "DeclaredFireStop": {
+        "additionalProperties": false,
+        "description": "A wall's or a slab's declared fire stop (yangın kesici) role and its basis (docs/adr/8136; BYKHY 4/pp: an element,\nhorizontal or vertical, stopping fire and smoke spreading for a set time; Ek-3/B 10: EI 30, each side).",
+        "properties": {
+          "basis": {
+            "$ref": "#/components/schemas/DeclaredBasis"
+          },
+          "fireStop": {
+            "description": "Evet: it is a fire stop; hayır: it is not.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "fireStop",
+          "basis"
+        ],
+        "type": "object"
+      },
+      "DeclaredProtected": {
+        "additionalProperties": false,
+        "description": "A shaft room's declared protected (korunumlu) role and its basis (docs/adr/8136; BYKHY Ek-3/B 8: \"Korunumlu Şaftlar\"\nREI 120, each side): the regulation does not define a protected shaft, the designer says which is. One of the\nshaft's rooms says it for the whole shaft through the storeys.",
+        "properties": {
+          "basis": {
+            "$ref": "#/components/schemas/DeclaredBasis"
+          },
+          "protected": {
+            "description": "Evet: the shaft is protected; hayır: it is not.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "protected",
+          "basis"
+        ],
+        "type": "object"
+      },
+      "DeclaredShaftVent": {
+        "additionalProperties": false,
+        "description": "A lift shaft's declared ventilation and smoke vent, or its pressurisation, and its basis (docs/adr/8135; BYKHY 62/4:\n\"kuyu alanının 0.025 katı kadar bir havalandırma ve dumandan arındırma bacası bulundurulur veya kuyular\nbasınçlandırılır\"): one of the shaft's rooms says it for the whole shaft.",
+        "properties": {
+          "area": {
+            "description": "The vent's free area, m²; absent when the shaft is pressurised instead.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "area"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/DeclaredBasis"
+          },
+          "pressurized": {
+            "description": "The shaft is pressurised (62/4's other way).",
+            "type": "boolean"
+          }
+        },
+        "required": [
           "basis"
         ],
         "type": "object"
@@ -10228,6 +10455,11 @@
           {
             "const": "outside",
             "description": "Emsal harici, %30'a sayılmaz (5/8's own list: fire stairs and their halls, a shelter or plant room in the\nbasement …).",
+            "type": "string"
+          },
+          {
+            "const": "bonus",
+            "description": "Emsal artışı (docs/adr/8125; EK-4 4.14.2, EK-6 Tablo 6.60 `DIGER`): an area the administration's own zoning rules\nlet the emsal base grow by. Neither in nor out: its own sum, its basis said. Only a room's own state.",
             "type": "string"
           }
         ]
@@ -23600,7 +23832,7 @@
         "type": "object"
       },
       "PlanNoteKey": {
-        "description": "What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value\ncoming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla\nbelirlenmemiş ise”), or the plan's own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya\nbina yüksekliği aşılamaz”, docs/adr/8098).",
+        "description": "What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value\ncoming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla\nbelirlenmemiş ise”; 4/1-yyy: “İmar planlarında aksine bir hüküm bulunmaması halinde”, docs/adr/8158; 42/1 and the\nroof's ridge and slope, docs/adr/8160; 41/1's projections and the basements, docs/adr/8162), or the plan's\nown limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya bina yüksekliği aşılamaz”,\ndocs/adr/8098).",
         "oneOf": [
           {
             "const": "groundStoreyHeight",
@@ -23620,6 +23852,41 @@
           {
             "const": "storeys",
             "description": "Kat adedi, en çok (5/11; docs/adr/8098): the ground and normal storeys, a whole number.",
+            "type": "string"
+          },
+          {
+            "const": "plinthMost",
+            "description": "Subasman kotu, en çok (4/1-yyy; docs/adr/8158): the ground storey's floor over its building's ±0.00 at most, m\n(PAİY's +1.20 where the plan says nothing).",
+            "type": "string"
+          },
+          {
+            "const": "plinthLeast",
+            "description": "Subasman kotu, en az (4/1-yyy; docs/adr/8158): the ground storey's floor over its building's ±0.00 at least, m,\nbelow it with a minus (PAİY's ±0.00 where the plan says nothing).",
+            "type": "string"
+          },
+          {
+            "const": "ridgeMost",
+            "description": "Mahya yüksekliği, en çok (40/4; docs/adr/8160): a sloping roof's ridge over the saçak seviyesi at most, m\n(PAİY's 5.00, the municipality's where it says one).",
+            "type": "string"
+          },
+          {
+            "const": "roofSlopeMost",
+            "description": "Çatı eğimi, en çok (40/2; docs/adr/8160): a roof's edges' slope at most, per cent (PAİY leaves it to the\nadministration; the municipality's where it says one).",
+            "type": "string"
+          },
+          {
+            "const": "eavesMost",
+            "description": "Saçak genişliği, en çok (42/1; docs/adr/8160): a roof's overhang over its walls at most, m (PAİY's 1.00:\n“Uygulama imar planında belirlenmemiş ise”).",
+            "type": "string"
+          },
+          {
+            "const": "projectionMost",
+            "description": "Çıkma, en çok (41/1; docs/adr/8162): a projection past the setback line at most, m (PAİY's 1.50; 0: none).",
+            "type": "string"
+          },
+          {
+            "const": "basementsMost",
+            "description": "Bodrum kat adedi, en çok (docs/adr/8162): a building's storeys under its ground storey, a whole number.",
             "type": "string"
           }
         ]
@@ -25428,6 +25695,24 @@
           "name": {
             "type": "string"
           },
+          "planNotes": {
+            "description": "Its own plan notes (docs/adr/8163; `.kcad` Mimari data 35): the plan's values for the area of the parcel it\nstands in, where a kademe hattı (PAİY 4/1-mm) gives the parcel's areas different storeys, heights or other\nvalues. A measure it notes takes the place of the project's note on that measure; the others are the\nproject's (Proje ayarları › Mimari › Plan notları). Checked as the project's notes are.",
+            "items": {
+              "$ref": "#/components/schemas/PlanNote"
+            },
+            "type": "array"
+          },
+          "structure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuildingStructure"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its own structural system and traditional elements (docs/adr/8145; `.kcad` Mimari data 31): a block built\notherwise than the others, PAİY 22/1-m, 28/1-d, 5/8 and 20/8-j read its storeys by it. None: the project's\n(Proje ayarları › Mimari › Taşıyıcı sistem)."
+          },
           "usage": {
             "description": "What it is used for (Kullanım türü; EK-6 Tablo 6.7 `OccupancyType`), as the project writes it.",
             "type": [
@@ -25449,6 +25734,17 @@
               "null"
             ],
             "x-unit": "length"
+          },
+          "zone": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Zone"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its own Bölge (docs/adr/8144; `.kcad` Mimari data 30): where the parcel's blocks stand on decisions of different\nuses, PAİY 28/1 reads its storeys' heights by it. None: the project's (Proje ayarları › Mimari › İmar durumu)."
           }
         },
         "required": [
@@ -31737,6 +32033,11 @@
             "const": "public",
             "description": "A public area's edge (a park, a square): at least 5.00 m, no storey's increase (23/1-a, ç).",
             "type": "string"
+          },
+          {
+            "const": "party",
+            "description": "Bitişik (docs/adr/8142): the building stands against the neighbouring parcel's building on this edge (bitişik\nnizam, or a blok or ikiz nizam's attached side; PAİY 4/1-pppp): no garden, its wall a fire wall (BYKHY 25) with no\nwindow or door (PAİY 39/4). In ayrık nizam, attached to no neighbour (4/1-pppp-1), a side garden. `.kcad`\narchitecture data 29.",
+            "type": "string"
           }
         ]
       },
@@ -31783,6 +32084,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/SlabBreak"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "edges": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SlabEdgeBindings"
               },
               {
                 "type": "null"
@@ -31837,6 +32148,13 @@
         "description": "Why a bound slab's outline is not what its source says: the last one kept as it was.",
         "oneOf": [
           {
+            "enum": [
+              "edgeSourceGone",
+              "edgeShapeInvalid"
+            ],
+            "type": "string"
+          },
+          {
             "const": "lostEnclosure",
             "description": "The walls no longer close round its seed (or the outline moved by its offset turns over).",
             "type": "string"
@@ -31874,6 +32192,25 @@
         ],
         "type": "object"
       },
+      "SlabEdgeBindings": {
+        "additionalProperties": false,
+        "properties": {
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/SlabEdgeLink"
+            },
+            "type": "array"
+          },
+          "reference": {
+            "$ref": "#/components/schemas/SpacePart"
+          }
+        },
+        "required": [
+          "reference",
+          "links"
+        ],
+        "type": "object"
+      },
       "SlabEdgeKind": {
         "description": "What runs along a slab's free sides.",
         "oneOf": [
@@ -31888,6 +32225,53 @@
             "type": "string"
           }
         ]
+      },
+      "SlabEdgeLink": {
+        "additionalProperties": false,
+        "properties": {
+          "edge": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "1"
+          },
+          "face": {
+            "description": "Wall component boundary index from its left face. No index means the outer right face.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "offset": {
+            "description": "Outwards relative to the slab contour, in metres.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "segment": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "1"
+          },
+          "wall": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "edge",
+          "wall",
+          "segment",
+          "offset",
+          "locked"
+        ],
+        "type": "object"
       },
       "SlabEntity": {
         "description": "A slab (docs/adr/0722).",
@@ -32294,6 +32678,11 @@
             "const": "space",
             "description": "Mahal: the space's rings.",
             "type": "string"
+          },
+          {
+            "const": "edges",
+            "description": "Kenarlar: individual component faces and an independent reference perimeter.",
+            "type": "string"
           }
         ]
       },
@@ -32601,6 +32990,25 @@
         ],
         "type": "string"
       },
+      "SpaceEmsal": {
+        "additionalProperties": false,
+        "description": "A room's own emsal state (docs/adr/8125; plan/bim-plan.md BIM-08 \"elle düzeltilir\"): over what its brief and its\nwords say, with the basis it rests on (an article, a plan note, the administration's decision). An emsal increase\n(`bonus`, EK-6's `DIGER`) needs its basis: the model writes it as the zone's description.",
+        "properties": {
+          "basis": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "count": {
+            "$ref": "#/components/schemas/EmsalCount"
+          }
+        },
+        "required": [
+          "count"
+        ],
+        "type": "object"
+      },
       "SpaceEntity": {
         "description": "A space (docs/adr/0342).",
         "properties": {
@@ -32648,6 +33056,17 @@
           "columns": {
             "$ref": "#/components/schemas/SpaceColumns",
             "description": "Physical columns to deduct, within the same semantic level (no level: all)."
+          },
+          "emsal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpaceEmsal"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its own emsal state (docs/adr/8125, `.kcad` architecture data 21) over its brief's and its words'; absent: those."
           },
           "finishes": {
             "$ref": "#/components/schemas/SpaceFinishes"
@@ -39082,6 +39501,17 @@
         "additionalProperties": false,
         "description": "A named view's architectural recipe (docs/adr/0774 §1): what a\nsheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the\nscreen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.",
         "properties": {
+          "ceiling": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CeilingRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Upward view; the regular plan is used when absent."
+          },
           "combo": {
             "description": "The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.",
             "type": [
@@ -40211,6 +40641,17 @@
             "description": "One of its kind among the project's wall styles; KentOS's own are named (`kentos-…`), the user's UUIDv7.",
             "type": "string"
           },
+          "loadBearing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclaredBearing"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its load-bearing role (docs/adr/8137; EK-6 Tablo 6.133 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2): every wall\nof the style carries it unless the wall has its own. Absent: none (unknown)."
+          },
           "name": {
             "type": "string"
           },
@@ -40650,7 +41091,7 @@
       },
       "Zoning": {
         "additionalProperties": false,
-        "description": "İmar durumu (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's\nemsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan\ngives it.",
+        "description": "İmar durumu (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's\nemsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan\ngives it, with where each is read from when that is said (docs/adr/8140; `.kcad` architecture data 27).",
         "properties": {
           "coverage": {
             "description": "TAKS.",
@@ -40661,6 +41102,13 @@
             ],
             "x-unit": "1"
           },
+          "coverageSource": {
+            "description": "Where the TAKS is read from, as [`Zoning::far_source`].",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "far": {
             "description": "Emsal (KAKS).",
             "format": "double",
@@ -40669,6 +41117,13 @@
               "null"
             ],
             "x-unit": "1"
+          },
+          "farSource": {
+            "description": "Where the emsal is read from (docs/adr/8140): the zoning certificate, or the zoning plan's decision it was taken\nfrom (the plan, its approval, the decision); one line, at most [`MAX_ZONING_SOURCE`] characters.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "parcelArea": {
             "format": "double",

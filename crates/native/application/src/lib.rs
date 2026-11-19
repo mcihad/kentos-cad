@@ -1105,6 +1105,8 @@ pub mod opening_codes;
 pub(crate) mod opening_types;
 #[path = "arch/door_audit.rs"]
 pub(crate) mod door_audit;
+pub use door_audit::fixture_front;
+pub use kentos_scene_query::ceiling_plan;
 #[path = "core/fixture_audit.rs"]
 pub mod fixture_audit;
 #[cfg(feature = "mod-arch")]
@@ -1191,6 +1193,9 @@ pub use column_distances::distances as columns_distances;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/arch_audit.rs"]
 pub mod arch_audit;
+#[cfg(feature = "mod-arch")]
+#[path = "arch/walk.rs"]
+pub mod arch_walk;
 #[path = "arch/arch_bonds.rs"]
 pub mod arch_bonds;
 // Harita bağı: sınır kenarının referansa kalıcı uzaklığı (docs/adr/2580).
@@ -2172,6 +2177,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_ARCH_AUDIT,
         kentos_commands::CAD_ARCH_AUDIT_VERSION,
     ),
+    (kentos_commands::CAD_ARCH_WALK, kentos_commands::CAD_ARCH_WALK_VERSION),
     // Denetim istisnası ([`arch_exceptions`], docs/adr/0732 §3).
     (
         kentos_commands::CAD_ARCH_EXCEPTIONS,

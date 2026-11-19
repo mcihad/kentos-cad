@@ -71,6 +71,10 @@ impl App {
             } else {
                 ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id))
             };
+            #[cfg(target_os = "macos")]
+            if tab.id == crate::accessibility::ARCH_TAB {
+                ribbon = ribbon.tab_layout_id(crate::accessibility::ARCH_TAB);
+            }
         }
         // The extensions' tabs of this program (extensions/ribbon.rs, docs/adr/8057 §3).
         for tab in self.extension_tabs() {
@@ -437,6 +441,11 @@ impl App {
             // The label is the short name without its “…” (the web's `ribbonLabel`); the tip has the title.
             let label = command.short.strip_suffix('…').unwrap_or(command.short);
             let button = sized(size, command.icon, label);
+            #[cfg(target_os = "macos")]
+            let button = match crate::accessibility::Tool::from_id(command.id) {
+                Some(tool) => button.layout_id(tool.id()),
+                None => button,
+            };
             // An off command that says why has the reason in its tip (the web's `whyDisabled`).
             let tip_of = match self.why_disabled(command.id) {
                 Some(why) => Tip::new(command.title).body(why),

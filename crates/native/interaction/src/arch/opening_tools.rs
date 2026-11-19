@@ -582,6 +582,8 @@ impl Tool for OpeningTool {
             } else {
                 "ilk pervaz noktasını duvarda seçin"
             }
+        } else if self.form == OpeningForm::Door {
+            "duvarın yanında konumu seçin veya koordinatını yazın"
         } else {
             "açıklığın konacağı yere duvarın yanından tıklayın"
         };
@@ -673,10 +675,12 @@ impl Tool for OpeningTool {
         }
         self.placement.side_point = Some(p.raw);
         let Some(slot) = Self::wall_at(p.raw, cx) else {
-            cx.say(
-                Level::Warn,
-                format!("{}: bir duvarın yanına tıklayın.", self.label()),
-            );
+            let instruction = if self.form == OpeningForm::Door {
+                "duvar bulunamadı; duvarın yanına tıklayın veya koordinatını yazın"
+            } else {
+                "bir duvarın yanına tıklayın"
+            };
+            cx.say(Level::Warn, format!("{}: {instruction}.", self.label()));
             return;
         };
         if self.placement.two_points {
@@ -822,7 +826,7 @@ impl Tool for OpeningTool {
             "M" if self.form == OpeningForm::Door => self.hand = self.hand.other(),
             k if self.door_key(k, cx) => return true,
             _ => {
-                if self.placement.two_points
+                if (self.placement.two_points || self.form == OpeningForm::Door)
                     && !self.placement.copy
                     && let Some(p) = cx.typed_point(
                         text,

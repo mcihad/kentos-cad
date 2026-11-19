@@ -342,6 +342,7 @@ impl<'a> MapDrawer<'a> {
                     map: self.map,
                     level: m.level.as_ref(),
                     phase: m.phase,
+                    ceiling: m.ceiling,
                     hidden: &m.hidden,
                     pens: &m.pens,
                     mono: m.mono,
@@ -357,6 +358,7 @@ impl<'a> MapDrawer<'a> {
                 map: self.map,
                 level: m.level.as_ref(),
                 phase: m.phase,
+                ceiling: m.ceiling,
                 hidden: &m.hidden,
                 pens: &m.pens,
                 mono: m.mono,
@@ -385,7 +387,7 @@ impl<'a> MapDrawer<'a> {
                 &m.layers,
                 &m.layer_overrides,
                 m.level.as_ref(),
-                (m.phase, &m.hidden, &m.pens, m.mono, &m.options),
+                (m.phase, &m.hidden, &m.pens, m.mono, &m.options, m.ceiling),
                 crate::maps::project_box(Some(map), extent),
             )
             .into_iter()

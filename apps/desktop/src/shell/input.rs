@@ -203,6 +203,7 @@ impl App {
     /// The drawing boundary is stronger than Esc: discard every unfinished
     /// command and drawing aid, without committing or resuming a parent.
     pub(crate) fn leave_document_interaction(&mut self) {
+        self.scene_browse = None;
         self.session.leave_document();
         self.field = None;
         // These editors hold object slots from the drawing being left. Do
@@ -530,14 +531,20 @@ impl App {
 
     /// Ctrl+Z: the running command's newest step first, then the drawing (ADR 0018).
     pub(crate) fn undo(&mut self) {
+        if !self.undo_tool_step() {
+            self.step_history(true);
+        }
+    }
+
+    fn undo_tool_step(&mut self) -> bool {
         let before = self.document.as_ref().map(|d| d.model.revision());
         if self.session.is_running() && self.with_tool(|s, cx| s.undo_step(cx)) == Some(true) {
             if before != self.document.as_ref().map(|d| d.model.revision()) {
                 self.echo_history(true);
             }
-            return;
+            return true;
         }
-        self.step_history(true);
+        false
     }
 
     pub(crate) fn zoom(&mut self, factor: f64) {
@@ -948,7 +955,18 @@ impl App {
         // 1. The command line has the keyboard: what reaches here passed its
         // text box (Tab, chords); only the global chords work there.
         if self.line_focused {
+            if self.command_input.is_empty()
+                && self.session.point_count() > 0
+                && !press.repeat
+                && keys::chord(&press).and_then(|chord| self.shortcut(&chord)) == Some("edit.undo")
+            {
+                self.undo_tool_step();
+                return Task::none();
+            }
             return self.global_chord(&press);
+        }
+        if self.scene_browse_key(&press) {
+            return Task::none();
         }
         // 1. The layer tree has the keyboard: its keys are its own (layer_tree.rs).
         if self.layers_keyboard

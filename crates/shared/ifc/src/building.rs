@@ -162,6 +162,7 @@ pub enum Class {
     TransportElement,
     Furniture,
     SanitaryTerminal,
+    ElectricAppliance,
     Member,
     Chimney,
     Ramp,
@@ -185,6 +186,7 @@ impl Class {
             Class::TransportElement => "IFCTRANSPORTELEMENT",
             Class::Furniture => "IFCFURNITURE",
             Class::SanitaryTerminal => "IFCSANITARYTERMINAL",
+            Class::ElectricAppliance => "IFCELECTRICAPPLIANCE",
             Class::Member => "IFCMEMBER",
             Class::Chimney => "IFCCHIMNEY",
             Class::Ramp => "IFCRAMP",
@@ -208,6 +210,7 @@ impl Class {
             Class::TransportElement => "TSM",
             Class::Furniture => "MBL",
             Class::SanitaryTerminal => "STT",
+            Class::ElectricAppliance => "ECZ",
             Class::Member => "ELM",
             Class::Chimney => "BAC",
             Class::Ramp => "RMP",
@@ -454,6 +457,8 @@ pub struct Building {
     pub building: Place,
     pub storeys: Vec<Storey>,
     pub elements: Vec<Element>,
+    /// Plan extent and installation offset of a fixture whose card supplies no solid height, by persistent ID.
+    pub fixture_plans: std::collections::BTreeMap<u128, (Vec<[f64; 2]>, f64)>,
     pub openings: Vec<Opening>,
     pub spaces: Vec<Space>,
     /// The spatial zones (EK-6 Tablo 6.60): each storey's emsal areas (docs/adr/8069).
@@ -1181,6 +1186,12 @@ pub fn write(b: &Building) -> String {
         ));
     }
     // The elements on their storeys.
+    let mut footprint_context = None;
+    let mut footprint = |w: &mut Writer| *footprint_context.get_or_insert_with(|| {
+        w.st.add(format!(
+            "IFCGEOMETRICREPRESENTATIONSUBCONTEXT('FootPrint','Model',*,*,*,*,#{model},$,.PLAN_VIEW.,$)"
+        ))
+    });
     let mut contained: Vec<Vec<usize>> = vec![Vec::new(); b.storeys.len()];
     let mut products = Vec::new();
     let mut materials: Vec<(String, Vec<usize>)> = Vec::new();
@@ -1191,7 +1202,8 @@ pub fn write(b: &Building) -> String {
             products.push(0);
             continue;
         };
-        let place = w.placement(Some(parent), 0.0);
+        let plan = e.id.and_then(|id| b.fixture_plans.get(&id));
+        let place = w.placement(Some(parent), plan.map_or(0.0, |(_, elevation)| *elevation));
         // A Reference View's body is already cut (docs/adr/8071 §4).
         let cut;
         let shapes: &[Shape] = match b.view {
@@ -1202,7 +1214,14 @@ pub fn write(b: &Building) -> String {
                 &cut
             }
         };
-        let shape = w.body(shapes).map_or("$".into(), |s| format!("#{s}"));
+        let shape = w.body(shapes).or_else(|| {
+            let (ring, _) = plan?;
+            if ring.len() < 3 { return None; }
+            let context = footprint(&mut w);
+            let curve = w.curve(ring, None);
+            let rep = w.st.add(format!("IFCSHAPEREPRESENTATION(#{context},'FootPrint','Curve2D',(#{curve}))"));
+            Some(w.st.add(format!("IFCPRODUCTDEFINITIONSHAPE($,$,(#{rep}))")))
+        }).map_or("$".into(), |s| format!("#{s}"));
         let g = w.id(e.id);
         let head = format!(
             "{g},$,{},{},{},#{place},{shape},{}",
@@ -1386,13 +1405,8 @@ pub fn write(b: &Building) -> String {
     // The grids (EK-6 Tablo 6.36; docs/adr/8070 §4, 8169): each axis its tag and its curve, the grid's footprint their
     // curves. A grid on a storey is its storey's, else the building's.
     let mut in_building = Vec::new();
-    let mut footprint = None;
     for grid in b.grids.iter().filter(|g| !g.u.is_empty() && !g.v.is_empty()) {
-        let context = *footprint.get_or_insert_with(|| {
-            w.st.add(format!(
-                "IFCGEOMETRICREPRESENTATIONSUBCONTEXT('FootPrint','Model',*,*,*,*,#{model},$,.PLAN_VIEW.,$)"
-            ))
-        });
+        let context = footprint(&mut w);
         let parent = grid
             .storey
             .and_then(|s| storey_places.get(s).copied())

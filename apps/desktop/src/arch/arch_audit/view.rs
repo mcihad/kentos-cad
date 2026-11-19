@@ -610,6 +610,14 @@ impl App {
                 named(&STAIR_PROFILES, a.stair_profile),
                 profiles(&STAIR_PROFILES, a.stair_profile, Event::StairProfile),
             ),
+            (
+                "Kapı yaklaşımı",
+                if a.door_approach { "Önden yaklaşım" } else { "Yok" }.to_owned(),
+                vec![
+                    ("Yok".into(), !a.door_approach, msg(Event::DoorApproach(0))),
+                    ("Önden yaklaşım".into(), a.door_approach, msg(Event::DoorApproach(1))),
+                ],
+            ),
         ];
         let summary = groups
             .iter()
@@ -617,12 +625,19 @@ impl App {
             .map(|(name, now, _)| format!("{name} {now}"))
             .collect::<Vec<_>>()
             .join(" · ");
-        let notes: Vec<String> = [a.ramp_profile, a.stair_profile]
+        let mut notes: Vec<String> = [a.ramp_profile, a.stair_profile]
             .into_iter()
             .flatten()
             .filter_map(kentos_commands::arch_profile)
             .map(|p| format!("{}. {}", p.name, p.note))
             .collect();
+        if a.door_approach {
+            let profile = kentos_commands::DoorApproachProfile::FRONT;
+            notes.push(format!(
+                "Tek kanatlı kapı, önden yaklaşım. Çekme derinliği {} ve kol payı {}. İtme derinliği {}. Tasarım denetimi.",
+                length(profile.pull_depth), length(profile.pull_latch), length(profile.push_depth),
+            ));
+        }
         let menu = move || {
             let mut menu = kentos_ui::widget::Menu::new().header("Eşikler");
             for (name, now, items) in &groups {

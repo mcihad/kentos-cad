@@ -37,14 +37,18 @@ fn the_post_tool_writes_a_post_of_its_own_height() {
     assert_eq!(b.doc.layers().get(&c.base.layer_id).map(|l| l.name.as_str()), Some("MM-DIGR-DIKME"));
     assert_eq!(b.last_text(), Some("1 dikme konuldu."));
     // 2.40 m and Ahşap typed; a height of 0 is refused and the old one stays.
-    assert!(b.run(|s, cx| s.configure("Ü", "2.4", cx)));
-    assert!(!b.run(|s, cx| s.configure("Ü", "0", cx)));
+    assert!(b.run(|s, cx| s.input("Y", cx)));
+    assert!(b.run(|s, cx| s.input("2.4", cx)));
+    assert!(b.run(|s, cx| s.input("O", cx)));
+    assert!(b.run(|s, cx| s.input("0.15", cx)));
+    assert!(!b.run(|s, cx| s.configure("Y", "0", cx)));
     assert!(b.run(|s, cx| s.configure("M", "Ahşap", cx)));
     b.click(3.0, 1.0);
     let Entity::Column(c) = b.newest().clone() else {
         panic!("a column")
     };
-    assert_eq!((c.column.height, c.column.material.as_deref()), (Some(2.4), Some("Ahşap")));
+    assert_eq!((c.column.height, c.column.depth), (Some(2.4), Some(0.15)));
+    assert_eq!(c.column.material.as_deref(), Some("Ahşap"));
     // Kat: its storey's height again.
     assert!(b.run(|s, cx| s.configure("Ü", "Kat", cx)));
     b.click(5.0, 1.0);

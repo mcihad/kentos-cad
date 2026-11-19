@@ -682,6 +682,45 @@ mod tests {
         c.spaces.iter().find(|s| s.number.as_deref() == Some(number)).expect("the row")
     }
 
+    #[test]
+    fn a_removed_door_breaks_reach_and_the_finding_shows_both_rooms() {
+        let mut app = app_with_drawing();
+        let plan = house(&mut app);
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let layer = doc.layers().active().to_owned();
+        let mut program = doc.program();
+        let brief = program.briefs.iter_mut().find(|brief| brief.usage == "Yatak odası").expect("a brief");
+        brief.adjacent = vec!["Salon".into()];
+        command(&mut app, "cad.program.edit", json!({"program": program}));
+        let door = uids(&command(&mut app, "cad.openings.create", json!({
+            "layerId": layer,
+            "openings": [{"host": plan.walls[7], "at": 1.6, "width": 0.9, "form": "door"}]
+        })));
+        let target = plan.space("203").to_owned();
+        let source = plan.space("201").to_owned();
+        let before = checked(&app);
+        assert_eq!(row(&before, "201").reach[0].by, [target.clone()]);
+        assert_eq!(row(&before, "201").adjacent[0].by, [target.clone()]);
+
+        command(&mut app, "cad.entities.delete", json!({"uids": door}));
+        let after = checked(&app);
+        assert!(row(&after, "201").reach[0].by.is_empty());
+        assert_eq!(row(&after, "201").adjacent[0].by, [target.clone()]);
+        let subjects = [source.clone(), target.clone()];
+        let index = after.findings.iter().position(|finding| {
+            finding.code == "program_reach_missing" && finding.uids == subjects
+        }).expect("the failed passage names both rooms in the same flat");
+
+        app.choose_level(Some("kat-1".into()));
+        window(&mut app, Tab::Status);
+        let expected = [slot(&app, &source), slot(&app, &target)];
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::ShowFinding(index))));
+        assert!(app.dialog.is_none());
+        assert_eq!(app.active_level().as_deref(), Some("zemin"));
+        assert_eq!(app.level_view, kentos_interaction::level_view::LevelView::Active);
+        assert_eq!(app.selection.ids(), expected);
+    }
+
     /// The acceptance of docs/adr/0773: two flats on a 2+1 plan; a 10 cm move of the corridor's partition updates the
     /// targets' and the passage's differences in the same step; the units' totals count no common area twice; the
     /// merge's decision is said before it is written; the window's numbers are the command's.

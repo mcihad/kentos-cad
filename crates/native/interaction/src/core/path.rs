@@ -1354,6 +1354,10 @@ impl Path {
         }
         let min = self.shape.min();
         if self.pts.len() < min {
+            if self.separator_level.is_some() {
+                cx.say(Level::Warn, "Mahal ayırıcının bitiş noktasını girin.");
+                return;
+            }
             cx.say(
                 Level::Warn,
                 format!("{} için en az {min} nokta gerekir.", self.shape.label()),

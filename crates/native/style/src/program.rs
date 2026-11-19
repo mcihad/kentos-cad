@@ -495,7 +495,7 @@ pub fn layer_call(
                         "fill": {"type":"fill", "layers":[{"id":"pdf-fill", "type":"simpleFill", "color":color, "opacity":1.0}]}
                     }))),
                     (Some(Entity::Hatch(h)), _) => {
-                        it.set(piece_stroke.apply(json!({ "fill": hatch_symbol_of(&h, color) })))
+                        it.set(piece_stroke.apply(json!({ "fill": hatch_symbol_of(&h, color, opts.origin) })))
                     }
                     // Intrinsic solid ink, just as at the root: a leader's head or a wide path's
                     // band must not take a layer's optional polygon fill (ADR 0869).
@@ -527,7 +527,7 @@ pub fn layer_call(
             Entity::PointCloud(_) => (MODE_POINTCLOUD, 0),
             Entity::Hatch(h) => (
                 MODE_SET,
-                it.set(stroke.apply(json!({ "fill": hatch_symbol_of(h, color) }))),
+                it.set(stroke.apply(json!({ "fill": hatch_symbol_of(h, color, opts.origin) }))),
             ),
             // Its lines in its colour and weight, its arrowhead solid (docs/adr/0146 §5); as a hatch, never another
             // symbol. A table's lines so, its frame's band solid (docs/adr/0184 §2).

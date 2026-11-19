@@ -213,7 +213,7 @@ use crate::{sensors_ingest, sensors_latest};
 use crate::bcf_exchange::{read as bcf_read, write as bcf_write};
 #[cfg(feature = "mod-arch")]
 use crate::{
-    arch_audit, arch_edit, arch_exceptions, arch_form_answers, arch_ifc, arch_performance, arch_recognize, beams_create,
+    arch_audit, arch_edit, arch_exceptions, arch_form_answers, arch_ifc, arch_performance, arch_recognize, arch_walk, beams_create,
     delivery_edit,
     underlay_edit,
     underlay_check,

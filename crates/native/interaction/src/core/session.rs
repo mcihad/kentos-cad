@@ -95,6 +95,7 @@ pub const TOOLS: &[&str] = &[
     crate::parcel_tool::ID,
     // Kaçış yolları (docs/adr/8035 §2).
     crate::escape_tool::ID,
+    crate::walk_tool::ID,
     // İç ölçü zinciri (docs/adr/0711 §5).
     crate::interior_dims::ID,
     // The wall edits by a click (docs/adr/0340 §6).
@@ -118,6 +119,8 @@ pub const TOOLS: &[&str] = &[
     crate::opening_array::ID,
     space_tools::SPACE_ID,
     crate::slab_tools::SLAB_ID,
+    crate::slab_edge_tool::ID,
+    crate::ceiling_device_tool::ID,
     // Kaplama (docs/adr/8070 §10).
     crate::covering_tool::ID,
     crate::space_discover::ID,
@@ -535,6 +538,7 @@ impl Session {
             crate::parcel_tool::ID => Box::new(crate::parcel_tool::ParcelTool::new()),
             // Kaçış yolları (docs/adr/8035 §2).
             crate::escape_tool::ID => Box::new(crate::escape_tool::EscapeRoutes::new()),
+            crate::walk_tool::ID => Box::new(crate::walk_tool::WalkTool::default()),
             crate::wall_dimensions::ID => {
                 Box::new(crate::wall_dimensions::WallDimensions::default())
             }
@@ -559,6 +563,8 @@ impl Session {
             crate::opening_array::ID => Box::new(crate::opening_array::Array::default()),
             space_tools::SPACE_ID => Box::new(space_tools::SpaceTool::new()),
             crate::slab_tools::SLAB_ID => Box::new(crate::slab_tools::SlabTool::new()),
+            crate::slab_edge_tool::ID => Box::new(crate::slab_edge_tool::SlabEdgeTool::default()),
+            crate::ceiling_device_tool::ID => Box::new(crate::ceiling_device_tool::CeilingDeviceTool::default()),
             crate::covering_tool::ID => Box::new(crate::covering_tool::CoveringTool::new()),
             crate::space_number::ID => Box::new(crate::space_number::Number::default()),
             crate::space_discover::ID => Box::new(crate::space_discover::Discover::default()),

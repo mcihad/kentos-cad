@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use iced::widget::{Canvas, Column, button, column, container, row, text, tooltip};
 use iced::{Center, Element, Fill, Task, Theme};
@@ -23,7 +23,35 @@ use kentos_ui::{label, style};
 use serde::{Deserialize, Serialize};
 
 use crate::app::{App, Message};
-use crate::blocks_panel::{Thumb, thumb_tile};
+use crate::blocks_panel::{PlacementGuide, Thumb, thumb_tile};
+
+struct FixturePicture {
+    paths: Vec<f64>,
+    bounds: Option<[f64; 4]>,
+}
+
+impl FixturePicture {
+    fn from_store(store: &kentos_geometry_core::store::Store, block: &kentos_commands::BlockDefinition) -> Self {
+        let id = block.id;
+        Self {
+            paths: store.insert_outlines(&id.to_text(), kentos_interaction::Vec2::new(0., 0.), 1., 0., false),
+            bounds: kentos_native_application::blocks::fixture_housing_bounds(block)
+                .or_else(|| kentos_native_application::blocks::definition_box_in(store.blocks(), store.font(), id, None)),
+        }
+    }
+}
+
+fn builtin_pictures() -> &'static HashMap<String, FixturePicture> {
+    static PICTURES: OnceLock<HashMap<String, FixturePicture>> = OnceLock::new();
+    PICTURES.get_or_init(|| {
+        let libraries = kentos_native_application::standard_libraries::Libraries::builtin();
+        let Some(library) = libraries.blocks.first() else { return HashMap::new() };
+        let definitions: Vec<_> = library.blocks.iter().cloned().map(Arc::new).collect();
+        let mut store = kentos_geometry_core::store::Store::new();
+        store.set_blocks(kentos_native_application::blocks::core_blocks(&definitions));
+        definitions.iter().map(|b| (b.name.clone(), FixturePicture::from_store(&store, b))).collect()
+    })
+}
 
 const FORMAT: &str = "kentos.block-libraries";
 const FILE: &str = "blok-kitapliklari.json";
@@ -614,11 +642,8 @@ impl App {
     /// definition alone taken in; Tanımlarının hepsini çizime al takes the whole library as one undo step.
     fn library_builtin_view(&self) -> Element<'_, Message> {
         let lib = &self.blocks_panel.library;
-        let query = name_key(lib.query.trim());
-        let shown: Vec<&'static crate::fixture_search::Fixture> = crate::fixture_search::fixtures()
-            .iter()
-            .filter(|f| query.is_empty() || name_key(&f.name).contains(&query))
-            .collect();
+        let shown = crate::fixture_search::library_matches(&lib.query);
+        let format = self.format();
         let head = container(
             row![
                 button(label::caption("‹ Kitaplıklar"))
@@ -635,16 +660,42 @@ impl App {
         )
         .padding([4, 8])
         .width(Fill);
+        if shown.is_empty() {
+            let empty = column![
+                label::caption("Aramayla eşleşen donatı bulunamadı."),
+                button(label::caption("Aramayı temizle")).on_press(msg(Event::Search(String::new())))
+                    .style(style::button::ghost),
+            ].spacing(4).padding([6, 12]);
+            return column![head, empty].into();
+        }
         let list = VirtualList::new(shown.len(), typography::scaled(ROW), move |i| {
             let f = shown[i];
+            let local = self.document.as_ref().and_then(|d| d.model.block_named(&f.name).map(|b| (&d.model, b)));
+            let local_picture = local.map(|(_, b)| FixturePicture::from_store(self.spatial.store(), b));
+            let picture = local_picture.as_ref().or_else(|| builtin_pictures().get(&f.name));
+            let category = local.map_or(Some(f.category.as_str()), |(_, b)| b.card.as_ref()?.category.as_deref());
+            let wall_side = matches!(category.and_then(|c| c.split('/').next()), Some("Mobilya" | "Islak hacim" | "Mutfak"));
+            let bounds = picture.and_then(|p| p.bounds);
+            let unit = local.map_or(1., |(d,b)| kentos_native_application::blocks_insert::unit_factor(d, b));
+            let size = bounds.map(|[x0,y0,x1,y1]| format!("{} × {} {}",
+                format.plain((x1-x0)*unit), format.plain((y1-y0)*unit), format.length_unit_label()));
+            let side = typography::scaled(THUMB);
+            let thumb = Thumb {
+                paths: picture.map(|p| p.paths.clone()).unwrap_or_default(),
+                placement: Some(PlacementGuide { back: bounds.filter(|_| wall_side).map(|[a,b,c,_]| [a,c,b]) }),
+            };
+            let picture = container(Canvas::new(thumb).width(side).height(side)).style(|t| thumb_tile(t, false));
+            let family = f.category.replace('/', " › ");
+            let meta = size.map_or_else(|| family.clone(), |s| format!("{s} · {family}"));
+            let hint = if wall_side { "Nokta, blok tabanını gösterir. Renkli kenar duvara bakar." } else { "Nokta, blok tabanını gösterir." };
             self.library_line(
-                icon(crate::icons::from_web(Some("blocks"))).size(15.0).into(),
+                picture.into(),
                 f.name.clone(),
-                Some(f.category.replace('/', " › ")),
+                Some(meta),
                 msg(Event::PlaceBuiltin(f.name.clone())),
                 Some((
                     "Yerleştir".to_owned(),
-                    "Yalnız bu bloğun tanımı çizime alınır; Blok ekle onunla başlar.".to_owned(),
+                    format!("{family} · {hint}"),
                 )),
             )
         })
@@ -825,6 +876,7 @@ impl App {
                 container(
                     Canvas::new(Thumb {
                         paths: item.paths.clone(),
+                        placement: None,
                     })
                     .width(side)
                     .height(side),

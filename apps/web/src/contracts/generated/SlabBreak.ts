@@ -3,4 +3,4 @@
 /**
  * Why a bound slab's outline is not what its source says: the last one kept as it was.
  */
-export type SlabBreak = "lostEnclosure" | "sourceGone";
+export type SlabBreak = "lostEnclosure" | "sourceGone" | "edgeSourceGone" | "edgeShapeInvalid";

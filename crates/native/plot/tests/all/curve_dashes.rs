@@ -48,6 +48,7 @@ fn vector_paths(doc: &Document, book: &SheetBook, scale: f64) -> Vec<MapPath> {
         map: None,
         level: None,
         phase: None,
+        ceiling: None,
         hidden: &[],
         pens: &[],
         mono: false,

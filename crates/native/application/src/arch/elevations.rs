@@ -661,6 +661,10 @@ pub fn digest(items: &[(String, Entity)]) -> String {
     h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
+pub(crate) fn member_hashes(items: &[(String, Entity)]) -> BTreeMap<String, String> {
+    items.iter().map(|item| (item.0.clone(), digest(std::slice::from_ref(item)))).collect()
+}
+
 /// The elevation record of a layer: its derivation names the elevation tool and its parameters read.
 pub fn record_of(derivation: &LayerDerivation) -> Option<ElevationRecord> {
     if derivation.tool != ELEVATION_TOOL {
@@ -694,8 +698,7 @@ pub fn bare(e: &Entity) -> Entity {
     e
 }
 
-/// A layer's elevation as it stands: its state, the members deleted and those changed by hand (only while the model's
-/// drawing is unchanged), and what drawing it again gives (none when its space is gone).
+/// A layer's elevation as it stands: its state, deleted and edited members, and what drawing it again gives.
 pub struct Standing {
     pub state: ElevationState,
     pub missing: Vec<String>,
@@ -737,6 +740,14 @@ pub fn standing(doc: &Document, layer: &str, r: &ElevationRecord) -> Standing {
             };
             if &bare(now) != want {
                 edited.push(u.clone());
+            }
+        }
+    } else {
+        for (role, uid) in &r.members {
+            let Some(before) = r.member_hashes.get(role) else { continue };
+            let Some(entity) = Uuid::parse_str(uid).ok().and_then(|id| doc.slot_of(id)).and_then(|s| doc.get(s)) else { continue };
+            if digest(&[(role.clone(), bare(entity))]) != *before {
+                edited.push(uid.clone());
             }
         }
     }

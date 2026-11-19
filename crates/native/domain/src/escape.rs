@@ -299,7 +299,7 @@ fn dist(a: V, b: V) -> f64 {
 }
 
 /// A room's net outline: its inner faces found again from its seed, else its own.
-fn net_parts(search: &mut SpaceSearch<'_>, s: &SpaceFields) -> Vec<SpacePart> {
+pub fn net_parts(search: &mut SpaceSearch<'_>, s: &SpaceFields) -> Vec<SpacePart> {
     if s.method != SpaceMethod::Net && s.seed.is_some() {
         let mut net = s.clone();
         net.method = SpaceMethod::Net;

@@ -394,8 +394,8 @@ impl App {
                 ))
                 .push(words::field(
                     "Yükseklik (m)",
-                    field(&w.height, "0.75", Event::Height),
-                    Some("Gövde, bloğun çizdiğinin kutusu üstünde bu yükseklikte; boşsa gövdesi yok.".into()),
+                    field(&w.height, "Ürün yüksekliği", Event::Height),
+                    Some("Ürün yüksekliği girildiğinde IFC katı gövde içerir. Boş bırakırsanız plan izi aktarılır.".into()),
                 ))
                 .push(words::field(
                     "Alt kot (m)",

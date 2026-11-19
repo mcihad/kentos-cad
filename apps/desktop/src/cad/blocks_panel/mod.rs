@@ -657,7 +657,7 @@ impl App {
             false,
         );
         let side = typography::scaled(THUMB);
-        let picture = container(Canvas::new(Thumb { paths }).width(side).height(side))
+        let picture = container(Canvas::new(Thumb { paths, placement: None }).width(side).height(side))
             .style(move |theme: &Theme| thumb_tile(theme, chosen));
         let name: Element<'a, Message> = match &self.blocks_panel.renaming {
             Some((renamed, text)) if *renamed == id => tree_view::rename(
@@ -836,7 +836,7 @@ impl App {
             false,
         );
         let side = typography::scaled(CARD_THUMB);
-        let picture = container(Canvas::new(Thumb { paths }).width(side).height(side))
+        let picture = container(Canvas::new(Thumb { paths, placement: None }).width(side).height(side))
             .center_x(Fill)
             .style(move |theme: &Theme| thumb_tile(theme, chosen));
         let block = self.document.as_ref().and_then(|d| d.model.block(id));
@@ -1126,11 +1126,10 @@ impl App {
 pub(crate) fn size_text(app: &App, id: BlockId) -> Option<String> {
     let doc = app.document.as_ref()?;
     let b = doc.model.block(id)?;
-    let paths =
-        app.spatial
-            .store()
-            .insert_outlines(&id.to_text(), Vec2::new(0.0, 0.0), 1.0, 0.0, false);
-    let e = crate::attribute_table::outline_extent(&paths)?;
+    let store = app.spatial.store();
+    let [min_x, min_y, max_x, max_y] = kentos_native_application::blocks::fixture_housing_bounds(b)
+        .or_else(|| kentos_native_application::blocks::definition_box_in(store.blocks(), store.font(), id, None))?;
+    let factor = kentos_native_application::blocks_insert::unit_factor(&doc.model, b);
     let format = app.format();
     let unit = b.units.map_or_else(
         || "çizim biriminde".to_owned(),
@@ -1141,8 +1140,8 @@ pub(crate) fn size_text(app: &App, id: BlockId) -> Option<String> {
     );
     Some(format!(
         "Boyu {} × {}; {unit}",
-        format.length(e.max_x - e.min_x),
-        format.length(e.max_y - e.min_y)
+        format.length((max_x - min_x) * factor),
+        format.length((max_y - min_y) * factor)
     ))
 }
 
@@ -1165,6 +1164,12 @@ pub(crate) fn thumb_tile(theme: &Theme, chosen: bool) -> container::Style {
 /// marks are small squares (the web's `drawThumb`).
 pub(crate) struct Thumb {
     pub(crate) paths: Vec<f64>,
+    /// Mark the insertion point, and optionally the wall-facing edge in block-local coordinates.
+    pub(crate) placement: Option<PlacementGuide>,
+}
+
+pub(crate) struct PlacementGuide {
+    pub(crate) back: Option<[f64; 3]>,
 }
 
 impl<M> canvas::Program<M> for Thumb {
@@ -1200,6 +1205,12 @@ impl<M> canvas::Program<M> for Thumb {
         }
         if !min_x.is_finite() {
             return vec![frame.into_geometry()];
+        }
+        if self.placement.is_some() {
+            min_x = min_x.min(0.0);
+            min_y = min_y.min(0.0);
+            max_x = max_x.max(0.0);
+            max_y = max_y.max(0.0);
         }
         let side = f64::from(bounds.width.min(bounds.height));
         let pad = 3.0;
@@ -1244,6 +1255,13 @@ impl<M> canvas::Program<M> for Thumb {
                 frame.stroke(&path, stroke);
             }
             i += 2 + 2 * n;
+        }
+        if let Some(guide) = &self.placement {
+            let accent = Tokens::of(theme).accent;
+            if let Some([left, right, back]) = guide.back {
+                frame.stroke(&Path::line(at(left, back), at(right, back)), Stroke::default().with_color(accent).with_width(2.0));
+            }
+            frame.fill(&Path::circle(at(0., 0.), 2.4), accent);
         }
         vec![frame.into_geometry()]
     }

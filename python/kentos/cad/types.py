@@ -1049,13 +1049,15 @@ class BlockElementClass(_StrEnum):
     - ``furniture``: Mobilya (`IfcFurniture`, MBL): a table, a chair, a bed, a wardrobe, a kitchen unit.
     - ``sanitaryTerminal``: Sıhhi tesisat ucu (`IfcSanitaryTerminal`, STT): a basin, a toilet, a shower, a bath, a sink.
     - ``transportElement``: Taşıma elemanı (`IfcTransportElement`, TSM): a lift.
+    - ``electricAppliance``: Elektrikli cihaz (IfcElectricAppliance, ECZ), EK-6 Tablo 6.29.
     """
     FURNITURE = "furniture"
     SANITARY_TERMINAL = "sanitaryTerminal"
     TRANSPORT_ELEMENT = "transportElement"
+    ELECTRIC_APPLIANCE = "electricAppliance"
 
 
-BlockElementClassName = Literal["furniture", "sanitaryTerminal", "transportElement"]
+BlockElementClassName = Literal["furniture", "sanitaryTerminal", "transportElement", "electricAppliance"]
 """The names of :class:`BlockElementClass`, for a plain string."""
 
 
@@ -7546,6 +7548,19 @@ ShareRuleName = Literal["equal", "net", "weight"]
 """The names of :class:`ShareRule`, for a plain string."""
 
 
+class SheetDependencyState(_StrEnum):
+    CURRENT = "current"
+    STALE = "stale"
+    NOT_DRAWN = "notDrawn"
+    SOURCE_GONE = "sourceGone"
+    EDITED = "edited"
+    LEGACY = "legacy"
+
+
+SheetDependencyStateName = Literal["current", "stale", "notDrawn", "sourceGone", "edited", "legacy"]
+"""The names of :class:`SheetDependencyState`, for a plain string."""
+
+
 class SheetPublishMode(_StrEnum):
     SINGLE = "single"
     SEPARATE = "separate"
@@ -7708,14 +7723,18 @@ SlabBoundaryName = Literal["outline", "room"]
 class SlabBreak(_StrEnum):
     """Why a bound slab's outline is not what its source says: the last one kept as it was.
 
+    - ``edgeSourceGone``
+    - ``edgeShapeInvalid``
     - ``lostEnclosure``: The walls no longer close round its seed (or the outline moved by its offset turns over).
     - ``sourceGone``: Its space is gone (deleted, or no longer a space).
     """
+    EDGE_SOURCE_GONE = "edgeSourceGone"
+    EDGE_SHAPE_INVALID = "edgeShapeInvalid"
     LOST_ENCLOSURE = "lostEnclosure"
     SOURCE_GONE = "sourceGone"
 
 
-SlabBreakName = Literal["lostEnclosure", "sourceGone"]
+SlabBreakName = Literal["edgeSourceGone", "edgeShapeInvalid", "lostEnclosure", "sourceGone"]
 """The names of :class:`SlabBreak`, for a plain string."""
 
 
@@ -7791,12 +7810,14 @@ class SlabSourceKind(_StrEnum):
 
     - ``walls``: Duvarlar: the walls round the seed.
     - ``space``: Mahal: the space's rings.
+    - ``edges``: Kenarlar: individual component faces and an independent reference perimeter.
     """
     WALLS = "walls"
     SPACE = "space"
+    EDGES = "edges"
 
 
-SlabSourceKindName = Literal["walls", "space"]
+SlabSourceKindName = Literal["walls", "space", "edges"]
 """The names of :class:`SlabSourceKind`, for a plain string."""
 
 
@@ -11699,6 +11720,7 @@ class OpeningTypesOperation(_Union):
     - :class:`RenameOpeningTypesOperation` (``kind: rename``)
     - :class:`CodeOpeningTypesOperation` (``kind: code``)
     - :class:`CodesOpeningTypesOperation` (``kind: codes``)
+    - :class:`RefreshListOpeningTypesOperation` (``kind: refreshList``)
     - :class:`RemoveOpeningTypesOperation` (``kind: remove``)
     - :class:`ImportOpeningTypesOperation` (``kind: import``)
     - :class:`ExportOpeningTypesOperation` (``kind: export``)
@@ -12860,6 +12882,8 @@ class SlabsOperation(_Union):
     - :class:`SubtractSlabsOperation` (``kind: subtract``)
     - :class:`BindSlabsOperation` (``kind: bind``)
     - :class:`DetachSlabsOperation` (``kind: detach``)
+    - :class:`BindEdgeSlabsOperation` (``kind: bindEdge``)
+    - :class:`UnbindEdgeSlabsOperation` (``kind: unbindEdge``)
     - :class:`AddSlabsOperation` (``kind: add``)
     """
     __slots__ = ()
@@ -16909,6 +16933,7 @@ class ArchAudit(_Model):
     `exception_lapsed` (an exception whose finding changed: listed open again).
     Attributes:
         checks: The groups to check; absent or empty: every group. The findings keep the groups' own order.
+        door_approach: Design clearance profile for front approaches, separately on the pull and push faces.
         exceptions: The exceptions listed; absent: hidden and counted.
         level: The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
             absent: the project's ground level (the one at elevation 0, else its first).
@@ -16923,6 +16948,7 @@ class ArchAudit(_Model):
         within: The part of the drawing reported on; absent: all of it.
     """
     checks: list[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET
+    door_approach: DoorApproachProfile | None | Unset = UNSET
     exceptions: ArchAuditExceptionView | ArchAuditExceptionViewName | None | Unset = UNSET
     level: str | None | Unset = UNSET
     max_gap: float | None | Unset = UNSET
@@ -16937,6 +16963,8 @@ class ArchAudit(_Model):
         out: dict[str, Any] = {}
         if self.checks is not UNSET:
             out["checks"] = [_enum_out(e0) for e0 in self.checks]
+        if self.door_approach is not UNSET:
+            out["doorApproach"] = None if self.door_approach is None else self.door_approach.to_json()
         if self.exceptions is not UNSET:
             out["exceptions"] = None if self.exceptions is None else _enum_out(self.exceptions)
         if self.level is not UNSET:
@@ -16961,6 +16989,7 @@ class ArchAudit(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ArchAudit:
         return cls(
             checks=[_enum_in(ArchAuditCheck, e0) for e0 in data["checks"]] if "checks" in data else UNSET,
+            door_approach=UNSET if "doorApproach" not in data else None if data["doorApproach"] is None else DoorApproachProfile.from_json(data["doorApproach"]),
             exceptions=UNSET if "exceptions" not in data else None if data["exceptions"] is None else _enum_in(ArchAuditExceptionView, data["exceptions"]),
             level=data.get("level", UNSET),
             max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
@@ -17083,6 +17112,7 @@ class ArchAuditFinding(_Model):
         lapsed: Marked as left on purpose, but the finding changed since: open again.
         nature: A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule.
         note: The exception's note.
+        outline: Boundary of the affected area in model coordinates, when the finding has one. Unit: length.
         rule: A regulation finding's article and gazette (docs/adr/8033): “PAİY 29/1 · RG 3.7.2017/30113”; a local
             regulation's (docs/adr/8034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.
         state: A finding that is no failure (docs/adr/8078): eksik veri or uzman incelemesi. Absent: the drawing does not meet
@@ -17100,6 +17130,7 @@ class ArchAuditFinding(_Model):
     lapsed: bool | Unset = UNSET
     nature: ArchAuditNature | ArchAuditNatureName | None | Unset = UNSET
     note: str | None | Unset = UNSET
+    outline: list[Vec2] | Unset = UNSET
     rule: str | None | Unset = UNSET
     state: ArchAuditState | ArchAuditStateName | None | Unset = UNSET
 
@@ -17122,6 +17153,8 @@ class ArchAuditFinding(_Model):
             out["nature"] = None if self.nature is None else _enum_out(self.nature)
         if self.note is not UNSET:
             out["note"] = self.note
+        if self.outline is not UNSET:
+            out["outline"] = [_vec2_out(e0) for e0 in self.outline]
         if self.rule is not UNSET:
             out["rule"] = self.rule
         if self.state is not UNSET:
@@ -17143,6 +17176,7 @@ class ArchAuditFinding(_Model):
             lapsed=data.get("lapsed", UNSET),
             nature=UNSET if "nature" not in data else None if data["nature"] is None else _enum_in(ArchAuditNature, data["nature"]),
             note=data.get("note", UNSET),
+            outline=[Vec2.from_json(e0) for e0 in data["outline"]] if "outline" in data else UNSET,
             rule=data.get("rule", UNSET),
             state=UNSET if "state" not in data else None if data["state"] is None else _enum_in(ArchAuditState, data["state"]),
         )
@@ -18128,6 +18162,80 @@ class ArchSettings(_Model):
             underlays=[ModelUnderlay.from_json(e0) for e0 in data["underlays"]] if "underlays" in data else UNSET,
             zone=UNSET if "zone" not in data else None if data["zone"] is None else _enum_in(Zone, data["zone"]),
             zoning=UNSET if "zoning" not in data else None if data["zoning"] is None else Zoning.from_json(data["zoning"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchWalk(_Model):
+    """Point-to-point design route on one storey. Width is the envelope's diameter, in metres.
+    Attributes:
+        start: Unit: length.
+        end: Unit: length.
+        width: Unit: length.
+        shell_only: Exclude movable furniture and equipment when inspecting the architectural shell.
+    """
+    start: Vec2
+    end: Vec2
+    width: float
+    level: str | None | Unset = UNSET
+    shell_only: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["start"] = _vec2_out(self.start)
+        out["end"] = _vec2_out(self.end)
+        out["width"] = float(self.width)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.shell_only is not UNSET:
+            out["shellOnly"] = self.shell_only
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchWalk:
+        return cls(
+            start=Vec2.from_json(data["start"]),
+            end=Vec2.from_json(data["end"]),
+            width=float(data["width"]),
+            level=data.get("level", UNSET),
+            shell_only=data.get("shellOnly", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchWalked(_Model):
+    """A verified centreline, or a location to inspect when no route was found.
+    Attributes:
+        points: Unit: length.
+        length: Unit: length.
+        width: Unit: length.
+        blocked: Unit: length.
+    """
+    points: list[Vec2]
+    length: float
+    width: float
+    blocked: Vec2 | None | Unset = UNSET
+    obstacle: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        out["length"] = float(self.length)
+        out["width"] = float(self.width)
+        if self.blocked is not UNSET:
+            out["blocked"] = None if self.blocked is None else _vec2_out(self.blocked)
+        if self.obstacle is not UNSET:
+            out["obstacle"] = self.obstacle
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchWalked:
+        return cls(
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
+            length=float(data["length"]),
+            width=float(data["width"]),
+            blocked=UNSET if "blocked" not in data else None if data["blocked"] is None else Vec2.from_json(data["blocked"]),
+            obstacle=data.get("obstacle", UNSET),
         )
 
 
@@ -24185,7 +24293,9 @@ class CaseworkRun(_Model):
         corner: How it turns its corners; absent: blind.
         depth: The countertop's depth, from 0.30 to 1.20 m; absent: 0.60. Unit: length.
         dishwasher: The dishwasher's module; absent: none. Unit: index.
+        filler_ends: End of each leg receiving the leftover filler, in path order. An omitted entry uses the layout default.
         fridge: The fridge at an end of the path; absent: none.
+        level: Storey of this run and its fixtures. Without an explicit storey a run follows its supporting wall.
         line_weight: Unit: paper-mm.
         module: A base cabinet's width (one of the cabinet block's widths: 0.30 to 1.20 m by 0.15); absent: 0.60. Unit: length.
         oven: An oven under the cooktop.
@@ -24204,7 +24314,9 @@ class CaseworkRun(_Model):
     depth: float | None | Unset = UNSET
     dishwasher: int | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    filler_ends: list[CaseworkEnd | CaseworkEndName | None] | Unset = UNSET
     fridge: CaseworkEnd | CaseworkEndName | None | Unset = UNSET
+    level: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     module: float | None | Unset = UNSET
     oven: bool | None | Unset = UNSET
@@ -24231,8 +24343,12 @@ class CaseworkRun(_Model):
             out["dishwasher"] = self.dishwasher
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.filler_ends is not UNSET:
+            out["fillerEnds"] = [None if e0 is None else _enum_out(e0) for e0 in self.filler_ends]
         if self.fridge is not UNSET:
             out["fridge"] = None if self.fridge is None else _enum_out(self.fridge)
+        if self.level is not UNSET:
+            out["level"] = self.level
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.module is not UNSET:
@@ -24263,7 +24379,9 @@ class CaseworkRun(_Model):
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             dishwasher=data.get("dishwasher", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            filler_ends=[None if e0 is None else _enum_in(CaseworkEnd, e0) for e0 in data["fillerEnds"]] if "fillerEnds" in data else UNSET,
             fridge=UNSET if "fridge" not in data else None if data["fridge"] is None else _enum_in(CaseworkEnd, data["fridge"]),
+            level=data.get("level", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             module=UNSET if "module" not in data else None if data["module"] is None else float(data["module"]),
             oven=data.get("oven", UNSET),
@@ -24533,6 +24651,30 @@ class CatalogFieldChange(_Model):
             uids=list(data["uids"]),
             decide=data["decide"],
             note=data["note"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CeilingRange(_Model):
+    """A reflected ceiling plan's upward view interval above the selected storey's reference floor, metres.
+    Attributes:
+        low: Unit: length.
+        high: Unit: length.
+    """
+    low: float
+    high: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["low"] = float(self.low)
+        out["high"] = float(self.high)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CeilingRange:
+        return cls(
+            low=float(data["low"]),
+            high=float(data["high"]),
         )
 
 
@@ -34482,6 +34624,38 @@ class DonutCreate(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DoorApproachProfile(_Model):
+    """Front clearance dimensions for the project's single hinged doors, in metres.
+    Attributes:
+        pull_depth: Unit: length.
+        pull_latch: Unit: length.
+        push_depth: Unit: length.
+        push_latch: Unit: length.
+    """
+    pull_depth: float
+    pull_latch: float
+    push_depth: float
+    push_latch: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pullDepth"] = float(self.pull_depth)
+        out["pullLatch"] = float(self.pull_latch)
+        out["pushDepth"] = float(self.push_depth)
+        out["pushLatch"] = float(self.push_latch)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DoorApproachProfile:
+        return cls(
+            pull_depth=float(data["pullDepth"]),
+            pull_latch=float(data["pullLatch"]),
+            push_depth=float(data["pushDepth"]),
+            push_latch=float(data["pushLatch"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DoorSource(_Model):
     """The doors' layer and which of its attributes say what.
     Attributes:
@@ -36125,7 +36299,7 @@ class ElevationRow(_Model):
     Attributes:
         members: Unit: count.
         derived_at: The drawing's revision it was derived at.
-        edited: Its objects changed by hand (a refresh writes them back); said only while the model's drawing is unchanged.
+        edited: Its objects changed by hand (a refresh writes them back). Older records can detect this while their source is unchanged.
         missing: Its objects deleted from the drawing.
         sides: The sides asked for; empty: all. Unit: index.
         space_label: The space's number and name now (“101 Salon”); none when it is gone or has neither.
@@ -97420,6 +97594,44 @@ class SheetDeliveryResources(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetDependency(_Model):
+    """
+    Attributes:
+        generated: Stable content digest; produced output, when present.
+        model: Stable content digest; output the current source produces, when available.
+    """
+    name: str
+    source: str
+    state: SheetDependencyState | SheetDependencyStateName
+    sheets: list[str]
+    generated: str | None | Unset = UNSET
+    model: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["source"] = self.source
+        out["state"] = _enum_out(self.state)
+        out["sheets"] = list(self.sheets)
+        if self.generated is not UNSET:
+            out["generated"] = self.generated
+        if self.model is not UNSET:
+            out["model"] = self.model
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetDependency:
+        return cls(
+            name=data["name"],
+            source=data["source"],
+            state=_enum_in(SheetDependencyState, data["state"]),
+            sheets=list(data["sheets"]),
+            generated=data.get("generated", UNSET),
+            model=data.get("model", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetHeightCheck(_Model):
     """The chosen points' own heights against the surface's (docs/adr/4740; BÖHHBÜY m. 93(1)(c)'s limit): the points
     compared (an own height, on the surface, not one of the surface's corners: a corner's difference is nought), the
@@ -98472,12 +98684,14 @@ class SheetsSet(_Model):
 
     Refusals, in this order: `entity_not_found` (at `uids[i]`), `book_unreadable`.
     Attributes:
+        dependencies: Include freshness, sources, and sheet placements of generated architectural drawings.
         details: Include the canonical book and complete system templates for automation.
         pictures: Include embedded picture bytes (base64), explicitly opt in to the larger response.
         recipes: Include each frame's detail recipe and camera lock (docs/adr/1090 §2): what `cad.sheets.details` makes it
             again from.
         uids: The changed objects' persistent ids; absent: no affected list.
     """
+    dependencies: bool | Unset = UNSET
     details: bool | Unset = UNSET
     pictures: bool | Unset = UNSET
     recipes: bool | Unset = UNSET
@@ -98485,6 +98699,8 @@ class SheetsSet(_Model):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.dependencies is not UNSET:
+            out["dependencies"] = self.dependencies
         if self.details is not UNSET:
             out["details"] = self.details
         if self.pictures is not UNSET:
@@ -98498,6 +98714,7 @@ class SheetsSet(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SheetsSet:
         return cls(
+            dependencies=data.get("dependencies", UNSET),
             details=data.get("details", UNSET),
             pictures=data.get("pictures", UNSET),
             recipes=data.get("recipes", UNSET),
@@ -98521,6 +98738,7 @@ class SheetsSetResult(_Model):
     affected: list[AffectedFrame] | None | Unset = UNSET
     annotation_scales: list[float] | None | Unset = UNSET
     book: PaperSheetBook | None | Unset = UNSET
+    dependencies: list[SheetDependency] | None | Unset = UNSET
     named_views: list[NamedView] | None | Unset = UNSET
     pictures: list[SheetPicture] | None | Unset = UNSET
     standard_ratios: list[PaperScaleRatio] | None | Unset = UNSET
@@ -98537,6 +98755,8 @@ class SheetsSetResult(_Model):
             out["annotationScales"] = None if self.annotation_scales is None else [float(e0) for e0 in self.annotation_scales]
         if self.book is not UNSET:
             out["book"] = None if self.book is None else self.book.to_json()
+        if self.dependencies is not UNSET:
+            out["dependencies"] = None if self.dependencies is None else [e0.to_json() for e0 in self.dependencies]
         if self.named_views is not UNSET:
             out["namedViews"] = None if self.named_views is None else [e0.to_json() for e0 in self.named_views]
         if self.pictures is not UNSET:
@@ -98556,6 +98776,7 @@ class SheetsSetResult(_Model):
             affected=UNSET if "affected" not in data else None if data["affected"] is None else [AffectedFrame.from_json(e0) for e0 in data["affected"]],
             annotation_scales=UNSET if "annotationScales" not in data else None if data["annotationScales"] is None else [float(e0) for e0 in data["annotationScales"]],
             book=UNSET if "book" not in data else None if data["book"] is None else PaperSheetBook.from_json(data["book"]),
+            dependencies=UNSET if "dependencies" not in data else None if data["dependencies"] is None else [SheetDependency.from_json(e0) for e0 in data["dependencies"]],
             named_views=UNSET if "namedViews" not in data else None if data["namedViews"] is None else [NamedView.from_json(e0) for e0 in data["namedViews"]],
             pictures=UNSET if "pictures" not in data else None if data["pictures"] is None else [SheetPicture.from_json(e0) for e0 in data["pictures"]],
             standard_ratios=UNSET if "standardRatios" not in data else None if data["standardRatios"] is None else [PaperScaleRatio.from_json(e0) for e0 in data["standardRatios"]],
@@ -99196,6 +99417,7 @@ class SlabBound(_Model):
     """
     source: SlabSourceKind | SlabSourceKindName
     broken: SlabBreak | SlabBreakName | None | Unset = UNSET
+    edges: SlabEdgeBindings | None | Unset = UNSET
     face: SlabFace | SlabFaceName | Unset = UNSET
     offset: float | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
@@ -99207,6 +99429,8 @@ class SlabBound(_Model):
         out["source"] = _enum_out(self.source)
         if self.broken is not UNSET:
             out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.edges is not UNSET:
+            out["edges"] = None if self.edges is None else self.edges.to_json()
         if self.face is not UNSET:
             out["face"] = _enum_out(self.face)
         if self.offset is not UNSET:
@@ -99224,6 +99448,7 @@ class SlabBound(_Model):
         return cls(
             source=_enum_in(SlabSourceKind, data["source"]),
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(SlabBreak, data["broken"]),
+            edges=UNSET if "edges" not in data else None if data["edges"] is None else SlabEdgeBindings.from_json(data["edges"]),
             face=_enum_in(SlabFace, data["face"]) if "face" in data else UNSET,
             offset=float(data["offset"]) if "offset" in data else UNSET,
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
@@ -99257,6 +99482,64 @@ class SlabEdge(_Model):
             kind=_enum_in(SlabEdgeKind, data["kind"]),
             width=float(data["width"]),
             runs=[SlabRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabEdgeBindings(_Model):
+    reference: SpacePart
+    links: list[SlabEdgeLink]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["reference"] = self.reference.to_json()
+        out["links"] = [e0.to_json() for e0 in self.links]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabEdgeBindings:
+        return cls(
+            reference=SpacePart.from_json(data["reference"]),
+            links=[SlabEdgeLink.from_json(e0) for e0 in data["links"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabEdgeLink(_Model):
+    """
+    Attributes:
+        edge: Unit: 1.
+        segment: Unit: 1.
+        offset: Outwards relative to the slab contour, in metres. Unit: length.
+        face: Wall component boundary index from its left face. No index means the outer right face. Unit: 1.
+    """
+    edge: int
+    wall: str
+    segment: int
+    offset: float
+    locked: bool
+    face: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edge"] = self.edge
+        out["wall"] = self.wall
+        out["segment"] = self.segment
+        out["offset"] = float(self.offset)
+        out["locked"] = self.locked
+        if self.face is not UNSET:
+            out["face"] = self.face
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabEdgeLink:
+        return cls(
+            edge=data["edge"],
+            wall=data["wall"],
+            segment=data["segment"],
+            offset=float(data["offset"]),
+            locked=data["locked"],
+            face=data.get("face", UNSET),
         )
 
 
@@ -118008,6 +118291,7 @@ class ViewRecipe(_Model):
     sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
     screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
     Attributes:
+        ceiling: Upward view; the regular plan is used when absent.
         combo: The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.
         crop: The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2).
         detail: The walls' detail the map draws (docs/adr/0781 §1);
@@ -118025,6 +118309,7 @@ class ViewRecipe(_Model):
             everything but the level and the crop, which stay the view's. An input may name it.
         version: 1 for a new recipe, one more at each change; given in an input, it is ignored. Unit: version.
     """
+    ceiling: CeilingRange | None | Unset = UNSET
     combo: str | None | Unset = UNSET
     crop: bool | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
@@ -118041,6 +118326,8 @@ class ViewRecipe(_Model):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.ceiling is not UNSET:
+            out["ceiling"] = None if self.ceiling is None else self.ceiling.to_json()
         if self.combo is not UNSET:
             out["combo"] = self.combo
         if self.crop is not UNSET:
@@ -118072,6 +118359,7 @@ class ViewRecipe(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ViewRecipe:
         return cls(
+            ceiling=UNSET if "ceiling" not in data else None if data["ceiling"] is None else CeilingRange.from_json(data["ceiling"]),
             combo=data.get("combo", UNSET),
             crop=data.get("crop", UNSET),
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
@@ -135472,6 +135760,20 @@ class CodesOpeningTypesOperation(OpeningTypesOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class RefreshListOpeningTypesOperation(OpeningTypesOperation):
+    """Rebuild the existing graphic joinery definition without placing another instance."""
+    TAG_VALUE: ClassVar[str] = "refreshList"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "refreshList"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RefreshListOpeningTypesOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class RemoveOpeningTypesOperation(OpeningTypesOperation):
     """Sil: the type; its openings refuse it (`opening_type_in_use`) unless `detach`, which leaves them with their
     values, following nothing.
@@ -141590,6 +141892,67 @@ class DetachSlabsOperation(SlabsOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class BindEdgeSlabsOperation(SlabsOperation):
+    """Bind or edit a single outer edge. Other edges retain their own reference lines.
+    Attributes:
+        edge: Unit: 1.
+        segment: Unit: 1.
+        offset: Outwards relative to the slab contour, in metres. Unit: length.
+        face: Wall component boundary index from its left face. No index means the outer right face. Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "bindEdge"
+    edge: int
+    wall: str
+    segment: int
+    offset: float
+    locked: bool
+    face: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "bindEdge"}
+        out["edge"] = self.edge
+        out["wall"] = self.wall
+        out["segment"] = self.segment
+        out["offset"] = float(self.offset)
+        out["locked"] = self.locked
+        if self.face is not UNSET:
+            out["face"] = self.face
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BindEdgeSlabsOperation:
+        return cls(
+            edge=data["edge"],
+            wall=data["wall"],
+            segment=data["segment"],
+            offset=float(data["offset"]),
+            locked=data["locked"],
+            face=data.get("face", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnbindEdgeSlabsOperation(SlabsOperation):
+    """Release a single edge and use its current line as the independent reference.
+    Attributes:
+        edge: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "unbindEdge"
+    edge: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "unbindEdge"}
+        out["edge"] = self.edge
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnbindEdgeSlabsOperation:
+        return cls(
+            edge=data["edge"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddSlabsOperation(SlabsOperation):
     """Ekle: the area drawn or found added to each slab.
     Attributes:
@@ -145577,7 +145940,7 @@ _OPENING_ARRAY_LAYOUT: dict[str, type[OpeningArrayLayout]] = {"spacing": Spacing
 _OPENING_REFERENCE: dict[str, type[OpeningReference]] = {"end": EndOpeningReference, "opening": OpeningOpeningReference, "wall": WallOpeningReference, "grid": GridOpeningReference}
 
 
-_OPENING_TYPES_OPERATION: dict[str, type[OpeningTypesOperation]] = {"define": DefineOpeningTypesOperation, "update": UpdateOpeningTypesOperation, "rename": RenameOpeningTypesOperation, "code": CodeOpeningTypesOperation, "codes": CodesOpeningTypesOperation, "remove": RemoveOpeningTypesOperation, "import": ImportOpeningTypesOperation, "export": ExportOpeningTypesOperation}
+_OPENING_TYPES_OPERATION: dict[str, type[OpeningTypesOperation]] = {"define": DefineOpeningTypesOperation, "update": UpdateOpeningTypesOperation, "rename": RenameOpeningTypesOperation, "code": CodeOpeningTypesOperation, "codes": CodesOpeningTypesOperation, "refreshList": RefreshListOpeningTypesOperation, "remove": RemoveOpeningTypesOperation, "import": ImportOpeningTypesOperation, "export": ExportOpeningTypesOperation}
 
 
 _OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "detach": DetachOpeningsOperation, "push": PushOpeningsOperation, "refresh": RefreshOpeningsOperation, "reset": ResetOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation, "distance": DistanceOpeningsOperation}
@@ -145727,7 +146090,7 @@ _SHAPE_WORK: dict[str, type[ShapeWork]] = {"reshape": ReshapeShapeWork, "continu
 _SHEET_TEMPLATE_SOURCE: dict[str, type[SheetTemplateSource]] = {"system": SystemSheetTemplateSource, "custom": CustomSheetTemplateSource}
 
 
-_SLABS_OPERATION: dict[str, type[SlabsOperation]] = {"set": SetSlabsOperation, "offset": OffsetSlabsOperation, "subtract": SubtractSlabsOperation, "bind": BindSlabsOperation, "detach": DetachSlabsOperation, "add": AddSlabsOperation}
+_SLABS_OPERATION: dict[str, type[SlabsOperation]] = {"set": SetSlabsOperation, "offset": OffsetSlabsOperation, "subtract": SubtractSlabsOperation, "bind": BindSlabsOperation, "detach": DetachSlabsOperation, "bindEdge": BindEdgeSlabsOperation, "unbindEdge": UnbindEdgeSlabsOperation, "add": AddSlabsOperation}
 
 
 _SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "key": KeySourcesEditOp, "extent": ExtentSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
@@ -146022,6 +146385,8 @@ __all__ = [
     "ArchSettings",
     "ArchStatus",
     "ArchStatusName",
+    "ArchWalk",
+    "ArchWalked",
     "AreaExtractValue",
     "AreaLabelMode",
     "AreaLabelModeName",
@@ -146191,6 +146556,7 @@ __all__ = [
     "BezierPaperCadGeometry",
     "BimPackage",
     "BimPackaged",
+    "BindEdgeSlabsOperation",
     "BindLeaderEdit",
     "BindSlabsOperation",
     "BindXrefsOperation",
@@ -146348,6 +146714,7 @@ __all__ = [
     "CatalogFieldChange",
     "CatalogFieldChangeKind",
     "CatalogFieldChangeKindName",
+    "CeilingRange",
     "Cell",
     "CellField",
     "CellFormula",
@@ -146815,6 +147182,7 @@ __all__ = [
     "DomainsOp",
     "DomainsPackage",
     "DonutCreate",
+    "DoorApproachProfile",
     "DoorSource",
     "DraftParcel",
     "DraftRing",
@@ -148977,6 +149345,7 @@ __all__ = [
     "RefreshBuildingSectionsOperation",
     "RefreshElementTypesOperation",
     "RefreshElevationsOperation",
+    "RefreshListOpeningTypesOperation",
     "RefreshMapWorkOperation",
     "RefreshOpeningsOperation",
     "RefreshTablesOperation",
@@ -149403,6 +149772,9 @@ __all__ = [
     "SheetContourLine",
     "SheetDeliveryResource",
     "SheetDeliveryResources",
+    "SheetDependency",
+    "SheetDependencyState",
+    "SheetDependencyStateName",
     "SheetHeightCheck",
     "SheetInfo",
     "SheetMapInfo",
@@ -149485,8 +149857,10 @@ __all__ = [
     "SlabBreak",
     "SlabBreakName",
     "SlabEdge",
+    "SlabEdgeBindings",
     "SlabEdgeKind",
     "SlabEdgeKindName",
+    "SlabEdgeLink",
     "SlabEntity",
     "SlabFace",
     "SlabFaceName",
@@ -150098,6 +150472,7 @@ __all__ = [
     "UcsNow",
     "UcsSet",
     "UcsTo",
+    "UnbindEdgeSlabsOperation",
     "UnbreakDimensionEdit",
     "UnderlayAxisCheck",
     "UnderlayChange",

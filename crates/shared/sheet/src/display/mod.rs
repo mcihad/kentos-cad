@@ -184,6 +184,9 @@ pub struct MapPrim {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<crate::kinds::MapLevel>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ceiling: Option<kentos_contracts::CeilingRange>,
     /// The phases it shows (docs/adr/0774 §3: its linked view's recipe); none: the project's phase view.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

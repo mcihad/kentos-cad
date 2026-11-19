@@ -1008,7 +1008,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -1074,7 +1076,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -1082,7 +1084,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -2413,7 +2419,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -2479,7 +2487,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -2487,7 +2495,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -3815,7 +3827,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -3881,7 +3895,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -3889,7 +3903,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -5217,7 +5235,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -5283,7 +5303,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -5291,7 +5311,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -6615,7 +6639,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -6681,7 +6707,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -6689,7 +6715,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               },
               {
@@ -6703,7 +6733,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -6752,7 +6784,7 @@
                     "rotation": 0.0
                   }
                 ],
-                "description": "Ankastre fırın 60 × 60 cm, tezgâh altı; taban noktası duvarda ortası.",
+                "description": "Elektrikli ankastre fırın 60 × 60 cm, tezgâh altı; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -6761,7 +6793,11 @@
                     "ankastre",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -8057,7 +8093,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -8123,7 +8161,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -8131,7 +8169,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -9452,7 +9494,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -9518,7 +9562,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -9526,7 +9570,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -10994,7 +11042,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -11060,7 +11110,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -11068,7 +11118,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -12371,7 +12425,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -12437,7 +12493,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -12445,7 +12501,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -13782,7 +13842,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -13848,7 +13910,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -13856,7 +13918,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -14922,7 +14988,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -14988,7 +15056,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -14996,7 +15064,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -16538,7 +16610,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -16604,7 +16678,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -16612,7 +16686,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -17482,7 +17560,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -17548,7 +17628,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -17556,7 +17636,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -18426,7 +18510,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -18492,7 +18578,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -18500,7 +18586,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -19793,7 +19883,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -19859,7 +19951,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -19867,7 +19959,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -20737,7 +20833,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -20803,7 +20901,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -20811,7 +20909,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -21699,7 +21801,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -21765,7 +21869,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -21773,7 +21877,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -22660,7 +22768,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -22726,7 +22836,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -22734,7 +22844,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -23621,7 +23735,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -23687,7 +23803,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -23695,7 +23811,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -24582,7 +24702,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -24648,7 +24770,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -24656,7 +24778,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -25543,7 +25669,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -25609,7 +25737,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -25617,7 +25745,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -26995,7 +27127,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -27061,7 +27195,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -27069,7 +27203,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -28406,7 +28544,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -28472,7 +28612,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -28480,7 +28620,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -29351,7 +29495,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -29417,7 +29563,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -29425,7 +29571,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -30298,7 +30448,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -30364,7 +30516,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -30372,7 +30524,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -31263,7 +31419,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -31329,7 +31487,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -31337,7 +31495,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -32592,7 +32754,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -32658,7 +32822,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -32666,7 +32830,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -34110,7 +34278,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -34176,7 +34346,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -34184,7 +34354,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -35085,7 +35259,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -35151,7 +35327,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -35159,7 +35335,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -36027,7 +36207,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -36093,7 +36275,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -36101,7 +36283,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -37443,7 +37629,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -37509,7 +37697,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -37517,7 +37705,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -38763,7 +38955,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -38829,7 +39023,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -38837,7 +39031,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -40261,7 +40459,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -40327,7 +40527,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -40335,7 +40535,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -41603,7 +41807,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -41669,7 +41875,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -41677,7 +41883,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -42830,7 +43040,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -42896,7 +43108,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -42904,7 +43116,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -43869,7 +44085,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -43935,7 +44153,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -43943,7 +44161,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -45187,7 +45409,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -45253,7 +45477,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -45261,7 +45485,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -46224,7 +46452,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -46290,7 +46520,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -46298,7 +46528,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]
@@ -47256,7 +47490,9 @@
                     "kind": "polyline",
                     "id": 1,
                     "layerId": "",
-                    "attrs": {},
+                    "attrs": {
+                      "KENTOS_IFC_ROLE": "FOOTPRINT"
+                    },
                     "pts": [
                       {
                         "x": -0.3,
@@ -47322,7 +47558,7 @@
                     "r": 0.09
                   }
                 ],
-                "description": "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
+                "description": "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.",
                 "units": "m",
                 "card": {
                   "category": "Mutfak/Pişirme",
@@ -47330,7 +47566,11 @@
                     "ocak",
                     "mutfak"
                   ],
-                  "version": 1
+                  "version": 1,
+                  "element": {
+                    "class": "electricAppliance",
+                    "predefined": "ELECTRICCOOKER"
+                  }
                 }
               }
             ]

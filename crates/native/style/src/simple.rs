@@ -8,10 +8,11 @@
 //! batches.json` holds both platforms to the same sets.
 
 use kentos_contracts::{
-    GradientShape, HatchEntity, HatchPattern, HatchPatternType, LayerStyle, LineType, PointSymbol,
+    GradientShape, HatchEntity, HatchPatternType, LayerStyle, LineType, PointSymbol,
 };
-use kentos_geometry_core::entity::HatchPattern as CorePattern;
-use kentos_geometry_core::geom::hatch_pattern::{FamilyPaint, PatternLine, paints};
+use kentos_geometry_core::Vec2;
+use kentos_geometry_core::geom::hatch_pattern::{FamilyPaint, paints};
+use kentos_scene_query::geometry::core_pattern;
 use serde_json::{Value, json};
 
 /// Dash patterns of the layer line types, paper mm (`LINE_TYPE_DASH`).
@@ -260,7 +261,7 @@ pub fn symbols_of_object_in(
 /// gradient (docs/adr/0186 §3), or one hatch fill a family, as the geometry
 /// core gives the families (spacing in metres; a user-defined pattern's
 /// lines as they always were).
-pub fn hatch_symbol_of(hatch: &HatchEntity, color: &str) -> Value {
+pub fn hatch_symbol_of(hatch: &HatchEntity, color: &str, render_origin: Vec2) -> Value {
     let p = &hatch.pattern;
     match p.kind {
         HatchPatternType::Solid => json!({
@@ -288,7 +289,13 @@ pub fn hatch_symbol_of(hatch: &HatchEntity, color: &str) -> Value {
             })
         }
         _ => {
-            let layers: Vec<Value> = paints(&core_pattern(p))
+            let mut pattern = core_pattern(p);
+            // The model and each paper viewport may build their batches around different origins.
+            if let Some(origin) = &mut pattern.origin {
+                origin.x -= render_origin.x;
+                origin.y -= render_origin.y;
+            }
+            let layers: Vec<Value> = paints(&pattern)
                 .iter()
                 .enumerate()
                 .map(|(i, f)| family_layer(&format!("h{}", i + 1), f, color))
@@ -322,30 +329,4 @@ fn family_layer(id: &str, f: &FamilyPaint, color: &str) -> Value {
         }
     }
     layer
-}
-
-/// A hatch's pattern as the geometry core holds it (its families too).
-fn core_pattern(p: &HatchPattern) -> CorePattern {
-    let kind = match p.kind {
-        HatchPatternType::Solid => "solid",
-        HatchPatternType::Lines => "lines",
-        HatchPatternType::Cross => "cross",
-        HatchPatternType::Pattern => "pattern",
-        HatchPatternType::Gradient => "gradient",
-    };
-    CorePattern {
-        name: p.name.clone(),
-        scale: p.scale,
-        lines: p.lines.as_ref().map(|ls| {
-            ls.iter()
-                .map(|l| PatternLine {
-                    angle: l.angle,
-                    origin: l.origin,
-                    offset: l.offset,
-                    dashes: (!l.dashes.is_empty()).then(|| l.dashes.clone()),
-                })
-                .collect()
-        }),
-        ..CorePattern::user(kind, p.angle, p.spacing)
-    }
 }

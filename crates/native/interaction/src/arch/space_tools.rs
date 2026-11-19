@@ -335,6 +335,8 @@ impl Tool for SpaceTool {
         }
         let step = if !self.draw {
             "duvarlarla çevrili bir yere tıklayın"
+        } else if self.pts.len() == 2 {
+            "sınırın üçüncü köşesini belirtin"
         } else if self.pts.len() < 3 {
             "sınırın köşelerine tıklayın"
         } else {
@@ -610,6 +612,9 @@ impl Tool for SpaceTool {
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        if self.draw && points::incomplete_boundary(self.pts.len(), cx) {
+            return Flow::Stay;
+        }
         if self.draw && self.pts.len() >= 3 {
             let corners = self.pts.clone();
             let input = self.input_for(self.new_space(None, Some(&corners)), cx);

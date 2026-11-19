@@ -80,6 +80,7 @@ pub struct Button<'a, Message> {
     flash: bool,
     /// A small button drawn with its icon only (a narrow custom panel).
     icon_only: bool,
+    layout_id: Option<widget::Id>,
 }
 
 impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
@@ -97,6 +98,7 @@ impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
             menu_id: self.menu_id.clone(),
             flash: self.flash,
             icon_only: self.icon_only,
+            layout_id: self.layout_id.clone(),
         }
     }
 }
@@ -132,6 +134,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             menu_id: None,
             flash: false,
             icon_only: false,
+            layout_id: None,
         }
     }
 
@@ -165,6 +168,12 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
 
     pub fn on_press(mut self, message: Message) -> Self {
         self.on_press = Some(message);
+        self
+    }
+
+    /// Identifies the face's rendered bounds for a widget operation.
+    pub fn layout_id(mut self, id: impl Into<widget::Id>) -> Self {
+        self.layout_id = Some(id.into());
         self
     }
 
@@ -302,11 +311,15 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             Some(button_tip) => tip(content, button_tip.clone(), tooltip::Position::Bottom),
             None => content,
         };
-        match &self.context {
+        let content: Element<'a, Message> = match &self.context {
             Some(menu) => {
                 let menu = menu.clone();
                 ContextMenu::new(content, move |_| menu()).into()
             }
+            None => content,
+        };
+        match &self.layout_id {
+            Some(id) => container(content).id(id.clone()).into(),
             None => content,
         }
     }

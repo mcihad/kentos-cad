@@ -321,6 +321,7 @@ impl SheetMaps {
             &[kentos_commands::RecipePen],
             bool,
             &[kentos_commands::OptionChoice],
+            Option<kentos_commands::CeilingRange>,
         ),
     ) -> Rc<StyledAt> {
         let scale = view.scale;
@@ -328,7 +329,7 @@ impl SheetMaps {
             .center
             .map_or_else(|| scene::scene_origin(doc), |p| Vec2::new(p.x, p.y));
         let own_key = match (own, level) {
-            _ if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.2.is_empty() || recipe.3 || !recipe.4.is_empty() => {
+            _ if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.2.is_empty() || recipe.3 || !recipe.4.is_empty() || recipe.5.is_some() => {
                 use std::hash::{Hash, Hasher};
                 let mut h = std::collections::hash_map::DefaultHasher::new();
                 serde_json::to_string(&own.0).unwrap_or_default().hash(&mut h);
@@ -405,6 +406,9 @@ impl SheetMaps {
                 // (docs/adr/0774 §3).
                 let mut p =
                     kentos_plot::layers::map_drawing_of(&doc.model, recipe.0, recipe.1, recipe.2, recipe.3, recipe.4);
+                if let Some(range) = recipe.5 {
+                    for id in kentos_native_application::ceiling_plan::hidden(&doc.model, level.map(|l| l.id.as_str()), range) { p.hide(id); }
+                }
                 for &id in &faint {
                     p.fade(id);
                 }
@@ -679,6 +683,7 @@ impl MapPainter for SheetPainter<'_> {
                 map: None,
                 level: primitive.level.as_ref(),
                 phase: primitive.phase,
+                ceiling: primitive.ceiling,
                 hidden: &primitive.hidden,
                 pens: &primitive.pens,
                 mono: primitive.mono,
@@ -784,6 +789,7 @@ impl MapPainter for SheetPainter<'_> {
                 r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
                 r.primitive.is_some_and(|p| p.mono),
                 r.primitive.map_or(&[][..], |p| &p.options[..]),
+                r.primitive.and_then(|p| p.ceiling),
             ),
             r.extent,
         );
@@ -791,6 +797,7 @@ impl MapPainter for SheetPainter<'_> {
             map: None,
             level,
             phase: r.primitive.and_then(|p| p.phase),
+            ceiling: r.primitive.and_then(|p| p.ceiling),
             hidden: r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
             pens: r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
             mono: r.primitive.is_some_and(|p| p.mono),
@@ -912,6 +919,7 @@ impl SheetPainter<'_> {
                 r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
                 r.primitive.is_some_and(|p| p.mono),
                 r.primitive.map_or(&[][..], |p| &p.options[..]),
+                r.primitive.and_then(|p| p.ceiling),
             ),
         );
         let s = scale;
@@ -1034,6 +1042,7 @@ impl SheetPainter<'_> {
                 r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
                 r.primitive.is_some_and(|p| p.mono),
                 r.primitive.map_or(&[][..], |p| &p.options[..]),
+                r.primitive.and_then(|p| p.ceiling),
             ),
         );
         let s = scale;
@@ -1149,12 +1158,15 @@ impl SheetPainter<'_> {
             .map(|l| kentos_plot::layers::level_looks(doc, l))
             .unwrap_or_default();
         // A linked view's recipe (docs/adr/0774 §3): the words of what its phase or categories leave out.
-        let recipe_out: std::collections::HashSet<u32> = match r.primitive {
+        let mut recipe_out: std::collections::HashSet<u32> = match r.primitive {
             Some(p) if p.phase.is_some() || !p.hidden.is_empty() || !p.options.is_empty() => {
                 kentos_plot::layers::map_phasing_of(doc, p.phase, &p.hidden, &p.options).hidden().collect()
             }
             _ => Default::default(),
         };
+        if let Some(p) = r.primitive && let Some(range) = p.ceiling {
+            recipe_out.extend(kentos_native_application::ceiling_plan::hidden(doc, p.level.as_ref().map(|l| l.id.as_str()), range));
+        }
         let spots: Vec<_> = spots
             .into_iter()
             .filter(|s| {

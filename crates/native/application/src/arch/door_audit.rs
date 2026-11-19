@@ -8,7 +8,8 @@
 //! [`SLACK`] about its middle).
 
 use kentos_commands::{
-    ArchAuditCheck, ArchAuditFinding, ArchAuditNature, Entity, OpeningForm, OpeningOperation,
+    ArchAuditCheck, ArchAuditFinding, ArchAuditNature, DoorApproachProfile, Entity, OpeningForm,
+    OpeningOperation,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as V;
@@ -316,62 +317,148 @@ pub(crate) fn doors(doc: &Document) -> Vec<Door> {
 }
 
 pub(crate) fn obstacles(doc: &Document) -> Vec<Obstacle> {
-    let mut out = Vec::new();
-    for e in doc.entities() {
-        let slot = Slot(e.base().id);
-        let level = e.own_level().map(str::to_owned);
-        match e {
-            Entity::Wall(w) => {
-                if let Some((outer, holes)) = wall_rings(&w.wall) {
-                    out.push(Obstacle {
-                        slot,
-                        level,
-                        what: "duvar",
-                        outer,
-                        holes,
-                    });
+    doc.entities().filter_map(|e| obstacle(doc, e)).collect()
+}
+
+fn obstacle(doc: &Document, e: &Entity) -> Option<Obstacle> {
+    let (what, outer, holes) = match e {
+        Entity::Wall(w) => {
+            let (outer, holes) = wall_rings(&w.wall)?;
+            ("duvar", outer, holes)
+        }
+        Entity::Column(c) => {
+            let kentos_geometry_core::entity::Shape::Column { at, column } =
+                kentos_formats::arch_elements::core_column(&c.column) else { return None };
+            let ring = kentos_geometry_core::geom::arch::column_corners(at, &column);
+            ("kolon", ring, Vec::new())
+        }
+        Entity::Insert(i) => ("donatı", doc.fixture_footprint(i)?.map(|p| V::new(p.x, p.y)).to_vec(), Vec::new()),
+        _ => return None,
+    };
+    (outer.len() >= 3).then(|| Obstacle { slot: Slot(e.base().id), level: e.own_level().map(str::to_owned), what, outer, holes })
+}
+
+/// The nearest visible body across a fixture's front edge. `outward` is a unit vector perpendicular to the edge.
+/// Return where on that edge the measurement starts, the clear distance in metres, and the obstacle label.
+pub fn fixture_front(
+    doc: &Document,
+    candidates: impl Iterator<Item = Slot>,
+    edge: [V; 2],
+    outward: V,
+    level: Option<&str>,
+    limit: f64,
+) -> Option<(V, f64, &'static str)> {
+    let [base, last] = edge;
+    let width = (last.x - base.x).hypot(last.y - base.y);
+    if width < SLACK { return None }
+    let along = V::new((last.x - base.x) / width, (last.y - base.y) / width);
+    let local = |p: V| {
+        let d = V::new(p.x - base.x, p.y - base.y);
+        V::new(d.x * along.x + d.y * along.y, d.x * outward.x + d.y * outward.y)
+    };
+    let world = |x: f64, y: f64| V::new(base.x + along.x * x + outward.x * y, base.y + along.y * x + outward.y * y);
+    let mut best: Option<(V, f64, &'static str)> = None;
+    for e in candidates.filter_map(|slot| doc.get(slot)) {
+        if e.own_level() != level { continue }
+        if let Entity::Insert(i) = e {
+            let applicable = doc.block(i.block).and_then(|b| b.card.as_ref())
+                .and_then(|c| c.category.as_deref()).and_then(|c| c.split('/').next())
+                .is_some_and(|c| matches!(c.trim(), "Mobilya" | "Islak hacim" | "Mutfak"));
+            if !applicable { continue }
+        }
+        let Some(o) = obstacle(doc, e) else { continue };
+        let at = world(width * 0.5, SLACK);
+        if inside(&o.outer, at) && !o.holes.iter().any(|h| inside(h, at)) {
+            return Some((world(width * 0.5, 0.0), 0.0, o.what));
+        }
+        for ring in std::iter::once(&o.outer).chain(&o.holes) {
+            for (&a, &b) in ring.iter().zip(ring.iter().cycle().skip(1)) {
+                let (a, b) = (local(a), local(b));
+                let d = V::new(b.x - a.x, b.y - a.y);
+                let Some((lo, hi)) = crate::door_audit::clip_strip(a, d, width, limit) else { continue };
+                let t = if d.y >= 0.0 { lo } else { hi };
+                let y = (a.y + d.y * t).max(0.0);
+                if best.is_none_or(|(_, distance, _)| y < distance) {
+                    best = Some((world(a.x + d.x * t, 0.0), y, o.what));
                 }
             }
-            Entity::Column(c) => {
-                if let kentos_geometry_core::entity::Shape::Column { at, column } =
-                    kentos_formats::arch_elements::core_column(&c.column)
-                {
-                    let ring = kentos_geometry_core::geom::arch::column_corners(at, &column);
-                    if ring.len() >= 3 {
-                        out.push(Obstacle {
-                            slot,
-                            level,
-                            what: "kolon",
-                            outer: ring,
-                            holes: Vec::new(),
-                        });
-                    }
-                }
-            }
-            Entity::Insert(i) => {
-                if let Some(ring) = doc.fixture_footprint(i) {
-                    out.push(Obstacle {
-                        slot,
-                        level,
-                        what: "donatı",
-                        outer: ring.iter().map(|p| V::new(p.x, p.y)).collect(),
-                        holes: Vec::new(),
-                    });
-                }
-            }
-            _ => {}
         }
     }
-    out
+    best
+}
+
+fn clip_strip(p: V, d: V, width: f64, limit: f64) -> Option<(f64, f64)> {
+    let (mut lo, mut hi) = (0.0_f64, 1.0_f64);
+    for (o, slope, min, max) in [(p.x, d.x, SLACK, width - SLACK), (p.y, d.y, 0.0, limit)] {
+        if slope.abs() <= 1e-10 {
+            if o < min || o > max { return None }
+        } else {
+            let (l, h) = ((min - o) / slope, (max - o) / slope);
+            lo = lo.max(l.min(h));
+            hi = hi.min(l.max(h));
+        }
+    }
+    (lo <= hi).then_some((lo, hi))
 }
 
 /// The door group's findings: clashes, blocked fronts and, given `min_clear`, doors narrower in clear.
 /// A clash's fix comes as its words and its `flip`'s `what` (the caller makes the call, none on a locked layer).
 pub(crate) type Turn = Option<(&'static str, &'static str)>;
 
+/// Longest straight band through the given rectangle, from the wall face to the approach edge.
+/// Project only material inside the rectangle. Holes in a closed wall do not cast an obstruction.
+fn straight_clearance(rect: [V; 4], obstacles: &[&Obstacle]) -> f64 {
+    let [a, b, _, d] = rect;
+    let width = (b.x - a.x).hypot(b.y - a.y);
+    let depth = (d.x - a.x).hypot(d.y - a.y);
+    let local = |p: V| {
+        let (x, y) = (p.x - a.x, p.y - a.y);
+        V::new(
+            (x * (b.x - a.x) + y * (b.y - a.y)) / width,
+            (x * (d.x - a.x) + y * (d.y - a.y)) / depth,
+        )
+    };
+    let bodies: Vec<Vec<Vec<V>>> = obstacles.iter().map(|o| {
+        std::iter::once(&o.outer).chain(o.holes.iter())
+            .map(|r| r.iter().copied().map(local).collect()).collect()
+    }).collect();
+    let mut stops = vec![0.0, width];
+    for ring in bodies.iter().flatten() {
+        stops.extend(kentos_geometry_core::labels::geom::clip_ring(ring, [0.0, 0.0, width, depth])
+            .into_iter().map(|p| p.x.clamp(0.0, width)));
+    }
+    stops.sort_by(f64::total_cmp);
+    stops.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
+    let mut start = 0.0;
+    let mut largest: f64 = 0.0;
+    for span in stops.windows(2) {
+        let x = (span[0] + span[1]) / 2.0;
+        let occupied = bodies.iter().any(|body| {
+            let mut cuts: Vec<f64> = body.iter().flat_map(|ring| {
+                ring.iter().zip(ring.iter().cycle().skip(1)).filter_map(|(p, q)| {
+                    ((p.x > x) != (q.x > x)).then(|| p.y + (q.y - p.y) * (x - p.x) / (q.x - p.x))
+                })
+            }).collect();
+            cuts.sort_by(f64::total_cmp);
+            cuts.chunks_exact(2).any(|pair| pair[1].min(depth) - pair[0].max(0.0) > SLACK)
+        });
+        if occupied {
+            largest = largest.max(span[0] - start);
+            start = span[1];
+        }
+    }
+    largest.max(width - start)
+}
+
+fn with_outline(mut finding: ArchAuditFinding, ring: &[V]) -> ArchAuditFinding {
+    finding.outline = ring.iter().map(|p| kentos_commands::Vec2 { x: p.x, y: p.y }).collect();
+    finding
+}
+
 pub(crate) fn findings(
     doc: &Document,
     min_clear: Option<f64>,
+    profile: Option<DoorApproachProfile>,
     mut finding: impl FnMut(&str, String, String, Vec<Slot>, V, ArchAuditNature, Turn) -> ArchAuditFinding,
 ) -> Vec<ArchAuditFinding> {
     let doors = doors(doc);
@@ -388,7 +475,7 @@ pub(crate) fn findings(
                     continue;
                 }
                 let (message, repair) = clash_words(d, o.what);
-                out.push(finding(
+                let f = finding(
                     crate::codes::ARCH_DOOR_SWING_CLASH,
                     message,
                     repair,
@@ -396,7 +483,8 @@ pub(crate) fn findings(
                     middle(sweep),
                     ArchAuditNature::Physical,
                     fix_for(d),
-                ));
+                );
+                out.push(if profile.is_some() { with_outline(f, sweep) } else { f });
             }
             for (j, other) in doors.iter().enumerate() {
                 if j <= i || other.level != d.level {
@@ -423,6 +511,40 @@ pub(crate) fn findings(
                         ArchAuditNature::Physical,
                         fix_for(d),
                     ));
+                }
+            }
+        }
+        if let Some(profile) = profile
+            && let Some(Entity::Opening(o)) = doc.get(d.slot)
+            && let Some(net) = o.opening.sizes().clear
+        {
+            for (pull, depth, latch, side, code) in [
+                (true, profile.pull_depth, profile.pull_latch, "Çekme", crate::codes::ARCH_DOOR_PULL_BLOCKED),
+                (false, profile.push_depth, profile.push_latch, "İtme", crate::codes::ARCH_DOOR_PUSH_BLOCKED),
+            ] {
+                let Some(zone) = opening::door_approach(&d.place, &d.spec, pull, depth, latch) else { continue };
+                let z = shrunk(&zone);
+                let blocked: Vec<_> = obstacles.iter().filter(|o| {
+                    Some(o.slot) != d.host && o.level == d.level && overlaps(&z, o)
+                }).collect();
+                // The clearance band must pass through the door's jambs; the latch allowance
+                // beside the jamb belongs to the maneuver, not to the straight passage.
+                let aperture = opening::door_approach(&d.place, &d.spec, pull, depth, 0.0).unwrap_or(zone);
+                let straight = straight_clearance(aperture, &blocked).min(net);
+                for obstacle in blocked {
+                    let f = finding(
+                        code,
+                        format!(
+                            "{} · {side} alanında {} · Kapı neti {} m · Geçiş {} m",
+                            d.mark, obstacle.what, fixed(net, 3), fixed(straight, 3),
+                        ),
+                        "Engeli işaretli yaklaşım alanının dışına taşıyın veya kapının yerini ve yönünü yeniden değerlendirin.".into(),
+                        vec![d.slot, obstacle.slot],
+                        middle(&zone),
+                        ArchAuditNature::Passage,
+                        None,
+                    );
+                    out.push(with_outline(f, &zone));
                 }
             }
         }

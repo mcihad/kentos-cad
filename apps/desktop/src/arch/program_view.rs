@@ -31,8 +31,8 @@ use kentos_ui::widget::table::{Column as Col, Row, Table};
 use kentos_ui::widget::{Choice, Dialog as Frame, Form, ListDetails, Pairs, Segmented, Select, text_field};
 
 use super::{
-    ADD_BRIEF, ADD_BUILDING, ADD_UNIT, ADD_WING, CANCEL, CHECK, Event, GIVE, SAVE, STOP, TITLE, Tab, UnitRow, Window,
-    fixed2, msg,
+    ADD_BRIEF, ADD_BUILDING, ADD_UNIT, ADD_WING, CANCEL, CHECK, Event, GIVE, SAVE, SHOW_ON_PLAN, STOP, TITLE, Tab,
+    UnitRow, Window, fixed2, msg,
 };
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -549,8 +549,17 @@ impl App {
         out = out.push(label::strong("Mahaller")).push(self.spaces_table(c));
         if !c.findings.is_empty() {
             let mut found = Column::new().spacing(4).push(label::strong(format!("Bulgular ({})", c.findings.len())));
-            for f in &c.findings {
-                found = found.push(words::text_line(Kind::Warn, f.message.clone()));
+            let unsaved = w.unsaved();
+            if unsaved {
+                found = found.push(label::caption("Bulgulara planda gitmek için programı kaydedip yeniden denetleyin."));
+            }
+            for (index, finding) in c.findings.iter().enumerate() {
+                let action = (!unsaved && w.running.is_none() && !finding.uids.is_empty())
+                    .then_some(msg(Event::ShowFinding(index)));
+                found = found.push(row![
+                    container(words::text_line(Kind::Warn, finding.message.clone())).width(Fill),
+                    words::secondary(SHOW_ON_PLAN, action),
+                ].align_y(Center).spacing(8));
             }
             out = out.push(found);
         }

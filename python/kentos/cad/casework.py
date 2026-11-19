@@ -320,7 +320,9 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
         depth: float | None | Unset = UNSET,
         dishwasher: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        filler_ends: Sequence[CaseworkEnd | CaseworkEndName | None] | Unset = UNSET,
         fridge: CaseworkEnd | CaseworkEndName | None | Unset = UNSET,
+        level: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         module: float | None | Unset = UNSET,
         oven: bool | None | Unset = UNSET,
@@ -368,7 +370,9 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
             depth: The countertop's depth, from 0.30 to 1.20 m; absent: 0.60. Unit: length.
             dishwasher: The dishwasher's module; absent: none. Unit: index.
             expected_revision:
+            filler_ends: End of each leg receiving the leftover filler, in path order. An omitted entry uses the layout default.
             fridge: The fridge at an end of the path; absent: none.
+            level: Storey of this run and its fixtures. Without an explicit storey a run follows its supporting wall.
             line_weight: Unit: paper-mm.
             module: A base cabinet's width (one of the cabinet block's widths: 0.30 to 1.20 m by 0.15); absent: 0.60. Unit: length.
             oven: An oven under the cooktop.
@@ -399,7 +403,9 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
             depth=depth,
             dishwasher=dishwasher,
             expected_revision=expected_revision,
+            filler_ends=_opt(filler_ends, lambda x: list(x)),
             fridge=fridge,
+            level=level,
             line_weight=line_weight,
             module=module,
             oven=oven,
@@ -424,7 +430,9 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
         depth: float | None | Unset = UNSET,
         dishwasher: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        filler_ends: Sequence[CaseworkEnd | CaseworkEndName | None] | Unset = UNSET,
         fridge: CaseworkEnd | CaseworkEndName | None | Unset = UNSET,
+        level: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         module: float | None | Unset = UNSET,
         oven: bool | None | Unset = UNSET,
@@ -447,7 +455,9 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
             depth=depth,
             dishwasher=dishwasher,
             expected_revision=expected_revision,
+            filler_ends=_opt(filler_ends, lambda x: list(x)),
             fridge=fridge,
+            level=level,
             line_weight=line_weight,
             module=module,
             oven=oven,
@@ -472,7 +482,9 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
         depth: float | None | Unset = UNSET,
         dishwasher: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        filler_ends: Sequence[CaseworkEnd | CaseworkEndName | None] | Unset = UNSET,
         fridge: CaseworkEnd | CaseworkEndName | None | Unset = UNSET,
+        level: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         module: float | None | Unset = UNSET,
         oven: bool | None | Unset = UNSET,
@@ -495,7 +507,9 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
             depth=depth,
             dishwasher=dishwasher,
             expected_revision=expected_revision,
+            filler_ends=_opt(filler_ends, lambda x: list(x)),
             fridge=fridge,
+            level=level,
             line_weight=line_weight,
             module=module,
             oven=oven,
@@ -520,7 +534,9 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
         depth: float | None | Unset = UNSET,
         dishwasher: int | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        filler_ends: Sequence[CaseworkEnd | CaseworkEndName | None] | Unset = UNSET,
         fridge: CaseworkEnd | CaseworkEndName | None | Unset = UNSET,
+        level: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         module: float | None | Unset = UNSET,
         oven: bool | None | Unset = UNSET,
@@ -548,7 +564,9 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
             depth=depth,
             dishwasher=dishwasher,
             expected_revision=expected_revision,
+            filler_ends=_opt(filler_ends, lambda x: list(x)),
             fridge=fridge,
+            level=level,
             line_weight=line_weight,
             module=module,
             oven=oven,

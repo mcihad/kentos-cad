@@ -210,6 +210,8 @@ pub const BLOCKS_PUBLICATION_VERSION: u32 = 2;
 pub const BLOCKS_TYPE_VALUES_VERSION: u32 = 3;
 /// A card's building element (docs/adr/8070 §5): an older reader would drop the class, so it refuses the library.
 pub const BLOCKS_ELEMENT_VERSION: u32 = 4;
+/// First library reader that understands electrical appliance cards.
+pub const BLOCKS_APPLIANCE_VERSION: u32 = 5;
 /// Minimum readable library format, including every definition in the supplied dependency graph.
 pub fn block_library_version<'a>(blocks: impl IntoIterator<Item = &'a BlockDefinition>) -> u32 {
     blocks.into_iter().fold(BLOCKS_VERSION, |version, b| {
@@ -224,10 +226,10 @@ pub fn block_library_version<'a>(blocks: impl IntoIterator<Item = &'a BlockDefin
         } else {
             BLOCKS_VERSION
         };
-        let element = if b.card.as_ref().is_some_and(|c| c.element.is_some()) {
-            BLOCKS_ELEMENT_VERSION
-        } else {
-            BLOCKS_VERSION
+        let element = match b.card.as_ref().and_then(|c| c.element.as_ref()).map(|e| e.class) {
+            Some(crate::entity::BlockElementClass::ElectricAppliance) => BLOCKS_APPLIANCE_VERSION,
+            Some(_) => BLOCKS_ELEMENT_VERSION,
+            None => BLOCKS_VERSION,
         };
         version.max(needed).max(element)
     })

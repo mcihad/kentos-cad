@@ -6,7 +6,7 @@
 
 use kentos_commands::{
     AffectReason, AffectedFrame, CommandResult, Entity, OTHER_SERIES, SetFrame, SetSheet,
-    SheetSeries, SheetsSet, SheetsSetResult, Vec2, ViewTarget, series_of, series_title,
+    SheetDependency, SheetDependencyState as Fresh, SheetSeries, SheetsSet, SheetsSetResult, Vec2, ViewTarget, series_of, series_title,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
@@ -60,6 +60,8 @@ pub(crate) fn drawn_by<'a>(
         .and_then(|r| r.level.as_ref().map(|l| l.id.clone()))
         .or_else(|| map.as_ref().and_then(|m| m.level.as_ref().map(|l| l.id.clone())));
     let phase = recipe.as_ref().and_then(|r| r.phase);
+    let ceiling: std::collections::HashSet<u32> = recipe.as_ref().and_then(|r| r.ceiling)
+        .map(|r| crate::ceiling_plan::hidden(doc, level.as_deref(), r).into_iter().collect()).unwrap_or_default();
     // The cropping view's area as a box: a turned view's is wider, so more may be listed, never fewer.
     let crop = recipe
         .as_ref()
@@ -94,7 +96,7 @@ pub(crate) fn drawn_by<'a>(
             return true;
         };
         doc.get(slot).is_none_or(|e| {
-            draws(e) && printed.as_ref().is_none_or(|p| p.contains(e.base().layer_id.as_str()))
+            !ceiling.contains(&e.base().id) && draws(e) && printed.as_ref().is_none_or(|p| p.contains(e.base().layer_id.as_str()))
         })
     }
 }
@@ -345,6 +347,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
         out
     });
     Ok(SheetsSetResult {
+        dependencies: input.dependencies.then(|| dependencies(doc, &sheets, book.as_ref())),
         book: input.details.then(|| {
             serde_json::to_value(book.as_ref().cloned().unwrap_or_default()).unwrap_or_default()
         }),
@@ -365,6 +368,84 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
         affected,
         revision: doc.revision().to_string(),
     })
+}
+
+fn dependencies(doc: &Document, sheets: &[SetSheet], book: Option<&kentos_sheet::SheetBook>) -> Vec<SheetDependency> {
+    use kentos_commands::{BuildingSectionState, ElevationState};
+    use kentos_domain::{Uuid, joinery_list::JOINERY_LIST_ID};
+    use sha2::{Digest, Sha256};
+    let fingerprint = |objects: &[Entity]| {
+        let bytes = serde_json::to_vec(&crate::sections_edit::bare(objects)).unwrap_or_default();
+        format!("{:x}", Sha256::digest(bytes))
+    };
+    let where_shown = |uids: &[String]| {
+        let objects: Vec<_> = uids.iter().filter_map(|u| {
+            let e = doc.get(doc.slot_of(Uuid::parse_str(u).ok()?)?)?;
+            let [min_x, min_y, max_x, max_y] = crate::sheets_fit::extent_of(doc, std::iter::once(e))?;
+            Some((u, Bounds { min_x, min_y, max_x, max_y }))
+        }).collect();
+        sheets.iter().filter(|s| s.frames.iter().any(|f| {
+            let Some(b) = &f.bounds else { return false };
+            let draws = drawn_by(doc, &s.id, &f.item, book);
+            objects.iter().any(|(u, x)| meets(x, b) && draws(u, x))
+        })).map(|s| s.id.clone()).collect()
+    };
+    let placements = |block| doc.entities_with_uids().filter_map(|(uid, e)| {
+        matches!(e, Entity::Insert(i) if i.block == block).then(|| uid.to_string())
+    }).collect::<Vec<_>>();
+
+    let mut out: Vec<_> = crate::sections_query::rows(doc).into_iter().map(|section| {
+        let block = section.block.as_deref().and_then(kentos_commands::BlockId::parse).and_then(|id| doc.block(id));
+        let mark = section.mark.as_deref().and_then(|m| Uuid::parse_str(m).ok()).and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
+        let generated = block.map(|b| fingerprint(&b.entities));
+        let model = match (section.state, mark) {
+            (BuildingSectionState::Current, _) => generated.clone(),
+            (_, Some(Entity::ViewMark(v))) => crate::sections_query::current_entities(doc, &v.mark).map(|o| fingerprint(&o)),
+            _ => None,
+        };
+        SheetDependency {
+            name: section.name,
+            source: section.mark.unwrap_or_else(|| "Kesit/cephe işareti".into()),
+            state: match section.state {
+                BuildingSectionState::Current => Fresh::Current,
+                BuildingSectionState::Stale => Fresh::Stale,
+                BuildingSectionState::Gone => Fresh::SourceGone,
+                BuildingSectionState::NotDrawn => Fresh::NotDrawn,
+            },
+            generated, model,
+            sheets: block.map_or_else(Vec::new, |b| where_shown(&placements(b.id))),
+        }
+    }).collect();
+    if let CommandResult::Completed { output, .. } = crate::elevations_query::execute_in(doc, &Default::default()) {
+        for row in output.elevations {
+            let Some((_, record)) = crate::elevations::on_layer(doc, &row.layer) else { continue };
+            let state = match row.state {
+                ElevationState::Gone => Fresh::SourceGone,
+                _ if !row.edited.is_empty() => Fresh::Edited,
+                ElevationState::Current => Fresh::Current,
+                ElevationState::Stale if !crate::elevations_query::supports_batch_refresh(doc, &row.layer) => Fresh::Legacy,
+                ElevationState::Stale => Fresh::Stale,
+            };
+            let model = if state == Fresh::Current { Some(record.digest.clone()) } else {
+                crate::elevations::standing(doc, &row.layer, &record).drawn.as_ref().map(|d| crate::elevations::digest(&d.items))
+            };
+            out.push(SheetDependency {
+                name: row.name, source: row.space, state, model, generated: Some(record.digest),
+                sheets: where_shown(&record.members.into_values().collect::<Vec<_>>()),
+            });
+        }
+    }
+    if let Some(block) = doc.block(JOINERY_LIST_ID) {
+        let current = doc.joinery_list_block();
+        let generated = fingerprint(&block.entities);
+        let model = fingerprint(&current.entities);
+        out.push(SheetDependency {
+            name: "Doğrama listesi".into(), source: "Açıklık örnekleri ve proje tipleri".into(),
+            state: if *block == current { Fresh::Current } else { Fresh::Stale },
+            generated: Some(generated), model: Some(model), sheets: where_shown(&placements(JOINERY_LIST_ID)),
+        });
+    }
+    out
 }
 
 /// Which of `named` a model table's rows or fields come from (docs/adr/1090 §6), by persistent id, in their order: a

@@ -5,7 +5,8 @@
 //! `fixtures/commands/v1/cad.slabs.edit.json`.
 
 use kentos_commands::{
-    CommandResult, Entity, SlabBoundary, SlabChange, SlabEntity, SlabFields, SlabsEdit, SlabsEdited, SlabsOperation,
+    CommandResult, Entity, SlabBoundary, SlabBound, SlabChange, SlabEdgeBindings, SlabEntity, SlabFields,
+    SlabSourceKind, SlabsEdit, SlabsEdited, SlabsOperation,
     SpacePart, Vec2,
 };
 use kentos_domain::{Document, Slot};
@@ -131,6 +132,9 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
             }
             for (at, slot, s) in &list {
                 let mut f = s.slab.clone();
+                if f.bound.as_ref().is_some_and(|b| b.edges.is_some()) {
+                    return Err(fail(codes::SLAB_BOUND, "Bağlı kenarları tek tek öteleyin veya önce konturu ayırın.".into(), "operation.distance"));
+                }
                 f.parts = slabs::moved(&f.parts, *distance, &format!("uids[{at}]"))?;
                 // A bound slab keeps its offset with its source (docs/adr/0771 §4).
                 if let Some(b) = &mut f.bound {
@@ -156,6 +160,9 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
             }
             for (at, slot, s) in &list {
                 let level = s.slab.arch.level.as_deref();
+                if s.slab.bound.as_ref().and_then(|b| b.edges.as_ref()).is_some_and(|e| e.links.iter().any(|l| l.locked)) {
+                    return Err(fail(codes::SLAB_BOUND, "Tüm konturu bağlamadan önce kenar kilitlerini açın.".into(), &format!("uids[{at}]")));
+                }
                 let parts = match space {
                     Some(uid) => slabs::space_parts(doc, uid, "operation.space")?,
                     None => slabs::outline(doc, None, *seed, *boundary, level, "operation")?,
@@ -178,13 +185,69 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
                     ));
                 }
                 let mut f = s.slab.clone();
+                if f.bound.as_ref().and_then(|b| b.edges.as_ref()).is_some_and(|e| e.links.iter().any(|l| l.locked)) {
+                    return Err(fail(codes::SLAB_BOUND, "Konturu ayırmadan önce bağlı kenarların kilidini açın.".into(), &format!("uids[{at}]")));
+                }
                 f.bound = None;
+                out.push((*slot, *at, f));
+            }
+        }
+        SlabsOperation::BindEdge(link) => {
+            let Some(wall) = kentos_domain::Uuid::parse_str(&link.wall).ok() else {
+                return Err(fail(codes::INVALID_SLAB, "Geçerli bir kaynak duvar kimliği verin.".into(), "operation.wall"));
+            };
+            let mut link = link.clone();
+            link.wall = wall.to_string();
+            for (at, slot, s) in &list {
+                let mut f = s.slab.clone();
+                let field = format!("uids[{at}]");
+                if f.bound.as_ref().is_some_and(|b| b.source != SlabSourceKind::Edges) || f.parts.len() != 1 {
+                    return Err(fail(codes::SLAB_BOUND, "Tekil bağ için bağımsız, tek parçalı döşeme konturu kullanın.".into(), &field));
+                }
+                let bound = f.bound.get_or_insert_with(|| SlabBound {
+                    source: SlabSourceKind::Edges,
+                    edges: Some(SlabEdgeBindings { reference: f.parts[0].clone(), links: Vec::new() }),
+                    ..SlabBound::default()
+                });
+                let edges = bound.edges.as_mut().ok_or_else(|| fail(codes::INVALID_SLAB, "Döşemenin kenar bağı kaydı eksik.".into(), &field))?;
+                if let Some(existing) = edges.links.iter_mut().find(|l| l.edge == link.edge) {
+                    if existing.locked && (existing.wall != link.wall || existing.segment != link.segment || existing.face != link.face || existing.offset != link.offset) {
+                        return Err(fail(codes::SLAB_BOUND, "Kaynağı veya ötelemeyi değiştirmek için önce kenar kilidini açın.".into(), "operation.edge"));
+                    }
+                    *existing = link.clone();
+                } else {
+                    edges.links.push(link.clone());
+                    edges.links.sort_by_key(|l| l.edge);
+                }
+                slabs::valid(&f, &field)?;
+                out.push((*slot, *at, edge_result(doc, f, &field)?));
+            }
+        }
+        SlabsOperation::UnbindEdge { edge } => {
+            for (at, slot, s) in &list {
+                let mut f = s.slab.clone();
+                let field = format!("uids[{at}]");
+                let Some(edges) = f.bound.as_mut().and_then(|b| b.edges.as_mut()) else {
+                    return Err(fail(codes::SLAB_NOT_BOUND, "Döşemede tekil kenar bağı yok.".into(), &field));
+                };
+                let Some(i) = edges.links.iter().position(|l| l.edge == *edge) else {
+                    return Err(fail(codes::SLAB_NOT_BOUND, "Bu kenar zaten serbest.".into(), "operation.edge"));
+                };
+                if edges.links[i].locked {
+                    return Err(fail(codes::SLAB_BOUND, "Kenarı ayırmadan önce kilidini açın.".into(), "operation.edge"));
+                }
+                edges.links.remove(i);
+                if edges.links.is_empty() {
+                    f.bound = None;
+                } else {
+                    edges.reference = f.parts[0].clone();
+                }
                 out.push((*slot, *at, f));
             }
         }
         SlabsOperation::Subtract { parts, seed, boundary } | SlabsOperation::Add { parts, seed, boundary } => {
             let cut = matches!(input.operation, SlabsOperation::Subtract { .. });
-            if let Some((at, ..)) = list.iter().find(|(_, _, s)| s.slab.bound.is_some()) {
+            if let Some((at, ..)) = list.iter().find(|(_, _, s)| s.slab.bound.as_ref().is_some_and(|b| !cut || b.edges.is_none())) {
                 return Err(fail(
                     codes::SLAB_BOUND,
                     "Döşemenin sınırı kaynağına bağlı; kesmek ya da alan eklemek için önce Ayır ile bağımsız kontur yapın.".into(),
@@ -221,7 +284,17 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
                     ));
                 }
                 let mut f = s.slab.clone();
-                f.parts = slabs::parts_of(&after);
+                if let Some(edges) = f.bound.as_mut().and_then(|b| b.edges.as_mut()) {
+                    if after.len() != 1 || (kentos_geometry_core::geom::region::ring_area(&after[0].outer).abs()
+                        - kentos_geometry_core::geom::region::ring_area(&mine[0].outer).abs()).abs() > 1e-9 * before.max(1.0) {
+                        return Err(fail(codes::SLAB_BOUND, "Bağlı kenarlı döşemede şaft dış konturun içinde kalmalı.".into(), &format!("uids[{at}]")));
+                    }
+                    let mut cut_parts = slabs::parts_of(&after);
+                    edges.reference.holes = std::mem::take(&mut cut_parts[0].holes);
+                    f = edge_result(doc, f, &format!("uids[{at}]"))?;
+                } else {
+                    f.parts = slabs::parts_of(&after);
+                }
                 slabs::valid(&f, &format!("uids[{at}]"))?;
                 out.push((*slot, *at, f));
             }
@@ -255,6 +328,15 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
             (slot, e)
         })
         .collect())
+}
+
+fn edge_result(doc: &Document, f: SlabFields, field: &str) -> Result<SlabFields, Stop> {
+    let f = doc.slab_bound_again(&f);
+    if let Some(broken) = f.bound.as_ref().and_then(|b| b.broken) {
+        return Err(fail(codes::INVALID_SLAB, broken.words().into(), field));
+    }
+    slabs::valid(&f, field)?;
+    Ok(f)
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &SlabsEdit) -> CommandResult<()> {

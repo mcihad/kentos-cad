@@ -56,6 +56,41 @@ fn a_block_s_building_element_round_trips_under_arch_data_2() {
 }
 
 #[test]
+fn electrical_cards_require_their_new_readers() {
+    let mut doc = sample();
+    doc.blocks.push(table(Some(BlockElement {
+        class: BlockElementClass::ElectricAppliance,
+        predefined: Some("DISHWASHER".into()),
+        height: None,
+        elevation: None,
+    })));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_ELECTRIC_APPLIANCES);
+    assert_eq!(kentos_contracts::block_library_version(&doc.blocks), kentos_contracts::BLOCKS_APPLIANCE_VERSION);
+    let bytes = kentos_kcad::encode(&doc).expect("writes the appliance");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("reads the appliance"), doc);
+}
+
+#[test]
+fn kitchen_placement_requires_arch_39_and_preserves_legacy_files() {
+    let bytes = include_bytes!("../../../../../fixtures/kcad/v2/casework.kcad");
+    let original = kentos_kcad::decode(bytes).expect("legacy kitchen");
+    let original_version = kentos_kcad::arch_version(&original);
+    assert!(original_version < kentos_kcad::ARCH_WITH_CASEWORK_PLACEMENT);
+    for with_floor in [true, false] {
+        let mut doc = original.clone();
+        let recipe = &mut doc.casework[0].recipe;
+        if with_floor {
+            recipe.level = Some("zemin".into());
+        } else {
+            recipe.filler_ends = vec![Some(kentos_contracts::CaseworkEnd::Start)];
+        }
+        assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_CASEWORK_PLACEMENT);
+        let bytes = kentos_kcad::encode(&doc).expect("writes the new placement");
+        assert_eq!(kentos_kcad::decode(&bytes).expect("reads the placement"), doc);
+    }
+}
+
+#[test]
 fn a_type_its_class_does_not_have_is_refused() {
     let mut doc = sample();
     doc.blocks.push(table(Some(BlockElement {

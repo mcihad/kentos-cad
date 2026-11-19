@@ -164,6 +164,55 @@ fn detach_and_reset_run_on_the_selection_in_one_step() {
     assert!(o.opening.style.is_none() && o.opening.type_version.is_none());
 }
 
+#[test]
+fn contextual_opening_assignment_and_push_are_explicit_and_revision_bound() {
+    let mut app = app();
+    let model = &app.document.as_ref().unwrap().model;
+    let source = (0..200).map(Slot).find(|&slot| matches!(
+        model.get(slot), Some(Entity::Opening(o)) if !o.opening.overrides.is_empty()
+    )).expect("one K01 has a local frame size");
+    let snapshot = |app: &App| app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let before = snapshot(&app);
+    app.selection.set([source]);
+    let _ = app.update(Message::Run("arch.openingPush"));
+    let context = |app: &App| app.arch.opening_types.as_ref().unwrap().context.as_ref().unwrap().action.clone();
+    let ContextAction::Push { report, .. } = context(&app) else { panic!("change preview") };
+    assert_eq!(report.applied.len(), 20);
+    assert_eq!(snapshot(&app), before);
+    let _ = app.opening_types_event(Event::Close);
+    assert_eq!(snapshot(&app), before);
+    let _ = app.update(Message::Run("arch.openingPush"));
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let original = doc.settings().clone();
+    let mut settings = doc.settings().clone();
+    settings.drawing_unit = Some(kentos_commands::DrawingUnit::Mm);
+    doc.set_settings(settings);
+    let after_change = snapshot(&app);
+    let _ = app.opening_types_event(Event::ContextApply);
+    assert_eq!(snapshot(&app), after_change, "stale preview refused");
+    app.document.as_mut().unwrap().model.set_settings(original);
+    assert_eq!(snapshot(&app), before);
+    app.selection.set([source]);
+    let _ = app.update(Message::Run("arch.openingPush"));
+    let _ = app.opening_types_event(Event::ContextApply);
+    assert_eq!(k01(&app).version, 2);
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(snapshot(&app), before);
+    app.selection.set([source]);
+    let _ = app.update(Message::Run("arch.openingDetach"));
+    let unbound = snapshot(&app);
+    let _ = app.update(Message::Run("arch.openingPush"));
+    let ContextAction::Assign { choices, .. } = context(&app) else { panic!("direct assignment") };
+    let k01 = choices.iter().position(|(id, _, _)| id == "k01").unwrap();
+    let _ = app.opening_types_event(Event::ContextChoice(k01));
+    assert_eq!(snapshot(&app), unbound);
+    let _ = app.opening_types_event(Event::ContextApply);
+    let doc = &app.document.as_ref().unwrap().model;
+    assert!(matches!(doc.get(source), Some(Entity::Opening(o)) if o.opening.style.as_deref() == Some("k01")));
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(snapshot(&app), unbound);
+}
+
 /// The special doors' cases (docs/adr/0777): D01 revolving, CG1 pocket, KT1 folding, each with its door.
 const SPECIAL: &str = include_str!("../../../../fixtures/commands/v1/cad.openings.create.special.json");
 

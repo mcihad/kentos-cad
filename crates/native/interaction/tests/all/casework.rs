@@ -284,3 +284,91 @@ fn a_run_typed_is_said_as_it_is_written() {
     assert!(said.starts_with("Mutfak dizisi çizildi: 8 modül"), "{said}");
     assert!(said.contains("Tezgâh 6.600 m"), "{said}");
 }
+
+#[test]
+fn a_typed_side_point_places_the_straight_run_on_the_requested_side() {
+    let mut b = bench();
+    b.click(0., 0.);
+    b.click(3.2, 0.);
+    assert!(b.type_text("@0,-1"));
+    let run = record(&b);
+    assert_eq!(run.recipe.side, Some(kentos_commands::CaseworkSide::Right));
+    assert!(run.recipe.through.as_ref().is_none_or(Vec::is_empty));
+}
+
+#[test]
+fn a_refused_last_leg_can_be_replaced_from_the_last_corner() {
+    for corners in [1, 2] {
+        let mut b = bench();
+        b.run(|s, cx| s.configure("B", if corners == 1 { "l" } else { "u" }, cx));
+        if corners == 2 {
+            b.click(0., 0.6);
+        }
+        b.click(0., 3.);
+        b.click(4.2, 3.);
+        b.click(4.2, 2.9);
+        assert!(b.doc.casework().is_empty());
+        b.move_to(4.4, 0.6);
+        let path = b.session.preview(&Default::default()).unwrap().path;
+        assert_eq!(path.len(), corners + 2);
+        let end = path.last().unwrap();
+        assert!((end.x - E - 4.2).abs() < 1e-8 && (end.y - N - 0.6).abs() < 1e-8);
+        if corners == 1 {
+            assert!(b.type_text("@0,-2.4"));
+        } else {
+            b.click(4.4, 0.6);
+        }
+        let run = record(&b);
+        assert_eq!(run.recipe.through.as_ref().map(Vec::len), Some(corners));
+        assert_eq!(b.doc.undo().as_deref(), Some("Mutfak dizisi"));
+        assert!(b.doc.casework().is_empty());
+    }
+}
+
+#[test]
+fn freestanding_kitchen_keeps_its_active_storey_on_every_fixture() {
+    let mut b = bench();
+    let mut settings = b.doc.settings().clone();
+    settings.arch = Some(serde_json::from_value(serde_json::json!({
+        "levels": [{"id": "zemin", "name": "Zemin", "elevation": 0.0},
+                   {"id": "ust", "name": "Üst kat", "elevation": 3.0}]
+    })).unwrap());
+    b.doc.set_settings(settings);
+    b.level = Some("ust".into());
+    b.click(0., 0.);
+    b.click(3.6, 0.);
+    b.click(1.8, -1.);
+    let r = record(&b);
+    assert_eq!(r.recipe.level.as_deref(), Some("ust"));
+    assert!(r.ties.iter().all(Option::is_none));
+    assert!(!inserted(&b).is_empty());
+    for e in b.doc.entities() {
+        if let Entity::Insert(i) = e {
+            assert_eq!(i.arch.level.as_deref(), Some("ust"));
+        }
+    }
+}
+
+#[test]
+fn choosing_the_filler_end_preserves_module_order_and_width() {
+    use kentos_commands::CaseworkEnd;
+    let mut b = bench();
+    b.click(0., 0.);
+    b.click(3.2, 0.);
+    b.click(1.8, -1.);
+    let mut r = record(&b).recipe;
+    let library = |_: &str| None;
+    let mut fresh = || kentos_commands::BlockId(*kentos_domain::Uuid::now_v7().as_bytes());
+    let at_end = b.doc.lay_casework(&r, &library, &mut fresh).unwrap();
+    r.filler_ends = vec![Some(CaseworkEnd::Start)];
+    let at_start = b.doc.lay_casework(&r, &library, &mut fresh).unwrap();
+    assert!(at_end.filler > 0.0);
+    assert!((at_end.filler - at_start.filler).abs() < 1e-8);
+    assert_eq!(at_end.modules.len(), at_start.modules.len());
+    for (a, b) in at_end.modules.iter().zip(&at_start.modules) {
+        assert_eq!((a.number, a.width, a.kind), (b.number, b.width, b.kind));
+        assert!((b.start - a.start - at_end.filler).abs() < 1e-8);
+    }
+    r.filler_ends.push(Some(CaseworkEnd::End));
+    assert!(b.doc.lay_casework(&r, &library, &mut fresh).is_err());
+}

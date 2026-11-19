@@ -17,7 +17,7 @@ const SELECTION_PADDING: f64 = 96.0;
 impl App {
     /// The selection query over the drawing (docs/adr/0275) with the filter's kinds, the store first brought up to
     /// the drawing; none without one.
-    fn query_selection(&mut self, region: SelectRegion) -> Option<Selected> {
+    pub(crate) fn query_selection(&mut self, region: SelectRegion) -> Option<Selected> {
         let doc = self.document.as_ref()?;
         self.spatial.sync(&doc.model);
         selectable::query_in(&doc.model, &self.spatial, self.draft.select_kinds, region)

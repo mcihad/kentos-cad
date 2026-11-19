@@ -9,7 +9,7 @@
 use iced::widget::{Column, container, row};
 use iced::{Element, Fill};
 use kentos_commands::{
-    PenCategory, PhaseView, RecipeLevel, RecipePen, ViewCategory, ViewRecipe, ViewTemplate, ViewsOp, WallDetail,
+    CeilingRange, PenCategory, PhaseView, RecipeLevel, RecipePen, ViewCategory, ViewRecipe, ViewTemplate, ViewsOp, WallDetail,
 };
 use kentos_interaction::Level;
 use kentos_ui::label;
@@ -29,7 +29,7 @@ pub struct Preset {
 }
 
 /// The ready recipes (docs/adr/0774 §2): a few useful ones, no more.
-pub const PRESETS: [Preset; 5] = [
+pub const PRESETS: [Preset; 6] = [
     Preset {
         name: "Uygulama planı 1:50",
         scale: 50,
@@ -65,7 +65,13 @@ pub const PRESETS: [Preset; 5] = [
         hidden: &[],
         detail: None,
     },
+    Preset {
+        name: "Yansıtılmış tavan planı 1:50", scale: 50, phase: None, hidden: &[], detail: Some(WallDetail::Standard),
+    },
 ];
+
+const CEILING_PRESET: usize = 5;
+const HEIGHTS: [f64; 14] = [0.0, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.5, 5.0, 10.0];
 
 /// The scales the window offers; none: the view's box fitted to the map.
 const SCALES: [Option<u32>; 7] = [
@@ -128,6 +134,7 @@ pub fn recipe_caption(app: &App, r: &ViewRecipe) -> String {
     if let Some(s) = r.scale {
         parts.push(format!("1:{s}"));
     }
+    if let Some(c) = r.ceiling { parts.push(format!("Tavan · {:.2}–{:.2} m", c.low, c.high)); }
     if let Some(l) = &r.level {
         parts.push(app.recipe_level_name(&l.id).unwrap_or_else(|| l.id.clone()));
     }
@@ -319,6 +326,7 @@ impl App {
             .as_ref()
             .map(|d| d.model.option_combos().iter().map(|c| c.id.clone()).collect())
             .unwrap_or_default();
+        let active = self.active_level();
         let Some(w) = self.views_window.as_mut() else {
             return;
         };
@@ -330,6 +338,19 @@ impl App {
                     r.phase = p.phase;
                     r.hidden = p.hidden.to_vec();
                     r.detail = p.detail;
+                    r.ceiling = (i == CEILING_PRESET).then(CeilingRange::default);
+                    if r.ceiling.is_some() && r.level.is_none() {
+                        r.level = active.map(|id| RecipeLevel { id, below: false });
+                    }
+                }
+            }
+            Event::RecipeCeiling(on) => {
+                r.ceiling = on.then(CeilingRange::default);
+                if on && r.level.is_none() { r.level = active.map(|id| RecipeLevel { id, below: false }); }
+            }
+            Event::RecipeCeilingBound { low, metres } => {
+                if let Some(c) = &mut r.ceiling {
+                    if low { c.low = metres; } else { c.high = metres; }
                 }
             }
             Event::RecipeLevel(i) => {
@@ -501,6 +522,7 @@ impl App {
             "Bağlı haritaları görünümün alanına kırp",
             Some(m(Event::RecipeCrop(!r.crop))),
         );
+        let reflected = words::check(r.ceiling.is_some(), "Yansıtılmış tavan planı", Some(m(Event::RecipeCeiling(r.ceiling.is_none()))));
         // A design option set's choice each (docs/adr/0788 §3): its primary unless another is chosen.
         let sets = self.document.as_ref().map_or(&[][..], |d| d.model.arch_options());
         let mut options = Column::new().spacing(6);
@@ -616,7 +638,7 @@ impl App {
         .align_y(iced::Center);
         let version = if r.version > 0 {
             format!(
-                "Sürüm {}. Bu görünüme bağlı pafta haritaları bu tarifle çizer; model ve ekran değişmez.",
+                "Sürüm {}. Bağlı pafta pencereleri bu tarifi kullanır.",
                 r.version
             )
         } else {
@@ -625,7 +647,7 @@ impl App {
         let actions = row![
             words::primary(
                 "Tarifi uygula",
-                (editable && !r.is_empty()).then(|| m(Event::RecipeApply))
+                (editable && !r.is_empty() && r.ceiling.is_none_or(CeilingRange::valid)).then(|| m(Event::RecipeApply))
             ),
             words::secondary(
                 "Tarifi kaldır",
@@ -655,6 +677,21 @@ impl App {
                     ));
             }
             None => {
+                body = body.push(reflected);
+                if let Some(range) = r.ceiling {
+                    let height = |low, value| {
+                        let mut values: Vec<f64> = HEIGHTS.into_iter().filter(|v| if low { *v < range.high } else { *v > range.low }).collect();
+                        if !values.contains(&value) { values.push(value); values.sort_by(f64::total_cmp); }
+                        let selected = values.iter().position(|v| *v == value);
+                        let options: Vec<_> = values.iter().map(|v| Choice::new(format!("{v:.2} m"))).collect();
+                        Select::new(options, selected,
+                            move |i| m(Event::RecipeCeilingBound { low, metres: values[i] })).searchable(false)
+                    };
+                    body = body.push(row![
+                        cell("Alt kot", height(true, range.low).into()),
+                        cell("Üst kot", height(false, range.high).into()),
+                    ].spacing(12));
+                }
                 body = body
                     .push(
                         row![

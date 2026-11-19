@@ -919,6 +919,40 @@ fn an_l_roof_turns_in_with_a_valley_through_the_section_and_the_ifc() {
     assert!((v - want).abs() < 1e-9, "{v}, the closed form {want}");
 }
 
+#[test]
+fn a_saved_t_roof_keeps_its_two_valleys_and_is_cut_in_the_section() {
+    use kentos_geometry_core::geom::roof as core;
+    let mut doc = building();
+    let t = [(-0.625, -0.625), (12.625, -0.625), (12.625, 4.0), (7.625, 4.0),
+        (7.625, 9.625), (2.625, 9.625), (2.625, 4.0), (-0.625, 4.0)];
+    let points: Vec<_> = t.iter().map(|(x, y)| json!({"x": x, "y": y})).collect();
+    let created = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.roofs.create", CallOp::Execute,
+        json!({"layerId": "0", "roofs": [{"pts": points, "slopes": vec![33.0; 8], "arch": {"level": "k1"}}]}),
+    ).expect("roof command");
+    assert_eq!(created["status"], "completed", "{created}");
+    let uid = created["output"]["uids"][0].as_str().expect("roof id");
+    let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("save");
+    let mut reopened = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("read"))
+        .expect("reopen");
+    let slot = reopened.slot_of(uid.parse().expect("roof UUID")).expect("saved roof");
+    let Some(Entity::Roof(roof)) = reopened.get(slot) else { panic!("the saved T roof") };
+    let ring: Vec<_> = roof.roof.pts.iter().map(|p| kentos_geometry_core::Vec2::new(p.x, p.y)).collect();
+    assert_eq!(roof.roof.slopes, vec![Some(33.0); 8]);
+    let spec = core::RoofSpec { slopes: roof.roof.slopes.clone(), ..Default::default() };
+    let valleys = core::lines(&ring, &spec).expect("roof lines").into_iter()
+        .filter(|line| line.kind == core::Line::Valley).count();
+    assert_eq!(valleys, 2);
+    let b = mark(&reopened, ViewMarkForm::Section, "B");
+    let model = sections::model(&reopened);
+    assert_eq!(model.owners.iter().zip(&model.parts).filter(|(owner, part)| {
+        owner.as_deref() == Some(uid) && part.is_none()
+    }).count(), 8);
+    let out = derive(&mut reopened, b);
+    assert!(!out.left_out.iter().any(|entry| entry.why == BuildingSectionLeft::Roof), "{:?}", out.left_out);
+}
+
 /// Çatı altındaki mahal (docs/adr/8071 §11): the section building without its terrace slab and with its hip roof over
 /// the 1. kat (eaves 50 cm out of the walls at +6.00, 33 %, 25 cm upright). The 1. kat's rooms have no slab over them:
 /// each rises to the roof's underside. Worked out here another way than the IFC's pieces: the roof's lower envelope less

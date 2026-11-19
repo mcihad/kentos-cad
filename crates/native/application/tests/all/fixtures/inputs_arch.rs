@@ -241,7 +241,8 @@ impl Input for kentos_commands::SlabsEdit {
                 "operation.offset" => offset.as_mut(),
                 _ => None,
             },
-            Op::Detach => None,
+            Op::BindEdge(link) => (path == "operation.offset").then_some(&mut link.offset),
+            Op::Detach | Op::UnbindEdge { .. } => None,
         }
     }
 }

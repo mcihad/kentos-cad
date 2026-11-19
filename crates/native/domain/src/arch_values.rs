@@ -512,7 +512,15 @@ impl Document {
         i: &kentos_contracts::InsertEntity,
     ) -> Option<[kentos_contracts::Vec2; 4]> {
         let b = self.blocks().iter().find(|b| b.id == i.block)?;
-        let hidden = hidden_by(b, &i.parameters);
+        let mut hidden = hidden_by(b, &i.parameters);
+        // When the use zone is displayed, its outline still has no physical depth.
+        if let Some(states) = b.dynamic.iter().flat_map(|d| &d.parameters).find_map(|p| {
+            let kentos_contracts::BlockParameter::Visibility { name, states } = p else { return None };
+            let Some(kentos_contracts::ParamValue::Text(selected)) = i.parameters.get(name) else { return None };
+            (fold_name(selected) == fold_name(ZONE_STATE)).then_some(states)
+        }) && let Some(physical) = states.first() {
+            hidden.extend(&physical.hidden);
+        }
         let corners = entities_box(b.entities.iter().filter(|e| !hidden.contains(&e.base().id)))?;
         Some(placed_box(b, i, corners))
     }

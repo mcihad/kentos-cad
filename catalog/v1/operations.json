@@ -316,6 +316,13 @@
     "tool.cancel": {
       "level": "session"
     },
+    "edit.browseScene": {
+      "level": "session",
+      "via": ["cad.entities.select"],
+      "python": "kentos.cad.entities.select",
+      "mcp": "cad.entities.select",
+      "note": "Klavye gezinmesi masaüstü oturumuna aittir. Adaylar ortak cad.entities.select sorgusundan gelir."
+    },
     "edit.cycleSelection": {
       "level": "session"
     },
@@ -2213,6 +2220,11 @@
       ],
       "note": "Tıklanan iç nokta (seed) ya da çizilen köşeler, yöntem ve bilgiler komuta verilir; sınır komutun duvarlardan hesabıdır, önizleme planından (ADR 0342 §4, §5)."
     },
+    "tool.slabEdgeBind": {
+      "level": "semantic",
+      "via": ["cad.slabs.edit"],
+      "note": "Tek döşeme dış kenarını duvar bileşen yüzü, öteleme ve kilitle bağlar veya serbest bırakır."
+    },
     "tool.slab": {
       "level": "semantic",
       "via": [
@@ -2463,6 +2475,13 @@
       ],
       "note": "Kaçış yolları: Mevzuat grubunun yangın kurallarının ölçtüğü yollar (BYKHY 32/6, 4/i, 48/2, 48/4, Ek-5/B) etkin katta çizgi, ok başı ve sınırıyla yazı olarak çizime; Kaçış özniteliği taşıyan eski yollar silinir (ADR 8035 §2)."
     },
+    "tool.walkRoute": {
+      "level": "semantic",
+      "via": [
+        "cad.arch.walk"
+      ],
+      "note": "Etkin katta iki konum, geçiş genişliği ve donatı kapsamı ile tasarım güzergâhını hesaplar. Çizimi değiştirmez."
+    },
     "arch.qualityForm": {
       "level": "semantic",
       "via": [
@@ -2642,11 +2661,11 @@
       "note": "Gezgin paneli cad.navigator.read'in cevabını gösterir; tek seçili nesnenin yerleri onun uid'iyle (ADR 0778)."
     },
     "arch.sheetSet": {
-      "level": "query",
+      "level": "semantic",
       "via": [
-        "cad.sheets.set"
+        "cad.sheets.set", "cad.sections.edit", "cad.elevations.edit", "cad.openingtypes.edit"
       ],
-      "note": "Pencere cad.sheets.set'in cevabını gösterir; etkilenen paftalar seçili nesnelerin kimlikleriyle (ADR 0347 §1)."
+      "note": "cad.sheets.set etkilenen paftaları ve isteğe bağlı üretim bağımlılıklarını listeler. Toplu yenileme mevcut kesitleri, iç görünüşleri ve doğrama listesini yerinde yeniler."
     },
     "xref.attach": {
       "level": "semantic",
@@ -2678,6 +2697,11 @@
         "cad.spaces.finish"
       ],
       "note": "Tıklanan mahal ve desen komuta verilir; tarama komutun hesabı, mahale bağlı (ADR 0345 §4)."
+    },
+    "tool.ceilingDevice": {
+      "level": "semantic",
+      "via": ["cad.blocks.edit", "cad.blocks.insert"],
+      "note": "Tavan cihazı sembolünü metre birimli blok olarak ekler; yerleşim öznitelikleri cihaz türünü ve kaynak mahal kimliğini tutar."
     },
     "tool.spaceCeiling": {
       "level": "semantic",

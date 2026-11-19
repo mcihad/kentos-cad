@@ -1521,6 +1521,7 @@ mod tests {
             clip_shape: Default::default(),
             layer_overrides: Vec::new(),
             phase: None,
+            ceiling: None,
             hidden: Vec::new(),
             wall_detail: None,
             pens: Vec::new(),

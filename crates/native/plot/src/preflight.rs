@@ -669,6 +669,7 @@ mod tests {
                 map: None,
                 level: map.level.as_ref(),
                 phase: map.phase,
+                ceiling: map.ceiling,
                 hidden: &map.hidden,
                 pens: &map.pens,
                 mono: map.mono,

@@ -87,7 +87,7 @@ pub(crate) fn payload(
 
 /// The module versions a document needs (`modules`, schema 254). A module's new data raises its own version here and in
 /// its reader's `MODULE_VERSIONS`; the document schema stays (docs/adr/8054 §10).
-fn modules_of(doc: &DocumentSnapshotV2) -> ModuleVersions {
+fn modules_of(doc: &DocumentSnapshotV2, objects: Objs<'_>) -> ModuleVersions {
     // GIS 1 (docs/adr/8057 §15): a derivation that names an extension or its environment.
     fn extended(nodes: &[kentos_contracts::LayerNode]) -> bool {
         nodes.iter().any(|n| {
@@ -102,7 +102,7 @@ fn modules_of(doc: &DocumentSnapshotV2) -> ModuleVersions {
     // (docs/adr/8070 §5): a block card's building element; 3 (§7) a curtain wall; 4 (§8) a post, a rail, a column's
     // own height; 5 (§10) a covering; 6 (§11) a beams' or coverings' schedule; 7 (docs/adr/8071 §6) a sloped slab; 8
     // (§8) a roof's layers; 9 (docs/adr/8072 §1) a building's code, use or ±0.00, a shared level.
-    let arch = crate::arch_version(doc);
+    let arch = crate::arch_version_of(doc, objects.iter());
     if arch > 0 {
         out.modules.push(("arch".to_owned(), arch));
     }
@@ -323,7 +323,7 @@ impl<'d> Encoder<'d> {
                 ),
             ));
         }
-        self.root_with(doc, &modules_of(doc))
+        self.root_with(doc, &modules_of(doc, self.objs))
     }
 
     /// The root with the module versions `modules` (none: the three keys of schemas 2–253). `modules` sorts before

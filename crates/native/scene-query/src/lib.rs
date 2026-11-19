@@ -6,6 +6,7 @@
 //! under their old paths.
 
 pub mod blocks;
+pub mod ceiling_plan;
 pub mod expression_unit;
 pub mod geometry;
 pub mod geometry_store;

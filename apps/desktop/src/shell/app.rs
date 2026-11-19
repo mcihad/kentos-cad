@@ -352,6 +352,8 @@ pub enum Picker {
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    #[cfg(target_os = "macos")]
+    Accessibility(crate::accessibility::Event),
     /// Run a web command id (ribbon, shortcut, command line, dialog).
     Run(&'static str),
     /// Etkin kat chosen on the status bar (docs/adr/0713): a level by its id; none, Katsız.
@@ -716,6 +718,8 @@ pub struct Written {
 }
 
 pub struct App {
+    #[cfg(target_os = "macos")]
+    pub(crate) accessibility: crate::accessibility::State,
     pub document: Option<Document>,
     pub tab: &'static str,
     /// The contextual Seçim tab is the one shown, while something is
@@ -896,6 +900,7 @@ pub struct App {
     pub memory: Memory,
     /// The selected objects and the hovered one (session state, not the drawing's).
     pub selection: Selection,
+    pub(crate) scene_browse: Option<crate::scene_browse::Browse>,
     /// What Kes and Panoya kopyala put aside for Yapıştır (session state: it
     /// outlives the drawing on screen; clipboard.rs, docs/adr/0056).
     pub clipboard: Clipboard,

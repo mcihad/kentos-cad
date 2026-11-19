@@ -9,7 +9,7 @@ use kentos_commands::{
     OpeningTypesEdited, OpeningTypesFile, OpeningTypesOperation, builtin_opening_types,
     opening_type_id_of, opening_type_id_ok,
 };
-use kentos_domain::{Document, Slot};
+use kentos_domain::{Document, Slot, joinery_list::JOINERY_LIST_ID};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
@@ -25,6 +25,7 @@ struct Work {
     updates: Vec<(Slot, OpeningEntity)>,
     report: OpeningTypeReport,
     library: Option<OpeningTypesFile>,
+    joinery: Option<kentos_commands::BlockDefinition>,
 }
 
 fn name_ok(name: &str, path: &str) -> Result<(), Stop> {
@@ -85,6 +86,7 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
         updates: Vec::new(),
         report: OpeningTypeReport::default(),
         library: None,
+        joinery: None,
     };
     match &input.operation {
         OpeningTypesOperation::Define {
@@ -260,6 +262,15 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
                 .map(|(s, _)| doc.uid(*s).map(|u| u.to_string()).unwrap_or_default())
                 .collect();
             work.updates = plan.updates;
+        }
+        OpeningTypesOperation::RefreshList {} => {
+            let Some(current) = doc.block(JOINERY_LIST_ID) else {
+                return Err(fail(codes::NOTHING_TO_SET, "Önce Doğrama listesi ile bir liste oluşturun.".into(), "operation"));
+            };
+            let block = doc.joinery_list_block();
+            if *current != block {
+                work.joinery = Some(block);
+            }
         }
         OpeningTypesOperation::Remove { kind, detach } => {
             let old = types::find_project(doc, kind, "operation.type")?;
@@ -502,6 +513,9 @@ fn write_execute(
     let doc = &mut *cx.doc;
     if work.library.is_none() {
         let result = doc.transact(STEP, |d| {
+            if let Some(block) = work.joinery.clone() {
+                d.update_block(block)?;
+            }
             d.set_opening_types(work.types.clone(), STEP)?;
             d.update_many(
                 work.updates

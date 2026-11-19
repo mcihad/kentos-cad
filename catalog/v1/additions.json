@@ -2644,6 +2644,16 @@
       "status": "implemented"
     },
     {
+      "id": "tool.slabEdgeBind",
+      "title": "Döşeme kenarı bağla",
+      "icon": "slabEdgeBind",
+      "description": "Doğrusal döşeme kenarını bir duvar bileşeninin yüzüne bağlayın. Öteleme ve kilidi ayarlayıp Enter ile uygulayın. Serbest kenarlar kendi doğrularında kalır.",
+      "aliases": ["DOSEMEKENARBAGLA", "DÖŞEMEKENARBAĞLA", "SLABEDGEBIND"],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.slab",
       "title": "Döşeme",
       "icon": "slab",
@@ -2796,7 +2806,7 @@
       "id": "tool.post",
       "title": "Dikme",
       "icon": "post",
-      "description": "Tıklanan yere bir dikme koyar: pergola, saçak ya da cephe dikmesi; çerçevenin kolonu değildir, IFC'de eleman (dikme, POST) olarak yazılır. Biçim (B), En (E), Boy (Y), Açı (D), Hiza (H), Yükseklik (Ü: boş ya da Kat, katın yüksekliği), Malzeme (M: Çelik ile başlar), İlk etiket (K); 10/10 ile başlar, içi doldurulmaz. Kesitte, görünüşte ve 3B'de kendi yüksekliğiyle görünür; Öznitelikler'de tipi ve adı değişir.",
+      "description": "Tıklanan yere bir dikme koyar: pergola, saçak ya da cephe dikmesi; çerçevenin kolonu değildir, IFC'de eleman (dikme, POST) olarak yazılır. Biçim (B), En (E), Kesit boyu (O), Açı (D), Hiza (H), Yükseklik (Y: boş ya da Kat, katın yüksekliği), Malzeme (M: Çelik ile başlar), İlk etiket (K); 10/10 ile başlar, içi doldurulmaz. Kesitte, görünüşte ve 3B'de kendi yüksekliğiyle görünür; Öznitelikler'de tipi ve adı değişir.",
       "aliases": [
         "DIKME",
         "POST"
@@ -3149,7 +3159,7 @@
       "title": "Doğrama listesi",
       "short": "Doğrama listesi",
       "icon": "joineryList",
-      "description": "Grafik doğrama listesini imleçten yerleştirir: çizimin kullandığı her kapı ve pencere tipi bir sütunda; doğrama kodu, Türkiye'deki çizimle görünüşü (açılım çizgileri menteşe tarafının köşelerinden kol tarafının ortasına iner), kaba ölçü, denizlik yüksekliği, açılım, kasa ve kanat, U değeri, adet. Liste bir bloktur (MM-XXXX-DOGRAMALISTESI); tipler ya da açıklıklar değişince aynı adımda yeniden yazılır. 1/50 için 2,5 mm yazı.",
+      "description": "Grafik doğrama listesini imleçten yerleştirir: çizimin kullandığı her kapı ve pencere tipi bir sütunda; doğrama kodu, Türkiye'deki çizimle görünüşü (açılım çizgileri menteşe tarafının köşelerinden kol tarafının ortasına iner), kaba ölçü, denizlik yüksekliği, açılım, kasa ve kanat, U değeri, adet. Liste bir bloktur (MM-XXXX-DOGRAMALISTESI); tipler ya da açıklıklar değişince aynı adımda yeniden yazılır. Bir liste yerleştirilmişse Enter mevcut listeyi günceller. Başka yere yerleştirmek için Yeni kopya (Y) seçin. 1/50 için 2,5 mm yazı.",
       "aliases": [
         "DOGRAMALISTESI",
         "DOĞRAMALISTESİ",
@@ -3240,6 +3250,16 @@
         "YANGINKAÇIŞI",
         "EGRESS"
       ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.walkRoute",
+      "title": "Dolaşım güzergâhı",
+      "icon": "walkRoute",
+      "description": "Bir katta iki mahal arasında geçiş genişliği seçip güzergâhı ölçün. Kolonlar ve kapı netleri hesaba katılır. Donatıları ayardan dahil edin. Sonuç geçici tasarım ölçümüdür.",
+      "aliases": ["DOLASIM", "DOLAŞIM", "WALKROUTE"],
       "shortcuts": [],
       "category": "Mimari",
       "status": "implemented"
@@ -3647,6 +3667,16 @@
         "DOSEMEDESENI",
         "FLOORPATTERN"
       ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.ceilingDevice",
+      "title": "Tavan cihazı",
+      "icon": "ceilingDevice",
+      "description": "Mahal içinde armatür, menfez ve bakım kapağı yerleştirin. İsterseniz sembolü tavan ızgarasının hücre ortasına ve yönüne hizalayın.",
+      "aliases": ["TAVANCIHAZI", "TAVANCİHAZI", "CEILINGDEVICE"],
       "shortcuts": [],
       "category": "Mimari",
       "status": "implemented"
@@ -5132,6 +5162,16 @@
       "status": "implemented"
     },
     {
+      "id": "edit.browseScene",
+      "title": "Nesnelerde gezin",
+      "icon": "select",
+      "description": "Modeldeki seçilebilir nesneleri çizim sırasına göre dolaşır. Tab ve Shift+Tab ileri ve geri gider. Sol ve sağ oklar da çalışır. Enter veya Esc gezinmeyi bitirir ve seçili nesneyi korur.",
+      "aliases": ["NESNEGEZ"],
+      "shortcuts": ["Ctrl+Shift+J"],
+      "category": "Seçim",
+      "status": "implemented"
+    },
+    {
       "id": "edit.autoSelect",
       "title": "Otomatik seçim",
       "short": "Oto. seçim",
@@ -5788,6 +5828,9 @@
     "shelterTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 14.5V9l5-3.5L15 9v5.5z\"/><path d=\"M8.5 14.5v-3h3v3\" stroke-width=\"1\"/>",
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
     "escapeRoutes": "<path d=\"M17.5 7.5v-5h-15v15h15v-5\"/><path d=\"M5.5 14.5V10h8\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M12 7.5l2.5 2.5-2.5 2.5\"/>",
+    "walkRoute": "<circle cx=\"3.8\" cy=\"15.8\" r=\"1.8\"/><circle cx=\"16.2\" cy=\"4.2\" r=\"1.8\"/><path d=\"M5.6 15.8h5.5a2 2 0 0 0 2-2V6.2a2 2 0 0 1 2-2\"/>",
+    "slabEdgeBind": "<path d=\"M2 9.5l7.5 4.2 8.5-5-7.5-4.2L2 9.5v3.8l7.5 4.2 8.5-5V8.7M9.5 13.7v3.8\"/><path d=\"M5 5.2l5.5-3.2 4.9 2.7\" stroke-width=\"1\" stroke-dasharray=\"1.2 1.1\"/>",
+    "ceilingDevice": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><circle cx=\"10\" cy=\"10\" r=\"3.6\"/><path d=\"M8.4 10h3.2M10 8.4v3.2\" stroke-width=\"1\"/>",
     "regulation": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\" stroke-width=\"1\"/><path d=\"M7.5 11.5l2 2 3.5-4.5\"/>",
     "joineryList": "<rect x=\"2\" y=\"3.5\" width=\"7.5\" height=\"12.5\" rx=\"0.6\"/><path d=\"M9.5 3.5 2 9.75 9.5 16\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleRoomList": "<rect x=\"2\" y=\"3.5\" width=\"7.5\" height=\"7\" rx=\"0.6\"/><path d=\"M2 8a2.5 2.5 0 0 1 2.5 2.5\" stroke-width=\"1\"/><path d=\"M2 13.4h7.5\" stroke-width=\"1.5\"/><path d=\"M2 16h7.5\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",

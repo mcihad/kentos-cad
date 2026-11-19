@@ -159,6 +159,7 @@ pub(crate) fn bound_of(seed: Option<Vec2>, boundary: Option<SlabBoundary>, space
         offset,
         uids: Vec::new(),
         broken: None,
+        edges: None,
     }
 }
 

@@ -50,6 +50,7 @@ pub enum Kind {
     Rail,
     /// A covering (docs/adr/8070 §10), by its type's EK-2 element (Asma Tavan, Zemin Kaplama …): MM-ASTV-GENEL.
     Covering(&'static str),
+    CeilingDevice,
     Grid,
     /// Kitchen units (Mutfak).
     Casework,
@@ -90,6 +91,7 @@ impl Kind {
             Kind::CurtainWall => "GIYC",
             Kind::Post | Kind::Rail => "DIGR",
             Kind::Covering(element) => element,
+            Kind::CeilingDevice => "ASTV",
             Kind::Grid => "AKSS",
             Kind::Casework | Kind::Furniture(_) => "TEFR",
             Kind::Space
@@ -123,6 +125,7 @@ impl Kind {
             Kind::Post => word("DIKME"),
             Kind::Rail => word("KAYIT"),
             Kind::Covering(_) => String::new(),
+            Kind::CeilingDevice => word("CIHAZ"),
             Kind::Railing(infill) => word(infill.layer_word()),
             Kind::Door
             | Kind::Window
@@ -180,6 +183,7 @@ impl Kind {
             Kind::Post => "Dikme",
             Kind::Rail => "Kayıt",
             Kind::Covering(_) => "Kaplama",
+            Kind::CeilingDevice => "Tavan cihazı",
             Kind::Grid => "Aks",
             Kind::Casework => "Mutfak",
             Kind::Furniture(_) => "Donatı",
@@ -215,6 +219,7 @@ impl Kind {
             Kind::Post => "dikme",
             Kind::Rail => "kayıt",
             Kind::Covering(_) => "kaplama",
+            Kind::CeilingDevice => "tavan cihazı",
             Kind::Grid => "aks",
             Kind::Casework => "mutfak dolabı",
             Kind::Furniture(_) => "donatı",
@@ -237,7 +242,7 @@ impl Kind {
         match self {
             Kind::Wall(_) | Kind::Column | Kind::Post => look("ink", 0.5),
             Kind::Slab(_) | Kind::Roof(_) => look("ink", 0.35),
-            Kind::Covering(_) => look("ink", 0.18),
+            Kind::Covering(_) | Kind::CeilingDevice => look("ink", 0.18),
             Kind::Door
             | Kind::Window
             | Kind::Void

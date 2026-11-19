@@ -464,6 +464,18 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<Document
             "yangın dayanım sınıfı, acil çıkış, malzeme dayanımı ve binanın yangın koruma sınıfı mimari verisi sürüm 1'den önce yok",
         ));
     }
+    if arch < crate::ARCH_WITH_CASEWORK_PLACEMENT && crate::uses_casework_placement(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "mutfak dizisinin kat ve dolgu yerleşimi mimari veri sürümü 39 gerektirir"));
+    }
+    if arch < crate::ARCH_WITH_ELECTRIC_APPLIANCES && crate::uses_electric_appliances(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "elektrikli cihaz kartı mimari veri sürümü 38 gerektirir"));
+    }
+    if arch < crate::ARCH_WITH_CEILING_RECIPE && crate::uses_ceiling_recipe(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "yansıtılmış tavan planı mimari veri sürümü 37'den önce yok"));
+    }
+    if arch < crate::ARCH_WITH_SLAB_EDGE_BINDINGS && crate::uses_slab_edge_bindings(&doc) {
+        return Err(r.fail_at(Code::UnknownField, body_at, "tekil döşeme kenar bağları mimari veri sürümü 36'dan önce yok"));
+    }
     if arch < crate::ARCH_WITH_BUILDING_PLAN_NOTES && crate::uses_building_plan_notes(&doc) {
         return Err(r.fail_at(
             Code::UnknownField,

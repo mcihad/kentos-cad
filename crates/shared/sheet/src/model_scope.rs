@@ -15,6 +15,7 @@ pub struct Viewport {
     pub layer_overrides: Vec<crate::kinds::LayerOverride>,
     /// The level the map draws (docs/adr/0716): the paper's model edit picks and snaps as it shows.
     pub level: Option<crate::kinds::MapLevel>,
+    pub ceiling: Option<kentos_contracts::CeilingRange>,
     pub rotation: i32,
     pivot: [f64; 2],
     frame_rotation: i32,
@@ -64,6 +65,7 @@ impl Viewport {
         let center = view
             .center
             .ok_or_else(|| SheetError::new("unplaced_viewport", "Görünümün model merkezi yok."))?;
+        let recipe = crate::viewport::linked_recipe(map, views);
         Ok(Self {
             sheet: None,
             item: item.id.clone(),
@@ -73,7 +75,10 @@ impl Viewport {
             annotation_scale: map.annotation_scale.unwrap_or(view.denominator()),
             layers: map.layers.clone(),
             layer_overrides: map.layer_overrides.clone(),
-            level: map.level.clone(),
+            level: recipe.and_then(|r| r.level.as_ref()).map(|l| crate::kinds::MapLevel {
+                id: l.id.clone(), below: l.below, roof: false,
+            }).or_else(|| map.level.clone()),
+            ceiling: recipe.and_then(|r| r.ceiling),
             rotation: view.rotation,
             pivot: item.frame.center(),
             frame_rotation: item.rotation,

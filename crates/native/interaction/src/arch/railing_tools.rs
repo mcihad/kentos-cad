@@ -13,7 +13,8 @@
 //! - Dolgu (D): Dikey çubuk, Cam, Dolu; Küpeşte (E) 5 cm, a balcony's railing's (docs/adr/0722); Kot farkı (F).
 
 use kentos_commands::{
-    Entity, NewRailing, RAILING_GAP, RAILING_HEIGHT, RAILING_WIDTH, RailingInfill, RailingsCreate,
+    Entity, MAX_RAILING_GAP, MAX_RAILING_HEIGHT, MAX_RAILING_OFFSET, MAX_RAILING_WIDTH, NewRailing,
+    RAILING_GAP, RAILING_HEIGHT, RAILING_WIDTH, RailingInfill, RailingsCreate,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, railings_create};
@@ -234,7 +235,7 @@ impl RailingTool {
 
     /// Writes a railing along each of `pieces` on its layer, opened with it when missing (docs/adr/8008), as one undo
     /// step; says what it wrote.
-    fn write(&mut self, pieces: &[Piece], cx: &mut Context<'_>) {
+    fn write(&self, pieces: &[Piece], cx: &mut Context<'_>) -> bool {
         let kind = self.kind();
         let written = crate::arch_layer::writing(&kind, cx, |layer, cx| {
             let input = self.call(pieces, layer.to_owned(), cx);
@@ -242,7 +243,7 @@ impl RailingTool {
             points::written(result, cx).is_some()
         });
         if !written {
-            return;
+            return false;
         }
         let length: f64 = pieces
             .iter()
@@ -277,18 +278,21 @@ impl RailingTool {
         } else {
             cx.say(Level::Warn, format!("{words} {}.", rules.join("; ")));
         }
+        true
     }
 
     /// Writes the line drawn so far, closed or open.
     fn write_line(&mut self, closed: bool, cx: &mut Context<'_>) {
-        let pts = std::mem::take(&mut self.pts);
-        self.write(&[(pts, closed)], cx);
+        let line = (std::mem::take(&mut self.pts), closed);
+        if !self.write(std::slice::from_ref(&line), cx) {
+            self.pts = line.0;
+            self.hover = self.pts.last().copied();
+        }
     }
 
     /// A setting's value taken; false when it cannot be read.
     fn apply(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        let length =
-            |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
+        let length = |limit| cx.typed_length(value).filter(|v| *v > 0.0 && *v <= limit);
         match key {
             "S" => match value {
                 "draw" => {
@@ -317,20 +321,31 @@ impl RailingTool {
                 }
                 _ => false,
             },
-            "Y" => length(cx).map(|v| self.height = v).is_some(),
-            "E" => length(cx).map(|v| self.width = v).is_some(),
-            "A" => length(cx).map(|v| self.gap = v).is_some(),
+            "Y" => length(MAX_RAILING_HEIGHT).map(|v| self.height = v).is_some(),
+            "E" => length(MAX_RAILING_WIDTH).map(|v| self.width = v).is_some(),
+            "A" => length(MAX_RAILING_GAP).map(|v| self.gap = v).is_some(),
             "F" => {
                 let t = js_trim(value);
                 let v = if t.is_empty() {
                     Some(0.0)
                 } else {
-                    cx.typed_length(t).filter(|v| v.is_finite())
+                    cx.typed_length(t).filter(|v| v.abs() <= MAX_RAILING_OFFSET)
                 };
                 v.map(|v| self.offset = v).is_some()
             }
             _ => false,
         }
+    }
+
+    fn refusal(key: &str, f: &Format) -> String {
+        let (name, limit) = match key {
+            "Y" => ("Korkuluk yüksekliği", MAX_RAILING_HEIGHT),
+            "E" => ("Küpeşte eni", MAX_RAILING_WIDTH),
+            "A" => ("Çubuk aralığı", MAX_RAILING_GAP),
+            "F" => return format!("Kot farkı {} ile {} arasında olmalı.", f.length(-MAX_RAILING_OFFSET), f.length(MAX_RAILING_OFFSET)),
+            _ => return "Geçerli bir korkuluk seçeneği belirleyin.".into(),
+        };
+        format!("{name} sıfırdan büyük ve en çok {} olmalı.", f.length(limit))
     }
 }
 
@@ -365,6 +380,7 @@ impl Tool for RailingTool {
 
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
         if self.pts.pop().is_some() {
+            self.hover = self.pts.last().copied();
             self.see(cx);
             return true;
         }
@@ -425,7 +441,7 @@ impl Tool for RailingTool {
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if self.line == Line::Void {
             match self.round_void(p.world, cx) {
-                Ok(pieces) => self.write(&pieces, cx),
+                Ok(pieces) => { self.write(&pieces, cx); }
                 Err(why) => cx.say(Level::Info, why),
             }
             self.see(cx);
@@ -451,6 +467,11 @@ impl Tool for RailingTool {
             self.see(cx);
             return true;
         }
+        if self.pts.len() == kentos_commands::MAX_RAILING_POINTS {
+            cx.say(Level::Warn, "Nokta sınırına ulaşıldı. Son noktayı geri alın veya ayarları düzeltip Enter ile bitirin.");
+            return true;
+        }
+        self.hover = Some(p);
         self.pts.push(p);
         if self.pts.len() == kentos_commands::MAX_RAILING_POINTS {
             self.write_line(false, cx);
@@ -473,10 +494,7 @@ impl Tool for RailingTool {
                 Ask::Offset => "F",
             };
             if !self.apply(field, text, cx) {
-                cx.say(
-                    Level::Warn,
-                    "Değer okunamadı; yükseklik, küpeşte eni ve aralık sıfırdan büyük bir uzunluktur.",
-                );
+                cx.say(Level::Warn, Self::refusal(field, &cx.format()));
                 return true;
             }
             self.ask = None;
@@ -591,10 +609,7 @@ impl Tool for RailingTool {
             self.see(cx);
             return true;
         }
-        cx.say(
-            Level::Warn,
-            "Değer uygulanmadı: yükseklik, küpeşte eni ve aralık sıfırdan büyük bir uzunluktur.",
-        );
+        cx.say(Level::Warn, Self::refusal(key, &cx.format()));
         false
     }
 

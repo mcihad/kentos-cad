@@ -24,9 +24,18 @@ pub fn state_of(
     let Some(block) = doc.block(sections::block_id(mark)) else {
         return BuildingSectionState::NotDrawn;
     };
-    let Some(drawn) = sections::draw_mark(doc, fields) else {
+    let Some(now) = current_entities(doc, fields) else {
         return BuildingSectionState::Stale;
     };
+    if bare(&block.entities) == bare(&now) {
+        BuildingSectionState::Current
+    } else {
+        BuildingSectionState::Stale
+    }
+}
+
+pub(crate) fn current_entities(doc: &Document, fields: &kentos_commands::ViewMarkFields) -> Option<Vec<Entity>> {
+    let drawn = sections::draw_mark(doc, fields)?;
     // The block's objects name their layers by id; the drawing names them by their EK-4 names.
     let ids = |name: &str| -> String {
         let id = name.to_ascii_lowercase();
@@ -39,7 +48,7 @@ pub fn state_of(
             .find(|l| l.name.eq_ignore_ascii_case(name))
             .map_or(id, |l| l.id.clone())
     };
-    let now: Vec<Entity> = drawn
+    Some(drawn
         .entities
         .into_iter()
         .map(|mut e| {
@@ -47,12 +56,7 @@ pub fn state_of(
             e.base_mut().layer_id = id;
             e
         })
-        .collect();
-    if bare(&block.entities) == bare(&now) {
-        BuildingSectionState::Current
-    } else {
-        BuildingSectionState::Stale
-    }
+        .collect())
 }
 
 /// Every section mark of the drawing with its section's state, in the drawing's order; then the blocks of marks that

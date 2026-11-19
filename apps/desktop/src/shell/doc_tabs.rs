@@ -152,7 +152,7 @@ impl App {
         let index = if k_parked >= self.doc_tabs.at - 1 { k_parked + 1 } else { k_parked };
         let Parked { document, camera, selection, views, level } = self.doc_tabs.parked.remove(index);
         self.doc_tabs.at = index;
-        let name = document.name().to_owned();
+        let name = document.display_name().into_owned();
         self.show_document(document);
         self.viewport.camera = camera;
         self.selection = selection;
@@ -348,6 +348,15 @@ pub(crate) fn tab_titles(docs: &[&Document]) -> Vec<String> {
             }
         };
     }
+    // Projects may have the same filename and parent directory name under different roots.
+    let short = out.clone();
+    for (k, doc) in docs.iter().enumerate() {
+        if let Some(path) = doc.path.as_deref()
+            && short.iter().filter(|title| *title == &short[k]).take(2).count() == 2
+        {
+            out[k] = path.to_string_lossy().into_owned();
+        }
+    }
     out
 }
 
@@ -379,6 +388,11 @@ mod tests {
         assert_eq!(
             super::tab_titles(&[&d, &e]),
             ["kentos-alan-iliski.kcad — bir", "kentos-alan-iliski.kcad — iki"]
+        );
+        let h = named(Some("/tmp/baska/bir/kentos-alan-iliski.kcad"));
+        assert_eq!(
+            super::tab_titles(&[&d, &h]),
+            ["/tmp/bir/kentos-alan-iliski.kcad", "/tmp/baska/bir/kentos-alan-iliski.kcad"]
         );
         let (f, g) = (named(None), named(None));
         assert_eq!(super::tab_titles(&[&f, &g]), ["kentos-alan-iliski (1)", "kentos-alan-iliski (2)"]);

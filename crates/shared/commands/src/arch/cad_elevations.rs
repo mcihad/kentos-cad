@@ -248,7 +248,7 @@ pub struct ElevationRow {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub missing: Vec<String>,
-    /// Its objects changed by hand (a refresh writes them back); said only while the model's drawing is unchanged.
+    /// Its objects changed by hand (a refresh writes them back). Older records can detect this while their source is unchanged.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub edited: Vec<String>,
@@ -280,4 +280,7 @@ pub struct ElevationRecord {
     pub gap: f64,
     pub members: BTreeMap<String, String>,
     pub digest: String,
+    /// The shape written for each role, for detecting manual edits while the source is stale.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub member_hashes: BTreeMap<String, String>,
 }

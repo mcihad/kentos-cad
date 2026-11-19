@@ -44,25 +44,80 @@ fn inserts(app: &App) -> usize {
 
 #[cfg(unix)]
 #[test]
+fn the_sheet_set_reads_and_repairs_the_placed_joinery_definition_once() {
+    use kentos_domain::joinery_list::JOINERY_LIST_ID;
+    let mut app = crate::fixture_place_tests::fresh_mimari();
+    let level = app.active_level().unwrap();
+    let layer = app.document.as_ref().unwrap().model.layers().active().to_owned();
+    let wall = run(&mut app, "cad.walls.create", json!({"layerId":layer,"walls":[{"pts":[
+        {"x":0,"y":0},{"x":6,"y":0}],"width":0.20,"justify":"center","arch":{"level":level}}]}));
+    run(&mut app, "cad.openings.create", json!({"layerId":layer,"openings":[
+        {"host":wall["output"]["uids"][0],"at":2.0,"form":"window","width":1.0,"sill":0.90}]}));
+    let _ = app.update(Message::Run("tool.openingCodes"));
+    let _ = app.submit_line("");
+    let _ = app.update(Message::Run("tool.joineryList"));
+    let _ = app.submit_line("30,0");
+    let set = |app: &mut App| run(app, "cad.sheets.set", json!({"dependencies":true}))["output"]["dependencies"]
+        .as_array().unwrap().iter().find(|row| row["name"] == "Doğrama listesi").unwrap().clone();
+    let initial = set(&mut app);
+    assert_eq!(initial["state"], "current");
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut old = doc.block(JOINERY_LIST_ID).unwrap().clone();
+    let text = old.entities.iter_mut().find_map(|e| match e { kentos_commands::Entity::Text(t) => Some(t), _ => None }).unwrap();
+    text.text = "Eski liste".into();
+    doc.update_block(old).unwrap();
+    let stale = set(&mut app);
+    assert_eq!(stale["state"], "stale");
+    assert_ne!(stale["generated"], stale["model"]);
+    let _ = app.update(Message::Run("arch.sheetSet"));
+    let _ = app.sheet_set_event(crate::sheet_set::Event::RefreshDrawings);
+    assert_eq!(set(&mut app), initial);
+    assert_eq!(inserts(&app), 1);
+    let revision = app.document.as_ref().unwrap().model.revision();
+    let _ = app.sheet_set_event(crate::sheet_set::Event::RefreshDrawings);
+    assert_eq!(inserts(&app), 1);
+    assert_eq!(app.document.as_ref().unwrap().model.revision(), revision);
+}
+
+#[cfg(unix)]
+#[test]
 fn the_joinery_list_explains_missing_codes_and_can_assign_them_in_one_step() {
     let (mut app, _dir) = crate::acceptance_flat_tests::opened("dograma-kod");
     let _ = crate::acceptance_flat_tests::drawn(&mut app);
     let _ = app.update(Message::Run("tool.joineryList"));
     let coverage = app.document.as_ref().unwrap().model.joinery_coverage();
     assert_eq!((coverage.total, coverage.coded, coverage.listed), (10, 0, 10));
+    run(&mut app, "cad.openingtypes.edit", json!({
+        "operation": {"kind": "code", "type": "Pencere 120", "code": "P77"}
+    }));
+    let partial = app.document.as_ref().unwrap().model.joinery_coverage();
+    assert!(partial.coded > 0 && partial.coded < partial.total);
     let _ = app.submit_line("30,0");
     assert_eq!(inserts(&app), 1);
-    assert!(words(&app).iter().any(|line| line.contains("10 kod bekliyor")));
-    let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(inserts(&app), 0);
+    assert!(words(&app).iter().any(|line| line.contains("kod bekliyor")));
+    assert!(words(&app).iter().any(|line| line == "P77"));
     let _ = app.update(Message::Run("tool.joineryList"));
     let _ = app.submit_line("K");
-    let _ = app.submit_line("30,0");
+    let _ = app.submit_line("");
+    assert_eq!(inserts(&app), 1);
+    assert_eq!(app.document.as_ref().unwrap().model.joinery_coverage().coded, 10);
+    assert!(words(&app).iter().any(|line| line == "P77"));
+    // Updating a current list changes neither its placements nor the drawing revision.
+    let revision = app.document.as_ref().unwrap().model.revision();
+    let _ = app.update(Message::Run("tool.joineryList"));
+    let _ = app.submit_line("");
+    assert_eq!(inserts(&app), 1);
+    assert_eq!(app.document.as_ref().unwrap().model.revision(), revision);
+    let _ = app.update(Message::Run("tool.joineryList"));
+    let _ = app.submit_line("Y");
+    let _ = app.submit_line("45,0");
+    assert_eq!(inserts(&app), 2);
+    let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(inserts(&app), 1);
     assert_eq!(app.document.as_ref().unwrap().model.joinery_coverage().coded, 10);
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(inserts(&app), 0);
-    assert_eq!(app.document.as_ref().unwrap().model.joinery_coverage(), coverage);
+    assert_eq!(inserts(&app), 1);
+    assert_eq!(app.document.as_ref().unwrap().model.joinery_coverage(), partial);
 }
 
 #[cfg(unix)]

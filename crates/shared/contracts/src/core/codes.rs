@@ -2892,6 +2892,8 @@ codes! {
     ARCH_DOOR_SWING_CLASH = "arch_door_swing_clash", Warning, false, "Kapının kanadı açılırken bir duvara, kolona, donatıya ya da başka bir kapının kanadına çarpıyor (fiziksel çarpışma).";
     /// A door's use zone taken by a wall, a column or a fixture (docs/adr/0772 §5): passage.
     ARCH_DOOR_FRONT_BLOCKED = "arch_door_front_blocked", Warning, false, "Kapının önündeki kullanım alanına bir duvar, kolon ya da donatı giriyor (net geçiş).";
+    ARCH_DOOR_PULL_BLOCKED = "arch_door_pull_blocked", Warning, false, "Kapının çekme tarafındaki yaklaşım alanına bir engel giriyor.";
+    ARCH_DOOR_PUSH_BLOCKED = "arch_door_push_blocked", Warning, false, "Kapının itme tarafındaki yaklaşım alanına bir engel giriyor.";
     /// A door narrower in clear than the project rule the audit was given (docs/adr/0772 §5): a rule.
     ARCH_DOOR_CLEAR_NARROW = "arch_door_clear_narrow", Warning, false, "Kapının net geçişi verilen proje kuralının en az net geçişinden dar (proje kuralı).";
     /// A fixture's use zone (its block's “Boşluk zarfı”, or KentOS's for its older sanitary blocks) taken by a wall, a

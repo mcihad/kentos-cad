@@ -45,7 +45,7 @@ fn paper_style_cache_preserves_drawing_pattern_lengths_at_each_viewport_scale() 
                     &view,
                     (&layers, &[]),
                     None,
-                    (None, &[], &[], false, &[]),
+                    (None, &[], &[], false, &[], None),
                 )
             };
             let styled = build();

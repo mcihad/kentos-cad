@@ -280,6 +280,7 @@ pub struct MapSource<'a> {
     /// The level the map draws (docs/adr/0716): the other levels' objects left out, the one under it faint with
     /// `below`. None: every level.
     pub level: Option<&'a kentos_sheet::kinds::MapLevel>,
+    pub ceiling: Option<kentos_contracts::CeilingRange>,
     /// A linked view's recipe (docs/adr/0774 §3): its phase view (none: the project's) and the categories left out.
     pub phase: Option<kentos_contracts::PhaseView>,
     pub hidden: &'a [kentos_contracts::ViewCategory],
@@ -479,6 +480,9 @@ fn built_layers_profile_unchecked(
         .map(|l| crate::layers::level_looks(doc, l))
         .unwrap_or_default();
     let mut phasing = crate::layers::map_drawing_of(doc, src.phase, src.hidden, src.pens, src.mono, src.options);
+    if let Some(range) = src.ceiling {
+        for id in kentos_scene_query::ceiling_plan::hidden(doc, src.level.map(|l| l.id.as_str()), range) { phasing.hide(id); }
+    }
     for &id in &faint {
         phasing.fade(id);
     }

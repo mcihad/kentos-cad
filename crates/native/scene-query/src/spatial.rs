@@ -138,6 +138,7 @@ pub struct Spatial {
     /// how many times that changed (the drawing area builds its looks again then).
     level_view: crate::level_view::LevelView,
     active_level: Option<String>,
+    ceiling: Option<(Option<String>, kentos_commands::CeilingRange)>,
     level_looks: Arc<crate::level_view::LevelLooks>,
     level_version: u64,
     /// The objects on a level other than the active one, whatever the view: a click takes the others first where
@@ -253,6 +254,17 @@ impl Spatial {
         self.level_view
     }
 
+    pub fn set_ceiling_view(&mut self, doc: &Document, value: Option<(Option<String>, kentos_commands::CeilingRange)>) {
+        if self.ceiling != value {
+            self.ceiling = value;
+            self.sync_phases(doc);
+        }
+    }
+
+    pub fn ceiling_view(&self) -> Option<&(Option<String>, kentos_commands::CeilingRange)> {
+        self.ceiling.as_ref()
+    }
+
     /// What Kat görünümü hides and draws faint now, and its version: a new one whenever that changed.
     pub fn level_looks(&self) -> (u64, Arc<crate::level_view::LevelLooks>) {
         (self.level_version, Arc::clone(&self.level_looks))
@@ -262,7 +274,7 @@ impl Spatial {
     /// (docs/adr/0716), the stairs under the active level drawn from above (docs/adr/0724 §4) or the slabs over it
     /// dashed (docs/adr/8012, step 3). A sheet's map then wants a store of its own.
     pub fn draws_otherwise(&self) -> bool {
-        self.sheet_view.is_some() || !self.upper.is_empty() || !self.overhead.is_empty()
+        self.sheet_view.is_some() || self.ceiling.is_some() || !self.upper.is_empty() || !self.overhead.is_empty()
     }
 
     /// Explicit command input for tools that query the same source through the public catalog.
@@ -511,6 +523,15 @@ impl Spatial {
         } else {
             crate::level_view::looks(doc, view, active.as_deref())
         };
+        let ceiling = match &self.sheet_view {
+            Some(v) => v.ceiling.map(|r| (v.level.as_ref().map(|l| l.id.as_str()), r)),
+            None => self.ceiling.as_ref().map(|(id, r)| (id.as_deref(), *r)),
+        };
+        if let Some((level, range)) = ceiling {
+            looks = crate::level_view::LevelLooks {
+                hidden: crate::ceiling_plan::hidden(doc, level, range), ..Default::default()
+            };
+        }
         if !self.isolation_ignored && doc.objects_isolated() {
             looks.hidden.extend(
                 doc.entities()

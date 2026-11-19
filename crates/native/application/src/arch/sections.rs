@@ -1845,7 +1845,8 @@ fn push_rails(m: &mut Model, runs: Vec<kentos_geometry_core::geom::stair_rails::
 /// A placed block's outline in plan (docs/adr/8070 §5): the box of what its block draws with the insert's values,
 /// placed as the insert is (moved, turned, scaled, mirrored); none for a block that draws nothing.
 pub fn fixture_outline(doc: &Document, i: &kentos_commands::InsertEntity) -> Option<Vec<P>> {
-    let [x0, y0, x1, y1] = crate::blocks::definition_box(doc, i.block, Some(&i.parameters))?;
+    let [x0, y0, x1, y1] = crate::blocks::fixture_housing_bounds(doc.block(i.block)?)
+        .or_else(|| crate::blocks::definition_box(doc, i.block, Some(&i.parameters)))?;
     let m = kentos_geometry_core::block::placement_xy(
         P::new(i.p.x, i.p.y),
         i.scale,
@@ -1883,6 +1884,7 @@ fn fixture(doc: &Document, i: &kentos_commands::InsertEntity, owner: Option<Stri
     let (element, word) = match el.class {
         C::Furniture => ("TEFR", "Mobilya"),
         C::SanitaryTerminal => ("TEFR", "Vitrifiye"),
+        C::ElectricAppliance => ("TEFR", "Elektrikli cihaz"),
         C::TransportElement => ("ASAN", "Genel"),
     };
     push(

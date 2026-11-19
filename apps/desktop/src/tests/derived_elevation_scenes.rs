@@ -87,17 +87,22 @@ fn select_first(app: &mut App) {
 /// The door moved 1.5 m along its wall: side A's frame selected, Öznitelikler says Eski.
 fn stale(app: &mut App) {
     derived(app);
+    move_source_door(app);
+    fit(app, [-1.0, -2.0, 28.0, 6.0]);
+    select_first(app);
+}
+
+fn move_source_door(app: &mut App) {
     let doc = &mut app.document.as_mut().expect("a drawing").model;
     let door: kentos_commands::OpeningsEdit = serde_json::from_value(json!({
         "uids": ["0192f5a1-7990-7000-8000-000000000006"], "operation": {"kind": "move", "at": 3.0}
     }))
     .expect("input");
-    let _ = kentos_native_application::openings_edit::execute(
+    let result = kentos_native_application::openings_edit::execute(
         &mut kentos_native_application::ExecutionContext::new(doc),
         door,
     );
-    fit(app, [-1.0, -2.0, 28.0, 6.0]);
-    select_first(app);
+    assert!(matches!(result, kentos_commands::CommandResult::Completed { .. }), "{result:?}");
 }
 
 /// Yeniden üret from Öznitelikler: the door drawn where it is, the same objects, Güncel.
@@ -119,4 +124,42 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("ic-gorunus-eski", stale),
         ("ic-gorunus-guncel", current),
     ]
+}
+
+#[test]
+fn batch_refresh_updates_clean_interiors_and_keeps_locally_edited_geometry() {
+    use kentos_commands::ElevationState;
+    use kentos_native_application::elevations_query;
+
+    for edited in [false, true] {
+        let mut app = crate::files_testing::app_with_drawing();
+        derived(&mut app);
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let mut first = doc.get(Slot(FIRST)).expect("an elevation member").clone();
+        if edited {
+            first.base_mut().attrs.insert("Deneme notu".into(), "Elle düzenlendi".into());
+            doc.update_many(vec![(Slot(FIRST), first.clone())], "Elle düzenle");
+        }
+        let uid = doc.uid(Slot(FIRST)).expect("permanent member id").to_string();
+        move_source_door(&mut app);
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let before = elevations_query::row(doc, "ic-gorunus-1").expect("the derived view");
+        assert_eq!(before.state, ElevationState::Stale);
+        assert_eq!(before.edited.contains(&uid), edited);
+
+        app.open_sheet_set();
+        let _ = app.sheet_set_event(crate::sheet_set::Event::RefreshDrawings);
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let after = elevations_query::row(doc, "ic-gorunus-1").expect("the derived view");
+        if edited {
+            assert_eq!(after.state, ElevationState::Stale);
+            assert_eq!(doc.get(Slot(FIRST)), Some(&first));
+        } else {
+            assert_eq!(after.state, ElevationState::Current);
+            assert_eq!(after.members, before.members);
+        }
+        let revision = doc.revision();
+        let _ = app.sheet_set_event(crate::sheet_set::Event::RefreshDrawings);
+        assert_eq!(app.document.as_ref().unwrap().model.revision(), revision);
+    }
 }

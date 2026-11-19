@@ -222,6 +222,8 @@ pub enum OpeningTypesOperation {
     /// project type first gets one of its own, one for each make (named by its form and size: Kapı 90/210); one on a
     /// locked layer is left out. Codes given before stay.
     Codes {},
+    /// Rebuild the existing graphic joinery definition without placing another instance.
+    RefreshList {},
     /// Sil: the type; its openings refuse it (`opening_type_in_use`) unless `detach`, which leaves them with their
     /// values, following nothing.
     Remove {

@@ -51,7 +51,7 @@ fn paths(doc: &Document, book: &SheetBook, scale: f64) -> Vec<MapPath> {
     let library = book::library_of(doc);
     let src = MapSource {
         doc, store: spatial.store(), library: &library, origin: kentos_geometry_core::Vec2::new(0., 0.), map: None,
-        level: None, phase: None, hidden: &[], pens: &[], mono: false, options: &[],
+        level: None, phase: None, ceiling: None, hidden: &[], pens: &[], mono: false, options: &[],
     };
     let labels = kentos_plot::labels::map_labels(doc, &spatial, map);
     let kentos_sheet::pdf::MapContent::Vector(v) =

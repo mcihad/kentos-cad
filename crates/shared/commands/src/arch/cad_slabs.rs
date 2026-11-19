@@ -306,6 +306,13 @@ pub enum SlabsOperation {
     },
     /// Ayır: each bound slab's outline kept as it is now, its own (Bağımsız kontur).
     Detach,
+    /// Bind or edit a single outer edge. Other edges retain their own reference lines.
+    BindEdge(crate::SlabEdgeLink),
+    /// Release a single edge and use its current line as the independent reference.
+    UnbindEdge {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        edge: u32,
+    },
     /// Ekle: the area drawn or found added to each slab.
     Add {
         #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -125,7 +125,7 @@ impl App {
 
     /// Where the camera stands.
     pub(crate) fn viewpoint(&self) -> Viewpoint {
-        self.viewport.viewpoint()
+        Viewpoint { ceiling: self.spatial.ceiling_view().cloned(), ..self.viewport.viewpoint() }
     }
 
     /// Runs a navigation: a change of the view whose old view the history
@@ -186,7 +186,7 @@ impl App {
     fn view_back(&mut self) {
         let here = self.viewpoint();
         if let Some(view) = self.view_history.back(here) {
-            self.viewport.restore(view);
+            self.restore_viewpoint(view);
         }
     }
 
@@ -194,8 +194,15 @@ impl App {
     fn view_forward(&mut self) {
         let here = self.viewpoint();
         if let Some(view) = self.view_history.forward(here) {
-            self.viewport.restore(view);
+            self.restore_viewpoint(view);
         }
+    }
+
+    fn restore_viewpoint(&mut self, mut view: Viewpoint) {
+        if let Some(doc) = &self.document {
+            self.spatial.set_ceiling_view(&doc.model, view.ceiling.take());
+        }
+        self.viewport.restore(view);
     }
 
     /// Kapsam denetimi: the far objects become the selection; with none, the

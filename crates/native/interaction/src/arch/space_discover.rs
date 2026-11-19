@@ -9,6 +9,8 @@ use kentos_native_application::{ExecutionContext, spaces, spaces_discover};
 
 pub const ID: &str = "spaceDiscover";
 pub const LABEL: &str = "Toplu mahal bul";
+const EMPTY_SCOPE: &str = "Bu kapsamda kapalı oda bulunamadı.";
+const ALREADY_DEFINED: &str = "Bulunan mahaller zaten tanımlı.";
 
 #[derive(Default)]
 pub struct Discover {
@@ -74,16 +76,19 @@ impl Discover {
                         .strokes
                         .extend(Outline::of(&shape, dash, 2., tone).strokes);
                 }
-                if let Some(at) = tag {
+                let anchor = tag.or_else(|| self.corners.last().copied());
+                if let Some(at) = anchor {
                     self.drawn.tag = Some(Tag {
                         at,
-                        lines: vec![
-                            format!(
-                                "{} yeni · {} mevcut · {} çakışan",
-                                self.counts[0], self.counts[1], self.counts[2]
-                            ),
-                            "Önizleme · Enter uygular · Esc vazgeçer".into(),
-                        ],
+                        lines: if self.counts == [0; 3] {
+                            vec![EMPTY_SCOPE.into(), "Başka bir bölge seçebilirsiniz.".into()]
+                        } else {
+                            vec![
+                                format!("{} yeni · {} mevcut · {} çakışan",
+                                    self.counts[0], self.counts[1], self.counts[2]),
+                                self.review_step().into(),
+                            ]
+                        },
                     });
                     if self.counts[2] > 0 {
                         self.drawn.tag_tone = Tone::Danger;
@@ -97,6 +102,19 @@ impl Discover {
         }
         if let [a, b] = self.corners.as_slice() {
             self.drawn.path = vec![*a, Vec2::new(b.x, a.y), *b, Vec2::new(a.x, b.y), *a];
+        }
+    }
+    fn review_step(&self) -> &'static str {
+        if self.error.is_some() {
+            "Kaynakları ve seçilen kapsamı kontrol edin."
+        } else if self.counts[2] > 0 {
+            "Çakışan sınırları düzeltin veya bölgeyi daraltın."
+        } else if self.counts[0] > 0 {
+            "Yeni mahalleri Enter ile ekleyin."
+        } else if self.counts[1] > 0 {
+            ALREADY_DEFINED
+        } else {
+            EMPTY_SCOPE
         }
     }
     fn options(&self, key: &str) -> Vec<OptionChoice> {
@@ -150,27 +168,37 @@ impl Tool for Discover {
         self.see(cx);
     }
     fn point_count(&self) -> usize {
-        usize::from(!self.region || self.corners.len() == 2)
+        if self.region { self.corners.len() } else { 1 }
+    }
+    fn snap_from(&self) -> Option<Vec2> {
+        match self.corners.as_slice() {
+            [a] => Some(*a),
+            _ => None,
+        }
     }
     fn prompt(&self) -> Prompt {
         let step = if self.region && self.corners.len() < 2 {
             if self.corners.is_empty() {
-                "bölgenin ilk köşesine tıklayın"
+                "bölgenin ilk köşesini belirtin"
             } else {
-                "karşı köşeye tıklayın; bölge yalnız oda seçer"
+                "bölgenin karşı köşesini belirtin"
             }
-        } else if self.counts[2] > 0 {
-            "çakışma var; sınırları düzeltin veya bölgeyi daraltın"
         } else {
-            "önizlemeyi kontrol edin; yeni mahalleri Enter ile ekleyin"
+            self.review_step()
         };
-        Prompt::new(LABEL, step)
+        let prompt = Prompt::new(LABEL, step)
             .option("Kapsam", "K")
             .option("Kat", "L")
             .option("Kaynaklar", "B")
             .option("Alan yöntemi", "Y")
-            .option("Kolon alanı", "D")
-            .option("Uygula", "Enter")
+            .option("Kolon alanı", "D");
+        if self.error.is_none() && self.counts[0] > 0 && self.counts[2] == 0 {
+            prompt.option("Uygula", "Enter")
+        } else if self.error.is_none() && self.counts[2] == 0 && (self.counts[1] > 0 || !self.region) {
+            prompt.option("Bitir", "Enter")
+        } else {
+            prompt
+        }
     }
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if self.revision != Some(cx.doc.revision()) || self.layer != cx.doc.layers().active() {
@@ -183,20 +211,50 @@ impl Tool for Discover {
         }
     }
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        if self.region {
-            if self.corners.len() == 2 {
-                self.corners.clear();
-            }
-            self.corners.push(p.raw);
-            self.see(cx);
-        } else {
+        if !self.accept_point(p.raw, cx) {
             cx.say(Level::Info,"Önizlemeyi kontrol edip Enter ile uygulayın; kapsamı daraltmak için Bölge seç kullanın.");
         }
+    }
+    fn accepts_points(&self) -> bool {
+        self.region
+    }
+    fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        if !self.region {
+            return false;
+        }
+        if let [a] = self.corners.as_slice()
+            && (p.x == a.x || p.y == a.y)
+        {
+            cx.say(Level::Warn, "Karşı köşe için hem X hem Y farklı olmalı.");
+            return true;
+        }
+        if self.corners.len() == 2 {
+            self.corners.clear();
+        }
+        self.corners.push(p);
+        self.see(cx);
+        if self.corners.len() == 2 {
+            if let Some(error) = &self.error {
+                cx.say(Level::Warn, error.clone());
+            } else {
+                cx.say(Level::Info, self.review_step());
+            }
+        }
+        true
     }
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
         if self.region && self.corners.len() != 2 {
             cx.say(Level::Info, "Bölgenin iki karşı köşesini seçin.");
             return Flow::Stay;
+        }
+        if self.revision != Some(cx.doc.revision()) || self.layer != cx.doc.layers().active() {
+            self.see(cx);
+            cx.say(Level::Info, "Çizim değişti. Güncel mahal önizlemesini kontrol edin.");
+            return Flow::Stay;
+        }
+        if self.error.is_none() && self.counts[0] == 0 && self.counts[2] == 0 {
+            cx.say(Level::Info, self.review_step());
+            return if self.region && self.counts[1] == 0 { Flow::Stay } else { Flow::Exit };
         }
         let mut written = None;
         let before = cx.doc.revision();
@@ -263,6 +321,10 @@ impl Tool for Discover {
                 self.see(cx);
                 true
             }
+            _ if self.region => match cx.typed_point(text, self.snap_from(), None) {
+                Some(p) => self.accept_point(p, cx),
+                None => false,
+            },
             _ => false,
         }
     }

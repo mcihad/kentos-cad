@@ -865,6 +865,7 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
         doc: Document,
         /,
         *,
+        dependencies: bool | Unset = UNSET,
         details: bool | Unset = UNSET,
         pictures: bool | Unset = UNSET,
         recipes: bool | Unset = UNSET,
@@ -888,6 +889,7 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
 
         Args:
             doc: The drawing it works on.
+            dependencies: Include freshness, sources, and sheet placements of generated architectural drawings.
             details: Include the canonical book and complete system templates for automation.
             pictures: Include embedded picture bytes (base64), explicitly opt in to the larger response.
             recipes: Include each frame's detail recipe and camera lock (docs/adr/1090 §2): what `cad.sheets.details` makes it
@@ -906,6 +908,7 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
                 nothing was written. Warnings go to :mod:`warnings` as CommandWarning.
         """
         return self.execute_input(doc, SheetsSet(
+            dependencies=dependencies,
             details=details,
             pictures=pictures,
             recipes=recipes,
@@ -917,6 +920,7 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
         doc: Document,
         /,
         *,
+        dependencies: bool | Unset = UNSET,
         details: bool | Unset = UNSET,
         pictures: bool | Unset = UNSET,
         recipes: bool | Unset = UNSET,
@@ -926,6 +930,7 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, SheetsSet(
+            dependencies=dependencies,
             details=details,
             pictures=pictures,
             recipes=recipes,
@@ -937,6 +942,7 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
         doc: Document,
         /,
         *,
+        dependencies: bool | Unset = UNSET,
         details: bool | Unset = UNSET,
         pictures: bool | Unset = UNSET,
         recipes: bool | Unset = UNSET,
@@ -946,6 +952,7 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
         A refusal raises as for the call.
         """
         return self.validate_input(doc, SheetsSet(
+            dependencies=dependencies,
             details=details,
             pictures=pictures,
             recipes=recipes,
@@ -957,6 +964,7 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
         doc: Document,
         /,
         *,
+        dependencies: bool | Unset = UNSET,
         details: bool | Unset = UNSET,
         pictures: bool | Unset = UNSET,
         recipes: bool | Unset = UNSET,
@@ -971,6 +979,7 @@ class _SheetsSet(LocalCommand[SheetsSet, SheetsSetResult, SheetsSetResult]):
         before (``replayed``) and its journal row (``call``).
         """
         return self.answer_input(doc, SheetsSet(
+            dependencies=dependencies,
             details=details,
             pictures=pictures,
             recipes=recipes,

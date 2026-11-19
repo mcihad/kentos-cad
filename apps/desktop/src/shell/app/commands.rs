@@ -365,6 +365,7 @@ impl App {
             "tool.select" => self.leave_tool(),
             "edit.deselect" => self.selection.clear(),
             "edit.selectAll" => self.select_all(),
+            crate::scene_browse::COMMAND => return self.toggle_scene_browse(),
             "edit.invertSelection" => self.invert_selection(),
             // Seçim ekleri (docs/adr/0187, selection_commands.rs).
             "edit.previousSelection" => self.previous_selection(),
@@ -981,6 +982,7 @@ impl App {
             "attachment.add" | "attachment.addLink" => doc.is_some() && self.selection.len() == 1,
             "edit.previousSelection" => !self.previous_selection_ids().is_empty(),
             "edit.cycleSelection" => self.selection.cycle().is_some(),
+            crate::scene_browse::COMMAND => self.can_browse_scene(),
             // Only while a place is marked (search/, docs/adr/0178 §6).
             "data.unmark" => {
                 self.data_mark().is_some()

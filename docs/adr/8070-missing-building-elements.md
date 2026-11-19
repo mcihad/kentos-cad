@@ -348,7 +348,7 @@
 28. **Komut, araç ve pencere:** `cad.columns.create` `height` ve `member`, `cad.beams.create` `member` alır;
     `cad.arch.edit` `member`'ı (kolon, kiriş; `null` çerçevenin kolonuna ya da kirişine döndürür), kolonun `height`'ını
     ve `heightFromLevel: true`'yu (kolonu katın yüksekliğine döndürür; `height` ile birlikte reddedilir) alır. Araçlar:
-    **Dikme** (`tool.post`, yazılı adı DK): Kolon aracının kipi; 10/10, içi doldurulmaz, Çelik; Yükseklik (Ü; boş ya da
+    **Dikme** (`tool.post`, yazılı adı DK): Kolon aracının kipi; 10/10, içi doldurulmaz, Çelik; Kesit boyu (O), Yükseklik (Y; boş ya da
     Kat: katın), Malzeme (M); Aks kesişimleri yok. **Kayıt** (`tool.rail`, KY): Kiriş aracının kipi; 5/10, 1,00 m
     kattan yükseklikte, Çelik; Tür yok. Şeritte Mimari › Yerleştir'de Kolon ▾ (Kolon, Dikme) ve Kiriş ▾ (Kiriş, Kayıt);
     ikonları seçenek sayfasından Dikme A (başlığı ve tabanıyla dikme) ve Kayıt B (iki dayanağı üstünde kayıt).

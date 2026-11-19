@@ -994,6 +994,7 @@ impl<'a> Player<'a> {
             let session = self.app.document.as_ref().map(|d| d.session);
             self.app.picker = Picker::File(self.file.clone());
             self.press(&chord_stroke("Ctrl+S", self.variant.layout)?)?;
+            self.apply(Message::DocTabs(crate::doc_tabs::Event::Close(self.app.doc_tabs.at)))?;
             self.press(&chord_stroke("Ctrl+O", self.variant.layout)?)?;
             return if self.app.document.as_ref().is_some_and(|d|
                 d.path.as_ref() == Some(&self.file) && Some(d.session) != session)

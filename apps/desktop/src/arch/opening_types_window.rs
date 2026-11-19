@@ -124,6 +124,28 @@ pub struct Window {
     pub preview: Option<Result<OpeningTypesEdited, String>>,
     /// Closed with a change not applied: “Kaydedilmemiş değişiklikler” asks (docs/adr/8006).
     pub closing: bool,
+    context: Option<ContextEdit>,
+}
+
+#[derive(Clone, Debug)]
+struct ContextEdit {
+    document: u64,
+    revision: u64,
+    action: ContextAction,
+}
+
+#[derive(Clone, Debug)]
+enum ContextAction {
+    Assign {
+        slot: Slot,
+        choices: Vec<(String, String, bool)>,
+        choice: Option<usize>,
+    },
+    Push {
+        input: OpeningsEdit,
+        name: String,
+        report: OpeningTypeReport,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -150,6 +172,8 @@ pub enum Event {
     Exported(Option<PathBuf>),
     Close,
     Answer(crate::unsaved_close::Answer),
+    ContextChoice(usize),
+    ContextApply,
 }
 
 fn msg(e: Event) -> Message {
@@ -325,25 +349,92 @@ impl App {
             doc.model.uid(slot).map(|uid| uid.to_string())
         }).collect();
         if uids.is_empty() {
-            self.warn(
-                "Seçimde proje tipini izleyen açıklık yok. Öznitelikler → Proje tipi listesinden tip atayın.",
-            );
+            let mut openings = self.selection.ids().iter().copied()
+                .filter(|&slot| matches!(doc.model.get(slot), Some(Entity::Opening(_))));
+            if let Some(slot) = openings.next().filter(|_| openings.next().is_none()) {
+                self.assign_opening_type(slot);
+            } else {
+                self.warn("Proje tipi atamak için tek bir kapı, pencere veya boşluk seçin.");
+            }
             return;
         }
         if matches!(operation, OpeningsOperation::Push { .. }) && uids.len() != 1 {
             self.warn("Tipe uygula tek açıklıkla çalışır: değerleri tipin olacak açıklığı seçin.");
             return;
         }
+        let input = OpeningsEdit { uids, operation, expected_revision: None };
+        if matches!(input.operation, OpeningsOperation::Push { .. }) {
+            self.preview_opening_push(input);
+        } else {
+            self.execute_opening_type_action(input);
+        }
+    }
+
+    fn show_opening_context(&mut self, action: ContextAction) {
+        let Some(doc) = self.document.as_ref() else { return };
+        self.arch.opening_types = Some(Window {
+            context: Some(ContextEdit { document: doc.session, revision: doc.model.revision(), action }),
+            ..Window::default()
+        });
+        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::OpeningTypes));
+    }
+
+    pub(crate) fn assign_opening_type(&mut self, slot: Slot) {
+        let Some(doc) = self.document.as_ref() else { return };
+        let Some(Entity::Opening(opening)) = doc.model.get(slot) else { return };
+        if opening.opening.form.is_recess() || doc.model.layers().is_locked(&opening.base.layer_id) {
+            self.warn("Bu açıklığa proje tipi atanamıyor. Açıklığın türünü ve katman kilidini kontrol edin.");
+            return;
+        }
+        let form = opening.opening.form;
+        let types = doc.model.opening_types();
+        let choices: Vec<_> = types.iter().filter(|t| t.form == form)
+            .map(|t| (t.id.clone(), t.name.clone(), false))
+            .chain(kentos_commands::builtin_opening_types().iter()
+                .filter(|t| t.form == form && !types.iter().any(|own| own.id == t.id))
+                .map(|t| (t.id.clone(), format!("{} · Projeye al ve bağla", t.name), true)))
+            .collect();
+        let choice = choices.iter().position(|(id, _, _)| opening.opening.style.as_ref() == Some(id));
+        self.show_opening_context(ContextAction::Assign { slot, choices, choice });
+    }
+
+    pub(crate) fn preview_opening_push_at(&mut self, slot: Slot, operation: OpeningsOperation) {
+        let Some(uid) = self.document.as_ref().and_then(|doc| doc.model.uid(slot)) else { return };
+        self.preview_opening_push(OpeningsEdit { uids: vec![uid.to_string()], operation, expected_revision: None });
+    }
+
+    fn preview_opening_push(&mut self, mut input: OpeningsEdit) {
+        let Some(doc) = self.document.as_ref() else { return };
+        let name = input.uids.first()
+            .and_then(|id| Uuid::parse_str(id).ok())
+            .and_then(|id| doc.model.slot_of(id))
+            .and_then(|slot| match doc.model.get(slot) {
+                Some(Entity::Opening(o)) => o.opening.style.as_deref(),
+                _ => None,
+            })
+            .and_then(|id| doc.model.opening_types().iter().find(|t| t.id == id))
+            .map_or_else(|| "Proje tipi".to_owned(), |t| t.name.clone());
+        input.expected_revision = Some(doc.model.revision().to_string());
+        match kentos_native_application::openings_edit::plan_in(&doc.model, &input) {
+            CommandResult::Completed { output, .. } => {
+                if let Some(report) = output.report {
+                    self.show_opening_context(ContextAction::Push { input, name, report });
+                }
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.warn(error.message),
+            _ => {}
+        }
+    }
+
+    fn execute_opening_type_action(&mut self, input: OpeningsEdit) {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
         let result = kentos_native_application::openings_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            OpeningsEdit {
-                uids,
-                operation,
-                expected_revision: None,
-            },
+            input,
         );
         match result {
             CommandResult::Completed {
@@ -644,6 +735,15 @@ impl App {
     pub(crate) fn opening_types_event(&mut self, event: Event) -> Task<Message> {
         let format = self.opening_types_format();
         match event {
+            Event::ContextChoice(i) => {
+                if let Some(ContextEdit { action: ContextAction::Assign { choices, choice, .. }, .. }) =
+                    self.arch.opening_types.as_mut().and_then(|w| w.context.as_mut())
+                    && i < choices.len()
+                {
+                    *choice = Some(i);
+                }
+            }
+            Event::ContextApply => self.apply_opening_context(),
             Event::Choose(i) => {
                 let t = self
                     .arch
@@ -902,6 +1002,38 @@ impl App {
         Task::none()
     }
 
+    fn apply_opening_context(&mut self) {
+        let Some(context) = self.arch.opening_types.as_ref().and_then(|w| w.context.clone()) else { return };
+        if self.document.as_ref().is_none_or(|doc| {
+            doc.session != context.document || doc.model.revision() != context.revision
+        }) {
+            self.arch.opening_types = None;
+            self.dialog = None;
+            self.warn("Çizim değişti. Proje tipinin kapsamını yeniden açın.");
+            return;
+        }
+        match context.action {
+            ContextAction::Assign { slot, choices, choice } => {
+                let Some((id, _, preset)) = choice.and_then(|i| choices.get(i)) else { return };
+                self.arch.opening_types = None;
+                self.dialog = None;
+                self.properties_event(if *preset {
+                    crate::properties::Event::OpeningTakePreset(slot, id.clone())
+                } else {
+                    crate::properties::Event::Opening(
+                        slot,
+                        OpeningsOperation::ReplaceType { from: None, to: id.clone(), level: None },
+                    )
+                });
+            }
+            ContextAction::Push { input, .. } => {
+                self.arch.opening_types = None;
+                self.dialog = None;
+                self.execute_opening_type_action(input);
+            }
+        }
+    }
+
     /// Whether the chosen type has a change or a new name Uygula has not written (docs/adr/8006).
     fn opening_types_unapplied(&self) -> bool {
         self.arch.opening_types.as_ref().is_some_and(|w| {
@@ -972,6 +1104,9 @@ impl App {
         let (Some(w), Some(f)) = (&self.arch.opening_types, self.opening_types_format()) else {
             return iced::widget::text("").into();
         };
+        if let Some(context) = &w.context {
+            return opening_context_view(&context.action);
+        }
         let mut list = Column::new().spacing(4);
         for (i, u) in w.uses.iter().enumerate() {
             // A door's icon by how it moves (docs/adr/0777): sliding, revolving, pocket, folding, double.
@@ -1223,6 +1358,18 @@ impl App {
         if self.arch.opening_types.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
+        if let Some(context) = self.arch.opening_types.as_ref().and_then(|w| w.context.as_ref()) {
+            return Ok(match (&context.action, control) {
+                (_, Control::Press(CLOSE)) => Some(msg(Event::Close)),
+                (ContextAction::Assign { choice: Some(_), .. }, Control::Press("Tipi ata"))
+                | (ContextAction::Push { .. }, Control::Press(APPLY)) => Some(msg(Event::ContextApply)),
+                (ContextAction::Assign { choices, .. }, Control::Pick("Proje tipi", item)) => {
+                    choices.iter().position(|(_, label, _)| label == item)
+                        .map(|i| msg(Event::ContextChoice(i)))
+                }
+                _ => return Err(format!("Bu tip eyleminde {control} yok")),
+            });
+        }
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
@@ -1244,6 +1391,31 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+fn opening_context_view(action: &ContextAction) -> Element<'_, Message> {
+    let (title, text, apply, ready) = match action {
+        ContextAction::Assign { choice, .. } =>
+            ("Proje tipi ata", "Seçili açıklığı aynı biçimdeki bir proje tipine bağlayın.".to_owned(),
+             "Tipi ata", choice.is_some()),
+        ContextAction::Push { name, report, .. } =>
+            ("Tipe uygula · Önizleme", format!("{name} · Tüm çizim  |  {}", report_words(report)), APPLY, true),
+    };
+    let frame = Frame::new(title).push(label::body(text));
+    let frame = match action {
+        ContextAction::Assign { choices, choice, .. } => frame.push(
+            Select::new(choices.iter().map(|(_, text, _)| Choice::new(text)), *choice,
+                |i| msg(Event::ContextChoice(i))).placeholder("Proje tipi seçin"),
+        ),
+        ContextAction::Push { report, .. } => frame.push(label::caption(
+            report.fields.iter().map(|field| field.label()).collect::<Vec<_>>().join(" · "),
+        )),
+    };
+    frame
+        .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+        .action(words::primary(apply, ready.then(|| msg(Event::ContextApply))))
+        .width(540.0)
+        .modal(msg(Event::Close))
 }
 
 /// A new type's name before it is numbered: “Yeni pencere tipi” for a form, “İç kapı 90 kopyası” for a copy (a copy's

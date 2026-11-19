@@ -17501,6 +17501,10 @@
         "additionalProperties": false,
         "description": "Input of `cad.sheets.set` v1 (“Pafta seti”): the set; with `uids`, the sheets those objects' change affects.\n\nRefusals, in this order: `entity_not_found` (at `uids[i]`), `book_unreadable`.",
         "properties": {
+          "dependencies": {
+            "description": "Include freshness, sources, and sheet placements of generated architectural drawings.",
+            "type": "boolean"
+          },
           "details": {
             "description": "Include the canonical book and complete system templates for automation.",
             "type": "boolean"
@@ -17562,6 +17566,15 @@
               {
                 "type": "null"
               }
+            ]
+          },
+          "dependencies": {
+            "items": {
+              "$ref": "#/$defs/SheetDependency"
+            },
+            "type": [
+              "array",
+              "null"
             ]
           },
           "namedViews": {
@@ -17662,6 +17675,15 @@
               {
                 "type": "null"
               }
+            ]
+          },
+          "dependencies": {
+            "items": {
+              "$ref": "#/$defs/SheetDependency"
+            },
+            "type": [
+              "array",
+              "null"
             ]
           },
           "namedViews": {
@@ -24520,6 +24542,172 @@
       ]
     },
     {
+      "id": "cad.arch.walk",
+      "version": 1,
+      "title": "Dolaşım güzergâhı",
+      "summary": "Tek katta başlangıç ve bitiş arasında seçilen geçiş genişliğini koruyan güzergâhı arar. Net mahal sınırlarını, kapı netlerini, kolonları ve donatıları okur. shellOnly yalnız sabit plan sınırlarını ve kolonları alır. Sonuç geçici tasarım ölçümüdür. Çizimi değiştirmez.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Point-to-point design route on one storey. Width is the envelope's diameter, in metres.",
+        "properties": {
+          "end": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "level": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shellOnly": {
+            "description": "Exclude movable furniture and equipment when inspecting the architectural shell.",
+            "type": "boolean"
+          },
+          "start": {
+            "$ref": "#/$defs/Vec2",
+            "x-unit": "length"
+          },
+          "width": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "width"
+        ],
+        "title": "ArchWalk",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "A verified centreline, or a location to inspect when no route was found.",
+        "properties": {
+          "blocked": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Vec2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "x-unit": "length"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "obstacle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "width": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "points",
+          "length",
+          "width"
+        ],
+        "title": "ArchWalked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "A verified centreline, or a location to inspect when no route was found.",
+        "properties": {
+          "blocked": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Vec2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "x-unit": "length"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "obstacle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "width": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "points",
+          "length",
+          "width"
+        ],
+        "title": "ArchWalked",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Zemin katta 90 cm genişliğinde dolaşım",
+          "input": {
+            "end": {
+              "x": 8.0,
+              "y": 3.0
+            },
+            "level": "zemin",
+            "start": {
+              "x": 2.0,
+              "y": 2.0
+            },
+            "width": 0.9
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.openings.create",
       "version": 1,
       "title": "Açıklık ekle",
@@ -27282,6 +27470,17 @@
             },
             "type": "array"
           },
+          "doorApproach": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DoorApproachProfile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Design clearance profile for front approaches, separately on the pull and push faces."
+          },
           "exceptions": {
             "anyOf": [
               {
@@ -29972,6 +30171,20 @@
               "null"
             ]
           },
+          "fillerEnds": {
+            "description": "End of each leg receiving the leftover filler, in path order. An omitted entry uses the layout default.",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CaseworkEnd"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array"
+          },
           "fridge": {
             "anyOf": [
               {
@@ -29991,6 +30204,13 @@
           "layerId": {
             "description": "The layer the run goes on, a layer's id.",
             "type": "string"
+          },
+          "level": {
+            "description": "Storey of this run and its fixtures. Without an explicit storey a run follows its supporting wall.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "lineWeight": {
             "format": "double",
@@ -118869,6 +119089,18 @@
       "meaning": "Kapının önündeki kullanım alanına bir duvar, kolon ya da donatı giriyor (net geçiş)."
     },
     {
+      "code": "arch_door_pull_blocked",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kapının çekme tarafındaki yaklaşım alanına bir engel giriyor."
+    },
+    {
+      "code": "arch_door_push_blocked",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kapının itme tarafındaki yaklaşım alanına bir engel giriyor."
+    },
+    {
       "code": "arch_door_clear_narrow",
       "kind": "warning",
       "retryable": false,
@@ -123602,6 +123834,17 @@
           },
           "type": "array"
         },
+        "doorApproach": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DoorApproachProfile"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Design clearance profile for front approaches, separately on the pull and push faces."
+        },
         "exceptions": {
           "anyOf": [
             {
@@ -123894,6 +124137,14 @@
             "string",
             "null"
           ]
+        },
+        "outline": {
+          "description": "Boundary of the affected area in model coordinates, when the finding has one.",
+          "items": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "type": "array",
+          "x-unit": "length"
         },
         "repair": {
           "description": "What resolves it.",
@@ -129879,6 +130130,11 @@
           "const": "transportElement",
           "description": "Taşıma elemanı (`IfcTransportElement`, TSM): a lift.",
           "type": "string"
+        },
+        {
+          "const": "electricAppliance",
+          "description": "Elektrikli cihaz (IfcElectricAppliance, ECZ), EK-6 Tablo 6.29.",
+          "type": "string"
         }
       ]
     },
@@ -131841,6 +132097,20 @@
             "null"
           ]
         },
+        "fillerEnds": {
+          "description": "End of each leg receiving the leftover filler, in path order. An omitted entry uses the layout default.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CaseworkEnd"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": "array"
+        },
         "fridge": {
           "anyOf": [
             {
@@ -131860,6 +132130,13 @@
         "layerId": {
           "description": "The layer the run goes on, a layer's id.",
           "type": "string"
+        },
+        "level": {
+          "description": "Storey of this run and its fixtures. Without an explicit storey a run follows its supporting wall.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "lineWeight": {
           "format": "double",
@@ -132362,6 +132639,27 @@
           "type": "string"
         }
       ]
+    },
+    "CeilingRange": {
+      "additionalProperties": false,
+      "description": "A reflected ceiling plan's upward view interval above the selected storey's reference floor, metres.",
+      "properties": {
+        "high": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "low": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "low",
+        "high"
+      ],
+      "type": "object"
     },
     "Cell": {
       "description": "A cell of a combination: a code of its field's list, any value (empty too), or empty.",
@@ -145288,6 +145586,39 @@
         }
       ]
     },
+    "DoorApproachProfile": {
+      "additionalProperties": false,
+      "description": "Front clearance dimensions for the project's single hinged doors, in metres.",
+      "properties": {
+        "pullDepth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "pullLatch": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "pushDepth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "pushLatch": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "pullDepth",
+        "pullLatch",
+        "pushDepth",
+        "pushLatch"
+      ],
+      "type": "object"
+    },
     "DoorSource": {
       "description": "The doors' layer and which of its attributes say what.",
       "properties": {
@@ -147059,7 +147390,7 @@
           "type": "string"
         },
         "edited": {
-          "description": "Its objects changed by hand (a refresh writes them back); said only while the model's drawing is unchanged.",
+          "description": "Its objects changed by hand (a refresh writes them back). Older records can detect this while their source is unchanged.",
           "items": {
             "type": "string"
           },
@@ -177696,6 +178027,19 @@
           "properties": {
             "kind": {
               "const": "codes",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Rebuild the existing graphic joinery definition without placing another instance.",
+          "properties": {
+            "kind": {
+              "const": "refreshList",
               "type": "string"
             }
           },
@@ -208382,6 +208726,57 @@
       ],
       "type": "object"
     },
+    "SheetDependency": {
+      "properties": {
+        "generated": {
+          "description": "Stable content digest; produced output, when present.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model": {
+          "description": "Stable content digest; output the current source produces, when available.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "sheets": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "source": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/SheetDependencyState"
+        }
+      },
+      "required": [
+        "name",
+        "source",
+        "state",
+        "sheets"
+      ],
+      "type": "object"
+    },
+    "SheetDependencyState": {
+      "enum": [
+        "current",
+        "stale",
+        "notDrawn",
+        "sourceGone",
+        "edited",
+        "legacy"
+      ],
+      "type": "string"
+    },
     "SheetHeightCheck": {
       "description": "The chosen points' own heights against the surface's (docs/adr/4740; BÖHHBÜY m. 93(1)(c)'s limit): the points\ncompared (an own height, on the surface, not one of the surface's corners: a corner's difference is nought), the\ncorners left out, the RMS of the differences and the largest one with its place (metres), KOH_Z for the scale by\nm. 91(2) and the limit, `factor` times it (metres), and whether the RMS is under the limit.",
       "properties": {
@@ -209827,6 +210222,16 @@
             }
           ]
         },
+        "edges": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SlabEdgeBindings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "face": {
           "$ref": "#/$defs/SlabFace"
         },
@@ -209890,6 +210295,13 @@
       "description": "Why a bound slab's outline is not what its source says: the last one kept as it was.",
       "oneOf": [
         {
+          "enum": [
+            "edgeSourceGone",
+            "edgeShapeInvalid"
+          ],
+          "type": "string"
+        },
+        {
           "const": "lostEnclosure",
           "description": "The walls no longer close round its seed (or the outline moved by its offset turns over).",
           "type": "string"
@@ -209927,6 +210339,25 @@
       ],
       "type": "object"
     },
+    "SlabEdgeBindings": {
+      "additionalProperties": false,
+      "properties": {
+        "links": {
+          "items": {
+            "$ref": "#/$defs/SlabEdgeLink"
+          },
+          "type": "array"
+        },
+        "reference": {
+          "$ref": "#/$defs/SpacePart"
+        }
+      },
+      "required": [
+        "reference",
+        "links"
+      ],
+      "type": "object"
+    },
     "SlabEdgeKind": {
       "description": "What runs along a slab's free sides.",
       "oneOf": [
@@ -209941,6 +210372,53 @@
           "type": "string"
         }
       ]
+    },
+    "SlabEdgeLink": {
+      "additionalProperties": false,
+      "properties": {
+        "edge": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "1"
+        },
+        "face": {
+          "description": "Wall component boundary index from its left face. No index means the outer right face.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "offset": {
+          "description": "Outwards relative to the slab contour, in metres.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "segment": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "1"
+        },
+        "wall": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "edge",
+        "wall",
+        "segment",
+        "offset",
+        "locked"
+      ],
+      "type": "object"
     },
     "SlabEntity": {
       "description": "A slab (docs/adr/0722).",
@@ -210498,6 +210976,11 @@
           "const": "space",
           "description": "Mahal: the space's rings.",
           "type": "string"
+        },
+        {
+          "const": "edges",
+          "description": "Kenarlar: individual component faces and an independent reference perimeter.",
+          "type": "string"
         }
       ]
     },
@@ -210737,6 +211220,79 @@
           },
           "required": [
             "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Bind or edit a single outer edge. Other edges retain their own reference lines.",
+          "properties": {
+            "edge": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "1"
+            },
+            "face": {
+              "description": "Wall component boundary index from its left face. No index means the outer right face.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "1"
+            },
+            "kind": {
+              "const": "bindEdge",
+              "type": "string"
+            },
+            "locked": {
+              "type": "boolean"
+            },
+            "offset": {
+              "description": "Outwards relative to the slab contour, in metres.",
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "segment": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "1"
+            },
+            "wall": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "edge",
+            "wall",
+            "segment",
+            "offset",
+            "locked"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Release a single edge and use its current line as the independent reference.",
+          "properties": {
+            "edge": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "1"
+            },
+            "kind": {
+              "const": "unbindEdge",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "edge"
           ],
           "type": "object"
         },
@@ -228449,6 +229005,17 @@
       "additionalProperties": false,
       "description": "A named view's architectural recipe (docs/adr/0774 §1): what a\nsheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the\nscreen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.",
       "properties": {
+        "ceiling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CeilingRange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Upward view; the regular plan is used when absent."
+        },
         "combo": {
           "description": "The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.",
           "type": [

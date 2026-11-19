@@ -22,4 +22,8 @@ pictures?: boolean,
  * Include each frame's detail recipe and camera lock (docs/adr/1090 §2): what `cad.sheets.details` makes it
  * again from.
  */
-recipes?: boolean, };
+recipes?: boolean, 
+/**
+ * Include freshness, sources, and sheet placements of generated architectural drawings.
+ */
+dependencies?: boolean, };

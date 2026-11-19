@@ -190,6 +190,8 @@ impl Scope {
                 let wall = doc.get(doc.slot_of(host)?)?;
                 Some(kentos_ifc::arch::level_of(wall).is_some_and(|l| self.levels.iter().any(|x| x == l)))
             }
+            Entity::Insert(i) if doc.block(i.block).is_some_and(|b| b.card.as_ref().is_some_and(|c| c.element.is_some())) =>
+                Some(i.arch.level.as_ref().map_or(!self.several, |l| self.levels.contains(l))),
             Entity::Grid(g) => Some(g.grid.arch.level.as_deref().is_none_or(|l| self.levels.iter().any(|x| x == l))),
             _ => match kentos_ifc::arch::level_of(e) {
                 Some(l) => Some(self.levels.iter().any(|x| x == l)),
@@ -342,7 +344,7 @@ fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope
             .collect(),
         fixtures: fixtures(doc)
             .into_iter()
-            .filter(|f| scope.is_none_or(|s| f.level.as_ref().is_some_and(|l| s.levels.contains(l))))
+            .filter(|f| scope.is_none_or(|s| f.level.as_ref().map_or(!s.several, |l| s.levels.contains(l))))
             .collect(),
         coverings: doc
             .entities_with_uids()
@@ -778,6 +780,28 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         + written.fixtures
         + written.curtain_walls
         + written.spaces;
+    let mut warnings = Vec::new();
+    // Legacy and office cards may describe appliances without specifying an IFC class or an energy source.
+    let mut missing = std::collections::BTreeMap::<&str, usize>::new();
+    for (_, entity) in doc.entities_with_uids() {
+        let kentos_commands::Entity::Insert(insert) = entity else { continue };
+        if scope.as_ref().is_some_and(|s| !insert.arch.level.as_ref().map_or(!s.several, |l| s.levels.contains(l))) {
+            continue;
+        }
+        let Some(block) = doc.block(insert.block) else { continue };
+        let Some(card) = &block.card else { continue };
+        if card.element.is_none() && matches!(card.category.as_deref(), Some("Mutfak/Beyaz eşya" | "Mutfak/Pişirme" | "Islak hacim/Beyaz eşya")) {
+            *missing.entry(&block.name).or_default() += 1;
+        }
+    }
+    if !missing.is_empty() {
+        let names = missing.iter().map(|(name, count)| format!("{name} ({count})")).collect::<Vec<_>>().join(", ");
+        let message = format!("IFC sınıfı girilmemiş cihazlar aktarılmadı: {names}. Blok kartında ürünün sınıfını ve ön tanımlı tipini seçin.");
+        if held == 0 {
+            return Err(bad("", message));
+        }
+        warnings.push(losses(message));
+    }
     if held == 0 {
         return Err(bad(
             "",
@@ -786,7 +810,9 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
                 .into(),
         ));
     }
-    let mut warnings = Vec::new();
+    if !b.fixture_plans.is_empty() {
+        warnings.push(losses(format!("{} donatının blok kartında yükseklik yok. IFC'ye plan izi yazıldı. Katı gövde için ürün yüksekliğini girin.", b.fixture_plans.len())));
+    }
     for (why, because) in [
         (Why::NoBody, "kesit modeli gövdesini kuramadı"),
         (Why::NoWall, "duvarı yazılmadı"),

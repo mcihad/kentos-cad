@@ -2,6 +2,7 @@
 import type { ArchAuditCheck } from "./ArchAuditCheck";
 import type { ArchAuditExceptionView } from "./ArchAuditExceptionView";
 import type { ArchAuditWithin } from "./ArchAuditWithin";
+import type { DoorApproachProfile } from "./DoorApproachProfile";
 
 /**
  * Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703, 0732): the checks asked (none: every one),
@@ -49,6 +50,10 @@ minLength?: number,
  * not measured.
  */
 minClearWidth?: number, 
+/**
+ * Design clearance profile for front approaches, separately on the pull and push faces.
+ */
+doorApproach?: DoorApproachProfile, 
 /**
  * The part of the drawing reported on; absent: all of it.
  */

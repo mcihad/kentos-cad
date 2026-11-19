@@ -1643,6 +1643,31 @@ pub fn use_zone(place: &[Vec2], spec: &Spec) -> Option<Vec<Vec2>> {
     Some(vec![a, c, add(c, o), add(a, o)])
 }
 
+/// The front approach of a single hinged door. The first two points lie across the opening
+/// on the chosen wall face. The latch-side clearance follows the hand of the leaf.
+pub fn door_approach(
+    place: &[Vec2],
+    spec: &Spec,
+    pull: bool,
+    depth: f64,
+    latch: f64,
+) -> Option<[Vec2; 4]> {
+    if spec.form != Form::Door || spec.operation != Operation::Swing || spec.leaves != 1 || depth <= 0.0 {
+        return None;
+    }
+    let parts = Parts::new(place, spec)?;
+    if parts.clear <= 0.0 {
+        return None;
+    }
+    let left = pull != spec.side_right;
+    let face = if left { 0.0 } else { parts.f.thickness };
+    let jamb = parts.fit + parts.fr;
+    let start = parts.along_start(jamb - if spec.hand_end { latch } else { 0.0 }, face);
+    let end = parts.along_end(jamb - if spec.hand_end { 0.0 } else { latch }, face);
+    let outward = mul(parts.out(left), depth);
+    Some([start, end, add(end, outward), add(start, outward)])
+}
+
 /// The point the opening's jambs are centred on (their four points' mean).
 pub fn centre(place: &[Vec2]) -> Option<Vec2> {
     (place.len() == 4).then(|| {

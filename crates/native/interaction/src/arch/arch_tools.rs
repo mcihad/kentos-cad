@@ -39,7 +39,7 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, TextGhost, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, Label, Marker, MarkerShape, OptionChoice, Pointer, Preview, Tag, TextGhost, Tone, Tool};
 use crate::tool_settings::Setting;
 
 pub const GRID_ID: &str = "grid";
@@ -608,6 +608,10 @@ impl ColumnTool {
         Self::default()
     }
 
+    fn depth_option(&self) -> (&'static str, &'static str) {
+        if self.post { ("Kesit boyu", "O") } else { ("Boy", "Y") }
+    }
+
     /// Dikme (docs/adr/8070 §8): 10/10 Çelik until changed, KentOS's own first values; its storey's height until one is
     /// typed.
     pub fn post() -> Self {
@@ -788,8 +792,9 @@ impl Tool for ColumnTool {
         .option_with("Biçim", "B", self.shape.label())
         .option_with("En", "E", fmt(self.width));
         if !self.round() {
+            let (label, key) = self.depth_option();
             p = p
-                .option_with("Boy", "Y", self.depth.map_or_else(|| fmt(self.width), fmt))
+                .option_with(label, key, self.depth.map_or_else(|| fmt(self.width), fmt))
                 .option_with("Açı", "D", fmt(self.turn.to_degrees()));
         }
         if let Some([a, b]) = self.legs_now() {
@@ -799,7 +804,7 @@ impl Tool for ColumnTool {
         if self.post {
             // A post's own height and material (docs/adr/8070 §8).
             p = p
-                .option_with("Yükseklik", "Ü", self.height.map_or_else(|| "Kat".into(), fmt))
+                .option_with("Yükseklik", "Y", self.height.map_or_else(|| "Kat".into(), fmt))
                 .option_with("Malzeme", "M", self.material.clone().unwrap_or_else(|| "Betonarme".into()));
         }
         p = p.option_with(
@@ -854,7 +859,7 @@ impl Tool for ColumnTool {
                     return true;
                 }
                 Ask::OwnHeight => {
-                    self.configure("Ü", text, cx);
+                    self.configure("Y", text, cx);
                     return true;
                 }
                 Ask::Material => {
@@ -881,7 +886,7 @@ impl Tool for ColumnTool {
                 }
             }
             "E" => self.ask = Some(Ask::Width),
-            "Y" if !self.round() => self.ask = Some(Ask::Depth),
+            key if key == self.depth_option().1 && !self.round() => self.ask = Some(Ask::Depth),
             "D" if !self.round() => self.ask = Some(Ask::Turn),
             "L" if self.shape == ColumnShape::LShape => self.ask = Some(Ask::Legs),
             // The next of its box's nine points.
@@ -891,7 +896,7 @@ impl Tool for ColumnTool {
                 self.anchor = all[(at + 1) % all.len()];
             }
             "K" => self.ask = Some(Ask::Label),
-            "Ü" if self.post => self.ask = Some(Ask::OwnHeight),
+            "Y" | "Ü" if self.post => self.ask = Some(Ask::OwnHeight),
             "M" if self.post => self.ask = Some(Ask::Material),
             "A" if !self.post => {
                 let grids: Vec<String> = grids_shown(cx).into_iter().map(|(_, u, _)| u).collect();
@@ -953,7 +958,8 @@ impl Tool for ColumnTool {
             Setting::text("E", if self.round() { "Çap" } else { "En" }, f.length(self.width)),
         ];
         if !self.round() {
-            rows.push(Setting::text("Y", "Boy", f.length(self.depth.unwrap_or(self.width))));
+            let (label, key) = self.depth_option();
+            rows.push(Setting::text(key, label, f.length(self.depth.unwrap_or(self.width))));
         }
         if let Some([a, b]) = self.legs_now() {
             rows.push(Setting::text(
@@ -976,7 +982,7 @@ impl Tool for ColumnTool {
         ));
         if self.post {
             rows.push(Setting::text(
-                "Ü",
+                "Y",
                 "Yükseklik",
                 self.height.map_or_else(|| "Katın yüksekliği".into(), |h| f.length(h)),
             ));
@@ -1032,7 +1038,7 @@ impl Tool for ColumnTool {
                 }
                 None => false,
             },
-            "E" | "Y" => match cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0) {
+            key if key == "E" || key == self.depth_option().1 => match cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0) {
                 Some(v) if key == "E" => {
                     self.width = v;
                     true
@@ -1079,7 +1085,7 @@ impl Tool for ColumnTool {
                 true
             }
             // A post's own height (docs/adr/8070 §8): empty or Kat its storey's.
-            "Ü" if self.post => {
+            "Y" | "Ü" if self.post => {
                 if words.is_empty() || words.starts_with("KAT") {
                     self.height = None;
                     true
@@ -1107,9 +1113,9 @@ impl Tool for ColumnTool {
             cx.say(
                 Level::Warn,
                 match key {
-                    "Ü" => "Dikmenin yüksekliği sıfırdan büyük bir uzunluk olmalı; boş: katın yüksekliği.",
+                    "Y" | "Ü" if self.post => "Dikmenin yüksekliği sıfırdan büyük bir uzunluk olmalı; boş: katın yüksekliği.",
                     "L" => "L kolonun iki kolunu sıfırdan büyük uzunluklar olarak boşlukla yazın (0.25 0.30); boş: yarısı.",
-                    "E" | "Y" => "Kolon ölçüsü sıfırdan büyük bir uzunluk olmalı.",
+                    "E" | "O" | "Y" => "Kolon ölçüsü sıfırdan büyük bir uzunluk olmalı.",
                     "D" => "Dönüşü derece olarak bir sayıyla yazın; örneğin 30.",
                     _ => "Geçerli bir değer seçin.",
                 },
@@ -1199,6 +1205,8 @@ pub struct FlightTool {
     design: Option<(u32, f64, f64, f64)>,
     /// The planned ramp: its slope (given or its rise over its sloped length), its sloped length, its levels.
     ramp_design: Option<(f64, f64, f64, f64)>,
+    /// Horizontal path specified by the user and signed adjustment of its final straight flight.
+    fitted_path: Option<(f64, f64)>,
 }
 
 /// A railing choice's words.
@@ -1284,6 +1292,7 @@ impl FlightTool {
             notes: Vec::new(),
             design: None,
             ramp_design: None,
+            fitted_path: None,
         }
     }
 
@@ -1438,10 +1447,11 @@ impl FlightTool {
     fn write_arc(&mut self, cx: &mut Context<'_>) {
         match self.arc_line() {
             Some((pts, bulges)) => {
-                self.write_run(&pts, Some(bulges), cx);
-                self.pts.clear();
-                self.turned = 0.0;
-                self.seen_at = None;
+                if self.write_run(&pts, Some(bulges), cx) {
+                    self.pts.clear();
+                    self.turned = 0.0;
+                    self.seen_at = None;
+                }
             }
             None => cx.say(
                 Level::Warn,
@@ -1454,11 +1464,12 @@ impl FlightTool {
         let mut pts = self.pts.clone();
         // The pointer still on the point just given is no next point (UR-018): the preview is the path given so far,
         // not a turn of no length the path check would call an error.
-        if with_hover
-            && pts.len() < kentos_commands::MAX_FLIGHT_POINTS
-            && let Some(h) = self.hover
+        if with_hover && let Some(h) = self.hover
             && pts.last().is_none_or(|l| (l.x - h.x).hypot(l.y - h.y) > 1e-6)
         {
+            if pts.len() == kentos_commands::MAX_FLIGHT_POINTS {
+                pts.pop();
+            }
             pts.push(h);
         }
         pts
@@ -1475,12 +1486,12 @@ impl FlightTool {
 
     /// Writes the walking line `pts` on its layer, opened with it when missing (docs/adr/8008): written when the
     /// drawing changed.
-    fn write_run(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) {
+    fn write_run(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) -> bool {
         crate::arch_layer::writing(&self.layer_kind(), cx, |_, cx| {
             let generation = cx.doc.generation();
             self.run(pts, bulges, cx, true);
             cx.doc.generation() != generation
-        });
+        })
     }
 
     /// The plan or the write for the walking line `pts`.
@@ -1591,6 +1602,7 @@ impl FlightTool {
         self.notes.clear();
         self.design = None;
         self.ramp_design = None;
+        self.fitted_path = None;
         self.arc_design = None;
         self.narrow = None;
         let (pts, bulges) = if self.spiralling() {
@@ -1609,6 +1621,9 @@ impl FlightTool {
         }
         let (made, why, notes) = self.run(&pts, bulges, cx, false);
         flight_drawn(&made, cx.doc.settings().plot_scale, &mut self.drawn);
+        if self.fit && !self.spiralling() && let Some(entity) = made.first() {
+            self.mark_fitted_end(&pts, entity);
+        }
         self.arc_design = made.iter().find_map(|e| match e {
             Entity::Stair(s) => {
                 let [a, b] = s.stair.pts[..] else { return None };
@@ -1667,6 +1682,32 @@ impl FlightTool {
         self.notes = notes;
     }
 
+    fn mark_fitted_end(&mut self, path: &[Vec2], entity: &Entity) {
+        let end = match entity {
+            Entity::Stair(s) => s.stair.pts.last(),
+            Entity::Ramp(r) => r.ramp.pts.last(),
+            _ => None,
+        };
+        let ([.., turn, entered], Some(end)) = (path, end) else { return };
+        let fitted = Vec2::new(end.x, end.y);
+        let delta = (fitted.x - turn.x).hypot(fitted.y - turn.y)
+            - (entered.x - turn.x).hypot(entered.y - turn.y);
+        if delta.abs() <= 1e-6 {
+            return;
+        }
+        self.fitted_path = Some((arch::Walk::of(path).length(), delta));
+        self.drawn.markers.extend([
+            Marker { at: *entered, shape: MarkerShape::Ring(5.0), tone: Tone::Accent },
+            Marker { at: fitted, shape: MarkerShape::Square(3.0), tone: Tone::Snap },
+        ]);
+        self.drawn.labels.push(Label {
+            at: fitted,
+            text: "Bitiş".into(),
+            offset: [8.0, -14.0],
+            tone: Tone::Snap,
+        });
+    }
+
     /// Before a curved stair turns: its walking line's circle through the pointer (or its start) and its sides' circles
     /// half its width in and out, dashed.
     fn circles(&mut self) {
@@ -1690,11 +1731,17 @@ impl FlightTool {
     /// The planned stair in words: its risers and their height, its tread, the step rule, its walking line; a ramp's
     /// slope, sloped length and levels.
     fn design_words(&self, f: &Format) -> Vec<String> {
+        let end_note = self.fitted_path.map(|(entered, delta)| format!(
+            "Girilen hat {} · bitiş {} {}",
+            f.length(entered), f.length(delta.abs()), if delta > 0.0 { "ileride" } else { "geride" }
+        ));
         if let Some((slope, run, from, to)) = self.ramp_design {
-            return vec![
-                format!("Eğim %{} · eğimli uzunluk {}", crate::fixed(slope, 2), f.length(run)),
+            let mut words = vec![
+                format!("Eğim %{} · eğimli kolların yatay boyu {}", crate::fixed(slope, 2), f.length(run)),
                 format!("Kot {} → {}", arch::level_text(from), arch::level_text(to)),
             ];
+            words.extend(end_note);
+            return words;
         }
         let Some((risers, riser, tread, run)) = self.design else {
             return Vec::new();
@@ -1703,6 +1750,7 @@ impl FlightTool {
             format!("{risers} rıht × {}, basamak {}", f.length(riser), f.length(tread)),
             format!("2R+G {} · yürüme çizgisi {}", f.length(2.0 * riser + tread), f.length(run)),
         ];
+        out.extend(end_note);
         // A curved stair's tread is measured on its walking line; on its inner side it is shorter (docs/adr/0709).
         if let Some((r, sweep)) = self.arc_design {
             // Going up a counter-clockwise stair one turns left.
@@ -1971,6 +2019,7 @@ impl Tool for FlightTool {
         if self.pts.pop().is_some() {
             self.turned = 0.0;
             self.seen_at = None;
+            self.hover = self.pts.last().copied();
             self.see(cx);
             return true;
         }
@@ -2016,6 +2065,7 @@ impl Tool for FlightTool {
                 0 => "orta çizginin başına tıklayın",
                 1 if self.fit => "çıkış yönüne ya da dönüşe tıklayın; son kol eğime göre biter",
                 1 => "sonraki noktaya tıklayın",
+                kentos_commands::MAX_FLIGHT_POINTS => "son noktayı değiştirin ya da ayarları düzeltip Enter ile bitirin",
                 _ => "sonraki noktaya tıklayın ya da Enter ile yazın",
             };
             return Prompt::new(self.name(), step)
@@ -2037,6 +2087,7 @@ impl Tool for FlightTool {
             0 => "yürüme çizgisinin başına tıklayın (çıkış buradan)",
             1 if self.fit => "çıkış yönüne ya da dönüşe tıklayın; son kol rıhtlara göre biter",
             1 => "çıkış yönüne ya da dönüşe tıklayın",
+            kentos_commands::MAX_FLIGHT_POINTS => "son noktayı değiştirin ya da ayarları düzeltip Enter ile bitirin",
             _ => "dönüşe tıklayın ya da Enter ile bitirin",
         };
         Prompt::new(self.name(), step)
@@ -2099,6 +2150,13 @@ impl Tool for FlightTool {
 
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
         self.see_level(cx);
+        self.hover = Some(p);
+        if self.pts.last() == Some(&p) && !(self.spiralling() && self.pts.len() == 2) {
+            if self.spiralling() && self.pts.len() == 1 {
+                cx.say(Level::Warn, "Yürüme çizgisinin başlangıcı merkezden farklı bir nokta olmalı.");
+            }
+            return true;
+        }
         if self.spiralling() {
             // Its centre, its start, then the end of its turn (docs/adr/0709).
             match self.pts.len() {
@@ -2108,7 +2166,6 @@ impl Tool for FlightTool {
                     self.seen_at = None;
                 }
                 _ => {
-                    self.hover = Some(p);
                     self.follow(p);
                     self.write_arc(cx);
                 }
@@ -2116,10 +2173,12 @@ impl Tool for FlightTool {
             self.see(cx);
             return true;
         }
-        self.pts.push(p);
         if self.pts.len() == kentos_commands::MAX_FLIGHT_POINTS {
-            let pts = std::mem::take(&mut self.pts);
-            self.write_run(&pts, None, cx);
+            self.pts.pop();
+        }
+        self.pts.push(p);
+        if self.pts.len() == kentos_commands::MAX_FLIGHT_POINTS && self.write_run(&self.pts, None, cx) {
+            self.pts.clear();
         }
         self.see(cx);
         true
@@ -2148,10 +2207,7 @@ impl Tool for FlightTool {
                 _ => "",
             };
             if !self.apply(field, text, cx) {
-                cx.say(
-                    Level::Warn,
-                    "Değer okunamadı; sıfırdan büyük bir sayı yazın (Rıht sayısı: 0 hesaplanır, Kesme: 0 yok).",
-                );
+                cx.say(Level::Warn, self.refusal(field));
                 return true;
             }
             self.ask = None;
@@ -2364,8 +2420,11 @@ impl Tool for FlightTool {
             return Flow::Exit;
         }
         if self.pts.len() >= 2 {
-            let pts = std::mem::take(&mut self.pts);
-            self.write_run(&pts, None, cx);
+            if self.write_run(&self.pts, None, cx) {
+                self.pts.clear();
+            } else {
+                self.hover = self.pts.last().copied();
+            }
             self.see(cx);
             return Flow::Stay;
         }

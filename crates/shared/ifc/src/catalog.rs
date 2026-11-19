@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 /// The classes an architectural model meets (EK-5 Tablo 5.1; plan/ifc-uyum.md §4): the spatial structure, the
 /// architectural elements, the zones and the blocks a building's drawing holds. IfcFooting (the structural model's) and
 /// IfcSign are among them as the table has them.
-pub const ARCHITECTURE: [&str; 29] = [
+pub const ARCHITECTURE: [&str; 30] = [
     "IfcProject",
     "IfcSite",
     "IfcBuilding",
@@ -49,6 +49,7 @@ pub const ARCHITECTURE: [&str; 29] = [
     "IfcGroup",
     "IfcFurniture",
     "IfcSanitaryTerminal",
+    "IfcElectricAppliance",
     "IfcTransportElement",
     "IfcFooting",
     "IfcSign",
@@ -416,6 +417,7 @@ mod tests {
             building::Class::TransportElement,
             building::Class::Furniture,
             building::Class::SanitaryTerminal,
+            building::Class::ElectricAppliance,
             building::Class::Member,
             building::Class::Chimney,
             building::Class::Ramp,

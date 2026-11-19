@@ -15,6 +15,20 @@ fn wall(tool: &str) -> Bench {
     b
 }
 #[test]
+fn a_door_can_be_placed_by_coordinate_and_requires_a_wall() {
+    let mut b = wall("door");
+    assert!(set(&mut b, "E", "0.9 m"));
+    assert!(b.type_text("487004,4420020"));
+    assert_eq!(b.doc.len(), 1);
+    assert!(b.type_text("487004,4420000.1"));
+    let Entity::Opening(door) = b.newest() else {
+        panic!("the typed point should insert a door");
+    };
+    assert!((door.opening.at - 4.0).abs() < 1e-9);
+    assert!((door.opening.width - 0.9).abs() < 1e-9);
+}
+
+#[test]
 fn visible_end_and_hinge_reference_are_previewed_then_written_through_the_same_command() {
     let mut b = wall("door");
     let before = b.doc.to_snapshot_v2();

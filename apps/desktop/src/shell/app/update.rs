@@ -172,6 +172,8 @@ impl App {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         // A lock that changes with the pointer still shows at once (locks.rs);
         // the drawing area's own events move the pointer themselves.
+        #[cfg(target_os = "macos")]
+        let pointer_only = matches!(message, Message::Viewport(crate::viewport::Event::Moved(_)));
         let locks = (!matches!(message, Message::Viewport(_)))
             .then_some((self.locks.length, self.locks.toward));
         let held = self.window_over();
@@ -195,6 +197,7 @@ impl App {
         self.follow_sheets();
         self.follow_wall_view();
         self.follow_selection_layers();
+        self.follow_scene_browse();
         // Follow selection before rebuilding keyboard targets for the visible tab.
         self.follow_selection_tab();
         // The key tips follow what the ribbon shows now (ribbon_keys.rs).
@@ -261,6 +264,8 @@ impl App {
         // Google's geocoding answers only beside a shown Google basemap (address/online.rs).
         self.follow_address();
         self.cloud_after(Instant::now());
+        #[cfg(target_os = "macos")]
+        let task = Task::batch([task, self.follow_accessibility(pointer_only)]);
         // A window that opens over the drawing has the keyboard: a text box under
         // it (the command line that opened it) lets go first, before the window's
         // own field takes it. The view keeps the window's widgets as they were
@@ -274,7 +279,7 @@ impl App {
 
     /// Whether a window is open over the drawing: a dialog, the application
     /// menu or the sheet templates' gallery.
-    pub(super) fn window_over(&self) -> bool {
+    pub(crate) fn window_over(&self) -> bool {
         self.dialog.is_some() || self.app_menu.is_some() || self.sheets.gallery_open()
     }
 
@@ -333,6 +338,14 @@ impl App {
     }
 
     pub(super) fn handle(&mut self, message: Message) -> Task<Message> {
+        if matches!(
+            message,
+            Message::Viewport(
+                crate::viewport::Event::Pressed(_) | crate::viewport::Event::RightPressed(_)
+            )
+        ) {
+            self.scene_browse = None;
+        }
         // The secondary windows' opening, closing, moves and resizes are taken whatever the app is doing, else the
         // windows and their list would part; their keys go through the waits below (an open, an import) as the main
         // window's do.
@@ -437,6 +450,8 @@ impl App {
             self.vertices.keyboard = false;
         }
         match message {
+            #[cfg(target_os = "macos")]
+            Message::Accessibility(event) => return self.accessibility_event(event),
             Message::Run(id) | Message::RunKept(id) => return self.run(id),
             Message::DrawTemplate(id) => return self.draw_template(&id),
             Message::ApplyTemplate(id) => self.apply_template(&id),

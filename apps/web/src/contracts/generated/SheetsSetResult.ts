@@ -2,6 +2,7 @@
 import type { AffectedFrame } from "./AffectedFrame";
 import type { NamedView } from "./NamedView";
 import type { SetSheet } from "./SetSheet";
+import type { SheetDependency } from "./SheetDependency";
 import type { SheetPicture } from "./SheetPicture";
 import type { SheetSeries } from "./SheetSeries";
 import type { PaperScaleRatio } from "./sheet/PaperScaleRatio";
@@ -9,7 +10,7 @@ import type { PaperScaleRatio } from "./sheet/PaperScaleRatio";
 /**
  * Output of `cad.sheets.set` v1 (its plan's too).
  */
-export type SheetsSetResult = { 
+export type SheetsSetResult = { dependencies?: Array<SheetDependency>, 
 /**
  * The series, sorted by their letters and digit; `Diğer` last.
  */

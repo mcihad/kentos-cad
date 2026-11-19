@@ -422,6 +422,7 @@ fn findings(answer: &Value, digital: bool) -> Vec<ArchAuditFinding> {
             repair: text("repair"),
             uids,
             at,
+            outline: Vec::new(),
             fix,
             exception: false,
             lapsed: false,

@@ -23,6 +23,7 @@ COMMANDS: dict[str, Any] = {
     "cad.arch.ifc": arch.ifc,
     "cad.arch.performance": arch.performance,
     "cad.arch.recognize": arch.recognize,
+    "cad.arch.walk": arch.walk,
     "cad.areas.edit": areas.edit,
     "cad.arrays.adopt": arrays.adopt,
     "cad.arrays.edit": arrays.edit,

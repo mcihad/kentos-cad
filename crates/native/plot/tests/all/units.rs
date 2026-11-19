@@ -75,6 +75,7 @@ fn map_fills(doc: &Document) -> Vec<String> {
         map: None,
         level: None,
         phase: None,
+        ceiling: None,
         hidden: &[],
             pens: &[],
             mono: false,

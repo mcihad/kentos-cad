@@ -173,6 +173,33 @@ fn a_railing_lower_than_paiy_s_1_10_m_is_written_and_warned_of() {
     assert_eq!(b.last_level(), Some(Level::Warn));
 }
 
+#[test]
+fn railing_settings_refuse_out_of_range_values_before_finishing_the_path() {
+    let mut b = gallery();
+    b.start("railing");
+    b.click(0., 9.);
+    b.click(4., 9.);
+    b.click(4., 12.);
+    for (key, invalid, valid, name) in [
+        ("Y", "4", "3", "Korkuluk yüksekliği"),
+        ("E", "0.51", "0.5", "Küpeşte eni"),
+        ("A", "1.01", "1", "Çubuk aralığı"),
+        ("F", "-10.01", "-10", "Kot farkı"),
+    ] {
+        assert!(!b.run(|s, cx| s.configure(key, invalid, cx)));
+        assert!(b.last_text().unwrap().contains(name));
+        assert!(b.type_text(key));
+        assert!(b.type_text(invalid));
+        assert!(b.last_text().unwrap().contains(name));
+        assert!(b.type_text(valid));
+        assert_eq!(b.session.point_count(), 3);
+    }
+    b.confirm();
+    let r = newest_railing(&b);
+    assert_eq!(rel(&r), [(0., 9.), (4., 9.), (4., 12.)]);
+    assert_eq!((r.railing.height, r.railing.width, r.railing.gap, r.railing.offset), (3., 0.5, Some(1.), -10.));
+}
+
 /// Boşluktan on a stair's void: the sides the walls run along get none, and the stretch where the stair from Zemin kat
 /// arrives stays open: the north side whole, the south side in two either side of the stair's 1.20 m.
 #[test]

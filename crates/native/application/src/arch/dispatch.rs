@@ -153,6 +153,9 @@ macro_rules! arch_commands {
                 arch_audit,
                 kentos_commands::ArchAudit
             ),
+            kentos_commands::CAD_ARCH_WALK => crate::arch_dispatch::arch_arm!(
+                $command, $then, arch_walk, kentos_commands::ArchWalk
+            ),
             kentos_commands::CAD_ARCH_EXCEPTIONS => {
                 crate::arch_dispatch::arch_arm!(
                     $command,

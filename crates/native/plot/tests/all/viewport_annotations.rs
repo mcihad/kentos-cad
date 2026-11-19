@@ -47,6 +47,7 @@ fn twenty_native_plot_cases_combine_representations_freeze_and_cad_overrides_wit
             map: None,
             level: m.level.as_ref(),
             phase: None,
+            ceiling: None,
             hidden: &[],
             pens: &[],
             mono: false,

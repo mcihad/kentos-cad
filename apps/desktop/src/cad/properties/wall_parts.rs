@@ -109,6 +109,13 @@ pub(crate) fn bound_text(s: &SlabFields, spaces: &[(String, String)]) -> String 
             let source = match (b.source, b.face) {
                 (SlabSourceKind::Walls, SlabFace::Outline) => "Dış yüzlere bağlı",
                 (SlabSourceKind::Walls, SlabFace::Room) => "Odaya bağlı",
+                (SlabSourceKind::Edges, _) => {
+                    let (linked, locked) = b.edges.as_ref().map_or((0, 0), |edges| {
+                        (edges.links.len(), edges.links.iter().filter(|link| link.locked).count())
+                    });
+                    named = format!("{linked} bağlı kenar · {locked} kilitli");
+                    named.as_str()
+                }
                 (SlabSourceKind::Space, _) => {
                     match b.space.as_ref().and_then(|u| spaces.iter().find(|(id, _)| id == u)) {
                         Some((_, words)) => {

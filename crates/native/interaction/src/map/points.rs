@@ -18,6 +18,15 @@ const CAPTURE_PX: f64 = 10.0;
 /// Two points closer than this are the same point.
 pub(crate) const SAME: f64 = 1e-9;
 
+/// Keep a manual boundary editable when Enter arrives before its third corner.
+pub(crate) fn incomplete_boundary(count: usize, cx: &mut Context<'_>) -> bool {
+    if (1..3).contains(&count) {
+        cx.say(Level::Warn, format!("{} köşe daha girin. Kapalı sınır için en az 3 köşe gerekir.", 3 - count));
+        return true;
+    }
+    false
+}
+
 /// What rules the next point's place (docs/adr/0268 §1), first to last: a locked coordinate, a locked direction
 /// (Açı, Sapma, Paralel, Dik), Dik açı, an object snap's or object tracking's point (exact), ortho (Shift
 /// turning it over while held), polar tracking (onto its ray), else the pointer itself. A locked length holds

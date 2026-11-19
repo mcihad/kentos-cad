@@ -333,6 +333,7 @@ fn finding(code: &str, uids: Vec<String>, at: V, message: String, repair: String
             repair,
             uids,
             at: wire(at),
+            outline: Vec::new(),
             fix,
             exception: false,
             lapsed: false,
@@ -417,6 +418,26 @@ fn read<'a>(doc: &'a Document, input: &ProgramCheck) -> Result<(BuildingProgram,
         });
     }
     Ok((program, rooms))
+}
+
+/// An unmet target can point to the intended neighbour when the drawing identifies it unambiguously.
+fn relation_subjects(room: &Room<'_>, usage: &str, rooms: &[Room<'_>]) -> Vec<String> {
+    let mut matches = rooms.iter().filter(|candidate| {
+        candidate.slot != room.slot
+            && candidate.level == room.level
+            && !candidate.s.space.void
+            && candidate.s.space.usage.as_deref() == Some(usage)
+    });
+    let mut same_unit = matches.clone().filter(|candidate| candidate.s.space.unit == room.s.space.unit);
+    let mut subjects = vec![room.uid.clone()];
+    if let (Some(candidate), None) = (same_unit.next(), same_unit.next()) {
+        subjects.push(candidate.uid.clone());
+    } else if let Some(candidate) = matches.next()
+        && matches.next().is_none()
+    {
+        subjects.push(candidate.uid.clone());
+    }
+    subjects
 }
 
 /// The check; `stopped` is asked now and then with how far it has come (done, total): true stops it.
@@ -610,7 +631,7 @@ pub(crate) fn checked(
                 if l.by.is_empty() {
                     found.push(finding(
                         codes::PROGRAM_ADJACENT_MISSING,
-                        vec![r.uid.clone()],
+                        relation_subjects(r, &l.usage, &rooms),
                         at,
                         format!("{words}: tasarım hedefi “{}” komşusu istiyor; yanında öyle bir mahal yok ({rule}).", l.usage),
                         "Komşu mahali bu mahalin yanına alın ya da tasarım hedefini değiştirin.".into(),
@@ -622,7 +643,7 @@ pub(crate) fn checked(
                 if l.by.is_empty() {
                     found.push(finding(
                         codes::PROGRAM_REACH_MISSING,
-                        vec![r.uid.clone()],
+                        relation_subjects(r, &l.usage, &rooms),
                         at,
                         format!("{words}: tasarım hedefi “{}” mahaline geçiş istiyor; kapı ya da açık geçiş yok ({rule}).", l.usage),
                         "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.".into(),

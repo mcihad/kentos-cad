@@ -137,6 +137,21 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
     )));
     if let Some(l) = &laid {
         rows.push(Row::figure("Dolgu", f.length_bare(l.filler)).unit(f.length_unit_label()));
+        for (leg, _) in l.legs.iter().enumerate().filter(|(_, leg)| leg.filler > 0.0) {
+            let custom = recipe.filler_ends.get(leg).copied().flatten();
+            let automatic = if corners > 0 && leg == 0 { "Başta" } else { "Sonda" };
+            let value = match custom {
+                Some(CaseworkEnd::Start) => "Başta".into(),
+                Some(CaseworkEnd::End) => "Sonda".into(),
+                None => format!("Otomatik · {automatic}"),
+            };
+            let choices = [("Otomatik", "auto", None), ("Başta", "start", Some(CaseworkEnd::Start)),
+                           ("Sonda", "end", Some(CaseworkEnd::End))].into_iter()
+                .map(|(name, end, selected)| pick(name.into(), "filler", &format!("{leg}/{end}"), selected == custom))
+                .collect();
+            let title = if corners == 0 { "Dolgu ucu".into() } else { format!("{}. kol dolgu ucu", leg + 1) };
+            rows.push(Row::text(title, &value).editor(select(&value, choices)));
+        }
     }
     // The module this object is: its width, its door and what it holds.
     let number = match member.part {

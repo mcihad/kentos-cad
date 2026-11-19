@@ -1,6 +1,6 @@
 //! Doğrama listesi (docs/adr/8038 §6; M38): the joinery list's block placed at a click, its top left corner at the
-//! cursor. The block is written as the drawing's types give it (`kentos_domain::joinery_list`) and the document keeps
-//! it so; the block and its insert are one undo step “Doğrama listesi”, on the schedules' layer (docs/adr/8008).
+//! cursor. The drawing keeps the block in step with its types (`kentos_domain::joinery_list`). With a placement
+//! present, Enter updates that definition in place; an explicit Yeni kopya places another instance.
 
 use kentos_commands::{BlocksInsert, CommandResult, OpeningTypesEdit, OpeningTypesOperation};
 use kentos_domain::joinery_list::{JOINERY_LIST_ID, extent};
@@ -25,6 +25,8 @@ pub struct JoineryListTool {
     ghost: Preview,
     coverage: kentos_domain::joinery_list::Coverage,
     seen: Option<u64>,
+    placed: usize,
+    separate: bool,
     assign_codes: bool,
     done: bool,
 }
@@ -38,12 +40,22 @@ impl JoineryListTool {
         if self.seen != Some(cx.doc.revision()) {
             self.seen = Some(cx.doc.revision());
             self.coverage = cx.doc.joinery_coverage();
+            self.placed = cx.doc.block_uses(JOINERY_LIST_ID);
             self.bounds = None;
         }
     }
 
-    fn accept(&mut self, p: Vec2, cx: &mut Context<'_>) {
+    fn updates_existing(&self) -> bool {
+        self.placed > 0 && !self.separate
+    }
+
+    fn accept(&mut self, at: Option<Vec2>, cx: &mut Context<'_>) {
         self.refresh(cx);
+        let updating = self.updates_existing();
+        let place = at.filter(|_| !updating);
+        if !updating && place.is_none() {
+            return;
+        }
         if self.coverage.total == 0 {
             cx.say(
                 Level::Warn,
@@ -82,8 +94,12 @@ impl JoineryListTool {
                     return false;
                 }
                 let block = cx.doc.joinery_list_block();
-                let made = if cx.doc.block(JOINERY_LIST_ID).is_some() {
-                    cx.doc.update_block(block).map(|_| ())
+                let made = if let Some(existing) = cx.doc.block(JOINERY_LIST_ID) {
+                    if *existing == block {
+                        Ok(())
+                    } else {
+                        cx.doc.update_block(block).map(|_| ())
+                    }
                 } else {
                     cx.doc.add_block(block)
                 };
@@ -92,6 +108,10 @@ impl JoineryListTool {
                     cx.say(Level::Warn, why.to_string());
                     return false;
                 }
+                let Some(p) = place else {
+                    cx.doc.end_group(group);
+                    return true;
+                };
                 let input = BlocksInsert {
                     parameters: None,
                     block: Some(JOINERY_LIST_ID),
@@ -128,19 +148,22 @@ impl JoineryListTool {
             },
         );
         if written {
-            self.d.begin(p, cx);
+            if let Some(p) = place {
+                self.d.begin(p, cx);
+            }
             let rows = cx.doc.joinery_rows();
             let coverage = cx.doc.joinery_coverage();
-            let codes: Vec<String> = rows
-                .iter()
-                .map(|r| r.kind.code.clone().unwrap_or_else(|| r.kind.name.clone()))
-                .collect();
             let openings: usize = rows.iter().map(|r| r.count).sum();
-            let mut said = format!(
-                "{LABEL}: {} tip ({}), {openings} açıklık; tipler değişince liste kendini yeniden yazar.",
-                rows.len(),
-                codes.join(", ")
-            );
+            let mut said = if updating {
+                format!("{LABEL}: {} yerleşim güncel · {} tip · {openings} açıklık.", self.placed, rows.len())
+            } else {
+                let codes: Vec<_> = rows.iter().map(|r| r.kind.code.as_deref().unwrap_or(&r.kind.name)).collect();
+                format!(
+                    "{LABEL}: {} tip ({}), {openings} açıklık; tipler değişince liste kendini yeniden yazar.",
+                    rows.len(),
+                    codes.join(", ")
+                )
+            };
             if coverage.coded < coverage.total {
                 said.push_str(&format!(
                     " {} açıklık kod bekliyor.",
@@ -159,6 +182,11 @@ impl JoineryListTool {
     /// The list's outline at the cursor.
     fn place_ghost(&mut self, cx: &Context<'_>) {
         self.ghost = Preview::default();
+        if self.updates_existing() || self.coverage.total == 0
+            || (self.coverage.listed == 0 && !self.assign_codes)
+        {
+            return;
+        }
         let Some(h) = self.d.hover else {
             return;
         };
@@ -181,7 +209,7 @@ impl Tool for JoineryListTool {
     }
 
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
-        self.accept(p, cx);
+        self.accept(Some(p), cx);
         true
     }
 
@@ -198,10 +226,17 @@ impl Tool for JoineryListTool {
             "çizimde kapı veya pencere yok"
         } else if self.coverage.listed == 0 && !self.assign_codes {
             "kapı ve pencereler kod bekliyor"
+        } else if self.updates_existing() {
+            "mevcut listeyi güncellemek için Enter"
         } else {
             "listenin sol üst köşesini belirtin"
         };
-        let prompt = Prompt::new(LABEL, step);
+        let prompt = Prompt::new(LABEL, step).option_if(
+            self.placed > 0,
+            "Liste",
+            "Y",
+            if self.separate { "Yeni kopya" } else { "Mevcut listeyi güncelle" },
+        );
         if self.coverage.coded < self.coverage.total {
             prompt.toggle("Kodları oluştur ve listele", "K", self.assign_codes)
         } else {
@@ -231,24 +266,37 @@ impl Tool for JoineryListTool {
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let p = self.d.constrain(p, cx);
-        self.accept(p, cx);
+        self.accept(Some(p), cx);
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         if text.trim().eq_ignore_ascii_case("K") && self.coverage.coded < self.coverage.total {
             self.assign_codes = !self.assign_codes;
+            self.place_ghost(cx);
+            return true;
+        }
+        if text.trim().eq_ignore_ascii_case("Y") && self.placed > 0 {
+            self.separate = !self.separate;
+            self.place_ghost(cx);
             return true;
         }
         match cx.typed_point(text, self.d.last(), self.d.hover) {
             Some(p) => {
-                self.accept(p, cx);
+                self.accept(Some(p), cx);
                 true
             }
             None => false,
         }
     }
 
-    fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
+    fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.refresh(cx);
+        if self.updates_existing() {
+            self.accept(None, cx);
+            if !self.done {
+                return Flow::Stay;
+            }
+        }
         Flow::Exit
     }
 

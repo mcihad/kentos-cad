@@ -147,6 +147,31 @@ pub struct RecipeLevel {
     pub below: bool,
 }
 
+/// A reflected ceiling plan's upward view interval above the selected storey's reference floor, metres.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CeilingRange {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub low: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub high: f64,
+}
+
+impl Default for CeilingRange {
+    fn default() -> Self { Self { low: 2.0, high: 5.0 } }
+}
+
+impl CeilingRange {
+    pub fn contains(self, at: f64) -> bool { at >= self.low - 1e-8 && at <= self.high + 1e-8 }
+    pub fn valid(self) -> bool { self.low.is_finite() && self.low >= 0.0 && self.high.is_finite() && self.high > self.low && self.high <= 100.0 }
+}
+
+pub const CEILING_DEVICE_ATTR: &str = "Tavan cihazı";
+pub const CEILING_SPACE_ATTR: &str = "Tavan mahali";
+
 /// A named view's architectural recipe (docs/adr/0774 §1): what a
 /// sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
 /// screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
@@ -156,6 +181,10 @@ pub struct RecipeLevel {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ViewRecipe {
+    /// Upward view; the regular plan is used when absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ceiling: Option<CeilingRange>,
     /// 1 for a new recipe, one more at each change; given in an input, it is ignored.
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
@@ -222,7 +251,7 @@ fn is_zero(v: &u32) -> bool {
 impl ViewRecipe {
     /// Whether it changes nothing a map draws (its version aside).
     pub fn is_empty(&self) -> bool {
-        self.level.is_none()
+        self.ceiling.is_none() && self.level.is_none()
             && self.phase.is_none()
             && self.layer_state.is_none()
             && self.hidden.is_empty()
@@ -493,6 +522,9 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
     if let Some(why) = crate::option_choices_problem(&r.options) {
         return Some(why);
     }
+    if r.ceiling.is_some_and(|c| !c.valid()) {
+        return Some("Tavan planı aralığında alt kot sıfır ya da üzeri olmalı ve üst kot alt kottan büyük, en çok 100 m olmalı.".into());
+    }
     if let Some(c) = &r.combo
         && !crate::option_id_ok(c)
     {
@@ -547,6 +579,7 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
             || !r.hidden.is_empty()
             || !r.pens.is_empty()
             || r.mono
+            || r.ceiling.is_some()
         {
             return Some("Şablona bağlı tarifte yalnız kat ve kırpma görünümündür; öbürleri şablondan gelir.".into());
         }

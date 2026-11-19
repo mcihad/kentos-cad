@@ -38,10 +38,17 @@ impl App {
         self.layout.keep_quick_access(&kept, Instant::now());
     }
 
-    /// A split button's entry on top: the one last chosen from its list.
+    /// Architecture groups show the running tool, then return to the saved choice when it exits.
     pub(crate) fn split_on_top<'e>(&self, key: &str, entries: &'e [Entry]) -> Option<&'e Entry> {
         let pairs: Vec<(&str, Option<&str>)> = entries.iter().map(|e| (e.id, e.option)).collect();
-        entries.get(split_current(&pairs, self.layout.split_choice(key)))
+        let kept = entries.get(split_current(&pairs, self.layout.split_choice(key)))?;
+        if key.starts_with("arch") && self.session.is_running() {
+            let active = |entry: &Entry| entry.id.strip_prefix("tool.") == Some(self.session.tool_id());
+            if !active(kept) && let Some(entry) = entries.iter().find(|entry| active(entry)) {
+                return Some(entry);
+            }
+        }
+        Some(kept)
     }
 
     /// An entry chosen from a split button's list: it goes on top (kept by
@@ -276,6 +283,26 @@ mod tests {
             prompt.starts_with("Daire: ilk noktayı belirtin"),
             "{prompt}"
         );
+    }
+
+    #[test]
+    fn architecture_split_follows_the_tool_started_from_the_command_line() {
+        let mut app = app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        app.program = Some(kentos_launch::Module::Architecture);
+        let entries = catalog().tabs_in(kentos_commands::Workspace::Cad)
+            .flat_map(|tab| &tab.panels)
+            .flat_map(|panel| &panel.items)
+            .find_map(|item| match item {
+                Item::Split { key: "archStairs", entries, .. } => Some(entries),
+                _ => None,
+            })
+            .unwrap();
+        let _ = app.split_chosen("archStairs", "tool.stairCurved", None, "Döner merdiven");
+        let _ = app.run("tool.ramp");
+        assert_eq!(app.split_on_top("archStairs", entries).unwrap().id, "tool.ramp");
+        app.session.exit();
+        assert_eq!(app.split_on_top("archStairs", entries).unwrap().id, "tool.stairCurved");
     }
 
     #[test]

@@ -347,6 +347,8 @@ pub mod joinery_list_tool;
 pub mod renovation_legend_tool;
 #[path = "core/escape_tool.rs"]
 pub mod escape_tool;
+#[path = "arch/walk_tool.rs"]
+pub mod walk_tool;
 #[path = "arch/plan_dimensions.rs"]
 pub mod plan_dimensions;
 #[path = "core/revcloud.rs"]
@@ -470,6 +472,10 @@ pub mod space_tools;
 // Döşeme (docs/adr/0722).
 #[path = "arch/slab_tools.rs"]
 pub mod slab_tools;
+#[path = "arch/slab_edge_tool.rs"]
+pub mod slab_edge_tool;
+#[path = "arch/ceiling_device_tool.rs"]
+pub mod ceiling_device_tool;
 // Kaplama (docs/adr/8070 §10).
 #[path = "arch/covering_tool.rs"]
 pub mod covering_tool;

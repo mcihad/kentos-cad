@@ -120,6 +120,14 @@ pub struct CaseworkModuleSetting {
 pub struct CaseworkRun {
     /// The layer the run goes on, a layer's id.
     pub layer_id: String,
+    /// Storey of this run and its fixtures. Without an explicit storey a run follows its supporting wall.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    /// End of each leg receiving the leftover filler, in path order. An omitted entry uses the layout default.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<CaseworkEnd>>>", optional))]
+    pub filler_ends: Vec<Option<CaseworkEnd>>,
     /// Where the run starts, on the line its backs stand on.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub from: Vec2,
@@ -437,6 +445,9 @@ pub fn casework_problem(runs: &[CaseworkRecord]) -> Option<(usize, String)> {
             return fail("Mutfak dizisinin katmanı boş.");
         }
         let corners = r.through.as_ref().map_or(0, Vec::len);
+        if r.filler_ends.len() > corners + 1 || r.level.as_deref().is_some_and(|l| l.trim().is_empty()) {
+            return fail("Mutfak dizisinin katı veya dolgu kolu geçersiz.");
+        }
         if corners > CASEWORK_CORNERS_MAX {
             return fail("Mutfak dizisi en çok iki köşelidir.");
         }

@@ -145,6 +145,15 @@ fn too_small_a_radius_says_why_and_writes_nothing() {
     );
     b.click(0., 1.5);
     assert!(!b.doc.entities().any(|e| matches!(e, Entity::Stair(_))));
+    assert_eq!(b.session.point_count(), 2);
+    assert!(b.undo_step());
+    assert_eq!(b.session.point_count(), 1);
+    b.click(1.5, 0.);
+    assert!(b.type_text("-90"));
+    let s = stair(&b);
+    assert_eq!((s.pts[0].x, s.pts[0].y), (E + 1.5, N));
+    assert!(s.bulge() < 0.);
+    assert_eq!(b.session.point_count(), 0);
 }
 
 #[test]

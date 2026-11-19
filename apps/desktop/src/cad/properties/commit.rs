@@ -117,6 +117,22 @@ pub(super) fn casework_value(
                 json!({"kind": "module", "module": k, "holds": value, "width": own_width, "hand": own_hand})
             }
         }
+        ("filler", _) => {
+            let Some((leg, end)) = value.split_once('/') else { return Vec::new() };
+            let Ok(leg) = leg.parse::<usize>() else { return Vec::new() };
+            if leg >= recipe.path().len() - 1 { return Vec::new() }
+            let mut next = recipe;
+            let choice = match end {
+                "auto" => None,
+                "start" => Some(kentos_commands::CaseworkEnd::Start),
+                "end" => Some(kentos_commands::CaseworkEnd::End),
+                _ => return Vec::new(),
+            };
+            if next.filler_ends.len() <= leg { next.filler_ends.resize(leg + 1, None); }
+            next.filler_ends[leg] = choice;
+            while next.filler_ends.last() == Some(&None) { next.filler_ends.pop(); }
+            json!({"kind": "recipe", "recipe": next})
+        }
         ("corner" | "fridge", _) => {
             let mut r = serde_json::to_value(&recipe).unwrap_or_default();
             r[field] = if value == "none" {

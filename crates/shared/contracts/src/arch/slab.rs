@@ -410,6 +410,8 @@ pub enum SlabSourceKind {
     Walls,
     /// Mahal: the space's rings.
     Space,
+    /// Kenarlar: individual component faces and an independent reference perimeter.
+    Edges,
 }
 
 impl SlabSourceKind {
@@ -417,6 +419,7 @@ impl SlabSourceKind {
         match self {
             SlabSourceKind::Walls => "Duvarlar",
             SlabSourceKind::Space => "Mahal",
+            SlabSourceKind::Edges => "Duvar bileşenlerine bağlı kenarlar",
         }
     }
 }
@@ -446,6 +449,8 @@ pub enum SlabBreak {
     LostEnclosure,
     /// Its space is gone (deleted, or no longer a space).
     SourceGone,
+    EdgeSourceGone,
+    EdgeShapeInvalid,
 }
 
 impl SlabBreak {
@@ -455,6 +460,8 @@ impl SlabBreak {
                 "Duvarlar döşemenin iç noktasının çevresini artık kapatmıyor; son sınırı korundu."
             }
             SlabBreak::SourceGone => "Döşemenin bağlı olduğu mahal yok; son sınırı korundu.",
+            SlabBreak::EdgeSourceGone => "Bağlı duvar, doğrusal parça veya bileşen yüzü artık bulunamıyor; son sınır korundu.",
+            SlabBreak::EdgeShapeInvalid => "Bağlı kenarlar kapalı, geçerli bir kontur oluşturmuyor; son sınır korundu.",
         }
     }
 }
@@ -493,6 +500,41 @@ pub struct SlabBound {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<SlabBreak>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub edges: Option<SlabEdgeBindings>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SlabEdgeBindings {
+    pub reference: SpacePart,
+    pub links: Vec<SlabEdgeLink>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SlabEdgeLink {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub edge: u32,
+    pub wall: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub segment: u32,
+    /// Wall component boundary index from its left face. No index means the outer right face.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub face: Option<u32>,
+    /// Outwards relative to the slab contour, in metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub offset: f64,
+    pub locked: bool,
 }
 
 fn is_outline(f: &SlabFace) -> bool {
@@ -505,6 +547,27 @@ pub const MAX_BOUND_OFFSET: f64 = 10.0;
 impl SlabBound {
     /// What is wrong with it: the field (relative to the slab) and the words.
     pub fn problem(&self) -> Option<(String, String)> {
+        if self.source == SlabSourceKind::Edges {
+            let invalid = || ("bound.edges".into(), "Kenar bağlantıları geçerli, tek parçalı ve doğrusal bir döşeme konturuna ait olmalı.".into());
+            let Some(edges) = &self.edges else { return Some(invalid()); };
+            let ring = &edges.reference.outer;
+            let mut seen = std::collections::BTreeSet::new();
+            if self.seed.is_some() || self.space.is_some() || self.offset != 0.0
+                || !(3..=512).contains(&ring.pts.len()) || ring.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.0))
+                || ring_problem_of(ring, "bound.edges.reference.outer", "Döşemenin").is_some()
+                || edges.links.is_empty() || edges.links.iter().any(|l| {
+                    l.edge as usize >= ring.pts.len() || !seen.insert(l.edge) || l.wall.trim().is_empty()
+                    || !l.offset.is_finite() || l.offset.abs() > MAX_BOUND_OFFSET
+                })
+            { return Some(invalid()); }
+            for (i, hole) in edges.reference.holes.iter().enumerate() {
+                if let Some(failure) = ring_problem_of(hole, &format!("bound.edges.reference.holes[{i}]"), "Döşemenin") {
+                    return Some(failure);
+                }
+            }
+        } else if self.edges.is_some() {
+            return Some(("bound.edges".into(), "Tekil kenar bağları yalnız Kenarlar kaynağında verilir.".into()));
+        }
         match self.source {
             SlabSourceKind::Walls if self.seed.is_none() || self.space.is_some() => {
                 return Some((

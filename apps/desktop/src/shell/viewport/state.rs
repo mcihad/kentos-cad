@@ -821,6 +821,7 @@ impl Viewport {
             center: self.camera.world_center(),
             scale: self.camera.scale,
             twist: self.camera.twist,
+            ceiling: None,
         }
     }
 

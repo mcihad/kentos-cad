@@ -5,11 +5,11 @@
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    AffectReason, BuildingSectionRow, BuildingSectionState, BuildingSectionsEdit,
-    BuildingSectionsOperation, CommandResult, ElevationRow, ElevationState, ElevationsEdit,
-    ElevationsOperation, SheetsSet, SheetsSetResult,
+    AffectReason, BuildingSectionState, BuildingSectionsEdit, BuildingSectionsOperation, CommandResult,
+    ElevationState, ElevationsEdit, ElevationsOperation, OpeningTypesEdit, OpeningTypesOperation,
+    SheetDependencyState as Fresh, SheetsSet, SheetsSetResult,
 };
-use kentos_native_application::{ExecutionContext, elevations_edit, elevations_query, sections_edit, sections_query};
+use kentos_native_application::{ExecutionContext, elevations_edit, elevations_query, opening_types_edit, sections_edit, sections_query};
 use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
@@ -28,9 +28,6 @@ pub struct Window {
     pub set: SheetsSetResult,
     /// The selected objects the affected sheets are of; none: no selection.
     pub chosen: usize,
-    sections: Vec<BuildingSectionRow>,
-    interiors: Vec<ElevationRow>,
-    stale_sheets: Vec<(String, String)>,
 }
 
 #[derive(Clone, Debug)]
@@ -79,20 +76,12 @@ impl App {
         let chosen = uids.len();
         let input = SheetsSet {
             uids: (!uids.is_empty()).then_some(uids),
+            dependencies: true,
             ..Default::default()
         };
         match kentos_native_application::sheets_set::plan_in(&doc.model, &input) {
             kentos_commands::CommandResult::Completed { output, .. } => {
                 self.sheet_set = Some(Window {
-                    sections: sections_query::rows(&doc.model),
-                    interiors: match elevations_query::execute_in(&doc.model, &Default::default()) {
-                        CommandResult::Completed { output, .. } => output.elevations,
-                        _ => Vec::new(),
-                    },
-                    stale_sheets: sections_query::stale_on_sheets(
-                        &doc.model, self.sheets.book(),
-                        &output.sheets.iter().map(|sheet| sheet.id.clone()).collect::<Vec<_>>(),
-                    ),
                     set: output,
                     chosen,
                 });
@@ -120,9 +109,10 @@ impl App {
     }
 
     fn refresh_sheet_drawings(&mut self) {
-        let (Some(doc), Some(window)) = (self.document.as_mut(), &self.sheet_set) else {
+        let Some(doc) = self.document.as_mut().filter(|_| self.sheet_set.is_some()) else {
             return;
         };
+        use kentos_domain::joinery_list::JOINERY_LIST_ID;
         let group = doc.model.begin_group("Pafta görünüşlerini yenile");
         let mut changed = 0;
         let mut failures = Vec::new();
@@ -139,22 +129,28 @@ impl App {
             });
             record(&section.name, refreshed(result));
         }
-        for layer in &window.interiors {
-            let Some(current) = elevations_query::row(&doc.model, &layer.layer) else { continue };
-            if current.state != ElevationState::Stale || !current.edited.is_empty() {
-                continue;
+        if let CommandResult::Completed { output, .. } = elevations_query::execute_in(&doc.model, &Default::default()) {
+            for current in output.elevations {
+                if current.state != ElevationState::Stale || !current.edited.is_empty()
+                    || !elevations_query::supports_batch_refresh(&doc.model, &current.layer) { continue }
+                let result = elevations_edit::execute(&mut ExecutionContext::new(&mut doc.model), ElevationsEdit {
+                    operation: ElevationsOperation::Refresh { layer: current.layer }, expected_revision: None,
+                });
+                record(&current.name, refreshed(result));
             }
-            let result = elevations_edit::execute(&mut ExecutionContext::new(&mut doc.model), ElevationsEdit {
-                operation: ElevationsOperation::Refresh { layer: current.layer }, expected_revision: None,
+        }
+        if doc.model.block(JOINERY_LIST_ID).is_some_and(|kept| *kept != doc.model.joinery_list_block()) {
+            let result = opening_types_edit::execute(&mut ExecutionContext::new(&mut doc.model), OpeningTypesEdit {
+                operation: OpeningTypesOperation::RefreshList {}, on_refused: Default::default(), expected_revision: None,
             });
-            record(&current.name, refreshed(result));
+            record("Doğrama listesi", refreshed(result));
         }
         doc.model.end_group(group);
         self.open_sheet_set();
         for error in failures {
             self.warn(error);
         }
-        self.say(kentos_interaction::Level::Info, format!("{changed} görünüş yenilendi."));
+        self.say(kentos_interaction::Level::Info, format!("{changed} çizim çıktısı yenilendi."));
     }
 
     pub(crate) fn sheet_set_view(&self) -> Element<'_, Message> {
@@ -168,6 +164,7 @@ impl App {
             v
         };
         let sheets = w.set.sheets.len();
+        let dependencies = w.set.dependencies.as_deref().unwrap_or_default();
         let line = if w.set.affected.is_none() {
             words::text_line(
                 Kind::Ok,
@@ -200,30 +197,25 @@ impl App {
                 "Projede pafta yok: Mimari › Proje'den Mimari şablonu ile ya da pafta kipinde “+” ile pafta ekleyin.",
             ));
         }
-        if !w.sections.is_empty() || !w.interiors.is_empty() {
-            list = list.push(label::strong("Kesit ve görünüşler"));
-            if w.sections.iter().any(|section| section.state == BuildingSectionState::Stale) {
-                list = list.push(label::caption(
-                    "Yenileme kesit ve görünüş bloklarının içini yeniden çizer. Bağımsız pafta açıklamaları korunur.",
-                ));
-            }
-            for section in &w.sections {
-                let standing = match section.state {
-                    BuildingSectionState::Current => "Güncel",
-                    BuildingSectionState::Stale => "Yenileme bekliyor",
-                    BuildingSectionState::NotDrawn => "Henüz çıkarılmadı",
-                    BuildingSectionState::Gone => "Kaynak işareti eksik",
+        if !dependencies.is_empty() {
+            list = list.push(label::strong("Kesit, görünüş ve listeler"));
+            for drawing in dependencies {
+                let standing = match drawing.state {
+                    Fresh::Current => "Güncel",
+                    Fresh::Stale => "Yenileme bekliyor",
+                    Fresh::NotDrawn => "Henüz çıkarılmadı",
+                    Fresh::SourceGone => "Kaynak eksik",
+                    Fresh::Edited => "Elle düzenlendi · toplu yenilemede atlanır",
+                    Fresh::Legacy => "Eski üretim kaydı · tek tek yenileyin",
                 };
-                list = list.push(label::caption(format!("{} · {standing}", section.name)));
-            }
-            for interior in &w.interiors {
-                let standing = match interior.state {
-                    ElevationState::Current => "Güncel",
-                    ElevationState::Stale if !interior.edited.is_empty() => "Elle düzenlendi · toplu yenilemede atlanır",
-                    ElevationState::Stale => "Yenileme bekliyor",
-                    ElevationState::Gone => "Kaynak mahal eksik",
-                };
-                list = list.push(label::caption(format!("{} · {standing} · üretim sürümü {}", interior.name, interior.derived_at)));
+                let code = |s: &Option<String>| s.as_ref().map_or_else(|| "—".into(), |s| s.chars().take(8).collect::<String>());
+                let source = kentos_domain::Uuid::parse_str(&drawing.source).map_or_else(
+                    |_| drawing.source.clone(),
+                    |id| format!("{:.8}…{}", drawing.source, &id.to_string()[28..]),
+                );
+                list = list.push(Column::new().spacing(2)
+                    .push(label::body(format!("{} · {standing}", drawing.name)))
+                    .push(label::caption(format!("Kaynak {source} · Üretim {} · Model {}", code(&drawing.generated), code(&drawing.model)))));
             }
         }
         for series in &w.set.series {
@@ -262,8 +254,12 @@ impl App {
                     .spacing(2)
                     .push(label::body(s.name.clone()))
                     .push(label::caption(frames));
-                for (_, stale) in w.stale_sheets.iter().filter(|(sheet, _)| sheet == &s.id) {
-                    text = text.push(words::text_line(Kind::Warn, format!("Yenileme bekliyor · {stale}")));
+                for output in dependencies.iter().filter(|d| d.sheets.contains(&s.id)) {
+                    text = text.push(match output.state {
+                        Fresh::Current => label::caption(format!("Güncel · {}", output.name)).into(),
+                        Fresh::Stale => words::text_line(Kind::Warn, format!("Yenileme bekliyor · {}", output.name)),
+                        _ => words::text_line(Kind::Warn, format!("İnceleyin · {}", output.name)),
+                    });
                 }
                 if !hit.is_empty() {
                     let why: Vec<String> = hit
@@ -312,11 +308,10 @@ impl App {
             .spacing(12)
             .push(words::summary(vec![line]))
             .push(iced::widget::scrollable(list).height(420.0));
-        let rebuild = w.sections.iter().any(|s| s.state == BuildingSectionState::Stale)
-            || w.interiors.iter().any(|e| e.state == ElevationState::Stale && e.edited.is_empty());
+        let rebuild = dependencies.iter().any(|d| d.state == Fresh::Stale);
         Frame::new(TITLE)
             .push(body)
-            .action(words::secondary("Eski görünüşleri yenile", rebuild.then(|| msg(Event::RefreshDrawings))))
+            .action(words::secondary("Eski çıktıları yenile", rebuild.then(|| msg(Event::RefreshDrawings))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(760.0)
             .modal(msg(Event::Close))

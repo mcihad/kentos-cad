@@ -87,7 +87,8 @@ fn the_tag_says_the_real_size_and_unit_before_the_click() {
         assert_eq!(lines.first(), Some(&format!("{BED}: {}", size(&b, 0.9, 2.0))), "{unit}");
         assert!(lines.get(1).is_some_and(|l| l.contains("birimi metre")), "{unit}: {lines:?}");
         // The pane says the same; the base point is marked where the click puts it.
-        assert_eq!(row(&b, "En × boy"), Some(size(&b, 0.9, 2.0)), "{unit}");
+        let pane_size = if unit == "mm" { "900 × 2000 mm".into() } else { size(&b, 0.9, 2.0) };
+        assert_eq!(row(&b, "En × boy"), Some(pane_size), "{unit}");
         assert_eq!(row(&b, "Bloğun birimi").as_deref(), Some("metre"), "{unit}");
         let preview = b.session.preview(&format(&b)).expect("the ghost");
         assert!(
@@ -142,11 +143,11 @@ fn a_length_beyond_its_rule_is_said_in_the_pane() {
         .find(|s| s.key == "problem")
         .map(|s| s.value);
     assert!(problem.is_some(), "the refusal said in the pane");
-    assert_eq!(row(&b, "En × boy"), Some(size(&b, 0.9, 2.0)));
+    assert_eq!(row(&b, "En × boy").as_deref(), Some("900 × 2000 mm"));
     // A length in the rule is the drawing's millimetres: 1000 mm.
     assert!(b.run(|s, cx| s.configure("p0", "1000", cx)));
     b.move_to(0.0, 0.0);
-    assert_eq!(row(&b, "En × boy"), Some(size(&b, 1.0, 2.0)));
+    assert_eq!(row(&b, "En × boy").as_deref(), Some("1000 × 2000 mm"));
     b.click(0.0, 0.0);
     let Entity::Insert(placed) = b.newest() else {
         panic!("an insert");

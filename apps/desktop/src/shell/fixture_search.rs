@@ -122,6 +122,18 @@ pub(crate) fn search(query: &str) -> Vec<(f64, &'static Fixture)> {
     if words.first().is_none_or(|q| q.chars().count() < 2) {
         return Vec::new();
     }
+    ranked(&words)
+}
+
+pub(crate) fn library_matches(query: &str) -> Vec<&'static Fixture> {
+    let words = meant(query.trim());
+    if words.is_empty() {
+        return fixtures().iter().collect();
+    }
+    ranked(&words).into_iter().map(|(_, fixture)| fixture).collect()
+}
+
+fn ranked(words: &[String]) -> Vec<(f64, &'static Fixture)> {
     let mut found: Vec<(f64, &'static Fixture)> = fixtures()
         .iter()
         .filter_map(|f| {
@@ -241,6 +253,16 @@ mod tests {
         // The doors, windows and symbols are not fixtures: their own tools place them.
         assert!(names("kapı").is_empty());
         assert!(names("kuzey").is_empty());
+    }
+
+    #[test]
+    fn the_library_lists_by_category_alias_and_single_letter() {
+        let rows = |q| library_matches(q).into_iter().map(|f| f.name.as_str()).collect::<Vec<_>>();
+        assert_eq!(rows("  ").len(), fixtures().len());
+        assert!(rows("Oturma").contains(&"Sandalye"));
+        assert!(rows("karyola").contains(&"Çift kişilik yatak"));
+        assert!(rows("m").contains(&"Masa"));
+        assert!(rows("qzz99").is_empty());
     }
 
     #[test]

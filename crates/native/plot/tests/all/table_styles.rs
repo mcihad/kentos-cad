@@ -108,6 +108,7 @@ fn printed(doc: &Document, book: &SheetBook) -> (Vec<kentos_sheet::pdf::MapPath>
         map: None,
         level: None,
         phase: None,
+        ceiling: None,
         hidden: &[],
         pens: &[],
         mono: false,

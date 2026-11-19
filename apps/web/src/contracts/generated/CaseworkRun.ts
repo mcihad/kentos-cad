@@ -31,6 +31,14 @@ export type CaseworkRun = {
  */
 layerId: string, 
 /**
+ * Storey of this run and its fixtures. Without an explicit storey a run follows its supporting wall.
+ */
+level?: string, 
+/**
+ * End of each leg receiving the leftover filler, in path order. An omitted entry uses the layout default.
+ */
+fillerEnds?: Array<CaseworkEnd | null>, 
+/**
  * Where the run starts, on the line its backs stand on.
  */
 from: Vec2, 

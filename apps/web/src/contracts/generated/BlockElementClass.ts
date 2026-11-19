@@ -3,4 +3,4 @@
 /**
  * A block's building element class (EK-5 Tablo 5.1).
  */
-export type BlockElementClass = "furniture" | "sanitaryTerminal" | "transportElement";
+export type BlockElementClass = "furniture" | "sanitaryTerminal" | "transportElement" | "electricAppliance";

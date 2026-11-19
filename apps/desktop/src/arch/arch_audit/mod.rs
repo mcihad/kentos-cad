@@ -18,7 +18,7 @@ use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_LENGTH, ARCH_AUDIT_MIN_WIDTH,
     ArchAudit, ArchAuditCheck, ArchAuditExceptionView, ArchAuditFinding, ArchAuditWithin,
-    CommandResult,
+    CommandResult, DoorApproachProfile,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_native_application::arch_audit;
@@ -141,6 +141,7 @@ pub(crate) struct ArchAuditPanel {
     pub min_length: f64,
     /// Net geçiş < (docs/adr/0772 §6); 0: not asked.
     pub min_clear: f64,
+    pub door_approach: bool,
     pub scope: AuditScope,
     pub view: ArchAuditExceptionView,
     /// The rows chosen with Ctrl/⌘ and Shift, by their places in the findings; the one pressed last is `selected`.
@@ -183,6 +184,7 @@ impl Default for ArchAuditPanel {
             stair_profile: STAIR_PROFILES[1].0,
             min_length: ARCH_AUDIT_MIN_LENGTH,
             min_clear: 0.0,
+            door_approach: false,
             scope: AuditScope::All,
             view: ArchAuditExceptionView::Hide,
             chosen: BTreeSet::new(),
@@ -226,6 +228,7 @@ pub enum Event {
     Length(usize),
     /// Net geçiş <'s choice, by its place in [`CLEARS`].
     Clear(usize),
+    DoorApproach(usize),
     /// Kapsam's choice, by its place in [`SCOPES`].
     Scope(usize),
     /// İstisnalar' choice, by its place in [`VIEWS`].
@@ -374,6 +377,7 @@ impl App {
             checks: ArchAuditCheck::ALL.to_vec(),
             min_clear_width: (self.arch.arch_audit.min_clear > 0.0)
                 .then_some(self.arch.arch_audit.min_clear),
+            door_approach: self.arch.arch_audit.door_approach.then_some(DoorApproachProfile::FRONT),
             max_gap: Some(self.arch.arch_audit.max_gap),
             min_area: Some(self.arch.arch_audit.min_area),
             min_width: Some(self.arch.arch_audit.min_width),
@@ -579,6 +583,10 @@ impl App {
             }
             Event::Clear(i) => {
                 self.arch.arch_audit.min_clear = CLEARS[i.min(CLEARS.len() - 1)];
+                self.arch_audit_check();
+            }
+            Event::DoorApproach(i) => {
+                self.arch.arch_audit.door_approach = i == 1;
                 self.arch_audit_check();
             }
             Event::Scope(i) => {

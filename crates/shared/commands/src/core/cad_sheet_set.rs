@@ -80,6 +80,10 @@ pub struct SheetsSet {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub recipes: bool,
+    /// Include freshness, sources, and sheet placements of generated architectural drawings.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub dependencies: bool,
 
 }
 
@@ -218,6 +222,9 @@ pub struct AffectedFrame {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SheetsSetResult {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dependencies: Option<Vec<SheetDependency>>,
     /// The series, sorted by their letters and digit; `Diğer` last.
     pub series: Vec<SheetSeries>,
     /// The sheets, in the book's order.
@@ -252,6 +259,33 @@ pub struct SheetsSetResult {
     #[cfg_attr(feature="ts",ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="scale")))]
     pub annotation_scales:Option<Vec<f64>>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SheetDependencyState { Current, Stale, NotDrawn, SourceGone, Edited, Legacy }
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SheetDependency {
+    pub name: String,
+    pub source: String,
+    pub state: SheetDependencyState,
+    /// Stable content digest; produced output, when present.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub generated: Option<String>,
+    /// Stable content digest; output the current source produces, when available.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub model: Option<String>,
+    pub sheets: Vec<String>,
 }
 
 #[cfg(test)]

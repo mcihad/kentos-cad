@@ -1817,6 +1817,7 @@
        "edit.invertSelection",
        "edit.previousSelection",
        "edit.cycleSelection",
+       "edit.browseScene",
        "edit.autoSelect"
       ]
      },
@@ -2204,6 +2205,11 @@
           "command": "tool.covering",
           "title": "Döşeme",
           "label": "Kaplama"
+         },
+         {
+          "command": "tool.slabEdgeBind",
+          "title": "Döşeme",
+          "label": "Kenar bağla"
          }
         ]
        }
@@ -2274,7 +2280,8 @@
        "tool.openingFlip",
        "arch.spaceMerge",
        "tool.spaceFloor",
-       "tool.spaceCeiling"
+       "tool.spaceCeiling",
+       "tool.ceilingDevice"
       ]
      },
      {
@@ -2516,6 +2523,7 @@
        "arch.program",
        "tool.siteParcel",
        "tool.escapeRoutes",
+       "tool.walkRoute",
        "arch.template",
        "arch.sheetSet",
        "arch.qualityForm",
@@ -3567,7 +3575,8 @@
       "overflow": [
        "edit.invertSelection",
        "edit.previousSelection",
-       "edit.cycleSelection"
+       "edit.cycleSelection",
+       "edit.browseScene"
       ]
      },
      {
@@ -7383,6 +7392,10 @@
       {
        "command": "tool.spaceCeiling",
        "size": "small"
+      },
+      {
+       "command": "tool.ceilingDevice",
+       "size": "small"
       }
      ],
      "works": [
@@ -7486,6 +7499,10 @@
       {
        "command": "tool.slab",
        "size": "large"
+      },
+      {
+       "command": "tool.slabEdgeBind",
+       "size": "small"
       },
       {
        "command": "arch.quantities",

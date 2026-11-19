@@ -551,6 +551,10 @@ impl App {
             }
             other => other,
         };
+        if let Event::Opening(slot, op @ kentos_commands::OpeningsOperation::Push { .. }) = &event {
+            self.preview_opening_push_at(*slot, op.clone());
+            return;
+        }
         // Docs/adr/4600: Gerekçe typed in Öznitelikler › Topoloji is the tab's own words; the drawing does not change.
         if let Event::Commit(Field::TopologyReason, text) = &event {
             self.gis.topology.reason = text.trim().to_owned();

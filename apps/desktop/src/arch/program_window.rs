@@ -45,6 +45,7 @@ const ADD_BRIEF: &str = "Hedef ekle";
 const GIVE: &str = "Seçilenleri ver";
 const ADD_BUILDING: &str = "Bina ekle";
 const ADD_WING: &str = "Kanat ekle";
+const SHOW_ON_PLAN: &str = "Planda göster";
 
 /// The part shown.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -203,6 +204,7 @@ pub enum Event {
     Stop,
     Progress(u64, u64, u64),
     Checked(u64, Arc<CommandResult<ProgramChecked>>),
+    ShowFinding(usize),
     Cancel,
     Save,
     /// A click beside the window, its × or Esc: asks when there are unsaved changes (docs/adr/8006).
@@ -690,6 +692,12 @@ impl App {
                     CommandResult::Queued { .. } => {}
                 }
             }
+            Event::ShowFinding(index) => {
+                if w.unsaved() || w.running.is_some() {
+                    return Task::none();
+                }
+                return self.show_program_finding(index);
+            }
             Event::Cancel | Event::Answer(crate::unsaved_close::Answer::Discard) => {
                 if let Some(r) = w.running.take() {
                     r.stop.store(true, Ordering::Relaxed);
@@ -727,6 +735,35 @@ impl App {
             }
             Event::Save => return self.save_program(),
         }
+        Task::none()
+    }
+
+    fn show_program_finding(&mut self, index: usize) -> Task<Message> {
+        let (Some(doc), Some(finding)) = (
+            self.document.as_ref(),
+            self.arch.program_window.as_ref().and_then(|w| w.checked.as_ref())
+                .and_then(|checked| checked.findings.get(index)),
+        ) else {
+            return Task::none();
+        };
+        let slots: Vec<_> = finding.uids.iter().filter_map(|uid| doc.model.slot_of(uid.parse().ok()?)).collect();
+        let Some(&first) = slots.first() else { return Task::none() };
+        let level_of = |slot| doc.model.get(slot).and_then(|entity| entity.own_level());
+        let level = level_of(first)
+            .filter(|level| slots.iter().all(|&slot| level_of(slot) == Some(*level)))
+            .map(str::to_owned);
+        self.arch.program_window = None;
+        self.dialog = None;
+        if let Some(level) = level {
+            if self.active_level().as_deref() != Some(&level) {
+                self.choose_level(Some(level));
+            }
+            if self.level_view != kentos_interaction::level_view::LevelView::Active {
+                self.choose_level_view(kentos_interaction::level_view::LevelView::Active);
+            }
+        }
+        self.selection.set(slots);
+        self.navigating(|app| app.zoom_selection());
         Task::none()
     }
 
@@ -863,6 +900,7 @@ impl App {
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(CHECK) => Some(msg(Event::Check)),
             Control::Press(STOP) => Some(msg(Event::Stop)),
+            Control::Press(SHOW_ON_PLAN) => Some(msg(Event::ShowFinding(0))),
             Control::Press(ADD_UNIT) => Some(msg(Event::AddUnit)),
             Control::Press(ADD_BUILDING) => Some(msg(Event::AddBuilding)),
             Control::Press("Binalar") => Some(msg(Event::Tab(Tab::Buildings))),

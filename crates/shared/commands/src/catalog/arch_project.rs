@@ -7,6 +7,29 @@ use serde_json::json;
 pub(super) fn descriptors() -> Vec<CommandDescriptor> {
     vec![
         CommandDescriptor {
+            id: crate::CAD_ARCH_WALK.into(),
+            version: crate::CAD_ARCH_WALK_VERSION,
+            title: "Dolaşım güzergâhı".into(),
+            summary: "Tek katta başlangıç ve bitiş arasında seçilen geçiş genişliğini koruyan güzergâhı arar. Net mahal sınırlarını, kapı netlerini, kolonları ve donatıları okur. shellOnly yalnız sabit plan sınırlarını ve kolonları alır. Sonuç geçici tasarım ölçümüdür. Çizimi değiştirmez.".into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ArchWalk>(),
+            output: schema::<crate::ArchWalked>(),
+            plan: Some(schema::<crate::ArchWalked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Zemin katta 90 cm genişliğinde dolaşım".into(),
+                input: json!({"start":{"x":2.0,"y":2.0},"end":{"x":8.0,"y":3.0},"width":0.9,"level":"zemin"}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_OPENINGS_CREATE.into(),
             version: crate::CAD_OPENINGS_CREATE_VERSION,
             title: "Açıklık ekle".into(),

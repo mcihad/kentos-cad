@@ -18,7 +18,7 @@ sides?: Array<number>, state: ElevationState, members: number,
  */
 missing?: Array<string>, 
 /**
- * Its objects changed by hand (a refresh writes them back); said only while the model's drawing is unchanged.
+ * Its objects changed by hand (a refresh writes them back). Older records can detect this while their source is unchanged.
  */
 edited?: Array<string>, 
 /**

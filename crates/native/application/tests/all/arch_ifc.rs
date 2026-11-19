@@ -680,6 +680,8 @@ fn the_library_s_fixtures_are_their_ifc_classes_with_their_bodies() {
     let basin = place(&mut doc, "Lavabo", 8.5, 0.2, serde_json::Value::Null);
     let table = place(&mut doc, "Masa", 2.0, 6.5, serde_json::Value::Null);
     let wardrobe = place(&mut doc, "Dolap", 0.2, 2.0, serde_json::Value::Null);
+    let dishwasher = place(&mut doc, "Bulaşık makinesi", 4.0, 2.0, serde_json::Value::Null);
+    let fridge = place(&mut doc, "Buzdolabı", 6.0, 2.0, serde_json::Value::Null);
     let mark = place(&mut doc, "Kot işareti", 1.0, 1.0, serde_json::Value::Null);
     let (b, written) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
     let of = |uid: &str| {
@@ -687,7 +689,17 @@ fn the_library_s_fixtures_are_their_ifc_classes_with_their_bodies() {
         b.elements.iter().find(|e| e.id == Some(id))
     };
     assert!(of(&mark).is_none(), "a level mark is no building element");
-    assert_eq!(written.fixtures, 4);
+    assert_eq!(written.fixtures, 6);
+    let (ring, _) = &b.fixture_plans[&of(&fridge).unwrap().id.unwrap()];
+    assert!((ring[2][1] - ring[0][1] - 0.65).abs() < 1e-8, "door swing excluded: {ring:?}");
+    let machine = of(&dishwasher).expect("the dishwasher");
+    assert_eq!((machine.class, machine.predefined), (Class::ElectricAppliance, "DISHWASHER"));
+    assert_eq!(machine.tag.as_deref(), Some(dishwasher.as_str()));
+    assert!(machine.name.starts_with("MM-ECZ-"));
+    assert!(machine.shapes.is_empty(), "no height was entered");
+    assert!(b.fixture_plans.contains_key(&machine.id.unwrap()));
+    let step = kentos_ifc::building::write(&b);
+    assert!(step.contains("IFCELECTRICAPPLIANCE(") && step.contains("'FootPrint','Curve2D'"));
     let lift_el = of(&lift).expect("the lift");
     assert_eq!((lift_el.class, lift_el.predefined), (Class::TransportElement, "ELEVATOR"));
     assert_eq!(lift_el.name, "MM-TSM-Asansör");

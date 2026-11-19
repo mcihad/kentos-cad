@@ -42,17 +42,19 @@ pub(super) fn check(
     let file: serde_json::Value = serde_json::from_str(text)
         .map_err(|_| refused("Yayın kaynağı geçerli bir kentos.blocks JSON dosyası olmalı."))?;
     if file["format"].as_str() != Some(kentos_commands::BLOCKS_FORMAT)
-        || !matches!(file["version"].as_u64(), Some(v) if (u64::from(kentos_commands::BLOCKS_PUBLICATION_VERSION)..=u64::from(kentos_commands::BLOCKS_ELEMENT_VERSION)).contains(&v))
+        || !matches!(file["version"].as_u64(), Some(v) if (u64::from(kentos_commands::BLOCKS_PUBLICATION_VERSION)..=u64::from(kentos_commands::BLOCKS_APPLIANCE_VERSION)).contains(&v))
     {
         return Err(refused(
-            "Yükseltme, yayın kimlikli kentos.blocks sürüm 2, 3 ya da 4 gerektirir.",
+            "Yükseltme, yayın kimlikli kentos.blocks sürüm 2–5 gerektirir.",
         ));
     }
     let blocks: Vec<BlockDefinition> = serde_json::from_value(file["blocks"].clone())
         .map_err(|e| refused(format!("Yayın tanımları okunamadı: {e}")))?;
     let needed = kentos_commands::block_library_version(&blocks);
     if file["version"].as_u64().unwrap_or_default() < u64::from(needed) {
-        return Err(refused(if needed == kentos_commands::BLOCKS_ELEMENT_VERSION {
+        return Err(refused(if needed == kentos_commands::BLOCKS_APPLIANCE_VERSION {
+            "Elektrikli cihaz kartı için yayın kaynağı en az sürüm 5 olmalı."
+        } else if needed == kentos_commands::BLOCKS_ELEMENT_VERSION {
             "Yapı elemanı sınıfı taşıyan yayın kaynağı kentos.blocks sürüm 4 olmalı."
         } else {
             "Ortak tip değeri içeren yayın kaynağı kentos.blocks sürüm 3 olmalı."

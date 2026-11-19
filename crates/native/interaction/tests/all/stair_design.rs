@@ -71,6 +71,73 @@ fn risers_ending_before_the_last_flight_say_why_and_write_nothing() {
     b.click(8., 3.);
     b.confirm();
     assert!(!b.doc.entities().any(|e| matches!(e, Entity::Stair(_))));
+    assert_eq!(b.session.point_count(), 3);
+    assert!(b.type_text("U"));
+    b.confirm();
+    let s = stair(&b);
+    assert_eq!(s.pts.len(), 3);
+    assert_eq!((s.pts[2].x, s.pts[2].y), (E + 8.0, N + 3.0));
+    assert_eq!(b.session.point_count(), 0);
+}
+
+#[test]
+fn refused_fourth_ramp_point_can_be_retried_without_losing_the_start_or_turns() {
+    let mut b = bench();
+    b.start("ramp");
+    let before = b.doc.len();
+    for (x, y) in [(0., 0.), (14., 0.), (14., 3.), (12., 3.), (11., 3.)] {
+        b.click(x, y);
+    }
+    assert_eq!(b.doc.len(), before);
+    assert_eq!(b.session.point_count(), 4);
+    assert!(b.run(|s, cx| s.configure("Y", "1.2", cx)));
+    b.confirm();
+    let Entity::Ramp(r) = b.newest() else { panic!("expected ramp") };
+    assert_eq!(r.ramp.pts.len(), 4);
+    assert_eq!((r.ramp.pts[0].x, r.ramp.pts[0].y), (E, N));
+    assert_eq!((r.ramp.pts[2].x, r.ramp.pts[2].y), (E + 14., N + 3.));
+    assert_eq!(r.ramp.rise, 1.2);
+    assert_eq!(b.doc.len(), before + 1);
+    assert_eq!(b.session.point_count(), 0);
+}
+
+#[test]
+fn ramp_slope_input_explains_its_own_field_and_undo_clears_the_removed_flight_preview() {
+    let mut b = bench();
+    b.start("ramp");
+    b.click(0., 0.);
+    b.click(2., 0.);
+    assert!(b.type_text("M"));
+    assert!(b.type_text("abc"));
+    let why = b.last_text().unwrap();
+    assert!(why.contains("yüzde") && !why.contains("Rıht"), "{why}");
+    assert!(b.type_text("6"));
+    assert!(b.undo_step());
+    assert_eq!(b.session.point_count(), 1);
+    let p = b.run(|s, cx| s.preview(&cx.format())).unwrap();
+    assert!(p.strokes.is_empty() && p.markers.is_empty());
+    b.move_to(0., 3.);
+    let p = b.run(|s, cx| s.preview(&cx.format())).unwrap();
+    assert!(!p.strokes.is_empty());
+}
+
+#[test]
+fn straight_flights_mark_the_entered_and_fitted_ends_only_when_they_differ() {
+    for (tool, expected, direction) in [("stair", 4.76, "geride"), ("ramp", 0.5 / 0.06, "ileride")] {
+        let mut b = bench();
+        b.start(tool);
+        b.click(0., 0.);
+        b.move_to(6., 0.);
+        let p = b.run(|s, cx| s.preview(&cx.format())).unwrap();
+        assert_eq!(p.markers.len(), 2);
+        assert_eq!(p.markers[0].at.x, E + 6.0);
+        assert!((p.markers[1].at.x - E - expected).abs() < 1e-9);
+        assert!(p.tag.unwrap().lines.iter().any(|t| t.contains("Girilen hat") && t.ends_with(direction)));
+        assert!(b.type_text("U"));
+        let p = b.run(|s, cx| s.preview(&cx.format())).unwrap();
+        assert!(p.markers.is_empty());
+        assert!(!p.tag.unwrap().lines.iter().any(|t| t.contains("Girilen hat")));
+    }
 }
 
 #[test]

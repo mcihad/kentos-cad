@@ -55,6 +55,13 @@ pub fn row(doc: &Document, layer: &str) -> Option<ElevationRow> {
     })
 }
 
+/// A legacy derivation can detect local edits only while its source remains unchanged.
+pub fn supports_batch_refresh(doc: &Document, layer: &str) -> bool {
+    elevations::on_layer(doc, layer).is_some_and(|(_, record)| {
+        record.members.keys().all(|role| record.member_hashes.contains_key(role))
+    })
+}
+
 fn check(doc: &Document, input: &ElevationsQuery) -> Result<Vec<ElevationRow>, Stop> {
     let mut only: Option<String> = None;
     if let Some(l) = &input.layer {

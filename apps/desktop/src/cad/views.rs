@@ -83,6 +83,8 @@ pub enum Event {
     Close,
     /// The recipe's draft (docs/adr/0774 §2, `views_recipe.rs`).
     RecipePreset(usize),
+    RecipeCeiling(bool),
+    RecipeCeilingBound { low: bool, metres: f64 },
     RecipeLevel(Option<usize>),
     RecipeBelow(bool),
     RecipePhase(usize),
@@ -217,7 +219,16 @@ impl App {
             self.warn(format!("“{name}” adlı bir görünüm yok."));
             return;
         };
-        self.navigating(|app| app.viewport.show_view(&v));
+        let ceiling = self.document.as_ref().and_then(|d| {
+            let r = kentos_commands::resolved_recipe(v.recipe.as_ref()?, &d.model.settings().view_templates);
+            Some((r.level.map(|l| l.id).or_else(|| self.active_level()), r.ceiling?))
+        });
+        self.navigating(|app| {
+            app.viewport.show_view(&v);
+            if let Some(doc) = &app.document {
+                app.spatial.set_ceiling_view(&doc.model, ceiling);
+            }
+        });
         self.say(Level::Info, format!("Görünüm: {}", v.name));
     }
 

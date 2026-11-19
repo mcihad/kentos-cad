@@ -501,6 +501,7 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
             None => m.level.clone(),
         },
         phase: recipe.and_then(|r| r.phase),
+        ceiling: recipe.and_then(|r| r.ceiling),
         hidden: recipe.map(|r| r.hidden.clone()).unwrap_or_default(),
         wall_detail: recipe.and_then(|r| r.detail),
         pens: recipe.map(|r| r.pens.clone()).unwrap_or_default(),

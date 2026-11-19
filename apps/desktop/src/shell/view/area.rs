@@ -246,6 +246,7 @@ impl App {
                         .extend(self.bond_notice_view())
                         // Sıradakini seç's chip beside the click (selection_chip.rs, docs/adr/0187 §1).
                         .extend(self.selection_chip())
+                        .extend(self.scene_browse_strip())
                         .extend(typing)
                         .extend(writing)
                         .extend(self.command_bar()),

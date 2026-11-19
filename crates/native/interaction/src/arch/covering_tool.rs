@@ -9,7 +9,7 @@
 //!   covering 2 cm (the floor build-up's kaplama, docs/adr/8040 §2).
 
 use kentos_commands::{Covering, Entity, NewSlab, SlabsCreate, SpacePart, SpaceRing};
-use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_geometry_core::tools::point_text::{js_trim, parse_length};
 use kentos_native_application::{ExecutionContext, slabs_create};
 
 use crate::Vec2;
@@ -50,6 +50,7 @@ pub struct CoveringTool {
     drawn: Preview,
     area: Option<f64>,
     why: Option<String>,
+    format: Format,
 }
 
 impl Default for CoveringTool {
@@ -66,7 +67,18 @@ impl Default for CoveringTool {
             drawn: Preview::default(),
             area: None,
             why: None,
+            format: Format::default(),
         }
+    }
+}
+
+/// Preserve the project's length style when it can display the covering's actual dimension.
+fn covering_length(f: &Format, metres: f64) -> String {
+    let shown = f.length(metres);
+    if parse_length(&shown).is_some_and(|v| v.metres(|n| f.to_metres(n)) == metres) {
+        shown
+    } else {
+        format!("{} {}", f.plain(metres), f.length_unit_label())
     }
 }
 
@@ -197,6 +209,7 @@ impl CoveringTool {
     }
 
     fn see(&mut self, cx: &Context<'_>) {
+        self.format = cx.format();
         self.drawn = Preview::default();
         self.area = None;
         self.why = None;
@@ -314,6 +327,11 @@ impl CoveringTool {
 }
 
 impl Tool for CoveringTool {
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.see(cx);
+        Flow::Stay
+    }
+
     fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
         Some(self.kind())
     }
@@ -362,15 +380,16 @@ impl Tool for CoveringTool {
         }
         let step = match (self.room, self.pts.len()) {
             (true, _) => "kaplanacak mahale tıklayın",
+            (false, 2) => "sınırın üçüncü köşesini belirtin",
             (false, n) if n < 3 => "kaplamanın köşelerine tıklayın",
             _ => "köşelere tıklayın, Enter ile kapatın",
         };
         let tip = if self.ceiling() { "Asma tavan".to_owned() } else { Covering::word(&self.covering.predefined).to_owned() };
-        let offset = self.offset.map_or_else(|| "Oto".to_owned(), |v| v.to_string());
+        let offset = self.offset.map_or_else(|| "Oto".to_owned(), |v| covering_length(&self.format, v));
         let mut p = Prompt::new("Kaplama", step)
             .option_with("Sınır", "S", if self.room { "Mahal" } else { "Köşeleri çiz" })
             .option_with("Tip", "P", tip)
-            .option_with("Kalınlık", "E", self.thickness.to_string())
+            .option_with("Kalınlık", "E", covering_length(&self.format, self.thickness))
             .option_with("Kot farkı", "F", offset)
             .option_with("Malzeme", "M", self.material.clone().unwrap_or_else(|| "Yok".into()));
         if !self.room && !self.pts.is_empty() {
@@ -462,8 +481,8 @@ impl Tool for CoveringTool {
         vec![
             Setting::choice("S", "Sınır", self.bound_choices()),
             Setting::choice("P", "Tip", self.type_choices()),
-            Setting::text("E", "Kalınlık", f.length(self.thickness)),
-            Setting::text("F", "Kot farkı", self.offset.map_or_else(|| "Oto".to_owned(), |v| f.length(v))),
+            Setting::text("E", "Kalınlık", covering_length(f, self.thickness)),
+            Setting::text("F", "Kot farkı", self.offset.map_or_else(|| "Oto".to_owned(), |v| covering_length(f, v))),
             Setting::text("M", "Malzeme", self.material.clone().unwrap_or_default()),
             Setting::hint(
                 "K",
@@ -540,6 +559,9 @@ impl Tool for CoveringTool {
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        if !self.room && points::incomplete_boundary(self.pts.len(), cx) {
+            return Flow::Stay;
+        }
         if !self.room && self.pts.len() >= 3 {
             let corners = self.pts.clone();
             self.write(None, Some(&corners), cx);
@@ -555,7 +577,7 @@ impl Tool for CoveringTool {
             at,
             lines: match (&self.why, self.area) {
                 (Some(why), _) => vec![title.clone(), why.clone()],
-                (None, Some(a)) => vec![format!("{title} · {} · {}", format.area(a), format.length(self.thickness))],
+                (None, Some(a)) => vec![format!("{title} · {} · {}", format.area(a), covering_length(format, self.thickness))],
                 _ => vec![title.clone()],
             },
         });

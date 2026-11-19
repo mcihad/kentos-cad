@@ -13,6 +13,22 @@ fn separator_factory_settings_preview_and_one_confirmation_are_semantic() {
     let Entity::Polyline(p)=b.newest()else{panic!()};assert!(p.space_separator.is_some());assert!(p.widths.is_none());
     b.doc.undo().unwrap();assert_eq!(b.doc.to_snapshot_v2(),before);
 }
+
+#[test]
+fn early_enter_keeps_the_separator_start() {
+    let mut b = Bench::new("spaceSeparator");
+    let before = b.doc.to_snapshot_v2();
+    b.click(1., 2.);
+    b.confirm();
+    assert_eq!(b.points(), 1);
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(b.type_text("@3.8,0"));
+    b.confirm();
+    let Entity::Polyline(line) = b.newest() else { panic!("expected separator") };
+    assert!(line.space_separator.is_some());
+    assert_eq!(line.pts.len(), 2);
+    assert!((line.pts[1].x - line.pts[0].x - 3.8).abs() < 1e-8);
+}
 #[test]
 fn arc_input_and_escape_use_the_existing_path_grammar_without_writing_early() {
     let mut b=Bench::new("spaceSeparator");let before=b.doc.to_snapshot_v2();

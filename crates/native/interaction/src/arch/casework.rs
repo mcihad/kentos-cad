@@ -139,13 +139,24 @@ impl Casework {
         usize::from(self.corners) + 2
     }
 
+    // A completed turn remains in the tool only when the command refused it.
+    fn correcting_end(&self) -> bool {
+        self.corners > 0 && self.pts.len() == self.needed()
+    }
+
+    fn fixed_points(&self) -> &[Vec2] {
+        if self.correcting_end() { &self.pts[..self.pts.len() - 1] } else { &self.pts }
+    }
+
     /// The path now: the points placed, then the pointer while one is still to place.
     fn path(&self) -> Vec<Vec2> {
         let mut out = self.pts.clone();
-        if out.len() < self.needed()
-            && let Some(h) = self.hover
-        {
-            out.push(h);
+        if let Some(h) = self.hover {
+            if self.correcting_end() {
+                *out.last_mut().unwrap() = h;
+            } else if out.len() < self.needed() {
+                out.push(h);
+            }
         }
         out
     }
@@ -153,7 +164,7 @@ impl Casework {
     /// The pointer square to the leg before: on the line through the last point across the last leg; as it is before
     /// a leg is placed.
     fn squared(&self, p: Vec2) -> Vec2 {
-        let n = self.pts.len();
+        let n = self.fixed_points().len();
         if n < 2 {
             return p;
         }
@@ -202,6 +213,8 @@ impl Casework {
         let n = path.len();
         let mut run = CaseworkRun {
             // The units' layer (docs/adr/8008).
+            level: cx.level.map(str::to_owned),
+            filler_ends: Vec::new(),
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Casework, cx),
             from: points::wire(path[0]),
             through: (n > 2).then(|| path[1..n - 1].iter().map(|p| points::wire(*p)).collect()),
@@ -536,15 +549,11 @@ impl Tool for Casework {
     }
 
     fn snap_from(&self) -> Option<Vec2> {
-        if self.pts.len() < self.needed() {
-            self.pts.last().copied()
-        } else {
-            None
-        }
+        self.fixed_points().last().copied()
     }
 
     fn snaps(&self) -> bool {
-        self.pts.len() < self.needed()
+        self.pts.len() < self.needed() || self.correcting_end()
     }
 
     fn point_count(&self) -> usize {
@@ -553,6 +562,7 @@ impl Tool for Casework {
 
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
         if self.pts.pop().is_some() {
+            self.hover = None;
             self.see(cx);
             return true;
         }
@@ -581,8 +591,10 @@ impl Tool for Casework {
             } else {
                 "dizinin sonuna tıklayın ya da boyunu yazın".to_owned()
             }
+        } else if self.correcting_end() {
+            "son kolun bitişini düzeltin veya ayarları değiştirip Enter’a basın".to_owned()
         } else {
-            "dolapların duracağı tarafa tıklayın ya da Enter ile yazın".to_owned()
+            "dolap tarafını bir noktayla belirtin veya Enter ile tamamlayın".to_owned()
         };
         let spot = |s: Spot| match s {
             Spot::Auto => "Otomatik".to_owned(),
@@ -641,7 +653,7 @@ impl Tool for Casework {
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        self.hover = Some(if self.pts.len() < self.needed() {
+        self.hover = Some(if self.snaps() {
             self.squared(p.world)
         } else {
             p.world
@@ -650,28 +662,33 @@ impl Tool for Casework {
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        if self.pts.len() >= self.needed() {
-            let path = self.pts.clone();
-            let side = self.side_at(&path, Some(p.world));
-            self.write(side, cx);
-            return;
-        }
-        self.accept_point(self.squared(p.world), cx);
+        self.accept_point(p.world, cx);
     }
 
     fn accepts_points(&self) -> bool {
-        self.pts.len() < self.needed()
+        self.ask.is_none()
     }
 
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        if self.ask.is_some() {
+            return false;
+        }
+        if self.corners == 0 && self.pts.len() == self.needed() {
+            self.write(self.side_at(&self.pts, Some(p)), cx);
+            return true;
+        }
         let p = self.squared(p);
-        if self.pts.last() == Some(&p) {
+        if self.fixed_points().last() == Some(&p) {
             cx.say(Level::Info, "Bu nokta bir öncekiyle aynı; başka bir noktaya tıklayın.");
             return true;
+        }
+        if self.correcting_end() {
+            self.pts.pop();
         }
         self.pts.push(p);
         // An L or a U is written with its end: its side is the side it turns to.
         if self.corners > 0 && self.pts.len() == self.needed() {
+            self.hover = Some(p);
             let path = self.pts.clone();
             let side = self.side_at(&path, None);
             self.write(side, cx);
@@ -756,8 +773,7 @@ impl Tool for Casework {
                 return true;
             }
             _ => {
-                if self.pts.len() < self.needed()
-                    && let Some(p) = cx.typed_point(text, self.pts.last().copied(), self.hover)
+                if let Some(p) = cx.typed_point(text, self.snap_from(), self.hover)
                 {
                     return self.accept_point(p, cx);
                 }
@@ -914,6 +930,10 @@ impl Tool for Casework {
             return Flow::Stay;
         }
         if self.pts.len() >= self.needed() {
+            if self.correcting_end() && let Some(p) = self.hover {
+                self.accept_point(p, cx);
+                return Flow::Stay;
+            }
             let path = self.pts.clone();
             let side = self.side_at(&path, self.hover);
             self.write(side, cx);

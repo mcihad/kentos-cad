@@ -81,3 +81,25 @@ fn region_requires_two_picks_then_enter_and_escape_leaves_sources_intact() {
     assert_eq!(b.doc.to_snapshot_v2(), before_region);
     assert_eq!(before.entities.len(), 2);
 }
+
+#[test]
+fn typed_region_corners_can_be_corrected_and_empty_search_creates_no_layer() {
+    let mut b = setup();
+    b.memory.layer_keys = true;
+    assert!(b.run(|s, cx| s.configure("K", "region", cx)));
+    let before = b.doc.to_snapshot_v2();
+    b.click(-5., -5.);
+    assert!(b.type_text("@3,0"));
+    assert_eq!(b.points(), 1);
+    assert!(b.type_text("@3,3"));
+    assert_eq!(b.points(), 2);
+    assert!(b.session.prompt().step.contains("kapalı oda bulunamadı"));
+    b.confirm();
+    assert_eq!(b.session.tool_id(), "spaceDiscover");
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(b.undo_step());
+    assert_eq!(b.points(), 1);
+    assert!(b.type_text("@9,14"));
+    b.confirm();
+    assert_eq!(b.doc.entities().filter(|e| matches!(e, Entity::Space(_))).count(), 1);
+}

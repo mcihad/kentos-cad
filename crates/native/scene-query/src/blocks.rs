@@ -79,6 +79,19 @@ pub fn definition_box_in(
     out
 }
 
+/// Physical bounds of a static fixture with an authored housing outline, relative to the insertion point.
+/// A door swing or a clearance mark can extend beyond that outline. Dynamic definitions use their evaluated bounds.
+pub fn fixture_housing_bounds(block: &BlockDefinition) -> Option<[f64; 4]> {
+    if block.dynamic.is_some() { return None; }
+    let outline = block.entities.iter().find(|e| {
+        e.base().attrs.get("KENTOS_IFC_ROLE").is_some_and(|role| role == "FOOTPRINT")
+            && (matches!(e, Entity::Polygon(_)) || matches!(e, Entity::Polyline(path) if path.closed))
+    })?;
+    let bounds = kentos_geometry_core::entity::entity_bounds(&shape(outline));
+    Some([bounds.min_x - block.base.x, bounds.min_y - block.base.y,
+          bounds.max_x - block.base.x, bounds.max_y - block.base.y])
+}
+
 /// The world-axis box of an insert's drawn pieces, excluding its insertion grip.
 /// Expansion is the renderer's: active parameters, nested transforms and clips are already resolved.
 /// Piece layer gates follow the drawing's layer tree, as `Store::Item::shapes` does.

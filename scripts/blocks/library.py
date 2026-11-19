@@ -73,10 +73,12 @@ class Block:
     def dynamic(self, parameters, actions):
         self.data["dynamic"] = {"parameters": parameters, "actions": actions}
 
-    def element(self, cls, predefined, height, elevation=None):
+    def element(self, cls, predefined, height=None, elevation=None):
         """What the block is as a building element (docs/adr/8070 §5): its class (furniture, sanitaryTerminal,
         transportElement), its IFC 4.3 type and its body's height (and underside over the floor)."""
-        e = {"class": cls, "predefined": predefined, "height": float(height)}
+        e = {"class": cls, "predefined": predefined}
+        if height is not None:
+            e["height"] = float(height)
         if elevation is not None:
             e["elevation"] = float(elevation)
         self.data["card"]["element"] = e
@@ -357,6 +359,7 @@ def appliance(n, name, category, tags, description, label, width=0.6, depth=0.6)
     """A white good under or beside the counter: its box, its front, its label."""
     b = Block(n, name, category, tags, description)
     b.rect(-width / 2, 0, width / 2, depth)
+    b.data["entities"][-1]["attrs"]["KENTOS_IFC_ROLE"] = "FOOTPRINT"
     b.line((-width / 2, depth - 0.04), (width / 2, depth - 0.04))
     b.text((-0.08, depth / 2 - 0.05), label, 0.1)
     return b
@@ -383,8 +386,9 @@ sink.dynamic(
     [{"kind": "flip", "parameter": "Süzgeç sağda", "pieces": [bowl, drain, tap] + ribs}])
 blocks.append(sink)
 
-hob = Block(32, "Ocak", "Mutfak/Pişirme", ["ocak", "mutfak"], "Dört gözlü ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.")
+hob = Block(32, "Ocak", "Mutfak/Pişirme", ["ocak", "mutfak"], "Dört gözlü elektrikli ankastre ocak 60 × 52 cm; taban noktası duvarda ortası.")
 hob.rect(-0.3, 0, 0.3, 0.52)
+hob.data["entities"][-1]["attrs"]["KENTOS_IFC_ROLE"] = "FOOTPRINT"
 for (x, y, r) in ((-0.14, 0.14, 0.09), (0.14, 0.14, 0.07), (-0.14, 0.37, 0.07), (0.14, 0.37, 0.09)):
     hob.circle((x, y), r)
 blocks.append(hob)
@@ -399,7 +403,7 @@ dishwasher = appliance(34, "Bulaşık makinesi", "Mutfak/Beyaz eşya", ["bulaş�
 blocks.append(dishwasher)
 
 oven = appliance(35, "Fırın", "Mutfak/Pişirme", ["fırın", "ankastre", "mutfak"],
-                 "Ankastre fırın 60 × 60 cm, tezgâh altı; taban noktası duvarda ortası.", "F")
+                 "Elektrikli ankastre fırın 60 × 60 cm, tezgâh altı; taban noktası duvarda ortası.", "F")
 blocks.append(oven)
 
 base_unit = Block(36, "Alt dolap", "Mutfak/Dolap", ["dolap", "tezgâh", "mutfak"],
@@ -511,8 +515,8 @@ blocks.append(stall)
 # the toilet (42 cm, its bowl's rim without the seat) and the urinal (70 cm, its front edge) are the installation
 # heights a fixture maker's guide gives (Geberit, "The perfect installation height"); the others are KentOS's own
 # common sizes, as the plan sizes are (docs/adr/0702): no regulation is said to ask them. A wall unit hangs from 1.45 m
-# over the worktop (0.90 m). The marks, the title block, the door and window symbols, the parking place and the
-# appliances (no class of EK-5's) are no building elements. A body stands on the floor: the room under a wall-hung
+# over the worktop (0.90 m). The marks, the title block, the door and window symbols, the parking place are drafting aids. Electrical appliances use EK-6 Table 6.29.
+# Their plan symbols specify no product height. A body stands on the floor: the room under a wall-hung
 # basin or toilet is not modelled. ──
 ELEMENTS = {
     "Masa": ("furniture", "TABLE", 0.75), "Sandalye": ("furniture", "CHAIR", 0.85),
@@ -528,6 +532,9 @@ ELEMENTS = {
     "Pisuvar": ("sanitaryTerminal", "URINAL", 0.7), "Duş teknesi": ("sanitaryTerminal", "SHOWER", 0.1),
     "Köşe duş": ("sanitaryTerminal", "SHOWER", 0.1), "Küvet": ("sanitaryTerminal", "BATH", 0.55),
     "Evye": ("sanitaryTerminal", "SINK", 0.9),
+    "Ocak": ("electricAppliance", "ELECTRICCOOKER"), "Fırın": ("electricAppliance", "ELECTRICCOOKER"),
+    "Buzdolabı": ("electricAppliance", "REFRIGERATOR"), "Bulaşık makinesi": ("electricAppliance", "DISHWASHER"),
+    "Çamaşır makinesi": ("electricAppliance", "WASHINGMACHINE"), "Kurutma makinesi": ("electricAppliance", "TUMBLEDRYER"),
     "Asansör": ("transportElement", "ELEVATOR", 2.2),
 }
 for b in blocks:
@@ -535,9 +542,8 @@ for b in blocks:
         b.element(*ELEMENTS[b.data["name"]])
 assert set(ELEMENTS) <= {b.data["name"] for b in blocks}
 
-# Version 4 (docs/adr/8070 §5): the cards carry their building element; an older reader refuses the file rather than
-# drop the classes.
-LIBRARY = {"format": "kentos.blocks", "version": 4, "blocks": [b.data for b in blocks]}
+# Version 5 adds the electric appliance class.
+LIBRARY = {"format": "kentos.blocks", "version": 5, "blocks": [b.data for b in blocks]}
 TEXT = json.dumps(LIBRARY, ensure_ascii=False, indent=1) + "\n"
 
 

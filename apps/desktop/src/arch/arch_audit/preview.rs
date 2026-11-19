@@ -43,8 +43,14 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
-        let wanted: Vec<Slot> = self
-            .arch_audit_chosen()
+        let chosen = self.arch_audit_chosen();
+        let mut zones: Vec<_> = chosen.iter().filter(|f| !f.outline.is_empty())
+            .map(|f| {
+                let points = f.outline.iter().map(|p| Vec2::new(p.x, p.y)).collect();
+                Stroke::dashed(points, true, [6.0, 4.0]).width(2.0).tone(Tone::Danger)
+            })
+            .collect();
+        let wanted: Vec<Slot> = chosen
             .iter()
             .filter(|f| f.check == ArchAuditCheck::Fixtures)
             .filter_map(|f| f.uids.first())
@@ -52,16 +58,17 @@ impl App {
             .filter_map(|u| doc.model.slot_of(u))
             .collect();
         if wanted.is_empty() {
-            return Vec::new();
+            return zones;
         }
-        kentos_native_application::fixture_audit::fixtures(&doc.model)
+        zones.extend(kentos_native_application::fixture_audit::fixtures(&doc.model)
             .into_iter()
             .filter(|f| wanted.contains(&f.slot))
             .map(|f| {
                 let pts = f.zone.iter().map(|p| Vec2::new(p.x, p.y)).collect();
                 Stroke::dashed(pts, true, [6.0, 4.0]).width(2.0).tone(Tone::Danger)
             })
-            .collect()
+        );
+        zones
     }
 
     /// The chosen findings' fixes as they would draw (docs/adr/0732 §5).

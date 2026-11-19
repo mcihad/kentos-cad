@@ -697,7 +697,13 @@ SCHEMA_WITH_TOOL_LAYERS = 255
 # (0: not raised). A newer one, an unknown module or an extension's data is a newer KentOS's file.
 # GIS 1 (docs/adr/8057 §15): a layer's derivation names the extension whose tool made it and where its code ran.
 GIS_WITH_EXTENSION_DERIVATIONS = 1
-MODULE_VERSIONS = {"arch": ("mimari", 0), "gis": ("CBS", GIS_WITH_EXTENSION_DERIVATIONS), "map": ("harita", 0),
+ARCH_WITH_BLOCK_ELEMENTS = 2
+ARCH_WITH_COVERINGS = 5
+ARCH_WITH_SLAB_EDGE_BINDINGS = 36
+ARCH_WITH_CEILING_RECIPE = 37
+ARCH_WITH_ELECTRIC_APPLIANCES = 38
+ARCH_WITH_CASEWORK_PLACEMENT = 39
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_EXTENSION_DERIVATIONS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -3864,6 +3870,7 @@ class _Schema:
         modules = {"modules": (self.module_versions, False)} if version >= SCHEMA_WITH_MODULE_VERSIONS else {}
         # The GIS data's version (docs/adr/8057 §15); `module_versions` reads it before the document.
         self.gis_version = 0
+        self.arch_version = 0
         checked = self.fields({"format": (self.text, True), **modules, "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -3904,6 +3911,7 @@ class _Schema:
             if x > known:
                 self.fail("schema_version", f"{name} verisi sürüm {x}; bu okuyucunun bildiği: {known}")
         self.gis_version = m.get("gis", 0)
+        self.arch_version = m.get("arch", 0)
         if ext:
             first, x = next(iter(ext.items()))
             self.fail("schema_version", f"`{first}` eklentisinin verisi (sürüm {x})")
@@ -4066,7 +4074,13 @@ class _Schema:
             "module": (self.uint(32), True), "width": (finite, False),
             "hand": (self.enum(("left", "right")), False),
         })
-        return self.fields({
+        end = self.enum(("start", "end"))
+        placement = {}
+        if self.arch_version >= ARCH_WITH_CASEWORK_PLACEMENT:
+            placement = {"level": (self.text, False),
+                         "fillerEnds": (nonempty(lambda v: None if v is None else end(v)), False)}
+        recipe = self.fields({
+            **placement,
             "layerId": (self.text, True), "from": (point, True), "through": (nonempty(point), False),
             "to": (point, True), "side": (self.enum(("left", "right")), False), "module": (finite, False),
             "depth": (finite, False), "corner": (self.enum(("blind", "open")), False),
@@ -4075,6 +4089,11 @@ class _Schema:
             "perModule": (nonempty(setting), False), "upper": (self.bool, False), "color": (self.text, False),
             "lineWeight": (finite, False),
         })(value)
+        if "level" in recipe and not recipe["level"].strip():
+            self.fail("bad_value", "mutfak dizisinin katı boş")
+        if len(recipe.get("fillerEnds", [])) > 1 + len(recipe.get("through", [])):
+            self.fail("bad_value", "dizide bulunmayan kol için dolgu ucu verilmiş")
+        return recipe
 
     def casework_checked(self, v):
         def uid(value):
@@ -6129,12 +6148,17 @@ class _Schema:
         if self.option_combos:
             extra = {**extra, "combo": (combo, False)}
         r = self.fields({"version": (self.uint(32), True), "level": (level, False), "phase": (self.enum(RECIPE_PHASES + (("renovation",) if self.renovation_view else ())), False),
+                         "ceiling": (self.fields({"low": (self.float, True), "high": (self.float, True)}), False),
                          "layerState": (self.text, False), "hidden": (self.array(category), False),
                          "scale": (self.uint(32), False), **extra})(v)
         if "pens" in r:
             ofs = [p["of"] for p in r["pens"]]
             if not ofs or len(set(ofs)) != len(ofs):
                 self.fail("bad_value", "görünüş tarifinin kalemleri boş olmaz, her tür bir kez")
+        if "ceiling" in r and not 0 <= r["ceiling"]["low"] < r["ceiling"]["high"] <= 100:
+            self.fail("bad_value", "tavan görünüşü aralığı 0 ile 100 m arasında olur")
+        if "ceiling" in r and self.arch_version < ARCH_WITH_CEILING_RECIPE:
+            self.fail("unknown_field", "yansıtılmış tavan planı mimari veri sürümü 37'den önce yok")
         if "template" in r:
             t = r["template"]
             if not t.strip() or len(t) > MOST_UCS_NAME or any(unicodedata.category(c) == "Cc" for c in t):
@@ -8846,6 +8870,31 @@ class _Schema:
             self.path.append("parameters")
             self.fail("bad_value", f"parametre değerleri: {problem}")
 
+    def block_element(self, v):
+        types = {
+            "furniture": ("BED", "CHAIR", "DESK", "FILECABINET", "SHELF", "SOFA", "TABLE", "TECHNICALCABINET"),
+            "sanitaryTerminal": ("BATH", "BIDET", "CISTERN", "SANITARYFOUNTAIN", "SHOWER", "SINK", "TOILETPAN", "URINAL", "WASHHANDBASIN", "WCSEAT"),
+            "transportElement": ("CRANEWAY", "ELEVATOR", "ESCALATOR", "HAULINGGEAR", "LIFTINGGEAR", "MOVINGWALKWAY"),
+        }
+        if self.arch_version >= ARCH_WITH_ELECTRIC_APPLIANCES:
+            types["electricAppliance"] = (
+                "DISHWASHER", "ELECTRICCOOKER", "FREESTANDINGELECTRICHEATER",
+                "FREESTANDINGFAN", "FREESTANDINGWATERCOOLER", "FREESTANDINGWATERHEATER",
+                "FREEZER", "FRIDGE_FREEZER", "HANDDRYER",
+                "KITCHENMACHINE", "MICROWAVE", "PHOTOCOPIER",
+                "REFRIGERATOR", "TUMBLEDRYER", "VENDINGMACHINE",
+                "WASHINGMACHINE",
+            )
+        e = self.fields({"class": (self.enum(types), True), "predefined": (self.text, False),
+                         "height": (self.float, False), "elevation": (self.float, False)})(v)
+        if "predefined" in e and e["predefined"] not in (*types[e["class"]], "USERDEFINED"):
+            self.fail("bad_value", "Blok tipi seçilen yapı elemanı sınıfına uygun olmalı.")
+        if "height" in e and not 0 < e["height"] <= 20:
+            self.fail("bad_value", "Blok gövdesinin yüksekliği sıfırdan büyük ve en çok 20 m olmalı.")
+        if "elevation" in e and not 0 <= e["elevation"] <= 20:
+            self.fail("bad_value", "Blok gövdesinin alt kotu 0 ile 20 m arasında olmalı.")
+        return e
+
     def card(self, v):
         """A block's card (schema 58): a version from 1, a category and tags trimmed and not blank, each tag once
         (Turkish case folded); an empty tag list is not written."""
@@ -8863,6 +8912,7 @@ class _Schema:
             return p
 
         c = self.fields({"category": (self.text, False), "tags": (tags, False), "version": (self.uint(32), True),
+                         **({"element": (self.block_element, False)} if self.arch_version >= ARCH_WITH_BLOCK_ELEMENTS else {}),
                          **({"publication": (publication, False)} if self.block_publications else {})})(v)
         if c["version"] < 1 or c["version"] > 0xFFFFFFFF:
             self.path.append("version")
@@ -8880,7 +8930,7 @@ class _Schema:
                 self.path.append("tags")
                 self.fail("bad_value", f"“{t}” etiketi iki kez var")
             seen.add(name_key(t))
-        return {k: c[k] for k in ("category", "tags", "version", "publication") if k in c}
+        return {k: c[k] for k in ("category", "tags", "version", "publication", "element") if k in c}
 
     def attribute(self, v):
         table = {
@@ -10031,6 +10081,17 @@ class _Schema:
     def slab_fields(self, v):
         """A slab's fields (schema 123, docs/adr/0722 §1), as the contract's JSON has them: each only when not its
         default (a floor, a top on its level, no edge runs, summed); then the contract's rule (`SlabFields::problem`)."""
+        def covering(x):
+            kinds = ("CEILING", "CLADDING", "COPING", "FLOORING", "INSULATION", "MEMBRANE", "MOLDING",
+                     "ROOFING", "SKIRTINGBOARD", "SLEEVING", "TOPPING", "WRAPPING", "USERDEFINED")
+            c = self.fields({"predefined": (self.enum(kinds), True), "name": (self.text, False)})(x)
+            name = c.get("name")
+            if name is not None and (not name or name.strip() != name or len(name) > 120 or any(unicodedata.category(ch) == "Cc" for ch in name)):
+                self.fail("bad_value", "Kaplama adı 1–120 karakter olmalı, kenar boşluğu veya denetim karakteri içeremez.")
+            if c["predefined"] == "USERDEFINED" and name is None:
+                self.fail("bad_value", "Kullanıcı tanımlı kaplama için ad gerekir.")
+            return c
+
         def not_default(read, default, words):
             def check(x):
                 x = read(x)
@@ -10053,6 +10114,7 @@ class _Schema:
                          "offset": (not_default(self.float, 0.0, "sıfır kot farkı yazılmaz"), False),
                          "arch": (not_default(self.arch_info, {}, "boş mimari bilgi yazılmaz"), False),
                          "material": (self.text, False), "edge": (edge, False),
+                         **({"covering": (covering, False)} if self.arch_version >= ARCH_WITH_COVERINGS else {}),
                          "excluded": (not_default(self.bool, False, "false yazılmaz; varsayılandır"), False),
                          # Schema 138 (docs/adr/0771 §4): an outline bound to its walls or its space.
                          **({"bound": (self.slab_bound, False)} if self.building_parts else {}),
@@ -10061,6 +10123,8 @@ class _Schema:
                          # Schema 232 (docs/adr/8040 §2): its layers besides its structure.
                          **({"layers": (self.slab_layers_field, False)} if self.slab_layers else {})})(v)
         bad = lambda words: self.fail("bad_value", words)  # noqa: E731
+        if "covering" in f and any(key in f for key in ("edge", "layers", "role")):
+            bad("Kaplama, kenarı veya katmanları olan bir döşeme, balkon ya da teras olamaz.")
         if not f["parts"]:
             bad("Döşemenin sınırı yok: en az bir halka verin.")
         total = sum(len(p["outer"]["pts"]) + sum(len(h["pts"]) for h in p.get("holes", [])) for p in f["parts"])
@@ -10295,16 +10359,33 @@ class _Schema:
                     self.fail("bad_value", words)
                 return x
             return check
-        b = self.fields({"source": (self.enum(("walls", "space")), True), "seed": (self.jpoint, False),
+        edge_link = self.fields({"edge": (self.uint(32), True), "wall": (self.text, True), "segment": (self.uint(32), True),
+                                 "face": (self.uint(32), False), "offset": (self.float, True), "locked": (self.bool, True)})
+        edges = self.fields({"reference": (self.space_part, True), "links": (self.array(edge_link), True)})
+        b = self.fields({"source": (self.enum(("walls", "space", "edges")), True), "seed": (self.jpoint, False),
                          "face": (not_default(self.enum(("outline", "room")), "outline", "varsayılan yüz ('outline') yazılmaz"), False),
                          "space": (self.text, False),
                          "offset": (not_default(self.float, 0.0, "sıfır öteleme yazılmaz"), False),
                          "uids": (not_default(self.array(self.text), [], "boş duvar listesi yazılmaz"), False),
-                         "broken": (self.enum(("lostEnclosure", "sourceGone")), False)})(v)
+                         "broken": (self.enum(("lostEnclosure", "sourceGone", "edgeSourceGone", "edgeShapeInvalid")), False),
+                         "edges": (edges, False)})(v)
         if (b["source"] == "walls") != ("seed" in b) or (b["source"] == "space") != ("space" in b):
             self.fail("bad_value", "Duvarlara bağlı döşemenin iç noktası, mahale bağlının mahali verilir; ötekisi verilmez.")
         if "offset" in b and not (math.isfinite(b["offset"]) and abs(b["offset"]) <= 10):
             self.fail("bad_value", "Kenar ötelemesi en çok ±10 m olur.")
+        if (b["source"] == "edges") != ("edges" in b) or ("edges" in b and "offset" in b):
+            self.fail("bad_value", "Tekil kenar bağlantıları yalnız edges kaynağında, ortak öteleme olmadan yazılır.")
+        if "edges" in b:
+            if self.arch_version < ARCH_WITH_SLAB_EDGE_BINDINGS:
+                self.fail("unknown_field", "tekil döşeme kenar bağları mimari veri sürümü 36'dan önce yok")
+            e = b["edges"]
+            ring = e["reference"]["outer"]
+            n = len(ring["pts"])
+            ids = [l["edge"] for l in e["links"]]
+            if not 3 <= n <= 512 or any(ring.get("bulges", [])) or not ids or len(set(ids)) != len(ids) or max(ids) >= n:
+                self.fail("bad_value", "Geçersiz doğrusal döşeme kenar kayıtları.")
+            if any(not l["wall"].strip() or not math.isfinite(l["offset"]) or abs(l["offset"]) > 10 for l in e["links"]):
+                self.fail("bad_value", "Kenar bağlantısının duvarı ve ±10 m içindeki ötelemesi verilir.")
         return b
 
     def table_sources(self, t):

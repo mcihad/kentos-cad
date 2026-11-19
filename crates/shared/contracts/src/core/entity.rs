@@ -1259,13 +1259,16 @@ pub enum BlockElementClass {
     SanitaryTerminal,
     /// Taşıma elemanı (`IfcTransportElement`, TSM): a lift.
     TransportElement,
+    /// Elektrikli cihaz (IfcElectricAppliance, ECZ), EK-6 Tablo 6.29.
+    ElectricAppliance,
 }
 
 impl BlockElementClass {
-    pub const ALL: [BlockElementClass; 3] = [
+    pub const ALL: [BlockElementClass; 4] = [
         BlockElementClass::Furniture,
         BlockElementClass::SanitaryTerminal,
         BlockElementClass::TransportElement,
+        BlockElementClass::ElectricAppliance,
     ];
 
     /// Its name in Turkish.
@@ -1274,6 +1277,7 @@ impl BlockElementClass {
             BlockElementClass::Furniture => "Mobilya",
             BlockElementClass::SanitaryTerminal => "Sıhhi tesisat ucu",
             BlockElementClass::TransportElement => "Taşıma elemanı",
+            BlockElementClass::ElectricAppliance => "Elektrikli cihaz",
         }
     }
 
@@ -1283,6 +1287,7 @@ impl BlockElementClass {
             BlockElementClass::Furniture => "furniture",
             BlockElementClass::SanitaryTerminal => "sanitaryTerminal",
             BlockElementClass::TransportElement => "transportElement",
+            BlockElementClass::ElectricAppliance => "electricAppliance",
         }
     }
 
@@ -1296,6 +1301,14 @@ impl BlockElementClass {
             BlockElementClass::SanitaryTerminal => &[
                 "BATH", "BIDET", "CISTERN", "SANITARYFOUNTAIN", "SHOWER", "SINK", "TOILETPAN", "URINAL",
                 "WASHHANDBASIN", "WCSEAT", "USERDEFINED",
+            ],
+            BlockElementClass::ElectricAppliance => &[
+                "DISHWASHER", "ELECTRICCOOKER", "FREESTANDINGELECTRICHEATER",
+                "FREESTANDINGFAN", "FREESTANDINGWATERCOOLER", "FREESTANDINGWATERHEATER",
+                "FREEZER", "FRIDGE_FREEZER", "HANDDRYER",
+                "KITCHENMACHINE", "MICROWAVE", "PHOTOCOPIER",
+                "REFRIGERATOR", "TUMBLEDRYER", "VENDINGMACHINE",
+                "WASHINGMACHINE", "USERDEFINED",
             ],
             BlockElementClass::TransportElement => &[
                 "CRANEWAY", "ELEVATOR", "ESCALATOR", "HAULINGGEAR", "LIFTINGGEAR", "MOVINGWALKWAY", "USERDEFINED",

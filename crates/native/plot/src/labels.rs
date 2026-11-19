@@ -173,7 +173,7 @@ pub fn map_labels(doc: &Document, spatial: &Spatial, m: &MapPrim) -> Vec<MapLabe
         &m.layers,
         &m.layer_overrides,
         m.level.as_ref(),
-        (m.phase, &m.hidden, &m.pens, m.mono, &m.options),
+        (m.phase, &m.hidden, &m.pens, m.mono, &m.options, m.ceiling),
         m.extent,
     )
 }
@@ -227,6 +227,7 @@ pub fn labels_in_view(
         &[kentos_contracts::RecipePen],
         bool,
         &[kentos_contracts::OptionChoice],
+        Option<kentos_contracts::CeilingRange>,
     ),
     extent: Option<[f64; 4]>,
 ) -> Vec<MapLabel> {
@@ -234,11 +235,14 @@ pub fn labels_in_view(
         return Vec::new();
     };
     // A linked view's recipe (docs/adr/0774 §3): the words of the objects its phase or categories leave out, out too.
-    let recipe_out: std::collections::HashSet<u32> = if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.4.is_empty() {
+    let mut recipe_out: std::collections::HashSet<u32> = if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.4.is_empty() {
         crate::layers::map_phasing_of(doc, recipe.0, recipe.1, recipe.4).hidden().collect()
     } else {
         Default::default()
     };
+    if let Some(range) = recipe.5 {
+        recipe_out.extend(kentos_scene_query::ceiling_plan::hidden(doc, level.map(|l| l.id.as_str()), range));
+    }
     // A level's plan (docs/adr/0716): the other levels' words out, the one under it faint.
     let (left_out, faint) = level
         .map(|l| crate::layers::level_looks(doc, l))

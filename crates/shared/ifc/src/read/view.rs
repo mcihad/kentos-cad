@@ -124,7 +124,7 @@ fn reaches(objects: &[ObjectIn], from: usize, to: usize) -> bool {
 
 /// The blocks that are building elements beside the furniture (a sanitary fixture, a lift): furnishings' colour.
 fn furnishing(schema: ifc_lite_core::SchemaVersion, class: &str) -> Category {
-    if ["IfcSanitaryTerminal", "IfcTransportElement", "IfcFurniture"].iter().any(|of| schema.is_subtype_of(class, of)) {
+    if ["IfcElectricAppliance", "IfcSanitaryTerminal", "IfcTransportElement", "IfcFurniture"].iter().any(|of| schema.is_subtype_of(class, of)) {
         Category::Furnishing
     } else {
         Category::Other
