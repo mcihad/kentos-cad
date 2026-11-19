@@ -34,8 +34,8 @@ pub struct Projection {
 }
 
 /// A room's part outside the footprint on a storey over its building's ground storey (docs/adr/8152), read without the
-/// site plan (docs/adr/8164: the eaves past a projection, PAİY 42/3): the room's persistent id and storey, whether it is
-/// open, its area (m²) and outline, its storey's floor over ±0.00.
+/// site plan (docs/adr/8164: the eaves past a projection, PAİY 42/3): the room's persistent id and storey, whether it
+/// is open, its area (m²) and outline, its storey's floor over ±0.00.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProjectionPart {
     pub room: String,

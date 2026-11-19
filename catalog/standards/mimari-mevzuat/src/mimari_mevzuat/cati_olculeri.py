@@ -10,6 +10,10 @@
   altındaki çıkmaların ön yüzünden saçak çizgisine (``overProjection``); satır yalnız çatının altında çıkma varken
   yazılır. Planın saçak notu 42/1'in yerine geçer, 42/3'ü bağlamaz.
 - **Hava bacası (PAİY 40/5):** çatı örtüsünü en yüksek köşesinde en çok 0,60 m aşar; düzeltme 0,60 m'ye indirir.
+- **Çatı örtüsünü aşan duvarlar (PAİY 40/5; docs/adr/8165):** merdiven evi, ışıklık, alın ve kalkan duvarı eğimli
+  çatının örtüsünü en çok 0,60 m aşar (``walls``: duvarın üstünün örtüden yüksekliği, türü yanındaki mahallerden).
+  Asansör kulesi muaftır; asansörlü binada merdiven evi asansör kulesiyle birlikte düzenlenmişse en az ölçülerdeki
+  bölümü aşabilir: aşan merdiven evi uzman incelemesi.
 - **Duman bacası (BYKHY 58/2):** mahyanın en az 0,80 m üstüne çıkar; düzeltme 0,80 m'ye çıkarır.
 - **Sivas seçiliyse** (yönetmeliğin günü 10.11.2022'den): eğim en çok %40 (40/5-g; düzeltme dik kenarları %40'a
   indirir), saçakta kar siperliği zorunlu (42/5; düzeltme Çatı aracının kar siperliğini, saçaktan 30 cm içeride, verir),
@@ -26,7 +30,8 @@ Bulgunun düzeltmesi ``cad.arch.edit``'in çatı üstündeki işlemidir; parçal
 yazılır, yalnız düzeltilen değişir.
 
 **Okunan olgular** (``facts.building``): çatılar (``form``: eğimli mi, mahya, saçak, eğimler, kar siperliği, ortası,
-parçalar, pencere aralıkları, saçağın parselden ve çıkmadan taşması), yerel yönetmelik, plan notları.
+parçalar, pencere aralıkları, saçağın parselden ve çıkmadan taşması, örtüyü aşan duvarlar), katların asansörleri,
+yerel yönetmelik, plan notları.
 """
 
 from __future__ import annotations
@@ -47,6 +52,9 @@ SIVAS = [("Sivas", "40/5-g"), ("Sivas", "40/5-e-2"), ("Sivas", "40/5-e-3"), ("Si
 
 #: Çatı aracının kar siperliği: saçaktan 30 cm içeride (kentos_commands::DEFAULT_SNOW_GUARD); yönetmeliğin değeri değil.
 KAR_SIPERLIGI = 0.3
+
+#: Çatı örtüsünü aşan duvarın türü (olguların ``walls[].kind``'i) ve iletideki adı (docs/adr/8165).
+DUVAR = {"stair": "Merdiven evi duvarının", "lightWell": "Işıklık duvarının", "other": "Alın ya da kalkan duvarının"}
 
 #: Planın çatı notları (olguların ``planNotes[].key``'i), satırdaki adları ve başlıkları.
 MAHYA, EGIM, SACAK = "ridgeMost", "roofSlopeMost", "eavesMost"
@@ -130,10 +138,15 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     kalan: dict[Any, int] = {}
     var: dict[Any, int] = {}
 
+    uzman: dict[Any, int] = {}
+
     def say(m: Any, kaldi: bool) -> None:
         var[m] = var.get(m, 0) + 1
         if kaldi:
             kalan[m] = kalan.get(m, 0) + 1
+
+    # Asansörlü bina (docs/adr/8165): merdiven evi asansör kulesiyle birlikte düzenlenebilir.
+    asansorlu = any(int(k.get("elevators") or 0) > 0 for k in bina.get("storeys") or [])
 
     h_mahya, h_baca, h_sacak, h_duman = (hal[m] for m in MADDELER)
     h_parsel = y.hal(*PARSEL, gun)
@@ -225,6 +238,30 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                     b["at"] = list(p["at"])
                     b["fix"] = _duzelt("Bacayı mahyanın 0,80 m üstüne çıkar", uid, _yukselt(f, i, en_az))
                     bulgular.append(b)
+        # Çatı örtüsünü aşan duvarlar (40/5; docs/adr/8165): asansör kulesi muaf; asansörlü binada merdiven evi uzmanın.
+        if h_baca is not None:
+            en_cok = float(h_baca.anahtar["most"])
+            for d in f.get("walls") or []:
+                if d["kind"] not in DUVAR:
+                    say(MADDELER[1], False)
+                    continue
+                b = katman.bulgu("paiy_roof_wall_high", f"{DUVAR[d['kind']]} çatı örtüsünü aşan yüksekliği",
+                                 float(d["over"]), False, katman.Sinir(en_cok, h_baca), None,
+                                 "Duvarı çatı örtüsünün en çok 0,60 m üstünde bitirin (duvarın yüksekliği).",
+                                 [d["uid"]], f"duvar:{d['uid']}")
+                if b is None:
+                    say(MADDELER[1], False)
+                    continue
+                b["at"] = list(d["at"])
+                if d["kind"] == "stair" and asansorlu:
+                    b["message"] += ("; asansörlü binada asansör kulesiyle birlikte düzenlenen merdiven evinin en az "
+                                     "ölçülerdeki bölümü aşabilir")
+                    b["state"] = y.UZMAN
+                    var[MADDELER[1]] = var.get(MADDELER[1], 0) + 1
+                    uzman[MADDELER[1]] = uzman.get(MADDELER[1], 0) + 1
+                else:
+                    say(MADDELER[1], True)
+                bulgular.append(b)
         # Planın çatı eğimi notu: Sivas'ın %40'ının yerine, Sivas'sız da.
         if egimli and EGIM in plan:
             sinir = plan[EGIM].deger
@@ -321,9 +358,10 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     # Notun bağladığı ölçünün maddesi kapsam dışı (Sivas 40/5-g mahyanın da eğimin de).
     baglanan = {m for m, anahtarlar in ((MADDELER[0], (MAHYA,)), (MADDELER[2], (SACAK,)), (SIVAS[0], (MAHYA, EGIM)))
                 if bagli(m, anahtarlar)}
-    yok_notu = {MADDELER[0]: "eğimli çatı yok", MADDELER[1]: "hava bacası yok", MADDELER[2]: "duvarlarından çizilmiş "
-                "çatı yok (saçağı ölçülmez)", MADDELER[3]: "duman bacası yok", SIVAS[0]: "eğimli çatı yok",
-                SIVAS[1]: "çatı penceresi yok", SIVAS[2]: "çatı penceresi yok", SIVAS[3]: "eğimli çatı yok"}
+    yok_notu = {MADDELER[0]: "eğimli çatı yok", MADDELER[1]: "hava bacası ya da çatı örtüsünü aşan duvar yok",
+                MADDELER[2]: "duvarlarından çizilmiş çatı yok (saçağı ölçülmez)", MADDELER[3]: "duman bacası yok",
+                SIVAS[0]: "eğimli çatı yok", SIVAS[1]: "çatı penceresi yok", SIVAS[2]: "çatı penceresi yok",
+                SIVAS[3]: "eğimli çatı yok"}
     if h_parsel is not None and any(r["form"].get("outside") is not None for r in catilar):
         if kalan.get(PARSEL):
             satirlar.append(_satir(h_parsel, y.KALDI, f"{kalan[PARSEL]} çatının saçağı parsel sınırını aşıyor"))
@@ -344,6 +382,9 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
             satirlar.append(_satir(h, y.KAPSAM_DISI, yok_notu[m] if catilar else "çatı yok"))
         elif kalan.get(m):
             satirlar.append(_satir(h, y.KALDI, f"{kalan[m]} ölçü sınırı aşıyor"))
+        elif uzman.get(m):
+            satirlar.append(_satir(h, y.UZMAN, f"{uzman[m]} merdiven evi duvarı asansörlü binada aşıyor: uzman "
+                                               f"incelemesi"))
         else:
             satirlar.append(_satir(h, y.GECTI, f"{var[m]} ölçü sınırın içinde"))
     return y.Sonuc(bulgular, satirlar)

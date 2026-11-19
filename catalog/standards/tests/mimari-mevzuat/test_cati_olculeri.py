@@ -40,7 +40,9 @@ class BagimsizDurumlar(unittest.TestCase):
                 with self.subTest(durum=durum["id"], kod=e["code"]):
                     for parca in e.get("has", []):
                         self.assertIn(parca, b["message"])
-                    self.assertEqual(b["uids"], [CATI])
+                    # Çatının bulgusu çatıyı, çatı örtüsünü aşan duvarınki duvarı seçer (docs/adr/8165).
+                    self.assertEqual(b["uids"], e.get("uids", [CATI]))
+                    self.assertEqual(b.get("state"), e.get("state"), b["message"])
                     self.assertTrue(b["repair"] and b["rule"] and len(b["at"]) == 2, b)
                     self.duzeltme(b, e.get("fix"), durum["building"])
             satirlar = {s["rule"]: [s["state"], s["version"]] for s in sonuc.satirlar}

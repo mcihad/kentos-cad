@@ -2351,7 +2351,7 @@
     {
       "regulation": "PAİY",
       "article": "40/5",
-      "title": "Çatı örtüsünü aşan yapılar (hava bacası)",
+      "title": "Çatı örtüsünü aşan yapılar",
       "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi; RG 25.2.2022/31761'in ek ibaresi (fotovoltaik paneller) 0.60 metreyi değiştirmedi.",
       "versions": [
         {
@@ -2361,8 +2361,8 @@
           "label": "1.10.2017",
           "gazette": "3.7.2017/30113; 25.2.2022/31761 ek ibare",
           "most": 0.6,
-          "text": "(5) Merdiven evleri, ışıklıklar, hava bacaları, alın ve kalkan duvarları dördüncü fıkraya göre belirlenen çatı örtüsü düzlemlerini en fazla 0.60 metre aşabilir. …",
-          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 40/5; docs/adr/8044 §9, 8159 §2."
+          "text": "(5) Merdiven evleri, ışıklıklar, hava bacaları, alın ve kalkan duvarları dördüncü fıkraya göre belirlenen çatı örtüsü düzlemlerini en fazla 0.60 metre aşabilir. … Asansörlü binalarda TSE standartlarına göre projelendirilecek asansör kulelerinin ve bu bölümlerle birlikte düzenlenen merdiven evlerinin en az ölçülerdeki bölümlerinin, çatı örtüsünü aşmasına da izin verilir.",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 40/5; docs/adr/8044 §9, 8159 §2, 8165 §2."
         }
       ]
     },

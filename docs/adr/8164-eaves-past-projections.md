@@ -59,5 +59,6 @@ geçiyordu.
 
 ## §6. Kalanlar
 
-- 40/5'in öbür çıkıntıları (merdiven evi, ışıklık, alın ve kalkan duvarları).
+- 40/5'in öbür çıkıntıları (merdiven evi, ışıklık, alın ve kalkan duvarları) — yapıldı: ADR
+  [8165](8165-walls-over-the-roof-covering.md).
 - Çıkmanın çatıya göre ayrı çatısı (çıkmanın kendi saçağı) çatının altındaki çıkma gibi okunur; ayrı bir hükmü yok.

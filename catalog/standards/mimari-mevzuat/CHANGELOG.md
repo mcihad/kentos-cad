@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.52.0 — 19 Kasım 2026
+
+- Çatı örtüsünü aşan duvarlar (`cati_olculeri`; docs/adr/8165): PAİY 40/5'in merdiven evi, ışıklık, alın ve kalkan
+  duvarı da çatı örtüsünü en çok 0,60 m aşar. Olguların çatı biçiminde `walls` (eğimli çatının dış hattındaki
+  duvarların üstünün örtüden yüksekliği, en çok aştığı yer ve yanındaki mahallerden türü: `stair`, `lightWell`,
+  `elevator`, `other`); aşan duvar `paiy_roof_wall_high`. Asansör kulesi muaf; asansörlü binada aşan merdiven evi uzman
+  incelemesi (asansör kulesiyle birlikte düzenlenen merdiven evinin en az ölçülerdeki bölümü aşabilir). 40/5'in
+  sürüm metni fıkranın asansör cümlesini de taşır. 5 yeni bağımsız durum (32).
+
 ## 0.51.0 — 19 Kasım 2026
 
 - Çıkmadan saçak (`cati_olculeri`; docs/adr/8164): PAİY 42/3 "Binada çıkma yapılması halinde saçak genişliği çıkmadan

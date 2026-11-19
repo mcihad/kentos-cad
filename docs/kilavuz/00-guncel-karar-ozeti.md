@@ -457,6 +457,10 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Çatı örtüsünü aşan duvarlar (19 Kasım 2026; [ADR 8165](../adr/8165-walls-over-the-roof-covering.md),
+    K426–K427):** PAİY 40/5; eğimli çatının dış hattındaki duvarın üstünün örtüden yüksekliği (`roofs[].form.walls`,
+    türü yanındaki mahallerden); merdiven evi, ışıklık, alın ve kalkan duvarı en çok 0,60 m, asansör kulesi muaf,
+    asansörlü binada aşan merdiven evi uzman incelemesi.
   - **Çıkmadan saçak (19 Kasım 2026; [ADR 8164](../adr/8164-eaves-past-projections.md), K424–K425):** PAİY 42/3;
     çatının altındaki çıkmaların ön yüzünden (yanları değil) saçak çizgisine en büyük uzaklık (`roofs[].form.
     overProjection`, `Document::projection_parts` vaziyet planı olmadan); en çok 0,50 m; satır yalnız çatının altında

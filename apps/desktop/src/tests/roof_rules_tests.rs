@@ -355,8 +355,8 @@ fn parcel_screens() {
     }
 }
 
-/// 8152's dwelling with a roof over 1. kat whose south eaves run along y = `south`: over the 1.20 m deep Balkon (y −1.20
-/// to 0, x 2–8) on 1. kat.
+/// 8152's dwelling with a roof over 1. kat whose south eaves run along y = `south`: over the 1.20 m deep Balkon
+/// (y −1.20 to 0, x 2–8) on 1. kat.
 fn over_the_balcony(south: f64) -> App {
     let (mut app, _) = crate::projection_tests::scene(1.2);
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
@@ -372,8 +372,9 @@ fn over_the_balcony(south: f64) -> App {
 }
 
 /// PAİY 42/3 (docs/adr/8164): "Binada çıkma yapılması halinde saçak genişliği çıkmadan itibaren 0.50 metreyi aşamaz."
-/// On 8152's dwelling the roof over 1. kat from y −2.00 reaches 0.80 m past the Balkon's front: 42/3 fails; from y −1.60,
-/// 0.40 m: it holds. The Balkon's sides are not its front: the eaves west and east of it are the main facade's.
+/// On 8152's dwelling the roof over 1. kat from y −2.00 reaches 0.80 m past the Balkon's front: 42/3 fails; from
+/// y −1.60, 0.40 m: it holds. The Balkon's sides are not its front: the eaves west and east of it are the main
+/// facade's.
 #[test]
 fn the_eaves_stay_within_half_a_metre_of_a_projection() {
     use kentos_commands::ArchAuditOutcome as O;
@@ -432,6 +433,115 @@ fn projection_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-cikma-sacak-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// A two-storey dwelling (Zemin kat ±0.00, 1. kat +3.00, each 3.00 m) under a hip roof over 1. kat (x 0–10, y 0–8, 50 %
+/// on every edge, its eaves at 1. kat's top, +6.00) and a stair housing's room on 1. kat (Merdiven evi, x 6–8, y 5–6.5,
+/// away from the slope arrows) whose south wall (x 6–8 along y 5, 20 cm) is `height` m: its foot +3.00.
+fn stair_housing(height: f64) -> App {
+    use crate::use_class_tests::{building, p, rect, run, spaces};
+    let mut app = building(2, "Konut");
+    let room = rect(6.0, 5.0, 8.0, 6.5);
+    spaces(&mut app, vec![json!({"parts": room, "name": "Merdiven evi", "arch": {"level": "k01"}})]);
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    run(
+        &mut app,
+        "cad.roofs.create",
+        json!({"layerId": layer, "roofs": [{"pts": [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 8.0), p(0.0, 8.0)],
+            "slopes": [50.0, 50.0, 50.0, 50.0], "arch": {"level": "k01"}}]}),
+    );
+    run(
+        &mut app,
+        "cad.walls.create",
+        json!({"layerId": layer, "walls": [{"pts": [p(6.0, 5.0), p(8.0, 5.0)], "width": 0.2, "height": height,
+            "arch": {"level": "k01"}}]}),
+    );
+    app
+}
+
+/// PAİY 40/5 (docs/adr/8165): the stair housing's wall 5.00 m tall tops out at +8.00; the covering under its east end
+/// (2.00 m in from the east eaves at 50 %) is +7.00: 1.00 m over it, past 0.60 m: 40/5 fails. 4.50 m tall, 0.50 m
+/// over: it holds. With an elevator in the building the 1.00 m is an expert's to review: the stair housing arranged
+/// with the elevator tower may pass the covering in its least sizes.
+#[test]
+fn a_stair_housing_passes_the_roof_covering_by_at_most_0_60_m() {
+    use kentos_commands::{ArchAuditOutcome as O, ArchAuditState};
+    let row = |app: &App| {
+        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        set.rules.iter().find(|r| r.rule == "PAİY 40/5").map(|r| r.state)
+    };
+    let found = |app: &App| -> Vec<(String, Option<ArchAuditState>)> {
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        audited
+            .findings
+            .iter()
+            .filter(|f| f.code == "paiy_roof_wall_high")
+            .map(|f| (f.message.clone(), f.state))
+            .collect()
+    };
+    use kentos_native_application::roof_walls::WallOverKind;
+    let mut app = stair_housing(5.0);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let walls: Vec<(WallOverKind, f64)> = kentos_native_application::roof_audit::measures(doc)
+        .into_iter()
+        .flat_map(|m| m.walls)
+        .map(|w| (w.kind, w.over))
+        .collect();
+    assert_eq!(walls.len(), 1, "{walls:?}");
+    assert_eq!(walls[0].0, WallOverKind::Stair);
+    assert!((walls[0].1 - 1.0).abs() < 1e-6, "{walls:?}");
+    checked(&mut app);
+    assert_eq!(row(&app), Some(O::Failed));
+    let message = "Merdiven evi duvarının çatı örtüsünü aşan yüksekliği 1.00 m > 0.60 m — PAİY 40/5 (1.10.2017)";
+    assert_eq!(found(&app), [(message.to_owned(), None)]);
+
+    let mut low = stair_housing(4.5);
+    checked(&mut low);
+    assert_eq!(row(&low), Some(O::Passed));
+    assert!(found(&low).is_empty());
+
+    // An elevator's shaft on 1. kat: the building has an elevator.
+    let shaft = crate::use_class_tests::rect(1.5, 2.0, 3.0, 4.0);
+    let elevator = json!({"parts": shaft, "name": "Asansör", "arch": {"level": "k01"}});
+    crate::use_class_tests::spaces(&mut app, vec![elevator]);
+    checked(&mut app);
+    assert_eq!(row(&app), Some(O::ExpertReview));
+    let said = found(&app);
+    assert_eq!(said.len(), 1, "{said:?}");
+    assert!(said[0].0.starts_with(message) && said[0].0.contains("asansörlü binada"), "{said:?}");
+    assert_eq!(said[0].1, Some(ArchAuditState::ExpertReview));
+}
+
+/// Denetim's 40/5 finding on the stair housing's wall, light and dark; `.run/gui-evidence/cati-duvar-8165/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn wall_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cati-duvar-8165");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    for (theme, size, name) in sizes {
+        let mut app = stair_housing(5.0);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::ActiveLevel(Some("k01".into())));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_roof_wall_high");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-cati-duvar-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

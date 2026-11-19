@@ -17,6 +17,8 @@
 //!   projection's front face (an outer side whose inside runs back to the footprint; not its sides) along its outward
 //!   normal to the eaves line, at the face's two ends 1 cm in and its middle, the points under the roof only; the
 //!   largest. A projection on a storey over the roof's is not under it.
+//! - **Duvarlar:** the walls rising over a sloping roof's covering, by how much and what they are (PAİY 40/5,
+//!   docs/adr/8165; [`crate::roof_walls`]).
 //!
 //! The measures are the drawing's; the rules decide.
 
@@ -58,6 +60,8 @@ pub struct RoofMeasure {
     /// How far the eaves reach past the front faces of the projections under it, m (docs/adr/8164); none when no
     /// projection's front face lies under it.
     pub over_projection: Option<f64>,
+    /// The walls rising over its covering (docs/adr/8165; PAİY 40/5), in the drawing's order; none for a flat roof.
+    pub walls: Vec<crate::roof_walls::WallOver>,
 }
 
 /// Every roof's measures, in the drawing's order; a roof whose shape cannot be built is left out.
@@ -143,6 +147,7 @@ pub fn measures(doc: &Document) -> Vec<RoofMeasure> {
                     projections.iter().filter(|p| top.is_none_or(|f| p.floor <= f + 1e-6)).collect();
                 past_projections(&pts, &under, &footprint)
             },
+            walls: crate::roof_walls::walls_over(doc, &pts, &spec),
         });
     }
     out
@@ -169,8 +174,8 @@ fn past(pts: &[V], ring: &[V]) -> f64 {
 }
 
 /// How far the eaves line `pts` reaches past the projections' front faces (docs/adr/8164; PAİY 42/3), m: from each
-/// front face (an outer side of a projection, the open air beyond it, whose inside runs back to the footprint) along its
-/// outward normal to the eaves line, at its two ends 1 cm in and its middle, the points under the roof only; the
+/// front face (an outer side of a projection, the open air beyond it, whose inside runs back to the footprint) along
+/// its outward normal to the eaves line, at its two ends 1 cm in and its middle, the points under the roof only; the
 /// largest; none when no front face lies under the roof.
 fn past_projections(
     pts: &[V],

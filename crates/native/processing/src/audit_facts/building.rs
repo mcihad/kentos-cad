@@ -638,7 +638,7 @@ fn roofs(doc: &Document) -> Vec<RoofFacts> {
 /// Each roof's form as the roof rules read it (docs/adr/8159), by its object: the application's measures.
 #[cfg(feature = "mod-arch")]
 fn roof_forms(doc: &Document) -> std::collections::HashMap<u32, RoofFormFacts> {
-    use kentos_extensions::audit_facts::building::{RoofPartFacts, WindowGapFacts};
+    use kentos_extensions::audit_facts::building::{RoofPartFacts, RoofWallFacts, WindowGapFacts};
     kentos_native_application::roof_audit::measures(doc)
         .into_iter()
         .map(|m| {
@@ -670,6 +670,16 @@ fn roof_forms(doc: &Document) -> std::collections::HashMap<u32, RoofFormFacts> {
                 window_gaps: m.window_gaps.into_iter().map(|(a, b, apart)| WindowGapFacts { a, b, apart }).collect(),
                 outside: m.outside,
                 over_projection: m.over_projection,
+                walls: m
+                    .walls
+                    .into_iter()
+                    .map(|w| RoofWallFacts {
+                        uid: w.uid,
+                        kind: w.kind.name().to_owned(),
+                        over: w.over,
+                        at: [w.at.x, w.at.y],
+                    })
+                    .collect(),
             };
             (m.slot.0, form)
         })

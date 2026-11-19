@@ -1415,6 +1415,9 @@ pub mod joinery_audit;
 #[path = "arch/roof_audit.rs"]
 pub mod roof_audit;
 #[cfg(feature = "mod-arch")]
+#[path = "arch/roof_walls.rs"]
+pub mod roof_walls;
+#[cfg(feature = "mod-arch")]
 #[path = "arch/railing_audit.rs"]
 pub mod railing_audit;
 #[cfg(feature = "mod-arch")]

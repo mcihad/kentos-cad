@@ -2808,6 +2808,518 @@
           ]
         }
       }
+    },
+    {
+      "id": "merdiven-evi-asar",
+      "neden": "Merdiven evinin duvarı eğimli çatının örtüsünü 1,00 m aşar; asansör yok → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                5.0,
+                4.0
+              ],
+              "sloping": true,
+              "ridge": 2.0,
+              "slopes": [
+                50.0,
+                50.0,
+                50.0,
+                50.0
+              ],
+              "walls": [
+                {
+                  "uid": "00000000-0000-4000-8000-000000000851",
+                  "kind": "stair",
+                  "over": 1.0,
+                  "at": [
+                    5.0,
+                    2.0
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_roof_wall_high",
+            "has": [
+              "Merdiven evi duvarının çatı örtüsünü aşan yüksekliği 1.00 m > 0.60 m — PAİY 40/5 (1.10.2017)"
+            ],
+            "uids": [
+              "00000000-0000-4000-8000-000000000851"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "failed",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "merdiven-evi-asansorlu",
+      "neden": "Aynı merdiven evi asansörlü binada: asansör kulesiyle birlikte düzenlenen merdiven evinin en az ölçülerdeki bölümü aşabilir, en az ölçüyü çizim söylemez → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 1,
+            "rooms": [],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 1,
+            "rooms": [],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                5.0,
+                4.0
+              ],
+              "sloping": true,
+              "ridge": 2.0,
+              "slopes": [
+                50.0,
+                50.0,
+                50.0,
+                50.0
+              ],
+              "walls": [
+                {
+                  "uid": "00000000-0000-4000-8000-000000000851",
+                  "kind": "stair",
+                  "over": 1.0,
+                  "at": [
+                    5.0,
+                    2.0
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_roof_wall_high",
+            "has": [
+              "Merdiven evi duvarının çatı örtüsünü aşan yüksekliği 1.00 m > 0.60 m — PAİY 40/5 (1.10.2017)",
+              "asansörlü binada"
+            ],
+            "uids": [
+              "00000000-0000-4000-8000-000000000851"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "expertReview",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kalkan-duvari-icinde",
+      "neden": "Kalkan duvarı örtüyü 0,40 m aşar ≤ 0,60 m → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                5.0,
+                4.0
+              ],
+              "sloping": true,
+              "ridge": 2.0,
+              "slopes": [
+                50.0,
+                50.0,
+                50.0,
+                50.0
+              ],
+              "walls": [
+                {
+                  "uid": "00000000-0000-4000-8000-000000000851",
+                  "kind": "other",
+                  "over": 0.4,
+                  "at": [
+                    5.0,
+                    2.0
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "asansor-kulesi",
+      "neden": "Asansör kulesinin duvarı örtüyü 1,50 m aşar: 40/5 izin verir → bulgu yok, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 1,
+            "rooms": [],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 1,
+            "rooms": [],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                5.0,
+                4.0
+              ],
+              "sloping": true,
+              "ridge": 2.0,
+              "slopes": [
+                50.0,
+                50.0,
+                50.0,
+                50.0
+              ],
+              "walls": [
+                {
+                  "uid": "00000000-0000-4000-8000-000000000851",
+                  "kind": "elevator",
+                  "over": 1.5,
+                  "at": [
+                    5.0,
+                    2.0
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "isiklik-asar",
+      "neden": "Işıklığın duvarı örtüyü 0,80 m aşar → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                5.0,
+                4.0
+              ],
+              "sloping": true,
+              "ridge": 2.0,
+              "slopes": [
+                50.0,
+                50.0,
+                50.0,
+                50.0
+              ],
+              "walls": [
+                {
+                  "uid": "00000000-0000-4000-8000-000000000851",
+                  "kind": "lightWell",
+                  "over": 0.8,
+                  "at": [
+                    5.0,
+                    2.0
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_roof_wall_high",
+            "has": [
+              "Işıklık duvarının çatı örtüsünü aşan yüksekliği 0.80 m > 0.60 m — PAİY 40/5 (1.10.2017)"
+            ],
+            "uids": [
+              "00000000-0000-4000-8000-000000000851"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "failed",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
     }
   ]
 }

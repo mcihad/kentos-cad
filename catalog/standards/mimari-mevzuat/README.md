@@ -33,7 +33,8 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   zeminden en az 2,40 m (41/2). Planın çıkma notu 1,50 m'nin yerine (docs/adr/8162).
 - **Çatının ölçüleri** (`cati_olculeri`, docs/adr/8159): mahya saçak seviyesinden en çok 5,00 m (40/4), saçak 1,00 m
   (42/1), parsel sınırının içinde (42/2, docs/adr/8161) ve çıkma varsa çıkmanın ön yüzünden en çok 0,50 m (42/3,
-  docs/adr/8164), hava bacası çatı örtüsünü en çok 0,60 m aşar (40/5), duman bacası mahyanın en az 0,80 m üstüne çıkar (BYKHY
+  docs/adr/8164), hava bacası, merdiven evi, ışıklık, alın ve kalkan duvarı çatı örtüsünü en çok 0,60 m aşar, asansör kulesi muaf (40/5,
+  docs/adr/8165), duman bacası mahyanın en az 0,80 m üstüne çıkar (BYKHY
   58/2); Sivas'ta mahya 4,00 m ve eğim %40 (40/5-g), çatı penceresi 1,20 × 1,50 m, cepheye 1 m, birbirine 2 m (40/5-e),
   kar siperliği (42/5). Planın mahya, eğim ve saçak notları (docs/adr/8160) önce. Bulgunun düzeltmesi çatıya yazar.
 - **Merdiven altı** (`merdiven_alti`, docs/adr/8080): 1,80 m'den alçak merdiven altı kapatılır (31/6); alçak boşluk bir

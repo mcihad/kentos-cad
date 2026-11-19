@@ -319,6 +319,22 @@ pub struct RoofFormFacts {
     /// when no projection's front face lies under it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub over_projection: Option<f64>,
+    /// The walls rising over its covering (docs/adr/8165; PAİY 40/5), in the drawing's order; none for a flat roof.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub walls: Vec<RoofWallFacts>,
+}
+
+/// A wall rising over a sloping roof's covering (docs/adr/8165; PAİY 40/5): its persistent id, what it is by the rooms
+/// beside it (`elevator`: an elevator shaft's, `stair`: a stair's room's, `lightWell`: a light well's, `other`: an end
+/// or a gable wall), by how much its top passes the covering (m) and where it passes it most, in plan.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct RoofWallFacts {
+    pub uid: String,
+    pub kind: String,
+    pub over: f64,
+    pub at: [f64; 2],
 }
 
 /// A part standing through a roof or set in it (docs/adr/8159): its kind (`chimney`, `vent`, `window`, `downpipe`), its
@@ -878,6 +894,10 @@ impl BuildingFacts {
                 }
                 f.outside = f.outside.map(|v| round(v, LENGTH));
                 f.over_projection = f.over_projection.map(|v| round(v, LENGTH));
+                for w in &mut f.walls {
+                    w.over = round(w.over, LENGTH);
+                    w.at = [round(w.at[0], LENGTH), round(w.at[1], LENGTH)];
+                }
             }
         }
         for i in &mut self.insulations {
