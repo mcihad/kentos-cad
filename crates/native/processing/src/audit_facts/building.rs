@@ -56,8 +56,8 @@ use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts, PartyFacts,
-    PlanNoteFacts,
+    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts,
+    MasonryStorey, PartyFacts, PlanNoteFacts,
     FinishFacts, RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts, ShaftVentFacts,
     SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
@@ -294,6 +294,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             footprint: counted.masonry_footprint,
             thick: counted.masonry_walls.clone(),
             undeclared: counted.masonry_undeclared.clone(),
+            storeys: masonry_storeys(doc, &counted),
         }),
         exempt_cap: counted.cap.map(|cap| ExemptCap { cap, exempt: counted.exempt }),
         rooms,
@@ -793,6 +794,36 @@ fn elevators(doc: &Document, storeys: &mut [StoreyHolds]) -> Vec<u32> {
 #[cfg(not(feature = "mod-arch"))]
 fn elevators(_: &Document, _: &mut [StoreyHolds]) -> Vec<u32> {
     Vec::new()
+}
+
+/// Each storey's share of the stone walls (docs/adr/8150): its walls' and footprint's parts from the table's storeys,
+/// its thick load-bearing walls by their own storey; a storey with none of them left out.
+fn masonry_storeys(doc: &Document, counted: &kentos_domain::zoning::ZoningReport) -> Vec<MasonryStorey> {
+    let mut out: Vec<MasonryStorey> = counted
+        .levels
+        .iter()
+        .filter_map(|l| {
+            Some(MasonryStorey {
+                level: l.level.clone()?,
+                walls: l.masonry,
+                footprint: l.masonry_footprint,
+                thick: Vec::new(),
+            })
+        })
+        .collect();
+    for (uid, e) in doc.entities_with_uids() {
+        let uid = uid.to_string();
+        if !counted.masonry_walls.contains(&uid) {
+            continue;
+        }
+        let Some(level) = e.own_level() else { continue };
+        match out.iter_mut().find(|s| s.level == level) {
+            Some(s) => s.thick.push(uid),
+            None => out.push(MasonryStorey { level: level.to_owned(), thick: vec![uid], ..MasonryStorey::default() }),
+        }
+    }
+    out.retain(|s| s.walls > 0.0 || s.footprint > 0.0 || !s.thick.is_empty());
+    out
 }
 
 #[cfg(test)]

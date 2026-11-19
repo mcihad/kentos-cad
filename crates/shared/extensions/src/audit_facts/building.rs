@@ -128,7 +128,8 @@ pub struct BuildingFacts {
 /// (exterior) and 12.50 cm (interior) within the rooms' contours, out of katlar alanı apart from the 30 % (`walls`, m²);
 /// of them, the exterior walls' on the ground storeys, out of taban alanı (`footprint`, m²); the load-bearing stone
 /// walls thicker than 12.50 cm (`thick`) and the walls as thick with no load-bearing declaration (`undeclared`: their
-/// part counts in), by persistent id.
+/// part counts in), by persistent id; and the same storey by storey (`storeys`, docs/adr/8150), so a rule reads each
+/// building's walls by its own storeys.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -139,6 +140,22 @@ pub struct MasonryFacts {
     pub thick: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub undeclared: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub storeys: Vec<MasonryStorey>,
+}
+
+/// A storey's share of a traditional building's stone walls (docs/adr/8150): its id, the walls' parts within its
+/// rooms' contours out apart from the 30 % (`walls`, m²), of them the exterior walls' out of taban alanı (`footprint`,
+/// m²), and the load-bearing stone walls thicker than 12.50 cm on it (`thick`, by persistent id).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct MasonryStorey {
+    pub level: String,
+    pub walls: f64,
+    pub footprint: f64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub thick: Vec<String>,
 }
 
 /// The 30 % of 5/8 as Emsal ve TAKS tablosu counts it (docs/adr/8096): its limit (`cap`, 30 % of the parcel's emsal
@@ -626,6 +643,12 @@ impl BuildingFacts {
             m.footprint = round(m.footprint, AREA);
             m.thick.sort();
             m.undeclared.sort();
+            for s in &mut m.storeys {
+                s.walls = round(s.walls, AREA);
+                s.footprint = round(s.footprint, AREA);
+                s.thick.sort();
+            }
+            m.storeys.sort_by(|a, b| a.level.cmp(&b.level));
         }
         self.uses.retain(|u| !u.trim().is_empty());
         for u in &mut self.under_stairs {

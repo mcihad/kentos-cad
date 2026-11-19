@@ -154,6 +154,12 @@ fn a_traditional_stone_house_s_thick_walls_are_out_of_katlar_alani_and_the_outer
     let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
     let m = facts.masonry.expect("the stone walls");
     assert!(near(m.walls, 16.875) && near(m.footprint, 7.75) && m.thick.len() == 9 && m.undeclared.is_empty(), "{m:?}");
+    // Storey by storey (docs/adr/8150): Zemin kat's two rooms' parts (3.875 + 0.6875 each) and its exterior walls' 7.75
+    // m² out of taban alanı, its four exterior walls and the interior one; 1. kat's 7.75 m², its four walls.
+    let storeys: Vec<(f64, f64, usize)> = m.storeys.iter().map(|s| (s.walls, s.footprint, s.thick.len())).collect();
+    assert_eq!(storeys.len(), 2, "{storeys:?}");
+    assert!(near(storeys[0].0, 9.125) && near(storeys[0].1, 7.75) && storeys[0].2 == 5, "{storeys:?}");
+    assert!(near(storeys[1].0, 7.75) && near(storeys[1].1, 0.0) && storeys[1].2 == 4, "{storeys:?}");
     let table = doc.zoning_table();
     let labels: Vec<&str> = table.rows.iter().map(|row| row[0].as_str()).collect();
     assert!(labels.contains(&"Taş duvarların kalın kısmı, %30 dışında (m²)"), "{labels:?}");

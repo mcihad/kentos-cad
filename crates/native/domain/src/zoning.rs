@@ -177,6 +177,12 @@ pub struct ZoningLevel {
     pub outside: f64,
     /// Emsal artışı (docs/adr/8125).
     pub bonus: f64,
+    /// A traditional cut stone masonry building's stone walls' parts within its rooms' contours, out apart from the
+    /// 30 % (5/8, docs/adr/8095; in `outside`), and of them the exterior walls' out of taban alanı on a ground storey
+    /// the footprint counts (20/8-j): the storey's share of `ZoningReport::masonry` and `masonry_footprint`
+    /// (docs/adr/8150).
+    pub masonry: f64,
+    pub masonry_footprint: f64,
 }
 
 impl ZoningLevel {
@@ -644,6 +650,7 @@ impl Document {
             out.outside += out_apart;
             level.outside += out_apart;
             out.masonry += walls_of[i];
+            level.masonry += walls_of[i];
         }
         out.masonry_walls = stone.thick;
         out.masonry_undeclared = stone.undeclared;
@@ -711,6 +718,11 @@ impl Document {
             })
             .collect();
         out.masonry_footprint = rooms.iter().zip(&outer_part).filter(|(r, _)| counted(r)).map(|(_, w)| w).sum();
+        // Each storey's share (docs/adr/8150): the rules read a building's walls by its storeys.
+        for l in &mut out.levels {
+            l.masonry_footprint =
+                rooms.iter().zip(&outer_part).filter(|(r, _)| counted(r) && r.level == l.level).map(|(_, w)| w).sum();
+        }
         let outline: Vec<Area> = rooms
             .iter()
             .zip(&shapes)

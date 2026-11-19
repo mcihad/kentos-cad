@@ -442,6 +442,9 @@
     22/1-g: Sığınak adlı mahaller binanın gerekli sığınak alanına kadar emsal harici (`ZoningLimit::Shelter`; net
     gerekli alan brüt/net oranıyla brüte), aşan emsale; 7 istemiyorsa hepsi; bağımsız bölüm yoksa sınır yok. 5/8-b
     bodrumda kalanın hepsini %30 dışına alır. Kural: 7.11.2025'ten önceki başvuruda uzman incelemesi.
+  - **Kalın taş duvarlar bina bina (19 Kasım 2026; [ADR 8150](../adr/8150-thick-walls-per-building.md), K387–K388):**
+    tablonun katları duvar paylarını taşır, olgular `masonry.storeys`'te verir; 20/8-j ve 5/8 her geleneksel binanın
+    duvarlarını kendi kat sayısıyla okur (3 katı aşanınki kalır), 8145'in uzman incelemesi kalktı.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Emsal sınırlarının bağımsız durumları (docs/adr/8079): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1'in metninden (RG 25.7.2019/30842, 23.1.2021/31373, 11.7.2021/31538; 44/1 RG 3.7.2017/30113) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un sayımıdır (building.limits): durumlar sınırların koşullarını sınar, sayımın kendisini Rust'ın sınamaları sınar. 22/1-m'nin durumları (docs/adr/8094) bendin RG 9.10.2021/31623 ve 31.12.2022/32060 hâllerinden elle (building.structuralSystem, building.traditional: projenin beyanı; spaces: mahallerin adları). Kalın taş duvarların durumları (docs/adr/8095) 20/8-j'nin RG 9.10.2021/31623, 5/8'in RG 31.12.2022/32060 metninden ve 22/1-m'nin iki hâlinden elle (building.masonry: tablonun saydığı paylar). Sivas 22/k'nin durumları (docs/adr/8096) Sivas İmar Yönetmeliği'nin (RG 10.11.2022/32009) “toplamı %30'u geçmemek üzere”sinden elle (building.exemptCap: tablonun %30'u ve içinde saydığı). 22/1-j'nin durumları (docs/adr/8147) bendin RG 25.7.2019/30842 metninden elle (building.limits'in amenity sınırı: tablonun saydığı alan, katlar alanının %5'i ve en çok 1000 m² olan sınırı, aşan); bu bendin satırı eski durumlara eklendi (böyle mekân yok: kapsam dışı; 25.7.2019'dan önceki başvuruda satır yok). 22/1-g'nin durumları (docs/adr/8149) bendin RG 3.7.2017/30113 metninden ve Sığınak Yönetmeliği'nin RG 7.11.2025/33070 hâlinden elle (building.limits'in shelter sınırı: tablonun saydığı alan, gerekli sığınak alanı brütüyle, aşan); bu bendin satırı eski durumlara eklendi (sığınak yok: kapsam dışı).",
+  "about": "Emsal sınırlarının bağımsız durumları (docs/adr/8079): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1'in metninden (RG 25.7.2019/30842, 23.1.2021/31373, 11.7.2021/31538; 44/1 RG 3.7.2017/30113) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un sayımıdır (building.limits): durumlar sınırların koşullarını sınar, sayımın kendisini Rust'ın sınamaları sınar. 22/1-m'nin durumları (docs/adr/8094) bendin RG 9.10.2021/31623 ve 31.12.2022/32060 hâllerinden elle (building.structuralSystem, building.traditional: projenin beyanı; spaces: mahallerin adları). Kalın taş duvarların durumları (docs/adr/8095) 20/8-j'nin RG 9.10.2021/31623, 5/8'in RG 31.12.2022/32060 metninden ve 22/1-m'nin iki hâlinden elle (building.masonry: tablonun saydığı paylar). Sivas 22/k'nin durumları (docs/adr/8096) Sivas İmar Yönetmeliği'nin (RG 10.11.2022/32009) “toplamı %30'u geçmemek üzere”sinden elle (building.exemptCap: tablonun %30'u ve içinde saydığı). 22/1-j'nin durumları (docs/adr/8147) bendin RG 25.7.2019/30842 metninden elle (building.limits'in amenity sınırı: tablonun saydığı alan, katlar alanının %5'i ve en çok 1000 m² olan sınırı, aşan); bu bendin satırı eski durumlara eklendi (böyle mekân yok: kapsam dışı; 25.7.2019'dan önceki başvuruda satır yok). 22/1-g'nin durumları (docs/adr/8149) bendin RG 3.7.2017/30113 metninden ve Sığınak Yönetmeliği'nin RG 7.11.2025/33070 hâlinden elle (building.limits'in shelter sınırı: tablonun saydığı alan, gerekli sığınak alanı brütüyle, aşan); bu bendin satırı eski durumlara eklendi (sığınak yok: kapsam dışı). Kalın taş duvarların bina bina durumları (docs/adr/8150) 20/8-j ve 5/8'in metninden elle (building.masonry.storeys: tablonun kat kat saydığı paylar).",
   "cases": [
     {
       "id": "kapici-70-konut",
@@ -5726,6 +5726,450 @@
           "PAİY 22/1-l": [
             "outOfScope",
             "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "duvar-iki-blok-biri-dort-kat",
+      "neden": "İki geleneksel kesme taş yığma blok, 2.7.2026: A zemin dahil 2 katlı (duvarlarının kalın kısmı 3 m², dış duvarlarınki 1,5 m²), B 4 katlı (2 m², 1 m²). 20/8-j ve 5/8 zemin dahil 3 katı geçmeyen binayı okur: olgular duvarları kat kat verir, A'nınkiler geçer, B'ninkiler kalır → iki satır kaldı, bulgu B'nin duvarlarını adlandırır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "a0",
+            "name": "a0",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000301",
+              "00000000-0000-4000-8000-000000000302"
+            ],
+            "height": 3.0,
+            "building": "a",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "a1",
+            "name": "a1",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000303"
+            ],
+            "height": 3.0,
+            "building": "a",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b0",
+            "name": "b0",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000320"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b1",
+            "name": "b1",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000321"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b2",
+            "name": "b2",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000322"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b3",
+            "name": "b3",
+            "elevation": 9.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000323"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [],
+        "masonry": {
+          "walls": 5.0,
+          "footprint": 2.5,
+          "thick": [
+            "00000000-0000-4000-8000-000000000411",
+            "00000000-0000-4000-8000-000000000412",
+            "00000000-0000-4000-8000-000000000421",
+            "00000000-0000-4000-8000-000000000422"
+          ],
+          "storeys": [
+            {
+              "level": "a0",
+              "walls": 2.0,
+              "footprint": 1.5,
+              "thick": [
+                "00000000-0000-4000-8000-000000000411"
+              ]
+            },
+            {
+              "level": "a1",
+              "walls": 1.0,
+              "footprint": 0.0,
+              "thick": [
+                "00000000-0000-4000-8000-000000000412"
+              ]
+            },
+            {
+              "level": "b0",
+              "walls": 1.5,
+              "footprint": 1.0,
+              "thick": [
+                "00000000-0000-4000-8000-000000000421"
+              ]
+            },
+            {
+              "level": "b1",
+              "walls": 0.5,
+              "footprint": 0.0,
+              "thick": [
+                "00000000-0000-4000-8000-000000000422"
+              ]
+            }
+          ]
+        }
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_masonry_walls_not_exempt",
+            "has": [
+              "(2.00 m²)",
+              "(1.00 m²)",
+              "zemin dahil 4 katlı"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 22/1-j": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "outOfScope",
+            "31.12.2022"
+          ],
+          "PAİY 20/8-j": [
+            "failed",
+            "9.10.2021"
+          ],
+          "PAİY 5/8": [
+            "failed",
+            "31.12.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "duvar-iki-blok-ikisi-uc-kat",
+      "neden": "İki geleneksel blok: A 2 katlı, B 3 katlı; ikisi de zemin dahil 3 katı geçmez → her bloğun duvarları kendi kat sayısıyla geçer; satırlar birleşir, notlar iki bloğun paylarını söyler.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "a0",
+            "name": "a0",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000301",
+              "00000000-0000-4000-8000-000000000302"
+            ],
+            "height": 3.0,
+            "building": "a",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "a1",
+            "name": "a1",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000303"
+            ],
+            "height": 3.0,
+            "building": "a",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b0",
+            "name": "b0",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000320"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b1",
+            "name": "b1",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000321"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b2",
+            "name": "b2",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000322"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [],
+        "masonry": {
+          "walls": 5.0,
+          "footprint": 2.5,
+          "thick": [
+            "00000000-0000-4000-8000-000000000411",
+            "00000000-0000-4000-8000-000000000412",
+            "00000000-0000-4000-8000-000000000421",
+            "00000000-0000-4000-8000-000000000422"
+          ],
+          "storeys": [
+            {
+              "level": "a0",
+              "walls": 2.0,
+              "footprint": 1.5,
+              "thick": [
+                "00000000-0000-4000-8000-000000000411"
+              ]
+            },
+            {
+              "level": "a1",
+              "walls": 1.0,
+              "footprint": 0.0,
+              "thick": [
+                "00000000-0000-4000-8000-000000000412"
+              ]
+            },
+            {
+              "level": "b0",
+              "walls": 1.5,
+              "footprint": 1.0,
+              "thick": [
+                "00000000-0000-4000-8000-000000000421"
+              ]
+            },
+            {
+              "level": "b1",
+              "walls": 0.5,
+              "footprint": 0.0,
+              "thick": [
+                "00000000-0000-4000-8000-000000000422"
+              ]
+            }
+          ]
+        }
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-g": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 22/1-j": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "outOfScope",
+            "31.12.2022"
+          ],
+          "PAİY 20/8-j": [
+            "passed",
+            "9.10.2021"
+          ],
+          "PAİY 5/8": [
+            "passed",
+            "31.12.2022"
           ]
         }
       }

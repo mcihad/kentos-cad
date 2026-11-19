@@ -1365,11 +1365,17 @@
       "type": "object"
     },
     "MasonryFacts": {
-      "description": "A traditional cut stone masonry building's stone walls (docs/adr/8095): their load-bearing walls' parts past 25 cm\n(exterior) and 12.50 cm (interior) within the rooms' contours, out of katlar alanı apart from the 30 % (`walls`, m²);\nof them, the exterior walls' on the ground storeys, out of taban alanı (`footprint`, m²); the load-bearing stone\nwalls thicker than 12.50 cm (`thick`) and the walls as thick with no load-bearing declaration (`undeclared`: their\npart counts in), by persistent id.",
+      "description": "A traditional cut stone masonry building's stone walls (docs/adr/8095): their load-bearing walls' parts past 25 cm\n(exterior) and 12.50 cm (interior) within the rooms' contours, out of katlar alanı apart from the 30 % (`walls`, m²);\nof them, the exterior walls' on the ground storeys, out of taban alanı (`footprint`, m²); the load-bearing stone\nwalls thicker than 12.50 cm (`thick`) and the walls as thick with no load-bearing declaration (`undeclared`: their\npart counts in), by persistent id; and the same storey by storey (`storeys`, docs/adr/8150), so a rule reads each\nbuilding's walls by its own storeys.",
       "properties": {
         "footprint": {
           "format": "double",
           "type": "number"
+        },
+        "storeys": {
+          "items": {
+            "$ref": "#/$defs/MasonryStorey"
+          },
+          "type": "array"
         },
         "thick": {
           "items": {
@@ -1389,6 +1395,34 @@
         }
       },
       "required": [
+        "walls",
+        "footprint"
+      ],
+      "type": "object"
+    },
+    "MasonryStorey": {
+      "description": "A storey's share of a traditional building's stone walls (docs/adr/8150): its id, the walls' parts within its\nrooms' contours out apart from the 30 % (`walls`, m²), of them the exterior walls' out of taban alanı (`footprint`,\nm²), and the load-bearing stone walls thicker than 12.50 cm on it (`thick`, by persistent id).",
+      "properties": {
+        "footprint": {
+          "format": "double",
+          "type": "number"
+        },
+        "level": {
+          "type": "string"
+        },
+        "thick": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "walls": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "level",
         "walls",
         "footprint"
       ],

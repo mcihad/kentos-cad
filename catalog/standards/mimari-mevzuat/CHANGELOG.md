@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.38.0 — 19 Kasım 2026
+
+- Kalın taş duvarlar bina bina (`emsal`; docs/adr/8150): olguların `masonry.storeys`'i (katın duvar payı, taban alanı
+  payı, kalın duvarları). Bir binası kendi taşıyıcı sistemini söylüyorsa 20/8-j ve 5/8 her geleneksel binanın
+  duvarlarını kendi kat sayısıyla okur: 3 katı aşan binanınkiler kalır, öbürlerininki geçer (eski uzman incelemesi
+  kalktı); satırlar birleşir. Emsal 52 bağımsız durum (2'si yeni).
+
 ## 0.37.0 — 19 Kasım 2026
 
 - 22/1-g (`emsal`; docs/adr/8149): olguların `shelter` sınırı (sığınağın alanı, binanın gerekli sığınak alanı brütüyle,

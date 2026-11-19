@@ -19,7 +19,7 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   amacı ve kullananları uzman incelemesi), sığınağın gerekli alanı hangi hâlle hesaplandı (22/1-g, docs/adr/8149;
   bağımsız bölüm yoksa eksik veri), geleneksel kesme taş yığma binanın emsal harici taşlık, dış sofa ve
   eyvanı zemin dahil 3 kata kadar binada ve zemin katta mı (22/1-m, docs/adr/8094); kalın taş duvarların payı (5/8,
-  20/8-j, docs/adr/8095): beyansız kalın duvar, katı ve başvuru günü; Sivas'ta duvarlar %30'un içinde (22/k,
+  20/8-j, docs/adr/8095): beyansız kalın duvar, katı (her binanınki kendi katlarıyla, docs/adr/8150) ve başvuru günü; Sivas'ta duvarlar %30'un içinde (22/k,
   docs/adr/8096).
 - **Merdiven altı** (`merdiven_alti`, docs/adr/8080): 1,80 m'den alçak merdiven altı kapatılır (31/6); alçak boşluk bir
   mahale açıksa kaldı.
