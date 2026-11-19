@@ -41,6 +41,13 @@
 //!   or Eyvan is out within the 30 %; the building's storeys (up to three, the ground one with them) and the room's
 //!   place (the garden's, by steps) are the standards package's. Its balconies are 22/1-l's 20 % (22/1-m's is the same).
 //!
+//! - **5/8's basement list** (docs/adr/8148; `basement`): in a basement (a storey under its building's ground
+//!   storey, 4/1-o) the rooms counted out go apart from the 30 %: a common area's on a storey wholly under the ground,
+//!   all of it (d); the shelter's least area, Sığınak Yönetmeliği 8/a's (b); a common masjid's 150 m², 300 m² in a
+//!   building of no dwelling (ç); the common children's play and care rooms' 100 m² (e); the car parks up to twice the
+//!   mandatory car parks' area, the places Ek-1 asks at 20 m² each (a). The rest of b (stairs, shafts, plant rooms) has
+//!   no least area computed: within the 30 %.
+//!
 //! Each limit's excess is shared among its rooms by their areas (the artığı rastgele son mahale verilmez, as for the
 //! balconies). The conditions on the building as a whole (whether a caretaker flat is obligatory, 44/1; the library's
 //! forty units) are the standards package's (catalog/standards/mimari-mevzuat, bim-plan K10), on the limits' facts.
@@ -59,6 +66,7 @@ use crate::room_names;
 use crate::space_follow::SpaceSearch;
 
 mod corners;
+mod basement;
 mod limits;
 mod masonry;
 
@@ -67,6 +75,7 @@ pub use limits::{
     AMENITY_AREA, AMENITY_SHARE, BALCONY_SHARE, CARETAKER_AREA, LIBRARY_AREA, STORAGE_SHARE, ZoningLimit,
     ZoningLimitUse, amenity_allowed,
 };
+pub use basement::{BasementApart, BasementBent, CHILDREN_AREA, MASJID_DWELLINGS, MASJID_OTHERS, PARKING_TIMES};
 pub use masonry::{EXTERIOR_KEPT, INTERIOR_KEPT};
 
 /// The drawing's floor area ratio and coverage against the parcel's zoning, m² and ratios.
@@ -122,6 +131,9 @@ pub struct ZoningReport {
     pub masonry: f64,
     /// Of them, the exterior walls' on the ground storeys the footprint counts, out of taban alanı (20/8-j).
     pub masonry_footprint: f64,
+    /// 5/8's basement list (docs/adr/8148): each bent's rooms moved apart from the 30 %, counted in `outside`; in the
+    /// order d, b, ç, e, a.
+    pub basement: Vec<BasementApart>,
     /// The load-bearing stone walls thicker than 12.50 cm of such a building, by persistent id.
     pub masonry_walls: Vec<String>,
     /// The walls thicker than 12.50 cm of such a building with no load-bearing declaration, by persistent id: their
@@ -144,6 +156,9 @@ pub struct ZoningRoom {
     pub walls: f64,
     /// Its own emsal state's basis, when it gives one (docs/adr/8125).
     pub basis: Option<String>,
+    /// Its part 5/8's basement list moves apart from the 30 % and the bent it is under (docs/adr/8148).
+    pub apart: f64,
+    pub bent: Option<BasementBent>,
 }
 
 
@@ -251,6 +266,14 @@ struct Room {
     /// An indoor storage annex's room on a storey under the ground (22/1-k): the independent unit its annex group is
     /// allocated to.
     storage_of: Option<String>,
+    /// A car park by its name or use (5/8-a, docs/adr/8148).
+    parking: bool,
+    /// A shelter by its name or use (5/8-b).
+    shelter: bool,
+    /// A masjid's room: its name or use says Mescit, or its group's (5/8-ç: "mescit ve müştemilat").
+    masjid: bool,
+    /// A children's play or care room: its name or use says Çocuk and Oyun or Bakım (5/8-e).
+    children: bool,
     /// Its net area, between its walls' faces (PAİY 4/1-ğ-3).
     net: f64,
     /// Its net outline: the stone walls' mass is its storey's contours less these (docs/adr/8095).
@@ -404,6 +427,11 @@ impl Document {
                 traditional,
                 amenity,
                 storage_of,
+                parking: kentos_contracts::is_parking(name, usage),
+                shelter: room_names::has(&own, "SIGINAK"),
+                masjid: names("MESCIT", &own, &theirs),
+                children: room_names::has(&own, "COCUK")
+                    && (room_names::has(&own, "OYUN") || room_names::has(&own, "BAKIM")),
                 net,
                 net_shape,
             });
@@ -514,6 +542,31 @@ impl Document {
         let kept: Vec<f64> = gross.iter().zip(&walls_of).map(|(g, w)| g - w).collect();
         // The limits of 22/1 (docs/adr/8069, 8079): each limited use's part past its limit counted in.
         let (moved, limit_of, used) = limits::apply(&rooms, &kept, &uids, program);
+        // 5/8's basement list (docs/adr/8148): of each room counted out, its part within the 30 % moved apart.
+        let within: Vec<f64> = rooms
+            .iter()
+            .enumerate()
+            .map(|(i, r)| {
+                if !r.void && r.count == EmsalCount::Exempt {
+                    kept[i] - moved[i]
+                } else {
+                    0.0
+                }
+            })
+            .collect();
+        let (apart, bent_of, basements) =
+            basement::apply(&rooms, &within, &uids, program, &basement::basement_levels(arch), &buried, || {
+                let shelter = self.shelter_report();
+                basement::Needs {
+                    parking: f64::from(self.parking_report().required) * crate::provisions::PARKING_UNIT,
+                    shelter: if shelter.exempt.is_some() { 0.0 } else { shelter.area_needed },
+                    dwellings: program.units.iter().any(|u| {
+                        u.kind == kentos_contracts::UnitKind::Unit
+                            && crate::provisions::parking_use(u.nature.as_deref())
+                                == Some(crate::provisions::ParkingUse::Dwelling)
+                    }),
+                }
+            });
         let parcel = zoning.map_or(0.0, |z| z.parcel_area);
         let mut out = ZoningReport {
             parcel,
@@ -551,9 +604,10 @@ impl Document {
                     level.included += g;
                 }
                 EmsalCount::Exempt => {
-                    // A limited use's part past its limit counts in (22/1-l, -k, -ç, -f).
-                    out.exempt += g - m;
-                    level.exempt += g - m;
+                    // A limited use's part past its limit counts in (22/1-l, -k, -ç, -f); 5/8's basement list moves
+                    // its part apart from the 30 % (docs/adr/8148).
+                    out.exempt += g - m - apart[i];
+                    level.exempt += g - m - apart[i];
                     out.included += m;
                     level.included += m;
                     match limit {
@@ -572,7 +626,7 @@ impl Document {
                 }
             }
             // A room out apart from the 30 % (5/8's own) keeps its whole contour there, its walls' part with it.
-            let out_apart = if r.count == EmsalCount::Outside { gross[i] } else { walls_of[i] };
+            let out_apart = if r.count == EmsalCount::Outside { gross[i] } else { walls_of[i] + apart[i] };
             out.outside += out_apart;
             level.outside += out_apart;
             out.masonry += walls_of[i];
@@ -593,9 +647,12 @@ impl Document {
                 shape: shapes[i].clone(),
                 walls: walls_of[i],
                 basis: r.basis.clone(),
+                apart: apart[i],
+                bent: bent_of[i],
             })
             .collect();
         out.limits = used;
+        out.basement = basements;
         out.levels.sort_by_key(|l| order(&l.level));
         out.cap = out.far_limit.map(|f| 0.30 * f * parcel);
         out.over = out.cap.map_or(0.0, |c| (out.exempt - c).max(0.0));
@@ -816,6 +873,20 @@ impl Document {
                 area(r.outside),
                 String::new(),
             ]);
+        }
+        // Of it, what 5/8's basement list moved apart (docs/adr/8148): a row for each bent that moved something.
+        for b in r.basement.iter().filter(|b| b.apart > 0.0) {
+            let words = match b.bent {
+                BasementBent::Buried => "— gömülü bodrumun ortak alanları",
+                BasementBent::Shelter => "— bodrumda sığınak, gerekli alanı kadar",
+                BasementBent::Masjid if (b.allowed - MASJID_DWELLINGS).abs() < 1e-9 => {
+                    "— bodrumda mescit, 150 m²'ye kadar"
+                }
+                BasementBent::Masjid => "— bodrumda mescit, 300 m²'ye kadar",
+                BasementBent::Children => "— bodrumda çocuk oyun ve bakım alanları, 100 m²'ye kadar",
+                BasementBent::Parking => "— bodrumda otopark, zorunlu alanın 2 katına kadar",
+            };
+            rows.push(vec![named(words), String::new(), area(b.apart), String::new()]);
         }
         // The rooms the administration's own rules add to the emsal base (docs/adr/8125, EK-6 DIGER): apart, said.
         if r.bonus > 0.0 {

@@ -97,6 +97,8 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
                     0.0
                 }
             };
+            // The basement rooms' part 5/8's list moves apart from the 30 % (docs/adr/8148), named in their own zone.
+            let apart = rooms.iter().filter(|r| r.level == level && r.count == count).map(|r| r.apart).sum();
             // The stone walls' part within the zone's rooms, out apart from the 30 % (docs/adr/8095).
             let walls = if count == EmsalCount::Outside {
                 0.0
@@ -123,6 +125,7 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
                 library: part(ZoningLimit::Library),
                 amenity: part(ZoningLimit::Amenity),
                 walls,
+                apart,
                 level,
                 count,
                 rings,

@@ -189,7 +189,7 @@ pub struct Fixture {
 /// units' 50 % (22/1-k), caretaker flats past 70 m² together (22/1-ç), library rooms past 50 m² (22/1-f), the
 /// residents' common rooms under the ground past 5 % of katlar alanı and 1000 m² (22/1-j, docs/adr/8147); and, within
 /// its rings, a traditional cut stone masonry building's stone walls past 25 cm and 12.50 cm, out apart from the 30 %
-/// (5/8, docs/adr/8095).
+/// (5/8, docs/adr/8095); and its rooms' part 5/8's basement list moves apart from the 30 % (docs/adr/8148).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct EmsalArea {
     pub level: Option<String>,
@@ -201,6 +201,7 @@ pub struct EmsalArea {
     pub library: f64,
     pub amenity: f64,
     pub walls: f64,
+    pub apart: f64,
     /// Its rooms' own emsal states' bases, each once (docs/adr/8125): an emsal increase's description.
     pub bases: Vec<String>,
     /// The emsal table's area of its storey's rooms counting so, their contours' (docs/adr/8125; EK-9/10); none: not
@@ -250,6 +251,10 @@ fn emsal_state(a: &EmsalArea) -> (&'static str, &'static str, String) {
                 "; 5/8: {:.2} m² taşıyıcı yığma taş duvarların kalın kısmı emsal harici, %30 dışında",
                 a.walls
             ));
+        }
+        // The basement's rooms 5/8's list moves apart from the 30 % (docs/adr/8148).
+        if a.apart > 0.0 {
+            words.push_str(&format!("; 5/8: bodrumda {:.2} m² emsal harici, %30 dışında", a.apart));
         }
         words
     };

@@ -27,7 +27,9 @@ pub struct ZoningFacts {
     pub included: f64,
     /// Emsal harici, within the 30 % (22/1).
     pub exempt: f64,
-    /// Emsal harici apart from the 30 % (5/8's own list: fire stairs and their halls, a shelter …).
+    /// Emsal harici apart from the 30 % (5/8's own list: fire stairs and their halls; in the basements,
+    /// docs/adr/8148, a storey wholly under the ground's common areas, the shelter's least area, a masjid's 150 or
+    /// 300 m², the children's rooms' 100 m², the car parks up to twice the mandatory ones' area).
     pub outside: f64,
     /// The 30 % of the parcel's emsal area the exempt rooms may take; none without an emsal.
     #[serde(default, skip_serializing_if = "Option::is_none")]

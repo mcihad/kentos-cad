@@ -162,7 +162,8 @@ okundu:
   [8147](8147-basement-common-rooms-22-1-j.md) (taban 21/2–3'ün kullanımıyla katlar alanı).
 - **22/1-m:** kesme taş yığma geleneksel yapının balkon ve taşlıkları — yapıldı: ADR [8094](8094-structural-system-traditional-cut-stone.md) (taşıyıcı sistem beyanı; kalın taş duvarların payı orada §6).
 - **5/8'in bodrum listesi:** bodrumda merdivenlerin, sığınağın ve tesisat alanlarının asgari alanı %30'un dışındadır.
-  KentOS onları %30 içinde sayar; asgari alanın hesabı kaldı.
+  KentOS onları %30 içinde sayar; asgari alanın hesabı kaldı — yapıldı: ADR [8148](8148-basement-list-5-8.md)
+  (otopark, sığınak, mescit, gömülü ortak alanlar, çocuk oyun alanı; b'nin öbür asgari alanları kaldı).
 - **Emsal zonlarının cephe köşesi:** farklı sayılan iki komşunun (daire ve merdiven evi gibi) ortak duvarının cephe
   köşesi iki zonun çokgeninde de var. Tablo bu alanı yarı yarıya böler, zonlar bölmez: her köşe ara duvar kalınlığı ×
   dış duvarın yarısı kadardır (deneme planında 0,01875 m²). Köşeyi ara duvarın ekseninden bölmek — yapıldı: ADR

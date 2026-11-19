@@ -1597,6 +1597,9 @@ mod regulation_dates_tests;
 #[path = "tests/emsal_limits_tests.rs"]
 mod emsal_limits_tests;
 #[cfg(test)]
+#[path = "tests/basement_list_tests.rs"]
+mod basement_list_tests;
+#[cfg(test)]
 #[path = "tests/under_stair_tests.rs"]
 mod under_stair_tests;
 #[cfg(test)]

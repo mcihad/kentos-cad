@@ -91,4 +91,4 @@ Bendin 25.7.2019'dan önceki hâlleri kural setinde yoktur: daha eski başvuruda
 - 5/8'in bodrum listesi (ADR 8079 §6), bir sonraki dilim. Listenin (d) bendi bütün cepheleri gömülü ve ortak alan
   niteliğindeki otoparkları ve "22 nci maddede belirtilen tamamen gömülü ortak alanlar"ı %30 hesabına katmadan emsal
   harici sayar: 22/1-j'nin sınır içindeki ortak mekânları da onlardandır. Bu dilimde tablo onları %30'un içinde sayar
-  (sıkı taraf); (d) ile %30'un dışına geçerler.
+  (sıkı taraf); (d) ile %30'un dışına geçerler — yapıldı: ADR [8148](8148-basement-list-5-8.md).

@@ -434,6 +434,10 @@
     katlar alanının %5'ine ve 1000 m²'ye kadar emsal harici (`ZoningLimit::Amenity`); %5'in tabanı 21/2–3'ün kullanımıyla
     katlar alanı (emsale dahil mahaller ve öbür sınırların aşanı), aşan emsale. Kural ortak alan değilse kaldı; ticari
     amaç ve kullananlar uzman incelemesi. Kısmen açığa çıkan yol cephesi okunmaz (tek tesviye kotu).
+  - **5/8'in bodrum listesi (19 Kasım 2026; [ADR 8148](../adr/8148-basement-list-5-8.md), K379–K383):** bodrumda (zemin
+    katın altındaki kat) emsal harici mahalin %30 içindeki kısmı okuyan ilk bentle %30 dışına: d gömülü katın ortak
+    alanları (hepsi), b sığınağın gerekli alanı, ç ortak mescit 150/300 m², e çocuk oyun ve bakım alanları 100 m², a
+    otopark zorunlu alanın (yer × 20 m²) 2 katı, d'nin otoparkları düşülerek. b'nin öbür asgari alanları hesaplanmaz.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

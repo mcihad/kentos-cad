@@ -20,7 +20,7 @@ use crate::files_testing::drive;
 use crate::recovery::Recovery;
 use crate::settings::Settings;
 
-fn command(app: &mut App, name: &str, input: Value) {
+pub(crate) fn command(app: &mut App, name: &str, input: Value) {
     let doc = app.document.as_mut().expect("a drawing");
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -36,7 +36,7 @@ fn command(app: &mut App, name: &str, input: Value) {
 /// ground storey over a basement half out of the ground when `floor` is over −3.00); the basement's three bays named
 /// and grouped as `basement` says (`e1` flat 1's storage annex, `o` the common area, `k` the caretaker flat), the ground
 /// storey's flat 1, stair hall and flat 2; the parcel's zoning (400 m², emsal 1.50, TAKS 0.40).
-fn building(basement: [(&str, &str); 3], floor: f64) -> App {
+pub(crate) fn building(basement: [(&str, &str); 3], floor: f64) -> App {
     kentos_postgis::connections::keep_in_memory();
     let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
     app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
@@ -113,16 +113,16 @@ fn amenity(floor: f64) -> App {
     building([("Spor salonu", "o"), ("Toplantı odası", "o"), ("Kazan dairesi", "o")], floor)
 }
 
-fn report(app: &App) -> kentos_domain::zoning::ZoningReport {
+pub(crate) fn report(app: &App) -> kentos_domain::zoning::ZoningReport {
     app.document.as_ref().expect("a drawing").model.zoning_report().expect("a zoning")
 }
 
-fn near(a: f64, b: f64) -> bool {
+pub(crate) fn near(a: f64, b: f64) -> bool {
     (a - b).abs() < 1e-6
 }
 
 /// Emsal ve TAKS tablosu's row starting with `words`: its drawing's value.
-fn row(app: &App, words: &str) -> Option<String> {
+pub(crate) fn row(app: &App, words: &str) -> Option<String> {
     let t = app.document.as_ref().expect("a drawing").model.zoning_table();
     t.rows.iter().find(|r| r[0].starts_with(words)).map(|r| r[2].clone())
 }
@@ -132,9 +132,12 @@ fn a_flat_s_storage_annex_under_the_ground_is_out_up_to_half_its_net_area_and_th
     let app = storage(-3.0);
     let r = report(&app);
     assert!(near(r.storage_over, 30.0 - 0.5 * 25.7125), "{r:?}");
-    // Katlar alanı: the two flats and the annex's part past the 50 %; out: the annex's rest, two stair halls, the boiler.
+    // Katlar alanı: the two flats and the annex's part past the 50 %; out within the 30 %: the annex's rest and the
+    // ground's stair hall; apart from it, the basement under the ground's common stair hall and boiler room (5/8-d,
+    // docs/adr/8148).
     assert!(near(r.included, 60.0 + 17.14375), "{r:?}");
-    assert!(near(r.exempt, 12.85625 + 30.0 + 30.0 + 30.0), "{r:?}");
+    assert!(near(r.exempt, 12.85625 + 30.0), "{r:?}");
+    assert!(near(r.outside, 60.0), "{r:?}");
     assert!(near(r.floors, 77.14375), "{r:?}");
     assert_eq!(row(&app, "Depo eklentilerinin %50'yi aşan kısmı").as_deref(), Some("17.14"));
     let limits: Vec<_> = r.limits.iter().map(|l| (l.limit, l.unit.as_deref(), l.rooms.len())).collect();
@@ -147,11 +150,12 @@ fn a_flat_s_storage_annex_under_the_ground_is_out_up_to_half_its_net_area_and_th
     assert!(near(r.included, 90.0), "the store in: {r:?}");
     assert!(near(r.exempt, 90.0), "two stair halls and the boiler: {r:?}");
     assert_eq!(row(&raised, "Depo eklentilerinin"), None);
-    // A coal room in flat 1's storage annex is a coal room (22/1-i, its own name), not a store under the 50 %.
+    // A coal room in flat 1's storage annex is a coal room (22/1-i, its own name), not a store under the 50 %; an
+    // annex's, no common area's: within the 30 %.
     let coal = building([("Kömürlük", "e1"), ("Merdiven", "o"), ("Kazan dairesi", "o")], -3.0);
     let r = report(&coal);
     assert!(r.limits.is_empty() && near(r.storage_over, 0.0), "{r:?}");
-    assert!(near(r.included, 60.0) && near(r.exempt, 120.0), "{r:?}");
+    assert!(near(r.included, 60.0) && near(r.exempt, 60.0) && near(r.outside, 60.0), "{r:?}");
 }
 
 #[test]
@@ -160,7 +164,9 @@ fn the_caretaker_flat_s_rooms_are_out_up_to_70_m2_together() {
     let r = report(&app);
     assert!(near(r.caretaker_over, 20.0), "{r:?}");
     assert!(near(r.included, 60.0 + 20.0), "{r:?}");
-    assert!(near(r.exempt, 70.0 + 30.0), "70 m² of the flat and the stair hall: {r:?}");
+    // The flat's 70 m², a common area's under the ground, apart from the 30 % (5/8-d, docs/adr/8148); the stair hall
+    // within.
+    assert!(near(r.exempt, 30.0) && near(r.outside, 70.0), "{r:?}");
     assert_eq!(row(&app, "Kapıcı dairelerinin 70 m²'yi aşan kısmı").as_deref(), Some("20.00"));
     // The excess shared by the rooms' areas: a third each, not all on the last room.
     let moved: Vec<f64> = r.rooms.iter().filter(|x| x.moved > 0.0).map(|x| x.moved).collect();
@@ -182,9 +188,10 @@ fn the_residents_common_rooms_under_the_ground_are_out_up_to_5_percent_of_katlar
     let app = amenity(-3.0);
     let r = report(&app);
     assert!(near(r.amenity_over, 57.0), "{r:?}");
-    // Katlar alanı: the two flats and the 57 m²; out: the 3 m², two stair halls … one: the ground's, and the boiler.
+    // Katlar alanı: the two flats and the 57 m²; out within the 30 %: the ground's stair hall; apart from it, the 3 m²
+    // and the boiler room, common areas under the ground (5/8-d, docs/adr/8148).
     assert!(near(r.included, 60.0 + 57.0), "{r:?}");
-    assert!(near(r.exempt, 3.0 + 30.0 + 30.0), "{r:?}");
+    assert!(near(r.exempt, 30.0) && near(r.outside, 33.0), "{r:?}");
     assert!(near(r.floors, 117.0), "{r:?}");
     assert_eq!(row(&app, "Bodrumdaki ortak mekânların sınırı aşan kısmı").as_deref(), Some("57.00"));
     let limits: Vec<_> = r.limits.iter().map(|l| (l.limit, l.rooms.len(), l.common)).collect();
@@ -226,7 +233,8 @@ fn common_rooms_above_the_ground_or_of_a_flat_count_in() {
     let own = building([("Spor salonu", "d1"), ("Toplantı odası", "d1"), ("Kazan dairesi", "o")], -3.0);
     let r = report(&own);
     assert!(r.limits.is_empty(), "{r:?}");
-    assert!(near(r.included, 120.0) && near(r.exempt, 60.0), "{r:?}");
+    // The boiler room apart from the 30 % (5/8-d, docs/adr/8148).
+    assert!(near(r.included, 120.0) && near(r.exempt, 30.0) && near(r.outside, 30.0), "{r:?}");
     // A meeting room in flat 1's store annex ("bir bağımsız bölümün eklentisi olmayan"): never 22/1-j's; its group's
     // nature makes it a store under 22/1-k's 50 % of the flat's net area (the flat's own gym in it).
     let annex = building([("Spor salonu", "d1"), ("Toplantı odası", "e1"), ("Kazan dairesi", "o")], -3.0);
@@ -306,7 +314,7 @@ fn a_storey_with_no_room_counted_in_names_the_part_past_the_limit_in_its_zone_co
 }
 
 /// The whole drawing checked in Denetim, the standards packages asked and answered.
-fn checked(app: &mut App) {
+pub(crate) fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
     assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
@@ -341,7 +349,7 @@ fn a_caretaker_flat_no_rule_makes_obligatory_is_a_finding_of_the_standards_packa
 }
 
 /// The basement the active storey, drawn alone (Yalnız etkin kat): the pictures show the bays the test names.
-fn basement_alone(app: &mut App) {
+pub(crate) fn basement_alone(app: &mut App) {
     let _ = app.update(Message::ActiveLevel(Some("b01".into())));
     let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
 }

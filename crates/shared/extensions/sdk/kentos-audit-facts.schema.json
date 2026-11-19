@@ -2654,7 +2654,7 @@
           ]
         },
         "outside": {
-          "description": "Emsal harici apart from the 30 % (5/8's own list: fire stairs and their halls, a shelter …).",
+          "description": "Emsal harici apart from the 30 % (5/8's own list: fire stairs and their halls; in the basements,\ndocs/adr/8148, a storey wholly under the ground's common areas, the shelter's least area, a masjid's 150 or\n300 m², the children's rooms' 100 m², the car parks up to twice the mandatory ones' area).",
           "format": "double",
           "type": "number"
         },
