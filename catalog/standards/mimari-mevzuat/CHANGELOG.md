@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.47.0 — 19 Kasım 2026
+
+- Planın çatı notları (`cati_olculeri`; docs/adr/8160): `ridgeMost` (mahya), `roofSlopeMost` (çatı eğimi, %) ve
+  `eavesMost` (saçak) PAİY 40/4, 42/1 ve Sivas 40/5-g'nin değerlerinin önüne geçer (69/3; 40 ve 42 planla
+  değiştirilebilir, 69/2 saymaz): not bağlar, yönetmeliklerin değeri iletide yanında; notun satırı sonucu söyler, notun
+  bağladığı madde kapsam dışı. Eğim notu Sivas'sız da okunur (`paiy_roof_slope_steep`, düzeltmesi kenarları notun
+  sınırına indirir). 6 yeni bağımsız durum (22).
+
 ## 0.46.0 — 19 Kasım 2026
 
 - Çatının ölçüleri (`cati_olculeri`; docs/adr/8159; Mimari denetimin Rust kurallarından taşındı): PAİY 40/4 mahya

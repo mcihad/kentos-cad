@@ -5,7 +5,9 @@
 //! 0.78 × 1.18 m one 1.50 m east of it. PAİY alone says the eaves, the vent and the chimney (the ridge, 4.47 m over the
 //! saçak seviyesi, is within its 5.00 m); Sivas's rules read over it the ridge (4.00 m), the slope, the snow guard and
 //! the windows too.
-//! Düzelt on the snow guard gives the roof one, on the chimney raises it to 0.80 m: their findings go.
+//! Düzelt on the snow guard gives the roof one, on the chimney raises it to 0.80 m: their findings go. The plan's roof
+//! notes (docs/adr/8160) come before them: eaves of 1.20 m pass a note of 1.20 m, a note of 33 % fails the 75 % slope
+//! and its Düzelt brings every sloping edge down to 33 %.
 //!
 //! ```text
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib roof_rules_tests::screens -- --ignored --nocapture
@@ -15,10 +17,11 @@ use serde_json::json;
 
 use crate::app::{App, Message};
 
-const ROOF_CODES: [&str; 8] = [
+const ROOF_CODES: [&str; 9] = [
     "paiy_ridge_high",
     "paiy_eaves_wide",
     "paiy_roof_vent_high",
+    "paiy_roof_slope_steep",
     "bykhy_chimney_low",
     "local_roof_slope_steep",
     "local_snow_guard_missing",
@@ -145,6 +148,56 @@ fn the_roof_rules_come_from_the_standards_package_with_their_fixes() {
     assert_eq!((roof.parts[2].width, roof.parts[3].depth), (1.4, 1.18));
 }
 
+/// The plan's roof notes typed in Plan notları (docs/adr/8160): `notes` as (measure, value), then Kaydet.
+fn plan_notes(app: &mut App, notes: &[(kentos_commands::PlanNoteKey, &str)]) {
+    use crate::project::plan_notes::Edit;
+    use crate::project::settings::Section;
+    use crate::project::{SettingsEvent, settings_message};
+    let _ = app.update(Message::Run("file.settings"));
+    let _ = app.update(settings_message(SettingsEvent::Section(Section::Arch)));
+    for (i, (key, value)) in notes.iter().enumerate() {
+        let _ = app.update(settings_message(SettingsEvent::AddPlanNote));
+        for e in [Edit::Key(*key), Edit::Value((*value).into()), Edit::Source("UİP 12.3.2019, plan notu 12".into())] {
+            let _ = app.update(settings_message(SettingsEvent::ArchPlanNote(i, e)));
+        }
+    }
+    let _ = app.update(settings_message(SettingsEvent::Save));
+    assert!(app.project.is_none(), "saved");
+}
+
+#[test]
+fn the_plan_s_roof_notes_come_before_the_regulations() {
+    use kentos_commands::PlanNoteKey;
+    let mut app = roofed();
+    // The plan lets the eaves be 1.20 m and asks the roof's slope at most 33 % (40 and 42 may be changed by a plan).
+    plan_notes(&mut app, &[(PlanNoteKey::EavesMost, "1,20"), (PlanNoteKey::RoofSlopeMost, "33")]);
+    checked(&mut app);
+    let found = said(&app);
+    assert!(!found.iter().any(|m| m.starts_with("Saçak genişliği")), "{found:?}");
+    assert!(
+        found.contains(&"Çatının eğimi %75 > %33 — Plan notu (UİP 12.3.2019, plan notu 12)".to_owned()),
+        "{found:?}"
+    );
+    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let row = |rule: &str| set.rules.iter().find(|r| r.rule == rule).map(|r| r.state);
+    use kentos_commands::ArchAuditOutcome as O;
+    assert_eq!(row("Plan notu: saçak genişliği"), Some(O::Passed));
+    assert_eq!(row("Plan notu: çatı eğimi"), Some(O::Failed));
+    assert_eq!(row("PAİY 42/1"), Some(O::OutOfScope));
+    // Düzelt: every sloping edge down to the plan's 33 %.
+    fix(&mut app, "paiy_roof_slope_steep");
+    assert!(!said(&app).iter().any(|m| m.starts_with("Çatının eğimi")), "{:?}", said(&app));
+    let doc = &app.document.as_ref().expect("the building").model;
+    let slopes = doc
+        .entities()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Roof(r) => Some(r.roof.slopes.clone()),
+            _ => None,
+        })
+        .expect("the roof");
+    assert!(slopes.iter().all(|s| *s == Some(33.0)), "{slopes:?}");
+}
+
 /// Denetim's roof findings with Sivas read, the chimney's selected, light and dark;
 /// `.run/gui-evidence/cati-olculeri-8159/`.
 #[test]
@@ -174,6 +227,52 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-cati-denetim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Plan notları with the plan's three roof notes, light and dark; `.run/gui-evidence/cati-notlari-8160/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn notes_screens() {
+    use crate::project::plan_notes::Edit;
+    use crate::project::settings::Section;
+    use crate::project::{SettingsEvent, settings_message};
+    use iced::Size;
+    use kentos_commands::PlanNoteKey;
+    use kentos_ui::snapshot::{Input, Snapshot};
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cati-notlari-8160");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    for (theme, size, name) in sizes {
+        let mut app = roofed();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("file.settings"));
+        let _ = app.update(settings_message(SettingsEvent::Section(Section::Arch)));
+        let notes =
+            [(PlanNoteKey::RidgeMost, "3,50"), (PlanNoteKey::RoofSlopeMost, "33"), (PlanNoteKey::EavesMost, "1,20")];
+        for (i, (key, value)) in notes.into_iter().enumerate() {
+            let _ = app.update(settings_message(SettingsEvent::AddPlanNote));
+            for e in [Edit::Key(key), Edit::Value(value.into()), Edit::Source("UİP 12.3.2019, plan notu 12".into())] {
+                let _ = app.update(settings_message(SettingsEvent::ArchPlanNote(i, e)));
+            }
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        // Down the Mimari page to Plan notları: to its end, then up past the groups under it.
+        let at = iced::Point::new(size.width * 0.55, size.height * 0.5);
+        snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -60.0));
+        snapshot.settle(&mut app, App::view, &mut update);
+        snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 5.0));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-cati-notlari-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

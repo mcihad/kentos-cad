@@ -71,6 +71,7 @@ siperliği); paketin bulgusu başsız denetimde düzeltme taşımıyordu: taşı
 
 ## §6. Kalanlar
 
-- Planın çatı notları (eğim, mahya, saçak; 42/1 "Uygulama imar planında belirlenmemiş ise"): yeni plan notu konuları.
+- Planın çatı notları (eğim, mahya, saçak; 42/1 "Uygulama imar planında belirlenmemiş ise"): yeni plan notu konuları
+  — yapıldı: ADR [8160](8160-plan-roof-notes.md).
 - 40/5'in öbür çıkıntıları (merdiven evi, ışıklık, alın ve kalkan duvarları), 42/2–3 (saçak parsel sınırı, çıkmadan
   0,50 m).

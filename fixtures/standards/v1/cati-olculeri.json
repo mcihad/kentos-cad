@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Çatının ölçülerinin bağımsız durumları (docs/adr/8159): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 40/4 (5,00 m), 40/5 (0,60 m), 42/1 (1,00 m), Binaların Yangından Korunması Hakkında Yönetmelik 58/2 (0,80 m) ve Sivas İmar Yönetmeliği 40/5-g (4,00 m, %40), 40/5-e-2 (1,20 × 1,50 m), 40/5-e-3 (1 m, 2 m), 42/5'in metninden elle; kuralın kodundan üretilmedi. Olgular KentOS'un çatı ölçüsüdür (building.roofs[].form); düzeltmenin beklenenleri cad.arch.edit'in işlemidir.",
+  "about": "Çatının ölçülerinin bağımsız durumları (docs/adr/8159): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 40/4 (5,00 m), 40/5 (0,60 m), 42/1 (1,00 m), Binaların Yangından Korunması Hakkında Yönetmelik 58/2 (0,80 m) ve Sivas İmar Yönetmeliği 40/5-g (4,00 m, %40), 40/5-e-2 (1,20 × 1,50 m), 40/5-e-3 (1 m, 2 m), 42/5'in metninden elle; kuralın kodundan üretilmedi. Olgular KentOS'un çatı ölçüsüdür (building.roofs[].form); düzeltmenin beklenenleri cad.arch.edit'in işlemidir. Planın çatı notlarının durumları (docs/adr/8160): ridgeMost, roofSlopeMost, eavesMost yönetmeliklerin değerinin önüne geçer (69/3; 40 ve 42 planla değiştirilebilir, 69/2 saymaz); beklenenler elle.",
   "cases": [
     {
       "id": "mahya-icinde",
@@ -1630,6 +1630,627 @@
           "BYKHY 58/2": [
             "outOfScope",
             "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-mahya-asar",
+      "neden": "Planın notu mahya en çok 3,50 m (69/3: plan yönetmeliklerin önünde; 40 planla değiştirilebilir, 69/2 saymaz); mahya 3,80 m → planın notundan kalır, PAİY'nin 5,00 m'si yanında; 40/4 kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 3.8,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ],
+        "planNotes": [
+          {
+            "key": "ridgeMost",
+            "value": 3.5,
+            "source": "UİP 12.3.2019, plan notu 12"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_ridge_high",
+            "has": [
+              "3.80 m > 3.50 m — Plan notu (UİP 12.3.2019, plan notu 12)",
+              "PAİY 40/4 (1.10.2017): 5.00 m"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Plan notu: mahya yüksekliği": [
+            "failed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-mahya-gevsek",
+      "neden": "Planın notu mahya en çok 6,00 m: 5,20 m'lik mahya planın notunun içinde → geçer (PAİY'nin 5,00 m'si bağlamaz).",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 5.2,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ],
+        "planNotes": [
+          {
+            "key": "ridgeMost",
+            "value": 6.0,
+            "source": "UİP 12.3.2019, plan notu 12"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Plan notu: mahya yüksekliği": [
+            "passed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-egim",
+      "neden": "Planın notu çatı eğimi en çok %33; kenarlar %40 → kalır; düzeltme kenarları %33'e indirir.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ],
+        "planNotes": [
+          {
+            "key": "roofSlopeMost",
+            "value": 33.0,
+            "source": "UİP 12.3.2019, plan notu 12"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_roof_slope_steep",
+            "has": [
+              "Çatının eğimi %40 > %33 — Plan notu (UİP 12.3.2019, plan notu 12)"
+            ],
+            "fix": {
+              "label": "Eğimi planın %33 sınırına indir",
+              "slopes": [
+                33.0,
+                33.0,
+                33.0,
+                33.0
+              ]
+            }
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Plan notu: çatı eğimi": [
+            "failed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-egim-sivas",
+      "neden": "Sivas seçili, planın notu eğim en çok %45: %42'lik kenarlar planın notunun içinde → geçer (Sivas'ın %40'ı bağlamaz); Sivas 40/5-g yalnız mahyayı okur (3,90 m ≤ 4,00).",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 3.9,
+              "slopes": [
+                42.0,
+                42.0,
+                42.0,
+                42.0
+              ],
+              "snowGuard": true
+            }
+          }
+        ],
+        "planNotes": [
+          {
+            "key": "roofSlopeMost",
+            "value": 45.0,
+            "source": "UİP 12.3.2019, plan notu 12"
+          }
+        ],
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Sivas 40/5-g": [
+            "passed",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-2": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 40/5-e-3": [
+            "outOfScope",
+            "10.11.2022"
+          ],
+          "Sivas 42/5": [
+            "passed",
+            "10.11.2022"
+          ],
+          "Plan notu: çatı eğimi": [
+            "passed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-sacak",
+      "neden": "Planın notu saçak en çok 1,20 m (42/1: \"Uygulama imar planında belirlenmemiş ise\"): 1,20 m'lik saçak → geçer; 42/1 kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "overhang": 1.2
+            }
+          }
+        ],
+        "planNotes": [
+          {
+            "key": "eavesMost",
+            "value": 1.2,
+            "source": "UİP 12.3.2019, plan notu 12"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Plan notu: saçak genişliği": [
+            "passed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-sacak-asar",
+      "neden": "Planın notu saçak en çok 0,80 m: 1,00 m'lik saçak → kalır; PAİY'nin 1,00 m'si yanında.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "overhang": 1.0
+            }
+          }
+        ],
+        "planNotes": [
+          {
+            "key": "eavesMost",
+            "value": 0.8,
+            "source": "UİP 12.3.2019, plan notu 12"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_eaves_wide",
+            "has": [
+              "Saçak genişliği 1.00 m > 0.80 m — Plan notu (UİP 12.3.2019, plan notu 12)",
+              "PAİY 42/1 (1.10.2017): 1.00 m"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Plan notu: saçak genişliği": [
+            "failed",
+            null
           ]
         }
       }

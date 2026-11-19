@@ -1885,7 +1885,8 @@ pub enum LocalRules {
 
 /// What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
 /// coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
-/// belirlenmemiş ise”; 4/1-yyy: “İmar planlarında aksine bir hüküm bulunmaması halinde”, docs/adr/8158), or the plan's
+/// belirlenmemiş ise”; 4/1-yyy: “İmar planlarında aksine bir hüküm bulunmaması halinde”, docs/adr/8158; 42/1 and the
+/// roof's ridge and slope, docs/adr/8160), or the plan's
 /// own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya bina yüksekliği aşılamaz”,
 /// docs/adr/8098).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1910,16 +1911,28 @@ pub enum PlanNoteKey {
     /// Subasman kotu, en az (4/1-yyy; docs/adr/8158): the ground storey's floor over its building's ±0.00 at least, m,
     /// below it with a minus (PAİY's ±0.00 where the plan says nothing).
     PlinthLeast,
+    /// Mahya yüksekliği, en çok (40/4; docs/adr/8160): a sloping roof's ridge over the saçak seviyesi at most, m
+    /// (PAİY's 5.00, the municipality's where it says one).
+    RidgeMost,
+    /// Çatı eğimi, en çok (40/2; docs/adr/8160): a roof's edges' slope at most, per cent (PAİY leaves it to the
+    /// administration; the municipality's where it says one).
+    RoofSlopeMost,
+    /// Saçak genişliği, en çok (42/1; docs/adr/8160): a roof's overhang over its walls at most, m (PAİY's 1.00:
+    /// “Uygulama imar planında belirlenmemiş ise”).
+    EavesMost,
 }
 
 impl PlanNoteKey {
-    pub const ALL: [PlanNoteKey; 6] = [
+    pub const ALL: [PlanNoteKey; 9] = [
         PlanNoteKey::GroundStoreyHeight,
         PlanNoteKey::StoreyHeight,
         PlanNoteKey::BuildingHeight,
         PlanNoteKey::Storeys,
         PlanNoteKey::PlinthMost,
         PlanNoteKey::PlinthLeast,
+        PlanNoteKey::RidgeMost,
+        PlanNoteKey::RoofSlopeMost,
+        PlanNoteKey::EavesMost,
     ];
 
     /// As the form and a finding name it.
@@ -1931,6 +1944,9 @@ impl PlanNoteKey {
             PlanNoteKey::Storeys => "Kat adedi (en çok)",
             PlanNoteKey::PlinthMost => "Subasman kotu (en çok)",
             PlanNoteKey::PlinthLeast => "Subasman kotu (en az)",
+            PlanNoteKey::RidgeMost => "Mahya yüksekliği (en çok)",
+            PlanNoteKey::RoofSlopeMost => "Çatı eğimi (en çok)",
+            PlanNoteKey::EavesMost => "Saçak genişliği (en çok)",
         }
     }
 
@@ -1943,13 +1959,17 @@ impl PlanNoteKey {
             PlanNoteKey::Storeys => "storeys",
             PlanNoteKey::PlinthMost => "plinthMost",
             PlanNoteKey::PlinthLeast => "plinthLeast",
+            PlanNoteKey::RidgeMost => "ridgeMost",
+            PlanNoteKey::RoofSlopeMost => "roofSlopeMost",
+            PlanNoteKey::EavesMost => "eavesMost",
         }
     }
 
-    /// The value's unit as the form writes it: metres, or storeys for the storey count.
+    /// The value's unit as the form writes it: metres, storeys for the storey count, per cent for a roof's slope.
     pub fn unit(self) -> &'static str {
         match self {
             PlanNoteKey::Storeys => "kat",
+            PlanNoteKey::RoofSlopeMost => "%",
             _ => "m",
         }
     }
@@ -1964,7 +1984,15 @@ impl PlanNoteKey {
     pub fn is_plinth(self) -> bool {
         matches!(self, PlanNoteKey::PlinthMost | PlanNoteKey::PlinthLeast)
     }
+
+    /// Whether a note of it is about the roof (docs/adr/8160): its ridge, its slope or its eaves.
+    pub fn is_roof(self) -> bool {
+        matches!(self, PlanNoteKey::RidgeMost | PlanNoteKey::RoofSlopeMost | PlanNoteKey::EavesMost)
+    }
 }
+
+/// The most a roof's slope plan note may give, per cent.
+pub const PLAN_ROOF_SLOPE_MAX: f64 = 200.0;
 
 /// The farthest a subasman plan note may stand from the building's ±0.00, either way, m.
 pub const PLAN_PLINTH_MAX: f64 = 10.0;
@@ -1996,7 +2024,8 @@ pub const PLAN_NOTES_MAX: usize = 50;
 impl PlanNote {
     /// What is wrong with a project's plan notes: the field and the words. A storey's height finite, over 0 and at most
     /// 20 m, a building height up to 1000 m, a storey count a whole number from 1 to 200, a subasman within 10 m of
-    /// ±0.00 and its least not above its most; its source said (at most 200 characters); one note for each measure.
+    /// ±0.00 and its least not above its most, a ridge over 0 and at most 20 m, a roof's slope over 0 and at most 200 %,
+    /// eaves from 0 to 5 m; its source said (at most 200 characters); one note for each measure.
     pub fn list_problem(notes: &[PlanNote]) -> Option<(String, String)> {
         if notes.len() > PLAN_NOTES_MAX {
             return Some(("planNotes".into(), format!("En çok {PLAN_NOTES_MAX} plan notu verilebilir.")));
@@ -2017,6 +2046,14 @@ impl PlanNote {
                 PlanNoteKey::PlinthMost | PlanNoteKey::PlinthLeast => (!(n.value.is_finite()
                     && (-PLAN_PLINTH_MAX..=PLAN_PLINTH_MAX).contains(&n.value)))
                     .then_some("−10 ile +10 m arasında"),
+                PlanNoteKey::RidgeMost => (!(n.value.is_finite() && n.value > 0.0 && n.value <= 20.0))
+                    .then_some("sıfırdan büyük, en çok 20 m"),
+                PlanNoteKey::RoofSlopeMost => (!(n.value.is_finite()
+                    && n.value > 0.0
+                    && n.value <= PLAN_ROOF_SLOPE_MAX))
+                    .then_some("sıfırdan büyük, en çok %200"),
+                PlanNoteKey::EavesMost => (!(n.value.is_finite() && (0.0..=5.0).contains(&n.value)))
+                    .then_some("0 ile 5 m arasında"),
             };
             if let Some(what) = wrong {
                 return Some((
@@ -2630,6 +2667,11 @@ impl ArchSettings {
     /// Whether a plan note gives the plan's subasman (Mimari data 32, docs/adr/8158).
     pub fn has_plan_plinth(&self) -> bool {
         self.plan_notes.iter().any(|n| n.key.is_plinth())
+    }
+
+    /// Whether a plan note gives the plan's roof ridge, slope or eaves (Mimari data 33, docs/adr/8160).
+    pub fn has_plan_roof(&self) -> bool {
+        self.plan_notes.iter().any(|n| n.key.is_roof())
     }
 
     /// Whether it says the parcel's area's use (Mimari data 12, docs/adr/8085).

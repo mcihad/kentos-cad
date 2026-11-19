@@ -87,9 +87,9 @@ def cati_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 @ext.audit("cati-olculeri")
 def cati_olculeri_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Çatının ölçüleri (PAİY 40/4 mahya, 40/5 hava bacası, 42/1 saçak; BYKHY 58/2 duman bacası; Sivas 40/5-g eğim ve
-    mahya, 40/5-e çatı penceresi, 42/5 kar siperliği)."""
-    return _bulgular(facts, ("paiy_ridge_", "paiy_eaves_", "paiy_roof_vent_", "bykhy_chimney_", "local_roof_",
-                             "local_snow_guard_"))
+    mahya, 40/5-e çatı penceresi, 42/5 kar siperliği; planın mahya, eğim ve saçak notları)."""
+    return _bulgular(facts, ("paiy_ridge_", "paiy_eaves_", "paiy_roof_vent_", "paiy_roof_slope_", "bykhy_chimney_",
+                             "local_roof_", "local_snow_guard_"))
 
 
 @ext.audit("kuyular")

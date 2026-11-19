@@ -10494,6 +10494,162 @@
       ]
     },
     {
+      "name": "Mimari: planın çatı notları (ADR 8160)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "planNotes": [
+                {
+                  "key": "ridgeMost",
+                  "value": 3.5,
+                  "source": "UİP 12.3.2019, plan notu 12"
+                },
+                {
+                  "key": "roofSlopeMost",
+                  "value": 33,
+                  "source": "UİP 12.3.2019, plan notu 12"
+                },
+                {
+                  "key": "eavesMost",
+                  "value": 0.8,
+                  "source": "UİP 12.3.2019, plan notu 12"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "planNotes": [
+                  {
+                    "key": "ridgeMost",
+                    "value": 3.5,
+                    "source": "UİP 12.3.2019, plan notu 12"
+                  },
+                  {
+                    "key": "roofSlopeMost",
+                    "value": 33,
+                    "source": "UİP 12.3.2019, plan notu 12"
+                  },
+                  {
+                    "key": "eavesMost",
+                    "value": 0.8,
+                    "source": "UİP 12.3.2019, plan notu 12"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "saçak 5 m'yi aşıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "planNotes": [
+                {
+                  "key": "eavesMost",
+                  "value": 6,
+                  "source": "UİP 12.3.2019, plan notu 12"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "“Saçak genişliği (en çok)” plan notunun değeri 0 ile 5 m arasında olmalı.",
+              "path": "arch.planNotes.0.value"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Mimari: imar durumunda emsalin ve TAKS'ın kaynağı (ADR 8140)",
       "steps": [
         {

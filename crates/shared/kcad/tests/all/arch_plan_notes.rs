@@ -253,6 +253,26 @@ fn a_plan_s_subasman_round_trips_under_arch_data_32() {
     assert!(e.message.contains("sürüm 32'den önce yok"), "{e}");
 }
 
+/// Architecture data 33 (docs/adr/8160): the plan's roof notes are written with `modules.arch = 33` and read back; the
+/// same file saying 32 is refused.
+#[test]
+fn a_plan_s_roof_notes_round_trip_under_arch_data_33() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_plan_roof(&doc));
+    let arch = doc.settings.arch.get_or_insert_with(Default::default);
+    let notes = [(PlanNoteKey::RidgeMost, 3.5), (PlanNoteKey::RoofSlopeMost, 33.0), (PlanNoteKey::EavesMost, 0.8)];
+    for (key, value) in notes {
+        arch.plan_notes.push(PlanNote { key, value, source: "UİP 12.3.2019, plan notu 12".into() });
+    }
+    assert!(kentos_kcad::uses_plan_roof(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_PLAN_ROOF);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the notes read back");
+    let e = kentos_kcad::decode(&saying_arch(&bytes, 33, 32)).expect_err("refused");
+    assert_eq!(e.code, kentos_kcad::Code::UnknownField, "{e}");
+    assert!(e.message.contains("sürüm 33'ten önce yok"), "{e}");
+}
+
 /// `bytes` with `modules.arch` saying `to` instead of `from` (CBOR: the text "arch", then 0x18 and the version), the
 /// SHA-256 trailer made again: a file an older KentOS would have written, holding newer data.
 fn saying_arch(bytes: &[u8], from: u8, to: u8) -> Vec<u8> {

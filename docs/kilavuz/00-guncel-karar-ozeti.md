@@ -457,6 +457,9 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Planın çatı notları (19 Kasım 2026; [ADR 8160](../adr/8160-plan-roof-notes.md), K412–K414):** Mahya
+    yüksekliği, Çatı eğimi (%) ve Saçak genişliği (en çok) plan notları 40/4, 42/1 ve Sivas 40/5-g'nin önünde (40 ve 42
+    planla değiştirilebilir, 69/2 saymaz); eğim notu Sivas'sız da okunur; `.kcad` Mimari verisi 33.
   - **Çatı kuralları pakette (19 Kasım 2026; [ADR 8159](../adr/8159-roof-rules-in-the-package.md), K409–K411):**
     PAİY 40/4, 40/5, 42/1, BYKHY 58/2, Sivas 40/5-e, 40/5-g, 42/5 `cati_olculeri`'de; Rust ölçer (`roof_audit::measures`,
     olgularda `roofs[].form`), iletiler ve düzeltmeler aynı (paketin bulgusu `fix`'i ve `at`'i başsız denetimde de taşır).
