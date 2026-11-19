@@ -457,6 +457,10 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Tahvil (19 Kasım 2026; [ADR 8157](../adr/8157-height-storeys-conversion-9-1-c.md), K404–K405):** PAİY 9/1-c:
+    planın yalnız bina yüksekliği ya da kat adedi varsa öbürü H(n) = 1,20 + zemin + (n − 1) normal katın 28/1'deki en
+    çok yüksekliğiyle (bölgenin bendi, başvuru günü, planın kat yüksekliği notları önce, Sivas seçiliyse sıkı olanı);
+    aşan bina uzman incelemesi; eksik yükseklik ve bölge satırda (bulgusu kat yüksekliği kuralının).
   - **Vaziyet planında çıkma izdüşümleri (19 Kasım 2026; [ADR 8155](../adr/8155-site-plan-projection-outlines.md), K399):**
     PAİY 57/3: Parsel aracı ölçülerle (Ö) her çıkma parçasını kesik çizgiyle çizer, `Vaziyet` özniteliğiyle eski
     ölçülerle birlikte yenilenir; çıkmalar yazılan vaziyet planına göre (`projections_for`).

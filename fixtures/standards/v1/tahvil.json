@@ -1,0 +1,1761 @@
+{
+  "format": "kentos.regulationCases",
+  "version": 1,
+  "about": "Bina yüksekliği ile kat adedinin tahvilinin bağımsız durumları (docs/adr/8157): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 9/1-c (1,20 m subasman), 9/1-a ve 28/1'in (konut 3,60 m, 12.8.2023'ten bodrum hariç 3 katı geçmeyen binada 4,00 m; ticaret zemin 4,50, asma katlı zemin 5,50, öbür 4,00; geleneksel kesme taş yığma 4,50) ve Sivas İmar Yönetmeliği 28/1-c'nin (3,60 m) metninden elle hesaplandı; kuralın kodundan üretilmedi. Planın değerleri projenin plan notlarıdır (building.planNotes).",
+  "cases": [
+    {
+      "id": "yukseklik-2-kat",
+      "neden": "Konut alanı, 2.7.2026: 28/1-c bodrum hariç 3 katı geçmeyen binada 4,00 m; planın 9,50 m'si: 1 kat 1,20 + 4,00 = 5,20; 2 kat 9,20 ≤ 9,50; 3 kat 13,20 > 9,50 → 2 kat; binada 2 kat → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 9/1-c": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yukseklik-3-kat",
+      "neden": "Aynı plan, 3 kat 3,00 m (saçak 9,00 m ≤ 9,50, 5/11 tutar): tahvil 2 kat → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000004"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000005"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_height_storeys_conversion",
+            "has": [
+              "9.50 m",
+              "2 kat 9.20 m, 3 kat 13.20 m",
+              "2 kata karşılık gelir",
+              "binada 3 kat",
+              "PAİY 9/1-c"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yukseklik-2017",
+      "neden": "Başvuru 1.6.2023: 28/1-c'nin 1.10.2017 hâli 3,60 m; planın 12,50 m'si: 3 kat 1,20 + 10,80 = 12,00 ≤ 12,50, 4 kat 15,60 → 3 kat; binada 3 kat → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2023"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000006"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000007"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000008"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 12.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 9/1-c": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yukseklik-2023",
+      "neden": "2.7.2026: 3 katlı binada 4,00 m; 12,50 m: 2 kat 9,20, 3 kat 13,20 > 12,50, 4 kat (3,60 m) 15,60 > 12,50 → 2 kat; binada 3 kat → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000009"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000010"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000011"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 12.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_height_storeys_conversion",
+            "has": [
+              "12.50 m",
+              "2 kata karşılık gelir",
+              "binada 3 kat"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tarihsiz",
+      "neden": "Başvuru tarihi yok: 12,50 m ve 3 kat 1.10.2017 hâliyle geçer, 12.8.2023 hâliyle uzman incelemesi → tek eksik veri bulgusu, satır eksik veri.",
+      "permit": null,
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000012"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000013"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000014"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 12.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "regulation_date_needed",
+            "has": [
+              "başvuru gününe göre değişiyor"
+            ],
+            "state": "missingData"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "missingData",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "kat-adedi",
+      "neden": "Planın kat adedi 4: 4 kat 1,20 + 4 × 3,60 = 15,60 m; dört kat 3,00 m, zemin +0,45: bina 12,45 m ≤ 15,60 → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.45,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000015"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.45,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000016"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.45,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000017"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k03",
+            "name": "3. kat",
+            "elevation": 9.45,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000018"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "storeys",
+            "value": 4,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 9/1-c": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kat-adedi-asar",
+      "neden": "Planın kat adedi 2: 1,20 + 4,00 + 4,00 = 9,20 m; iki kat 4,50 m, zemin +1,00: bina 10,00 m > 9,20 → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 1.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000019"
+            ],
+            "height": 4.5
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 5.5,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000020"
+            ],
+            "height": 4.5
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "storeys",
+            "value": 2,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_height_storeys_conversion",
+            "has": [
+              "kat adedi 2",
+              "9.20 m'ye karşılık gelir",
+              "binanın yüksekliği 10.00 m"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kat-adedi-yuksekliksiz",
+      "neden": "En üst katın yüksekliği yazılmamış: bina yüksekliği okunamıyor → satır eksik veri; bulgusunu kat yüksekliği kuralı verir (aynı neden iki kez söylenmez).",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000021"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000022"
+            ]
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "storeys",
+            "value": 2,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 9/1-c": [
+            "missingData",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ikisi-de",
+      "neden": "Planın bina yüksekliği de kat adedi de var: tahvil gerekmez → kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000023"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000024"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000025"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          },
+          {
+            "key": "storeys",
+            "value": 3,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 9/1-c": [
+            "outOfScope",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "notsuz",
+      "neden": "Planın notu yok: satır yok.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000026"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000027"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000028"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {}
+      }
+    },
+    {
+      "id": "ticaret",
+      "neden": "Ticaret alanı (28/1-a zemin 4,50, öbür 4,00), 9,50 m: 1 kat 5,70; 2 kat 9,70 > 9,50 → 1 kat; binada 2 kat → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "bedrooms": 0,
+            "dwellingRooms": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000029"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "bedrooms": 0,
+            "dwellingRooms": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000030"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 0,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "commercial"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_height_storeys_conversion",
+            "has": [
+              "1 kat 5.70 m, 2 kat 9.70 m",
+              "1 kata karşılık gelir",
+              "binada 2 kat"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "asma-katli",
+      "neden": "Ticaret alanı, asma katlı zemin kat 5,50 m; 10,00 m: 1 kat 6,70; 2 kat 10,70 > 10,00 → 1 kat; binada (asma kat sayılmaz) 2 kat → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "bedrooms": 0,
+            "dwellingRooms": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000031"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "Asma kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "bedrooms": 0,
+            "dwellingRooms": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000032"
+            ],
+            "height": 2.5,
+            "mezzanine": true
+          },
+          {
+            "level": "k02",
+            "name": "1. kat",
+            "elevation": 5.5,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "bedrooms": 0,
+            "dwellingRooms": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000033"
+            ],
+            "height": 4.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 0,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 10.0,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "commercial"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_height_storeys_conversion",
+            "has": [
+              "1 kat 6.70 m, 2 kat 10.70 m",
+              "binada 2 kat"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-kat-yuksekligi",
+      "neden": "Planın kat yüksekliği notu 3,00 m (69/3) 28/1'in önünde: 10,00 m'de 3 kat 1,20 + 9,00 = 10,20 > 10,00 → 2 kat; binada 3 kat → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000034"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000035"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000036"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 10.0,
+            "source": "UİP 12.3.2019, plan notu 3"
+          },
+          {
+            "key": "storeyHeight",
+            "value": 3.0,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_height_storeys_conversion",
+            "has": [
+              "2 kat 7.20 m, 3 kat 10.20 m",
+              "binada 3 kat"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bolgesiz-buro",
+      "neden": "Bölge yazılmamış, konut projesi değil (büro): tahvilin kat yükseklikleri okunamıyor → satır eksik veri; bölgenin bulgusunu kat yüksekliği kuralı verir.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "bedrooms": 0,
+            "dwellingRooms": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000037"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "bedrooms": 0,
+            "dwellingRooms": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000038"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 0,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 9/1-c": [
+            "missingData",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "oteki-bolge",
+      "neden": "Planın kullanımı 28/1'in saymadığı bir kullanım (öbür): kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "bedrooms": 0,
+            "dwellingRooms": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000039"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "bedrooms": 0,
+            "dwellingRooms": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000040"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 0,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "other"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 9/1-c": [
+            "outOfScope",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "iki-bina",
+      "neden": "İki bina, planın 9,50 m'si (2 kat): “a” 2 katlı geçer, “b” 3 katlı → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "a00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000041"
+            ],
+            "height": 3.0,
+            "building": "a"
+          },
+          {
+            "level": "a01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000042"
+            ],
+            "height": 3.0,
+            "building": "a"
+          },
+          {
+            "level": "b00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000043"
+            ],
+            "height": 3.0,
+            "building": "b"
+          },
+          {
+            "level": "b01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000044"
+            ],
+            "height": 3.0,
+            "building": "b"
+          },
+          {
+            "level": "b02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000045"
+            ],
+            "height": 3.0,
+            "building": "b"
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_height_storeys_conversion",
+            "has": [
+              "“b” binası:",
+              "2 kata karşılık gelir",
+              "binada 3 kat"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kendi-sifiri",
+      "neden": "Binanın kendi ±0,00'ı +2,00: +0,00'daki kat bodrumdur; +2,00 ve +5,00 iki kat → 9,50 m'nin 2 katı içinde, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "a00",
+            "name": "Bodrum kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000046"
+            ],
+            "height": 2.0,
+            "building": "a",
+            "zero": 2.0
+          },
+          {
+            "level": "a00",
+            "name": "Zemin kat",
+            "elevation": 2.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000047"
+            ],
+            "height": 3.0,
+            "building": "a",
+            "zero": 2.0
+          },
+          {
+            "level": "a01",
+            "name": "1. kat",
+            "elevation": 5.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000048"
+            ],
+            "height": 3.0,
+            "building": "a",
+            "zero": 2.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 9/1-c": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "basvuru-2016",
+      "neden": "Başvuru 1.6.2016: 9/1-c 1.10.2017'de yürürlüğe girdi, öncesi kural setinde yok → satır uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2016"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000049"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000050"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000051"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential"
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas",
+      "neden": "Sivas seçili: PAİY 28/1-c 3 katta 4,00 m → 12,50 m'de 2 kat; Sivas 28/1-c 3,60 m → 3 kat (12,00 m); sıkı olan PAİY bağlar, binada 3 kat → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000052"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000053"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000054"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 12.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential",
+        "local": "sivas"
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_height_storeys_conversion",
+            "has": [
+              "PAİY 28/1",
+              "2 kata karşılık gelir",
+              "Sivas ile 3 kat",
+              "binada 3 kat"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "geleneksel",
+      "neden": "Geleneksel kesme taş yığma bina (28/1-d 4,50 m), 9,50 m: 1 kat 5,70; 2 kat 10,20 > 9,50 → 1 kat; binada 2 kat → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000055"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000056"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "buildingHeight",
+            "value": 9.5,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ],
+        "zone": "residential",
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_height_storeys_conversion",
+            "has": [
+              "1 kat 5.70 m, 2 kat 10.20 m",
+              "1 kata karşılık gelir"
+            ],
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 9/1-c": [
+            "expertReview",
+            "1.10.2017"
+          ]
+        }
+      }
+    }
+  ]
+}

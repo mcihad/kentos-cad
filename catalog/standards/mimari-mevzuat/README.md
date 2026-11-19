@@ -61,7 +61,9 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   zemin dahil 3 kata kadar geleneksel kesme taş yığma binada 9.10.2021'den 4,50 m (28/1-d, projenin taşıyıcı sistem
   beyanıyla, docs/adr/8094). Projenin plan notu (zemin kat, kat yüksekliği) hepsinin önüne geçer (69/3).
 - **Bina yüksekliği ve kat adedi** (`bina_yuksekligi`, docs/adr/8098): planın plan notundaki bina yüksekliği (±0,00'dan
-  son katın tavan döşemesinin üstüne) ve kat adedi (zemin ve normal katlar) aşılamaz (PAİY 5/11).
+  son katın tavan döşemesinin üstüne) ve kat adedi (zemin ve normal katlar) aşılamaz (PAİY 5/11). Plan yalnız birini
+  veriyorsa öbürü 9/1-c'nin tahviliyle (`tahvil`, docs/adr/8157): 1,20 m subasman ve 28/1'in en çok kat yükseklikleri;
+  aşan uzman incelemesi.
 - **Kapı ölçüleri** (`kapi_olculeri`, docs/adr/8083): yükseklik 2,10 m; net genişlik bina girişinde 1,50, bölüm girişinde
   1,00, öbür kapılarda 0,90 m; 13.8.2025'e kadar ve Sivas'ta balkon ve tuvalet kapısı 0,80 m (PAİY 39/1). İki katmanın
   yargısı `katman`'da; gün yoksa her kat ve kapı ayrı denenir (`yururluk.parcalarla`).

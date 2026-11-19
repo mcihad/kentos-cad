@@ -2,7 +2,10 @@
 //! Plan notları, kept in the project (Mimari data 16) and read by the standards package. On the two-storey house of
 //! `dated_sizes_tests` (Zemin kat ±0.00 and 1. kat +3.80, each 3.80 m floor to floor) applied for on 2.7.2026: its eaves
 //! level is the top of the 1. kat's ceiling slab, 7.60 m over ±0.00, past a note of 7.00 m and within one of 8.00 m;
-//! its two storeys pass a note of one storey and hold one of two.
+//! its two storeys pass a note of one storey and hold one of two. With one of the two notes alone the other is read by
+//! PAİY 9/1-c's conversion (docs/adr/8157): 8.00 m holds one storey (1.20 m + 4.00 m = 5.20 m; two storeys 9.20 m),
+//! the house's two are an expert's to review; 10.00 m holds two; two storeys convert to 9.20 m, the house's 7.60 m
+//! within it.
 //!
 //! ```text
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib plan_limits_tests::screens -- --ignored --nocapture
@@ -122,6 +125,67 @@ fn the_plan_s_building_height_and_storey_count_typed_in_the_settings_are_not_pas
     );
 }
 
+/// The house with one of the plan's values alone typed and saved: `key` = `value`.
+fn typed_alone(key: PlanNoteKey, value: &str) -> App {
+    let (mut app, _, _) = crate::dated_sizes_tests::house();
+    crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+    let _ = app.update(Message::Run("file.settings"));
+    send(&mut app, SettingsEvent::Section(Section::Arch));
+    send(&mut app, SettingsEvent::AddPlanNote);
+    note(&mut app, 0, Edit::Key(key));
+    note(&mut app, 0, Edit::Value(value.into()));
+    note(&mut app, 0, Edit::Source("UİP 12.3.2019, plan notu 3".into()));
+    send(&mut app, SettingsEvent::Save);
+    assert!(app.project.is_none(), "saved");
+    app
+}
+
+/// The conversion's findings (message, state) and its row's outcome.
+fn conversion(app: &App) -> (Vec<(String, Option<kentos_commands::ArchAuditState>)>, O) {
+    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let found = audited
+        .findings
+        .iter()
+        .filter(|f| f.code == "paiy_height_storeys_conversion")
+        .map(|f| (f.message.clone(), f.state))
+        .collect();
+    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let row = set.rules.iter().find(|r| r.rule == "PAİY 9/1-c").unwrap_or_else(|| panic!("9/1-c: {:#?}", set.rules));
+    (found, row.state)
+}
+
+#[test]
+fn the_plan_s_building_height_alone_converts_to_a_storey_count() {
+    // 8.00 m: one storey (5.20 m), two 9.20 m; the house's two storeys are for an expert, its 7.60 m hold 5/11.
+    let mut app = typed_alone(PlanNoteKey::BuildingHeight, "8");
+    checked(&mut app);
+    let (found, row) = conversion(&app);
+    assert_eq!(row, O::ExpertReview);
+    assert_eq!(found.len(), 1, "{found:?}");
+    let (message, state) = &found[0];
+    assert_eq!(*state, Some(kentos_commands::ArchAuditState::ExpertReview));
+    assert!(
+        message.contains("Planın bina yüksekliği 8.00 m")
+            && message.contains("1 kat 5.20 m, 2 kat 9.20 m")
+            && message.contains("1 kata karşılık gelir; binada 2 kat"),
+        "{message}"
+    );
+    let (limits_found, rows) = limits(&app);
+    assert!(limits_found.is_empty(), "{limits_found:?}");
+    assert_eq!(rows, [("Plan notu: bina yüksekliği".to_owned(), O::Passed)]);
+    // 10.00 m: two storeys; the house's two hold it.
+    let _ = app.update(Message::Run("file.settings"));
+    send(&mut app, SettingsEvent::Section(Section::Arch));
+    note(&mut app, 0, Edit::Value("10".into()));
+    send(&mut app, SettingsEvent::Save);
+    checked(&mut app);
+    assert_eq!(conversion(&app), (Vec::new(), O::Passed));
+    // The storey count alone: two storeys convert to 9.20 m, the house is 7.60 m.
+    let mut app = typed_alone(PlanNoteKey::Storeys, "2");
+    checked(&mut app);
+    assert_eq!(conversion(&app), (Vec::new(), O::Passed));
+}
+
 /// Plan notları with the plan's building height and storey count, and Denetim with their findings, light and dark;
 /// `.run/gui-evidence/plan-yukseklik-8098/`.
 #[test]
@@ -161,6 +225,40 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-denetim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Denetim with the conversion's expert review (8.00 m alone: one storey, the house has two), light and dark;
+/// `.run/gui-evidence/tahvil-8157/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn conversion_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tahvil-8157");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    for (theme, size, name) in sizes {
+        let mut app = typed_alone(PlanNoteKey::BuildingHeight, "8");
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        app.toasts.clear();
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_height_storeys_conversion");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        app.selection.set(Vec::new());
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-tahvil-denetim-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

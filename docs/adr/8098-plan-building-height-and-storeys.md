@@ -76,5 +76,6 @@ Metinler derlenmiş PAİY'den (1.7.2026 derlemesi, `pdftotext`).
 - **Planın değerleri CBS'ten:** ADR 8072 §5'in `Hmax`'ı ve `KatAdedi`'si bir onayla plan notuna alınsın — yapıldı: ADR
   [8140](8140-plan-decision-values-into-zoning.md) (Değerlerini al).
 - **Tahvil (9/1-c):** planın yalnız birini verdiği durumda öbürüne çevirme (subasman +1,20 ve 28/1'in kat yükseklikleri);
-  subasmanın kendi sınırı yapıldı: ADR [8153](8153-plinth-level-4-1-yyy.md) (4/1-yyy).
+  subasmanın kendi sınırı yapıldı: ADR [8153](8153-plinth-level-4-1-yyy.md) (4/1-yyy); tahvil yapıldı: ADR
+  [8157](8157-height-storeys-conversion-9-1-c.md) (aşan uzman incelemesi).
 - **Tesisat katı** (28/3) ve **kademeli bina** (9/1, her kademenin kendi kotu) okunmaz.

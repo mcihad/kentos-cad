@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.44.0 — 19 Kasım 2026
+
+- Tahvil (`tahvil`; docs/adr/8157): PAİY 9/1-c. Planın yalnız bina yüksekliği varsa kat adedine, yalnız kat adedi
+  varsa yüksekliğe çevrilir: n katın yüksekliği 1,20 m subasman + zemin katın + (n − 1) normal katın 28/1'deki en çok
+  yüksekliği (bölgenin bendi başvuru gününün hâliyle, planın kat yüksekliği notları önce; Sivas seçiliyse sıkı olanı).
+  Binanın kat adedi ya da yüksekliği tahvili aşarsa uzman incelemesi (idareler subasmanı ve 28/2'yi farklı okur).
+  `bina-yuksekligi` katkısı tahvilin bulgularını da verir. 16 bağımsız durum. Sürüm tablosunda 9/1-c'nin 1.10.2017
+  hâli.
+
 ## 0.43.0 — 19 Kasım 2026
 
 - Otel ve yurt yatak odasının kapısından kaçış uzaklığı (`yatak_kacisi`; docs/adr/8156): BYKHY 50/4 ve 50/5. Olguların

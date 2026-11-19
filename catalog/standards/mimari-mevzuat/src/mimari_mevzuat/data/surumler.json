@@ -2311,6 +2311,24 @@
           "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 4/1-yyy; docs/adr/8153 §2."
         }
       ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "9/1-c",
+      "title": "Bina yüksekliği ile kat adedinin tahvili",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); derlenmiş metinde (c) bendinde değişiklik işareti yok (9/1-a 25.7.2019'da değişti). Sivas İmar Yönetmeliği 9/1-c aynı ölçüyü (1.20 m) yazar.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "subasman": 1.2,
+          "text": "c) Kat adetleri, binanın kot aldığı noktaya göre hesaplanır. Ancak artan kat yüksekliğinden faydalanılmak suretiyle binanın hiç bir cephesinde bodrum katlar hariç kat sayısı artırılamaz. İmar planlarında gösterilen bina yüksekliklerinin veya kat adetlerinin birbirlerine tahvillerinde veya neye tekabül ettiklerinin tespitinde bu esaslar ile binanın kot aldığı noktaya en fazla 1.2 metre eklenmek suretiyle belirlenen subasman kotu dikkate alınır.",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 9/1-c; 9/1-a (28 inci maddenin kat yükseklikleri ile kat adedinin çarpımı) ve 28/2; Sivas İmar Yönetmeliği (RG 10.11.2022/32009) 9/1-c; docs/adr/8157 §2."
+        }
+      ]
     }
   ]
 }
