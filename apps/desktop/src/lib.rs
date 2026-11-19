@@ -1651,6 +1651,9 @@ mod party_wall_tests;
 #[path = "tests/projection_tests.rs"]
 mod projection_tests;
 #[cfg(test)]
+#[path = "tests/lodging_escape_tests.rs"]
+mod lodging_escape_tests;
+#[cfg(test)]
 #[path = "tests/double_door_tests.rs"]
 mod double_door_tests;
 #[cfg(test)]

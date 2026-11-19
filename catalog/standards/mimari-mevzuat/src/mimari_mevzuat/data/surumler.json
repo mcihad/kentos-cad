@@ -525,6 +525,43 @@
     },
     {
       "regulation": "BYKHY",
+      "article": "50/4",
+      "title": "Otel ve yurt yatak odasının kapısından kaçış uzaklığı (50/5 ile)",
+      "transition": "50/4 ve 50/5 yayım gününden beri değişmedi. Sınırlar Ek-5/B'nin Oteller, Pansiyonlar ve Yurtlar, Yatakhaneler satırlarıdır; Ek-5/B 9.9.2009 (2009/15316) ve 9.7.2015 (2015/7401) değişiklikleriyle değişti (işaretler endüstri yapılarının dipnotunu ve hastanelerin kaçış merdiveni sütununu gösterir). Ek-5/B'nin 9.7.2015'ten önceki metni kural setinde yok: önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2015",
+          "from": "2015-07-09",
+          "until": null,
+          "label": "9.7.2015",
+          "gazette": "19.12.2007/26735; Ek-5/B 9.7.2015/29411",
+          "otel": [
+            [
+              15,
+              20
+            ],
+            [
+              30,
+              45
+            ]
+          ],
+          "yurt": [
+            [
+              15,
+              30
+            ],
+            [
+              45,
+              75
+            ]
+          ],
+          "text": "(4) Kaçış uzaklığı, yatak odası veya süit odanın çıkış kapısından başlayarak bir kaçış merdivenine, dış kaçış geçidine veya dış açık alana açılan çıkış kapısına kadar olan ölçüdür. (5) Koridor boyunca yalnızca tek yönde kaçış imkânı var ise, kaçış uzaklığı en uzaktaki yatak odası çıkış kapısından itibaren ölçülür. İki yönde kaçış sağlanabiliyor ise, kaçış uzaklığı her bir yatak odasının çıkış kapılarından ölçülür. Ek-5/B: Yurtlar, Yatakhaneler — tek yön en çok uzaklık 15 m (yağmurlama sistemli 30 m), iki yön 45 m (75 m); Oteller, Pansiyonlar — tek yön 15 m (20 m), iki yön 30 m (45 m).",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 50 nci madde ve Ek-5/B; değişiklik tablosu (2009/15316, 2015/7401); docs/adr/8156 §2"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
       "article": "52",
       "title": "Fabrika, imalathane, mağaza, dükkân, depo, büro ve ayakta tedavi merkezinin kaçış merdivenleri",
       "transition": "52 nci madde 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344); önceki metni kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",

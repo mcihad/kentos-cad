@@ -687,7 +687,14 @@ K208–K210, 18 Kasım 2026): L hol artık kollarından ölçülür, bulgu en da
 odasının içindeki kaçış uzaklığı (paket 0.25.0, `konaklama`): BYKHY 50/3, odanın en uzak noktasından (0,40 m önden) kendi
 kapısına yürüyüş 15 m'yi aşan tek kapılı oda kaldı, tamamı yağmurlamalı otelde sınır 20 m; kaçış modülüne mahalin kendi
 kapısına yürüyüşü, bina olgularına `toDoor`. 25 bağımsız durum; 18 m derin otel odası Denetim'de (ikinci kapıyla geçer).
-Kalan: süitin grubunun kapısına yürüyüş, 50/4–50/5 odanın kapısından merdivene, 50/2, 50/6.
+Kalan: süitin grubunun kapısına yürüyüş, 50/2, 50/6.
+**Yapıldı (19 Kasım 2026, [ADR 8156](../docs/adr/8156-bedroom-escape-from-its-door.md), K400–K403):** otel ve yurt yatak
+odasının kapısından kaçış uzaklığı (paket 0.43.0, `yatak_kacisi`): BYKHY 50/4, 50/5; kaçış modülünde kapının dış
+yanından en yakın kat çıkışına yürüyüş (`RoomEscape.door_exit`), olgularda `doorExit`; Ek-5/B'nin otel ya da yurt satırı;
+tek çıkışta bütün yol tek yön, iki çıkışta tek yönlü kısım ve bütün; süitin iç odası süitin çıkış kapısından. Mimari
+denetimin 32/4'ü bu odaları en uzak noktalarından ölçmez, Kaçış yolları yolu kapıdan çizer. 21 bağımsız durum; iki
+odalı otel katı Denetim'de. Kalan: 50/2 dış koridor (Ek-5/B'nin notu), salonu yatak odası adı taşımayan süit, otelin
+içindeki konut bölümü, 32/4'ün öbürünün betiğe taşınması.
 **Yapıldı (18 Kasım 2026, [ADR 8113](../docs/adr/8113-boiler-room-and-fuel-store.md), K211–K215):** kazan dairesi ve
 yakıt deposu (paket 0.26.0, `kazan`): BYKHY 54/2 komşu mahallerle en az EI 120 ayrım, 54/4 kapı merdivene değil hol ya da
 koridora, 54/5 net alanı 100 m²'yi aşanda iki çıkış kapısı ve kapılar EI2 90 S C (ısıl kapasite çizimde yok: uzman
@@ -1026,7 +1033,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | B21 ~ | Tipler ve katmanlı yapı; tip nesneleri | BIM-12, IFC-04 | Değerin kaynağı görünür (ADR 8105: duvar stili `IfcWallType`, katman takımları; ADR 8106: kolon, kiriş, döşeme, çatı, korkuluk, merdiven tipi, istisna, Öznitelikler'de Tipten/Örnekten, IFC tipleri; iki ilk kabul de tamam; giydirme cephe tipi, profil takımı, eski sürüm denetimi, kitaplık kaldı) |
-| B22 ~ | Konut dışı kullanımlar (yasal en geç 1.9.2033) | BIM-13 | Kullanım sınıfına özel kurallar (ADR 8107: BYKHY 49/1-a hasta odası, 50/1-a ve 50/1-b otel, 52 tek merdivenli fabrika, mağaza, depo, büro; ADR 8108: 96/2 yağmurlama zorunluluğu kullanıma, yüksekliğe ve alana göre; ADR 8110: 49/1-b büyük yatılan katın kompartımanları, 49/2 hastane koridoru, koridorun en dar yeri; ADR 8111: 50/3 otel odasının içindeki kaçış uzaklığı; 101 bağımsız durum, gerçek çizimde Denetim; 50/2, 50/4–50/6, 51, eğitim, toplanma, endüstri ve depolama kaldı) |
+| B22 ~ | Konut dışı kullanımlar (yasal en geç 1.9.2033) | BIM-13 | Kullanım sınıfına özel kurallar (ADR 8107: BYKHY 49/1-a hasta odası, 50/1-a ve 50/1-b otel, 52 tek merdivenli fabrika, mağaza, depo, büro; ADR 8108: 96/2 yağmurlama zorunluluğu kullanıma, yüksekliğe ve alana göre; ADR 8110: 49/1-b büyük yatılan katın kompartımanları, 49/2 hastane koridoru, koridorun en dar yeri; ADR 8111: 50/3 otel odasının içindeki kaçış uzaklığı; 101 bağımsız durum, gerçek çizimde Denetim; ADR 8156: 50/4–50/5 otel ve yurt yatak odasının kapısından kaçış uzaklığı, 21 durum; 50/2, 50/6, 51, eğitim, toplanma, endüstri ve depolama kaldı) |
 | B23 ~ | Kat irtifakı için 3B yapı modeli araştırması | BIM-19 | Karar ADR'de (ADR 8109: ertelendi; TKGM 2025/2 genelgesinin açık maddeleri okundu, biçim standardı okunamadı; yapılırsa harita modülünün işi) |
 
 - **Sürekli:** BIM-20 her fazda bir dilimle ilerler.

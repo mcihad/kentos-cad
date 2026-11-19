@@ -78,6 +78,19 @@ pub struct RoomEscape {
     pub passages: usize,
     /// From its farthest point to its nearest passage, inside it (docs/adr/8111; 50/3); none without a passage.
     pub door: Option<Route>,
+    /// From the outer side of its door to the nearest storey exit, the nearest of its doors (docs/adr/8156; BYKHY 50/4,
+    /// 50/5: a hotel's or a dormitory's bedroom is measured from its door); none without a door reaching an exit.
+    pub door_exit: Option<DoorExit>,
+}
+
+/// A room's walk from the outer side of its door to the nearest storey exit (docs/adr/8156).
+#[derive(Clone, Debug, PartialEq)]
+pub struct DoorExit {
+    /// The walk: none long (one exit reached) when the door opens into an escape stair's room or is the building's
+    /// final exit.
+    pub exit: ExitRoute,
+    /// The room the door opens into, by its object; none: the outside.
+    pub into: Option<Slot>,
 }
 
 /// A dwelling unit's entrance: from its door's outer side to the nearest storey exit (48/4).
@@ -503,6 +516,8 @@ pub fn escape(doc: &Document) -> Escape {
         let mut doors_of: BTreeMap<usize, usize> = BTreeMap::new();
         // Each room's side of its passages, by node.
         let mut own_doors: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
+        // Each passage's two sides, both ways: a room's side and the other side (none: the outside), by node.
+        let mut sides: Vec<(usize, Option<usize>)> = Vec::new();
         let cross = |g: &mut Graph, a: V, b: V| -> (Option<usize>, Option<usize>) {
             let (ra, rb) = (room_at(&level, a), room_at(&level, b));
             let na = ra.map(|r| g.node(a, r));
@@ -527,6 +542,11 @@ pub fn escape(doc: &Document) -> Escape {
             for n in [n1, n2].into_iter().flatten() {
                 *doors_of.entry(g.room[n]).or_default() += 1;
                 own_doors.entry(g.room[n]).or_default().push(n);
+            }
+            for (inner, outer) in [(n1, n2), (n2, n1)] {
+                if let Some(i) = inner {
+                    sides.push((i, outer));
+                }
             }
             let door = crate::identity::Uuid::parse_str(&p.uid)
                 .ok()
@@ -758,6 +778,44 @@ pub fn escape(doc: &Document) -> Escape {
                         .max_by(|a, b| a.length.total_cmp(&b.length))
                 })
                 .flatten();
+            // From the outer side of each of its doors to the nearest exit, the nearest (50/4, 50/5): the walk goes on
+            // in the room the door opens into, as that room's own walks do. A door into an escape stair's room, or the
+            // building's final exit, is at its exit.
+            let at_exit = |p: V| ExitRoute {
+                route: Route {
+                    path: vec![p],
+                    length: 0.0,
+                },
+                one_way: 0.0,
+                exits: 1,
+            };
+            let door_exit = sides
+                .iter()
+                .filter(|(k, _)| g.room[*k] == i)
+                .filter_map(|&(k, outer)| {
+                    let Some(o) = outer else {
+                        let exit = groups.iter().any(|s| s.contains(&k)).then(|| at_exit(g.at[k]))?;
+                        return Some(DoorExit { exit, into: None });
+                    };
+                    let r = g.room[o];
+                    let into = &rooms[r];
+                    let exit = if into.stair {
+                        at_exit(g.at[o])
+                    } else {
+                        let per_into = reached.get(&into.owner)?;
+                        exit_route(into, room_nodes.get(&r).unwrap_or(&empty), per_into, g.at[o])?
+                    };
+                    Some(DoorExit {
+                        exit,
+                        into: Some(into.slot),
+                    })
+                })
+                // The nearest; of two as near, the one into the outside, then by the room's persistent id: the same
+                // whatever the drawing's order.
+                .min_by(|a, b| {
+                    let id = |d: &DoorExit| d.into.map(|s| doc.uid(s));
+                    a.exit.route.length.total_cmp(&b.exit.route.length).then_with(|| id(a).cmp(&id(b)))
+                });
             out.rooms.push(RoomEscape {
                 room: room.slot,
                 level: level.clone(),
@@ -768,6 +826,7 @@ pub fn escape(doc: &Document) -> Escape {
                 has_entrance: !doors.is_empty(),
                 passages: doors_of.get(&i).copied().unwrap_or(0),
                 door,
+                door_exit,
             });
         }
         // Each dwelling unit's entrance: from its door's outer side to the nearest exit (48/4).

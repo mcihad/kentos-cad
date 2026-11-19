@@ -56,10 +56,10 @@ use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, FinishFacts, InsulationFacts,
-    LinkFacts, MasonryFacts, MasonryStorey, PartyFacts, PlanNoteFacts, ProjectionEdgeFacts, ProjectionFacts, RoofFacts,
-    RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts, ShaftVentFacts, SpaceFacts, StoreyHolds,
-    UnderStairFacts, UnderStairRoom
+    BuildingFacts, CoveringFacts, DoorExitFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, FinishFacts,
+    InsulationFacts, LinkFacts, MasonryFacts, MasonryStorey, PartyFacts, PlanNoteFacts, ProjectionEdgeFacts,
+    ProjectionFacts, RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts,
+    ShaftVentFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -234,11 +234,27 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             _ => None,
         })
         .collect();
-    // Each room's walk from its farthest point to its own nearest door, inside it (docs/adr/8111; 50/3).
-    let to_door: std::collections::HashMap<String, f64> = kentos_domain::escape::escape(doc)
+    // Each room's walk from its farthest point to its own nearest door, inside it (docs/adr/8111; 50/3), and from its
+    // door's outer side to the nearest storey exit (docs/adr/8156; 50/4).
+    let escape = kentos_domain::escape::escape(doc);
+    let to_door: std::collections::HashMap<String, f64> = escape
         .rooms
-        .into_iter()
-        .filter_map(|r| Some((doc.uid(r.room)?.to_string(), r.door?.length)))
+        .iter()
+        .filter_map(|r| Some((doc.uid(r.room)?.to_string(), r.door.as_ref()?.length)))
+        .collect();
+    let door_exit: std::collections::HashMap<String, DoorExitFacts> = escape
+        .rooms
+        .iter()
+        .filter_map(|r| {
+            let d = r.door_exit.as_ref()?;
+            let fact = DoorExitFacts {
+                length: d.exit.route.length,
+                one_way: d.exit.one_way,
+                exits: d.exit.exits,
+                into: d.into.and_then(|s| doc.uid(s)).map(|u| u.to_string()),
+            };
+            Some((doc.uid(r.room)?.to_string(), fact))
+        })
         .collect();
     let spaces = storeys
         .iter()
@@ -250,6 +266,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             stair: stair_rooms.contains(&uid),
             least: least.get(&uid).copied(),
             to_door: to_door.get(&uid).copied(),
+            door_exit: door_exit.get(&uid).cloned(),
             net: net.get(&uid).copied(),
             finishes: finishes.get(&uid).cloned().unwrap_or_default(),
             uid,

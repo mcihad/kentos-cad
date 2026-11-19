@@ -2401,6 +2401,11 @@
         "area": 36.3,
         "least": 1.4,
         "toDoor": 7.554,
+        "doorExit": {
+          "length": 0.0,
+          "oneWay": 0.0,
+          "exits": 1
+        },
         "net": 33.32
       },
       {
@@ -2409,6 +2414,12 @@
         "name": "Dükkân (Z01)",
         "area": 32.8,
         "toDoor": 4.881,
+        "doorExit": {
+          "length": 6.3,
+          "oneWay": 0.0,
+          "exits": 2,
+          "into": "01a1dfda-06c5-7278-9486-e3999a1cb813"
+        },
         "net": 30.415
       },
       {
@@ -2417,6 +2428,12 @@
         "name": "Salon (Z02)",
         "area": 24.6,
         "toDoor": 4.21,
+        "doorExit": {
+          "length": 13.3,
+          "oneWay": 0.0,
+          "exits": 2,
+          "into": "01a1dfda-06c5-7278-9486-e3999a1cb813"
+        },
         "net": 22.715
       },
       {
@@ -2425,6 +2442,12 @@
         "name": "Yatak odası (Z03)",
         "area": 25.01,
         "toDoor": 5.57,
+        "doorExit": {
+          "length": 16.998,
+          "oneWay": 3.698,
+          "exits": 2,
+          "into": "01a1dfda-06c5-7278-9486-e39bf9dc85ab"
+        },
         "net": 22.5225
       },
       {
@@ -2433,6 +2456,12 @@
         "name": "Depo (Z04)",
         "area": 21.965,
         "toDoor": 3.824,
+        "doorExit": {
+          "length": 1.862,
+          "oneWay": 0.0,
+          "exits": 2,
+          "into": "01a1dfda-06c5-7278-9486-e3999a1cb813"
+        },
         "net": 19.5975
       },
       {
@@ -2441,6 +2470,12 @@
         "name": "Ofis (Z05)",
         "area": 57.965,
         "toDoor": 8.07,
+        "doorExit": {
+          "length": 14.351,
+          "oneWay": 0.0,
+          "exits": 2,
+          "into": "01a1dfda-06c5-7278-9486-e3999a1cb813"
+        },
         "net": 53.0975
       },
       {
@@ -2458,6 +2493,12 @@
         "area": 36.3,
         "least": 1.4,
         "toDoor": 11.535,
+        "doorExit": {
+          "length": 0.0,
+          "oneWay": 0.0,
+          "exits": 1,
+          "into": "01a1dfda-0704-70dd-a975-499e70342853"
+        },
         "net": 33.32
       },
       {
@@ -2466,6 +2507,12 @@
         "name": "Salon (K01)",
         "area": 32.8,
         "toDoor": 4.881,
+        "doorExit": {
+          "length": 6.3,
+          "oneWay": 6.3,
+          "exits": 1,
+          "into": "01a1dfda-0704-70dd-a975-499fcf59dea1"
+        },
         "net": 30.415
       },
       {
@@ -2474,6 +2521,12 @@
         "name": "Yatak odası 1 (K02)",
         "area": 24.6,
         "toDoor": 1.579,
+        "doorExit": {
+          "length": 10.871,
+          "oneWay": 10.871,
+          "exits": 1,
+          "into": "01a1dfda-0704-70dd-a975-49a0e9eca5a0"
+        },
         "net": 22.715
       },
       {
@@ -2482,6 +2535,12 @@
         "name": "Yatak odası 2 (K03)",
         "area": 25.01,
         "toDoor": 5.57,
+        "doorExit": {
+          "length": 16.871,
+          "oneWay": 16.871,
+          "exits": 1,
+          "into": "01a1dfda-0704-70dd-a975-49a1c1b85ee4"
+        },
         "net": 22.5225
       },
       {
@@ -2490,6 +2549,12 @@
         "name": "Arşiv (K04)",
         "area": 87.12,
         "toDoor": 11.848,
+        "doorExit": {
+          "length": 10.372,
+          "oneWay": 10.372,
+          "exits": 1,
+          "into": "01a1dfda-0704-70dd-a975-499fcf59dea1"
+        },
         "net": 79.73
       }
     ],

@@ -2569,6 +2569,109 @@
      ]
     }
    }
+  },
+  {
+   "id": "otel-ve-yurt",
+   "neden": "Kullanımı “Otel ve yurt”: otel sözcüğü geçen bina oteldir (docs/adr/8156), 16 m tek kapı → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel ve yurt"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000083",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000084",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000085",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000084",
+       "00000000-0000-4000-8000-000000000083"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "16,00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
   }
  ]
 }

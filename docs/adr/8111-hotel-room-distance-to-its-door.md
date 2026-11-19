@@ -72,6 +72,8 @@ Değişmedi: Denetim'in Mevzuat grubunda yeni bulgu, kural setinde yeni madde.
 ## §6. Sıradaki adımlar
 
 - Süitin grubunun kapısına yürüyüş (K207).
-- 50/4 ve 50/5: odanın çıkış kapısından kaçış merdivenine uzaklık, tek yönlü koridorda en uzak odanın kapısından.
+- 50/4 ve 50/5: odanın çıkış kapısından kaçış merdivenine uzaklık, tek yönlü koridorda en uzak odanın kapısından —
+  yapıldı: ADR [8156](8156-bedroom-escape-from-its-door.md) (yurt yatak odası da; süitin iç odası süitin çıkış
+  kapısından).
 - 50/2 dış koridorlu otel odaları (dış koridor çizimde ayrı okunmuyor), 50/6 duman kesicileri (koridorun havalandırması
   beyanı).

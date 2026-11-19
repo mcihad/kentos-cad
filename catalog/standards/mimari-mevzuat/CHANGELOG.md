@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.43.0 — 19 Kasım 2026
+
+- Otel ve yurt yatak odasının kapısından kaçış uzaklığı (`yatak_kacisi`; docs/adr/8156): BYKHY 50/4 ve 50/5. Olguların
+  mahallerinde `doorExit` (kapılarından en yakınının dış yanından en yakın kat çıkışına yürüyüş: uzunluğu, tek yönlü
+  kısmı, ulaştığı çıkış sayısı, kapının açıldığı mahal). Tek çıkışa ulaşan odanın bütün yolu tek yön, iki çıkışa
+  ulaşanın tek yönlü kısmı tek yön ve bütünü iki yön sınırına; Ek-5/B'nin otel (15/20, 30/45 m) ya da yurt (15/30,
+  45/75 m) satırı; süitin iç odası süitin çıkış kapısından. `konaklama.sinif`: otel ve yurt sözcükleri birlikte geçen
+  bina oteldir (önce yurt sayılıyordu; 50/3'e 1 durum). 21 bağımsız durum. Sürüm tablosunda 50/4'ün Ek-5/B'nin 9.7.2015 hâliyle metni.
+
 ## 0.42.0 — 19 Kasım 2026
 
 - Binanın kendi ±0,00'ı (docs/adr/8154): kurallar katın kotunu binasının sıfırından okur (`katman.kot`: kot eksi

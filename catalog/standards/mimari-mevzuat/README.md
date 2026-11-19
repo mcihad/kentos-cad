@@ -21,6 +21,9 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   eyvanı zemin dahil 3 kata kadar binada ve zemin katta mı (22/1-m, docs/adr/8094); kalın taş duvarların payı (5/8,
   20/8-j, docs/adr/8095): beyansız kalın duvar, katı (her binanınki kendi katlarıyla, docs/adr/8150) ve başvuru günü; Sivas'ta duvarlar %30'un içinde (22/k,
   docs/adr/8096).
+- **Otel ve yurt yatak odasının kaçış uzaklığı** (`yatak_kacisi`, docs/adr/8156): yatak odasının kapısından en yakın
+  kat çıkışına (BYKHY 50/4); tek çıkışa ulaşan odada bütün yol, iki çıkışa ulaşanda tek yönlü kısmı ve bütünü (50/5)
+  Ek-5/B'nin otel ya da yurt satırıyla; süitin iç odası süitin çıkış kapısından.
 - **Subasman kotu** (`subasman`, docs/adr/8153): her binanın zemin katının taban döşemesi ±0,00 ile +1,20 arasında
   (4/1-yyy), binanın kendi ±0,00'ından.
 - **Çıkmalar** (`cikmalar`, docs/adr/8152): zemin katın dışına taşan açık ve kapalı çıkmalar vaziyet planının bahçe

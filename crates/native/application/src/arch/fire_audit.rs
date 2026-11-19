@@ -2,7 +2,9 @@
 //! drawing's escape routes (`kentos_domain::escape`), in Mimari denetim's Mevzuat group.
 //!
 //! - **Kaçış uzaklığı (32/4, Ek-5/B):** a room that is no dwelling's, from its farthest point (40 cm in, 32/6) to the
-//!   nearest storey exit: the one-way part and, with two exits or more, the whole walk against its use's limits.
+//!   nearest storey exit: the one-way part and, with two exits or more, the whole walk against its use's limits. A
+//!   lodging building's bedroom is measured from its door (50/4, docs/adr/8156): the standards package says it, the
+//!   plan draws that walk.
 //! - **Konutlar (48):** inside a dwelling unit, from its farthest point to its door at most 20 m (30 m with a sprinkler
 //!   system, 48/2); from the unit's door to the nearest storey exit as Ek-5/B's apartments (48/4). Neither is asked in
 //!   a dwelling building of four storeys or fewer with its basements, nor in a single house (48/1). By the structure's
@@ -162,6 +164,8 @@ struct Room {
     corridor: bool,
     /// Its use and its people (Ek-5/A); none for a dwelling's room.
     use_: Option<Use>,
+    /// A lodging building's bedroom, by the building's row (BYKHY 50/4; docs/adr/8156): measured from its door.
+    lodging: Option<Use>,
     people: f64,
     /// Its width: a corridor's narrowest neck (docs/adr/8112), another room's largest circle.
     width: f64,
@@ -297,6 +301,17 @@ fn assess(
         .filter_map(|u| unit_use(&u.id))
         .filter(|u| *u != Use::Dwelling)
         .reduce(Use::stricter);
+    // BYKHY 50's building as the standards package reads it (docs/adr/8156): its bedrooms' escape distance is measured
+    // from their doors (50/4) and said by the package.
+    let lodging = kentos_domain::fire_use::lodging_of(
+        program.buildings.iter().filter_map(|b| b.usage.as_deref()),
+        units.len(),
+        dwellings,
+        doc.entities().filter_map(|e| match e {
+            Entity::Space(s) => s.space.name.as_deref().or(s.space.usage.as_deref()),
+            _ => None,
+        }),
+    );
     // The rooms.
     let mut rooms: Vec<Room> = Vec::new();
     for e in doc.entities() {
@@ -362,6 +377,9 @@ fn assess(
             dwelling,
             corridor,
             use_,
+            lodging: lodging.filter(|_| {
+                !dwelling && kentos_domain::fire_use::lodging_bedroom(name.or(usage).unwrap_or_default())
+            }),
             people,
             width: neck.map_or(width, |(w, _)| w),
             neck: neck.and_then(|(_, p)| p),
@@ -499,6 +517,20 @@ fn assess(
             }
             continue;
         }
+        // A lodging building's bedroom: its walk from its door against its row (50/4, 50/5), drawn on the plan; the
+        // standards package says its finding.
+        if let (Some(row), Some(d)) = (room.lodging, &e.door_exit) {
+            let (measure, most, words, over) = judge(&d.exit, row);
+            walks.push(Walk {
+                level: e.level.clone(),
+                path: d.exit.route.path.clone(),
+                length: d.exit.route.length,
+                measure,
+                limit: Some(most),
+                words,
+                over,
+            });
+        }
         if dwelling_building && room.unit.is_none() || room.use_.is_none() {
             continue;
         }
@@ -539,6 +571,8 @@ fn assess(
                     );
                 }
             }
+            // Measured from its door above.
+            Some(_) if room.lodging.is_some() => {}
             Some(x) => {
                 let (measure, most, words, over) = judge(x, u);
                 walks.push(Walk {

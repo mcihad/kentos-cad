@@ -138,6 +138,8 @@ def durumlar():
     b.mahal("Otel odası 5", 16.0, 1)
     out.append(durum("adlardan", "Bina programında kullanım yok, mahal adı Otel odası: konaklama mahal adından → kalır.",
                      b, [bulgu(["16,00 m"])], kural("failed")))
+    out.append(durum("otel-ve-yurt", "Kullanımı “Otel ve yurt”: otel sözcüğü geçen bina oteldir (docs/adr/8156), 16 m "
+                     "tek kapı → kalır.", otel(16.0, uses=("Otel ve yurt",)), [bulgu(["16,00 m"])], kural("failed")))
     return out
 
 

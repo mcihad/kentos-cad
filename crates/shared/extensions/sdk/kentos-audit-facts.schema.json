@@ -842,6 +842,36 @@
       ],
       "type": "object"
     },
+    "DoorExitFacts": {
+      "description": "A room's walk from the outer side of its door to the nearest storey exit (docs/adr/8156): its length and the part\nit shares with the walk to the nearest other exit (tek yön; all of it with one exit), m, how many exits it reaches\nand the room the door opens into by its persistent id (absent: the outside). Nothing long when the door opens into\nan escape stair's room or is the building's final exit.",
+      "properties": {
+        "exits": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "into": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "length": {
+          "format": "double",
+          "type": "number"
+        },
+        "oneWay": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "length",
+        "oneWay",
+        "exits"
+      ],
+      "type": "object"
+    },
     "DoorFacts": {
       "description": "A door: the rooms on its two sides, the one its leaf swings into, how it opens, its declared fire class, and whether\nit opens into an escape stair's room or a fire safety lobby.",
       "properties": {
@@ -2231,6 +2261,17 @@
         "area": {
           "format": "double",
           "type": "number"
+        },
+        "doorExit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DoorExitFacts"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its walk from the outer side of its door to the nearest storey exit, the nearest of its doors (docs/adr/8156;\nBYKHY 50/4, 50/5: a hotel's or a dormitory's bedroom is measured from its door); none for a room whose doors\nreach no exit, a void or a broken room."
         },
         "finishes": {
           "description": "Its floor's, walls' and ceiling's finishes as the room list names them, each with the project material of that\nname (or id) and the material's declared reaction to fire class (docs/adr/8138; BYKHY 20/3, 26/2, 26/4).",

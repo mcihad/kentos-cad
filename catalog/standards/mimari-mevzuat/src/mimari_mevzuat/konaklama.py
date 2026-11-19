@@ -5,8 +5,9 @@
   tek kaçış kapısı yeter. (a) Aşıyorsa birbirinden uzakta en az 2 çıkış kapısı gerekir. (b) Tamamı yağmurlamalı otelde
   en uzak noktadan kapıya uzaklık 20 m'yi aşmaz.
 - **Kapsam:** otel, motel ve pansiyon (``kullanim.siniflar``'ın konaklama sınıfı); yalnız yurt ya da yatakhane olan
-  binada madde kapsam dışı (50/2 ve 50/3 otel yatak odasını söyler). Oda adı otel odası, yatak odası, süit, konuk ya da
-  misafir odası ya da Oda; banyo, WC, koridor ve hol değil.
+  binada madde kapsam dışı (50/2 ve 50/3 otel yatak odasını söyler). Otel ve yurt sözcükleri birlikte geçen bina
+  oteldir (``sinif``, docs/adr/8156). Oda adı otel odası, yatak odası, süit, konuk ya da misafir odası ya da Oda;
+  banyo, WC, koridor ve hol değil.
 - **Uzaklık:** olguların ``toDoor``'u: odanın en uzak noktasından (duvarlardan 0,40 m önde, 32/6) en yakın kapısına ya da
   eşiksiz boşluğuna, odanın içinden yürüyüş. Kapı sayısı olguların kapılarından. "Birbirinden uzakta" bir ölçü değildir:
   iki kapılı odada kapıların yeri idarenin takdirindedir.
@@ -30,8 +31,9 @@ from .kullanim import _kapilari, _otel_odasi, _sozcukler, _var, siniflar
 
 MADDELER = [("BYKHY", "50/3")]
 
-#: Yurt ve yatakhane otel değildir.
-_YURT = ("YURT", "YURD", "YATAKHANE")
+#: Konaklama yapısının (10) ve 50. maddenin binasının sözcükleri; otelinkiler: hiçbiri olmayan konaklama yurttur.
+_KONAKLAMA = ("OTEL", "MOTEL", "PANSIYON", "KONAKLAMA", "HOSTEL", "YURT", "YURD", "YATAKHANE")
+_OTEL = ("OTEL", "MOTEL", "PANSIYON", "KONAKLAMA", "HOSTEL")
 #: Geçiş ve ıslak hacimler otel odası değildir (Süit banyosu, Kat holü).
 _ODA_DEGIL = ("KORIDOR", "HOL", "WC", "TUVALET", "BANYO", "DUS", "LAVABO", "ANTRE")
 
@@ -55,18 +57,28 @@ def _bulgu(ileti: str, onarim: str, hal: y.Hal, uids: list[str], iz: str, bent: 
     return out
 
 
-def otel(bina: dict[str, Any]) -> tuple[bool, str]:
-    """Bina 50/3'ün oteli mi: konaklama sınıfında (otel, motel, pansiyon) ve yalnız yurt ya da yatakhane değil; nereden
-    okunduğu."""
+def sinif(bina: dict[str, Any]) -> tuple[str | None, str]:
+    """Binanın 50. maddedeki satırı (docs/adr/8156): konaklama sınıfındaysa ``"otel"`` (kullanımlarının ya da
+    adlarının biri otel, motel, pansiyon, konaklama ya da hostel), değilse ``"yurt"`` (yalnız yurt, yatakhane);
+    konaklama değilse yok; nereden okunduğu. Masaüstünün yangın kuralları aynı okumayla bu binanın yatak odalarını bu
+    pakete bırakır (``kentos_domain::fire_use::lodging_of``)."""
     sinif_, nereden = siniflar(bina)
     if "konaklama" not in sinif_:
-        return False, f"{nereden} otel, motel ya da pansiyon değil"
+        return None, nereden
     kullanim = list(bina.get("uses") or [])
     sozler = [_sozcukler(u) for u in kullanim] if kullanim else [_sozcukler(s.get("name"))
                                                                for s in bina.get("spaces") or []]
-    konaklayan = [w for w in sozler if _var(w, ("OTEL", "MOTEL", "PANSIYON", "KONAKLAMA", "HOSTEL", "YURT", "YURD",
-                                                   "YATAKHANE"))]
-    if konaklayan and all(_var(w, _YURT) for w in konaklayan):
+    konaklayan = [w for w in sozler if _var(w, _KONAKLAMA)]
+    return ("otel" if any(_var(w, _OTEL) for w in konaklayan) else "yurt"), nereden
+
+
+def otel(bina: dict[str, Any]) -> tuple[bool, str]:
+    """Bina 50/3'ün oteli mi: konaklama sınıfında (otel, motel, pansiyon) ve yalnız yurt ya da yatakhane değil; nereden
+    okunduğu."""
+    satir, nereden = sinif(bina)
+    if satir is None:
+        return False, f"{nereden} otel, motel ya da pansiyon değil"
+    if satir == "yurt":
         return False, f"{nereden} yurt ya da yatakhane: 50/3 otel yatak odasını söyler"
     return True, nereden
 

@@ -140,6 +140,80 @@ pub fn use_of(name: Option<&str>, usage: Option<&str>) -> Option<Use> {
     }
 }
 
+/// The words that make a building one of BYKHY 50's (oteller, moteller ve yatakhaneler; the lodging buildings of 10).
+const LODGING: [&str; 8] = [
+    "OTEL",
+    "MOTEL",
+    "PANSIYON",
+    "KONAKLAMA",
+    "HOSTEL",
+    "YURT",
+    "YURD",
+    "YATAKHANE",
+];
+/// Those of them that are a hotel's: a use or a name with none of them is a dormitory's.
+const HOTEL: [&str; 5] = ["OTEL", "MOTEL", "PANSIYON", "KONAKLAMA", "HOSTEL"];
+/// Words that make a room no bedroom: a corridor, a hall, a wet room (Süit banyosu, Kat holü).
+const NO_BEDROOM: [&str; 8] = [
+    "KORIDOR", "HOL", "WC", "TUVALET", "BANYO", "DUS", "LAVABO", "ANTRE",
+];
+
+/// A lodging building's row of Ek-5/B as the standards package's rules read BYKHY 50's building (docs/adr/8107,
+/// 8156): from the program's buildings' uses, else from its rooms' names (none when all its units are dwellings). A
+/// word of Otel, Motel, Pansiyon, Konaklama, Hostel, Yurt or Yatakhane makes it one: a hotel's row when one of those
+/// uses or names has a hotel's word, a dormitory's otherwise. The fire rules leave such a building's bedrooms
+/// ([`lodging_bedroom`]) to the package, which measures them from their doors (50/4).
+pub fn lodging_of<'a>(
+    uses: impl IntoIterator<Item = &'a str>,
+    units: usize,
+    dwellings: usize,
+    rooms: impl IntoIterator<Item = &'a str>,
+) -> Option<Use> {
+    let uses: Vec<Vec<String>> = uses
+        .into_iter()
+        .filter(|u| !u.trim().is_empty())
+        .map(|u| words(Some(u), None))
+        .collect();
+    let texts = if !uses.is_empty() {
+        uses
+    } else if dwellings > 0 && dwellings == units {
+        return None;
+    } else {
+        rooms.into_iter().map(|r| words(Some(r), None)).collect()
+    };
+    let lodging: Vec<&Vec<String>> = texts
+        .iter()
+        .filter(|w| LODGING.iter().any(|p| has(w, p)))
+        .collect();
+    if lodging.is_empty() {
+        return None;
+    }
+    Some(if lodging.iter().any(|w| HOTEL.iter().any(|p| has(w, p))) {
+        Use::Hotel
+    } else {
+        Use::Dormitory
+    })
+}
+
+/// A lodging building's bedroom by its name (its name, else its use; docs/adr/8111, 8156; BYKHY 50/3, 50/4) as the
+/// standards package reads it: a word beginning Yatak, Süit, Konuk or Misafir, an Öğrenci odası, or a name beginning
+/// Oda or Otel odası; never a corridor, a hall or a wet room.
+pub fn lodging_bedroom(name: &str) -> bool {
+    let w = words(Some(name), None);
+    let Some(first) = w.first() else {
+        return false;
+    };
+    if NO_BEDROOM.iter().any(|p| has(&w, p)) {
+        return false;
+    }
+    ["YATAK", "SUIT", "KONUK", "MISAFIR"]
+        .iter()
+        .any(|p| has(&w, p))
+        || (has(&w, "OGRENCI") && has(&w, "ODA"))
+        || first == "ODA"
+        || (first == "OTEL" && w.get(1).is_some_and(|x| x.starts_with("ODA")))
+}
+
 /// BYKHY 17 (yüksek tehlikeli yerler, 8/1-ğ's use): “Parlayıcı ve patlayıcı maddeler ile akaryakıtların imal edildiği,
 /// depolandığı, doldurma-boşaltma ve satış işlerinin yapıldığı yerler”: LPG and natural gas stored, filled or sold
 /// (a), explosives, bullets, gunpowder, dynamite (b), flammable liquids (c). Only words that name such a place plainly:
@@ -196,5 +270,34 @@ mod tests {
         }
         assert_eq!(Use::HighHazard.dead_end(), [10.0, 20.0]);
         assert_eq!(Use::Office.stricter(Use::HighHazard), Use::HighHazard);
+    }
+
+    /// BYKHY 50's building and its bedrooms as the standards package reads them (docs/adr/8156): the program's uses
+    /// first, the rooms' names without them; a dormitory's row only when no word is a hotel's.
+    #[test]
+    fn a_lodging_building_and_its_bedrooms_are_read_from_their_words() {
+        let none: [&str; 0] = [];
+        assert_eq!(lodging_of(["Otel"], 0, 0, none), Some(Use::Hotel));
+        assert_eq!(lodging_of(["Öğrenci yurdu"], 0, 0, none), Some(Use::Dormitory));
+        assert_eq!(lodging_of(["Otel ve yurt"], 0, 0, none), Some(Use::Hotel));
+        assert_eq!(lodging_of(["Yurt", "Pansiyon"], 0, 0, none), Some(Use::Hotel));
+        assert_eq!(lodging_of(["Büro"], 0, 0, ["Otel odası 5"]), None);
+        assert_eq!(lodging_of([" "], 0, 0, ["Otel odası 5"]), Some(Use::Hotel));
+        assert_eq!(lodging_of(none, 2, 2, ["Yurt odası"]), None);
+        assert_eq!(lodging_of(none, 0, 0, ["Yatakhane"]), Some(Use::Dormitory));
+        for name in [
+            "Oda 101",
+            "Otel odası 12",
+            "Süit 301",
+            "Yatak odası",
+            "Konuk odası",
+            "Öğrenci odası (4)",
+            "Yatakhane",
+        ] {
+            assert!(lodging_bedroom(name), "{name}");
+        }
+        for name in ["Süit 301 banyosu", "Kat holü", "Koridor", "Toplantı odası", "Lobi", "Etüt odası", ""] {
+            assert!(!lodging_bedroom(name), "{name}");
+        }
     }
 }

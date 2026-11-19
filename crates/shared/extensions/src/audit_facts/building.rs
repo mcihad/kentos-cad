@@ -323,6 +323,11 @@ pub struct SpaceFacts {
     /// sill, inside it, m (docs/adr/8111; a hotel room's, 50/3); none for a room without one, a void or a broken room.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub to_door: Option<f64>,
+    /// Its walk from the outer side of its door to the nearest storey exit, the nearest of its doors (docs/adr/8156;
+    /// BYKHY 50/4, 50/5: a hotel's or a dormitory's bedroom is measured from its door); none for a room whose doors
+    /// reach no exit, a void or a broken room.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub door_exit: Option<DoorExitFacts>,
     /// Its net floor area, between its walls' inner faces, m² (docs/adr/8113; a boiler room's döşeme alanı, BYKHY
     /// 54/5); none for a broken room.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -331,6 +336,21 @@ pub struct SpaceFacts {
     /// name (or id) and the material's declared reaction to fire class (docs/adr/8138; BYKHY 20/3, 26/2, 26/4).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub finishes: Vec<FinishFacts>,
+}
+
+/// A room's walk from the outer side of its door to the nearest storey exit (docs/adr/8156): its length and the part
+/// it shares with the walk to the nearest other exit (tek yön; all of it with one exit), m, how many exits it reaches
+/// and the room the door opens into by its persistent id (absent: the outside). Nothing long when the door opens into
+/// an escape stair's room or is the building's final exit.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct DoorExitFacts {
+    pub length: f64,
+    pub one_way: f64,
+    pub exits: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub into: Option<String>,
 }
 
 /// A room's finish (docs/adr/8138): its part (`floor`, `wall`, `ceiling`), its name as the room list writes it, the
@@ -730,6 +750,10 @@ impl BuildingFacts {
             x.area = round(x.area, AREA);
             x.least = x.least.map(|w| round(w, LENGTH));
             x.to_door = x.to_door.map(|w| round(w, LENGTH));
+            if let Some(d) = &mut x.door_exit {
+                d.length = round(d.length, LENGTH);
+                d.one_way = round(d.one_way, LENGTH);
+            }
             x.net = x.net.map(|a| round(a, AREA));
         }
         self.spaces.sort_by(|a, b| a.uid.cmp(&b.uid));

@@ -541,7 +541,11 @@
     (300 m²'yi aşan yatılan kat tek kompartımansa kaldı, birden çoksa uzman incelemesi) ve 49/2 (hastane koridoru 2,00 m).
     Otel odası ([ADR 8111](../adr/8111-hotel-room-distance-to-its-door.md), K204–K207): 0.25.0 `konaklama`, 50/3 en uzak
     noktadan kendi kapısına 15 m (yağmurlamalı otelde 20 m), aşan tek kapılı oda kaldı; kaçış modülünde
-    `RoomEscape.door`, olgularda `toDoor`; çok mahalli süitin kapısına yürüyüş yok. Kazan dairesi
+    `RoomEscape.door`, olgularda `toDoor`; çok mahalli süitin kapısına yürüyüş yok. Yatak odasının kapısından
+    ([ADR 8156](../adr/8156-bedroom-escape-from-its-door.md), K400–K403): 0.43.0 `yatak_kacisi`, 50/4–50/5 otel ve yurt
+    yatak odası kapısının dış yanından en yakın kat çıkışına (`RoomEscape.door_exit`, olgularda `doorExit`), Ek-5/B'nin
+    otel ya da yurt satırı; Mimari denetimin 32/4'ü bu odaları en uzak noktadan ölçmez (`fire_use::lodging_of` paketin
+    `konaklama.sinif`'iyle aynı okuma), Kaçış yolları yolu kapıdan çizer. Kazan dairesi
     ([ADR 8113](../adr/8113-boiler-room-and-fuel-store.md), K211–K215): 0.26.0 `kazan`, 54/2 EI 120 ayrım, 54/4 kapı hol
     ya da koridora, 54/5 iki çıkış ve EI2 90 S C kapı, 56/1 yakıt deposu EI 120; olgularda mahalin `net`'i.
   - **Koridorun en dar yeri (18 Kasım 2026; [ADR 8110](../adr/8110-health-buildings-sleeping-floors-corridors.md), K200–K201):**
