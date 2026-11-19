@@ -457,6 +457,10 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Dikme ve kayıt tipinin kesiti (19 Kasım 2026; [ADR 8170](../adr/8170-post-and-rail-type-sections.md),
+    K442–K443):** `IfcMemberType` de üyeleri paylaşınca kesitini `IfcMaterialProfileSet` olarak alır (kolonunki ya da
+    kirişinki gibi), rolü yazılmaz (taşıyıcı olmak zorunda değil, çizim söylemez); örnekler EK-6 Tablo 6.40 için
+    `IfcMaterial`'larını korur.
   - **Eğrisel aks ağı IFC'de (19 Kasım 2026; [ADR 8169](../adr/8169-radial-grids-and-grid-axis-curves.md),
     K439–K441):** aynı merkezli yaylar ve doğrusu o merkezden geçen düz akslar kendi RADIAL ızgarası
     (`MM-AKS-Eğrisel_aks`; U ışınsal akslar saat yönünün tersine, V yaylar merkezden dışa); kalan akslar eskisi gibi

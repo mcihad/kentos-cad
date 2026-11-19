@@ -415,6 +415,12 @@ IfcOpenShell başvuruları gövdelerden bağımsız olarak bulur (kalkan duvarı
 eleman yok), doğrulayıcıda 0 bulgu; görüntüleyicide Uzandığı kat. IFC-04'ün üçüncü maddesi tamam. **Kalan:** profil ve
 katman takımı kullanımları (eksen çerçeveli kolon, kiriş, duvar; çatı, eğik döşeme), dikme ve kaydın kesiti.
 
+**Durum (19 Kasım 2026, [ADR 8170](../docs/adr/8170-post-and-rail-type-sections.md)):** dikme ve kayıt tipi
+(`IfcMemberType`) de kesitini rolsüz bir `IfcMaterialProfileSet` olarak alır (EK-6 Tablo 6.40 için örnekler
+`IfcMaterial`'larını korur); IfcOpenShell iki tipin kesitini okur, doğrulayıcıda 0 bulgu; görüntüleyicide Kesit
+(tipten). **Kalan:** profil ve katman takımı kullanımları (eksen çerçeveli kolon, kiriş, dikme, duvar; çatı, eğik
+döşeme).
+
 #### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [x]
 
 **Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§4, BIM-11 ile):** bina

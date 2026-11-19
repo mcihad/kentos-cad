@@ -775,7 +775,9 @@ fn filler_ring(
 /// A column's or a beam's section as its type's profile set holds it (docs/adr/8167): a rectangular column its width
 /// across and its depth along, a round one its radius, an L its outline about its box's middle (its legs from the box's
 /// lower left corner, docs/adr/0725 §3); a beam its width across and its height; its material the element's, its role
-/// load bearing unless declared otherwise (docs/adr/8124). None for another element, a post or a rail (an IfcMember).
+/// load bearing unless declared otherwise (docs/adr/8124). A post's (a column's member role) and a rail's (a beam's)
+/// the same, with no role: a post carries nothing the drawing knows (docs/adr/8070 §8, docs/adr/8170). None for
+/// another element.
 fn section(e: Option<&Entity>, el: &Element) -> Option<crate::building::ProfileSet> {
     use crate::building::Section;
     use kentos_contracts::ColumnShape;
@@ -784,9 +786,10 @@ fn section(e: Option<&Entity>, el: &Element) -> Option<crate::building::ProfileS
         if (c - c.round()).abs() < 1e-9 { format!("{}", c.round() as i64) } else { format!("{c:.1}").replace('.', ",") }
     };
     let (section, profile, bearing) = match (e?, el.class) {
-        (Entity::Column(c), Class::Column) => {
+        (Entity::Column(c), Class::Column | Class::Member) => {
             let (w, d) = (c.column.width, c.column.depth.unwrap_or(c.column.width));
-            let bearing = c.column.arch.load_bearing.as_ref().is_none_or(|b| b.bearing);
+            let bearing =
+                el.class == Class::Column && c.column.arch.load_bearing.as_ref().is_none_or(|b| b.bearing);
             match c.column.shape {
                 ColumnShape::Rect => (Section::Rectangle { x: w, y: d }, format!("{}×{}", cm(w), cm(d)), bearing),
                 ColumnShape::Round => (Section::Circle { radius: w / 2.0 }, format!("Ø{}", cm(w)), bearing),
@@ -798,9 +801,9 @@ fn section(e: Option<&Entity>, el: &Element) -> Option<crate::building::ProfileS
                 }
             }
         }
-        (Entity::Beam(b), Class::Beam) => {
+        (Entity::Beam(b), Class::Beam | Class::Member) => {
             let (w, h) = (b.beam.width, b.beam.height);
-            (Section::Rectangle { x: w, y: h }, format!("{}×{}", cm(w), cm(h)), true)
+            (Section::Rectangle { x: w, y: h }, format!("{}×{}", cm(w), cm(h)), el.class == Class::Beam)
         }
         _ => return None,
     };
@@ -2493,7 +2496,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         };
         let set_of = |k: usize| layer_sets.iter().find(|(i, ..)| *i == k).map(|(_, n, l)| (n.clone(), l.clone()));
         let layer_set = set_of(members[0]).filter(|s| members.iter().all(|&k| set_of(k).as_ref() == Some(s)));
-        // A column type's or a beam type's section (docs/adr/8167), when its elements share one.
+        // A column type's, a beam type's, a post type's or a rail type's section (docs/adr/8167, 8170), when its
+        // elements share one.
         let section_of = |k: usize| section(entity_at.get(&k).copied(), &elements[k]);
         let profile_set = section_of(members[0])
             .filter(|p| members.iter().all(|&k| section_of(k).as_ref() == Some(p)))

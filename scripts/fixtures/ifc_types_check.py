@@ -9,6 +9,10 @@ something differs.
 
     uv run --offline --no-project --python 3.11 --with ifcopenshell==0.9.0.post1 \\
         python -I scripts/fixtures/ifc_types_check.py
+
+With `--uyeler FILE` it also reads a post type's and a rail type's sections (docs/adr/8170) in FILE, the one
+`KENTOS_WRITE_IFC_MEMBER_TYPES=FILE cargo test -p kentos-native-application --test all a_post_type` keeps; the validator
+then needs `--with lark --with pytest`.
 """
 
 import json
@@ -62,13 +66,17 @@ def main():
     if len(declared) != 1:
         problems.append(f"{len(declared)} IfcRelDeclares tipleri anıyor")
     report += element_types(problems)
+    if "--uyeler" in sys.argv:
+        report += members(Path(sys.argv[sys.argv.index("--uyeler") + 1]), problems)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if problems:
         print("uyuşmuyor: " + "; ".join(problems), file=sys.stderr)
         return 1
     print("uyuyor: her stil bir IfcWallType, duvarları ona bağlı, katmanları sırasıyla ve kalınlığıyla; her eleman tipi "
           "sınıfının IFC tipi, elemanları ona bağlı (docs/adr/8106); kolon ve kiriş tipinin kesiti profil takımında, "
-          "elemanlar kendi malzemesiyle (docs/adr/8167)")
+          "elemanlar kendi malzemesiyle (docs/adr/8167)"
+          + ("; dikme ve kayıt tipinin kesiti rolsüz profil takımında (docs/adr/8170)"
+             if "--uyeler" in sys.argv else ""))
     return 0
 
 
@@ -117,8 +125,9 @@ def element_types(problems):
 
 def section(x, want, typed, f, problems):
     """A column type's or a beam type's section (docs/adr/8167): its material an IfcMaterialProfileSet of one profile,
-    LoadBearing, whose profile is the drawing's (a rectangle its XDim and YDim, a circle its Radius, an L an arbitrary
-    closed profile); its elements keep their own material, an IfcMaterial."""
+    LoadBearing (a post type's or a rail type's no role, docs/adr/8170), whose profile is the drawing's (a rectangle its
+    XDim and YDim, a circle its Radius, an L an arbitrary closed profile); its elements keep their own material, an
+    IfcMaterial."""
     m = ue.get_material(x)
     if m is None or not m.is_a("IfcMaterialProfileSet") or len(m.MaterialProfiles) != 1:
         problems.append(f"{x.Name}: tipin malzemesi tek profilli profil takımı değil ({m.is_a() if m else 'yok'})")
@@ -137,14 +146,56 @@ def section(x, want, typed, f, problems):
         read = p.is_a()
     if not same:
         problems.append(f"{x.Name}: kesit {read}, çizimde {want}")
-    if mp.Category != "LoadBearing":
-        problems.append(f"{x.Name}: kesitin rolü {mp.Category}")
+    role = None if x.is_a("IfcMemberType") else "LoadBearing"
+    if mp.Category != role:
+        problems.append(f"{x.Name}: kesitin rolü {mp.Category}, beklenen {role}")
     for g in typed:
         own = ue.get_material(f.by_guid(g), should_inherit=False)
         if own is None or not own.is_a("IfcMaterial"):
             kind = own.is_a() if own else "yok"
             problems.append(f"{x.Name}: {g} elemanının kendi malzemesi IfcMaterial değil ({kind})")
     return {"name": p.ProfileName, "read": read, "material": mp.Material.Name if mp.Material else None}
+
+
+def members(path, problems):
+    """Post and rail types (docs/adr/8170) in the file the application test
+    `a_post_type_s_and_a_rail_type_s_section_is_their_profile_set` keeps (`KENTOS_WRITE_IFC_MEMBER_TYPES=<path>`): each
+    IfcMemberType's material a profile set of one profile, named by its type, a rectangle whose XDim and YDim are the
+    centimetres its ProfileName says ("10×10"), its material its elements', no role; its elements keep their own
+    IfcMaterial of that name; IfcOpenShell's validator (attributes, EXPRESS rules) finds nothing."""
+    import ifcopenshell.validate
+
+    f = ifcopenshell.open(str(path))
+    log = ifcopenshell.validate.json_logger()
+    ifcopenshell.validate.validate(f, log, express_rules=True)
+    if log.statements:
+        problems.append(f"{path.name}: doğrulayıcı {[s.get('message', s) for s in log.statements[:5]]}")
+    out = []
+    found = f.by_type("IfcMemberType")
+    if not found:
+        problems.append(f"{path.name}: IfcMemberType yok")
+    for x in found:
+        m = ue.get_material(x)
+        if m is None or not m.is_a("IfcMaterialProfileSet") or len(m.MaterialProfiles) != 1:
+            problems.append(f"{x.Name}: tipin malzemesi tek profilli profil takımı değil ({m.is_a() if m else 'yok'})")
+            continue
+        mp, near = m.MaterialProfiles[0], lambda a, b: abs(float(a) - float(b)) <= 1e-9
+        p = mp.Profile
+        cm = [int(v) / 100 for v in (p.ProfileName or "").split("×")]
+        if not (p.is_a("IfcRectangleProfileDef") and len(cm) == 2 and near(p.XDim, cm[0]) and near(p.YDim, cm[1])):
+            dims = f"{getattr(p, 'XDim', None)} × {getattr(p, 'YDim', None)}"
+            problems.append(f"{x.Name}: kesit {p.is_a()} {p.ProfileName} {dims}")
+        if m.Name != x.Name or mp.Category is not None:
+            problems.append(f"{x.Name}: takımın adı {m.Name}, rolü {mp.Category}")
+        material = mp.Material.Name if mp.Material else None
+        typed = [e for e in f.by_type("IfcMember") if ue.get_type(e) is not None and ue.get_type(e).id() == x.id()]
+        for e in typed:
+            own = ue.get_material(e, should_inherit=False)
+            if own is None or not own.is_a("IfcMaterial") or own.Name != material:
+                problems.append(f"{x.Name}: {e.GlobalId} elemanının kendi malzemesi {own}")
+        out.append({"type": x.Name, "ifc": x.is_a(), "elements": len(typed),
+                    "profile": {"name": p.ProfileName, "x": p.XDim, "y": p.YDim, "material": material}})
+    return out
 
 
 if __name__ == "__main__":

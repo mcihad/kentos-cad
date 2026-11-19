@@ -88,6 +88,77 @@ fn click_one(app: &mut App, category: Category) -> usize {
     panic!("no {category:?} met a click");
 }
 
+/// Kesit (tipten) of a post (docs/adr/8170), light and dark: four 10/10 Çelik posts north of the section building and a
+/// 5/10 Çelik rail on them, a post type made from the first and tied to the others, a rail type made from the rail;
+/// the file in IFC modeli, a post chosen in the plan: its type's section, with no role.
+/// `.run/gui-evidence/dikme-kesiti-8170/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::member_section_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn member_section_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikme-kesiti-8170");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = open(building());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let doc = &mut app.document.as_mut().expect("the building").model;
+        let mut run = |command: &str, input: serde_json::Value| -> Vec<String> {
+            let answer = kentos_native_application::registry::run(
+                &mut kentos_native_application::ExecutionContext::new(&mut *doc),
+                command,
+                kentos_commands::CallOp::Execute,
+                input,
+            )
+            .expect("runs");
+            assert_eq!(answer["status"], "completed", "{command}: {answer}");
+            answer["output"]["uids"].as_array().map_or_else(Vec::new, |l| {
+                l.iter().filter_map(|u| u.as_str().map(str::to_owned)).collect()
+            })
+        };
+        let post = |x: f64| {
+            serde_json::json!({"at": {"x": x, "y": 12.0}, "width": 0.1, "depth": 0.1, "height": 1.0,
+                "material": "Çelik", "member": {"predefined": "POST"}, "arch": {"level": "zemin"}})
+        };
+        let columns: Vec<serde_json::Value> = [0.0, 4.0, 8.0, 12.0].into_iter().map(post).collect();
+        let posts = run("cad.columns.create", serde_json::json!({"layerId": "0", "columns": columns}));
+        let rail = run("cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
+            "pts": [{"x": 0.0, "y": 12.0}, {"x": 12.0, "y": 12.0}], "width": 0.05, "height": 0.1, "baseOffset": 0.9,
+            "material": "Çelik", "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}}]}));
+        let edit = |kind: serde_json::Value| serde_json::json!({ "operation": kind });
+        run("cad.elementtypes.edit", edit(serde_json::json!({"kind": "define", "name": "Dikme 1", "from": posts[0]})));
+        run("cad.elementtypes.edit", edit(serde_json::json!({"kind": "assign", "type": "Dikme 1", "uids": posts[1..]})));
+        run("cad.elementtypes.edit", edit(serde_json::json!({"kind": "define", "name": "Kayıt 1", "from": rail[0]})));
+        let path = exported(&mut app, &format!("dikme-{name}"));
+        opened(&mut app, path.clone());
+        let uid: kentos_domain::Uuid = posts[1].parse().expect("its id");
+        let slot = app.document.as_ref().expect("the drawing").model.slot_of(uid).expect("its slot");
+        app.selection.set(vec![slot]);
+        app.follow_ifc_viewer();
+        let w = app.ifc_viewer.as_ref().expect("the viewer");
+        let details = w.viewer.details().expect("its details");
+        let group = details.groups.iter().find(|g| g.title == "Kesit (tipten)").expect("its type's section");
+        let said: Vec<(&str, &str)> = group.lines.iter().map(|l| (l.name.as_str(), l.value.as_str())).collect();
+        assert!(said.contains(&("Ad", "10×10")) && said.contains(&("Malzeme", "Çelik")), "{said:?}");
+        let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        let picture = out.join(format!("1-dikme-kesiti-{name}.png"));
+        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&picture).expect("writes the picture");
+        println!("{}", picture.display());
+        let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
+    }
+}
+
 /// Eğrisel aks (docs/adr/8169), light and dark: the section building with a curved grid system drawn beside its east
 /// façade by Eğrisel aks ağı (radial axes 4 to 7 from −45° by 30°, arcs E at 6 m and F at 10 m); the plan, then its
 /// file in IFC modeli with the curved grid chosen in the tree, its details: Ön tanımlı tür RADIAL and its axes, U the

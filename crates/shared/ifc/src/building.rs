@@ -1611,8 +1611,9 @@ pub fn write(b: &Building) -> String {
             let g = w.st.derived("type-material", &[n], "");
             w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,(#{n}),#{set})"));
         }
-        // A column type's or a beam type's section (docs/adr/8167): its profile, its material and its role as one
-        // profile set, the type's; its occurrences keep their own material (EK-6 Tablo 6.3, 6.16).
+        // A column type's, a beam type's, a post type's or a rail type's section (docs/adr/8167, 8170): its profile,
+        // its material and its role as one profile set, the type's; its occurrences keep their own material (EK-6
+        // Tablo 6.3, 6.16, 6.40).
         if let Some(p) = &t.profile_set {
             let name = text(&p.profile);
             let section = match &p.section {

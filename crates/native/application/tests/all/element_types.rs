@@ -189,11 +189,10 @@ fn every_element_type_is_its_class_s_ifc_type_and_its_elements_are_typed_by_it()
                 .map(|(u, _)| u.to_string())
                 .collect();
             let class = element_types.iter().find(|x| x.name == t.name).map_or("", |x| x.entity);
-            // Its section as the drawing gives it (docs/adr/8167): its first element's; a post's or a rail's none.
+            // Its section as the drawing gives it (docs/adr/8167, 8170): its first element's, a post's and a rail's too.
             let first =
                 doc.entities_with_uids().find(|(_, e)| type_link(e).is_some_and(|l| l.id == t.id)).map(|(_, e)| e);
             let profile = match first {
-                _ if t.values.contains_key("member") => Value::Null,
                 Some(Entity::Column(c)) => match c.column.shape {
                     kentos_commands::ColumnShape::Rect => {
                         json!({"kind": "rectangle", "x": c.column.width, "y": c.column.depth.unwrap_or(c.column.width)})
@@ -218,3 +217,77 @@ fn every_element_type_is_its_class_s_ifc_type_and_its_elements_are_typed_by_it()
     assert_eq!(std::fs::read_to_string(dir.join("kesit-binasi-eleman-tipli.ifc")).expect("the kept file"), text);
     assert_eq!(std::fs::read_to_string(dir.join("kesit-binasi-eleman-tipli.json")).expect("the kept note"), note);
 }
+
+/// A post type's and a rail type's section (docs/adr/8170): two 10/10 Çelik posts tied to a type made from the first, and
+/// a 5/10 Çelik rail's type, are IfcMemberTypes, each with its section as a profile set as a column type's is (8167):
+/// its name the type's, its profile named as drawings write it, its material the elements' (EK-6 Tablo 6.40 keeps
+/// each post's own IfcMaterial), no role: a post carries nothing the drawing knows (docs/adr/8070 §8).
+#[test]
+fn a_post_type_s_and_a_rail_type_s_section_is_their_profile_set() {
+    use kentos_commands::CallOp;
+    use kentos_ifc::building::Section;
+    use kentos_native_application::registry;
+    let mut doc = crate::ifc_required::declared();
+    let run = |doc: &mut Document, name: &str, input: Value| -> Vec<String> {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{answer}");
+        answer["output"]["uids"].as_array().expect("its ids").iter().map(|u| u.as_str().unwrap().to_owned()).collect()
+    };
+    let post = |x: f64| {
+        json!({"at": {"x": x, "y": 12.0}, "width": 0.1, "depth": 0.1, "height": 1.0, "material": "Çelik",
+               "member": {"predefined": "POST"}, "arch": {"level": "zemin"}})
+    };
+    let posts = run(&mut doc, "cad.columns.create", json!({"layerId": "0", "columns": [post(0.0), post(2.0)]}));
+    let rails = run(&mut doc, "cad.beams.create", json!({"layerId": "0", "beams": [{
+        "pts": [{"x": 0.0, "y": 12.0}, {"x": 2.0, "y": 12.0}], "width": 0.05, "height": 0.1, "baseOffset": 0.9,
+        "material": "Çelik", "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
+    }]}));
+    let define = |doc: &mut Document, name: &str, from: &str| {
+        let op = ElementTypesOperation::Define {
+            name: name.into(),
+            id: None,
+            element: None,
+            copy_of: None,
+            from: Some(from.to_owned()),
+            values: Map::new(),
+        };
+        types(doc, op).id.expect("its id")
+    };
+    let made = define(&mut doc, "Dikme 1", &posts[0]);
+    types(&mut doc, ElementTypesOperation::Assign { kind: made, uids: vec![posts[1].clone()] });
+    define(&mut doc, "Kayıt 1", &rails[0]);
+    let (b, written) = arch_ifc::building(&doc, "2026-11-19T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new());
+    let said: Vec<_> = b
+        .types
+        .iter()
+        .filter(|t| t.entity == "IFCMEMBERTYPE")
+        .map(|t| {
+            let p = t.profile_set.as_ref().unwrap_or_else(|| panic!("{}: its section", t.name));
+            (t.name.as_str(), t.members.len(), p.name.as_str(), p.profile.as_str(), p.section.clone(), p.category)
+        })
+        .collect();
+    assert_eq!(
+        said,
+        [
+            ("Dikme 1", 2, "Dikme 1", "10×10", Section::Rectangle { x: 0.1, y: 0.1 }, None),
+            ("Kayıt 1", 1, "Kayıt 1", "5×10", Section::Rectangle { x: 0.05, y: 0.1 }, None),
+        ]
+    );
+    let text = kentos_ifc::building::write(&b);
+    let profiles: Vec<&str> = text.lines().filter(|l| l.contains("IFCMATERIALPROFILE(")).collect();
+    // The section building's column and beam types are untyped here; the two member types' profiles, Çelik, no role.
+    assert_eq!(profiles.len(), 2, "{profiles:?}");
+    assert!(profiles.iter().all(|l| l.ends_with(",$,$);")), "{profiles:?}");
+    // Each post keeps its own material, EK-6 Tablo 6.40's IfcMaterial.
+    for uid in posts.iter().chain(&rails) {
+        let id = kentos_domain::Uuid::parse_str(uid).unwrap().as_u128();
+        let e = b.elements.iter().find(|e| e.id == Some(id)).expect("its element");
+        assert_eq!(e.material.as_deref(), Some("Çelik"), "{}", e.name);
+    }
+    // `KENTOS_WRITE_IFC_MEMBER_TYPES=<path>` keeps the file for `scripts/fixtures/ifc_types_check.py --uyeler <path>`.
+    if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_MEMBER_TYPES") {
+        std::fs::write(path, &text).expect("the file kept");
+    }
+}
+
