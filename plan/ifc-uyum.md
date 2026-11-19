@@ -399,6 +399,12 @@ IfcOpenShell kullanımı, sırayı, kalınlıkları ve gövdenin takım kalınl�
 gösterir. **Kalan:** kolon ve kiriş tipinin profil takımı, duvarın (AXIS2), çatının ve eğik döşemenin kullanımı, çok kata
 uzanan eleman.
 
+**Durum (19 Kasım 2026, [ADR 8167](../docs/adr/8167-column-and-beam-type-profile-sets.md)):** kolon ve kiriş tipinin
+kesiti tipin `IfcMaterialProfileSet`'i (dikdörtgen, daire, L; adı "30×30" gibi; malzemesi örneklerinki, LoadBearing),
+örnekler EK-6 için `IfcMaterial`'larını korur; IfcOpenShell kesitleri okur, doğrulayıcıda 0 bulgu; görüntüleyicide Kesit
+(tipten). **Kalan:** profil ve katman takımı kullanımları (eksen çerçeveli kolon, kiriş, duvar; çatı, eğik döşeme), dikme
+ve kaydın kesiti, çok kata uzanan eleman.
+
 #### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [x]
 
 **Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§4, BIM-11 ile):** bina

@@ -446,7 +446,32 @@ pub struct TypeObject {
     pub name: String,
     pub predefined: &'static str,
     pub layer_set: Option<(String, Vec<Layer>)>,
+    /// A column type's or a beam type's section (docs/adr/8167; IFC 4.3 `IfcMaterialProfileSet`); none for another.
+    pub profile_set: Option<ProfileSet>,
     pub members: Vec<usize>,
+}
+
+/// A type's material profile set (docs/adr/8167): one section, its material and its role.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ProfileSet {
+    /// The set's name: its type's.
+    pub name: String,
+    /// The section's name as the drawings write it ("40×40", "Ø50", "L 50×50"; its `ProfileName`).
+    pub profile: String,
+    pub section: Section,
+    /// Its material's name; none: not given.
+    pub material: Option<String>,
+    /// Its role in IFC 4.3's words ('LoadBearing'); none: not said.
+    pub category: Option<&'static str>,
+}
+
+/// A section in its own plane about its middle, metres: a rectangle (`IfcRectangleProfileDef`: its x and y), a circle
+/// (`IfcCircleProfileDef`) or an outline (`IfcArbitraryClosedProfileDef`: an L's).
+#[derive(Clone, Debug, PartialEq)]
+pub enum Section {
+    Rectangle { x: f64, y: f64 },
+    Circle { radius: f64 },
+    Outline(Vec<[f64; 2]>),
 }
 
 /// A layer of an element's material layer set (docs/adr/8071 §8; IFC 4.3 `IfcMaterialLayer`).
@@ -1496,6 +1521,39 @@ pub fn write(b: &Building) -> String {
             let g = w.st.derived("type-material", &[n], "");
             w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,(#{n}),#{set})"));
         }
+        // A column type's or a beam type's section (docs/adr/8167): its profile, its material and its role as one
+        // profile set, the type's; its occurrences keep their own material (EK-6 Tablo 6.3, 6.16).
+        if let Some(p) = &t.profile_set {
+            let name = text(&p.profile);
+            let section = match &p.section {
+                Section::Rectangle { x, y } => {
+                    w.st.add(format!("IFCRECTANGLEPROFILEDEF(.AREA.,{name},$,{},{})", real(*x), real(*y)))
+                }
+                Section::Circle { radius } => {
+                    w.st.add(format!("IFCCIRCLEPROFILEDEF(.AREA.,{name},$,{})", real(*radius)))
+                }
+                Section::Outline(pts) => {
+                    let c = w.curve(pts, None);
+                    w.st.add(format!("IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,{name},#{c})"))
+                }
+            };
+            let material = match &p.material {
+                Some(m) => match material_ids.iter().find(|(x, _)| x == m) {
+                    Some((_, id)) => format!("#{id}"),
+                    None => {
+                        let id = w.st.add(format!("IFCMATERIAL({},$,$)", text(m)));
+                        material_ids.push((m.clone(), id));
+                        format!("#{id}")
+                    }
+                },
+                None => "$".to_owned(),
+            };
+            let category = p.category.map_or_else(|| "$".to_owned(), text);
+            let profile = w.st.add(format!("IFCMATERIALPROFILE($,$,{material},#{section},$,{category})"));
+            let set = w.st.add(format!("IFCMATERIALPROFILESET({},$,(#{profile}),$)", text(&p.name)));
+            let g = w.st.derived("type-profile", &[n], "");
+            w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,(#{n}),#{set})"));
+        }
         let members: Vec<usize> = t.members.iter().filter_map(|&i| products.get(i).copied()).filter(|&n| n != 0).collect();
         if !members.is_empty() {
             let g = w.st.derived("types", &[n], "");
@@ -1746,6 +1804,58 @@ mod tests {
         let roof = f.lines().find(|l| l.contains("IFCROOF(")).expect("the roof").split('=').next().unwrap().to_owned();
         let set_id = set.split('=').next().unwrap().to_owned();
         assert!(f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.contains(&format!("({roof}),{set_id})"))));
+    }
+
+    /// A column type's section (docs/adr/8167): its rectangle, its material (the one its occurrences name, written
+    /// once) and its role as one profile set, associated with the type alone; a round one is a circle by its radius,
+    /// an L an arbitrary closed profile; the occurrence keeps its own material.
+    #[test]
+    fn a_column_type_s_section_is_its_profile_set() {
+        let mut b = door_building();
+        b.elements[0].class = Class::Column;
+        b.elements[0].predefined = "COLUMN";
+        b.elements[0].material = Some("Betonarme".into());
+        let set = |name: &str, profile: &str, section: Section| ProfileSet {
+            name: name.into(),
+            profile: profile.into(),
+            section,
+            material: Some("Betonarme".into()),
+            category: Some("LoadBearing"),
+        };
+        let typed = |id: u128, name: &str, profile_set: ProfileSet| TypeObject {
+            entity: "IFCCOLUMNTYPE",
+            id,
+            name: name.into(),
+            predefined: "COLUMN",
+            layer_set: None,
+            profile_set: Some(profile_set),
+            members: vec![0],
+        };
+        b.types = vec![
+            typed(1, "S1", set("S1", "40×30", Section::Rectangle { x: 0.4, y: 0.3 })),
+            typed(2, "S2", set("S2", "Ø50", Section::Circle { radius: 0.25 })),
+            typed(3, "S3", set("S3", "L 50×50", Section::Outline(vec![[-0.25, -0.25], [0.25, -0.25], [0.25, -0.05],
+                [-0.05, -0.05], [-0.05, 0.25], [-0.25, 0.25]]))),
+        ];
+        let f = write(&b);
+        let line = |what: &str| f.lines().find(|l| l.contains(what)).unwrap_or_else(|| panic!("{what}")).to_owned();
+        assert!(line("IFCRECTANGLEPROFILEDEF(").ends_with(&format!("(.AREA.,{},$,0.4,0.3);", text("40×30"))));
+        assert!(line("IFCCIRCLEPROFILEDEF(").ends_with(&format!("(.AREA.,{},$,0.25);", text("Ø50"))));
+        // The bodies' profiles are unnamed; the L's is the section's.
+        assert!(f.contains(&format!("IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,{},#", text("L 50×50"))));
+        assert_eq!(f.matches("IFCMATERIAL('Betonarme',$,$)").count(), 1, "the material once");
+        assert_eq!(f.matches("IFCMATERIALPROFILESET(").count(), 3);
+        let profiles: Vec<&str> = f.lines().filter(|l| l.contains("IFCMATERIALPROFILE(")).collect();
+        assert!(profiles.iter().all(|l| l.ends_with(",$,'LoadBearing');")), "{profiles:?}");
+        // Each set the type's; the column keeps its own material.
+        let id = |l: &str| l.split('=').next().unwrap().to_owned();
+        let s1 = id(&line("IFCMATERIALPROFILESET('S1'"));
+        let t1 = id(&line("IFCCOLUMNTYPE("));
+        assert!(f.contains(&format!("(#{}),{s1});", t1.trim_start_matches('#'))), "S1's set is its type's");
+        let column = id(&line("IFCCOLUMN("));
+        let material = id(&line("IFCMATERIAL('Betonarme'"));
+        let own = format!("({column}),{material});");
+        assert!(f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.ends_with(&own)));
     }
 
     /// A level slab's set laid from its top (docs/adr/8166): the slab is associated with one usage of the set, along

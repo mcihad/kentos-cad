@@ -88,6 +88,47 @@ fn click_one(app: &mut App, category: Category) -> usize {
     panic!("no {category:?} met a click");
 }
 
+/// Kesit (tipten) (docs/adr/8167), light and dark: the typed section building's file (its column type's and beam type's
+/// sections as profile sets) in IFC modeli, a column clicked, its details showing its type's section.
+/// `.run/gui-evidence/kolon-kesiti-8167/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::section_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn section_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kolon-kesiti-8167");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = open(building());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let dir = std::env::temp_dir().join(format!("kentos-kolon-kesiti-{}-{name}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("a folder");
+        let path = dir.join("tipli.ifc");
+        let typed = include_bytes!("../../../../fixtures/arch/v1/ifc/kesit-binasi-eleman-tipli.ifc");
+        std::fs::write(&path, typed).expect("writes");
+        opened(&mut app, path);
+        let column = click_one(&mut app, Category::Column);
+        let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
+        assert_eq!(v.selected(), Some(column));
+        let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        let file = out.join(format!("1-kolon-kesiti-{name}.png"));
+        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+}
+
 /// Malzeme katmanları (docs/adr/8166), light and dark: the section building's file in IFC modeli, a layered slab
 /// clicked, its details listing how its usage lays its set and its layers from the top.
 /// `.run/gui-evidence/doseme-katmanlari-8166/`:

@@ -855,6 +855,47 @@ fn filler_ring(
     band().unwrap_or_else(|| through.to_vec())
 }
 
+/// A column's or a beam's section as its type's profile set holds it (docs/adr/8167): a rectangular column its width
+/// across and its depth along, a round one its radius, an L its outline about its box's middle (its legs from the box's
+/// lower left corner, docs/adr/0725 §3); a beam its width across and its height; its material the element's, its role
+/// load bearing unless declared otherwise (docs/adr/8124). None for another element, a post or a rail (an IfcMember).
+fn section(e: Option<&Entity>, el: &Element) -> Option<crate::building::ProfileSet> {
+    use crate::building::Section;
+    use kentos_contracts::ColumnShape;
+    let cm = |m: f64| {
+        let c = (m * 1000.0).round() / 10.0;
+        if (c - c.round()).abs() < 1e-9 { format!("{}", c.round() as i64) } else { format!("{c:.1}").replace('.', ",") }
+    };
+    let (section, profile, bearing) = match (e?, el.class) {
+        (Entity::Column(c), Class::Column) => {
+            let (w, d) = (c.column.width, c.column.depth.unwrap_or(c.column.width));
+            let bearing = c.column.arch.load_bearing.as_ref().is_none_or(|b| b.bearing);
+            match c.column.shape {
+                ColumnShape::Rect => (Section::Rectangle { x: w, y: d }, format!("{}×{}", cm(w), cm(d)), bearing),
+                ColumnShape::Round => (Section::Circle { radius: w / 2.0 }, format!("Ø{}", cm(w)), bearing),
+                ColumnShape::LShape => {
+                    let [t0, t1] = c.column.legs?;
+                    let (x0, y0, x1, y1) = (-w / 2.0, -d / 2.0, w / 2.0, d / 2.0);
+                    let outline = vec![[x0, y0], [x1, y0], [x1, y0 + t0], [x0 + t1, y0 + t0], [x0 + t1, y1], [x0, y1]];
+                    (Section::Outline(outline), format!("L {}×{}", cm(w), cm(d)), bearing)
+                }
+            }
+        }
+        (Entity::Beam(b), Class::Beam) => {
+            let (w, h) = (b.beam.width, b.beam.height);
+            (Section::Rectangle { x: w, y: h }, format!("{}×{}", cm(w), cm(h)), true)
+        }
+        _ => return None,
+    };
+    Some(crate::building::ProfileSet {
+        name: String::new(),
+        profile,
+        section,
+        material: el.material.clone(),
+        category: bearing.then_some("LoadBearing"),
+    })
+}
+
 /// A material's name as EK-6 asks for it ("Malzeme İsmi_Dayanım"): the drawing's, which knows no strength class.
 fn material(m: Option<String>) -> Option<String> {
     m.map(|m| m.trim().to_owned()).filter(|m| !m.is_empty())
@@ -2428,6 +2469,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     name: wall_style_name(Some(id)),
                     predefined: "STANDARD",
                     layer_set,
+                    profile_set: None,
                     members: vec![k],
                 });
             }
@@ -2486,6 +2528,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // agree (NOTDEFINED else, and for USERDEFINED, whose word the type would need); its layer set theirs when they
     // share one.
     let element_types = arch.map_or(&[][..], |a| a.element_types.as_slice());
+    // Each element's object, by its index.
+    let entity_at: BTreeMap<usize, &Entity> =
+        index.iter().filter_map(|(owner, &k)| by_uid.get(owner).map(|&(_, e)| (k, e))).collect();
     for t in element_types {
         use kentos_contracts::ElementTypeKind as K;
         let class = match t.kind {
@@ -2531,6 +2576,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         };
         let set_of = |k: usize| layer_sets.iter().find(|(i, ..)| *i == k).map(|(_, n, l)| (n.clone(), l.clone()));
         let layer_set = set_of(members[0]).filter(|s| members.iter().all(|&k| set_of(k).as_ref() == Some(s)));
+        // A column type's or a beam type's section (docs/adr/8167), when its elements share one.
+        let section_of = |k: usize| section(entity_at.get(&k).copied(), &elements[k]);
+        let profile_set = section_of(members[0])
+            .filter(|p| members.iter().all(|&k| section_of(k).as_ref() == Some(p)))
+            .map(|p| crate::building::ProfileSet { name: t.name.clone(), ..p });
         let seed = match &scope {
             Some(b) => format!("kentos-eleman-tipi:{}:{}", b.id, t.id),
             None => format!("kentos-eleman-tipi:{}", t.id),
@@ -2541,6 +2591,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             name: t.name.clone(),
             predefined,
             layer_set,
+            profile_set,
             members,
         });
     }

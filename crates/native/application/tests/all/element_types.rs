@@ -3,8 +3,8 @@
 //! follow and the one with its own width keeps it, the source of each value said. And IFC-04's next part: the section
 //! building's elements typed by their own values, each type written as its class's IFC type, its elements typed by it;
 //! the file is kept (fixtures/arch/v1/ifc/kesit-binasi-eleman-tipli.ifc) with the types as the drawing says them
-//! (kesit-binasi-eleman-tipli.json) for the independent reader (scripts/fixtures/ifc_types_check.py).
-//! `KENTOS_WRITE_IFC_TYPES=1` writes them again.
+//! (kesit-binasi-eleman-tipli.json) for the independent reader (scripts/fixtures/ifc_types_check.py), a column type's
+//! and a beam type's section with them (docs/adr/8167). `KENTOS_WRITE_IFC_TYPES=1` writes them again.
 
 use std::path::PathBuf;
 
@@ -168,6 +168,17 @@ fn every_element_type_is_its_class_s_ifc_type_and_its_elements_are_typed_by_it()
         assert!(text.contains(&format!("{}('", t.entity)), "{}", t.entity);
     }
     assert_eq!(text.matches("IFCRELDECLARES(").count(), 1, "one declaration of every type");
+    // Each column type and beam type its section as a profile set (docs/adr/8167), its elements sharing it; the
+    // elements keep their own material (EK-6 Tablo 6.3, 6.16).
+    let sectioned: Vec<&&kentos_ifc::building::TypeObject> =
+        element_types.iter().filter(|t| matches!(t.entity, "IFCCOLUMNTYPE" | "IFCBEAMTYPE")).collect();
+    assert!(!sectioned.is_empty());
+    for t in &sectioned {
+        let p = t.profile_set.as_ref().unwrap_or_else(|| panic!("{}: its section", t.name));
+        let said = (p.name.as_str(), p.material.as_deref(), p.category);
+        assert_eq!(said, (t.name.as_str(), Some("Betonarme"), Some("LoadBearing")));
+    }
+    assert_eq!(text.matches("IFCMATERIALPROFILESET(").count(), sectioned.len());
     // The types as the drawing says them, beside the file: each its name, its IFC class and its elements' ids.
     let note_types: Vec<Value> = made
         .iter()
@@ -178,7 +189,22 @@ fn every_element_type_is_its_class_s_ifc_type_and_its_elements_are_typed_by_it()
                 .map(|(u, _)| u.to_string())
                 .collect();
             let class = element_types.iter().find(|x| x.name == t.name).map_or("", |x| x.entity);
-            json!({ "name": t.name, "kind": t.kind, "ifc": class, "members": members })
+            // Its section as the drawing gives it (docs/adr/8167): its first element's; a post's or a rail's none.
+            let first =
+                doc.entities_with_uids().find(|(_, e)| type_link(e).is_some_and(|l| l.id == t.id)).map(|(_, e)| e);
+            let profile = match first {
+                _ if t.values.contains_key("member") => Value::Null,
+                Some(Entity::Column(c)) => match c.column.shape {
+                    kentos_commands::ColumnShape::Rect => {
+                        json!({"kind": "rectangle", "x": c.column.width, "y": c.column.depth.unwrap_or(c.column.width)})
+                    }
+                    kentos_commands::ColumnShape::Round => json!({"kind": "circle", "radius": c.column.width / 2.0}),
+                    kentos_commands::ColumnShape::LShape => json!({"kind": "outline"}),
+                },
+                Some(Entity::Beam(b)) => json!({"kind": "rectangle", "x": b.beam.width, "y": b.beam.height}),
+                _ => Value::Null,
+            };
+            json!({ "name": t.name, "kind": t.kind, "ifc": class, "members": members, "profile": profile })
         })
         .collect();
     let note = serde_json::to_string_pretty(&json!({ "file": "kesit-binasi-eleman-tipli.ifc", "types": note_types }))

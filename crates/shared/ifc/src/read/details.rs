@@ -1,6 +1,7 @@
 //! The chosen object's details for the viewer's properties panel (feature `view`; docs/adr/8061 §5 "Özellikler",
 //! docs/adr/8073 §2): its attributes, its type, its material, its storey, its material layers and how a usage lays them
-//! (docs/adr/8166), then its property and quantity sets (its own, then its type's) as the file writes them, each value
+//! (docs/adr/8166), its section (its own or its type's profile set, docs/adr/8167), then its property and quantity sets
+//! (its own, then its type's) as the file writes them, each value
 //! with its unit: its own, else the project's for the measure it is written with. Nothing is converted and nothing is
 //! measured from the triangles (CLAUDE.md §23.3).
 
@@ -64,6 +65,37 @@ impl Model {
             if !materials.is_empty() {
                 groups.push(Group { title: "Katmanların malzemesi".to_owned(), lines: materials });
             }
+        }
+        // Its section (docs/adr/8167): its own material profile set's, else its type's (a column type's, a beam
+        // type's).
+        let (sections, from_type) = match self.profiles(bytes, object)? {
+            own if !own.is_empty() => (own, false),
+            _ => match o.type_object {
+                Some(t) => (self.profiles(bytes, t)?, true),
+                None => (Vec::new(), false),
+            },
+        };
+        for p in sections {
+            let length = self.summary.units.length.as_ref().map(|u| symbol(u.prefix.as_deref(), &u.name));
+            let mut lines = Vec::new();
+            if let Some(n) = p.name.filter(|n| !n.trim().is_empty()) {
+                lines.push(Line { name: "Ad".to_owned(), value: n, unit: None, numeric: false });
+            }
+            let shape = match p.class.to_ascii_uppercase().as_str() {
+                "IFCRECTANGLEPROFILEDEF" => "Dikdörtgen".to_owned(),
+                "IFCCIRCLEPROFILEDEF" => "Daire".to_owned(),
+                "IFCARBITRARYCLOSEDPROFILEDEF" => "Serbest biçim".to_owned(),
+                _ => p.class.clone(),
+            };
+            lines.push(Line { name: "Biçim".to_owned(), value: shape, unit: None, numeric: false });
+            for (key, v) in &p.measures {
+                lines.push(Line { name: (*key).to_owned(), value: v.to_string(), unit: length.clone(), numeric: true });
+            }
+            if let Some(m) = p.material {
+                lines.push(Line { name: "Malzeme".to_owned(), value: m, unit: None, numeric: false });
+            }
+            let title = if from_type { "Kesit (tipten)" } else { "Kesit" };
+            groups.push(Group { title: title.to_owned(), lines });
         }
         for set in self.property_sets(bytes, object)? {
             let title = if set.from_type { format!("{} (tipten)", set.name) } else { set.name.clone() };
@@ -294,6 +326,32 @@ mod tests {
         let w = lines(wall);
         assert!(w.iter().all(|(n, ..)| n != "Diziliş"), "{w:?}");
         assert_eq!(w.len(), 4, "the style's four layers: {w:?}");
+    }
+
+    /// A typed column's details (docs/adr/8167): its type's section, the profile set the type holds — its name, a
+    /// rectangle, its XDim and YDim in metres and its material.
+    #[test]
+    fn a_typed_column_shows_its_type_s_section() {
+        let bytes: &[u8] = include_bytes!("../../../../../fixtures/arch/v1/ifc/kesit-binasi-eleman-tipli.ifc");
+        let m = read_ok(bytes);
+        let column = m.objects.iter().position(|o| o.class == "IfcColumn").expect("a column");
+        let d = m.details(bytes, column).expect("the details");
+        let g = d.groups.iter().find(|g| g.title == "Kesit (tipten)").expect("its type's section");
+        let lines: Vec<(&str, &str, Option<&str>)> =
+            g.lines.iter().map(|l| (l.name.as_str(), l.value.as_str(), l.unit.as_deref())).collect();
+        assert_eq!(
+            lines,
+            [
+                ("Ad", "30×30", None),
+                ("Biçim", "Dikdörtgen", None),
+                ("XDim", "0.3", Some("m")),
+                ("YDim", "0.3", Some("m")),
+                ("Malzeme", "Betonarme", None),
+            ]
+        );
+        // A wall has no section.
+        let wall = m.objects.iter().position(|o| o.class == "IfcWall").expect("a wall");
+        assert!(m.details(bytes, wall).expect("the details").groups.iter().all(|g| !g.title.starts_with("Kesit")));
     }
 
     /// A space of the file written with fire compartments (docs/adr/8088) says its compartment's zone.

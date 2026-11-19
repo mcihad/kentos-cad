@@ -7,7 +7,8 @@
       "members": [
         "0192f5a1-4242-7000-8000-000000000029"
       ],
-      "name": "Döşeme 1"
+      "name": "Döşeme 1",
+      "profile": null
     },
     {
       "ifc": "IFCSLABTYPE",
@@ -15,7 +16,8 @@
       "members": [
         "0192f5a1-4242-7000-8000-00000000002a"
       ],
-      "name": "Döşeme 2"
+      "name": "Döşeme 2",
+      "profile": null
     },
     {
       "ifc": "IFCSLABTYPE",
@@ -23,7 +25,8 @@
       "members": [
         "0192f5a1-4242-7000-8000-00000000002b"
       ],
-      "name": "Döşeme 3"
+      "name": "Döşeme 3",
+      "profile": null
     },
     {
       "ifc": "IFCCOLUMNTYPE",
@@ -46,7 +49,12 @@
         "0192f5a1-4242-7000-8000-00000000003e",
         "0192f5a1-4242-7000-8000-00000000003f"
       ],
-      "name": "Kolon 1"
+      "name": "Kolon 1",
+      "profile": {
+        "kind": "rectangle",
+        "x": 0.3,
+        "y": 0.3
+      }
     },
     {
       "ifc": "IFCBEAMTYPE",
@@ -61,7 +69,12 @@
         "0192f5a1-4242-7000-8000-000000000042",
         "0192f5a1-4242-7000-8000-000000000043"
       ],
-      "name": "Kiriş 1"
+      "name": "Kiriş 1",
+      "profile": {
+        "kind": "rectangle",
+        "x": 0.25,
+        "y": 0.5
+      }
     },
     {
       "ifc": "IFCSTAIRTYPE",
@@ -69,7 +82,8 @@
       "members": [
         "0192f5a1-4242-7000-8000-000000000044"
       ],
-      "name": "Merdiven 1"
+      "name": "Merdiven 1",
+      "profile": null
     }
   ]
 }

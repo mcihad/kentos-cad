@@ -89,6 +89,66 @@ impl Model {
     }
 }
 
+/// A section of a material profile set as the file writes it (docs/adr/8167): its profile's name, its kind (the
+/// profile's class), its measures (a rectangle's XDim and YDim, a circle's Radius; an outline none) and its material.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ProfileLine {
+    pub name: Option<String>,
+    pub class: String,
+    pub measures: Vec<(&'static str, f64)>,
+    pub material: Option<String>,
+}
+
+impl Model {
+    /// The sections of the material profile set object `object` is associated with, directly or through a usage;
+    /// none when its material is another kind.
+    pub fn profiles(&self, bytes: &[u8], object: usize) -> Result<Vec<ProfileLine>, ReadError> {
+        let Some(o) = self.objects.get(object) else { return Ok(Vec::new()) };
+        let schema = header::version(self.summary.family);
+        guarded(|| {
+            let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
+            let associations: Vec<u32> = self
+                .relations_of(o.step)
+                .iter()
+                .map(|&r| &self.relations[r])
+                .filter(|r| schema.is_subtype_of(&r.class, "IfcRelAssociatesMaterial") && r.related.contains(&o.step))
+                .filter_map(|r| r.relating)
+                .collect();
+            let mut out = Vec::new();
+            for m in associations {
+                let Ok(e) = decoder.decode_by_id(m) else { continue };
+                let set = named(schema, &e, "ForProfileSet").and_then(AttributeValue::as_entity_ref).unwrap_or(m);
+                let Ok(s) = decoder.decode_by_id(set) else { continue };
+                let Some(list) = named(schema, &s, "MaterialProfiles").and_then(AttributeValue::as_list) else {
+                    continue;
+                };
+                let refs: Vec<u32> = list.iter().filter_map(AttributeValue::as_entity_ref).collect();
+                for r in refs {
+                    let Ok(mp) = decoder.decode_by_id(r) else { continue };
+                    let material = named(schema, &mp, "Material")
+                        .and_then(AttributeValue::as_entity_ref)
+                        .and_then(|x| decoder.decode_by_id(x).ok())
+                        .and_then(|x| named(schema, &x, "Name").and_then(AttributeValue::as_string).map(str::to_owned));
+                    let Some(p) = named(schema, &mp, "Profile").and_then(AttributeValue::as_entity_ref) else {
+                        continue;
+                    };
+                    let Ok(p) = decoder.decode_by_id(p) else { continue };
+                    let class = p.ifc_type.name().to_owned();
+                    let mut measures = Vec::new();
+                    for key in ["XDim", "YDim", "Radius"] {
+                        if let Some(v) = named(schema, &p, key).and_then(AttributeValue::as_float) {
+                            measures.push((key, v));
+                        }
+                    }
+                    let name = named(schema, &p, "ProfileName").and_then(AttributeValue::as_string).map(str::to_owned);
+                    out.push(ProfileLine { name, class, measures, material });
+                }
+            }
+            Ok(out)
+        })
+    }
+}
+
 /// A material record's name: its own, its layer set's, a usage's set's, or its members' names.
 fn material_name(decoder: &mut EntityDecoder, schema: SchemaVersion, step: u32, depth: usize) -> Option<String> {
     if depth > 3 {

@@ -67,7 +67,8 @@ def main():
         print("uyuşmuyor: " + "; ".join(problems), file=sys.stderr)
         return 1
     print("uyuyor: her stil bir IfcWallType, duvarları ona bağlı, katmanları sırasıyla ve kalınlığıyla; her eleman tipi "
-          "sınıfının IFC tipi, elemanları ona bağlı (docs/adr/8106)")
+          "sınıfının IFC tipi, elemanları ona bağlı (docs/adr/8106); kolon ve kiriş tipinin kesiti profil takımında, "
+          "elemanlar kendi malzemesiyle (docs/adr/8167)")
     return 0
 
 
@@ -106,9 +107,44 @@ def element_types(problems):
             problems.append(f"{t['name']}: tipli {sorted(typed)}, çizimde {sorted(want)}")
         if not any(x in r.RelatedDefinitions for r in f.by_type("IfcRelDeclares")):
             problems.append(f"{t['name']}: projede bildirilmemiş")
-        out.append({"type": t["name"], "ifc": x.is_a(), "globalId": x.GlobalId, "predefined": x.PredefinedType,
-                    "elements": len(typed)})
+        row = {"type": t["name"], "ifc": x.is_a(), "globalId": x.GlobalId, "predefined": x.PredefinedType,
+               "elements": len(typed)}
+        if t.get("profile"):
+            row["profile"] = section(x, t["profile"], typed, f, problems)
+        out.append(row)
     return out
+
+
+def section(x, want, typed, f, problems):
+    """A column type's or a beam type's section (docs/adr/8167): its material an IfcMaterialProfileSet of one profile,
+    LoadBearing, whose profile is the drawing's (a rectangle its XDim and YDim, a circle its Radius, an L an arbitrary
+    closed profile); its elements keep their own material, an IfcMaterial."""
+    m = ue.get_material(x)
+    if m is None or not m.is_a("IfcMaterialProfileSet") or len(m.MaterialProfiles) != 1:
+        problems.append(f"{x.Name}: tipin malzemesi tek profilli profil takımı değil ({m.is_a() if m else 'yok'})")
+        return None
+    mp = m.MaterialProfiles[0]
+    p = mp.Profile
+    near = lambda a, b: abs(float(a) - float(b)) <= 1e-9
+    if want["kind"] == "rectangle":
+        same = p.is_a("IfcRectangleProfileDef") and near(p.XDim, want["x"]) and near(p.YDim, want["y"])
+        read = f"{p.is_a()} {getattr(p, 'XDim', None)} × {getattr(p, 'YDim', None)}"
+    elif want["kind"] == "circle":
+        same = p.is_a("IfcCircleProfileDef") and near(p.Radius, want["radius"])
+        read = f"{p.is_a()} r {getattr(p, 'Radius', None)}"
+    else:
+        same = p.is_a("IfcArbitraryClosedProfileDef")
+        read = p.is_a()
+    if not same:
+        problems.append(f"{x.Name}: kesit {read}, çizimde {want}")
+    if mp.Category != "LoadBearing":
+        problems.append(f"{x.Name}: kesitin rolü {mp.Category}")
+    for g in typed:
+        own = ue.get_material(f.by_guid(g), should_inherit=False)
+        if own is None or not own.is_a("IfcMaterial"):
+            kind = own.is_a() if own else "yok"
+            problems.append(f"{x.Name}: {g} elemanının kendi malzemesi IfcMaterial değil ({kind})")
+    return {"name": p.ProfileName, "read": read, "material": mp.Material.Name if mp.Material else None}
 
 
 if __name__ == "__main__":

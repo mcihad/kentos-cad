@@ -457,6 +457,10 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Kolon ve kiriş tipinin kesiti (19 Kasım 2026; [ADR 8167](../adr/8167-column-and-beam-type-profile-sets.md),
+    K433–K435):** `IfcColumnType`/`IfcBeamType` üyeleri paylaşınca kesitini `IfcMaterialProfileSet` olarak alır
+    (dikdörtgen, daire, L; LoadBearing); örnekler EK-6 Tablo 6.3/6.16 için `IfcMaterial`'larını korur; kullanım yok
+    (gövdeler eksen çerçevesinde değil); görüntüleyicide Kesit (tipten).
   - **Döşemenin ve kaplamanın katman takımı (19 Kasım 2026; [ADR 8166](../adr/8166-slab-and-covering-layer-sets.md),
     K428–K432):** katmanlı döşeme ve her kaplama IFC'de `IfcMaterialLayerSet` (üstten; LoadBearing, Insulation, iç/dış
     kaplama), düz olanlar `IfcMaterialLayerSetUsage` (AXIS3, NEGATIVE, taban çizgisi üstü); katmansız döşeme tek
