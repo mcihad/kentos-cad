@@ -378,6 +378,47 @@ pub struct Place {
 
 pub use crate::crs::Crs;
 
+/// How far an element's top must rise over a higher storey's floor to span it, metres (docs/adr/8168): the project's
+/// spatial tolerance (docs/specs/numeric-policy.md §5). A body built up to the next floor, or a stair's last riser
+/// landing on it, stands at the floor and does not span the storey.
+const SPAN: f64 = 0.001;
+
+/// Whether an element of `class` is one that may span storeys (docs/adr/8168): a vertical one, not a floor, a beam or a
+/// roof, which lie between storeys or over the top one.
+fn spans_storeys(class: Class) -> bool {
+    matches!(
+        class,
+        Class::Wall
+            | Class::Column
+            | Class::CurtainWall
+            | Class::Member
+            | Class::Stair
+            | Class::Ramp
+            | Class::Railing
+            | Class::TransportElement
+            | Class::Chimney
+    )
+}
+
+/// The lowest and the highest point of a body over its storey's floor, metres; none for no body.
+fn height_range(shapes: &[Shape]) -> Option<(f64, f64)> {
+    let mut range: Option<(f64, f64)> = None;
+    let mut take = |lo: f64, hi: f64| {
+        range = Some(range.map_or((lo, hi), |(a, b)| (a.min(lo), b.max(hi))));
+    };
+    for s in shapes {
+        match s {
+            Shape::Prism { bottom, top, .. } => take(*bottom, *top),
+            Shape::Faces { vertices, .. } => {
+                for v in vertices {
+                    take(v[2], v[2]);
+                }
+            }
+        }
+    }
+    range
+}
+
 /// A building to write.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Building {
@@ -1408,6 +1449,34 @@ pub fn write(b: &Building) -> String {
             Step::refs(&in_building)
         ));
     }
+    // The storeys an element rises into over its own (docs/adr/8168; IFC 4.3: contained in one, referenced in the
+    // others it spans): a wall, a column, a curtain wall, a post, a stair, a ramp, a railing, an elevator or a chimney
+    // whose body's top stands more than 1 mm over a higher storey's floor. Only upwards: a storey's walls and columns
+    // stand on the structure, under its finished floor by its build-up (docs/adr/8040 §2), and do not span the storey
+    // under it.
+    let mut spanned: Vec<Vec<usize>> = vec![Vec::new(); b.storeys.len()];
+    for (i, e) in b.elements.iter().enumerate() {
+        let n = products.get(i).copied().unwrap_or(0);
+        if n == 0 || e.part_of.is_some() || e.storey >= b.storeys.len() || !spans_storeys(e.class) {
+            continue;
+        }
+        let Some((_, hi)) = height_range(&e.shapes) else { continue };
+        let floor = b.storeys[e.storey].elevation;
+        let top = floor + hi;
+        for (j, s) in b.storeys.iter().enumerate() {
+            if j != e.storey && s.elevation > floor + 1e-9 && top - s.elevation > SPAN {
+                spanned[j].push(n);
+            }
+        }
+    }
+    for (j, list) in spanned.iter().enumerate().filter(|(_, l)| !l.is_empty()) {
+        let g = w.st.derived("spans", &[storeys[j]], "");
+        w.st.add(format!(
+            "IFCRELREFERENCEDINSPATIALSTRUCTURE({g},$,$,$,({}),#{})",
+            Step::refs(list),
+            storeys[j]
+        ));
+    }
     // The survey points (docs/adr/8124; EK-7 Tablo 7.9): each an `IfcAnnotation` SURVEY in the site, a point; its name
     // its mark, its description its source.
     if !b.surveys.is_empty() {
@@ -1804,6 +1873,73 @@ mod tests {
         let roof = f.lines().find(|l| l.contains("IFCROOF(")).expect("the roof").split('=').next().unwrap().to_owned();
         let set_id = set.split('=').next().unwrap().to_owned();
         assert!(f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.contains(&format!("({roof}),{set_id})"))));
+    }
+
+    /// An element rising into the storey over its own (docs/adr/8168): a wall 6 m tall on the ground storey of two 3 m
+    /// storeys is contained in its own and referenced in the one over it; built up to the next floor it is not; an
+    /// upper storey's wall standing on the structure under its finished floor does not span the storey under it; a
+    /// slab is not a vertical element.
+    #[test]
+    fn a_wall_two_storeys_tall_is_referenced_in_the_storey_over_its_own() {
+        let mut b = door_building();
+        let mut upper = b.storeys[0].clone();
+        upper.id = Some(77);
+        upper.name = "MM-BNK-1._kat".into();
+        upper.elevation = 3.0;
+        b.storeys.push(upper);
+        let raise = |e: &mut Element, bottom_at: f64, top_at: f64| {
+            for s in &mut e.shapes {
+                if let Shape::Prism { bottom, top, .. } = s {
+                    (*bottom, *top) = (bottom_at, top_at);
+                }
+            }
+        };
+        raise(&mut b.elements[0], 0.0, 6.0);
+        let f = write(&b);
+        let id = |l: &str| l.split('=').next().unwrap().to_owned();
+        let wall = id(f.lines().find(|l| l.contains("IFCWALL(")).expect("the wall"));
+        let upper = f.lines().find(|l| l.contains("IFCBUILDINGSTOREY(") && l.contains("1._kat"));
+        let upper = id(upper.expect("the storey"));
+        let spans: Vec<&str> = f.lines().filter(|l| l.contains("IFCRELREFERENCEDINSPATIALSTRUCTURE(")).collect();
+        assert_eq!(spans.len(), 1, "{spans:?}");
+        assert!(spans[0].ends_with(&format!("({wall}),{upper});")), "{}", spans[0]);
+        // Built up to the next floor, or within 1 mm of it: no reference; 2 mm over it: it spans the storey.
+        for (top, spans) in [(3.0, false), (3.0009, false), (3.002, true)] {
+            raise(&mut b.elements[0], 0.0, top);
+            assert_eq!(write(&b).contains("IFCRELREFERENCEDINSPATIALSTRUCTURE("), spans, "{top}");
+        }
+        // The upper storey's wall from 7 cm under its floor (on the structure) up to 2.80 m: its own storey's alone.
+        b.elements[0].storey = 1;
+        raise(&mut b.elements[0], -0.07, 2.8);
+        assert!(!write(&b).contains("IFCRELREFERENCEDINSPATIALSTRUCTURE("));
+        b.elements[0].storey = 0;
+        // Read back (the viewer's details): its own storey, and the one it spans.
+        #[cfg(feature = "view")]
+        {
+            raise(&mut b.elements[0], 0.0, 6.0);
+            let f = write(&b);
+            let m = crate::read::read(f.as_bytes(), &crate::read::Limits::default(), &|| false).expect("reads");
+            let at = m.objects.iter().position(|o| o.class == "IfcWall").expect("the wall");
+            let d = m.details(f.as_bytes(), at).expect("the details");
+            let said: Vec<(&str, &str)> = d.groups[0]
+                .lines
+                .iter()
+                .filter(|l| l.name == "Kat" || l.name == "Uzandığı kat")
+                .map(|l| (l.name.as_str(), l.value.as_str()))
+                .collect();
+            assert_eq!(said, [("Kat", b.storeys[0].name.as_str()), ("Uzandığı kat", "MM-BNK-1._kat")]);
+        }
+        // A curtain wall over both storeys (IFC 4.3's own example), its panels its body: referenced the same way.
+        b.elements[0].class = Class::CurtainWall;
+        raise(&mut b.elements[0], 0.0, 6.0);
+        let f = write(&b);
+        let wall = id(f.lines().find(|l| l.contains("IFCCURTAINWALL(")).expect("the curtain wall"));
+        assert!(f.lines().any(|l| l.contains("IFCRELREFERENCEDINSPATIALSTRUCTURE(") && l.contains(&format!("({wall}),"))));
+        // A slab of the upper storey hanging into the ground storey is the upper storey's alone.
+        b.elements[0].class = Class::Slab;
+        b.elements[0].storey = 1;
+        raise(&mut b.elements[0], -0.25, 0.0);
+        assert!(!write(&b).contains("IFCRELREFERENCEDINSPATIALSTRUCTURE("));
     }
 
     /// A column type's section (docs/adr/8167): its rectangle, its material (the one its occurrences name, written

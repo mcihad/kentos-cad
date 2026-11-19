@@ -375,7 +375,7 @@ uyum için şart değildir.
 
 - Tip nesneleri ve tipe bağlama; tipte ve örnekte hangi değerin geçerli olduğu.
 - Katmanlı malzeme takımı ve kullanımı (duvar, döşeme, çatı, kaplama); katman uygulanmayan yerde bileşen takımı.
-- Çok kata uzanan elemanın öbür katlara başvurusu.
+- Çok kata uzanan elemanın öbür katlara başvurusu (yapıldı, ADR 8168).
 
 **İlk kabul:** bir duvar stili tek tip olarak yazılır ve bütün duvarları ona bağlıdır; katmanlar sırasıyla ve kalınlığıyla
 bağımsız okuyucuda okunur.
@@ -404,6 +404,13 @@ kesiti tipin `IfcMaterialProfileSet`'i (dikdörtgen, daire, L; adı "30×30" gib
 örnekler EK-6 için `IfcMaterial`'larını korur; IfcOpenShell kesitleri okur, doğrulayıcıda 0 bulgu; görüntüleyicide Kesit
 (tipten). **Kalan:** profil ve katman takımı kullanımları (eksen çerçeveli kolon, kiriş, duvar; çatı, eğik döşeme), dikme
 ve kaydın kesiti, çok kata uzanan eleman.
+
+**Durum (19 Kasım 2026, [ADR 8168](../docs/adr/8168-elements-spanning-storeys.md)):** üst kata uzanan duvar, kolon,
+giydirme cephe, dikme, merdiven, rampa, korkuluk, asansör ve baca kendi katında yer alır; gövdesinin üstü 1 mm'den çok
+aştığı her üst kata `IfcRelReferencedInSpatialStructure` ile başvurur (yalnız yukarı; parçalar bütününü izler).
+IfcOpenShell başvuruları gövdelerden bağımsız olarak bulur (kalkan duvarı dosyası; öbür altın dosyalarda kat aşan
+eleman yok), doğrulayıcıda 0 bulgu; görüntüleyicide Uzandığı kat. IFC-04'ün üçüncü maddesi tamam. **Kalan:** profil ve
+katman takımı kullanımları (eksen çerçeveli kolon, kiriş, duvar; çatı, eğik döşeme), dikme ve kaydın kesiti.
 
 #### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [x]
 

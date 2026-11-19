@@ -457,6 +457,10 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Birden çok kata uzanan eleman (19 Kasım 2026; [ADR 8168](../adr/8168-elements-spanning-storeys.md),
+    K436–K438):** duvar, kolon, giydirme cephe, dikme, merdiven, rampa, korkuluk, asansör ve baca kendi katında yer
+    alır; gövdesinin üstü daha yüksek bir katın kotunu 1 mm'den çok aşarsa o kata `IfcRelReferencedInSpatialStructure`
+    ile başvurur (yalnız yukarı; parçalar bütününü izler); görüntüleyicide Uzandığı kat.
   - **Kolon ve kiriş tipinin kesiti (19 Kasım 2026; [ADR 8167](../adr/8167-column-and-beam-type-profile-sets.md),
     K433–K435):** `IfcColumnType`/`IfcBeamType` üyeleri paylaşınca kesitini `IfcMaterialProfileSet` olarak alır
     (dikdörtgen, daire, L; LoadBearing); örnekler EK-6 Tablo 6.3/6.16 için `IfcMaterial`'larını korur; kullanım yok

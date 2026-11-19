@@ -1,6 +1,7 @@
 //! The chosen object's details for the viewer's properties panel (feature `view`; docs/adr/8061 §5 "Özellikler",
 //! docs/adr/8073 §2): its attributes, its type, its material, its storey, its material layers and how a usage lays them
-//! (docs/adr/8166), its section (its own or its type's profile set, docs/adr/8167), then its property and quantity sets
+//! (docs/adr/8166), its section (its own or its type's profile set, docs/adr/8167), the storeys it spans besides its
+//! own (docs/adr/8168), then its property and quantity sets
 //! (its own, then its type's) as the file writes them, each value
 //! with its unit: its own, else the project's for the measure it is written with. Nothing is converted and nothing is
 //! measured from the triangles (CLAUDE.md §23.3).
@@ -31,6 +32,10 @@ impl Model {
         add("Ön tanımlı tür", o.predefined.clone());
         add("Tip", o.type_object.map(|t| &self.objects[t]).map(|t| format!("{} ({})", t.name.as_deref().unwrap_or("adsız"), t.class)));
         add("Kat", self.storey_of(schema, object).map(|s| s.name.clone().unwrap_or_else(|| s.class.clone())));
+        // The storeys it rises into besides its own (docs/adr/8168; `IfcRelReferencedInSpatialStructure`).
+        for storey in self.spanned_storeys(schema, object) {
+            add("Uzandığı kat", Some(storey));
+        }
         for group in self.groups_of(schema, object) {
             add("Grup", Some(group));
         }
@@ -114,6 +119,21 @@ impl Model {
             .filter(|r| schema.is_subtype_of(&r.class, "IfcRelAssignsToGroup") && r.related.contains(&o.step))
             .filter_map(|r| self.object(r.relating?))
             .map(|g| g.long_name.clone().or_else(|| g.name.clone()).or_else(|| g.object_type.clone()).unwrap_or_else(|| g.class.clone()))
+            .collect()
+    }
+
+    /// The storeys that reference the object without containing it (`IfcRelReferencedInSpatialStructure`,
+    /// docs/adr/8168: an element spanning storeys), each by its name, else its class.
+    fn spanned_storeys(&self, schema: SchemaVersion, object: usize) -> Vec<String> {
+        let Some(o) = self.objects.get(object) else { return Vec::new() };
+        self.relations_of(o.step)
+            .iter()
+            .map(|&r| &self.relations[r])
+            .filter(|r| r.related.contains(&o.step))
+            .filter(|r| schema.is_subtype_of(&r.class, "IfcRelReferencedInSpatialStructure"))
+            .filter_map(|r| self.object(r.relating?))
+            .filter(|s| schema.is_subtype_of(&s.class, "IfcBuildingStorey"))
+            .map(|s| s.name.clone().unwrap_or_else(|| s.class.clone()))
             .collect()
     }
 

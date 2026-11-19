@@ -88,6 +88,67 @@ fn click_one(app: &mut App, category: Category) -> usize {
     panic!("no {category:?} met a click");
 }
 
+/// Uzandığı kat (docs/adr/8168), light and dark: the section building with its east wall drawn once over both storeys
+/// and on over the roof (fixtures/arch/v1/ifc/kesit-binasi-kalkan-duvari.ifc, the application test's) in IFC modeli,
+/// the plan's east wall chosen; its details name the storey it stands in and the one it rises into.
+/// `.run/gui-evidence/iki-kat-duvar-8168/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::span_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn span_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/iki-kat-duvar-8168");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = open(building());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let dir = std::env::temp_dir().join(format!("kentos-iki-kat-duvar-{}-{name}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("a folder");
+        let path = dir.join("kalkan-duvari.ifc");
+        let file = include_bytes!("../../../../fixtures/arch/v1/ifc/kesit-binasi-kalkan-duvari.ifc");
+        std::fs::write(&path, file).expect("writes");
+        opened(&mut app, path);
+        // The plan's east wall on the ground storey: the file's tall wall, its id kept.
+        let doc = &app.document.as_ref().expect("the drawing").model;
+        let (tall, slot) = doc
+            .entities_with_uids()
+            .find_map(|(u, e)| {
+                let Entity::Wall(w) = e else { return None };
+                let (p, q) = (w.wall.pts[0], w.wall.pts[w.wall.pts.len() - 1]);
+                let east = p.x == 12.0 && q.x == 12.0 && p.y == 0.0 && q.y == 9.0;
+                (east && w.wall.arch.level.as_deref() == Some("zemin")).then(|| (u, doc.slot_of(u)))
+            })
+            .expect("the east wall");
+        app.selection.set(vec![slot.expect("its slot")]);
+        app.follow_ifc_viewer();
+        let w = app.ifc_viewer.as_ref().expect("the viewer");
+        let v = w.viewer.view().expect("the model");
+        let key = kentos_ifc::step::guid(tall.as_u128());
+        assert_eq!(v.selected().map(|o| v.input().objects[o].key.as_str()), Some(key.as_str()));
+        let details = w.viewer.details().expect("its details");
+        let line = |name: &str| -> Vec<&str> {
+            details.groups.iter().flat_map(|g| &g.lines).filter(|l| l.name == name).map(|l| l.value.as_str()).collect()
+        };
+        assert_eq!((line("Kat"), line("Uzandığı kat")), (vec!["MM-BNK-Zemin_kat"], vec!["MM-BNK-1._kat"]));
+        let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        let picture = out.join(format!("1-iki-kat-duvar-{name}.png"));
+        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&picture).expect("writes the picture");
+        println!("{}", picture.display());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+}
+
 /// Kesit (tipten) (docs/adr/8167), light and dark: the typed section building's file (its column type's and beam type's
 /// sections as profile sets) in IFC modeli, a column clicked, its details showing its type's section.
 /// `.run/gui-evidence/kolon-kesiti-8167/`:

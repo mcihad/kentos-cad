@@ -80,6 +80,77 @@ fn a_layered_slab_is_its_build_up_laid_from_its_top() {
     assert!(text.lines().filter(|l| l.contains("IFCMATERIALLAYERSETUSAGE(")).all(|l| laid(&l)));
 }
 
+/// An element rising over its storey (docs/adr/8168): the section building's east wall drawn once over both storeys
+/// and on over the roof, as a party wall stands (the ground storey's raised to 6.6 m by Değiştir, the first storey's
+/// and the two east beams taken away, the 1. kat's floor and the terrace cut back to the wall's inner face by Kes), is
+/// contained in the ground storey and referenced in the first; none of the building's other walls and columns (built
+/// up to what is over them, or standing on the structure under the finished floor) spans a storey.
+/// `KENTOS_WRITE_IFC_BUILDING=1` keeps fixtures/arch/v1/ifc/kesit-binasi-kalkan-duvari.ifc, which
+/// `scripts/fixtures/storey_spans_check.py` reads with IfcOpenShell.
+#[test]
+fn a_wall_two_storeys_tall_spans_the_storey_over_its_own() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let east = |pts: &[kentos_commands::Vec2]| {
+        pts.first().is_some_and(|p| p.x == 12.0 && p.y == 0.0) && pts.last().is_some_and(|q| q.x == 12.0 && q.y == 9.0)
+    };
+    let (mut tall, mut gone, mut slabs) = (None, Vec::new(), Vec::new());
+    for (u, e) in doc.entities_with_uids() {
+        match e {
+            Entity::Wall(w) if east(&w.wall.pts) && w.wall.arch.level.as_deref() == Some("zemin") => tall = Some(u),
+            Entity::Wall(w) if east(&w.wall.pts) => gone.push(u.to_string()),
+            Entity::Beam(b) if east(&b.beam.pts) => gone.push(u.to_string()),
+            Entity::Slab(s) if s.slab.arch.level.as_deref() == Some("k1") => slabs.push(u.to_string()),
+            _ => {}
+        }
+    }
+    let uid = tall.expect("the ground storey's east wall").to_string();
+    assert_eq!((gone.len(), slabs.len()), (3, 2), "the first storey's east wall and both east beams; the two slabs");
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let strip = serde_json::json!({"outer": {"pts": [p(11.875, -0.5), p(12.5, -0.5), p(12.5, 9.5), p(11.875, 9.5)]}});
+    for (command, input) in [
+        ("cad.walls.edit", serde_json::json!({"uids": [uid], "operation": {"kind": "set", "height": 6.6}})),
+        ("cad.entities.delete", serde_json::json!({"uids": gone})),
+        ("cad.slabs.edit", serde_json::json!({"uids": slabs, "operation": {"kind": "subtract", "parts": [strip]}})),
+    ] {
+        let answer = registry::run(&mut ExecutionContext::new(&mut doc), command, CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{command}: {answer}");
+    }
+    let (b, written) = arch_ifc::building(&doc, "2026-11-19T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new());
+    let text = kentos_ifc::building::write(&b);
+    let id = |l: &str| l.split('=').next().unwrap().to_owned();
+    let wall = id(text.lines().find(|l| l.contains("IFCWALL(") && l.contains(&uid)).expect("the tall wall"));
+    let storey = |name: &str| text.lines().find(|l| l.contains("IFCBUILDINGSTOREY(") && l.contains(name)).map(id);
+    let (upper, lower) = (storey("1._kat").expect("the 1. kat"), storey("Zemin").expect("the ground"));
+    // A relation's related objects: `(..,$,$,$,(#a,#b),#storey);`.
+    let list = |l: &str| l.split("$,$,$,(").nth(1).and_then(|x| x.split(')').next()).unwrap_or("").to_owned();
+    let refs: Vec<&str> = text.lines().filter(|l| l.contains("IFCRELREFERENCEDINSPATIALSTRUCTURE(")).collect();
+    assert!(refs.iter().any(|l| l.ends_with(&format!("({wall}),{upper});"))), "{refs:?}");
+    let contained = text
+        .lines()
+        .filter(|l| l.contains("IFCRELCONTAINEDINSPATIALSTRUCTURE("))
+        .find(|l| list(l).split(',').any(|x| x == wall))
+        .expect("the tall wall's storey");
+    assert!(contained.ends_with(&format!(",{lower});")), "{contained}");
+    // The building's other walls and columns span none: every reference besides the tall wall's is a zone's.
+    let walls_and_columns: Vec<String> = text
+        .lines()
+        .filter(|l| (l.contains("IFCWALL(") || l.contains("IFCCOLUMN(")) && !l.contains(&uid))
+        .map(|l| id(l))
+        .collect();
+    assert!(!walls_and_columns.is_empty());
+    for r in &refs {
+        assert!(list(r).split(',').all(|x| !walls_and_columns.iter().any(|w| w == x)), "{r}");
+    }
+    if std::env::var_os("KENTOS_WRITE_IFC_BUILDING").is_some() {
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/arch/v1/ifc/kesit-binasi-kalkan-duvari.ifc");
+        std::fs::write(out, &text).expect("the file kept");
+    }
+}
+
 #[test]
 fn the_drawing_s_walls_doors_windows_and_rooms_are_the_files() {
     let doc = building();
