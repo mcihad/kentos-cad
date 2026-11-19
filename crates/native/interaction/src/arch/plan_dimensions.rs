@@ -14,10 +14,11 @@
 //!   dimensions' layer (MM-XXXX-OLCU with the layer key, docs/adr/8008).
 
 use kentos_commands::{
-    CommandResult, DimensionSetFace, DimensionSetOpenings, DimensionSetReference, DimensionSetRow,
-    DimensionSetTight, DimensionSetsCreateInput, DimensionsInterior, Entity, InteriorColumns,
-    InteriorFaces, NewLook,
+    CommandResult, DimensionEntity, DimensionSetFace, DimensionSetId, DimensionSetOpenings,
+    DimensionSetReference, DimensionSetRow, DimensionSetTight, DimensionSetsCreateInput,
+    DimensionsInterior, Entity, InteriorColumns, InteriorFaces, NewLook, uuid_v5,
 };
+use kentos_domain::{Document, Refusal, Slot};
 use kentos_native_application::{ExecutionContext, dimension_sets_create, dimensions_interior};
 
 use crate::Vec2;
@@ -25,7 +26,7 @@ use crate::arch_layer::Kind;
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Flow, Pointer, Preview, Tag, Tool};
+use crate::tool::{Context, Flow, Pointer, Preview, Tag, Tone, Tool};
 use crate::tool_settings::{Setting, choices};
 
 pub const ID: &str = "planDimensions";
@@ -37,6 +38,8 @@ const CUT_SPACING_MM: f64 = 6.0;
 const GAP_MM: f64 = 7.5;
 /// How far a cut reaches beyond the building on each end, metres: it starts and ends outside every wall.
 const REACH: f64 = 0.5;
+const PLAN_SCOPE: &str = "kentos.plan-dimensions.scope";
+const PLAN_OWNER: &str = "kentos.plan-dimensions.member";
 
 /// The project's stage: its outside chains (MO).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -106,6 +109,7 @@ impl Frame {
 struct Planned {
     facade: Option<DimensionSetsCreateInput>,
     cuts: Vec<DimensionsInterior>,
+    existing: bool,
     preview: Preview,
     exterior: usize,
     rooms: usize,
@@ -122,6 +126,7 @@ pub struct PlanDimensions {
     outside: bool,
     inside: bool,
     centers: bool,
+    separate: bool,
     planned: Planned,
     seen: Option<u64>,
 }
@@ -240,6 +245,118 @@ pub fn cuts_for(ranges: &[(f64, f64)], spacing: f64) -> Vec<f64> {
     }
     cuts.sort_by(f64::total_cmp);
     cuts
+}
+
+/// Model-space dimensions are scoped to the active floor, including the unassigned floor.
+fn scope(level: Option<&str>) -> String {
+    level.map_or_else(|| "model".to_owned(), |id| format!("level:{id}"))
+}
+
+fn facade_ids(scope: &str) -> [DimensionSetId; 4] {
+    std::array::from_fn(|side| {
+        let key = format!("{PLAN_SCOPE}:{scope}:{side}");
+        DimensionSetId(uuid_v5(b"kentos-plan-dims", key.as_bytes()))
+    })
+}
+
+fn owned_interiors(doc: &Document, scope: &str) -> Vec<(Slot, DimensionEntity)> {
+    doc.entities_with_uids()
+        .filter_map(|(uid, entity)| {
+            let Entity::Dimension(d) = entity else {
+                return None;
+            };
+            (d.base
+                .attrs
+                .get(PLAN_SCOPE)
+                .is_some_and(|value| value == scope)
+                && d.base
+                    .attrs
+                    .get(PLAN_OWNER)
+                    .is_some_and(|owner| *owner == uid.to_string()))
+            .then(|| (Slot(d.base.id), d.clone()))
+        })
+        .collect()
+}
+
+fn refresh_interior(doc: &mut Document, scope: &str, fresh: Vec<Entity>) -> Result<(), Refusal> {
+    let mut old = owned_interiors(doc, scope);
+    if old
+        .iter()
+        .any(|(_, d)| doc.layers().is_locked(&d.base.layer_id))
+    {
+        return Err(Refusal("Plan ölçülerinin katmanı kilitli.".into()));
+    }
+    let same_sources = |a: &DimensionEntity, b: &DimensionEntity| {
+        let ids = |d: &DimensionEntity| {
+            let r = d.refs.as_ref()?;
+            Some((r.a.as_ref()?.uid, r.b.as_ref()?.uid))
+        };
+        a.angle == b.angle && ids(a).is_some_and(|pair| ids(b) == Some(pair))
+    };
+    let mut changes = Vec::new();
+    let mut additions = Vec::new();
+    for e in fresh {
+        let Entity::Dimension(next) = &e else {
+            continue;
+        };
+        let distance = |dim: &DimensionEntity| {
+            (dim.a.x - next.a.x).hypot(dim.a.y - next.a.y)
+                + (dim.b.x - next.b.x).hypot(dim.b.y - next.b.y)
+        };
+        if let Some((index, _)) = old
+            .iter()
+            .enumerate()
+            .filter(|(_, (_, dim))| {
+                same_sources(dim, next) || (dim.c == next.c && distance(dim) <= 1e-9)
+            })
+            .min_by(|(_, (_, a)), (_, (_, b))| distance(a).total_cmp(&distance(b)))
+        {
+            let (slot, mut dim) = old.swap_remove(index);
+            if distance(&dim) <= 1e-9 && dim.c == next.c && (dim.offset - next.offset).abs() <= 1e-9
+            {
+                continue;
+            }
+            dim.a = next.a;
+            dim.b = next.b;
+            dim.c = next.c;
+            dim.offset = next.offset;
+            dim.refs = next.refs.clone();
+            changes.push((slot, Entity::Dimension(dim)));
+        } else {
+            additions.push(e);
+        }
+    }
+    let mut removed = Vec::new();
+    for (slot, mut dim) in old {
+        // Leave a manually positioned value as an independent dimension if its
+        // source pair disappeared from the refreshed cuts.
+        if dim.text_shift.is_some() || dim.text.is_some() {
+            dim.base.attrs.remove(PLAN_SCOPE);
+            dim.base.attrs.remove(PLAN_OWNER);
+            changes.push((slot, Entity::Dimension(dim)));
+        } else {
+            removed.push(slot);
+        }
+    }
+    let slots = doc
+        .add_many(additions, LABEL)
+        .map_err(|e| Refusal(e.to_string()))?;
+    for slot in slots {
+        let mut entity = doc.get(slot).expect("new plan dimension").clone();
+        let uid = doc.uid(slot).expect("new dimension identity");
+        entity
+            .base_mut()
+            .attrs
+            .insert(PLAN_OWNER.to_owned(), uid.to_string());
+        entity
+            .base_mut()
+            .attrs
+            .insert(PLAN_SCOPE.to_owned(), scope.to_owned());
+        changes.push((slot, entity));
+    }
+    doc.update_many(changes, LABEL);
+    doc.remove(&removed);
+    Ok(())
 }
 
 impl PlanDimensions {
@@ -397,6 +514,39 @@ impl PlanDimensions {
                 }
             }
         }
+        let scope = scope(cx.level);
+        let owned = if self.inside {
+            owned_interiors(cx.doc, &scope)
+        } else {
+            Vec::new()
+        };
+        let exterior = facade_ids(&scope);
+        let sets = exterior
+            .iter()
+            .filter_map(|&id| self.outside.then(|| cx.doc.dimension_set(id)).flatten());
+        let mut members: Vec<_> = owned.iter().map(|(slot, _)| *slot).collect();
+        for set in sets {
+            planned.existing = true;
+            members.extend(
+                set.members
+                    .iter()
+                    .filter_map(|m| cx.doc.slot_of(kentos_domain::Uuid::from_bytes(m.uid.0))),
+            );
+        }
+        planned.existing |= !owned.is_empty();
+        if !self.separate {
+            for slot in members {
+                if let Some(e) = cx.doc.get(slot) {
+                    let mut outline = crate::edge::Outline::of(
+                        &kentos_native_application::geometry::shape(e),
+                        Some([5.0, 4.0]),
+                        2.0,
+                        Tone::Accent,
+                    );
+                    planned.preview.strokes.append(&mut outline.strokes);
+                }
+            }
+        }
         self.planned = planned;
     }
 
@@ -424,8 +574,18 @@ impl PlanDimensions {
                 p.rooms
             ));
         }
-        lines.push("Enter ya da tık: yaz".into());
+        lines.push(format!("Enter: {}", self.action_label()));
         lines
+    }
+
+    fn action_label(&self) -> &'static str {
+        if self.separate {
+            "Ayrı takım oluştur"
+        } else if self.planned.existing {
+            "Güncelle"
+        } else {
+            "Oluştur"
+        }
     }
 
     /// Writes the plans: one undo step on the dimensions' layer (opened with them).
@@ -444,40 +604,61 @@ impl PlanDimensions {
             return false;
         }
         let group = cx.doc.begin_group(LABEL);
-        let mut layer: Option<String> = None;
-        let mut ok = true;
-        let mut sets = 0usize;
-        let mut chains = 0usize;
-        if let Some(facade) = planned.facade.clone() {
-            ok &= crate::arch_layer::writing(&Kind::Dimension, cx, |id, cx| {
-                layer = Some(id.to_owned());
+        let scope = scope(cx.level);
+        let mut sets = 0;
+        let chains = planned.cuts.len();
+        let ok = crate::arch_layer::writing(&Kind::Dimension, cx, |id, cx| {
+            if let Some(facade) = planned.facade {
                 let input = DimensionSetsCreateInput {
                     layer_id: id.to_owned(),
                     ..facade
                 };
-                let result =
-                    dimension_sets_create::execute(&mut ExecutionContext::new(cx.doc), input);
-                let done = crate::points::written(result, cx);
-                sets = done.as_ref().map_or(0, |d| d.sets.len());
-                done.is_some()
-            });
-        }
-        for c in planned.cuts.clone() {
-            if !ok {
-                break;
-            }
-            ok &= crate::arch_layer::writing(&Kind::Dimension, cx, |id, cx| {
-                let input = DimensionsInterior {
-                    layer_id: layer.clone().unwrap_or_else(|| id.to_owned()),
-                    ..c
+                let count = if self.separate {
+                    let result =
+                        dimension_sets_create::execute(&mut ExecutionContext::new(cx.doc), input);
+                    crate::points::written(result, cx).map(|d| d.sets.len())
+                } else {
+                    let result = dimension_sets_create::refresh_plan_facades(
+                        cx.doc,
+                        &input,
+                        &facade_ids(&scope),
+                    );
+                    crate::points::written(result, cx)
                 };
-                let result =
-                    dimensions_interior::execute(&mut ExecutionContext::new(cx.doc), input);
-                let done = crate::points::written(result, cx).is_some();
-                chains += usize::from(done);
-                done
-            });
-        }
+                let Some(count) = count else { return false };
+                sets = count;
+            }
+            if self.separate {
+                return planned.cuts.into_iter().all(|c| {
+                    let input = DimensionsInterior {
+                        layer_id: id.to_owned(),
+                        ..c
+                    };
+                    let result =
+                        dimensions_interior::execute(&mut ExecutionContext::new(cx.doc), input);
+                    crate::points::written(result, cx).is_some()
+                });
+            }
+            if self.inside {
+                let mut fresh = Vec::new();
+                for c in planned.cuts {
+                    let input = DimensionsInterior {
+                        layer_id: id.to_owned(),
+                        ..c
+                    };
+                    let result = dimensions_interior::plan_in(cx.doc, &input);
+                    let Some(output) = crate::points::written(result, cx) else {
+                        return false;
+                    };
+                    fresh.extend(output.entities);
+                }
+                if let Err(error) = refresh_interior(cx.doc, &scope, fresh) {
+                    cx.say(Level::Warn, error.to_string());
+                    return false;
+                }
+            }
+            true
+        });
         if !ok {
             cx.doc.cancel_group(group);
             self.seen = None;
@@ -495,13 +676,12 @@ impl PlanDimensions {
         if chains > 0 {
             words.push(format!("{chains} iç zincir"));
         }
-        cx.say(
-            Level::Success,
-            format!(
-                "Plan ölçülendi: {}; tek geri almayla gider.",
-                words.join(", ")
-            ),
-        );
+        let result = if planned.existing && !self.separate {
+            "Plan ölçüleri güncellendi"
+        } else {
+            "Plan ölçülendi"
+        };
+        cx.say(Level::Success, format!("{result}: {}.", words.join(", ")));
         self.seen = None;
         true
     }
@@ -517,7 +697,17 @@ impl Tool for PlanDimensions {
     }
 
     fn prompt(&self) -> Prompt {
-        Prompt::new(LABEL, "önizlemeye bakın; Enter ya da tık ile yazın")
+        Prompt::new(LABEL, "ölçü takımının önizlemesi")
+            .option(self.action_label(), "Enter")
+            .option_with(
+                "Takım",
+                "T",
+                if self.separate {
+                    "Ayrı takım"
+                } else {
+                    "Mevcut takım"
+                },
+            )
             .option_with("Aşama", "A", self.stage.words())
             .option_with(
                 "Dış zincirler",
@@ -574,6 +764,10 @@ impl Tool for PlanDimensions {
                 };
                 true
             }
+            "T" => {
+                self.separate = !self.separate;
+                true
+            }
             "D" => {
                 self.outside = !self.outside;
                 true
@@ -620,6 +814,17 @@ impl Tool for PlanDimensions {
                     self.stage.key(),
                 ),
             ),
+            Setting::choice(
+                "T",
+                "Ölçü takımı",
+                choices(
+                    &[
+                        ("current", "Varsayılan takım"),
+                        ("separate", "Ayrı takım oluştur"),
+                    ],
+                    if self.separate { "separate" } else { "current" },
+                ),
+            ),
             Setting::toggle("D", "Dış zincirler", self.outside),
             Setting::toggle("İ", "İç zincirler (mahal başına 2+2)", self.inside),
             Setting::choice(
@@ -651,6 +856,7 @@ impl Tool for PlanDimensions {
                     Stage::Preliminary
                 }
             }
+            "T" => self.separate = value == "separate",
             "D" => self.outside = on(value),
             "İ" => self.inside = on(value),
             "B" => self.centers = value == "centers",

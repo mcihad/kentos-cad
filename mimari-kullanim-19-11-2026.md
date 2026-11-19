@@ -311,3 +311,27 @@ Arşivde 75 ekran görüntüsü, bunların OCR metinleri, çekim anına ait 50 �
 **Otomatik kontroller.** Etkileşim testi, onay öncesi kapsamı, araya giren çizim değişikliğinden sonra eski önizlemenin uygulanmasını engellemeyi ve tek adımda geri almayı sınadı. İki mevcut pencere düzeni testi, ondalık/geçersiz taslak testi ve bir istemci kapanırken diğerinin soketini koruyan bağlantı testi de geçti. Son kaydedilen KCAD çizimi `kcad validate` ile dokuz geçerli nesne olarak okundu.
 
 Ekran görüntüleri depo dışında tutuluyor. Arşivde 11 tam pencere görüntüsü, bağlantı deneyi, ölçüm kaydı ve son test çizimi var. [Düzeltme kanıtlarını aç](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/duzeltmeler/duvar-ve-ajan-kanitlari.zip)
+
+<a id="sirali-duzeltmeler"></a>
+
+## Açık bulguların sırayla doğrulanması
+
+### 1. Plan ölçülerinin üst üste yazılması
+
+Planı ölçülendir, etkin katın varsayılan dış ve iç ölçülerini tanıyor. Tekrar çalıştırıldığında **Güncelle** seçeneği ve işaretli mevcut takım görünüyor. **Ayrı takım oluştur** seçeneği bağımsız bir takım yazıyor. Bu plan model alanında etkin kata göre üretiliyor. Eski sürümün ürettiği ölçülerde takım kimliği bulunmadığı için otomatik güncelleme o ölçüleri sahiplenmiyor.
+
+KentOS Mimari'de Kesit binası çizimiyle başladım. Başlangıçta 79 nesne vardı. İlk işlem 191 nesneye çıktı. Aynı komutla ikinci ve üçüncü uygulama 191'de kaldı. Ayrı takım seçimi 303 nesneye çıkardı. Tek geri alma 191'e döndürdü. Kaydedilen dosya `kcad validate` ile 191 nesne olarak doğrulandı. Uygulamayı yeniden açınca takım tekrar **Güncelle** olarak tanındı. [Yeniden açılış](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/plan-yeniden-acilis.png) [Güncelle önizlemesi](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/plan-guncelle-onizleme.png) · [Üçüncü çalıştırma](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/plan-ucuncu.png) · [Ayrı takım](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/plan-ayri-yaz.png) · [Geri alma](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/plan-geri-al.png)
+
+### 2. Kodsuz kapı ve pencerelerin doğrama listesi
+
+Doğrama listesi komutu, tüm çizime ait toplam kapı/pencere, kodlu ve kod bekleyen sayılarını gösteriyor. Listelenecek proje tipi bulunmayan dolu çizimde tıklama, kullanıcı **Kodları oluştur ve listele** seçeneğini açana kadar tablo yazmıyor. Kısmi listenin kapsamı basılabilir blokta da yazıyor. Kod ataması mevcut kodları koruyan Doğrama kodları işlemini kullanıyor.
+
+Canlı Kesit binası denemesi 14 kapı/pencere ve sıfır kodla başladı. Normal tıklama nesne sayısını 191'de bıraktı. Seçenek açılıp tekrar konum verildiğinde altı tip ve bir liste eklendi. Komutu tekrar açınca 14 kodlu ve sıfır kod bekleyen görüldü. Tek geri alma Doğrama listesi adımıyla 191 nesneye döndü. [Kodsuz başlangıç](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/dograma-kodsuz.png) · [Yerleştirilen liste](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/dograma-yerlesti.png) · [Tam kapsama](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/dograma-tam.png) · [Geri alma](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/dograma-geri-al.png)
+
+### 3. Eksik bölüm verisiyle üretilen cetveller
+
+Metrekare cetveli ve bölüm kapsamlı çizelgeler sonuç üretilemediğinde tablonun içinde gerekçe ve kaynak mahal sayısını gösteriyor. Kat veya süzgeçte bölüm bulunmaması ayrı yazılıyor. Çizelgenin kaynakları değiştikçe bu satır da güncelleniyor. Metrekare cetvelinin istemindeki **Bölüm bağla** menüsünden Bina programı açılıyor.
+
+İki mahalli ve bölüm tanımı olmayan Mimari Geometri QA çiziminde uyarıyı önce komut isteminde gördüm. Menüden Bina programını açınca “Programda bölüm yok” açıklamasını okudum. Cetveli çizime yerleştirip yakınlaştırdığımda tablonun gövdesinde **Hesaplanamadı · 2 mahal** göründü. [Komut istemi](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cetvel-eksik-durum.png) · [Bina programına geçiş](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cetvel-bina-programi.png) · [Çizime yerleşen uyarı](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cetvel-eksik-yakin.png)
+
+Bölümlü karşılaştırma çiziminde araç normal yerleştirme istemi açtı. Cetvel yerleştirildi, kaydedilen KCAD dosyası 10 nesneyle doğrulandı. [Bölümlü çizim](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cetvel-dolu-sonuc.png)

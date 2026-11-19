@@ -798,6 +798,22 @@ fn plan_dimensions_writes_four_sides_and_two_chains_each_way_in_one_step() {
         "{}",
         crate::files_testing::last_said(&app)
     );
+    let before = doc.to_snapshot_v2();
+    for _ in 0..2 {
+        let _ = app.update(Message::Run("tool.planDimensions"));
+        assert!(app.session.prompt().options.iter().any(|option| option.label == "Güncelle"));
+        let _ = app.submit_line("");
+        let refreshed = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        assert_eq!(refreshed.uids, before.uids);
+        assert_eq!(refreshed.entities, before.entities);
+        assert_eq!(refreshed.dimension_sets, before.dimension_sets);
+    }
+    let _ = app.update(Message::Run("tool.planDimensions"));
+    let _ = app.submit_line("T");
+    let _ = app.submit_line("");
+    assert_eq!(dims(&app), 2 * written);
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(dims(&app), written, "one undo takes the separate set");
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(dims(&app), 0, "one undo takes them all");
 }

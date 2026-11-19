@@ -1117,6 +1117,7 @@ pub struct ScheduleTool {
     /// The plan's table at the origin, made again when an option changes.
     table: Option<kentos_commands::TableEntity>,
     problem: Option<String>,
+    empty_units: Option<String>,
     hover: Option<Vec2>,
     ghost: Preview,
     /// Placed: the tool leaves, as Tablo ekle's placement does.
@@ -1160,6 +1161,7 @@ impl ScheduleTool {
             active_level: false,
             table: None,
             problem: None,
+            empty_units: None,
             hover: None,
             ghost: Preview::default(),
             done: false,
@@ -1208,12 +1210,19 @@ impl ScheduleTool {
     fn plan(&mut self, cx: &Context<'_>) {
         self.table = None;
         self.problem = None;
+        self.empty_units = None;
         match plan_words(schedules_create::plan_in(
             cx.doc,
             &self.input_at(Vec2::new(0.0, 0.0), cx),
         )) {
             Ok(p) => {
                 if let Entity::Table(t) = p.table {
+                    if let Some(kentos_commands::TableSource::Schedule {
+                        of: ScheduleOf::Units, units, filter, by_level, ..
+                    }) = &t.source && units.iter().all(Vec::is_empty)
+                    {
+                        self.empty_units = Some(cx.doc.units_schedule_empty_note(filter.as_ref(), *by_level));
+                    }
                     self.table = Some(t);
                 }
             }
@@ -1285,6 +1294,10 @@ impl ScheduleTool {
             } else {
                 String::new()
             };
+            if let Some(note) = &self.empty_units {
+                cx.say(Level::Warn, format!("{} yerleştirildi. {note}", self.preset.label()));
+                return;
+            }
             cx.say(
                 Level::Success,
                 format!(
@@ -1370,7 +1383,20 @@ impl Tool for ScheduleTool {
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.plan(cx);
+        if let Some(note) = &self.empty_units {
+            cx.say(Level::Warn, note.clone());
+        }
         Flow::Stay
+    }
+
+    fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        if key != "B" || self.empty_units.is_none() {
+            return Vec::new();
+        }
+        vec![OptionChoice {
+            label: "Bina programını aç".into(), typed: "program".into(),
+            command: Some("arch.program"), icon: None, preview: None, checked: false,
+        }]
     }
 
     fn accepts_points(&self) -> bool {
@@ -1384,8 +1410,12 @@ impl Tool for ScheduleTool {
 
     fn prompt(&self) -> Prompt {
         let on = |b: bool| if b { "Açık" } else { "Kapalı" }.to_owned();
-        Prompt::new(self.preset.label(), "çizelgenin sol üst köşesine tıklayın")
-            .option_with("Tür", "T", self.preset.label().to_owned())
+        let mut prompt = Prompt::new(self.preset.label(), "çizelgenin sol üst köşesine tıklayın");
+        if self.empty_units.is_some() {
+            prompt = Prompt::new(self.preset.label(), "uyarı içeren cetveli yerleştirin")
+                .option("Bölüm bağla", "B");
+        }
+        prompt.option_with("Tür", "T", self.preset.label().to_owned())
             .option_with("Grup", "G", on(self.group))
             .option_with("Toplam", "O", on(self.total))
             .option_with("Sırala", "S", on(self.sorted))
@@ -1437,7 +1467,7 @@ impl Tool for ScheduleTool {
 
     fn preview(&self, _format: &Format) -> Preview {
         let mut out = self.ghost.clone();
-        if let (Some(why), Some(at)) = (&self.problem, self.hover)
+        if let (Some(why), Some(at)) = (self.problem.as_ref().or(self.empty_units.as_ref()), self.hover)
             && !why.is_empty()
         {
             out.tag = Some(Tag {

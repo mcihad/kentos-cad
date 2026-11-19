@@ -44,6 +44,29 @@ fn inserts(app: &App) -> usize {
 
 #[cfg(unix)]
 #[test]
+fn the_joinery_list_explains_missing_codes_and_can_assign_them_in_one_step() {
+    let (mut app, _dir) = crate::acceptance_flat_tests::opened("dograma-kodlari-ve-liste");
+    let _ = crate::acceptance_flat_tests::drawn(&mut app);
+    let _ = app.update(Message::Run("tool.joineryList"));
+    let coverage = app.document.as_ref().unwrap().model.joinery_coverage();
+    assert_eq!((coverage.total, coverage.coded, coverage.listed), (10, 0, 10));
+    let _ = app.submit_line("30,0");
+    assert_eq!(inserts(&app), 1);
+    assert!(words(&app).iter().any(|line| line.contains("10 kod bekliyor")));
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(inserts(&app), 0);
+    let _ = app.update(Message::Run("tool.joineryList"));
+    let _ = app.submit_line("K");
+    let _ = app.submit_line("30,0");
+    assert_eq!(inserts(&app), 1);
+    assert_eq!(app.document.as_ref().unwrap().model.joinery_coverage().coded, 10);
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(inserts(&app), 0);
+    assert_eq!(app.document.as_ref().unwrap().model.joinery_coverage(), coverage);
+}
+
+#[cfg(unix)]
+#[test]
 fn the_apartment_s_joinery_list_draws_each_type_and_follows_the_drawing() {
     let (mut app, _dir) = crate::acceptance_flat_tests::opened("dograma-listesi");
     let _ = crate::acceptance_flat_tests::drawn(&mut app);

@@ -993,6 +993,48 @@ pub mod create {
             Err(e) => e.into(),
         }
     }
+    /// Reconcile the façade recipes owned by a generated architectural plan.
+    /// Stable IDs leave hand-placed façade recipes outside the operation.
+    pub fn refresh_plan_facades(
+        doc: &mut Document,
+        input: &DimensionSetsCreateInput,
+        ids: &[DimensionSetId; 4],
+    ) -> CommandResult<usize> {
+        let sets = match create_recipes(doc, input) {
+            Ok(sets) => sets,
+            Err(error) => return error.into(),
+        };
+        let count = sets.len();
+        let result = doc.transact("Dış ölçü dizilerini güncelle", |doc| {
+            for (mut recipe, &id) in sets.into_iter().zip(ids) {
+                recipe.id = id;
+                if let Some(existing) = doc.dimension_set(id) {
+                    if doc.layers().is_locked(&existing.layer_id) {
+                        return Err(kentos_domain::Refusal("Plan ölçülerinin katmanı kilitli.".into()));
+                    }
+                    recipe.layer_id.clone_from(&existing.layer_id);
+                    if recipe.span.as_ref().map(|span| span.direction)
+                        == existing.span.as_ref().map(|span| span.direction)
+                    {
+                        recipe.at = existing.at;
+                        recipe.row_places = existing.row_places.clone();
+                        recipe.row_places.retain(|place| recipe.rows.contains(&place.row));
+                    }
+                    recipe.suppressed = existing.suppressed.clone();
+                    recipe.suppressed.retain(|span| recipe.rows.contains(&span.row));
+                    doc.update_dimension_set(recipe)?;
+                } else {
+                    doc.add_dimension_set(recipe)?;
+                }
+            }
+            Ok::<_, kentos_domain::Refusal>(())
+        });
+        match result {
+            Ok(()) => visible_result(doc, &input.layer_id, count),
+            Err(error) => written_error(error.to_string()).into(),
+        }
+    }
+
     pub fn execute(
         cx: &mut ExecutionContext<'_>,
         input: DimensionSetsCreateInput,

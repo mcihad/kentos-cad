@@ -609,6 +609,27 @@ impl Document {
         self.schedule_rows_by(of, columns, filter, sort, group, total, false)
     }
 
+    /// An empty fixtures/room schedule can be a real zero. A units table needs
+    /// a building program and, for per-storey areas, rooms linked to its units.
+    pub fn units_schedule_empty_note(
+        &self,
+        filter: Option<&ScheduleFilter>,
+        by_level: bool,
+    ) -> String {
+        let program = self.program();
+        let rooms = self.entities().filter(|entity| {
+            matches!(entity, Entity::Space(room) if !room.space.void)
+                && self.schedule_takes(entity, filter)
+        }).count();
+        if program.units.is_empty() {
+            format!("Hesaplanamadı · {rooms} mahal · Bina programında bölüm tanımlayın.")
+        } else if by_level && rooms > 0 {
+            format!("Hesaplanamadı · {rooms} mahal · Mahalleri Bina programındaki bölümlere bağlayın.")
+        } else {
+            "Kapsam dışı · Seçilen kat veya süzgeçte bölüm yok.".to_owned()
+        }
+    }
+
     /// [`Self::schedule_rows`], a units schedule's storey by storey when `by_level` (docs/adr/8029).
     #[allow(clippy::too_many_arguments)]
     pub fn schedule_rows_by(
@@ -800,6 +821,25 @@ impl Document {
             merges: Vec::new(),
             numbers: vec![vec![None; width]],
         };
+        if units && rows.is_empty() {
+            let mut note = vec![String::new(); width];
+            if let Some(first) = note.first_mut() {
+                *first = self.units_schedule_empty_note(filter, by_level);
+            }
+            out.rows.push(note);
+            out.members.push(Vec::new());
+            out.units.push(Vec::new());
+            out.numbers.push(vec![None; width]);
+            out.styles.push(CellStyle {
+                range: CellRange { row: 1, col: 0, rows: 1, cols: width as u32 },
+                align: Some(TableAlign::Left), bold: Some(true), color: Some("#a55019".into()),
+                fill: None, decimals: None,
+            });
+            if width > 1 {
+                out.merges.push(CellRange { row: 1, col: 0, rows: 1, cols: width as u32 });
+            }
+            return out;
+        }
         let numbers = |values: &[Option<ArchValue>]| -> Vec<Option<f64>> {
             values.iter().map(|v| v.as_ref().and_then(|v| self.arch_value_number(v))).collect()
         };

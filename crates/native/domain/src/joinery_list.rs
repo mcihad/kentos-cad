@@ -366,6 +366,22 @@ fn cells(r: &JoineryRow) -> [String; 5] {
     ]
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Coverage {
+    pub total: usize,
+    pub coded: usize,
+    pub listed: usize,
+}
+
+impl Coverage {
+    pub fn caption(self) -> String {
+        format!(
+            "Tüm çizim · {} kapı/pencere · {} kodlu · {} kod bekliyor",
+            self.total, self.coded, self.total - self.coded
+        )
+    }
+}
+
 impl Document {
     /// The door and window types the list shows: those openings follow, by their joinery codes (types without one
     /// after, by name), each with how many openings follow it.
@@ -402,21 +418,48 @@ impl Document {
         rows
     }
 
+    pub fn joinery_coverage(&self) -> Coverage {
+        let mut coverage = Coverage::default();
+        for opening in self.entities().filter_map(|e| match e {
+            Entity::Opening(o)
+                if matches!(o.opening.form, OpeningForm::Door | OpeningForm::Window) => Some(&o.opening),
+            _ => None,
+        }) {
+            coverage.total += 1;
+            if opening.follows_type()
+                && let Some(kind) = self.opening_types().iter()
+                    .find(|kind| Some(kind.id.as_str()) == opening.style.as_deref())
+            {
+                coverage.listed += 1;
+                coverage.coded += usize::from(kind.code.is_some());
+            }
+        }
+        coverage
+    }
+
     /// The joinery list's block as the drawing's types give it (docs/adr/8038 §6): its top left at its base point,
     /// bands of six types one under another.
     pub fn joinery_list_block(&self) -> BlockDefinition {
         let rows = self.joinery_rows();
         let mut s = Shapes::default();
         let mut top = 0.0_f64;
-        if rows.is_empty() {
-            s.rect(0.0, 0.0, LABEL_W + MIN_COL * 2.0, -HEAD_ROW);
+        let coverage = self.joinery_coverage();
+        if coverage.coded < coverage.total || rows.is_empty() {
+            let caption = if coverage.total == 0 {
+                "Doğrama listesi: çizimde kapı veya pencere yok.".to_owned()
+            } else {
+                format!("{} · {} listede", coverage.caption(), coverage.listed)
+            };
+            let width = (LABEL_W + MIN_COL * 2.0).max(width_of(&caption, TEXT) + 2.0 * PAD);
+            s.rect(0.0, 0.0, width, -HEAD_ROW);
             s.text(
                 (PAD, -HEAD_ROW / 2.0),
-                "Doğrama listesi: çizimde tipe bağlı kapı ya da pencere yok.",
+                &caption,
                 TEXT,
                 "middleLeft",
                 0.0,
             );
+            top -= HEAD_ROW;
         }
         for band in rows.chunks(PER_BAND) {
             let texts: Vec<[String; 5]> = band.iter().map(cells).collect();
