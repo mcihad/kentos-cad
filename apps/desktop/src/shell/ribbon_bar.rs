@@ -122,7 +122,9 @@ pub(crate) fn split_entry(e: &Entry) -> SplitEntry<'static> {
 /// and runs it; a command not on the desktop is off.
 /// A split button's list: its entries, each off as its command is (`off`, [`crate::app::App::rows_off`]), the reason
 /// under the first that gives it.
-pub(crate) fn split_list(key: &'static str, entries: &[Entry], off: &[Option<String>]) -> Menu<Message> {
+pub(crate) fn split_list(
+    key: &'static str, entries: &[Entry], off: &[Option<String>], current: Option<usize>,
+) -> Menu<Message> {
     let plan_entries: Vec<SplitEntry> = entries.iter().map(split_entry).collect();
     let (header, rows) = plan::split_menu(&plan_entries);
     let menu = match header {
@@ -147,7 +149,10 @@ pub(crate) fn split_list(key: &'static str, entries: &[Entry], off: &[Option<Str
         let icon = row
             .icon
             .map_or(command.icon, |name| crate::icons::from_web(Some(name)));
-        let menu = menu.item(row.label, run).icon(icon);
+        let menu = match current {
+            Some(index) => menu.radio(row.label, k == index, run),
+            None => menu.item(row.label, run),
+        }.icon(icon);
         let menu = match row.hint {
             Some(hint) => menu.hint(hint),
             None => menu,
@@ -202,7 +207,7 @@ mod tests {
         assert!(off.iter().all(Option::is_some), "{off:?}");
         let why = off[0].clone().unwrap_or_default();
         assert!(why.contains("nokta katmanı"), "{why}");
-        let menu = format!("{:?}", super::split_list(key, &entries, &off));
+        let menu = format!("{:?}", super::split_list(key, &entries, &off, None));
         assert!(!menu.contains("SplitChosen"), "no row runs: {menu}");
         assert_eq!(menu.matches(why.as_str()).count(), 1, "the reason once: {menu}");
         // Düzgün çokgen, on Çizim's own list, is off too.

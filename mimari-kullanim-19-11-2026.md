@@ -4,6 +4,8 @@
 
 Duvar stili, kalınlık girişi ve ajan bağlantısı için [düzeltme sonrası doğrulamaya](#duzeltme-sonrasi) bakın.
 
+Numaralı bulguların güncel durumunu [düzeltme ve deneme kayıtlarında](#sirali-duzeltmeler) bulabilirsiniz.
+
 ## Deneme ortamı ve kanıt
 
 macOS üzerinde 18 Kasım 21.52 tarihli yerel `target/release/kentos-cad` kullanıldı. Zaten çalışan çıplak yürütülebilir dosya masaüstü denetiminde seçilemediği için aynı ikili, projenin macOS paketleme aracıyla geçici bir Mimari test penceresinde açıldı. Yeni proje metre, yerel koordinatlar ve 1:100 çizim ölçeğiyle başladı. Görsel gözlemler bu ikiliye ait. İncelenen kaynak ağacının başlangıç revizyonu `0bd37f998`. Derlemenin bu revizyona birebir karşılık geldiği doğrulanmadı.
@@ -335,3 +337,45 @@ Metrekare cetveli ve bölüm kapsamlı çizelgeler sonuç üretilemediğinde tab
 İki mahalli ve bölüm tanımı olmayan Mimari Geometri QA çiziminde uyarıyı önce komut isteminde gördüm. Menüden Bina programını açınca “Programda bölüm yok” açıklamasını okudum. Cetveli çizime yerleştirip yakınlaştırdığımda tablonun gövdesinde **Hesaplanamadı · 2 mahal** göründü. [Komut istemi](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cetvel-eksik-durum.png) · [Bina programına geçiş](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cetvel-bina-programi.png) · [Çizime yerleşen uyarı](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cetvel-eksik-yakin.png)
 
 Bölümlü karşılaştırma çiziminde araç normal yerleştirme istemi açtı. Cetvel yerleştirildi, kaydedilen KCAD dosyası 10 nesneyle doğrulandı. [Bölümlü çizim](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cetvel-dolu-sonuc.png)
+
+### 4. Hazır doğrama türü ve proje tipi
+
+Tip ve ölçüler bölümünde **Hazır tür** ve **Proje tipi** ayrı satırlar. Mevcut proje tipi seçilebiliyor. KentOS hazır türünü seçmek, türü projeye ekliyor ve açıklığı aynı geri alma adımında bağlıyor.
+
+Kesit binasındaki K01 kapısının proje tipi atanmamıştı. Açılır listeden **Kapı 90 · Projeye al ve bağla** seçtim. Panel Kapı 90, 1 · güncel ve 1 açıklık · tüm çizim gösterdi. Modelde kapi-90 tip kimliği ve sürüm 1 okundu. Yerel istisnalar da aynı bölümde. [Bağsız kapı](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/tip-son-bagsiz.png) · [Bağlı kapı](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/tip-son-bagli.png)
+
+### 5. Pafta setinde kesit ve görünüş güncelliği
+
+Pafta seti kesit, cephe ve iç görünüşlerin durumlarını listeliyor. Eski kesit ve cepheyi gösteren sabit pafta çerçeveleri ilgili pafta satırında işaretleniyor. İç görünüşün üretim sürümü okunuyor. **Eski görünüşleri yenile** ilgili türetme komutlarını çalıştırıyor. Elle değiştirilmiş iç görünüşler toplu işlemde atlanıyor. Yenileme kesit ve görünüş bloklarının içini modelden yeniden üretiyor.
+
+B-B kesitini ürettim. Kestiği giriş kapısının yüksekliğini 2,25 m yaptım. Pafta Seti'nde B-B “Yenileme bekliyor”, A-A “Henüz çıkarılmadı” gösterdi. Yenileme düğmesine basınca B-B “Güncel” oldu. Bu dosyada pafta bulunmadığından ekran görüntüleri görünüş listesindeki durumu kanıtlıyor. [Yenileme öncesi](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/pafta-eski-kesit.png) · [Yenileme sonrası](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/pafta-kesit-guncel.png)
+
+### 6. Araç ailesinin başlığı
+
+Mimari araç ailesi son seçilen işlemin adını ve simgesini ana düğmede gösteriyor. Açılır menüde etkin öğe işaretli. Klavye ipucundaki komut adı da seçilen öğeyle eşleşiyor.
+
+Canlı şeritte Aks ağı adı ve simgesi göründü. Oku açınca Aks ağı satırı işaretliydi. Menüden Aks'ı seçtim. Ana düğme Aks oldu ve komut satırı tek aksın başlangıcını istedi. [Etkin Aks ağı menüde](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/serit-aks-isaretli.png) · [Tek aksın işlem istemi](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/serit-tek-aks-komut.png)
+
+### 7. Mimari şeridin yoğunluğu ve Başvurular yolu
+
+IFC modeli ve Ruhsat takımı Proje grubunun açılır menüsüne taşındı. Oda, Duvar, Kapı ve Pencere görünür. Mimari şerit 30 düğme içeriyor. Şerit testleri 1100 ve 1440 mantıksal pikselde 13 ve 18 yazı boyutlarıyla geçti.
+
+Görünüm işareti bulunmayan çizimde Başvurular penceresi katalogdan okuduğu **Mimari › Belgele › İşaret** yolunu yazdı. [Mimari şerit](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/serit-otuz.png) · [Başvurular boş durumu](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/basvurular-katalog-yolu.png)
+
+### 8. L ve T biçimli çatı yardımı
+
+Çatı komutunun açıklaması L ve T saçaklardaki dere geometrisini ve geçersiz sınırın bildirilmesini tarif ediyor. Köşe çiziminde imleç son köşenin üzerinde durduğunda aynı noktanın önizlemeye ikinci kez eklenmesi de engellendi.
+
+Gerçek pencerede **Çatı → Köşeleri çiz → Kırma** ile sekiz köşeli T saçak oluşturdum. Enter ile modelde sekiz saçak noktası ve her kenarda %33 eğim kaydedildi. T biçimli çatı 79 nesneli KCAD dosyasında doğrulandı. T çatısını kaydedip yeniden açtığımda sekiz köşe ve %33 eğimler korundu. Son derlemede L saçak çizdim. Son noktanın üzerinde kırma çatı önizlemesi +3,59 m mahyayı gösterdi ve Enter ile altı köşeli çatı oluştu. İki çatının bulunduğu kaydedilmiş dosya 80 nesneyle doğrulandı. [T çatının üretim sonucu](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cati-t-sonuc.png) · [T çatının yeniden açılışı](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cati-t-yeniden-acildi.png) · [L çatının son köşe önizlemesi](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/cati-l-son-onizleme.png)
+
+### 9. Ekran okuyucu desteği · Açık
+
+F6 ile Mimari şeridin klavye ipuçları gerçek pencerede göründü. macOS erişilebilirlik sorgusunda pencere ve sistem düğmeleri göründü. Oda ve Kapı için yerel erişilebilirlik öğesi dönmedi. KentOS'un kullandığı Iced 0.14 bağımlılık ağacı AccessKit sunmuyor. Şerit ve sahne için ekran okuyucu desteği, yerel erişilebilirlik ağacının widget durumu ve klavye odağıyla eşlenmesini gerektiriyor. [Klavye ipuçları](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/erisim-klavye-serit.png) · [Iced erişilebilirlik takibi](https://github.com/iced-rs/iced/issues/552)
+
+### 10. Farklı kaydet sonrası etkin dosya adı
+
+Dosya sekmesinden kapilar.kcad çizimini kesit-ikinci-dosya.kcad olarak kaydettim. Pencere başlığı ve şerit yeni dosya adını gösterdi. Çizim panelinde “Proje adı” Kesit binası olarak kaldı. “Dosya” ve “Dosya yolu” ayrı satırlarda göründü. [Pencere başlığı](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/dosya-yeni-ad.png) · [Proje adı, dosya adı ve yol](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/dosya-proje-yol.png)
+
+31 gerçek pencere görüntüsü ve dört deneme çizimi depo dışında arşivlendi. [Doğrulama arşivi](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/mimari-kullanim-19-11-2026/rapor-devam/mimari-rapor-duzeltmeleri.zip)
+
+**Otomatik doğrulama.** Son hedefli koşularda 24 test geçti. Plan ölçülerinin kalıcı kimlikleri ve tek geri alma, doğrama listesi ve kodları, pafta yayın denetimi, kapı tipleri, şerit yerleşimi, çizim özeti ve ajan bağlantısı sınandı. Daha önceki geniş koşuda 2706 test geçti. Bu çalışmayla ilgili üç test ve kısa Unix soket yolu gerektiren bağlantı testi son hedefli koşuda geçti. Geniş koşudaki Dikme aracının mevcut Yükseklik harfi ve masaüstü lib.rs satır sınırı testleri açık.

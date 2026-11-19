@@ -62,7 +62,7 @@ fn nothing_selected_shows_the_drawing() {
     let panel = app.properties_panel(doc);
     assert!(matches!(panel.summary, Summary::Empty));
     assert_eq!(panel.meta, None);
-    assert_eq!(value(&app, "Çizim", "Dosya"), "Etkileşim izi: nesneler");
+    assert_eq!(value(&app, "Çizim", "Proje adı"), "Etkileşim izi: nesneler");
     assert_eq!(value(&app, "Çizim", "SRID"), "EPSG:5256");
     assert_eq!(value(&app, "Çizim", "Çizim ölçeği"), "1:1000");
     assert_eq!(value(&app, "Çizim", "Nesne sayısı"), "7");

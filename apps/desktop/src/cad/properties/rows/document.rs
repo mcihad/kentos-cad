@@ -10,7 +10,13 @@ pub(super) fn document_section(doc: &Document, crs: bool) -> Section {
     let active = layers
         .get(layers.active())
         .map_or_else(|| "—".to_owned(), |n| layer_path(layers, &n.id));
-    let mut rows = vec![Row::text("Dosya", doc.name())];
+    let mut rows = vec![Row::text("Proje adı", doc.name())];
+    if let Some(name) = doc.file_name() {
+        rows.push(Row::text("Dosya", name.into_owned()));
+    }
+    if let Some(path) = &doc.path {
+        rows.push(Row::text("Dosya yolu", path.display().to_string()));
+    }
     if crs {
         rows.push(Row::text("Koordinat sistemi", crate::crs::project_name(s)));
         rows.push(Row::figure("SRID", crate::crs::project_code(s)));

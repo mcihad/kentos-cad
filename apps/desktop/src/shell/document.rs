@@ -210,6 +210,14 @@ impl Document {
         self.model.name()
     }
 
+    pub fn file_name(&self) -> Option<std::borrow::Cow<'_, str>> {
+        self.path.as_deref()?.file_name().map(|name| name.to_string_lossy())
+    }
+
+    pub(crate) fn display_name(&self) -> std::borrow::Cow<'_, str> {
+        self.file_name().unwrap_or_else(|| std::borrow::Cow::Borrowed(self.name()))
+    }
+
     /// Whether the drawing has changes no save has written.
     pub fn dirty(&self) -> bool {
         self.model.is_dirty()

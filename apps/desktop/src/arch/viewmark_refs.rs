@@ -264,7 +264,22 @@ impl App {
         };
         let mut marks = Column::new().spacing(6).push(label::strong("İşaretler"));
         if w.refs.marks.is_empty() {
-            marks = marks.push(label::caption("Çizimde görünüm işareti yok: Mimari › Görünüm'den Kesit, Görünüş ya da Detay çizin."));
+            let path = crate::catalog::catalog().tabs_for(kentos_commands::Workspace::Cad, Some(kentos_commands::CadWork::Architecture))
+                .find(|tab| tab.id == "arch")
+                .and_then(|tab| tab.panels.iter().find_map(|panel| {
+                    panel.items.iter().find_map(|item| match item {
+                        crate::catalog::Item::Split { entries, .. }
+                            if entries.iter().any(|entry| entry.id == "tool.viewSection") =>
+                        {
+                            Some(format!("{} › {} › {}", tab.label, panel.label, entries[0].title))
+                        }
+                        _ => None,
+                    })
+                }))
+                .unwrap_or_else(|| "Komut ara".to_owned());
+            marks = marks.push(label::caption(format!(
+                "Çizimde görünüm işareti yok. {path} üzerinden Kesit, Görünüş ya da Detay çizin."
+            )));
         }
         for (k, m) in w.refs.marks.iter().enumerate() {
             let target = w

@@ -296,8 +296,11 @@ impl App {
                     return;
                 };
                 if usable(self, top.id) {
-                    let (_, aria, _) =
+                    let (_, mut aria, _) =
                         crate::ribbon_plan::split_face(&crate::ribbon_bar::split_entry(top));
+                    if (*key).starts_with("arch") {
+                        aria = top.label.trim_end_matches('…').to_owned();
+                    }
                     let run = match top.option {
                         Some(option) => Message::RunMethod {
                             id: top.id,

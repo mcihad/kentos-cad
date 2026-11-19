@@ -313,15 +313,20 @@ impl App {
 
     /// Tipten ayır, Tipe uygula, Tipe döndür on the selected openings through `cad.openings.edit`, one undo step.
     pub(crate) fn opening_type_action(&mut self, operation: OpeningsOperation) {
-        let uids: Vec<String> = self
-            .selected_openings()
-            .into_iter()
-            .filter(|(_, s)| s.is_some())
-            .map(|(u, _)| u)
-            .collect();
+        let Some(doc) = self.document.as_ref() else { return };
+        let uids: Vec<String> = self.selection.ids().iter().filter_map(|&slot| {
+            let Entity::Opening(opening) = doc.model.get(slot)? else { return None };
+            let fields = &opening.opening;
+            if !fields.follows_type() || !fields.style.as_deref().is_some_and(|id| {
+                doc.model.opening_types().iter().any(|kind| kind.id == id)
+            }) {
+                return None;
+            }
+            doc.model.uid(slot).map(|uid| uid.to_string())
+        }).collect();
         if uids.is_empty() {
             self.warn(
-                "Seçimde tipi izleyen açıklık yok; bir tipin açıklığını seçip yeniden deneyin.",
+                "Seçimde proje tipini izleyen açıklık yok. Öznitelikler → Proje tipi listesinden tip atayın.",
             );
             return;
         }

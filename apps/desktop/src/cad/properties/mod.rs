@@ -113,6 +113,7 @@ pub enum Event {
     WallKeep(kentos_commands::WallReference),
     /// An opening's own field chosen, its type replaced (docs/adr/0341 §5): written through `cad.openings.edit`.
     Opening(Slot, kentos_commands::OpeningsOperation),
+    OpeningTakePreset(Slot, String),
     /// A component's or a slab's project material chosen (docs/adr/0785): written through `cad.materials.edit`.
     Material(kentos_commands::MaterialsOperation),
     /// A room module's action on the object's instance (docs/adr/0775 §3): written through `cad.modules.edit`.

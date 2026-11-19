@@ -1184,7 +1184,7 @@ impl App {
                     doc.name(),
                     source.workspace
                 ),
-                None => format!("{} — {}{dot}", program.title(), doc.name()),
+                None => format!("{} — {}{dot}", program.title(), doc.display_name()),
             };
         }
         match &self.document {
@@ -1198,7 +1198,7 @@ impl App {
                 ),
                 None => format!(
                     "{}{} — KentOS CAD",
-                    doc.name(),
+                    doc.display_name(),
                     if doc.dirty() { " •" } else { "" }
                 ),
             },

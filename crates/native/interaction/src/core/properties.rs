@@ -315,6 +315,47 @@ pub fn edit_opening(doc: &mut Document, slot: Slot, operation: kentos_commands::
     said(kentos_native_application::openings_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// Take a KentOS preset into the project and bind the selected opening to
+/// it together. A clearance or lock refusal rolls back both writes.
+pub fn take_opening_type(doc: &mut Document, slot: Slot, preset: &str) -> Vec<String> {
+    use kentos_commands::{OpeningTypesEdit, OpeningTypesOperation, OpeningsEdit, OpeningsOperation};
+    let Some(uid) = doc.uid(slot) else { return Vec::new() };
+    let Some(ready) = kentos_commands::builtin_opening_types().into_iter().find(|kind| kind.id == preset) else {
+        return vec!["Hazır tür bulunamadı.".into()];
+    };
+    let name = std::iter::once(ready.name.clone())
+        .chain((2..).map(|i| format!("{} {i}", ready.name)))
+        .find(|name| !doc.opening_types().iter().any(|kind| kind.name.to_lowercase() == name.to_lowercase()))
+        .expect("a free opening type name");
+    let group = doc.begin_group("Proje tipi ata");
+    let made = kentos_native_application::opening_types_edit::execute(
+        &mut ExecutionContext::new(doc), OpeningTypesEdit {
+            operation: OpeningTypesOperation::Define {
+                name: name.clone(), id: None, copy_of: Some(preset.to_owned()),
+                form: None, change: Default::default(),
+            },
+            expected_revision: None, on_refused: Default::default(),
+        },
+    );
+    if !matches!(made, CommandResult::Completed { .. }) {
+        doc.cancel_group(group);
+        return said(made);
+    }
+    let bound = kentos_native_application::openings_edit::execute(
+        &mut ExecutionContext::new(doc), OpeningsEdit {
+            uids: vec![uid.to_string()],
+            operation: OpeningsOperation::ReplaceType { from: None, to: name, level: None },
+            expected_revision: None,
+        },
+    );
+    if matches!(bound, CommandResult::Completed { .. }) {
+        doc.end_group(group);
+    } else {
+        doc.cancel_group(group);
+    }
+    said(bound)
+}
+
 /// A component's or a slab's project material from Öznitelikler (docs/adr/0785): `operation` through
 /// `cad.materials.edit`; what to say.
 pub fn edit_material(doc: &mut Document, operation: kentos_commands::MaterialsOperation) -> Vec<String> {

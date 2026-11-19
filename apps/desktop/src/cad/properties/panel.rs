@@ -776,6 +776,7 @@ impl App {
             }
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
+            Event::OpeningTakePreset(slot, id) => properties::take_opening_type(model, slot, &id),
             Event::Module(op) => properties::edit_module(model, op),
             Event::Elevation(op) => properties::edit_elevation(model, op),
             Event::Section(op) => properties::edit_section(model, op),

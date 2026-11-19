@@ -45,7 +45,7 @@ fn inserts(app: &App) -> usize {
 #[cfg(unix)]
 #[test]
 fn the_joinery_list_explains_missing_codes_and_can_assign_them_in_one_step() {
-    let (mut app, _dir) = crate::acceptance_flat_tests::opened("dograma-kodlari-ve-liste");
+    let (mut app, _dir) = crate::acceptance_flat_tests::opened("dograma-kod");
     let _ = crate::acceptance_flat_tests::drawn(&mut app);
     let _ = app.update(Message::Run("tool.joineryList"));
     let coverage = app.document.as_ref().unwrap().model.joinery_coverage();

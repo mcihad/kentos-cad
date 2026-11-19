@@ -139,7 +139,7 @@ impl App {
                 .cloud_source()
                 .map_or(String::new(), |s| format!("{} › ", s.workspace));
             (
-                format!("{place}{}", doc.name()),
+                format!("{place}{}", doc.display_name()),
                 doc.dirty(),
                 (
                     crate::crs::project_name(doc.settings()),
@@ -467,8 +467,14 @@ impl App {
                 // one of it shown by Komut ara outlines the split.
                 let running = ids.iter().any(|id| self.running(id));
                 let flash = self.ribbon_flash.is_some_and(|id| ids.contains(&id));
-                let (label, aria, icon) =
+                let (mut label, mut aria, icon) =
                     ribbon_plan::split_face(&crate::ribbon_bar::split_entry(top));
+                let active_entry = (*key).starts_with("arch");
+                if active_entry {
+                    label = top.label.trim_end_matches('…').to_owned();
+                    aria = label.clone();
+                }
+                let current = active_entry.then(|| entries.iter().position(|e| std::ptr::eq(e, top))).flatten();
                 // A method with its own drawing shows it (Ölçülendirme's kinds); else the command's.
                 let icon = icon.map_or(command.icon, |name| crate::icons::from_web(Some(name)));
                 let face = sized(*size, icon, label);
@@ -522,7 +528,7 @@ impl App {
                 if off.iter().all(Option::is_some) && !runs {
                     return Some(button);
                 }
-                let menu = move || crate::ribbon_bar::split_list(key, &entries, &off);
+                let menu = move || crate::ribbon_bar::split_list(key, &entries, &off, current);
                 Some(with_family(button, &ids, command.title, menu))
             }
             Item::Menu {

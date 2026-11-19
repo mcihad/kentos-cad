@@ -232,7 +232,12 @@ impl RoofTool {
         let at = self.hover?;
         if self.draws() {
             let mut c = self.pts.clone();
-            c.push(at);
+            // A clicked corner remains under the cursor until it moves.
+            if !c.last().is_some_and(|last| *last == at)
+                && !c.first().is_some_and(|first| *first == at)
+            {
+                c.push(at);
+            }
             (c.len() >= 3).then_some((None, Some(c)))
         } else {
             Some((Some(at), None))

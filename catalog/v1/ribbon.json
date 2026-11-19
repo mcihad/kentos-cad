@@ -2502,23 +2502,17 @@
         "size": "small"
        },
        {
-        "command": "ifc.view",
-        "size": "small"
-       },
-       {
         "command": "arch.settings",
         "size": "small"
        },
        {
         "command": "arch.wallStyles",
         "size": "small"
-       },
-       {
-        "command": "arch.permitSet",
-        "size": "small"
        }
       ],
       "overflow": [
+       "arch.permitSet",
+       "ifc.view",
        "arch.program",
        "tool.siteParcel",
        "tool.escapeRoutes",

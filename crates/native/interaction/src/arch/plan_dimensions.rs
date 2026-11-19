@@ -700,7 +700,7 @@ impl Tool for PlanDimensions {
         Prompt::new(LABEL, "ölçü takımının önizlemesi")
             .option(self.action_label(), "Enter")
             .option_with(
-                "Takım",
+                "Ölçü takımı",
                 "T",
                 if self.separate {
                     "Ayrı takım"

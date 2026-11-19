@@ -4,7 +4,12 @@
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_commands::{AffectReason, SheetsSet, SheetsSetResult};
+use kentos_commands::{
+    AffectReason, BuildingSectionRow, BuildingSectionState, BuildingSectionsEdit,
+    BuildingSectionsOperation, CommandResult, ElevationRow, ElevationState, ElevationsEdit,
+    ElevationsOperation, SheetsSet, SheetsSetResult,
+};
+use kentos_native_application::{ExecutionContext, elevations_edit, elevations_query, sections_edit, sections_query};
 use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
@@ -23,11 +28,15 @@ pub struct Window {
     pub set: SheetsSetResult,
     /// The selected objects the affected sheets are of; none: no selection.
     pub chosen: usize,
+    sections: Vec<BuildingSectionRow>,
+    interiors: Vec<ElevationRow>,
+    stale_sheets: Vec<(String, String)>,
 }
 
 #[derive(Clone, Debug)]
 pub enum Event {
     Go(usize),
+    RefreshDrawings,
     Close,
 }
 
@@ -41,6 +50,15 @@ fn reason_words(r: AffectReason) -> &'static str {
         AffectReason::Table => "nesneyi okuyan tabloyu gösteriyor",
         AffectReason::Marked => "işaret ona bakıyor",
         AffectReason::Unknown => "zemini bilinmiyor",
+    }
+}
+
+fn refreshed<T>(result: CommandResult<T>) -> Result<(), String> {
+    match result {
+        CommandResult::Completed { .. } => Ok(()),
+        CommandResult::Failed { error } | CommandResult::NeedsInput { error }
+        | CommandResult::Conflict { error } => Err(error.message),
+        _ => Err("Yenileme tamamlanamadı.".into()),
     }
 }
 
@@ -66,6 +84,15 @@ impl App {
         match kentos_native_application::sheets_set::plan_in(&doc.model, &input) {
             kentos_commands::CommandResult::Completed { output, .. } => {
                 self.sheet_set = Some(Window {
+                    sections: sections_query::rows(&doc.model),
+                    interiors: match elevations_query::execute_in(&doc.model, &Default::default()) {
+                        CommandResult::Completed { output, .. } => output.elevations,
+                        _ => Vec::new(),
+                    },
+                    stale_sheets: sections_query::stale_on_sheets(
+                        &doc.model, self.sheets.book(),
+                        &output.sheets.iter().map(|sheet| sheet.id.clone()).collect::<Vec<_>>(),
+                    ),
                     set: output,
                     chosen,
                 });
@@ -83,12 +110,51 @@ impl App {
                 self.dialog = None;
                 return self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(k + 1)));
             }
+            Event::RefreshDrawings => self.refresh_sheet_drawings(),
             Event::Close => {
                 self.sheet_set = None;
                 self.dialog = None;
             }
         }
         Task::none()
+    }
+
+    fn refresh_sheet_drawings(&mut self) {
+        let (Some(doc), Some(window)) = (self.document.as_mut(), &self.sheet_set) else {
+            return;
+        };
+        let group = doc.model.begin_group("Pafta görünüşlerini yenile");
+        let mut changed = 0;
+        let mut failures = Vec::new();
+        let mut record = |name: &str, result: Result<(), String>| match result {
+            Ok(()) => changed += 1,
+            Err(error) => failures.push(format!("{name} · {error}")),
+        };
+        for section in sections_query::rows(&doc.model) {
+            let Some(mark) = section.mark.filter(|_| section.state == BuildingSectionState::Stale) else {
+                continue;
+            };
+            let result = sections_edit::execute(&mut ExecutionContext::new(&mut doc.model), BuildingSectionsEdit {
+                operation: BuildingSectionsOperation::Refresh { mark }, expected_revision: None,
+            });
+            record(&section.name, refreshed(result));
+        }
+        for layer in &window.interiors {
+            let Some(current) = elevations_query::row(&doc.model, &layer.layer) else { continue };
+            if current.state != ElevationState::Stale || !current.edited.is_empty() {
+                continue;
+            }
+            let result = elevations_edit::execute(&mut ExecutionContext::new(&mut doc.model), ElevationsEdit {
+                operation: ElevationsOperation::Refresh { layer: current.layer }, expected_revision: None,
+            });
+            record(&current.name, refreshed(result));
+        }
+        doc.model.end_group(group);
+        self.open_sheet_set();
+        for error in failures {
+            self.warn(error);
+        }
+        self.say(kentos_interaction::Level::Info, format!("{changed} görünüş yenilendi."));
     }
 
     pub(crate) fn sheet_set_view(&self) -> Element<'_, Message> {
@@ -134,6 +200,32 @@ impl App {
                 "Projede pafta yok: Mimari › Proje'den Mimari şablonu ile ya da pafta kipinde “+” ile pafta ekleyin.",
             ));
         }
+        if !w.sections.is_empty() || !w.interiors.is_empty() {
+            list = list.push(label::strong("Kesit ve görünüşler"));
+            if w.sections.iter().any(|section| section.state == BuildingSectionState::Stale) {
+                list = list.push(label::caption(
+                    "Yenileme kesit ve görünüş bloklarının içini yeniden çizer. Bağımsız pafta açıklamaları korunur.",
+                ));
+            }
+            for section in &w.sections {
+                let standing = match section.state {
+                    BuildingSectionState::Current => "Güncel",
+                    BuildingSectionState::Stale => "Yenileme bekliyor",
+                    BuildingSectionState::NotDrawn => "Henüz çıkarılmadı",
+                    BuildingSectionState::Gone => "Kaynak işareti eksik",
+                };
+                list = list.push(label::caption(format!("{} · {standing}", section.name)));
+            }
+            for interior in &w.interiors {
+                let standing = match interior.state {
+                    ElevationState::Current => "Güncel",
+                    ElevationState::Stale if !interior.edited.is_empty() => "Elle düzenlendi · toplu yenilemede atlanır",
+                    ElevationState::Stale => "Yenileme bekliyor",
+                    ElevationState::Gone => "Kaynak mahal eksik",
+                };
+                list = list.push(label::caption(format!("{} · {standing} · üretim sürümü {}", interior.name, interior.derived_at)));
+            }
+        }
         for series in &w.set.series {
             let head = if series.title.is_empty() {
                 series.series.clone()
@@ -170,6 +262,9 @@ impl App {
                     .spacing(2)
                     .push(label::body(s.name.clone()))
                     .push(label::caption(frames));
+                for (_, stale) in w.stale_sheets.iter().filter(|(sheet, _)| sheet == &s.id) {
+                    text = text.push(words::text_line(Kind::Warn, format!("Yenileme bekliyor · {stale}")));
+                }
                 if !hit.is_empty() {
                     let why: Vec<String> = hit
                         .iter()
@@ -217,8 +312,11 @@ impl App {
             .spacing(12)
             .push(words::summary(vec![line]))
             .push(iced::widget::scrollable(list).height(420.0));
+        let rebuild = w.sections.iter().any(|s| s.state == BuildingSectionState::Stale)
+            || w.interiors.iter().any(|e| e.state == ElevationState::Stale && e.edited.is_empty());
         Frame::new(TITLE)
             .push(body)
+            .action(words::secondary("Eski görünüşleri yenile", rebuild.then(|| msg(Event::RefreshDrawings))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(760.0)
             .modal(msg(Event::Close))

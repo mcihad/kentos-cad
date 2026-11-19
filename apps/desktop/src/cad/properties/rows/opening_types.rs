@@ -25,6 +25,7 @@ pub(super) fn section(
     let typed = x
         .style
         .as_deref()
+        .filter(|_| x.follows_type())
         .and_then(|id| arch.and_then(|a| a.opening_type(id)));
     let action =
         |label: &'static str, icon: &'static str, op: Option<OpeningsOperation>| Choice::Action {
@@ -35,6 +36,37 @@ pub(super) fn section(
                 .map(|op| Message::Properties(Event::Opening(slot, op))),
         };
     let mut rows = Vec::new();
+    let builtin = kentos_commands::builtin_opening_types();
+    let ready = x.style.as_deref().and_then(|id| builtin.iter().find(|kind| kind.id == id));
+    rows.push(Row::text("Hazır tür", ready.map_or("Yok", |kind| kind.name.as_str())));
+    let name = typed.map_or("Atanmamış", |kind| kind.name.as_str());
+    let project = doc.model.opening_types();
+    let mut type_items = project.iter().filter(|kind| kind.form == x.form)
+        .map(|kind| (kind.id.clone(), kind.name.clone(), typed.is_some_and(|current| current.id == kind.id), false))
+        .chain(builtin.iter().filter(|kind| {
+            kind.form == x.form && !project.iter().any(|own| own.id == kind.id)
+        }).map(|kind| (kind.id.clone(), format!("{} · Projeye al ve bağla", kind.name), false, true)))
+        .map(|(to, label, chosen, preset)| Choice::Pick {
+            label,
+            chosen,
+            swatch: None,
+            icon: None,
+            wide: false,
+            enabled: !locked,
+            message: Message::Properties(if preset {
+                Event::OpeningTakePreset(slot, to)
+            } else {
+                Event::Opening(slot, OpeningsOperation::ReplaceType { from: None, to, level: None })
+            }),
+        }).collect::<Vec<_>>();
+    type_items.push(Choice::Command {
+        label: "Kapı ve pencere tipleri…",
+        icon: crate::icons::from_web(Some("openingTypes")),
+        id: "arch.openingTypes",
+    });
+    rows.push(Row::text("Proje tipi", name).editor(Some(Editor::Select {
+        text: name.to_owned(), items: type_items, icon: None, swatch: None,
+    })));
     match typed {
         Some(t) => {
             let own = x.type_version.unwrap_or(t.version);
@@ -44,6 +76,11 @@ pub(super) fn section(
                 format!("{own} · güncel")
             };
             rows.push(Row::text("Tip sürümü", version));
+            let follows = doc.model.entities().filter(|e| matches!(
+                e, kentos_commands::Entity::Opening(o)
+                    if o.opening.follows_type() && o.opening.style.as_deref() == Some(t.id.as_str())
+            )).count();
+            rows.push(Row::text("Bu tipi izleyenler", format!("{follows} açıklık · tüm çizim")));
             let kept = if x.overrides.is_empty() {
                 "Yok".to_owned()
             } else {
@@ -99,21 +136,9 @@ pub(super) fn section(
             );
         }
         None => {
-            let words = if x.style.is_some() {
-                "Tipin kopyası"
-            } else {
-                "Tipsiz"
-            };
-            rows.push(Row::text("Tip sürümü", words).editor(Some(Editor::Select {
-                text: words.to_owned(),
-                swatch: None,
-                icon: None,
-                items: vec![Choice::Command {
-                    label: "Kapı ve pencere tipleri…",
-                    icon: crate::icons::from_web(Some("openingTypes")),
-                    id: "arch.openingTypes",
-                }],
-            })));
+            rows.push(Row::note(
+                "Tipe uygula, ayırma ve döndürme için yukarıdan proje tipi atayın.",
+            ));
         }
     }
     let sizes = kentos_commands::opening_sizes(x);
