@@ -25,7 +25,8 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   kat çıkışına (BYKHY 50/4); tek çıkışa ulaşan odada bütün yol, iki çıkışa ulaşanda tek yönlü kısmı ve bütünü (50/5)
   Ek-5/B'nin otel ya da yurt satırıyla; süitin iç odası süitin çıkış kapısından.
 - **Subasman kotu** (`subasman`, docs/adr/8153): her binanın zemin katının taban döşemesi ±0,00 ile +1,20 arasında
-  (4/1-yyy), binanın kendi ±0,00'ından.
+  (4/1-yyy), binanın kendi ±0,00'ından; planın aksine hükmü (subasman kotu en çok, en az plan notları, docs/adr/8158)
+  önce.
 - **Çıkmalar** (`cikmalar`, docs/adr/8152): zemin katın dışına taşan açık ve kapalı çıkmalar vaziyet planının bahçe
   mesafelerine göre: yol cephesinde yapı yaklaşma sınırından en çok 1,50 m; yan, arka ve kamusal alan bahçesinde en çok
   1,50 m ve parsel sınırına en az 3,00 m; bitişik nizamda açık çıkma komşu sınırına en az 2,00 m (41/1); çıkma altı

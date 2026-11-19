@@ -457,6 +457,9 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Planın subasman hükmü (19 Kasım 2026; [ADR 8158](../adr/8158-plan-subasman-notes.md), K406–K408):** Plan
+    notları'nda Subasman kotu (en çok, en az; `plinthMost`, `plinthLeast`, −10 ile +10 m, en az en çoğu aşmaz) 4/1-yyy'nin
+    uçlarının yerine; iki uç da plandaysa 4/1-yyy kapsam dışı; `.kcad` Mimari verisi 32 (31 diyen dosya reddedilir).
   - **Tahvil (19 Kasım 2026; [ADR 8157](../adr/8157-height-storeys-conversion-9-1-c.md), K404–K405):** PAİY 9/1-c:
     planın yalnız bina yüksekliği ya da kat adedi varsa öbürü H(n) = 1,20 + zemin + (n − 1) normal katın 28/1'deki en
     çok yüksekliğiyle (bölgenin bendi, başvuru günü, planın kat yüksekliği notları önce, Sivas seçiliyse sıkı olanı);

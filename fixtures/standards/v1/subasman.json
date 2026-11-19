@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Subasman kotunun bağımsız durumları (docs/adr/8153): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 4/1-yyy'nin (RG 3.7.2017/30113) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un katlarıdır (building.storeys: ad, kot, asma kat, bina, mahaller).",
+  "about": "Subasman kotunun bağımsız durumları (docs/adr/8153): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 4/1-yyy'nin (RG 3.7.2017/30113) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un katlarıdır (building.storeys: ad, kot, asma kat, bina, mahaller). Planın aksine hükmünün durumları (docs/adr/8158): projenin plan notları (plinthMost, plinthLeast) 4/1-yyy'nin uçlarının yerine geçer; beklenenler 4/1-yyy'nin “İmar planlarında aksine bir hüküm bulunmaması halinde” kaydından elle.",
   "cases": [
     {
       "id": "zemin-sifir",
@@ -592,6 +592,431 @@
           "PAİY 4/1-yyy": [
             "passed",
             "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-en-cok-240",
+      "neden": "Planın notu subasman en çok +2,40 (4/1-yyy'nin aksine hükmü): zemin kat +1,50 → plan notu geçti; 4/1-yyy yalnız en az ±0,00'ı okur, geçti.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 1.5,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000901"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 4.5,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000902"
+            ]
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "plinthMost",
+            "value": 2.4,
+            "source": "UİP 12.3.2019, plan notu 56"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "passed",
+            "1.10.2017"
+          ],
+          "Plan notu: subasman kotu (en çok)": [
+            "passed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-en-cok-asar",
+      "neden": "Planın notu en çok +2,40; zemin kat +2,60 → planın notundan kaldı (bulgunun maddesi plan notu).",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 2.6,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000903"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 5.6,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000904"
+            ]
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "plinthMost",
+            "value": 2.4,
+            "source": "UİP 12.3.2019, plan notu 56"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_plinth_level",
+            "has": [
+              "+2.60 m, en çok +2.40 m",
+              "planın notu",
+              "Plan notu (UİP 12.3.2019, plan notu 56)"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "passed",
+            "1.10.2017"
+          ],
+          "Plan notu: subasman kotu (en çok)": [
+            "failed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-en-az-eksi",
+      "neden": "Planın notu en az −0,50; zemin kat −0,30 → plan notu geçti (4/1-yyy'nin ±0,00'ı bağlamaz); 4/1-yyy yalnız en çok +1,20'yi okur, geçti.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": -0.3,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000905"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 2.7,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000906"
+            ]
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "plinthLeast",
+            "value": -0.5,
+            "source": "UİP 12.3.2019, plan notu 56"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "passed",
+            "1.10.2017"
+          ],
+          "Plan notu: subasman kotu (en az)": [
+            "passed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-en-az-asar",
+      "neden": "Planın notu en az −0,50; zemin kat −0,80 → planın notundan kaldı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": -0.8,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000907"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 2.2,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000908"
+            ]
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "plinthLeast",
+            "value": -0.5,
+            "source": "UİP 12.3.2019, plan notu 56"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_plinth_level",
+            "has": [
+              "−0.80 m, en az −0.50 m",
+              "planın notu"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "passed",
+            "1.10.2017"
+          ],
+          "Plan notu: subasman kotu (en az)": [
+            "failed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-ikisi",
+      "neden": "Planın iki notu (−0,50 ile +2,40); zemin kat +2,00 → iki not geçti; 4/1-yyy'nin iki ucu da planda: kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 2.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000909"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 5.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000910"
+            ]
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "plinthLeast",
+            "value": -0.5,
+            "source": "UİP 12.3.2019, plan notu 56"
+          },
+          {
+            "key": "plinthMost",
+            "value": 2.4,
+            "source": "UİP 12.3.2019, plan notu 56"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "Plan notu: subasman kotu (en çok)": [
+            "passed",
+            null
+          ],
+          "Plan notu: subasman kotu (en az)": [
+            "passed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-ust-yonetmelik-alt",
+      "neden": "Planın notu yalnız en çok +2,40; zemin kat −0,30 → en az ucu 4/1-yyy'nin ±0,00'ı: kaldı, ileti yalnız o ucu söyler.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": -0.3,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000911"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 2.7,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000912"
+            ]
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "plinthMost",
+            "value": 2.4,
+            "source": "UİP 12.3.2019, plan notu 56"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_plinth_level",
+            "has": [
+              "±0,00'ın 0.30 m altında",
+              "4/1-yyy en az ±0,00'ı ister",
+              "PAİY 4/1-yyy"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "failed",
+            "1.10.2017"
+          ],
+          "Plan notu: subasman kotu (en çok)": [
+            "passed",
+            null
           ]
         }
       }

@@ -272,6 +272,18 @@ def cases():
                            {"key": "storeys", "value": 2.5, "source": "UİP 12.3.2019, plan notu 3"}]}},
                        "invalid_arch", "“Kat adedi (en çok)” plan notunun değeri 1 ile 200 arasında bir tam sayı olmalı.",
                        "arch.planNotes.0.value"))
+    # The plan's subasman (docs/adr/8158): its most and least within 10 m of ±0.00, the least not above the most.
+    plinth = {"levels": levels, "planNotes": [
+        {"key": "plinthMost", "value": 2.4, "source": "UİP 12.3.2019, plan notu 56"},
+        {"key": "plinthLeast", "value": -0.5, "source": "UİP 12.3.2019, plan notu 56"}]}
+    out.append({"name": "Mimari: planın subasman kotu notları (ADR 8158)",
+                "steps": [step("execute", {"arch": plinth}, done(["arch"]), {**FLAGS, "settings": {"arch": plinth}})]})
+    out.append(refused("subasmanın en azı en çoğundan yüksek",
+                       {"arch": {"levels": levels, "planNotes": [
+                           {"key": "plinthMost", "value": 0.5, "source": "UİP 12.3.2019, plan notu 56"},
+                           {"key": "plinthLeast", "value": 1.0, "source": "UİP 12.3.2019, plan notu 56"}]}},
+                       "invalid_arch", "“Subasman kotu (en az)” plan notunun değeri “Subasman kotu (en çok)” notununkini "
+                       "aşamaz.", "arch.planNotes.1.value"))
     # Where İmar durumu's emsal and TAKS are read from (docs/adr/8140): kept as given; a source without its value, empty,
     # or longer than a plan note's (200 characters) is refused at its field.
     sourced = {"levels": levels, "zoning": {

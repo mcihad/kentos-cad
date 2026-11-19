@@ -1,9 +1,9 @@
 //! Proje ayarları › Mimari › Plan notları (docs/adr/8084): the parcel's plan notes that give a value the regulation's
 //! rules read over the municipality's and the national one (Planlı Alanlar İmar Yönetmeliği 69/3; 28/1 leaves the storey
-//! heights to the plan) and the plan's building height and storey count 5/11 reads (docs/adr/8098), a row each: Konu,
-//! Değer (m, or storeys), Kaynak, delete; Plan notu ekle. KentOS does not read a note's
-//! words into a number: the architect writes the value and where it stands. What does not hold is said under the rows
-//! and Kaydet waits; Kaydet writes them through `cad.settings.set`'s `arch.planNotes`.
+//! heights to the plan) and the plan's building height and storey count 5/11 reads (docs/adr/8098) and its subasman
+//! 4/1-yyy leaves to it (docs/adr/8158), a row each: Konu, Değer (m, or storeys), Kaynak, delete; Plan notu ekle.
+//! KentOS does not read a note's words into a number: the architect writes the value and where it stands. What does not
+//! hold is said under the rows and Kaydet waits; Kaydet writes them through `cad.settings.set`'s `arch.planNotes`.
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Length};
@@ -90,6 +90,8 @@ fn placeholder(key: PlanNoteKey) -> &'static str {
     match key {
         PlanNoteKey::BuildingHeight => "9,50",
         PlanNoteKey::Storeys => "3",
+        PlanNoteKey::PlinthMost => "1,50",
+        PlanNoteKey::PlinthLeast => "-0,50",
         _ => "4,00",
     }
 }
@@ -162,8 +164,9 @@ pub(super) fn view<'a>(
          imar yönetmeliğinin ve Planlı Alanlar İmar Yönetmeliği'nin önüne koyar (69/3; kat yükseklikleri plana \
          bırakılmıştır, 28/1). Zemin kat yüksekliği ±0,00'daki katın, kat yüksekliği bütün zemin ve normal katların \
          sınırıdır (m). Bina yüksekliği ±0,00'dan son katın tavan döşemesinin üstüne (m), kat adedi zemin ve normal \
-         katlardır; planın bu değerleri aşılamaz (5/11). KentOS notun sözünü okumaz: değeri ve notun yerini planı okuyan \
-         yazar.",
+         katlardır; planın bu değerleri aşılamaz (5/11). Subasman kotu zemin katın taban döşemesinin binanın \
+         ±0,00'ından en çok ve en az yüksekliğidir (m, altında eksiyle); yazılmazsa +1,20 ve ±0,00'dır (4/1-yyy). \
+         KentOS notun sözünü okumaz: değeri ve notun yerini planı okuyan yazar.",
     ));
     super::group::<Message>("Plan notları", body)
 }

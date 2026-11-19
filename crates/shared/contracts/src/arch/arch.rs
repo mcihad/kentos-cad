@@ -1885,8 +1885,9 @@ pub enum LocalRules {
 
 /// What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
 /// coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
-/// belirlenmemiş ise”), or the plan's own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya
-/// bina yüksekliği aşılamaz”, docs/adr/8098).
+/// belirlenmemiş ise”; 4/1-yyy: “İmar planlarında aksine bir hüküm bulunmaması halinde”, docs/adr/8158), or the plan's
+/// own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya bina yüksekliği aşılamaz”,
+/// docs/adr/8098).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1903,11 +1904,23 @@ pub enum PlanNoteKey {
     BuildingHeight,
     /// Kat adedi, en çok (5/11; docs/adr/8098): the ground and normal storeys, a whole number.
     Storeys,
+    /// Subasman kotu, en çok (4/1-yyy; docs/adr/8158): the ground storey's floor over its building's ±0.00 at most, m
+    /// (PAİY's +1.20 where the plan says nothing).
+    PlinthMost,
+    /// Subasman kotu, en az (4/1-yyy; docs/adr/8158): the ground storey's floor over its building's ±0.00 at least, m,
+    /// below it with a minus (PAİY's ±0.00 where the plan says nothing).
+    PlinthLeast,
 }
 
 impl PlanNoteKey {
-    pub const ALL: [PlanNoteKey; 4] =
-        [PlanNoteKey::GroundStoreyHeight, PlanNoteKey::StoreyHeight, PlanNoteKey::BuildingHeight, PlanNoteKey::Storeys];
+    pub const ALL: [PlanNoteKey; 6] = [
+        PlanNoteKey::GroundStoreyHeight,
+        PlanNoteKey::StoreyHeight,
+        PlanNoteKey::BuildingHeight,
+        PlanNoteKey::Storeys,
+        PlanNoteKey::PlinthMost,
+        PlanNoteKey::PlinthLeast,
+    ];
 
     /// As the form and a finding name it.
     pub fn label(self) -> &'static str {
@@ -1916,6 +1929,8 @@ impl PlanNoteKey {
             PlanNoteKey::StoreyHeight => "Kat yüksekliği (en çok)",
             PlanNoteKey::BuildingHeight => "Bina yüksekliği (en çok)",
             PlanNoteKey::Storeys => "Kat adedi (en çok)",
+            PlanNoteKey::PlinthMost => "Subasman kotu (en çok)",
+            PlanNoteKey::PlinthLeast => "Subasman kotu (en az)",
         }
     }
 
@@ -1926,6 +1941,8 @@ impl PlanNoteKey {
             PlanNoteKey::StoreyHeight => "storeyHeight",
             PlanNoteKey::BuildingHeight => "buildingHeight",
             PlanNoteKey::Storeys => "storeys",
+            PlanNoteKey::PlinthMost => "plinthMost",
+            PlanNoteKey::PlinthLeast => "plinthLeast",
         }
     }
 
@@ -1942,7 +1959,15 @@ impl PlanNoteKey {
     pub fn is_plan_limit(self) -> bool {
         matches!(self, PlanNoteKey::BuildingHeight | PlanNoteKey::Storeys)
     }
+
+    /// Whether a note of it is the plan's subasman (docs/adr/8158): 4/1-yyy's range where the plan says otherwise.
+    pub fn is_plinth(self) -> bool {
+        matches!(self, PlanNoteKey::PlinthMost | PlanNoteKey::PlinthLeast)
+    }
 }
+
+/// The farthest a subasman plan note may stand from the building's ±0.00, either way, m.
+pub const PLAN_PLINTH_MAX: f64 = 10.0;
 
 /// The most a building height plan note may give, m.
 pub const PLAN_BUILDING_HEIGHT_MAX: f64 = 1000.0;
@@ -1969,8 +1994,9 @@ pub struct PlanNote {
 pub const PLAN_NOTES_MAX: usize = 50;
 
 impl PlanNote {
-    /// What is wrong with a project's plan notes: the field and the words. A value finite, over 0 and at most 20 m; its
-    /// source said (at most 200 characters); one note for each measure.
+    /// What is wrong with a project's plan notes: the field and the words. A storey's height finite, over 0 and at most
+    /// 20 m, a building height up to 1000 m, a storey count a whole number from 1 to 200, a subasman within 10 m of
+    /// ±0.00 and its least not above its most; its source said (at most 200 characters); one note for each measure.
     pub fn list_problem(notes: &[PlanNote]) -> Option<(String, String)> {
         if notes.len() > PLAN_NOTES_MAX {
             return Some(("planNotes".into(), format!("En çok {PLAN_NOTES_MAX} plan notu verilebilir.")));
@@ -1988,6 +2014,9 @@ impl PlanNote {
                     && n.value.fract() == 0.0
                     && (1.0..=PLAN_STOREYS_MAX).contains(&n.value)))
                     .then_some("1 ile 200 arasında bir tam sayı"),
+                PlanNoteKey::PlinthMost | PlanNoteKey::PlinthLeast => (!(n.value.is_finite()
+                    && (-PLAN_PLINTH_MAX..=PLAN_PLINTH_MAX).contains(&n.value)))
+                    .then_some("−10 ile +10 m arasında"),
             };
             if let Some(what) = wrong {
                 return Some((
@@ -2017,6 +2046,16 @@ impl PlanNote {
                     format!("“{}” için iki plan notu var; birini kaldırın.", n.key.label()),
                 ));
             }
+        }
+        // The subasman's least above its most leaves no floor level (docs/adr/8158).
+        let of = |k: PlanNoteKey| notes.iter().position(|n| n.key == k);
+        if let (Some(most), Some(least)) = (of(PlanNoteKey::PlinthMost), of(PlanNoteKey::PlinthLeast))
+            && notes[least].value > notes[most].value
+        {
+            return Some((
+                format!("planNotes.{least}.value"),
+                "“Subasman kotu (en az)” plan notunun değeri “Subasman kotu (en çok)” notununkini aşamaz.".into(),
+            ));
         }
         None
     }
@@ -2586,6 +2625,11 @@ impl ArchSettings {
     /// Whether a plan note gives the plan's building height or storey count (Mimari data 16, docs/adr/8098).
     pub fn has_plan_limits(&self) -> bool {
         self.plan_notes.iter().any(|n| n.key.is_plan_limit())
+    }
+
+    /// Whether a plan note gives the plan's subasman (Mimari data 32, docs/adr/8158).
+    pub fn has_plan_plinth(&self) -> bool {
+        self.plan_notes.iter().any(|n| n.key.is_plinth())
     }
 
     /// Whether it says the parcel's area's use (Mimari data 12, docs/adr/8085).

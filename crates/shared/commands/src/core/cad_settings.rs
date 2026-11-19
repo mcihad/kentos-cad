@@ -63,8 +63,9 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 ///   absent: every object its own pen) how its lines are weighted (docs/adr/8013); `planNotes` the parcel's plan notes
 ///   the regulation's rules read over the municipality's and the national one (docs/adr/8084: `key`
 ///   `groundStoreyHeight` or `storeyHeight`, `value` metres over 0 and at most 20; docs/adr/8098: `buildingHeight`
-///   metres over 0 and at most 1000, `storeys` a whole number from 1 to 200; `source` where the note stands, one note a
-///   key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
+///   metres over 0 and at most 1000, `storeys` a whole number from 1 to 200; docs/adr/8158: `plinthMost`,
+///   `plinthLeast` the subasman's metres over ±0.00, −10 to 10, the least not above the most; `source` where the note
+///   stands, one note a key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
 ///   `residential`, `residentialShops`, `mixed`, `commercial`, `other`); `structure` the building's structural system
 ///   (docs/adr/8094: `system` `reinforcedConcrete`, `steel`, `masonry`, `cutStoneMasonry`, `timber`, `composite`;
 ///   `traditional` only with `cutStoneMasonry`);

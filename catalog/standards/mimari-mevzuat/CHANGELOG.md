@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.45.0 — 19 Kasım 2026
+
+- Planın subasman kotu hükmü (`subasman`; docs/adr/8158): projenin plan notları `plinthMost` (en çok) ve `plinthLeast`
+  (en az, ±0,00'ın altında eksi) 4/1-yyy'nin +1,20 ve ±0,00'ının yerine geçer; notu aşan zemin kat planın notunun
+  maddesiyle kalır, notun satırı sonucunu söyler; iki uç da plandaysa 4/1-yyy kapsam dışı, biri plandaysa öbür ucu
+  okur. 14 bağımsız durum (6'sı yeni). `pyproject.toml` ve `uv.lock`'un sürümü manifestinkiyle eşitlendi (0.31.0'da
+  kalmıştı).
+
 ## 0.44.0 — 19 Kasım 2026
 
 - Tahvil (`tahvil`; docs/adr/8157): PAİY 9/1-c. Planın yalnız bina yüksekliği varsa kat adedine, yalnız kat adedi

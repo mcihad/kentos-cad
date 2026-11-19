@@ -6033,21 +6033,26 @@ PlanBoxName = Literal["index", "geometry", "local"]
 class PlanNoteKey(_StrEnum):
     """What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
     coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
-    belirlenmemiş ise”), or the plan's own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya
-    bina yüksekliği aşılamaz”, docs/adr/8098).
+    belirlenmemiş ise”; 4/1-yyy: “İmar planlarında aksine bir hüküm bulunmaması halinde”, docs/adr/8158), or the plan's
+    own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya bina yüksekliği aşılamaz”,
+    docs/adr/8098).
 
     - ``groundStoreyHeight``: Zemin kat yüksekliği, en çok (28/1): the ground storey's floor to floor, m.
     - ``storeyHeight``: Kat yüksekliği, en çok (28/1): every storey's on and over ±0.00 floor to floor (the ground storey's too, unless
     - ``buildingHeight``: Bina yüksekliği, en çok (5/11, 4/1-n; docs/adr/8098): from the building's ±0.00 to its eaves level (the top of
     - ``storeys``: Kat adedi, en çok (5/11; docs/adr/8098): the ground and normal storeys, a whole number.
+    - ``plinthMost``: Subasman kotu, en çok (4/1-yyy; docs/adr/8158): the ground storey's floor over its building's ±0.00 at most, m
+    - ``plinthLeast``: Subasman kotu, en az (4/1-yyy; docs/adr/8158): the ground storey's floor over its building's ±0.00 at least, m,
     """
     GROUND_STOREY_HEIGHT = "groundStoreyHeight"
     STOREY_HEIGHT = "storeyHeight"
     BUILDING_HEIGHT = "buildingHeight"
     STOREYS = "storeys"
+    PLINTH_MOST = "plinthMost"
+    PLINTH_LEAST = "plinthLeast"
 
 
-PlanNoteKeyName = Literal["groundStoreyHeight", "storeyHeight", "buildingHeight", "storeys"]
+PlanNoteKeyName = Literal["groundStoreyHeight", "storeyHeight", "buildingHeight", "storeys", "plinthMost", "plinthLeast"]
 """The names of :class:`PlanNoteKey`, for a plain string."""
 
 
@@ -96920,8 +96925,9 @@ class SettingsSet(_Model):
       absent: every object its own pen) how its lines are weighted (docs/adr/8013); `planNotes` the parcel's plan notes
       the regulation's rules read over the municipality's and the national one (docs/adr/8084: `key`
       `groundStoreyHeight` or `storeyHeight`, `value` metres over 0 and at most 20; docs/adr/8098: `buildingHeight`
-      metres over 0 and at most 1000, `storeys` a whole number from 1 to 200; `source` where the note stands, one note a
-      key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
+      metres over 0 and at most 1000, `storeys` a whole number from 1 to 200; docs/adr/8158: `plinthMost`,
+      `plinthLeast` the subasman's metres over ±0.00, −10 to 10, the least not above the most; `source` where the note
+      stands, one note a key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
       `residential`, `residentialShops`, `mixed`, `commercial`, `other`); `structure` the building's structural system
       (docs/adr/8094: `system` `reinforcedConcrete`, `steel`, `masonry`, `cutStoneMasonry`, `timber`, `composite`;
       `traditional` only with `cutStoneMasonry`);

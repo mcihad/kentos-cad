@@ -10343,6 +10343,157 @@
       ]
     },
     {
+      "name": "Mimari: planın subasman kotu notları (ADR 8158)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "planNotes": [
+                {
+                  "key": "plinthMost",
+                  "value": 2.4,
+                  "source": "UİP 12.3.2019, plan notu 56"
+                },
+                {
+                  "key": "plinthLeast",
+                  "value": -0.5,
+                  "source": "UİP 12.3.2019, plan notu 56"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "planNotes": [
+                  {
+                    "key": "plinthMost",
+                    "value": 2.4,
+                    "source": "UİP 12.3.2019, plan notu 56"
+                  },
+                  {
+                    "key": "plinthLeast",
+                    "value": -0.5,
+                    "source": "UİP 12.3.2019, plan notu 56"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "subasmanın en azı en çoğundan yüksek",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "planNotes": [
+                {
+                  "key": "plinthMost",
+                  "value": 0.5,
+                  "source": "UİP 12.3.2019, plan notu 56"
+                },
+                {
+                  "key": "plinthLeast",
+                  "value": 1.0,
+                  "source": "UİP 12.3.2019, plan notu 56"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "“Subasman kotu (en az)” plan notunun değeri “Subasman kotu (en çok)” notununkini aşamaz.",
+              "path": "arch.planNotes.1.value"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Mimari: imar durumunda emsalin ve TAKS'ın kaynağı (ADR 8140)",
       "steps": [
         {

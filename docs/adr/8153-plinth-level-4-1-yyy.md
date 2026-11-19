@@ -48,7 +48,8 @@ denetimden geçiyordu. 9/1-c'nin bina yüksekliği ile kat adedi arasındaki tah
 
 ## §6. Kalanlar
 
-- İmar planının subasman hükmü (plan notunun konusu olarak).
+- İmar planının subasman hükmü (plan notunun konusu olarak) — yapıldı: ADR [8158](8158-plan-subasman-notes.md)
+  (Subasman kotu en çok ve en az plan notları, Mimari verisi 32).
 - Öbür kurallar (`kat_yuksekligi.ustteki`) katların kotunu bugün projenin ±0,00'ından okur; binanın kendi sıfırıyla
   okunması — yapıldı: ADR [8154](8154-rules-by-building-zero.md).
 - Tahvil (9/1-c): planın yalnız birini verdiği durumda bina yüksekliği ile kat adedinin birbirine çevrilmesi — yapıldı:
