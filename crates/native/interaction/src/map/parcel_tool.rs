@@ -10,8 +10,9 @@
 //!
 //! Ölçüler (Ö, on by default; docs/adr/8032 §2) draws the site plan's marks with them, in the same undo step: an aligned
 //! dimension from the footprint's nearest point to each edge, a level mark ±0.00 in the footprint's middle and, with
-//! ±0.00's elevation, “±0.00 = +1285.40” under it. Each carries the attribute `Vaziyet`; run again, the tool takes the
-//! old marks away before it draws the new ones.
+//! ±0.00's elevation, “±0.00 = +1285.40” under it, and each projection's outline (çıkma izdüşümü, PAİY 57/3,
+//! docs/adr/8155): the part of a room of a storey over the ground storey outside the footprint, a dashed closed line.
+//! Each carries the attribute `Vaziyet`; run again, the tool takes the old marks away before it draws the new ones.
 
 use kentos_commands::{EntityGeometry, LineType, SiteEdge, SiteEdgeKind, SitePlan};
 use kentos_native_application::{ExecutionContext, create};
@@ -93,6 +94,53 @@ impl ParcelTool {
 
     /// The site plan's marks (docs/adr/8032 §2): the old ones taken away, a distance dimension for each edge the
     /// footprint stands apart from, ±0.00 in the footprint's middle and its elevation under it; how many drawn.
+    /// Each projection's outline (çıkma izdüşümü, PAİY 57/3, docs/adr/8155) against `site`: a dashed closed line for each
+    /// part of it, carrying `Vaziyet` (the marks' removal takes them away too). How many; none when a write fails.
+    fn draw_projections(site: &SitePlan, cx: &mut Context<'_>) -> Option<usize> {
+        let layer = cx.doc.layers().active().to_owned();
+        let objects: Vec<kentos_commands::NewObject> = cx
+            .doc
+            .projections_for(site)
+            .iter()
+            .flat_map(|p| p.shape.iter().map(|a| a.outer.pts.clone()).collect::<Vec<_>>())
+            .filter(|pts| pts.len() >= 3)
+            .map(|pts| kentos_commands::NewObject {
+                geometry: EntityGeometry::Polyline {
+                    pts: pts.iter().map(|p| kentos_commands::Vec2 { x: p.x, y: p.y }).collect(),
+                    bulges: None,
+                    zs: None,
+                    ms: None,
+                    parts: None,
+                    closed: true,
+                    widths: None,
+                },
+                color: None,
+                line_weight: None,
+                line_type: Some(LineType::Dashed),
+                line_pattern: None,
+                attrs: Some(std::iter::once((MARK_ATTR.to_owned(), "Çıkma izdüşümü".to_owned())).collect()),
+                label: Some("Çıkma izdüşümü".to_owned()),
+                label_of: None,
+                label_scale: None,
+                symbol: None,
+                order: None,
+                transparency: None,
+            })
+            .collect();
+        if objects.is_empty() {
+            return Some(0);
+        }
+        let n = objects.len();
+        let input = kentos_commands::EntitiesCreate {
+            layer_id: layer,
+            objects,
+            operation: None,
+            expected_revision: None,
+        };
+        let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
+        crate::points::written(result, cx).map(|_| n)
+    }
+
     fn draw_marks(report: &kentos_domain::site::SiteReport, cx: &mut Context<'_>) -> Option<usize> {
         let old: Vec<kentos_domain::Slot> = cx
             .doc
@@ -404,6 +452,15 @@ impl ParcelTool {
         if marks.is_none() {
             return false;
         }
+        // The projections' outlines with the marks (PAİY 57/3, docs/adr/8155): the old ones went with them.
+        let projections = if self.marks {
+            Self::draw_projections(site, cx)
+        } else {
+            Some(0)
+        };
+        let Some(projections) = projections else {
+            return false;
+        };
         let mut settings = cx.doc.settings().clone();
         let arch = settings.arch.get_or_insert_with(Default::default);
         // A project without a zoning takes the parcel's drawn area as its own (docs/adr/8030).
@@ -441,10 +498,10 @@ impl ParcelTool {
                 m2(report.area),
                 report.floors,
                 report.trees,
-                if self.marks {
-                    ", bahçe mesafeleri ve ±0,00 ölçülendi"
-                } else {
-                    ""
+                match (self.marks, projections) {
+                    (false, _) => String::new(),
+                    (true, 0) => ", bahçe mesafeleri ve ±0,00 ölçülendi".to_owned(),
+                    (true, n) => format!(", bahçe mesafeleri ve ±0,00 ölçülendi, {n} çıkma izdüşümü çizildi"),
                 },
                 if short.is_empty() {
                     String::new()

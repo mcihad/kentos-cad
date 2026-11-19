@@ -129,6 +129,34 @@ fn a_balcony_past_the_setback_line_by_more_than_1_50_m_fails_41() {
     assert_eq!(rows(&app), [O::Passed, O::Passed]);
 }
 
+/// The site plan's projection outlines (PAİY 57/3, docs/adr/8155): the closed dashed lines carrying `Vaziyet`, each
+/// with its corners sorted.
+fn outlines(app: &App) -> Vec<Vec<(i64, i64)>> {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    doc.entities()
+        .filter(|e| e.base().attrs.get("Vaziyet").map(String::as_str) == Some("Çıkma izdüşümü"))
+        .map(|e| {
+            let kentos_commands::Entity::Polyline(l) = e else { panic!("a projection's outline is a polyline: {e:?}") };
+            assert!(l.closed && l.base.look.line_type == Some(kentos_commands::LineType::Dashed), "{l:?}");
+            let mut corners: Vec<(i64, i64)> =
+                l.pts.iter().map(|p| ((p.x * 100.0).round() as i64, (p.y * 100.0).round() as i64)).collect();
+            corners.sort_unstable();
+            corners
+        })
+        .collect()
+}
+
+#[test]
+fn parsel_draws_the_projections_outlines_with_the_site_plan() {
+    let (mut app, _) = scene(2.0);
+    // The Balkon's part outside the footprint: x 2–8, y −2–0.
+    assert_eq!(outlines(&app), [vec![(200, -200), (200, 0), (800, -200), (800, 0)]]);
+    // Parsel again: the old outline goes with the old marks, one drawn again.
+    let _ = app.update(Message::Run("tool.siteParcel"));
+    let _ = app.submit_line("");
+    assert_eq!(outlines(&app).len(), 1);
+}
+
 /// Denetim's 41/1 finding beside 1. kat's plan with the parcel, light and dark; `.run/gui-evidence/cikma-8152/`:
 ///
 /// ```text
@@ -159,6 +187,35 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-cikma-denetim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// The site plan with the setback line and the Balkon's projection outline (PAİY 57/3), light and dark;
+/// `.run/gui-evidence/cikma-izdusumu-8155/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn site_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cikma-izdusumu-8155");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let (mut app, _) = scene(2.0);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::ActiveLevel(Some("k01".into())));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-vaziyet-cikma-izdusumu-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

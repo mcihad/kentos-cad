@@ -114,4 +114,4 @@ Tarih: 2026-11-09. Durum: kabul (M32, iki bölüm; ADV-22; plan S22).
 - Kenar kenar kat adedi (23/1-d "o cephede", eğimli arazi), 60,50 m üstü binalar (23/1-g, ğ), birden çok bina (24).
 - Parseli Harita işinden ya da tapu koordinat tablosundan almak.
 - Açık çıkmaların bahçe mesafesine taşma kuralları (çıkma izdüşümü, 57/3) — kuralları yapıldı: ADR
-  [8152](8152-projections-paiy-41.md) (PAİY 41/1, 41/2); vaziyet planında izdüşüm kaldı.
+  [8152](8152-projections-paiy-41.md) (PAİY 41/1, 41/2); vaziyet planında izdüşüm: ADR [8155](8155-site-plan-projection-outlines.md).

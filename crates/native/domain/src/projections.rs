@@ -93,9 +93,16 @@ impl Document {
     /// The rooms' parts outside the footprint on the storeys over the ground storey, in the drawing's order (docs/adr/
     /// 8152); none without the site plan's parcel or a footprint.
     pub fn projections(&self) -> Vec<Projection> {
+        match self.settings().arch.as_ref().and_then(|a| a.site.clone()) {
+            Some(site) => self.projections_for(&site),
+            None => Vec::new(),
+        }
+    }
+
+    /// The projections against `site`, a site plan not yet written (the Parsel tool's, docs/adr/8155).
+    pub fn projections_for(&self, site: &kentos_contracts::SitePlan) -> Vec<Projection> {
         let Some(arch) = self.settings().arch.as_ref() else { return Vec::new() };
-        let Some(site) = arch.site.clone() else { return Vec::new() };
-        let Some(report) = self.site_report_for(&site) else { return Vec::new() };
+        let Some(report) = self.site_report_for(site) else { return Vec::new() };
         let counted = self.zoning_counted();
         if counted.footprint_shape.is_empty() {
             return Vec::new();

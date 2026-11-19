@@ -457,6 +457,9 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Vaziyet planında çıkma izdüşümleri (19 Kasım 2026; [ADR 8155](../adr/8155-site-plan-projection-outlines.md), K399):**
+    PAİY 57/3: Parsel aracı ölçülerle (Ö) her çıkma parçasını kesik çizgiyle çizer, `Vaziyet` özniteliğiyle eski
+    ölçülerle birlikte yenilenir; çıkmalar yazılan vaziyet planına göre (`projections_for`).
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

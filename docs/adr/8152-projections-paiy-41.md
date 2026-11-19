@@ -69,6 +69,6 @@ balkonları ve kapalı çıkmaları okumuyordu: ön bahçeye 2 m taşan balkon, 
 
 ## §6. Kalanlar
 
-- Çıkmanın vaziyet planında izdüşümüyle gösterilmesi (57/3).
+- Çıkmanın vaziyet planında izdüşümüyle gösterilmesi (57/3) — yapıldı: ADR [8155](8155-site-plan-projection-outlines.md).
 - Ön bahçesi 3 m ve daha az parselde yol kotu (bugün ±0,00).
 - PAİY 6 (8142 §6'nın öbür kalanı).
