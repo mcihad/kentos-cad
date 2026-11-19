@@ -55,6 +55,7 @@ from datetime import date
 from typing import Any
 
 from . import kat_yuksekligi
+from . import katman
 from . import yururluk as y
 
 MADDELER = [("PAİY", "22/1-ç"), ("PAİY", "22/1-f"), ("PAİY", "22/1-g"), ("PAİY", "22/1-j"), ("PAİY", "22/1-k"),
@@ -185,7 +186,7 @@ def _normal_disi(bina: dict[str, Any], uids: list[str]) -> list[str]:
     if not katlar:
         return []
     zemin = next((k for k in katlar if "ZEMIN" in _katla(k.get("name") or "")), None) or min(
-        katlar, key=lambda k: abs(float(k.get("elevation") or 0.0)))
+        katlar, key=lambda k: abs(katman.kot(k)))
     out: list[str] = []
     for k in katlar:
         if not set(uids) & set(k.get("rooms") or []):

@@ -44,6 +44,7 @@ import re
 from datetime import date
 from typing import Any
 
+from . import katman
 from . import yururluk as y
 from .kompartiman import ayiriyor
 from .yangin_sinifi import okuma
@@ -146,7 +147,7 @@ def _kat_yeri(bina: dict[str, Any]) -> tuple[dict[str, str], dict[str, str], str
     if not katlar:
         return {}, {}, None, None
     zemin = next((k for k in katlar if "ZEMIN" in _katla(k.get("name") or "")), None) or min(
-        katlar, key=lambda k: abs(float(k.get("elevation") or 0)))
+        katlar, key=lambda k: abs(katman.kot(k)))
     yer = {k["level"]: ("bodrum" if float(k["elevation"]) < float(zemin["elevation"]) - 1e-9 else "ust") for k in katlar}
     ad = {k["level"]: k.get("name") or k["level"] for k in katlar}
     en_alt = min(katlar, key=lambda k: float(k["elevation"]))["level"]

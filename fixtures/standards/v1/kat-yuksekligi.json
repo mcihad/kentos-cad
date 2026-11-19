@@ -1,7 +1,7 @@
 {
  "format": "kentos.regulationCases",
  "version": 1,
- "about": "Kat yüksekliğinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 28/1-c'nin 1.10.2017 (RG 3.7.2017/30113) ve 12.8.2023 (RG 32277 ek ibare) hâllerinden ve Sivas İmar Yönetmeliği 28/1-c'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Bölgeli durumlar (docs/adr/8085) 28/1-a, b, ç'den ve 4/1-d'den, plan notlu durumlar (docs/adr/8084) PAİY 28/1'in kat yüksekliklerini plana bırakmasından ve 69/3'ten elle. Olgular KentOS'un ölçüsüdür (building.storeys: kot, kattan kata yükseklik, yatak odaları; building.planNotes: projenin yazdığı plan notları). Geleneksel kesme taş yığma binanın durumları (docs/adr/8094) 28/1-d'nin RG 9.10.2021/31623 metninden ve Sivas 28/1-d'den elle (building.structuralSystem, building.traditional: projenin beyanı).",
+ "about": "Kat yüksekliğinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 28/1-c'nin 1.10.2017 (RG 3.7.2017/30113) ve 12.8.2023 (RG 32277 ek ibare) hâllerinden ve Sivas İmar Yönetmeliği 28/1-c'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Bölgeli durumlar (docs/adr/8085) 28/1-a, b, ç'den ve 4/1-d'den, plan notlu durumlar (docs/adr/8084) PAİY 28/1'in kat yüksekliklerini plana bırakmasından ve 69/3'ten elle. Olgular KentOS'un ölçüsüdür (building.storeys: kot, kattan kata yükseklik, yatak odaları; building.planNotes: projenin yazdığı plan notları). Geleneksel kesme taş yığma binanın durumları (docs/adr/8094) 28/1-d'nin RG 9.10.2021/31623 metninden ve Sivas 28/1-d'den elle (building.structuralSystem, building.traditional: projenin beyanı). Binanın kendi ±0,00'ı durumu (docs/adr/8154) ADR 8072'den elle (katın zero'su).",
  "cases": [
   {
    "id": "iki-kat-380-2026",
@@ -3786,6 +3786,87 @@
      "PAİY 28/1-d": [
       "missingData",
       null
+     ]
+    }
+   }
+  },
+  {
+   "id": "bina-sifiri-bodrum",
+   "neden": "Binanın kendi ±0,00'ı +2,60: +1,00'deki 4,60 m'lik kat kendi sıfırının altında, bodrumdur (28/1'in katı değil); zemin kat +3,80 (kendi sıfırından +1,20), 1. kat, ikisi 3,80 m → 28/1-c'nin 4,00 m'si geçer (projenin sıfırından okunsaydı 4,60 m'lik kat zemin kat sayılıp kalırdı).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": 1.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000012"
+      ],
+      "height": 4.6,
+      "building": "a",
+      "zero": 2.6
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8,
+      "building": "a",
+      "zero": 2.6
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 7.6,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8,
+      "building": "a",
+      "zero": 2.6
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
      ]
     }
    }

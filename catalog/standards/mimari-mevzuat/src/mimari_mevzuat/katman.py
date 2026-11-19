@@ -58,6 +58,12 @@ class PlanNotu:
         return f"Plan notu · {self.kaynak}"
 
 
+def kot(kat: dict) -> float:
+    """Katın kotu binasının ±0,00'ından (docs/adr/8154): olguların katının kotu eksi binasının kendi ±0,00'ı (``zero``,
+    bina programından, docs/adr/8072); binası sıfırını söylemiyorsa projeninki."""
+    return float(kat.get("elevation") or 0.0) - float(kat.get("zero") or 0.0)
+
+
 def metre(v: float) -> str:
     """İki basamakla metre: “1.20 m”."""
     return f"{v:.2f} m"

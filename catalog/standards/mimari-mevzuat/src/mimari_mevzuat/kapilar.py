@@ -19,6 +19,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
+from . import katman
 from . import yururluk as y
 from .yangin_sinifi import sinif
 
@@ -85,7 +86,7 @@ def dayanim(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dic
     """47/3: kaçış merdiveni ve yangın güvenlik holü kapıları."""
     kapilar = [k for k in bina.get("doors") or [] if k.get("stair") or k.get("lobby")]
     katlar = [s for s in bina.get("storeys") or [] if s.get("stair")]
-    bodrum = any(s["elevation"] < -1e-6 for s in katlar)
+    bodrum = any(katman.kot(s) < -1e-6 for s in katlar)
     n = len(katlar)
     az, cok, sinir = int(hal.anahtar["few"]), int(hal.anahtar["many"]), int(hal.anahtar["storeys"])
     gerek = cok if bodrum or n > sinir else (az if n < sinir else None)

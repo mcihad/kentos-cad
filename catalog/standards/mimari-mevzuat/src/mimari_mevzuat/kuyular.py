@@ -36,6 +36,7 @@ from datetime import date
 from typing import Any
 
 from . import dayanim
+from . import katman
 from . import yururluk as y
 from .yangin_sinifi import ayirir, okuma
 
@@ -224,7 +225,7 @@ def _bodrum_katlari(bina: dict[str, Any]) -> set[str]:
     if not katlar:
         return set()
     zemin = next((k for k in katlar if "ZEMIN" in _katla(k.get("name") or "")), None) or min(
-        katlar, key=lambda k: abs(float(k.get("elevation") or 0)))
+        katlar, key=lambda k: abs(katman.kot(k)))
     return {k["level"] for k in katlar if float(k.get("elevation") or 0) < float(zemin.get("elevation") or 0) - 1e-9}
 
 

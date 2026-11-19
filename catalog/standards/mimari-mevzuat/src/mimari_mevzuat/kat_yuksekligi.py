@@ -78,8 +78,8 @@ def geleneksel(bina: dict[str, Any]) -> bool:
 
 
 def ustteki(bina: dict[str, Any]) -> list[dict[str, Any]]:
-    """Zemin ve normal katlar: ±0,00 ve üstündeki, asma kat olmayan katlar."""
-    return [s for s in bina.get("storeys") or [] if s["elevation"] >= -1e-6 and not s.get("mezzanine")]
+    """Zemin ve normal katlar: binasının ±0,00'ı ve üstündeki (docs/adr/8154), asma kat olmayan katlar."""
+    return [s for s in bina.get("storeys") or [] if katman.kot(s) >= -1e-6 and not s.get("mezzanine")]
 
 
 def zemin_yuksekligi(bina: dict[str, Any], zemin: dict[str, Any]) -> tuple[float | None, list[dict[str, Any]]]:

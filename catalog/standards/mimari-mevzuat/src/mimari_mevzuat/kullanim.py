@@ -33,6 +33,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
+from . import katman
 from . import yururluk as y
 from .yangin_sinifi import sinif
 
@@ -158,7 +159,7 @@ def _katlar(bina: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _zemin(kat: dict[str, Any]) -> bool:
-    return abs(float(kat.get("elevation") or 0.0)) < _ZEMIN
+    return abs(katman.kot(kat)) < _ZEMIN
 
 
 def _cikislar(bina: dict[str, Any], kat: dict[str, Any]) -> int:

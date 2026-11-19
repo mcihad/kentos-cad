@@ -29,6 +29,7 @@ import re
 from datetime import date
 from typing import Any
 
+from . import katman
 from . import yururluk as y
 
 #: Kuralın maddeleri; yerel yönetmelik seçiliyse onunkiler de.
@@ -96,9 +97,10 @@ class _Bina:
 
     def __init__(self, bina: dict[str, Any], plan: tuple[int | None, str | None]) -> None:
         self.katlar = bina.get("storeys") or []
-        self.ust = [s for s in self.katlar if s["elevation"] >= -1e-6]
+        # Binasının ±0,00'ından (docs/adr/8154).
+        self.ust = [s for s in self.katlar if katman.kot(s) >= -1e-6]
         self.hizmet = [s for s in self.ust if _odali(s)]
-        self.bodrum = [s for s in self.katlar if s["elevation"] < -1e-6]
+        self.bodrum = [s for s in self.katlar if katman.kot(s) < -1e-6]
         self.tek_konut = bina.get("units") == 1 and bina.get("dwellings") == 1
         self.plan, self.plan_kaynak = plan
         self.asansor = any(s["elevators"] > 0 for s in self.katlar)

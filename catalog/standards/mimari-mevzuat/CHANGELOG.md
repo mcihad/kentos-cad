@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.42.0 — 19 Kasım 2026
+
+- Binanın kendi ±0,00'ı (docs/adr/8154): kurallar katın kotunu binasının sıfırından okur (`katman.kot`: kot eksi
+  katın `zero`'su): ±0,00 üstündeki katlar (`kat_yuksekligi.ustteki`), asansörün ve kaçış kapılarının bodrumu, yangın
+  dayanımının, kuyuların ve emsalin zemin katı, kullanımın zemin katı, bina yüksekliği. Planın kat adedi bina bina:
+  en çok katlı bina okunur (önce bütün binaların katları birlikte sayılıyordu). Bina yüksekliği 11, kat yüksekliği
+  48 bağımsız durum (4'ü yeni).
+
 ## 0.41.0 — 19 Kasım 2026
 
 - Subasman kotu (`subasman`; docs/adr/8153): PAİY 4/1-yyy. Her binanın zemin katı (adında Zemin, yoksa ±0,00'a en
