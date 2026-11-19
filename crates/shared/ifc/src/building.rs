@@ -383,6 +383,20 @@ pub use crate::crs::Crs;
 /// landing on it, stands at the floor and does not span the storey.
 const SPAN: f64 = 0.001;
 
+/// The circle through an arc's start `a`, its middle `m` and its end `b` (docs/adr/8169): its centre, its radius and
+/// whether it runs counter-clockwise; none when the three are on a line. Worked from `a`, so far from the origin the
+/// small differences keep their digits.
+pub(crate) fn circle(a: [f64; 2], m: [f64; 2], b: [f64; 2]) -> Option<([f64; 2], f64, bool)> {
+    let (p, q) = ([m[0] - a[0], m[1] - a[1]], [b[0] - a[0], b[1] - a[1]]);
+    let d = 2.0 * (p[0] * q[1] - p[1] * q[0]);
+    if d.abs() < 1e-12 {
+        return None;
+    }
+    let (pp, qq) = (p[0] * p[0] + p[1] * p[1], q[0] * q[0] + q[1] * q[1]);
+    let c = [(q[1] * pp - p[1] * qq) / d, (p[0] * qq - q[0] * pp) / d];
+    Some(([a[0] + c[0], a[1] + c[1]], crate::math::hypot(c[0], c[1]), d > 0.0))
+}
+
 /// Whether an element of `class` is one that may span storeys (docs/adr/8168): a vertical one, not a floor, a beam or a
 /// roof, which lie between storeys or over the top one.
 fn spans_storeys(class: Class) -> bool {
@@ -1369,8 +1383,8 @@ pub fn write(b: &Building) -> String {
         let g = w.st.derived("covers", &[space], "");
         w.st.add(format!("IFCRELCOVERSSPACES({g},$,$,$,#{space},({}))", Step::refs(&list)));
     }
-    // The grids (EK-6 Tablo 6.36; docs/adr/8070 §4): each axis its tag and its line, an arc an indexed curve's arc
-    // segment; the grid's footprint their lines. A grid on a storey is its storey's, else the building's.
+    // The grids (EK-6 Tablo 6.36; docs/adr/8070 §4, 8169): each axis its tag and its curve, the grid's footprint their
+    // curves. A grid on a storey is its storey's, else the building's.
     let mut in_building = Vec::new();
     let mut footprint = None;
     for grid in b.grids.iter().filter(|g| !g.u.is_empty() && !g.v.is_empty()) {
@@ -1385,28 +1399,35 @@ pub fn write(b: &Building) -> String {
             .unwrap_or(building_place);
         let place = w.placement(Some(parent), 0.0);
         let mut curves = Vec::new();
+        // Each axis its tag and its curve as IFC 4.3's grid footprint applies them (docs/adr/8169): a straight one a
+        // polyline; an arc its circle trimmed at its ends, by the points (the master) and by their angles round its
+        // centre (radians, the file's plane angle unit), along the circle when it runs counter-clockwise.
         let mut axes = |w: &mut Writer, list: &[Axis]| -> Vec<usize> {
             list.iter()
                 .map(|a| {
-                    let pts: Vec<[f64; 2]> = match a.through {
-                        Some(m) => vec![a.from, m, a.to],
-                        None => vec![a.from, a.to],
+                    let point = |w: &mut Writer, p: [f64; 2]| {
+                        w.st.add(format!("IFCCARTESIANPOINT(({},{}))", real(p[0]), real(p[1])))
                     };
-                    let coords: Vec<String> = pts
-                        .iter()
-                        .map(|p| format!("({},{})", real(p[0]), real(p[1])))
-                        .collect();
-                    let list = w
-                        .st
-                        .add(format!("IFCCARTESIANPOINTLIST2D(({}),$)", coords.join(",")));
-                    let segment = if a.through.is_some() {
-                        "IFCARCINDEX((1,2,3))"
-                    } else {
-                        "IFCLINEINDEX((1,2))"
+                    let (from, to) = (point(w, a.from), point(w, a.to));
+                    let curve = match a.through.and_then(|m| circle(a.from, m, a.to)) {
+                        Some((c, r, ccw)) => {
+                            let centre = point(w, c);
+                            let place = w.st.add(format!("IFCAXIS2PLACEMENT2D(#{centre},$)"));
+                            let base = w.st.add(format!("IFCCIRCLE(#{place},{})", real(r)));
+                            let angle = |p: [f64; 2]| {
+                                let t = crate::math::atan2(p[1] - c[1], p[0] - c[0]);
+                                real(if t < 0.0 { t + std::f64::consts::TAU } else { t })
+                            };
+                            w.st.add(format!(
+                                "IFCTRIMMEDCURVE(#{base},(#{from},IFCPARAMETERVALUE({})),(#{to},IFCPARAMETERVALUE({})),\
+                                 {},.CARTESIAN.)",
+                                angle(a.from),
+                                angle(a.to),
+                                if ccw { ".T." } else { ".F." }
+                            ))
+                        }
+                        None => w.st.add(format!("IFCPOLYLINE((#{from},#{to}))")),
                     };
-                    let curve = w
-                        .st
-                        .add(format!("IFCINDEXEDPOLYCURVE(#{list},({segment}),.F.)"));
                     curves.push(curve);
                     w.st.add(format!("IFCGRIDAXIS({},#{curve},.T.)", text(&a.tag)))
                 })
@@ -1940,6 +1961,82 @@ mod tests {
         b.elements[0].storey = 1;
         raise(&mut b.elements[0], -0.25, 0.0);
         assert!(!write(&b).contains("IFCRELREFERENCEDINSPATIALSTRUCTURE("));
+    }
+
+    /// A radial grid (docs/adr/8169): its straight axes polylines, its arcs circles about the centre trimmed at their
+    /// ends by the points (the master) and their angles in radians, a clockwise one against its circle. Read back, the
+    /// viewer's details list its axes' tags and the alignment check finds every axis's ends.
+    #[test]
+    fn a_radial_grid_s_arcs_are_trimmed_circles() {
+        let mut b = door_building();
+        let c = [512_340.0, 4_412_350.0];
+        let at = |r: f64, deg: f64| {
+            let t = deg.to_radians();
+            [c[0] + r * crate::math::cos(t), c[1] + r * crate::math::sin(t)]
+        };
+        let ray = |tag: &str, deg: f64| Axis {
+            id: None,
+            tag: tag.into(),
+            from: at(2.5, deg),
+            to: at(9.5, deg),
+            through: None,
+        };
+        let arc = |tag: &str, r: f64, ccw: bool| {
+            let (s, e) = if ccw { (-70.0, 70.0) } else { (70.0, -70.0) };
+            Axis { id: None, tag: tag.into(), from: at(r, s), to: at(r, e), through: Some(at(r, 0.0)) }
+        };
+        b.grids.push(Grid {
+            id: Some(9),
+            name: "MM-AKS-Eğrisel_aks".into(),
+            storey: None,
+            u: vec![ray("4", -30.0), ray("5", 0.0), ray("6", 30.0)],
+            v: vec![arc("E", 4.0, true), arc("F", 8.0, false)],
+            predefined: "RADIAL",
+        });
+        let f = write(&b);
+        let lines = |head: &str| f.lines().filter(|l| l.contains(head)).map(str::to_owned).collect::<Vec<_>>();
+        let args = |l: &str| l.split_once('(').map(|(_, r)| r.trim_end_matches(");").to_owned()).unwrap_or_default();
+        // Each axis's curve: the straight ones polylines, the arcs trimmed curves.
+        let line_of = |id: &str| f.lines().find(|l| l.starts_with(&format!("{id}="))).unwrap_or_default().to_owned();
+        let kinds: Vec<String> = lines("IFCGRIDAXIS(")
+            .iter()
+            .map(|l| format!("#{}", l.split(",#").nth(1).and_then(|x| x.split(',').next()).unwrap()))
+            .map(|id| line_of(&id))
+            .map(|l| l.split('=').nth(1).unwrap().split('(').next().unwrap().to_owned())
+            .collect();
+        assert_eq!(kinds, ["IFCPOLYLINE", "IFCPOLYLINE", "IFCPOLYLINE", "IFCTRIMMEDCURVE", "IFCTRIMMEDCURVE"]);
+        assert!(lines("IFCGRID(").iter().any(|l| l.ends_with(".RADIAL.);")));
+        let circles = lines("IFCCIRCLE(");
+        let radii: Vec<f64> = circles.iter().map(|l| args(l).rsplit(',').next().unwrap().parse().unwrap()).collect();
+        assert_eq!(radii.len(), 2);
+        assert!((radii[0] - 4.0).abs() < 1e-9 && (radii[1] - 8.0).abs() < 1e-9, "{radii:?}");
+        let trimmed = lines("IFCTRIMMEDCURVE(");
+        assert_eq!(trimmed.len(), 2);
+        let tau = std::f64::consts::TAU;
+        for (l, ccw) in trimmed.iter().zip([true, false]) {
+            assert!(l.ends_with(&format!(",{},.CARTESIAN.);", if ccw { ".T." } else { ".F." })), "{l}");
+            let params: Vec<f64> = l
+                .split("IFCPARAMETERVALUE(")
+                .skip(1)
+                .map(|x| x.split(')').next().unwrap().parse().unwrap())
+                .collect();
+            let (low, high) = (70f64.to_radians(), tau - 70f64.to_radians());
+            let want = if ccw { [high, low] } else { [low, high] };
+            assert!((params[0] - want[0]).abs() < 1e-9 && (params[1] - want[1]).abs() < 1e-9, "{params:?}");
+        }
+        #[cfg(feature = "view")]
+        {
+            let m = crate::read::read(f.as_bytes(), &crate::read::Limits::default(), &|| false).expect("reads");
+            let at_grid = m.objects.iter().position(|o| o.class == "IfcGrid").expect("the grid");
+            let d = m.details(f.as_bytes(), at_grid).expect("the details");
+            let group = d.groups.iter().find(|g| g.title == "Akslar").expect("its axes");
+            let said: Vec<(&str, &str)> = group.lines.iter().map(|l| (l.name.as_str(), l.value.as_str())).collect();
+            assert_eq!(said, [("U aksları", "4, 5, 6"), ("V aksları", "E, F")]);
+            let axes = m.grid_axes(f.as_bytes()).expect("the axes");
+            assert_eq!(axes.iter().map(|a| a.tag.as_str()).collect::<Vec<_>>(), ["4", "5", "6", "E", "F"]);
+            let (e, end) = (&axes[3], at(4.0, 70.0));
+            assert!((e.b[0] - end[0]).abs() < 1e-6 && (e.b[1] - end[1]).abs() < 1e-6, "{:?}", e.b);
+        }
     }
 
     /// A column type's section (docs/adr/8167): its rectangle, its material (the one its occurrences name, written

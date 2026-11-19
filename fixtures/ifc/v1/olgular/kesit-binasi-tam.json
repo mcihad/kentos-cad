@@ -1013,7 +1013,7 @@
     "IfcWindow": "PNC"
   },
   "file": {
-    "bytes": 175515,
+    "bytes": 175445,
     "extension": "ifc",
     "header": {
       "author": [
@@ -1032,7 +1032,7 @@
       "timeStamp": "2026-11-17T12:00:00"
     },
     "name": "kesit-binasi-tam.ifc",
-    "records": 3167,
+    "records": 3174,
     "schema": "IFC4X3_ADD2"
   },
   "findings": [],
@@ -4803,7 +4803,7 @@
           "type": "GeometricCurveSet"
         }
       ],
-      "step": 3115,
+      "step": 3122,
       "storey": null,
       "tag": null,
       "type": null,
@@ -4829,7 +4829,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3161,
+      "step": 3168,
       "storey": null,
       "tag": null,
       "type": null,
@@ -4855,7 +4855,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3164,
+      "step": 3171,
       "storey": null,
       "tag": null,
       "type": null,

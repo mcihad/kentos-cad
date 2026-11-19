@@ -1,15 +1,16 @@
 //! The chosen object's details for the viewer's properties panel (feature `view`; docs/adr/8061 §5 "Özellikler",
 //! docs/adr/8073 §2): its attributes, its type, its material, its storey, its material layers and how a usage lays them
 //! (docs/adr/8166), its section (its own or its type's profile set, docs/adr/8167), the storeys it spans besides its
-//! own (docs/adr/8168), then its property and quantity sets
+//! own (docs/adr/8168), a grid's axes (docs/adr/8169), then its property and quantity sets
 //! (its own, then its type's) as the file writes them, each value
 //! with its unit: its own, else the project's for the measure it is written with. Nothing is converted and nothing is
 //! measured from the triangles (CLAUDE.md §23.3).
 
-use ifc_lite_core::SchemaVersion;
+use ifc_lite_core::{AttributeValue, EntityDecoder, SchemaVersion};
 use kentos_model_view::{Details, Group, Line};
 
-use super::{Model, ReadError, Units, Value, ValueKind, header};
+use super::graph::named;
+use super::{Model, ReadError, Units, Value, ValueKind, guarded, header};
 
 impl Model {
     /// The details of object `object` (an index into [`Model::objects`]); `bytes` are the bytes it was read from.
@@ -42,6 +43,11 @@ impl Model {
         add("Malzeme", self.materials(bytes, object).ok().filter(|m| !m.is_empty()).map(|m| m.join("; ")));
         add("Kayıt", Some(format!("#{}", o.step)));
         let mut groups = vec![own];
+        // A grid's axes (docs/adr/8169): its U, V and W axes' tags as the file lists them.
+        let axes = self.axes(bytes, schema, object)?;
+        if !axes.is_empty() {
+            groups.push(Group { title: "Akslar".to_owned(), lines: axes });
+        }
         // Its material layers (docs/adr/8166): how a usage lays them, then each in order, its thickness in the
         // project's length unit.
         if let Some(list) = self.layers(bytes, object)? {
@@ -120,6 +126,34 @@ impl Model {
             .filter_map(|r| self.object(r.relating?))
             .map(|g| g.long_name.clone().or_else(|| g.name.clone()).or_else(|| g.object_type.clone()).unwrap_or_else(|| g.class.clone()))
             .collect()
+    }
+
+    /// A grid's axes (docs/adr/8169): a line for each of its U, V and W lists, its axes' tags in the file's order; none
+    /// for another object.
+    fn axes(&self, bytes: &[u8], schema: SchemaVersion, object: usize) -> Result<Vec<Line>, ReadError> {
+        let Some(o) = self.objects.get(object).filter(|o| schema.is_subtype_of(&o.class, "IfcGrid")) else {
+            return Ok(Vec::new());
+        };
+        guarded(|| {
+            let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
+            let Ok(grid) = decoder.decode_by_id(o.step) else { return Ok(Vec::new()) };
+            let mut lines = Vec::new();
+            for (list, name) in [("UAxes", "U aksları"), ("VAxes", "V aksları"), ("WAxes", "W aksları")] {
+                let ids: Vec<u32> = named(schema, &grid, list)
+                    .and_then(AttributeValue::as_list)
+                    .map(|l| l.iter().filter_map(AttributeValue::as_entity_ref).collect())
+                    .unwrap_or_default();
+                let tags: Vec<String> = ids
+                    .into_iter()
+                    .filter_map(|id| decoder.decode_by_id(id).ok())
+                    .map(|a| named(schema, &a, "AxisTag").and_then(AttributeValue::as_string).unwrap_or("?").to_owned())
+                    .collect();
+                if !tags.is_empty() {
+                    lines.push(Line { name: name.to_owned(), value: tags.join(", "), unit: None, numeric: false });
+                }
+            }
+            Ok(lines)
+        })
     }
 
     /// The storeys that reference the object without containing it (`IfcRelReferencedInSpatialStructure`,

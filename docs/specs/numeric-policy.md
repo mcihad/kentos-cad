@@ -64,6 +64,7 @@ Bu belge onları birbirine bağlar. Kural değiştiren her iş buraya da yazıl�
 | Mekânsal sorgu | 1 mm (`spatial_query::TOLERANCE`) | Konuma göre seç'in ilişkileri (ADR 0200) |
 | Topoloji | proje ayarı, 1 mm varsayılan | topoloji kuralları, topolojik temizlik (ADR 0148, 0202) |
 | Kata uzanma | 1 mm (`building::SPAN`) | IFC'de gövdesinin üstü daha yüksek bir katın kotunu aşan eleman o kata başvurur (ADR 8168) |
+| Eğrisel aks | 1 mm (`grids::SAME_POINT`) | IFC'de aynı merkezli yaylar ve doğrusu o merkezden geçen düz akslar bir RADIAL ızgara (ADR 8169) |
 | Kenet ve seçim | ekranda piksel | yalnız neyin tutulduğunu seçer; yeri kaynaktan gelir |
 | Kayıtlı ölçü denetimi | proje ayarı | ADR 0180 |
 

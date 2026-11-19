@@ -1013,7 +1013,7 @@
     "IfcWindow": "PNC"
   },
   "file": {
-    "bytes": 163313,
+    "bytes": 163243,
     "extension": "ifc",
     "header": {
       "author": [
@@ -1032,7 +1032,7 @@
       "timeStamp": "2026-11-11T12:00:00"
     },
     "name": "kesit-binasi.ifc",
-    "records": 3010,
+    "records": 3017,
     "schema": "IFC4X3_ADD2"
   },
   "findings": [],
@@ -5160,7 +5160,7 @@
           "type": "GeometricCurveSet"
         }
       ],
-      "step": 2958,
+      "step": 2965,
       "storey": null,
       "tag": null,
       "type": null,
@@ -5186,7 +5186,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3004,
+      "step": 3011,
       "storey": null,
       "tag": null,
       "type": null,
@@ -5212,7 +5212,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3007,
+      "step": 3014,
       "storey": null,
       "tag": null,
       "type": null,

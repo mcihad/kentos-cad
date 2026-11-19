@@ -33,7 +33,7 @@ It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
   docs/adr/8105), slabs theirs (Betonarme; a layered slab's set, laid from its top, holds it in its one LoadBearing
   layer, docs/adr/8166), columns and beams Betonarme;
 - the grids (docs/adr/8070 §4) are one rectangular IfcGrid of the building, its U and V axes the definition's lines with
-  their names and points; the U stair is a HALF_TURN_STAIR of Betonarme (§2);
+  their names and points, each a polyline (docs/adr/8169); the U stair is a HALF_TURN_STAIR of Betonarme (§2);
 - every element and room gives IfcOpenShell a shape;
 - fixtures/arch/v1/ifc/kesit-binasi-kompartiman.ifc (the fire compartments a caller gives, docs/adr/8088): one
   IfcZone of object type "Yangın kompartımanı" for each storey, named `MM-ZON-Yangın_kompartımanı_N`, grouping exactly
@@ -305,7 +305,11 @@ def main() -> int:
         par = lambda d: abs(first[0] * d[1] - first[1] * d[0]) < 1e-9
         want_u = [(e["name"], [(p["x"], p["y"]) for p in e["pts"][:2]]) for e in grid_defs if par(direction(e))]
         want_v = [(e["name"], [(p["x"], p["y"]) for p in e["pts"][:2]]) for e in grid_defs if not par(direction(e))]
-        got = lambda axes: [(a.AxisTag, [tuple(p) for p in a.AxisCurve.Points.CoordList]) for a in axes]
+        # Each a polyline (IFC 4.3's grid footprint curves, docs/adr/8169).
+        for a in list(g.UAxes) + list(g.VAxes or []):
+            ensure(a.AxisCurve.is_a("IfcPolyline"), f"axis {a.AxisTag}: {a.AxisCurve.is_a()}")
+        got = lambda axes: [(a.AxisTag, [tuple(p.Coordinates) for p in a.AxisCurve.Points])
+                            for a in axes if a.AxisCurve.is_a("IfcPolyline")]
         ensure(got(g.UAxes) == want_u, f"U axes {got(g.UAxes)}")
         ensure(got(g.VAxes or []) == want_v, f"V axes {got(g.VAxes or [])}")
         ensure(g.PredefinedType == "RECTANGULAR", f"grid type {g.PredefinedType}")

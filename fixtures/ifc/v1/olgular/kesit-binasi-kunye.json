@@ -1013,7 +1013,7 @@
     "IfcWindow": "PNC"
   },
   "file": {
-    "bytes": 165866,
+    "bytes": 165796,
     "extension": "ifc",
     "header": {
       "author": [
@@ -1032,7 +1032,7 @@
       "timeStamp": "2026-11-11T12:00:00"
     },
     "name": "kesit-binasi-kunye.ifc",
-    "records": 3042,
+    "records": 3049,
     "schema": "IFC4X3_ADD2"
   },
   "findings": [],
@@ -5043,7 +5043,7 @@
           "type": "GeometricCurveSet"
         }
       ],
-      "step": 2990,
+      "step": 2997,
       "storey": null,
       "tag": null,
       "type": null,
@@ -5069,7 +5069,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3036,
+      "step": 3043,
       "storey": null,
       "tag": null,
       "type": null,
@@ -5095,7 +5095,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3039,
+      "step": 3046,
       "storey": null,
       "tag": null,
       "type": null,

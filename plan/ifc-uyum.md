@@ -98,7 +98,7 @@ kimliği; test bağlantısı.
 | IfcRailing | KRK | Korkuluk | ✓ çizilen korkuluk; merdivenin ve rampanın yan yan korkuluğu onların parçası; dikey çubuklu korkuluğun çubukları gövdede (ADR 8128) | camlı korkuluğun camı | — |
 | IfcCovering | KPL | Kaplama, asma tavan (BIM-09) | ✓ döşemenin kaplama rolü (mahale bağlı ya da elle, tipi ve gövdesiyle; K47) ve mahalin seti adları ve kalınlıklarıyla (K44, ADR 8070) | katman takımı (duvar kalınlığı ADR 8076 ve 8124, `IfcRelCoversSpaces` ADR 8127) | IFC-03 |
 | IfcChimney | BAC | Çatı bacası, duvardaki baca | ✓ tek eleman, duvarın boşluğunu doldurur (ADR 8070) | — | IFC-03 |
-| IfcGridAxis | AKS | Aks | ✓ `IfcGrid` U/V (ADR 8070); tek yönlü takım kayıpta | RADIAL | IFC-03 |
+| IfcGridAxis | AKS | Aks | ✓ `IfcGrid` U/V (ADR 8070); eğrisel aks ağı RADIAL, akslar `IfcPolyline` ve kırpılmış çember (ADR 8169); tek yönlü takım kayıpta | — | IFC-03 |
 | IfcGroup | GRP | — | ✗ | kataloğun ne için istediği belli olunca | IFC-03 |
 | IfcFurniture | MBL | Kitaplık bloğu (mobilya) | ✓ kartındaki sınıf ve gövdeyle (ADR 8070) | gerçek biçim | IFC-03 |
 | IfcSanitaryTerminal | STT | Kitaplık bloğu (vitrifiye) | ✓ aynı | gerçek biçim | IFC-03 |
@@ -348,8 +348,11 @@ parçaları (`IfcRailing`, [ADR 8128](../docs/adr/8128-stair-and-ramp-railings-i
 kapı ve pencere parçaları ([ADR 8129](../docs/adr/8129-doors-and-windows-in-curtain-walls.md)), eğimli eleman
 (`Pset_MemberCommon.Slope`, [ADR 8130](../docs/adr/8130-sloped-members.md)) 18 Kasım'da. Kaplamanın katman takımı ve
 kullanımı 19 Kasım'da ([ADR 8166](../docs/adr/8166-slab-and-covering-layer-sets.md): EK-6 Tablo 6.20'nin kaplama
-malzemesi ve kalınlığı kaplama nesnesinde). **Kalan:** RADIAL aks; mobilya ve vitrifiyenin gerçek biçimi; `IfcGroup`'un
-katalogdaki yeri.
+malzemesi ve kalınlığı kaplama nesnesinde). Eğrisel aks ağı kendi RADIAL ızgarası (U ışınsal akslar saat yönünün
+tersine, V yaylar merkezden dışa), bütün akslar ızgara ayak izinin uygulanan eğrileriyle (`IfcPolyline`, `IfcCircle`
+üstünde `IfcTrimmedCurve`), altlık denetimi KentOS'un akslarını da okur, görüntüleyicide ızgaranın Akslar grubu;
+IfcOpenShell doğrulayıcısında 0 bulgu 19 Kasım'da ([ADR 8169](../docs/adr/8169-radial-grids-and-grid-axis-curves.md)).
+**Kalan:** mobilya ve vitrifiyenin gerçek biçimi; `IfcGroup`'un katalogdaki yeri.
 
 **Kullanıcı sonucu:** Modeldeki her yapı nesnesi kendi sınıfıyla dışa gider; emsal alanları ve bağımsız bölümler dosyadadır.
 Nesneleri BIM-08 ve BIM-09'dan gelir.

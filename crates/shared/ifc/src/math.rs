@@ -16,3 +16,7 @@ pub(crate) fn atan(x: f64) -> f64 {
 pub(crate) fn hypot(x: f64, y: f64) -> f64 {
     libm::hypot(x, y)
 }
+
+pub(crate) fn atan2(y: f64, x: f64) -> f64 {
+    libm::atan2(y, x)
+}

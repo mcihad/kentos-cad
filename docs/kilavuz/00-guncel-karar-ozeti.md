@@ -457,6 +457,11 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Eğrisel aks ağı IFC'de (19 Kasım 2026; [ADR 8169](../adr/8169-radial-grids-and-grid-axis-curves.md),
+    K439–K441):** aynı merkezli yaylar ve doğrusu o merkezden geçen düz akslar kendi RADIAL ızgarası
+    (`MM-AKS-Eğrisel_aks`; U ışınsal akslar saat yönünün tersine, V yaylar merkezden dışa); kalan akslar eskisi gibi
+    ayrı ızgara. Bütün akslar `IfcPolyline` ya da `IfcCircle` üstünde `IfcTrimmedCurve` (nokta esas, açı radyan);
+    altlık denetimi bunları ve eski `IfcIndexedPolyCurve`'ü okur; görüntüleyicide ızgaranın Akslar grubu.
   - **Birden çok kata uzanan eleman (19 Kasım 2026; [ADR 8168](../adr/8168-elements-spanning-storeys.md),
     K436–K438):** duvar, kolon, giydirme cephe, dikme, merdiven, rampa, korkuluk, asansör ve baca kendi katında yer
     alır; gövdesinin üstü daha yüksek bir katın kotunu 1 mm'den çok aşarsa o kata `IfcRelReferencedInSpatialStructure`

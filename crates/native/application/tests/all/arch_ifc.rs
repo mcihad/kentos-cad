@@ -151,6 +151,53 @@ fn a_wall_two_storeys_tall_spans_the_storey_over_its_own() {
     }
 }
 
+/// A curved grid system beside the building (docs/adr/8169), drawn by Eğrisel aks ağı from the east façade's middle:
+/// four radial axes (4 to 7, from −45° by 30° turns) and two arcs (E at 6 m, F at 10 m), each 1 m past the others. It
+/// is one RADIAL grid of the building, U its radial axes counter-clockwise and V its arcs from the centre out, each arc
+/// a circle about the centre trimmed at its ends. The building's own axes (2 and D pass through the centre) stay their
+/// rectangular grid. `KENTOS_WRITE_IFC_RADIAL=<path>` keeps the file for `scripts/fixtures/radial_grid_check.py`.
+#[test]
+fn a_curved_grid_system_is_a_radial_grid() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let turn = 30f64.to_radians();
+    let input = serde_json::json!({"layerId": "aks", "radial": {
+        "center": {"x": 12.0, "y": 4.5}, "angle": -45f64.to_radians(), "turns": [turn, turn, turn],
+        "radius": 6.0, "rings": [4.0], "radialStart": "4", "arcStart": "E", "extension": 1.0}});
+    let answer =
+        registry::run(&mut ExecutionContext::new(&mut doc), "cad.grids.create", CallOp::Execute, input).unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let (b, written) = arch_ifc::building(&doc, "2026-11-19T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new());
+    assert_eq!(written.grid_axes, 13);
+    let tags = |list: &[kentos_ifc::building::Axis]| list.iter().map(|a| a.tag.clone()).collect::<Vec<_>>();
+    let said: Vec<(&str, Vec<String>, Vec<String>)> =
+        b.grids.iter().map(|g| (g.predefined, tags(&g.u), tags(&g.v))).collect();
+    let words = |l: &[&str]| l.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+    assert_eq!(
+        said,
+        [
+            ("RECTANGULAR", words(&["A", "B", "C", "D"]), words(&["1", "2", "3"])),
+            ("RADIAL", words(&["4", "5", "6", "7"]), words(&["E", "F"])),
+        ]
+    );
+    assert_eq!((b.grids[0].storey, b.grids[1].storey), (None, None));
+    let text = kentos_ifc::building::write(&b);
+    assert_eq!(text.matches("IFCGRID(").count(), 2);
+    assert_eq!(text.matches("IFCTRIMMEDCURVE(").count(), 2);
+    // Each axis's curve as the grid's footprint applies them: the straight ones polylines, the arcs trimmed circles.
+    let line_of = |id: &str| text.lines().find(|l| l.starts_with(&format!("{id}="))).unwrap_or_default();
+    for axis in text.lines().filter(|l| l.contains("IFCGRIDAXIS(")) {
+        let curve = axis.split(",#").nth(1).and_then(|x| x.split(',').next()).expect("its curve");
+        let kind = line_of(&format!("#{curve}"));
+        assert!(kind.contains("=IFCPOLYLINE(") || kind.contains("=IFCTRIMMEDCURVE("), "{axis} {kind}");
+    }
+    if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_RADIAL") {
+        std::fs::write(path, &text).expect("the file kept");
+    }
+}
+
 #[test]
 fn the_drawing_s_walls_doors_windows_and_rooms_are_the_files() {
     let doc = building();

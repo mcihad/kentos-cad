@@ -1013,7 +1013,7 @@
     "IfcWindow": "PNC"
   },
   "file": {
-    "bytes": 163683,
+    "bytes": 163613,
     "extension": "ifc",
     "header": {
       "author": [
@@ -1032,7 +1032,7 @@
       "timeStamp": "2026-11-16T12:00:00"
     },
     "name": "yerel-sistem.ifc",
-    "records": 3013,
+    "records": 3020,
     "schema": "IFC4X3_ADD2"
   },
   "findings": [],
@@ -5161,7 +5161,7 @@
           "type": "GeometricCurveSet"
         }
       ],
-      "step": 2961,
+      "step": 2968,
       "storey": null,
       "tag": null,
       "type": null,
@@ -5187,7 +5187,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3007,
+      "step": 3014,
       "storey": null,
       "tag": null,
       "type": null,
@@ -5213,7 +5213,7 @@
       "quantities": {},
       "sets": {},
       "shapes": [],
-      "step": 3010,
+      "step": 3017,
       "storey": null,
       "tag": null,
       "type": null,

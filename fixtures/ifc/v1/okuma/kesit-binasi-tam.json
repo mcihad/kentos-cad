@@ -2216,7 +2216,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 3164,
+   "step": 3171,
    "tag": null,
    "type": null
   },
@@ -2356,7 +2356,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 3161,
+   "step": 3168,
    "tag": null,
    "type": null
   },
@@ -2398,7 +2398,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "RECTANGULAR",
-   "step": 3115,
+   "step": 3122,
    "tag": null,
    "type": null
   },
@@ -2517,7 +2517,7 @@
  },
  "precision": 1e-05,
  "reader": "IfcOpenShell 0.9.0.post1",
- "records": 3167,
+ "records": 3174,
  "schema": "IFC4X3_ADD2",
  "sets": {
   "01alMXGa9m08000000000$": {

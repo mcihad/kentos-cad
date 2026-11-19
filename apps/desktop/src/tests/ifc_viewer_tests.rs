@@ -88,6 +88,77 @@ fn click_one(app: &mut App, category: Category) -> usize {
     panic!("no {category:?} met a click");
 }
 
+/// Eğrisel aks (docs/adr/8169), light and dark: the section building with a curved grid system drawn beside its east
+/// façade by Eğrisel aks ağı (radial axes 4 to 7 from −45° by 30°, arcs E at 6 m and F at 10 m); the plan, then its
+/// file in IFC modeli with the curved grid chosen in the tree, its details: Ön tanımlı tür RADIAL and its axes, U the
+/// radial ones counter-clockwise, V the arcs from the centre out. `.run/gui-evidence/egrisel-aks-8169/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::radial_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn radial_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/egrisel-aks-8169");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = open(building());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let size = Size::new(1440.0, 900.0);
+        let _ = app.update(Message::WindowResized(size));
+        let turn = 30f64.to_radians();
+        let doc = &mut app.document.as_mut().expect("the building").model;
+        let answer = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(doc),
+            "cad.grids.create",
+            kentos_commands::CallOp::Execute,
+            serde_json::json!({"layerId": "aks", "radial": {
+                "center": {"x": 12.0, "y": 4.5}, "angle": -45f64.to_radians(), "turns": [turn, turn, turn],
+                "radius": 6.0, "rings": [4.0], "radialStart": "4", "arcStart": "E", "extension": 1.0}}),
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let mut main = Snapshot::new(size).expect("a renderer");
+        main.settle(&mut app, App::view, &mut update);
+        main.settle(&mut app, App::view, &mut update);
+        let plan = out.join(format!("1-plan-{name}.png"));
+        main.render(App::view(&app), &app.theme()).save(&plan).expect("writes the picture");
+        println!("{}", plan.display());
+        let path = exported(&mut app, &format!("egrisel-{name}"));
+        opened(&mut app, path.clone());
+        let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
+        let grid = v
+            .input()
+            .objects
+            .iter()
+            .position(|o| o.class == "IfcGrid" && o.label.contains("Eğrisel"))
+            .expect("the curved grid");
+        send(&mut app, Event::Viewer(V::Choose(Some(grid))));
+        let w = app.ifc_viewer.as_ref().expect("the viewer");
+        let details = w.viewer.details().expect("its details");
+        let line = |name: &str| -> Vec<&str> {
+            details.groups.iter().flat_map(|g| &g.lines).filter(|l| l.name == name).map(|l| l.value.as_str()).collect()
+        };
+        assert_eq!(line("Ön tanımlı tür"), ["RADIAL"]);
+        assert_eq!((line("U aksları"), line("V aksları")), (vec!["4, 5, 6, 7"], vec!["E, F"]));
+        let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        let picture = out.join(format!("2-ifc-modeli-{name}.png"));
+        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&picture).expect("writes the picture");
+        println!("{}", picture.display());
+        let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
+    }
+}
+
 /// Uzandığı kat (docs/adr/8168), light and dark: the section building with its east wall drawn once over both storeys
 /// and on over the roof (fixtures/arch/v1/ifc/kesit-binasi-kalkan-duvari.ifc, the application test's) in IFC modeli,
 /// the plan's east wall chosen; its details name the storey it stands in and the one it rises into.

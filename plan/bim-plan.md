@@ -1004,7 +1004,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B6 ◐ | Binanın 3B görünümü | BIM-06 | Bina 3B'de; tıkla, planda seç; örtüşen mahal kırmızı (ADR 8067); ağaç, özellikler ve kesit görüntüleyicide, model çizimden canlı (ADR 8119); gerçek pencere kaldı |
 | B7 ✓ | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Beyan dayanağıyla modelde; eksik alanlar nesneleriyle Denetim'de; 9. soru modelden; yazar gibi doldurulmuş binada zorunlu satır eksiği yok (ADR 8068, 8076); pencerelerde beyan, türetilenin gerekçesi, acil çıkış önerisi, Tag, ad ve soyad, ölçüm anotasyonu (ADR 8124) |
 | B8 ✓ | Mahal, zon ve emsal; mekânsal zonlar ve gruplar | BIM-08, IFC-03 | Emsal tablosu ile model aynı alanlardan (ADR 8069); mahalin kendi emsal durumu ve DİĞER, mahalin türü, doğru katta (ADR 8125); çatıyla kesilen hacim (ADR 8071, 8123); dosyada kat × durum (ADR 8126) |
-| B9 ✓ | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş (ADR 8070); kaplamanın mahali (8127); merdiven ve rampa korkuluğu (8128); giydirme cephede kapı ve pencere (8129); eğimli eleman (8130) |
+| B9 ✓ | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş (ADR 8070); kaplamanın mahali (8127); merdiven ve rampa korkuluğu (8128); giydirme cephede kapı ve pencere (8129); eğimli eleman (8130); eğrisel aks RADIAL ızgara, akslar `IfcPolyline` ve kırpılmış çember (8169) |
 | B10 ✓ | Geometri doğruluğu; geometri ve görünüm tanımı | BIM-10, IFC-06 | Eğri eğri, açıklık kesik (ADR 8071) |
 | B11 ✓ | Çok bina; konum, kot ve çok bina | BIM-11, IFC-05 | İki blok, iki model dosyası; yerel sistem haritada; plan kararları kaynağıyla (ADR 8072) |
 
