@@ -9,6 +9,8 @@
 //! - 22/1-k: flat 1's storage annex under the ground, 30 m², out up to 0.50 × 25.7125 = 12.85625 m²; 17.14375 m² in.
 //! - 22/1-ç: a caretaker flat of three 30 m² rooms, 70 m² of its 90 out, 20 m² in.
 //! - 22/1-f: two library rooms, 50 m² of their 60 out, 10 m² in.
+//! - 22/1-j (docs/adr/8147): the common area's gym and meeting room in the basement under the ground, 60 m²; katlar
+//!   alanı before them the two flats' 60 m², 5 % of it 3 m² (under 1000 m²): 3 m² out, 57 m² in.
 
 use kentos_launch::Module;
 use serde_json::{Value, json};
@@ -72,8 +74,12 @@ fn building(basement: [(&str, &str); 3], floor: f64) -> App {
         {"id": "o", "number": "O", "name": "Ortak alan", "kind": "common"},
         {"id": "k", "number": "K", "name": "Kapıcı dairesi", "kind": "common"}
     ]}}));
+    // An empty group: the room in none.
     let room = |x: f64, level: &str, unit: &str, name: Option<&str>| {
-        let mut r = json!({"seed": p(x, 3.0), "arch": {"level": level}, "unit": unit});
+        let mut r = json!({"seed": p(x, 3.0), "arch": {"level": level}});
+        if !unit.is_empty() {
+            r["unit"] = json!(unit);
+        }
         if let Some(n) = name {
             r["name"] = json!(n);
         }
@@ -100,6 +106,11 @@ fn caretaker() -> App {
 /// Two library rooms of the common area and the boiler room.
 fn library() -> App {
     building([("Kütüphane", "o"), ("Kütüphane", "o"), ("Kazan dairesi", "o")], -3.0)
+}
+
+/// The common area's gym and meeting room and the boiler room (22/1-j).
+fn amenity(floor: f64) -> App {
+    building([("Spor salonu", "o"), ("Toplantı odası", "o"), ("Kazan dairesi", "o")], floor)
 }
 
 fn report(app: &App) -> kentos_domain::zoning::ZoningReport {
@@ -164,6 +175,94 @@ fn the_library_rooms_are_out_up_to_50_m2_together() {
     assert!(near(r.library_over, 10.0), "{r:?}");
     assert!(near(r.included, 60.0 + 10.0), "{r:?}");
     assert_eq!(row(&app, "Kütüphanenin 50 m²'yi aşan kısmı").as_deref(), Some("10.00"));
+}
+
+#[test]
+fn the_residents_common_rooms_under_the_ground_are_out_up_to_5_percent_of_katlar_alani() {
+    let app = amenity(-3.0);
+    let r = report(&app);
+    assert!(near(r.amenity_over, 57.0), "{r:?}");
+    // Katlar alanı: the two flats and the 57 m²; out: the 3 m², two stair halls … one: the ground's, and the boiler.
+    assert!(near(r.included, 60.0 + 57.0), "{r:?}");
+    assert!(near(r.exempt, 3.0 + 30.0 + 30.0), "{r:?}");
+    assert!(near(r.floors, 117.0), "{r:?}");
+    assert_eq!(row(&app, "Bodrumdaki ortak mekânların sınırı aşan kısmı").as_deref(), Some("57.00"));
+    let limits: Vec<_> = r.limits.iter().map(|l| (l.limit, l.rooms.len(), l.common)).collect();
+    assert_eq!(limits, [(kentos_domain::zoning::ZoningLimit::Amenity, 2, true)]);
+    assert!(near(r.limits[0].area, 60.0) && near(r.limits[0].allowed, 3.0) && near(r.limits[0].over, 57.0));
+    // The excess shared by the rooms' areas: half each.
+    let moved: Vec<f64> = r.rooms.iter().filter(|x| x.moved > 0.0).map(|x| x.moved).collect();
+    assert!(moved.len() == 2 && moved.iter().all(|m| near(*m, 28.5)), "{moved:?}");
+    // The facts carry the limit for the standards package.
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
+    let amenity: Vec<(usize, f64, f64, f64, bool)> = facts
+        .limits
+        .iter()
+        .filter(|l| l.limit == "amenity")
+        .map(|l| (l.rooms.len(), l.area, l.allowed, l.over, l.common))
+        .collect();
+    assert_eq!(amenity.len(), 1, "{:?}", facts.limits);
+    assert!(amenity[0].0 == 2 && near(amenity[0].1, 60.0) && near(amenity[0].2, 3.0) && near(amenity[0].3, 57.0));
+    assert!(amenity[0].4, "of the common area");
+    // The basement holds no room counted in: its counted-out zone names the 57 m² as counted in.
+    let (b, _, _) = kentos_native_application::arch_ifc::model(doc);
+    let named: Vec<&str> =
+        b.zones.iter().filter_map(|z| z.description.as_deref()).filter(|d| d.contains("22/1-j")).collect();
+    assert_eq!(named.len(), 1, "{:?}", b.zones);
+    let words = "22/1-j: bodrumdaki ortak mekânların sınırını aşan 57.00 m² emsale dahil";
+    assert!(named[0].contains(words), "{}", named[0]);
+}
+
+#[test]
+fn common_rooms_above_the_ground_or_of_a_flat_count_in() {
+    // The basement's top a metre over ±0.00: not under the ground, the gym and the meeting room count in whole.
+    let raised = amenity(-2.0);
+    let r = report(&raised);
+    assert!(r.limits.is_empty() && near(r.amenity_over, 0.0), "{r:?}");
+    assert!(near(r.included, 120.0) && near(r.exempt, 60.0), "{r:?}");
+    assert_eq!(row(&raised, "Bodrumdaki ortak mekânların"), None);
+    // Flat 1's own gym and meeting room (22/1-j: "tek başına bağımsız bölüm oluşturmayan"): in.
+    let own = building([("Spor salonu", "d1"), ("Toplantı odası", "d1"), ("Kazan dairesi", "o")], -3.0);
+    let r = report(&own);
+    assert!(r.limits.is_empty(), "{r:?}");
+    assert!(near(r.included, 120.0) && near(r.exempt, 60.0), "{r:?}");
+    // A meeting room in flat 1's store annex ("bir bağımsız bölümün eklentisi olmayan"): never 22/1-j's; its group's
+    // nature makes it a store under 22/1-k's 50 % of the flat's net area (the flat's own gym in it).
+    let annex = building([("Spor salonu", "d1"), ("Toplantı odası", "e1"), ("Kazan dairesi", "o")], -3.0);
+    let r = report(&annex);
+    let limits: Vec<_> = r.limits.iter().map(|l| (l.limit, l.unit.as_deref())).collect();
+    assert_eq!(limits, [(kentos_domain::zoning::ZoningLimit::Storage, Some("d1"))]);
+    assert!(near(r.amenity_over, 0.0), "{r:?}");
+}
+
+/// The gym and the meeting room counted out: Denetim's 22/1-j row is an expert's (their trade and users are not
+/// drawn); with the rooms in no program group, failed (no group says they are a common area's).
+#[test]
+fn denetim_asks_an_expert_of_the_common_rooms_trade_and_users() {
+    use kentos_commands::ArchAuditOutcome as O;
+    let mut app = amenity(-3.0);
+    crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+    checked(&mut app);
+    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let found: Vec<_> = audited.findings.iter().filter(|f| f.code == "paiy_amenity_not_exempt").collect();
+    assert_eq!(found.len(), 1, "{:#?}", audited.findings);
+    assert_eq!(found[0].state, Some(kentos_commands::ArchAuditState::ExpertReview));
+    assert!(found[0].message.contains("60.00 m², sınır 3.00 m²"), "{}", found[0].message);
+    assert!(found[0].message.contains("57.00 m²'si sınırı aştığı için emsale eklendi"), "{}", found[0].message);
+    assert_eq!(found[0].uids.len(), 2);
+    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let row = set.rules.iter().find(|r| r.rule == "PAİY 22/1-j").expect("the row");
+    assert_eq!((row.state, row.version.as_deref()), (O::ExpertReview, Some("25.7.2019")));
+    // The two rooms in no group: counted out by their words, but no group says they are a common area's.
+    let mut app = building([("Spor salonu", ""), ("Toplantı odası", ""), ("Kazan dairesi", "o")], -3.0);
+    assert!(near(report(&app).amenity_over, 57.0));
+    crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+    checked(&mut app);
+    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let f = audited.findings.iter().find(|f| f.code == "paiy_amenity_not_exempt").expect("the finding");
+    assert_eq!(f.state, None, "failed: {f:?}");
+    assert!(f.message.contains("ortak alan değil"), "{}", f.message);
 }
 
 /// A polygon's area by the shoelace formula, its rings even-odd.
@@ -231,7 +330,13 @@ fn a_caretaker_flat_no_rule_makes_obligatory_is_a_finding_of_the_standards_packa
     use kentos_commands::ArchAuditOutcome as O;
     assert_eq!(
         rows,
-        [("PAİY 22/1-ç", O::Failed), ("PAİY 22/1-f", O::OutOfScope), ("PAİY 22/1-k", O::OutOfScope), ("PAİY 22/1-l", O::OutOfScope)]
+        [
+            ("PAİY 22/1-ç", O::Failed),
+            ("PAİY 22/1-f", O::OutOfScope),
+            ("PAİY 22/1-j", O::OutOfScope),
+            ("PAİY 22/1-k", O::OutOfScope),
+            ("PAİY 22/1-l", O::OutOfScope)
+        ]
     );
 }
 
@@ -289,6 +394,53 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-kapici-dairesi-denetim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Emsal ve TAKS tablosu beside the basement with the common area's gym and meeting room (22/1-j: the 57 m² past the
+/// 5 % on its own row), and Denetim's 22/1-j finding, light and dark; `.run/gui-evidence/bodrum-ortak-8147/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib emsal_limits_tests::amenity_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn amenity_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/bodrum-ortak-8147");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut app = amenity(-3.0);
+        basement_alone(&mut app);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("arch.zoningTable"));
+        let _ = app.submit_line("17,6");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        app.selection.set(Vec::new());
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-emsal-tablosu-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+
+        crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_amenity_not_exempt");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-denetim-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

@@ -72,7 +72,8 @@ pub struct BuildingFacts {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub doors: Vec<DoorFacts>,
     /// The uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar alanı only up to a limit, as Emsal ve TAKS
-    /// tablosu counts them (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the library.
+    /// tablosu counts them (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the library,
+    /// a traditional building's taşlık, dış sofa and eyvan, the residents' common rooms under the ground.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub limits: Vec<EmsalLimit>,
     /// What the program's buildings are used for, as the project writes it (Kullanım türü), in the program's order.
@@ -424,7 +425,8 @@ pub struct EmsalLimit {
     /// on a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together),
     /// `library` (22/1-f: the library rooms, 50 m² together) or `traditional` (22/1-m, docs/adr/8094: a traditional cut
     /// stone masonry building's taşlık, dış sofa and eyvan, no area of their own; the building's conditions are the
-    /// rule's).
+    /// rule's) or `amenity` (22/1-j, docs/adr/8147: the common management, meeting, sport and social rooms on a storey
+    /// under the ground, no unit's own or annex; together 5 % of katlar alanı and at most 1000 m²).
     pub limit: String,
     /// The independent unit whose net area the limit is a share of, by program id (a balcony's, a storage annex's).
     #[serde(default, skip_serializing_if = "Option::is_none")]

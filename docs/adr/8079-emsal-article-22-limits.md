@@ -158,7 +158,8 @@ okundu:
 ## §6. Sıradaki adımlar
 
 - **22/1-j:** bodrumdaki yönetim, toplantı, spor ve sosyal mekânlar. "Emsal hesabına konu alanın %5'i"nin çizimin
-  katlar alanı mı, planın izin verdiği alan mı olduğu belirsiz; yeni kullanım sözcükleri ister.
+  katlar alanı mı, planın izin verdiği alan mı olduğu belirsiz; yeni kullanım sözcükleri ister — yapıldı: ADR
+  [8147](8147-basement-common-rooms-22-1-j.md) (taban 21/2–3'ün kullanımıyla katlar alanı).
 - **22/1-m:** kesme taş yığma geleneksel yapının balkon ve taşlıkları — yapıldı: ADR [8094](8094-structural-system-traditional-cut-stone.md) (taşıyıcı sistem beyanı; kalın taş duvarların payı orada §6).
 - **5/8'in bodrum listesi:** bodrumda merdivenlerin, sığınağın ve tesisat alanlarının asgari alanı %30'un dışındadır.
   KentOS onları %30 içinde sayar; asgari alanın hesabı kaldı.

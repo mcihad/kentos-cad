@@ -1011,7 +1011,8 @@ _Durum (9 Kasım 2026):_ PAİY 4'ün bağımsız bölüm alanları yapıldı (M2
 - Otopark ve sığınak (M36, [ADR 8036](../docs/adr/8036-parking-and-shelter-provisions.md)): Metraj ▾ › Otopark hesabı (Ek-1: konut brüt alana göre 80/120/180 m² eşikleri, dükkân 50 m²'ye 1 ve bölüm başına en az 1, büro 50 m²'ye 1; toplam bir üste, 8/4; Otopark/Garaj mahallerinin net alanı ÷ 20 m², 4/1-ç; 20 yerde %5 şarj, 5/1-j) ve Sığınak hesabı (8/a: oda sayısına göre 2/3/4 kişi, konut dışı brüt ÷ 20, kişi başına 1 m² net; 7/a–c muafiyetleri; tuvalet ve çıkış); eksikler Denetim › Mevzuat'ta; KCAD 227.
 - 22. maddenin sınırları ([ADR 8069](../docs/adr/8069-room-zone-far-model.md) balkon %20; [ADR 8079](../docs/adr/8079-emsal-article-22-limits.md) depo eklentisi %50, kapıcı daireleri 70 m², kütüphane 50 m², merdiven evi) ve Metrekare cetvelinde kat ara toplamı yapıldı (17 Kasım 2026).
 - Merdiven altı 1,80 m yapıldı ([ADR 8080](../docs/adr/8080-under-stair-1-80.md)): net alandan düşülür, 31/6 kapatılmasını denetler.
-- Kalanlar: gruba alınmamış mahallerin yapı inşaat alanı, sıvasız projede sıva payı, emsal sınıfı arayüzü, 22/1-j ve 22/1-m, ortak yer sözlüğü ve elle arsa payı, vaziyet planında ağaç simgeleri ve bağlı ölçüler.
+- 22/1-m yapıldı ([ADR 8094](../docs/adr/8094-structural-system-traditional-cut-stone.md)); 22/1-j yapıldı ([ADR 8147](../docs/adr/8147-basement-common-rooms-22-1-j.md), 19 Kasım 2026): toprak altındaki bodrumun ortak mekânları katlar alanının %5'ine ve 1000 m²'ye kadar.
+- Kalanlar: gruba alınmamış mahallerin yapı inşaat alanı, sıvasız projede sıva payı, emsal sınıfı arayüzü, ortak yer sözlüğü ve elle arsa payı, vaziyet planında ağaç simgeleri ve bağlı ölçüler.
 
 **Kullanıcı sonucu:** Metrekare cetveli, emsal/TAKS tablosu, kat irtifakı tablosu ve vaziyet planı aynı modelden çıkar.
 Sınırı aşan değer çizim sırasında görünür. Dayanak S22; W4 §4/1–3, 8–10.

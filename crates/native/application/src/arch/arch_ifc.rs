@@ -121,6 +121,7 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
                 storage: part(ZoningLimit::Storage),
                 caretaker: part(ZoningLimit::Caretaker),
                 library: part(ZoningLimit::Library),
+                amenity: part(ZoningLimit::Amenity),
                 walls,
                 level,
                 count,

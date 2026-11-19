@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.36.0 — 19 Kasım 2026
+
+- 22/1-j (`emsal`; docs/adr/8147): toprak altındaki bodrumun ortak yönetim, toplantı, spor ve sosyal mekânları
+  (olguların `amenity` sınırı: alanı, katlar alanının %5'i ve en çok 1000 m² olan sınırı, aşanı, ortak alan mı). Ortak
+  alan değilse kaldı; ortaksa ticari amacı ve yalnız binada oturanların kullanımına yönelik olduğu çizimden okunmaz,
+  uzman incelemesi. Sürüm tablosunda 22/1-j'nin 25.7.2019 hâli. Emsal 46 bağımsız durum (5'i yeni); eski durumların
+  satırlarına 22/1-j eklendi (böyle mekân yok: kapsam dışı; 25.7.2019'dan önceki başvuruda satır yok).
+
 ## 0.35.0 — 18 Kasım 2026
 
 - Binanın kendi taşıyıcı sistemi (docs/adr/8145): olguların katları binasının kendi sistemini (`structuralSystem`,

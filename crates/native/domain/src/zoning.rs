@@ -29,6 +29,10 @@
 //!   on a storey under the ground (its top at or below its building's ±0.00, where the model's graded ground lies) is
 //!   out up to 50 % of its unit's net area; what passes counts in. Elsewhere a store counts in.
 //! - **The library** (22/1-f): the rooms named or used as Kütüphane together at most 50 m²; what passes counts in.
+//! - **The residents' common rooms** (22/1-j, docs/adr/8147): a room named or used as Yönetim, Toplantı, Spor or Sosyal
+//!   (or of a group named so), no unit's own or annex, on a storey under the ground, is out; together at most 5 % of
+//!   katlar alanı (the rooms counted in and the other limits' excess) and 1000 m², what passes counts in. Elsewhere it
+//!   counts in. Whether it is a common area's, its trade and its users are the standards package's.
 //! - **A traditional cut stone masonry building's thick stone walls** (5/8, 20/8-j, docs/adr/8095; `masonry`): the
 //!   load-bearing stone walls' parts past 25 cm (exterior) and 12.50 cm (interior) within each room's contour are out
 //!   apart from the 30 %, the exterior ones' out of taban alanı too.
@@ -41,8 +45,7 @@
 //! balconies). The conditions on the building as a whole (whether a caretaker flat is obligatory, 44/1; the library's
 //! forty units) are the standards package's (catalog/standards/mimari-mevzuat, bim-plan K10), on the limits' facts.
 //!
-//! A ratio is the drawing's measure, not an approval; the plan's own notes and 22/1-j's basement rooms are the next
-//! step.
+//! A ratio is the drawing's measure, not an approval; the plan's own notes are the next step.
 
 use kentos_contracts::{
     ArchLevel, AreaUnit, BuildingProgram, CellRange, CellStyle, EmsalCount, Entity, SpaceMethod, TableAlign, Zoning,
@@ -59,8 +62,11 @@ mod corners;
 mod limits;
 mod masonry;
 
-use limits::{buried_levels, names, says_balcony, says_traditional};
-pub use limits::{BALCONY_SHARE, CARETAKER_AREA, LIBRARY_AREA, STORAGE_SHARE, ZoningLimit, ZoningLimitUse};
+use limits::{buried_levels, names, says_amenity, says_balcony, says_traditional};
+pub use limits::{
+    AMENITY_AREA, AMENITY_SHARE, BALCONY_SHARE, CARETAKER_AREA, LIBRARY_AREA, STORAGE_SHARE, ZoningLimit,
+    ZoningLimitUse, amenity_allowed,
+};
 pub use masonry::{EXTERIOR_KEPT, INTERIOR_KEPT};
 
 /// The drawing's floor area ratio and coverage against the parcel's zoning, m² and ratios.
@@ -101,8 +107,12 @@ pub struct ZoningReport {
     pub storage_over: f64,
     /// The library rooms past 50 m² together (22/1-f), counted in `included`.
     pub library_over: f64,
+    /// The residents' common rooms under the ground past 5 % of katlar alanı and 1000 m² (22/1-j, docs/adr/8147),
+    /// counted in `included`.
+    pub amenity_over: f64,
     /// Each limited use counted out (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the
-    /// library; in that order, a unit's by the program's order of its units.
+    /// library, a traditional building's taşlık, dış sofa and eyvan, the residents' common rooms under the ground; in
+    /// that order, a unit's by the program's order of its units.
     pub limits: Vec<ZoningLimitUse>,
     /// Each room as the ratios count it (docs/adr/8069: the model's emsal zones are made of them), in the drawing's
     /// order; voids left out.
@@ -235,6 +245,9 @@ struct Room {
     library: bool,
     /// A traditional cut stone masonry building's taşlık, dış sofa or eyvan (22/1-m, docs/adr/8094).
     traditional: bool,
+    /// An indoor common management, meeting, sport or social room on a storey under the ground, no unit's own or annex
+    /// (22/1-j, docs/adr/8147).
+    amenity: bool,
     /// An indoor storage annex's room on a storey under the ground (22/1-k): the independent unit its annex group is
     /// allocated to.
     storage_of: Option<String>,
@@ -340,6 +353,13 @@ impl Document {
                         && !room_names::technical(name, usage)
                         && x.arch.level.as_ref().is_some_and(|l| buried.contains(l))
                 });
+            // The residents' common rooms (22/1-j: "tek başına bağımsız bölüm oluşturmayan, bir bağımsız bölümün
+            // eklentisi olmayan"): no unit's own or annex, on a storey under the ground.
+            let amenity = indoor
+                && by_use == EmsalCount::Included
+                && says_amenity(&own, &theirs)
+                && group.is_none_or(|g| g.kind == kentos_contracts::UnitKind::Common)
+                && x.arch.level.as_ref().is_some_and(|l| buried.contains(l));
             // A stair hall (22/1-l: "kat ve ara sahanlıkları dâhil açık veya kapalı merdiven evi"): no unit's own.
             let stair_hall = indoor
                 && room_names::stair_name(name, usage)
@@ -349,7 +369,9 @@ impl Document {
                 Some(c) => c,
                 None if outdoor => EmsalCount::Exempt,
                 None => match by_use {
-                    EmsalCount::Included if caretaker || storage_of.is_some() || stair_hall || traditional => {
+                    EmsalCount::Included
+                        if caretaker || storage_of.is_some() || stair_hall || traditional || amenity =>
+                    {
                         EmsalCount::Exempt
                     }
                     c => c,
@@ -380,6 +402,7 @@ impl Document {
                 caretaker,
                 library,
                 traditional,
+                amenity,
                 storage_of,
                 net,
                 net_shape,
@@ -538,6 +561,7 @@ impl Document {
                         Some(ZoningLimit::Storage) => out.storage_over += m,
                         Some(ZoningLimit::Caretaker) => out.caretaker_over += m,
                         Some(ZoningLimit::Library) => out.library_over += m,
+                        Some(ZoningLimit::Amenity) => out.amenity_over += m,
                         Some(ZoningLimit::Traditional) | None => {}
                     }
                 }
@@ -765,12 +789,13 @@ impl Document {
             &area,
         );
         // Each limited use's part past its limit, counted into Emsale konu alan (22/1-l, docs/adr/8069; 22/1-k, -ç,
-        // -f, docs/adr/8079): a row only when something passed.
+        // -f, docs/adr/8079; 22/1-j, docs/adr/8147): a row only when something passed.
         for (over, words) in [
             (r.balcony_over, "Balkonların %20'yi aşan kısmı, emsale eklenen"),
             (r.storage_over, "Depo eklentilerinin %50'yi aşan kısmı, emsale eklenen"),
             (r.caretaker_over, "Kapıcı dairelerinin 70 m²'yi aşan kısmı, emsale eklenen"),
             (r.library_over, "Kütüphanenin 50 m²'yi aşan kısmı, emsale eklenen"),
+            (r.amenity_over, "Bodrumdaki ortak mekânların sınırı aşan kısmı, emsale eklenen"),
         ] {
             if over > 0.0 {
                 rows.push(vec![named(words), String::new(), area(over), String::new()]);

@@ -1,8 +1,9 @@
 //! Emsalin 22. madde sınırları (docs/adr/8069, 8079): the uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar
 //! alanı only up to a limit — an independent unit's open balconies (22/1-l) and its storage annexes under the ground
-//! (22/1-k), the caretaker flats (22/1-ç), the library (22/1-f) — what passes each limit, and the storeys under the
-//! ground; and a traditional cut stone masonry building's taşlık, dış sofa and eyvan (22/1-m, docs/adr/8094), let out
-//! only in such a building. The rooms are [`super::Room`]s, as the ratios read them.
+//! (22/1-k), the caretaker flats (22/1-ç), the library (22/1-f), the residents' common rooms under the ground (22/1-j,
+//! docs/adr/8147) — what passes each limit, and the storeys under the ground; and a traditional cut stone masonry
+//! building's taşlık, dış sofa and eyvan (22/1-m, docs/adr/8094), let out only in such a building. The rooms are
+//! [`super::Room`]s, as the ratios read them.
 
 use kentos_contracts::{ArchLevel, BuildingProgram, EmsalCount};
 
@@ -23,6 +24,9 @@ pub enum ZoningLimit {
     /// 22/1-m (docs/adr/8094): a traditional cut stone masonry building's taşlık, dış sofa and eyvan; no area of their
     /// own (the 30 % of 5/8 holds them with the others), the building's storeys and the rooms' place are the rule's.
     Traditional,
+    /// 22/1-j (docs/adr/8147): the residents' common management and meeting rooms, sport and social rooms on a storey
+    /// under the ground, together at most 5 % of katlar alanı and 1000 m².
+    Amenity,
 }
 
 impl ZoningLimit {
@@ -34,6 +38,7 @@ impl ZoningLimit {
             ZoningLimit::Caretaker => "caretaker",
             ZoningLimit::Library => "library",
             ZoningLimit::Traditional => "traditional",
+            ZoningLimit::Amenity => "amenity",
         }
     }
 }
@@ -68,6 +73,19 @@ pub const CARETAKER_AREA: f64 = 70.0;
 /// The library rooms' area together katlar alanı leaves out, m² (PAİY 22/1-f, as amended RG 23/1/2021-31373).
 pub const LIBRARY_AREA: f64 = 50.0;
 
+/// The share of katlar alanı the residents' common rooms under the ground may take out of it together (PAİY 22/1-j, as
+/// amended RG 25/7/2019-30842: "toplamda emsal hesabına konu alanın % 5'ini").
+pub const AMENITY_SHARE: f64 = 0.05;
+
+/// The most those rooms may take out together, m² (PAİY 22/1-j: "… ve 1000 m2'yi geçmeyen").
+pub const AMENITY_AREA: f64 = 1000.0;
+
+/// What 22/1-j lets out of `floors`, the katlar alanı it is a share of (docs/adr/8147 K376): 5 % of it, at most
+/// 1000 m².
+pub fn amenity_allowed(floors: f64) -> f64 {
+    (AMENITY_SHARE * floors).min(AMENITY_AREA)
+}
+
 /// Whether a room or its group says `word` (folded, a word's beginning: Kapıcı dairesi, Depolar).
 pub(super) fn names(word: &str, room: &[String], group: &[String]) -> bool {
     room_names::has(room, word) || room_names::has(group, word)
@@ -92,6 +110,12 @@ pub(super) fn says_traditional(words: &[String]) -> bool {
     room_names::has(words, "TASLIK")
         || room_names::has(words, "EYVAN")
         || (room_names::is(words, "DIS") && room_names::has(words, "SOFA"))
+}
+
+/// Whether a room's words or its group's say 22/1-j's rooms (docs/adr/8147): "yönetim ve toplantı odaları ile spor ve
+/// sosyal mekânlar", a word beginning with Yönetim, Toplantı, Spor or Sosyal.
+pub(super) fn says_amenity(room: &[String], group: &[String]) -> bool {
+    ["YONETIM", "TOPLANTI", "SPOR", "SOSYAL"].into_iter().any(|w| names(w, room, group))
 }
 
 /// The storeys under the ground, by their ids (22/1-k: "bütün cepheleri tamamen toprağın altında kalan bodrum katlar";
@@ -129,7 +153,10 @@ pub(super) fn buried_levels(arch: &kentos_contracts::ArchSettings) -> Vec<String
 ///   count;
 /// - k: a unit's storage annexes under the ground up to 50 % of its net area;
 /// - ç: the caretaker flats 70 m² together; f: the library rooms 50 m² together;
-/// - m: a traditional cut stone masonry building's taşlık, dış sofa and eyvan, all of them (no area of their own).
+/// - m: a traditional cut stone masonry building's taşlık, dış sofa and eyvan, all of them (no area of their own);
+/// - j: the residents' common rooms under the ground, together 5 % of katlar alanı and at most 1000 m² (docs/adr/8147
+///   K376): katlar alanı as the rooms counted in and the other limits' excess make it, last; neither its own excess nor
+///   5/8's past the 30 % (both rest on it) is in it.
 ///
 /// What passes a limit counts in, shared among its rooms by their areas; a room is under the first limit that reads it.
 pub(super) fn apply(
@@ -167,6 +194,7 @@ pub(super) fn apply(
     asks.push((ZoningLimit::Caretaker, None, Some(CARETAKER_AREA)));
     asks.push((ZoningLimit::Library, None, Some(LIBRARY_AREA)));
     asks.push((ZoningLimit::Traditional, None, None));
+    asks.push((ZoningLimit::Amenity, None, None));
     for (limit, unit, allowed) in asks {
         let members: Vec<usize> = (0..rooms.len())
             .filter(|&i| {
@@ -180,6 +208,7 @@ pub(super) fn apply(
                         ZoningLimit::Caretaker => r.caretaker,
                         ZoningLimit::Library => r.library,
                         ZoningLimit::Traditional => r.traditional,
+                        ZoningLimit::Amenity => r.amenity,
                     }
             })
             .collect();
@@ -187,7 +216,19 @@ pub(super) fn apply(
             continue;
         }
         let area: f64 = members.iter().map(|&i| gross[i]).sum();
-        let allowed = allowed.unwrap_or(area);
+        let allowed = match limit {
+            // Katlar alanı so far: the rooms counted in and what the other limits moved in.
+            ZoningLimit::Amenity => amenity_allowed(
+                rooms
+                    .iter()
+                    .zip(gross)
+                    .filter(|(r, _)| !r.void && r.count == EmsalCount::Included)
+                    .map(|(_, g)| g)
+                    .sum::<f64>()
+                    + moved.iter().sum::<f64>(),
+            ),
+            _ => allowed.unwrap_or(area),
+        };
         let over = (area - allowed).max(0.0);
         for &i in &members {
             limit_of[i] = Some(limit);
@@ -213,4 +254,18 @@ pub(super) fn apply(
         });
     }
     (moved, limit_of, limits)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::amenity_allowed;
+
+    /// 22/1-j's limit worked by hand (docs/adr/8147): 5 % of 2400 m² is 120 m²; of 20000 m² it is 1000 m², the bent's
+    /// own; of 30000 m² it would be 1500 m², the 1000 m² holds.
+    #[test]
+    fn the_common_rooms_limit_is_5_percent_of_katlar_alani_and_at_most_1000_m2() {
+        for (floors, allowed) in [(2400.0, 120.0), (20000.0, 1000.0), (30000.0, 1000.0), (0.0, 0.0)] {
+            assert!((amenity_allowed(floors) - allowed).abs() < 1e-9, "{floors}: {}", amenity_allowed(floors));
+        }
+    }
 }

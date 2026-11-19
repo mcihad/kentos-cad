@@ -429,6 +429,11 @@
   - **Künyenin taşıyıcı sistemi (18 Kasım 2026; [ADR 8146](../adr/8146-kunye-structural-system.md), K374–K375):**
     çizimde `tasiyici_sistem` değişkeni yoksa ruhsat takımı beyanın sözünü yazar (projenin; yoksa binaların ortak
     sistemi; geleneksel öğeliyse söylenir); alan onunla açılır, eksik sayılmaz.
+  - **Bodrumdaki ortak mekânlar (19 Kasım 2026; [ADR 8147](../adr/8147-basement-common-rooms-22-1-j.md), K376–K378):**
+    PAİY 22/1-j: toprak altındaki katta bölümün ve eklentinin olmayan Yönetim, Toplantı, Spor, Sosyal adlı mahaller
+    katlar alanının %5'ine ve 1000 m²'ye kadar emsal harici (`ZoningLimit::Amenity`); %5'in tabanı 21/2–3'ün kullanımıyla
+    katlar alanı (emsale dahil mahaller ve öbür sınırların aşanı), aşan emsale. Kural ortak alan değilse kaldı; ticari
+    amaç ve kullananlar uzman incelemesi. Kısmen açığa çıkan yol cephesi okunmaz (tek tesviye kotu).
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

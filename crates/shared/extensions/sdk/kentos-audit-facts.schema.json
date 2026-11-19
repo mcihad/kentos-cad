@@ -132,7 +132,7 @@
           ]
         },
         "limits": {
-          "description": "The uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar alanı only up to a limit, as Emsal ve TAKS\ntablosu counts them (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the library.",
+          "description": "The uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar alanı only up to a limit, as Emsal ve TAKS\ntablosu counts them (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the library,\na traditional building's taşlık, dış sofa and eyvan, the residents' common rooms under the ground.",
           "items": {
             "$ref": "#/$defs/EmsalLimit"
           },
@@ -1017,7 +1017,7 @@
           "type": "boolean"
         },
         "limit": {
-          "description": "`balcony` (22/1-l: a unit's open balconies, 20 % of its net area), `storage` (22/1-k: a unit's storage annexes\non a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together),\n`library` (22/1-f: the library rooms, 50 m² together) or `traditional` (22/1-m, docs/adr/8094: a traditional cut\nstone masonry building's taşlık, dış sofa and eyvan, no area of their own; the building's conditions are the\nrule's).",
+          "description": "`balcony` (22/1-l: a unit's open balconies, 20 % of its net area), `storage` (22/1-k: a unit's storage annexes\non a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together),\n`library` (22/1-f: the library rooms, 50 m² together) or `traditional` (22/1-m, docs/adr/8094: a traditional cut\nstone masonry building's taşlık, dış sofa and eyvan, no area of their own; the building's conditions are the\nrule's) or `amenity` (22/1-j, docs/adr/8147: the common management, meeting, sport and social rooms on a storey\nunder the ground, no unit's own or annex; together 5 % of katlar alanı and at most 1000 m²).",
           "type": "string"
         },
         "over": {

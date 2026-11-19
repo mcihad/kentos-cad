@@ -111,4 +111,5 @@ Gazete'nin eski sayısından (WebFetch) okundu.
 - **Künye:** ruhsat takımının `tasiyici_sistem` metni boşsa beyanın adıyla dolabilir — yapıldı: ADR
   [8146](8146-kunye-structural-system.md).
 - **22/1-j:** "emsal hesabına konu alanın %5'i"nin tabanı (çizimin katlar alanı mı, planın izin verdiği alan mı) kaynak
-  bekliyor.
+  bekliyor — yapıldı: ADR [8147](8147-basement-common-rooms-22-1-j.md) (yönetmeliğin 21/2–3'teki kullanımı: katlar
+  alanı).

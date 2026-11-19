@@ -163,6 +163,25 @@
     },
     {
       "regulation": "PAİY",
+      "article": "22/1-j",
+      "title": "Bodrumdaki ortak yönetim, toplantı, spor ve sosyal mekânlar (katlar alanına dahil edilmeyen)",
+      "transition": "Değişiklik yönetmeliği yayımı günü yürürlüğe girdi (RG 25.7.2019/30842, 15 inci madde); geçiş hükmü yok.",
+      "versions": [
+        {
+          "id": "2019",
+          "from": "2019-07-25",
+          "until": null,
+          "label": "25.7.2019",
+          "gazette": "25.7.2019/30842",
+          "share": 0.05,
+          "area": 1000,
+          "text": "Bütün cepheleri tamamen toprağın altında kalan bodrum katlar ile kısmen açığa çıkan yol cephesi haricindeki bodrum katlarda yer alan, tek başına bağımsız bölüm oluşturmayan, bir bağımsız bölümün eklentisi olmayan, ticari amaç içermeyen, sadece binada oturanların kullanımına yönelik, toplamda emsal hesabına konu alanın % 5’ini ve 1000 m2’yi geçmeyen ortak alan niteliğindeki yönetim ve toplantı odaları ile spor ve sosyal mekânlar, katlar alanına dâhil edilmez.",
+          "source": "RG 25.7.2019/30842 (bent değişik; 1.7.2026/33297'ye kadar işlenmiş birleştirilmiş metin, 1.7.2026 değişikliği bu bende dokunmadı); “emsal hesabına konu alan” katlar alanıdır (21/2 “emsal hesabına konu edilmeyen alanlar”, 21/3 “emsal hesabına konu alan haline getirilemez”); docs/adr/8147 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
       "article": "22/1-k",
       "title": "Depo amaçlı eklentiler (katlar alanına dahil edilmeyen)",
       "transition": "Değişiklik yönetmeliği yayımı günü yürürlüğe girdi (RG 25.7.2019/30842, 15 inci madde); geçiş hükmü yok.",
