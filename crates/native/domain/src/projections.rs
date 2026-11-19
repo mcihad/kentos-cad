@@ -33,6 +33,19 @@ pub struct Projection {
     pub underside: Option<f64>,
 }
 
+/// A room's part outside the footprint on a storey over its building's ground storey (docs/adr/8152), read without the
+/// site plan (docs/adr/8164: the eaves past a projection, PAİY 42/3): the room's persistent id and storey, whether it is
+/// open, its area (m²) and outline, its storey's floor over ±0.00.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ProjectionPart {
+    pub room: String,
+    pub level: Option<String>,
+    pub open: bool,
+    pub area: f64,
+    pub shape: Vec<Area>,
+    pub floor: f64,
+}
+
 /// A parcel edge as a projection reads it: its place in the site plan (from 0), its kind as the gardens read it, the
 /// distance it asks and the projection's nearest distance to it, m.
 #[derive(Clone, Debug, PartialEq)]
@@ -99,15 +112,14 @@ impl Document {
         }
     }
 
-    /// The projections against `site`, a site plan not yet written (the Parsel tool's, docs/adr/8155).
-    pub fn projections_for(&self, site: &kentos_contracts::SitePlan) -> Vec<Projection> {
-        let Some(arch) = self.settings().arch.as_ref() else { return Vec::new() };
-        let Some(report) = self.site_report_for(site) else { return Vec::new() };
+    /// The rooms' parts outside the footprint on the storeys over their building's ground storey, in the drawing's
+    /// order, and the footprint they stand out of (docs/adr/8152, 8164); none without a footprint.
+    pub fn projection_parts(&self) -> (Vec<Area>, Vec<ProjectionPart>) {
+        let Some(arch) = self.settings().arch.as_ref() else { return (Vec::new(), Vec::new()) };
         let counted = self.zoning_counted();
         if counted.footprint_shape.is_empty() {
-            return Vec::new();
+            return (Vec::new(), Vec::new());
         }
-        let detached = arch.layout == Some(BuildingLayout::Detached);
         let program = &arch.program;
         let elevation = |id: &str| arch.levels.iter().find(|l| l.id == id).map(|l| l.elevation);
         // Each storey's ground: its building's ground storey (docs/adr/8072 §4), else the footprint's lowest.
@@ -143,36 +155,57 @@ impl Document {
             if area < LEAST {
                 continue;
             }
-            let edges = report
-                .edges
-                .iter()
-                .enumerate()
-                .map(|(i, e)| ProjectionEdge {
-                    edge: i,
-                    kind: match e.kind {
-                        SiteEdgeKind::Party if detached => SiteEdgeKind::Side,
-                        k => k,
-                    },
-                    required: e.required,
-                    distance: nearest(&shape, e.a, e.b),
-                })
-                .collect();
-            let underside = inner_point(&shape).and_then(|at| {
-                let at = kentos_contracts::Vec2 { x: at.x, y: at.y };
-                let (s, f) = self.floor_slab_under(at, floor)?;
-                Some(s.structure_underside_at(f, at) - s.layers.under_thickness())
-            });
-            out.push(Projection {
+            out.push(ProjectionPart {
                 room: r.uid.clone(),
                 level: r.level.clone(),
                 open: outdoor.contains(&r.uid),
                 area,
                 shape,
-                edges,
                 floor,
-                underside,
             });
         }
-        out
+        (counted.footprint_shape, out)
+    }
+
+    /// The projections against `site`, a site plan not yet written (the Parsel tool's, docs/adr/8155).
+    pub fn projections_for(&self, site: &kentos_contracts::SitePlan) -> Vec<Projection> {
+        let Some(arch) = self.settings().arch.as_ref() else { return Vec::new() };
+        let Some(report) = self.site_report_for(site) else { return Vec::new() };
+        let detached = arch.layout == Some(BuildingLayout::Detached);
+        self.projection_parts()
+            .1
+            .into_iter()
+            .map(|p| {
+                let edges = report
+                    .edges
+                    .iter()
+                    .enumerate()
+                    .map(|(i, e)| ProjectionEdge {
+                        edge: i,
+                        kind: match e.kind {
+                            SiteEdgeKind::Party if detached => SiteEdgeKind::Side,
+                            k => k,
+                        },
+                        required: e.required,
+                        distance: nearest(&p.shape, e.a, e.b),
+                    })
+                    .collect();
+                let underside = inner_point(&p.shape).and_then(|at| {
+                    let at = kentos_contracts::Vec2 { x: at.x, y: at.y };
+                    let (s, f) = self.floor_slab_under(at, p.floor)?;
+                    Some(s.structure_underside_at(f, at) - s.layers.under_thickness())
+                });
+                Projection {
+                    room: p.room,
+                    level: p.level,
+                    open: p.open,
+                    area: p.area,
+                    shape: p.shape,
+                    edges,
+                    floor: p.floor,
+                    underside,
+                }
+            })
+            .collect()
     }
 }

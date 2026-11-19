@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.51.0 — 19 Kasım 2026
+
+- Çıkmadan saçak (`cati_olculeri`; docs/adr/8164): PAİY 42/3 "Binada çıkma yapılması halinde saçak genişliği çıkmadan
+  itibaren 0.50 metreyi aşamaz." Olguların çatı biçiminde `overProjection` (çatının altındaki çıkmaların ön yüzünden
+  saçak çizgisine en büyük uzaklık, m; çıkmanın yanları sayılmaz); aşan çatı `paiy_eaves_past_projection`. Satır yalnız
+  çatının altında çıkma varken yazılır; planın saçak notu 42/3'ü bağlamaz. 2 yeni bağımsız durum (27).
+
 ## 0.50.0 — 19 Kasım 2026
 
 - Binanın kendi plan notları (docs/adr/8163; kademe hattı, PAİY 4/1-mm, 7/12, 7/14): olguların katları binasının

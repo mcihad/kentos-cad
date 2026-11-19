@@ -1873,6 +1873,14 @@
             "null"
           ]
         },
+        "overProjection": {
+          "description": "How far its eaves reach past the front faces of the projections under it, m (docs/adr/8164; PAİY 42/3); none\nwhen no projection's front face lies under it.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "overhang": {
           "format": "double",
           "type": [

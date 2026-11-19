@@ -44,5 +44,5 @@ saçağı komşu parsele taşıyordu ve denetimden geçiyordu.
 
 ## §6. Kalanlar
 
-- 42/3: çıkma varsa saçak çıkmadan en çok 0,50 m.
+- 42/3: çıkma varsa saçak çıkmadan en çok 0,50 m — yapıldı: ADR [8164](8164-eaves-past-projections.md).
 - 40/5'in öbür çıkıntıları (merdiven evi, ışıklık, alın ve kalkan duvarları).

@@ -457,6 +457,10 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Çıkmadan saçak (19 Kasım 2026; [ADR 8164](../adr/8164-eaves-past-projections.md), K424–K425):** PAİY 42/3;
+    çatının altındaki çıkmaların ön yüzünden (yanları değil) saçak çizgisine en büyük uzaklık (`roofs[].form.
+    overProjection`, `Document::projection_parts` vaziyet planı olmadan); en çok 0,50 m; satır yalnız çatının altında
+    çıkma varken; planın saçak notu 42/3'ü bağlamaz.
   - **Binanın kendi plan notları (19 Kasım 2026; [ADR 8163](../adr/8163-plan-notes-per-building.md), K420–K423):**
     kademe hattının iki yanındaki bloklar (PAİY 4/1-mm) Bina programı › Binalar'da kendi plan notlarını alır
     (`ProgramBuilding.planNotes`); yazdığı konu projeninkinin yerine geçer (`ArchSettings::plan_notes_on`); olguların

@@ -6,6 +6,9 @@
 - **Saçak (PAİY 42/1):** duvarlarından çizilen çatının saçağı en çok 1,00 m (öbür çatının saçağı ölçülmez).
 - **Saçağın parsel sınırı (PAİY 42/2; docs/adr/8161):** vaziyet planı varken saçak parsel sınırını aşamaz; satır
   yalnız vaziyet planıyla yazılır.
+- **Çıkmadan saçak (PAİY 42/3; docs/adr/8164):** binada çıkma varsa saçak genişliği çıkmadan en çok 0,50 m: çatının
+  altındaki çıkmaların ön yüzünden saçak çizgisine (``overProjection``); satır yalnız çatının altında çıkma varken
+  yazılır. Planın saçak notu 42/1'in yerine geçer, 42/3'ü bağlamaz.
 - **Hava bacası (PAİY 40/5):** çatı örtüsünü en yüksek köşesinde en çok 0,60 m aşar; düzeltme 0,60 m'ye indirir.
 - **Duman bacası (BYKHY 58/2):** mahyanın en az 0,80 m üstüne çıkar; düzeltme 0,80 m'ye çıkarır.
 - **Sivas seçiliyse** (yönetmeliğin günü 10.11.2022'den): eğim en çok %40 (40/5-g; düzeltme dik kenarları %40'a
@@ -23,7 +26,7 @@ Bulgunun düzeltmesi ``cad.arch.edit``'in çatı üstündeki işlemidir; parçal
 yazılır, yalnız düzeltilen değişir.
 
 **Okunan olgular** (``facts.building``): çatılar (``form``: eğimli mi, mahya, saçak, eğimler, kar siperliği, ortası,
-parçalar, pencere aralıkları), yerel yönetmelik, plan notları.
+parçalar, pencere aralıkları, saçağın parselden ve çıkmadan taşması), yerel yönetmelik, plan notları.
 """
 
 from __future__ import annotations
@@ -38,6 +41,8 @@ from . import yururluk as y
 MADDELER = [("PAİY", "40/4"), ("PAİY", "40/5"), ("PAİY", "42/1"), ("BYKHY", "58/2")]
 #: Vaziyet planının parseliyle okunan madde: satırı yalnız vaziyet planıyla.
 PARSEL = ("PAİY", "42/2")
+#: Çatının altındaki çıkmayla okunan madde (docs/adr/8164): satırı yalnız çatının altında çıkma varken.
+CIKMA = ("PAİY", "42/3")
 SIVAS = [("Sivas", "40/5-g"), ("Sivas", "40/5-e-2"), ("Sivas", "40/5-e-3"), ("Sivas", "42/5")]
 
 #: Çatı aracının kar siperliği: saçaktan 30 cm içeride (kentos_commands::DEFAULT_SNOW_GUARD); yönetmeliğin değeri değil.
@@ -132,6 +137,7 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
 
     h_mahya, h_baca, h_sacak, h_duman = (hal[m] for m in MADDELER)
     h_parsel = y.hal(*PARSEL, gun)
+    h_cikma = y.hal(*CIKMA, gun)
     s_mahya, s_boyut, s_yer, s_kar = (yerel.get(m) for m in SIVAS)
     for r in catilar:
         f, uid = r["form"], r["uid"]
@@ -182,6 +188,17 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                     "paiy_eaves_over_parcel", f"Saçak parsel sınırını {katman.metre(asan)} aşıyor — {h_parsel.kisa()}",
                     "Saçağı parsel sınırının içine çekin: çatıyı Çatı aracıyla yeniden çizin.", h_parsel.kural(), uid,
                     orta, f"parsel:{uid}"))
+        # Çıkmadan saçak (42/3): çatının altındaki çıkmaların ön yüzünden saçak çizgisine.
+        if f.get("overProjection") is not None and h_cikma is not None:
+            v = float(f["overProjection"])
+            b = katman.bulgu("paiy_eaves_past_projection", "Saçağın çıkmadan genişliği", v, False,
+                             katman.Sinir(float(h_cikma.anahtar["most"]), h_cikma), None,
+                             "Saçağı çıkmanın ön yüzünden en çok 0,50 m taşacak biçimde daraltın: çatıyı Çatı aracıyla "
+                             "yeniden çizin.", [uid], f"çıkma:{uid}")
+            say(CIKMA, b is not None)
+            if b is not None:
+                b["at"] = list(orta)
+                bulgular.append(b)
         # Hava bacası (40/5) ve duman bacası (58/2): her parçanın tepesi.
         for i, p in enumerate(f.get("parts") or []):
             if p.get("top") is None:
@@ -312,6 +329,11 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
             satirlar.append(_satir(h_parsel, y.KALDI, f"{kalan[PARSEL]} çatının saçağı parsel sınırını aşıyor"))
         else:
             satirlar.append(_satir(h_parsel, y.GECTI, f"{var.get(PARSEL, 0)} çatının saçağı parselin içinde"))
+    if h_cikma is not None and var.get(CIKMA):
+        if kalan.get(CIKMA):
+            satirlar.append(_satir(h_cikma, y.KALDI, f"{kalan[CIKMA]} çatının saçağı çıkmadan 0,50 m'den geniş"))
+        else:
+            satirlar.append(_satir(h_cikma, y.GECTI, f"{var[CIKMA]} çatının saçağı çıkmadan en çok 0,50 m"))
     for m in MADDELER + (SIVAS if sivas else []):
         h = hal.get(m) or yerel.get(m)
         if h is None:
@@ -332,5 +354,5 @@ def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Son
     bina = facts.get("building") or {}
     if not bina.get("storeys"):
         return y.Sonuc([], [])
-    maddeler = MADDELER + [PARSEL] + (SIVAS if bina.get("local") == "sivas" else [])
+    maddeler = MADDELER + [PARSEL, CIKMA] + (SIVAS if bina.get("local") == "sivas" else [])
     return y.denetle(lambda g: kural(bina, g), maddeler, gun, neden, "çatı kuralı")

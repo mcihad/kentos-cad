@@ -2402,6 +2402,24 @@
       ]
     },
     {
+      "regulation": "PAİY",
+      "article": "42/3",
+      "title": "Çıkmadan saçak genişliği",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); derlenmiş metinde bu fıkrada değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "most": 0.5,
+          "text": "(3) Binada çıkma yapılması halinde saçak genişliği çıkmadan itibaren 0.50 metreyi aşamaz.",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 42/3; docs/adr/8164 §2."
+        }
+      ]
+    },
+    {
       "regulation": "BYKHY",
       "article": "58/2",
       "title": "Bacanın mahyayı aşması",

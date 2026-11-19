@@ -7,7 +7,8 @@
 //! the windows too.
 //! Düzelt on the snow guard gives the roof one, on the chimney raises it to 0.80 m: their findings go. The plan's roof
 //! notes (docs/adr/8160) come before them: eaves of 1.20 m pass a note of 1.20 m, a note of 33 % fails the 75 % slope
-//! and its Düzelt brings every sloping edge down to 33 %.
+//! and its Düzelt brings every sloping edge down to 33 %. On 8152's dwelling a roof over 1. kat reads the parcel
+//! (42/2, docs/adr/8161) and the Balkon under its south eaves (42/3, docs/adr/8164).
 //!
 //! ```text
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib roof_rules_tests::screens -- --ignored --nocapture
@@ -349,6 +350,88 @@ fn parcel_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-sacak-parsel-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// 8152's dwelling with a roof over 1. kat whose south eaves run along y = `south`: over the 1.20 m deep Balkon (y −1.20
+/// to 0, x 2–8) on 1. kat.
+fn over_the_balcony(south: f64) -> App {
+    let (mut app, _) = crate::projection_tests::scene(1.2);
+    crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    crate::use_class_tests::run(
+        &mut app,
+        "cad.roofs.create",
+        json!({"layerId": layer, "roofs": [{"pts": [p(-1.0, south), p(11.0, south), p(11.0, 9.0), p(-1.0, 9.0)],
+            "slopes": [33.0, 33.0, 33.0, 33.0], "arch": {"level": "k01"}}]}),
+    );
+    app
+}
+
+/// PAİY 42/3 (docs/adr/8164): "Binada çıkma yapılması halinde saçak genişliği çıkmadan itibaren 0.50 metreyi aşamaz."
+/// On 8152's dwelling the roof over 1. kat from y −2.00 reaches 0.80 m past the Balkon's front: 42/3 fails; from y −1.60,
+/// 0.40 m: it holds. The Balkon's sides are not its front: the eaves west and east of it are the main facade's.
+#[test]
+fn the_eaves_stay_within_half_a_metre_of_a_projection() {
+    use kentos_commands::ArchAuditOutcome as O;
+    for (south, outcome, past) in [(-2.0, O::Failed, 0.8), (-1.6, O::Passed, 0.4)] {
+        let mut app = over_the_balcony(south);
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let measured: Vec<Option<f64>> =
+            kentos_native_application::roof_audit::measures(doc).iter().map(|m| m.over_projection).collect();
+        assert_eq!(measured.len(), 1);
+        assert!(measured[0].is_some_and(|v| (v - past).abs() < 1e-6), "{measured:?}");
+        checked(&mut app);
+        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let row = set.rules.iter().find(|r| r.rule == "PAİY 42/3").map(|r| r.state);
+        assert_eq!(row, Some(outcome), "{:#?}", set.rules);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let said: Vec<&str> = audited
+            .findings
+            .iter()
+            .filter(|f| f.code == "paiy_eaves_past_projection")
+            .map(|f| f.message.as_str())
+            .collect();
+        match outcome {
+            O::Failed => {
+                assert_eq!(said, ["Saçağın çıkmadan genişliği 0.80 m > 0.50 m — PAİY 42/3 (1.10.2017)"]);
+            }
+            _ => assert!(said.is_empty(), "{said:?}"),
+        }
+    }
+}
+
+/// Denetim's 42/3 finding beside 1. kat's plan (the Balkon under the roof's south eaves), light and dark;
+/// `.run/gui-evidence/cikma-sacak-8164/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn projection_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cikma-sacak-8164");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    for (theme, size, name) in sizes {
+        let mut app = over_the_balcony(-2.0);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::ActiveLevel(Some("k01".into())));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_eaves_past_projection");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-cikma-sacak-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

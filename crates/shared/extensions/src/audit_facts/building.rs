@@ -315,6 +315,10 @@ pub struct RoofFormFacts {
     /// site plan.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub outside: Option<f64>,
+    /// How far its eaves reach past the front faces of the projections under it, m (docs/adr/8164; PAİY 42/3); none
+    /// when no projection's front face lies under it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub over_projection: Option<f64>,
 }
 
 /// A part standing through a roof or set in it (docs/adr/8159): its kind (`chimney`, `vent`, `window`, `downpipe`), its
@@ -873,6 +877,7 @@ impl BuildingFacts {
                     g.apart = round(g.apart, LENGTH);
                 }
                 f.outside = f.outside.map(|v| round(v, LENGTH));
+                f.over_projection = f.over_projection.map(|v| round(v, LENGTH));
             }
         }
         for i in &mut self.insulations {
