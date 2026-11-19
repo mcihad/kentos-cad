@@ -53,4 +53,5 @@ kalıyordu.
 
 - Tahvil (9/1-c): planın yalnız birini verdiği durumda bina yüksekliği ile kat adedinin birbirine çevrilmesi — yapıldı:
   ADR [8157](8157-height-storeys-conversion-9-1-c.md).
-- Plan notunun binası: bir plan notu bütün projenin; blok blok farklı plan notu (kademe hattı) okunmaz.
+- Plan notunun binası: bir plan notu bütün projenin; blok blok farklı plan notu (kademe hattı) okunmaz — yapıldı: ADR
+  [8163](8163-plan-notes-per-building.md).

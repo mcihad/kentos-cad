@@ -1,5 +1,16 @@
 # Değişiklikler
 
+## 0.50.0 — 19 Kasım 2026
+
+- Binanın kendi plan notları (docs/adr/8163; kademe hattı, PAİY 4/1-mm, 7/12, 7/14): olguların katları binasının
+  kendi notlarını (`planNotes`) ve adını (`buildingName`) taşır; binanın yazdığı ölçü projenin aynı ölçüdeki notunun
+  yerine geçer (`katman.plan_notlari`). `bina_yuksekligi` ve `tahvil` her binayı kendi notlarıyla (ileti binanın
+  adıyla), `kat_yuksekligi` binaları ayırarak, `subasman` her zemin katı, `cati_olculeri` her çatıyı, `cikmalar` her
+  çıkmayı katının binasının notlarıyla okur. Binanın notunun satırı adıyla ayrıdır ("Plan notu: bina yüksekliği (A
+  Blok)"), bulgunun kaynağı "A Blok plan notu (…)"; projenin notunu okuyan bina yoksa satırı kapsam dışı. Hiçbir bina
+  not söylemiyorsa sonuçlar değişmedi. 9 yeni bağımsız durum (bina yüksekliği 3, kat yüksekliği 1, tahvil 2, subasman
+  1, çatı 1, çıkma 1).
+
 ## 0.49.0 — 19 Kasım 2026
 
 - Planın çıkma ve bodrum notları (docs/adr/8162): `cikmalar` planın `projectionMost` notunu 41/1'in taşma ölçüsünün

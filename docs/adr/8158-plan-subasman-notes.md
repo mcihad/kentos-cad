@@ -65,5 +65,6 @@ kalıyor, bulgunun onarımı "uzman onayıyla işaretleyin" diyordu.
 
 ## §6. Kalanlar
 
-- Plan notunun binası: plan notu bütün projenin; blok blok farklı subasman (kademeli yerleşim) okunmaz.
+- Plan notunun binası: plan notu bütün projenin; blok blok farklı subasman (kademeli yerleşim) okunmaz — yapıldı: ADR
+  [8163](8163-plan-notes-per-building.md).
 - Kot alınan noktanın kendisi (10–14: yoldan, tabii zeminden kotlandırma): binanın ±0,00'ı projenin yazdığıdır.

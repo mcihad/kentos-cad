@@ -60,5 +60,5 @@ geçemez", "saçak 1,20 m" diyen planın binası PAİY'nin ve Sivas'ın değerle
 
 ## §6. Kalanlar
 
-- Plan notunun binası (blok blok farklı çatı hükmü) okunmaz.
+- Plan notunun binası (blok blok farklı çatı hükmü) okunmaz — yapıldı: ADR [8163](8163-plan-notes-per-building.md).
 - 40/2'nin idarenin tasvibiyle belirlenen eğimi plan notu değilse yazılmaz.

@@ -70,6 +70,10 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   (PAİY 5/11). Plan yalnız birini
   veriyorsa öbürü 9/1-c'nin tahviliyle (`tahvil`, docs/adr/8157): 1,20 m subasman ve 28/1'in en çok kat yükseklikleri;
   aşan uzman incelemesi.
+- **Binanın kendi plan notları** (docs/adr/8163; kademe hattı, PAİY 4/1-mm): bina programının binası kendi notlarını
+  söylüyorsa (olguların katlarında `planNotes`) yazdığı ölçü projenin aynı ölçüdeki notunun yerine geçer; kat ve bina
+  yüksekliği, tahvil, subasman, çatı ve çıkma kuralları binayı, çatıyı ve çıkmayı katının binasının notlarıyla okur;
+  binanın notunun satırı adıyla ayrıdır.
 - **Kapı ölçüleri** (`kapi_olculeri`, docs/adr/8083): yükseklik 2,10 m; net genişlik bina girişinde 1,50, bölüm girişinde
   1,00, öbür kapılarda 0,90 m; 13.8.2025'e kadar ve Sivas'ta balkon ve tuvalet kapısı 0,80 m (PAİY 39/1). İki katmanın
   yargısı `katman`'da; gün yoksa her kat ve kapı ayrı denenir (`yururluk.parcalarla`).

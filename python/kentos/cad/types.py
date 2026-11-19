@@ -82347,6 +82347,10 @@ class ProgramBuilding(_Model):
         code: Its building code (docs/adr/8072 §1; EK-2 §2.3, Tablo 2.1): two capital letters or digits, its model files'
             names carry it; "00" only for a project of one building. None: not said.
         levels: The levels it spans (docs/adr/0784 §1), by their ids, each once; a level may be another building's too.
+        plan_notes: Its own plan notes (docs/adr/8163; `.kcad` Mimari data 35): the plan's values for the area of the parcel it
+            stands in, where a kademe hattı (PAİY 4/1-mm) gives the parcel's areas different storeys, heights or other
+            values. A measure it notes takes the place of the project's note on that measure; the others are the
+            project's (Proje ayarları › Mimari › Plan notları). Checked as the project's notes are.
         structure: Its own structural system and traditional elements (docs/adr/8145; `.kcad` Mimari data 31): a block built
             otherwise than the others, PAİY 22/1-m, 28/1-d, 5/8 and 20/8-j read its storeys by it. None: the project's
             (Proje ayarları › Mimari › Taşıyıcı sistem).
@@ -82360,6 +82364,7 @@ class ProgramBuilding(_Model):
     name: str
     code: str | None | Unset = UNSET
     levels: list[str] | Unset = UNSET
+    plan_notes: list[PlanNote] | Unset = UNSET
     structure: BuildingStructure | None | Unset = UNSET
     usage: str | None | Unset = UNSET
     wings: list[ProgramWing] | Unset = UNSET
@@ -82374,6 +82379,8 @@ class ProgramBuilding(_Model):
             out["code"] = self.code
         if self.levels is not UNSET:
             out["levels"] = list(self.levels)
+        if self.plan_notes is not UNSET:
+            out["planNotes"] = [e0.to_json() for e0 in self.plan_notes]
         if self.structure is not UNSET:
             out["structure"] = None if self.structure is None else self.structure.to_json()
         if self.usage is not UNSET:
@@ -82393,6 +82400,7 @@ class ProgramBuilding(_Model):
             name=data["name"],
             code=data.get("code", UNSET),
             levels=list(data["levels"]) if "levels" in data else UNSET,
+            plan_notes=[PlanNote.from_json(e0) for e0 in data["planNotes"]] if "planNotes" in data else UNSET,
             structure=UNSET if "structure" not in data else None if data["structure"] is None else BuildingStructure.from_json(data["structure"]),
             usage=data.get("usage", UNSET),
             wings=[ProgramWing.from_json(e0) for e0 in data["wings"]] if "wings" in data else UNSET,

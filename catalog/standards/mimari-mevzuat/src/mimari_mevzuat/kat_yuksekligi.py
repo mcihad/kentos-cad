@@ -20,7 +20,8 @@ parselin plandaki kullanımına (bölgesine) göre:
 - **Plan notu** (``planNotes``): 28/1 kat yüksekliklerini plana bırakır, yerel yönetmelik plan aksini demiyorsa
   uygulanır (69/3). Zemin kat yüksekliği notu zemin katın, kat yüksekliği notu öbür zemin ve normal katların (zemin
   katın kendi notu yoksa onun da) sınırıdır; notun bağladığı katta maddeler kapsam dışıdır, değerleri farklıysa iletide
-  yanında yazılır. Plan notu bölgeden bağımsız okunur.
+  yanında yazılır. Plan notu bölgeden bağımsız okunur. Binanın kendi notu (docs/adr/8163) binanın katlarında
+  projenin aynı ölçüdeki notunun yerine geçer; satırı binanın adıyla ayrıdır.
 
 Değişiklikler yayımı günü yürürlüğe girdi, geçiş hükmü 28/1'i saymaz: başvuru gününde yürürlükteki hâl okunur.
 
@@ -148,8 +149,8 @@ def _satir(hal: y.Hal, durum: str, not_: str) -> dict[str, Any]:
 
 
 def _not_satiri(not_: dict[str, Any], durum: str) -> dict[str, Any]:
-    return {"rule": NOT_SATIRI[not_["key"]], "title": NOT_BASLIGI[not_["key"]], "version": None,
-            "gazette": not_["source"], "state": durum, "note": ""}
+    return {"rule": katman.not_satiri(NOT_SATIRI[not_["key"]], not_), "title": NOT_BASLIGI[not_["key"]],
+            "version": None, "gazette": not_["source"], "state": durum, "note": ""}
 
 
 def _bolge_satiri(durum: str, not_: str) -> dict[str, Any]:
@@ -168,8 +169,8 @@ def _kat(p: dict[str, Any], katlar: int, madde: str | None, sivas: bool, gun: da
     hallar = [h_ for h_ in (hu, hy) if h_ is not None]
     uids, h = p["uids"], p["h"]
     if h is None:
-        kim = katman.PlanNotu(float(not_["value"]), not_["source"]).kural() if not_ else hu.kural()
-        ad = f"Plan notu ({not_['source']})" if not_ else hu.kisa()
+        kim = katman.plan_notu(not_).kural() if not_ else hu.kural()
+        ad = katman.plan_notu(not_).kisa() if not_ else hu.kisa()
         bulgu = {"code": "paiy_storey_height_over",
                  "message": f"“{kat['name']}” katının yüksekliği yazılmamış ve üstünde kat yok: kat yüksekliği "
                             f"okunamıyor — {ad}",
@@ -185,7 +186,7 @@ def _kat(p: dict[str, Any], katlar: int, madde: str | None, sivas: bool, gun: da
     yerel = sinir(hy, katlar, p["zemin"], p["asma"], konut_kati) if hy is not None else None
     ozne = f"“{kat['name']}” kat yüksekliği"
     if not_:
-        plan = katman.PlanNotu(float(not_["value"]), not_["source"])
+        plan = katman.plan_notu(not_)
         b = katman.bulgu("paiy_storey_height_over", ozne, float(h), False, ulusal, yerel, PLANA_ONARIM, uids,
                          kat["level"], plan=plan)
         durum = y.GECTI if katman.tutar(float(h), False, plan) else y.KALDI
@@ -234,23 +235,22 @@ def parcalar(bina: dict[str, Any], madde: str | None) -> list[dict[str, Any]]:
 def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:
     """Projenin kat yüksekliği bulguları: her kat bölgenin bendinin başvuru günündeki hâliyle ve kendi plan notuyla; gün
     yoksa her kat her hâlle denenmiş (``yururluk.parcalarla``). Bir binası kendi bölgesini (docs/adr/8144; katın
-    ``zone``'u) ya da taşıyıcı sistemini (docs/adr/8145; ``structuralSystem``, ``traditional``) söylüyorsa her binanın
-    katları kendininkiyle ayrı denetlenir (28/1-d'nin kat sayısı da binanınkidir); aynı maddenin satırları birleşir."""
+    ``zone``'u), taşıyıcı sistemini (docs/adr/8145; ``structuralSystem``, ``traditional``) ya da plan notlarını
+    (docs/adr/8163; ``planNotes``) söylüyorsa her binanın katları kendininkiyle ayrı denetlenir (28/1-d'nin kat sayısı
+    da binanınkidir); aynı maddenin satırları birleşir."""
     bina = facts.get("building") or {}
     if not bina.get("storeys"):
         return y.Sonuc([], [])
-    if not any(k.get("zone") or k.get("structuralSystem") for k in bina["storeys"]):
+    if not any(k.get("zone") or k.get("structuralSystem") or k.get("planNotes") for k in bina["storeys"]):
         return _bina(bina, gun, neden)
-    gruplar: dict[Any, list[dict[str, Any]]] = {}
-    for k in bina["storeys"]:
-        gruplar.setdefault(k.get("building"), []).append(k)
     sonuclar = []
-    for katlar in gruplar.values():
+    for katlar in katman.binalara(bina):
         zone = next((k["zone"] for k in katlar if k.get("zone")), None) or bina.get("zone")
         kendi = next((k for k in katlar if k.get("structuralSystem")), None)
         yapi = ({"structuralSystem": kendi["structuralSystem"], "traditional": bool(kendi.get("traditional"))}
                 if kendi else {})
-        sonuclar.append(_bina(dict(bina, storeys=katlar, zone=zone, **yapi), gun, neden))
+        sonuclar.append(_bina(dict(bina, storeys=katlar, zone=zone, planNotes=katman.plan_notlari(bina, katlar),
+                                   **yapi), gun, neden))
     satirlar = []
     for r in y.birlesik(sonuclar):
         r.pop("sayilar")
@@ -306,11 +306,11 @@ def _bina(bina: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:
     sonuclar = y.parcalarla(okunan, lambda p, g: _kat(p, n, bent(g), sivas, g), maddeler, gun, neden, KONU,
                             lambda p: list(p["uids"]))
     bulgular += [b for s in sonuclar for b in s.bulgular]
-    notlar = {n_["key"]: n_ for n_ in bina.get("planNotes") or []}
+    notlar = [n_ for n_ in bina.get("planNotes") or [] if n_["key"] in NOT_SATIRI]
     for r in y.birlesik(sonuclar):
         sayi = r.pop("sayilar")
         kalan, eksik, gecen = sayi.get(y.KALDI, 0), sayi.get(y.EKSIK_VERI, 0), sayi.get(y.GECTI, 0)
-        not_ = next((x for k, x in notlar.items() if NOT_SATIRI.get(k) == r["rule"]), None)
+        not_ = next((x for x in notlar if katman.not_satiri(NOT_SATIRI[x["key"]], x) == r["rule"]), None)
         if not_ is not None:
             deger = katman.metre(float(not_["value"]))
             if r["state"] == y.EKSIK_VERI:

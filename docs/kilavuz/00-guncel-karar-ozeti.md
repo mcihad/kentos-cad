@@ -457,6 +457,11 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Binanın kendi plan notları (19 Kasım 2026; [ADR 8163](../adr/8163-plan-notes-per-building.md), K420–K423):**
+    kademe hattının iki yanındaki bloklar (PAİY 4/1-mm) Bina programı › Binalar'da kendi plan notlarını alır
+    (`ProgramBuilding.planNotes`); yazdığı konu projeninkinin yerine geçer (`ArchSettings::plan_notes_on`); olguların
+    katları binasının notlarını ve adını taşır; bina, kat ve çatı yüksekliği, tahvil, subasman ve çıkma kuralları bina
+    bina okur, binanın notunun satırı adıyla; `.kcad` Mimari verisi 35. Asansör (34/1) projenin notunu okur.
   - **Planın çıkma ve bodrum notları (19 Kasım 2026; [ADR 8162](../adr/8162-plan-projection-basement-notes.md),
     K417–K419):** Çıkma (en çok; 41/1'in 1,50 m'si yerine, 0: çıkma yok; sınıra 3,00 m ve komşuya 2,00 m 41/1'in) ve
     Bodrum kat adedi (en çok; bina bina zemin katın altındaki katlar) plan notları; `.kcad` Mimari verisi 34.

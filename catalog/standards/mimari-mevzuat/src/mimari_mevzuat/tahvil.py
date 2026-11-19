@@ -11,7 +11,8 @@
   yüksekliği notları önce (69/3). Planın bina yüksekliği H'nin kat adedi H(n) ≤ H olan en büyük n'dir. Sivas seçiliyse
   Sivas'ın 28/1'iyle de hesaplanır, sıkı olanı bağlar.
 - **Ne zaman:** plan notlarında yalnız biri varsa (``buildingHeight`` ya da ``storeys``). İkisi de varsa tahvil gerekmez
-  (kapsam dışı); hiçbiri yoksa satır yok. Planın notu 5/11'le zaten aşılamaz (``bina_yuksekligi``).
+  (kapsam dışı); hiçbiri yoksa satır yok. Planın notu 5/11'le zaten aşılamaz (``bina_yuksekligi``). Bir bina kendi
+  notlarını söylüyorsa (docs/adr/8163) her bina kendi notlarıyla (yazmadığı ölçüde projeninkiyle) okunur.
 - **Sonuç:** her binanın kat adedi (binasının ±0,00'ından, docs/adr/8154) planın yüksekliğinin tahvilini, yüksekliği
   planın kat adedinin tahvilini aşmıyorsa geçti. Aşıyorsa uzman incelemesi: idareler subasmanı tahvile katıp katmamakta
   ve 28/2'nin (28 inci maddenin kat yükseklikleri dikkate alınmadan bina yüksekliği verilen planlar) okunuşunda ayrışır;
@@ -105,42 +106,45 @@ def kat_adedi(bina: dict[str, Any], h: float, gun: date, subasman: float, yon: s
 
 
 def _binalar(bina: dict[str, Any]) -> list[dict[str, Any]]:
-    """Her binanın olguları: katları, bölgesi (kendi bölgesi yoksa projeninki, docs/adr/8144) ve taşıyıcı sistemi
-    (docs/adr/8145)."""
-    gruplar: dict[Any, list[dict[str, Any]]] = {}
-    for k in bina.get("storeys") or []:
-        gruplar.setdefault(k.get("building"), []).append(k)
+    """Her binanın olguları: katları, bölgesi (kendi bölgesi yoksa projeninki, docs/adr/8144), taşıyıcı sistemi
+    (docs/adr/8145) ve plan notları (kendi notları, yazmadığı ölçüde projeninkiler; docs/adr/8163)."""
     out = []
-    for katlar in gruplar.values():
+    for katlar in katman.binalara(bina):
         zone = next((k["zone"] for k in katlar if k.get("zone")), None) or bina.get("zone")
         kendi = next((k for k in katlar if k.get("structuralSystem")), None)
         yapi = ({"structuralSystem": kendi["structuralSystem"], "traditional": bool(kendi.get("traditional"))}
                 if kendi else {})
-        out.append(dict(bina, storeys=katlar, zone=zone, **yapi))
+        out.append(dict(bina, storeys=katlar, zone=zone, planNotes=katman.plan_notlari(bina, katlar), **yapi))
     return out
 
 
 def _ad(bina: dict[str, Any], hepsi: int) -> str:
-    """İletide binanın adı: birden çok binada bina programındaki kimliğiyle (“a” binası), tek binada yok."""
-    kimlik = next((k["building"] for k in bina.get("storeys") or [] if k.get("building")), None)
-    return f"“{kimlik}” binası: " if hepsi > 1 and kimlik else ""
+    """İletide binanın adı: birden çok binada bina programındaki adıyla, ad yoksa kimliğiyle (“a” binası); tek binada
+    yok."""
+    ad = katman.bina_adi(bina.get("storeys") or [])
+    return f"{ad}: " if hepsi > 1 and ad else ""
+
+
+def _notlar(bina: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Binanın tahvilde okunan plan notları: bina yüksekliği ve kat adedi."""
+    return {n["key"]: n for n in bina.get("planNotes") or [] if n["key"] in (YUKSEKLIK, KAT)}
 
 
 def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     """Başvuru günü ``gun`` olan projenin tahvil bulguları ve 9/1-c'nin satırı."""
     hal = y.hal(*MADDE, gun)
-    notlar = {n["key"]: n for n in bina.get("planNotes") or []}
+    hepsi = _binalar(bina)
     if hal is None:
         ilk = y.haller(*MADDE)[0]
         not_ = f"başvuru günü ({y.yaz(gun)}) kural setinin bildiği ilk hâlden ({ilk.etiket}) önce"
         return y.Sonuc([], [{"rule": "PAİY 9/1-c", "title": ilk.baslik, "version": None, "gazette": None,
                              "state": y.UZMAN, "note": not_}])
-    if YUKSEKLIK in notlar and KAT in notlar:
+    if all(len(_notlar(b)) == 2 for b in hepsi):
         return y.Sonuc([], [_satir(hal, y.KAPSAM_DISI, "planın bina yüksekliği de kat adedi de var: tahvil gerekmez")])
     subasman = float(hal.anahtar["subasman"])
     sivas = bina.get("local") == "sivas"
     yonler = ["PAİY", "Sivas"] if sivas else ["PAİY"]
-    binalar = [b for b in _binalar(bina) if bina_yuksekligi.katlar(b)]
+    binalar = [b for b in hepsi if bina_yuksekligi.katlar(b)]
     if not binalar:
         return y.Sonuc([], [_satir(hal, y.KAPSAM_DISI, "±0,00 üstünde kat yok")])
     bulgular: list[dict[str, Any]] = []
@@ -148,9 +152,16 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     # Okunamayan binaların nedenleri: bulgusunu kat yüksekliği kuralı verir (bölge, katın yüksekliği); burada satır.
     eksik: list[str] = []
     kapsam = 0
+    # Planın iki değeri de olan binalar (docs/adr/8163: binanın kendi notlarıyla): tahvil gerekmez.
+    gerekmez: list[str] = []
     for b in binalar:
         katlar = bina_yuksekligi.katlar(b)
         ad = _ad(b, len(binalar))
+        notlar = _notlar(b)
+        if len(notlar) != 1:
+            if notlar:
+                gerekmez.append(f"{ad}tahvil gerekmez (planın iki değeri de var)")
+            continue
         uids = [u for k in katlar for u in k.get("rooms") or []][:20]
         madde = _bent(b, len(katlar), gun)
         notlu = kat_yuksekligi.plan_notu(b, True) is not None and kat_yuksekligi.plan_notu(b, False) is not None
@@ -217,7 +228,11 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         return y.Sonuc(bulgular, [_satir(hal, y.EKSIK_VERI, "tahvil okunamadı: " + " · ".join(eksik))])
     if not notlar_ and kapsam:
         return y.Sonuc([], [_satir(hal, y.KAPSAM_DISI, "planın kullanımı 28/1'in saymadığı bir kullanım")])
-    return y.Sonuc([], [_satir(hal, y.GECTI, " · ".join(notlar_))])
+    if not notlar_:
+        ne = ("planın bina yüksekliği de kat adedi de var: tahvil gerekmez" if gerekmez
+              else "planın değerini okuyan binada ±0,00 üstünde kat yok")
+        return y.Sonuc([], [_satir(hal, y.KAPSAM_DISI, ne)])
+    return y.Sonuc([], [_satir(hal, y.GECTI, " · ".join(notlar_ + gerekmez))])
 
 
 def maddeler(bina: dict[str, Any]) -> list[tuple[str, str]]:
@@ -236,7 +251,7 @@ def maddeler(bina: dict[str, Any]) -> list[tuple[str, str]]:
 def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:
     """Projenin tahvil bulguları (``yururluk.denetle`` ile)."""
     bina = facts.get("building") or {}
-    notlar = {n["key"] for n in bina.get("planNotes") or []}
+    notlar = {n["key"] for b in _binalar(bina) for n in b.get("planNotes") or []}
     if not bina.get("storeys") or not (YUKSEKLIK in notlar or KAT in notlar):
         return y.Sonuc([], [])
     return y.denetle(lambda g: kural(bina, g), maddeler(bina), gun, neden, "tahvil kuralı")

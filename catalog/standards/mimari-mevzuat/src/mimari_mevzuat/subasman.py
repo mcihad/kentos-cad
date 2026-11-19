@@ -9,6 +9,9 @@
 - **Planın aksine hükmü** (docs/adr/8158): projenin plan notları ``plinthMost`` (en çok) ve ``plinthLeast`` (en az,
   ±0,00'ın altında eksi) 4/1-yyy'nin +1,20 ve ±0,00'ının yerine geçer; notun satırı (“Plan notu: subasman kotu (en
   çok)”) sonucunu söyler, iki ucu da plan notundaysa 4/1-yyy kapsam dışıdır, biri plandaysa 4/1-yyy öbür ucu okur.
+- **Binanın kendi notları** (docs/adr/8163): her binanın zemin katı binasının notlarıyla (yazmadığı uçta projeninkiyle);
+  binanın notunun satırı binanın adıyla ayrıdır. 4/1-yyy notla bağlanmamış uçları okur; her zemin katın iki ucu da
+  notluysa kapsam dışıdır.
 
 **Okunan olgular** (``facts.building``): katlar (ad, kot, asma kat, binası, mahalleri), plan notları.
 """
@@ -63,8 +66,13 @@ def _kot(v: float) -> str:
 
 
 def _not_satiri(not_: dict[str, Any], durum: str, ne: str) -> dict[str, Any]:
-    return {"rule": NOT_SATIRI[not_["key"]], "title": NOT_BASLIGI[not_["key"]], "version": None,
-            "gazette": not_["source"], "state": durum, "note": ne}
+    return {"rule": katman.not_satiri(NOT_SATIRI[not_["key"]], not_), "title": NOT_BASLIGI[not_["key"]],
+            "version": None, "gazette": not_["source"], "state": durum, "note": ne}
+
+
+def _zemin_notlari(bina: dict[str, Any], k: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Zemin katı bağlayan subasman notları: binasının kendi notları, yazmadığı uçta projeninkiler (docs/adr/8163)."""
+    return {n["key"]: n for n in katman.plan_notlari(bina, [k]) if n["key"] in (EN_COK, EN_AZ)}
 
 
 def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
@@ -72,28 +80,44 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     hal = y.hal("PAİY", "4/1-yyy", gun)
     if hal is None:
         return y.Sonuc([], [])
-    notlar = {n["key"]: n for n in bina.get("planNotes") or [] if n["key"] in (EN_COK, EN_AZ)}
-    ust_not, alt_not = notlar.get(EN_COK), notlar.get(EN_AZ)
-    alt = float(alt_not["value"]) if alt_not else float(hal.anahtar["least"])
-    ust = float(ust_not["value"]) if ust_not else float(hal.anahtar["most"])
+    proje = {n["key"]: n for n in bina.get("planNotes") or [] if n["key"] in (EN_COK, EN_AZ)}
     zemin = zeminler(bina)
     if not zemin:
-        satirlar = [_not_satiri(n, y.KAPSAM_DISI, "zemin kat yok") for n in notlar.values()]
+        satirlar = [_not_satiri(n, y.KAPSAM_DISI, "zemin kat yok") for n in proje.values()]
         return y.Sonuc([], [_satir(hal, y.KAPSAM_DISI, "zemin kat yok")] + satirlar)
     bulgular: list[dict[str, Any]] = []
-    # Her ucun kaldığı zemin katları: 4/1-yyy'nin ya da planın notunun.
-    kalan = {EN_COK: 0, EN_AZ: 0}
+    # Notların satırları adlarıyla, ilk görüldükleri sırayla: notu, kaldığı ve okuduğu zemin katlar.
+    satir_notu: dict[str, dict[str, Any]] = {}
+    kalan: dict[str, int] = {}
+    okunan: dict[str, list[str]] = {}
+    # 4/1-yyy'nin okuduğu (notla bağlanmamış) uçlar, kaldığı ve okuduğu zemin katlar.
+    madde_uclari: set[str] = set()
+    madde_kalan = 0
+    madde_okunan: list[str] = []
     for k in zemin:
+        notlar = _zemin_notlari(bina, k)
+        ust_not, alt_not = notlar.get(EN_COK), notlar.get(EN_AZ)
+        alt = float(alt_not["value"]) if alt_not else float(hal.anahtar["least"])
+        ust = float(ust_not["value"]) if ust_not else float(hal.anahtar["most"])
         kot = float(k["elevation"]) - float(k.get("zero") or 0.0)
+        yazi = _kot(kot).removesuffix(" m")
+        for n in notlar.values():
+            ad_ = katman.not_satiri(NOT_SATIRI[n["key"]], n)
+            satir_notu.setdefault(ad_, n)
+            okunan.setdefault(ad_, []).append(yazi)
+        bos = [uc for uc in (EN_AZ, EN_COK) if uc not in notlar]
+        if bos:
+            madde_uclari.update(bos)
+            madde_okunan.append(yazi)
         if alt - 1e-9 <= kot <= ust + 1e-9:
             continue
         asagi = kot < alt
         uc = EN_AZ if asagi else EN_COK
-        kalan[uc] += 1
         bag = notlar.get(uc)
         ad = f"“{k.get('name') or k['level']}” zemin katın taban döşemesi (subasman kotu)"
         uids = list(k.get("rooms") or [])[:20]
         if bag is None:
+            madde_kalan += 1
             ne = (f"±0,00'ın {katman.metre(-kot)} altında" if asagi and abs(alt) < 1e-9
                   else f"{_kot(kot)}, en az {_kot(alt)}" if asagi
                   else f"+{katman.metre(kot)}, en çok {_kot(ust)}")
@@ -106,31 +130,35 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                           "aksini söylüyorsa planın notunu Plan notları'na yazın.",
                 "uids": uids, "rule": hal.kural(), "_iz": f"subasman:{k['level']}"})
             continue
-        plan = katman.PlanNotu(float(bag["value"]), bag["source"])
+        ad_ = katman.not_satiri(NOT_SATIRI[uc], bag)
+        kalan[ad_] = kalan.get(ad_, 0) + 1
+        plan = katman.plan_notu(bag)
         ne = f"{_kot(kot)}, en az {_kot(alt)}" if asagi else f"{_kot(kot)}, en çok {_kot(ust)}"
         bulgular.append({
             "code": "paiy_plinth_level",
             "message": f"{ad} {ne}: planın notu (4/1-yyy'nin aksine hükmü) — {plan.kisa()}",
             "repair": "Zemin katın kotunu planın notunun sınırına getirin (Proje ayarları › Mimari › Katlar).",
             "uids": uids, "rule": plan.kural(), "_iz": f"subasman:{k['level']}:plan:{bag['value']}"})
-    kotlar = ", ".join(_kot(float(k["elevation"]) - float(k.get("zero") or 0.0)).removesuffix(" m") for k in zemin)
     satirlar = []
-    for uc, n in notlar.items():
-        sinir = f"en çok {_kot(ust)}" if uc == EN_COK else f"en az {_kot(alt)}"
-        satirlar.append(_not_satiri(n, y.KALDI if kalan[uc] else y.GECTI,
-                                    f"{kalan[uc]} zemin kat {sinir} dışında" if kalan[uc]
-                                    else f"zemin kat {kotlar} m ({sinir})"))
-    if len(notlar) == 2:
+    for ad_, n in satir_notu.items():
+        deger = float(n["value"])
+        sinir = f"en çok {_kot(deger)}" if n["key"] == EN_COK else f"en az {_kot(deger)}"
+        sayi = kalan.get(ad_, 0)
+        satirlar.append(_not_satiri(n, y.KALDI if sayi else y.GECTI,
+                                    f"{sayi} zemin kat {sinir} dışında" if sayi
+                                    else f"zemin kat {', '.join(okunan[ad_])} m ({sinir})"))
+    # Projenin notu: her zemin katın binası o uçta kendi notunu okuyorsa okunmaz.
+    for n in proje.values():
+        if NOT_SATIRI[n["key"]] not in satir_notu:
+            satirlar.append(_not_satiri(n, y.KAPSAM_DISI, "her binanın kendi notu var"))
+    if not madde_uclari:
         durum = _satir(hal, y.KAPSAM_DISI, "subasman kotu parselin plan notunda")
+    elif madde_kalan:
+        sinir = ("±0,00 ile +1,20" if madde_uclari == {EN_AZ, EN_COK} else "en az ±0,00" if EN_AZ in madde_uclari
+                 else "en çok +1,20")
+        durum = _satir(hal, y.KALDI, f"{madde_kalan} zemin katın subasmanı {sinir} dışında")
     else:
-        # Planın notu olmayan uç 4/1-yyy'nin.
-        uclar = [uc for uc in (EN_AZ, EN_COK) if uc not in notlar]
-        kac = sum(kalan[uc] for uc in uclar)
-        if kac:
-            sinir = ("±0,00 ile +1,20" if not notlar else "en az ±0,00" if EN_AZ in uclar else "en çok +1,20")
-            durum = _satir(hal, y.KALDI, f"{kac} zemin katın subasmanı {sinir} dışında")
-        else:
-            durum = _satir(hal, y.GECTI, f"zemin kat {kotlar} m")
+        durum = _satir(hal, y.GECTI, f"zemin kat {', '.join(madde_okunan)} m")
     return y.Sonuc(bulgular, [durum] + satirlar)
 
 

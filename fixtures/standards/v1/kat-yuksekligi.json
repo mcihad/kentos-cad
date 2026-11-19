@@ -3870,6 +3870,175 @@
      ]
     }
    }
+  },
+  {
+   "id": "bina-notu-kat-yuksekligi",
+   "neden": "Konut alanı; A Blok'un kendi kat yüksekliği notu 3,50 (kademe hattı A alanı): A'nın 3,80'lik iki katı kalır (28/1-c'nin 4,00'ı iletide yanında); B'nin 3,00'lık katları projenin 4,00'lık notuyla geçer; bütün katlar notlu → 28/1-c kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "a0",
+      "name": "A zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000009101"
+      ],
+      "height": 3.8,
+      "building": "a",
+      "buildingName": "A Blok",
+      "planNotes": [
+       {
+        "key": "storeyHeight",
+        "value": 3.5,
+        "source": "UİP 12.3.2019, kademe hattı A alanı"
+       }
+      ]
+     },
+     {
+      "level": "a1",
+      "name": "A 1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000009102"
+      ],
+      "height": 3.8,
+      "building": "a",
+      "buildingName": "A Blok",
+      "planNotes": [
+       {
+        "key": "storeyHeight",
+        "value": 3.5,
+        "source": "UİP 12.3.2019, kademe hattı A alanı"
+       }
+      ]
+     },
+     {
+      "level": "b0",
+      "name": "B zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000009201"
+      ],
+      "height": 3.0,
+      "building": "b",
+      "buildingName": "B Blok"
+     },
+     {
+      "level": "b1",
+      "name": "B 1. kat",
+      "elevation": 3.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000009202"
+      ],
+      "height": 3.0,
+      "building": "b",
+      "buildingName": "B Blok"
+     },
+     {
+      "level": "b2",
+      "name": "B 2. kat",
+      "elevation": 6.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000009203"
+      ],
+      "height": 3.0,
+      "building": "b",
+      "buildingName": "B Blok"
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 0,
+    "zone": "residential",
+    "planNotes": [
+     {
+      "key": "storeyHeight",
+      "value": 4.0,
+      "source": "UİP 12.3.2019, plan notu 3"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“A zemin kat” kat yüksekliği 3.80 m > 3.50 m — A Blok plan notu (UİP 12.3.2019, kademe hattı A alanı)",
+       "PAİY 28/1-c"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“A 1. kat” kat yüksekliği 3.80 m > 3.50 m — A Blok plan notu (UİP 12.3.2019, kademe hattı A alanı)"
+      ]
+     }
+    ],
+    "rules": {
+     "Plan notu: kat yüksekliği (A Blok)": [
+      "failed",
+      null
+     ],
+     "PAİY 28/1-c": [
+      "outOfScope",
+      "12.8.2023"
+     ],
+     "Plan notu: kat yüksekliği": [
+      "passed",
+      null
+     ]
+    }
+   }
   }
  ]
 }

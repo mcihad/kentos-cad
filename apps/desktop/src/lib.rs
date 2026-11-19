@@ -1657,6 +1657,9 @@ mod lodging_escape_tests;
 #[path = "tests/roof_rules_tests.rs"]
 mod roof_rules_tests;
 #[cfg(test)]
+#[path = "tests/building_plan_notes_tests.rs"]
+mod building_plan_notes_tests;
+#[cfg(test)]
 #[path = "tests/double_door_tests.rs"]
 mod double_door_tests;
 #[cfg(test)]

@@ -5,7 +5,8 @@
 //! basements (docs/adr/8162), a row each: Konu, Değer
 //! (m, storeys or per cent), Kaynak, delete; Plan notu ekle. KentOS does not read a note's words into a number: the
 //! architect writes the value and where it stands. What does not hold is said under the rows and Kaydet waits; Kaydet
-//! writes them through `cad.settings.set`'s `arch.planNotes`.
+//! writes them through `cad.settings.set`'s `arch.planNotes`. A building of the program shows the same rows in Bina
+//! programı › Binalar for its own notes (docs/adr/8163; [`table`]).
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Length};
@@ -109,6 +110,28 @@ pub(super) fn view<'a>(
     on: impl Fn(usize, Edit) -> Message + Copy + 'a,
     on_add: Message,
 ) -> Element<'a, Message> {
+    let body = table(rows, on, on_add).push(label::caption(
+        "Parselin uygulama imar planının notu bir değeri değiştiriyorsa buraya yazılır: Denetim › Mevzuat o değeri yerel \
+         imar yönetmeliğinin ve Planlı Alanlar İmar Yönetmeliği'nin önüne koyar (69/3; kat yükseklikleri plana \
+         bırakılmıştır, 28/1). Zemin kat yüksekliği ±0,00'daki katın, kat yüksekliği bütün zemin ve normal katların \
+         sınırıdır (m). Bina yüksekliği ±0,00'dan son katın tavan döşemesinin üstüne (m), kat adedi zemin ve normal \
+         katlardır; planın bu değerleri aşılamaz (5/11). Subasman kotu zemin katın taban döşemesinin binanın \
+         ±0,00'ından en çok ve en az yüksekliğidir (m, altında eksiyle); yazılmazsa +1,20 ve ±0,00'dır (4/1-yyy). \
+         Mahya saçak seviyesinden (m; yazılmazsa 5,00, 40/4), çatı eğimi kenarların eğimi (%), saçak duvardan taşması \
+         (m; yazılmazsa 1,00, 42/1). Çıkma yapı yaklaşma sınırından taşması (m; yazılmazsa 1,50, 41/1; 0: çıkma yok), \
+         bodrum kat adedi zemin katın altındaki katlar. Kademe hattının iki yanındaki bloklar kendi notlarını Bina \
+         programı › Binalar'da alır. KentOS notun sözünü okumaz: değeri ve notun yerini planı okuyan yazar.",
+    ));
+    super::group::<Message>("Plan notları", body)
+}
+
+/// The rows with what each sends, what does not hold and Plan notu ekle: the project's group and a building's own
+/// notes in Bina programı › Binalar (docs/adr/8163) show the same.
+pub(crate) fn table<'a>(
+    rows: &'a [Note],
+    on: impl Fn(usize, Edit) -> Message + Copy + 'a,
+    on_add: Message,
+) -> Column<'a, Message> {
     let head = kentos_ui::widget::table::band(
         row![
             container(kentos_ui::widget::table::title("Konu"))
@@ -166,17 +189,5 @@ pub(super) fn view<'a>(
     .on_press(on_add)
     .padding([4, 10])
     .style(style::button::secondary);
-    body = body.push(add).push(label::caption(
-        "Parselin uygulama imar planının notu bir değeri değiştiriyorsa buraya yazılır: Denetim › Mevzuat o değeri yerel \
-         imar yönetmeliğinin ve Planlı Alanlar İmar Yönetmeliği'nin önüne koyar (69/3; kat yükseklikleri plana \
-         bırakılmıştır, 28/1). Zemin kat yüksekliği ±0,00'daki katın, kat yüksekliği bütün zemin ve normal katların \
-         sınırıdır (m). Bina yüksekliği ±0,00'dan son katın tavan döşemesinin üstüne (m), kat adedi zemin ve normal \
-         katlardır; planın bu değerleri aşılamaz (5/11). Subasman kotu zemin katın taban döşemesinin binanın \
-         ±0,00'ından en çok ve en az yüksekliğidir (m, altında eksiyle); yazılmazsa +1,20 ve ±0,00'dır (4/1-yyy). \
-         Mahya saçak seviyesinden (m; yazılmazsa 5,00, 40/4), çatı eğimi kenarların eğimi (%), saçak duvardan taşması \
-         (m; yazılmazsa 1,00, 42/1). Çıkma yapı yaklaşma sınırından taşması (m; yazılmazsa 1,50, 41/1; 0: çıkma yok), \
-         bodrum kat adedi zemin katın altındaki katlar. KentOS notun sözünü okumaz: değeri ve notun yerini planı \
-         okuyan yazar.",
-    ));
-    super::group::<Message>("Plan notları", body)
+    body.push(add)
 }

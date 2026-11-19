@@ -133,6 +133,13 @@ pub struct ProgramBuilding {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub structure: Option<crate::BuildingStructure>,
+    /// Its own plan notes (docs/adr/8163; `.kcad` Mimari data 35): the plan's values for the area of the parcel it
+    /// stands in, where a kademe hattı (PAİY 4/1-mm) gives the parcel's areas different storeys, heights or other
+    /// values. A measure it notes takes the place of the project's note on that measure; the others are the
+    /// project's (Proje ayarları › Mimari › Plan notları). Checked as the project's notes are.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::PlanNote>>", optional))]
+    pub plan_notes: Vec<crate::PlanNote>,
 }
 
 /// Whether a storey's name says it is the ground storey: “Zemin” in any case (Turkish İ lower-cases to i and a dot; the
@@ -395,6 +402,11 @@ impl BuildingProgram {
         self.buildings.iter().any(|b| b.structure.is_some())
     }
 
+    /// Whether a building gives its own plan notes (Mimari data 35, docs/adr/8163).
+    pub fn has_building_plan_notes(&self) -> bool {
+        self.buildings.iter().any(|b| !b.plan_notes.is_empty())
+    }
+
     /// The building a level is a storey of (docs/adr/8072 §1): the one building that spans it, else the one its shared
     /// entry names; none when no building or several without a choice span it.
     pub fn building_of_level(&self, level: &str) -> Option<&ProgramBuilding> {
@@ -561,6 +573,10 @@ impl BuildingProgram {
             // Its own structural system (docs/adr/8145): traditional elements only of cut stone masonry.
             if let Some((path, why)) = b.structure.as_ref().and_then(crate::BuildingStructure::problem) {
                 return Some((format!("buildings[{i}].{path}"), why));
+            }
+            // Its own plan notes (docs/adr/8163): as the project's, each measure once.
+            if let Some((path, why)) = crate::PlanNote::list_problem(&b.plan_notes) {
+                return Some((format!("buildings[{i}].{path}"), format!("“{}” binasının plan notları: {why}", b.name)));
             }
             // Its code, use and ±0.00 (docs/adr/8072 §1; EK-2 §2.3).
             if let Some(c) = &b.code {

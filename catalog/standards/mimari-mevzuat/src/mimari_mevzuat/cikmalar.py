@@ -15,8 +15,11 @@ Vaziyet planı yoksa çıkma okunmaz.
   m. Zemin modelin ±0,00'ıdır; ön bahçesi 3 m ve daha az parselde yol kotu da ±0,00 sayılır. Altında döşeme çizilmemiş
   çıkmanın katının kotu 2,40 m'den azsa kaldı, değilse eksik veri.
 
+- **Planın çıkma notu** (docs/adr/8162) 1,50 m'nin yerine (0: çıkma yapılamaz); binanın kendi notu (docs/adr/8163)
+  binanın katlarındaki çıkmalarda projeninkinin yerine, satırı binanın adıyla ayrı.
+
 **Okunan olgular** (``facts.building``): ``projections`` (mahal, kat, açık mı, alanı, katın kotu, alt kotu, kenarlar:
-türü, istenen mesafe, uzaklık), katların adları.
+türü, istenen mesafe, uzaklık), katların adları ve binalarının notları, plan notları.
 """
 
 from __future__ import annotations
@@ -28,6 +31,8 @@ from . import katman
 from . import yururluk as y
 
 MADDELER = [("PAİY", "41/1"), ("PAİY", "41/2")]
+#: Planın çıkma notu (olguların ``planNotes[].key``'i) ve satırının adı.
+NOT, SATIR = "projectionMost", "Plan notu: çıkma"
 
 _YAN = ("side", "back", "public")
 
@@ -90,19 +95,36 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         not_ = "zemin katın dışına taşan çıkma yok (ya da vaziyet planı yok)"
         return y.Sonuc([], [_satir(h1, y.KAPSAM_DISI, not_), _satir(h2, y.KAPSAM_DISI, not_)])
     katlar = {k["level"]: k.get("name") or k["level"] for k in bina.get("storeys") or []}
+    kat_of = {k["level"]: k for k in bina.get("storeys") or []}
+    proje = next((n for n in bina.get("planNotes") or [] if n["key"] == NOT), None)
+
+    def notu(c: dict[str, Any]) -> dict[str, Any] | None:
+        """Çıkmayı bağlayan çıkma notu: katının binasının kendi notu, yoksa projeninki (docs/adr/8163)."""
+        kat = kat_of.get(c.get("level") or "")
+        return next((n for n in katman.plan_notlari(bina, [kat] if kat else None) if n["key"] == NOT), None)
+
     # Planın çıkma notu (docs/adr/8162): taşmanın 1,50 m'sinin yerine (0: çıkma yok); sınıra ve komşuya uzaklık 41/1'in.
-    not_ = next((n for n in bina.get("planNotes") or [] if n["key"] == "projectionMost"), None)
-    plan = katman.PlanNotu(float(not_["value"]), not_["source"]) if not_ else None
+    # Notların satırları adlarıyla: projeninki önce, binalarınkiler ilk görüldükleri sırayla; okudukları ve kaldıkları.
+    satir_notu: dict[str, dict[str, Any]] = {SATIR: proje} if proje else {}
+    okunan: dict[str, int] = {}
+    kalan_plan: dict[str, int] = {}
     bulgular: list[dict[str, Any]] = []
-    kalan1 = kalan_plan = 0
+    kalan1 = 0
     for c in cikmalar:
+        not_ = notu(c)
+        plan = katman.plan_notu(not_) if not_ else None
+        if not_:
+            ad_ = katman.not_satiri(SATIR, not_)
+            satir_notu.setdefault(ad_, not_)
+            okunan[ad_] = okunan.get(ad_, 0) + 1
         asanlar = tasma(c, h1, plan.deger if plan else None)
         if not asanlar:
             continue
         plandan = any(p for _, p, _ in asanlar)
         yonetmelikten = any(r for _, _, r in asanlar)
         kalan1 += bool(yonetmelikten)
-        kalan_plan += bool(plandan)
+        if plandan and not_:
+            kalan_plan[ad_] = kalan_plan.get(ad_, 0) + 1
         kaynak = "; ".join(([plan.kisa()] if plandan and plan else []) + ([h1.kisa()] if yonetmelikten else []))
         bulgular.append({
             "code": "paiy_projection_over",
@@ -114,12 +136,18 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
             "_iz": f"41/1:{c['room']}"})
     satir1 = (_satir(h1, y.KALDI, f"{kalan1} çıkma bahçe mesafesinden fazla taşıyor") if kalan1
               else _satir(h1, y.GECTI, f"{len(cikmalar)} çıkma, hepsi sınırlar içinde"))
-    satir_plan = None
-    if not_:
-        satir_plan = {"rule": "Plan notu: çıkma", "title": "Çıkma (en çok)", "version": None, "gazette": not_["source"],
-                      "state": y.KALDI if kalan_plan else y.GECTI,
-                      "note": (f"{kalan_plan} çıkma planın {_m(plan.deger)}'sinden fazla taşıyor" if kalan_plan
-                               else f"{len(cikmalar)} çıkma planın {_m(plan.deger)}'si içinde")}
+    satir_plan = []
+    for ad_, n in satir_notu.items():
+        deger, sayi = float(n["value"]), kalan_plan.get(ad_, 0)
+        if not okunan.get(ad_):
+            durum = y.KAPSAM_DISI
+            ne = "binasında çıkma yok" if n.get("_bina") else "çıkmaların binalarının kendi notu var"
+        elif sayi:
+            durum, ne = y.KALDI, f"{sayi} çıkma planın {_m(deger)}'sinden fazla taşıyor"
+        else:
+            durum, ne = y.GECTI, f"{okunan[ad_]} çıkma planın {_m(deger)}'si içinde"
+        satir_plan.append({"rule": ad_, "title": "Çıkma (en çok)", "version": None, "gazette": n["source"],
+                           "state": durum, "note": ne})
     en_az = float(h2.anahtar["height"])
     kalan2, eksik2 = 0, 0
     for c in cikmalar:
@@ -153,7 +181,7 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         satir2 = _satir(h2, y.EKSIK_VERI, f"{eksik2} çıkmanın altında döşeme yok")
     else:
         satir2 = _satir(h2, y.GECTI, f"{len(cikmalar)} çıkmanın altı en az {_m(en_az)}")
-    return y.Sonuc(bulgular, [satir1, satir2] + ([satir_plan] if satir_plan else []))
+    return y.Sonuc(bulgular, [satir1, satir2] + satir_plan)
 
 
 def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:

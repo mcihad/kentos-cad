@@ -58,5 +58,5 @@ Planlar çıkmayı sınırlar ya da yasaklar ("çıkma yapılamaz", "çıkma 1,0
 
 ## §6. Kalanlar
 
-- Plan notunun binası (blok blok farklı not) okunmaz.
+- Plan notunun binası (blok blok farklı not) okunmaz — yapıldı: ADR [8163](8163-plan-notes-per-building.md).
 - Planın bodrumun kullanımı (iskân, ticaret) üzerine hükümleri ayrı konu.

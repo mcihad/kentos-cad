@@ -10,6 +10,9 @@ Belediyenin imar yönetmeliği (Sivas) PAİY'nin üstüne okunur: plan aksini de
 - **Parselin plan notu** (docs/adr/8084) ikisinin de önüne geçer: yerel yönetmelik plan aksini demiyorsa uygulanır
   (69/3), 28 ile 39 arasındaki maddeler planla değiştirilebilir (69/2 saymaz). Ölçü plan notunun değerini tutmuyorsa
   kaldı; yönetmeliklerin değerleri farklıysa iletide yanında yazılır.
+- **Binanın plan notu** (docs/adr/8163; kademe hattı, PAİY 4/1-mm): bina programının binası kendi notlarını söylüyorsa
+  (olguların katlarında ``planNotes``) binanın yazdığı ölçü projenin aynı ölçüdeki notunun yerine geçer; satırı ve
+  bulgunun kaynağı binanın adıyladır (“Plan notu: bina yüksekliği (A Blok)”, “A Blok plan notu (…)”).
 
 İletiler Mimari denetimin Rust kurallarınınkiyle aynı biçimdedir (“Ortak merdivenin kolu 1.25 m < 1.30 m — Sivas 31/1-a;
 PAİY 31/1-a: 1.20 m”).
@@ -46,16 +49,62 @@ class Sinir:
 @dataclass(frozen=True)
 class PlanNotu:
     """Parselin plan notunun bir ölçüye koyduğu değer ve yazıldığı yer, mimarın yazdığı gibi (“UİP 12.3.2019, plan notu
-    7”; docs/adr/8084)."""
+    7”; docs/adr/8084); binanın kendi notuysa binanın adı (docs/adr/8163)."""
 
     deger: float
     kaynak: str
+    bina: str | None = None
 
     def kisa(self) -> str:
-        return f"Plan notu ({self.kaynak})"
+        return f"{self.bina} plan notu ({self.kaynak})" if self.bina else f"Plan notu ({self.kaynak})"
 
     def kural(self) -> str:
-        return f"Plan notu · {self.kaynak}"
+        return f"{self.bina} plan notu · {self.kaynak}" if self.bina else f"Plan notu · {self.kaynak}"
+
+
+def bina_adi(katlar: list[dict[str, Any]]) -> str | None:
+    """Katların binasının iletideki adı (docs/adr/8163): bina programındaki adı (``buildingName``), yoksa kimliğiyle
+    (“a” binası); binasız katlarda yok."""
+    kat = next((k for k in katlar if k.get("building")), None)
+    if kat is None:
+        return None
+    return kat.get("buildingName") or f"“{kat['building']}” binası"
+
+
+def kendi_notu_var(bina: dict[str, Any]) -> bool:
+    """Bir bina kendi plan notlarını söylüyor mu (docs/adr/8163; katların ``planNotes``'u)."""
+    return any(k.get("planNotes") for k in bina.get("storeys") or [])
+
+
+def plan_notlari(bina: dict[str, Any], katlar: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """Okunan plan notları (docs/adr/8163): ``katlar``ın binasının kendi notları (``_bina``: binanın adı), binanın
+    yazmadığı ölçülerde projeninkiler; ``katlar`` yoksa ya da binaları not söylemiyorsa projeninkiler."""
+    proje = list(bina.get("planNotes") or [])
+    kendi = next((k["planNotes"] for k in katlar or [] if k.get("planNotes")), None)
+    if not kendi:
+        return proje
+    ad = bina_adi(katlar or []) or "Binanın"
+    yazilan = {n["key"] for n in kendi}
+    return [dict(n, _bina=ad) for n in kendi] + [n for n in proje if n["key"] not in yazilan]
+
+
+def plan_notu(n: dict[str, Any]) -> PlanNotu:
+    """Bir notun (``plan_notlari``'nın) değeri, yeri ve binası."""
+    return PlanNotu(float(n["value"]), n["source"], n.get("_bina"))
+
+
+def not_satiri(ad: str, n: dict[str, Any]) -> str:
+    """Notun satırının adı: projeninki ``ad``, binanınki ardında binanın adıyla (“Plan notu: bina yüksekliği (A Blok)”;
+    docs/adr/8163)."""
+    return f"{ad} ({n['_bina']})" if n.get("_bina") else ad
+
+
+def binalara(bina: dict[str, Any]) -> list[list[dict[str, Any]]]:
+    """Katlar binalarına göre, binaların ilk görüldüğü sırayla; binasız katlar bir arada."""
+    gruplar: dict[Any, list[dict[str, Any]]] = {}
+    for k in bina.get("storeys") or []:
+        gruplar.setdefault(k.get("building"), []).append(k)
+    return list(gruplar.values())
 
 
 def kot(kat: dict) -> float:

@@ -13,6 +13,10 @@
 - **Kat adedi** (9/1-c: binanın kot aldığı noktaya göre): ±0,00 ve üstündeki katlar, zemin ve normal katlar; asma kat
   zemin katın parçasıdır (4/1-d), adında Çatı geçen kat çatı arasıdır, bodrum zemin katın altındadır: sayılmaz. Kat
   adedi binanındır: birden çok binada en çok katlısı okunur (docs/adr/8154).
+- **Binanın kendi notları** (docs/adr/8163; kademe hattı, PAİY 4/1-mm, 7/12, 7/14): bir bina kendi notlarını
+  söylüyorsa her bina kendi notlarıyla (yazmadığı ölçüde projeninkiyle) ayrı denetlenir, ileti binanın adıyla; binanın
+  kendi notunun satırı binanın adıyla ayrıdır, projenin notunun satırı onu okuyan binaların sonucudur (hiçbiri
+  okumuyorsa kapsam dışı).
 
 Plan notu başvuru gününe bağlı değildir (docs/adr/8084 K91): satırın hâli yok, kaynağı notun yeridir.
 
@@ -48,50 +52,84 @@ def katlar(bina: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _satir(not_: dict[str, Any], durum: str, ne: str) -> dict[str, Any]:
-    return {"rule": SATIR[not_["key"]], "title": BASLIK[not_["key"]], "version": None, "gazette": not_["source"],
-            "state": durum, "note": ne}
+    return {"rule": katman.not_satiri(SATIR[not_["key"]], not_), "title": BASLIK[not_["key"]], "version": None,
+            "gazette": not_["source"], "state": durum, "note": ne}
 
 
 def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:
-    """Projenin bina yüksekliği ve kat adedi bulguları (plan notu günden bağımsız)."""
+    """Projenin bina yüksekliği ve kat adedi bulguları (plan notu günden bağımsız); bir bina kendi notlarını
+    söylüyorsa bina bina (docs/adr/8163)."""
     del gun, neden
     bina = facts.get("building") or {}
-    notlar = {n["key"]: n for n in bina.get("planNotes") or []}
-    if not bina.get("storeys") or not (YUKSEKLIK in notlar or KAT in notlar or BODRUM in notlar):
+    if not bina.get("storeys"):
+        return y.Sonuc([], [])
+    if not katman.kendi_notu_var(bina):
+        return _bina(bina, bina.get("planNotes") or [], "")
+    gruplar = katman.binalara(bina)
+    sonuclar = []
+    for katlar in gruplar:
+        ad = katman.bina_adi(katlar) if len(gruplar) > 1 else None
+        sonuclar.append(_bina(dict(bina, storeys=katlar), katman.plan_notlari(bina, katlar), f"{ad}: " if ad else ""))
+    satirlar = []
+    for r in y.birlesik(sonuclar):
+        r.pop("sayilar")
+        notlar = [x["note"] for s in sonuclar for x in s.satirlar
+                  if x["rule"] == r["rule"] and x["state"] == r["state"]]
+        r["note"] = " · ".join(dict.fromkeys(n for n in notlar if n))
+        satirlar.append(r)
+    # Projenin notu: her binanın aynı ölçüde kendi notu varsa okunmaz.
+    okunan = {r["rule"] for r in satirlar}
+    for n in bina.get("planNotes") or []:
+        if n["key"] in SATIR and SATIR[n["key"]] not in okunan:
+            satirlar.append(_satir(n, y.KAPSAM_DISI, "her binanın kendi notu var"))
+    return y.Sonuc([b for s in sonuclar for b in s.bulgular], satirlar)
+
+
+def _bina(bina: dict[str, Any], okunan: list[dict[str, Any]], ad: str) -> y.Sonuc:
+    """``bina``nın katlarının bulguları ``okunan`` notlarla; ``ad`` iletinin başı (“A Blok: ”), bina bina okunurken."""
+    notlar = {n["key"]: n for n in okunan if n["key"] in SATIR}
+    if not notlar:
         return y.Sonuc([], [])
     sayilan = katlar(bina)
     bulgular: list[dict[str, Any]] = []
     satirlar: list[dict[str, Any]] = []
+    # Satırın notu: projenin notunu birden çok bina okuyorsa binanın adıyla.
+    def ne(n: dict[str, Any], metin: str) -> str:
+        return metin if n.get("_bina") else f"{ad}{metin}"
+
     if YUKSEKLIK in notlar:
         n = notlar[YUKSEKLIK]
-        plan = katman.PlanNotu(float(n["value"]), n["source"])
+        plan = katman.plan_notu(n)
         ust = sayilan[-1] if sayilan else None
         if ust is None:
-            satirlar.append(_satir(n, y.KAPSAM_DISI, "±0,00 üstünde kat yok"))
+            satirlar.append(_satir(n, y.KAPSAM_DISI, ne(n, "±0,00 üstünde kat yok")))
         elif ust.get("height") is None:
             bulgular.append({
                 "code": "paiy_building_height_over",
-                "message": f"“{ust['name']}” katının yüksekliği yazılmamış ve üstünde kat yok: saçak seviyesi, bina "
-                           f"yüksekliği okunamıyor — {plan.kisa()}",
+                "message": f"{ad}“{ust['name']}” katının yüksekliği yazılmamış ve üstünde kat yok: saçak seviyesi, "
+                           f"bina yüksekliği okunamıyor — {plan.kisa()}",
                 "repair": "En üst katın yüksekliğini yazın (Proje ayarları › Mimari › Katlar).",
                 "uids": list(ust.get("rooms") or [])[:20], "rule": plan.kural(), "_iz": "yükseklik:okunmuyor",
                 "state": y.EKSIK_VERI})
-            satirlar.append(_satir(n, y.EKSIK_VERI, "en üst katın yüksekliği yazılmamış"))
+            satirlar.append(_satir(n, y.EKSIK_VERI, ne(n, "en üst katın yüksekliği yazılmamış")))
         else:
             h = katman.kot(ust) + float(ust["height"])
             if katman.tutar(h, False, plan):
-                satirlar.append(_satir(n, y.GECTI, f"bina yüksekliği {katman.metre(h)} ≤ {katman.metre(plan.deger)}"))
+                satirlar.append(_satir(n, y.GECTI, ne(n, f"bina yüksekliği {katman.metre(h)} ≤ "
+                                                         f"{katman.metre(plan.deger)}")))
             else:
                 bulgular.append({
                     "code": "paiy_building_height_over",
-                    "message": f"Bina yüksekliği {katman.metre(h)} > {katman.metre(plan.deger)} (±0,00'dan “{ust['name']}” "
-                               f"katının tavan döşemesinin üstüne) — {plan.kisa()}; PAİY 5/11",
+                    "message": f"{ad}Bina yüksekliği {katman.metre(h)} > {katman.metre(plan.deger)} (±0,00'dan "
+                               f"“{ust['name']}” katının tavan döşemesinin üstüne) — {plan.kisa()}; PAİY 5/11",
                     "repair": "Katları alçaltın ya da kat sayısını azaltın: bina yüksekliği planın notunu aşamaz.",
                     "uids": list(ust.get("rooms") or [])[:20], "rule": plan.kural(), "_iz": f"yükseklik:{plan.deger}"})
-                satirlar.append(_satir(n, y.KALDI, f"bina yüksekliği {katman.metre(h)} > {katman.metre(plan.deger)}"))
+                satirlar.append(_satir(n, y.KALDI, ne(n, f"bina yüksekliği {katman.metre(h)} > "
+                                                         f"{katman.metre(plan.deger)}")))
     if KAT in notlar:
         n = notlar[KAT]
         sinir = int(round(float(n["value"])))
+        plan = katman.plan_notu(n)
         # Kat adedi binanındır (docs/adr/8154): her binanın katları, en çok katlısı.
         gruplar: dict[Any, list[dict[str, Any]]] = {}
         for k in sayilan:
@@ -99,38 +137,38 @@ def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Son
         en_cok = max(gruplar.values(), key=len) if gruplar else []
         kac = len(en_cok)
         if kac <= sinir:
-            satirlar.append(_satir(n, y.GECTI if kac else y.KAPSAM_DISI, f"{kac} kat ≤ {sinir} kat"))
+            satirlar.append(_satir(n, y.GECTI if kac else y.KAPSAM_DISI, ne(n, f"{kac} kat ≤ {sinir} kat")))
         else:
             fazla = en_cok[sinir:]
             bulgular.append({
                 "code": "paiy_storey_count_over",
-                "message": f"Kat adedi {kac} > {sinir} (±0,00 ve üstündeki zemin ve normal katlar) — "
-                           f"{katman.PlanNotu(float(n['value']), n['source']).kisa()}; PAİY 5/11",
+                "message": f"{ad}Kat adedi {kac} > {sinir} (±0,00 ve üstündeki zemin ve normal katlar) — "
+                           f"{plan.kisa()}; PAİY 5/11",
                 "repair": "Kat adedini planın notuna indirin; bodrum, asma kat ve çatı arası sayılmaz.",
-                "uids": [u for k in fazla for u in k.get("rooms") or []][:20],
-                "rule": katman.PlanNotu(float(n["value"]), n["source"]).kural(), "_iz": f"kat:{sinir}"})
-            satirlar.append(_satir(n, y.KALDI, f"{kac} kat > {sinir} kat"))
+                "uids": [u for k in fazla for u in k.get("rooms") or []][:20], "rule": plan.kural(),
+                "_iz": f"kat:{sinir}"})
+            satirlar.append(_satir(n, y.KALDI, ne(n, f"{kac} kat > {sinir} kat")))
     if BODRUM in notlar:
         n = notlar[BODRUM]
         sinir = int(round(float(n["value"])))
-        plan = katman.PlanNotu(float(n["value"]), n["source"])
+        plan = katman.plan_notu(n)
         # Bina bina zemin katın altındaki katlar (asma kat değil), binasının ±0,00'ından; en çok bodrumlusu.
-        gruplar: dict[Any, list[dict[str, Any]]] = {}
+        gruplar = {}
         for k in bina.get("storeys") or []:
             if katman.kot(k) < -1e-6 and not k.get("mezzanine"):
                 gruplar.setdefault(k.get("building"), []).append(k)
         en_cok = max(gruplar.values(), key=len) if gruplar else []
         kac = len(en_cok)
         if kac <= sinir:
-            satirlar.append(_satir(n, y.GECTI if kac else y.KAPSAM_DISI, f"{kac} bodrum kat ≤ {sinir}"))
+            satirlar.append(_satir(n, y.GECTI if kac else y.KAPSAM_DISI, ne(n, f"{kac} bodrum kat ≤ {sinir}")))
         else:
             # Planın saydığından derindekiler: en alttakiler.
             fazla = sorted(en_cok, key=katman.kot)[: kac - sinir]
             bulgular.append({
                 "code": "paiy_basement_count_over",
-                "message": f"Bodrum kat adedi {kac} > {sinir} (zemin katın altındaki katlar) — {plan.kisa()}",
+                "message": f"{ad}Bodrum kat adedi {kac} > {sinir} (zemin katın altındaki katlar) — {plan.kisa()}",
                 "repair": "Bodrum katlarını planın notuna indirin.",
                 "uids": [u for k in fazla for u in k.get("rooms") or []][:20], "rule": plan.kural(),
                 "_iz": f"bodrum:{sinir}"})
-            satirlar.append(_satir(n, y.KALDI, f"{kac} bodrum kat > {sinir}"))
+            satirlar.append(_satir(n, y.KALDI, ne(n, f"{kac} bodrum kat > {sinir}")))
     return y.Sonuc(bulgular, satirlar)

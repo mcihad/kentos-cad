@@ -119,6 +119,8 @@ pub struct Window {
     buildings: Vec<ProgramBuilding>,
     /// Each building's ±0.00 as typed (docs/adr/8072 §1), in the buildings' order; empty: not said.
     zeros: Vec<String>,
+    /// Each building's own plan notes as typed (docs/adr/8163), in the buildings' order; read when Kaydet writes.
+    notes: Vec<Vec<crate::project::plan_notes::Note>>,
     /// The levels two or more buildings span and the building each counts in (docs/adr/8072 §1).
     shared: Vec<kentos_commands::SharedLevel>,
     share_rule: Option<ShareRule>,
@@ -169,6 +171,9 @@ pub enum Event {
     BuildingStructure(usize, Option<kentos_commands::StructuralSystem>),
     /// Its traditional architectural elements switched (cut stone masonry only).
     BuildingTraditional(usize, bool),
+    /// A row of a building's own plan notes changed or taken away; a row added (docs/adr/8163).
+    BuildingPlanNote(usize, usize, crate::project::plan_notes::Edit),
+    AddBuildingPlanNote(usize),
     SharedBuilding(String, String),
     AddWing(usize),
     RemoveWing(usize, usize),
@@ -242,6 +247,7 @@ impl Window {
                 .unwrap_or_default(),
             buildings: program.buildings.clone(),
             zeros: program.buildings.iter().map(|b| b.zero.map(|z| z.to_string()).unwrap_or_default()).collect(),
+            notes: program.buildings.iter().map(|b| crate::project::plan_notes::rows(&b.plan_notes)).collect(),
             shared: program.shared.clone(),
             share_rule: program.share_rule,
             briefs: program.briefs.iter().cloned().map(BriefRow::of).collect(),
@@ -283,6 +289,10 @@ impl Window {
         p.buildings = self.buildings.clone();
         for (b, z) in p.buildings.iter_mut().zip(&self.zeros) {
             b.zero = number(z, "Binanın ±0.00'ı")?;
+        }
+        for (b, rows) in p.buildings.iter_mut().zip(&self.notes) {
+            b.plan_notes = crate::project::plan_notes::read(rows)
+                .map_err(|why| format!("“{}” binasının plan notları: {why}", b.name))?;
         }
         // A level's choice kept while two or more buildings span it, the chosen one among them.
         p.shared = self
@@ -396,6 +406,7 @@ impl App {
                 let n = w.buildings.len() + 1;
                 w.buildings.push(ProgramBuilding { id, name: format!("{n}. bina"), ..Default::default() });
                 w.zeros.push(String::new());
+                w.notes.push(Vec::new());
                 (w.building, w.wing) = (w.buildings.len() - 1, 0);
             }
             Event::RemoveBuilding(i) => {
@@ -413,6 +424,9 @@ impl App {
                     w.buildings.remove(i);
                     if i < w.zeros.len() {
                         w.zeros.remove(i);
+                    }
+                    if i < w.notes.len() {
+                        w.notes.remove(i);
                     }
                     w.building = w.building.min(w.buildings.len().saturating_sub(1));
                     w.wing = 0;
@@ -451,6 +465,18 @@ impl App {
             Event::BuildingZone(i, zone) => {
                 if let Some(b) = w.buildings.get_mut(i) {
                     b.zone = zone;
+                }
+            }
+            // Its own plan notes (docs/adr/8163): rows as typed, read when Kaydet writes.
+            Event::BuildingPlanNote(i, k, edit) => {
+                if let Some(rows) = w.notes.get_mut(i) {
+                    crate::project::plan_notes::edit(rows, k, edit);
+                }
+            }
+            Event::AddBuildingPlanNote(i) => {
+                if let Some(rows) = w.notes.get_mut(i) {
+                    let row = crate::project::plan_notes::new_row(rows);
+                    rows.push(row);
                 }
             }
             // A system other than cut stone masonry keeps no traditional elements (docs/adr/8094).

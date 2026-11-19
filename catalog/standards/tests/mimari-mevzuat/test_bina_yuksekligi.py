@@ -42,7 +42,9 @@ class BagimsizDurumlar(unittest.TestCase):
                         self.assertIn(parca, b["message"])
                     if "uids" in e:
                         self.assertEqual(b["uids"], e["uids"], b["message"])
-                    self.assertTrue(b["uids"] and b["repair"] and b["rule"].startswith("Plan notu · "))
+                    # Binanın kendi notunun kuralı binanın adıyla başlar (docs/adr/8163): “A Blok plan notu · …”.
+                    self.assertTrue(b["uids"] and b["repair"]
+                                    and (b["rule"].startswith("Plan notu · ") or " plan notu · " in b["rule"]))
             satirlar = {s["rule"]: s["state"] for s in sonuc.satirlar}
             with self.subTest(durum=durum["id"], ne="satırlar"):
                 self.assertEqual(satirlar, durum["expect"]["rules"], durum["neden"])

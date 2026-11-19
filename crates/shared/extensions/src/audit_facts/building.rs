@@ -8,7 +8,8 @@
 //!
 //! Planlı Alanlar İmar Yönetmeliği 28/1-c and 39/1 (docs/adr/8083) read each storey's height floor to floor and its
 //! bedrooms, the program's common areas, and each door's net clear width, height and what stands on its two sides; the
-//! parcel's plan notes (docs/adr/8084) give a rule the plan's value over the regulations'.
+//! parcel's plan notes (docs/adr/8084) give a rule the plan's value over the regulations', a building's own on its
+//! storeys (docs/adr/8163) over the project's.
 //!
 //! An optional section of version 1, as [`super::architecture`]: absent when the project has no storey, so the facts
 //! of a drawing that never had one stay byte for byte what they were. The storeys lowest first (by elevation, then
@@ -737,6 +738,13 @@ pub struct StoreyHolds {
     /// Its building's own declaration of traditional architectural elements (with `structural_system`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub traditional: bool,
+    /// Its building's own plan notes (docs/adr/8163), as the facts' `planNotes`: a measure they give takes the place of
+    /// the project's on that measure; none: the project's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub plan_notes: Vec<PlanNoteFacts>,
+    /// Its building's name in the program (docs/adr/8163): what a finding names the building by; none in no building.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building_name: Option<String>,
     /// It is a mezzanine (its name says Asma kat): part of the ground storey it stands in (PAİY 4/1-d, 28/1-a, b, ç's
     /// “asma katlı zemin kat”; docs/adr/8085).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -758,6 +766,9 @@ impl BuildingFacts {
             s.elevation = round(s.elevation, LENGTH);
             s.zero = s.zero.map(|z| round(z, LENGTH));
             s.height = s.height.map(|h| round(h, LENGTH));
+            for n in &mut s.plan_notes {
+                n.value = round(n.value, LENGTH);
+            }
             s.rooms.sort();
             s.rooms.dedup();
         }

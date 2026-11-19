@@ -2561,6 +2561,13 @@
             "null"
           ]
         },
+        "buildingName": {
+          "description": "Its building's name in the program (docs/adr/8163): what a finding names the building by; none in no building.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "common": {
           "description": "Rooms of a common area on it that are not technical rooms.",
           "format": "uint32",
@@ -2616,6 +2623,13 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "planNotes": {
+          "description": "Its building's own plan notes (docs/adr/8163), as the facts' `planNotes`: a measure they give takes the place of\nthe project's on that measure; none: the project's.",
+          "items": {
+            "$ref": "#/$defs/PlanNoteFacts"
+          },
+          "type": "array"
         },
         "rooms": {
           "description": "The rooms counted on it, by their persistent ids in order: what a finding about the storey names.",

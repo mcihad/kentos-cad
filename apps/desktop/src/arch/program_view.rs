@@ -303,6 +303,20 @@ impl App {
                 "Bölümleri",
                 label::body(if users.is_empty() { "Yok".to_owned() } else { users.join(", ") }),
             );
+        // Its own plan notes (docs/adr/8163): the plan's values for the area of the parcel it stands in.
+        let notes = w.notes.get(i).map_or(&[][..], Vec::as_slice);
+        form = form
+            .section("Plan notları")
+            .wide(crate::project::plan_notes::table(
+                notes,
+                move |k, e| msg(Event::BuildingPlanNote(i, k, e)),
+                msg(Event::AddBuildingPlanNote(i)),
+            ))
+            .wide(label::caption(
+                "Bina kademe hattının bir yanında duruyorsa (Planlı Alanlar İmar Yönetmeliği 4/1-mm) planın o alana \
+                 verdiği değerler: yazılan konu Proje ayarları › Mimari › Plan notları'ndaki aynı konunun yerine geçer, \
+                 yazılmayanlar projeninkidir.",
+            ));
         // The levels it shares with other buildings (docs/adr/8072 §1): the building each counts in.
         let mut shared_head = false;
         for (id, name) in self.program_levels() {

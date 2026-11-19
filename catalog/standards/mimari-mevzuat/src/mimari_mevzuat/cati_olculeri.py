@@ -16,6 +16,8 @@
   bırakır, Sivas'ın %40'ının yerine geçer, Sivas'sız da okunur) ve ``eavesMost`` (saçak; 42/1: "Uygulama imar planında
   belirlenmemiş ise") yönetmeliklerin değerlerinin önüne geçer (69/3): not bağlar, notun satırı sonucu söyler,
   yönetmeliklerin değerleri farklıysa iletide yanında yazılır; notun bağladığı ölçüde madde kapsam dışıdır.
+- **Binanın kendi notları** (docs/adr/8163): her çatı katının binasının notlarıyla (yazmadığı ölçüde projeninkiyle)
+  okunur; binanın notunun satırı binanın adıyla ayrıdır. Madde, maddeyle okunan çatı kalmadığında kapsam dışıdır.
 
 Bulgunun düzeltmesi ``cad.arch.edit``'in çatı üstündeki işlemidir; parçalar olgulardaki çizilen değerleriyle yeniden
 yazılır, yalnız düzeltilen değişir.
@@ -48,8 +50,8 @@ NOT_BASLIGI = {MAHYA: "Mahya yüksekliği (en çok)", EGIM: "Çatı eğimi (en �
 
 
 def _not_satiri(not_: dict[str, Any], durum: str, ne: str) -> dict[str, Any]:
-    return {"rule": NOT_SATIRI[not_["key"]], "title": NOT_BASLIGI[not_["key"]], "version": None,
-            "gazette": not_["source"], "state": durum, "note": ne}
+    return {"rule": katman.not_satiri(NOT_SATIRI[not_["key"]], not_), "title": NOT_BASLIGI[not_["key"]],
+            "version": None, "gazette": not_["source"], "state": durum, "note": ne}
 
 
 def _satir(hal: y.Hal, durum: str, not_: str) -> dict[str, Any]:
@@ -107,8 +109,18 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     sivas = bina.get("local") == "sivas"
     yerel = {m: y.hal(*m, gun) for m in SIVAS} if sivas else {}
     catilar = [r for r in bina.get("roofs") or [] if r.get("form")]
-    notlar = {n["key"]: n for n in bina.get("planNotes") or [] if n["key"] in (MAHYA, EGIM, SACAK)}
-    plan = {k: katman.PlanNotu(float(n["value"]), n["source"]) for k, n in notlar.items()}
+    proje = {n["key"]: n for n in bina.get("planNotes") or [] if n["key"] in (MAHYA, EGIM, SACAK)}
+    kat_of = {k["level"]: k for k in bina.get("storeys") or []}
+
+    def notlari(r: dict[str, Any]) -> dict[str, dict[str, Any]]:
+        """Çatıyı bağlayan notlar: katının binasının kendi notları, yazmadığı ölçüde projeninkiler (docs/adr/8163)."""
+        kat = kat_of.get(r.get("level") or "")
+        return {n["key"]: n for n in katman.plan_notlari(bina, [kat] if kat else None)
+                if n["key"] in (MAHYA, EGIM, SACAK)}
+
+    # Notların satırları adlarıyla: projeninkiler sırasıyla, binalarınkiler ilk görüldükleri sırayla.
+    satir_notu = {NOT_SATIRI[k]: n for k, n in proje.items()}
+    cati_notlari: list[dict[str, dict[str, Any]]] = []
     bulgular: list[dict[str, Any]] = []
     kalan: dict[Any, int] = {}
     var: dict[Any, int] = {}
@@ -125,6 +137,12 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         f, uid = r["form"], r["uid"]
         orta = f["at"]
         egimli = bool(f.get("sloping"))
+        notlar = notlari(r)
+        cati_notlari.append(notlar)
+        plan = {k: katman.plan_notu(n) for k, n in notlar.items()}
+        ad = {k: katman.not_satiri(NOT_SATIRI[k], n) for k, n in notlar.items()}
+        for k, n in notlar.items():
+            satir_notu.setdefault(ad[k], n)
         # Mahya (40/4; Sivas 40/5-g).
         if egimli and f.get("ridge") is not None and h_mahya is not None:
             v = float(f["ridge"])
@@ -134,7 +152,7 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                              "Çatının eğimini azaltın ya da çatıyı kot farkı olmadan oturtun.", [uid], f"mahya:{uid}",
                              plan=plan.get(MAHYA))
             if MAHYA in plan:
-                say(MAHYA, b is not None)
+                say(ad[MAHYA], b is not None)
             else:
                 u, s = katman.durumlar(v, False, ulusal, yerel_)
                 say(MADDELER[0], u == y.KALDI)
@@ -151,7 +169,7 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                       else "Saçağı daraltın: çatıyı Çatı aracıyla en çok 1,00 m saçakla yeniden çizin.")
             b = katman.bulgu("paiy_eaves_wide", "Saçak genişliği", v, False, sinir, None, onarim, [uid], f"saçak:{uid}",
                              plan=plan.get(SACAK))
-            say(SACAK if SACAK in plan else MADDELER[2], b is not None)
+            say(ad[SACAK] if SACAK in plan else MADDELER[2], b is not None)
             if b is not None:
                 b["at"] = list(orta)
                 bulgular.append(b)
@@ -195,7 +213,7 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
             sinir = plan[EGIM].deger
             egimler = [s for s in f.get("slopes") or [] if s is not None]
             dik = max(egimler, default=0.0)
-            say(EGIM, dik > sinir + 1e-9)
+            say(ad[EGIM], dik > sinir + 1e-9)
             if dik > sinir + 1e-9:
                 yeni = [None if s is None else min(float(s), sinir) for s in f.get("slopes") or []]
                 yan = (f"; {s_mahya.kisa()}: {egim(float(s_mahya.anahtar['slope']))}"
@@ -266,19 +284,26 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                         "Pencereleri çatının üstünde en az 2 m aralıkla yerleştirin.", s_yer.kural(), uid,
                         parts[int(g["a"])]["at"], f"aralık:{uid}:{g['a']}:{g['b']}"))
     satirlar = []
-    for k, n in notlar.items():
-        if not var.get(k):
-            satirlar.append(_not_satiri(n, y.KAPSAM_DISI, "çatı yok" if not catilar else "ölçülecek çatı yok"))
-        elif kalan.get(k):
-            satirlar.append(_not_satiri(n, y.KALDI, f"{kalan[k]} ölçü planın notunu aşıyor"))
+    # Binaların kendi notlarının ölçüleri: projenin notunu okuyan çatı kalmadıysa nedeni.
+    kendi = {k for nt in cati_notlari for k, n in nt.items() if n.get("_bina")}
+    for ad_, n in satir_notu.items():
+        if not var.get(ad_):
+            ne = ("çatı yok" if not catilar else "çatıların binalarının kendi notu var"
+                  if not n.get("_bina") and n["key"] in kendi else "ölçülecek çatı yok")
+            satirlar.append(_not_satiri(n, y.KAPSAM_DISI, ne))
+        elif kalan.get(ad_):
+            satirlar.append(_not_satiri(n, y.KALDI, f"{kalan[ad_]} ölçü planın notunu aşıyor"))
         else:
-            satirlar.append(_not_satiri(n, y.GECTI, f"{var[k]} ölçü planın notunun içinde"))
+            satirlar.append(_not_satiri(n, y.GECTI, f"{var[ad_]} ölçü planın notunun içinde"))
+
+    def bagli(m: Any, anahtarlar: tuple[str, ...]) -> bool:
+        """Notun bağladığı ölçünün maddesi: maddeyle okunan çatı yok, not projenin ya da bir çatının."""
+        return not var.get(m) and (all(a in proje for a in anahtarlar)
+                                   or any(all(a in nt for a in anahtarlar) for nt in cati_notlari))
+
     # Notun bağladığı ölçünün maddesi kapsam dışı (Sivas 40/5-g mahyanın da eğimin de).
-    baglanan = {MADDELER[0]} if MAHYA in plan else set()
-    if SACAK in plan:
-        baglanan.add(MADDELER[2])
-    if MAHYA in plan and EGIM in plan:
-        baglanan.add(SIVAS[0])
+    baglanan = {m for m, anahtarlar in ((MADDELER[0], (MAHYA,)), (MADDELER[2], (SACAK,)), (SIVAS[0], (MAHYA, EGIM)))
+                if bagli(m, anahtarlar)}
     yok_notu = {MADDELER[0]: "eğimli çatı yok", MADDELER[1]: "hava bacası yok", MADDELER[2]: "duvarlarından çizilmiş "
                 "çatı yok (saçağı ölçülmez)", MADDELER[3]: "duman bacası yok", SIVAS[0]: "eğimli çatı yok",
                 SIVAS[1]: "çatı penceresi yok", SIVAS[2]: "çatı penceresi yok", SIVAS[3]: "eğimli çatı yok"}

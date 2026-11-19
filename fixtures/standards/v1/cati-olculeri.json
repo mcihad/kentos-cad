@@ -2439,6 +2439,204 @@
           ]
         }
       }
+    },
+    {
+      "id": "bina-notu-sacak",
+      "neden": "Düz iki çatı: A Blok'un kendi saçak notu 1,20 → A'nın 1,10'luk saçağı geçer; B'nin 1,00'lık saçağı projenin 0,80'lik notuyla kalır; iki çatı da notlu → 42/1 kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "a0",
+            "name": "A zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000009101"
+            ],
+            "height": 3.8,
+            "building": "a",
+            "buildingName": "A Blok",
+            "planNotes": [
+              {
+                "key": "eavesMost",
+                "value": 1.2,
+                "source": "UİP 12.3.2019, kademe hattı A alanı"
+              }
+            ]
+          },
+          {
+            "level": "a1",
+            "name": "A 1. kat",
+            "elevation": 3.8,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000009102"
+            ],
+            "height": 3.8,
+            "building": "a",
+            "buildingName": "A Blok",
+            "planNotes": [
+              {
+                "key": "eavesMost",
+                "value": 1.2,
+                "source": "UİP 12.3.2019, kademe hattı A alanı"
+              }
+            ]
+          },
+          {
+            "level": "b0",
+            "name": "B zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000009201"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "buildingName": "B Blok"
+          },
+          {
+            "level": "b1",
+            "name": "B 1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000009202"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "buildingName": "B Blok"
+          },
+          {
+            "level": "b2",
+            "name": "B 2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000009203"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "buildingName": "B Blok"
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000009301",
+            "level": "a1",
+            "layers": [],
+            "form": {
+              "at": [
+                5.0,
+                5.0
+              ],
+              "overhang": 1.1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "b2",
+            "layers": [],
+            "form": {
+              "at": [
+                5.0,
+                5.0
+              ],
+              "overhang": 1.0
+            }
+          }
+        ],
+        "planNotes": [
+          {
+            "key": "eavesMost",
+            "value": 0.8,
+            "source": "UİP 12.3.2019, plan notu 3"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_eaves_wide",
+            "has": [
+              "Saçak genişliği 1.00 m > 0.80 m — Plan notu (UİP 12.3.2019, plan notu 3)"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "Plan notu: saçak genişliği": [
+            "failed",
+            null
+          ],
+          "Plan notu: saçak genişliği (A Blok)": [
+            "passed",
+            null
+          ]
+        }
+      }
     }
   ]
 }

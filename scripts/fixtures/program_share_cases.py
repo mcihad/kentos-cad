@@ -405,6 +405,16 @@ def building_edit_cases():
          result=refusal("invalid_program", "Geleneksel mimari öğeler yalnız kesme taş yığma binada okunur; taşıyıcı sistem "
                         "Betonarme. Taşıyıcı sistemi Kesme taş yığma seçin ya da geleneksel mimari öğeleri kaldırın.",
                         "program.buildings[0].structure.traditional"))
+    # A building's own plan notes (docs/adr/8163): written as given; checked as the project's, said with its name.
+    kademe = "UİP 12.3.2019, kademe hattı A alanı"
+    pn = changed(lambda p: p["buildings"][0].update(planNotes=[
+        {"key": "buildingHeight", "value": 12.5, "source": kademe}, {"key": "storeys", "value": 4.0, "source": kademe}]))
+    edit("Binanın kendi plan notları yazılır (ADR 8163)", {"program": pn}, pn)
+    edit("Binanın aynı konuda iki plan notu yazılmaz", {"program": changed(lambda p: p["buildings"][0].update(planNotes=[
+        {"key": "buildingHeight", "value": 12.5, "source": kademe},
+        {"key": "buildingHeight", "value": 9.5, "source": kademe}]))},
+         result=refusal("invalid_program", "“A Blok” binasının plan notları: “Bina yüksekliği (en çok)” için iki plan notu "
+                        "var; birini kaldırın.", "program.buildings[0].planNotes.1.key"))
     edit("Kullanılmayan kanat kaldırılır", {"program": changed(lambda p: p["buildings"][0].update(wings=[
         {"id": "a-dogu", "name": "Doğu kanadı"}]))},
          changed(lambda p: p["buildings"][0].update(wings=[{"id": "a-dogu", "name": "Doğu kanadı"}])),

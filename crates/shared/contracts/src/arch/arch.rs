@@ -2715,6 +2715,15 @@ impl ArchSettings {
         self.program.building_of_level(level).and_then(|b| b.zone).or(self.zone)
     }
 
+    /// The plan notes a level's storeys are read by (docs/adr/8163): its building's own, and the project's on the
+    /// measures its building does not note; its building's first, each in its order.
+    pub fn plan_notes_on(&self, level: &str) -> Vec<&PlanNote> {
+        let own: &[PlanNote] = self.program.building_of_level(level).map_or(&[], |b| b.plan_notes.as_slice());
+        own.iter()
+            .chain(self.plan_notes.iter().filter(|n| own.iter().all(|o| o.key != n.key)))
+            .collect()
+    }
+
     /// The structural system a level's storeys are read by (docs/adr/8145): its building's own, else the project's.
     pub fn structure_on(&self, level: &str) -> Option<BuildingStructure> {
         self.program.building_of_level(level).and_then(|b| b.structure).or(self.structure)
@@ -3463,6 +3472,54 @@ mod plan_cut_tests {
         a.plan_notes[1] = note(PlanNoteKey::GroundStoreyHeight, 4.0, "plan notu 9");
         assert_eq!(path(&a).as_deref(), Some("planNotes.1.key"));
         assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("planNotes"));
+    }
+
+    /// A building's own plan notes (docs/adr/8163): a measure it notes takes the place of the project's, the others are
+    /// the project's; a storey in no building reads the project's; checked as the project's, said with its name.
+    #[test]
+    fn a_building_s_own_plan_notes_come_before_the_project_s_on_its_storeys() {
+        let note = |key, value, source: &str| PlanNote { key, value, source: source.into() };
+        let mut a = ArchSettings {
+            plan_notes: vec![
+                note(PlanNoteKey::BuildingHeight, 9.5, "UİP 12.3.2019, plan notu 3"),
+                note(PlanNoteKey::Storeys, 3.0, "UİP 12.3.2019, plan notu 3"),
+            ],
+            ..Default::default()
+        };
+        a.program.buildings = vec![
+            crate::ProgramBuilding {
+                id: "a".into(),
+                name: "A Blok".into(),
+                levels: vec!["a0".into(), "a1".into()],
+                plan_notes: vec![
+                    note(PlanNoteKey::PlinthMost, 2.0, "kademe hattı A alanı"),
+                    note(PlanNoteKey::BuildingHeight, 12.5, "kademe hattı A alanı"),
+                ],
+                ..Default::default()
+            },
+            crate::ProgramBuilding { id: "b".into(), name: "B Blok".into(), levels: vec!["b0".into()], ..Default::default() },
+        ];
+        assert_eq!(a.problem(), None);
+        assert!(a.program.has_building_plan_notes());
+        let on = |level: &str| -> Vec<(PlanNoteKey, f64)> {
+            a.plan_notes_on(level).into_iter().map(|n| (n.key, n.value)).collect()
+        };
+        assert_eq!(
+            on("a1"),
+            [(PlanNoteKey::PlinthMost, 2.0), (PlanNoteKey::BuildingHeight, 12.5), (PlanNoteKey::Storeys, 3.0)]
+        );
+        assert_eq!(on("b0"), [(PlanNoteKey::BuildingHeight, 9.5), (PlanNoteKey::Storeys, 3.0)]);
+        assert_eq!(on("yok"), on("b0"), "a storey in no building reads the project's");
+        let json = serde_json::to_value(&a.program.buildings[0]).unwrap();
+        assert_eq!(json["planNotes"][1], serde_json::json!({"key": "buildingHeight", "value": 12.5, "source": "kademe hattı A alanı"}));
+        assert!(serde_json::to_value(&a.program.buildings[1]).unwrap().get("planNotes").is_none());
+        let mut b = a.clone();
+        b.program.buildings[0].plan_notes[0].key = PlanNoteKey::BuildingHeight;
+        let (path, why) = b.problem().expect("one note a measure");
+        assert_eq!(path, "program.buildings[0].planNotes.1.key");
+        assert!(why.starts_with("“A Blok” binasının plan notları: “Bina yüksekliği (en çok)” için iki plan notu var"), "{why}");
+        a.program.buildings[0].plan_notes[0].value = 11.0;
+        assert_eq!(a.problem().map(|(p, _)| p).as_deref(), Some("program.buildings[0].planNotes.0.value"));
     }
 
     /// The plan's building height and storey count (docs/adr/8098): a height up to 1000 m, a whole number of storeys from

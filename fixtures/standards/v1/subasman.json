@@ -1020,6 +1020,90 @@
           ]
         }
       }
+    },
+    {
+      "id": "bina-notu-subasman",
+      "neden": "A Blok'un kendi notu subasman en çok +2,40: A'nın zemin katı +1,80 geçer; notsuz B'nin zemin katı +1,50, 4/1-yyy'nin +1,20'si → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "a0",
+            "name": "A zemin kat",
+            "elevation": 1.8,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000009101"
+            ],
+            "height": 3.8,
+            "building": "a",
+            "buildingName": "A Blok",
+            "planNotes": [
+              {
+                "key": "plinthMost",
+                "value": 2.4,
+                "source": "UİP 12.3.2019, kademe hattı A alanı"
+              }
+            ]
+          },
+          {
+            "level": "b0",
+            "name": "B zemin kat",
+            "elevation": 1.5,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000009201"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "buildingName": "B Blok"
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_plinth_level",
+            "has": [
+              "“B zemin kat” zemin katın taban döşemesi",
+              "+1.50 m, en çok +1.20 m",
+              "4/1-yyy ±0,00 ile +1,20 arasını ister"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "failed",
+            "1.10.2017"
+          ],
+          "Plan notu: subasman kotu (en çok) (A Blok)": [
+            "passed",
+            null
+          ]
+        }
+      }
     }
   ]
 }

@@ -45,7 +45,9 @@ class BagimsizDurumlar(unittest.TestCase):
                     if "uids" in e:
                         self.assertEqual(b["uids"], e["uids"], b["message"])
                     self.assertTrue(b["repair"], b["message"])
-                    self.assertTrue(b["rule"] and b["rule"].startswith(KURALLAR), b["rule"])
+                    # Binanın kendi notunun kuralı binanın adıyla başlar (docs/adr/8163).
+                    self.assertTrue(b["rule"] and (b["rule"].startswith(KURALLAR) or " plan notu · " in b["rule"]),
+                                    b["rule"])
                     if b["code"] != "regulation_text_unknown":
                         self.assertTrue(b["uids"], b["message"])
             satirlar = {s["rule"]: [s["state"], s["version"]] for s in sonuc.satirlar}

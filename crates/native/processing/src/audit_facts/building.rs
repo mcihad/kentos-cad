@@ -98,6 +98,14 @@ pub fn measure(doc: &Document) -> BuildingFacts {
                 .and_then(|b| b.structure)
                 .map(|x| x.system.name().to_owned()),
             traditional: program.building_of_level(&l.id).and_then(|b| b.structure).is_some_and(|x| x.traditional),
+            // And that building's own plan notes and its name (docs/adr/8163).
+            plan_notes: program.building_of_level(&l.id).map_or_else(Vec::new, |b| {
+                b.plan_notes
+                    .iter()
+                    .map(|n| PlanNoteFacts { key: n.key.name().to_owned(), value: n.value, source: n.source.clone() })
+                    .collect()
+            }),
+            building_name: program.building_of_level(&l.id).map(|b| b.name.clone()),
             ..StoreyHolds::default()
         })
         .collect();
