@@ -21,6 +21,8 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   eyvanı zemin dahil 3 kata kadar binada ve zemin katta mı (22/1-m, docs/adr/8094); kalın taş duvarların payı (5/8,
   20/8-j, docs/adr/8095): beyansız kalın duvar, katı (her binanınki kendi katlarıyla, docs/adr/8150) ve başvuru günü; Sivas'ta duvarlar %30'un içinde (22/k,
   docs/adr/8096).
+- **Subasman kotu** (`subasman`, docs/adr/8153): her binanın zemin katının taban döşemesi ±0,00 ile +1,20 arasında
+  (4/1-yyy), binanın kendi ±0,00'ından.
 - **Çıkmalar** (`cikmalar`, docs/adr/8152): zemin katın dışına taşan açık ve kapalı çıkmalar vaziyet planının bahçe
   mesafelerine göre: yol cephesinde yapı yaklaşma sınırından en çok 1,50 m; yan, arka ve kamusal alan bahçesinde en çok
   1,50 m ve parsel sınırına en az 3,00 m; bitişik nizamda açık çıkma komşu sınırına en az 2,00 m (41/1); çıkma altı

@@ -8,12 +8,13 @@ from typing import Any
 
 from . import (asansor, bina_yuksekligi, bitisik, catilar, cikmalar, dayanim, emsal, kapi_olculeri, kapilar,
                kaplamalar, kat_yuksekligi, kazan, kompartiman, konaklama, kullanim, kuyular, merdiven_alti, saglik,
-               yagmurlama)
+               subasman, yagmurlama)
 from . import yururluk as y
 
 #: Sırayla çalışan kurallar: her biri ``kontrol(facts, gun, neden) -> yururluk.Sonuc``.
 KURALLAR = (asansor, kapilar, kompartiman, dayanim, kaplamalar, catilar, kuyular, bitisik, cikmalar, emsal,
-            merdiven_alti, kat_yuksekligi, bina_yuksekligi, kapi_olculeri, kullanim, konaklama, saglik, yagmurlama, kazan)
+            merdiven_alti, kat_yuksekligi, bina_yuksekligi, subasman, kapi_olculeri, kullanim, konaklama, saglik,
+            yagmurlama, kazan)
 
 
 def denetle(facts: dict[str, Any]) -> dict[str, Any]:

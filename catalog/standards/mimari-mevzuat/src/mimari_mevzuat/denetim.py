@@ -91,6 +91,12 @@ def kuyu_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     return _bulgular(facts, ("bykhy_shaft_", "bykhy_elevator_"))
 
 
+@ext.audit("subasman")
+def subasman_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Subasman kotu (PAİY 4/1-yyy): zemin katın taban döşemesi ±0,00 ile +1,20 arasında."""
+    return _bulgular(facts, ("paiy_plinth_level",))
+
+
 @ext.audit("cikmalar")
 def cikma_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Çıkmalar (PAİY 41/1 bahçe mesafesine en çok 1,50 m, yan ve arka sınıra en az 3,00 m, bitişik komşuya açık çıkma

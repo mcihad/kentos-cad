@@ -2255,6 +2255,25 @@
           "source": "Derlenmiş BYKHY (mevzuat.gov.tr PDF'i, pdftotext): 25 inci maddede değişiklik işareti yok; süre 25/1'in 90 dakikası, yarısı 45; docs/adr/8142 §2."
         }
       ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "4/1-yyy",
+      "title": "Subasman kotu (zemin kat taban kotu)",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); derlenmiş metinde bu bentte değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "least": 0.0,
+          "most": 1.2,
+          "text": "Subasman kotu (Zemin kat taban kotu): Binaların zemin kat taban döşemesi üst kotunu (İmar planlarında aksine bir hüküm bulunmaması halinde, ±0.00 kotunun altına düşemez ve +1.20 kotunun üzerine çıkamaz.),",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 4/1-yyy; docs/adr/8153 §2."
+        }
+      ]
     }
   ]
 }

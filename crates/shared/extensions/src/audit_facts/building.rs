@@ -638,6 +638,10 @@ pub struct StoreyHolds {
     /// building chosen.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub building: Option<String>,
+    /// Its building's own ±0.00 over the project's, m (docs/adr/8072; `ProgramBuilding.zero`); none: the project's. The
+    /// storey's height over its building's ±0.00 is its `elevation` less it (docs/adr/8153).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zero: Option<f64>,
     /// Its building's own Bölge (docs/adr/8144), as the facts' `zone`; none: the project's (the building facts' `zone`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zone: Option<String>,
@@ -666,6 +670,7 @@ impl BuildingFacts {
     pub fn normalized(mut self) -> BuildingFacts {
         for s in &mut self.storeys {
             s.elevation = round(s.elevation, LENGTH);
+            s.zero = s.zero.map(|z| round(z, LENGTH));
             s.height = s.height.map(|h| round(h, LENGTH));
             s.rooms.sort();
             s.rooms.dedup();

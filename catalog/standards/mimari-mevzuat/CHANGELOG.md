@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 0.41.0 — 19 Kasım 2026
+
+- Subasman kotu (`subasman`; docs/adr/8153): PAİY 4/1-yyy. Her binanın zemin katı (adında Zemin, yoksa ±0,00'a en
+  yakın, asma kat değil) ±0,00 ile +1,20 arasında; olguların katları binanın kendi ±0,00'ını (`zero`) taşır. 8
+  bağımsız durum. Sürüm tablosunda 4/1-yyy'nin 1.10.2017 hâli.
+
 ## 0.40.0 — 19 Kasım 2026
 
 - Çıkmalar (`cikmalar`; docs/adr/8152): PAİY 41/1 ve 41/2. Olguların `projections`'ı (zemin katın üstündeki katlarda

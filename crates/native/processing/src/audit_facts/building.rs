@@ -89,6 +89,8 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             mezzanine: kentos_domain::room_names::has(&kentos_domain::room_names::words(Some(&l.name), None), "ASMA"),
             // Its building and that building's own Bölge (docs/adr/8072, 8144).
             building: program.building_of_level(&l.id).map(|b| b.id.clone()),
+            // And its building's own ±0.00 (docs/adr/8072, 8153).
+            zero: program.building_of_level(&l.id).and_then(|b| b.zero),
             zone: program.building_of_level(&l.id).and_then(|b| b.zone).map(|z| z.name().to_owned()),
             // And that building's own structural system (docs/adr/8145).
             structural_system: program

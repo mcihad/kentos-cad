@@ -452,6 +452,8 @@
     katlarda mahalin taban alanı dışındaki parçası çıkma (dış mekânsa açık); taşma kenarın istediği mesafeden ölçülür;
     PAİY 41/1 ön bahçede 1,50 m, yan, arka ve kamusal bahçede 1,50 m ve sınıra 3,00 m, bitişik komşuya açık çıkma
     2,00 m; 41/2 çıkma altı 2,40 m (döşemesiz eksik veri).
+  - **Subasman kotu (19 Kasım 2026; [ADR 8153](../adr/8153-plinth-level-4-1-yyy.md), K395–K396):** her binanın zemin
+    katı ±0,00 ile +1,20 arasında (PAİY 4/1-yyy); olguların katları binasının kendi ±0,00'ını (`zero`) taşır.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

@@ -140,7 +140,8 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
     // The line says every article not out of scope: the basement's storage annexes are 22/1-k's (docs/adr/8079); its
     // boiler room, drawn with no wall, opens into the stores (BYKHY 24/2, docs/adr/8081; 54/2, and with no door drawn
     // 54/4 and 54/5 lack it, docs/adr/8113); the flats' one compartment
-    // has no limit (24/6); the three storeys of 3.00 m keep 28/1-c's 4.00 m as of 12.8.2023 (docs/adr/8083); the
+    // has no limit (24/6); the three storeys of 3.00 m keep 28/1-c's 4.00 m as of 12.8.2023 (docs/adr/8083), Zemin kat
+    // on ±0.00 4/1-yyy's ±0.00 to +1.20 (docs/adr/8153); the
     // elevator's shafts are drawn as rooms alone, no wall round them, so 62/2 lacks their walls' classes (docs/adr/8087)
     // and 62/4 their vent, a shaft with no door in its scope too (docs/adr/8135);
     // the rest (34/8, 47/2, 47/3, 24/4: 9 m, 24/5: no opening between storeys, 24/7, Ek-3, 20/3, 26/2, 26/4: no covering
@@ -155,8 +156,8 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
         line,
         "Kural seti — Başvuru tarihi künyeden: 30.6.2026 · PAİY 34/1 (11.7.2021) geçti · BYKHY 24/2 (19.12.2007) kaldı \
          · BYKHY 24/6 (9.9.2009) geçti · BYKHY 62/2 (19.12.2007) eksik veri · BYKHY 62/4 (19.12.2007) eksik veri · PAİY \
-         22/1-k (25.7.2019) geçti · PAİY 28/1-c (12.8.2023) geçti · BYKHY 54/2 (19.12.2007) kaldı · BYKHY 54/4 (9.9.2009) \
-         eksik veri · BYKHY 54/5 (19.12.2007) eksik veri · 37 madde kapsam dışı"
+         22/1-k (25.7.2019) geçti · PAİY 28/1-c (12.8.2023) geçti · PAİY 4/1-yyy (1.10.2017) geçti · BYKHY 54/2 \
+         (19.12.2007) kaldı · BYKHY 54/4 (9.9.2009) eksik veri · BYKHY 54/5 (19.12.2007) eksik veri · 37 madde kapsam dışı"
     );
     // Applied for on 2.7.2026: as of 1.7.2026 the basement of annexes counts, four storeys ask for an elevator and
     // 34/8 for it to reach the basement, which it does not.

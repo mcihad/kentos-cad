@@ -2471,6 +2471,14 @@
           "minimum": 0,
           "type": "integer"
         },
+        "zero": {
+          "description": "Its building's own ±0.00 over the project's, m (docs/adr/8072; `ProgramBuilding.zero`); none: the project's. The\nstorey's height over its building's ±0.00 is its `elevation` less it (docs/adr/8153).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "zone": {
           "description": "Its building's own Bölge (docs/adr/8144), as the facts' `zone`; none: the project's (the building facts' `zone`).",
           "type": [

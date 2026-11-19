@@ -1,0 +1,600 @@
+{
+  "format": "kentos.regulationCases",
+  "version": 1,
+  "about": "Subasman kotunun bağımsız durumları (docs/adr/8153): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 4/1-yyy'nin (RG 3.7.2017/30113) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un katlarıdır (building.storeys: ad, kot, asma kat, bina, mahaller).",
+  "cases": [
+    {
+      "id": "zemin-sifir",
+      "neden": "Zemin kat ±0,00'da → 4/1-yyy'nin ±0,00 ile +1,20 arası, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000701"
+            ]
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000702"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000703"
+            ]
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "zemin-120",
+      "neden": "Zemin kat +1,20'de (yükseltilmiş zemin, sınırda) → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -1.8,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000701"
+            ]
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 1.2,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000702"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 4.2,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000703"
+            ]
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "zemin-150",
+      "neden": "Zemin kat +1,50'de → +1,20'nin üstünde, kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -1.5,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000701"
+            ]
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 1.5,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000702"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 4.5,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000703"
+            ]
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_plinth_level",
+            "has": [
+              "“Zemin kat” zemin katın taban döşemesi (subasman kotu) +1.50 m, en çok +1.20 m",
+              "PAİY 4/1-yyy"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "zemin-eksi-030",
+      "neden": "Zemin kat −0,30'da → ±0,00'ın altına düşemez, kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": -0.3,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000702"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 2.7,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000703"
+            ]
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_plinth_level",
+            "has": [
+              "±0,00'ın 0.30 m altında"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "adsiz-en-yakin",
+      "neden": "Katların adında Zemin yok: kotu ±0,00'a en yakın kat (+0,45) zemin kattır → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k0",
+            "name": "Kat 0",
+            "elevation": 0.45,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000702"
+            ]
+          },
+          {
+            "level": "k1",
+            "name": "Kat 1",
+            "elevation": 3.45,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000703"
+            ]
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "asma-kat-sayilmaz",
+      "neden": "Adsız katlar: +0,10'daki asma kat zemin kat sayılmaz, +1,60'taki kat zemin kattır → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k0",
+            "name": "Asma",
+            "elevation": 0.1,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000702"
+            ],
+            "mezzanine": true
+          },
+          {
+            "level": "k1",
+            "name": "Kat 1",
+            "elevation": 1.6,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000703"
+            ]
+          },
+          {
+            "level": "k2",
+            "name": "Kat 2",
+            "elevation": 4.6,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000704"
+            ]
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_plinth_level",
+            "has": [
+              "“Kat 1” zemin katın taban döşemesi (subasman kotu) +1.60 m"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "iki-bina",
+      "neden": "İki bina: A'nın zemin katı ±0,00, B'ninki +1,40 → B kalır, tek bulgu.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "a0",
+            "name": "A Zemin",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000705"
+            ],
+            "building": "a"
+          },
+          {
+            "level": "a1",
+            "name": "A 1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000706"
+            ],
+            "building": "a"
+          },
+          {
+            "level": "b0",
+            "name": "B Zemin",
+            "elevation": 1.4,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000707"
+            ],
+            "building": "b"
+          },
+          {
+            "level": "b1",
+            "name": "B 1. kat",
+            "elevation": 4.4,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000708"
+            ],
+            "building": "b"
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_plinth_level",
+            "has": [
+              "“B Zemin”",
+              "+1.40 m"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bina-kendi-sifiri",
+      "neden": "B binası kendi ±0,00'ını +2,00'de söylüyor (bina programı): B'nin zemin katı +3,00 (projenin), kendi sıfırından +1,00 → geçer; A'nınki ±0,00 → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "a0",
+            "name": "A Zemin",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000705"
+            ],
+            "building": "a"
+          },
+          {
+            "level": "a1",
+            "name": "A 1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000706"
+            ],
+            "building": "a"
+          },
+          {
+            "level": "b0",
+            "name": "B Zemin",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000707"
+            ],
+            "building": "b",
+            "zero": 2.0
+          },
+          {
+            "level": "b1",
+            "name": "B 1. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000708"
+            ],
+            "building": "b",
+            "zero": 2.0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 4/1-yyy": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    }
+  ]
+}
