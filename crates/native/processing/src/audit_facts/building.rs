@@ -58,7 +58,8 @@ use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
     BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts,
     MasonryStorey, PartyFacts, PlanNoteFacts,
-    FinishFacts, RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts, ShaftVentFacts,
+    FinishFacts, InsulationFacts, RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts,
+    ShaftVentFacts,
     SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
@@ -313,6 +314,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         structure_height,
         shafts: enclosed,
         coverings: coverings(doc),
+        insulations: insulations(doc),
         roofs: roofs(doc),
     }
 }
@@ -432,6 +434,33 @@ fn coverings(doc: &Document) -> Vec<CoveringFacts> {
                 material,
                 reaction,
             })
+        })
+        .collect()
+}
+
+/// The walls' insulation layers on their inner side (docs/adr/8151; BYKHY 20/3), each with its project material's
+/// declared reaction to fire class.
+fn insulations(doc: &Document) -> Vec<InsulationFacts> {
+    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    doc.inner_insulations()
+        .into_iter()
+        .flat_map(|w| {
+            w.layers
+                .into_iter()
+                .map(|l| InsulationFacts {
+                    wall: w.wall.clone(),
+                    level: w.level.clone(),
+                    reaction: materials
+                        .iter()
+                        .find(|m| m.id == l.material_id)
+                        .and_then(|m| m.reaction.as_ref())
+                        .map(|d| d.value.clone()),
+                    component: l.component,
+                    material: l.material,
+                    rooms: w.rooms.clone(),
+                    unknown_side: !w.side_known,
+                })
+                .collect::<Vec<_>>()
         })
         .collect()
 }

@@ -71,8 +71,10 @@ def dayanim_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 
 @ext.audit("kaplamalar")
 def kaplama_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
-    """Kaplamaların yanıcılığı (BYKHY 26/2 döşeme kaplaması, 26/4 tavan kaplaması ve asma tavan; Ek-2/Ç)."""
-    return _bulgular(facts, ("bykhy_floor_covering_reaction", "bykhy_ceiling_reaction"))
+    """Kaplamaların yanıcılığı (BYKHY 20/3 duvar kaplaması ve içte uygulanan yalıtım, 26/2 döşeme kaplaması, 26/4 tavan
+    kaplaması ve asma tavan; Ek-2/Ç)."""
+    return _bulgular(facts, ("bykhy_floor_covering_reaction", "bykhy_ceiling_reaction", "bykhy_wall_lining_reaction",
+                             "bykhy_wall_insulation_reaction"))
 
 
 @ext.audit("catilar")

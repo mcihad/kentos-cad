@@ -102,6 +102,10 @@ pub struct BuildingFacts {
     /// reaction to fire class.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub coverings: Vec<CoveringFacts>,
+    /// The walls' insulation layers on their inner side (docs/adr/8151; BYKHY 20/3): each with its material, the
+    /// material's declared reaction to fire class and the rooms it faces.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub insulations: Vec<InsulationFacts>,
     /// The roofs and their layers (docs/adr/8134; BYKHY 28/2, 28/3): each layer's material and the material's declared
     /// reaction to fire class and roof class.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -338,6 +342,27 @@ pub struct FinishFacts {
     pub material: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reaction: Option<String>,
+}
+
+/// A wall's insulation layer on its inner side (docs/adr/8151; BYKHY 20/3: "içte uygulanacak ısı ve ses yalıtımları"):
+/// the wall's persistent id and storey, the layer's component name, its project material (of the category Yalıtım) and
+/// that material's declared reaction to fire class, the rooms on the wall's inner side (both sides of an interior wall)
+/// by persistent id, and whether the inner side was not found (an exterior wall with a room on neither side or both:
+/// all its insulation layers, some perhaps the façade's).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct InsulationFacts {
+    pub wall: String,
+    pub level: Option<String>,
+    pub component: String,
+    pub material: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reaction: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rooms: Vec<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub unknown_side: bool,
 }
 
 /// An opening between two storeys (docs/adr/8086; BYKHY 4/g, 24/4, 24/5): a floor slab's hole, a void space that is no
@@ -694,6 +719,10 @@ impl BuildingFacts {
         self.basement_depth = round(self.basement_depth, LENGTH);
         self.structure_height = round(self.structure_height, LENGTH);
         self.coverings.sort_by(|a, b| a.uid.cmp(&b.uid));
+        for i in &mut self.insulations {
+            i.rooms.sort();
+        }
+        self.insulations.sort_by(|a, b| (&a.wall, &a.component).cmp(&(&b.wall, &b.component)));
         for x in &mut self.shafts {
             x.open = round(x.open, LENGTH);
             x.area = round(x.area, AREA);

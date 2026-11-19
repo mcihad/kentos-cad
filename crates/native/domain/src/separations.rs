@@ -162,12 +162,12 @@ fn holds(ring: &[Vec2], p: Vec2) -> bool {
 }
 
 impl Document {
-    /// What separates each two rooms of a storey that share a boundary (docs/adr/8081), in their persistent ids'
-    /// order; voids and outdoor rooms are no rooms here.
-    pub fn separations(&self) -> Vec<Separation> {
+    /// The rooms of the storeys (docs/adr/8081): persistent id, storey and outline to the walls' axes (a room drawn by
+    /// its own outline, its own); voids and outdoor rooms are no rooms here. Separations and the walls' inner
+    /// insulation (docs/adr/8151) read them.
+    pub(crate) fn axis_rooms(&self) -> Vec<(String, Option<String>, Vec<Area>)> {
         let program = self.program();
         let mut search = SpaceSearch::new(self);
-        // The rooms: persistent id, storey, outline to the walls' axes.
         let mut rooms: Vec<(String, Option<String>, Vec<Area>)> = Vec::new();
         for (uid, e) in self.entities_with_uids() {
             let Entity::Space(s) = e else { continue };
@@ -194,6 +194,13 @@ impl Document {
             };
             rooms.push((uid.to_string(), x.arch.level.clone(), outline));
         }
+        rooms
+    }
+
+    /// What separates each two rooms of a storey that share a boundary (docs/adr/8081), in their persistent ids'
+    /// order; voids and outdoor rooms are no rooms here.
+    pub fn separations(&self) -> Vec<Separation> {
+        let rooms = self.axis_rooms();
         let (walls, openings) = self.bodies();
         let mut found: BTreeMap<(String, String), (Option<String>, BTreeMap<At, f64>)> = BTreeMap::new();
         for (uid, level, outline) in &rooms {

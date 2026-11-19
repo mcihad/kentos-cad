@@ -115,7 +115,7 @@ fn said(app: &App) -> (Option<O>, Option<O>, Found) {
 }
 
 /// Malzemeler open, `name` chosen, its Yanıcılık sınıfı typed `class` and applied.
-fn declared(app: &mut App, name: &str, class: &str) {
+pub(crate) fn declared(app: &mut App, name: &str, class: &str) {
     let _ = app.update(Message::Run("arch.materials"));
     let at = app.arch.materials.as_ref().expect("the window").list.iter().position(|(m, _)| m.name == name).expect(name);
     let _ = app.update(Message::Arch(arch::Event::Materials(Event::Choose(at))));

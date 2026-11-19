@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.39.0 — 19 Kasım 2026
+
+- 20/3'ün içte uygulanan ısı ve ses yalıtımı (`kaplamalar`; docs/adr/8151): olguların `insulations`'ı (duvarın iç
+  yüzündeki Yalıtım katmanı, malzemesi, sınıfı, baktığı mahaller, iç yüzün bulunup bulunmadığı). Duvar kaplamasıyla aynı
+  istek, katmanın baktığı mahallere göre; aynı malzemeli katmanlar tek bulguda; iç yüzü bulunamayan dış duvarda yetmeyen
+  sınıf uzman incelemesi. `kaplamalar` katkısı 20/3'ün bulgularını da verir (8138'in duvar kaplaması bulgusu eksikti).
+  Kaplamalar 39 bağımsız durum (5'i yeni).
+
 ## 0.38.0 — 19 Kasım 2026
 
 - Kalın taş duvarlar bina bina (`emsal`; docs/adr/8150): olguların `masonry.storeys`'i (katın duvar payı, taban alanı

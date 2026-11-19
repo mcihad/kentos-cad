@@ -124,6 +124,13 @@
           "format": "double",
           "type": "number"
         },
+        "insulations": {
+          "description": "The walls' insulation layers on their inner side (docs/adr/8151; BYKHY 20/3): each with its material, the\nmaterial's declared reaction to fire class and the rooms it faces.",
+          "items": {
+            "$ref": "#/$defs/InsulationFacts"
+          },
+          "type": "array"
+        },
         "layout": {
           "description": "The building's layout as the project says it (yapı nizamı, docs/adr/8141): `detached`, `attached`, `block`,\n`twin` (blok nizam to the regulation, PAİY 4/1-pppp-3); absent: not said.",
           "type": [
@@ -1216,6 +1223,47 @@
           "type": "string"
         }
       ]
+    },
+    "InsulationFacts": {
+      "description": "A wall's insulation layer on its inner side (docs/adr/8151; BYKHY 20/3: \"içte uygulanacak ısı ve ses yalıtımları\"):\nthe wall's persistent id and storey, the layer's component name, its project material (of the category Yalıtım) and\nthat material's declared reaction to fire class, the rooms on the wall's inner side (both sides of an interior wall)\nby persistent id, and whether the inner side was not found (an exterior wall with a room on neither side or both:\nall its insulation layers, some perhaps the façade's).",
+      "properties": {
+        "component": {
+          "type": "string"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "material": {
+          "type": "string"
+        },
+        "reaction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rooms": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "unknownSide": {
+          "type": "boolean"
+        },
+        "wall": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "wall",
+        "component",
+        "material"
+      ],
+      "type": "object"
     },
     "InvalidGeometry": {
       "description": "An object whose shape is not valid.",

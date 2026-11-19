@@ -445,6 +445,9 @@
   - **Kalın taş duvarlar bina bina (19 Kasım 2026; [ADR 8150](../adr/8150-thick-walls-per-building.md), K387–K388):**
     tablonun katları duvar paylarını taşır, olgular `masonry.storeys`'te verir; 20/8-j ve 5/8 her geleneksel binanın
     duvarlarını kendi kat sayısıyla okur (3 katı aşanınki kalır), 8145'in uzman incelemesi kalktı.
+  - **Duvarların içte uygulanan yalıtımı (19 Kasım 2026; [ADR 8151](../adr/8151-inner-insulation-20-3.md), K389–K391):**
+    Yalıtım kategorili malzemeli katmanlar; iç duvarda hepsi, dış duvarda iç yüzden (mahalin yanı) ilk Taşıyıcı katmana
+    kadar; 20/3 duvar kaplamasının isteğiyle okur; iç yüz bulunamazsa uzman incelemesi.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

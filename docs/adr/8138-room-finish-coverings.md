@@ -75,6 +75,7 @@ Yönetmeliğin metni derlenmiş resmî metinden (pdftotext; ADR 8081'in kopyası
 
 ## §6. Kalanlar
 
-- İçte uygulanan ısı ve ses yalıtımı (20/3): duvar stilinin iç yüzdeki yalıtım bileşeni katman katman okunabilir.
+- İçte uygulanan ısı ve ses yalıtımı (20/3): duvar stilinin iç yüzdeki yalıtım bileşeni katman katman okunabilir —
+  yapıldı: ADR [8151](8151-inner-insulation-20-3.md).
 - Kaplamanın adı yerine malzemeye bağlanması (duvar bileşeni gibi `materialId`): mahal listesinin sözleşmesini değiştirir.
 - 26/4'ün nizamı: binanın nizamı İmar durumu'na yazılırsa tek konutlu binanın uzman incelemesi kalkar — yapıldı: ADR [8141](8141-building-layout-nizam.md) (Proje ayarları › Mimari › İmar durumu › Yapı nizamı).

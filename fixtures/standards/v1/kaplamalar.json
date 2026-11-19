@@ -1,7 +1,7 @@
 {
  "format": "kentos.regulationCases",
  "version": 1,
- "about": "Kaplamaların yanıcılığının bağımsız durumları (docs/adr/8091, 8138): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 20/3 (9.7.2015), 26/2, 26/4 ve Ek-2/Ç'nin (PDF'in 89. sayfası resim olarak okundu) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Mahal kaplamalarıyla olanlar docs/adr/8138'den. Olgular KentOS'un ölçüsüdür (building.coverings, spaces[].finishes, rooms).",
+ "about": "Kaplamaların yanıcılığının bağımsız durumları (docs/adr/8091, 8138): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 20/3 (9.7.2015), 26/2, 26/4 ve Ek-2/Ç'nin (PDF'in 89. sayfası resim olarak okundu) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Mahal kaplamalarıyla olanlar docs/adr/8138'den. Olgular KentOS'un ölçüsüdür (building.coverings, spaces[].finishes, rooms). Duvarların içte uygulanan yalıtımının durumları (docs/adr/8151) 20/3'ün “içte uygulanacak ısı ve ses yalıtımları”ndan elle (building.insulations: duvar, malzeme, sınıfı, baktığı mahaller, iç yüzün bulunup bulunmadığı).",
  "cases": [
   {
    "id": "doseme-normal-tamam",
@@ -2643,6 +2643,448 @@
      ],
      "BYKHY 26/4": [
       "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yalitim-ic-tamam",
+   "neden": "İki dış duvarın iç yüzünde Taş yünü A1-s1,d0 (yanmaz) yalıtım; 20/3 içte uygulanan yalıtıma en az normal alevlenici ister → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000191",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0
+     }
+    ],
+    "insulations": [
+     {
+      "wall": "00000000-0000-4000-8000-000000000501",
+      "level": "k01",
+      "component": "Taş yünü",
+      "material": "Taş yünü",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000191"
+      ],
+      "reaction": "A1"
+     },
+     {
+      "wall": "00000000-0000-4000-8000-000000000502",
+      "level": "k01",
+      "component": "Taş yünü",
+      "material": "Taş yünü",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000191"
+      ],
+      "reaction": "A1"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 20/3": [
+      "passed",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yalitim-ic-kolay",
+   "neden": "İki duvarın iç yüzünde EPS F (kolay alevlenici); 20/3 en az normal alevlenici → kalır, aynı malzemeli katmanlar tek bulguda.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000191",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0
+     }
+    ],
+    "insulations": [
+     {
+      "wall": "00000000-0000-4000-8000-000000000501",
+      "level": "k01",
+      "component": "EPS",
+      "material": "EPS",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000191"
+      ],
+      "reaction": "F"
+     },
+     {
+      "wall": "00000000-0000-4000-8000-000000000502",
+      "level": "k01",
+      "component": "EPS",
+      "material": "EPS",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000191"
+      ],
+      "reaction": "F"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_wall_insulation_reaction",
+      "has": [
+       "“EPS” iç yalıtımı (2 duvar)",
+       "F, kolay alevlenici",
+       "en az normal alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "failed",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yalitim-yuksek-bina-normal",
+   "neden": "Yüksek bina (bina yüksekliği 24 m > 21,50 m): iç yalıtım XPS D-s2,d0 (normal alevlenici); 20/3 yüksek binada en az zor alevlenici → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 24.0,
+    "structureHeight": 24.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000191",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0
+     }
+    ],
+    "insulations": [
+     {
+      "wall": "00000000-0000-4000-8000-000000000501",
+      "level": "k01",
+      "component": "XPS",
+      "material": "XPS",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000191"
+      ],
+      "reaction": "D-s2,d0"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_wall_insulation_reaction",
+      "has": [
+       "yüksek bina",
+       "en az zor alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "failed",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yalitim-sinifi-yok",
+   "neden": "İç yalıtımın malzemesi (Cam yünü) yanıcılık sınıfı beyan edilmemiş → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000191",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0
+     }
+    ],
+    "insulations": [
+     {
+      "wall": "00000000-0000-4000-8000-000000000501",
+      "level": "k01",
+      "component": "Cam yünü",
+      "material": "Cam yünü",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000191"
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_wall_insulation_reaction",
+      "state": "missingData",
+      "has": [
+       "yanıcılık sınıfı beyan edilmemiş"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "missingData",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yalitim-ic-yuzu-bilinmiyor",
+   "neden": "Dış duvarın iki yanında mahal yok, iç yüzü bulunamadı: EPS F yalıtım cephenin de olabilir → yetmeyen sınıf uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000191",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0
+     }
+    ],
+    "insulations": [
+     {
+      "wall": "00000000-0000-4000-8000-000000000503",
+      "level": "k01",
+      "component": "EPS",
+      "material": "EPS",
+      "rooms": [],
+      "reaction": "F",
+      "unknownSide": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_wall_insulation_reaction",
+      "state": "expertReview",
+      "has": [
+       "dış duvarın iç yüzü bulunamadı",
+       "cephenin olabilir"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "expertReview",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
       "9.9.2009"
      ]
     }
