@@ -660,6 +660,7 @@ fn roof_forms(doc: &Document) -> std::collections::HashMap<u32, RoofFormFacts> {
                 at: [m.at.x, m.at.y],
                 parts,
                 window_gaps: m.window_gaps.into_iter().map(|(a, b, apart)| WindowGapFacts { a, b, apart }).collect(),
+                outside: m.outside,
             };
             (m.slot.0, form)
         })

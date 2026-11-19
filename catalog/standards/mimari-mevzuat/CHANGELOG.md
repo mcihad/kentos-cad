@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 0.48.0 — 19 Kasım 2026
+
+- Saçağın parsel sınırı (`cati_olculeri`; docs/adr/8161): PAİY 42/2 "Saçaklar parsel sınırlarını aşamaz". Olguların
+  çatı biçiminde `outside` (saçağın vaziyet planının parselini aştığı en uzak yer, m; vaziyet planı yoksa yok); aşan
+  çatı `paiy_eaves_over_parcel`. Satır yalnız vaziyet planıyla yazılır. 2 yeni bağımsız durum (24).
+
 ## 0.47.0 — 19 Kasım 2026
 
 - Planın çatı notları (`cati_olculeri`; docs/adr/8160): `ridgeMost` (mahya), `roofSlopeMost` (çatı eğimi, %) ve

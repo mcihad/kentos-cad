@@ -310,6 +310,10 @@ pub struct RoofFormFacts {
     pub parts: Vec<RoofPartFacts>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub window_gaps: Vec<WindowGapFacts>,
+    /// How far its eaves reach past the site plan's parcel, m (docs/adr/8161; PAİY 42/2); 0 within it; none without a
+    /// site plan.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outside: Option<f64>,
 }
 
 /// A part standing through a roof or set in it (docs/adr/8159): its kind (`chimney`, `vent`, `window`, `downpipe`), its
@@ -857,6 +861,7 @@ impl BuildingFacts {
                 for g in &mut f.window_gaps {
                     g.apart = round(g.apart, LENGTH);
                 }
+                f.outside = f.outside.map(|v| round(v, LENGTH));
             }
         }
         for i in &mut self.insulations {

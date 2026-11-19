@@ -1865,6 +1865,14 @@
           "minItems": 2,
           "type": "array"
         },
+        "outside": {
+          "description": "How far its eaves reach past the site plan's parcel, m (docs/adr/8161; PAİY 42/2); 0 within it; none without a\nsite plan.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "overhang": {
           "format": "double",
           "type": [

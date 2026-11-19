@@ -457,6 +457,9 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Saçağın parsel sınırı (19 Kasım 2026; [ADR 8161](../adr/8161-eaves-within-the-parcel.md), K415–K416):** PAİY 42/2;
+    saçak çizgisinin vaziyet planının parselinden taşan parçasının sınırdan en uzak köşesi (`roofs[].form.outside`);
+    satır yalnız vaziyet planıyla.
   - **Planın çatı notları (19 Kasım 2026; [ADR 8160](../adr/8160-plan-roof-notes.md), K412–K414):** Mahya
     yüksekliği, Çatı eğimi (%) ve Saçak genişliği (en çok) plan notları 40/4, 42/1 ve Sivas 40/5-g'nin önünde (40 ve 42
     planla değiştirilebilir, 69/2 saymaz); eğim notu Sivas'sız da okunur; `.kcad` Mimari verisi 33.

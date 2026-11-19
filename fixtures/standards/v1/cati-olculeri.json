@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Çatının ölçülerinin bağımsız durumları (docs/adr/8159): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 40/4 (5,00 m), 40/5 (0,60 m), 42/1 (1,00 m), Binaların Yangından Korunması Hakkında Yönetmelik 58/2 (0,80 m) ve Sivas İmar Yönetmeliği 40/5-g (4,00 m, %40), 40/5-e-2 (1,20 × 1,50 m), 40/5-e-3 (1 m, 2 m), 42/5'in metninden elle; kuralın kodundan üretilmedi. Olgular KentOS'un çatı ölçüsüdür (building.roofs[].form); düzeltmenin beklenenleri cad.arch.edit'in işlemidir. Planın çatı notlarının durumları (docs/adr/8160): ridgeMost, roofSlopeMost, eavesMost yönetmeliklerin değerinin önüne geçer (69/3; 40 ve 42 planla değiştirilebilir, 69/2 saymaz); beklenenler elle.",
+  "about": "Çatının ölçülerinin bağımsız durumları (docs/adr/8159): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 40/4 (5,00 m), 40/5 (0,60 m), 42/1 (1,00 m), Binaların Yangından Korunması Hakkında Yönetmelik 58/2 (0,80 m) ve Sivas İmar Yönetmeliği 40/5-g (4,00 m, %40), 40/5-e-2 (1,20 × 1,50 m), 40/5-e-3 (1 m, 2 m), 42/5'in metninden elle; kuralın kodundan üretilmedi. Olgular KentOS'un çatı ölçüsüdür (building.roofs[].form); düzeltmenin beklenenleri cad.arch.edit'in işlemidir. Planın çatı notlarının durumları (docs/adr/8160): ridgeMost, roofSlopeMost, eavesMost yönetmeliklerin değerinin önüne geçer (69/3; 40 ve 42 planla değiştirilebilir, 69/2 saymaz); beklenenler elle. PAİY 42/2'nin durumları (docs/adr/8161): olguların outside'ı vaziyet planının parselinin dışına taşan saçak; satır yalnız vaziyet planıyla.",
   "cases": [
     {
       "id": "mahya-icinde",
@@ -2251,6 +2251,191 @@
           "Plan notu: saçak genişliği": [
             "failed",
             null
+          ]
+        }
+      }
+    },
+    {
+      "id": "parsel-icinde",
+      "neden": "Vaziyet planı var, saçak parselin içinde (0 m) → 42/2 geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "outside": 0.0
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "PAİY 42/2": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "parsel-asar",
+      "neden": "Saçak parsel sınırını 1,25 m aşıyor: 42/2 \"Saçaklar parsel sınırlarını aşamaz\" → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0,
+            "rooms": []
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "roofs": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000801",
+            "level": "k01",
+            "layers": [],
+            "form": {
+              "at": [
+                7.0,
+                5.0
+              ],
+              "sloping": true,
+              "ridge": 4.47,
+              "slopes": [
+                40.0,
+                40.0,
+                40.0,
+                40.0
+              ],
+              "snowGuard": true,
+              "outside": 1.25
+            }
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_eaves_over_parcel",
+            "has": [
+              "Saçak parsel sınırını 1.25 m aşıyor — PAİY 42/2 (1.10.2017)"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 40/4": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 40/5": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "PAİY 42/1": [
+            "outOfScope",
+            "1.10.2017"
+          ],
+          "BYKHY 58/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "PAİY 42/2": [
+            "failed",
+            "1.10.2017"
           ]
         }
       }

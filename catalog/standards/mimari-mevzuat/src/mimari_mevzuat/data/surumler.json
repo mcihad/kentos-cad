@@ -2385,6 +2385,23 @@
       ]
     },
     {
+      "regulation": "PAİY",
+      "article": "42/2",
+      "title": "Saçağın parsel sınırı",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); derlenmiş metinde bu fıkrada değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "text": "Saçaklar — MADDE 42 - (1) Uygulama imar planında belirlenmemiş ise 1.00 metreyi geçmeyen saçak yapılabilir. … (2) Saçaklar parsel sınırlarını aşamaz.",
+          "source": "Derlenmiş PAİY (1.7.2026'ya kadar işlenmiş birleştirilmiş metin, pdftotext): 42/2; docs/adr/8161 §2."
+        }
+      ]
+    },
+    {
       "regulation": "BYKHY",
       "article": "58/2",
       "title": "Bacanın mahyayı aşması",

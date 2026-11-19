@@ -26,7 +26,7 @@ fn click(app: &mut App, x: f64, y: f64) {
 
 /// The dwelling with its Balkon `depth` deep, the parcel drawn round it and taken in Parsel (its south edge Ön); the
 /// Balkon's persistent id.
-fn scene(depth: f64) -> (App, String) {
+pub(crate) fn scene(depth: f64) -> (App, String) {
     let mut app = building(2, "Konut");
     run(
         &mut app,

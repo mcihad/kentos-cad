@@ -198,6 +198,40 @@ fn the_plan_s_roof_notes_come_before_the_regulations() {
     assert!(slopes.iter().all(|s| *s == Some(33.0)), "{slopes:?}");
 }
 
+/// PAİY 42/2 (docs/adr/8161): on 8152's dwelling (the parcel x −3–13, y −5–11), a roof over 1. kat whose eaves run
+/// from x −4: 1.00 m past the parcel's west side, "Saçaklar parsel sınırlarını aşamaz" fails; from x −2 it holds.
+#[test]
+fn the_eaves_stay_within_the_parcel() {
+    use kentos_commands::ArchAuditOutcome as O;
+    for (west, outcome) in [(-4.0, O::Failed), (-2.0, O::Passed)] {
+        let (mut app, _) = crate::projection_tests::scene(1.2);
+        crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+        let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+        let p = |x: f64, y: f64| json!({"x": x, "y": y});
+        crate::use_class_tests::run(
+            &mut app,
+            "cad.roofs.create",
+            json!({"layerId": layer, "roofs": [{"pts": [p(west, -1.0), p(11.0, -1.0), p(11.0, 9.0), p(west, 9.0)],
+                "slopes": [33.0, 33.0, 33.0, 33.0], "arch": {"level": "k01"}}]}),
+        );
+        checked(&mut app);
+        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let row = set.rules.iter().find(|r| r.rule == "PAİY 42/2").map(|r| r.state);
+        assert_eq!(row, Some(outcome), "{:#?}", set.rules);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let over: Vec<&str> = audited
+            .findings
+            .iter()
+            .filter(|f| f.code == "paiy_eaves_over_parcel")
+            .map(|f| f.message.as_str())
+            .collect();
+        match outcome {
+            O::Failed => assert_eq!(over, ["Saçak parsel sınırını 1.00 m aşıyor — PAİY 42/2 (1.10.2017)"]),
+            _ => assert!(over.is_empty(), "{over:?}"),
+        }
+    }
+}
+
 /// Denetim's roof findings with Sivas read, the chimney's selected, light and dark;
 /// `.run/gui-evidence/cati-olculeri-8159/`.
 #[test]
@@ -273,6 +307,48 @@ fn notes_screens() {
         snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 5.0));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-cati-notlari-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Denetim's 42/2 finding beside 1. kat's plan (the parcel and the roof past its west side), light and dark;
+/// `.run/gui-evidence/sacak-parsel-8161/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn parcel_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/sacak-parsel-8161");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    for (theme, size, name) in sizes {
+        let (mut app, _) = crate::projection_tests::scene(1.2);
+        crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+        let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+        let p = |x: f64, y: f64| json!({"x": x, "y": y});
+        crate::use_class_tests::run(
+            &mut app,
+            "cad.roofs.create",
+            json!({"layerId": layer, "roofs": [{"pts": [p(-4.0, -1.0), p(11.0, -1.0), p(11.0, 9.0), p(-4.0, 9.0)],
+                "slopes": [33.0, 33.0, 33.0, 33.0], "arch": {"level": "k01"}}]}),
+        );
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::ActiveLevel(Some("k01".into())));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_eaves_over_parcel");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-sacak-parsel-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

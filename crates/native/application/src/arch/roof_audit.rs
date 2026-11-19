@@ -1,6 +1,7 @@
 //! Çatının ölçüleri (docs/adr/8044 §9, 8159; M44): each roof measured on the drawing for the standards package's roof
-//! rules (`catalog/standards/mimari-mevzuat`, `cati_olculeri`: Planlı Alanlar İmar Yönetmeliği 40/4, 40/5, 42/1, the
-//! fire regulation's 58/2 and Sivas İmar Yönetmeliği 40/5, 42/5), which the audit facts carry (`building.roofs[].form`).
+//! rules (`catalog/standards/mimari-mevzuat`, `cati_olculeri`: Planlı Alanlar İmar Yönetmeliği 40/4, 40/5, 42/1,
+//! 42/2, the fire regulation's 58/2 and Sivas İmar Yönetmeliği 40/5, 42/5), which the audit facts carry
+//! (`building.roofs[].form`).
 //!
 //! - **Mahya:** the ridge's top over the saçak seviyesi (PAİY 4/ppp: "son kat tavan döşemesi üst kotu", the top of the
 //!   storey the roof stands on), its kot farkı counted; a sloping roof's only.
@@ -10,6 +11,8 @@
 //!   over the ridge and a vent's over the roof at its highest corner (its own, else its kind's); a window's outline's
 //!   nearest distance to the building's facade lines (the walls' outer faces the roof was drawn from, its eaves its
 //!   overhang in), and between two windows the shortest distance between their outlines on the roof.
+//! - **Parsel:** with the site plan's parcel, how far the eaves outline reaches past its boundary (PAİY 42/2,
+//!   docs/adr/8161): the farthest corner of the eaves' part outside it from the boundary, 0 when within.
 //!
 //! The measures are the drawing's; the rules decide.
 
@@ -46,11 +49,22 @@ pub struct RoofMeasure {
     pub parts: Vec<PartMeasure>,
     /// Two windows (their indices among the parts) and the shortest distance between their outlines on the roof, m.
     pub window_gaps: Vec<(usize, usize, f64)>,
+    /// How far the eaves reach past the site plan's parcel, m (0: within it); none without a site plan.
+    pub outside: Option<f64>,
 }
 
 /// Every roof's measures, in the drawing's order; a roof whose shape cannot be built is left out.
 pub fn measures(doc: &Document) -> Vec<RoofMeasure> {
     let mut out = Vec::new();
+    // The site plan's parcel, anticlockwise (docs/adr/8161).
+    let parcel: Option<Vec<V>> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .and_then(|a| a.site.as_ref())
+        .and_then(|s| doc.site_report_for(s))
+        .map(|r| r.parcel)
+        .filter(|ring| ring.len() >= 3);
     for e in doc.entities() {
         let Entity::Roof(r) = e else { continue };
         let Shape::Roof { pts, roof: spec } = crate::geometry::roof_shape(r, doc.settings()) else {
@@ -111,9 +125,30 @@ pub fn measures(doc: &Document) -> Vec<RoofMeasure> {
             snow_guard: r.roof.snow_guard.is_some(),
             parts,
             window_gaps,
+            outside: parcel.as_ref().map(|ring| past(&pts, ring)),
         });
     }
     out
+}
+
+/// How far the outline `pts` reaches past the closed `ring`, m: the farthest corner of its part outside the ring from
+/// the ring's sides; 0 when it stays within.
+fn past(pts: &[V], ring: &[V]) -> f64 {
+    use kentos_geometry_core::geom::arrangement::{Area, Ring};
+    let area = |p: &[V]| Area { outer: Ring { pts: p.to_vec(), bulges: None }, holes: Vec::new() };
+    let rest = kentos_geometry_core::geom::region::subtract_areas(&[area(pts)], &[area(ring)]);
+    let to_ring = |q: V| {
+        (0..ring.len())
+            .map(|i| {
+                let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
+                let (dx, dy) = (b.x - a.x, b.y - a.y);
+                let len2 = dx * dx + dy * dy;
+                let t = if len2 > 0.0 { (((q.x - a.x) * dx + (q.y - a.y) * dy) / len2).clamp(0.0, 1.0) } else { 0.0 };
+                (q.x - (a.x + dx * t)).hypot(q.y - (a.y + dy * t))
+            })
+            .fold(f64::INFINITY, f64::min)
+    };
+    rest.iter().flat_map(|a| a.outer.pts.iter().copied()).map(to_ring).fold(0.0, f64::max)
 }
 
 /// How far in from the eaves line `pts` (convex, either way round) the plan point `q` is: its nearest edge's line.
@@ -216,6 +251,16 @@ mod tests {
             [5.0, 0.0, 0.0],
         );
         assert!((d - 3.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn eaves_past_the_parcel() {
+        let parcel = [V::new(0.0, 0.0), V::new(10.0, 0.0), V::new(10.0, 8.0), V::new(0.0, 8.0)];
+        let within = [V::new(1.0, 1.0), V::new(9.0, 1.0), V::new(9.0, 7.0), V::new(1.0, 7.0)];
+        assert!(past(&within, &parcel).abs() < 1e-9);
+        // 1.25 m past the west side, clockwise.
+        let over = [V::new(-1.25, 1.0), V::new(-1.25, 7.0), V::new(9.0, 7.0), V::new(9.0, 1.0)];
+        assert!((past(&over, &parcel) - 1.25).abs() < 1e-9, "{}", past(&over, &parcel));
     }
 
     #[test]
