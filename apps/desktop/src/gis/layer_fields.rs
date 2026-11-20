@@ -384,6 +384,11 @@ pub enum Cell {
     Max,
 }
 
+/// A row's box's id: `layer-field-1-name` (what a test clicks into).
+pub(crate) fn cell_id(row: usize, cell: Cell) -> iced::widget::Id {
+    iced::widget::Id::from(format!("layer-field-{row}-{}", format!("{cell:?}").to_lowercase()))
+}
+
 #[derive(Debug, Clone)]
 pub enum Event {
     /// Değerleri biçime çevir (docs/adr/0439 §8): the layer's values in their saved fields' canonical texts.
@@ -395,6 +400,9 @@ pub enum Event {
     Required(usize, bool),
     /// A row pressed: it is the one Sil, Yukarı and Aşağı take.
     Choose(usize),
+    /// A row's box took the focus (a click or Tab, gis-usage-report GIS-003): the row is chosen, so the settings
+    /// under the table are its own; `false`: the focus left it, nothing changes.
+    Focused(usize, bool),
     Add,
     Remove,
     Up,
@@ -545,7 +553,8 @@ impl App {
                 }
                 w.chosen = Some(i);
             }
-            Event::Choose(i) => w.chosen = Some(i),
+            Event::Choose(i) | Event::Focused(i, true) => w.chosen = Some(i),
+            Event::Focused(_, false) => {}
             Event::Add => {
                 let n = w.rows.len() + 1;
                 w.rows.push(FieldRow {
@@ -951,7 +960,7 @@ impl App {
             },
         ));
         let input = |i: usize, cell: Cell, value: &str, label_words: &'static str, on: bool| {
-            let field = kentos_ui::widget::text_field(label_words, value);
+            let field = kentos_ui::widget::text_field(label_words, value).id(cell_id(i, cell));
             let field = if on {
                 field.on_input(move |t| msg(Event::Type(i, cell, t)))
             } else {
@@ -1017,10 +1026,13 @@ impl App {
             .align_y(Center);
             let chosen = w.chosen == Some(i);
             rows = rows.push(
-                button(line)
-                    .on_press(msg(Event::Choose(i)))
-                    .padding([2, 4])
-                    .style(style::button::table_row(chosen, false)),
+                kentos_ui::widget::focus_watch::focus_watch(
+                    button(line)
+                        .on_press(msg(Event::Choose(i)))
+                        .padding([2, 4])
+                        .style(style::button::table_row(chosen, false)),
+                )
+                .on_focus(move |on| msg(Event::Focused(i, on))),
             );
         }
         if w.rows.is_empty() {
@@ -1588,6 +1600,65 @@ mod tests {
             let _ = app.update(msg(Event::Add));
             app
         });
+    }
+
+/// Where the box of `id` is drawn.
+    fn box_at(
+        snapshot: &mut kentos_ui::snapshot::Snapshot,
+        app: &crate::app::App,
+        id: iced::widget::Id,
+    ) -> Option<iced::Rectangle> {
+        use iced::Rectangle;
+        use iced::advanced::widget::operation::TextInput;
+        use iced::advanced::widget::{Id, Operation};
+        use std::sync::{Arc, Mutex};
+        struct Find(Id, Arc<Mutex<Option<Rectangle>>>);
+        impl Operation for Find {
+            fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+                operate(self);
+            }
+            fn text_input(&mut self, id: Option<&Id>, bounds: Rectangle, _: &mut dyn TextInput) {
+                if id == Some(&self.0) {
+                    *self.1.lock().expect("a lock") = Some(bounds);
+                }
+            }
+        }
+        let found = Arc::new(Mutex::new(None));
+        snapshot.operate(app.view(), Box::new(Find(id, found.clone())));
+        *found.lock().expect("a lock")
+    }
+
+    /// GIS-003: a click into the second row's name box chooses that row at once, so Tekil below is its own; saved, only
+    /// the second field changed. With `KENTOS_SHOTS=1` the picture goes to `.run/gui-evidence/gis-003/`.
+    #[test]
+    fn a_click_into_a_rows_box_chooses_that_row() {
+        use kentos_ui::snapshot::Input;
+        let mut app = crate::files_testing::app_with_drawing();
+        let layer = app.document.as_ref().expect("open").model.layers().active().to_owned();
+        let _ = app.update(Message::Run("layer.fields"));
+        for (i, name) in ["park_kodu", "bank_sayisi"].into_iter().enumerate() {
+            let _ = app.update(msg(Event::Add));
+            let _ = app.update(msg(Event::Type(i, Cell::Name, name.into())));
+        }
+        let _ = app.update(msg(Event::Choose(0)));
+        let _ = app.update(msg(Event::Unique(true)));
+        let _ = app.update(msg(Event::Save));
+        let _ = app.update(Message::Run("layer.fields"));
+        let w = app.gis.layer_fields.as_ref().expect("Alanlar is open");
+        assert_eq!(w.chosen, Some(0));
+        let mut shot = crate::files_testing::offscreen(iced::Size::new(1440., 900.));
+        let mut update = |app: &mut crate::app::App, m| drop(app.update(m));
+        shot.settle(&mut app, crate::app::App::view, &mut update);
+        let at = box_at(&mut shot, &app, cell_id(1, Cell::Name)).expect("the second row's name box");
+        shot.input(&mut app, crate::app::App::view, &mut update, Input::Click(at.center()));
+        assert_eq!(app.gis.layer_fields.as_ref().expect("open").chosen, Some(1), "the clicked row is chosen");
+        crate::files_testing::evidence(&mut shot, &app, "gis-003", "ikinci-satir-secili");
+        let _ = app.update(msg(Event::Unique(true)));
+        let _ = app.update(msg(Event::Save));
+        let doc = &app.document.as_ref().expect("open").model;
+        let fields = &doc.layers().get(&layer).expect("the layer").fields;
+        let unique: Vec<(&str, bool)> = fields.iter().map(|f| (f.name.as_str(), f.unique)).collect();
+        assert_eq!(unique, [("park_kodu", true), ("bank_sayisi", true)]);
     }
 
     /// UR-063: every header fits its column at the interface's caption size, its 8 px padding either side.
