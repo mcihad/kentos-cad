@@ -3788,63 +3788,7 @@
        }
       ],
       "settings": {
-       "domains": [
-        {
-         "id": "kontrol-tur",
-         "name": "Kontrol noktasının türü",
-         "kind": "text",
-         "values": [
-          {
-           "code": "gnss",
-           "label": "GNSS noktası"
-          },
-          {
-           "code": "poligon",
-           "label": "Poligon noktası"
-          },
-          {
-           "code": "nirengi",
-           "label": "Nirengi noktası"
-          },
-          {
-           "code": "rs",
-           "label": "Röper / sabit nokta"
-          }
-         ]
-        },
-        {
-         "id": "sebeke",
-         "name": "Şebeke",
-         "kind": "text",
-         "values": [
-          {
-           "code": "kanalizasyon",
-           "label": "Kanalizasyon"
-          },
-          {
-           "code": "yagmursuyu",
-           "label": "Yağmursuyu"
-          },
-          {
-           "code": "icmesuyu",
-           "label": "İçme suyu"
-          },
-          {
-           "code": "elektrik",
-           "label": "Elektrik"
-          },
-          {
-           "code": "telekom",
-           "label": "Haberleşme",
-           "retired": true
-          },
-          {
-           "code": "atiksu",
-           "label": "Atık su"
-          }
-         ]
-        }
-       ]
+       "domains": null
       }
      }
     }
@@ -18001,63 +17945,7 @@
        }
       ],
       "settings": {
-       "domains": [
-        {
-         "id": "kontrol-tur",
-         "name": "Kontrol noktasının türü",
-         "kind": "text",
-         "values": [
-          {
-           "code": "gnss",
-           "label": "GNSS noktası"
-          },
-          {
-           "code": "poligon",
-           "label": "Poligon noktası"
-          },
-          {
-           "code": "nirengi",
-           "label": "Nirengi noktası"
-          },
-          {
-           "code": "rs",
-           "label": "Röper / sabit nokta"
-          }
-         ]
-        },
-        {
-         "id": "sebeke",
-         "name": "Şebeke",
-         "kind": "text",
-         "values": [
-          {
-           "code": "kanalizasyon",
-           "label": "Kanalizasyon"
-          },
-          {
-           "code": "yagmursuyu",
-           "label": "Yağmursuyu"
-          },
-          {
-           "code": "icmesuyu",
-           "label": "İçme suyu"
-          },
-          {
-           "code": "elektrik",
-           "label": "Elektrik"
-          },
-          {
-           "code": "telekom",
-           "label": "Haberleşme",
-           "retired": true
-          },
-          {
-           "code": "atiksu",
-           "label": "Atık su"
-          }
-         ]
-        }
-       ]
+       "domains": null
       }
      }
     }

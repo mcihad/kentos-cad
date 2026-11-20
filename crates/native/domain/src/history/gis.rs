@@ -26,6 +26,17 @@ pub(crate) enum GisOp {
         before: Arc<Vec<kentos_contracts::LineageRecord>>,
         after: Arc<Vec<kentos_contracts::LineageRecord>>,
     },
+    /// The project's relations (docs/adr/0430), before and after: written in the step of the layers they join (a data
+    /// profile's, GIS-051), so undo leaves none naming a layer it took away.
+    Relations {
+        before: Arc<Vec<kentos_contracts::ProjectRelation>>,
+        after: Arc<Vec<kentos_contracts::ProjectRelation>>,
+    },
+    /// The project's address locators, before and after: as the relations (GIS-051).
+    AddressLocators {
+        before: Arc<Vec<kentos_contracts::AddressLocator>>,
+        after: Arc<Vec<kentos_contracts::AddressLocator>>,
+    },
 }
 
 impl GisOp {
@@ -41,6 +52,14 @@ impl GisOp {
                 after: before.clone(),
             },
             GisOp::Lineage { before, after } => GisOp::Lineage {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            GisOp::Relations { before, after } => GisOp::Relations {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            GisOp::AddressLocators { before, after } => GisOp::AddressLocators {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -70,6 +89,12 @@ impl GisOp {
             }
             GisOp::Lineage { after, .. } => {
                 Arc::make_mut(&mut doc.settings).lineage = (**after).clone();
+            }
+            GisOp::Relations { after, .. } => {
+                Arc::make_mut(&mut doc.settings).relations = (**after).clone();
+            }
+            GisOp::AddressLocators { after, .. } => {
+                Arc::make_mut(&mut doc.settings).address_locators = (**after).clone();
             }
         }
     }

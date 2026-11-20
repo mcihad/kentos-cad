@@ -268,8 +268,7 @@ pub(crate) fn write(
     let mut out = ProfilesApplied::default();
     let mut warnings = Vec::new();
     // The value lists the project will have: its own first (kept), then the profile's it lacks.
-    let mut settings = doc.settings().clone();
-    let mut domains: Vec<FieldDomain> = settings.domains.clone();
+    let mut domains: Vec<FieldDomain> = doc.settings().domains.clone();
     for d in &p.domains {
         match domains.iter().find(|x| x.id == d.id) {
             Some(have) if have.kind != d.kind || have.values != d.values => warnings.push(warn(
@@ -286,17 +285,19 @@ pub(crate) fn write(
             }
         }
     }
+    // One undo step for all of it (GIS-051): the value lists, the layers and their fields, the relations and the
+    // address locator. Undone, no relation or locator is left naming a layer the step took away; a refusal below
+    // cancels the whole step.
+    let group = doc.begin_group(STEP);
     // The value lists go in first: a layer the drawing already has takes the profile's fields bound to them, and the
     // document checks a field's list against the project's (docs/adr/1360: a profile applied over its own layers was
-    // refused). A refusal below puts the project's own back.
-    let before = doc.settings().clone();
-    if !out.domains.is_empty() {
-        let mut with = before.clone();
-        with.domains = domains.clone();
-        doc.set_settings(with);
+    // refused).
+    if !out.domains.is_empty()
+        && let Err(why) = doc.set_domains(domains.clone(), STEP)
+    {
+        doc.cancel_group(group);
+        return Err(Stop::failed(error(codes::INVALID_INPUT, why.0, Some("profile".into()))));
     }
-    // 1. The layers and their fields: one undo step.
-    let group = doc.begin_group(STEP);
     let mut layer_of: HashMap<&str, String> = HashMap::new();
     for c in &p.classes {
         match place_class(doc, c, &domains, &mut out, &mut warnings) {
@@ -306,17 +307,12 @@ pub(crate) fn write(
             Ok(None) => {}
             Err(stop) => {
                 doc.cancel_group(group);
-                doc.set_settings(before);
                 return Err(stop);
             }
         }
     }
-    doc.end_group(group);
-    // 2. The value lists, relations and address data: project settings, no undo step.
-    settings = doc.settings().clone();
     let mut changed_settings = !out.domains.is_empty();
-    settings.domains = domains;
-    let mut relations = settings.relations.clone();
+    let mut relations = doc.settings().relations.clone();
     for r in &p.relations {
         let (Some(parent), Some(child)) = (
             layer_of.get(r.parent.as_str()),
@@ -348,27 +344,24 @@ pub(crate) fn write(
             ));
             out.relations.clear();
         } else {
-            settings.relations = relations;
-            changed_settings = true;
+            changed_settings |= doc.set_relations(relations, STEP);
         }
     }
     if let Some(locator) = locator_of(p, &layer_of)
-        && !settings
+        && !doc
+            .settings()
             .address_locators
             .iter()
             .any(|l| l.id == locator.id || l.name == locator.name)
     {
-        let mut all = settings.address_locators.clone();
+        let mut all = doc.settings().address_locators.clone();
         all.push(locator);
         if kentos_commands::address_locators_problem(&all).is_none() {
-            settings.address_locators = all;
             out.address = true;
-            changed_settings = true;
+            changed_settings |= doc.set_address_locators(all, STEP);
         }
     }
-    if changed_settings {
-        doc.set_settings(settings);
-    }
+    doc.end_group(group);
     out.changed = changed_settings || !out.layers.is_empty() || !out.fields.is_empty();
     out.revision = doc.revision().to_string();
     Ok((out, warnings))

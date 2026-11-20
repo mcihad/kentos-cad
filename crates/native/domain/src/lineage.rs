@@ -47,3 +47,35 @@ impl Document {
         })
     }
 }
+
+impl Document {
+    /// Gives the project the relations `next` as one change named `label` (into the open transaction or group, else an
+    /// undo step of its own; GIS-051): undo takes them back with the layers of the same step. Whether anything changed.
+    pub fn set_relations(&mut self, next: Vec<kentos_contracts::ProjectRelation>, label: &str) -> bool {
+        let before = self.settings.relations.clone();
+        if before == next {
+            return false;
+        }
+        let _ = self.transact(label, |doc| -> Result<(), ()> {
+            doc.record(vec![Op::Gis(GisOp::Relations { before: Arc::new(before), after: Arc::new(next) })], label);
+            Ok(())
+        });
+        true
+    }
+
+    /// Gives the project the address locators `next`, as [`Document::set_relations`] gives relations.
+    pub fn set_address_locators(&mut self, next: Vec<kentos_contracts::AddressLocator>, label: &str) -> bool {
+        let before = self.settings.address_locators.clone();
+        if before == next {
+            return false;
+        }
+        let _ = self.transact(label, |doc| -> Result<(), ()> {
+            doc.record(
+                vec![Op::Gis(GisOp::AddressLocators { before: Arc::new(before), after: Arc::new(next) })],
+                label,
+            );
+            Ok(())
+        });
+        true
+    }
+}

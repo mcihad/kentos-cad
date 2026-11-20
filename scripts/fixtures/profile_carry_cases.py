@@ -210,9 +210,9 @@ def written(d, inp, old, new, field="Kod", undo=True):
               "expect": {"ids": ids, "fields": changed, "layers": after["layers"], "settings": {"domains": domains},
                          "revision": "changed", "canUndo": True}}]
     if undo:
-        # The value lists the writer adds stay after an undo, as cad.profiles.apply's do (profile_cases.apply_case).
+        # The value lists the writer adds go with the undo, as cad.profiles.apply's do (GIS-051, docs/adr/1108).
         steps.append({"op": "undo", "returns": STEP, "expect": {"ids": ids, "fields": before, "layers": d["layers"],
-                                                                 "settings": {"domains": domains}}})
+                                                                 "settings": {"domains": d["settings"].get("domains")}}})
     return steps, done
 
 

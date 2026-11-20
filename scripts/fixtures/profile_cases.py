@@ -877,9 +877,11 @@ def apply_case(name, doc, input_, links=(), plan=True, undo=True, extra_steps=()
         steps.append(step("plan", input_, completed(out, warnings), {"revision": "same", "layers": before["layers"]}))
     expect = {"layers": after["layers"], "settings": {k: after["settings"].get(k) for k in ("domains", "relations", "addressLocators")}}
     steps.append(step("execute", input_, completed(out, warnings), expect))
-    if undo and (out["layers"] or out["fields"]):
+    # GIS-051 (docs/adr/1108): the value lists, relations and address locator are in the step with the layers, so
+    # undo gives the project's own settings back with them.
+    if undo and out["changed"]:
         steps.append(step("undo", returns=STEP_NAME, expect={"layers": before["layers"],
-                                                             "settings": expect["settings"]}))
+                                                             "settings": {k: before["settings"].get(k) for k in ("domains", "relations", "addressLocators")}}))
     return {"name": name, "setup": doc, "steps": steps}, after, out
 
 

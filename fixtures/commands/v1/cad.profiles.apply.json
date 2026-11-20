@@ -3595,64 +3595,6 @@
                       "label": "Kamu"
                     }
                   ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
                 }
               ],
               "relations": [
@@ -3662,46 +3604,9 @@
                   "parent": "parsel",
                   "child": "bina",
                   "field": "Parsel"
-                },
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "bina",
-                  "child": "kapi",
-                  "field": "Bina"
                 }
               ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "kapi",
-                    "street": "Yol",
-                    "door": "KapiNo",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "yol",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "mahalle",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "addressLocators": null
             }
           }
         }
@@ -7252,167 +7157,9 @@
               }
             ],
             "settings": {
-              "domains": [
-                {
-                  "id": "parsel-nitelik",
-                  "name": "Parsel niteliği",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "arsa",
-                      "label": "Arsa"
-                    },
-                    {
-                      "code": "tarla",
-                      "label": "Tarla"
-                    },
-                    {
-                      "code": "bahce",
-                      "label": "Bahçe"
-                    },
-                    {
-                      "code": "bina",
-                      "label": "Kargir bina ve arsası"
-                    },
-                    {
-                      "code": "diger",
-                      "label": "Diğer"
-                    }
-                  ]
-                },
-                {
-                  "id": "bina-kullanim",
-                  "name": "Binanın kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut ve ticaret"
-                    },
-                    {
-                      "code": "kamu",
-                      "label": "Kamu"
-                    },
-                    {
-                      "code": "sanayi",
-                      "label": "Sanayi"
-                    }
-                  ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
-                }
-              ],
-              "relations": [
-                {
-                  "id": "parsel-bina",
-                  "name": "Parselin binaları",
-                  "parent": "$layer:5",
-                  "child": "$layer:7",
-                  "field": "Parsel"
-                },
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "$layer:7",
-                  "child": "$layer:11",
-                  "field": "Bina"
-                }
-              ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "$layer:11",
-                    "street": "Yol",
-                    "door": "KapiNo",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "$layer:9",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "$layer:2",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "domains": null,
+              "relations": null,
+              "addressLocators": null
             }
           }
         }
@@ -10039,64 +9786,6 @@
                       "label": "Kamu"
                     }
                   ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
                 }
               ],
               "relations": [
@@ -10106,46 +9795,9 @@
                   "parent": "parsel",
                   "child": "bina",
                   "field": "Parsel"
-                },
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "bina",
-                  "child": "kapi",
-                  "field": "Bina"
                 }
               ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "kapi",
-                    "street": "Yol",
-                    "door": "KapiNo",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "yol",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "mahalle",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "addressLocators": null
             }
           }
         }
@@ -12589,120 +12241,7 @@
               }
             ],
             "settings": {
-              "domains": [
-                {
-                  "id": "parsel-nitelik",
-                  "name": "Parsel niteliği",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "arsa",
-                      "label": "Arsa"
-                    },
-                    {
-                      "code": "tarla",
-                      "label": "Tarla"
-                    },
-                    {
-                      "code": "bahce",
-                      "label": "Bahçe"
-                    },
-                    {
-                      "code": "bina",
-                      "label": "Kargir bina ve arsası"
-                    },
-                    {
-                      "code": "diger",
-                      "label": "Diğer"
-                    }
-                  ]
-                },
-                {
-                  "id": "bina-kullanim",
-                  "name": "Binanın kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut ve ticaret"
-                    },
-                    {
-                      "code": "kamu",
-                      "label": "Kamu"
-                    },
-                    {
-                      "code": "sanayi",
-                      "label": "Sanayi"
-                    }
-                  ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
-                }
-              ],
+              "domains": null,
               "relations": [
                 {
                   "id": "parsel-bina",
@@ -12710,46 +12249,9 @@
                   "parent": "parsel",
                   "child": "bina",
                   "field": "Parsel"
-                },
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "bina",
-                  "child": "kapi",
-                  "field": "Bina"
                 }
               ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "kapi",
-                    "street": "Yol",
-                    "door": "KapiNo",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "yol",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "mahalle",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "addressLocators": null
             }
           }
         }
@@ -15274,64 +14776,6 @@
                       "label": "Kamu"
                     }
                   ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
                 }
               ],
               "relations": [
@@ -15341,46 +14785,9 @@
                   "parent": "parsel",
                   "child": "bina",
                   "field": "Parsel"
-                },
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "bina",
-                  "child": "kapi",
-                  "field": "Bina"
                 }
               ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "kapi",
-                    "street": "Yol",
-                    "door": "KapiNo",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "yol",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "mahalle",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "addressLocators": null
             }
           }
         }
@@ -16165,160 +15572,9 @@
               }
             ],
             "settings": {
-              "domains": [
-                {
-                  "id": "parsel-nitelik",
-                  "name": "Parsel niteliği",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "arsa",
-                      "label": "Arsa"
-                    },
-                    {
-                      "code": "tarla",
-                      "label": "Tarla"
-                    },
-                    {
-                      "code": "bahce",
-                      "label": "Bahçe"
-                    },
-                    {
-                      "code": "bina",
-                      "label": "Kargir bina ve arsası"
-                    },
-                    {
-                      "code": "diger",
-                      "label": "Diğer"
-                    }
-                  ]
-                },
-                {
-                  "id": "bina-kullanim",
-                  "name": "Binanın kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut ve ticaret"
-                    },
-                    {
-                      "code": "kamu",
-                      "label": "Kamu"
-                    },
-                    {
-                      "code": "sanayi",
-                      "label": "Sanayi"
-                    }
-                  ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
-                }
-              ],
-              "relations": [
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "$layer:4",
-                  "child": "$layer:8",
-                  "field": "Bina"
-                }
-              ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "$layer:8",
-                    "street": "Yol",
-                    "door": "KapiNo",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "$layer:6",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "$layer:2",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "domains": null,
+              "relations": null,
+              "addressLocators": null
             }
           }
         }
@@ -16732,23 +15988,7 @@
               }
             ],
             "settings": {
-              "domains": [
-                {
-                  "id": "agac-tur",
-                  "name": "Ağaç türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "cinar",
-                      "label": "Çınar"
-                    },
-                    {
-                      "code": "mese",
-                      "label": "Meşe"
-                    }
-                  ]
-                }
-              ],
+              "domains": null,
               "relations": null,
               "addressLocators": null
             }
@@ -19369,64 +18609,6 @@
                     {
                       "code": "kamu",
                       "label": "Kamu"
-                    }
-                  ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
                     }
                   ]
                 }
@@ -41837,120 +41019,7 @@
               }
             ],
             "settings": {
-              "domains": [
-                {
-                  "id": "parsel-nitelik",
-                  "name": "Parsel niteliği",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "arsa",
-                      "label": "Arsa"
-                    },
-                    {
-                      "code": "tarla",
-                      "label": "Tarla"
-                    },
-                    {
-                      "code": "bahce",
-                      "label": "Bahçe"
-                    },
-                    {
-                      "code": "bina",
-                      "label": "Kargir bina ve arsası"
-                    },
-                    {
-                      "code": "diger",
-                      "label": "Diğer"
-                    }
-                  ]
-                },
-                {
-                  "id": "bina-kullanim",
-                  "name": "Binanın kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut ve ticaret"
-                    },
-                    {
-                      "code": "kamu",
-                      "label": "Kamu"
-                    },
-                    {
-                      "code": "sanayi",
-                      "label": "Sanayi"
-                    }
-                  ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
-                }
-              ],
+              "domains": null,
               "relations": [
                 {
                   "id": "parsel-bina",
@@ -41958,46 +41027,9 @@
                   "parent": "parsel",
                   "child": "bina",
                   "field": "PARSEL_REF"
-                },
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "bina",
-                  "child": "kapi",
-                  "field": "YAPI_REF"
                 }
               ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "kapi",
-                    "street": "CADDE",
-                    "door": "KAPI",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "yol",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "mahalle",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "addressLocators": null
             }
           }
         }
@@ -43125,167 +42157,9 @@
               }
             ],
             "settings": {
-              "domains": [
-                {
-                  "id": "parsel-nitelik",
-                  "name": "Parsel niteliği",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "arsa",
-                      "label": "Arsa"
-                    },
-                    {
-                      "code": "tarla",
-                      "label": "Tarla"
-                    },
-                    {
-                      "code": "bahce",
-                      "label": "Bahçe"
-                    },
-                    {
-                      "code": "bina",
-                      "label": "Kargir bina ve arsası"
-                    },
-                    {
-                      "code": "diger",
-                      "label": "Diğer"
-                    }
-                  ]
-                },
-                {
-                  "id": "bina-kullanim",
-                  "name": "Binanın kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut ve ticaret"
-                    },
-                    {
-                      "code": "kamu",
-                      "label": "Kamu"
-                    },
-                    {
-                      "code": "sanayi",
-                      "label": "Sanayi"
-                    }
-                  ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
-                }
-              ],
-              "relations": [
-                {
-                  "id": "parsel-bina",
-                  "name": "Parselin binaları",
-                  "parent": "$layer:5",
-                  "child": "$layer:7",
-                  "field": "Parsel"
-                },
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "$layer:7",
-                  "child": "$layer:11",
-                  "field": "Bina"
-                }
-              ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "$layer:11",
-                    "street": "CADDE",
-                    "door": "KAPI",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "$layer:9",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "$layer:2",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "domains": null,
+              "relations": null,
+              "addressLocators": null
             }
           }
         }
@@ -45954,64 +44828,6 @@
                       "label": "Kamu"
                     }
                   ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
                 }
               ],
               "relations": [
@@ -46021,46 +44837,9 @@
                   "parent": "parsel",
                   "child": "bina",
                   "field": "Parsel"
-                },
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "bina",
-                  "child": "kapi",
-                  "field": "Bina"
                 }
               ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "kapi",
-                    "street": "Yol",
-                    "door": "KapiNo",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "yol",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "mahalle",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "addressLocators": null
             }
           }
         }
@@ -51641,120 +50420,7 @@
               }
             ],
             "settings": {
-              "domains": [
-                {
-                  "id": "parsel-nitelik",
-                  "name": "Parsel niteliği",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "arsa",
-                      "label": "Arsa"
-                    },
-                    {
-                      "code": "tarla",
-                      "label": "Tarla"
-                    },
-                    {
-                      "code": "bahce",
-                      "label": "Bahçe"
-                    },
-                    {
-                      "code": "bina",
-                      "label": "Kargir bina ve arsası"
-                    },
-                    {
-                      "code": "diger",
-                      "label": "Diğer"
-                    }
-                  ]
-                },
-                {
-                  "id": "bina-kullanim",
-                  "name": "Binanın kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut ve ticaret"
-                    },
-                    {
-                      "code": "kamu",
-                      "label": "Kamu"
-                    },
-                    {
-                      "code": "sanayi",
-                      "label": "Sanayi"
-                    }
-                  ]
-                },
-                {
-                  "id": "yol-tur",
-                  "name": "Yolun türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "bulvar",
-                      "label": "Bulvar"
-                    },
-                    {
-                      "code": "cadde",
-                      "label": "Cadde"
-                    },
-                    {
-                      "code": "sokak",
-                      "label": "Sokak"
-                    },
-                    {
-                      "code": "yaya",
-                      "label": "Yaya yolu"
-                    }
-                  ]
-                },
-                {
-                  "id": "imar-kullanim",
-                  "name": "Planlı alan kullanımı",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "konut",
-                      "label": "Konut alanı"
-                    },
-                    {
-                      "code": "ticaret",
-                      "label": "Ticaret alanı"
-                    },
-                    {
-                      "code": "karma",
-                      "label": "Konut + ticaret alanı"
-                    },
-                    {
-                      "code": "yesil",
-                      "label": "Park ve yeşil alan"
-                    },
-                    {
-                      "code": "egitim",
-                      "label": "Eğitim tesisi alanı"
-                    },
-                    {
-                      "code": "saglik",
-                      "label": "Sağlık tesisi alanı"
-                    },
-                    {
-                      "code": "yol",
-                      "label": "Yol"
-                    }
-                  ]
-                }
-              ],
+              "domains": null,
               "relations": [
                 {
                   "id": "parsel-bina",
@@ -51762,46 +50428,9 @@
                   "parent": "parsel",
                   "child": "bina",
                   "field": "PARSEL_REF"
-                },
-                {
-                  "id": "bina-adres",
-                  "name": "Binanın adresleri",
-                  "parent": "bina",
-                  "child": "kapi",
-                  "field": "YAPI_REF"
                 }
               ],
-              "addressLocators": [
-                {
-                  "id": "profil-tucbs-temel",
-                  "name": "TUCBS temel belediye profili",
-                  "doors": {
-                    "layer": "kapi",
-                    "street": "CADDE",
-                    "door": "KAPI",
-                    "neighbourhood": "Mahalle",
-                    "district": "Ilce",
-                    "province": "Il",
-                    "postcode": "PostaKodu",
-                    "code": "AdresKodu"
-                  },
-                  "streets": {
-                    "layer": "yol",
-                    "name": "Ad",
-                    "neighbourhood": "Mahalle"
-                  },
-                  "areas": [
-                    {
-                      "layer": "mahalle",
-                      "level": "neighbourhood",
-                      "name": "Ad",
-                      "district": "Ilce"
-                    }
-                  ],
-                  "minScore": 70,
-                  "reach": 50.0
-                }
-              ]
+              "addressLocators": null
             }
           }
         }
@@ -52064,23 +50693,7 @@
               }
             ],
             "settings": {
-              "domains": [
-                {
-                  "id": "agac-tur",
-                  "name": "Ağaç türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "cinar",
-                      "label": "Çınar"
-                    },
-                    {
-                      "code": "mese",
-                      "label": "Meşe"
-                    }
-                  ]
-                }
-              ],
+              "domains": null,
               "relations": null,
               "addressLocators": null
             }
@@ -52354,23 +50967,7 @@
               }
             ],
             "settings": {
-              "domains": [
-                {
-                  "id": "agac-tur",
-                  "name": "Ağaç türü",
-                  "kind": "text",
-                  "values": [
-                    {
-                      "code": "cinar",
-                      "label": "Çınar"
-                    },
-                    {
-                      "code": "mese",
-                      "label": "Meşe"
-                    }
-                  ]
-                }
-              ],
+              "domains": null,
               "relations": null,
               "addressLocators": null
             }

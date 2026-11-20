@@ -139,3 +139,35 @@ fn the_folder_needs_the_drawings_file() {
         "the drawing is as it was"
     );
 }
+
+/// GIS-051 (docs/adr/1108): a drawing with a few working layers takes the default municipal profile; one undo takes
+/// its layers, value lists, relations and address locator back together, so no relation or locator names a layer
+/// that is gone; redo gives them all again, every reference on a layer the drawing has.
+#[test]
+fn one_undo_takes_the_profile_s_settings_back_with_its_layers() {
+    let mut app = crate::files_testing::app_with_drawing();
+    let _ = app.update(Message::Run("profile.window"));
+    let settings = |app: &App| app.document.as_ref().expect("open").model.settings().clone();
+    let before = settings(&app);
+    let _ = app.update(Message::Gis(gis::Event::DataProfile(Event::Apply)));
+    let after = settings(&app);
+    assert!(after.relations.len() > before.relations.len() || after.address_locators.len() > before.address_locators.len(), "the profile wrote settings");
+    let doc = app.document.as_mut().expect("open");
+    assert!(doc.model.undo().is_some());
+    let undone = settings(&app);
+    assert_eq!(undone.relations, before.relations, "relations back");
+    assert_eq!(undone.address_locators, before.address_locators, "locators back");
+    assert_eq!(undone.domains, before.domains, "value lists back");
+    let layers = |app: &App| app.document.as_ref().expect("open").model.layers().clone();
+    let held = |app: &App| {
+        let l = layers(app);
+        let s = settings(app);
+        s.relations.iter().all(|r| l.get(&r.parent).is_some() && l.get(&r.child).is_some())
+    };
+    assert!(held(&app));
+    let doc = app.document.as_mut().expect("open");
+    assert!(doc.model.redo().is_some());
+    assert_eq!(settings(&app).relations, after.relations);
+    assert_eq!(settings(&app).address_locators, after.address_locators);
+    assert!(held(&app), "every relation on a layer the drawing has");
+}

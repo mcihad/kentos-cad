@@ -1,7 +1,7 @@
 //! Veri profili (docs/adr/0541, 0558; plan/gis.md CBS-34): a window with a data profile, where the drawing's data departs
 //! from it (`cad.profiles.check`, read again after every write) and what Uygula would add (`cad.profiles.apply`'s plan).
-//! Uygula writes it: the layers and fields as one undo step “Veri profili”, the value lists, relations and address data
-//! as project settings; the findings are read again and the window stays. A finding's row selects its objects.
+//! Uygula writes it: the layers and fields, the value lists, relations and address data as one undo step “Veri profili”
+//! (GIS-051); the findings are read again and the window stays. A finding's row selects its objects.
 //!
 //! The profile is one of KentOS's or of the project's own: those the drawing carries inside its file (docs/adr/0735) and
 //! the files of the `profiller` folder beside it. İçe aktar… brings a profile or a mapping JSON where Nereye says, into
@@ -1183,36 +1183,9 @@ fn planned_words(p: &ProfilesApplied) -> String {
     if p.address {
         parts.push("adres verisi".to_owned());
     }
-    let undo = match kept_words(p) {
-        Some(kept) => format!(
-            "Katmanlar ve alanları tek adımda geri alınır; {kept} proje ayarına yazılır ve geri almada kalır (Değer listeleri, İlişkiler ve Adres verisi pencerelerinden kaldırılır)."
-        ),
-        None => "Katmanlar ve alanları tek adımda geri alınır.".to_owned(),
-    };
+    // GIS-051: the value lists, relations and address data go in the same step as the layers.
+    let undo = "Hepsi tek adımda geri alınır.";
     format!("Uygula: {}. {undo}", parts.join(", "))
-}
-
-/// What Uygula writes to the project settings, which its undo step leaves: “4 değer listesi, 2 ilişki ve adres
-/// verisi”; none when it writes none.
-fn kept_words(p: &ProfilesApplied) -> Option<String> {
-    let mut kept = Vec::new();
-    if !p.domains.is_empty() {
-        kept.push(format!("{} değer listesi", p.domains.len()));
-    }
-    if !p.relations.is_empty() {
-        kept.push(format!("{} ilişki", p.relations.len()));
-    }
-    if p.address {
-        kept.push("adres verisi".to_owned());
-    }
-    match kept.len() {
-        0 => None,
-        1 => kept.pop(),
-        _ => {
-            let last = kept.pop().unwrap_or_default();
-            Some(format!("{} ve {last}", kept.join(", ")))
-        }
-    }
 }
 
 /// What the write did, in a sentence.
@@ -1224,16 +1197,17 @@ fn applied_words(p: &ProfilesApplied) -> String {
     if !p.fields.is_empty() {
         parts.push(format!("{} alan eklendi", p.fields.len()));
     }
-    match kept_words(p) {
-        Some(kept) => {
-            parts.push(format!("{kept} proje ayarına yazıldı"));
-            format!(
-                "Veri profili uygulandı: {}. Geri al katman ve alanları geri alır; {kept} proje ayarında kalır.",
-                parts.join(", ")
-            )
-        }
-        None => format!("Veri profili uygulandı: {}.", parts.join(", ")),
+    if !p.domains.is_empty() {
+        parts.push(format!("{} değer listesi", p.domains.len()));
     }
+    if !p.relations.is_empty() {
+        parts.push(format!("{} ilişki", p.relations.len()));
+    }
+    if p.address {
+        parts.push("adres verisi".to_owned());
+    }
+    // GIS-051: one step takes all of it back.
+    format!("Veri profili uygulandı: {}. Geri al hepsini tek adımda geri alır.", parts.join(", "))
 }
 
 /// What a file that came in is, in a sentence.
@@ -1305,9 +1279,9 @@ fn migrated_words(p: &ProfilesMigrated) -> String {
 mod undo_words_tests {
     use super::*;
 
-    /// UR-073: Uygula's plan and its result say what its undo step leaves in the project settings.
+    /// GIS-051: Uygula's plan and its result say one step takes all of it back, the settings too.
     #[test]
-    fn the_settings_undo_leaves_are_said() {
+    fn one_step_takes_it_all_back() {
         let p = ProfilesApplied {
             layers: vec!["a".into(), "b".into()],
             domains: vec!["d1".into(), "d2".into(), "d3".into(), "d4".into()],
@@ -1316,11 +1290,7 @@ mod undo_words_tests {
             changed: true,
             ..ProfilesApplied::default()
         };
-        assert_eq!(kept_words(&p).as_deref(), Some("4 değer listesi, 2 ilişki ve adres verisi"));
-        assert!(planned_words(&p).ends_with("4 değer listesi, 2 ilişki ve adres verisi proje ayarına yazılır ve geri almada kalır (Değer listeleri, İlişkiler ve Adres verisi pencerelerinden kaldırılır)."));
-        assert!(applied_words(&p).contains("Geri al katman ve alanları geri alır; 4 değer listesi, 2 ilişki ve adres verisi proje ayarında kalır."));
-        let only = ProfilesApplied { layers: vec!["a".into()], changed: true, ..ProfilesApplied::default() };
-        assert_eq!(kept_words(&only), None);
-        assert!(planned_words(&only).ends_with("Katmanlar ve alanları tek adımda geri alınır."));
+        assert!(planned_words(&p).ends_with("4 değer listesi, 2 ilişki, adres verisi. Hepsi tek adımda geri alınır."), "{}", planned_words(&p));
+        assert!(applied_words(&p).ends_with("4 değer listesi, 2 ilişki, adres verisi. Geri al hepsini tek adımda geri alır."), "{}", applied_words(&p));
     }
 }
