@@ -10,7 +10,7 @@ use kentos_ui::widget::Dialog as Frame;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
-use crate::road_dialog::{col, num, sheet};
+use crate::road_dialog::{Col, col, num, sheet_chosen};
 use crate::traces::Control;
 
 pub const TITLE: &str = "Açılış raporu";
@@ -42,6 +42,8 @@ impl Fate {
 pub struct OpenReport {
     pub file: String,
     pub items: Vec<(Fate, ReportItem)>,
+    /// The row pressed: its whole words under the table, to read and copy (UR2-024).
+    pub chosen: Option<usize>,
 }
 
 impl OpenReport {
@@ -62,7 +64,9 @@ impl OpenReport {
             }))
             .collect();
         items.sort_by_key(|(fate, _)| *fate);
-        Self { file, items }
+        // The first row chosen: what was left out is read at once, whole.
+        let chosen = (!items.is_empty()).then_some(0);
+        Self { file, items, chosen }
     }
 
     /// Whether anything was left out or changed: the window comes up by itself.
@@ -82,6 +86,10 @@ impl OpenReport {
 #[derive(Clone, Debug)]
 pub enum Event {
     Close,
+    /// A row pressed.
+    Choose(usize),
+    /// The chosen row's words to the clipboard.
+    Copy,
 }
 
 fn msg(e: Event) -> Message {
@@ -106,14 +114,28 @@ impl App {
         }
     }
 
-    pub(crate) fn open_report_event(&mut self, e: Event) {
+    pub(crate) fn open_report_event(&mut self, e: Event) -> iced::Task<Message> {
         match e {
+            Event::Copy => {
+                let words = self
+                    .open_report()
+                    .and_then(|r| r.chosen.and_then(|i| r.items.get(i)))
+                    .map(|(_, item)| format!("{}: {}", item.what, item.reason));
+                return words.map_or_else(iced::Task::none, iced::clipboard::write);
+            }
             Event::Close => {
                 if self.dialog == Some(Dialog::OpenReport) {
                     self.dialog = None;
                 }
             }
+            Event::Choose(i) => {
+                let session = self.document.as_ref().map(|d| d.session);
+                if let Some(r) = session.and_then(|s| self.open_reports.get_mut(&s)) {
+                    r.chosen = Some(i);
+                }
+            }
         }
+        iced::Task::none()
     }
 
     pub(crate) fn open_report_view(&self) -> Element<'_, Message> {
@@ -154,18 +176,33 @@ impl App {
             }
             None => lines.push(words::text_line(Kind::Info, "Açık çizimin açılış raporu yok.")),
         }
-        let table = sheet(
+        // The reason takes what the window leaves (UR2-024: cut with 500 px free beside it); the chosen row's item and
+        // reason are written whole under the table, selectable.
+        let chosen = self.open_report().and_then(|r| r.chosen.and_then(|i| r.items.get(i).map(|(_, item)| (i, item))));
+        let table = sheet_chosen(
             vec![
                 col("Durum", 100.0),
-                col("Öğe", 150.0),
+                col("Öğe", 190.0),
                 num("Adet", 60.0),
-                col("Açıklama", 440.0),
+                Col { title: "Açıklama", width: None, number: false },
             ],
             rows,
             "Raporlanacak bir şey yok.",
             320.0,
+            chosen.map(|(i, _)| i),
+            |i| msg(Event::Choose(i)),
         );
-        let body = Column::new().spacing(12).push(words::summary(lines)).push(table);
+        let mut body = Column::new().spacing(12).push(words::summary(lines)).push(table);
+        if let Some((_, item)) = chosen {
+            body = body.push(
+                iced::widget::row![
+                    kentos_ui::label::body(format!("{}: {}", item.what, item.reason)).width(iced::Fill),
+                    words::ghost("Kopyala", Some(msg(Event::Copy))),
+                ]
+                .spacing(12)
+                .align_y(iced::Center),
+            );
+        }
         Frame::new(TITLE)
             .push(body)
             .action(words::primary(CLOSE, Some(msg(Event::Close))))

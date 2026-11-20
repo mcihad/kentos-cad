@@ -96,3 +96,28 @@ fn open_report_screens() {
         println!("{}", file.display());
     }
 }
+
+/// UR2-024: the NCZ sheet's report: the row left out is chosen at once and its item and reason are written whole under
+/// the table (a reason the column cut is read there), with Kopyala; another row pressed takes its place.
+#[test]
+fn the_chosen_rows_reason_is_written_whole() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/formats/v1/ncz/08-pafta.ncz");
+    let mut app = opened(path);
+    let report = app.open_report().expect("a report").clone();
+    assert_eq!(report.chosen, Some(0), "the worst row chosen");
+    let (_, first) = &report.items[0];
+    let whole = format!("{}: {}", first.what, first.reason);
+    let size = iced::Size::new(1440.0, 900.0);
+    let mut snapshot = crate::files_testing::offscreen(size);
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let _ = app.update(Message::WindowResized(size));
+    snapshot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut snapshot, &app, "ur2-024", "ncz");
+    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, &whole).is_empty(), "{whole}");
+    if report.items.len() > 1 {
+        let _ = app.update(Message::OpenReport(Event::Choose(1)));
+        assert_eq!(app.open_report().and_then(|r| r.chosen), Some(1));
+    }
+}
