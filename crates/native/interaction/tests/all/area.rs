@@ -264,6 +264,26 @@ fn objects_on_a_locked_layer_are_left_out() {
     );
 }
 
+/// UR2-013: a second click in the same region does not write a second, unseen copy: the area there is selected and said;
+/// with another layer active the copy is drawn on purpose.
+#[test]
+fn a_second_click_in_the_same_region_selects_the_area_already_there() {
+    let mut b = bench();
+    b.start("boundary");
+    b.click(-23.0, -10.0);
+    let first = b.selected();
+    let count = b.doc.len();
+    b.click(-23.0, -10.0);
+    assert_eq!(b.doc.len(), count, "no second area");
+    assert_eq!(b.selected(), first, "the area there is selected");
+    let said = b.last_text().unwrap_or_default().to_owned();
+    assert!(said.starts_with("Bu bölge “Çizim” katmanında zaten bir alan"), "{said}");
+    // Another layer active: a copy there, on purpose.
+    let other = ["parsel", "bina", "0"].into_iter().find(|id| b.doc.set_active_layer(id)).expect("another layer");
+    b.click(-23.0, -10.0);
+    assert_eq!(b.doc.len(), count + 1, "a copy on {other}");
+}
+
 #[test]
 fn a_click_inside_line_work_makes_an_area_on_the_active_layer() {
     let mut b = bench();

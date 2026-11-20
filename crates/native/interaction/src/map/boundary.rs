@@ -1,7 +1,6 @@
 //! İçine tıklayarak alan: the web's `BoundaryTool` (`apps/web/src/tools/areaTools.ts`),
 //! step for step (docs/adr/0065). A click inside a region the visible line
-//! work closes makes it an area on the active layer (AutoCAD's BOUNDARY,
-//! Netcad's “alan oluştur”); closed groups inside it are holes unless Adalar
+//! work closes makes it an area on the active layer; closed groups inside it are holes unless Adalar
 //! is off. The boundary set is the view's visible objects, or one layer's,
 //! picked by an object of it (Sınır katmanı, K). The product command
 //! `cad.entities.boundary` does the work (docs/adr/0254 §6): the region
@@ -96,6 +95,22 @@ impl Boundary {
             );
             return;
         };
+        // The same region already an area on the target layer (UR2-013: a second click wrote a second, unseen copy):
+        // it is selected and said; a copy is drawn on purpose with another layer active.
+        let layer = cx.doc.layers().active().to_owned();
+        if let Some(slot) = same_area(cx.doc, &layer, &area) {
+            cx.selection.set([slot]);
+            let name = cx.doc.layers().get(&layer).map_or_else(|| layer.clone(), |n| n.name.clone());
+            cx.say(
+                Level::Info,
+                format!(
+                    "Bu bölge “{name}” katmanında zaten bir alan (#{}); yeni alan yazılmadı, var olan seçildi. Kopya \
+                     için başka bir katmanı etkin yapın.",
+                    slot.0
+                ),
+            );
+            return;
+        }
         let input = self.request(p, cx);
         let result = {
             let mut ecx = ExecutionContext::with_store(cx.doc, cx.spatial.store());
@@ -114,6 +129,36 @@ impl Boundary {
         let size = cx.format().area(net_area(&area));
         cx.say(Level::Success, format!("Alan oluşturuldu: {size}{holes}."));
     }
+}
+
+/// An area on `layer` bounded as `area` is: its outer ring and holes the same corners, from any start and either way
+/// round, straight edges alike (a bulge's region is never taken for a straight one).
+fn same_area(doc: &kentos_domain::Document, layer: &str, area: &Area) -> Option<Slot> {
+    fn same_ring(a: &[kentos_commands::Vec2], b: &[Vec2]) -> bool {
+        let n = a.len();
+        if n != b.len() || n < 3 {
+            return false;
+        }
+        let eq = |p: &kentos_commands::Vec2, q: &Vec2| p.x == q.x && p.y == q.y;
+        (0..n).any(|s| (0..n).all(|i| eq(&a[(s + i) % n], &b[i])) || (0..n).all(|i| eq(&a[(s + n - i) % n], &b[i])))
+    }
+    let straight = |r: &kentos_geometry_core::geom::arrangement::Ring| r.bulges.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0));
+    if !straight(&area.outer) || !area.holes.iter().all(straight) {
+        return None;
+    }
+    doc.layer_slots(layer).find_map(|(_, slot)| match doc.get(slot)? {
+        kentos_commands::Entity::Polygon(p)
+            if p.bulges.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0))
+                && same_ring(&p.pts, &area.outer.pts)
+                && p.holes.as_ref().map_or(0, Vec::len) == area.holes.len()
+                && area.holes.iter().all(|h| {
+                    p.holes.iter().flatten().any(|ph| ph.bulges.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0)) && same_ring(&ph.pts, &h.pts))
+                }) =>
+        {
+            Some(slot)
+        }
+        _ => None,
+    })
 }
 
 impl Tool for Boundary {
