@@ -290,8 +290,15 @@ impl Form {
         {
             self.layer = Some(layers.active().to_owned());
         }
+        // Nothing selected (GIS-038): the source points' layer, the objects measured with them; Tümü only without one.
         if self.scope == Scope::Selection && selected == 0 {
-            self.scope = Scope::All;
+            match (&self.method, &self.source) {
+                (Method::Points, Some(source)) => {
+                    self.scope = Scope::Layer;
+                    self.layer = Some(source.clone());
+                }
+                _ => self.scope = Scope::All,
+            }
         }
         self.status = None;
         self.solve();
@@ -381,13 +388,59 @@ impl Form {
         best
     }
 
+    /// The target points' layer Tümü leaves where it is (GIS-038): with control points, the layer they are fitted to,
+    /// when it is not the source's.
+    pub(super) fn held_layer(&self) -> Option<&str> {
+        (self.method == Method::Points)
+            .then_some(self.target.as_deref())
+            .flatten()
+            .filter(|t| self.source.as_deref() != Some(*t))
+    }
+
+    /// How many objects Tümü takes: the drawing's, less the target layer's.
+    pub(super) fn all_count(&self, model: &Model) -> usize {
+        model.len() - self.held_layer().map_or(0, |l| model.count(l))
+    }
+
     /// Whether Uygula has objects to take (without listing them: Tümü of a large drawing).
     fn has_targets(&self, model: &Model, selected: usize) -> bool {
         match self.scope {
             Scope::Selection => selected > 0,
             Scope::Layer => self.layer.as_deref().is_some_and(|l| model.count(l) > 0),
-            Scope::All => !model.is_empty(),
+            Scope::All => self.all_count(model) > 0,
         }
+    }
+
+    /// The layers Uygula moves objects of, with how many, in the tree's order; and whether the target points' layer
+    /// is among them (a layer or a selection asked so on purpose).
+    pub(super) fn reach(&self, model: &Model, selection: &[Slot]) -> (Vec<(String, usize)>, bool) {
+        let layers = model.layers();
+        let counts: Vec<(String, usize)> = match (self.scope, self.layer.as_deref()) {
+            (Scope::Layer, Some(l)) => vec![(l.to_owned(), model.count(l))],
+            (Scope::Layer, None) => Vec::new(),
+            (Scope::All, _) => layers
+                .leaves()
+                .into_iter()
+                .map(|n| (n.id.clone(), model.count(&n.id)))
+                .filter(|(id, n)| *n > 0 && Some(id.as_str()) != self.held_layer())
+                .collect(),
+            (Scope::Selection, _) => {
+                let mut by: Vec<(String, usize)> = Vec::new();
+                for e in selection.iter().filter_map(|s| model.get(*s)) {
+                    let id = &e.base().layer_id;
+                    match by.iter_mut().find(|(l, _)| l == id) {
+                        Some((_, n)) => *n += 1,
+                        None => by.push((id.clone(), 1)),
+                    }
+                }
+                by
+            }
+        };
+        let target = (self.method == Method::Points)
+            .then_some(self.target.as_deref())
+            .flatten()
+            .is_some_and(|t| counts.iter().any(|(l, n)| l == t && *n > 0));
+        (counts, target)
     }
 
     /// The objects Uygula takes by their persistent ids (the web's `targets`):
@@ -403,6 +456,7 @@ impl Form {
             (Scope::Layer, None) => Vec::new(),
             (Scope::All, _) => model
                 .entities()
+                .filter(|e| Some(e.base().layer_id.as_str()) != self.held_layer())
                 .filter_map(|e| uid(Slot(e.base().id)))
                 .collect(),
         }

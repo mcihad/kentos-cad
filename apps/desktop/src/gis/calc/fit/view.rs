@@ -7,6 +7,7 @@ use iced::widget::tooltip::Position;
 use iced::widget::{button, column, container, row};
 use iced::{Element, Fill};
 use kentos_domain::Document as Model;
+use kentos_domain::Slot;
 use kentos_interaction::Format;
 use kentos_ui::icon::icon;
 use kentos_ui::label;
@@ -22,15 +23,16 @@ use crate::calc::{
     Event as Calc, Field, MAX_HEIGHT, Window, event, footer_button, grid, known_field, knowns,
     number_field, summary,
 };
-use crate::exchange::words;
+use crate::exchange::words::{self, Kind as Line};
 
 impl Form {
     pub fn view<'a>(
         &'a self,
         model: &'a Model,
         format: &Format,
-        selected: usize,
+        selection: &[Slot],
     ) -> Element<'a, Message> {
+        let selected = selection.len();
         let method = words::field(
             "Yöntem",
             Segmented::new(Method::ALL, self.method, |m| fit_event(Event::Method(m))),
@@ -45,6 +47,7 @@ impl Form {
             body = body.push(summary);
         }
         body = body.push(self.apply_row(model, selected));
+        body = body.push(self.reach_line(model, selection));
         let can_apply = self.plan(model, format).is_some() && self.has_targets(model, selected);
         let can_report = self.method == Method::Points || self.plan(model, format).is_some();
         let mut dialog = Dialog::new(TITLE)
@@ -210,7 +213,7 @@ impl Form {
         let counts = [
             Counted(Scope::Selection, selected),
             Counted(Scope::Layer, 0),
-            Counted(Scope::All, model.len()),
+            Counted(Scope::All, self.all_count(model)),
         ];
         let current = counts
             .iter()
@@ -256,6 +259,33 @@ impl Form {
             None,
         ))
         .into()
+    }
+}
+
+impl Form {
+    /// What Uygula moves, layer by layer, before it runs (GIS-038); a warning when the target points' layer is in.
+    fn reach_line<'a>(&self, model: &Model, selection: &[Slot]) -> Element<'a, Message> {
+        let (counts, target) = self.reach(model, selection);
+        let layers = model.layers();
+        let name = |id: &str| layers.get(id).map_or_else(|| id.to_owned(), |l| l.name.clone());
+        if counts.is_empty() {
+            return words::text_line(Line::Warn, "Uygulanacak nesne yok.");
+        }
+        let said: Vec<String> = counts.iter().map(|(l, n)| format!("“{}” {n} nesne", name(l))).collect();
+        let held = self
+            .held_layer()
+            .filter(|_| self.scope == Scope::All)
+            .map(|l| format!("; hedef katman “{}” yerinde kalır", name(l)))
+            .unwrap_or_default();
+        let mut out = column![words::text_line(Line::Info, format!("Taşınacak: {}{held}.", said.join(", ")))].spacing(4);
+        if target {
+            let t = self.target.as_deref().map(name).unwrap_or_default();
+            out = out.push(words::text_line(
+                Line::Warn,
+                format!("Hedef kontrol katmanı “{t}” de taşınır: hedef noktaların koordinatları değişir."),
+            ));
+        }
+        out.into()
     }
 }
 

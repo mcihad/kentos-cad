@@ -7,7 +7,7 @@ use kentos_domain::Slot;
 use kentos_interaction::{Format, Level};
 use kentos_native_application::{ExecutionContext, transform};
 
-use super::{Event, Side, TITLE};
+use super::{Event, Scope, Side, TITLE};
 use crate::app::App;
 
 impl App {
@@ -19,7 +19,14 @@ impl App {
             Event::Param(p, text) => form.params.set(p, text),
             Event::Kind(kind) => form.kind = kind,
             Event::Fix(row) => form.status = form.fix(row).err(),
-            Event::Source(id) => form.source = (!id.is_empty()).then_some(id),
+            Event::Source(id) => {
+                let id = (!id.is_empty()).then_some(id);
+                // Uygula on the source's layer follows the source (GIS-038).
+                if form.scope == Scope::Layer && form.layer == form.source && id.is_some() {
+                    form.layer = id.clone();
+                }
+                form.source = id;
+            }
             Event::Target(id) => form.target = (!id.is_empty()).then_some(id),
             Event::Scope(scope) => form.scope = scope,
             Event::Layer(id) => form.layer = (!id.is_empty()).then_some(id),

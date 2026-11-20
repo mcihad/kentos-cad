@@ -172,8 +172,9 @@ fn adla_esle_pairs_the_named_points_and_p5_reads_worst() {
     let form = &app.gis.calc.fit;
     assert_eq!(form.source.as_deref(), Some("yerel"));
     assert_eq!(form.target.as_deref(), Some("tm"));
-    assert_eq!(form.scope, Scope::All, "nothing is selected");
-    assert_eq!(form.layer.as_deref(), Some("cizim"), "the active layer");
+    // GIS-038: nothing selected, Uygula takes the source points' layer, never the target's.
+    assert_eq!(form.scope, Scope::Layer, "nothing is selected");
+    assert_eq!(form.layer.as_deref(), Some("yerel"), "the source's layer");
     assert!(form.fit().is_none(), "four empty rows");
     let app = matched();
     assert_eq!(last_said(&app), "Vektör oturtma: 6 çift adla eşlendi.");
@@ -853,4 +854,73 @@ fn another_drawing_starts_the_fit_empty() {
     fit(&mut app, Event::Apply);
     let doc = app.document.as_ref().expect("open");
     assert_eq!((doc.model.len(), doc.model.revision()), (count, revision), "nothing written");
+}
+
+/// The target points' places, by name.
+fn targets_of(app: &App) -> Vec<(String, kentos_commands::Vec2)> {
+    let doc = app.document.as_ref().expect("open");
+    doc.model
+        .by_layer("tm")
+        .filter_map(|e| match e {
+            Entity::Point(p) => Some((p.base.label.clone().unwrap_or_default(), p.p)),
+            _ => None,
+        })
+        .collect()
+}
+
+/// GIS-038: with nothing selected and the window left as it opens (Uygula on the source's layer), Adla eşle and
+/// Uygula move the ten local objects and leave the six TUREF points exactly where they are; Tümü leaves the target
+/// layer too and says so; the line before Uygula names each layer moved with its count; asking for the target layer
+/// on purpose says the control points move. Undo brings the local points back.
+#[test]
+fn the_default_fit_moves_the_source_and_never_the_targets() {
+    let mut app = app_with_fit_drawing();
+    let _ = app.run("transform.fit");
+    fit(&mut app, Event::Kind(Kind::Helmert));
+    fit(&mut app, Event::Match);
+    let form = &app.gis.calc.fit;
+    assert_eq!((form.scope, form.layer.as_deref()), (Scope::Layer, Some("yerel")));
+    let model = &app.document.as_ref().expect("open").model;
+    let (reach, target) = form.reach(&model, &[]);
+    assert_eq!(reach, [("yerel".to_owned(), 10)]);
+    assert!(!target);
+    // Tümü: every layer but the target's.
+    fit(&mut app, Event::Scope(Scope::All));
+    let form = &app.gis.calc.fit;
+    let model = &app.document.as_ref().expect("open").model;
+    assert_eq!(form.all_count(model), model.len() - model.count("tm"));
+    let (reach, target) = form.reach(model, &[]);
+    assert!(reach.iter().all(|(l, _)| l != "tm"), "{reach:?}");
+    assert!(!target);
+    // The target layer asked on purpose: said.
+    fit(&mut app, Event::Scope(Scope::Layer));
+    fit(&mut app, Event::Layer("tm".into()));
+    let model = &app.document.as_ref().expect("open").model;
+    assert!(app.gis.calc.fit.reach(model, &[]).1, "the control points move: said");
+    // Back to Tümü and Uygula: the targets stay to the last digit.
+    fit(&mut app, Event::Scope(Scope::All));
+    let before = targets_of(&app);
+    let p1 = gap(&app, "P1");
+    fit(&mut app, Event::Apply);
+    assert_eq!(app.dialog, None, "applied");
+    assert_eq!(targets_of(&app), before, "the targets are not moved");
+    assert!(gap(&app, "P1") < p1, "the source moved onto them");
+    let doc = app.document.as_mut().expect("open");
+    assert_eq!(doc.model.undo().as_deref(), Some("Oturt"));
+    assert!((gap(&app, "P1") - p1).abs() < 1e-9, "undone");
+}
+
+/// The window after Adla eşle with Tümü: the line before Uygula, picture `gis-038-oturtma-kapsam`.
+#[test]
+fn the_reach_line_on_the_screen() {
+    let mut app = app_with_fit_drawing();
+    let _ = app.run("transform.fit");
+    fit(&mut app, Event::Kind(Kind::Helmert));
+    fit(&mut app, Event::Match);
+    fit(&mut app, Event::Scope(Scope::All));
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    let found = crate::files_testing::find_texts(&mut shot, &app, "Uygula");
+    assert!(!found.is_empty());
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-038-oturtma-kapsam");
 }

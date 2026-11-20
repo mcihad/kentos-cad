@@ -882,7 +882,7 @@ impl App {
             Window::Polar => self.gis.calc.polar.view(model, &format),
             Window::Intersection => self.gis.calc.intersection.view(model, &format),
             Window::Stakeout => self.gis.calc.stakeout.view(model, &format),
-            Window::Fit => self.gis.calc.fit.view(model, &format, self.selection.len()),
+            Window::Fit => self.gis.calc.fit.view(model, &format, self.selection.ids()),
             Window::Edgematch => self.gis.calc.edgematch.view(model, self.selection.len()),
             // Coordinates as the project writes them: its axes and digits, the user's notation.
             Window::Convert => self.gis.calc.convert.view(
