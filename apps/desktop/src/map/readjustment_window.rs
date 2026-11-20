@@ -177,7 +177,9 @@ pub fn records(text: &str) -> Result<Vec<ReadjustmentEntry>, String> {
         if cells.len() != 4 && cells.len() != 5 {
             return Err(format!("{}. satır dört ya da beş sütun değil (parsel;hak sahibi;tapu alanı;pay[;değer]).", n + 1));
         }
-        if n == 0 && !cells[2].chars().next().is_some_and(|c| c.is_ascii_digit()) {
+        // A header by its column names only (UR2-035: a first line whose area was not a number was taken for one and
+        // dropped, its holder lost and the shortened total shown as kept); every other line is data, checked alike.
+        if out.is_empty() && is_header(&cells) {
             continue;
         }
         out.push(ReadjustmentEntry {
@@ -189,6 +191,17 @@ pub fn records(text: &str) -> Result<Vec<ReadjustmentEntry>, String> {
         });
     }
     Ok(out)
+}
+
+/// Whether a line is the columns' names: “Parsel”, “Hak sahibi”, “Tapu alanı”, “Pay” as Turkish letter case folds
+/// them (a word of them in each of its first four cells).
+fn is_header(cells: &[&str]) -> bool {
+    let fold = |t: &str| t.to_lowercase().replace('ı', "i").replace("i̇", "i");
+    let words: [&[&str]; 4] = [&["parsel"], &["hak", "malik", "sahib"], &["alan", "yüzölçüm", "yuzolcum"], &["pay", "hisse"]];
+    cells.iter().zip(words).all(|(c, w)| {
+        let c = fold(c);
+        w.iter().any(|w| c.contains(w))
+    })
 }
 
 /// The answer as CSV: the package, then a line a holder's part, then the holders' totals.

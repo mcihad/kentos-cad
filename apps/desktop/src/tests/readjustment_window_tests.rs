@@ -53,6 +53,24 @@ fn filled_with(app: &mut App, csv: &str) {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+/// UR2-035: a headerless file's first line is data like the others: one whose area is no number is kept (the command
+/// then says it), not dropped as a header; with or without a header a valid file gives the same records.
+#[test]
+fn a_headerless_files_first_line_is_data() {
+    let bad = records("101/1;QA01;yanlış;1/1\n101/2;QA02;603.50;1/1\n").expect("reads");
+    assert_eq!(bad.len(), 2, "the faulty line is not dropped");
+    assert_eq!((bad[0].holder.as_str(), bad[0].area.as_str()), ("QA01", "yanlış"));
+    let plain = records("101/1;QA01;600.00;1/1\n101/2;QA02;603.50;1/1\n").expect("reads");
+    let headed = records("Parsel;Hak sahibi;Tapu alanı;Pay\n101/1;QA01;600.00;1/1\n101/2;QA02;603.50;1/1\n").expect("reads");
+    assert_eq!(plain, headed);
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    filled_with(&mut app, "101/1;QA01;yanlış;1/1\n101/2;QA02;603.50;1/1\n");
+    let said = crate::files_testing::last_said(&app);
+    let answer = app.map.readjustment.answer.clone();
+    assert!(!matches!(answer, Some(Ok(_))), "nothing kept as complete: {said}");
+}
+
 #[test]
 fn the_records_are_read_and_the_totals_kept() {
     assert_eq!(records(CSV).expect("reads").len(), 7);
