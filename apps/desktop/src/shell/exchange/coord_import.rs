@@ -533,17 +533,15 @@ impl App {
     pub(super) fn coord_import_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let project = self.project_system();
         let r = s.read.as_deref();
+        // The file's lines and its data apart (UR2-021: the header was counted as data).
         let meta = match r {
-            Some(r) => format!(
-                "{} veri satırı, {}{}",
+            Some(r) if r.header => format!(
+                "{} satır: başlık ve {} veri satırı, {}",
                 r.data_lines,
-                r.encoding,
-                if r.header {
-                    ", ilk satır başlık"
-                } else {
-                    ""
-                }
+                r.data_lines.saturating_sub(1),
+                r.encoding
             ),
+            Some(r) => format!("{} veri satırı, {}", r.data_lines, r.encoding),
             None => "okunuyor…".to_owned(),
         };
         let mut body = Column::new()
@@ -689,7 +687,11 @@ impl App {
                 };
                 line = line.push(container(cell).width(CELL));
             }
+            // A row is good only once east and north have columns (UR2-021: every row, the header among them, had a
+            // green tick while both columns read Alınmaz).
+            let mapped = r.columns.contains(&CoordColumn::Y) && r.columns.contains(&CoordColumn::X);
             let status: Element<'a, Message> = match &p.error {
+                _ if !mapped => label::caption("Sütun eşlemesi bekleniyor").style(kentos_ui::style::text::muted).into(),
                 Some(error) => row![
                     icon(Icon::Warning).size(14.0).tone(Tone::Warning),
                     label::caption(error.clone()),
@@ -833,6 +835,44 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The window's file read as the off-thread task would read it, answered to the window.
+    fn answer(app: &mut App) {
+        let Some(Window::CoordImport(s)) = &app.exchange else { panic!("the window") };
+        let (id, read) = (s.reading_id, kentos_formats::coords::read(&s.file.bytes, &s.options()));
+        let _ = app.update(message(Exchange::CoordImport(Event::Read { id, read: Arc::new(read) })));
+    }
+
+    /// UR2-021: `noktalar.csv` (a header, three data lines, `abc` in the last): the file's lines and its data are said
+    /// apart, and with the header unticked, both coordinate columns Alınmaz, no row gets a green tick.
+    #[test]
+    fn rows_wait_for_their_columns_and_the_header_is_not_data() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let bytes: Arc<[u8]> = Arc::from(&include_bytes!("../../../../../fixtures/processing/v1/noktalar.csv")[..]);
+        let _ = app.coord_import_picked(Picked { name: "noktalar.csv".into(), bytes, path: None }, false);
+        answer(&mut app);
+        let size = iced::Size::new(1440.0, 900.0);
+        let mut snapshot = crate::files_testing::offscreen(size);
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file_line = |snapshot: &mut kentos_ui::snapshot::Snapshot, app: &App, t: &str| {
+            !crate::files_testing::find_texts(snapshot, app, t).is_empty()
+        };
+        assert!(file_line(&mut snapshot, &app, "4 satır: başlık ve 3 veri satırı, UTF-8"), "the lines and the data apart");
+        assert!(file_line(&mut snapshot, &app, "2 nokta alınacak."));
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-021", "baslikli");
+        let _ = app.update(message(Exchange::CoordImport(Event::Header(false))));
+        answer(&mut app);
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-021", "basliksiz");
+        let Some(Window::CoordImport(s)) = &app.exchange else { panic!("the window") };
+        let r = s.read.as_deref().expect("read");
+        if !(r.columns.contains(&CoordColumn::Y) && r.columns.contains(&CoordColumn::X)) {
+            assert_eq!(crate::files_testing::find_texts(&mut snapshot, &app, "Sütun eşlemesi bekleniyor").len(), r.preview.len());
+        }
+    }
 
     #[test]
     fn orders_lay_over_the_files_columns_as_on_the_web() {
