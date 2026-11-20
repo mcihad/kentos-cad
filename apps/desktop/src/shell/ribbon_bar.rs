@@ -166,7 +166,9 @@ pub(crate) fn split_list(
             Some(hint) => menu.hint(hint),
             None => menu,
         };
-        let menu = match command.shortcuts.first() {
+        // A shortcut starts its command as it is, so only the command's own row shows it: a method row is the command
+        // with an option given (UR2-003: Shift+L beside Merkez and Eliptik yay started neither).
+        let menu = match command.shortcuts.first().filter(|_| entry.option.is_none()) {
             Some(keys) => menu.shortcut(*keys),
             None => menu,
         };
@@ -341,6 +343,48 @@ mod tests {
         }
         app.session.exit();
         assert_eq!(app.split_on_top(key, entries).unwrap().id, "tool.regularPolygon");
+    }
+
+    /// UR2-003: a shortcut is shown once in a family's list, beside the command it starts as it is; a method row
+    /// (the command with an option given) shows none.
+    #[test]
+    fn a_shortcut_is_shown_only_beside_the_command_it_starts() {
+        let (mut checked, mut seen) = (0, 0);
+        for tab in catalog().tabs() {
+            for item in tab.panels.iter().flat_map(|p| p.items.iter()) {
+                let Item::Split { key, entries, .. } = item else { continue };
+                let off = vec![None; entries.len()];
+                let menu = format!("{:?}", super::split_list(key, entries, &off, None));
+                for entry in entries.iter() {
+                    let Some(keys) = catalog().get(entry.id).and_then(|c| c.shortcuts.first()) else { continue };
+                    let plain = entries.iter().filter(|e| e.id == entry.id && e.option.is_none()).count();
+                    let shown = menu.matches(&format!("{keys:?}")).count();
+                    assert!(shown <= plain, "{key}: {keys} shown {shown} times for {plain} plain rows: {menu}");
+                    checked += 1;
+                    seen += usize::from(shown > 0);
+                }
+            }
+        }
+        assert!(checked > 10 && seen > 3, "the families with shortcuts were looked at ({checked}, {seen} shown)");
+        if std::env::var_os("KENTOS_SHOTS").is_none() {
+            return;
+        }
+        // The two lists of the report, open on Giriş.
+        use kentos_ui::snapshot::{Input, Snapshot};
+        for (face, name) in [("Elips", "elips"), ("Dikdörtgen", "dikdortgen")] {
+            let mut app = app_with_drawing();
+            crate::files_testing::make_cad(&mut app);
+            let _ = app.update(Message::RibbonTab("home"));
+            let mut snapshot = Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut crate::app::App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, crate::app::App::view, &mut update);
+            let at = crate::files_testing::find_text(&mut snapshot, &app, face).expect("the split's face");
+            let arrow = iced::Point::new(at.x + at.width + 16.0, at.center_y());
+            snapshot.input(&mut app, crate::app::App::view, &mut update, Input::Click(arrow));
+            crate::files_testing::evidence(&mut snapshot, &app, "ur2-003", name);
+        }
     }
 
     #[test]
