@@ -164,6 +164,17 @@ fn msg(e: Event) -> Message {
     Message::Map(map::Event::Asbuilt(e))
 }
 
+impl State {
+    /// The one tolerance given, when only one is (UR2-026): its component's word.
+    fn one_tolerance(&self) -> Option<&'static str> {
+        match (self.horizontal.trim().is_empty(), self.vertical.trim().is_empty()) {
+            (false, true) => Some("yatay"),
+            (true, false) => Some("düşey"),
+            _ => None,
+        }
+    }
+}
+
 /// A status in words.
 pub fn status_word(s: &str) -> &'static str {
     match s {
@@ -171,6 +182,7 @@ pub fn status_word(s: &str) -> &'static str {
         "outside" => "Dışında",
         "unmatched" => "Eşleşmedi",
         "ambiguous" => "Belirsiz",
+        "untoleranced" => "Tolerans yok",
         _ => "—",
     }
 }
@@ -183,6 +195,7 @@ pub fn watch_status_word(s: &str) -> &'static str {
         "outside" => "Sınırı aştı",
         "unmatched" => "Yeni nokta",
         "ambiguous" => "Belirsiz",
+        "untoleranced" => "Sınır yok",
         _ => "—",
     }
 }
@@ -848,8 +861,21 @@ impl App {
             Some(Ok(r)) => {
                 faults = r.points.iter().filter(|p| p.status != "within").count();
                 let watch = watched(r);
+                // No tolerance, no conformity (UR2-026): said first, not green.
+                if r.untoleranced > 0 {
+                    lines.push(words::text_line(
+                        Kind::Warn,
+                        format!(
+                            "Tolerans verilmedi: {} noktanın sapması gösterilir, uygunluğu denetlenmedi. Yatay ya da düşey \
+                             toleransı yazın.",
+                            r.untoleranced
+                        ),
+                    ));
+                } else if let Some(only) = s.one_tolerance() {
+                    lines.push(words::text_line(Kind::Info, format!("Yalnız {only} sapma denetlendi.")));
+                }
                 lines.push(words::text_line(
-                    if r.outside + r.unmatched + r.ambiguous == 0 { Kind::Ok } else { Kind::Warn },
+                    if r.outside + r.unmatched + r.ambiguous + r.untoleranced == 0 { Kind::Ok } else { Kind::Warn },
                     if watch {
                         format!(
                             "Bu dönemde {} nokta: {} sınır içinde, {} sınırı aştı, {} önceki dönemde yok, {} belirsiz; önceki dönemin {} noktası bu dönemde ölçülmedi.",
@@ -862,12 +888,13 @@ impl App {
                         )
                     } else {
                         format!(
-                            "{} ölçülen nokta: {} içinde, {} dışında, {} eşleşmedi, {} belirsiz; {} tasarım noktası ölçülmedi.",
+                            "{} ölçülen nokta: {} içinde, {} dışında, {} eşleşmedi, {} belirsiz{}; {} tasarım noktası ölçülmedi.",
                             r.points.len(),
                             r.within,
                             r.outside,
                             r.unmatched,
                             r.ambiguous,
+                            if r.untoleranced > 0 { format!(", {} toleranssız", r.untoleranced) } else { String::new() },
                             r.missing.len()
                         )
                     },

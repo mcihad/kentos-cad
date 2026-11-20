@@ -411,6 +411,7 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
             claimed.add(hits[0])
     used = set()
     out, counts = [], {"within": 0, "outside": 0, "unmatched": 0, "ambiguous": 0}
+    untoleranced = 0
     low = 0
     hs, vs = [], []
     for k, (name, x, y, z, s) in enumerate(MEASURED_):
@@ -490,15 +491,23 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
             status = "unmatched"
         elif outside:
             status = "outside"
+        elif horizontal is None and vertical is None:
+            # UR2-026: no tolerance given, so no conformity judged; the deviations stay.
+            status = "untoleranced"
         else:
             status = "within"
-        counts[status] += 1
+        if status == "untoleranced":
+            untoleranced += 1
+        else:
+            counts[status] += 1
         row["status"] = status
         row["flags"] = sorted(flags, key=FLAGS.index)
         out.append(row)
     missing = [{"uid": d_ids[i], "name": DESIGN_[i][0]} for i in range(len(DESIGN_)) if design and i not in used]
     dig = digest_of(DESIGN_ if design else [], LINES_ if lines else [])
     result = {"designDigest": dig, "points": out, "missing": missing, **counts, "lowQuality": low}
+    if untoleranced:
+        result["untoleranced"] = untoleranced
     if expected is not None and expected != dig:
         result["designChanged"] = True
     if hs:
@@ -585,7 +594,7 @@ def answer(i):
 
 # The answer's keys in the contract's order: the digest and the changes first.
 ORDER = ["designDigest", "designChanged", "surfaceChanged", "points", "missing", "within", "outside", "unmatched",
-         "ambiguous", "lowQuality", "rmsHorizontal", "rmsVertical", "maxHorizontal", "maxVertical", "package", "kind",
+         "ambiguous", "lowQuality", "untoleranced", "rmsHorizontal", "rmsVertical", "maxHorizontal", "maxVertical", "package", "kind",
          "control"]
 
 

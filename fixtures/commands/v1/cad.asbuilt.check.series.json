@@ -3027,7 +3027,7 @@
          "dn": 0.0040000000000048885,
          "horizontal": 0.005000000000003979,
          "dh": -0.0030000000000001137,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3040,7 +3040,7 @@
          "dn": 0.006999999999997897,
          "horizontal": 0.012206555615733777,
          "dh": -0.001999999999995339,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3053,7 +3053,7 @@
          "dn": 0.0,
          "horizontal": 0.0,
          "dh": -0.015000000000000568,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3066,7 +3066,7 @@
          "dn": 0.0009999999999976694,
          "horizontal": 0.0009999999999976694,
          "dh": -0.000999999999990564,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3085,7 +3085,7 @@
          "dn": 0.0,
          "horizontal": 0.0,
          "dh": 0.0,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3098,7 +3098,7 @@
          "dn": 0.0,
          "horizontal": 0.0,
          "dh": 0.0,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3111,7 +3111,7 @@
          "dn": 0.0,
          "horizontal": 0.0040000000000048885,
          "dh": -0.001999999999995339,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3122,11 +3122,12 @@
         }
        ],
        "missing": [],
-       "within": 7,
+       "within": 0,
        "outside": 0,
        "unmatched": 2,
        "ambiguous": 0,
        "lowQuality": 0,
+       "untoleranced": 7,
        "rmsHorizontal": 0.005223572942510246,
        "rmsVertical": 0.005891883036371328,
        "maxHorizontal": 0.012206555615733777,

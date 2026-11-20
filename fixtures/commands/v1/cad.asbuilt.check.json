@@ -3091,7 +3091,7 @@
           4420010.000097951,
           100.30020489755123
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3111,7 +3111,7 @@
           4420010.049995002,
           100.50049975012493
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3131,7 +3131,7 @@
           4420010.0003998,
           100.700019990005
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3151,7 +3151,7 @@
           4420010.049975012,
           100.90249875062469
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": [
           "proposed"
          ]
@@ -3206,7 +3206,7 @@
           4420010.0,
           101.9
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3221,7 +3221,7 @@
          ],
          "normal": -0.030000000000001137,
          "lineUid": "0192f700-1700-7000-8000-000000000082",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3236,7 +3236,7 @@
          ],
          "normal": -0.00999999999999801,
          "lineUid": "0192f700-1700-7000-8000-000000000083",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         }
        ],
@@ -3254,11 +3254,12 @@
          "name": "P7"
         }
        ],
-       "within": 7,
+       "within": 0,
        "outside": 0,
        "unmatched": 2,
        "ambiguous": 1,
        "lowQuality": 0,
+       "untoleranced": 7,
        "rmsHorizontal": 0.05495452665613711,
        "maxHorizontal": 0.11180339887499108,
        "rmsVertical": 0.020615528128085064,
@@ -3393,7 +3394,7 @@
          "name": "P1",
          "normal": -20.0,
          "lineUid": "0192f700-1700-7000-8000-000000000082",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3401,7 +3402,7 @@
          "name": "P2",
          "normal": -19.95,
          "lineUid": "0192f700-1700-7000-8000-000000000082",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3409,7 +3410,7 @@
          "name": "P3",
          "normal": -20.0,
          "lineUid": "0192f700-1700-7000-8000-000000000082",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3417,7 +3418,7 @@
          "name": "p4x",
          "normal": -19.95,
          "lineUid": "0192f700-1700-7000-8000-000000000082",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3425,7 +3426,7 @@
          "name": "X9",
          "normal": -10.299999999999997,
          "lineUid": "0192f700-1700-7000-8000-000000000083",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3433,7 +3434,7 @@
          "name": "R1",
          "normal": -10.0,
          "lineUid": "0192f700-1700-7000-8000-000000000082",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3441,7 +3442,7 @@
          "name": "S1",
          "normal": -10.0,
          "lineUid": "0192f700-1700-7000-8000-000000000082",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3449,7 +3450,7 @@
          "name": "P8",
          "normal": -20.0,
          "lineUid": "0192f700-1700-7000-8000-000000000082",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3457,7 +3458,7 @@
          "name": "B1",
          "normal": -0.030000000000001137,
          "lineUid": "0192f700-1700-7000-8000-000000000082",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -3465,16 +3466,17 @@
          "name": "B2",
          "normal": -0.00999999999999801,
          "lineUid": "0192f700-1700-7000-8000-000000000083",
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         }
        ],
        "missing": [],
-       "within": 10,
+       "within": 0,
        "outside": 0,
        "unmatched": 0,
        "ambiguous": 0,
-       "lowQuality": 0
+       "lowQuality": 0,
+       "untoleranced": 10
       },
       "warnings": []
      },
@@ -15026,7 +15028,7 @@
          "dn": 0.003999999999997783,
          "horizontal": 0.004999999999998295,
          "dh": -0.001999999999995339,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -15039,7 +15041,7 @@
          "dn": 0.015000000000000568,
          "horizontal": 0.025,
          "dh": 0.0,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -15052,7 +15054,7 @@
          "dn": 0.0,
          "horizontal": 0.0,
          "dh": -0.015000000000000568,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -15065,7 +15067,7 @@
          "dn": 0.0,
          "horizontal": 0.0009999999999976694,
          "dh": 0.000999999999990564,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -15078,7 +15080,7 @@
          "dn": 0.0,
          "horizontal": 0.0,
          "dh": 0.0,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -15091,7 +15093,7 @@
          "dn": 0.008000000000002672,
          "horizontal": 0.010000000000002274,
          "dh": 0.0,
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -15107,11 +15109,12 @@
          "name": "M5"
         }
        ],
-       "within": 6,
+       "within": 0,
        "outside": 0,
        "unmatched": 1,
        "ambiguous": 0,
        "lowQuality": 0,
+       "untoleranced": 6,
        "rmsHorizontal": 0.011187790964559118,
        "rmsVertical": 0.006191391873668628,
        "maxHorizontal": 0.025,
@@ -16011,7 +16014,7 @@
           4420010.000097951,
           100.30020489755123
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -16024,7 +16027,7 @@
           4420010.049995002,
           100.50049975012493
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -16037,7 +16040,7 @@
           4420010.0003998,
           100.700019990005
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -16050,7 +16053,7 @@
           4420010.049975012,
           100.90249875062469
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -16063,7 +16066,7 @@
           4420060.099930035,
           101.80699650174913
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -16076,13 +16079,13 @@
           4420020.0,
           101.6
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
          "uid": "0192f700-1700-7000-8000-00000000008a",
          "name": "S1",
-         "status": "within",
+         "status": "untoleranced",
          "flags": [
           "noHeight"
          ]
@@ -16097,7 +16100,7 @@
           4420010.0,
           101.9
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -16110,7 +16113,7 @@
           4420029.970002999,
           100.79970014992504
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         },
         {
@@ -16123,16 +16126,17 @@
           4420059.999998001,
           101.60019990004997
          ],
-         "status": "within",
+         "status": "untoleranced",
          "flags": []
         }
        ],
        "missing": [],
-       "within": 10,
+       "within": 0,
        "outside": 0,
        "unmatched": 0,
        "ambiguous": 0,
-       "lowQuality": 0
+       "lowQuality": 0,
+       "untoleranced": 10
       },
       "warnings": []
      },

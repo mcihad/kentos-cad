@@ -381,7 +381,7 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
     let mut out = Vec::new();
     let (mut sum_h, mut n_h, mut sum_v, mut n_v) = (0.0, 0usize, 0.0, 0usize);
     let (mut max_h, mut max_v): (Option<f64>, Option<f64>) = (None, None);
-    let mut counts = [0u32; 5];
+    let mut counts = [0u32; 6];
     for m in &measured {
         let mut flags: Vec<&str> = Vec::new();
         let named = by_name(&m.name);
@@ -527,6 +527,10 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
         } else if outside {
             counts[1] += 1;
             "outside"
+        } else if input.horizontal.is_none() && input.vertical.is_none() {
+            // No tolerance given (UR2-026): its deviations are read, its conformity is not judged.
+            counts[5] += 1;
+            "untoleranced"
         } else {
             counts[0] += 1;
             "within"
@@ -575,6 +579,7 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
         unmatched: counts[2],
         ambiguous: counts[3],
         low_quality: counts[4],
+        untoleranced: counts[5],
         rms_horizontal: rms(sum_h, n_h),
         rms_vertical: rms(sum_v, n_v),
         max_horizontal: max_h,

@@ -729,3 +729,37 @@ fn nearest_screens() {
         println!("{}", file.display());
     }
 }
+
+/// UR2-026: with no tolerance no point is "içinde": the matched ones are Tolerans yok, the summary says so and is not
+/// green; the tolerances typed back give the first classing again; one tolerance alone is named.
+#[test]
+fn no_tolerance_judges_no_conformity() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("asbuilt.check"));
+    limits(&mut app);
+    let judged = app.map.asbuilt.answer.clone().expect("an answer").expect("checked");
+    assert!(judged.within > 0 && judged.untoleranced == 0);
+    for e in [A::Horizontal(String::new()), A::Vertical(String::new())] {
+        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+    }
+    let r = app.map.asbuilt.answer.clone().expect("an answer").expect("checked");
+    assert_eq!((r.within, r.outside), (0, 0), "no conformity without a tolerance");
+    assert_eq!(r.untoleranced, judged.within + judged.outside, "the matched ones");
+    assert!(r.points.iter().all(|p| p.status != "within"));
+    let size = iced::Size::new(1440.0, 900.0);
+    let mut snapshot = crate::files_testing::offscreen(size);
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let _ = app.update(Message::WindowResized(size));
+    snapshot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut snapshot, &app, "ur2-026", "toleranssiz");
+    let said = format!("Tolerans verilmedi: {} noktanın sapması gösterilir, uygunluğu denetlenmedi. Yatay ya da düşey toleransı yazın.", r.untoleranced);
+    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, &said).is_empty(), "{said}");
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Horizontal("0,02".into()))));
+    snapshot.settle(&mut app, App::view, &mut update);
+    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, "Yalnız yatay sapma denetlendi.").is_empty());
+    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Vertical("0,03".into()))));
+    let back = app.map.asbuilt.answer.clone().expect("an answer").expect("checked");
+    assert_eq!((back.within, back.outside, back.untoleranced), (judged.within, judged.outside, 0), "the first classing again");
+}

@@ -528,6 +528,11 @@ pub struct AsbuiltChecked {
     pub ambiguous: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub low_quality: u32,
+    /// Matched points no tolerance was given for (UR2-026): their deviations shown, their conformity not judged.
+    #[serde(default, skip_serializing_if = "is_zero_count")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub untoleranced: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -560,4 +565,8 @@ pub struct AsbuiltChecked {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AsbuiltTrack>>", optional))]
     pub tracks: Vec<AsbuiltTrack>,
+}
+
+fn is_zero_count(n: &u32) -> bool {
+    *n == 0
 }
