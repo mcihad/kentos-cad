@@ -211,6 +211,37 @@ impl Registry {
             .collect()
     }
 
+    /// The tools the query names (gis-usage-report GIS-015, docs/adr/1081): every word of it in the tool's name or a
+    /// command line name, the exact name first, then names starting with it, then the rest by name; a tool found only
+    /// by its keywords or description is not among them (`search` has it).
+    pub fn named(&self, query: &str) -> Vec<&Tool> {
+        let folded = fold_turkish(query.trim());
+        let words: Vec<&str> = folded.split_whitespace().collect();
+        if words.is_empty() {
+            return Vec::new();
+        }
+        let mut out: Vec<(u8, &Tool)> = self
+            .tools
+            .iter()
+            .filter_map(|t| {
+                let name = fold_turkish(&t.label);
+                let alias = t.aliases.iter().any(|a| fold_turkish(a) == folded.replace(' ', ""));
+                let rank = if name == folded || alias {
+                    0
+                } else if name.starts_with(folded.as_str()) {
+                    1
+                } else if words.iter().all(|w| name.contains(w)) {
+                    2
+                } else {
+                    return None;
+                };
+                Some((rank, t))
+            })
+            .collect();
+        out.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| compare_tr(&a.1.label, &b.1.label)));
+        out.into_iter().map(|(_, t)| t).collect()
+    }
+
     /// The tool an alias typed on the command line names ("kosenumara"), Turkish letters folded.
     pub fn by_alias(&self, typed: &str) -> Option<&Tool> {
         let typed = fold_turkish(typed);

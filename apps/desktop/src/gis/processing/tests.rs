@@ -836,3 +836,25 @@ fn changed_advanced_screens() {
         app
     });
 }
+
+/// GIS-015 (docs/adr/1081): the toolbox's search puts the tool named exactly first: “En yakın tesis” the network's tool,
+/// “En yakın merkeze bağla” the straight-line one; keyword hits stay under them in their categories. With
+/// `KENTOS_SHOTS=1` the picture goes to `.run/gui-evidence/gis-015/`.
+#[test]
+fn a_search_puts_the_tool_named_exactly_first() {
+    use super::panel::Event as PanelEvent;
+    let mut app = app_with_parcels();
+    let registry = &app.gis.processing.registry;
+    let first = |q: &str| registry.named(q).first().map(|t| t.id.clone());
+    assert_eq!(first("En yakın tesis").as_deref(), Some("network.closestFacility"));
+    assert_eq!(first("En yakın merkeze bağla").as_deref(), Some("proximity.hub"));
+    // Turkish letters folded.
+    assert_eq!(first("en yakin tesis").as_deref(), Some("network.closestFacility"));
+    let _ = app.update(Message::Run("processing.toolbox"));
+    event(&mut app, Event::Panel(PanelEvent::Search("En yakın tesis".into())));
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        crate::files_testing::evidence(&mut shot, &app, "gis-015", "en-yakin-tesis-arama");
+    }
+}

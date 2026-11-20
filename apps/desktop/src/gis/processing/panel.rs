@@ -232,9 +232,33 @@ impl App {
             }
             roots.push(branch);
         }
+        // A search's tools named by it first, the exact name on top (GIS-015); the ones its keywords or description
+        // find under them, in their categories.
+        let named: Vec<&kentos_processing::Tool> = registry
+            .named(query)
+            .into_iter()
+            .filter(|t| self.offers_tool(&t.id))
+            .collect();
+        if !named.is_empty() {
+            let mut branch = category_row(
+                "Adıyla bulunanlar",
+                "search",
+                "Adında aranan sözcükler geçen araçlar; tam ad en üstte",
+                named.len(),
+                true,
+                NAMED,
+            );
+            for tool in &named {
+                branch = branch.push(tool_row(tool));
+            }
+            roots.push(branch);
+        }
+        let named_ids: BTreeSet<&str> = named.iter().map(|t| t.id.as_str()).collect();
         // The tools this program offers (docs/adr/0802), those the search finds.
         let keep = |t: &kentos_processing::Tool| {
-            self.offers_tool(&t.id) && hits.as_ref().is_none_or(|h| h.contains(&t.id))
+            self.offers_tool(&t.id)
+                && hits.as_ref().is_none_or(|h| h.contains(&t.id))
+                && !named_ids.contains(t.id.as_str())
         };
         for node in registry.tree(&keep) {
             roots.push(category_node(node, &open));
@@ -471,23 +495,31 @@ fn category_node<'a>(node: CategoryNode, open: &dyn Fn(&str) -> bool) -> Node<'a
         branch = branch.push(category_node(child, open));
     }
     for tool in node.tools {
-        let command = catalog()
-            .get(&format!("processing.run.{}", tool.id))
-            .map(|c| c.id);
-        // The web's tooltip: what it does and its command line names.
-        let mut about = Tip::new(tool.label.clone()).body(tool.description.clone());
-        if !tool.aliases.is_empty() {
-            about = about.detail(format!("Komut satırı: {}", tool.aliases.join(", ")));
-        }
-        let mut row = Node::new(tool.label.clone())
-            .icon(icon(crate::icons::from_web(tool.icon.as_deref())).size(15.0))
-            .tip(about);
-        if let Some(id) = command {
-            row = row.on_press(Message::Run(id));
-        }
-        branch = branch.push(row);
+        branch = branch.push(tool_row(&tool));
     }
     branch
+}
+
+/// The search's group of tools found by name (`Event::Fold`'s id; always open).
+const NAMED: &str = "processing-named";
+
+/// A tool's row: its name and icon, what it does and its command line names in its tip; it opens its window.
+fn tool_row<'a>(tool: &kentos_processing::Tool) -> Node<'a, Message> {
+    let command = catalog()
+        .get(&format!("processing.run.{}", tool.id))
+        .map(|c| c.id);
+    // The web's tooltip: what it does and its command line names.
+    let mut about = Tip::new(tool.label.clone()).body(tool.description.clone());
+    if !tool.aliases.is_empty() {
+        about = about.detail(format!("Komut satırı: {}", tool.aliases.join(", ")));
+    }
+    let mut row = Node::new(tool.label.clone())
+        .icon(icon(crate::icons::from_web(tool.icon.as_deref())).size(15.0))
+        .tip(about);
+    if let Some(id) = command {
+        row = row.on_press(Message::Run(id));
+    }
+    row
 }
 
 fn count_tools(node: &CategoryNode) -> usize {
