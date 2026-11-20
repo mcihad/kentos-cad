@@ -40,3 +40,12 @@ okuyucuları aynı dönüşümden (`geopackage::table_of_rows`) geçer.
 - `fixtures/geopackage/v1/egri-tampon.gpkg`: raporun paketinden GDAL ile alınan tek tablo (sentetik veri);
   `gpkg_tests::a_curve_polygons_near_straight_arc_stays_in_the_park` TM33 CBS projesine alır, Tümünü göster parkı
   çerçeveler (görünüm < 1 km). Resim `.run/gui-evidence/gis-005/`.
+
+## Ek (20.11.2026, GIS-043)
+
+FlatGeobuf, GML ve WKT'li CSV okuyucuları da `geopackage::table_of_rows` → `geometry_json` → `arc_bulge` yolundan
+geçer; bu kararla birlikte düzeldiler. Kanıt: `apps/desktop/src/shell/exchange/gpkg_tests.rs`
+`the_park_buffer_keeps_its_arcs_through_fgb_gml_and_csv` — park tamponu TM33 projesine alınır, Dışa aktarma kaybı
+denetiminde FlatGeobuf ve GML için Eğriler, Köşe konumu, Eğri biçimi, Uzunluk ve Alan “Korunur” (ADR 1096); WKT'li CSV
+KentOS'un yazıcı ve okuyucusuyla gidip döner, çevre 790.231 m (1 mm içinde) ve alan 38 956.519 m² (1 cm² içinde)
+60 basamaklı başvuruyla aynı, bütün katsayılar 0,5'in altında.

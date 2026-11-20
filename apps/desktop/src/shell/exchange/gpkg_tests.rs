@@ -2109,3 +2109,70 @@ fn a_layers_empty_template_goes_out_as_an_empty_table() {
     let gp = kentos_geopackage::GeoPackage::open(&out, false).expect("opens");
     assert!(gp.layers().expect("tables").iter().all(|l| l.name != "Bakım rotaları"));
 }
+
+/// The area's length and area, each bulged edge its arc (geometry-core's own sums).
+fn arc_measures(e: &kentos_commands::Entity) -> (f64, f64) {
+    let kentos_commands::Entity::Polygon(p) = e else { panic!("an area: {}", e.kind()) };
+    let bulges = p.bulges.as_deref();
+    let pts: Vec<kentos_geometry_core::Vec2> = p.pts.iter().map(|q| kentos_geometry_core::Vec2::new(q.x, q.y)).collect();
+    (
+        kentos_geometry_core::geom::bulge::bulge_path_length(&pts, bulges, true),
+        kentos_geometry_core::geom::bulge::bulge_ring_area(&pts, bulges).abs(),
+    )
+}
+
+/// GIS-043 (docs/adr/1071, 1096): the park buffer of GIS-005 (a TM33 curve polygon, its arcs few micrometres to ten metres)
+/// written to FlatGeobuf, GML and a CSV with WKT and read back by KentOS's own readers keeps its perimeter
+/// 790.231 m and its area 38 956.519 m² (the 60-digit reference of scripts/fixtures/gpkg_arc_area.py) within the
+/// millimetre and the square centimetre, every bulge below 0.5; the exchange check (GIS-039) keeps its curves' shape,
+/// length and area for FlatGeobuf and GML.
+#[test]
+fn the_park_buffer_keeps_its_arcs_through_fgb_gml_and_csv() {
+    use kentos_commands::{ExchangeFormat as F, ExchangeState as S};
+    use serde_json::json;
+    const AREA: f64 = 38_956.519_339_831;
+    const PERIMETER: f64 = 790.231_084_908_664;
+    let (mut app, _) = App::boot(None);
+    crate::tools_scenes::open_edited(&mut app, crate::tools_scenes::Objects::new(), |d| {
+        d["settings"]["workspace"] = json!("gis");
+        d["settings"]["srid"] = json!(5255);
+    });
+    app.picker = Picker::File(gpkg("egri-tampon.gpkg"));
+    run(&mut app, "file.import.gpkg");
+    send(&mut app, Event::Gpkg(G::Run));
+    let doc = &app.document.as_ref().expect("open").model;
+    let buffer = doc.entities().find(|e| e.kind() == "polygon").expect("the buffer").clone();
+    let (perimeter, area) = arc_measures(&buffer);
+    assert!((perimeter - PERIMETER).abs() < 1e-3 && (area - AREA).abs() < 1e-4, "{perimeter} {area}");
+    // The exchange check's round trips through FlatGeobuf and GML.
+    let _ = app.update(Message::Run("file.exchangeCheck"));
+    let _ = app.update(Message::ExchangeCheck(crate::exchange_check_window::Event::Matrix));
+    let m = app.exchange_check.matrix.clone().expect("a matrix").expect("checked");
+    for f in [F::Fgb, F::Gml] {
+        for aspect in ["curves", "position", "shape", "length", "area"] {
+            let cell = m
+                .rows
+                .iter()
+                .find(|r| r.aspect == aspect)
+                .and_then(|r| r.cells.iter().find(|c| c.format == f))
+                .expect("a cell");
+            assert_eq!(cell.state, S::Kept, "{f:?} {aspect}: {:?}", m.checks.iter().find(|c| c.format == f).map(|c| &c.numeric));
+        }
+    }
+    // A CSV with WKT: written and read back by KentOS's own CSV writer and reader.
+    let dir = crate::files_testing::scratch("park-csv");
+    let path = dir.join("park.csv");
+    let export: kentos_commands::ExportCsv =
+        serde_json::from_value(json!({ "path": path.to_string_lossy() })).expect("the input");
+    let doc = &app.document.as_ref().expect("open").model;
+    let made = kentos_native_application::csv_table::export(doc, &export).expect("written");
+    let import: kentos_commands::ImportCsv =
+        serde_json::from_value(json!({ "path": path.to_string_lossy() })).expect("the input");
+    let read = kentos_native_application::csv_table::read(&path, &made.csv, &import).expect("read back");
+    let back = read.tables[0].objects.iter().map(|(_, e)| e).find(|e| e.kind() == "polygon").expect("the buffer back");
+    let (perimeter, area) = arc_measures(back);
+    assert!((perimeter - PERIMETER).abs() < 1e-3, "CSV perimeter {perimeter}");
+    assert!((area - AREA).abs() < 1e-4, "CSV area {area}");
+    let kentos_commands::Entity::Polygon(p) = back else { unreachable!() };
+    assert!(p.bulges.iter().flatten().all(|b| b.abs() < 0.5), "{:?}", p.bulges);
+}
