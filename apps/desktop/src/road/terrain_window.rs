@@ -50,6 +50,7 @@ const BOUNDARY: &str = "Sınırı seçimden al";
 const VOIDS: &str = "Boşlukları seçimden ekle";
 const CONTOURS: &str = "Eğrileri çiz";
 const LANDXML: &str = "LandXML al…";
+const LANDXML_TAKE: &str = "Seçilenleri al";
 
 /// A definition being edited, its numbers as the text the user typed (empty: none).
 #[derive(Debug, Clone, PartialEq)]
@@ -98,6 +99,9 @@ pub struct Window {
     pub(crate) paste_from: Option<String>,
     /// Why Kaydet was refused, shown in the window over the sources (UR2-008); any change clears it.
     pub(crate) error: Option<String>,
+    /// A LandXML file of several surfaces (UR2-040): its path and each surface's name, points and triangles, and which
+    /// are chosen to take.
+    pub(crate) landxml: Option<(std::path::PathBuf, Vec<(String, usize, usize)>, Vec<bool>)>,
 }
 
 impl Window {
@@ -150,6 +154,11 @@ pub enum Event {
     /// LandXML al…: the file to take, asked; then the file chosen (none: given up).
     LandXml,
     LandXmlChosen(Option<std::path::PathBuf>),
+    /// A surface of the LandXML file taken or left (UR2-040).
+    LandXmlPick(usize, bool),
+    /// The chosen surfaces taken, one after another.
+    LandXmlTake,
+    LandXmlDrop,
     Accept,
     Save,
     Cancel,
@@ -240,6 +249,7 @@ impl App {
             edit_report: None,
             paste_from: None,
             error: None,
+            landxml: None,
         });
         self.dialog = Some(Dialog::Road(road::RoadDialogKind::Terrains));
         self.refresh_edit_report();
@@ -418,7 +428,51 @@ impl App {
             }
             Event::LandXmlChosen(path) => {
                 if let Some(path) = path {
-                    self.import_landxml(&path);
+                    // Several surfaces: listed to choose from (UR2-040: only the file's first was ever taken).
+                    let surfaces: Vec<(String, usize, usize)> = std::fs::read(&path)
+                        .ok()
+                        .and_then(|b| kentos_formats::landxml::read(&b).ok())
+                        .map(|f| f.surfaces.iter().map(|s| (s.name.clone(), s.points.len(), s.faces.len())).collect())
+                        .unwrap_or_default();
+                    if surfaces.len() > 1 {
+                        if let Some(w) = self.road.terrain_window.as_mut() {
+                            let n = surfaces.len();
+                            w.landxml = Some((path, surfaces, vec![true; n]));
+                        }
+                    } else {
+                        self.import_landxml(&path, None);
+                    }
+                }
+                return Task::none();
+            }
+            Event::LandXmlPick(k, on) => {
+                if let Some(w) = self.road.terrain_window.as_mut()
+                    && let Some((_, _, chosen)) = w.landxml.as_mut()
+                    && let Some(c) = chosen.get_mut(k)
+                {
+                    *c = on;
+                }
+                return Task::none();
+            }
+            Event::LandXmlDrop => {
+                if let Some(w) = self.road.terrain_window.as_mut() {
+                    w.landxml = None;
+                }
+                return Task::none();
+            }
+            Event::LandXmlTake => {
+                let Some((path, surfaces, chosen)) = self.road.terrain_window.as_mut().and_then(|w| w.landxml.take()) else {
+                    return Task::none();
+                };
+                let names: Vec<String> =
+                    surfaces.iter().zip(&chosen).filter(|(_, c)| **c).map(|((n, _, _), _)| n.clone()).collect();
+                let left: Vec<String> =
+                    surfaces.iter().zip(&chosen).filter(|(_, c)| !**c).map(|((n, _, _), _)| format!("“{n}”")).collect();
+                for name in &names {
+                    self.import_landxml(&path, Some(name.clone()));
+                }
+                if !left.is_empty() && !names.is_empty() {
+                    self.say(Level::Info, format!("LandXML: {} alınmadı.", left.join(", ")));
                 }
                 return Task::none();
             }
@@ -510,7 +564,7 @@ impl App {
 
     /// LandXML al: the file's first surface on the window's layer, its terrain surface defined and accepted
     /// (`file.import.landxml`); the window then lists it.
-    pub(crate) fn import_landxml(&mut self, path: &std::path::Path) {
+    pub(crate) fn import_landxml(&mut self, path: &std::path::Path, surface: Option<String>) {
         let layer = self
             .road
             .terrain_window
@@ -520,7 +574,7 @@ impl App {
         let input = kentos_commands::ImportLandxml {
             path: path.to_string_lossy().into_owned(),
             layer_id: layer,
-            surface: None,
+            surface,
             name: None,
             expected_revision: None,
         };
@@ -717,7 +771,7 @@ impl App {
                     .style(muted),
             );
         }
-        let left = column![
+        let mut left = column![
             label::strong("Yüzeyler"),
             container(scrollable(list).height(typography::scaled(260.0)))
                 .style(style::container::field_box)
@@ -729,6 +783,26 @@ impl App {
             .spacing(8),
         ]
         .spacing(8);
+        // A LandXML file of several surfaces: its surfaces to choose from (UR2-040).
+        if let Some((_, surfaces, chosen)) = &w.landxml {
+            let mut pick = Column::new().spacing(4).push(label::caption("Dosyadaki yüzeyler"));
+            for (k, ((name, points, faces), on)) in surfaces.iter().zip(chosen).enumerate() {
+                pick = pick.push(words::check(
+                    *on,
+                    format!("{name} ({points} nokta, {faces} üçgen)"),
+                    Some(msg(Event::LandXmlPick(k, !on))),
+                ));
+            }
+            let any = chosen.iter().any(|c| *c);
+            pick = pick.push(
+                row![
+                    words::primary(LANDXML_TAKE, any.then(|| msg(Event::LandXmlTake))),
+                    words::ghost(CANCEL, Some(msg(Event::LandXmlDrop))),
+                ]
+                .spacing(8),
+            );
+            left = left.push(pick);
+        }
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
             None => container(label::caption("Bir yüzey seçin ya da yeni bir yüzey oluşturun.")).padding(12).into(),

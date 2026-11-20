@@ -673,3 +673,39 @@ fn a_refused_save_is_said_in_the_window_and_the_draft_stays() {
     send(&mut app, W::Save);
     assert!(app.road.terrain_window.is_none(), "saved from the same window");
 }
+
+/// UR2-040: iki-yuzey.xml (EG 14 points, 22 triangles; FG 8 and 10): its surfaces are listed to choose from; FG alone,
+/// whatever the file's order, or both in one go.
+#[test]
+fn a_landxml_files_surfaces_are_chosen() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/landxml/v1/iki-yuzey.xml");
+    let names = |a: &App| -> Vec<String> {
+        a.document.as_ref().and_then(|d| d.model.settings().road.clone()).map(|r| r.surfaces.into_iter().map(|s| s.name).collect()).unwrap_or_default()
+    };
+    // FG alone.
+    let mut app = self::app("road");
+    let _ = app.update(Message::Run("terrain.surfaces"));
+    send(&mut app, W::ContourLayer("esyukselti".into()));
+    send(&mut app, W::LandXmlChosen(Some(path.clone())));
+    let listed = app.road.terrain_window.as_ref().and_then(|w| w.landxml.clone()).expect("the surfaces listed");
+    let found: Vec<(String, usize, usize)> = listed.1.clone();
+    assert_eq!(found, vec![("EG".to_owned(), 14, 22), ("FG".to_owned(), 8, 10)]);
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-040", "iki-yuzey");
+    }
+    send(&mut app, W::LandXmlPick(0, false));
+    send(&mut app, W::LandXmlTake);
+    assert_eq!(names(&app), vec!["FG".to_owned()]);
+    // Both in one go.
+    let mut app = self::app("road");
+    let _ = app.update(Message::Run("terrain.surfaces"));
+    send(&mut app, W::ContourLayer("esyukselti".into()));
+    send(&mut app, W::LandXmlChosen(Some(path)));
+    send(&mut app, W::LandXmlTake);
+    assert_eq!(names(&app), vec!["EG".to_owned(), "FG".to_owned()]);
+}
