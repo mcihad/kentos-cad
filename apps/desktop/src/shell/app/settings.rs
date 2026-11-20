@@ -256,6 +256,8 @@ impl App {
         self.info_card = None;
         self.networks_reset();
         self.address_reset();
+        // Topoloji's last check, its chosen rows and the reason typed are the drawing's left (GIS-032).
+        self.gis.topology = Default::default();
         // Hesap's tables, solutions and the names they are kept under are the drawing's (UR2-049: a levelling's
         // rows and name wrote another project's N2): another drawing starts them empty, its window closed; a tab
         // brought in front gets its own back (doc_tabs.rs).

@@ -729,3 +729,17 @@ fn a_reason_stays_with_its_finding() {
     ev(&mut app, Event::Press(0));
     assert_eq!(app.gis.topology.reason, "QA: örnek hattın açık başlangıcı", "its own reason back");
 }
+
+/// GIS-032: Gerekçe is the finding's it was typed for and the drawing's: another finding or another drawing starts
+/// it empty.
+#[test]
+fn the_reason_typed_stays_with_its_finding_and_drawing() {
+    let mut app = checked();
+    ev(&mut app, Event::Press(0));
+    ev(&mut app, Event::Reason("QA: ortak sınır için geçici istisna".into()));
+    ev(&mut app, Event::Press(1));
+    assert!(app.gis.topology.reason.is_empty(), "another finding starts it empty");
+    ev(&mut app, Event::Reason("taslak".into()));
+    let _ = app.update(crate::app::Message::Opened(Some(Ok(Box::new(crate::files_testing::drawing(0))))));
+    assert!(app.gis.topology.reason.is_empty() && app.gis.topology.checked.is_none(), "another drawing starts it again");
+}

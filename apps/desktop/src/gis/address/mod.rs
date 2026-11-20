@@ -669,6 +669,9 @@ impl App {
         }
         self.gis.address.waiting = None;
         let place = matches!(self.gis.address.question, Some(Question::Place(_)));
+        // The mark on the map is the last answer's (GIS-033): a new answer takes the old mark away, whatever it
+        // finds; Git or a row marks its own again.
+        self.gis.address.mark = None;
         match reply.answer {
             Answer::Found { rows, status } => {
                 self.gis.address.status = status;

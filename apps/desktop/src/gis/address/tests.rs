@@ -334,3 +334,17 @@ fn the_providers_card_is_accepted_before_a_provider_is_used() {
     // The device's settings as they were (the tests share them).
     super::online::online().save(saved).expect("restored");
 }
+
+/// GIS-033: a new search takes the last door's mark off the map, whatever it finds; one with no candidate leaves no
+/// mark at all.
+#[test]
+fn a_new_search_takes_the_last_mark_away() {
+    let mut app = app();
+    send(&mut app, Message::Run("address.search"));
+    find(&mut app, "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara");
+    ev(&mut app, Event::Press(0));
+    assert!(app.address_mark_label().is_some(), "the door is marked");
+    find(&mut app, "Olmayan Yol No:9999");
+    assert!(app.gis.address.rows.is_empty());
+    assert!(app.address_mark_label().is_none(), "no candidate, no mark");
+}

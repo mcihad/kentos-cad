@@ -541,6 +541,10 @@ impl App {
         let Some(&finding) = shown.get(at) else {
             return;
         };
+        // Gerekçe is the finding's it was typed for (GIS-032): another finding starts it empty.
+        if !self.gis.topology.selected.contains(&finding) {
+            self.gis.topology.reason.clear();
+        }
         let (ctrl, shift) = (self.modifiers.control(), self.modifiers.shift());
         if ctrl || shift {
             let picked: Vec<Slot> = crate::points::click_pick(
