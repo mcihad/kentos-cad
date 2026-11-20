@@ -117,6 +117,7 @@ pub fn status_line(status: &RunStatus, attempted: bool, issues: &[Issue]) -> Sta
             pick,
             selected,
             undo,
+            warning,
             ..
         } => {
             let mut actions = if *selected {
@@ -130,10 +131,16 @@ pub fn status_line(status: &RunStatus, attempted: bool, issues: &[Issue]) -> Sta
                 actions.push(Action::Undo);
             }
             let pick = actions.contains(&Action::Select).then(|| pick.clone());
+            // A run that gave nothing of use is a warning, not a success (GIS-019, GIS-020).
+            let (kind, glyph) = if *warning {
+                (LineKind::Warn, LineIcon::Warning)
+            } else {
+                (LineKind::Ok, LineIcon::Success)
+            };
             return StatusLine {
                 actions,
                 pick,
-                ..line(LineKind::Ok, Some(LineIcon::Success), text.clone())
+                ..line(kind, Some(glyph), text.clone())
             };
         }
         _ => {}
@@ -373,6 +380,7 @@ mod tests {
                     .collect(),
                 selected: v["selected"].as_bool().unwrap_or(false),
                 undo: v["undo"].as_bool().unwrap_or(false),
+                warning: v["warning"].as_bool().unwrap_or(false),
                 table: None,
             },
             "error" => RunStatus::Error(text()),

@@ -456,6 +456,7 @@ impl App {
                         selected: false,
                         undo: false,
                         table: None,
+                        warning: false,
                     },
                     Err(why) => RunStatus::Error(why),
                 };

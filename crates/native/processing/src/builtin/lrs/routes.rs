@@ -510,15 +510,22 @@ fn run_extract(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedba
         feedback.info(format!("{without} nesnenin ölçüsü yok; yazılmadı."));
     }
     let written = routes - without;
+    // No route with a measure: said as what it is, a warning, with the way to measures (GIS-019).
+    let summary = if routes > 0 && written == 0 {
+        format!(
+            "{routes} rotanın hiçbirinde M değeri yok; öznitelik yazılmadı. Ölçüleri Rota oluştur ya da Rotayı kalibre et verir."
+        )
+    } else {
+        format!("{routes} rotadan {written} rotanın ölçüleri yazıldı.")
+    };
     RunResult {
         changes: Some(ChangeSet {
             update,
             ..ChangeSet::default()
         }),
         outputs: [("count".to_owned(), json!(written))].into_iter().collect(),
-        summary: Some(format!(
-            "{routes} rotadan {written} rotanın ölçüleri yazıldı."
-        )),
+        summary: Some(summary),
+        warning: routes > 0 && written == 0,
         ..RunResult::default()
     }
 }

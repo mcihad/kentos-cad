@@ -60,6 +60,7 @@ fn a_run_writes_one_undo_step_named_after_the_tool_and_the_window_stays() {
             selected: false,
             undo: true,
             table: None,
+            warning: false,
         }
     );
     assert_eq!(
@@ -131,6 +132,7 @@ fn a_run_in_the_background_does_what_it_does_here_in_one_undo_step() {
             selected: false,
             undo: true,
             table: None,
+            warning: false,
         }
     );
     assert_eq!(

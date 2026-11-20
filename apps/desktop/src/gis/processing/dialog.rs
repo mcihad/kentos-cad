@@ -38,6 +38,8 @@ pub enum RunStatus {
         selected: bool,
         undo: bool,
         table: Option<ResultTable>,
+        /// It ran but gave nothing of use: said as a warning (docs/adr/1084).
+        warning: bool,
     },
     /// It did not start (nothing selected …).
     Invalid(String),
@@ -559,6 +561,7 @@ impl ToolDialog {
                     selected: result.select.is_some(),
                     undo: edited,
                     table,
+                    warning: result.warning,
                 };
                 self.attempted = false;
             }
