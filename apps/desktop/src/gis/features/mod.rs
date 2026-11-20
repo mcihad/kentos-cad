@@ -847,6 +847,20 @@ impl App {
             self.gis.features.editing = None;
             return Task::none();
         };
+        // A locked layer's cell opens no editor (GIS-028), as its form and its properties are read only: said at
+        // once, not after a value is typed; choosing, copying and zooming go on.
+        if doc.model.layers().is_locked(&e.base().layer_id) {
+            let name = doc
+                .model
+                .layers()
+                .get(&e.base().layer_id)
+                .map_or_else(|| e.base().layer_id.clone(), |n| n.name.clone());
+            self.gis.features.editing = None;
+            self.warn(format!(
+                "“{name}” katmanı kilitli; değeri düzenlenemez. Kilidi Katmanlar panelinden açın."
+            ));
+            return Task::none();
+        }
         // A value the bound table always makes itself is shown, not written (docs/adr/0754 §3).
         let Some(key) = c.key.as_ref().filter(|_| {
             !c.field

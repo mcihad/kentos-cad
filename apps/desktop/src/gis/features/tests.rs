@@ -503,3 +503,17 @@ fn kinds_screens() {
         }
     }
 }
+
+/// GIS-028: a locked layer's cell opens no editor; it is said at once, and the value stays.
+#[test]
+fn a_locked_layers_cell_opens_no_editor() {
+    let mut app = app_with_table();
+    let layer = app.gis.features.layer.clone().or_else(|| {
+        app.document.as_ref().map(|d| d.model.layers().active().to_owned())
+    });
+    let layer = layer.expect("a layer");
+    app.document.as_mut().unwrap().model.set_layer_locked(&layer, true);
+    ev(&mut app, Event::Edit(0, 1));
+    assert!(!app.gis.features.editing(), "no editor on a locked layer");
+    assert!(crate::files_testing::last_said(&app).contains("kilitli"));
+}
