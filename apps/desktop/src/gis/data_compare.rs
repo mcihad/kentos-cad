@@ -121,6 +121,9 @@ pub struct Window {
     ignored: BTreeSet<String>,
     only_diffs: bool,
     outcome: Option<Outcome>,
+    /// The outcome was made with other inputs than the window's now (GIS-056): it is shown as such and neither copied,
+    /// saved nor written until Karşılaştır runs again. Yalnız farklar only filters what is shown: it leaves it fresh.
+    stale: bool,
     /// The sides' dates as written (docs/adr/0210 §8): empty, every object.
     old_date: String,
     new_date: String,
@@ -442,6 +445,7 @@ impl App {
             ignored: BTreeSet::new(),
             only_diffs: true,
             outcome: None,
+            stale: false,
             old_date: preset.old_date,
             new_date: preset.new_date,
         });
@@ -824,6 +828,30 @@ impl App {
     }
 
     pub(crate) fn data_compare_event(&mut self, event: Event) -> Task<Message> {
+        // An input changed (GIS-056): the outcome no longer answers the window's settings.
+        let input = matches!(
+            event,
+            Event::Source(_)
+                | Event::FilePicked(Some(_))
+                | Event::OldNode(_)
+                | Event::NewNode(_)
+                | Event::Pairing(_)
+                | Event::Key(_)
+                | Event::Search(_)
+                | Event::Tolerance(_)
+                | Event::OldDate(_)
+                | Event::NewDate(_)
+                | Event::Field(..)
+        );
+        if input && let Some(w) = self.gis.data_compare.as_mut() {
+            w.stale = w.outcome.is_some();
+        }
+        if matches!(event, Event::Copy | Event::Save | Event::Write)
+            && self.gis.data_compare.as_ref().is_some_and(|w| w.stale)
+        {
+            self.warn("Ayarlar değişti: önce yeniden Karşılaştır'a basın.".to_owned());
+            return Task::none();
+        }
         match event {
             Event::Source(here) => {
                 if let Some(w) = self.gis.data_compare.as_mut() {
@@ -929,6 +957,7 @@ impl App {
                     let said = counts_text(&outcome.rows);
                     if let Some(w) = self.gis.data_compare.as_mut() {
                         w.outcome = Some(outcome);
+                        w.stale = false;
                     }
                     self.say(Level::Success, format!("Karşılaştırıldı: {said}."));
                 }
@@ -1234,6 +1263,20 @@ impl App {
         ]
         .spacing(18)
         .align_y(iced::Alignment::End);
+        // A stale outcome (GIS-056): said, and none of it goes out.
+        let fresh = any && !w.stale;
+        let summary: Element<'_, Message> = if w.stale {
+            Column::new()
+                .spacing(6)
+                .push(words::text_line(
+                    Kind::Warn,
+                    "Ayarlar değişti: aşağıdaki sonuç önceki ayarlarla. Kopyalamak, kaydetmek ya da çizime yazmak için yeniden Karşılaştır'a basın.",
+                ))
+                .push(summary)
+                .into()
+        } else {
+            summary.into()
+        };
         let content = Column::new()
             .spacing(12)
             .push(first)
@@ -1244,9 +1287,9 @@ impl App {
             .push(list);
         Frame::new(COMPARE_TITLE)
             .push(content)
-            .action(words::secondary(COPY, any.then(|| msg(Event::Copy))))
-            .action(words::secondary(SAVE, any.then(|| msg(Event::Save))))
-            .action(words::secondary(WRITE, any.then(|| msg(Event::Write))))
+            .action(words::secondary(COPY, fresh.then(|| msg(Event::Copy))))
+            .action(words::secondary(SAVE, fresh.then(|| msg(Event::Save))))
+            .action(words::secondary(WRITE, fresh.then(|| msg(Event::Write))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(920.0)
             .modal(msg(Event::Close))
@@ -1336,4 +1379,50 @@ mod tests {
         assert!(said.contains("2 eklenen") && said.contains("1 silinen"), "{said}");
         assert!(said.contains("1 fark yazılmadı (1 Kolon)"), "{said}");
     }
+
+    /// GIS-056 (docs/adr/1116): a parcel moved 0.4 m reads changed at 0.001 m; the tolerance made 2 m without comparing
+    /// again marks the outcome stale: Kopyala, Kaydet and Çizime yaz are off (and refused); Yalnız farklar leaves it
+    /// fresh; compared again at 2 m the parcel is not a difference any more.
+    #[test]
+    fn a_changed_tolerance_makes_the_outcome_stale_until_compared_again() {
+        let mut app = app_with_drawing();
+        let model = &mut app.document.as_mut().expect("a drawing").model;
+        let old = model.add_layer(NewLayer::layer("Eski"), None, false).expect("a layer");
+        let new = model.add_layer(NewLayer::layer("Yeni"), None, false).expect("a layer");
+        let square = |dx: f64| json!([{"x":500.0+dx,"y":500.0},{"x":510.0+dx,"y":500.0},{"x":510.0+dx,"y":510.0},{"x":500.0+dx,"y":510.0}]);
+        for (layer, dx) in [(&old, 0.0), (&new, 0.4)] {
+            let e = json!({"kind":"polygon","id":0,"layerId":layer,"attrs":{"No":"2"},"pts":square(dx)});
+            model.add(serde_json::from_value(e).expect("an object")).expect("added");
+        }
+        app.open_data_compare_with(super::Preset {
+            old_node: Some(old.clone()),
+            new_node: Some(new.clone()),
+            key: Some("No".into()),
+            ..super::Preset::default()
+        });
+        let ev = |app: &mut crate::app::App, e: super::Event| {
+            let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(e)));
+        };
+        ev(&mut app, super::Event::Compare);
+        let changed = |app: &crate::app::App| {
+            app.gis
+                .data_compare
+                .as_ref()
+                .and_then(|w| w.outcome.as_ref())
+                .map_or(0, |o| o.rows.iter().filter(|r| r.status != super::Status::Same).count())
+        };
+        assert_eq!(changed(&app), 1, "0.4 m at 0.001 m");
+        ev(&mut app, super::Event::OnlyDiffs(false));
+        assert!(!app.gis.data_compare.as_ref().expect("open").stale, "a filter of what is shown");
+        ev(&mut app, super::Event::Tolerance("2".into()));
+        assert!(app.gis.data_compare.as_ref().expect("open").stale);
+        let before = app.document.as_ref().expect("a drawing").model.entities().count();
+        ev(&mut app, super::Event::Write);
+        assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before, "refused while stale");
+        assert!(crate::files_testing::last_said(&app).contains("yeniden Karşılaştır"));
+        ev(&mut app, super::Event::Compare);
+        assert!(!app.gis.data_compare.as_ref().expect("open").stale);
+        assert_eq!(changed(&app), 0, "at 2 m the parcel is the same");
+    }
+
 }
