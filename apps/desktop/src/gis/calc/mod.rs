@@ -616,7 +616,10 @@ impl App {
             return;
         };
         if let (Some(p), Some(doc)) = (p, &self.document) {
-            let text = read::name_at(&doc.model, p).unwrap_or_else(|| format!("{},{}", p.x, p.y));
+            // Vektör oturtma's base point keeps a shared name (its sets share them); every other field takes a name
+            // only when one point carries it (UR2-016).
+            let name = if window == Window::Fit { read::name_at(&doc.model, p) } else { read::unique_name_at(&doc.model, p) };
+            let text = name.unwrap_or_else(|| format!("{},{}", p.x, p.y));
             if let Some(known) = self.calc_known_text(window, field) {
                 *known = text;
             }

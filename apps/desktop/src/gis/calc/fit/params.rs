@@ -15,7 +15,7 @@ use kentos_interaction::{Format, Vec2};
 use kentos_processing::text::js_number;
 
 use super::TITLE;
-use crate::calc::read::{Known, read_number, resolve_point};
+use crate::calc::read::{Known, read_number, resolve_point_first};
 use crate::exchange::words::Kind as Line;
 
 /// How the transform is given.
@@ -127,7 +127,7 @@ impl Typed {
     /// is wrong, in the fields' order (the web's `readParams`).
     pub fn read(&self, model: &Model, format: &Format) -> Result<Params, Vec<(Line, String)>> {
         let mut problems = Vec::new();
-        let base = match resolve_point(model, &self.base) {
+        let base = match resolve_point_first(model, &self.base) {
             Known::Empty => {
                 problems.push((
                     Line::Info,

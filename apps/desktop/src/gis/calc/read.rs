@@ -79,6 +79,16 @@ fn number_prefix(s: &str) -> Option<(&str, &str)> {
 /// Reads a known point (the web's `resolvePointIn`): “Y,X”, or the first
 /// point object whose label (else its Ad) matches, Turkish upper-casing.
 pub fn resolve_point(doc: &Model, text: &str) -> Known {
+    resolve(doc, text, true)
+}
+
+/// [`resolve_point`] taking the first point of a name two carry: Vektör oturtma's base point, whose local and target
+/// sets share names by design.
+pub fn resolve_point_first(doc: &Model, text: &str) -> Known {
+    resolve(doc, text, false)
+}
+
+fn resolve(doc: &Model, text: &str, strict: bool) -> Known {
     let t = js_trim(text);
     if t.is_empty() {
         return Known::Empty;
@@ -89,19 +99,17 @@ pub fn resolve_point(doc: &Model, text: &str) -> Known {
             name: String::new(),
         };
     }
-    let key = upper_tr(t);
-    let found = doc.entities().find_map(|e| match e {
-        Entity::Point(pt) => {
-            let name = pt
-                .base
-                .label
-                .as_deref()
-                .or_else(|| pt.base.attrs.get("Ad").map(String::as_str))
-                .unwrap_or("");
-            (upper_tr(name) == key).then(|| (pt.p, pt.base.label.clone()))
-        }
-        _ => None,
-    });
+    let named = points_named(doc, t);
+    // Two points of one name (UR2-016): which one is meant is not guessed; the candidates are said.
+    if strict && named.len() > 1 {
+        let places: Vec<String> = named.iter().map(|pt| format!("({}, {})", pt.p.x, pt.p.y)).collect();
+        return Known::Error(format!(
+            "“{t}” adını {} nokta taşıyor: {}. Noktayı Çizimden seçin ya da Y,X yazın.",
+            named.len(),
+            places.join(", ")
+        ));
+    }
+    let found = named.first().map(|pt| (pt.p, pt.base.label.clone()));
     match found {
         Some((p, label)) => Known::Point {
             p: Vec2::new(p.x, p.y),
@@ -131,22 +139,41 @@ pub fn known_point(doc: &Model, text: &str) -> Option<KnownPoint> {
 /// as [`resolve_point`] finds it: Cihaza gönder takes its code and elevation.
 pub fn point_named<'a>(doc: &'a Model, text: &str) -> Option<&'a Entity> {
     let key = upper_tr(js_trim(text));
-    doc.entities().find(|e| match e {
-        Entity::Point(pt) => {
-            let name = pt
-                .base
-                .label
-                .as_deref()
-                .or_else(|| pt.base.attrs.get("Ad").map(String::as_str))
-                .unwrap_or("");
-            upper_tr(name) == key
-        }
-        _ => false,
-    })
+    let mut found = doc.entities().filter(|e| matches!(e, Entity::Point(pt) if upper_tr(point_name(pt)) == key));
+    // One point of the name, or none: two are not told apart by it (UR2-016).
+    match (found.next(), found.next()) {
+        (Some(one), None) => Some(one),
+        _ => None,
+    }
 }
 
-/// The name a point object at exactly `p` has, if any (the web's `nameAt`):
-/// a picked point snapped to a named point is given by its name.
+/// A point's name as Hesap reads it: its label, else its `Ad` attribute.
+fn point_name(pt: &kentos_commands::PointEntity) -> &str {
+    pt.base.label.as_deref().or_else(|| pt.base.attrs.get("Ad").map(String::as_str)).unwrap_or("")
+}
+
+/// The drawing's points named `text` (trimmed, case as Turkish folds it).
+fn points_named<'a>(doc: &'a Model, text: &str) -> Vec<&'a kentos_commands::PointEntity> {
+    let key = upper_tr(js_trim(text));
+    doc.entities()
+        .filter_map(|e| match e {
+            Entity::Point(pt) if upper_tr(point_name(pt)) == key => Some(pt),
+            _ => None,
+        })
+        .collect()
+}
+
+/// The name a point object at exactly `p` has for a Hesap field: a picked
+/// point snapped to a named point is given by its name. A name two points
+/// carry is not given (UR2-016): the field takes the picked place, so the
+/// point clicked is the one computed from.
+pub fn unique_name_at(doc: &Model, p: Vec2) -> Option<String> {
+    let name = name_at(doc, p)?;
+    (points_named(doc, &name).len() == 1).then_some(name)
+}
+
+/// The name a point object at exactly `p` has, if any (the web's `nameAt`), however many carry it: Vektör oturtma's
+/// rows, whose source and target sets share names, keep it beside the place picked.
 pub fn name_at(doc: &Model, p: Vec2) -> Option<String> {
     doc.entities().find_map(|e| match e {
         Entity::Point(pt) if pt.p.x == p.x && pt.p.y == p.y => {

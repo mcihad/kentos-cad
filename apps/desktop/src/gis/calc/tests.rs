@@ -888,3 +888,54 @@ fn intersection_boxes_stay_put_as_values_are_typed() {
     assert!(places.iter().all(|p| *p == places[0]), "{places:?}");
     crate::files_testing::evidence(&mut snapshot, &app, "ur2-014", "sonuc");
 }
+
+/// UR2-016: two points named QA-K (the forward intersection's and the resection's). Picked on the drawing, the second
+/// one is the station, not the first of the name: its stakeout values are those of its coordinates typed. The name
+/// typed is not guessed: its two places are said and nothing is computed.
+#[test]
+fn a_picked_station_is_the_point_clicked_though_another_has_its_name() {
+    let mut app = app_with_drawing();
+    let doc = app.document.as_mut().expect("open");
+    let layer = doc.model.layers().active().to_owned();
+    for (x, y) in [(487_005.0, 4_419_995.0), (487_010.0, 4_419_990.0)] {
+        let result = kentos_native_application::create::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            serde_json::from_value(json!({
+                "layerId": layer,
+                "objects": [{"geometry": {"kind": "point", "p": {"x": x, "y": y}}, "label": "QA-K"}]
+            }))
+            .expect("the input reads"),
+        );
+        assert!(matches!(result, kentos_commands::CommandResult::Completed { .. }), "{result:?}");
+    }
+    let _ = app.run("calc.stakeout");
+    calc(&mut app, Event::Known(Field::Back, "487000,4420100".into()));
+    calc(&mut app, Event::Cell(0, 0, "486513.341,4420189.522".into()));
+    calc(&mut app, Event::Pick(Field::Station));
+    let _ = app.submit_line("487010,4419990");
+    let picked = app.gis.calc.stakeout.station.clone();
+    assert_ne!(picked, "QA-K", "the name two points carry is not taken");
+    let doc = app.document.as_ref().expect("open");
+    let by_pick = app.gis.calc.stakeout.compute(&doc.model).stakes.expect("values");
+    calc(&mut app, Event::Known(Field::Station, "487010,4419990".into()));
+    let doc = app.document.as_ref().expect("open");
+    let typed = app.gis.calc.stakeout.compute(&doc.model).stakes.expect("values");
+    assert_eq!(
+        (by_pick[0].distance.to_bits(), by_pick[0].bearing.to_bits()),
+        (typed[0].distance.to_bits(), typed[0].bearing.to_bits())
+    );
+    calc(&mut app, Event::Known(Field::Station, "QA-K".into()));
+    let doc = app.document.as_ref().expect("open");
+    let read = app.gis.calc.stakeout.compute(&doc.model);
+    assert!(read.stakes.is_none(), "nothing computed from a name two points carry");
+    let why = read.errors.join(" ");
+    assert!(why.contains("“QA-K” adını 2 nokta taşıyor") && why.contains("487010"), "{why}");
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-016", "ayni-ad");
+    }
+}
