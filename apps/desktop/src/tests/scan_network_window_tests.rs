@@ -308,3 +308,75 @@ fn a_disconnected_scan_is_named_by_its_file() {
     );
     assert!(!crate::files_testing::find_texts(&mut snapshot, &app, &shown).is_empty(), "{shown}");
 }
+
+/// GIS-037 (docs/adr/1094): the flat ground's scans E, F, G: the notes name the weak links and scans by their files,
+/// never by their ids; a note clicked marks its link in Bağlar (its scan in Taramalar); a new run clears the mark.
+#[test]
+fn the_notes_name_the_scans_and_a_click_marks_the_link() {
+    let mut app = opened();
+    app.selection.set(vec![Slot(5), Slot(6), Slot(7)]);
+    let _ = app.update(Message::Run("pointcloud.network"));
+    let r = app.map.scan_network.answer.clone().expect("an answer").expect("adjusted");
+    let uids: Vec<String> = app.map.scan_network.scans.iter().map(|(u, _)| u.clone()).collect();
+    let weak: Vec<&String> = r.notes.iter().filter(|n| n.contains("zayıf")).collect();
+    assert!(!weak.is_empty(), "the shared case's notes");
+    // What the window shows: each note with the names in.
+    let text = |app: &App| {
+        let s = &app.map.scan_network;
+        r.notes.iter().map(|n| s.scans.iter().fold(n.clone(), |t, (u, name)| t.replace(u.as_str(), name))).collect::<Vec<_>>()
+    };
+    for n in text(&app) {
+        assert!(uids.iter().all(|u| !n.contains(u.as_str())), "{n}");
+    }
+    assert!(text(&app).iter().any(|n| n.contains("“ag-e.xyz” ile “ag-f.xyz” bağında") || n.contains("“ag-e.xyz” ile “ag-g.xyz” bağında") || n.contains("“ag-f.xyz” ile “ag-g.xyz” bağında")), "{:?}", text(&app));
+    // A link's note clicked: Bağlar, its row marked.
+    let pair = r.notes.iter().find(|n| n.contains("bağında")).expect("a link's note");
+    let named: Vec<String> = uids.iter().filter(|u| pair.contains(u.as_str())).cloned().collect();
+    assert_eq!(named.len(), 2);
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Mark(named))));
+    assert_eq!(app.map.scan_network.show, Show::Links);
+    let (_, rows) = app.scan_network_lines();
+    assert_eq!(rows.iter().filter(|r| r[0].starts_with("▸ ")).count(), 1, "{rows:?}");
+    // Run again: nothing marked.
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Spacing(0.5))));
+    assert!(app.map.scan_network.marked.is_empty());
+}
+
+/// Two scans whose files share a name are told apart: by their layers when those differ, else by their numbers.
+#[test]
+fn scans_sharing_a_name_are_told_apart() {
+    let dir = crate::files_testing::scratch("ayni-adli-tarama");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/pointcloud/v1/files");
+    std::fs::copy(root.join("ag-f.xyz"), dir.join("ag-e.xyz")).expect("a copy");
+    let mut text = cases()["setup"].to_string();
+    text = text.replace("$fixture:pointcloud/v1/files/ag-f.xyz", &dir.join("ag-e.xyz").to_string_lossy());
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
+    text = text.replace("$fixture:", &format!("{}/", root.display()));
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(&text).expect("reads");
+    let (mut app, _) = App::boot(None);
+    app.program = Some(Module::Map);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.selection.set(vec![Slot(5), Slot(6), Slot(7)]);
+    let _ = app.update(Message::Run("pointcloud.network"));
+    let names: Vec<String> = app.map.scan_network.scans.iter().map(|(_, n)| n.clone()).collect();
+    assert_eq!(names, ["ag-e.xyz #5", "ag-e.xyz #6", "ag-g.xyz"], "same layer: by number");
+}
+
+/// The flat ground's notes by name, a link's note clicked: picture `gis-037-ag-uyarilari`.
+#[test]
+fn the_named_notes_on_the_screen() {
+    let mut app = opened();
+    app.selection.set(vec![Slot(5), Slot(6), Slot(7)]);
+    let _ = app.update(Message::Run("pointcloud.network"));
+    let r = app.map.scan_network.answer.clone().expect("an answer").expect("adjusted");
+    let uids: Vec<String> = app.map.scan_network.scans.iter().map(|(u, _)| u.clone()).collect();
+    let pair = r.notes.iter().find(|n| n.contains("bağında")).expect("a link's note");
+    let named: Vec<String> = uids.iter().filter(|u| pair.contains(u.as_str())).cloned().collect();
+    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Mark(named))));
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    let shown = app.map.scan_network.scans.iter().fold(pair.clone(), |t, (u, n)| t.replace(u.as_str(), n));
+    assert!(crate::files_testing::find_text(&mut shot, &app, &shown).is_some(), "{shown}");
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-037-ag-uyarilari");
+}

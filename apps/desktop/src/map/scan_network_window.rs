@@ -23,7 +23,7 @@
 //! ```
 
 use crate::map;
-use iced::widget::{container, row, space};
+use iced::widget::{button, container, row, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, Entity, PointCloudsNetwork, PointCloudsNetworked, RegisterReject, RegisterRobust};
 use kentos_native_application::{ExecutionContext, pointcloud_network, pointcloud_register};
@@ -101,6 +101,8 @@ pub struct State {
     pub chosen: String,
     pub show: Show,
     pub answer: Option<Result<PointCloudsNetworked, String>>,
+    /// The scans a note names, its link or its scan marked in the table when the note is clicked (GIS-037).
+    pub marked: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -115,6 +117,8 @@ pub enum Event {
     Edges(bool),
     Chosen(String),
     Show(Show),
+    /// A note clicked: the scans it names, their link (two) or the scan (one) marked in its table.
+    Mark(Vec<String>),
     Apply,
     Keep,
     Close,
@@ -122,6 +126,31 @@ pub enum Event {
 
 fn msg(e: Event) -> Message {
     Message::Map(map::Event::ScanNetwork(e))
+}
+
+/// The scans' names told apart (GIS-037): scans sharing a name take their layers' names when those differ, else
+/// their numbers.
+fn told_apart(doc: &kentos_domain::Document, scans: Vec<(String, String)>) -> Vec<(String, String)> {
+    let entity = |u: &str| kentos_domain::Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
+    let layer = |u: &str| entity(u).and_then(|e| doc.layers().get(&e.base().layer_id)).map(|l| l.name.clone());
+    scans
+        .iter()
+        .map(|(u, n)| {
+            let same: Vec<&String> = scans.iter().filter(|(_, m)| m == n).map(|(v, _)| v).collect();
+            if same.len() < 2 {
+                return (u.clone(), n.clone());
+            }
+            let mut layers: Vec<Option<String>> = same.iter().map(|v| layer(v)).collect();
+            let all = layers.len();
+            layers.sort();
+            layers.dedup();
+            let shown = match layer(u) {
+                Some(l) if layers.len() == all => format!("{n} ({l})"),
+                _ => entity(u).map_or_else(|| n.clone(), |e| format!("{n} #{}", e.base().id)),
+            };
+            (u.clone(), shown)
+        })
+        .collect()
 }
 
 /// A cloud's name: its first file's, else its number.
@@ -148,9 +177,10 @@ impl App {
             })
             .collect();
         if !selected.is_empty() {
-            return selected;
+            return told_apart(&doc.model, selected);
         }
-        doc.model.entities_with_uids().filter_map(|(u, e)| cloud_name(e).map(|n| (u.to_string(), n))).collect()
+        let all = doc.model.entities_with_uids().filter_map(|(u, e)| cloud_name(e).map(|n| (u.to_string(), n))).collect();
+        told_apart(&doc.model, all)
     }
 
     fn scan_network_run(&mut self) {
@@ -171,6 +201,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
+        self.map.scan_network.marked.clear();
         self.map.scan_network.answer = Some(
             match pointcloud_network::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
@@ -325,6 +356,11 @@ impl App {
                 s.show = v;
                 return Task::none();
             }
+            Event::Mark(uids) => {
+                s.show = if uids.len() == 2 { Show::Links } else { Show::Scans };
+                s.marked = uids;
+                return Task::none();
+            }
             Event::Apply => {
                 self.scan_network_apply();
                 return Task::none();
@@ -361,8 +397,21 @@ impl App {
             }
             Some(Ok(r)) => r,
         };
+        // The command names scans by their ids; the window by their names, a note naming scans clickable (GIS-037).
         for (k, n) in r.notes.iter().enumerate() {
-            lines.push(words::text_line(if k == 0 { Kind::Ok } else { Kind::Info }, n.clone()));
+            let named: Vec<String> = s.scans.iter().filter(|(u, _)| n.contains(u.as_str())).map(|(u, _)| u.clone()).collect();
+            let text = s.scans.iter().fold(n.clone(), |t, (u, name)| t.replace(u.as_str(), name));
+            let kind = if k == 0 { Kind::Ok } else if named.is_empty() { Kind::Info } else { Kind::Warn };
+            let line = words::text_line(kind, text);
+            lines.push(if named.is_empty() {
+                line
+            } else {
+                button(line)
+                    .padding(0)
+                    .style(kentos_ui::style::button::ghost)
+                    .on_press(msg(Event::Mark(named)))
+                    .into()
+            });
         }
         let format = self.format();
         let degrees = format.angle_unit_label() == "°";
@@ -376,11 +425,19 @@ impl App {
         };
         let name = |u: &str| s.scans.iter().find(|(id, _)| id == u).map_or_else(|| u.to_owned(), |(_, n)| n.clone());
         let mm = |m: f64| format!("{:.1}", m * 1000.0);
+        // A clicked note's scan or link, marked at the start of its row.
+        let mark = |uids: &[&String], text: String| {
+            if !s.marked.is_empty() && s.marked.len() == uids.len() && s.marked.iter().all(|m| uids.contains(&m)) {
+                format!("▸ {text}")
+            } else {
+                text
+            }
+        };
         match s.show {
             Show::Scans => {
                 for sc in &r.scans {
                     rows.push(vec![
-                        name(&sc.uid),
+                        mark(&[&sc.uid], name(&sc.uid)),
                         if sc.fixed { "Sabit".to_owned() } else { String::new() },
                         angle(sc.rotation[0]),
                         angle(sc.rotation[1]),
@@ -393,7 +450,7 @@ impl App {
             Show::Links => {
                 for l in &r.links {
                     rows.push(vec![
-                        format!("{} – {}", name(&l.scans[0]), name(&l.scans[1])),
+                        mark(&[&l.scans[0], &l.scans[1]], format!("{} – {}", name(&l.scans[0]), name(&l.scans[1]))),
                         l.pairs.to_string(),
                         format!("{:.0}", l.overlap * 100.0),
                         mm(l.rms_after),
