@@ -439,7 +439,9 @@ impl App {
                 let alone = matches!(target, Target::Point(s)
                     if selection.len() == 1 && selection.contains(s));
                 let survey_cell = map && !draft_row && matches!(col, Some(EditColumn::Name | EditColumn::Code | EditColumn::Z));
-                let shown = if survey_cell {
+                // Every editable cell takes its click or double click over its whole row height and column width
+                // (GIS-062): an empty elevation's middle or the space beside a short code is the cell too.
+                let shown = if col.is_some() {
                     container(shown)
                         .width(Fill)
                         .height(kentos_ui::widget::table::row_height())

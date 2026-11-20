@@ -1097,3 +1097,52 @@ fn screens() {
         }
     }
 }
+
+/// GIS-062 (docs/adr/1133): in a GIS drawing a double click anywhere in an editable cell opens it: the middle of the
+/// Z column of the first row (an elevation empty or short) and the space right of a short code.
+#[test]
+fn a_double_click_anywhere_in_a_cell_edits_it() {
+    use super::Target;
+    use kentos_ui::snapshot::Input;
+    let mut app = app_with_points();
+    let _ = app.update(Message::Run("point.editor"));
+    let shown = {
+        let doc = app.document.as_ref().expect("a drawing");
+        app.point_rows(doc).shown
+    };
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    let mut update = |app: &mut App, m: Message| drop(app.update(m));
+    shot.settle(&mut app, App::view, &mut update);
+    let lowest = |shot: &mut kentos_ui::snapshot::Snapshot, app: &App, caption: &str| {
+        crate::files_testing::find_texts(shot, app, caption)
+            .into_iter()
+            .max_by(|a, b| a.y.total_cmp(&b.y))
+            .unwrap_or_else(|| panic!("{caption} on screen"))
+    };
+    let z = lowest(&mut shot, &app, "Z (kot)");
+    let code = lowest(&mut shot, &app, "Kod");
+    let layer = lowest(&mut shot, &app, "Katman");
+    let row_y = z.y + z.height + kentos_ui::widget::table::row_height() * 0.5 + 6.0;
+    let double = |shot: &mut kentos_ui::snapshot::Snapshot, app: &mut App, x: f32| {
+        let at = iced::Point::new(x, row_y);
+        let mut update = |app: &mut App, m: Message| drop(app.update(m));
+        shot.input(app, App::view, &mut update, Input::Click(at));
+        shot.input(app, App::view, &mut update, Input::Click(at));
+    };
+    // The middle of Z's column.
+    double(&mut shot, &mut app, z.center().x);
+    assert_eq!(app.gis.points.editing, Some((Target::Point(shown[0]), super::EditColumn::Z)), "the elevation cell");
+    // 0 is an elevation, not an unknown one.
+    ev(&mut app, Event::Input("0".into()));
+    ev(&mut app, Event::Finish(None));
+    let z = match app.document.as_ref().and_then(|d| d.model.get(shown[0])) {
+        Some(kentos_commands::Entity::Point(p)) => p.z,
+        _ => panic!("a point"),
+    };
+    assert_eq!(z, Some(0.0));
+    // Right of a short code, inside Kod's column.
+    std::thread::sleep(std::time::Duration::from_millis(400));
+    double(&mut shot, &mut app, code.x + code.width + 40.0);
+    assert_eq!(app.gis.points.editing, Some((Target::Point(shown[0]), super::EditColumn::Code)), "the code cell");
+    let _ = layer;
+}
