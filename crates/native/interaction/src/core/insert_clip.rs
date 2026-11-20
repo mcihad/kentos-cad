@@ -152,7 +152,10 @@ impl Tool for InsertClip {
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if self.insert.is_none() {
-            match edge::pick_said(p, cx, editable) {
+            // The insert a plain click would select there (its block's drawn parts lead to it), as the selection finds
+            // it (UR2-044: a click on the reference's line found nothing here and Blok #1 when selecting).
+            let selected = crate::selectable::pick(cx, p.raw).filter(|s| cx.doc.get(*s).is_some_and(|e| editable(e, cx.doc)));
+            match selected.or_else(|| edge::pick_said(p, cx, editable)) {
                 Some(slot) => {
                     self.insert = Some(slot);
                     cx.selection.set_hover(None);

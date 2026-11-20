@@ -171,3 +171,31 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("pdf-ice-aktar-cizim", pdf_imported),
     ]
 }
+
+/// UR2-044: nothing selected, Kırp started, and a click on a line of the attached plan: the plan's insert is the one
+/// to clip, as a plain click would select it, not “no block or external reference here”.
+#[test]
+fn kirp_takes_the_reference_a_click_on_its_line_would_select() {
+    let mut app = App::boot(None).0;
+    let _ = plan(&mut app);
+    on_inserts(&mut app);
+    let insert = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.entities().find(|e| matches!(e, kentos_commands::Entity::Insert(_))).map(|e| kentos_domain::Slot(e.base().id)))
+        .expect("the insert");
+    // A point a plain click selects the insert at: the first on a grid over the view.
+    let b = app.viewport.camera.visible_bounds();
+    let tol = (b.max_x - b.min_x) / 400.0;
+    let at = (0..80)
+        .flat_map(|i| (0..80).map(move |j| (i, j)))
+        .map(|(i, j)| kentos_interaction::Vec2::new(b.min_x + (b.max_x - b.min_x) * f64::from(i) / 80.0, b.min_y + (b.max_y - b.min_y) * f64::from(j) / 80.0))
+        .find(|p| app.spatial.pick(*p, tol) == Some(insert))
+        .expect("a point on the plan's lines");
+    app.selection.set([]);
+    let _ = app.run("tool.xclip");
+    crate::tools_scenes::click(&mut app, [at.x - crate::tools_scenes::E, at.y - crate::tools_scenes::N]);
+    let said = crate::files_testing::last_said(&app);
+    assert!(!said.contains("kilitsiz bir blok ya da dış başvuru yok"), "{said}");
+    assert_eq!(app.session.point_count(), 1, "the insert taken: {said}");
+}
