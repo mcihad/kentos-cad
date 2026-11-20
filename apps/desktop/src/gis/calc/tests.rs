@@ -853,3 +853,38 @@ fn a_closed_traverse_carries_its_heights() {
         assert!((got - want).abs() < 1e-9, "{zs:?}");
     }
 }
+
+/// UR2-014: as A, B, α and β are typed the boxes stay where they were: the warnings and the result have a room of one
+/// height, so the dialog does not grow and shift its fields under the pointer.
+#[test]
+fn intersection_boxes_stay_put_as_values_are_typed() {
+    let mut app = app_with_drawing();
+    let size = iced::Size::new(1440.0, 900.0);
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.run("calc.forward");
+    let mut snapshot = crate::files_testing::offscreen(size);
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let mut places = Vec::new();
+    let steps: [Option<Event>; 5] = [
+        None,
+        Some(Event::Known(Field::A, "487000,4420000".into())),
+        Some(Event::Known(Field::B, "487010,4420000".into())),
+        Some(Event::Alpha("50".into())),
+        Some(Event::Beta("50".into())),
+    ];
+    for step in steps {
+        if let Some(e) = step {
+            calc(&mut app, e);
+        }
+        snapshot.settle(&mut app, App::view, &mut update);
+        let mut at = |caption: &str| crate::files_testing::find_text(&mut snapshot, &app, caption).map(|r| (r.x, r.y));
+        let head = at("Kestirme türü");
+        let beta = at("β: B'de P'den A'ya (g)").or_else(|| at("β: B'de P'den A'ya (°)"));
+        places.push((head, beta));
+    }
+    assert!(places[0].1.is_some(), "the β box found: {places:?}");
+    assert!(places.iter().all(|p| *p == places[0]), "{places:?}");
+    crate::files_testing::evidence(&mut snapshot, &app, "ur2-014", "sonuc");
+}

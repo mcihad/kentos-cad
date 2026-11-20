@@ -9,7 +9,7 @@
 use std::fmt;
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
-use iced::widget::{Canvas, column, container, row};
+use iced::widget::{Canvas, Column, column, container, row};
 use iced::{
     Border, Element, Fill, Length, Pixels, Point, Rectangle, Renderer, Shrink, Size, Theme, mouse,
 };
@@ -295,11 +295,14 @@ impl Form {
                 lines
             }
         };
+        // The messages and the result in a room of one height (UR2-014): as values are typed and the warnings come
+        // and go, the dialog keeps its size, so the boxes above stay under the pointer; a long list scrolls in it.
+        let mut answer = Column::new().spacing(12);
         if let Some(summary) = summary(lines) {
-            body = body.push(summary);
+            answer = answer.push(summary);
         }
         if let Some(found) = &computed.result {
-            body = body.push(result_table(
+            answer = answer.push(result_table(
                 &["Nokta", "Y (sağa)", "X (yukarı)"],
                 vec![vec![
                     found.name.clone(),
@@ -309,6 +312,10 @@ impl Form {
                 &[false, true, true],
             ));
         }
+        body = body.push(
+            container(iced::widget::scrollable(answer).height(Fill))
+                .height(Length::Fixed(typography::scaled(ANSWER_H))),
+        );
         let done = computed.result.is_some();
         footer(
             Dialog::new("Kestirme")
@@ -342,6 +349,8 @@ fn sketch_box(theme: &Theme) -> container::Style {
 /// The web's drawing (an SVG of 200 × 118), drawn to its box's width
 /// (230 less the padding).
 const SKETCH_H: f32 = 210.0 * 118.0 / 200.0;
+/// The messages' and the result's room: the summary's lines (up to six warnings) or a line and the one-row table.
+const ANSWER_H: f32 = 150.0;
 
 /// The web's sketch (an SVG there): which point is where and which angle is
 /// which, not to scale.
