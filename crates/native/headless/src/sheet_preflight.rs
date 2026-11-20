@@ -168,7 +168,7 @@ pub fn preflight(doc: &Document, input: &PreflightSheets) -> Result<SheetsPrefli
 /// The pages most read of an atlas in one preflight; past them the rest are said not read.
 const MOST_ATLAS_PAGES: usize = 200;
 
-/// An atlas sheet's issues (GIS-031, docs/adr/1090): its pages planned as the atlas's PDF plans them, each read in its
+/// An atlas sheet's issues (GIS-031, docs/adr/1091): its pages planned as the atlas's PDF plans them, each read in its
 /// own context; a finding is said once with the pages it is on, an error when it is one on any page.
 #[allow(clippy::too_many_arguments)]
 fn atlas_issues(

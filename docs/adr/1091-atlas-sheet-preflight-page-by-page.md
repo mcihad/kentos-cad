@@ -1,4 +1,4 @@
-# 1090 — Baskı öncesi denetim atlas paftasını sayfa sayfa okur
+# 1091 — Baskı öncesi denetim atlas paftasını sayfa sayfa okur
 
 Tarih: 2026-11-20. gis-usage-report.md GIS-031. Durum: kabul edildi.
 

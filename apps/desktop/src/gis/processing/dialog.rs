@@ -214,6 +214,8 @@ pub struct ToolDialog {
     pub(super) inputs: BTreeMap<String, InputSummary>,
     /// Each expression parameter's line (“16 / 340 nesne koşulu sağlıyor.”).
     pub(super) previews: BTreeMap<String, String>,
+    /// Each chosen output file that is there, with the drawing's objects linked to it (overwrite.rs, GIS-035).
+    pub(super) overwrites: BTreeMap<String, super::overwrite::Overwrite>,
 }
 
 impl ToolDialog {
@@ -249,6 +251,7 @@ impl ToolDialog {
             run_issues: Vec::new(),
             inputs: BTreeMap::new(),
             previews: BTreeMap::new(),
+            overwrites: BTreeMap::new(),
         }
     }
 

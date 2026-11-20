@@ -18,7 +18,7 @@ fn cases() -> Value {
     serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pointclouds.register.json")).expect("cases")
 }
 
-fn opened(program: Option<Module>) -> App {
+pub(crate) fn opened(program: Option<Module>) -> App {
     let mut text = cases()["setup"].to_string();
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
     text = text.replace("$fixture:", &format!("{}/", root.display()));

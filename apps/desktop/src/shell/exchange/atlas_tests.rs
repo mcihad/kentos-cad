@@ -475,7 +475,7 @@ fn a_chosen_coverage_not_applied_says_so_beside_its_button() {
     assert!(crate::files_testing::find_text(&mut shot, &app, "Atlas tanımı değişti: sayfaları bu tanımla hesaplamak için Tanımı uygula'ya basın.").is_none());
 }
 
-/// GIS-031 (docs/adr/1090): the sheets' preflight reads an atlas sheet page by page, each in its own context as the
+/// GIS-031 (docs/adr/1091): the sheets' preflight reads an atlas sheet page by page, each in its own context as the
 /// atlas's PDF draws it: its atlas maps are placed and its @atlas_ fields resolved; it says it is an atlas and how many
 /// pages it read, and a value really missing is said with the pages it is on.
 #[test]

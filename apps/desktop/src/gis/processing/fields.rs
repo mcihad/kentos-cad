@@ -762,7 +762,14 @@ fn save_file<'a>(def: &'a ParamDef, suffix: &'a str, env: &Env<'a, '_>) -> Eleme
                 .on_press(ev(Event::Value(name, json!("")))),
         );
     }
-    line.push(pick).into()
+    let line = line.push(pick);
+    // A file there, perhaps another result's (GIS-035): said before the run writes over it.
+    match env.window.overwrites.get(&def.name).filter(|_| chosen) {
+        Some(o) => column![line, label::caption(o.line()).style(style::text::warning)]
+            .spacing(4)
+            .into(),
+        None => line.into(),
+    }
 }
 
 /// A file (docs/adr/0200 §7): its button, its name and what it holds, or

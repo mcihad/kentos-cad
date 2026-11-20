@@ -29,6 +29,9 @@ pub(crate) mod batch;
 pub(crate) mod designer;
 pub mod dialog;
 mod fields;
+pub(crate) mod overwrite;
+#[cfg(test)]
+mod overwrite_tests;
 pub mod memory;
 pub mod panel;
 mod plan;
@@ -455,6 +458,8 @@ impl App {
         window
             .sink
             .refresh(&doc.model, &window.tool, &window.values);
+        let folder = doc.path.as_deref().and_then(std::path::Path::parent);
+        window.overwrites = overwrite::overwrites(&doc.model, folder, &window.tool, &window.values);
     }
 
     pub(crate) fn processing_event(&mut self, e: Event) -> Task<Message> {
