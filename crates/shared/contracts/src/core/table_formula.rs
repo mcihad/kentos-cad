@@ -105,6 +105,37 @@ pub fn number_of(words: &str) -> Option<f64> {
     s.parse::<f64>().ok().filter(|x| x.is_finite())
 }
 
+/// A cell's number written the Turkish way (UR2-037: `1340,13` summed as text, so as 0): a decimal comma, and
+/// optionally points between groups of three digits (`2.087,13`); `[+-]digits[.ddd]*,digits` or `[+-]digits.ddd(.ddd)*`
+/// only, so a plain `1.5` stays the point's and a list `1,2,3` is no number.
+pub fn turkish_number_of(words: &str) -> Option<f64> {
+    let s = words.trim();
+    let (sign, body) = match s.strip_prefix('-') {
+        Some(rest) => (-1.0, rest),
+        None => (1.0, s.strip_prefix('+').unwrap_or(s)),
+    };
+    let (whole, frac) = match body.split_once(',') {
+        Some((w, f)) if !f.is_empty() && f.bytes().all(|b| b.is_ascii_digit()) => (w, Some(f)),
+        Some(_) => return None,
+        None => (body, None),
+    };
+    let groups: Vec<&str> = whole.split('.').collect();
+    let grouped = groups.len() > 1;
+    let first = groups.first()?;
+    if first.is_empty() || first.len() > if grouped { 3 } else { usize::MAX } || !first.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    if groups[1..].iter().any(|g| g.len() != 3 || !g.bytes().all(|b| b.is_ascii_digit())) {
+        return None;
+    }
+    // Without a comma it must be grouped (`2.087`), else it is the point's own form, read by `number_of`.
+    if frac.is_none() && !grouped {
+        return None;
+    }
+    let text = format!("{}.{}", groups.concat(), frac.unwrap_or("0"));
+    text.parse::<f64>().ok().filter(|x| x.is_finite()).map(|x| sign * x)
+}
+
 /// `x` in its shortest decimal form, without an exponent (`0.1`, `1200`, `-3.5`); 0 is `0`.
 pub fn shortest(x: f64) -> String {
     if x == 0.0 {
@@ -578,7 +609,7 @@ impl Sheet<'_> {
         let words = &self.cells[r][c];
         if words.trim().is_empty() {
             Value::Empty
-        } else if let Some(x) = number_of(words) {
+        } else if let Some(x) = number_of(words).or_else(|| turkish_number_of(words)) {
             Value::Number(x)
         } else {
             Value::Text(words.clone())
@@ -1072,6 +1103,21 @@ mod tests {
             .pop()
             .map(|(_, _, w)| w)
             .unwrap_or_default()
+    }
+
+    /// UR2-037: cells written the Turkish way are summed as numbers: `1340,13` and `747,00` make 2087.13, as their
+    /// point-written forms do; grouped `2.087,13` reads too; a list of numbers is no number.
+    #[test]
+    fn turkish_written_cells_are_numbers() {
+        let comma = grid(&[&["1340,13"], &["747,00"]]);
+        let point = grid(&[&["1340.13"], &["747.00"]]);
+        assert_eq!(one(&comma, "=SUM(A1:A2)"), "2087.13");
+        assert_eq!(one(&comma, "=SUM(A1:A2)"), one(&point, "=SUM(A1:A2)"));
+        assert_eq!(turkish_number_of("2.087,13"), Some(2087.13));
+        assert_eq!(turkish_number_of("-1.234.567,5"), Some(-1_234_567.5));
+        assert_eq!(turkish_number_of("1,2,3"), None);
+        assert_eq!(turkish_number_of("1.5"), None, "the point's own form is number_of's");
+        assert_eq!(turkish_number_of("12.34,5"), None, "groups of three only");
     }
 
     #[test]
