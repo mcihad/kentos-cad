@@ -265,6 +265,9 @@ impl App {
         self.followed = Some((doc.session, doc.model.generation()));
         self.xrefs = Default::default();
         self.document = Some(doc);
+        // The time slider is the drawing's (UR2-042: the last project's range and position went on in a drawing with
+        // no time): measured again on this one, closed when it has none.
+        self.time_for_document();
         // The level and view it opens with are the file's (docs/adr/0720 §1); a tab brought in front gives its own.
         self.take_level_state();
         // A linked file that changed or went is said, never loaded silently (docs/adr/0348 §5, 0349 §2).

@@ -435,3 +435,20 @@ fn a_file_and_a_downloaded_revision_are_shown_and_compared() {
     );
     let _ = app.update(Message::Split(Event::Source(0, Source::Drawing)));
 }
+
+/// UR2-042: the slider open on the temporal drawing, then a drawing with no time opened: the slider closes, its range
+/// is not the old drawing's, and opening it again says there is no time to show.
+#[test]
+fn a_drawing_without_time_closes_the_slider() {
+    let (mut app, _) = App::boot(None);
+    crate::temporal_scenes::opened(&mut app);
+    let task = app.run("time.slider");
+    crate::files_testing::drive(&mut app, task);
+    assert!(app.gis.time.slider.open && app.gis.time.slider.extent.is_some());
+    let plain = crate::files_testing::app_with_drawing();
+    let doc = plain.document.expect("a drawing");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    assert!(!app.gis.time.slider.open, "closed on a drawing without time");
+    assert!(!app.gis.time.slider.playing);
+    assert_eq!(app.gis.time.slider.extent, None, "no old range");
+}

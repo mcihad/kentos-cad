@@ -523,6 +523,22 @@ impl App {
         self.time_apply();
     }
 
+    /// Another drawing in front (opened, or its tab): the slider forgets the last one's range, stops playing and is
+    /// measured on this one, closed when it has no time (UR2-042).
+    pub(crate) fn time_for_document(&mut self) {
+        let was_open = self.gis.time.slider.open;
+        let s = &mut self.gis.time.slider;
+        s.playing = false;
+        s.extent = None;
+        s.open = false;
+        if was_open {
+            // Opened again on the drawing's own range; nothing said when it has none.
+            let _ = self.time_show();
+        } else {
+            self.time_apply();
+        }
+    }
+
     /// The drawing changed: the range and the positions again, the position at the nearest moment.
     pub(crate) fn time_refresh(&mut self) {
         if !self.gis.time.slider.open {
