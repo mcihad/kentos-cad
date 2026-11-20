@@ -4,9 +4,12 @@
 //! thread). Coordinates are written exactly and not transformed: a WGS 84
 //! project (EPSG:4326) gives RFC 7946 GeoJSON; any other its own coordinates
 //! with the 2008 `crs` member naming them, which the window says before
-//! writing (RFC 7946 knows only WGS 84), unless the user ticks “WGS 84'e
-//! çevir (RFC 7946)”: then they are moved into WGS 84 longitude and latitude
-//! (docs/adr/0222 §7), the way said first. What GeoJSON cannot hold is said
+//! writing (RFC 7946 knows only WGS 84). A projected project's file is
+//! RFC 7946 by default (gis-usage-report GIS-011, docs/adr/1077): the
+//! coordinates are moved into WGS 84 longitude and latitude (docs/adr/0222
+//! §7), the way said first; “Proje koordinatları (eski GeoJSON)” keeps them,
+//! and the choice is kept for the next export in the session. One layer's
+//! objects are summed up in one line instead of the layers' table. What GeoJSON cannot hold is said
 //! before writing (the summary) and after (the writer's report, in the
 //! command line). An export is not a save: the drawing stays unsaved if it
 //! was.
@@ -33,6 +36,25 @@ use crate::view::hex_color;
 const CURVES: [&str; 4] = ["circle", "arc", "ellipse", "spline"];
 /// Not written: GeoJSON has no text, dimension or infinite line.
 const UNWRITTEN: [&str; 4] = ["text", "dimension", "xline", "ray"];
+
+thread_local! {
+    /// The coordinates the last GeoJSON export of this session chose (GIS-011): none, RFC 7946's WGS 84.
+    static LAST_WGS84: std::cell::Cell<Option<bool>> = const { std::cell::Cell::new(None) };
+}
+
+/// The file's coordinates, as the window offers them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Profile(pub bool);
+
+impl std::fmt::Display for Profile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if self.0 {
+            "GeoJSON (RFC 7946, WGS 84)"
+        } else {
+            "Proje koordinatları (eski GeoJSON)"
+        })
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -62,6 +84,12 @@ fn event(e: Event) -> Message {
 }
 
 impl State {
+    /// Whether the file is RFC 7946's WGS 84 (else the project's coordinates).
+    #[cfg(test)]
+    pub fn wgs84_chosen(&self) -> bool {
+        self.wgs84
+    }
+
     pub fn new(app: &App) -> Self {
         Self {
             scope: if app.selection.is_empty() {
@@ -73,7 +101,7 @@ impl State {
             writing: false,
             status: None,
             written: None,
-            wgs84: false,
+            wgs84: LAST_WGS84.with(|c| c.get()).unwrap_or(true),
         }
     }
 }
@@ -151,7 +179,10 @@ impl App {
                     s.excluded.extend(ids);
                 }
             }
-            Event::Wgs84(on) => s.wgs84 = on,
+            Event::Wgs84(on) => {
+                s.wgs84 = on;
+                LAST_WGS84.with(|c| c.set(Some(on)));
+            }
             Event::Run | Event::Bytes(..) => {}
         }
         Task::none()
@@ -319,19 +350,41 @@ impl App {
             ),
         ));
         if self.geojson_can_move() {
+            let unit = self
+                .document
+                .as_ref()
+                .map(|d| crate::crs::project_name(d.settings()))
+                .unwrap_or_default();
             body = body.push(words::field(
                 "Koordinatlar",
-                words::check(
-                    s.wgs84,
-                    "WGS 84'e çevir (RFC 7946)",
-                    Some(event(Event::Wgs84(!s.wgs84))),
-                ),
-                None,
+                Segmented::new([Profile(true), Profile(false)], Profile(s.wgs84), |p: Profile| {
+                    event(Event::Wgs84(p.0))
+                }),
+                Some(if s.wgs84 {
+                    "Web haritaları ve paylaşım için: boylam, enlem derece olarak (RFC 7946); crs üyesi yazılmaz.".to_owned()
+                } else {
+                    format!("Yerel teslim için: {unit} sisteminde metre olarak, eski (2008) crs üyesiyle; RFC 7946'yı bilen programlar yanlış yere koyar.")
+                }),
             ));
         }
-        body = body
-            .push(self.geojson_export_layers(s))
-            .push(self.geojson_export_summary(s, &chosen));
+        // One layer's objects: one line, not a table of one row (GIS-011).
+        let layered = self.by_layer(s.scope);
+        if let ([(id, list)], Some(doc)) = (layered.as_slice(), &self.document) {
+            let name = doc.model.layers().get(id).map_or("Katmansız".to_owned(), |l| l.name.clone());
+            let system = if s.wgs84 && self.geojson_can_move() {
+                "WGS 84".to_owned()
+            } else {
+                crate::crs::project_name(doc.settings())
+            };
+            body = body.push(words::field(
+                "Katman",
+                words::text_line(Line::Info, format!("{} nesne · {name} · {system}", list.len())),
+                None,
+            ));
+        } else {
+            body = body.push(self.geojson_export_layers(s));
+        }
+        body = body.push(self.geojson_export_summary(s, &chosen));
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
                 if *error { Line::Error } else { Line::Info },
@@ -532,7 +585,7 @@ impl App {
             ));
         }
         if data {
-            lines.push(words::text_line(Line::Info, "Öznitelikler metin özellik (properties) olarak yazılır; katman ve etiket KentOS'un “kentos” üyesinde: KentOS geri okur, öbür programlar yok sayar."));
+            lines.push(words::text_line(Line::Info, "Öznitelikler özellik (properties) olarak yazılır: tanımlı sayı alanları JSON sayısı, evet/hayır alanları true/false, ötekiler metin; katman ve etiket KentOS'un “kentos” üyesinde: KentOS geri okur, öbür programlar yok sayar."));
         }
         if styled > 0 {
             lines.push(words::text_line(

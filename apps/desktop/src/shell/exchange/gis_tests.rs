@@ -305,6 +305,8 @@ fn a_geojson_export_writes_what_the_reader_takes_back() {
         &mut app,
         Event::GeoJsonExport(geojson_export::Event::Scope(dxf_export::Scope::All)),
     );
+    // The project's own coordinates, asked for (RFC 7946's WGS 84 is the default, GIS-011).
+    send(&mut app, Event::GeoJsonExport(geojson_export::Event::Wgs84(false)));
     send(&mut app, Event::GeoJsonExport(geojson_export::Event::Run));
     assert_eq!(app.dialog, None, "{:?}", app.exchange);
     assert!(
@@ -535,4 +537,39 @@ fn screens() {
             picture(&mut app, &format!("gis-{mode}-11-kml-komutla"));
         }
     }
+}
+
+/// GIS-011 (docs/adr/1077): a TM36 project's GeoJSON is RFC 7946 by default — WGS 84 degrees, no crs member, a
+/// defined whole number a JSON number — and the choice of the project's coordinates is kept for the next export of the
+/// session; one layer's objects are one line, not a table of one row.
+#[test]
+fn a_geojson_export_is_rfc_7946_by_default_and_keeps_the_choice() {
+    let mut app = app_with_drawing();
+    let dir = scratch("export-geojson-rfc");
+    let path = dir.join("web.geojson");
+    app.picker = Picker::File(path.clone());
+    let doc = &app.document.as_ref().expect("open").model;
+    let first = doc.entities_with_uids().find(|(_, e)| e.kind() == "polygon").map(|(u, _)| u).expect("a parcel");
+    let slot = doc.slot_of(first).expect("its slot");
+    app.selection.set([slot]);
+    run(&mut app, "file.export.geojson");
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    let mut update = |app: &mut App, m| drop(app.update(m));
+    shot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut shot, &app, "gis-011", "tek-katman-wgs84");
+    send(&mut app, Event::GeoJsonExport(geojson_export::Event::Run));
+    let v: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).expect("written")).expect("json");
+    assert!(v.get("crs").is_none(), "RFC 7946 has no crs member");
+    let ring = &v["features"][0]["geometry"]["coordinates"][0][0];
+    let (lon, lat) = (ring[0].as_f64().unwrap(), ring[1].as_f64().unwrap());
+    assert!((25.0..46.0).contains(&lon) && (35.0..43.0).contains(&lat), "{lon}, {lat}");
+    // The project's coordinates chosen once are the next export's.
+    run(&mut app, "file.export.geojson");
+    send(&mut app, Event::GeoJsonExport(geojson_export::Event::Wgs84(false)));
+    send(&mut app, Event::GeoJsonExport(geojson_export::Event::Run));
+    run(&mut app, "file.export.geojson");
+    let Some(super::Window::GeoJsonExport(s)) = &app.exchange else {
+        panic!("the window");
+    };
+    assert!(!s.wgs84_chosen(), "the last choice is kept");
 }
