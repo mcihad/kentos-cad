@@ -103,9 +103,18 @@ fn the_window_reads_ranges_a_difference_and_check_points() {
     // The breaks are the user's: none asked, none read.
     send(&mut app, W::Preview);
     assert!(
-        matches!(&app.road.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("Bir şey sorun"))
+        matches!(&app.road.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.ends_with("sınıflandırmak için Sınırlar alanına en az iki sınır yazın (ör. 0, 30, 70).") && !why.contains("slopes"))
     );
     send(&mut app, W::Surface("t-6".into()));
+    send(&mut app, W::Preview);
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-009", "sinir-yok");
+    }
     send(&mut app, W::Field(0, "0, 1, 12, 35".into()));
     send(&mut app, W::Roughness(true));
     send(&mut app, W::Preview);

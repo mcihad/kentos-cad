@@ -1,5 +1,5 @@
 //! Yüzey analizi (plan/road.md Y18.5, docs/adr/0916 §5, `terrain.analysis`): a terrain surface read three ways, nothing
-//! written. Analiz: elevation, slope or aspect ranges (Civil 3D's Elevations, Slopes, Directions) coloured in plan with
+//! written. Analiz: elevation, slope or aspect ranges coloured in plan with
 //! their plan and 3D areas, the roughness and a raster's slope against the triangles' (`road.terrains.analysis`). Fark:
 //! a second surface over the first, cut, fill and net and the difference's ranges (`road.terrains.compare`); the
 //! material zones (docs/adr/3540) are the closed objects of a layer, named and factored by their attributes. Kalite: near
@@ -93,7 +93,7 @@ pub(crate) const FIELDS: [&str; 22] = [
     // Fark by sections (docs/adr/4340): their spacing and the axis's azimuth (degrees from north, clockwise).
     "Kesit aralığı (m)",
     "Eksenin semti (°)",
-    // Sections along a drawn axis (docs/adr/4760; Netcad's Enkesit Çiz): the widths and the start's kilometre.
+    // Sections along a drawn axis (docs/adr/4760): the widths and the start's kilometre.
     "Sola genişlik (m)",
     "Sağa genişlik (m)",
     "Başlangıç km (m)",
@@ -161,7 +161,7 @@ pub struct Window {
     pub(crate) formula: kentos_commands::SectionFormula,
     /// Fark by sections along a drawn axis (docs/adr/4760): a line's or an open polyline's uid; none, the azimuth's.
     pub(crate) axis: Option<String>,
-    /// Sections at the axis's corners too (Netcad's “Eksen Çizgisi Noktalarında”).
+    /// Sections at the axis's corners too.
     pub(crate) corners: bool,
     /// The cut and fill zones' labels and quantity table (docs/adr/2340), their deepest places (docs/adr/2740).
     pub(crate) zone_labels: bool,
@@ -258,6 +258,13 @@ impl Window {
 
     pub(crate) fn analysis(&self) -> Result<TerrainsAnalysis, String> {
         let breaks = list(&self.fields[0], FIELDS[0])?;
+        // The step the user can take, before the query is sent (UR2-009): ranges need two bounds at least, unless
+        // Pürüzlülük or a raster asks something else.
+        let asks_else = self.roughness || !self.fields[1].trim().is_empty();
+        if breaks.as_ref().is_none_or(|b| b.len() < 2) && !asks_else {
+            let what = ["Kotu", "Eğimi", "Bakıyı"][self.measure.min(2)];
+            return Err(format!("{what} sınıflandırmak için Sınırlar alanına en az iki sınır yazın (ör. 0, 30, 70)."));
+        }
         let mut q = TerrainsAnalysis {
             surface: self.surface()?,
             elevations: None,
@@ -811,7 +818,7 @@ impl App {
                 .width(BOX);
                 form = form.section("Hacim").field("Yöntem", method);
                 form = if w.volume_sections {
-                    // Docs/adr/4340: parallel sections across an axis; Civil 3D's Average End Area and Prismoidal.
+                    // Docs/adr/4340: parallel sections across an axis; the average end area and prismoidal methods.
                     // Docs/adr/5140: the frustum's (A₁ + A₂ + √(A₁·A₂))·L/3 too.
                     use kentos_commands::SectionFormula as F;
                     let formulas = [F::EndArea, F::Prismoidal, F::Frustum];
