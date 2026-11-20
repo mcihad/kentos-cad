@@ -304,3 +304,26 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("dis-basvuru-onizleme", preview),
     ]
 }
+
+/// UR2-027: the plan attached, then Boşalt: the manager's summary says it is unloaded, not "as its source"; Yeniden
+/// yükle brings its objects back and the summary with them.
+#[test]
+fn an_unloaded_reference_is_said_in_the_summary() {
+    let mut app = App::boot(None).0;
+    attached_plan(&mut app);
+    let _ = app.run("xref.manager");
+    send(&mut app, Event::Choose(0));
+    let objects = app.xrefs.listed.as_deref().and_then(|l| l.first()).map(|x| x.objects).unwrap_or(0);
+    assert!(objects > 0);
+    send(&mut app, Event::Unload);
+    let size = iced::Size::new(1440.0, 900.0);
+    let mut snapshot = crate::files_testing::offscreen(size);
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut snapshot, &app, "ur2-027", "bosaltildi");
+    let said = "1 başvuru boşaltıldı: çizimde içeriği yok; Yeniden yükle ile geri gelir.";
+    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, said).is_empty(), "{said}");
+    assert!(crate::files_testing::find_texts(&mut snapshot, &app, "1 dış başvuru, hepsi kaynağıyla aynı.").is_empty());
+}

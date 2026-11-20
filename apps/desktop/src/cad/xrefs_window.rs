@@ -803,6 +803,21 @@ impl App {
                     counts(XrefState::Missing)
                 ),
             )
+        } else if counts(XrefState::Unloaded) > 0 {
+            // Unloaded is not "as its source" (UR2-027): the drawing holds none of its content until Yeniden yükle.
+            let unloaded = counts(XrefState::Unloaded);
+            let rest = listed.len() - unloaded;
+            words::text_line(
+                Kind::Info,
+                if rest == 0 {
+                    format!("{unloaded} başvuru boşaltıldı: çizimde içeriği yok; Yeniden yükle ile geri gelir.")
+                } else {
+                    format!(
+                        "{} dış başvuru; {unloaded} boşaltıldı (çizimde içeriği yok), {rest} kaynağıyla aynı.",
+                        listed.len()
+                    )
+                },
+            )
         } else {
             words::text_line(
                 Kind::Ok,
