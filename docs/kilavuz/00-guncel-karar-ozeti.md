@@ -4,6 +4,19 @@
 
 ## 0. Güncel karar özeti
 
+- **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
+  [plan/veri.md](../../plan/veri.md)).**
+  - Veritabanı ve dosya katmanları ayrı crate'lerdeki sürücülerden geçer:
+    - ortak sözleşme `kentos-data`;
+    - `kentos-data-gpkg`;
+    - `kentos-data-postgis`;
+    - Oracle, MySQL ve SQL Server ileride birer sürücü crate'idir.
+  - İstek (kutu, koşul, sıra, sayfa, sadeleştirme) kaynağa gider. PostGIS'te satırlar sunucu imleciyle okunur;
+    veritabanı başına tek bağlantı havuzu vardır.
+  - Yeni bir sürücü, kaydedilmeden önce `kentos_data::conformance`'ı geçer.
+  - Sıradaki maddeler: veri katmanı türü (satırlar çizime kopyalanmaz), canlı çizim, kaynakta tablo, düzenleme
+    oturumu, işlem kipleri, sınıflar katman ağacında, dışa aktarma penceresi, GeoPackage projeleri.
+
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.
   Gerçek fare/klavye ve ekran görüntüsüyle doğrulama sürer, ancak ham GUI

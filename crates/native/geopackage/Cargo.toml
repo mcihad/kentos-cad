@@ -7,8 +7,10 @@ rust-version.workspace = true
 publish.workspace = true
 
 # Native only (scripts/arch/deps.mjs, group `geopackage`; docs/adr/0502): SQLite compiled in by rusqlite, no KentOS
-# type, no runtime, network or interface. The product commands turn its rows into a drawing's objects.
+# type, no runtime, network or interface. Its geometry model is the data drivers' (`kentos-data`, docs/adr/9100 §3).
+# The product commands turn its rows into a drawing's objects; the GeoPackage data driver reads and writes over it.
 [dependencies]
+kentos-data = { path = "../data" }
 rusqlite = { workspace = true }
 
 

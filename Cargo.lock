@@ -2953,6 +2953,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-data"
+version = "0.1.0"
+
+[[package]]
+name = "kentos-data-gpkg"
+version = "0.1.0"
+dependencies = [
+ "kentos-data",
+ "kentos-geopackage",
+ "rusqlite",
+]
+
+[[package]]
+name = "kentos-data-postgis"
+version = "0.1.0"
+dependencies = [
+ "kentos-data",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
 name = "kentos-desktop"
 version = "0.1.0"
 dependencies = [
@@ -3183,6 +3205,7 @@ dependencies = [
 name = "kentos-geopackage"
 version = "0.1.0"
 dependencies = [
+ "kentos-data",
  "rusqlite",
  "serde_json",
 ]

@@ -1,0 +1,322 @@
+//! A database's tables read (docs/adr/9100 §6): the catalog, a table's shape (cached until one of our transactions
+//! commits), counts, boxes, distinct values, and rows through a server-side cursor in a read-only transaction: the
+//! cursor is declared once, its rows fetched a part at a time, closed when the reader is done or told to stop.
+
+use kentos_data::driver::{Capabilities, Read};
+use kentos_data::geom::read_wkb;
+use kentos_data::{
+    Cancel, Condition, DataError, Family, Feature, Request, Schema, Source, TableInfo, Transaction,
+    Value,
+};
+use sqlx::{Postgres, Row};
+
+use crate::catalog::{Shape, quote, shape, tables};
+use crate::connect::{PgSource, error_of};
+use crate::runtime;
+use crate::sql::{
+    Arg, Sql, columns_of, geometry_expr, order_and_page, read_expr, value_of, where_of,
+};
+use crate::write::PgTransaction;
+
+/// A statement with its values bound.
+pub(crate) fn bound<'q>(
+    sql: &'q str,
+    args: &'q [Arg],
+) -> sqlx::query::Query<'q, Postgres, sqlx::postgres::PgArguments> {
+    let mut q = sqlx::query(sqlx::AssertSqlSafe(sql));
+    for a in args {
+        q = match a {
+            Arg::Int(i) => q.bind(*i),
+            Arg::Real(r) => q.bind(*r),
+            Arg::Bool(b) => q.bind(*b),
+            Arg::Text(t) => q.bind(t.as_str()),
+            Arg::Null => q.bind(Option::<String>::None),
+            Arg::Bytes(b) => q.bind(b.as_slice()),
+            Arg::Ints(v) => q.bind(v.as_slice()),
+        };
+    }
+    q
+}
+
+impl PgSource {
+    /// A table's shape, read once.
+    pub(crate) fn shape(&self, table: &str) -> Result<Shape, DataError> {
+        if let Some(s) = self.shapes.read().ok().and_then(|m| m.get(table).cloned()) {
+            return Ok(s);
+        }
+        let s = runtime()?.block_on(async {
+            let mut conn = self.pool.acquire().await.map_err(error_of)?;
+            shape(&mut conn, table).await
+        })?;
+        if let Ok(mut m) = self.shapes.write() {
+            m.insert(table.to_owned(), s.clone());
+        }
+        Ok(s)
+    }
+}
+
+/// The geometry read, simplified by the server when asked (lines and areas; arcs kept).
+fn geometry_select(shape: &Shape, request: &Request, s: &mut Sql) -> String {
+    let Some(g) = geometry_expr(shape).filter(|_| request.geometry) else {
+        return "NULL::bytea".into();
+    };
+    let family = shape.schema.geometry.as_ref().map(|g| g.family());
+    match request.simplify.filter(|t| *t > 0.0) {
+        Some(t) if family != Some(Family::Point) => {
+            let p = s.bind(Arg::Real(t));
+            format!(
+                "ST_AsBinary(CASE WHEN ST_HasArc({g}) OR GeometryType({g}) LIKE '%POINT%' THEN {g} ELSE ST_Simplify({g}, {p}, true) END)"
+            )
+        }
+        _ => format!("ST_AsBinary({g})"),
+    }
+}
+
+impl Source for PgSource {
+    fn driver(&self) -> &'static str {
+        "postgis"
+    }
+
+    fn address(&self) -> &str {
+        &self.address
+    }
+
+    fn tables(&self) -> Result<Vec<TableInfo>, DataError> {
+        runtime()?.block_on(async {
+            let mut conn = self.pool.acquire().await.map_err(error_of)?;
+            tables(&mut conn).await
+        })
+    }
+
+    fn schema(&self, table: &str) -> Result<Schema, DataError> {
+        Ok(self.shape(table)?.schema)
+    }
+
+    fn capabilities(&self, table: &str) -> Result<Capabilities, DataError> {
+        let s = self.shape(table)?;
+        let w = s.writable;
+        Ok(Capabilities {
+            read: true,
+            insert: w,
+            update_values: w,
+            update_geometry: w && s.schema.geometry.is_some(),
+            delete: w,
+            transactions: true,
+            spatial_index: true,
+            simplify_at_source: true,
+            query_at_source: true,
+            curves: true,
+            create_table: true,
+        })
+    }
+
+    fn extent(&self, table: &str, estimate: bool) -> Result<Option<[f64; 4]>, DataError> {
+        let s = self.shape(table)?;
+        let Some(g) = s.schema.geometry.clone() else {
+            return Ok(None);
+        };
+        let expr = geometry_expr(&s).unwrap_or_default();
+        runtime()?.block_on(async {
+            let mut conn = self.pool.acquire().await.map_err(error_of)?;
+            if estimate && !s.geography {
+                let est = sqlx::query(
+                    "SELECT ST_XMin(e)::float8 AS a, ST_YMin(e)::float8 AS b, ST_XMax(e)::float8 AS c, ST_YMax(e)::float8 AS d
+                     FROM (SELECT ST_EstimatedExtent($1, $2, $3) AS e) s",
+                )
+                .bind(&s.namespace)
+                .bind(&s.relation)
+                .bind(&g.name)
+                .fetch_one(&mut *conn)
+                .await;
+                if let Ok(r) = est {
+                    let b: [Option<f64>; 4] = [
+                        r.try_get("a").ok().flatten(),
+                        r.try_get("b").ok().flatten(),
+                        r.try_get("c").ok().flatten(),
+                        r.try_get("d").ok().flatten(),
+                    ];
+                    if let [Some(a), Some(b), Some(c), Some(d)] = b {
+                        return Ok(Some([a, b, c, d]));
+                    }
+                }
+            }
+            let sql = format!(
+                "SELECT ST_XMin(e)::float8 AS a, ST_YMin(e)::float8 AS b, ST_XMax(e)::float8 AS c, ST_YMax(e)::float8 AS d
+                 FROM (SELECT ST_Extent({expr}) AS e FROM {} t) s",
+                s.sql
+            );
+            let r = sqlx::query(sqlx::AssertSqlSafe(sql))
+                .fetch_one(&mut *conn)
+                .await
+                .map_err(error_of)?;
+            let b: [Option<f64>; 4] = [
+                r.try_get("a").map_err(error_of)?,
+                r.try_get("b").map_err(error_of)?,
+                r.try_get("c").map_err(error_of)?,
+                r.try_get("d").map_err(error_of)?,
+            ];
+            Ok(match b {
+                [Some(a), Some(b), Some(c), Some(d)] => Some([a, b, c, d]),
+                _ => None,
+            })
+        })
+    }
+
+    fn count(&self, table: &str, request: &Request, estimate: bool) -> Result<u64, DataError> {
+        let s = self.shape(table)?;
+        let mut q = Sql::default();
+        let w = where_of(request, &s, table, &mut q)?;
+        runtime()?.block_on(async {
+            let mut conn = self.pool.acquire().await.map_err(error_of)?;
+            if estimate && w.is_empty() {
+                let n: Option<f64> = sqlx::query_scalar(
+                    "SELECT c.reltuples::float8 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                     WHERE n.nspname = $1 AND c.relname = $2",
+                )
+                .bind(&s.namespace)
+                .bind(&s.relation)
+                .fetch_optional(&mut *conn)
+                .await
+                .map_err(error_of)?;
+                if let Some(n) = n.filter(|n| *n >= 0.0) {
+                    return Ok(n as u64);
+                }
+            }
+            let sql = format!("SELECT count(*)::int8 FROM {} t{w}", s.sql);
+            let n: i64 = bound(&sql, &q.args)
+                .fetch_one(&mut *conn)
+                .await
+                .and_then(|r| r.try_get(0))
+                .map_err(error_of)?;
+            Ok(n.max(0) as u64)
+        })
+    }
+
+    fn features(
+        &self,
+        table: &str,
+        request: &Request,
+        cancel: &Cancel,
+        sink: &mut dyn FnMut(Vec<Feature>) -> bool,
+    ) -> Result<Read, DataError> {
+        let s = self.shape(table)?;
+        let fields = columns_of(request, &s.schema, table)?;
+        let kinds: Vec<_> = fields.iter().map(|f| f.kind.clone()).collect();
+        let mut q = Sql::default();
+        let mut select = vec![
+            format!("t.{}::int8", quote(&s.schema.key)),
+            geometry_select(&s, request, &mut q),
+        ];
+        select.extend(
+            fields
+                .iter()
+                .map(|f| read_expr(&format!("t.{}", quote(&f.name)), &f.kind)),
+        );
+        let w = where_of(request, &s, table, &mut q)?;
+        let query = format!(
+            "SELECT {} FROM {} t{w}{}",
+            select.join(", "),
+            s.sql,
+            order_and_page(request, &s, table)?
+        );
+        let declare = format!("DECLARE kentos_rows NO SCROLL CURSOR FOR {query}");
+        let fetch = format!("FETCH FORWARD {} FROM kentos_rows", request.chunk.max(1));
+        runtime()?.block_on(async {
+            let mut tx = self.pool.begin().await.map_err(error_of)?;
+            sqlx::query("SET TRANSACTION READ ONLY")
+                .execute(&mut *tx)
+                .await
+                .map_err(error_of)?;
+            bound(&declare, &q.args)
+                .execute(&mut *tx)
+                .await
+                .map_err(error_of)?;
+            let mut read = Read::default();
+            loop {
+                if cancel.is_cancelled() {
+                    read.stopped = true;
+                    break;
+                }
+                let rows = sqlx::query(sqlx::AssertSqlSafe(fetch.as_str()))
+                    .persistent(false)
+                    .fetch_all(&mut *tx)
+                    .await
+                    .map_err(error_of)?;
+                let done = rows.len() < request.chunk.max(1);
+                let mut part = Vec::with_capacity(rows.len());
+                for r in &rows {
+                    let fid: i64 = r.try_get(0).map_err(error_of)?;
+                    let wkb: Option<Vec<u8>> = r.try_get(1).map_err(error_of)?;
+                    let mut values = Vec::with_capacity(kinds.len());
+                    for (i, k) in kinds.iter().enumerate() {
+                        values.push(value_of(r.try_get(i + 2).map_err(error_of)?, k));
+                    }
+                    part.push(Feature {
+                        fid,
+                        geometry: wkb.map(|b| read_wkb(&b).map_err(|e| e.to_string())),
+                        values,
+                    });
+                }
+                read.rows += part.len() as u64;
+                let go = part.is_empty() || sink(part);
+                if !go || cancel.is_cancelled() {
+                    read.stopped = true;
+                    break;
+                }
+                if done {
+                    break;
+                }
+            }
+            let _ = sqlx::query("CLOSE kentos_rows").execute(&mut *tx).await;
+            tx.rollback().await.map_err(error_of)?;
+            Ok(read)
+        })
+    }
+
+    fn unique(
+        &self,
+        table: &str,
+        field: &str,
+        condition: Option<&Condition>,
+        limit: usize,
+    ) -> Result<Vec<Value>, DataError> {
+        let s = self.shape(table)?;
+        let kind = s
+            .schema
+            .field(field)
+            .map(|f| f.kind.clone())
+            .ok_or_else(|| DataError::NoField {
+                table: table.to_owned(),
+                field: field.to_owned(),
+            })?;
+        let request = Request {
+            condition: Some(match condition {
+                Some(c) => Condition::And(vec![c.clone(), Condition::NotNull(field.to_owned())]),
+                None => Condition::NotNull(field.to_owned()),
+            }),
+            ..Request::default()
+        };
+        let mut q = Sql::default();
+        let w = where_of(&request, &s, table, &mut q)?;
+        let col = format!("t.{}", quote(field));
+        let sql = format!(
+            "SELECT {} FROM (SELECT DISTINCT {col} AS v FROM {} t{w}) d ORDER BY d.v LIMIT {limit}",
+            read_expr("d.v", &kind),
+            s.sql
+        );
+        runtime()?.block_on(async {
+            let mut conn = self.pool.acquire().await.map_err(error_of)?;
+            let rows = bound(&sql, &q.args)
+                .fetch_all(&mut *conn)
+                .await
+                .map_err(error_of)?;
+            rows.iter()
+                .map(|r| Ok(value_of(r.try_get(0).map_err(error_of)?, &kind)))
+                .collect()
+        })
+    }
+
+    fn begin(&self) -> Result<Box<dyn Transaction>, DataError> {
+        Ok(Box::new(PgTransaction::begin(self)?))
+    }
+}

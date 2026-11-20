@@ -1,8 +1,9 @@
-//! A GeoPackage geometry blob (OGC 12-128r19 §2.1.3): the `GP` header (version, flags, srs id, envelope) and the ISO
-//! WKB after it, with Z and M (type codes +1000, +2000, +3000; EWKB's high bits read too), empty geometries (the
-//! header's flag; a point's NaN coordinates), and the curve types of the non-linear geometry extension (circular
-//! string, compound curve, curve polygon, multi curve, multi surface). Reading never panics: a short or nested-too-deep
-//! blob is an error.
+//! Every driver's geometry (docs/adr/9100 §3): positions with Z and M, lines, arcs and compound curves, polygons with
+//! holes, their multi forms and collections; read and written as ISO WKB (type codes +1000, +2000, +3000; EWKB's high
+//! bits and SRID read too) and as a GeoPackage blob (OGC 12-128r19 §2.1.3: the `GP` header with its version, flags,
+//! srs id and envelope, then the WKB). Empty geometries are kept (the header's flag; a point's NaN coordinates), and
+//! so are the curve types of the non-linear geometry extension. Reading never panics: a short or nested-too-deep
+//! input is an error.
 
 use std::fmt;
 
@@ -124,7 +125,7 @@ impl Geometry {
     }
 
     /// Its box (min x, min y, max x, max y) through its positions; arcs bulge past them, so for an arc the box of its
-    /// points is a bound only when the arc's middle is one of them (as the spatial index's GDAL writes it too).
+    /// points is a bound only when the arc's middle is one of them (as the common writers of the spatial index take it too).
     pub fn bounds(&self) -> Option<[f64; 4]> {
         let mut c = Vec::new();
         self.coords(&mut c);

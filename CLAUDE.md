@@ -36,6 +36,7 @@ uyumu [plan/bim-plan.md](plan/bim-plan.md) (sıra §6) ve [plan/ifc-uyum.md](pla
 portalı (`apps/portal`) [ADR 9000](docs/adr/9000-cloud-portal.md) ve [plan/bulut.md](plan/bulut.md).
 Masaüstündeki portal dosyaları [ADR 9001](docs/adr/9001-desktop-portal-files.md)'dedir.
 E-imza (KentOS İmza: crate'ler, yerel servis, PIN ajanı, masaüstünde süreç içi imza) [ADR 9002](docs/adr/9002-e-imza.md)'dedir.
+Veri sürücüleri (GeoPackage, PostGIS; ortak sözleşme `kentos-data`), canlı veri katmanı ve düzenleme oturumu [plan/veri.md](plan/veri.md) ve [ADR 9100](docs/adr/9100-data-drivers.md)'dedir.
 
 **Bu dosyaya ne yazılır:** yalnız her oturumda gereken kural ve haritanın satırı. Bir özelliğin kararı, ölçümü ve
 geçmişi o alanın ADR'sine, planına ve §0'ın dosyasına yazılır; buraya en çok bir satırlık bağlantı. Dosya 4432
