@@ -124,6 +124,15 @@ fn comma(v: f64, d: usize) -> String {
 }
 
 /// The rotation angle (degrees) of a place and how far it moves the middle of `box_` (metres).
+/// The box's middle moved by `m`, row by row (none: as it is).
+fn moved_middle(m: Option<&[f64]>, b: &[f64; 6]) -> [f64; 3] {
+    let c = [(b[0] + b[3]) / 2.0, (b[1] + b[4]) / 2.0, (b[2] + b[5]) / 2.0];
+    match m {
+        Some(m) => std::array::from_fn(|i| m[4 * i] * c[0] + m[4 * i + 1] * c[1] + m[4 * i + 2] * c[2] + m[4 * i + 3]),
+        None => c,
+    }
+}
+
 fn turn_and_shift(m: &[f64], b: &[f64; 6]) -> (f64, f64) {
     let (ax, ay, az) = (m[9] - m[6], m[2] - m[8], m[4] - m[1]);
     let angle = (ax * ax + ay * ay + az * az).sqrt().atan2(m[0] + m[5] + m[10] - 1.0).to_degrees();
@@ -309,12 +318,17 @@ impl App {
                         comma(p.shift, 3)
                     ),
                 ));
+                // Each file: where it is kept now, what this step moves it, where it is if Konumla is pressed (GIS-063):
+                // the middle's shift from the file's own place, the step's from the kept one.
                 if let Some(c) = &cloud {
                     for (src, pose) in c.sources.iter().zip(&p.poses) {
                         let name = src.file.as_deref().or(src.url.as_deref()).or(src.asset.as_deref()).unwrap_or("");
                         let name = name.rsplit(['/', '\\']).next().unwrap_or(name).to_owned();
-                        let (a, d) = pose.as_deref().map_or((0.0, 0.0), |m| turn_and_shift(m, &src.bounds));
-                        rows.push(vec![name, comma(a, 4), comma(d, 3)]);
+                        let (_, kept) = src.pose.as_ref().map_or((0.0, 0.0), |m| turn_and_shift(m, &src.bounds));
+                        let (a, total) = pose.as_deref().map_or((0.0, 0.0), |m| turn_and_shift(m, &src.bounds));
+                        let (from, to) = (moved_middle(src.pose.as_ref().map(|m| &m[..]), &src.bounds), moved_middle(pose.as_deref(), &src.bounds));
+                        let step = ((to[0] - from[0]).powi(2) + (to[1] - from[1]).powi(2) + (to[2] - from[2]).powi(2)).sqrt();
+                        rows.push(vec![name, comma(kept, 3), comma(step, 3), comma(total, 3), comma(a, 4)]);
                     }
                 }
             }
@@ -392,7 +406,18 @@ impl App {
         ]
         .spacing(10)
         .align_y(Center);
-        let table = sheet(vec![col("Dosya", 260.0), num("Dönme (°)", 120.0), num("Ortanın kayması (m)", 170.0)], rows, "Dosya yok.", 140.0);
+        let table = sheet(
+            vec![
+                col("Dosya", 220.0),
+                num("Kayıtlı kayma (m)", 140.0),
+                num("Bu adım (m)", 110.0),
+                num("Uygulanırsa kayma (m)", 170.0),
+                num("Uygulanırsa dönme (°)", 170.0),
+            ],
+            rows,
+            "Dosya yok.",
+            140.0,
+        );
         let body = Grows::new().spacing(12.0).push(form).push(words::summary(lines)).push(actions).push_grow(table, 140.0);
         Frame::new(TITLE).scroll(body).action(words::secondary(CLOSE, Some(msg(Event::Close)))).width(820.0).modal(msg(Event::Close))
     }

@@ -96,8 +96,10 @@ fn a_quarter_turn_by_euler_angles_is_the_shared_case_and_konumla_writes_it() {
         rows,
         vec![vec![
             "bulut.xyz".to_owned(),
-            "90,0000".to_owned(),
-            "0,000".to_owned()
+            "0,000".to_owned(),
+            "0,000".to_owned(),
+            "0,000".to_owned(),
+            "90,0000".to_owned()
         ]]
     );
     let _ = app.update(Message::Map(map::Event::CloudPlace(P::Place)));
@@ -237,4 +239,22 @@ fn screens() {
         crate::scan_network_window::Event::Rounds(5.0),
     )));
     shoot(&mut app, narrow, "6-tarama-agi-dis-dongu-koyu-dar.png");
+}
+
+
+/// GIS-063 (docs/adr/1134): a move of 3 4 0 m pressed once: the table says the kept place 5 m and that pressing again
+/// would move it 5 m more to 10 m, apart, as the summary says “Şimdi: … 5 m”; Konumu kaldır brings the kept place back
+/// to the file's.
+#[test]
+fn the_table_tells_the_kept_place_from_the_next_step() {
+    let mut app = open_on(1);
+    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Translation("3 4 0".into()))));
+    let (_, rows) = app.cloud_place_lines();
+    assert_eq!(rows[0][1..4], ["0,000".to_owned(), "5,000".to_owned(), "5,000".to_owned()], "before: kept 0, step 5, total 5");
+    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Place)));
+    let (_, rows) = app.cloud_place_lines();
+    assert_eq!(rows[0][1..4], ["5,000".to_owned(), "5,000".to_owned(), "10,000".to_owned()], "after: kept 5, step 5, total 10");
+    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Remove)));
+    let (_, rows) = app.cloud_place_lines();
+    assert_eq!(rows[0][1], "0,000", "the file's own place again");
 }
