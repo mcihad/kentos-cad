@@ -182,7 +182,7 @@ pub(super) fn rows(
     let x = &c.cloud;
     let source = match x.sources.as_slice() {
         [one] => match (&one.asset, &one.file, &one.url) {
-            (Some(a), _, _) => crate::pictures::asset_words(&doc.model, a),
+            (Some(a), _, _) => crate::pictures::cloud_asset_words(&doc.model, a, format_name(one.format), x.count),
             (None, Some(path), _) => crate::pictures::file_words(path, doc.path.as_deref(), &[]),
             (None, None, Some(u)) => u.clone(),
             _ => "—".to_owned(),

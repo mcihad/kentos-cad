@@ -112,6 +112,22 @@ pub fn asset_words(model: &Model, id: &str) -> String {
     }
 }
 
+/// Öznitelikler's Kaynak for an embedded point cloud (UR2-028): its name, its format and its points, never a picture's
+/// pixels (a LAZ asset has none).
+pub fn cloud_asset_words(model: &Model, id: &str, format: &str, points: u64) -> String {
+    let item = model.styles().items.iter().find(|it| {
+        it.get("kind").and_then(Value::as_str) == Some("asset") && it.get("id").and_then(Value::as_str) == Some(id)
+    });
+    let count = crate::road_dialog::grouped(points as f64, 0);
+    match item {
+        Some(it) => {
+            let name = it.get("name").and_then(Value::as_str).unwrap_or(id);
+            format!("Gömülü: {name} ({format}, {count} nokta)")
+        }
+        None => "Gömülü (kitaplıkta yok)".to_owned(),
+    }
+}
+
 /// Öznitelikler's Kaynak for a linked picture: its file's name, and whether it was found (with the project's search
 /// paths, `search`).
 pub fn file_words(file: &str, drawing: Option<&Path>, search: &[String]) -> String {

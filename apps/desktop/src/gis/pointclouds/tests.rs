@@ -284,3 +284,37 @@ fn xyz_sor_says_the_nearest_points_facts_by_the_tools_name() {
     assert!(said.starts_with("Nokta bulutu Köy (LiDAR): Y="), "{said}");
     assert!(said.contains("sınıf 6 (Bina)"), "{said}");
 }
+
+/// UR2-028: koy.laz embedded: Öznitelikler's Kaynak names it as point data (its format and points), never a picture's
+/// pixels.
+#[test]
+fn an_embedded_laz_is_named_as_point_data() {
+    crate::cloud_scenes::test_cache();
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(koy());
+    let task = app.run("pointcloud.add");
+    drive(&mut app, task);
+    send(&mut app, add::Event::Keep(add::Keep::Embedded));
+    send(&mut app, add::Event::Run);
+    let doc = app.document.as_ref().expect("a drawing");
+    let (slot, cloud) = doc
+        .model
+        .entities_with_uids()
+        .find_map(|(uid, e)| match e {
+            kentos_commands::Entity::PointCloud(c) => doc.model.slot_of(uid).map(|s| (s, c.clone())),
+            _ => None,
+        })
+        .expect("the cloud");
+    let asset = cloud.cloud.sources[0].asset.clone().expect("embedded");
+    let words = crate::pictures::cloud_asset_words(&doc.model, &asset, "LAZ", cloud.cloud.count);
+    assert_eq!(words, "Gömülü: koy (LAZ, 71.212 nokta)");
+    app.selection.set([slot]);
+    let size = iced::Size::new(1440.0, 900.0);
+    let mut snapshot = crate::files_testing::offscreen(size);
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut snapshot, &app, "ur2-028", "gomulu-laz");
+    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, &words).is_empty(), "Öznitelikler shows {words}");
+}
