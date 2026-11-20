@@ -1161,6 +1161,9 @@ mod layer_types;
 #[cfg(test)]
 #[path = "tests/layer_type_scenes.rs"]
 mod layer_type_scenes;
+#[cfg(test)]
+#[path = "tests/new_layer_reveal_tests.rs"]
+mod new_layer_reveal_tests;
 #[path = "cad/layering.rs"]
 mod layering;
 #[path = "shell/layout.rs"]

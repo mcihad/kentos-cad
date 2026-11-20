@@ -85,7 +85,7 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
     ))
 }
 
-/// A layer type's glyph: the layer tree's row draws it in the layer's colour (as QGIS's symbol), the menus beside
+/// A layer type's glyph: the layer tree's row draws it in the layer's colour, the menus beside
 /// its name.
 pub(crate) fn glyph(geometry: Option<LayerGeometry>) -> Icon {
     crate::icons::from_web(Some(match geometry {
@@ -182,15 +182,39 @@ impl App {
         input.activate = Some(true);
         input.geometry = Some(LayerGeometryChoice::of(Some(geometry)));
         if self.edit_layers(input).is_some() {
-            self.say(
-                Level::Success,
-                format!(
-                    "“{name}” eklendi ve etkin yapıldı: bir {}, yalnız {} alır.",
-                    geometry.layer_words(),
-                    holds(geometry)
-                ),
+            // Its row is chosen and scrolled into view, the open groups as they were (GIS-004); a search that leaves
+            // it out stays as it is and the message says so.
+            let id = self.document.as_ref().map(|d| d.model.layers().active().to_owned());
+            let hidden = id.as_ref().is_some_and(|id| self.layer_row_hidden(id));
+            if let Some(id) = id {
+                self.selected_layer = Some(id.clone());
+                self.layers_follow = false;
+                self.layer_reveal = Some(id);
+            }
+            let mut words = format!(
+                "“{name}” eklendi ve etkin yapıldı: bir {}, yalnız {} alır.",
+                geometry.layer_words(),
+                holds(geometry)
             );
+            if hidden {
+                words.push_str(" Katman araması onu gizliyor; görmek için aramayı temizleyin.");
+            }
+            self.say(Level::Success, words);
         }
+    }
+
+    /// Whether Katmanlar's search leaves the layer `id`'s row out.
+    fn layer_row_hidden(&self, id: &str) -> bool {
+        let Some(doc) = &self.document else {
+            return false;
+        };
+        if self.layer_query.trim().is_empty() && !self.layer_props_on() {
+            return false;
+        }
+        let search = self.layer_search_state();
+        !crate::layer_tree::open_rows(doc.model.layers().nodes(), &search)
+            .iter()
+            .any(|row| row.node.id == id)
     }
 
     /// Why a command that writes on the active layer is off now (`misfit`).
