@@ -16,6 +16,9 @@ mod read_tests;
 mod tests;
 #[cfg(test)]
 mod terminal_tests;
+pub(crate) mod edge_fit;
+#[cfg(test)]
+mod edge_fit_tests;
 pub mod window;
 
 use crate::gis;

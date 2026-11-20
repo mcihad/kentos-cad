@@ -159,6 +159,12 @@ impl Window {
         self.check.as_ref().and_then(|c| c.value.as_deref())
     }
 
+    /// What the window last said, as its line shows it.
+    #[cfg(test)]
+    pub fn said_text(&self) -> Option<&str> {
+        self.said.as_ref().map(|(_, t)| t.as_str())
+    }
+
     /// The networks' names, as the list shows them.
     #[cfg(test)]
     pub fn names(&self) -> Vec<String> {
@@ -318,11 +324,10 @@ impl App {
     }
 
     pub(crate) fn networks_window_event(&mut self, e: Event) -> Task<Message> {
-        let active = self
-            .document
-            .as_ref()
-            .map(|d| d.model.layers().active().to_owned())
-            .unwrap_or_default();
+        // A new network's edges: the active layer when it holds lines, else a line layer (GIS-013).
+        let proposed = self.document.as_ref().and_then(|d| {
+            super::edge_fit::proposed(&d.model, d.model.layers().active())
+        });
         let layers = self.network_layers();
         let format = self.format();
         let Some(w) = self.gis.networks.window.as_mut() else {
@@ -344,11 +349,7 @@ impl App {
                     name = format!("Yeni ağ {k}");
                     k += 1;
                 }
-                let layer = if layers.iter().any(|(id, _)| *id == active) {
-                    active
-                } else {
-                    String::new()
-                };
+                let layer = proposed.unwrap_or_default();
                 w.forms.push(new_form(
                     &next_network_id(&ids),
                     &name,
@@ -398,6 +399,21 @@ impl App {
                 return Task::none();
             }
         };
+        // Edges no layer can give are said before anything is written (GIS-013); an empty line layer is a template.
+        if let Some(doc) = &self.document {
+            let unfit = now.iter().find_map(|n| {
+                n.edges.iter().find_map(|e| match super::edge_fit::fit(&doc.model, &e.layer) {
+                    super::edge_fit::Fit::No(why) => Some(format!("“{}” ağı kaydedilmedi: {why}", n.name)),
+                    _ => None,
+                })
+            });
+            if let Some(why) = unfit {
+                if let Some(w) = self.gis.networks.window.as_mut() {
+                    w.said = Some((Say::Error, why));
+                }
+                return Task::none();
+            }
+        }
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
