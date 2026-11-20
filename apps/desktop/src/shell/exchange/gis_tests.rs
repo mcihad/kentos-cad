@@ -573,3 +573,65 @@ fn a_geojson_export_is_rfc_7946_by_default_and_keeps_the_choice() {
     };
     assert!(!s.wgs84_chosen(), "the last choice is kept");
 }
+
+/// GIS-042 (docs/adr/1099): the exchange sample's layers written as one archive (Shapefile dışa aktar › Tek arşiv), then
+/// imported into an empty GIS project of the same system: every layer of the archive is read and listed with its
+/// objects and system, and İçe aktar takes them all in one undo step, the command with no `entry`; Ctrl+Z takes them
+/// all back. An archive whose layers name different systems (katmanlar.zip) still takes one at a time.
+#[test]
+fn an_archive_s_layers_come_in_together() {
+    // The archive, written by the export command.
+    let dir = scratch("shp-arsiv");
+    let zip = dir.join("envanter.zip");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_str(include_str!("../../../../../fixtures/exchange/v1/devir.json")).expect("the sample");
+    let sample = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+    let input: kentos_commands::ExportShp =
+        serde_json::from_value(serde_json::json!({ "path": zip.to_string_lossy() })).expect("the input");
+    let made = kentos_headless::shp_export::make(&sample, &input).expect("made");
+    kentos_headless::shp_export::write(&made).expect("written");
+    assert!(zip.exists());
+    let members = kentos_formats::shp::zip_layers(&std::fs::read(&zip).expect("read")).expect("listed");
+    assert!(members.len() >= 4, "{members:?}");
+    // An empty GIS project of the sample's system.
+    let mut drawing: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
+    drawing["settings"]["srid"] = serde_json::json!(5256);
+    drawing["settings"]["workspace"] = serde_json::json!("gis");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+    let doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let (mut app, _) = App::boot(None);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.picker = Picker::File(zip.clone());
+    run(&mut app, "file.import.shp");
+    let s = window(&app);
+    let Source::Zip { layers, systems, .. } = &s.source else {
+        panic!("an archive")
+    };
+    assert_eq!(layers.len(), members.len());
+    assert!(systems.iter().all(|(_, sys)| sys == "EPSG:5256"), "{systems:?}");
+    let read = s.result.as_ref().expect("read");
+    assert_eq!(read.layers.len(), members.len(), "every layer read: {:?}", read.layers.iter().map(|l| &l.name).collect::<Vec<_>>());
+    let objects = read.entities.len();
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    let head = format!("Bütün katmanlar ({})", members.len());
+    assert!(crate::files_testing::find_text(&mut shot, &app, &head).is_some(), "{head}");
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-042-zip-katmanlar");
+    let before = count(&app);
+    import(&mut app);
+    assert_eq!(count(&app) - before, objects, "every layer's objects");
+    let model = &app.document.as_ref().expect("open").model;
+    let row = model.journal().last().expect("a row");
+    assert_eq!(row.command.as_deref(), Some("file.import.shp"));
+    let input = row.input.clone().expect("the input");
+    assert!(input.get("entry").is_none(), "{input}");
+    let doc = app.document.as_mut().expect("open");
+    assert!(doc.model.undo().is_some());
+    assert_eq!(count(&app), before, "one undo step");
+    // Layers that name different systems: one at a time, as before.
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(gis("katmanlar.zip"));
+    run(&mut app, "file.import.shp");
+    assert_eq!(window(&app).result.as_ref().expect("read").layers.len(), 1);
+}

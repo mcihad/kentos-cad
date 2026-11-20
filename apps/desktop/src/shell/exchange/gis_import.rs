@@ -123,11 +123,14 @@ pub enum Source {
     /// The files a user chose together for one Shapefile layer.
     Shapefile(Vec<Picked>),
     /// A zipped Shapefile: the archive, its layers (paths without extension,
-    /// known once it is read) and the one read.
+    /// known once it is read) and the one read when two of them share a name; else every layer is read and taken
+    /// together, each with the system its .prj names (GIS-042).
     Zip {
         file: Picked,
         layers: Vec<String>,
         layer: usize,
+        /// Each layer's name and the system its .prj says (“—” without one), once read.
+        systems: Vec<(String, String)>,
     },
 }
 
@@ -209,6 +212,7 @@ pub fn shapefile_source(files: Vec<Picked>) -> Result<Source, String> {
             file: (*zip).clone(),
             layers: Vec::new(),
             layer: 0,
+            systems: Vec::new(),
         }),
         (false, [_, _, ..]) => Err(format!(
             "Seçilen dosyalarda {} .zip var. Bir seferde bir arşiv alınır: “Başka dosya…” ile birini seçin.",
@@ -250,8 +254,9 @@ pub enum Event {
         read: u64,
         result: Result<Arc<ImportResult>, String>,
         unusable: Option<String>,
-        /// A zip archive's layers, once listed.
+        /// A zip archive's layers, once listed, and each one's system.
         layers: Option<Vec<String>>,
+        systems: Vec<(String, String)>,
     },
     /// Another layer of the zip archive.
     Layer(usize),
@@ -323,6 +328,35 @@ impl State {
     }
 }
 
+/// Whether an archive's layers are taken one at a time: two share a name (in two folders: the command asks for the
+/// path), or their .prj files name different systems (one system answer would place some of them wrongly, CLAUDE.md
+/// §5). Otherwise every layer comes in together (GIS-042).
+fn one_at_a_time(layers: &[String], systems: &[(String, String)]) -> bool {
+    let mut names: Vec<String> = layers.iter().map(|l| shp::zip_layer_name(l).to_lowercase()).collect();
+    names.sort_unstable();
+    let clash = names.windows(2).any(|w| w[0] == w[1]);
+    let mut said: Vec<&str> = systems.iter().map(|(_, s)| s.as_str()).collect();
+    said.sort_unstable();
+    said.dedup();
+    clash || said.len() > 1
+}
+
+/// Each layer of an archive and the system its .prj says, read off the UI thread (GIS-042).
+fn zip_systems(bytes: &[u8], layers: &[String]) -> Vec<(String, String)> {
+    layers
+        .iter()
+        .map(|path| {
+            let name = shp::zip_layer_name(path).to_owned();
+            let opts = ShapefileReadOptions { layer: name.clone(), max_entities: 1 };
+            let system = shp::read_zip(bytes, path, &opts)
+                .ok()
+                .and_then(|r| r.declared_crs)
+                .map_or_else(|| "—".to_owned(), |d| d.srid.map_or(d.text.clone(), |srid| format!("EPSG:{srid}")));
+            (name, system)
+        })
+        .collect()
+}
+
 /// Reads the source (off the UI thread): the result, and a zip's layers.
 fn read_source(source: &Source) -> (Result<ImportResult, String>, Option<Vec<String>>) {
     match source {
@@ -354,7 +388,7 @@ fn read_source(source: &Source) -> (Result<ImportResult, String>, Option<Vec<Str
         }
         Source::Zip { file, layer, .. } => match shp::zip_layers(&file.bytes) {
             Err(e) => (Err(e), None),
-            Ok(layers) => {
+            Ok(layers) if one_at_a_time(&layers, &zip_systems(&file.bytes, &layers)) => {
                 let path = layers
                     .get(*layer)
                     .or(layers.first())
@@ -365,6 +399,38 @@ fn read_source(source: &Source) -> (Result<ImportResult, String>, Option<Vec<Str
                     max_entities: 0,
                 };
                 (shp::read_zip(&file.bytes, &path, &opts), Some(layers))
+            }
+            // Every layer of the archive at once (GIS-042): one that cannot be read is said by name and left out,
+            // the others come in together.
+            Ok(layers) => {
+                let mut read = Vec::new();
+                let mut broken = Vec::new();
+                for path in &layers {
+                    let opts = ShapefileReadOptions {
+                        layer: shp::zip_layer_name(path).to_owned(),
+                        max_entities: 0,
+                    };
+                    match shp::read_zip(&file.bytes, path, &opts) {
+                        Ok(r) => read.push(r),
+                        Err(why) => broken.push((path.clone(), why)),
+                    }
+                }
+                if read.is_empty() {
+                    let why = broken.first().map_or_else(|| "Arşivde Shapefile katmanı yok.".to_owned(), |(p, w)| format!("“{p}” okunamadı: {w}"));
+                    return (Err(why), Some(layers));
+                }
+                let mut one = if read.len() == 1 { read.remove(0) } else { kentos_native_application::file_import_gis::merge(read) };
+                for (path, why) in broken {
+                    one.report.notes.push(kentos_commands::ReportItem {
+                        severity: None,
+                        details: Vec::new(),
+                        what: format!("“{}” katmanı", shp::zip_layer_name(&path)),
+                        count: 1,
+                        reason: format!("okunamadı ({why}); alınmaz, öbür katmanlar alınır"),
+                        lines: Vec::new(),
+                    });
+                }
+                (Ok(one), Some(layers))
             }
         },
     }
@@ -455,14 +521,19 @@ impl App {
                     .ok()
                     .and_then(|r| apply::unusable(&r.entities))
                     .map(|(place, kind)| apply::unusable_text(place, kind));
-                (result, unusable, layers)
+                let systems = match (&source, &layers) {
+                    (Source::Zip { file, .. }, Some(l)) if l.len() > 1 => zip_systems(&file.bytes, l),
+                    _ => Vec::new(),
+                };
+                (result, unusable, layers, systems)
             },
-            move |(result, unusable, layers)| {
+            move |(result, unusable, layers, systems)| {
                 Exchange::GisImport(Event::Read {
                     read,
                     result: result.map(Arc::new),
                     unusable,
                     layers,
+                    systems,
                 })
             },
         )
@@ -493,13 +564,15 @@ impl App {
                 result,
                 unusable,
                 layers,
+                systems,
             } => {
                 if read != s.read {
                     return Task::none();
                 }
                 s.reading = false;
-                if let (Source::Zip { layers: known, .. }, Some(layers)) = (&mut s.source, layers) {
+                if let (Source::Zip { layers: known, systems: said, .. }, Some(layers)) = (&mut s.source, layers) {
                     *known = layers;
+                    *said = systems;
                 }
                 let shapefile = !s.geojson();
                 match result {
@@ -705,11 +778,13 @@ impl App {
                     .and_then(|set| files[set.shp].path.clone()),
                 None,
             ),
+            // Every layer of the archive (GIS-042), one only when two share a name.
             Source::Zip {
                 file,
                 layers,
                 layer,
-            } => (file.path.clone(), layers.get(*layer).cloned()),
+                systems,
+            } => (file.path.clone(), one_at_a_time(layers, systems).then(|| layers.get(*layer).cloned()).flatten()),
         };
         GisInput {
             path: path.map_or_else(|| s.name(), |p| p.display().to_string()),
@@ -852,8 +927,9 @@ impl App {
         let mut body = Column::new()
             .spacing(12)
             .push(words::file_line(&s.name(), meta));
-        if let Source::Zip { layers, layer, .. } = &s.source
+        if let Source::Zip { layers, layer, systems, .. } = &s.source
             && layers.len() > 1
+            && one_at_a_time(layers, systems)
         {
             let pick = Select::new(
                 layers.iter().map(|l| Choice::new(l.clone())),
@@ -864,7 +940,7 @@ impl App {
                 "Arşivdeki katman",
                 pick,
                 Some(format!(
-                    "Arşivde {} Shapefile katmanı var; bir seferde biri alınır. Öbürlerini sonra aynı arşivden alın: yeni katmanlar aynı gruba girer.",
+                    "Arşivde {} Shapefile katmanı var; adları çakıştığı ya da sistemleri farklı olduğu için bir seferde biri alınır. Öbürlerini sonra aynı arşivden alın: yeni katmanlar aynı gruba girer.",
                     layers.len()
                 )),
             ));
@@ -922,6 +998,18 @@ impl App {
         ]
         .spacing(8)
         .align_y(Center);
+        // An archive's layers each with the system its .prj says (GIS-042); a single file's, the file's.
+        let systems: Vec<(String, String)> = match &s.source {
+            Source::Zip { systems, .. } => systems.clone(),
+            _ => Vec::new(),
+        };
+        let whole = r
+            .declared_crs
+            .as_ref()
+            .map_or_else(|| "—".to_owned(), |d| d.srid.map_or(d.text.clone(), |srid| format!("EPSG:{srid}")));
+        let system_of = move |name: &str| {
+            systems.iter().find(|(n, _)| n == name).map_or_else(|| whole.clone(), |(_, s)| s.clone())
+        };
         let rows = r.layers.iter().map(|l| {
             let (existing, locked) = self.gis_target(s, l);
             let checked = !s.excluded.contains(&l.name) && !locked;
@@ -948,6 +1036,7 @@ impl App {
                     .align_y(Center)
                     .into(),
                 label::body(l.count.to_string()).into(),
+                label::caption(system_of(&l.name)).into(),
                 if locked {
                     label::caption(where_to)
                         .style(kentos_ui::style::text::danger)
@@ -962,6 +1051,7 @@ impl App {
                 TableColumn::new("").width(22),
                 TableColumn::new("Katman").width(Length::FillPortion(2)),
                 TableColumn::new("Nesne").width(60).align_right(),
+                TableColumn::new("Sistem").width(110),
                 TableColumn::new("Nereye").width(Length::FillPortion(3)),
             ])
             .extend(rows),

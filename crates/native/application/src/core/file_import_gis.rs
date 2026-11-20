@@ -291,8 +291,8 @@ fn sidecars(shp: &Path) -> Result<Vec<(&'static str, Vec<u8>)>, String> {
 }
 
 /// The results of a zip archive's layers as one: objects, layers and the report added up, the system the first
-/// layer's, the box the union.
-fn merge(mut results: Vec<ImportResult>) -> ImportResult {
+/// layer's, the box the union. The desktop's window reads an archive's layers so too (GIS-042).
+pub fn merge(mut results: Vec<ImportResult>) -> ImportResult {
     let mut one = results.remove(0);
     let first = one.declared_crs.as_ref().and_then(|d| d.srid);
     let mut names: Vec<String> = one.layers.iter().map(|l| l.name.clone()).collect();
