@@ -303,7 +303,13 @@ impl App {
         // text centred on it, a text's middle or top over its baseline.
         let field_height = size * 1.25 + 4.0;
         let left = x as f32 - width * open.along as f32;
-        let top = y as f32 - field_height * 0.85 + size * open.up as f32;
+        let mut top = y as f32 - field_height * 0.85 + size * open.up as f32;
+        // Yazı draws the text to come as it will stand (UR2-005): the field goes under it, out of its way, at a size
+        // that reads; the drawn text, not the field, shows how much room it takes.
+        if open.editing.is_none() && self.session.tool_id() == "text" {
+            let real = (open.height * camera.scale) as f32;
+            top = y as f32 + real * (open.up as f32 + 0.3) + 6.0;
+        }
         Some(
             pin(column![input, hint].spacing(2))
                 .x(left.max(0.0))
@@ -421,6 +427,43 @@ mod tests {
         assert!(app.text_field.is_none());
         assert!(texts(&app).contains(&"Çınar".to_owned()));
         assert!(app.session.is_running(), "the tool waits for the next text");
+    }
+
+    /// UR2-005: while `ADA 27` is typed, the drawing shows it where and as it will be placed (the project's paper
+    /// height, angle, alignment), the field under it; Enter writes the same text at the same place and size.
+    #[test]
+    fn yazi_draws_the_typed_text_as_it_will_stand_and_writes_it_so() {
+        let mut app = app_with_drawing();
+        let mut snapshot = crate::files_testing::offscreen(iced::Size::new(1440.0, 900.0));
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("tool.text"));
+        // Beside the parcel, as the report's text stood beside its lines.
+        let area = app.viewport.bounds;
+        press(&mut app, Point::new(area.width * 0.30, area.height * 0.45));
+        let open = app.text_field.clone().expect("the field opened");
+        assert!(app.session.preview(&app.format()).is_none_or(|p| p.texts.is_empty()), "nothing typed, nothing drawn");
+        let _ = app.update(Message::TextField(Event::Input("ADA 27".into())));
+        let preview = app.session.preview(&app.format()).expect("a preview");
+        let [ghost] = preview.texts.as_slice() else { panic!("one text to come: {:?}", preview.texts) };
+        assert_eq!((ghost.text.as_str(), ghost.p, ghost.height), ("ADA 27", open.at, open.height));
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-005", "1-yazarken");
+        let _ = app.update(Message::TextField(Event::Keep));
+        let doc = &app.document.as_ref().unwrap().model;
+        let written = doc
+            .entities()
+            .find_map(|e| match e {
+                Entity::Text(t) if t.text == "ADA 27" => Some((t.p, t.height, t.rotation)),
+                _ => None,
+            })
+            .expect("the text written");
+        assert_eq!((written.0.x, written.0.y), (ghost.p.x, ghost.p.y), "where it was drawn");
+        assert_eq!((written.1, written.2), (ghost.height, ghost.rotation), "as large and as turned as it was drawn");
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-005", "2-enter-sonrasi");
     }
 
     #[test]

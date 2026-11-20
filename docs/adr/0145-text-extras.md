@@ -142,3 +142,22 @@ Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 - **Komutlar:** ortak durumlar üç koşucuda; tek geri alma adımı; kilitli katman reddi.
 - **Biçimler:** hizalı TEXT, ATTDEF ve MTEXT'li DXF örneği Rust'ta ve WASM'da; DXF gidiş-dönüşü; bağımsız Python denetimi.
 - **Kullanım:** yazı eklerinin kullanım senaryosu iki platformda, adım adım resimleriyle.
+
+## Güncelleme (20 Kasım 2026): yazılan metin sahnede yerleşeceği gibi görünür
+
+**Bulgu (kullanım raporu 2, UR2-005):** 1:1000'de 2,5 mm yazı yazılırken alan ekranda yaklaşık 155 × 36 birimdi; Enter'dan
+sonra yazı 605 × 144 oldu ve yandaki çizgilerin üstüne taştı. Alanın yazı boyu ekranda 13–48 px'e sıkıştırılıyordu; yazının
+gerçek yerini gösteren bir şey yoktu.
+
+**Karar:**
+
+- Yazı alanı açıkken araç yazılanı sahnede yazı nesnesi gibi soluk çizer (`Text::text_draft`, `Preview::texts`): kâğıt
+  yüksekliğinin modeldeki karşılığı, açı, hiza, stil ve genişlik çarpanıyla, Enter'ın yazacağı yerde.
+- Yazı alanı okunur boyunu korur ve önizlemenin altına iner; yazının kaplayacağı yeri önizleme gösterir.
+- Var olan yazıyı düzenleme alanı değişmedi.
+
+**Doğrulama:** `text_field::tests::yazi_draws_the_typed_text_as_it_will_stand_and_writes_it_so`: `ADA 27` yazılırken
+önizleme alanın noktasında ve yüksekliğindedir; Enter aynı nokta, yükseklik ve açıyla yazar.
+
+**Web:** ertelendi (ADR 0228; TODOS.md §0.2).
+

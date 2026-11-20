@@ -225,6 +225,9 @@ pub struct Text {
     styles: styles::Seen,
     /// The last text this run wrote: Artır's next field starts from it.
     last_text: Option<String>,
+    /// While the field is open: the text as typed, drawn where and as it will be placed (its height on the paper's
+    /// scale, style, angle and alignment), so the field's own size does not mislead (UR2-005).
+    draft: Option<crate::tool::TextGhost>,
 }
 
 /// The text layer's lock sentence, when it is locked (the drawing tools' words): the active layer, or the project's
@@ -326,6 +329,16 @@ impl Text {
                     .as_deref()
                     .filter(|_| m.text_increment)
                     .map(|t| increment(t).unwrap_or_else(|| t.to_owned()));
+                self.draft = Some(crate::tool::TextGhost {
+                    p,
+                    text: initial.clone().unwrap_or_default(),
+                    height: cx.annotation_height(AnnotationKind::Text),
+                    rotation: m.text_angle,
+                    align: m.text_align.and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
+                    mask: m.text_mask,
+                    face: styles::text_face(cx),
+                    width_factor: m.text_width_factor,
+                });
                 cx.view_changes.push(ViewChange::Text(TextField {
                     at: p,
                     height: cx.annotation_height(AnnotationKind::Text),
@@ -346,6 +359,7 @@ impl Text {
     /// The field closed: back to where the next text starts (the web's `afterTyping`).
     fn after_typing(&mut self) {
         self.at = None;
+        self.draft = None;
         self.stage = Stage::Pos;
     }
 }
@@ -547,6 +561,15 @@ impl Tool for Text {
         taken
     }
 
+    /// What the field holds as it is typed: drawn as the text will be (UR2-005).
+    fn text_draft(&mut self, text: &str, _cx: &mut Context<'_>) {
+        if self.stage == Stage::Typing
+            && let Some(draft) = &mut self.draft
+        {
+            draft.text = text.to_owned();
+        }
+    }
+
     /// The field's answer: the text to add, or none (Esc, nothing typed).
     fn text_typed(&mut self, text: Option<&str>, cx: &mut Context<'_>) {
         if self.stage != Stage::Typing {
@@ -607,6 +630,16 @@ impl Tool for Text {
     /// The angle's line from its first click, or where the text will sit: a
     /// dashed box of its height along its angle.
     fn preview(&self, _format: &Format) -> Preview {
+        // Typing: the text to come, as it will stand (trimmed as it will be written).
+        if self.stage == Stage::Typing {
+            return match &self.draft {
+                Some(draft) if !js_trim(&draft.text).is_empty() => Preview {
+                    texts: vec![crate::tool::TextGhost { text: js_trim(&draft.text).to_owned(), ..draft.clone() }],
+                    ..Preview::default()
+                },
+                _ => Preview::default(),
+            };
+        }
         let Some(h) = self.d.hover else {
             return Preview::default();
         };
