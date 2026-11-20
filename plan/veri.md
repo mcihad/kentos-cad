@@ -53,13 +53,15 @@ ADR'ler **9100**'den başlar.
   - Kalan:
     - seçim VY-04'te (tabloyla birlikte), kenet VY-05'te (düzenleme oturumuyla birlikte);
     - stil penceresinin sınıflandırmasının sürücüden okuması VY-07'de.
-- [ ] **VY-04 — Alttaki tablo kaynakta.** ([ADR 9102](../docs/adr/9102-data-table.md); yapıldı: Türkçe sıra iki
-  sürücüde, `cad.layers.rows` ve 28 ortak durumu, masaüstünde sayfalı tablo (1 milyon satırda denendi); sürüyor:
-  haritada seçim)
+- [x] **VY-04 — Alttaki tablo kaynakta.** ([ADR 9102](../docs/adr/9102-data-table.md))
+  - Metin Türk alfabesiyle sıralanır, iki sürücüde de. `cad.layers.rows` 28 ortak durumla.
+  - Masaüstünde sayfalı tablo; bir milyon satırda denendi. Ara ve süzgeç Enter'la sorulur.
+  - Tabloda seçilen satırlar haritada çevrelenir; Seçime yakınlaş.
+  - Kalan: Seç aracıyla haritada satır seçmek VY-05'te.
   - Öznitelik tablosu veri katmanında sayfa sayfa okunur.
   - Sıralama, süzgeç, arama ve sayı SQL'de; “görünümdekiler” ve “seçililer” kaynaktan.
   - Hücre düzenlemesi düzenleme tamponuna yazılır (VY-05).
-- [ ] **VY-05 — Etkin katman ve düzenleme oturumu.**
+- [ ] **VY-05 — Etkin katman ve düzenleme oturumu.** (VY-04'ten: Seç aracı veri katmanında satır seçer.)
   - Katman düzenlemeye açılır ve kapatılır.
   - Değişiklikler önce katmanın tamponunda bekler: eklenen, değişen ve silinen kayıtlar, kendi geri alma adımlarıyla.
   - Çizim araçları etkin ve düzenlenen katmana yazar.

@@ -96,6 +96,8 @@ pub enum DataEvent {
     Press(i64, bool),
     /// Enter in Ara or İfade süzgeci: what is typed is asked.
     Apply,
+    /// Seçime yakınlaş: the selected rows framed.
+    Zoom,
 }
 
 fn msg(e: DataEvent) -> Message {
@@ -258,6 +260,10 @@ impl App {
     }
 
     pub(crate) fn data_table_event(&mut self, event: DataEvent) -> Task<Message> {
+        if event == DataEvent::Zoom {
+            self.zoom_to_data_selection();
+            return Task::none();
+        }
         let data = &mut self.gis.features.data;
         match event {
             DataEvent::Range(first, last) => data.range = (first, last),
@@ -304,6 +310,7 @@ impl App {
                     Err(why) => data.error = Some(why),
                 }
             }
+            DataEvent::Zoom => {}
             DataEvent::Apply => {
                 data.search = self.gis.features.search.trim().to_owned();
                 data.filter = self.gis.features.filter.trim().to_owned();

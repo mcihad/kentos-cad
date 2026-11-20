@@ -230,6 +230,8 @@ impl App {
             self.data_info_tasks(),
             // A data layer's table: its pages read from its source (features/data.rs, docs/adr/9102 §5).
             self.data_table_tasks(),
+            // Its selected rows outlined on the map (data_selection.rs).
+            self.data_selection_tasks(),
             self.network_tasks(),
             // Konumdan adres's places, asked on the address thread or of a provider (address/).
             self.address_tasks(),

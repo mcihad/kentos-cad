@@ -178,12 +178,23 @@ impl App {
         let filter = kentos_ui::widget::text_field(super::data::words::FILTER, &panel.filter)
             .on_input(|t| msg(Event::Filter(t)))
             .on_submit(apply);
+        let zoom = tip(
+            button(icon(from_web(Some("zoomSelection"))).size(16.0))
+                .style(style::button::subtle)
+                .padding(kentos_ui::theme::metrics::icon_small(16.0))
+                .on_press_maybe(
+                    (!panel.data.selected.is_empty()).then(|| msg(Event::Data(super::data::DataEvent::Zoom))),
+                ),
+            Tip::new(texts::ZOOM).body(texts::ZOOM_HINT),
+            iced::widget::tooltip::Position::Top,
+        );
         container(
             row![
                 container(self.layer_select(rows)).width(Length::Fixed(250.0)),
                 container(search).width(Length::Fixed(170.0)),
                 container(show).width(Length::Fixed(170.0)),
                 container(filter).width(Length::Fixed(260.0)),
+                zoom,
             ]
             .spacing(8)
             .align_y(Center)

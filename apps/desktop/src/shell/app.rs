@@ -820,6 +820,8 @@ pub struct App {
     pub(crate) cloud_query_wanted: Vec<(kentos_interaction::Vec2, f64)>,
     /// Bilgi's asks of the data layers and the row it shows (data_info.rs, docs/adr/9101 §6).
     pub(crate) data_info: crate::data_info::State,
+    /// A data layer's selected rows outlined on the map (data_selection.rs, docs/adr/9102 §5).
+    pub(crate) data_selection: crate::data_selection::DataSelection,
     /// The network tools' questions, asked after the update (networks/, docs/adr/0209 §12).
     pub(crate) network_wanted: Vec<kentos_interaction::network::NetworkAsk>,
     /// Commands a tool asked the host to run (Ağlar from the network tools).

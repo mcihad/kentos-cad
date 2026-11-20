@@ -103,6 +103,9 @@ Katman ▾'da veri katmanı seçilince Öznitelik tablosu satırları kaynaktan 
   - Seçililer, tabloda basılan satırlardır.
 - **İptal:** yeni soru, eskisinin süren okumasını durdurur (taramanın bir sonraki parçasında).
 - **Satıra basmak** satırı seçer; Ctrl ile seçimi tersine çevirir.
+- **Haritada seçim** (`gis/data_selection.rs`): seçili satırlar geometrileriyle kaynaktan okunur (anahtarlarıyla,
+  en çok 1 000) ve haritada vurgu rengiyle çevrelenir. Çubuktaki Seçime yakınlaş onları çerçeveler. Çizimin kendi
+  seçimi değişmez.
 - **Salt okunur:** tablo bu maddede yalnız okur. Hücre düzenlemesi VY-05'in oturumunda.
 
 Tablonun satır önbelleği, katman seçilmemişken etkin katmanın değişmesini görmüyordu (önceden de böyleydi). Anahtara
@@ -130,10 +133,12 @@ Gerçek pencerede, PostGIS'te 1 000 000 parselle denendi (`.run/gui-evidence/ver
 | Görünümdekiler (1:9 994) | 3.400 satır |
 | Bir satır basılıp Seçililer | 1 satır |
 
+Haritada seçim de denendi: anahtarı 3 olan satır (100/3) seçilip Seçime yakınlaş'a basıldı; parsel 1:621'de
+vurgu rengiyle çevrili göründü (`vy04c/20-secime-yakinlas.png`).
+
 ## §8 Kalan
 
-- **Haritada seçim:** tabloda seçilen satırın haritada vurgulanması, Seç aracının veri katmanında satır seçmesi ve
-  Seçime yakınlaş.
+- **Seç aracıyla haritada satır seçmek** VY-05'te gelecek; düzenleme araçları da seçili satırla çalışır.
 - **Yazma:** düzenleme VY-05'te.
 
 ## Uygulama

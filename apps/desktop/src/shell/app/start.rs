@@ -92,6 +92,7 @@ impl App {
             raster_values_wanted: Vec::new(),
             cloud_query_wanted: Vec::new(),
             data_info: Default::default(),
+            data_selection: Default::default(),
             network_wanted: Vec::new(),
             command_wanted: Vec::new(),
             image_file_wanted: false,

@@ -231,6 +231,8 @@ impl App {
                         .extend(service_labels)
                         // The data layers' labels under the drawing's own (data_labels.rs, docs/adr/9101 §6).
                         .extend(self.data_label_layers(&format))
+                        // A data layer's rows selected in the table (data_selection.rs, docs/adr/9102 §5).
+                        .extend(self.data_selection_layer(crate::view::rgba_color(accent)))
                         .push(labels)
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
                         .extend(self.swipe_layer())

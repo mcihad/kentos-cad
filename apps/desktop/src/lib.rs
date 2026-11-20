@@ -1516,6 +1516,8 @@ mod data_view;
 mod data_info;
 #[path = "gis/data_labels.rs"]
 mod data_labels;
+#[path = "gis/data_selection.rs"]
+mod data_selection;
 #[path = "gis/db_connections.rs"]
 mod db_connections;
 #[path = "gis/sources/mod.rs"]
