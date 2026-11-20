@@ -269,7 +269,8 @@ impl Labels<'_> {
             && let Some(lift) = self.map_marks
         {
             let ucs = self.format.ucs.map(|u| u[2]);
-            frame.marks(&self.view, &self.colors, self.format.axes, ucs, lift);
+            let per_unit = crate::map_marks::metres_per_unit(self.doc.settings(), &self.view);
+            frame.marks(&self.view, &self.colors, self.format.axes, ucs, lift, per_unit);
         }
     }
 

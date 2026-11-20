@@ -933,7 +933,8 @@ impl canvas::Program<Message> for Labels<'_> {
             });
             if let Some(lift) = self.map_marks {
                 let ucs = self.format.ucs.map(|u| u[2]);
-                frame.marks(&area, &self.colors, self.format.axes, ucs, lift);
+                let per_unit = crate::map_marks::metres_per_unit(self.doc.settings(), &area);
+                frame.marks(&area, &self.colors, self.format.axes, ucs, lift, per_unit);
             }
         })]
     }
@@ -1341,9 +1342,10 @@ impl<I: Ink> Ink for Counted<'_, I> {
         axes: kentos_interaction::Axes,
         ucs: Option<f64>,
         lift: f32,
+        per_unit: f64,
     ) {
         self.ops += 1;
-        self.ink.marks(camera, colors, axes, ucs, lift);
+        self.ink.marks(camera, colors, axes, ucs, lift, per_unit);
     }
 
     fn fill_ring(&mut self, ring: &[Point], color: Color, of: Option<Slot>) {

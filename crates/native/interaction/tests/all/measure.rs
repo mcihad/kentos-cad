@@ -201,3 +201,42 @@ fn g_while_a_length_is_waited_for_takes_the_point_back_and_ends_the_wait() {
     assert!(b.type_text("@0,5"));
     assert_eq!(b.points(), 2);
 }
+
+/// The empty drawing as a geographic project (EPSG:4326): its coordinates degrees of longitude and latitude.
+fn geographic(tool: &str) -> Bench {
+    let mut drawing: serde_json::Value = serde_json::from_str(common::EMPTY).expect("the drawing");
+    drawing["settings"]["srid"] = serde_json::json!(4326);
+    let mut b = Bench::on(&drawing.to_string());
+    b.draft.snap = false;
+    b.start(tool);
+    b
+}
+
+/// A click at a longitude and latitude (the bench adds its origin).
+fn at(b: &mut Bench, lon: f64, lat: f64) {
+    b.click(lon - common::E, lat - common::N);
+}
+
+/// GIS-040 (docs/adr/1097): in a geographic project Mesafe ölç measures on the ellipsoid, in metres: 0.103° of
+/// longitude is 9 287.328 m at 35.996° N and 5 747.400 m at 60° N (pyproj's Geod, WGS 84: 9287.328372554475 and
+/// 5747.3995815299195), never “0.103 m”; Alan hesapla's 2° square from 36° N is 39 510 856 108.41 m² with a perimeter
+/// of 799 896.451 m (pyproj: 39510856108.41333 and 799896.451280943; a square this large so that its last corner is
+/// not taken for the first at the bench's 8 pixels a unit).
+#[test]
+fn a_geographic_project_measures_on_the_ellipsoid() {
+    for (lat, want) in [(35.996, "9287.328 m"), (60.0, "5747.400 m")] {
+        let mut b = geographic("measure");
+        at(&mut b, 32.0, lat);
+        at(&mut b, 32.103, lat);
+        b.confirm();
+        assert_eq!(b.last_text(), Some(format!("Elipsoit üstünde: uzunluk {want} (1 kenar)").as_str()), "{lat}");
+    }
+    let mut b = geographic("area");
+    for (lon, lat) in [(32.0, 36.0), (34.0, 36.0), (34.0, 38.0), (32.0, 38.0)] {
+        at(&mut b, lon, lat);
+    }
+    b.confirm();
+    let said = b.last_text().unwrap_or_default().to_owned();
+    assert!(said.starts_with("Elipsoit üstünde: Alan 39510856108.41 m²"), "{said}");
+    assert!(said.ends_with("Çevre 799896.451 m"), "{said}");
+}

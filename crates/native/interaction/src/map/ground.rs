@@ -81,6 +81,25 @@ pub fn trimmed(v: f64) -> String {
     }
 }
 
+/// What a geographic project measures (GIS-040): its drawing is in degrees of latitude and longitude, so a length
+/// and an area are taken on its system's ellipsoid (the geodesics between the vertices, GeographicLib's polygon) and
+/// written in metres and square metres; none in a projected project or one without a system. `Err` when a point is
+/// beyond the system.
+pub fn on_geographic_ellipsoid(settings: &ProjectSettings, rings: &[Ring], closed: bool) -> Option<Result<(f64, Option<f64>), ()>> {
+    let system = systems::own(settings).and_then(|n| n.system)?;
+    if !matches!(system, kentos_geometry_core::crs::System::Geographic { .. }) {
+        return None;
+    }
+    Some(ground_measures(&system, rings, closed, None).map(|m| (m.ellipsoid_length, m.ellipsoid_area)).map_err(|_| ()))
+}
+
+/// The project's own system when it is geographic: its drawing in degrees (GIS-040).
+pub fn geographic_system(settings: &ProjectSettings) -> Option<kentos_geometry_core::crs::System> {
+    systems::own(settings)
+        .and_then(|n| n.system)
+        .filter(|s| matches!(s, kentos_geometry_core::crs::System::Geographic { .. }))
+}
+
 /// The lines Mesafe ölç (`closed` false: the first ring, a path) and Alan
 /// hesapla (the rings, the first the outer) say after their own: the
 /// ellipsoid's, with the plane's scale against it, and the ground's, with
@@ -117,6 +136,10 @@ pub fn lines(settings: &ProjectSettings, rings: &[Ring], closed: bool, f: &Forma
         trimmed(height),
         what(m.ground_area, m.ground_length.unwrap_or(0.0))
     );
+    if matches!(system, kentos_geometry_core::crs::System::Geographic { .. }) {
+        // Its own line is already the ellipsoid's (GIS-040).
+        return vec![ground];
+    }
     vec![ellipsoid, ground]
 }
 

@@ -328,6 +328,8 @@ pub struct Path {
     offers: Offers,
     /// The project's units, as of the last call (Adım boyu's value in the prompt).
     format: Format,
+    /// A geographic project's system (GIS-040): Mesafe ölç and Alan hesapla measure on its ellipsoid.
+    geographic: Option<kentos_geometry_core::crs::System>,
     /// İçine tıkla: where the pointer is and the region around it.
     inside: Option<(Vec2, Option<Region>)>,
     /// The faces of the visible line work, kept while the drawing and the view stand.
@@ -402,6 +404,7 @@ impl Path {
             memory: Memory::default(),
             offers: Offers::ALL,
             format: Format::default(),
+            geographic: None,
             inside: None,
             faces: FaceCache::default(),
             measured: None,
@@ -467,9 +470,22 @@ impl Path {
         self.memory = *cx.memory;
         self.offers = cx.draft.offers;
         self.format = cx.format();
+        self.geographic = matches!(self.shape, Shape::MeasureLength | Shape::MeasureArea)
+            .then(|| ground::geographic_system(cx.doc.settings()))
+            .flatten();
         if self.shape == Shape::Wall {
             self.wall_offer = wall::offered(cx.doc.settings());
         }
+    }
+
+    /// A geographic project's measure on its ellipsoid (GIS-040): the path's length and the ring's area; none in a
+    /// projected project or beyond the system.
+    fn on_ellipsoid(&self, pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Option<(f64, Option<f64>)> {
+        let system = self.geographic.as_ref()?;
+        let ring = Ring { pts: pts.to_vec(), bulges: bulges.map(<[f64]>::to_vec) };
+        kentos_geometry_core::crs::ground::ground_measures(system, &[ring], closed, None)
+            .ok()
+            .map(|m| (m.ellipsoid_length, m.ellipsoid_area))
     }
 
     /// Whether Çoklu çizgi offers Genişlik (docs/adr/0258): not a room's separator, nor where the program has no
@@ -997,11 +1013,13 @@ impl Path {
         self.pts.push(p);
         self.bulges.push(0.0);
         let f = cx.format();
+        let ray = [Ring { pts: vec![first, p], bulges: None }];
+        let length = measured_on_ellipsoid(&ray, false, cx).unwrap_or_else(|| f.length(dist(first, p)));
         // The direction as the project's type reads it: a semt, or a CAD project's angle (docs/adr/0165 §4).
         let mut text = format!(
             "{}: {}, {} {}",
             self.pts.len() - 1,
-            f.length(dist(first, p)),
+            length,
             f.direction_name().to_lowercase(),
             f.direction(bearing_grad(first, p))
         );
@@ -1029,16 +1047,14 @@ impl Path {
             return;
         };
         let f = cx.format();
-        let text = format!(
-            "Alan {}   Çevre {}",
-            f.area(net_area(&region)),
-            f.length(perimeter(&region))
-        );
-        cx.say(Level::Success, text);
         let rings: Vec<Ring> = std::iter::once(&region.outer)
             .chain(&region.holes)
             .cloned()
             .collect();
+        let text = measured_on_ellipsoid(&rings, true, cx).unwrap_or_else(|| {
+            format!("Alan {}   Çevre {}", f.area(net_area(&region)), f.length(perimeter(&region)))
+        });
+        cx.say(Level::Success, text);
         say_second(&rings, true, cx);
         self.measured = Some(region);
     }
@@ -1379,29 +1395,33 @@ impl Path {
             // Rays have no total: what each said is all there is.
             Shape::MeasureLength if self.fixed() => {}
             Shape::MeasureLength => {
-                let length = bulge_path_length(&pts, bulges.as_deref(), false);
-                let text = format!(
-                    "Toplam uzunluk {} ({} kenar)",
-                    cx.format().length(length),
-                    pts.len() - 1
-                );
-                cx.say(Level::Success, text);
                 let path = Ring {
                     pts: pts.clone(),
                     bulges: bulges.clone(),
                 };
+                let text = match measured_on_ellipsoid(std::slice::from_ref(&path), false, cx) {
+                    Some(said) => format!("{said} ({} kenar)", pts.len() - 1),
+                    None => format!(
+                        "Toplam uzunluk {} ({} kenar)",
+                        cx.format().length(bulge_path_length(&pts, bulges.as_deref(), false)),
+                        pts.len() - 1
+                    ),
+                };
+                cx.say(Level::Success, text);
                 say_second(&[path], false, cx);
             }
             Shape::MeasureArea => {
-                let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
-                let perimeter = bulge_path_length(&pts, bulges.as_deref(), true);
-                let f = cx.format();
-                let text = format!("Alan {}   Çevre {}", f.area(area), f.length(perimeter));
-                cx.say(Level::Success, text);
                 let ring = Ring {
                     pts: pts.clone(),
                     bulges: bulges.clone(),
                 };
+                let text = measured_on_ellipsoid(std::slice::from_ref(&ring), true, cx).unwrap_or_else(|| {
+                    let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
+                    let perimeter = bulge_path_length(&pts, bulges.as_deref(), true);
+                    let f = cx.format();
+                    format!("Alan {}   Çevre {}", f.area(area), f.length(perimeter))
+                });
+                cx.say(Level::Success, text);
                 say_second(&[ring], true, cx);
                 self.measured = Some(Region {
                     outer: Ring { pts, bulges },
@@ -1831,6 +1851,19 @@ impl Path {
 /// Mesafe ölç's and Alan hesapla's measure on the ellipsoid and on the ground
 /// (docs/adr/0171 §4a), then in the second system's plane, or why there is
 /// none, when the project has a second system (docs/adr/0167 §2).
+/// A geographic project's measure (GIS-040): its drawing is in degrees, so the path's length or the area and its
+/// perimeter are taken on the system's ellipsoid and said so, in metres; none in a projected project.
+fn measured_on_ellipsoid(rings: &[Ring], closed: bool, cx: &Context<'_>) -> Option<String> {
+    let f = cx.format();
+    Some(match ground::on_geographic_ellipsoid(cx.doc.settings(), rings, closed)? {
+        Ok((length, Some(area))) if closed => {
+            format!("Elipsoit üstünde: Alan {}   Çevre {}", f.area(area), f.length(length))
+        }
+        Ok((length, _)) => format!("Elipsoit üstünde: uzunluk {}", f.length(length)),
+        Err(()) => ground::UNREACHED.to_owned(),
+    })
+}
+
 fn say_second(rings: &[Ring], closed: bool, cx: &mut Context<'_>) {
     for line in ground::lines(cx.doc.settings(), rings, closed, &cx.format()) {
         cx.say(Level::Info, line);
@@ -2603,16 +2636,22 @@ impl Tool for Path {
                         format!("Yay boyu {}", format.length(a.r * a.sweep.abs())),
                     ],
                     (None, None) => vec![
-                        format.length(dist(last, end)),
+                        self.on_ellipsoid(&[last, end], None, false)
+                            .map_or_else(|| format.length(dist(last, end)), |(l, _)| format.length(l)),
                         format!("{} {}", format.direction_name(), format.direction(bearing_grad(last, end))),
                     ],
                 };
                 if self.shape == Shape::MeasureLength {
-                    let total = bulge_path_length(&pts, Some(&bulges), false);
+                    let total = self
+                        .on_ellipsoid(&pts, Some(&bulges), false)
+                        .map_or_else(|| bulge_path_length(&pts, Some(&bulges), false), |(l, _)| l);
                     lines.push(format!("Toplam {}", format.length(total)));
                 }
                 if area_shape {
-                    let area = bulge_ring_area(&pts, Some(&bulges)).abs();
+                    let area = self
+                        .on_ellipsoid(&pts, Some(&bulges), true)
+                        .and_then(|(_, a)| a)
+                        .unwrap_or_else(|| bulge_ring_area(&pts, Some(&bulges)).abs());
                     lines.push(format!("Alan {}", format.area(area)));
                 }
                 // Duvar: the loop so far, to the cursor and back to its first corner, on the walls' path

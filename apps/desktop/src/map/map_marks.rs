@@ -56,6 +56,7 @@ pub fn paint(
     axes: Axes,
     ucs: Option<f64>,
     lift: f32,
+    per_unit: f64,
 ) {
     let size = frame.size();
     // A twisted view (docs/adr/0285 §2): grid north and the axes turn with the drawing.
@@ -63,9 +64,10 @@ pub fn paint(
     match axes {
         Axes::Gis => {
             north_arrow(frame, size, colors, twist);
+            // Pixels per metre: a geographic project's degree is metres on its ellipsoid (GIS-040).
             scale_bar(
                 frame,
-                camera.scale,
+                camera.scale / per_unit,
                 Size::new(size.width, size.height - lift),
                 colors,
             );
@@ -262,6 +264,28 @@ pub fn scale_length(scale: f64) -> (f64, String) {
         format!("{} cm", two_digits(best * 100.0))
     };
     (best, unit)
+}
+
+/// Metres a drawing unit is along the screen's width at the view's middle (GIS-040): 1 but in a geographic project
+/// drawn in its own degrees, where it is the geodesic along the middle latitude across the scale bar's reach, over the
+/// degrees it spans (WGS 84 at 36° N: about 90.2 km a degree of longitude, at 60° N about 55.8 km).
+pub fn metres_per_unit(settings: &kentos_commands::ProjectSettings, camera: &Camera) -> f64 {
+    if camera.map.is_some() || !(camera.scale.is_finite() && camera.scale > 0.0) {
+        return 1.0;
+    }
+    let Some(system) = kentos_interaction::ground::geographic_system(settings) else {
+        return 1.0;
+    };
+    let half = TARGET / 2.0 / camera.scale;
+    let c = camera.center;
+    let ring = kentos_geometry_core::crs::measure::Ring {
+        pts: vec![kentos_geometry_core::Vec2::new(c.x - half, c.y), kentos_geometry_core::Vec2::new(c.x + half, c.y)],
+        bulges: None,
+    };
+    match kentos_geometry_core::crs::ground::ground_measures(&system, &[ring], false, None) {
+        Ok(m) if m.ellipsoid_length > 0.0 => m.ellipsoid_length / (2.0 * half),
+        _ => 1.0,
+    }
 }
 
 /// A number with two significant digits, as JavaScript's `toPrecision(2)`
@@ -533,4 +557,63 @@ mod ucs_screens {
             app
         });
     }
+
+    /// GIS-040 (docs/adr/1097): in a geographic project a drawing unit is a degree, so the scale bar takes the metres a
+    /// degree of longitude is at the view's middle latitude: across the bar's reach (0.12° at 1 000 px a degree) about
+    /// 90 163.682 m at 36° N and 55 799.994 m at 60° N (pyproj's Geod, WGS 84: 90163.68212811717 and
+    /// 55799.99392349242); 1 in a projected project.
+    #[test]
+    fn a_geographic_view_s_scale_bar_is_in_metres() {
+        let settings = |srid: u32| -> kentos_commands::ProjectSettings {
+            serde_json::from_value(serde_json::json!({ "srid": srid, "lengthDecimals": 3, "areaDecimals": 2,
+                "areaUnit": "m2", "angleUnit": "deg", "plotScale": 1000 }))
+            .expect("settings")
+        };
+        let at = |lat: f64| kentos_render_wgpu::Camera {
+            center: kentos_render_wgpu::Vec2::new(32.0, lat),
+            scale: 1000.0,
+            width: 800.0,
+            height: 600.0,
+            ..kentos_render_wgpu::Camera::default()
+        };
+        for (lat, want) in [(36.0, 90163.68212811717), (60.0, 55799.99392349242)] {
+            let got = super::metres_per_unit(&settings(4326), &at(lat));
+            assert!((got - want).abs() < 1e-3, "{lat}: {got}");
+        }
+        assert_eq!(super::metres_per_unit(&settings(5256), &at(36.0)), 1.0);
+        // At 1 000 px a degree, 120 px are about 10.8 km: the bar is 10 km, not 5 cm.
+        let (length, words) = super::scale_length(1000.0 / super::metres_per_unit(&settings(4326), &at(36.0)));
+        assert_eq!((length, words.as_str()), (10000.0, "10 km"));
+    }
+
+}
+
+/// GIS-040: a geographic project's view, its scale bar in kilometres; picture `gis-040-olcek-cubugu`.
+#[cfg(test)]
+#[test]
+fn a_geographic_project_s_scale_bar_on_the_screen() {
+    use crate::app::{App, Message};
+    let mut drawing: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
+    drawing["settings"]["srid"] = serde_json::json!(4326);
+    drawing["settings"]["workspace"] = serde_json::json!("gis");
+    let pts: Vec<serde_json::Value> =
+        [(32.0, 36.0), (32.2, 36.0), (32.2, 36.2), (32.0, 36.2)].iter().map(|(x, y)| serde_json::json!({"x": x, "y": y})).collect();
+    let layer = drawing["activeLayer"].clone();
+    drawing["entities"] = serde_json::json!([{ "kind": "polygon", "id": 1, "layerId": layer, "attrs": {}, "pts": pts }]);
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+    let doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let (mut app, _) = App::boot(None);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let _ = app.update(Message::QuickAccess("view.zoomExtents".into(), true));
+    let per = metres_per_unit(app.document.as_ref().expect("open").model.settings(), &app.viewport.camera);
+    assert!(per > 80_000.0, "{per}");
+    // The status bar's 1:N is of metres too, and 1:100 000 chosen gives it back (the camera's deepest zoom, 10⁴
+    // pixels a unit, is about 1:42 000 in degrees).
+    assert!(app.view_scale() > 10_000.0, "{}", app.view_scale());
+    let _ = app.update(Message::ScreenScale(crate::screen_scale::Event::Choose(100_000.0)));
+    assert!((app.view_scale() - 100_000.0).abs() < 100.0, "{}", app.view_scale());
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-040-olcek-cubugu");
 }

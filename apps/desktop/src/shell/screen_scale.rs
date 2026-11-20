@@ -48,7 +48,7 @@ impl App {
         match e {
             Event::Choose(n) => self.zoom_to_scale(n),
             Event::Type => {
-                let n = self.viewport.camera.screen_scale().round();
+                let n = self.view_scale().round();
                 self.scale_field = Some(format!("{n}"));
                 return Task::batch([
                     operation::focus(Id::new(FIELD)),
@@ -72,9 +72,23 @@ impl App {
         Task::none()
     }
 
-    /// The view zoomed about its middle to 1:N, a navigation step.
+    /// The view zoomed about its middle to 1:N, a navigation step; in a geographic project N is of metres on the
+    /// ground, a degree being as many metres as at the view's middle (GIS-040).
     fn zoom_to_scale(&mut self, n: f64) {
-        self.navigating(|app| app.viewport.camera.zoom_to_screen_scale(n));
+        let per_unit = self.metres_per_unit();
+        self.navigating(|app| app.viewport.camera.zoom_to_screen_scale(n / per_unit));
+    }
+
+    /// Metres a drawing unit is at the view's middle: 1 but in a geographic project (map_marks.rs).
+    pub(crate) fn metres_per_unit(&self) -> f64 {
+        self.document
+            .as_ref()
+            .map_or(1.0, |d| crate::map_marks::metres_per_unit(d.model.settings(), &self.viewport.camera))
+    }
+
+    /// The view's 1:N as the status bar says it: of metres on the ground (GIS-040).
+    pub(crate) fn view_scale(&self) -> f64 {
+        self.viewport.camera.screen_scale() * self.metres_per_unit()
     }
 
     /// The scales the selector offers: the project's type's (the new project
