@@ -489,12 +489,19 @@ impl App {
             return None;
         };
         let tool = &window.tool;
+        // The cells that cannot be read, as they are typed (GIS-061): said under the table, the run kept until fixed.
+        let problems = self
+            .document
+            .as_ref()
+            .map(|d| batch_table::problems(&d.model, tool, &b.table))
+            .unwrap_or_default();
         let body = column![
             intro(),
             toolbar(b, tool),
             on_error(b),
             sink_section(window),
             grid(b, tool),
+            cell_problems(&problems),
             failed_panel(b),
             record_panel(b)
         ]
@@ -508,7 +515,7 @@ impl App {
                     .height(Fill),
             )
             .push(horizontal_divider())
-            .footer(footer(b))
+            .footer(footer(b, problems.is_empty()))
             .width(WIDTH)
             .max_height(HEIGHT);
         Some((dialog, ev(Event::Back)))
@@ -517,7 +524,7 @@ impl App {
 
 fn intro<'a>() -> Element<'a, Message> {
     label::body(
-        "Her satır aracı bir kez çalıştırır. Sütunlar satıra göre değişen parametrelerdir; boş hücre penceredeki değeri alır. Satırlar sırayla çalışır, hepsi tek geri alma adımıdır. Hata olursa: Dur seçiliyken biri çalışmazsa hiçbir şey yazılmaz; Devam et seçiliyken yalnız o satır geri alınır, öteki satırlar yazılır. Sonuç bir dosyaya ya da veritabanına yazılırken çizim değişmez.",
+        "Her satır aracı bir kez çalıştırır. Sütunlar satıra göre değişen parametrelerdir; boş hücre penceredeki değeri alır. Satırlar sırayla çalışır, hepsi tek geri alma adımıdır. Okunamayan bir hücre tabloyu bütünüyle durdurur ve tablonun altında satırıyla söylenir. Hata olursa (çalışırken): Dur seçiliyken biri çalışmazsa hiçbir şey yazılmaz; Devam et seçiliyken yalnız o satır geri alınır, öteki satırlar yazılır. Sonuç bir dosyaya ya da veritabanına yazılırken çizim değişmez.",
     )
     .style(style::text::muted)
     .into()
@@ -886,7 +893,23 @@ fn record_panel<'a>(b: &'a BatchState) -> Element<'a, Message> {
 }
 
 /// Forma dön, the line (how it goes, ended, or why not), Kapat or Durdur, and Toplu çalıştır.
-fn footer<'a>(b: &'a BatchState) -> Element<'a, Message> {
+/// The cells that cannot be read, each by its row and column (GIS-061); nothing when every cell reads.
+fn cell_problems<'a>(problems: &[batch_table::Refusal]) -> Element<'a, Message> {
+    if problems.is_empty() {
+        return column![].into();
+    }
+    let mut list = column![label::body(
+        "Bu hücreler okunamıyor; tablo bütünüyle denetlenir, Dur ya da Devam et seçiminden bağımsız olarak düzeltilmeden çalışmaz:"
+    )
+    .style(style::text::danger)]
+    .spacing(4);
+    for p in problems.iter().take(20) {
+        list = list.push(label::caption(format!("Satır {}: {}", p.row + 1, p.message)).style(style::text::danger));
+    }
+    list.into()
+}
+
+fn footer<'a>(b: &'a BatchState, cells_read: bool) -> Element<'a, Message> {
     let running = b.running();
     let back = button(label::body("Forma dön"))
         .padding(kentos_ui::theme::metrics::action())
@@ -944,7 +967,7 @@ fn footer<'a>(b: &'a BatchState) -> Element<'a, Message> {
     )
     .padding(kentos_ui::theme::metrics::action())
     .style(style::button::primary)
-    .on_press_maybe((!running).then(|| ev(Event::Run)));
+    .on_press_maybe((!running && cells_read).then(|| ev(Event::Run)));
     row![back, status, close, run]
         .spacing(10)
         .align_y(Center)

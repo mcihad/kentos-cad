@@ -359,3 +359,30 @@ fn screens() {
         }
     }
 }
+
+/// GIS-061 (docs/adr/1120): a cell that cannot be read is said under the table as it is typed, with its row and
+/// column, whichever of Dur and Devam et is chosen, and Toplu çalıştır waits until it is fixed. Picture
+/// `gis-061-toplu-hucre`.
+#[test]
+fn a_cell_that_cannot_be_read_is_said_as_it_is_typed() {
+    let mut app = app_with(PARCELS);
+    let _ = app.update(Message::Run("processing.run.geometry.buffer"));
+    batch_event(&mut app, batch::Event::Open);
+    batch_event(&mut app, batch::Event::OnError(batch::OnError::Continue));
+    type_cell(&mut app, 0, 0, "2");
+    type_cell(&mut app, 1, 0, "ölçülmedi");
+    let doc = &app.document.as_ref().expect("open").model;
+    let tool = &app.gis.processing.dialog.as_ref().expect("the window").tool;
+    let problems = kentos_processing::batch_table::problems(doc, tool, &state(&app).table);
+    assert_eq!(problems.len(), 1);
+    assert_eq!(problems[0].row, 1);
+    let line = format!("Satır 2: {}", problems[0].message);
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    assert!(crate::files_testing::find_text(&mut shot, &app, &line).is_some(), "{line}");
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-061-toplu-hucre");
+    type_cell(&mut app, 1, 0, "5");
+    let doc = &app.document.as_ref().expect("open").model;
+    let tool = &app.gis.processing.dialog.as_ref().expect("the window").tool;
+    assert!(kentos_processing::batch_table::problems(doc, tool, &state(&app).table).is_empty());
+}

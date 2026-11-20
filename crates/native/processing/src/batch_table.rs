@@ -204,6 +204,27 @@ pub fn cell_value(doc: &Document, def: &ParamDef, text: &str) -> Result<Value, S
     }
 }
 
+/// Every filled cell that cannot be read, in the table's order (GIS-061): what the window says as the cells are typed,
+/// before the batch runs; the same words [`input`] refuses with.
+pub fn problems(doc: &Document, tool: &Tool, table: &Table) -> Vec<Refusal> {
+    let mut out = Vec::new();
+    for (i, r) in table.rows.iter().enumerate() {
+        for (c, name) in table.columns.iter().enumerate() {
+            let text = r.cells.get(c).map_or("", String::as_str);
+            if text.trim().is_empty() {
+                continue;
+            }
+            let Some(def) = tool.parameters.iter().find(|p| &p.name == name) else {
+                continue;
+            };
+            if let Err(message) = cell_value(doc, def, text) {
+                out.push(Refusal { row: i, column: name.clone(), message: format!("“{}”: {message}.", def.label) });
+            }
+        }
+    }
+    out
+}
+
 /// The `cad.processing.batch` input of a table: the window's values (`common`, as the command takes them), the
 /// selection and the box, and each row's own values from its filled cells.
 pub fn input(
