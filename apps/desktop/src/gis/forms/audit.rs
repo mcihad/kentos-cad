@@ -34,6 +34,7 @@ const CLOSE: &str = "Kapat";
 const AGAIN: &str = "Yeniden denetle";
 const SELECT_ALL: &str = "Hepsini seç";
 const WARNINGS: &str = "Uyarılar da";
+const DESIGNER: &str = "Form tasarımcısında aç";
 
 /// The window.
 #[derive(Debug, Clone)]
@@ -42,6 +43,9 @@ pub struct Window {
     name: String,
     warnings: bool,
     answer: Option<FormsAudited>,
+    /// Why the audit could not run (GIS-049): the command's words (the form, the rule and where it breaks), kept in
+    /// the window beside Form tasarımcısında aç.
+    failed: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -51,6 +55,8 @@ pub enum Event {
     SelectAll,
     Show(String),
     Open(String),
+    /// Form tasarımcısında aç: the form whose rule broke, in the designer.
+    Designer,
     Close,
 }
 
@@ -86,6 +92,7 @@ impl App {
             name,
             warnings: false,
             answer: None,
+            failed: None,
         });
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FormAudit));
         self.run_form_audit();
@@ -115,9 +122,17 @@ impl App {
             return;
         };
         let result = forms_audit::plan(&ExecutionContext::new(&mut doc.model), &input);
-        let answer = self.answered(result);
+        // The failure stays in the window (GIS-049), not only in the history.
+        let (answer, failed) = match result {
+            kentos_commands::CommandResult::Completed { output, .. } => (Some(output), None),
+            kentos_commands::CommandResult::Failed { error }
+            | kentos_commands::CommandResult::Conflict { error }
+            | kentos_commands::CommandResult::NeedsInput { error } => (None, Some(error.message)),
+            _ => (None, Some("Denetim bir sonuç vermedi.".to_owned())),
+        };
         if let Some(w) = self.gis.form_audit.as_mut() {
             w.answer = answer;
+            w.failed = failed;
         }
     }
 
@@ -150,6 +165,11 @@ impl App {
                     self.selection.set([slot]);
                     return self.open_entry(slot, &form);
                 }
+            }
+            Event::Designer => {
+                let form = self.gis.form_audit.take().map(|w| w.form);
+                self.dialog = None;
+                self.open_forms(form);
             }
             Event::Close => {
                 self.gis.form_audit = None;
@@ -209,7 +229,15 @@ impl App {
         );
         match &w.answer {
             None => {
-                body = body.push(words::text_line(Kind::Warn, "Denetim yapılamadı."));
+                let why = w.failed.clone().unwrap_or_else(|| "Denetim yapılamadı.".to_owned());
+                body = body.push(words::text_line(Kind::Error, why));
+                body = body.push(
+                    row![
+                        space::horizontal().width(Fill),
+                        words::secondary(DESIGNER, Some(msg(Event::Designer))),
+                    ]
+                    .align_y(Center),
+                );
             }
             Some(a) => {
                 let mut head = format!("{} kayıt denetlendi · {} hatalı", a.checked, a.failing);
@@ -298,6 +326,7 @@ impl App {
         };
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
+            Control::Press(DESIGNER) => Some(msg(Event::Designer)),
             Control::Press(AGAIN) => Some(msg(Event::Again)),
             Control::Press(SELECT_ALL) => Some(msg(Event::SelectAll)),
             Control::Press(WARNINGS) => Some(msg(Event::Warnings(!w.warnings))),
@@ -309,5 +338,40 @@ impl App {
 fn muted(theme: &iced::Theme) -> iced::widget::text::Style {
     iced::widget::text::Style {
         color: Some(Tokens::of(theme).muted),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// GIS-049 (docs/adr/1106): a form whose rule cannot be read: Kayıtları denetle keeps the command's reason in the
+    /// window (the form, the rule and where it breaks) beside Form tasarımcısında aç, which opens the form in the
+    /// designer; a readable rule gives the counts.
+    #[test]
+    fn a_rule_that_cannot_be_read_is_said_in_the_window() {
+        let mut drawing: serde_json::Value =
+            serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/forms.kcad")).expect("the drawing");
+        let form = &mut drawing["settings"]["forms"][0];
+        form["releases"] = serde_json::json!([]);
+        form["draft"]["items"][0]["items"][2]["checks"][0]["rule"] = serde_json::json!("uzunluk(Açıklama)) >= 10");
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+        let doc = crate::document::Document::new(snapshot, None).expect("opens");
+        let (mut app, _) = App::boot(None);
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.open_form_audit(Some("bina-denetimi".into()));
+        let w = app.gis.form_audit.as_ref().expect("the window");
+        let why = w.failed.clone().expect("the reason kept");
+        assert!(w.answer.is_none());
+        assert!(why.contains("uzunluk(Açıklama)) >= 10") || why.contains("karakter"), "{why}");
+        let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        assert!(crate::files_testing::find_text(&mut shot, &app, &why).is_some(), "{why}");
+        assert!(why.contains("Bina denetimi") && why.contains("karakterde"), "the form and where: {why}");
+        assert!(crate::files_testing::find_text(&mut shot, &app, DESIGNER).is_some());
+        crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-049-form-denetim");
+        let _ = app.update(msg(Event::Designer));
+        assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::Forms)), "the designer opens");
+        assert!(app.gis.form_audit.is_none());
     }
 }
