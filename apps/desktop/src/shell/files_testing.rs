@@ -124,6 +124,16 @@ pub fn offscreen(size: iced::Size) -> kentos_ui::snapshot::Snapshot {
     kentos_ui::snapshot::Snapshot::software(size).expect("a software renderer")
 }
 
+/// A snapshot for a test that may take an `evidence` picture: the GPU's renderer (the drawing area drawn) when
+/// `KENTOS_SHOTS` is set, else [`offscreen`]'s software one.
+pub fn pictured(size: iced::Size) -> kentos_ui::snapshot::Snapshot {
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        kentos_ui::snapshot::Snapshot::new(size).expect("a renderer")
+    } else {
+        offscreen(size)
+    }
+}
+
 /// A usage review finding's picture (`usage-reporting.md`): the window as it stands, light at 1440×900 then dark at
 /// 1100×760 (`prepare` sets each fresh app up), into `.run/gui-evidence/kullanim-<ur>/<name>-<theme>.png`. For the
 /// owner, run by hand; the folder is not committed.

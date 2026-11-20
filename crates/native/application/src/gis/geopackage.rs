@@ -95,32 +95,25 @@ fn coord_json(c: &Coord) -> J {
     json!({ "x": c.x, "y": c.y })
 }
 
-/// The signed sweep of the arc from `a` through `m` to `b`, radians (counter-clockwise positive); none when they
-/// are on one line or two are one point.
-fn sweep(a: &Coord, m: &Coord, b: &Coord) -> Option<f64> {
-    let (ax, ay, mx, my, bx, by) = (a.x, a.y, m.x, m.y, b.x, b.y);
-    let d = 2.0 * (ax * (my - by) + mx * (by - ay) + bx * (ay - my));
-    if d == 0.0 || !d.is_finite() {
+/// The bulge, tan(θ/4), of the arc from `a` through `m` to `b` (counter-clockwise positive; docs/adr/1071), from the
+/// angle at `m` rather than the circle's centre: with u = a − m and v = b − m, θ/4 = (π − ∠amb)/2, so the bulge is
+/// (v × u) / (|u||v| − u·v). Only differences of the points enter, so map coordinates lose nothing, and
+/// three nearly straight points (a buffer's few-micrometre arc) give a bulge near 0 instead of a far centre's
+/// rounding; an arc past 180° keeps its sweep and direction. None when two points are one or `a` and `b` meet (a
+/// whole circle: one bulge cannot say it).
+fn arc_bulge(a: &Coord, m: &Coord, b: &Coord) -> Option<f64> {
+    let (ux, uy) = (a.x - m.x, a.y - m.y);
+    let (vx, vy) = (b.x - m.x, b.y - m.y);
+    let lu = ux.hypot(uy);
+    let lv = vx.hypot(vy);
+    // Counter-clockwise a → m → b turns left: (m − a) × (b − a), which is v × u.
+    let turn = vx * uy - vy * ux;
+    let under = lu * lv - (ux * vx + uy * vy);
+    if lu == 0.0 || lv == 0.0 || !(under > 0.0) {
         return None;
     }
-    let a2 = ax * ax + ay * ay;
-    let m2 = mx * mx + my * my;
-    let b2 = bx * bx + by * by;
-    let cx = (a2 * (my - by) + m2 * (by - ay) + b2 * (ay - my)) / d;
-    let cy = (a2 * (bx - mx) + m2 * (ax - bx) + b2 * (mx - ax)) / d;
-    let ang = |x: f64, y: f64| (y - cy).atan2(x - cx);
-    let (t0, t1, t2) = (ang(ax, ay), ang(mx, my), ang(bx, by));
-    let tau = std::f64::consts::TAU;
-    let ccw = (mx - ax) * (by - ay) - (my - ay) * (bx - ax) > 0.0;
-    let norm = |x: f64| x.rem_euclid(tau);
-    Some(if ccw {
-        // Counter-clockwise from a, through m, to b.
-        let s = norm(t2 - t0);
-        debug_assert!(norm(t1 - t0) <= s + 1e-12);
-        s
-    } else {
-        -norm(t0 - t2)
-    })
+    let bulge = turn / under;
+    bulge.is_finite().then_some(bulge)
 }
 
 /// A curve as vertices, each with its edge's bulge, elevation and measure (the last vertex's bulge 0).
@@ -155,7 +148,7 @@ impl Walk {
                 }
                 let mut i = 0;
                 while i + 2 < p.len() {
-                    let b = sweep(&p[i], &p[i + 1], &p[i + 2]).map_or(0.0, |s| (s / 4.0).tan());
+                    let b = arc_bulge(&p[i], &p[i + 1], &p[i + 2]).unwrap_or(0.0);
                     self.push(p[i + 2], Some(b));
                     i += 2;
                 }
@@ -2587,3 +2580,7 @@ mod tests {
         assert_eq!(field_document(&fields[..1], &columns), None);
     }
 }
+
+#[cfg(test)]
+#[path = "geopackage_arc_tests.rs"]
+mod arc_tests;

@@ -96,7 +96,7 @@ fn buffer_rings_go_to_a_layer_of_their_own_in_one_step() {
 #[test]
 fn a_gis_buffers_layer_is_an_area_layer_that_turns_the_point_tool_off() {
     let mut app = app_with_geometry();
-    let mut shot = crate::files_testing::offscreen(iced::Size::new(1440., 900.));
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
     let _ = app.update(Message::Run("processing.run.geometry.buffer"));
     value(&mut app, "input", layer("parsel"));
     value(&mut app, "distance", json!(10));

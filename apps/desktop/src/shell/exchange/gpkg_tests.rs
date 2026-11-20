@@ -1823,3 +1823,40 @@ fn undoing_a_written_step_says_the_source_still_holds_it() {
     );
     assert!(said(&app, "Geri alındı"));
 }
+
+/// GIS-005 (docs/adr/1071): a curve polygon written by GDAL, its few-micrometre arc nearly straight, comes in at its
+/// place in a TM33 CBS project; Tümünü göster frames the park, not hundreds of kilometres. With `KENTOS_SHOTS=1` the
+/// picture goes to `.run/gui-evidence/gis-005/`.
+#[test]
+fn a_curve_polygons_near_straight_arc_stays_in_the_park() {
+    use serde_json::json;
+    let (mut app, _) = App::boot(None);
+    crate::tools_scenes::open_edited(&mut app, crate::tools_scenes::Objects::new(), |d| {
+        d["settings"]["workspace"] = json!("gis");
+        d["settings"]["srid"] = json!(5255);
+    });
+    app.picker = Picker::File(gpkg("egri-tampon.gpkg"));
+    run(&mut app, "file.import.gpkg");
+    send(&mut app, Event::Gpkg(G::Run));
+    let doc = &app.document.as_ref().expect("open").model;
+    let area = doc
+        .entities()
+        .find(|e| e.kind() == "polygon")
+        .expect("the buffer came in");
+    let bulges: Vec<f64> = serde_json::to_value(area).expect("json")["bulges"]
+        .as_array()
+        .expect("arcs")
+        .iter()
+        .filter_map(serde_json::Value::as_f64)
+        .collect();
+    assert!(bulges.iter().all(|b| b.abs() < 0.5), "{bulges:?}");
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    let mut update = |app: &mut App, m| drop(app.update(m));
+    shot.settle(&mut app, App::view, &mut update);
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    shot.settle(&mut app, App::view, &mut update);
+    // Framed, the park's 244 m fill the drawing area at a town's scale, not a country's.
+    let width = app.viewport.camera.width / app.viewport.camera.map_px();
+    assert!(width < 1_000.0, "the view is {width} m wide");
+    crate::files_testing::evidence(&mut shot, &app, "gis-005", "egri-tampon-tumunu-goster");
+}
