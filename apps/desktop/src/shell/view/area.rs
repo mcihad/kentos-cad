@@ -229,6 +229,8 @@ impl App {
                             Tokens::of(&self.theme()).warning,
                         ))
                         .extend(service_labels)
+                        // The data layers' labels under the drawing's own (data_labels.rs, docs/adr/9101 §6).
+                        .extend(self.data_label_layers(&format))
                         .push(labels)
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
                         .extend(self.swipe_layer())

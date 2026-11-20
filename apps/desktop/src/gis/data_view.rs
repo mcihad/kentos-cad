@@ -10,13 +10,16 @@
 //! The read covers the view and half of it again on every side, so a pan within it reads nothing; the geometry is
 //! simplified to half a pixel; a new read starts once the view stops moving. The earlier parts stay drawn until the new
 //! read is whole.
+//!
+//! A layer whose labels are on keeps a whole read's objects, up to [`LABEL_ROWS`], in a document of their own
+//! ([`take_labels`](DataView::take_labels)); the label engine places them as it places the drawing's (data_labels.rs).
 
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Condvar, Mutex, OnceLock, PoisonError};
 
-use kentos_commands::{DataLayer, Entity, LayerNode, ProjectSettings};
+use kentos_commands::{DataLayer, Entity, LabelsMode, LayerNode, ProjectSettings, ProjectStyles};
 use kentos_data::{Cancel, Feature, Request, Value};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
@@ -30,6 +33,9 @@ use crate::style::scene::Look;
 const PART_ROWS: usize = 8192;
 /// Rows a read asks the source for at a time.
 const CHUNK: usize = 4096;
+/// Rows a read keeps for its labels at most: past it the view is too wide for words to be read, and the label engine
+/// would leave nearly all of them out.
+pub const LABEL_ROWS: usize = 20_000;
 
 /// What a read was made for: the same table, look, style and library on a view inside its cover at its step.
 #[derive(Clone, PartialEq)]
@@ -49,6 +55,8 @@ struct Read {
     cover: [f64; 4],
     parts: Vec<Arc<StyledLayerPart>>,
     cancel: Cancel,
+    /// Its objects in a document of their own for the labels, once the read is whole.
+    labels: Option<Box<kentos_domain::Document>>,
 }
 
 /// A layer's reads: the one drawn and the one under way.
@@ -63,6 +71,7 @@ struct Layer {
 /// What a read's thread says back.
 enum Said {
     Part(String, u64, Arc<StyledLayerPart>),
+    Labels(String, u64, Box<kentos_domain::Document>),
     Done(String, u64),
     Failed(String, u64, String),
 }
@@ -88,7 +97,12 @@ static NEXT_PART: AtomicU64 = AtomicU64::new(1 << 61);
 
 /// The process's data view.
 pub fn service() -> &'static DataView {
-    SERVICE.get_or_init(|| {
+    SERVICE.get_or_init(DataView::new)
+}
+
+impl DataView {
+    /// A data view of its own: the process's is [`service`]; a test's reads stay apart from the others'.
+    pub(crate) fn new() -> Self {
         let (to, from) = channel();
         DataView {
             layers: Mutex::new(HashMap::new()),
@@ -100,7 +114,7 @@ pub fn service() -> &'static DataView {
             fresh: Mutex::new(false),
             told: Condvar::new(),
         }
-    })
+    }
 }
 
 /// Whether a data layer is being read or drawn (the window listens for parts then).
@@ -130,6 +144,15 @@ fn inside(view: &Bounds, cover: &[f64; 4]) -> bool {
     view.min_x >= cover[0] && view.min_y >= cover[1] && view.max_x <= cover[2] && view.max_y <= cover[3]
 }
 
+/// Whether a layer's labels are on: a single label or rules with a class (an absent style labels nothing of a table).
+fn labelled(node: &LayerNode) -> bool {
+    match &node.style.labels {
+        Some(l) if l.mode == LabelsMode::Off => false,
+        Some(l) if l.mode == LabelsMode::Rules => !l.classes.is_empty(),
+        _ => node.style.label.is_some(),
+    }
+}
+
 /// The columns a look reads: the fields whose names its renderer, labels or filter name (a name met anywhere in their
 /// JSON is read; a few columns too many cost less than a class drawn without its value).
 fn columns_of(node: &LayerNode) -> Vec<String> {
@@ -154,7 +177,7 @@ fn columns_of(node: &LayerNode) -> Vec<String> {
 }
 
 /// A value as the drawing's attributes keep it.
-fn attribute(v: &Value) -> Option<serde_json::Value> {
+pub(crate) fn attribute(v: &Value) -> Option<serde_json::Value> {
     Some(serde_json::Value::String(match v {
         Value::Null => return None,
         Value::Bool(b) => if *b { "true" } else { "false" }.to_owned(),
@@ -166,7 +189,7 @@ fn attribute(v: &Value) -> Option<serde_json::Value> {
 }
 
 /// A geometry moved into the project's system, position by position.
-fn moved(g: &kentos_data::Geometry, system: &TableSystem) -> Option<kentos_data::Geometry> {
+pub(crate) fn moved(g: &kentos_data::Geometry, system: &TableSystem) -> Option<kentos_data::Geometry> {
     use kentos_data::{Coord, Curve, Geometry};
     fn coord(c: &Coord, s: &TableSystem) -> Option<Coord> {
         let (x, y) = s.to_project(c.x, c.y)?;
@@ -219,6 +242,8 @@ struct Job {
     library: Arc<StyleLibrary>,
     cancel: Cancel,
     to: Sender<Said>,
+    /// The project's styles, for the labels' document; none: the layer's labels are off.
+    labels: Option<ProjectStyles>,
 }
 
 /// A part of the rows drawn: their objects in a store of their own through the style engine.
@@ -265,6 +290,26 @@ fn build(job: &Job, entities: &[Entity]) -> Option<Arc<StyledLayerPart>> {
     }))
 }
 
+/// A read's objects in a document of their own: the layer as a layer of objects, the project's settings and styles.
+fn label_document(job: &Job, styles: ProjectStyles, entities: Vec<Entity>) -> Option<kentos_domain::Document> {
+    let mut node = job.key.node.clone();
+    node.data = None;
+    let snapshot = kentos_commands::DocumentSnapshotV1 {
+        format: kentos_commands::DOCUMENT_FORMAT.into(),
+        version: kentos_commands::DOCUMENT_VERSION,
+        name: String::new(),
+        settings: job.settings.clone(),
+        origin: kentos_commands::Vec2 { x: 0.0, y: 0.0 },
+        home_view: None,
+        layers: vec![node],
+        active_layer: job.layer.clone(),
+        entities,
+        styles,
+        blocks: Vec::new(),
+    };
+    kentos_domain::Document::from_snapshot(snapshot).ok()
+}
+
 /// A read on its thread: the source asked for the cover's rows, each part drawn and handed back as it comes.
 fn run(job: Job) {
     let data = &job.key.data;
@@ -300,6 +345,8 @@ fn run(job: Job) {
         ..Request::default()
     };
     let mut entities: Vec<Entity> = Vec::with_capacity(PART_ROWS);
+    // The objects kept for the labels, while they are few enough.
+    let mut kept: Option<Vec<Entity>> = job.labels.is_some().then(Vec::new);
     let mut next_id = 1u32;
     // Each part is said to the window as it comes: it is drawn while the rest is read.
     let flush = |entities: &mut Vec<Entity>| {
@@ -332,6 +379,12 @@ fn run(job: Job) {
                 kentos_native_application::geopackage::object_of(&g, &job.layer, next_id, attrs)
             {
                 next_id = next_id.wrapping_add(1);
+                if kept.as_ref().is_some_and(|k| k.len() >= LABEL_ROWS) {
+                    kept = None;
+                }
+                if let Some(k) = kept.as_mut() {
+                    k.push(e.clone());
+                }
                 entities.push(e);
             }
         }
@@ -345,6 +398,11 @@ fn run(job: Job) {
         Ok(r) if r.stopped => {}
         Ok(_) => {
             flush(&mut entities);
+            if let (Some(styles), Some(objects)) = (job.labels.clone(), kept)
+                && let Some(doc) = label_document(&job, styles, objects)
+            {
+                let _ = job.to.send(Said::Labels(job.layer.clone(), job.read, Box::new(doc)));
+            }
             let _ = job.to.send(Said::Done(job.layer.clone(), job.read));
         }
     }
@@ -379,6 +437,26 @@ impl DataView {
         }
     }
 
+    /// The read drawn for a layer, by its id.
+    pub fn drawn_read(&self, layer: &str) -> Option<u64> {
+        let layers = self.layers.lock().unwrap_or_else(PoisonError::into_inner);
+        layers.get(layer).and_then(|l| l.drawn.as_ref()).map(|r| r.id)
+    }
+
+    /// The documents of the drawn reads' objects for their labels that came since last asked: the layer, the read and
+    /// the document (each handed once).
+    pub fn take_labels(&self) -> Vec<(String, u64, Box<kentos_domain::Document>)> {
+        self.drain();
+        let mut layers = self.layers.lock().unwrap_or_else(PoisonError::into_inner);
+        layers
+            .iter_mut()
+            .filter_map(|(id, l)| {
+                let d = l.drawn.as_mut()?;
+                Some((id.clone(), d.id, d.labels.take()?))
+            })
+            .collect()
+    }
+
     /// Takes what the reads said: parts added to their reads, a whole read becoming the drawn one.
     fn drain(&self) {
         let from = self.from.lock().unwrap_or_else(PoisonError::into_inner);
@@ -392,6 +470,13 @@ impl DataView {
                     {
                         g.parts.push(part);
                         changed = true;
+                    }
+                }
+                Said::Labels(layer, read, doc) => {
+                    if let Some(g) = layers.get_mut(&layer).and_then(|l| l.going.as_mut())
+                        && g.id == read
+                    {
+                        g.labels = Some(doc);
                     }
                 }
                 Said::Done(layer, read) => {
@@ -432,6 +517,7 @@ impl DataView {
         &self,
         nodes: &[&LayerNode],
         settings: &ProjectSettings,
+        styles: &ProjectStyles,
         view: &Bounds,
         px_per_m: f64,
         look: &Look,
@@ -499,6 +585,7 @@ impl DataView {
                 cover,
                 parts: Vec::new(),
                 cancel: Cancel::new(),
+                labels: None,
             };
             let job = Job {
                 layer: node.id.clone(),
@@ -511,6 +598,7 @@ impl DataView {
                 library: Arc::clone(&library),
                 cancel: read.cancel.clone(),
                 to: self.to.clone(),
+                labels: labelled(node).then(|| styles.clone()),
             };
             l.going = Some(read);
             let _ = std::thread::Builder::new()

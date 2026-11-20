@@ -40,18 +40,18 @@ ADR'ler **9100**'den başlar.
     - katmanın süzgeci veri katmanında henüz uygulanmıyor (VY-04'te SQL'e);
     - göreli yolun yazılması ve çözülmesi VY-09'da;
     - SQL sorgusu katmanı bağlı kopya olarak kaldı.
-- [ ] **VY-03 — Canlı çizim.** ([ADR 9101](../docs/adr/9101-data-layers.md) §6; çekirdeği yapıldı, etiket ve bilgi
-  aracı sürüyor)
+- [x] **VY-03 — Canlı çizim.** ([ADR 9101](../docs/adr/9101-data-layers.md) §6)
   - Veri katmanı görünen alanı ve her yandan yarısı kadar payı arka planda okur, parça geldikçe çizer. Görünüm başka
     yere gidince eski istek durur.
   - Geometri yarım piksele sadeleştirilir; PostGIS'te sunucuda. Pay içindeki kaydırma yeniden okumaz.
   - Kategorili, dereceli ve kurallı stiller çizim katmanlarıyla aynı motordan geçer.
   - Gerçek pencerede bir milyon PostGIS parseli ve bir GeoPackage'ın yolları ve direkleri, bütün kentten sokağa kadar
     kaynaktan çizildi. Çizimde 0 nesne vardı.
+  - Etiketler çizimin etiketleriyle aynı motordan geçer (okunan satır 20 000'i geçmezse).
+  - Bilgi, nesne olmayan yere tıklanınca görünen veri katmanlarına üstten alta sorar. Satır bütün sütunlarıyla
+    kaynaktan okunur; kartı katmanın şablonundan geçer.
   - Kalan:
-    - veri katmanının etiketleri;
-    - bilgi aracının kaynaktan sorması;
-    - seçim VY-04'te (tablo ile birlikte), kenet VY-05'te (düzenleme oturumu ile birlikte);
+    - seçim VY-04'te (tabloyla birlikte), kenet VY-05'te (düzenleme oturumuyla birlikte);
     - stil penceresinin sınıflandırmasının sürücüden okuması VY-07'de.
 - [ ] **VY-04 — Alttaki tablo kaynakta.**
   - Öznitelik tablosu veri katmanında sayfa sayfa okunur.

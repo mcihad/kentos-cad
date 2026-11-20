@@ -233,6 +233,7 @@ impl App {
         self.image_file_wanted = false;
         self.raster_values_wanted.clear();
         self.cloud_query_wanted.clear();
+        self.data_info.wanted.clear();
         self.network_wanted.clear();
         self.command_wanted.clear();
         self.form_on_create = None;
@@ -350,7 +351,12 @@ impl App {
                 // Köşelere koordinat yaz's schedule hangs from the cursor (docs/adr/0185 §1).
                 ViewChange::PlaceTable(table, label) => self.place_table(*table, label),
                 // Bilgi's card moves to the object clicked, or closes (info_card.rs, docs/adr/0225 §5).
-                ViewChange::InfoCard(card) => self.info_card = card,
+                ViewChange::InfoCard(card) => {
+                    self.info_card = card;
+                    self.data_info.card = None;
+                }
+                // Bilgi's click on no object of the drawing: the data layers asked after the update (data_info.rs).
+                ViewChange::DataInfo { at, reach } => self.data_info.wanted.push((at, reach)),
                 // Konumdan adres's place: its address looked for after the update (address/).
                 ViewChange::AddressAt(p) => self.gis.address.wanted.push(p),
                 // Otomatik seçim off left other layers' objects out: a notice offers to turn it on (layer_types.rs).

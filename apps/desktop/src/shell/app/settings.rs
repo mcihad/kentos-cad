@@ -254,6 +254,7 @@ impl App {
         // on an object of the drawing left.
         self.photos.clear();
         self.info_card = None;
+        self.data_info = Default::default();
         self.networks_reset();
         self.address_reset();
         // Topoloji's last check, its chosen rows and the reason typed are the drawing's left (GIS-032).

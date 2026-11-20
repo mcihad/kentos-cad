@@ -121,3 +121,118 @@ fn a_table_in_another_system_is_drawn_in_the_projects() {
     let b = system.to_table([x - 100.0, y - 100.0, x + 100.0, y + 100.0]).expect("the box moved back");
     assert!(b[0] < 37.0 && b[2] > 37.0 && b[1] < 39.75 && b[3] > 39.75, "{b:?}");
 }
+
+/// The world point at `x`, `y` metres from the parcels' corner.
+fn parcel_point(x: f64, y: f64) -> kentos_interaction::Vec2 {
+    kentos_interaction::Vec2::new(486_500.0 + x, 4_420_200.0 + y)
+}
+
+#[test]
+fn bilgi_on_no_object_asks_the_data_layers_and_shows_the_row_read_from_its_table() {
+    crate::data_layers::register();
+    let path = parcels("bilgi", 40);
+    let address = path.display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
+        .expect("added");
+    // Bilgi's click on no object of the drawing, inside the 22nd parcel (its second row, second column): the data
+    // layers are asked after the update, off the thread.
+    crate::tools_scenes::run(&mut app, "tool.identify");
+    let at = parcel_point(42.0, 42.0);
+    crate::tools_scenes::click(&mut app, [at.x - crate::tools_scenes::E, at.y - crate::tools_scenes::N]);
+    assert!(app.info_card.is_none(), "no object of the drawing is there");
+    assert_eq!(app.data_info.asked, 1, "the data layers were asked");
+    // What the thread answers: the row under the point with every column.
+    let layer = node(&app, "parseller").expect("the layer").clone();
+    let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+    let (found, said) = crate::data_info::ask(std::slice::from_ref(&layer), &settings, at, 0.5);
+    assert!(said.is_empty(), "{said:?}");
+    let found = found.expect("a row under the point");
+    assert_eq!(found.key, 22);
+    let _ = app.data_info_event(crate::data_info::Event::Answered(1, Some(Box::new(found)), Vec::new()));
+    // The card: the layer's name, the columns in the table's order, where the row is.
+    let (card, _, _) = app.data_card().expect("the row's card");
+    assert_eq!(card.title, "parseller");
+    let names: Vec<&str> = card.rows.iter().map(|(k, _)| k.as_str()).collect();
+    assert_eq!(names, ["ada", "kullanim", "alan"]);
+    assert_eq!(card.rows[0].1, "101");
+    assert_eq!(card.rows[1].1, "Park");
+    assert!(
+        card.source.as_ref().is_some_and(|(line, _)| line.ends_with("› parseller · fid 22")),
+        "{:?}",
+        card.source
+    );
+    assert!(app.info_card_view().is_some(), "the card is drawn beside the click");
+    // An answer to an earlier click is stale.
+    let _ = app.data_info_event(crate::data_info::Event::Answered(0, None, Vec::new()));
+    assert!(app.data_card().is_some());
+    // Between two parcels: no row.
+    let gap = parcel_point(27.5, 12.0);
+    assert!(crate::data_info::ask(&[layer], &settings, gap, 0.5).0.is_none());
+    let _ = std::fs::remove_file(&path);
+}
+
+/// Asks a data view of its own for `layer` over the parcels and waits for its read to be drawn.
+fn read_whole(
+    view: &crate::data_view::DataView,
+    app: &crate::app::App,
+    layer: &LayerNode,
+) -> Option<(String, u64, Box<kentos_domain::Document>)> {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let look = kentos_plot::layers::Look {
+        line_types: Default::default(),
+        palette: kentos_native_style::StylePalette::graphite(),
+        symbol_scale: 1000.0,
+        screen: false,
+        hairlines: false,
+        hold_weights: false,
+        origin: kentos_render_wgpu::scene::scene_origin(app.document.as_ref().expect("a drawing")),
+        view_build: Default::default(),
+        view_colors: Default::default(),
+        phasing: Default::default(),
+        reading_unit: kentos_native_style::reading_unit(doc.settings()),
+    };
+    let library = kentos_native_style::library::StyleLibrary::default();
+    let bounds = kentos_geometry_core::geometry::Bounds {
+        min_x: 486_480.0,
+        min_y: 4_420_180.0,
+        max_x: 487_150.0,
+        max_y: 4_420_300.0,
+    };
+    view.want(&[layer], doc.settings(), doc.styles(), &bounds, 1.0, &look, &library, true);
+    let start = std::time::Instant::now();
+    let mut labels = None;
+    while view.drawn_read(&layer.id).is_none() {
+        labels = labels.or_else(|| view.take_labels().into_iter().next());
+        assert!(start.elapsed() < std::time::Duration::from_secs(30), "the read is drawn");
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+    labels.or_else(|| view.take_labels().into_iter().next())
+}
+
+#[test]
+fn a_labelled_data_layer_keeps_its_read_for_the_label_engine_and_another_keeps_nothing() {
+    crate::data_layers::register();
+    let path = parcels("etiket", 40);
+    let address = path.display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
+        .expect("added");
+    let plain = node(&app, "parseller").expect("the layer").clone();
+    // Without a label: the read draws, nothing is kept.
+    assert!(read_whole(&crate::data_view::DataView::new(), &app, &plain).is_none());
+    // Labelled by its ada: the read's 40 rows in a document of their own, labelled as the drawing's objects are.
+    let mut labelled = plain.clone();
+    labelled.style.label = Some(kentos_commands::LabelStyle {
+        template: Some("{ada}".into()),
+        ..Default::default()
+    });
+    let (layer, _, doc) = read_whole(&crate::data_view::DataView::new(), &app, &labelled).expect("kept");
+    assert_eq!(layer, labelled.id);
+    assert_eq!(doc.len(), 40);
+    assert!(doc.layers().get(&labelled.id).is_some_and(|n| n.data.is_none()));
+    let spatial = kentos_interaction::Spatial::of(&doc);
+    assert_eq!(spatial.label_texts(kentos_domain::Slot(1)), ["100"]);
+    assert_eq!(spatial.label_texts(kentos_domain::Slot(40)), ["101"]);
+    let _ = std::fs::remove_file(&path);
+}

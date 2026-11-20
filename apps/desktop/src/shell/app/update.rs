@@ -226,6 +226,8 @@ impl App {
             self.raster_values_tasks(),
             self.service_info_tasks(),
             self.cloud_query_tasks(),
+            // Bilgi's clicks on the data layers, asked of their sources (data_info.rs, docs/adr/9101 §6).
+            self.data_info_tasks(),
             self.network_tasks(),
             // Konumdan adres's places, asked on the address thread or of a provider (address/).
             self.address_tasks(),
@@ -553,6 +555,7 @@ impl App {
                 for text in crate::data_view::service().take_notices() {
                     self.warn(text);
                 }
+                self.sync_data_labels();
             }
             Message::Services(event) => return self.services_event(event),
             Message::Bound(event) => return self.bound_event(event),

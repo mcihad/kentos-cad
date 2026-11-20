@@ -456,7 +456,13 @@ impl App {
         } else {
             Vec::new()
         };
-        crate::info_card::card_body(self, &shown, None, &actions, e.base().attachments.len())
+        crate::info_card::card_body(
+            self,
+            &shown,
+            crate::info_card::Shown::Preview,
+            &actions,
+            e.base().attachments.len(),
+        )
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

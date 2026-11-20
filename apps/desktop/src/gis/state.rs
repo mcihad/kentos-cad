@@ -119,6 +119,8 @@ pub(crate) struct GisUiState {
 pub(crate) enum Event {
     /// Data layers (data_layers.rs, docs/adr/9101): tables described off the interface's thread, then added.
     DataLayers(crate::data_layers::Event),
+    /// Bilgi's asks of the data layers (data_info.rs, docs/adr/9101 §6).
+    DataInfo(crate::data_info::Event),
     /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
     Rasters(crate::rasters::Event),
     /// The point cloud windows, XYZ sor's answers and the indexes' panel (pointclouds/).
@@ -331,6 +333,7 @@ impl App {
                 return Task::batch([moved, self.time_sources()]);
             }
             Event::DataLayers(event) => return self.data_layers_event(event),
+            Event::DataInfo(event) => return self.data_info_event(event),
             Event::Rasters(event) => return self.rasters_event(event),
             Event::PointClouds(event) => return self.pointclouds_event(event),
             Event::Reconcile(event) => return self.reconcile_event(event),

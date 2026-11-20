@@ -152,6 +152,28 @@ Ortak durumlar: `scripts/fixtures/layer_data_command_cases.py` bağımsız Pytho
 
 Okuma kendi iş parçacığında yürür, arayüz donmaz. Belgeye hiçbir şey yazılmaz: veri katmanlı çizimde nesne sayısı 0'dır.
 
+**Etiketler** (`gis/data_labels.rs`). Etiketi açık bir katmanın okuması bütünüyle bittiğinde nesneleri kendi küçük
+belgesine konur: katmanın kendisi (veri bağı olmadan), projenin ayarları ve stilleri, okunan satırlar.
+
+- Belge okuma iş parçacığında kurulur.
+- Etiket deposu (`Spatial`) arayüz iş parçacığında kurulur: etiket motorunun belleği o iş parçacığına bağlıdır.
+- Etiket motoru bu nesneleri çizimin nesneleri gibi yerleştirir: aynı sınıflar, şablonlar, boyutlar ve haleler.
+- Veri katmanının etiketleri çizimin etiketlerinin altında durur.
+- Okunan satır **20 000**'i geçerse etiket kurulmaz. O genişlikte sözcükler okunmaz, motor zaten neredeyse hepsini
+  dışarıda bırakırdı. Bir milyon parselde bütün kent ve ilçe ölçeğinde etiket yoktur, mahalle ölçeğinde vardır.
+
+**Bilgi** (`gis/data_info.rs`). Bilgi önce çizimin nesnesine bakar. Tıklanan yerde nesne yoksa araç ev sahibinden
+veri katmanlarına sormasını ister (`ViewChange::DataInfo`).
+
+- Görünen veri katmanları üstten alta sorulur. Tıklanan yerin seçim payı kadar çevresi tablonun sistemine çevrilir ve
+  `exact` istekle okunur: en çok 64 satır, bütün sütunlar.
+- Satır çizimin nesneleri gibi seçilir: önce en yakın kenar, yoksa noktayı içeren en küçük alan.
+- Kart katmanın kart şablonundan geçer. Şablon yoksa başlık katmanın adıdır ve sütunlar tablodaki sırasıyla
+  dizilir. Başlığın altında satırın yeri yazar: tablo ve anahtar (“… › public.parseller · fid 492776”).
+- Katmanın eylemleri karttadır; ek yoktur, çünkü satır çizimin nesnesi değildir.
+- Bilgi bulunan satırı halkayla işaretler (`Tool::data_found`). Esc önce kartı kapatır.
+- Sorgu arayüzün dışında yürür. Yanıt gelmeden yapılan yeni tıklama eskisinin yanıtını bayatlatır.
+
 ## §7 Ekleme yolları
 
 - **Kaynaklar:** bir GeoPackage'ın ya da bağlantının tablosunda “Veri katmanı olarak ekle” (eskiden “Bağlı katman
@@ -172,6 +194,10 @@ eklenir. Sonra ilk tablonun kutusuna yaklaşılır. Alan olarak alınmayan sütu
 5. **Yalnız stilin andığı sütunlar okunur.** Alan JSON'da adıyla geçiyorsa okunur; birkaç fazla sütun, değeri olmadan
    çizilen bir sınıftan ucuzdur.
 6. **Yeni veri katmanı ağacın en üstüne eklenir**, çizim katmanlarının üstünde çizilsin diye.
+7. **Etiket 20 000 satırla sınırlı.** Daha geniş bir görünümde etiket kurulmaz.
+8. **Bilgi önce çizimin nesnesine bakar**, nesne yoksa veri katmanlarına üstten alta sorar.
+9. **Satırın kartında** başlık, şablon yoksa katmanın adıdır. Sütunlar tablodaki sırasıyla dizilir; altında tablonun
+   yeri ve anahtarı yazar.
 
 ## §9 Kanıt
 
@@ -183,11 +209,18 @@ Gerçek pencerede doğrulandı (Xvfb, sahibin ayarlarının kopyası; `scripts/u
 
 Bütün kent, ilçe, mahalle ve sokak ölçeğinde ve bir kaydırmada katmanlar kaynaktan çizildi. Çizimde 0 nesne vardı.
 
+- **Parça parça çizim:** açılıştan 1,2 saniye sonra parsellerin bir bölümü çizilmiş, üst şerit hâlâ okunuyordu
+  (`00a-ilk-parcalar.png`).
+- **Etiketler:** mahalle ölçeğinde (1:1 652) her parselin üstünde `{ada}/{parsel}` etiketi çıktı
+  (`.run/gui-evidence/veri/vy03b/06`, `07`).
+- **Bilgi:** bir parsele tıklandı. Satır PostGIS'ten bütün sütunlarıyla okundu, kart açıldı ve parsel halkayla
+  işaretlendi (`08`). Esc kartı ve halkayı kapattı (`09`).
+
 ## §10 Kapsam dışı ve kalan
 
-- **Veri katmanının etiketleri** henüz kurulmuyor (VY-03'ün kalanı).
-- **Bilgi aracı** veri katmanında kaynağa sormuyor (VY-03'ün kalanı). **Seçim** tabloyla birlikte VY-04'te,
-  **kenet** düzenleme oturumuyla birlikte VY-05'te.
+- **Seçim** tabloyla birlikte VY-04'te, **kenet** düzenleme oturumuyla birlikte VY-05'te.
+- **Python ve MCP'de veri katmanının satırları:** Bilgi'nin bu yüzlerdeki karşılığı, VY-04'te tablonun satırlarını
+  okuyan komuttur.
 - **Katmanın süzgeci** (ADR 0211) veri katmanında uygulanmıyor. Süzgecin koşul ağacına çevrilip okumaya verilmesi
   VY-04'te.
 - **Stil penceresinin sınıflandırması** değerleri bugün çizimdeki nesnelerden alıyor. Sürücünün ayrık değerlerinden
@@ -212,6 +245,9 @@ Bütün kent, ilçe, mahalle ve sokak ölçeğinde ve bir kaydırmada katmanlar 
   - sahne (`cad/style/scene.rs`), çizim alanı (`shell/viewport/state.rs`), Katmanlar satırı (`shell/view/area.rs`);
   - yaklaşma: `cad/layering.rs`, `cad/selecting.rs`, `shell/app/settings.rs`;
   - ekleme yolları: Kaynaklar, PostGIS'e bağlan.
+- **Etiket ve Bilgi:** `gis/data_labels.rs`, `gis/data_info.rs`, `labels::data_layer`, kartın `Shown`'u
+  (`cad/info_card.rs`). Etkileşim crate'inde `ViewChange::DataInfo`, `Tool::data_found` ve `Session::data_found`;
+  Bilgi'nin halkası.
 - **Uygulama crate'i:** `geopackage::object_of`, `sources::TableSystem`.
 
 ## Doğrulama
@@ -223,5 +259,10 @@ Bütün kent, ilçe, mahalle ve sokak ölçeğinde ve bir kaydırmada katmanlar 
 - `cargo test -p kentos-desktop --lib data_`:
   - GeoPackage tablosu satırları kopyalanmadan veri katmanı olarak eklenir;
   - başka sistemdeki tablo projenin sisteminde çizilir;
-  - okumanın kapsamı ve basamağı doğru.
+  - okumanın kapsamı ve basamağı doğru;
+  - Bilgi nesne olmayan yere tıklayınca veri katmanlarına sorar; bulunan satırın kartı tablonun sırasıyla, yeriyle ve
+    anahtarıyla; eski yanıt bayattır; iki parselin arası boştur;
+  - etiketli katmanın okuması belgesini tutar ve etiket motoru ondan `ada`yı okur; etiketsiz katman hiçbir şey tutmaz.
+- `cargo test -p kentos-desktop --lib attachments_tests`: çizimin nesnelerinin kartları değişmedi.
+- `KENTOS_TRACES_ONLY=identify … every_trace_passes_in_every_variant`: Bilgi'nin ortak izi her türevde geçti.
 - Gerçek pencere: §9.

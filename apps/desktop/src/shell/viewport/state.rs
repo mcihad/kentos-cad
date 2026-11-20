@@ -474,6 +474,7 @@ impl Viewport {
             crate::data_view::service().want(
                 &data_nodes,
                 doc.model.settings(),
+                doc.model.styles(),
                 &self.camera.visible_bounds(),
                 self.camera.scale,
                 &look,
@@ -822,6 +823,7 @@ impl Viewport {
             | ViewChange::OpenImageFile
             | ViewChange::RasterValues(_)
             | ViewChange::CloudQuery { .. }
+            | ViewChange::DataInfo { .. }
             | ViewChange::Network(_)
             | ViewChange::Command(_)
             | ViewChange::InfoCard(_)

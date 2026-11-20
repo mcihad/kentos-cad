@@ -1512,6 +1512,10 @@ mod data_layers;
 mod data_layers_tests;
 #[path = "gis/data_view.rs"]
 mod data_view;
+#[path = "gis/data_info.rs"]
+mod data_info;
+#[path = "gis/data_labels.rs"]
+mod data_labels;
 #[path = "gis/db_connections.rs"]
 mod db_connections;
 #[path = "gis/sources/mod.rs"]
