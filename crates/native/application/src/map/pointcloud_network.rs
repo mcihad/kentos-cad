@@ -104,7 +104,11 @@ fn run(doc: &Document, input: &PointCloudsNetwork) -> Result<(PointCloudsNetwork
         let (observations, answers, warnings) = round(doc, input, &uids, &links, centre, &totals)?;
         let adjusted = network::adjust(uids.len(), &fixed, &observations).map_err(|f| match f {
             NetworkFault::Unjoined(k) => fail(
-                format!("“{}” taraması bağlarla hiçbir sabit taramaya bağlanmıyor; bir bağ ekleyin ya da onu da sabit yapın.", uids[k]),
+                // By its file's name, as the scans are seen (UR2-031: a 36-character id was all it said).
+                format!(
+                    "“{}” taraması bağlarla hiçbir sabit taramaya bağlanmıyor; bir bağ ekleyin ya da onu da sabit yapın.",
+                    scan_name(&scans[k].1, &uids[k])
+                ),
                 "links",
             ),
             NetworkFault::Undetermined => fail(
@@ -297,4 +301,14 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PointCloudsNetwork) -> CommandRes
 /// The answer; reads only.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: PointCloudsNetwork) -> CommandResult<PointCloudsNetworked> {
     plan(cx, &input)
+}
+
+/// A scan as a user knows it: its first source file's name, else its id.
+fn scan_name(c: &kentos_commands::PointCloudEntity, uid: &str) -> String {
+    c.cloud
+        .sources
+        .first()
+        .and_then(|s| s.file.as_deref())
+        .and_then(|f| std::path::Path::new(f).file_name())
+        .map_or_else(|| uid.to_owned(), |n| n.to_string_lossy().into_owned())
 }

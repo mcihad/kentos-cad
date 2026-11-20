@@ -350,7 +350,13 @@ impl App {
         let r = match &s.answer {
             None => return (lines, rows),
             Some(Err(why)) => {
-                lines.push(words::text_line(Kind::Error, why.clone()));
+                // The command's advice in this window's terms (UR2-031): it has one fixed scan and no field to add a
+                // link, so what it can do is the selection.
+                let why = why.replace(
+                    "bir bağ ekleyin ya da onu da sabit yapın.",
+                    "bağlı taramaları birlikte seçip pencereyi yeniden açın ya da bu taramayı seçimden çıkarın.",
+                );
+                lines.push(words::text_line(Kind::Error, why));
                 return (lines, rows);
             }
             Some(Ok(r)) => r,

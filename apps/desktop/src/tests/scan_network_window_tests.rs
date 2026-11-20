@@ -282,3 +282,29 @@ fn screens() {
     app.selection.set(vec![Slot(1)]);
     shoot(&mut app, wide, "4-serit-nokta-bulutu-acik-genis.png");
 }
+
+/// UR2-031: the seven scans chosen with ag-a.xyz fixed: the disconnected scan is named by its file, and the advice is
+/// what this window can do (the selection), not a link it has no field for.
+#[test]
+fn a_disconnected_scan_is_named_by_its_file() {
+    let mut app = opened();
+    app.selection.set((1..=7).map(Slot));
+    let _ = app.update(Message::Run("pointcloud.network"));
+    let why = match &app.map.scan_network.answer {
+        Some(Err(why)) => why.clone(),
+        other => panic!("refused: {other:?}"),
+    };
+    assert!(why.contains(".xyz” taraması bağlarla hiçbir sabit taramaya bağlanmıyor"), "{why}");
+    let size = iced::Size::new(1440.0, 900.0);
+    let mut snapshot = crate::files_testing::offscreen(size);
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut snapshot, &app, "ur2-031", "kopuk");
+    let shown = why.replace(
+        "bir bağ ekleyin ya da onu da sabit yapın.",
+        "bağlı taramaları birlikte seçip pencereyi yeniden açın ya da bu taramayı seçimden çıkarın.",
+    );
+    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, &shown).is_empty(), "{shown}");
+}

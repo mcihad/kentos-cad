@@ -465,7 +465,8 @@ def cases():
     out.append(refused("bağın taraması ağda yok", dict(three, links=[[uid(1), uid(4)]]), "invalid_input",
                        "1. bağın taraması ağın taramaları arasında yok.", "links[0]"))
     out.append(refused("C hiçbir sabit taramaya bağlanmıyor", dict(three, links=[[uid(1), uid(2)]]), "invalid_input",
-                       f"“{uid(3)}” taraması bağlarla hiçbir sabit taramaya bağlanmıyor; bir bağ ekleyin ya da onu da "
+                       # UR2-031: by its file's name, as the scans are seen.
+                       f"“{NAMES[2]}” taraması bağlarla hiçbir sabit taramaya bağlanmıyor; bir bağ ekleyin ya da onu da "
                        "sabit yapın.", "links"))
     e, f, g = "ag-e.xyz", "ag-f.xyz", "ag-g.xyz"
     case, ans = ok("düz zemin: ağ yatay konumu zayıf belirler, not söyler; düşey anlamlı", [e, f, g], [e])
