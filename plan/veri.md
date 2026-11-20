@@ -53,7 +53,8 @@ ADR'ler **9100**'den başlar.
   - Kalan:
     - seçim VY-04'te (tabloyla birlikte), kenet VY-05'te (düzenleme oturumuyla birlikte);
     - stil penceresinin sınıflandırmasının sürücüden okuması VY-07'de.
-- [ ] **VY-04 — Alttaki tablo kaynakta.**
+- [ ] **VY-04 — Alttaki tablo kaynakta.** ([ADR 9102](../docs/adr/9102-data-table.md); yapıldı: Türkçe sıra iki
+  sürücüde, `cad.layers.rows` ve 28 ortak durumu; sürüyor: masaüstünde tablo ve seçim)
   - Öznitelik tablosu veri katmanında sayfa sayfa okunur.
   - Sıralama, süzgeç, arama ve sayı SQL'de; “görünümdekiler” ve “seçililer” kaynaktan.
   - Hücre düzenlemesi düzenleme tamponuna yazılır (VY-05).

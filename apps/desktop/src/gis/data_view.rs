@@ -176,58 +176,9 @@ fn columns_of(node: &LayerNode) -> Vec<String> {
         .collect()
 }
 
-/// A value as the drawing's attributes keep it.
+/// A value as the drawing's attributes keep it (`geopackage::attribute_text`).
 pub(crate) fn attribute(v: &Value) -> Option<serde_json::Value> {
-    Some(serde_json::Value::String(match v {
-        Value::Null => return None,
-        Value::Bool(b) => if *b { "true" } else { "false" }.to_owned(),
-        Value::Real(r) if !r.is_finite() => return None,
-        Value::DateTime(t) => t.chars().take(19).collect(),
-        Value::Blob(_) => return None,
-        other => other.to_string(),
-    }))
-}
-
-/// A geometry moved into the project's system, position by position.
-pub(crate) fn moved(g: &kentos_data::Geometry, system: &TableSystem) -> Option<kentos_data::Geometry> {
-    use kentos_data::{Coord, Curve, Geometry};
-    fn coord(c: &Coord, s: &TableSystem) -> Option<Coord> {
-        let (x, y) = s.to_project(c.x, c.y)?;
-        Some(Coord { x, y, ..*c })
-    }
-    fn curve(c: &Curve, s: &TableSystem) -> Option<Curve> {
-        Some(match c {
-            Curve::Line(p) => Curve::Line(p.iter().map(|c| coord(c, s)).collect::<Option<_>>()?),
-            Curve::Arc(p) => Curve::Arc(p.iter().map(|c| coord(c, s)).collect::<Option<_>>()?),
-            Curve::Compound(parts) => {
-                Curve::Compound(parts.iter().map(|c| curve(c, s)).collect::<Option<_>>()?)
-            }
-        })
-    }
-    Some(match g {
-        Geometry::Point(p) => Geometry::Point(match p {
-            Some(c) => Some(coord(c, system)?),
-            None => None,
-        }),
-        Geometry::MultiPoint(ps) => {
-            Geometry::MultiPoint(ps.iter().map(|c| coord(c, system)).collect::<Option<_>>()?)
-        }
-        Geometry::Curve(c) => Geometry::Curve(curve(c, system)?),
-        Geometry::Polygon(r) => {
-            Geometry::Polygon(r.iter().map(|c| curve(c, system)).collect::<Option<_>>()?)
-        }
-        Geometry::MultiCurve(cs) => {
-            Geometry::MultiCurve(cs.iter().map(|c| curve(c, system)).collect::<Option<_>>()?)
-        }
-        Geometry::MultiPolygon(ps) => Geometry::MultiPolygon(
-            ps.iter()
-                .map(|r| r.iter().map(|c| curve(c, system)).collect::<Option<Vec<_>>>())
-                .collect::<Option<_>>()?,
-        ),
-        Geometry::Collection(gs) => Geometry::Collection(
-            gs.iter().map(|g| moved(g, system)).collect::<Option<_>>()?,
-        ),
-    })
+    kentos_native_application::geopackage::attribute_text(v).map(serde_json::Value::String)
 }
 
 /// What a read's thread needs.
@@ -363,7 +314,7 @@ fn run(job: Job) {
                 continue;
             };
             let g = match &system {
-                Some(s) => match moved(g, s) {
+                Some(s) => match s.moved(g) {
                     Some(m) => m,
                     None => continue,
                 },

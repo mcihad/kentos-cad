@@ -347,6 +347,21 @@ fn geometry_json(
     }
 }
 
+/// A data layer's value as the drawing's attributes keep it (docs/adr/9101 §6): a text, a number as the source wrote
+/// it, yes or no as `true`/`false`, a date and time to the second; none for an empty value, a number that is not
+/// finite and bytes.
+pub fn attribute_text(v: &kentos_data::Value) -> Option<String> {
+    use kentos_data::Value;
+    Some(match v {
+        Value::Null => return None,
+        Value::Bool(b) => if *b { "true" } else { "false" }.to_owned(),
+        Value::Real(r) if !r.is_finite() => return None,
+        Value::DateTime(t) => t.chars().take(19).collect(),
+        Value::Blob(_) => return None,
+        other => other.to_string(),
+    })
+}
+
 /// A row of a data layer's table as an object of the layer `layer` (docs/adr/9101 §6): drawn as the view asks for it,
 /// never written into the drawing. `id` is its place in the part being built, `attrs` its values as the drawing's
 /// attributes keep them. None for a geometry the drawing has no object for (an empty one, a collection).

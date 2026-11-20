@@ -430,6 +430,46 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Veri katmanının satırları (docs/adr/9102 §4), held together by fixtures/commands/v1/cad.layers.rows.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_ROWS.into(),
+            version: crate::CAD_LAYERS_ROWS_VERSION,
+            title: "Veri katmanının satırları".into(),
+            summary: "Bir veri katmanının satırlarını kaynağından okur (GeoPackage dosyası ya da PostGIS tablosu); Öznitelik tablosu sayfalarını bununla okur. Hiçbir şey yazmaz. \
+                      bbox (projenin sisteminde batı, güney, doğu, kuzey) kutusu ona değen satırları, keys o anahtarlı satırları, search alanlarından birinde o sözcükleri (büyük-küçük harf Türkçe kurallarla ayırt edilmeden) geçen satırları, filter İfadeyle seç'in dilindeki koşulu sağlayan satırları tutar; hepsi birlikte uygulanır. \
+                      order alan alan sıralar (metin Türk alfabesinin sırasıyla, boş değerler sonda), sonra anahtarla; offset kaç satırın atlanacağı, limit sayfanın satır sayısı (0–1 000; verilmezse 100). \
+                      count bütün tutulan satırları sayar (total), allKeys hepsinin anahtarını sırasıyla verir (keys). fields dönen alanlar (verilmezse tablonun sırasıyla hepsi), geometry satırın geometrisini projenin sisteminde WKT olarak verir. \
+                      Süzgeç yoksa her şey kaynakta yapılır (checked: source); süzgeç varsa kaynağın tuttuğu her satır okunup koşul burada sorulur (checked: here)."
+                .into(),
+            aliases: vec!["satirlar".into(), "oznitelik".into(), "verioku".into(), "tablo".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersRows>(),
+            output: schema::<crate::LayerRowsAnswer>(),
+            plan: Some(schema::<crate::LayerRowsAnswer>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsellerin Türk alfabesiyle mahalleye göre ilk sayfası, sayısıyla".into(),
+                    input: json!({ "layer": "parseller", "order": [{ "field": "mahalle" }], "limit": 50, "count": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Görünümdeki konut parselleri".into(),
+                    input: json!({
+                        "layer": "parseller",
+                        "bbox": [600000.0, 4410000.0, 601000.0, 4411000.0],
+                        "filter": "kullanim = 'Konut'"
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Veri katmanı (docs/adr/9101 §4), held together by fixtures/commands/v1/cad.layers.data.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_DATA.into(),

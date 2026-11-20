@@ -77798,6 +77798,306 @@
       ]
     },
     {
+      "id": "cad.layers.rows",
+      "version": 1,
+      "title": "Veri katmanının satırları",
+      "summary": "Bir veri katmanının satırlarını kaynağından okur (GeoPackage dosyası ya da PostGIS tablosu); Öznitelik tablosu sayfalarını bununla okur. Hiçbir şey yazmaz. bbox (projenin sisteminde batı, güney, doğu, kuzey) kutusu ona değen satırları, keys o anahtarlı satırları, search alanlarından birinde o sözcükleri (büyük-küçük harf Türkçe kurallarla ayırt edilmeden) geçen satırları, filter İfadeyle seç'in dilindeki koşulu sağlayan satırları tutar; hepsi birlikte uygulanır. order alan alan sıralar (metin Türk alfabesinin sırasıyla, boş değerler sonda), sonra anahtarla; offset kaç satırın atlanacağı, limit sayfanın satır sayısı (0–1 000; verilmezse 100). count bütün tutulan satırları sayar (total), allKeys hepsinin anahtarını sırasıyla verir (keys). fields dönen alanlar (verilmezse tablonun sırasıyla hepsi), geometry satırın geometrisini projenin sisteminde WKT olarak verir. Süzgeç yoksa her şey kaynakta yapılır (checked: source); süzgeç varsa kaynağın tuttuğu her satır okunup koşul burada sorulur (checked: here).",
+      "aliases": [
+        "satirlar",
+        "oznitelik",
+        "verioku",
+        "tablo"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.rows` v1: the rows of `layer` (a data layer) that `bbox`, `keys`, `search` and `filter` all\nkeep, in `order` (then by key), `limit` of them from `offset`.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `invalid_count` (`limit` past\n1 000), `invalid_extent` (a box reversed or not finite), `layer_not_found`, `not_a_data_layer`, `field_not_found`\n(in `fields` or `order`), `invalid_expression` (the filter does not compile, reads `$sıra` or `$ölçek`, or looks at\nother objects), `source_unreachable` (the source could not be read; the message says why). A job stopped answers\n`cancelled`.",
+        "properties": {
+          "allKeys": {
+            "description": "Return every kept row's key, in the order (a selection of the rows a filter keeps, a table's pages).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "bbox": {
+            "description": "Rows whose geometry's box meets this one, in the project's system: west, south, east, north (Görünümdekiler).",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "count": {
+            "description": "Count every row the question keeps.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "fields": {
+            "description": "The fields returned, by name; none: all of them in the table's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "filter": {
+            "description": "A condition in İfadeyle seç's language: the rows it holds for (İfade süzgeci).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "geometry": {
+            "description": "Return each row's geometry in the project's system (ISO WKT).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "keys": {
+            "description": "Rows of these keys only (Seçililer).",
+            "items": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "layer": {
+            "description": "The data layer (its id).",
+            "type": "string"
+          },
+          "limit": {
+            "description": "How many rows the page holds, 0–1 000; none: 100.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "offset": {
+            "description": "How many of the ordered rows come before the page.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "order": {
+            "description": "The order, field after field; then by key. A text is ordered in the Turkish alphabet's order.",
+            "items": {
+              "$ref": "#/$defs/QueryOrder"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "search": {
+            "description": "Rows any of whose fields, read as text, holds these words, case aside the Turkish way (Ara).",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "LayersRows",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.rows` v1.",
+        "properties": {
+          "checked": {
+            "$ref": "#/$defs/RowsChecked"
+          },
+          "fields": {
+            "description": "The fields of the rows, in the table's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "keys": {
+            "description": "Every kept row's key in the order (with `allKeys`).",
+            "items": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "offset": {
+            "description": "The page's first row's place among the ordered rows.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rows": {
+            "description": "The page's rows, in the order.",
+            "items": {
+              "$ref": "#/$defs/LayerRow"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "How many rows the question keeps (with `count`).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "fields",
+          "rows",
+          "offset",
+          "checked"
+        ],
+        "title": "LayerRowsAnswer",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.rows` v1.",
+        "properties": {
+          "checked": {
+            "$ref": "#/$defs/RowsChecked"
+          },
+          "fields": {
+            "description": "The fields of the rows, in the table's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "keys": {
+            "description": "Every kept row's key in the order (with `allKeys`).",
+            "items": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "offset": {
+            "description": "The page's first row's place among the ordered rows.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rows": {
+            "description": "The page's rows, in the order.",
+            "items": {
+              "$ref": "#/$defs/LayerRow"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "How many rows the question keeps (with `count`).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "fields",
+          "rows",
+          "offset",
+          "checked"
+        ],
+        "title": "LayerRowsAnswer",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_layer",
+          "invalid_count",
+          "invalid_extent",
+          "layer_not_found",
+          "not_a_data_layer",
+          "field_not_found",
+          "invalid_expression",
+          "source_unreachable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsellerin Türk alfabesiyle mahalleye göre ilk sayfası, sayısıyla",
+          "input": {
+            "count": true,
+            "layer": "parseller",
+            "limit": 50,
+            "order": [
+              {
+                "field": "mahalle"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Görünümdeki konut parselleri",
+          "input": {
+            "bbox": [
+              600000.0,
+              4410000.0,
+              601000.0,
+              4411000.0
+            ],
+            "filter": "kullanim = 'Konut'",
+            "layer": "parseller"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.data",
       "version": 1,
       "title": "Veri katmanı",
@@ -165003,6 +165303,36 @@
       ],
       "type": "string"
     },
+    "LayerRow": {
+      "description": "A row of a data layer.",
+      "properties": {
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The fields asked for, as the drawing's attributes read them (an empty value left out).",
+          "type": "object"
+        },
+        "key": {
+          "description": "Its key in the source.",
+          "format": "int64",
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "wkt": {
+          "description": "Its geometry in the project's system, ISO WKT (with `geometry`; none for a row without one).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "attrs"
+      ],
+      "type": "object"
+    },
     "LayerRule": {
       "additionalProperties": false,
       "description": "A record rule of a layer.",
@@ -205712,6 +206042,21 @@
         "z"
       ],
       "type": "object"
+    },
+    "RowsChecked": {
+      "description": "Where a question's filter was checked.",
+      "oneOf": [
+        {
+          "const": "source",
+          "description": "By the source: there was no filter, the box, the keys and the search are the source's.",
+          "type": "string"
+        },
+        {
+          "const": "here",
+          "description": "Here: every row the source kept was read and the filter asked of it.",
+          "type": "string"
+        }
+      ]
     },
     "RubberLink": {
       "description": "A link of Kauçuk levha: a point of the drawing and where it is to go.",

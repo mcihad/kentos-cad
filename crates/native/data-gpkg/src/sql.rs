@@ -3,7 +3,7 @@
 //! same folding as [`kentos_data::condition::fold`] (SQLite's own `LIKE` folds ASCII letters only).
 
 use kentos_data::condition::{escape_like, fold, like};
-use kentos_data::{Condition, DataError, Request, Schema, Value};
+use kentos_data::{Condition, DataError, FieldKind, Request, Schema, Value};
 use kentos_geopackage::quote;
 use rusqlite::Connection;
 use rusqlite::functions::FunctionFlags;
@@ -11,9 +11,27 @@ use rusqlite::types::Value as Sql;
 
 use crate::convert::sql_of;
 
-/// Registers `kentos_fold(text)` and `kentos_like(text, pattern)` (SQL `LIKE` with case, `\` escaping) on a
+/// Registers `kentos_fold(text)`, `kentos_like(text, pattern)` (SQL `LIKE` with case, `\` escaping) and
+/// `kentos_order(text)` (the bytes a text is ordered by in the Turkish alphabet's order, `kentos_data::turkish`) on a
 /// connection.
 pub fn register_fold(conn: &Connection) -> rusqlite::Result<()> {
+    conn.create_scalar_function(
+        "kentos_order",
+        1,
+        FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_DETERMINISTIC,
+        |ctx| {
+            Ok(match ctx.get_raw(0) {
+                rusqlite::types::ValueRef::Text(t) => Some(rusqlite::types::Value::Blob(
+                    kentos_data::turkish::sort_key(&String::from_utf8_lossy(t)),
+                )),
+                rusqlite::types::ValueRef::Null => None,
+                // A number in a text column orders below the texts, as SQLite orders it.
+                rusqlite::types::ValueRef::Integer(i) => Some(rusqlite::types::Value::Integer(i)),
+                rusqlite::types::ValueRef::Real(r) => Some(rusqlite::types::Value::Real(r)),
+                rusqlite::types::ValueRef::Blob(b) => Some(rusqlite::types::Value::Blob(b.to_vec())),
+            })
+        },
+    )?;
     conn.create_scalar_function(
         "kentos_like",
         2,
@@ -219,8 +237,14 @@ pub fn order_and_page(
     let mut by = Vec::with_capacity(request.order.len() + 1);
     for o in &request.order {
         let col = column(schema, table, &o.field)?;
+        // A text in the Turkish alphabet's order, not by its bytes (docs/adr/9102 §3).
+        let text = schema
+            .fields
+            .iter()
+            .any(|f| f.name == o.field && matches!(f.kind, FieldKind::Text { .. }));
+        let by_what = if text { format!("kentos_order({col})") } else { col };
         by.push(format!(
-            "{col} {} NULLS LAST",
+            "{by_what} {} NULLS LAST",
             if o.descending { "DESC" } else { "ASC" }
         ));
     }

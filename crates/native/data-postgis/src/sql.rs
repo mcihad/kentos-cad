@@ -270,8 +270,23 @@ pub fn order_and_page(request: &Request, shape: &Shape, table: &str) -> Result<S
     let mut by = Vec::with_capacity(request.order.len() + 1);
     for o in &request.order {
         let (col, ..) = column(shape, table, &o.field)?;
+        // A text in the Turkish alphabet's order whatever the database's collation (docs/adr/9102 §3): ICU's Turkish
+        // collation when the database has it, else each letter written as the byte of its place and compared bytewise.
+        let text = shape
+            .schema
+            .fields
+            .iter()
+            .any(|f| f.name == o.field && matches!(f.kind, FieldKind::Text { .. }));
+        let by_what = match (text, shape.turkish) {
+            (false, _) => col,
+            (true, true) => format!("{col} COLLATE \"tr-x-icu\""),
+            (true, false) => {
+                let (from, to) = kentos_data::turkish::sort_key_translation();
+                format!("translate({col}::text, '{from}', '{to}') COLLATE \"C\"")
+            }
+        };
         by.push(format!(
-            "{col} {} NULLS LAST",
+            "{by_what} {} NULLS LAST",
             if o.descending { "DESC" } else { "ASC" }
         ));
     }

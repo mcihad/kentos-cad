@@ -7189,6 +7189,20 @@ RoofPartKindName = Literal["chimney", "vent", "window", "downpipe"]
 """The names of :class:`RoofPartKind`, for a plain string."""
 
 
+class RowsChecked(_StrEnum):
+    """Where a question's filter was checked.
+
+    - ``source``: By the source: there was no filter, the box, the keys and the search are the source's.
+    - ``here``: Here: every row the source kept was read and the filter asked of it.
+    """
+    SOURCE = "source"
+    HERE = "here"
+
+
+RowsCheckedName = Literal["source", "here"]
+"""The names of :class:`RowsChecked`, for a plain string."""
+
+
 class ScaleBasis(_StrEnum):
     """What a pattern's Ölçek is of (docs/adr/0331 §3).
 
@@ -56540,6 +56554,76 @@ class LayerNode(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerRow(_Model):
+    """A row of a data layer.
+    Attributes:
+        key: Its key in the source. Unit: id.
+        attrs: The fields asked for, as the drawing's attributes read them (an empty value left out).
+        wkt: Its geometry in the project's system, ISO WKT (with `geometry`; none for a row without one).
+    """
+    key: int
+    attrs: dict[str, str]
+    wkt: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["attrs"] = dict(self.attrs)
+        if self.wkt is not UNSET:
+            out["wkt"] = self.wkt
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerRow:
+        return cls(
+            key=data["key"],
+            attrs=dict(data["attrs"]),
+            wkt=data.get("wkt", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerRowsAnswer(_Model):
+    """Output of `cad.layers.rows` v1.
+    Attributes:
+        fields: The fields of the rows, in the table's order.
+        rows: The page's rows, in the order.
+        offset: The page's first row's place among the ordered rows. Unit: count.
+        keys: Every kept row's key in the order (with `allKeys`). Unit: id.
+        total: How many rows the question keeps (with `count`). Unit: count.
+    """
+    fields: list[str]
+    rows: list[LayerRow]
+    offset: int
+    checked: RowsChecked | RowsCheckedName
+    keys: list[int] | None | Unset = UNSET
+    total: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fields"] = list(self.fields)
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["offset"] = self.offset
+        out["checked"] = _enum_out(self.checked)
+        if self.keys is not UNSET:
+            out["keys"] = None if self.keys is None else list(self.keys)
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerRowsAnswer:
+        return cls(
+            fields=list(data["fields"]),
+            rows=[LayerRow.from_json(e0) for e0 in data["rows"]],
+            offset=data["offset"],
+            checked=_enum_in(RowsChecked, data["checked"]),
+            keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
+            total=data.get("total", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerRule(_Model):
     """A record rule of a layer.
     Attributes:
@@ -58217,6 +58301,88 @@ class LayersReprojected(_Model):
             mean_dy=UNSET if "meanDy" not in data else None if data["meanDy"] is None else float(data["meanDy"]),
             most=UNSET if "most" not in data else None if data["most"] is None else float(data["most"]),
             status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ChainStatus, data["status"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersRows(_Model):
+    """Input of `cad.layers.rows` v1: the rows of `layer` (a data layer) that `bbox`, `keys`, `search` and `filter` all
+    keep, in `order` (then by key), `limit` of them from `offset`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `invalid_count` (`limit` past
+    1 000), `invalid_extent` (a box reversed or not finite), `layer_not_found`, `not_a_data_layer`, `field_not_found`
+    (in `fields` or `order`), `invalid_expression` (the filter does not compile, reads `$sıra` or `$ölçek`, or looks at
+    other objects), `source_unreachable` (the source could not be read; the message says why). A job stopped answers
+    `cancelled`.
+    Attributes:
+        layer: The data layer (its id).
+        all_keys: Return every kept row's key, in the order (a selection of the rows a filter keeps, a table's pages).
+        bbox: Rows whose geometry's box meets this one, in the project's system: west, south, east, north (Görünümdekiler). Unit: length.
+        count: Count every row the question keeps.
+        fields: The fields returned, by name; none: all of them in the table's order.
+        filter: A condition in İfadeyle seç's language: the rows it holds for (İfade süzgeci).
+        geometry: Return each row's geometry in the project's system (ISO WKT).
+        keys: Rows of these keys only (Seçililer). Unit: id.
+        limit: How many rows the page holds, 0–1 000; none: 100. Unit: count.
+        offset: How many of the ordered rows come before the page. Unit: count.
+        order: The order, field after field; then by key. A text is ordered in the Turkish alphabet's order.
+        search: Rows any of whose fields, read as text, holds these words, case aside the Turkish way (Ara).
+    """
+    layer: str
+    all_keys: bool | None | Unset = UNSET
+    bbox: list[float] | None | Unset = UNSET
+    count: bool | None | Unset = UNSET
+    fields: list[str] | None | Unset = UNSET
+    filter: str | None | Unset = UNSET
+    geometry: bool | None | Unset = UNSET
+    keys: list[int] | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    offset: int | None | Unset = UNSET
+    order: list[QueryOrder] | None | Unset = UNSET
+    search: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.all_keys is not UNSET:
+            out["allKeys"] = self.all_keys
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.count is not UNSET:
+            out["count"] = self.count
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else list(self.fields)
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.keys is not UNSET:
+            out["keys"] = None if self.keys is None else list(self.keys)
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.offset is not UNSET:
+            out["offset"] = self.offset
+        if self.order is not UNSET:
+            out["order"] = None if self.order is None else [e0.to_json() for e0 in self.order]
+        if self.search is not UNSET:
+            out["search"] = self.search
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersRows:
+        return cls(
+            layer=data["layer"],
+            all_keys=data.get("allKeys", UNSET),
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            count=data.get("count", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else list(data["fields"]),
+            filter=data.get("filter", UNSET),
+            geometry=data.get("geometry", UNSET),
+            keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
+            limit=data.get("limit", UNSET),
+            offset=data.get("offset", UNSET),
+            order=UNSET if "order" not in data else None if data["order"] is None else [QueryOrder.from_json(e0) for e0 in data["order"]],
+            search=data.get("search", UNSET),
         )
 
 
@@ -148329,6 +148495,8 @@ __all__ = [
     "LayerNodeTypeName",
     "LayerPaperCoordSource",
     "LayerPaperTableSource",
+    "LayerRow",
+    "LayerRowsAnswer",
     "LayerRule",
     "LayerServiceOperation",
     "LayerServiceOperationName",
@@ -148375,6 +148543,7 @@ __all__ = [
     "LayersRendererPlan",
     "LayersReproject",
     "LayersReprojected",
+    "LayersRows",
     "LayersRules",
     "LayersService",
     "LayersServicePlan",
@@ -149920,6 +150089,8 @@ __all__ = [
     "RoutesFind",
     "RowHeightTableEdit",
     "RowOffsetDimensionSetEdit",
+    "RowsChecked",
+    "RowsCheckedName",
     "RubberLink",
     "RubbersheetTransform",
     "RunInput",

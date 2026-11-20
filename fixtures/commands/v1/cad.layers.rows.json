@@ -1,0 +1,2210 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.layers.rows",
+ "commandVersion": 1,
+ "title": "Veri katmanının satırları: sıra, sayfa, arama, süzgeç, kutu, seçili anahtarlar (ADR 9102 §4)",
+ "note": "ADR 9102. GeoPackage'ı bu betik sqlite3 ile yazar (fixtures/data/v1/satirlar.gpkg); beklentiler sözleşmenin kurallarıyla burada hesaplanır: Türk alfabesinin sırası, Türkçe katlanan arama, süzgecin anlamı, sayfa, sayı, retler.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Veri katmanının satırları",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 600000,
+   "y": 4410000
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "parseller",
+    "name": "Parseller",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "area",
+    "data": {
+     "driver": "gpkg",
+     "address": "$fixture:data/v1/satirlar.gpkg",
+     "table": "parseller",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "typeName": "POLYGON",
+      "srid": 5256
+     }
+    },
+    "fields": [
+     {
+      "name": "ada",
+      "kind": "integer"
+     },
+     {
+      "name": "parsel",
+      "kind": "integer"
+     },
+     {
+      "name": "mahalle",
+      "kind": "text"
+     },
+     {
+      "name": "alan",
+      "kind": "decimal"
+     },
+     {
+      "name": "kullanim",
+      "kind": "text"
+     }
+    ]
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "İlk sayfa: bütün satırlar anahtar sırasıyla, sayısıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "400",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "ada": "100",
+          "parsel": "2",
+          "mahalle": "Işıklar",
+          "alan": "729.25",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "ada": "100",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "1156.5",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "ada": "100",
+          "parsel": "4",
+          "mahalle": "Ağaçlı",
+          "alan": "676.75",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 5,
+         "attrs": {
+          "ada": "100",
+          "parsel": "5",
+          "mahalle": "İnönü",
+          "alan": "1089",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "ada": "100",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "625.25",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 7,
+         "attrs": {
+          "ada": "100",
+          "parsel": "7",
+          "mahalle": "Ulaş",
+          "alan": "1024.5",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 8,
+         "attrs": {
+          "ada": "100",
+          "parsel": "8",
+          "mahalle": "Cumhuriyet",
+          "alan": "576.75",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 9,
+         "attrs": {
+          "ada": "100",
+          "parsel": "9",
+          "mahalle": "Esentepe",
+          "alan": "961"
+         }
+        },
+        {
+         "key": 10,
+         "attrs": {
+          "ada": "100",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "529.25",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 11,
+         "attrs": {
+          "ada": "101",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "900.5",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 12,
+         "attrs": {
+          "ada": "101",
+          "parsel": "2",
+          "mahalle": "Işıklar",
+          "alan": "484.75",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 13,
+         "attrs": {
+          "ada": "101",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "841",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 14,
+         "attrs": {
+          "ada": "101",
+          "parsel": "4",
+          "mahalle": "Ağaçlı",
+          "alan": "441.25",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 15,
+         "attrs": {
+          "ada": "101",
+          "parsel": "5",
+          "mahalle": "İnönü",
+          "alan": "784.5",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "ada": "101",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "400.75",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 17,
+         "attrs": {
+          "ada": "101",
+          "parsel": "7",
+          "mahalle": "Ulaş",
+          "alan": "729",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 18,
+         "attrs": {
+          "ada": "101",
+          "parsel": "8",
+          "mahalle": "Cumhuriyet",
+          "alan": "1156.25"
+         }
+        },
+        {
+         "key": 19,
+         "attrs": {
+          "ada": "101",
+          "parsel": "9",
+          "mahalle": "Esentepe",
+          "alan": "676.5",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 20,
+         "attrs": {
+          "ada": "101",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "1089.75",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 21,
+         "attrs": {
+          "ada": "102",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "625",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 22,
+         "attrs": {
+          "ada": "102",
+          "parsel": "2",
+          "mahalle": "Işıklar",
+          "alan": "1024.25",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 23,
+         "attrs": {
+          "ada": "102",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "576.5",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 24,
+         "attrs": {
+          "ada": "102",
+          "parsel": "4",
+          "mahalle": "Ağaçlı",
+          "alan": "961.75",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 25,
+         "attrs": {
+          "ada": "102",
+          "parsel": "5",
+          "mahalle": "İnönü",
+          "alan": "529",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 26,
+         "attrs": {
+          "ada": "102",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "900.25",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 27,
+         "attrs": {
+          "ada": "102",
+          "parsel": "7",
+          "mahalle": "Ulaş",
+          "alan": "484.5"
+         }
+        },
+        {
+         "key": 28,
+         "attrs": {
+          "ada": "102",
+          "parsel": "8",
+          "mahalle": "Cumhuriyet",
+          "alan": "841.75",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 29,
+         "attrs": {
+          "ada": "102",
+          "parsel": "9",
+          "mahalle": "Esentepe",
+          "alan": "441",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 30,
+         "attrs": {
+          "ada": "102",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "784.25",
+          "kullanim": "Konut"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 30,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Mahalleye göre Türk alfabesiyle: Ağaçlı, Cumhuriyet, Çınar, Esentepe, Işıklar, İnönü …",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "order": [
+       {
+        "field": "mahalle"
+       }
+      ],
+      "limit": 12,
+      "fields": [
+       "mahalle",
+       "ada"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "mahalle",
+        "ada"
+       ],
+       "rows": [
+        {
+         "key": 4,
+         "attrs": {
+          "mahalle": "Ağaçlı",
+          "ada": "100"
+         }
+        },
+        {
+         "key": 14,
+         "attrs": {
+          "mahalle": "Ağaçlı",
+          "ada": "101"
+         }
+        },
+        {
+         "key": 24,
+         "attrs": {
+          "mahalle": "Ağaçlı",
+          "ada": "102"
+         }
+        },
+        {
+         "key": 8,
+         "attrs": {
+          "mahalle": "Cumhuriyet",
+          "ada": "100"
+         }
+        },
+        {
+         "key": 18,
+         "attrs": {
+          "mahalle": "Cumhuriyet",
+          "ada": "101"
+         }
+        },
+        {
+         "key": 28,
+         "attrs": {
+          "mahalle": "Cumhuriyet",
+          "ada": "102"
+         }
+        },
+        {
+         "key": 1,
+         "attrs": {
+          "mahalle": "Çınar",
+          "ada": "100"
+         }
+        },
+        {
+         "key": 11,
+         "attrs": {
+          "mahalle": "Çınar",
+          "ada": "101"
+         }
+        },
+        {
+         "key": 21,
+         "attrs": {
+          "mahalle": "Çınar",
+          "ada": "102"
+         }
+        },
+        {
+         "key": 9,
+         "attrs": {
+          "mahalle": "Esentepe",
+          "ada": "100"
+         }
+        },
+        {
+         "key": 19,
+         "attrs": {
+          "mahalle": "Esentepe",
+          "ada": "101"
+         }
+        },
+        {
+         "key": 29,
+         "attrs": {
+          "mahalle": "Esentepe",
+          "ada": "102"
+         }
+        }
+       ],
+       "offset": 0,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Mahalle azalan, sonra ada: eşitler anahtarla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "order": [
+       {
+        "field": "mahalle",
+        "descending": true
+       },
+       {
+        "field": "ada"
+       }
+      ],
+      "limit": 10
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 10,
+         "attrs": {
+          "ada": "100",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "529.25",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 20,
+         "attrs": {
+          "ada": "101",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "1089.75",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 30,
+         "attrs": {
+          "ada": "102",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "784.25",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 7,
+         "attrs": {
+          "ada": "100",
+          "parsel": "7",
+          "mahalle": "Ulaş",
+          "alan": "1024.5",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 17,
+         "attrs": {
+          "ada": "101",
+          "parsel": "7",
+          "mahalle": "Ulaş",
+          "alan": "729",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 27,
+         "attrs": {
+          "ada": "102",
+          "parsel": "7",
+          "mahalle": "Ulaş",
+          "alan": "484.5"
+         }
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "ada": "100",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "625.25",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "ada": "101",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "400.75",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 26,
+         "attrs": {
+          "ada": "102",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "900.25",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "ada": "100",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "1156.5",
+          "kullanim": "Eğitim"
+         }
+        }
+       ],
+       "offset": 0,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kullanım: boş değerler iki yönde de sonda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "order": [
+       {
+        "field": "kullanim",
+        "descending": true
+       }
+      ],
+      "offset": 22,
+      "limit": 8,
+      "fields": [
+       "kullanim"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 8,
+         "attrs": {
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 10,
+         "attrs": {
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 15,
+         "attrs": {
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 20,
+         "attrs": {
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 22,
+         "attrs": {
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 9,
+         "attrs": {}
+        },
+        {
+         "key": 18,
+         "attrs": {}
+        },
+        {
+         "key": 27,
+         "attrs": {}
+        }
+       ],
+       "offset": 22,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alana göre azalan, ikinci sayfa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "order": [
+       {
+        "field": "alan",
+        "descending": true
+       }
+      ],
+      "offset": 5,
+      "limit": 5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 22,
+         "attrs": {
+          "ada": "102",
+          "parsel": "2",
+          "mahalle": "Işıklar",
+          "alan": "1024.25",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 24,
+         "attrs": {
+          "ada": "102",
+          "parsel": "4",
+          "mahalle": "Ağaçlı",
+          "alan": "961.75",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 9,
+         "attrs": {
+          "ada": "100",
+          "parsel": "9",
+          "mahalle": "Esentepe",
+          "alan": "961"
+         }
+        },
+        {
+         "key": 11,
+         "attrs": {
+          "ada": "101",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "900.5",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 26,
+         "attrs": {
+          "ada": "102",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "900.25",
+          "kullanim": "Park"
+         }
+        }
+       ],
+       "offset": 5,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Arama Türkçe katlanır: “çınar” Çınar'ı bulur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "search": "çınar",
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "400",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 11,
+         "attrs": {
+          "ada": "101",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "900.5",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 21,
+         "attrs": {
+          "ada": "102",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "625",
+          "kullanim": "Park"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Arama büyük harfle: “İNÖNÜ” İnönü'yü, “IŞIK” Işıklar'ı bulur, “isik” bulmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "search": "İNÖNÜ",
+      "count": true,
+      "limit": 3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 5,
+         "attrs": {
+          "ada": "100",
+          "parsel": "5",
+          "mahalle": "İnönü",
+          "alan": "1089",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 15,
+         "attrs": {
+          "ada": "101",
+          "parsel": "5",
+          "mahalle": "İnönü",
+          "alan": "784.5",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 25,
+         "attrs": {
+          "ada": "102",
+          "parsel": "5",
+          "mahalle": "İnönü",
+          "alan": "529",
+          "kullanim": "Konut"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Arama: “IŞIK”",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "search": "IŞIK",
+      "count": true,
+      "limit": 0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Arama: “isik” Işıklar'ı bulmaz (ı ile i ayrı harf)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "search": "isik",
+      "count": true,
+      "limit": 0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [],
+       "offset": 0,
+       "total": 0,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Arama sayılarda da: “10” adası ve parseli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "search": "10",
+      "count": true,
+      "fields": [
+       "ada",
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100",
+          "parsel": "1"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "ada": "100",
+          "parsel": "2"
+         }
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "ada": "100",
+          "parsel": "3"
+         }
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "ada": "100",
+          "parsel": "4"
+         }
+        },
+        {
+         "key": 5,
+         "attrs": {
+          "ada": "100",
+          "parsel": "5"
+         }
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "ada": "100",
+          "parsel": "6"
+         }
+        },
+        {
+         "key": 7,
+         "attrs": {
+          "ada": "100",
+          "parsel": "7"
+         }
+        },
+        {
+         "key": 8,
+         "attrs": {
+          "ada": "100",
+          "parsel": "8"
+         }
+        },
+        {
+         "key": 9,
+         "attrs": {
+          "ada": "100",
+          "parsel": "9"
+         }
+        },
+        {
+         "key": 10,
+         "attrs": {
+          "ada": "100",
+          "parsel": "10"
+         }
+        },
+        {
+         "key": 11,
+         "attrs": {
+          "ada": "101",
+          "parsel": "1"
+         }
+        },
+        {
+         "key": 12,
+         "attrs": {
+          "ada": "101",
+          "parsel": "2"
+         }
+        },
+        {
+         "key": 13,
+         "attrs": {
+          "ada": "101",
+          "parsel": "3"
+         }
+        },
+        {
+         "key": 14,
+         "attrs": {
+          "ada": "101",
+          "parsel": "4"
+         }
+        },
+        {
+         "key": 15,
+         "attrs": {
+          "ada": "101",
+          "parsel": "5"
+         }
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "ada": "101",
+          "parsel": "6"
+         }
+        },
+        {
+         "key": 17,
+         "attrs": {
+          "ada": "101",
+          "parsel": "7"
+         }
+        },
+        {
+         "key": 18,
+         "attrs": {
+          "ada": "101",
+          "parsel": "8"
+         }
+        },
+        {
+         "key": 19,
+         "attrs": {
+          "ada": "101",
+          "parsel": "9"
+         }
+        },
+        {
+         "key": 20,
+         "attrs": {
+          "ada": "101",
+          "parsel": "10"
+         }
+        },
+        {
+         "key": 21,
+         "attrs": {
+          "ada": "102",
+          "parsel": "1"
+         }
+        },
+        {
+         "key": 22,
+         "attrs": {
+          "ada": "102",
+          "parsel": "2"
+         }
+        },
+        {
+         "key": 23,
+         "attrs": {
+          "ada": "102",
+          "parsel": "3"
+         }
+        },
+        {
+         "key": 24,
+         "attrs": {
+          "ada": "102",
+          "parsel": "4"
+         }
+        },
+        {
+         "key": 25,
+         "attrs": {
+          "ada": "102",
+          "parsel": "5"
+         }
+        },
+        {
+         "key": 26,
+         "attrs": {
+          "ada": "102",
+          "parsel": "6"
+         }
+        },
+        {
+         "key": 27,
+         "attrs": {
+          "ada": "102",
+          "parsel": "7"
+         }
+        },
+        {
+         "key": 28,
+         "attrs": {
+          "ada": "102",
+          "parsel": "8"
+         }
+        },
+        {
+         "key": 29,
+         "attrs": {
+          "ada": "102",
+          "parsel": "9"
+         }
+        },
+        {
+         "key": 30,
+         "attrs": {
+          "ada": "102",
+          "parsel": "10"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 30,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Seçililer: anahtarlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "keys": [
+       3,
+       7,
+       11,
+       40
+      ],
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 3,
+         "attrs": {
+          "ada": "100",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "1156.5",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 7,
+         "attrs": {
+          "ada": "100",
+          "parsel": "7",
+          "mahalle": "Ulaş",
+          "alan": "1024.5",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 11,
+         "attrs": {
+          "ada": "101",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "900.5",
+          "kullanim": "Konut"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Görünümdekiler: kutuya değenler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "bbox": [
+       600040.0,
+       4410040.0,
+       600160.0,
+       4410110.0
+      ],
+      "count": true,
+      "fields": [
+       "ada",
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel"
+       ],
+       "rows": [
+        {
+         "key": 8,
+         "attrs": {
+          "ada": "100",
+          "parsel": "8"
+         }
+        },
+        {
+         "key": 9,
+         "attrs": {
+          "ada": "100",
+          "parsel": "9"
+         }
+        },
+        {
+         "key": 10,
+         "attrs": {
+          "ada": "100",
+          "parsel": "10"
+         }
+        },
+        {
+         "key": 14,
+         "attrs": {
+          "ada": "101",
+          "parsel": "4"
+         }
+        },
+        {
+         "key": 15,
+         "attrs": {
+          "ada": "101",
+          "parsel": "5"
+         }
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "ada": "101",
+          "parsel": "6"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 6,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geometri projenin sisteminde WKT",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "keys": [
+       1,
+       8
+      ],
+      "geometry": true,
+      "fields": [
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "parsel"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "parsel": "1"
+         },
+         "wkt": "POLYGON ((600000 4410000, 600020 4410000, 600020 4410020, 600000 4410020, 600000 4410000))"
+        },
+        {
+         "key": 8,
+         "attrs": {
+          "parsel": "8"
+         },
+         "wkt": "POLYGON ((600050 4410050, 600074 4410050, 600074 4410074, 600050 4410074, 600050 4410050))"
+        }
+       ],
+       "offset": 0,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız sayı: limit 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "limit": 0,
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [],
+       "offset": 0,
+       "total": 30,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bütün anahtarlar sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "order": [
+       {
+        "field": "mahalle"
+       }
+      ],
+      "limit": 0,
+      "allKeys": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [],
+       "offset": 0,
+       "keys": [
+        4,
+        14,
+        24,
+        8,
+        18,
+        28,
+        1,
+        11,
+        21,
+        9,
+        19,
+        29,
+        2,
+        12,
+        22,
+        5,
+        15,
+        25,
+        3,
+        13,
+        23,
+        6,
+        16,
+        26,
+        7,
+        17,
+        27,
+        10,
+        20,
+        30
+       ],
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgeç: kullanim = 'Konut' (burada sorulur)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "filter": "kullanim = 'Konut'",
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "400",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "ada": "100",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "625.25",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 11,
+         "attrs": {
+          "ada": "101",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "900.5",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 13,
+         "attrs": {
+          "ada": "101",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "841",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 23,
+         "attrs": {
+          "ada": "102",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "576.5",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 25,
+         "attrs": {
+          "ada": "102",
+          "parsel": "5",
+          "mahalle": "İnönü",
+          "alan": "529",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 30,
+         "attrs": {
+          "ada": "102",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "784.25",
+          "kullanim": "Konut"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 7,
+       "checked": "here"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgeç ve sıra: alan > 500 ve kullanim = 'Park', alana göre azalan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "filter": "alan > 500 ve kullanim = 'Park'",
+      "order": [
+       {
+        "field": "alan",
+        "descending": true
+       }
+      ],
+      "count": true,
+      "allKeys": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 26,
+         "attrs": {
+          "ada": "102",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "900.25",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 28,
+         "attrs": {
+          "ada": "102",
+          "parsel": "8",
+          "mahalle": "Cumhuriyet",
+          "alan": "841.75",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "ada": "100",
+          "parsel": "2",
+          "mahalle": "Işıklar",
+          "alan": "729.25",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "ada": "100",
+          "parsel": "4",
+          "mahalle": "Ağaçlı",
+          "alan": "676.75",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 21,
+         "attrs": {
+          "ada": "102",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "625",
+          "kullanim": "Park"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 5,
+       "keys": [
+        26,
+        28,
+        2,
+        4,
+        21
+       ],
+       "checked": "here"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgeç geometriyi ölçer: ada > 0 ve $alan > 900, ikinci sayfa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "filter": "ada > 0 ve $alan > 900",
+      "offset": 3,
+      "limit": 3,
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 9,
+         "attrs": {
+          "ada": "100",
+          "parsel": "9",
+          "mahalle": "Esentepe",
+          "alan": "961"
+         }
+        },
+        {
+         "key": 18,
+         "attrs": {
+          "ada": "101",
+          "parsel": "8",
+          "mahalle": "Cumhuriyet",
+          "alan": "1156.25"
+         }
+        },
+        {
+         "key": 20,
+         "attrs": {
+          "ada": "101",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "1089.75",
+          "kullanim": "Eğitim"
+         }
+        }
+       ],
+       "offset": 3,
+       "total": 8,
+       "checked": "here"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgeç, arama ve kutu birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "filter": "ada >= 101",
+      "search": "e",
+      "bbox": [
+       600000.0,
+       4410000.0,
+       600300.0,
+       4410150.0
+      ],
+      "count": true,
+      "fields": [
+       "ada",
+       "mahalle"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "mahalle"
+       ],
+       "rows": [
+        {
+         "key": 12,
+         "attrs": {
+          "ada": "101",
+          "mahalle": "Işıklar"
+         }
+        },
+        {
+         "key": 13,
+         "attrs": {
+          "ada": "101",
+          "mahalle": "Selçuklu"
+         }
+        },
+        {
+         "key": 15,
+         "attrs": {
+          "ada": "101",
+          "mahalle": "İnönü"
+         }
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "ada": "101",
+          "mahalle": "Şehitler"
+         }
+        },
+        {
+         "key": 17,
+         "attrs": {
+          "ada": "101",
+          "mahalle": "Ulaş"
+         }
+        },
+        {
+         "key": 18,
+         "attrs": {
+          "ada": "101",
+          "mahalle": "Cumhuriyet"
+         }
+        },
+        {
+         "key": 19,
+         "attrs": {
+          "ada": "101",
+          "mahalle": "Esentepe"
+         }
+        },
+        {
+         "key": 20,
+         "attrs": {
+          "ada": "101",
+          "mahalle": "Ümraniye"
+         }
+        },
+        {
+         "key": 22,
+         "attrs": {
+          "ada": "102",
+          "mahalle": "Işıklar"
+         }
+        },
+        {
+         "key": 23,
+         "attrs": {
+          "ada": "102",
+          "mahalle": "Selçuklu"
+         }
+        },
+        {
+         "key": 24,
+         "attrs": {
+          "ada": "102",
+          "mahalle": "Ağaçlı"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 11,
+       "checked": "here"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman verilmedi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": " "
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_layer",
+       "message": "Satırları okunacak veri katmanını (layer) verin.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sayfa 1 000'i geçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "limit": 1001
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Bir sayfa en çok 1000 satır tutar; 1001 istendi.",
+       "path": "limit"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: ters kutu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "bbox": [
+       600100.0,
+       4410000.0,
+       600000.0,
+       4410100.0
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extent",
+       "message": "Kutu batı, güney, doğu, kuzey sırasıyla sonlu dört sayı olmalı; batı doğuyu, güney kuzeyi geçemez.",
+       "path": "bbox"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: veri katmanı değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "cizim"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_data_layer",
+       "message": "“Çizim” bir veri katmanı değil; satırları kaynaktan okunmaz.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sıranın alanı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "order": [
+       {
+        "field": "ada"
+       },
+       {
+        "field": "kat"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“kat” alanı “Parseller” katmanında yok.",
+       "path": "order[1].field"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: dönen alan yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "fields": [
+       "ada",
+       "malik"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“malik” alanı “Parseller” katmanında yok.",
+       "path": "fields[1]"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: süzgeç derlenmiyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "filter": "kullanim ="
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_expression",
+       "message": "$any",
+       "path": "filter"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kaynak okunamıyor (dosya yok)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri katmanının satırları",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/yok.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

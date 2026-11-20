@@ -22,6 +22,8 @@ pub struct Shape {
     pub geography: bool,
     /// Rows can be written.
     pub writable: bool,
+    /// The database has ICU's Turkish collation (`tr-x-icu`): texts are ordered by it (docs/adr/9102 §3).
+    pub turkish: bool,
 }
 
 /// An identifier quoted.
@@ -304,6 +306,10 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
         )));
     };
     fields.retain(|f| f.name != key);
+    let turkish: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM pg_collation WHERE collname = 'tr-x-icu')")
+        .fetch_one(&mut *conn)
+        .await
+        .unwrap_or(false);
     Ok(Shape {
         schema: Schema {
             key,
@@ -315,6 +321,7 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
         relation: rel,
         geography,
         writable: writes && pk.is_some() && matches!(kind.as_str(), "r" | "p"),
+        turkish,
     })
 }
 

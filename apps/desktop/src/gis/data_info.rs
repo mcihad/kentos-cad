@@ -95,7 +95,7 @@ pub fn row_at(
                     continue;
                 };
                 let g = match &system {
-                    Some(s) => match crate::data_view::moved(g, s) {
+                    Some(s) => match s.moved(g) {
                         Some(m) => m,
                         None => continue,
                     },

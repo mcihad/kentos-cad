@@ -182,6 +182,8 @@ pub mod cad_layer_tree;
 pub mod cad_layers;
 #[path = "gis/cad_layers_data.rs"]
 pub mod cad_layers_data;
+#[path = "gis/cad_layers_rows.rs"]
+pub mod cad_layers_rows;
 #[path = "gis/cad_layers_crs.rs"]
 pub mod cad_layers_crs;
 #[path = "core/cad_leaders.rs"]
@@ -534,6 +536,7 @@ pub use cad_layer_find::*;
 pub use cad_layer_tree::*;
 pub use cad_layers::*;
 pub use cad_layers_data::*;
+pub use cad_layers_rows::*;
 pub use cad_layers_crs::*;
 pub use cad_leaders::*;
 pub use cad_linearref::*;

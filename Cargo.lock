@@ -3525,6 +3525,8 @@ name = "kentos-native-application"
 version = "0.1.0"
 dependencies = [
  "kentos-commands",
+ "kentos-data",
+ "kentos-data-gpkg",
  "kentos-digital-project",
  "kentos-domain",
  "kentos-dwg",

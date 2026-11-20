@@ -493,6 +493,8 @@ pub mod layers_renderer;
 pub mod layers_service;
 #[path = "gis/layers_data.rs"]
 pub mod layers_data;
+#[path = "gis/layers_rows.rs"]
+pub mod layers_rows;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_set.rs"]
 pub mod layers_set;
@@ -3143,6 +3145,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LAYERS_DATA,
         kentos_commands::CAD_LAYERS_DATA_VERSION,
+    ),
+    // A data layer's rows read from its source ([`layers_rows`], docs/adr/9102 §4).
+    (
+        kentos_commands::CAD_LAYERS_ROWS,
+        kentos_commands::CAD_LAYERS_ROWS_VERSION,
     ),
     (
         kentos_commands::CAD_LAYERS_CRS,

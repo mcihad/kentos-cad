@@ -118,6 +118,47 @@ impl TableSystem {
         .map(|t| (t.point.x, t.point.y))
     }
 
+    /// A geometry of the table moved into the project's system, position by position; none where a position has no
+    /// value there.
+    pub fn moved(&self, g: &kentos_data::Geometry) -> Option<kentos_data::Geometry> {
+        use kentos_data::{Coord, Curve, Geometry};
+        let coord = |c: &Coord| -> Option<Coord> {
+            let (x, y) = self.to_project(c.x, c.y)?;
+            Some(Coord { x, y, ..*c })
+        };
+        fn curve(c: &Curve, coord: &dyn Fn(&Coord) -> Option<Coord>) -> Option<Curve> {
+            Some(match c {
+                Curve::Line(p) => Curve::Line(p.iter().map(coord).collect::<Option<_>>()?),
+                Curve::Arc(p) => Curve::Arc(p.iter().map(coord).collect::<Option<_>>()?),
+                Curve::Compound(parts) => {
+                    Curve::Compound(parts.iter().map(|c| curve(c, coord)).collect::<Option<_>>()?)
+                }
+            })
+        }
+        Some(match g {
+            Geometry::Point(p) => Geometry::Point(match p {
+                Some(c) => Some(coord(c)?),
+                None => None,
+            }),
+            Geometry::MultiPoint(ps) => Geometry::MultiPoint(ps.iter().map(coord).collect::<Option<_>>()?),
+            Geometry::Curve(c) => Geometry::Curve(curve(c, &coord)?),
+            Geometry::Polygon(r) => {
+                Geometry::Polygon(r.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?)
+            }
+            Geometry::MultiCurve(cs) => {
+                Geometry::MultiCurve(cs.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?)
+            }
+            Geometry::MultiPolygon(ps) => Geometry::MultiPolygon(
+                ps.iter()
+                    .map(|r| r.iter().map(|c| curve(c, &coord)).collect::<Option<Vec<_>>>())
+                    .collect::<Option<_>>()?,
+            ),
+            Geometry::Collection(gs) => {
+                Geometry::Collection(gs.iter().map(|g| self.moved(g)).collect::<Option<_>>()?)
+            }
+        })
+    }
+
     /// A box of the project's system as one of the table's, its sides densified.
     pub fn to_table(&self, b: [f64; 4]) -> Option<[f64; 4]> {
         kentos_geometry_core::crs::transform_bounds(

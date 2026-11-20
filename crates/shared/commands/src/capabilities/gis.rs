@@ -147,6 +147,17 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // docs/adr/9102 §4: a data layer's rows read from its source.
+    Entry {
+        id: "cad.layers.rows",
+        refusals: &[
+            &["no_layer", "invalid_count", "invalid_extent"],
+            &["layer_not_found", "not_a_data_layer", "field_not_found"],
+            &["invalid_expression", "source_unreachable"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // docs/adr/9101 §4: a data layer added, changed or removed.
     Entry {
         id: "cad.layers.data",

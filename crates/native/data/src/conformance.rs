@@ -6,8 +6,8 @@
 //!
 //! The dataset is fixed by a linear congruential generator (`x' = (1103515245 x + 12345) mod 2³¹`, seed 2026): 24 × 25
 //! parcels on a grid of 40 m cells from (587 000, 4 400 000) in TM36, each a rectangle shrunk by a pseudo-random
-//! margin; a few rows have NULL values and one has no geometry. Texts carry Turkish letters; the ordered text field
-//! (`kod`) is ASCII only, since a source's collation orders other letters its own way.
+//! margin; a few rows have NULL values and one has no geometry. Texts carry Turkish letters and are ordered in the
+//! Turkish alphabet's order (`turkish::compare`) by every driver.
 
 use crate::cancel::Cancel;
 use crate::condition::{Condition, Op, compare};
@@ -223,7 +223,10 @@ impl Truth {
                     (true, false) => std::cmp::Ordering::Greater,
                     (false, true) => std::cmp::Ordering::Less,
                     (false, false) => {
-                        let c = compare(&va, &vb).unwrap_or(std::cmp::Ordering::Equal);
+                        let c = match (&va, &vb) {
+                            (Value::Text(a), Value::Text(b)) => crate::turkish::compare(a, b),
+                            _ => compare(&va, &vb).unwrap_or(std::cmp::Ordering::Equal),
+                        };
                         if o.descending { c.reverse() } else { c }
                     }
                 };
@@ -437,6 +440,18 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
             field: "tarih".into(),
             descending: false,
         }],
+        // Turkish letters in the Turkish alphabet's order whatever the source's collation (docs/adr/9102 §3):
+        // Esentepe, İnönü, Kılavuz, Mevlana, Yenişehir.
+        vec![
+            Order {
+                field: "mahalle".into(),
+                descending: false,
+            },
+            Order {
+                field: "kullanim".into(),
+                descending: true,
+            },
+        ],
     ] {
         let want = truth.ordered(truth.keep(None, None), &order);
         for (offset, limit) in [(0u64, 25u64), (25, 25), (590, 25)] {
