@@ -1165,3 +1165,49 @@ fn a_drawn_object_with_an_empty_required_field_is_said() {
         "{said:?}"
     );
 }
+
+/// GIS-024: an unsaved entry in the table's form stops another layer and the table pane as it stops another row; the
+/// draft stays.
+#[test]
+fn an_unsaved_entry_stops_another_layer_and_keeps_its_draft() {
+    use crate::features::{Event, Pane};
+    let mut app = crate::files_testing::app_with_drawing();
+    form_view(&mut app);
+    let layer = app.gis.features.layer.clone();
+    let other = app
+        .document
+        .as_ref()
+        .unwrap()
+        .model
+        .layers()
+        .leaves()
+        .iter()
+        .map(|l| l.id.clone())
+        .find(|id| Some(id) != layer.as_ref())
+        .expect("another layer");
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Layer(other))));
+    assert_eq!(app.gis.features.layer, layer, "the layer stays while the entry is unsaved");
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Pane(Pane::Table))));
+    let e = app.gis.form_entry.as_ref().expect("the form stays");
+    assert_eq!(e.value_of("Kat").as_deref(), Some("8"), "the draft is kept");
+    assert!(crate::files_testing::last_said(&app).contains("Kaydedilmemiş değişiklik"));
+}
+
+/// GIS-022: another drawing on screen leaves the table's form and its record behind; its unsaved entry is said.
+#[test]
+fn another_drawing_never_shows_the_last_ones_form() {
+    let mut app = crate::files_testing::app_with_drawing();
+    form_view(&mut app);
+    assert!(app.gis.form_entry.is_some());
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
+        "../../../../../../fixtures/processing/v1/parcels.kcad"
+    ))
+    .expect("reads");
+    let doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    assert!(app.gis.form_entry.is_none(), "the last drawing's form is gone");
+    assert!(app.gis.form_stack.is_empty());
+    assert_eq!(app.gis.features.layer, None, "the table starts on the new drawing");
+    let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(said.iter().any(|t| t.contains("kaydedilmemiş giriş önceki projede kaldı")), "{said:?}");
+}

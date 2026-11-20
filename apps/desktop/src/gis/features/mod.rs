@@ -600,9 +600,58 @@ impl App {
             .unwrap_or_default()
     }
 
+    /// The forms and the table's record left when another drawing comes on screen (GIS-022): the docked form and the
+    /// forms waiting under it closed, the table's layer, search, sort and edit started again; an unsaved entry is
+    /// said by its form and record so nothing is lost unseen.
+    pub(crate) fn leave_forms_of_document(&mut self) {
+        let unsaved = self
+            .gis
+            .form_entry
+            .as_ref()
+            .filter(|e| e.dirty_now())
+            .map(|e| e.name.clone());
+        self.gis.form_entry = None;
+        self.gis.form_stack.clear();
+        let panel = std::mem::take(&mut self.gis.features);
+        self.gis.features = FeaturesPanel {
+            pane: panel.pane,
+            hidden: panel.hidden,
+            widths: panel.widths,
+            ..FeaturesPanel::default()
+        };
+        if let Some(name) = unsaved {
+            self.say(
+                kentos_interaction::Level::Warn,
+                format!("“{name}” formundaki kaydedilmemiş giriş önceki projede kaldı; yazılmadı."),
+            );
+        }
+    }
+
+    /// Whether the docked form holds an unsaved entry: then the table does not leave its record (GIS-024), it says
+    /// so; true when it may go on.
+    fn docked_form_may_leave(&mut self) -> bool {
+        if self
+            .gis
+            .form_entry
+            .as_ref()
+            .is_some_and(|e| e.docked && e.dirty_now())
+        {
+            self.say(
+                kentos_interaction::Level::Warn,
+                "Kaydedilmemiş değişiklik var: önce Kaydet’e basın ya da Vazgeç’le bırakın.",
+            );
+            return false;
+        }
+        true
+    }
+
     pub(crate) fn features_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Layer(id) => {
+                // Another layer leaves the record: an unsaved entry stops it, as another row does (GIS-024).
+                if !self.docked_form_may_leave() {
+                    return Task::none();
+                }
                 if self.gis.form_entry.as_ref().is_some_and(|e| e.docked) {
                     self.gis.form_entry = None;
                 }
@@ -710,6 +759,9 @@ impl App {
             Event::AddRecord => return self.feature_add_record(),
             Event::Duplicate => return self.duplicate_selected(),
             Event::Pane(pane) => {
+                if pane != Pane::Form && !self.docked_form_may_leave() {
+                    return Task::none();
+                }
                 self.gis.features.pane = pane;
                 if pane == Pane::Form {
                     return self.dock_form_on_selection();
@@ -721,16 +773,7 @@ impl App {
             Event::FormRow(i) => {
                 let slot = self.shown_features().get(i).copied();
                 if let Some(slot) = slot {
-                    if self
-                        .gis
-                        .form_entry
-                        .as_ref()
-                        .is_some_and(|e| e.docked && e.dirty_now())
-                    {
-                        self.say(
-                            kentos_interaction::Level::Warn,
-                            "Kaydedilmemiş değişiklik var: önce Kaydet’e basın ya da Vazgeç’le bırakın.",
-                        );
+                    if !self.docked_form_may_leave() {
                         return Task::none();
                     }
                     self.selection.set([slot]);

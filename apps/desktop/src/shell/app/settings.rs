@@ -268,6 +268,10 @@ impl App {
         self.selection = Selection::new();
         // İstatistik and Grafik start again on another drawing (docs/adr/0227 §8).
         self.gis.charts = Default::default();
+        // The table's form and its record are the drawing's left (GIS-022): another drawing never shows them; an
+        // unsaved entry is said, not carried. The table starts on the new drawing's layer, its widths and hidden
+        // columns kept for the session.
+        self.leave_forms_of_document();
         self.followed = Some((doc.session, doc.model.generation()));
         self.xrefs = Default::default();
         self.document = Some(doc);
