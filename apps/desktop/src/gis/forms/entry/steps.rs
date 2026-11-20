@@ -5,6 +5,16 @@ use super::*;
 use crate::gis;
 
 impl App {
+    /// The docked form's step to the table's `to`th row shown (GIS-023): a record the search, the filter or Göster
+    /// leaves out is never opened.
+    fn step_docked(&mut self, to: usize, form: &str) -> Task<Message> {
+        let Some(slot) = self.shown_features().get(to).copied() else {
+            return Task::none();
+        };
+        self.selection.set([slot]);
+        self.open_entry_docked(slot, form)
+    }
+
     pub(super) fn entry_event(&mut self, preview: bool, event: Event) -> Task<Message> {
         let slot = if preview {
             &mut self.gis.form_preview
@@ -319,14 +329,20 @@ impl App {
                 };
                 let form = e.form.clone();
                 let layer = e.screen.layer.clone();
+                let docked = e.docked;
                 let Some(to) = at.checked_add_signed(step as isize) else {
                     return Task::none();
                 };
-                let slot = doc
-                    .model
-                    .by_layer_with_uids(&layer)
-                    .nth(to)
-                    .and_then(|(u, _)| doc.model.slot_of(u));
+                // Docked, the arrows go through the table's rows shown, in its order (GIS-023): a record the search,
+                // the filter or Göster leaves out is never opened.
+                let slot = if docked {
+                    return self.step_docked(to, &form);
+                } else {
+                    doc.model
+                        .by_layer_with_uids(&layer)
+                        .nth(to)
+                        .and_then(|(u, _)| doc.model.slot_of(u))
+                };
                 if let Some(slot) = slot {
                     self.selection.set([slot]);
                     return if e.docked {

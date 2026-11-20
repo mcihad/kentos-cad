@@ -1211,3 +1211,29 @@ fn another_drawing_never_shows_the_last_ones_form() {
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(said.iter().any(|t| t.contains("kaydedilmemiş giriş önceki projede kaldı")), "{said:?}");
 }
+
+/// GIS-023: the table's form counts and steps through the rows the table shows: with Göster › Seçililer on one other
+/// building it moves to that one, its place 1 of 1, and the arrows open no hidden record.
+#[test]
+fn the_table_form_steps_through_the_rows_shown_only() {
+    use crate::features::{Event, Show};
+    let mut app = crate::files_testing::app_with_drawing();
+    form_view(&mut app);
+    let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Save)));
+    let open = app.selection.ids()[0];
+    let all = app.shown_features();
+    assert!(all.len() >= 2, "{all:?}");
+    let place = app.gis.form_entry.as_ref().and_then(|e| e.place());
+    assert_eq!(place.map(|p| p.1), Some(all.len()), "counted over the rows shown");
+    let other = *all.iter().find(|s| **s != open).expect("another building");
+    app.selection.set([other]);
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Show(Show::Selected))));
+    let e = app.gis.form_entry.as_ref().expect("the form follows");
+    assert_eq!(e.record_slot(&app.document.as_ref().unwrap().model), Some(other));
+    assert_eq!(e.place(), Some((0, 1)));
+    for step in [-1, 1] {
+        let _ = app.update(Message::Gis(gis::Event::FormEntry(entry::Event::Step(step))));
+        let e = app.gis.form_entry.as_ref().expect("still open");
+        assert_eq!(e.record_slot(&app.document.as_ref().unwrap().model), Some(other), "no hidden record opens");
+    }
+}

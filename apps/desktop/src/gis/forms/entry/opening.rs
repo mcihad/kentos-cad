@@ -55,8 +55,14 @@ impl App {
     /// window.
     pub(crate) fn open_entry_docked(&mut self, slot: Slot, form: &str) -> Task<Message> {
         let task = self.open_entry(slot, form);
+        // Docked, its place and count are the table's rows shown (GIS-023), not the layer's.
+        let shown = self.shown_features();
         if let Some(e) = self.gis.form_entry.as_mut() {
             e.docked = true;
+            match shown.iter().position(|x| *x == slot) {
+                Some(at) => e.set_place(at, shown.len()),
+                None => e.clear_place(),
+            }
             if self.dialog == Some(Dialog::Gis(gis::GisDialogKind::FormEntry)) {
                 self.dialog = None;
             }

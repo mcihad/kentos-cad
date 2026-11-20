@@ -590,7 +590,7 @@ impl App {
     }
 
     /// The objects shown now, in the order shown.
-    fn shown_features(&self) -> Vec<Slot> {
+    pub(crate) fn shown_features(&self) -> Vec<Slot> {
         self.document
             .as_ref()
             .map(|doc| {
@@ -669,15 +669,18 @@ impl App {
             Event::Search(text) => {
                 self.gis.features.search = text;
                 self.gis.features.changed();
+                return self.form_follows_rows();
             }
             Event::Show(show) => {
                 self.gis.features.show = show;
                 self.gis.features.changed();
+                return self.form_follows_rows();
             }
             Event::Filter(text) => {
                 self.gis.features.filter = text;
                 self.gis.features.changed();
-                return self.whole_filtered();
+                let followed = self.form_follows_rows();
+                return Task::batch([followed, self.whole_filtered()]);
             }
             Event::Builder => return self.open_builder_for_features(),
             Event::Write(e) => return self.features_write_event(e),
@@ -712,6 +715,7 @@ impl App {
                     (p.sort, p.descending) = next_sort(&p.sort, p.descending, &key);
                 }
                 p.changed();
+                return self.form_follows_rows();
             }
             Event::Width(j, width) => {
                 if let Some(doc) = &self.document {
@@ -1237,6 +1241,41 @@ impl App {
         let slot = selected.or_else(|| self.shown_features().first().copied());
         match slot {
             Some(slot) => self.dock_form_on(slot),
+            None => {
+                self.gis.form_entry = None;
+                Task::none()
+            }
+        }
+    }
+
+    /// The docked form after the table's rows changed (a search, Göster, the filter, the sort; GIS-023): its record
+    /// still shown, its place among them again; left out, the first row shown takes its place unless the entry is
+    /// unsaved, which stays and says whose it is; no row, no form.
+    pub(crate) fn form_follows_rows(&mut self) -> Task<Message> {
+        let Some(e) = self.gis.form_entry.as_ref().filter(|e| e.docked) else {
+            return Task::none();
+        };
+        let slot = self.document.as_ref().and_then(|d| e.record_slot(&d.model));
+        let shown = self.shown_features();
+        if let Some(at) = slot.and_then(|s| shown.iter().position(|x| *x == s)) {
+            if let Some(e) = self.gis.form_entry.as_mut() {
+                e.set_place(at, shown.len());
+            }
+            return Task::none();
+        }
+        if e.dirty_now() {
+            let name = e.record_words();
+            self.say(
+                kentos_interaction::Level::Warn,
+                format!("Açık kayıt ({name}) tabloda artık görünmüyor; kaydedilmemiş giriş ona ait. Kaydet’e basın ya da Vazgeç’le bırakın."),
+            );
+            return Task::none();
+        }
+        match shown.first().copied() {
+            Some(first) => {
+                self.selection.set([first]);
+                self.dock_form_on(first)
+            }
             None => {
                 self.gis.form_entry = None;
                 Task::none()

@@ -733,6 +733,32 @@ impl Entry {
     }
 
     /// Whether a value was typed that the record does not hold yet.
+    /// Its record's slot in `doc`, when the drawing still has it.
+    pub(crate) fn record_slot(&self, doc: &kentos_domain::Document) -> Option<kentos_domain::Slot> {
+        controls::record_slot(doc, &self.uid)
+    }
+
+    /// Its place among the records it steps through and their count (the table's rows shown when docked).
+    pub(crate) fn set_place(&mut self, at: usize, of: usize) {
+        self.place = Some((at, of));
+    }
+
+    /// Its place among the records it steps through and their count.
+    #[cfg(test)]
+    pub(crate) fn place(&self) -> Option<(usize, usize)> {
+        self.place
+    }
+
+    /// No place to step from: its record is not among the rows shown.
+    pub(crate) fn clear_place(&mut self) {
+        self.place = None;
+    }
+
+    /// Its record as a message names it: the form's name and its id's start.
+    pub(crate) fn record_words(&self) -> String {
+        format!("{}, {}", self.name, self.uid.chars().take(8).collect::<String>())
+    }
+
     pub(crate) fn dirty_now(&self) -> bool {
         self.dirty()
     }
