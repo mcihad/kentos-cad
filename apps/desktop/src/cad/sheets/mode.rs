@@ -12,6 +12,9 @@ impl App {
         let painter: Painter<'_> = Rc::new(self.sheet_painter());
         let base = container(column![
             self.ribbon(false),
+            // The open drawings' tabs under the ribbon as over the model (UR2-058: from a sheet the other drawing was
+            // reached only through Model).
+            self.doc_tabs_view(),
             self.sheet_body(painter.clone()),
             if self.sheets.model_scope().is_some() {
                 self.command_line()
