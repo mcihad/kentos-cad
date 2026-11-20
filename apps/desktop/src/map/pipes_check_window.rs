@@ -176,6 +176,8 @@ pub struct State {
     pub vertical: String,
     pub horizontal: String,
     pub above: Above,
+    /// The drawing these values were typed for (its session): reopened on it and the same network, they come back.
+    pub session: Option<u64>,
 }
 
 #[derive(Clone, Debug)]
@@ -456,7 +458,25 @@ impl App {
             .iter()
             .find(|(_, n)| ["profil", "boykesit"].iter().any(|w| n.to_lowercase().contains(w)))
             .map_or_else(|| doc.model.layers().active().to_owned(), |l| l.0.clone());
+        // The same drawing and network as last time (UR2-025: back from Hat profili every limit was empty): the
+        // values typed come back, the lists read again; another network starts afresh, its own guesses shown.
+        let session = Some(doc.session);
+        let kept = &self.map.pipes_check;
+        if kept.session == session && kept.network == first.0 {
+            let layers: Vec<(String, String)> =
+                doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+            let mut again = kept.clone();
+            again.networks = networks;
+            again.surfaces = surfaces;
+            again.layers = layers;
+            again.answer = None;
+            self.map.pipes_check = again;
+            self.pipes_check_run();
+            self.dialog = Some(Dialog::Map(map::MapDialogKind::PipesCheck));
+            return Task::none();
+        }
         self.map.pipes_check = State {
+            session,
             network: first.0.clone(),
             profile_layer,
             layers,
@@ -552,7 +572,8 @@ impl App {
                     out.uids.len()
                 ),
             );
-            self.map.pipes_check = State::default();
+            // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
+                self.map.pipes_check.answer = None;
             self.dialog = None;
         }
     }
@@ -690,7 +711,8 @@ impl App {
                 );
                 self.map.pipes_shown_marks =
                     Some(crate::pipes_marks::Shown::new(doc.session, input));
-                self.map.pipes_check = State::default();
+                // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
+                self.map.pipes_check.answer = None;
                 self.dialog = None;
                 self.say(Level::Info, text);
                 return Task::none();
@@ -710,7 +732,8 @@ impl App {
                     .collect();
                 let n = slots.len();
                 self.selection.set(slots);
-                self.map.pipes_check = State::default();
+                // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
+                self.map.pipes_check.answer = None;
                 self.dialog = None;
                 self.say(Level::Info, format!("{TITLE}: bulgusu olan {n} boru seçildi."));
                 return Task::none();
@@ -735,7 +758,8 @@ impl App {
             }
             Event::Saved(None) => return Task::none(),
             Event::Close => {
-                self.map.pipes_check = State::default();
+                // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
+                self.map.pipes_check.answer = None;
                 self.dialog = None;
                 return Task::none();
             }

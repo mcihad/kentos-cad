@@ -246,6 +246,35 @@ fn the_profile_of_the_run_is_drawn_in_one_step() {
     assert_eq!(undone.as_deref(), Some("Hat profili"));
 }
 
+/// UR2-025: limits typed, Hat profilini çiz, then Boru denetimi again on the same drawing and network: the limits come
+/// back and so do the rows and the findings' count.
+#[test]
+fn the_limits_typed_come_back_after_the_profile() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pipes.check"));
+    for e in [
+        P::MinCover("0,8".into()),
+        P::MaxCover("2,5".into()),
+        P::MinSlope("3".into()),
+        P::MaxSlope("50".into()),
+        P::Catalog("200 300 400".into()),
+    ] {
+        let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
+    }
+    let before = app.map.pipes_check.answer.clone().expect("an answer").expect("checked");
+    let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
+    assert_eq!(app.dialog, None);
+    let _ = app.update(Message::Run("pipes.check"));
+    let s = &app.map.pipes_check;
+    assert_eq!(
+        (s.min_cover.as_str(), s.max_cover.as_str(), s.min_slope.as_str(), s.max_slope.as_str(), s.catalog.as_str()),
+        ("0,8", "2,5", "3", "50", "200 300 400")
+    );
+    let again = s.answer.clone().expect("an answer").expect("checked");
+    assert_eq!(again.pipes.len(), before.pipes.len());
+    assert_eq!(again.counts, before.counts, "the same findings");
+}
+
 fn profile_output(name: &str) -> Value {
     let profile: Value =
         serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pipes.profile.json")).expect("cases");
