@@ -491,6 +491,35 @@ pub fn export_block(doc: &Document, input: &ExportBlock) -> Result<BlockFileExpo
 /// A GeoPackage made: where it goes, whether a file is there, its bytes, what it holds and what it says.
 type GpkgMade = (PathBuf, bool, Vec<u8>, GpkgExported, Vec<CommandWarning>);
 
+/// A copy of the drawing with only the objects of `uids` (none when empty), or the refusal of an id it lacks.
+fn only_objects(doc: &Document, uids: &[String]) -> Result<Option<Document>, Refused> {
+    if uids.is_empty() {
+        return Ok(None);
+    }
+    let mut keep = std::collections::HashSet::new();
+    for (i, text) in uids.iter().enumerate() {
+        let slot = kentos_domain::Uuid::parse_str(text)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .ok_or_else(|| {
+                refuse(
+                    codes::ENTITY_NOT_FOUND,
+                    format!("“{text}” kalıcı kimlikli nesne çizimde yok. Var olan bir nesnenin kimliğini verin."),
+                    &format!("uids[{i}]"),
+                )
+            })?;
+        keep.insert(slot);
+    }
+    let gone: Vec<kentos_domain::Slot> = doc
+        .entities_with_uids()
+        .filter_map(|(uid, _)| doc.slot_of(uid))
+        .filter(|s| !keep.contains(s))
+        .collect();
+    let mut copy = doc.clone();
+    copy.remove(&gone);
+    Ok(Some(copy))
+}
+
 fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
     use std::sync::atomic::{AtomicU64, Ordering};
     static NEXT: AtomicU64 = AtomicU64::new(0);
@@ -500,7 +529,19 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
         kentos_native_application::time_export::filtered(doc, &input.layers, input.time.as_ref())
             .map_err(|(code, message, at)| refuse(&code, message, &at))?;
     let doc = timed.as_ref();
+    // Seçili nesneler (docs/adr/1073): only the objects named, off a copy; their layers are the tables.
+    let picked = only_objects(doc, &input.uids)?;
+    let doc = picked.as_ref().unwrap_or(doc);
     let mut ids = Vec::new();
+    if input.layers.is_empty() && !input.uids.is_empty() {
+        ids = doc
+            .layers()
+            .leaves()
+            .iter()
+            .filter(|n| doc.by_layer_with_uids(&n.id).next().is_some())
+            .map(|n| n.id.clone())
+            .collect();
+    }
     for (i, id) in input.layers.iter().enumerate() {
         let Some(node) = doc.layers().get(id) else {
             return Err(refuse(

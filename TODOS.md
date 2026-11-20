@@ -66,6 +66,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   kaynak katmanların taşınan değerlerinin alan tanımlarını alır; Tampon'un Uzaklık ve Halka'sı sayıdır, var olan türlü
   katmana uymayan yazım yazmadan reddedilir ([ADR 1070](docs/adr/1070-gis-run-output-layer-type-and-fields.md)); web'in
   işlem çalıştırıcısı (`processing/runner.ts`) aynısını ister.
+  GIS-006/007'de GeoPackage içe aktarma her tabloyu kendi sisteminden çevirir ([ADR 1072](docs/adr/1072-geopackage-tables-each-in-their-own-system.md));
+  dışa aktarma kapsamı sorar, `file.export.gpkg` `uids` alır ([ADR 1073](docs/adr/1073-geopackage-export-scope.md)): web'in
+  GeoPackage pencereleri ve `ExportGpkg` TS sözleşmesi buna göre yenilenir.
 - Yangın ve performans ([ADR 8068](docs/adr/8068-fire-performance-material-declarations.md), `cad.arch.performance`):
   web'e dönüşte komutun işleyicisi (`product/`), Öznitelikler'in Yangın dayanımı ve Acil çıkış satırları, Duvar stilleri
   alanı; TS sözleşmeleri üretildi (`Declared`, `DeclaredBasis`, `DeclaredExit`, `ArchPerformance` …); `.kcad` mimari verisi

@@ -2,10 +2,10 @@
 import type { QueryTime } from "./QueryTime";
 
 /**
- * Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object
- * a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
+ * Input of `file.export.gpkg` v1: the layers (all with objects when none), or only the objects named, as tables of a
+ * new GeoPackage, each object a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
  * coordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,
- * `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves
+ * `entity_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves
  * written as chords).
  */
 export type ExportGpkg = { 
@@ -17,6 +17,12 @@ path: string,
  * The layers, by id; empty: every layer with objects.
  */
 layers?: Array<string>, 
+/**
+ * Only these objects, by persistent id (Seçili nesneler, docs/adr/1073): each on its layer's table, the other
+ * objects of those layers and the other layers left out; with `layers`, only those of them on the given layers.
+ * Refused `entity_not_found` for an id the drawing does not have.
+ */
+uids?: Array<string>, 
 /**
  * Write over a file that is there.
  */

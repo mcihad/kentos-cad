@@ -73,6 +73,7 @@ mod gnss_import;
 #[cfg(test)]
 mod gnss_tests;
 pub(crate) mod gpkg;
+pub(crate) mod gpkg_out;
 pub(crate) mod pdf_import;
 #[cfg(test)]
 mod gpkg_tests;
@@ -159,6 +160,8 @@ pub enum Window {
     PhotoImport(Box<photo_import::State>),
     /// GeoPackage içe aktar (docs/adr/0502).
     Gpkg(gpkg::State),
+    /// GeoPackage dışa aktar: what goes in, counted (docs/adr/1073).
+    GpkgOut(gpkg_out::State),
     /// PostGIS'e bağlan (docs/adr/0505).
     Postgis(postgis::State),
     /// Shapefile dışa aktar (docs/adr/0514).
@@ -218,6 +221,7 @@ pub enum Event {
     Wgs84Export(wgs84_export::Event),
     PhotoImport(photo_import::Event),
     Gpkg(gpkg::Event),
+    GpkgOut(gpkg_out::Event),
     GpkgTiles(gpkg_tiles::Event),
     Postgis(postgis::Event),
     PdfImport(pdf_import::Event),
@@ -384,7 +388,7 @@ impl App {
             // The visible layers as one MapLibre style, and a style's looks into every layer it is for (docs/adr/0560).
             "file.export.maplibre" => self.maplibre_export_ask(None),
             "file.import.maplibre" => self.maplibre_import_ask(None),
-            "file.export.gpkg" => self.gpkg_save(),
+            "file.export.gpkg" => self.gpkg_out_open(),
             "file.export.shp" => self.shp_export_open(),
             "file.export.csv" => self.csv_export_open(),
             "file.import.csv" => self.csv_import_pick(),
@@ -599,6 +603,7 @@ impl App {
             Event::Wgs84Export(e) => self.wgs84_export_event(e),
             Event::PhotoImport(e) => self.photo_import_event(e),
             Event::Gpkg(e) => self.gpkg_event(e),
+            Event::GpkgOut(e) => self.gpkg_out_event(e),
             Event::GpkgTiles(e) => self.gpkg_tiles_event(e),
             Event::PdfImport(e) => self.pdf_event(e),
             Event::Postgis(e) => self.postgis_event(e),
@@ -654,6 +659,7 @@ impl App {
             Some(Window::Wgs84Export(s)) => self.wgs84_export_view(s),
             Some(Window::PhotoImport(s)) => self.photo_import_view(s),
             Some(Window::Gpkg(s)) => self.gpkg_view(s),
+            Some(Window::GpkgOut(s)) => self.gpkg_out_view(s),
             Some(Window::GpkgTilesRead(s)) => self.gpkg_tiles_read_view(s),
             Some(Window::GpkgTilesWrite(s)) => self.gpkg_tiles_write_view(s),
             Some(Window::Postgis(s)) => self.postgis_view(s),

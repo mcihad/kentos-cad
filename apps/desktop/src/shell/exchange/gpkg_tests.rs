@@ -32,7 +32,7 @@ fn a_geopackage_goes_in_as_one_undo_step_with_its_tables_as_layers() {
     run(&mut app, "file.import.gpkg");
     let s = window(&app);
     assert_eq!(s.tables.len(), 6);
-    assert_eq!(s.srid, Some(5256));
+    assert_eq!(s.tables.iter().find_map(|t| t.srid), Some(5256));
     assert!(s.chosen.iter().all(|c| *c));
     // Without the road table.
     send(&mut app, Event::Gpkg(G::Toggle(1)));
@@ -118,7 +118,7 @@ fn a_file_in_another_system_waits_for_the_move_to_be_asked() {
     let before = count(&app);
     app.picker = Picker::File(gpkg("wgs84.gpkg"));
     run(&mut app, "file.import.gpkg");
-    assert_eq!(window(&app).srid, Some(4326));
+    assert_eq!(window(&app).tables.iter().find_map(|t| t.srid), Some(4326));
     // İçe aktar is off until the move is asked; asked, the point goes into TM36.
     send(&mut app, Event::Gpkg(G::Run));
     assert_eq!(count(&app), before, "nothing moved silently");
@@ -143,6 +143,7 @@ fn the_drawing_goes_out_as_a_geopackage() {
     let out = dir.join("teslim.gpkg");
     app.picker = Picker::File(out.clone());
     run(&mut app, "file.export.gpkg");
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
     assert!(
         out.exists(),
         "{:?}",
@@ -1942,4 +1943,78 @@ fn the_wgs84_table_alone_asks_for_the_move() {
     assert!(app.exchange.is_none());
     let (b, _) = points_of(&app, "B_WGS84");
     assert_eq!(b.len(), 3);
+}
+
+/// Two parks, a road and three trees in a CBS project, the second park selected (GIS-007).
+fn inventory() -> App {
+    use serde_json::json;
+    let (mut app, _) = App::boot(None);
+    let mut o = crate::tools_scenes::Objects::new();
+    o.path("parsel", &[[0.0, 0.0], [20.0, 0.0], [20.0, 15.0], [0.0, 15.0]], true);
+    o.path("parsel", &[[30.0, 0.0], [50.0, 0.0], [50.0, 15.0], [30.0, 15.0]], true);
+    o.line("yol", [-5.0, -5.0], [55.0, -5.0]);
+    for x in [5.0, 25.0, 45.0] {
+        o.point("agac", [x, -8.0], None);
+    }
+    crate::tools_scenes::open_edited(&mut app, o, |d| {
+        d["settings"]["workspace"] = json!("gis");
+        d["layers"] = json!([
+            crate::tools_scenes::layer("parsel", "Park sınırları", "#3E63DD", 0.35),
+            crate::tools_scenes::layer("yol", "Yürüyüş yolları", "#E5484D", 0.5),
+            crate::tools_scenes::layer("agac", "Ağaçlar", "#30A46C", 0.25),
+        ]);
+        d["activeLayer"] = json!("parsel");
+    });
+    let doc = &app.document.as_ref().expect("open").model;
+    let second = doc
+        .entities_with_uids()
+        .filter(|(_, e)| e.base().layer_id == "parsel")
+        .filter_map(|(uid, _)| doc.slot_of(uid))
+        .nth(1)
+        .expect("the second park");
+    app.selection.set([second]);
+    app
+}
+
+/// The rows of each table the file at `path` holds, by table name.
+fn rows_of(path: &std::path::Path) -> Vec<(String, usize)> {
+    let read = kentos_native_application::geopackage::read(path, None).expect("the file reads");
+    read.tables.iter().map(|t| (t.name.clone(), t.objects.len())).collect()
+}
+
+/// GIS-007 (docs/adr/1073): GeoPackage dışa aktar asks what goes in before the file, each scope counted; with one park
+/// selected the file holds one park, the active layer both parks, the whole project every layer.
+#[test]
+fn the_geopackage_export_writes_the_scope_it_shows() {
+    use super::gpkg_out::{Event as O, Scope};
+    let dir = scratch("gpkg-scope");
+    let mut app = inventory();
+    run(&mut app, "file.export.gpkg");
+    let Some(Window::GpkgOut(s)) = &app.exchange else {
+        panic!("the export window");
+    };
+    assert_eq!(s.scope, Scope::Selection, "something is selected: the selection first");
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    let mut update = |app: &mut App, m| drop(app.update(m));
+    shot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut shot, &app, "gis-007", "secili-kapsam");
+    for (scope, file, want) in [
+        (Scope::Selection, "secili.gpkg", vec![("Park sınırları", 1)]),
+        (Scope::Active, "etkin.gpkg", vec![("Park sınırları", 2)]),
+        (Scope::All, "tum.gpkg", vec![("Park sınırları", 2), ("Yürüyüş yolları", 1), ("Ağaçlar", 3)]),
+    ] {
+        if app.exchange.is_none() {
+            run(&mut app, "file.export.gpkg");
+        }
+        send(&mut app, Event::GpkgOut(O::Scope(scope)));
+        let out = dir.join(file);
+        app.picker = Picker::File(out.clone());
+        send(&mut app, Event::GpkgOut(O::Save));
+        assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+        let mut got = rows_of(&out);
+        got.sort();
+        let mut want: Vec<(String, usize)> = want.into_iter().map(|(n, r)| (n.to_owned(), r)).collect();
+        want.sort();
+        assert_eq!(got, want, "{scope:?}");
+    }
 }

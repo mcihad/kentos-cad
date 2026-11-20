@@ -43,8 +43,6 @@ pub struct State {
     pub file: String,
     pub tables: Vec<Table>,
     pub chosen: Vec<bool>,
-    /// The first EPSG code the file's tables declare, none for an undefined system; each table's is its own.
-    pub srid: Option<u32>,
     pub reproject: bool,
     /// Bağlı katman olarak aç: each table bound to its layer (`cad.sources.edit`).
     pub bind: bool,
@@ -75,7 +73,6 @@ pub enum Event {
     Key(String),
     Merge(MergeEvent),
     Run,
-    Save(Option<PathBuf>),
 }
 
 fn event(e: Event) -> Message {
@@ -86,7 +83,6 @@ fn event(e: Event) -> Message {
 pub fn describe(path: &std::path::Path) -> Result<State, String> {
     let gp = GeoPackage::open(path, false).map_err(|e| e.0)?;
     let mut tables = Vec::new();
-    let mut srid = None;
     // The relations' mapping tables and the layer styles come in with the layers, not as layers (docs/adr/0627 §6, §7).
     let beside = gp.side_tables().map_err(|e| e.0)?;
     for l in gp.layers().map_err(|e| e.0)? {
@@ -101,9 +97,6 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
             && s.organization.eq_ignore_ascii_case("EPSG")
         {
             own = u32::try_from(s.organization_id).ok();
-        }
-        if srid.is_none() {
-            srid = own;
         }
         tables.push(Table {
             srid: own.filter(|_| l.data_type == DataType::Features),
@@ -124,7 +117,6 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
         path: path.to_path_buf(),
         tables,
         chosen,
-        srid,
         reproject: false,
         bind: false,
         area: false,
@@ -200,33 +192,9 @@ impl App {
         )
     }
 
-    pub(super) fn gpkg_save(&mut self) -> Task<Message> {
-        if let Picker::File(path) = &self.picker {
-            let path = path.clone();
-            return Task::done(event(Event::Save(Some(path))));
-        }
-        let suggested = self.export_name(".gpkg");
-        Task::perform(
-            async move {
-                let file = rfd::AsyncFileDialog::new()
-                    .set_title("GeoPackage dışa aktar")
-                    .add_filter("GeoPackage", &["gpkg"])
-                    .set_file_name(suggested)
-                    .save_file()
-                    .await?;
-                let mut path = file.path().to_path_buf();
-                if path.extension().is_none() {
-                    path.set_extension("gpkg");
-                }
-                Some(path)
-            },
-            |p| event(Event::Save(p)),
-        )
-    }
-
     pub(super) fn gpkg_event(&mut self, e: Event) -> Task<Message> {
         match e {
-            Event::Picked(None, _) | Event::Save(None) => {}
+            Event::Picked(None, _) => {}
             Event::Picked(Some(path), bind) => match describe(&path) {
                 Ok(state) => self.open_window(Window::Gpkg(State { bind, ..state })),
                 Err(why) => self.say(Level::Error, format!("{} açılamadı: {why}", path.display())),
@@ -240,7 +208,6 @@ impl App {
                 }
                 Err(why) => self.say(Level::Error, format!("{} açılamadı: {why}", path.display())),
             },
-            Event::Save(Some(path)) => self.gpkg_write(path),
             Event::Toggle(i) => {
                 if let Some(Window::Gpkg(s)) = &mut self.exchange
                     && let Some(c) = s.chosen.get_mut(i)
@@ -489,18 +456,12 @@ impl App {
         }
     }
 
-    fn gpkg_write(&mut self, path: PathBuf) {
+    /// Writes the file `input` names (GeoPackage dışa aktar's window, `gpkg_out.rs`); whether it was written.
+    pub(super) fn gpkg_write(&mut self, path: &std::path::Path, input: &ExportGpkg) -> bool {
         let Some(doc) = &self.document else {
-            return;
+            return false;
         };
-        let input = ExportGpkg {
-            path: path.display().to_string(),
-            layers: Vec::new(),
-            overwrite: true,
-            // GeoPackage dışa aktar has no window to ask Zaman sürgüsünün zamanıyla in (docs/adr/0646 §2).
-            time: None,
-        };
-        match kentos_headless::file_commands::export_gpkg(&doc.model, &input) {
+        match kentos_headless::file_commands::export_gpkg(&doc.model, input) {
             Ok((output, warnings)) => {
                 let rows: u32 = output.tables.iter().map(|t| t.rows).sum();
                 let name = path.file_name().map_or_else(
@@ -522,11 +483,15 @@ impl App {
                 for w in warnings {
                     self.say(Level::Warn, w.message);
                 }
+                true
             }
-            Err(error) => self.announce(
-                Level::Error,
-                format!("GeoPackage yazılamadı. {}", error.message),
-            ),
+            Err(error) => {
+                self.announce(
+                    Level::Error,
+                    format!("GeoPackage yazılamadı. {}", error.message),
+                );
+                false
+            }
         }
     }
 
