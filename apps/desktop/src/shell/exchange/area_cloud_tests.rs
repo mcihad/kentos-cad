@@ -180,8 +180,8 @@ fn the_answers_carry_their_units() {
 /// The answer's first line as Panoya kopyala takes it.
 fn copied(app: &mut App) -> String {
     let (r, f) = match &app.exchange {
-        Some(Window::CloudRegion(s)) => (s.result.clone(), s.format),
-        Some(Window::CloudProfile(s)) => (s.result.clone(), s.format),
+        Some(Window::CloudRegion(s)) => (s.result.clone(), s.units),
+        Some(Window::CloudProfile(s)) => (s.result.clone(), s.units),
         _ => panic!("a cloud window"),
     };
     super::area_queries::copy_text(&r.expect("answered"), &f)
@@ -218,4 +218,27 @@ fn the_windows_on_the_screen() {
         drop(app.update(m))
     });
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-036-profil-bos");
+}
+
+/// GIS-041 (docs/adr/1098): the answers' plan values in a geographic project are degrees, as its drawing is (a mesh's
+/// face of 0.01° a side is 0.0001 derece², never “0.0001 m²”); heights stay metres; a projected project's are metres.
+#[test]
+fn a_geographic_project_s_answers_are_in_degrees() {
+    use super::area_queries::Units;
+    let degrees = Units {
+        f: kentos_interaction::Format::default(),
+        degrees: true,
+    };
+    assert_eq!(degrees.area(0.0001), "0.0001 derece²");
+    assert_eq!(degrees.plan(0.01), "0.01°");
+    let metres = Units {
+        f: kentos_interaction::Format::default(),
+        degrees: false,
+    };
+    assert!(
+        metres.area(1088.0).ends_with(" m²"),
+        "{}",
+        metres.area(1088.0)
+    );
+    assert!(metres.plan(400.0).ends_with(" m"), "{}", metres.plan(400.0));
 }

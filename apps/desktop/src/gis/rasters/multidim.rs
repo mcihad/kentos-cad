@@ -1022,10 +1022,19 @@ impl App {
         if s.mode == Mode::Mesh {
             let cell =
                 kentos_ui::widget::text_field("0,5", &s.cell).on_input(|t| msg(Event::Cell(t)));
+            // The grid's cells in the drawing's plan unit (GIS-041): degrees in a geographic project.
+            let label = match self.multidim_plan_unit() {
+                "°" => "Hücre boyu (°)",
+                "mm" => "Hücre boyu (mm)",
+                "cm" => "Hücre boyu (cm)",
+                "in" => "Hücre boyu (in)",
+                "ft" => "Hücre boyu (ft)",
+                _ => "Hücre boyu (m)",
+            };
             col = col.push(
                 row![
                     container(words::field(
-                        "Hücre boyu (m)",
+                        label,
                         cell,
                         Some("Mesh her katta bu ızgaranın hücreleriyle örneklenir; varsayılanı yüzlerin ortalama boyunun sekizde biri.".to_owned()),
                     ))
@@ -1039,6 +1048,17 @@ impl App {
         col.into()
     }
 
+    /// The drawing's plan unit a mesh's cells are in (GIS-041): “°” in a geographic project (its coordinates are
+    /// degrees), else the length unit's mark.
+    fn multidim_plan_unit(&self) -> &'static str {
+        let Some(doc) = self.document.as_ref() else { return "m" };
+        if kentos_project::systems::own(doc.settings()).is_some_and(|n| n.geographic()) {
+            "°"
+        } else {
+            kentos_interaction::Format::of(doc.settings()).length_unit_label()
+        }
+    }
+
     fn multidim_facts<'a>(&self, s: &'a State, i: &RasterInfo) -> Element<'a, Message> {
         let system = match i.epsg {
             Some(srid) => crate::crs::title_of(srid),
@@ -1050,12 +1070,21 @@ impl App {
             .map_or_else(kentos_interaction::Format::default, |d| {
                 kentos_interaction::Format::of(d.settings())
             });
+        let geographic = self.multidim_plan_unit() == "°";
+        let side = |v: f64| {
+            if geographic {
+                let t = format!("{v:.7}");
+                t.trim_end_matches('0').trim_end_matches('.').to_owned()
+            } else {
+                format.length_bare(v)
+            }
+        };
         let pixel = match i.affine {
             Some([_, a, b, _, c, d]) => format!(
                 "{} × {} {}",
-                format.length_bare(kentos_geometry_core::jsmath::js_hypot(a, c)),
-                format.length_bare(kentos_geometry_core::jsmath::js_hypot(b, d)),
-                format.length_unit_label()
+                side(kentos_geometry_core::jsmath::js_hypot(a, c)),
+                side(kentos_geometry_core::jsmath::js_hypot(b, d)),
+                self.multidim_plan_unit()
             ),
             None => "—".to_owned(),
         };

@@ -84,11 +84,44 @@ impl Clouds {
     }
 }
 
+/// How an answer's numbers are written (GIS-036, GIS-041): in the project's units; a geographic project's plan
+/// lengths and areas in degrees, as its drawing is (the command measures in the drawing's plane), heights in metres.
+#[derive(Clone, Copy, Debug)]
+pub struct Units {
+    pub f: Format,
+    pub degrees: bool,
+}
+
+impl Units {
+    pub(super) fn area(&self, v: f64) -> String {
+        if self.degrees { format!("{} derece²", degrees(v)) } else { self.f.area(v) }
+    }
+
+    pub(super) fn plan(&self, v: f64) -> String {
+        if self.degrees { format!("{}°", degrees(v)) } else { self.f.length(v) }
+    }
+
+    fn plan_bare(&self, v: f64) -> String {
+        if self.degrees { degrees(v) } else { self.f.length_bare(v) }
+    }
+
+    fn per_area(&self) -> &'static str {
+        if self.degrees { "nokta/derece²" } else { "nokta/m²" }
+    }
+}
+
+/// Degrees with up to seven decimals (about a centimetre), trailing zeros dropped.
+fn degrees(v: f64) -> String {
+    let t = format!("{v:.7}");
+    let t = t.trim_end_matches('0').trim_end_matches('.');
+    if t.is_empty() || t == "-" { "0".to_owned() } else { t.to_owned() }
+}
+
 #[derive(Debug)]
 pub struct RegionState {
     pub clouds: Clouds,
     /// The project's units, as the answer is written.
-    pub format: Format,
+    pub units: Units,
     pub shape: Result<Shape, String>,
     pub result: Option<Outcome>,
     pub running: bool,
@@ -97,7 +130,7 @@ pub struct RegionState {
 #[derive(Debug)]
 pub struct ProfileState {
     pub clouds: Clouds,
-    pub format: Format,
+    pub units: Units,
     /// The path taken from the selection and what it is said to be.
     pub path: Result<(Vec<Vec2>, String), String>,
     pub width: String,
@@ -109,6 +142,7 @@ pub struct ProfileState {
 
 #[derive(Debug)]
 pub struct MeshState {
+    pub units: Units,
     pub mode: MeshMode,
     pub x: String,
     pub y: String,
@@ -312,7 +346,7 @@ impl App {
         let shape = shape_of(self);
         self.open_window(Window::CloudRegion(RegionState {
             clouds: clouds_of(self),
-            format: self.area_format(),
+            units: self.area_units(),
             shape,
             result: None,
             running: false,
@@ -324,7 +358,7 @@ impl App {
         let path = path_of(self);
         self.open_window(Window::CloudProfile(ProfileState {
             clouds: clouds_of(self),
-            format: self.area_format(),
+            units: self.area_units(),
             path,
             width: "10".into(),
             step: "25".into(),
@@ -347,6 +381,7 @@ impl App {
             MeshMode::Place
         };
         self.open_window(Window::MeshQuery(MeshState {
+            units: self.area_units(),
             mode,
             x,
             y,
@@ -362,9 +397,15 @@ impl App {
         Task::none()
     }
 
-    /// The project's units, as the answers are written.
-    fn area_format(&self) -> Format {
-        self.document.as_ref().map_or_else(Format::default, |d| Format::of(d.settings()))
+    /// The project's units, as the answers are written; a geographic project's plan in degrees (GIS-041).
+    fn area_units(&self) -> Units {
+        let f = self.document.as_ref().map_or_else(Format::default, |d| Format::of(d.settings()));
+        let degrees = self
+            .document
+            .as_ref()
+            .and_then(|d| kentos_project::systems::own(d.settings()))
+            .is_some_and(|n| n.geographic());
+        Units { f, degrees }
     }
 
     /// Back from Sahneden seç (window_pick.rs): the area or the line read from the selection again.
@@ -510,9 +551,9 @@ impl App {
             }
             Event::Copy => {
                 let text = match &self.exchange {
-                    Some(Window::CloudRegion(s)) => s.result.as_ref().map(|r| copy_text(r, &s.format)),
-                    Some(Window::CloudProfile(s)) => s.result.as_ref().map(|r| copy_text(r, &s.format)),
-                    Some(Window::MeshQuery(s)) => s.result.as_ref().map(|r| copy_text(r, &self.area_format())),
+                    Some(Window::CloudRegion(s)) => s.result.as_ref().map(|r| copy_text(r, &s.units)),
+                    Some(Window::CloudProfile(s)) => s.result.as_ref().map(|r| copy_text(r, &s.units)),
+                    Some(Window::MeshQuery(s)) => s.result.as_ref().map(|r| copy_text(r, &s.units)),
                     _ => None,
                 };
                 text.map_or_else(Task::none, iced::clipboard::write)
@@ -718,7 +759,7 @@ impl App {
             Some("Alanın içindeki nokta bulutu noktaları kaynak dosyalarının tam çözünürlüğünde okunur; sınırdaki nokta içeridedir.".into()),
         ));
         body = body.push(pick_row());
-        body = body.push(result_view(s.result.as_ref(), s.running, &s.format));
+        body = body.push(result_view(s.result.as_ref(), s.running, &s.units));
         window(
             "Nokta bulutu alan istatistiği",
             body,
@@ -752,7 +793,7 @@ impl App {
             "Noktaları da listele (istasyon, ofset, yer, sınıf)",
             Some(event(Event::Toggle)),
         ));
-        body = body.push(result_view(s.result.as_ref(), s.running, &s.format));
+        body = body.push(result_view(s.result.as_ref(), s.running, &s.units));
         window(
             "Nokta bulutu profili",
             body,
@@ -837,7 +878,7 @@ impl App {
             }
             MeshMode::Path => {}
         }
-        body = body.push(result_view(s.result.as_ref(), s.running, &self.area_format()));
+        body = body.push(result_view(s.result.as_ref(), s.running, &s.units));
         window("Mesh sor", body, ready && !s.running, s.result.is_some())
     }
 }
@@ -903,7 +944,7 @@ fn cloud_field(c: &Clouds) -> (bool, Element<'_, Message>) {
     (!c.all.is_empty(), words::field("Nokta bulutu", body, None))
 }
 
-fn result_view<'a>(r: Option<&'a Outcome>, running: bool, f: &Format) -> Element<'a, Message> {
+fn result_view<'a>(r: Option<&'a Outcome>, running: bool, f: &Units) -> Element<'a, Message> {
     if running {
         return words::summary(vec![words::text_line(Line::Info, "Dosyalar okunuyor…")]);
     }
@@ -925,11 +966,11 @@ fn result_view<'a>(r: Option<&'a Outcome>, running: bool, f: &Format) -> Element
             lines.push(words::text_line(Line::Error, why.clone()));
         }
         Outcome::MeshRegion(Ok((o, warnings))) => {
-            lines.extend(texts_lines(mesh_region_texts(o)));
+            lines.extend(texts_lines(mesh_region_texts(o, f)));
             warn(warnings, &mut lines);
         }
         Outcome::MeshProfile(Ok((o, warnings))) => {
-            lines.extend(texts_lines(mesh_profile_texts(o)));
+            lines.extend(texts_lines(mesh_profile_texts(o, f)));
             warn(warnings, &mut lines);
         }
         Outcome::Region(Ok((o, warnings))) => {
@@ -941,7 +982,7 @@ fn result_view<'a>(r: Option<&'a Outcome>, running: bool, f: &Format) -> Element
             warn(warnings, &mut lines);
         }
         Outcome::Mesh(Ok((o, warnings))) => {
-            lines.extend(mesh_lines(o));
+            lines.extend(mesh_lines(o, f));
             warn(warnings, &mut lines);
         }
     }
@@ -975,14 +1016,14 @@ fn stats_text(s: &kentos_commands::CloudStats) -> Vec<String> {
     out
 }
 
-fn region_texts(o: &PointCloudsRegioned, f: &Format) -> Vec<String> {
-    // The area in the project's unit, the density per square metre (GIS-036): the drawing is in metres.
+fn region_texts(o: &PointCloudsRegioned, f: &Units) -> Vec<String> {
+    // The area in the project's unit, the density per its square (GIS-036, GIS-041).
     let mut out = vec![format!(
         "Alan {}; {} nokta{}; {} nokta okundu.",
         f.area(o.area),
         grouped(o.total.count),
         o.density
-            .map_or_else(String::new, |d| format!(" ({} nokta/m²)", density(d))),
+            .map_or_else(String::new, |d| format!(" ({} {})", density(d), f.per_area())),
         grouped(o.read)
     )];
     out.extend(stats_text(&o.total));
@@ -999,7 +1040,7 @@ fn region_texts(o: &PointCloudsRegioned, f: &Format) -> Vec<String> {
     out
 }
 
-fn region_lines(o: &PointCloudsRegioned, f: &Format) -> Vec<Element<'static, Message>> {
+fn region_lines(o: &PointCloudsRegioned, f: &Units) -> Vec<Element<'static, Message>> {
     let texts = region_texts(o, f);
     let kind = if o.total.count == 0 {
         Line::Warn
@@ -1013,10 +1054,10 @@ fn region_lines(o: &PointCloudsRegioned, f: &Format) -> Vec<Element<'static, Mes
         .collect()
 }
 
-fn profile_texts(o: &PointCloudsProfiled, f: &Format) -> Vec<String> {
+fn profile_texts(o: &PointCloudsProfiled, f: &Units) -> Vec<String> {
     let mut out = vec![format!(
         "Yol {}; koridorda {} nokta; {} nokta okundu; {} istasyon.",
-        f.length(o.length),
+        f.plan(o.length),
         grouped(o.count),
         grouped(o.read),
         o.bins.len()
@@ -1025,20 +1066,20 @@ fn profile_texts(o: &PointCloudsProfiled, f: &Format) -> Vec<String> {
         out.push(match &b.z {
             Some(z) => format!(
                 "{} – {}: {} nokta, yükseklik {} … {} (ort. {})",
-                f.length_bare(b.from),
-                f.length(b.to),
+                f.plan_bare(b.from),
+                f.plan(b.to),
                 grouped(b.count),
-                f.length_bare(z.min),
-                f.length(z.max),
-                f.length(z.mean)
+                f.f.length_bare(z.min),
+                f.f.length(z.max),
+                f.f.length(z.mean)
             ),
-            None => format!("{} – {}: nokta yok", f.length_bare(b.from), f.length(b.to)),
+            None => format!("{} – {}: nokta yok", f.plan_bare(b.from), f.plan(b.to)),
         });
     }
     out
 }
 
-fn profile_lines<'a>(o: &'a PointCloudsProfiled, f: &Format) -> Vec<Element<'a, Message>> {
+fn profile_lines<'a>(o: &'a PointCloudsProfiled, f: &Units) -> Vec<Element<'a, Message>> {
     let texts = profile_texts(o, f);
     let more = texts.len().saturating_sub(SHOWN + 1);
     let mut lines: Vec<Element<'_, Message>> = texts
@@ -1065,7 +1106,7 @@ fn profile_lines<'a>(o: &'a PointCloudsProfiled, f: &Format) -> Vec<Element<'a, 
     lines
 }
 
-fn mesh_texts(o: &MeshesQueried) -> Vec<String> {
+fn mesh_texts(o: &MeshesQueried, u: &Units) -> Vec<String> {
     let Some(f) = &o.face else {
         return vec!["Yer hiçbir meshin yüzünde değil.".to_owned()];
     };
@@ -1075,7 +1116,7 @@ fn mesh_texts(o: &MeshesQueried) -> Vec<String> {
         f.face + 1,
         f.topology,
         nodes.join("-"),
-        fixed(f.area),
+        u.area(f.area),
         o.read
     )];
     if !f.neighbours.is_empty() {
@@ -1136,8 +1177,8 @@ fn moment_of(z: &MeshZonal) -> String {
         .unwrap_or_default()
 }
 
-fn mesh_region_texts(o: &MeshesRegioned) -> Vec<String> {
-    let mut out = vec![format!("Alan {}; {} değer okundu.", fixed(o.area), o.read)];
+fn mesh_region_texts(o: &MeshesRegioned, u: &Units) -> Vec<String> {
+    let mut out = vec![format!("Alan {}; {} değer okundu.", u.area(o.area), o.read)];
     if o.meshes.is_empty() {
         out.push("Alanda mesh yok.".to_owned());
     }
@@ -1146,7 +1187,7 @@ fn mesh_region_texts(o: &MeshesRegioned) -> Vec<String> {
             "“{}” ağı: {} yüz, alanları toplamı {}",
             m.topology,
             m.count,
-            fixed(m.area)
+            u.area(m.area)
         ));
         for z in &m.datasets {
             let unit = z
@@ -1176,8 +1217,8 @@ fn mesh_region_texts(o: &MeshesRegioned) -> Vec<String> {
     out
 }
 
-fn mesh_profile_texts(o: &MeshesProfiled) -> Vec<String> {
-    let mut out = vec![format!("Yol {}; {} değer okundu.", fixed(o.length), o.read)];
+fn mesh_profile_texts(o: &MeshesProfiled, u: &Units) -> Vec<String> {
+    let mut out = vec![format!("Yol {}; {} değer okundu.", u.plan(o.length), o.read)];
     for m in &o.meshes {
         let heads: Vec<String> = m
             .datasets
@@ -1199,11 +1240,11 @@ fn mesh_profile_texts(o: &MeshesProfiled) -> Vec<String> {
             out.push(match st.face {
                 Some(f) => format!(
                     "    {}: yüz {}; {}",
-                    fixed(st.station),
+                    u.plan_bare(st.station),
                     f + 1,
                     values.join(" · ")
                 ),
-                None => format!("    {}: meshin dışında", fixed(st.station)),
+                None => format!("    {}: meshin dışında", u.plan_bare(st.station)),
             });
         }
     }
@@ -1227,8 +1268,8 @@ fn texts_lines<'a>(texts: Vec<String>) -> Vec<Element<'a, Message>> {
     lines
 }
 
-fn mesh_lines(o: &MeshesQueried) -> Vec<Element<'_, Message>> {
-    mesh_texts(o)
+fn mesh_lines<'a>(o: &'a MeshesQueried, u: &Units) -> Vec<Element<'a, Message>> {
+    mesh_texts(o, u)
         .into_iter()
         .take(SHOWN + 1)
         .enumerate()
@@ -1250,7 +1291,7 @@ fn mesh_lines(o: &MeshesQueried) -> Vec<Element<'_, Message>> {
 }
 
 /// The answer as text for the clipboard: the lines, a profile's points as tab separated rows.
-pub(super) fn copy_text(r: &Outcome, f: &Format) -> String {
+pub(super) fn copy_text(r: &Outcome, f: &Units) -> String {
     match r {
         Outcome::Region(Ok((o, _))) => region_texts(o, f).join("\n"),
         Outcome::Profile(Ok((o, _))) => {
@@ -1272,9 +1313,9 @@ pub(super) fn copy_text(r: &Outcome, f: &Format) -> String {
             }
             t
         }
-        Outcome::Mesh(Ok((o, _))) => mesh_texts(o).join("\n"),
-        Outcome::MeshRegion(Ok((o, _))) => mesh_region_texts(o).join("\n"),
-        Outcome::MeshProfile(Ok((o, _))) => mesh_profile_texts(o).join("\n"),
+        Outcome::Mesh(Ok((o, _))) => mesh_texts(o, f).join("\n"),
+        Outcome::MeshRegion(Ok((o, _))) => mesh_region_texts(o, f).join("\n"),
+        Outcome::MeshProfile(Ok((o, _))) => mesh_profile_texts(o, f).join("\n"),
         Outcome::Region(Err(why))
         | Outcome::Profile(Err(why))
         | Outcome::Mesh(Err(why))

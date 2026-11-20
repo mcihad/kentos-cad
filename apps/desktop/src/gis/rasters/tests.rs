@@ -853,3 +853,40 @@ fn first_view_of_a_large_cog() {
         fetched(&server) as f64 / size as f64 * 100.0
     );
 }
+
+/// GIS-041 (docs/adr/1098): the geographic mesh quad-static.nc (its nodes in degrees) in a WGS 84 project: Mesh ekle's
+/// cell field says degrees and its preview “0.01 × 0.01 °” over 21 × 21 cells, never metres; in a projected project
+/// the field stays in metres. Picture `gis-041-mesh-derece`.
+#[test]
+fn a_geographic_mesh_s_cells_are_in_degrees() {
+    let open = |srid: u32| {
+        let mut drawing: serde_json::Value =
+            serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
+        drawing["settings"]["srid"] = serde_json::json!(srid);
+        drawing["settings"]["workspace"] = serde_json::json!("gis");
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+        let doc = crate::document::Document::new(snapshot, None).expect("opens");
+        let (mut app, _) = App::boot(None);
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        app.picker = Picker::File(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/meshes/v1/files/quad-static.nc"),
+        );
+        let task = app.run("mesh.add");
+        drive(&mut app, task);
+        app
+    };
+    let mut app = open(4326);
+    let s = app.gis.rasters.multidim.as_ref().expect("the window");
+    assert!(matches!(s.read, Some(Ok(_))), "read: {:?}", s.read.as_ref().map(|r| r.as_ref().err()));
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    assert!(crate::files_testing::find_text(&mut shot, &app, "Hücre boyu (°)").is_some(), "the field's unit");
+    assert!(crate::files_testing::find_text(&mut shot, &app, "0.01 × 0.01 °").is_some(), "the preview's cells");
+    assert!(crate::files_testing::find_text(&mut shot, &app, "21 × 21 hücre (sanal ızgara)").is_some());
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-041-mesh-derece");
+    // A projected project: metres.
+    let mut app = open(5254);
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    assert!(crate::files_testing::find_text(&mut shot, &app, "Hücre boyu (m)").is_some());
+}
