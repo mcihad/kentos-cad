@@ -5,6 +5,7 @@
 //! page as it shows: from its crop box's lower left corner, turned by its `Rotate`. Pictures, shadings and letters
 //! that read as no character are counted, never drawn or guessed. An encrypted file is refused.
 
+pub mod clip;
 pub mod content;
 pub mod file;
 pub mod filter;
@@ -239,6 +240,8 @@ pub fn read_page(bytes: &[u8], number: u32) -> Result<PdfPage, PdfError> {
         }
     }
     let mut run = Run::new(&file, off);
+    // The page's box as it shows: what is outside it is not on the page (GIS-053).
+    run.page_box = Some([0.0, 0.0, width, height]);
     let contents = file.field(&page.dict, "Contents");
     let streams: Vec<Obj> = match &contents {
         Obj::Array(a) => a.clone(),
@@ -318,6 +321,39 @@ mod tests {
         assert_eq!(page.texts[0].p, [100.0, 200.0]);
         assert_eq!(page.texts[0].height, 12.0);
         assert_eq!(read_page(&bytes, 2), Err(PdfError::NoPage { count: 1 }));
+    }
+
+    /// GIS-053 (docs/adr/1110): an atlas page's map frame clips its map: a path drawn past the frame keeps only its
+    /// piece inside; `Q` gives the page back its whole box (the legend's line outside the frame stays); two frames
+    /// keep a line's two pieces; an even-odd frame's hole is cut out; nested clips narrow; what is past the page's own
+    /// box is not on the page; a text outside the frame is left out.
+    #[test]
+    fn a_map_frame_clips_what_is_drawn_past_it() {
+        let content = "q 100 100 200 200 re W n 1 w 50 150 m 400 150 l S BT /F1 10 Tf 1 0 0 1 20 20 Tm (Disarida) Tj ET Q \
+                       10 50 m 90 50 l S \
+                       q 100 400 m 200 400 l 200 500 l 100 500 l h 300 400 m 400 400 l 400 500 l 300 500 l h W n 50 450 m 450 450 l S Q \
+                       q 100 600 300 100 re 200 630 100 40 re W* n 50 650 m 450 650 l S Q \
+                       q 100 750 300 50 re W n 200 700 300 100 re W n 50 775 m 450 775 l S Q \
+                       500 20 m 700 20 l S";
+        let bytes = pdf(&[
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 595 842] >>",
+            "<< /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+            &stream(content),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        ]);
+        let page = read_page(&bytes, 1).unwrap();
+        let parts: Vec<Vec<[f64; 2]>> = page.paths.iter().flat_map(|p| p.parts.iter().map(|(pts, _)| pts.clone())).collect();
+        assert_eq!(parts[0], vec![[100.0, 150.0], [300.0, 150.0]], "inside the frame only");
+        assert_eq!(parts[1], vec![[10.0, 50.0], [90.0, 50.0]], "Q: the whole page again");
+        assert_eq!(parts[2], vec![[100.0, 450.0], [200.0, 450.0]], "the first frame");
+        assert_eq!(parts[3], vec![[300.0, 450.0], [400.0, 450.0]], "the second frame");
+        assert_eq!(parts[4], vec![[100.0, 650.0], [200.0, 650.0]], "the even-odd hole cut out");
+        assert_eq!(parts[5], vec![[300.0, 650.0], [400.0, 650.0]]);
+        assert_eq!(parts[6], vec![[200.0, 775.0], [400.0, 775.0]], "nested clips narrow");
+        assert_eq!(parts[7], vec![[500.0, 20.0], [595.0, 20.0]], "the page's own box");
+        assert_eq!(parts.len(), 8);
+        assert!(page.texts.is_empty(), "the text outside the frame");
     }
 
     #[test]

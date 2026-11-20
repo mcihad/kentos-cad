@@ -59,6 +59,8 @@ struct Gs {
     leading: f64,
     rise: f64,
     render: i64,
+    /// The clipping paths in force (GIS-053): the page's box, then each `W`/`W*` of this state and the outer ones.
+    clips: Rc<Vec<super::clip::Clip>>,
 }
 
 fn rgb(vals: &[f64]) -> [u8; 3] {
@@ -92,6 +94,8 @@ pub struct Run<'f, 'a> {
     fonts: HashMap<String, Rc<Font>>,
     operators: usize,
     layer_of_group: HashMap<u32, usize>,
+    /// The page's box in device space, the first clip (GIS-053); none: nothing clipped by it.
+    pub page_box: Option<[f64; 4]>,
 }
 
 impl<'f, 'a> Run<'f, 'a> {
@@ -103,6 +107,7 @@ impl<'f, 'a> Run<'f, 'a> {
             fonts: HashMap::new(),
             operators: 0,
             layer_of_group: HashMap::new(),
+            page_box: None,
         }
     }
 
@@ -164,6 +169,7 @@ impl<'f, 'a> Run<'f, 'a> {
             leading: 0.0,
             rise: 0.0,
             render: 0,
+            clips: Rc::new(self.page_box.map(|[x0, y0, x1, y1]| super::clip::Clip::rect(x0, y0, x1, y1)).into_iter().collect()),
         };
         self.run(data, resources, gs, depth, forms);
     }
@@ -177,6 +183,8 @@ impl<'f, 'a> Run<'f, 'a> {
         // Each part's cubic pieces, beside `parts` (docs/adr/0352 §2).
         let mut curves: Vec<Vec<PdfCurve>> = Vec::new();
         let mut cur: Vec<[f64; 2]> = Vec::new();
+        // A `W` or `W*` waits for the path's painting operator, then joins the state's clips (ISO 32000-1 §8.5.4).
+        let mut clip_next: Option<super::clip::Clip> = None;
         let mut cur_curves: Vec<PdfCurve> = Vec::new();
         let mut start = [0.0, 0.0];
         let mut last = [0.0, 0.0];
@@ -334,18 +342,27 @@ impl<'f, 'a> Run<'f, 'a> {
                     cur_curves.clear();
                     let painted = std::mem::take(&mut parts);
                     let painted_curves = std::mem::take(&mut curves);
+                    // The clipping path this operator ends (GIS-053): its rings, closed, become a clip after it.
+                    if let Some(mut c) = clip_next.take() {
+                        c.rings = painted.iter().map(|(pts, _)| pts.clone()).filter(|r| r.len() >= 3).collect();
+                        if !c.rings.is_empty() {
+                            Rc::make_mut(&mut gs.clips).push(c);
+                        }
+                        // A clip's path painted too is painted under the clips before it: cut below with the new one
+                        // left out, so the frame's own line stays.
+                        if op != "n" && !painted.is_empty() {
+                            let outer: Vec<super::clip::Clip> = gs.clips[..gs.clips.len().saturating_sub(1)].to_vec();
+                            self.paint(&op, &gs, painted, painted_curves, layer, &outer);
+                        }
+                        operands.clear();
+                        continue;
+                    }
                     if op != "n" && !painted.is_empty() {
-                        let stroke = matches!(op.as_str(), "S" | "s" | "B" | "B*" | "b" | "b*").then(|| PdfStroke {
-                            color: gs.stroke,
-                            width: gs.width * scale_of(&gs.ctm),
-                            dashed: gs.dashed,
-                        });
-                        let fill = matches!(op.as_str(), "f" | "F" | "f*" | "B" | "B*" | "b" | "b*").then_some(gs.fill);
-                        self.out.points += painted.iter().map(|p| p.0.len()).sum::<usize>();
-                        self.out.paths.push(PdfPath { parts: painted, curves: painted_curves, stroke, fill, layer });
+                        let clips = gs.clips.clone();
+                        self.paint(&op, &gs, painted, painted_curves, layer, &clips);
                     }
                 }
-                "W" | "W*" => {}
+                "W" | "W*" => clip_next = Some(super::clip::Clip { rings: Vec::new(), even_odd: op == "W*" }),
                 "CS" | "cs" => {
                     let comps = operands.first().and_then(Obj::name).map_or(1, |name| self.components(resources, name));
                     if op == "CS" {
@@ -558,7 +575,49 @@ impl<'f, 'a> Run<'f, 'a> {
         if !(height > 0.0 && height.is_finite()) {
             return;
         }
+        // A text whose start is outside the clips is not on the printed page (GIS-053).
+        if !super::clip::inside(&gs.clips, p) {
+            return;
+        }
         self.out.texts.push(PdfText { p, height, angle, text, color: gs.fill, layer });
+    }
+
+    /// A painted path cut by `clips` (GIS-053): its parts' pieces inside them; a cut part's curves are dropped (its points
+    /// stay within the flatness), an untouched part keeps them.
+    fn paint(
+        &mut self,
+        op: &str,
+        gs: &Gs,
+        painted: Vec<(Vec<[f64; 2]>, bool)>,
+        painted_curves: Vec<Vec<PdfCurve>>,
+        layer: Option<usize>,
+        clips: &[super::clip::Clip],
+    ) {
+        let stroke = matches!(op, "S" | "s" | "B" | "B*" | "b" | "b*").then(|| PdfStroke {
+            color: gs.stroke,
+            width: gs.width * scale_of(&gs.ctm),
+            dashed: gs.dashed,
+        });
+        let fill = matches!(op, "f" | "F" | "f*" | "B" | "B*" | "b" | "b*").then_some(gs.fill);
+        let mut parts = Vec::with_capacity(painted.len());
+        let mut curves = Vec::with_capacity(painted.len());
+        for ((pts, closed), part_curves) in painted.into_iter().zip(painted_curves) {
+            let (pieces, changed) = super::clip::cut(&pts, closed, fill.is_some(), clips);
+            if changed {
+                for piece in pieces {
+                    parts.push(piece);
+                    curves.push(Vec::new());
+                }
+            } else {
+                parts.push((pts, closed));
+                curves.push(part_curves);
+            }
+        }
+        if parts.is_empty() {
+            return;
+        }
+        self.out.points += parts.iter().map(|p| p.0.len()).sum::<usize>();
+        self.out.paths.push(PdfPath { parts, curves, stroke, fill, layer });
     }
 
     #[allow(clippy::too_many_arguments)]

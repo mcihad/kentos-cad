@@ -421,6 +421,7 @@ mod tests {
                 load_bearing: None,
                 external: None,
                 element_type: None,
+                ..ArchInfo::default()
             },
             joins: WallJoins {
                 start: WallJoin::Butt,
