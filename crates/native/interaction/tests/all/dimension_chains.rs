@@ -265,3 +265,28 @@ fn chain_and_baseline_show_the_value_at_the_exact_committed_text_position() {
         assert_eq!(b.doc.to_snapshot_v2(), before);
     }
 }
+
+/// UR2-061: a dimension saved with its style written out as Hizalı is an aligned one: both tools go on from it, as
+/// from one with no style; an angular one is still refused.
+#[test]
+fn a_dimension_saved_as_aligned_is_a_base() {
+    for tool in ["dimContinue", "dimBaseline"] {
+        let mut b = with_base(3.0);
+        let slot = b.selected().first().map(|&s| kentos_domain::Slot(s)).unwrap_or_else(|| {
+            b.doc
+                .entities()
+                .find(|e| matches!(e, Entity::Dimension(_)))
+                .map(|e| kentos_domain::Slot(e.base().id))
+                .expect("the base")
+        });
+        let Some(Entity::Dimension(mut d)) = b.doc.get(slot).cloned() else {
+            panic!("the base dimension");
+        };
+        d.style = Some(DimensionStyle::Aligned);
+        assert!(b.doc.update(slot, Entity::Dimension(d)));
+        b.start(tool);
+        assert!(!b.session.prompt().text().contains("tıklayın"), "{tool}: {}", b.session.prompt().text());
+        b.click(16.0, 0.0);
+        assert_eq!(dimensions(&b), 2, "{tool}: {:?}", b.last_text());
+    }
+}

@@ -790,7 +790,8 @@ enum Edges {
 /// does not lay out. Zincir ölçü and Baz ölçü go on from it (docs/adr/0140).
 pub fn straight(d: &DimensionEntity) -> Option<DimensionGeom> {
     let style = match d.style {
-        None => None,
+        // Hizalı written out is the default, aligned (UR2-061: a dimension saved with it was refused as a base).
+        None | Some(DimensionStyle::Aligned) => None,
         Some(DimensionStyle::Linear) => Some("linear".to_owned()),
         Some(_) => return None,
     };
