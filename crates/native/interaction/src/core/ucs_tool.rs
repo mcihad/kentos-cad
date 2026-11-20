@@ -317,6 +317,16 @@ impl Tool for UcsTool {
                 true
             }
             Mode::Named if !text.is_empty() => {
+                // An option by its name in full, when no system has that name (a typed letter is a name: K is
+                // the system K, UR2-048).
+                if self.naming == Naming::Restore && !self.names.iter().any(|n| n == text) {
+                    // Turkish case: İ is i, I is ı.
+                    let word = text.replace('İ', "i").replace('I', "ı").to_lowercase();
+                    if word == "kaydet" || word == "sil" {
+                        self.naming = if word == "sil" { Naming::Delete } else { Naming::Save };
+                        return true;
+                    }
+                }
                 let name = text.to_owned();
                 let to = match self.naming {
                     Naming::Restore => UcsTo::Named { name },

@@ -1023,6 +1023,15 @@ impl App {
         {
             return kentos_ui::focus::next_if_focused(press.modifiers.shift());
         }
+        // 3. A step asking for words (a name, a style's name) takes what is typed over the drawing as its text from
+        // the first letter (UR2-047: Adlı UCS's name lost P and A to Çoklu çizgi and Yay): neither an option letter
+        // nor a shortcut. Its options stay on its buttons and by their names in full.
+        if self.session.takes_words()
+            && let Some(text) = keys::typed(&press)
+        {
+            let text = text.to_owned();
+            return self.type_into_line(&text);
+        }
         // 3. An option letter of the running command beats the shortcuts.
         // A hot grip's modes are letters too (docs/adr/0280).
         if (self.session.is_running() || self.session.grip_active())
@@ -1117,6 +1126,9 @@ mod value_field_tests;
 #[cfg(test)]
 #[path = "input/cursor_settings_tests.rs"]
 mod cursor_settings_tests;
+#[cfg(test)]
+#[path = "input/words_step_tests.rs"]
+mod words_step_tests;
 
 #[path = "input/fields.rs"]
 mod fields;

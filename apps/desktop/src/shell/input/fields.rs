@@ -516,10 +516,15 @@ impl App {
             "Esc" => self.run("tool.cancel"),
             _ => {
                 self.echo_value(key);
-                if self.with_tool(|s, cx| s.input(key, cx)) != Some(true) {
+                // A step asking for words reads a typed letter as its text: its option's button is chosen as the
+                // option (UR2-048: Adlı UCS's Kaydet looked for a system named K).
+                let chosen =
+                    self.session.takes_words() && self.with_tool(|s, cx| s.choose_option(key, "", cx)) == Some(true);
+                if !chosen && self.with_tool(|s, cx| s.input(key, cx)) != Some(true) {
                     self.warn(format!("“{key}” seçeneği şu adımda kullanılamıyor."));
                 }
-                if !self.session.settings(&self.format()).is_empty() {
+                // The words the next step asks for are typed in the command line.
+                if self.session.takes_words() || !self.session.settings(&self.format()).is_empty() {
                     widget_operation::focus(COMMAND_INPUT)
                 } else { Task::none() }
             }
