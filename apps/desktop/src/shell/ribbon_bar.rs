@@ -38,11 +38,13 @@ impl App {
         self.layout.keep_quick_access(&kept, Instant::now());
     }
 
-    /// Architecture groups show the running tool, then return to the saved choice when it exits.
+    /// A split shows its running tool, then returns to the saved choice when it exits.
     pub(crate) fn split_on_top<'e>(&self, key: &str, entries: &'e [Entry]) -> Option<&'e Entry> {
         let pairs: Vec<(&str, Option<&str>)> = entries.iter().map(|e| (e.id, e.option)).collect();
         let kept = entries.get(split_current(&pairs, self.layout.split_choice(key)))?;
-        if key.starts_with("arch") && self.session.is_running() {
+        // A family member running shows itself on top, however it started (R from the keyboard while Düzgün çokgen was
+        // last chosen, UR2-002): the face, the light and the tool at work agree. The kept choice comes back after.
+        if self.session.is_running() {
             let active = |entry: &Entry| entry.id.strip_prefix("tool.") == Some(self.session.tool_id());
             if !active(kept) && let Some(entry) = entries.iter().find(|entry| active(entry)) {
                 return Some(entry);
@@ -303,6 +305,42 @@ mod tests {
         assert_eq!(app.split_on_top("archStairs", entries).unwrap().id, "tool.ramp");
         app.session.exit();
         assert_eq!(app.split_on_top("archStairs", entries).unwrap().id, "tool.stairCurved");
+    }
+
+    /// UR2-002: Düzgün çokgen last chosen from the list, then R from the keyboard: the face shows Dikdörtgen while it
+    /// runs, as the prompt and the drawing do; Düzgün çokgen comes back after.
+    #[test]
+    fn a_split_follows_its_tool_started_from_the_keyboard() {
+        let mut app = app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        let (tab, key, entries) = catalog()
+            .tabs_in(kentos_commands::Workspace::Cad)
+            .flat_map(|tab| tab.panels.iter().map(move |panel| (tab, panel)))
+            .flat_map(|(tab, panel)| panel.items.iter().map(move |item| (tab, item)))
+            .find_map(|(tab, item)| match item {
+                Item::Split { key, entries, .. } if entries.iter().any(|e| e.id == "tool.regularPolygon") => {
+                    Some((tab.id, *key, entries))
+                }
+                _ => None,
+            })
+            .expect("the shapes' split");
+        let _ = app.update(Message::RibbonTab(tab));
+        let _ = app.split_chosen(key, "tool.regularPolygon", Some("İÇ"), "Düzgün çokgen, çember içinde");
+        app.session.exit();
+        assert_eq!(app.split_on_top(key, entries).unwrap().id, "tool.regularPolygon");
+        let _ = app.run("tool.rectangle");
+        assert_eq!(app.session.tool_id(), "rectangle");
+        assert_eq!(app.split_on_top(key, entries).unwrap().id, "tool.rectangle");
+        if std::env::var_os("KENTOS_SHOTS").is_some() {
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut crate::app::App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, crate::app::App::view, &mut update);
+            crate::files_testing::evidence(&mut snapshot, &app, "ur2-002", "r-dikdortgen");
+        }
+        app.session.exit();
+        assert_eq!(app.split_on_top(key, entries).unwrap().id, "tool.regularPolygon");
     }
 
     #[test]
