@@ -91,6 +91,28 @@ fn the_window_previews_the_catchment_against_the_culvert_and_draws_it() {
     );
 }
 
+/// UR2-011: the runoff written `0,5` reads as `0.5` and gives the same catchment; outside 0–1 it is said.
+#[test]
+fn a_comma_runoff_reads_as_a_point_and_its_range_is_said() {
+    let peak = |runoff: &str| {
+        let mut app = app();
+        let _ = app.update(Message::Run("drainage.editor"));
+        valley(&mut app);
+        send(&mut app, W::Field(3, runoff.into()));
+        send(&mut app, W::Preview);
+        match &app.road.drainage_window.as_ref().expect("open").preview {
+            Some(Ok(q)) => Ok(q.catchment.as_ref().and_then(|c| c.peak).map(f64::to_bits)),
+            Some(Err(why)) => Err(why.clone()),
+            None => Err("no preview".into()),
+        }
+    };
+    let (comma, point) = (peak("0,5"), peak("0.5"));
+    assert!(matches!(comma, Ok(Some(_))), "a peak flow: {comma:?}");
+    assert_eq!(comma, point, "0,5 and 0.5 are one number");
+    let over = peak("1,5").expect_err("refused");
+    assert_eq!(over, "Akış katsayısı C: 1,5 0 ile 1 arasında olmalı (ör. 0,5).");
+}
+
 #[test]
 fn the_ponds_of_the_pit() {
     let mut app = app();

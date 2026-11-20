@@ -575,6 +575,21 @@ pub fn grade_of(text: &str) -> Result<Option<f64>, ()> {
     t.parse::<f64>().ok().filter(|v| v.is_finite()).map(|v| Some(v / 100.0)).ok_or(())
 }
 
+/// A single number typed in a road window: the decimal comma Turkish writes, or a point (UR2-011: `0,5` was refused
+/// where `0.5` went). Empty: none; otherwise why it is not a number, under the field's name.
+pub fn decimal_of(text: &str, what: &str) -> Result<Option<f64>, String> {
+    let t = text.trim();
+    if t.is_empty() {
+        return Ok(None);
+    }
+    t.replace(',', ".")
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(Some)
+        .ok_or_else(|| format!("{what}: “{t}” bir sayı değil."))
+}
+
 /// A number in Turkish for a table: thousands with points, the fraction after a comma (1.289.851,02).
 pub fn grouped(v: f64, digits: usize) -> String {
     let text = format!("{:.digits$}", v.abs());

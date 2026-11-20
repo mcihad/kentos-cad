@@ -76,12 +76,10 @@ fn msg(event: Event) -> Message {
     Message::Road(road::Event::Drainage(event))
 }
 
+/// A single number: the decimal comma or a point, as every road window reads it (UR2-011). The outlet's Y,X pair keeps
+/// the comma as its separator.
 fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
-    let t = text.trim();
-    if t.is_empty() {
-        return Ok(None);
-    }
-    t.parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    crate::road_dialog::decimal_of(text, what)
 }
 
 fn trimmed(v: f64) -> String {
@@ -109,7 +107,12 @@ impl Window {
                 culvert: self.culvert.clone(),
                 cell: number(&self.fields[1], FIELDS[1])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[1]))?,
                 radius: number(&self.fields[2], FIELDS[2])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[2]))?,
-                runoff: number(&self.fields[3], FIELDS[3])?,
+                runoff: match number(&self.fields[3], FIELDS[3])? {
+                    Some(c) if !(0.0..=1.0).contains(&c) => {
+                        return Err(format!("{}: {} 0 ile 1 arasında olmalı (ör. 0,5).", FIELDS[3], self.fields[3].trim()));
+                    }
+                    c => c,
+                },
                 intensity: number(&self.fields[4], FIELDS[4])?,
             })
         } else {
