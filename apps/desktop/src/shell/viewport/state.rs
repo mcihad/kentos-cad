@@ -174,6 +174,9 @@ impl Viewport {
         self.cursor = None;
         self.fit_pending = true;
         self.opened_extent = extent;
+        // A drawing opens north up (UR2-046: the last drawing's turn went on in the next one): the start view it
+        // keeps has no turn; a tab brought in front gets its own camera back after this (doc_tabs.rs).
+        self.camera.twist = 0.0;
         if self.sized {
             self.fit(doc);
         }

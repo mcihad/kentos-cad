@@ -580,6 +580,26 @@ mod tests {
         assert!(!app.document.as_ref().unwrap().dirty());
     }
 
+    /// UR2-046: a drawing opened after one turned by Görünümü döndür opens north up; the turned one, brought in front
+    /// again, keeps its own turn, and the drawing opened stays north up.
+    #[test]
+    fn a_drawing_opens_north_up_and_a_tab_keeps_its_own_turn() {
+        let mut app = app_with_drawing();
+        let turn = std::f64::consts::FRAC_PI_4; // 50 gon
+        app.viewport.camera.twist = turn;
+        assert!(app.park_active());
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
+        assert_eq!(app.viewport.camera.twist, 0.0, "the drawing opened is north up");
+        let _ = app.update(Message::DocTabs(Event::Show(0)));
+        assert_eq!(app.viewport.camera.twist, turn, "the first drawing keeps its turn");
+        let _ = app.update(Message::DocTabs(Event::Show(1)));
+        assert_eq!(app.viewport.camera.twist, 0.0, "the second stays north up");
+        // Opened in the tab's place, without setting it aside: north up too.
+        app.viewport.camera.twist = turn;
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(3))))));
+        assert_eq!(app.viewport.camera.twist, 0.0);
+    }
+
     #[test]
     fn closing_the_last_drawing_drops_a_pending_value_and_drawing_aids() {
         let mut app = app_with_drawing();
