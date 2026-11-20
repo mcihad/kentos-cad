@@ -179,6 +179,13 @@ def raster_case(id, title, tool, values, refname, style, tail, *, inputs, sample
     out = f"{first}{SUFFIX[tool]}.tif"
     name = LAYER[tool]
     summary = f"{words(r['width'])} × {words(r['height'])} hücrelik raster; “{out}” yazıldı.{tail}"
+    # The cells with a value (docs/adr/1084): said when some are empty; none at all is a warning.
+    cells = r["width"] * r["height"]
+    valid = sum(1 for v in r["values"] if v is not None)
+    if valid == 0:
+        summary += f" Hiçbir hücrede değer yok (0/{words(cells)}): girdilerin ortak kapsamını ve değerlerini denetleyin."
+    elif valid < cells:
+        summary += f" {words(valid)}/{words(cells)} hücrede değer var."
     expect = {
         "status": "ok",
         "undo": LABELS[tool],

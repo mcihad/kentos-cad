@@ -1,6 +1,6 @@
 # 1084 — Bir şey vermeyen işlem uyarıdır: M değerlerini çıkar ve boş raster sonuçları
 
-Tarih: 2026-11-20. gis-usage-report.md GIS-019 (GIS-020 aynı yolu kullanır). Durum: kabul edildi.
+Tarih: 2026-11-20. gis-usage-report.md GIS-019, GIS-020. Durum: kabul edildi.
 
 İlgili: [ADR 0201](0201-geometry-operations.md) (işlem araçları).
 
@@ -17,11 +17,22 @@ değeri olmadığı yalnız komut geçmişindeydi. Benzer biçimde tamamı boş 
    yazılmadı. Ölçüleri Rota oluştur ya da Rotayı kalibre et verir.” ve uyarıdır; en az biri ölçülüyse eskisi gibi
    başarı.
 
+3. Uygunluk araçlarının raster sonucu (Bulanık üyelik, Bulanık çakıştırma, Ağırlıklı toplam, Ağırlıklı çakıştırma,
+   İkili karşılaştırma) özetinde değerli hücreleri söyler: bazıları boşsa “26/30 hücrede değer var.”; hiçbiri değerli
+   değilse “Hiçbir hücrede değer yok (0/30): girdilerin ortak kapsamını ve değerlerini denetleyin.” ve sonuç uyarıdır.
+   Boş raster yine bilerek dosyaya yazılır.
+
 ## Sınama
 
 - `crates/native/processing/tests/run_warnings.rs`: üç çizgi ve iki çoklu çizgi ölçüsüzken uyarı ve yönlendiren özet;
   ölçülü iki rota varken başarı.
 
+- `suitability::cells_tests`: dolu, kısmen boş, bütünüyle boş özetleri; `fixtures/processing/v1/suitability.json`
+  (`scripts/fixtures/suitability_processing_cases.py`): kısmen boş sonuçların özeti hücre sayısıyla.
+
 ## Açık
+
+- Bir sonraki aracın kapsamı önceki boş sonucu da alıyorsa çalıştırmadan önce o katmanı gösterip çıkarmaya izin
+  vermek (GIS-020).
 
 - Girdi satırında M değeri okunabilen rota sayısını göstermek (araca özgü girdi özeti gerekir).

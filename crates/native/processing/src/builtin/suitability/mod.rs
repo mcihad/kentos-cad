@@ -65,7 +65,11 @@ pub fn run_raster(
         let Some((bands, sample, style, grid)) = ran.raster else {
             return Err("Çözümleme raster vermedi.".into());
         };
-        if ran.notes.empty_cells == u64::from(grid.width) * u64::from(grid.height) {
+        // The cells with a value, said in the summary (GIS-020): every one empty is a warning, not a success.
+        let cells = u64::from(grid.width) * u64::from(grid.height);
+        let valid = cells.saturating_sub(ran.notes.empty_cells);
+        let all_empty = valid == 0 && cells > 0;
+        if all_empty {
             feedback.warn("Sonucun hiçbir hücresinde değer yok.".to_owned());
         }
         let add: Vec<Entity> = r
@@ -99,9 +103,17 @@ pub fn run_raster(
             count_words(u64::from(grid.height)),
             said(&ran.notes, rasters.len(), feedback)
         );
-        let classes = matches!(spec.tool, kentos_raster::ops::OpsTool::WeightedOverlay { .. });
-        summary.push_str(&sensitivity_said(ran.notes.suit.sensitivity.as_ref(), classes));
+        let classes = matches!(
+            spec.tool,
+            kentos_raster::ops::OpsTool::WeightedOverlay { .. }
+        );
+        summary.push_str(&sensitivity_said(
+            ran.notes.suit.sensitivity.as_ref(),
+            classes,
+        ));
+        summary.push_str(&cells_said(valid, cells));
         let mut result = RunResult {
+            warning: all_empty,
             changes: (!add.is_empty()).then(|| ChangeSet {
                 add,
                 ..ChangeSet::default()
@@ -114,6 +126,31 @@ pub fn run_raster(
         Ok(result)
     };
     go().unwrap_or_else(broke)
+}
+
+/// The summary's word on the result's cells with a value (GIS-020, docs/adr/1084): nothing when every cell has one;
+/// how many when some are empty; none at all said with what to check.
+pub(crate) fn cells_said(valid: u64, cells: u64) -> String {
+    if cells == 0 || valid >= cells {
+        String::new()
+    } else if valid == 0 {
+        format!(
+            " Hiçbir hücrede değer yok (0/{}): girdilerin ortak kapsamını ve değerlerini denetleyin.",
+            count_words(cells)
+        )
+    } else {
+        format!(" {}/{} hücrede değer var.", count_words(valid), count_words(cells))
+    }
+}
+
+#[cfg(test)]
+mod cells_tests {
+    #[test]
+    fn full_partly_empty_and_empty_results_are_said_apart() {
+        assert_eq!(super::cells_said(30, 30), "");
+        assert_eq!(super::cells_said(26, 30), " 26/30 hücrede değer var.");
+        assert!(super::cells_said(0, 30).starts_with(" Hiçbir hücrede değer yok (0/30)"));
+    }
 }
 
 /// The weights' sensitivity as the summary says it (docs/adr/0643 §4): how far a cell can move with each weight a
