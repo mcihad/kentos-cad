@@ -76,6 +76,26 @@ pub struct TableRead {
     pub losses: BTreeSet<String>,
     /// The table's indexes as the layer's (docs/adr/0758 §5).
     pub indexes: Vec<kentos_commands::LayerIndex>,
+    /// The geometry type its geometry column declares (`POLYGON`, `MULTILINESTRING` …); none for an attribute table.
+    pub geometry: Option<String>,
+}
+
+/// The layer type a declared geometry type is (gis-usage-report GIS-008, docs/adr/1074): points, lines (curves too)
+/// or areas (curved and multi ones too); none for `GEOMETRY`, a collection or a type KentOS has no family for.
+pub fn layer_geometry_of(declared: &str) -> Option<kentos_commands::LayerGeometry> {
+    use kentos_commands::LayerGeometry as G;
+    let t = declared.trim().to_ascii_uppercase();
+    // A Z, M or ZM form is its plain type's (`POINTZ`, `POLYGON Z`).
+    let t = t.trim_end_matches(|c: char| c == 'Z' || c == 'M' || c == ' ');
+    match t {
+        "POINT" | "MULTIPOINT" => Some(G::Point),
+        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVE" | "MULTICURVE" => {
+            Some(G::Line)
+        }
+        "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "SURFACE" | "MULTISURFACE" | "TRIANGLE" | "TIN"
+        | "POLYHEDRALSURFACE" => Some(G::Area),
+        _ => None,
+    }
 }
 
 /// A file read.
@@ -1033,6 +1053,7 @@ pub fn table_of_rows_hinted(
         skipped,
         losses,
         indexes: Vec::new(),
+        geometry: layer.geometry.as_ref().map(|g| g.type_name.clone()),
     })
 }
 

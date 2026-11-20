@@ -2018,3 +2018,43 @@ fn the_geopackage_export_writes_the_scope_it_shows() {
         assert_eq!(got, want, "{scope:?}");
     }
 }
+
+/// GIS-008 (docs/adr/1074): in a CBS project a table's declared type becomes its layer's: the curve polygon table an
+/// area layer (the point tool off on it), the point tables point layers; kept after saving and opening again. A CAD
+/// project's layers stay of any kind.
+#[test]
+fn a_geopackage_tables_declared_type_types_its_layer() {
+    use kentos_commands::LayerGeometry;
+    use serde_json::json;
+    let open = |workspace: &str, file: &str| {
+        let (mut app, _) = App::boot(None);
+        crate::tools_scenes::open_edited(&mut app, crate::tools_scenes::Objects::new(), |d| {
+            d["settings"]["workspace"] = json!(workspace);
+            d["settings"]["srid"] = json!(5255);
+        });
+        app.picker = Picker::File(gpkg(file));
+        run(&mut app, "file.import.gpkg");
+        send(&mut app, Event::Gpkg(G::Reproject));
+        send(&mut app, Event::Gpkg(G::Run));
+        assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+        app
+    };
+    let type_of = |app: &App, name: &str| {
+        let doc = &app.document.as_ref().expect("open").model;
+        doc.layers().leaves().into_iter().find(|l| l.name == name).and_then(|l| l.geometry)
+    };
+    let mut app = open("gis", "egri-tampon.gpkg");
+    assert_eq!(type_of(&app, "Park koruma 10 m"), Some(LayerGeometry::Area));
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let id = doc.layers().leaves().into_iter().find(|l| l.name == "Park koruma 10 m").map(|l| l.id.clone()).unwrap();
+    assert!(doc.set_active_layer(&id));
+    assert!(crate::layer_types::misfit(doc, "tool.point").is_some(), "the point tool is off");
+    assert!(crate::layer_types::misfit(doc, "tool.polygon").is_none());
+    let again = kentos_domain::Document::from_snapshot(doc.to_snapshot()).expect("opens again");
+    assert_eq!(again.layers().get(&id).and_then(|l| l.geometry), Some(LayerGeometry::Area));
+    let app = open("gis", "cift-sistem.gpkg");
+    assert_eq!(type_of(&app, "A_TM33"), Some(LayerGeometry::Point));
+    assert_eq!(type_of(&app, "B_WGS84"), Some(LayerGeometry::Point));
+    let app = open("hybrid", "egri-tampon.gpkg");
+    assert_eq!(type_of(&app, "Park koruma 10 m"), None);
+}

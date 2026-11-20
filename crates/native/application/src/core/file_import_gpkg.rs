@@ -479,7 +479,7 @@ pub(crate) fn run_read(
     let srid = declared.iter().next().copied();
     let project = doc.settings().srid;
     let mut was_moved = false;
-    if declared.is_empty() || read.tables.iter().zip(&srids).any(|(t, s)| s.is_none() && t.srs_id.is_some()) {
+    if declared.is_empty() || read.tables.iter().zip(&srids).any(|(t, s)| s.is_none() && t.geometry.is_some()) {
         warnings.push(CommandWarning {
             code: codes::CRS_UNDECLARED.into(),
             message: if declared.is_empty() {
@@ -499,6 +499,18 @@ pub(crate) fn run_read(
     let foreign: BTreeSet<u32> = declared.iter().copied().filter(|&s| s != project).collect();
     if !foreign.is_empty() {
         let names = foreign.iter().map(|s| format!("EPSG:{s}")).collect::<Vec<_>>().join(", ");
+        // One file in one other system says it as before; several systems or the project's beside name the tables.
+        let alone = foreign.len() == 1 && declared.len() == 1;
+        if !input.reproject && alone {
+            return Err(refuse(
+                codes::CRS_MISMATCH,
+                format!(
+                    "{} {names} sisteminde, proje EPSG:{project}. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi {names}'de açın.",
+                    read.file
+                ),
+                "reproject",
+            ));
+        }
         if !input.reproject {
             let tables: Vec<&str> = read
                 .tables
@@ -614,6 +626,27 @@ pub(crate) fn run_read(
             }
             let applied = apply_import_with_uids(doc, objects, &plan)
                 .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "path"))?;
+            // A CBS project's new layer takes the type its table declares (docs/adr/1074): a POLYGON table's layer is an
+            // area layer that takes no point, whatever writes it later.
+            // A bound layer (`fresh`) stays of any kind: its table's later rows, a record among them, come as they are;
+            // a table with rows without geometry (records) too.
+            if !fresh && doc.settings().workspace == Some(kentos_commands::Workspace::Gis) {
+                for t in &read.tables {
+                    let (Some(g), Some((_, layer))) = (
+                        t.geometry.as_deref().and_then(geopackage::layer_geometry_of),
+                        applied.targets.iter().find(|(from, _)| *from == t.name),
+                    ) else {
+                        continue;
+                    };
+                    if !t.objects.iter().all(|(_, e)| g.admits(e.kind())) {
+                        continue;
+                    }
+                    if applied.made.iter().any(|(id, _)| id == layer) {
+                        doc.set_layer_geometry(layer, Some(g), &plan.label)
+                            .map_err(|r| refuse(codes::IMPORT_UNREADABLE, r.0, "path"))?;
+                    }
+                }
+            }
             if declared.len() > 1 {
                 for (t, s) in read.tables.iter().zip(&srids) {
                     let (Some(s), Some((_, layer))) = (s, applied.targets.iter().find(|(from, _)| *from == t.name))
