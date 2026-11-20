@@ -156,3 +156,18 @@ fn what_may_be_written_goes_in_one_step_the_rest_stays() {
     assert_eq!(words(&b, 1), "Ada 101");
     assert_eq!(write(&mut b.doc, &[]), (0, Vec::new()));
 }
+
+/// UR2-036: a text found whose replacement is the same words is listed as found, not written: the search's count
+/// does not hang on the replacement, and nothing is written.
+#[test]
+fn a_text_found_and_left_as_it_is_is_listed() {
+    let mut b = scene();
+    let same = matches(&b.doc, None, &query("Ada 102", "Ada 102", CASELESS));
+    let changed = matches(&b.doc, None, &query("Ada 102", "A 102", CASELESS));
+    assert_eq!(same.len(), changed.len(), "the same texts found");
+    assert!(!same.is_empty() && same.iter().all(|m| m.blocked == Some(Blocked::Same)), "{same:?}");
+    let revision = b.doc.revision();
+    let (n, _) = write(&mut b.doc, &same);
+    assert_eq!(n, 0);
+    assert_eq!(b.doc.revision(), revision, "nothing written, no undo step");
+}

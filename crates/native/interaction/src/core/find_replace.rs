@@ -20,6 +20,8 @@ pub enum Blocked {
     Locked,
     /// It would become empty.
     Empty,
+    /// It is found but stays as it is: the replacement gives the same words (UR2-036). Listed, not written.
+    Same,
 }
 
 /// A text whose words change.
@@ -69,10 +71,10 @@ pub fn matches(doc: &Document, scope: Option<&[Slot]>, q: &Query) -> Vec<Match> 
         .filter_map(|(slot, t)| {
             let next = replace(&t.text, &q.find, &q.replace, q.how)?;
             let next = next.trim().to_owned();
-            if next == t.text {
-                return None;
-            }
-            let blocked = if layers.is_locked(&t.base.layer_id) {
+            // Found though unchanged: listed (the search's count does not hang on the replacement), never written.
+            let blocked = if next == t.text {
+                Some(Blocked::Same)
+            } else if layers.is_locked(&t.base.layer_id) {
                 Some(Blocked::Locked)
             } else if next.is_empty() {
                 Some(Blocked::Empty)

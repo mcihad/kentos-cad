@@ -281,7 +281,14 @@ impl App {
                 },
             )
         } else {
-            words::text_line(Kind::Info, format!("{} eşleşme.", w.matches.len()))
+            // Found and changed counted apart (UR2-036): a text the replacement leaves as it is is still found.
+            let same = w.matches.iter().filter(|m| m.blocked == Some(Blocked::Same)).count();
+            let changes = w.matches.len() - same;
+            if same > 0 {
+                words::text_line(Kind::Info, format!("{} eşleşme, {changes} değişiklik.", w.matches.len()))
+            } else {
+                words::text_line(Kind::Info, format!("{} eşleşme.", w.matches.len()))
+            }
         }];
         if locked > 0 {
             lines.push(words::text_line(
