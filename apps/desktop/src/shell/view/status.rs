@@ -57,8 +57,8 @@ impl App {
         line.escape_clears()
             .on_cancel(Message::CommandCancelled)
             .on_focus(Message::CommandFocus)
-            // Geçmiş opens the panel on the tab it was on, or closes it (the web's expand button).
-            .expanded(open, |_| Message::CommandHistoryToggled)
+            // Geçmiş opens the panel on Komut geçmişi, or closes it (UR2-006: it opened Noktalar when left there).
+            .expanded(open, |_| Message::CommandHistoryShown)
             .lines(0)
             .into()
     }

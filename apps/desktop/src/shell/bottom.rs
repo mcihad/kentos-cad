@@ -362,6 +362,16 @@ impl App {
         }
     }
 
+    /// The command line's Geçmiş (UR2-006): the panel on Komut geçmişi at its newest line, whatever tab it was left
+    /// on (Noktalar, a table); closed when it shows Komut geçmişi already. F2 and the panel's own ⌄ keep the last tab.
+    pub(crate) fn show_history(&mut self) {
+        if self.command_expanded && self.bottom_tab == BottomTab::History {
+            self.toggle_bottom();
+        } else {
+            self.show_bottom(BottomTab::History);
+        }
+    }
+
     /// Python konsolu (the desktop's own command): the panel on its Python
     /// tab, or closed when it shows that tab already.
     pub(crate) fn toggle_python(&mut self) {
@@ -853,6 +863,43 @@ mod tests {
         assert_eq!(app.log.unseen(), 1);
         let _ = app.update(Message::CommandHistoryToggled);
         assert_eq!(app.log.unseen(), 0);
+    }
+
+    /// UR2-006: left on Noktalar, Koordinat listesi or Tablo and closed, the panel opens on Komut geçmişi from the
+    /// command line's Geçmiş; a second Geçmiş closes it, and F2 still brings back the last tab.
+    #[test]
+    fn the_command_lines_gecmis_opens_komut_gecmisi_whatever_tab_was_left() {
+        for left in [BottomTab::Points, BottomTab::Coords, BottomTab::Table] {
+            let mut app = app_with_drawing();
+            let _ = app.update(Message::BottomTab(left));
+            let left = app.bottom_tab;
+            let _ = app.update(Message::CommandHistoryToggled);
+            assert!(!app.command_expanded);
+            let _ = app.update(Message::CommandHistoryShown);
+            assert!(app.command_expanded);
+            assert_eq!(app.bottom_tab, BottomTab::History, "left on {left:?}");
+            let _ = app.update(Message::CommandHistoryShown);
+            assert!(!app.command_expanded, "a second Geçmiş closes it");
+            // Open on another tab: Geçmiş turns to Komut geçmişi, it does not close the panel.
+            let _ = app.update(Message::BottomTab(left));
+            let _ = app.update(Message::CommandHistoryShown);
+            assert!(app.command_expanded);
+            assert_eq!(app.bottom_tab, BottomTab::History);
+        }
+        if std::env::var_os("KENTOS_SHOTS").is_some() {
+            let mut app = app_with_drawing();
+            let _ = app.update(Message::Run("tool.line"));
+            let _ = app.update(Message::Run("tool.cancel"));
+            let _ = app.update(Message::BottomTab(BottomTab::Points));
+            let _ = app.update(Message::CommandHistoryToggled);
+            let _ = app.update(Message::CommandHistoryShown);
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut crate::app::App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, crate::app::App::view, &mut update);
+            crate::files_testing::evidence(&mut snapshot, &app, "ur2-006", "gecmis");
+        }
     }
 
     #[test]

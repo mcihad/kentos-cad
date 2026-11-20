@@ -496,6 +496,7 @@ impl App {
                 return self.run_typed(&name);
             }
             Message::CommandHistoryToggled => self.toggle_bottom(),
+            Message::CommandHistoryShown => self.show_history(),
             Message::BottomTab(tab) => self.show_bottom(tab),
             Message::Gis(inner) => return self.gis_event(inner),
             Message::TableWritten(outcome) => match outcome {

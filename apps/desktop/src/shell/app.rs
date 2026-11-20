@@ -421,6 +421,8 @@ pub enum Message {
     CommandSubmitted,
     CommandRun(String),
     CommandHistoryToggled,
+    /// The command line's Geçmiş: the panel on Komut geçmişi, or closed when it shows it (UR2-006).
+    CommandHistoryShown,
     /// A tab of the bottom panel chosen: the panel opens on it.
     BottomTab(crate::bottom::BottomTab),
     /// A table written as a file (docs/adr/0223 §2): what was written, or why not.
