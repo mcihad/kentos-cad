@@ -172,7 +172,31 @@ impl App {
 
     /// Çizimi kapat: the drawing on screen asked about first when it has unsaved work.
     fn close_tab(&mut self, k: usize) -> iced::Task<Message> {
-        if k != self.doc_tabs.at {
+        if k != self.doc_tabs.at && self.document.is_some() {
+            // A tab behind, by its own drawing (UR2-059: bringing it in front first ended the front drawing's command,
+            // its corners lost, even when the question was then turned down).
+            let kp = if k > self.doc_tabs.at { k - 1 } else { k };
+            let Some(behind) = self.doc_tabs.parked.get(kp).map(|p| &p.document) else {
+                return iced::Task::none();
+            };
+            let name = behind.display_name().into_owned();
+            // Nothing unsaved, not a cloud project's: it goes where it stands, the front drawing as it is.
+            if !behind.dirty() && behind.cloud_source().is_none() {
+                self.doc_tabs.parked.remove(kp);
+                if kp < self.doc_tabs.at {
+                    self.doc_tabs.at -= 1;
+                }
+                self.say(Level::Info, format!("“{name}” kapatıldı."));
+                return iced::Task::none();
+            }
+            // Its unsaved work is asked about in front: a command running here is not ended for that.
+            if self.session.is_running() {
+                let running = self.session.prompt().tool.unwrap_or("Komut");
+                self.warn(format!(
+                    "“{name}” sekmesinde kaydedilmemiş değişiklik var; kapatmadan önce sorulacak. Öndeki {running} sürüyor: bitirin ya da Esc'ye basın, sonra sekmeyi kapatın."
+                ));
+                return iced::Task::none();
+            }
             self.show_tab(k);
             if k != self.doc_tabs.at {
                 return iced::Task::none();
@@ -609,6 +633,35 @@ mod tests {
         );
         assert_eq!(app.document.as_ref().unwrap().model.len(), 15);
         assert!(!app.document.as_ref().unwrap().dirty());
+    }
+
+    /// UR2-059: closing a tab behind leaves the front drawing's command as it is: a clean one goes at once; one with
+    /// unsaved work is not brought in front while a command runs here, the command and its corners kept.
+    #[test]
+    fn closing_a_tab_behind_keeps_the_front_command() {
+        let mut app = app_with_drawing();
+        assert!(app.park_active());
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
+        let front_session = front(&app);
+        pending_hatch_value(&mut app);
+        // The first drawing, behind, has nothing unsaved: it goes, the hatch runs on.
+        let _ = app.update(Message::DocTabs(Event::Close(0)));
+        assert_eq!(app.doc_tabs.count(true), 1);
+        assert_eq!(front(&app), front_session);
+        assert_eq!(app.session.tool_id(), "hatch", "the front command runs on");
+        // A drawing behind with unsaved work: refused while the command runs.
+        let mut app = app_with_drawing();
+        let first = front(&app);
+        app.document.as_mut().expect("open").model.set_name("değişti");
+        assert!(app.document.as_ref().expect("open").dirty(), "unsaved work");
+        assert!(app.park_active());
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
+        pending_hatch_value(&mut app);
+        let _ = app.update(Message::DocTabs(Event::Close(0)));
+        assert_eq!(app.doc_tabs.count(true), 2, "kept");
+        assert_ne!(front(&app), first, "not brought in front");
+        assert_eq!(app.session.tool_id(), "hatch");
+        assert!(crate::files_testing::last_said(&app).contains("kaydedilmemiş değişiklik"));
     }
 
     /// UR2-060: Nokta's name series, code and height are the drawing's: another drawing opened starts with none, so
