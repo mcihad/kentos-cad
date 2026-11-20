@@ -1,0 +1,5210 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.layers.data",
+  "commandVersion": 1,
+  "title": "Veri katmanı: GeoPackage ya da PostGIS tablosu ekle, değiştir, kaldır (ADR 9101 §4)",
+  "note": "scripts/fixtures/layer_data_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/commands/src/gis/cad_layers_data.rs, crates/shared/contracts/src/gis/data_layer.rs) KentOS kodu olmadan kurulur. `$layer` komutun eklediği (plan: ekleyeceği) katmanın kimliğidir: ağaçta olmayan bir `layer-N`; `expect.layers` katman ağacının tamamıdır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri katmanları",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "parseller",
+        "name": "Parseller",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [],
+        "data": {
+          "driver": "postgis",
+          "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+          "table": "kadastro.parseller",
+          "key": "fid",
+          "geometry": {
+            "column": "geom",
+            "typeName": "MULTIPOLYGON",
+            "srid": 5256
+          }
+        },
+        "fields": [
+          {
+            "name": "ada",
+            "kind": "integer"
+          },
+          {
+            "name": "parsel",
+            "kind": "integer"
+          },
+          {
+            "name": "mahalle",
+            "kind": "text"
+          }
+        ],
+        "geometry": "area"
+      },
+      {
+        "id": "veri",
+        "name": "Veri",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "direkler",
+            "name": "Direkler",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "data": {
+              "driver": "gpkg",
+              "address": "/veri/altyapi.gpkg",
+              "relative": "veri/altyapi.gpkg",
+              "table": "direkler",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256,
+                "z": true
+              },
+              "readOnly": true
+            },
+            "geometry": "point"
+          }
+        ]
+      },
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+          "x": 500010,
+          "y": 4400030
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Ekle: PostGIS tablosu ağacın sonuna; çizgi katmanı olur, satırları çizime girmez; adımı “Veri katmanı ekle”, geri alınır ve yinelenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "Yollar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "ulasim.yollar",
+                  "key": "gid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTILINESTRING",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ad",
+                    "kind": "text"
+                  },
+                  {
+                    "name": "tur",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "line"
+              }
+            ]
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Veri katmanı ekle",
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Veri katmanı ekle",
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "Yollar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "ulasim.yollar",
+                  "key": "gid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTILINESTRING",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ad",
+                    "kind": "text"
+                  },
+                  {
+                    "name": "tur",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "line"
+              }
+            ],
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: grubun başına (parent bir grup, index 0); adın baştaki ve sondaki boşluğu atılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "  Yollar  ",
+            "parent": "veri",
+            "index": 0,
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "$layer",
+                    "name": "Yollar",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.18
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "postgis",
+                      "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                      "table": "ulasim.yollar",
+                      "key": "gid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "MULTILINESTRING",
+                        "srid": 5256
+                      }
+                    },
+                    "fields": [
+                      {
+                        "name": "ad",
+                        "kind": "text"
+                      },
+                      {
+                        "name": "tur",
+                        "kind": "text"
+                      }
+                    ],
+                    "geometry": "line"
+                  },
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: bir katmanın yanına (parent bir katman) onun grubunun sonuna",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "parent": "direkler",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  },
+                  {
+                    "id": "$layer",
+                    "name": "Yollar",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.18
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "postgis",
+                      "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                      "table": "ulasim.yollar",
+                      "key": "gid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "MULTILINESTRING",
+                        "srid": 5256
+                      }
+                    },
+                    "fields": [
+                      {
+                        "name": "ad",
+                        "kind": "text"
+                      },
+                      {
+                        "name": "tur",
+                        "kind": "text"
+                      }
+                    ],
+                    "geometry": "line"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: geometrisiz tablo; türsüz katman, alansız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Malikler",
+            "data": {
+              "driver": "gpkg",
+              "address": "/veri/altyapi.gpkg",
+              "table": "malikler",
+              "key": "fid"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "Malikler",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "data": {
+                  "driver": "gpkg",
+                  "address": "/veri/altyapi.gpkg",
+                  "table": "malikler",
+                  "key": "fid"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: her türden geometri tutan sütun; katman türsüz kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Karışık",
+            "data": {
+              "driver": "gpkg",
+              "address": "/veri/altyapi.gpkg",
+              "table": "karisik",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "GEOMETRY"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "Karışık",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "data": {
+                  "driver": "gpkg",
+                  "address": "/veri/altyapi.gpkg",
+                  "table": "karisik",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "GEOMETRY"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ekle: index sondan büyükse sona; bilinmeyen parent ağacın en üstü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "parent": "yok",
+            "index": 99,
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "Yollar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "ulasim.yollar",
+                  "key": "gid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTILINESTRING",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ad",
+                    "kind": "text"
+                  },
+                  {
+                    "name": "tur",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "line"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: adı ve taşınan dosyanın yeni yeri tek adımda; adımı “Veri katmanını değiştir”, geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "direkler",
+            "name": " Elektrik direkleri ",
+            "data": {
+              "driver": "gpkg",
+              "address": "/yeni/altyapi.gpkg",
+              "relative": "yeni/altyapi.gpkg",
+              "table": "direkler",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256,
+                "z": true
+              },
+              "readOnly": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "direkler",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Elektrik direkleri",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/yeni/altyapi.gpkg",
+                      "relative": "yeni/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Veri katmanını değiştir",
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Veri katmanını değiştir",
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Elektrik direkleri",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/yeni/altyapi.gpkg",
+                      "relative": "yeni/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: yalnız alanlar (tablo yeniden okundu)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "parseller",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              },
+              {
+                "name": "alan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "parseller",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  },
+                  {
+                    "name": "alan",
+                    "kind": "decimal"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: tablonun geometrisi değişti; katmanın türü onu izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "parseller",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "kadastro.parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTIPOINT",
+                "srid": 5256
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "parseller",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOINT",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "point"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: aynı değerler bir şey yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "parseller",
+            "name": "Parseller",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "kadastro.parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTIPOLYGON",
+                "srid": 5256
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "parseller",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaldır: veri katmanı gider, tablosu kaynağında kalır; adımı “Veri katmanını kaldır”, geri alınır, yerine döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "direkler"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "direkler",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Veri katmanını kaldır",
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaldır: etkin katman kaldırılmaz; belgenin sözüyle reddedilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Veri katmanları",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "parseller",
+            "name": "Parseller",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "kadastro.parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTIPOLYGON",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              }
+            ],
+            "geometry": "area"
+          },
+          {
+            "id": "veri",
+            "name": "Veri",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "direkler",
+                "name": "Direkler",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "gpkg",
+                  "address": "/veri/altyapi.gpkg",
+                  "relative": "veri/altyapi.gpkg",
+                  "table": "direkler",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "POINT",
+                    "srid": 5256,
+                    "z": true
+                  },
+                  "readOnly": true
+                },
+                "geometry": "point"
+              }
+            ]
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "parseller",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400030
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "parseller"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_refused",
+              "message": "“Parseller” etkin katman; silinemez. Önce başka bir katmanı etkinleştirin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrula: yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: eklenecek katman; yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "node": {
+                "id": "$layer",
+                "name": "Yollar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "ulasim.yollar",
+                  "key": "gid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTILINESTRING",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ad",
+                    "kind": "text"
+                  },
+                  {
+                    "name": "tur",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "line"
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: değişecek katman; yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "update",
+            "layer": "direkler",
+            "name": "Elektrik direkleri",
+            "data": {
+              "driver": "gpkg",
+              "address": "/yeni/altyapi.gpkg",
+              "relative": "yeni/altyapi.gpkg",
+              "table": "direkler",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POINT",
+                "srid": 5256,
+                "z": true
+              },
+              "readOnly": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "node": {
+                "id": "direkler",
+                "name": "Elektrik direkleri",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "gpkg",
+                  "address": "/yeni/altyapi.gpkg",
+                  "relative": "yeni/altyapi.gpkg",
+                  "table": "direkler",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "POINT",
+                    "srid": 5256,
+                    "z": true
+                  },
+                  "readOnly": true
+                },
+                "geometry": "point"
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: kaldırmada katman yok",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "operation": "remove",
+            "layer": "parseller"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katmanı olmayan değiştirme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "name": "Yollar"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_layer",
+              "message": "Değiştirilecek ya da kaldırılacak katmanın kimliğini (layer) verin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "katmanı olmayan kaldırma",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_layer",
+              "message": "Değiştirilecek ya da kaldırılacak katmanın kimliğini (layer) verin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş ad (yalnız boşluk)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": " \t",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "Katmanın adı boş olamaz; bir ad verin.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "değiştirmede boş ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "parseller",
+            "name": ""
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "Katmanın adı boş olamaz; bir ad verin.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "tablosuz ekleme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Boş"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_data",
+              "message": "Eklenecek veri tablosu (data) verilmedi: sürücüyü, kaynağın adresini, tabloyu ve anahtarı verin.",
+              "path": "data"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "tanınmayan sürücü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Oracle",
+            "data": {
+              "driver": "oracle",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_data",
+              "message": "veri katmanının sürücüsü “oracle” olamaz: gpkg ya da postgis",
+              "path": "data"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "adreste parola",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs:gizli@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_data",
+              "message": "adreste parola var; parola projeye yazılmaz: PGPASSWORD ortam değişkenine ya da ~/.pgpass dosyasına koyun",
+              "path": "data"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "küçük harfli geometri türü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MultiLineString",
+                "srid": 5256
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_data",
+              "message": "geometri türü “MultiLineString” tanınmıyor (büyük harfle OGC adı: POINT, MULTIPOLYGON …)",
+              "path": "data"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş tablo adı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "  ",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_data",
+              "message": "veri katmanının tablosu boş",
+              "path": "data"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "veritabanının göreli yolu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              },
+              "relative": "a/b"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_data",
+              "message": "veritabanının göreli yolu olmaz",
+              "path": "data"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı adlı iki alan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "AD",
+                "kind": "text"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_fields",
+              "message": "“AD” adlı iki alan var; alan adları bir kez kullanılır.",
+              "path": "fields"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Yollar",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm çakışması: plan edilen sürümden sonra çizim değişmişse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "parseller",
+            "name": "Kadastro"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "parseller",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "direkler",
+            "expectedRevision": "$once"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Kadastro",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "grup",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "veri",
+            "name": "Veriler"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Veri” bir katman grubu; veri tablosu yalnız katmanın olur.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "veri katmanı olmayanı değiştirme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "update",
+            "layer": "0",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "ulasim.yollar",
+              "key": "gid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTILINESTRING",
+                "srid": 5256
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_data_layer",
+              "message": "“0” bir veri katmanı değil; bu komut yalnız veri katmanını değiştirir ya da kaldırır.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "veri katmanı olmayanı kaldırma",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "remove",
+            "layer": "0"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_data_layer",
+              "message": "“0” bir veri katmanı değil; bu komut yalnız veri katmanını değiştirir ya da kaldırır.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

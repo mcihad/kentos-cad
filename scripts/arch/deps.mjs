@@ -178,7 +178,7 @@ const GROUPS = [
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'data', 'postgis', 'imza', 'imza-pkcs11', 'imza-ui', 'launch', 'agent', 'extension-host', 'python-env', 'extension-tools', 'render3d', 'model-view-ui', 'standards'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'data', 'data-gpkg', 'data-postgis', 'postgis', 'imza', 'imza-pkcs11', 'imza-ui', 'launch', 'agent', 'extension-host', 'python-env', 'extension-tools', 'render3d', 'model-view-ui', 'standards'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
   // KentOS Launcher (docs/adr/0800): starts KentOS's programs and others from their manifests. The UI library and the
   // shared launch contract only: no drawing, KentOS renderer, server runtime or browser; a program it starts is a process of its own.
   { name: 'launcher', path: 'apps/launcher/', targets: [HOST], uses: ['ui', 'launch'], forbid: ['axum*', 'sqlx*', 'pyo3*', ...BROWSER] },

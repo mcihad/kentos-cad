@@ -274,6 +274,14 @@ macro_rules! gis_commands {
             kentos_commands::CAD_LAYERS_FILTER => {
                 crate::gis_dispatch::gis_arm!($command, $then, layers_filter, LayersFilter)
             }
+            kentos_commands::CAD_LAYERS_DATA => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layers_data,
+                    kentos_commands::LayersData
+                )
+            }
             kentos_commands::CAD_LAYERS_CRS => {
                 crate::gis_dispatch::gis_arm!(
                     $command,

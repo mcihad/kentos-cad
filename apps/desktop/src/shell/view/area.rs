@@ -638,6 +638,39 @@ impl App {
                 }
                 row
             }
+            // A data layer (docs/adr/9101 §5): its kind's glyph in its colour, a mark for where its rows are (a file, a
+            // database), and the tip saying both.
+            LayerNodeType::Layer if node.data.is_some() => {
+                let Some(data) = node.data.as_ref() else {
+                    return row;
+                };
+                let palette = crate::viewport::palette(self.canvas());
+                let color = palette
+                    .resolve(&node.style.color)
+                    .map_or_else(|| hex_color(&node.style.color), rgba_color);
+                let face: Element<'_, Message> = match node.geometry {
+                    Some(g) => kentos_ui::icon::icon(crate::layer_types::glyph(Some(g)))
+                        .size(14.0)
+                        .color(color)
+                        .into(),
+                    None => kentos_ui::icon::icon(crate::icons::from_web(Some("table")))
+                        .size(14.0)
+                        .color(color)
+                        .into(),
+                };
+                let mark = if data.driver == "gpkg" { "fileOpen" } else { "sourceDatabase" };
+                row.icon(MenuButton::new(face, move || self.layer_colors(node)))
+                    .cells([kentos_ui::icon::icon(crate::icons::from_web(Some(mark)))
+                        .size(11.0)
+                        .tone(kentos_ui::icon::Tone::Muted)
+                        .into()])
+                    .tip(kentos_ui::widget::Tip::new(format!(
+                        "{}\n{}{}",
+                        data.kind_words(),
+                        data.place_words(),
+                        if data.read_only { "\nSalt okunur" } else { "" }
+                    )))
+            }
             LayerNodeType::Layer => {
                 let palette = crate::viewport::palette(self.canvas());
                 let color = palette

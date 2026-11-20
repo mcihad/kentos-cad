@@ -263,7 +263,22 @@ impl App {
         // brought in front gets its own back (doc_tabs.rs).
         self.calc_reset();
         self.spatial.reload(&doc.model);
-        self.viewport.opened(&doc, self.spatial.extent());
+        // A drawing of data layers opens on their tables (docs/adr/9101 §5): their rows are not in it.
+        let settings = doc.model.settings();
+        let mut boxes: Vec<[f64; 4]> = kentos_plot::layers::shown_layers(doc.model.layers().nodes())
+            .into_iter()
+            .filter_map(|n| crate::data_layers::extent_in_project(n, settings))
+            .collect();
+        if let Some(b) = self.spatial.extent() {
+            boxes.push([b.min_x, b.min_y, b.max_x, b.max_y]);
+        }
+        let first = crate::layering::union(&boxes).map(|b| kentos_render_wgpu::Bounds {
+            min_x: b[0],
+            min_y: b[1],
+            max_x: b[2],
+            max_y: b[3],
+        });
+        self.viewport.opened(&doc, first);
         // The views left belong to the drawing they were left on (docs/adr/0141).
         self.view_history.clear();
         self.styles.follow_project(Some(doc.model.styles()));

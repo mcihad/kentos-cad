@@ -404,6 +404,8 @@ pub enum Message {
     /// The map services brought tiles or read what they need, or one failed:
     /// the drawing draws again, the failure goes to the log (docs/adr/0208 §6).
     ServicesReady,
+    /// Data layers' parts came (data_view.rs, docs/adr/9101 §6): the next frame draws them.
+    DataReady,
     /// A mouse press anywhere or the window losing the focus while the key
     /// tips show: they go (ribbon_keys.rs, docs/adr/0118).
     KeyTipsAway,

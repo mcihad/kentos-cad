@@ -90,6 +90,46 @@ pub(crate) fn mover_in(
     }))
 }
 
+/// The move between the project's system and a data layer's table (docs/adr/9101 §6): its rows' positions brought
+/// into the project's system as they are drawn, the view's box taken into the table's for the request. None in the
+/// same system or for a table that declares none.
+pub struct TableSystem {
+    mover: Mover,
+}
+
+impl TableSystem {
+    /// The move for a table of `srid` in this project; why not, when the systems do not meet.
+    pub fn of(
+        settings: &kentos_commands::ProjectSettings,
+        srid: Option<u32>,
+    ) -> Result<Option<TableSystem>, String> {
+        Ok(mover_in(settings, srid)?.map(|mover| TableSystem { mover }))
+    }
+
+    /// A position of the table in the project's system; none where it has no value there.
+    pub fn to_project(&self, x: f64, y: f64) -> Option<(f64, f64)> {
+        kentos_geometry_core::crs::transform_in(
+            &self.mover.source,
+            &self.mover.project,
+            kentos_geometry_core::Vec2 { x, y },
+            &self.mover.choices,
+        )
+        .ok()
+        .map(|t| (t.point.x, t.point.y))
+    }
+
+    /// A box of the project's system as one of the table's, its sides densified.
+    pub fn to_table(&self, b: [f64; 4]) -> Option<[f64; 4]> {
+        kentos_geometry_core::crs::transform_bounds(
+            &self.mover.project,
+            &self.mover.source,
+            b,
+            16,
+            &self.mover.choices,
+        )
+    }
+}
+
 /// A table's declared box (`SourceTable::extent`) in the project's system, for Kapsamı göster (docs/adr/0599 §9):
 /// moved across with its sides densified when the table is in another system. Why not, when the table declares no
 /// system in a project that has one, or the systems do not meet.
@@ -2740,8 +2780,8 @@ fn link_table(
         }
     };
     // A geometry column none of whose rows hold one (docs/adr/0745 §3): the rows came as records, so nothing is drawn;
-    // said before the layer looks empty for no reason. Some rows without geometry are ordinary (QGIS says nothing of
-    // them either): they are records in the attribute table.
+    // said before the layer looks empty for no reason. Some rows without geometry are ordinary and nothing is said of
+    // them: they are records in the attribute table.
     if let Some(column) = &stored.layer.geometry {
         let (all, bare) = doc
             .by_layer(&layer)

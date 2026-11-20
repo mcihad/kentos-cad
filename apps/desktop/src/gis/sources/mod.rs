@@ -10,7 +10,7 @@
 //! layers, and a layer's Katman olarak ekle takes it with its objects into
 //! the open drawing as one undo step (drawing_exchange.rs
 //! `take_layer_into`). Veritabanları lists the device's PostgreSQL
-//! connections (docs/adr/0623, as QGIS's Browser lists its own): a
+//! connections (docs/adr/0623): a
 //! connection opens into its schemas and their tables, views and
 //! materialized views, read from the database's catalogue off the UI thread
 //! (`kentos_postgis::probe::browse`); a table's Katman olarak ekle binds it
@@ -347,7 +347,7 @@ pub enum Event {
     ServiceRemove(usize),
     /// Add a source by what it is (a recent or favourite row, a drop); it becomes the newest recent one.
     Use(Kept),
-    /// A table's Bağlı katman olarak aç (`true`) or Kopya olarak al.
+    /// A table's Veri katmanı olarak ekle (`true`) or Kopya olarak al.
     OpenTable(Origin, String, bool),
     /// Katmana git: the bound layer chosen in Katmanlar and shown.
     GoToLayer(String),
@@ -848,10 +848,12 @@ impl App {
         }
     }
 
-    /// Bağlı katman olarak aç or Kopya olarak al on a GeoPackage's table: the file's window with the table alone chosen.
-    fn open_table(&mut self, origin: Origin, table: String, bind: bool) -> Task<Message> {
+    /// Veri katmanı olarak ekle on a GeoPackage's table: added as a data layer, its rows left in the file (docs/adr/9101);
+    /// Kopya olarak al: the file's window with the table alone chosen, its objects copied into the drawing.
+    fn open_table(&mut self, origin: Origin, table: String, live: bool) -> Task<Message> {
         match origin {
-            Origin::File(path) => self.update(crate::exchange::open_gpkg(path, Some(table), bind)),
+            Origin::File(path) if live => self.add_tables(path.display().to_string(), vec![table]),
+            Origin::File(path) => self.update(crate::exchange::open_gpkg(path, Some(table), false)),
         }
     }
 

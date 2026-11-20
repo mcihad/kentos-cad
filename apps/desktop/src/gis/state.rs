@@ -117,6 +117,8 @@ pub(crate) struct GisUiState {
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone)]
 pub(crate) enum Event {
+    /// Data layers (data_layers.rs, docs/adr/9101): tables described off the interface's thread, then added.
+    DataLayers(crate::data_layers::Event),
     /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
     Rasters(crate::rasters::Event),
     /// The point cloud windows, XYZ sor's answers and the indexes' panel (pointclouds/).
@@ -328,6 +330,7 @@ impl App {
                 let moved = self.time_event(event);
                 return Task::batch([moved, self.time_sources()]);
             }
+            Event::DataLayers(event) => return self.data_layers_event(event),
             Event::Rasters(event) => return self.rasters_event(event),
             Event::PointClouds(event) => return self.pointclouds_event(event),
             Event::Reconcile(event) => return self.reconcile_event(event),

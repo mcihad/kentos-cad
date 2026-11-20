@@ -100,7 +100,7 @@ impl App {
             return;
         };
         self.spatial.sync(&doc.model);
-        // A frozen layer's objects are not counted (docs/adr/0311 §1); a hidden one's are, as AutoCAD's.
+        // A frozen layer's objects are not counted (docs/adr/0311 §1); a hidden one's are.
         let tree = doc.model.layers();
         let bounds = if tree.leaves().iter().any(|l| tree.is_frozen(&l.id)) {
             let ids: Vec<f64> = doc
@@ -113,6 +113,21 @@ impl App {
         } else {
             self.spatial.extent()
         };
+        // The shown data layers' tables count too (docs/adr/9101 §5): their rows are not in the drawing.
+        let settings = doc.settings();
+        let mut boxes: Vec<[f64; 4]> = kentos_plot::layers::shown_layers(tree.nodes())
+            .into_iter()
+            .filter_map(|n| crate::data_layers::extent_in_project(n, settings))
+            .collect();
+        if let Some(b) = &bounds {
+            boxes.push([b.min_x, b.min_y, b.max_x, b.max_y]);
+        }
+        let bounds = crate::layering::union(&boxes).map(|b| kentos_render_wgpu::Bounds {
+            min_x: b[0],
+            min_y: b[1],
+            max_x: b[2],
+            max_y: b[3],
+        });
         if let Some(bounds) = bounds {
             self.viewport.show(&bounds);
         }

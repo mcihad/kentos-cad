@@ -472,6 +472,20 @@ impl App {
         let Some(node) = doc.model.layers().get(id) else {
             return;
         };
+        // A data layer, or a group of them, frames its tables' boxes (docs/adr/9101 §5).
+        let mut boxes = Vec::new();
+        data_boxes(node, doc.settings(), &mut boxes);
+        if let Some(b) = union(&boxes) {
+            self.navigating(|app| {
+                app.zoom_to_bounds(&kentos_commands::Bounds {
+                    min_x: b[0],
+                    min_y: b[1],
+                    max_x: b[2],
+                    max_y: b[3],
+                })
+            });
+            return;
+        }
         let mut layers = Vec::new();
         leaves(node, &mut layers);
         let ids: Vec<f64> = doc
@@ -924,6 +938,25 @@ fn removal_counts(model: &kentos_domain::Document, id: &str) -> (usize, usize) {
 }
 
 /// The layers of a node: itself, or every layer below a group.
+/// The boxes of the data layers at or below `node`, in the project's system.
+fn data_boxes(node: &LayerNode, settings: &kentos_commands::ProjectSettings, out: &mut Vec<[f64; 4]>) {
+    if let Some(b) = crate::data_layers::extent_in_project(node, settings) {
+        out.push(b);
+    }
+    for c in &node.children {
+        data_boxes(c, settings, out);
+    }
+}
+
+/// The box holding all of `boxes`.
+pub(crate) fn union(boxes: &[[f64; 4]]) -> Option<[f64; 4]> {
+    let mut it = boxes.iter();
+    let first = *it.next()?;
+    Some(it.fold(first, |a, b| {
+        [a[0].min(b[0]), a[1].min(b[1]), a[2].max(b[2]), a[3].max(b[3])]
+    }))
+}
+
 fn leaves<'a>(node: &'a LayerNode, out: &mut Vec<&'a str>) {
     match node.kind {
         LayerNodeType::Layer => out.push(&node.id),

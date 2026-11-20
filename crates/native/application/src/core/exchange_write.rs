@@ -38,6 +38,7 @@ pub fn put_nodes(
                     fields: n.fields.clone(),
                     service: n.service.clone(),
                     feed: n.feed.clone(),
+                    data: n.data.clone(),
                     // Its time setting comes along; a scenario's links name the other drawing's
                     // layers, so the taken nodes are plain ones (docs/adr/0210 §2).
                     time: n.time.clone(),

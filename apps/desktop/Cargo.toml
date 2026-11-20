@@ -26,6 +26,10 @@ test = false
 
 [dependencies]
 kentos-postgis = { path = "../../crates/native/postgis" }
+# The data drivers (docs/adr/9100): a data layer reads its table as it draws.
+kentos-data = { path = "../../crates/native/data" }
+kentos-data-gpkg = { path = "../../crates/native/data-gpkg" }
+kentos-data-postgis = { path = "../../crates/native/data-postgis" }
 # The KentOS modules, the command line that starts one and the recent files, shared with KentOS Launcher (docs/adr/0800, 0801).
 kentos-launch = { path = "../../crates/native/launch" }
 kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }

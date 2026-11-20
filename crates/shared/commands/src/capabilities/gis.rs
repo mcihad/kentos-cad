@@ -147,6 +147,28 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // docs/adr/9101 §4: a data layer added, changed or removed.
+    Entry {
+        id: "cad.layers.data",
+        refusals: &[
+            &[
+                "no_layer",
+                "empty_name",
+                "no_data",
+                "invalid_data",
+                "invalid_fields",
+            ],
+            REVISION,
+            &[
+                "layer_not_found",
+                "not_a_layer",
+                "not_a_data_layer",
+                "layer_refused",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // docs/adr/0583 §2: a layer's source system recorded, its objects moved from one.
     Entry {
         id: "cad.layers.crs",

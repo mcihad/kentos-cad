@@ -1505,6 +1505,13 @@ mod snap_menu;
 mod snap_tests;
 #[path = "shell/snapshot.rs"]
 mod snapshot;
+#[path = "gis/data_layers.rs"]
+mod data_layers;
+#[cfg(test)]
+#[path = "gis/data_layers_tests.rs"]
+mod data_layers_tests;
+#[path = "gis/data_view.rs"]
+mod data_view;
 #[path = "gis/db_connections.rs"]
 mod db_connections;
 #[path = "gis/sources/mod.rs"]

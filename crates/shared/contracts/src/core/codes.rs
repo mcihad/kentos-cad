@@ -610,6 +610,12 @@ codes! {
     LAYER_REFUSED = "layer_refused", Failed, false, "Belge değişikliği reddetti (silinemeyecek bir katman).";
     /// Add's id against its rules, or one the tree has (docs/adr/8057 §23).
     INVALID_LAYER_ID = "invalid_layer_id", Failed, false, "Katmanın kimliği kurallarına uymuyor ya da ağaçta var.";
+    /// `cad.layers.data`'s add without a table (docs/adr/9101 §4).
+    NO_DATA = "no_data", Failed, false, "Eklemek için veri tablosu verilmedi.";
+    /// A data layer's table against its rules (`DataLayer::problem`).
+    INVALID_DATA = "invalid_data", Failed, false, "Veri tablosu kurallarına uymuyor.";
+    /// An update or a removal of a layer that is not a data layer.
+    NOT_A_DATA_LAYER = "not_a_data_layer", Failed, false, "Katman bir veri katmanı değil.";
 
     // ── Networks and addresses (docs/adr/0209 §11, 0229 §14) ────────────
     /// `set` without a network.

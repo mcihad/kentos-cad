@@ -14,11 +14,13 @@ use crate::store::Stored;
 use crate::units::UnitState;
 
 /// What a layer is drawn from or took its objects from (docs/adr/0208):
-/// none, a map service, or a source (the web's `ServedBy`).
+/// none, a map service, a source (the web's `ServedBy`), or a table read as
+/// it is now (a data layer, docs/adr/9101 §2).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ServedBy {
     pub service: Option<ServiceLayer>,
     pub feed: Option<FeatureFeed>,
+    pub data: Option<kentos_contracts::DataLayer>,
 }
 
 /// A node's time setting, scenario and base layer (docs/adr/0210 §2), as

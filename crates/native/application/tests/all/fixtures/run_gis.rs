@@ -87,6 +87,7 @@ macro_rules! gis_cases {
             kentos_commands::CAD_LAYERS_TIME => $then!(layers_time, LayersTime),
             kentos_commands::CAD_SCENARIOS_EDIT => $then!(scenarios_edit, ScenariosEdit),
             kentos_commands::CAD_LAYERS_FILTER => $then!(layers_filter, LayersFilter),
+            kentos_commands::CAD_LAYERS_DATA => $then!(layers_data, kentos_commands::LayersData),
             kentos_commands::CAD_LAYERS_CRS => $then!(layers_crs_assign, kentos_commands::LayersCrs),
             kentos_commands::CAD_LAYERS_REPROJECT => {
                 $then!(layers_reproject, kentos_commands::LayersReproject)

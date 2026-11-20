@@ -1,0 +1,576 @@
+//! Veri katmanlarının canlı çizimi (docs/adr/9101 §6, plan/veri.md VY-03): a data layer's rows are read from its source
+//! for the view, never kept in the drawing. Each frame the drawing area says what it shows ([`want`]); a layer whose
+//! last read does not cover the view (a pan past its margin, a zoom past a step, its style or the colours changed) is
+//! read again on a thread of its own, the earlier read stopped. The rows come a part at a time
+//! ([`kentos_data::Source::features`]: the box, the columns the look reads, the geometry simplified for the screen),
+//! become objects of the layer in a store of their own and go through the style engine as the drawing's layers do
+//! (`kentos_plot::layers::build_whole`): a categorized, graduated or rule-based look draws them alike. Each part is drawn
+//! as it comes; the scene takes the layer's parts ([`parts`]) in the layer tree's order.
+//!
+//! The read covers the view and half of it again on every side, so a pan within it reads nothing; the geometry is
+//! simplified to half a pixel; a new read starts once the view stops moving. The earlier parts stay drawn until the new
+//! read is whole.
+
+use std::collections::{HashMap, HashSet};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::mpsc::{Receiver, Sender, channel};
+use std::sync::{Arc, Condvar, Mutex, OnceLock, PoisonError};
+
+use kentos_commands::{DataLayer, Entity, LayerNode, ProjectSettings};
+use kentos_data::{Cancel, Feature, Request, Value};
+use kentos_geometry_core::geometry::Bounds;
+use kentos_geometry_core::store::Store;
+use kentos_native_application::sources::TableSystem;
+use kentos_native_style::library::StyleLibrary;
+use kentos_render_wgpu::styled::StyledLayerPart;
+
+use crate::style::scene::Look;
+
+/// Rows built into one drawn part: the first one shows soon, the later ones keep the build's work bounded.
+const PART_ROWS: usize = 8192;
+/// Rows a read asks the source for at a time.
+const CHUNK: usize = 4096;
+
+/// What a read was made for: the same table, look, style and library on a view inside its cover at its step.
+#[derive(Clone, PartialEq)]
+struct Key {
+    data: DataLayer,
+    node: LayerNode,
+    look: Look,
+    library: u64,
+    /// The view's scale in quarter octaves: a zoom past a step reads again (the geometry's simplification follows it).
+    step: i64,
+}
+
+/// A read: what it is for, the box it covers (the project's system), its parts so far, its stop switch.
+struct Read {
+    id: u64,
+    key: Key,
+    cover: [f64; 4],
+    parts: Vec<Arc<StyledLayerPart>>,
+    cancel: Cancel,
+}
+
+/// A layer's reads: the one drawn and the one under way.
+#[derive(Default)]
+struct Layer {
+    drawn: Option<Read>,
+    going: Option<Read>,
+    /// The last failure, said once.
+    failed: Option<String>,
+}
+
+/// What a read's thread says back.
+enum Said {
+    Part(String, u64, Arc<StyledLayerPart>),
+    Done(String, u64),
+    Failed(String, u64, String),
+}
+
+/// The data layers' reads.
+pub struct DataView {
+    layers: Mutex<HashMap<String, Layer>>,
+    to: Sender<Said>,
+    from: Mutex<Receiver<Said>>,
+    /// Bumped when a part comes: the scene is built again.
+    generation: AtomicU64,
+    /// The style library the reads build with, kept while its version stays.
+    library: Mutex<Option<(u64, Arc<StyleLibrary>)>>,
+    notices: Mutex<Vec<String>>,
+    fresh: Mutex<bool>,
+    told: Condvar,
+}
+
+static SERVICE: OnceLock<DataView> = OnceLock::new();
+static NEXT_READ: AtomicU64 = AtomicU64::new(1);
+/// Drawn parts' ids, apart from the drawing's and the services' (the renderer uploads an id once).
+static NEXT_PART: AtomicU64 = AtomicU64::new(1 << 61);
+
+/// The process's data view.
+pub fn service() -> &'static DataView {
+    SERVICE.get_or_init(|| {
+        let (to, from) = channel();
+        DataView {
+            layers: Mutex::new(HashMap::new()),
+            to,
+            from: Mutex::new(from),
+            generation: AtomicU64::new(0),
+            library: Mutex::new(None),
+            notices: Mutex::new(Vec::new()),
+            fresh: Mutex::new(false),
+            told: Condvar::new(),
+        }
+    })
+}
+
+/// Whether a data layer is being read or drawn (the window listens for parts then).
+pub fn in_use() -> bool {
+    SERVICE
+        .get()
+        .is_some_and(|s| !s.layers.lock().unwrap_or_else(PoisonError::into_inner).is_empty())
+}
+
+/// The quarter-octave step of a view's pixels per metre.
+fn step_of(px_per_m: f64) -> i64 {
+    (px_per_m.max(1e-12).log2() * 4.0).round() as i64
+}
+
+/// The box a read covers for a view: the view and half of it again on every side.
+fn cover_of(view: &Bounds) -> [f64; 4] {
+    let (w, h) = (view.max_x - view.min_x, view.max_y - view.min_y);
+    [
+        view.min_x - w * 0.5,
+        view.min_y - h * 0.5,
+        view.max_x + w * 0.5,
+        view.max_y + h * 0.5,
+    ]
+}
+
+fn inside(view: &Bounds, cover: &[f64; 4]) -> bool {
+    view.min_x >= cover[0] && view.min_y >= cover[1] && view.max_x <= cover[2] && view.max_y <= cover[3]
+}
+
+/// The columns a look reads: the fields whose names its renderer, labels or filter name (a name met anywhere in their
+/// JSON is read; a few columns too many cost less than a class drawn without its value).
+fn columns_of(node: &LayerNode) -> Vec<String> {
+    let mut text = String::new();
+    if let Some(r) = &node.style.renderer {
+        text.push_str(&r.to_string());
+    }
+    if let Some(l) = &node.style.labels {
+        text.push_str(&serde_json::to_string(l).unwrap_or_default());
+    }
+    if let Some(l) = &node.style.label {
+        text.push_str(&serde_json::to_string(l).unwrap_or_default());
+    }
+    if let Some(f) = &node.filter {
+        text.push_str(&serde_json::to_string(f).unwrap_or_default());
+    }
+    node.fields
+        .iter()
+        .filter(|f| text.contains(f.name.as_str()))
+        .map(|f| f.name.clone())
+        .collect()
+}
+
+/// A value as the drawing's attributes keep it.
+fn attribute(v: &Value) -> Option<serde_json::Value> {
+    Some(serde_json::Value::String(match v {
+        Value::Null => return None,
+        Value::Bool(b) => if *b { "true" } else { "false" }.to_owned(),
+        Value::Real(r) if !r.is_finite() => return None,
+        Value::DateTime(t) => t.chars().take(19).collect(),
+        Value::Blob(_) => return None,
+        other => other.to_string(),
+    }))
+}
+
+/// A geometry moved into the project's system, position by position.
+fn moved(g: &kentos_data::Geometry, system: &TableSystem) -> Option<kentos_data::Geometry> {
+    use kentos_data::{Coord, Curve, Geometry};
+    fn coord(c: &Coord, s: &TableSystem) -> Option<Coord> {
+        let (x, y) = s.to_project(c.x, c.y)?;
+        Some(Coord { x, y, ..*c })
+    }
+    fn curve(c: &Curve, s: &TableSystem) -> Option<Curve> {
+        Some(match c {
+            Curve::Line(p) => Curve::Line(p.iter().map(|c| coord(c, s)).collect::<Option<_>>()?),
+            Curve::Arc(p) => Curve::Arc(p.iter().map(|c| coord(c, s)).collect::<Option<_>>()?),
+            Curve::Compound(parts) => {
+                Curve::Compound(parts.iter().map(|c| curve(c, s)).collect::<Option<_>>()?)
+            }
+        })
+    }
+    Some(match g {
+        Geometry::Point(p) => Geometry::Point(match p {
+            Some(c) => Some(coord(c, system)?),
+            None => None,
+        }),
+        Geometry::MultiPoint(ps) => {
+            Geometry::MultiPoint(ps.iter().map(|c| coord(c, system)).collect::<Option<_>>()?)
+        }
+        Geometry::Curve(c) => Geometry::Curve(curve(c, system)?),
+        Geometry::Polygon(r) => {
+            Geometry::Polygon(r.iter().map(|c| curve(c, system)).collect::<Option<_>>()?)
+        }
+        Geometry::MultiCurve(cs) => {
+            Geometry::MultiCurve(cs.iter().map(|c| curve(c, system)).collect::<Option<_>>()?)
+        }
+        Geometry::MultiPolygon(ps) => Geometry::MultiPolygon(
+            ps.iter()
+                .map(|r| r.iter().map(|c| curve(c, system)).collect::<Option<Vec<_>>>())
+                .collect::<Option<_>>()?,
+        ),
+        Geometry::Collection(gs) => Geometry::Collection(
+            gs.iter().map(|g| moved(g, system)).collect::<Option<_>>()?,
+        ),
+    })
+}
+
+/// What a read's thread needs.
+struct Job {
+    layer: String,
+    read: u64,
+    key: Key,
+    cover: [f64; 4],
+    columns: Vec<String>,
+    px_per_m: f64,
+    settings: ProjectSettings,
+    library: Arc<StyleLibrary>,
+    cancel: Cancel,
+    to: Sender<Said>,
+}
+
+/// A part of the rows drawn: their objects in a store of their own through the style engine.
+fn build(job: &Job, entities: &[Entity]) -> Option<Arc<StyledLayerPart>> {
+    if entities.is_empty() {
+        return None;
+    }
+    let mut store = Store::new();
+    store.put_many(entities.iter().map(|e| {
+        (
+            f64::from(e.base().id),
+            job.layer.as_str(),
+            false,
+            kentos_processing::geometry::record(e).3,
+        )
+    }));
+    let refs: Vec<&Entity> = entities.iter().collect();
+    let names: HashMap<String, String> =
+        HashMap::from([(job.layer.clone(), job.key.node.name.clone())]);
+    let styles: HashMap<String, kentos_commands::LayerStyle> =
+        HashMap::from([(job.layer.clone(), job.key.node.style.clone())]);
+    let clip = Bounds {
+        min_x: job.cover[0],
+        min_y: job.cover[1],
+        max_x: job.cover[2],
+        max_y: job.cover[3],
+    };
+    let layer = kentos_plot::layers::build_whole(
+        &store,
+        &job.library,
+        &job.key.node,
+        &refs,
+        &job.key.look,
+        clip,
+        kentos_plot::layers::LayerTables {
+            names: &names,
+            styles: &styles,
+        },
+    )
+    .ok()?;
+    Some(Arc::new(StyledLayerPart {
+        id: NEXT_PART.fetch_add(1, Ordering::Relaxed),
+        layer,
+    }))
+}
+
+/// A read on its thread: the source asked for the cover's rows, each part drawn and handed back as it comes.
+fn run(job: Job) {
+    let data = &job.key.data;
+    let fail = |why: String| {
+        let _ = job.to.send(Said::Failed(job.layer.clone(), job.read, why));
+    };
+    let source = match kentos_data::registry().source(&data.address) {
+        Ok(s) => s,
+        Err(e) => return fail(e.to_string()),
+    };
+    let srid = data.geometry.as_ref().and_then(|g| g.srid);
+    let system = match TableSystem::of(&job.settings, srid) {
+        Ok(s) => s,
+        Err(why) => return fail(why),
+    };
+    let bbox = match &system {
+        Some(s) => match s.to_table(job.cover) {
+            Some(b) => b,
+            None => return fail("görünüm tablonun sistemine çevrilemedi".into()),
+        },
+        None => job.cover,
+    };
+    // Half a pixel, in the table's units (a degree is about 111 km).
+    let metres = 0.5 / job.px_per_m.max(1e-9);
+    let geographic = matches!(srid, Some(4326) | Some(4258) | Some(4269));
+    let tolerance = if geographic { metres / 111_320.0 } else { metres };
+    let request = Request {
+        bbox: data.geometry.as_ref().map(|_| bbox),
+        columns: Some(job.columns.clone()),
+        geometry: data.geometry.is_some(),
+        simplify: Some(tolerance),
+        chunk: CHUNK,
+        ..Request::default()
+    };
+    let mut entities: Vec<Entity> = Vec::with_capacity(PART_ROWS);
+    let mut next_id = 1u32;
+    // Each part is said to the window as it comes: it is drawn while the rest is read.
+    let flush = |entities: &mut Vec<Entity>| {
+        if let Some(part) = build(&job, entities)
+            && job.to.send(Said::Part(job.layer.clone(), job.read, part)).is_ok()
+        {
+            service().tell();
+        }
+        entities.clear();
+    };
+    let read = source.features(&data.table, &request, &job.cancel, &mut |part: Vec<Feature>| {
+        for f in part {
+            let Some(g) = f.shape() else {
+                continue;
+            };
+            let g = match &system {
+                Some(s) => match moved(g, s) {
+                    Some(m) => m,
+                    None => continue,
+                },
+                None => g.clone(),
+            };
+            let attrs: serde_json::Map<String, serde_json::Value> = job
+                .columns
+                .iter()
+                .zip(&f.values)
+                .filter_map(|(c, v)| attribute(v).map(|a| (c.clone(), a)))
+                .collect();
+            if let Some(e) =
+                kentos_native_application::geopackage::object_of(&g, &job.layer, next_id, attrs)
+            {
+                next_id = next_id.wrapping_add(1);
+                entities.push(e);
+            }
+        }
+        if entities.len() >= PART_ROWS {
+            flush(&mut entities);
+        }
+        !job.cancel.is_cancelled()
+    });
+    match read {
+        Err(e) => fail(e.to_string()),
+        Ok(r) if r.stopped => {}
+        Ok(_) => {
+            flush(&mut entities);
+            let _ = job.to.send(Said::Done(job.layer.clone(), job.read));
+        }
+    }
+}
+
+impl DataView {
+    fn tell(&self) {
+        *self.fresh.lock().unwrap_or_else(PoisonError::into_inner) = true;
+        self.told.notify_one();
+    }
+
+    /// Bumps the generation the scene compares with.
+    pub fn generation(&self) -> u64 {
+        self.generation.load(Ordering::Relaxed)
+    }
+
+    /// The failures said since last asked, each once.
+    pub fn take_notices(&self) -> Vec<String> {
+        std::mem::take(&mut *self.notices.lock().unwrap_or_else(PoisonError::into_inner))
+    }
+
+    /// The parts to draw for a layer: the read drawn, else the read under way so far.
+    pub fn parts(&self, layer: &str) -> Vec<Arc<StyledLayerPart>> {
+        let layers = self.layers.lock().unwrap_or_else(PoisonError::into_inner);
+        let Some(l) = layers.get(layer) else {
+            return Vec::new();
+        };
+        match (&l.drawn, &l.going) {
+            (Some(d), _) => d.parts.clone(),
+            (None, Some(g)) => g.parts.clone(),
+            (None, None) => Vec::new(),
+        }
+    }
+
+    /// Takes what the reads said: parts added to their reads, a whole read becoming the drawn one.
+    fn drain(&self) {
+        let from = self.from.lock().unwrap_or_else(PoisonError::into_inner);
+        let mut layers = self.layers.lock().unwrap_or_else(PoisonError::into_inner);
+        let mut changed = false;
+        while let Ok(said) = from.try_recv() {
+            match said {
+                Said::Part(layer, read, part) => {
+                    if let Some(g) = layers.get_mut(&layer).and_then(|l| l.going.as_mut())
+                        && g.id == read
+                    {
+                        g.parts.push(part);
+                        changed = true;
+                    }
+                }
+                Said::Done(layer, read) => {
+                    if let Some(l) = layers.get_mut(&layer)
+                        && l.going.as_ref().is_some_and(|g| g.id == read)
+                    {
+                        l.drawn = l.going.take();
+                        l.failed = None;
+                        changed = true;
+                    }
+                }
+                Said::Failed(layer, read, why) => {
+                    if let Some(l) = layers.get_mut(&layer)
+                        && l.going.as_ref().is_some_and(|g| g.id == read)
+                    {
+                        l.going = None;
+                        if l.failed.as_deref() != Some(why.as_str()) {
+                            self.notices
+                                .lock()
+                                .unwrap_or_else(PoisonError::into_inner)
+                                .push(format!("Veri katmanı okunamadı: {why}"));
+                        }
+                        l.failed = Some(why);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        if changed {
+            self.generation.fetch_add(1, Ordering::Relaxed);
+        }
+    }
+
+    /// The drawing area's view each frame: each shown data layer read again where its last read does not cover what is
+    /// asked; layers no longer shown are let go (their reads stopped).
+    #[allow(clippy::too_many_arguments)]
+    pub fn want(
+        &self,
+        nodes: &[&LayerNode],
+        settings: &ProjectSettings,
+        view: &Bounds,
+        px_per_m: f64,
+        look: &Look,
+        library: &StyleLibrary,
+        settled: bool,
+    ) {
+        self.drain();
+        let shown: HashSet<&str> = nodes.iter().map(|n| n.id.as_str()).collect();
+        let mut layers = self.layers.lock().unwrap_or_else(PoisonError::into_inner);
+        layers.retain(|id, l| {
+            let keep = shown.contains(id.as_str());
+            if !keep && let Some(g) = &l.going {
+                g.cancel.cancel();
+            }
+            keep
+        });
+        if nodes.is_empty() {
+            return;
+        }
+        let version = library.version();
+        let library = {
+            let mut kept = self.library.lock().unwrap_or_else(PoisonError::into_inner);
+            match kept.as_ref() {
+                Some((v, l)) if *v == version => Arc::clone(l),
+                _ => {
+                    let l = Arc::new(library.clone());
+                    *kept = Some((version, Arc::clone(&l)));
+                    l
+                }
+            }
+        };
+        let step = step_of(px_per_m);
+        for node in nodes {
+            let Some(data) = &node.data else {
+                continue;
+            };
+            let key = Key {
+                data: data.clone(),
+                node: (*node).clone(),
+                look: look.clone(),
+                library: version,
+                step,
+            };
+            let l = layers.entry(node.id.clone()).or_default();
+            let covered = |r: &Read| r.key == key && inside(view, &r.cover);
+            if l.going.as_ref().is_some_and(covered) || (l.going.is_none() && l.drawn.as_ref().is_some_and(covered)) {
+                continue;
+            }
+            // A new look or table is read at once; a moved view once it stops (a pan within the cover reads nothing).
+            let same_look = l
+                .drawn
+                .as_ref()
+                .or(l.going.as_ref())
+                .is_some_and(|r| r.key.data == key.data && r.key.node == key.node && r.key.look == key.look);
+            if same_look && !settled {
+                continue;
+            }
+            if let Some(g) = l.going.take() {
+                g.cancel.cancel();
+            }
+            let cover = cover_of(view);
+            let read = Read {
+                id: NEXT_READ.fetch_add(1, Ordering::Relaxed),
+                key: key.clone(),
+                cover,
+                parts: Vec::new(),
+                cancel: Cancel::new(),
+            };
+            let job = Job {
+                layer: node.id.clone(),
+                read: read.id,
+                key,
+                cover,
+                columns: columns_of(node),
+                px_per_m,
+                settings: settings.clone(),
+                library: Arc::clone(&library),
+                cancel: read.cancel.clone(),
+                to: self.to.clone(),
+            };
+            l.going = Some(read);
+            let _ = std::thread::Builder::new()
+                .name("kentos-data-view".into())
+                .spawn(move || {
+                    let to = job.to.clone();
+                    run(job);
+                    drop(to);
+                    service().tell();
+                });
+        }
+    }
+}
+
+/// The window's message each time parts came (at most one a frame).
+pub fn ready() -> impl iced::futures::Stream<Item = crate::app::Message> {
+    use iced::futures::SinkExt;
+    let (mut out, stream) = iced::futures::channel::mpsc::channel(1);
+    std::thread::spawn(move || {
+        let s = service();
+        loop {
+            {
+                let mut fresh = s.fresh.lock().unwrap_or_else(PoisonError::into_inner);
+                while !*fresh {
+                    fresh = s.told.wait(fresh).unwrap_or_else(PoisonError::into_inner);
+                }
+                *fresh = false;
+            }
+            if iced::futures::executor::block_on(out.send(crate::app::Message::DataReady)).is_err() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(16));
+        }
+    });
+    stream
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_read_covers_half_the_view_again_on_every_side() {
+        let view = Bounds {
+            min_x: 0.0,
+            min_y: 0.0,
+            max_x: 100.0,
+            max_y: 50.0,
+        };
+        assert_eq!(cover_of(&view), [-50.0, -25.0, 150.0, 75.0]);
+        let moved = Bounds {
+            min_x: 40.0,
+            min_y: 10.0,
+            max_x: 140.0,
+            max_y: 60.0,
+        };
+        assert!(inside(&moved, &cover_of(&view)));
+        assert_eq!(step_of(1.0), 0);
+        assert_eq!(step_of(2.0), 4);
+        assert_eq!(attribute(&Value::Bool(true)), Some(serde_json::Value::String("true".into())));
+        assert_eq!(attribute(&Value::Null), None);
+    }
+}

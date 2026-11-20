@@ -664,7 +664,8 @@ impl App {
                     .on_press(add.clone())
                     .padding(kentos_ui::theme::metrics::icon_small(15.0))
                     .style(style::button::ghost),
-                Tip::new("Bağlı katman olarak aç"),
+                Tip::new("Veri katmanı olarak ekle")
+                    .body("Tablo kopyalanmaz: satırları dosyada kalır, görünüm gerektikçe okunur."),
                 tooltip::Position::Left,
             ),
         };
@@ -733,8 +734,9 @@ impl App {
                     .detail("Tablo bu çizimde zaten bağlı; ikinci kez bağlanmaz.")
             } else {
                 Menu::new()
-                    .item("Bağlı katman olarak aç…", bind.clone())
+                    .item("Veri katmanı olarak ekle", bind.clone())
                     .icon(from_web(Some("layerAdd")))
+                    .detail("Satırlar dosyada kalır; görünüm, tablo ve araçlar gerektikçe kaynaktan okur.")
             };
             if let Some(copy) = &copy {
                 menu = menu

@@ -104,6 +104,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // The data layers' parts as they are read and drawn (data_view.rs, docs/adr/9101 §6).
+            if crate::data_view::in_use() {
+                Subscription::run(crate::data_view::ready)
+            } else {
+                Subscription::none()
+            },
             // The loaded external references' files, looked at every few seconds (xrefs_watch.rs, docs/adr/0349 §3).
             if self.xrefs_watching() {
                 Subscription::run(crate::xrefs_watch::ticks)
@@ -539,6 +545,12 @@ impl App {
             // The next frame draws them; a service that failed is said once.
             Message::ServicesReady => {
                 for text in crate::services::hub().take_notices() {
+                    self.warn(text);
+                }
+            }
+            // The next frame draws them; a table that failed is said once.
+            Message::DataReady => {
+                for text in crate::data_view::service().take_notices() {
                     self.warn(text);
                 }
             }

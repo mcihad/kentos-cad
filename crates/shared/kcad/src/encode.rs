@@ -106,7 +106,14 @@ fn modules_of(doc: &DocumentSnapshotV2, objects: Objs<'_>) -> ModuleVersions {
     if arch > 0 {
         out.modules.push(("arch".to_owned(), arch));
     }
-    if extended(&doc.layers) {
+    // GIS 2 (docs/adr/9101 §3): a data layer.
+    fn data(nodes: &[kentos_contracts::LayerNode]) -> bool {
+        nodes.iter().any(|n| n.data.is_some() || data(&n.children))
+    }
+    if data(&doc.layers) {
+        out.modules
+            .push(("gis".to_owned(), crate::GIS_WITH_DATA_LAYERS));
+    } else if extended(&doc.layers) {
         out.modules
             .push(("gis".to_owned(), crate::GIS_WITH_EXTENSION_DERIVATIONS));
     }

@@ -45,6 +45,7 @@ fn layer(id: &str, style: LayerStyle) -> LayerNode {
         snap: None,
         fields: Vec::new(),
         service: None,
+        data: None,
         feed: None,
         time: None,
         scenario: None,

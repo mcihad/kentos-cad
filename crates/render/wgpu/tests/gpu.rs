@@ -275,6 +275,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         snap: None,
         fields: Vec::new(),
         service: None,
+        data: None,
         feed: None,
         time: None,
         scenario: None,

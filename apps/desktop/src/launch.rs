@@ -88,6 +88,8 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
     typography::load();
     // Bound layers on PostGIS (docs/adr/0505).
     kentos_postgis::register();
+    // The data drivers and the device's passwords for data layers (docs/adr/9101).
+    crate::data_layers::register();
     kentos_processing::command::register_as("desktop");
     // STAC searches (docs/adr/0528 §2): over the cloud client's HTTP.
     kentos_native_application::stac_host::register(Box::new(kentos_cloud::stac::HttpFetch));

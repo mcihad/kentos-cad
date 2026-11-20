@@ -298,6 +298,12 @@ impl Input for LayersService {
     }
 }
 
+impl Input for kentos_commands::LayersData {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for LayersTime {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None

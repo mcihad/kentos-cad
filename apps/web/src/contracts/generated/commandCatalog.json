@@ -77798,6 +77798,231 @@
       ]
     },
     {
+      "id": "cad.layers.data",
+      "version": 1,
+      "title": "Veri katmanı",
+      "summary": "Katman ağacına bir GeoPackage dosyasının ya da bir PostGIS veritabanının tablosundan çizilen veri katmanı ekler (add), birini değiştirir (update: adı, tablonun yeri, alanları) ya da kaldırır (remove; tablo olduğu gibi kalır); tek geri alma adımı, adı işlemin. Veri katmanının satırları çizime kopyalanmaz: kaynağında kalır, görünüm, tablo ve araçlar gerektikçe kaynaktan okunur. data: sürücü (gpkg ya da postgis), kaynağın adresi (dosyanın mutlak yolu ya da postgresql://kullanıcı@sunucu:port/veritabanı; parola yazılmaz), tablo, tam sayı anahtar sütunu, geometri sütunu (türü, EPSG kodu, Z, M), salt okunur. fields tablonun sütunlarıdır; ev sahibi tablonun kataloğunu okuyup verir, komut kaynağı okumaz. Katman tablonun çizdiği türü alır (nokta, çizgi, alan). parent katmanın gireceği grup, index gruptaki yeri: ilki en üstte çizilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "verikatmani",
+        "tabloekle",
+        "postgis",
+        "geopackage"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.data` v1.\n\n- `add`: `name`, `data`, `fields` (the table's columns as the layer's fields; absent: none); `parent` and `index`\n  place it as `cad.layers.service` places a layer;\n- `update`: `layer`, and any of `name`, `data`, `fields`;\n- `remove`: `layer`.\n\nThe host reads the table's catalog (its columns, key, geometry column, system) and gives it here: the command reads\nno source. Refusals (`CommandError.code`), checked in this order: `no_layer` (update and remove without `layer`),\n`empty_name` (add; update with a name that is empty or only white space), `no_data` (add without `data`),\n`invalid_data` (`DataLayer::problem`), `invalid_fields` (`fields_problem`); then `invalid_revision`,\n`revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer` (a group), `not_a_data_layer` (update or\nremove of a layer that is not a data layer).",
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataLayer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`add`: where its rows are; `update`: where they are now."
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fields": {
+            "description": "The table's columns as the layer's fields (docs/adr/0199 §1).",
+            "items": {
+              "$ref": "#/$defs/LayerField"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "index": {
+            "description": "Its place among the group's nodes, first on top; absent or past the end, last.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "index"
+          },
+          "layer": {
+            "description": "`update`, `remove`: the layer's id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "`add`: the new layer's name; `update`: a new name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/LayerDataOperation"
+          },
+          "parent": {
+            "description": "The group it goes into, or a layer whose group it goes into; absent, the top.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "LayersData",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.data` v1.",
+        "properties": {
+          "layer": {
+            "description": "The layer added, changed or removed.",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "revision"
+        ],
+        "title": "LayersDataDone",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.layers.data` would write (plan mode); nothing is written.",
+        "properties": {
+          "node": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerNode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The layer as execute would leave it (`add`: with the id it would be given); absent for `remove`."
+          },
+          "revision": {
+            "description": "The document revision the plan was made against.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "LayersDataPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_layer",
+          "empty_name",
+          "no_data",
+          "invalid_data",
+          "invalid_fields",
+          "invalid_revision",
+          "revision_conflict",
+          "layer_not_found",
+          "not_a_layer",
+          "not_a_data_layer",
+          "layer_refused"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Belediyenin PostGIS parselleri",
+          "input": {
+            "data": {
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "driver": "postgis",
+              "geometry": {
+                "column": "geom",
+                "srid": 5256,
+                "typeName": "MULTIPOLYGON"
+              },
+              "key": "fid",
+              "table": "kadastro.parseller"
+            },
+            "fields": [
+              {
+                "kind": "integer",
+                "name": "ada"
+              },
+              {
+                "kind": "integer",
+                "name": "parsel"
+              },
+              {
+                "kind": "text",
+                "name": "mahalle"
+              }
+            ],
+            "name": "Parseller",
+            "operation": "add"
+          },
+          "output": {
+            "layer": "layer-7",
+            "revision": "41"
+          }
+        },
+        {
+          "title": "GeoPackage'taki direkler, salt okunur",
+          "input": {
+            "data": {
+              "address": "/veri/altyapi.gpkg",
+              "driver": "gpkg",
+              "geometry": {
+                "column": "geom",
+                "srid": 5256,
+                "typeName": "POINT"
+              },
+              "key": "fid",
+              "readOnly": true,
+              "table": "direkler"
+            },
+            "name": "Direkler",
+            "operation": "add"
+          }
+        },
+        {
+          "title": "Veri katmanını kaldır (tablo kalır)",
+          "input": {
+            "layer": "layer-7",
+            "operation": "remove"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.crs",
       "version": 1,
       "title": "Katmanın koordinat sistemini tanımla",
@@ -105984,7 +106209,7 @@
       },
       "examples": [
         {
-          "title": "Google Earth'ün yer imleri projenin sistemine çevrilerek",
+          "title": "KMZ'nin yer imleri projenin sistemine çevrilerek",
           "input": {
             "path": "/veri/yerler.kmz",
             "reproject": true
@@ -112571,6 +112796,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Katmanın kimliği kurallarına uymuyor ya da ağaçta var."
+    },
+    {
+      "code": "no_data",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Eklemek için veri tablosu verilmedi."
+    },
+    {
+      "code": "invalid_data",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Veri tablosu kurallarına uymuyor."
+    },
+    {
+      "code": "not_a_data_layer",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman bir veri katmanı değil."
     },
     {
       "code": "no_network",
@@ -140779,6 +141022,107 @@
       ],
       "type": "object"
     },
+    "DataGeometry": {
+      "additionalProperties": false,
+      "description": "The geometry column of a data layer's table as last read.",
+      "properties": {
+        "column": {
+          "type": "string"
+        },
+        "m": {
+          "description": "Its positions have M; only `true` is written.",
+          "type": "boolean"
+        },
+        "srid": {
+          "description": "Its system's EPSG code; absent: undefined.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "epsg"
+        },
+        "typeName": {
+          "description": "OGC's name of its type, upper case (`MULTIPOLYGON`, `POINT`, `GEOMETRY` …).",
+          "type": "string"
+        },
+        "z": {
+          "description": "Its positions have Z; only `true` is written.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "column",
+        "typeName"
+      ],
+      "type": "object"
+    },
+    "DataLayer": {
+      "additionalProperties": false,
+      "description": "Where a data layer's rows are.",
+      "properties": {
+        "address": {
+          "description": "A GeoPackage's absolute path; a database's `postgresql://user@host:port/database` (no password).",
+          "type": "string"
+        },
+        "driver": {
+          "description": "The driver's id: `gpkg` or `postgis`.",
+          "type": "string"
+        },
+        "extent": {
+          "description": "The table's box as its catalogue last said it (minimum east, north, maximum east, north, in the table's system):\nwhat Katmana yakınlaş and Tümünü göster frame without asking the source.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "geometry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataGeometry"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The geometry column; absent: a table of records without geometry."
+        },
+        "key": {
+          "description": "The integer key column.",
+          "type": "string"
+        },
+        "readOnly": {
+          "description": "The layer is not edited even where the source allows it (the user's choice); only `true` is written.",
+          "type": "boolean"
+        },
+        "relative": {
+          "description": "A GeoPackage's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving\nwhen the file lies on the same disk; read when `address` is not there.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table": {
+          "description": "The table: its name in a file, `schema.table` in a database.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "driver",
+        "address",
+        "table",
+        "key"
+      ],
+      "type": "object"
+    },
     "DataProfile": {
       "additionalProperties": false,
       "description": "A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.",
@@ -163789,6 +164133,26 @@
       },
       "type": "object"
     },
+    "LayerDataOperation": {
+      "description": "What `cad.layers.data` does.",
+      "oneOf": [
+        {
+          "const": "add",
+          "description": "Veri katmanı ekle.",
+          "type": "string"
+        },
+        {
+          "const": "update",
+          "description": "Veri katmanını değiştir: its name, its table (another place of the same table, a moved file) or its fields.",
+          "type": "string"
+        },
+        {
+          "const": "remove",
+          "description": "Veri katmanını kaldır: the layer goes, the table stays as it is.",
+          "type": "string"
+        }
+      ]
+    },
     "LayerDerivation": {
       "additionalProperties": false,
       "description": "What a layer a processing tool made was derived from (docs/adr/0633 §2): written by the run, in its undo step.",
@@ -164417,6 +164781,17 @@
           },
           "type": "array"
         },
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataLayer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A data layer (docs/adr/9101 §2): drawn from a table of a GeoPackage or a database as it is now, its rows asked\nof the source, never copied into the drawing; it holds no objects. Only a layer has it, never a group, and\nnever with a service or a feed."
+        },
         "dataset": {
           "anyOf": [
             {
@@ -164472,7 +164847,7 @@
           "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
         },
         "frozen": {
-          "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+          "description": "Dondur (DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
           "type": [
             "boolean",
             "null"
@@ -164506,7 +164881,7 @@
           "type": "string"
         },
         "plot": {
-          "description": "Yazdır: absent, it is printed; `false`, it is drawn on screen but not\non a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;\ndocs/adr/0260 §4). A group's covers what it holds. Only `false` is written.",
+          "description": "Yazdır: absent, it is printed; `false`, it is drawn on screen but not\non a sheet, its PDF or a print (DXF's 290;\ndocs/adr/0260 §4). A group's covers what it holds. Only `false` is written.",
           "type": [
             "boolean",
             "null"
@@ -164795,7 +165170,7 @@
       "type": "object"
     },
     "LayerState": {
-      "description": "A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's\nlayer states): the tree's nodes as they were when it was saved, their\nvisibility and, when it was saved with them, their locks and the layers'\nstyles. The project keeps them (`ProjectSettings::layer_states`).",
+      "description": "A named layer state (docs/adr/0177 §4): the tree's nodes as they were\nwhen it was saved, their visibility and, when it was saved with them,\ntheir locks and the layers' styles. The project keeps them\n(`ProjectSettings::layer_states`).",
       "properties": {
         "id": {
           "description": "One of its kind among the project's states.",

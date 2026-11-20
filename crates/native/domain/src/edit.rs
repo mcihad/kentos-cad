@@ -443,16 +443,21 @@ impl Document {
                 "“{name}” bir grup; servis ve veri kaynağı yalnız katmanın olur."
             )));
         }
-        if next.service.is_some() && next.feed.is_some() {
+        if usize::from(next.service.is_some())
+            + usize::from(next.feed.is_some())
+            + usize::from(next.data.is_some())
+            > 1
+        {
             return Err(Refusal(format!(
-                "“{name}” katmanı hem servisten çizilir hem nesnelerini bir kaynaktan alır; ikisi birden olmaz."
+                "“{name}” katmanı tek bir yerden gelir: bir harita servisinden, bir servisin nesnelerinden ya da bir veri tablosundan; ikisi birden olmaz."
             )));
         }
         let problem = next
             .service
             .as_ref()
             .and_then(|s| s.problem())
-            .or_else(|| next.feed.as_ref().and_then(|f| f.problem()));
+            .or_else(|| next.feed.as_ref().and_then(|f| f.problem()))
+            .or_else(|| next.data.as_ref().and_then(|d| d.problem()));
         if let Some(problem) = problem {
             return Err(Refusal(problem));
         }
@@ -461,11 +466,17 @@ impl Document {
                 "“{name}” katmanında nesne var; servis katmanı nesne tutmaz. Servisi yeni bir katmana ekleyin."
             )));
         }
+        if next.data.is_some() && self.holds_objects(id) {
+            return Err(Refusal(format!(
+                "“{name}” katmanında nesne var; veri katmanı nesne tutmaz, satırları kaynağında kalır. Tabloyu yeni bir katman olarak ekleyin."
+            )));
+        }
         let before = Served {
             name: node.name.clone(),
             by: ServedBy {
                 service: node.service.clone(),
                 feed: node.feed.clone(),
+                data: node.data.clone(),
             },
         };
         let next = Served {

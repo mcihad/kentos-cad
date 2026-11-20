@@ -1491,6 +1491,8 @@ def layer_entries(n):
                 # Schema 106 (docs/adr/0633 §3): the layer as a dataset and what it was derived from, as their JSON.
                 "dataset": (opaque, False),
                 "derivation": (opaque, False),
+                # GIS data 2 (docs/adr/9101 §3): a data layer's table, as its JSON.
+                "data": (opaque, False),
                 # Schema 102 (docs/adr/0622 §5): what the layer holds.
                 "geometry": (enum(("point", "line", "area", "annotation")), False),
                 "type": (enum(("group", "layer")), True),
@@ -3002,6 +3004,13 @@ def document(d):
     def extended(nodes):
         return any("extension" in n.get("derivation", {}) or "environment" in n.get("derivation", {})
                    or extended(n.get("children", [])) for n in nodes)
+    # GIS data 2 (docs/adr/9101 §3): a data layer.
+    def data_layers(nodes):
+        return any("data" in n or data_layers(n.get("children", [])) for n in nodes)
+    if data_layers(d["layers"]):
+        schema = max(schema, 254)
+        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(2)})
+                + text("version") + uint(schema) + text("document") + cmap(body))
     if extended(d["layers"]):
         schema = max(schema, 254)
         return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(1)})
@@ -5744,6 +5753,33 @@ def build():
     ext_other = copy.deepcopy(load("extension-derivation.json"))
     derived_layer(ext_other)["derivation"]["extension"]["extension"] = "tr.ornek.baska"
     out["broken/derivation-extension-other-tool.kcad"] = container(document(ext_other))
+    # Data layers (docs/adr/9101 §3): GIS data 2; without `modules` an unknown field; a group's table, a password in its
+    # address, a `false` written, a data layer that is also a service's, an unknown geometry type, a box turned inside out
+    # are bad values.
+    out["data-layers.kcad"] = container(document(load("data-layers.json")))
+    data_payload = document(load("data-layers.json"))
+    with_gis2 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(2)})
+    assert data_payload.startswith(with_gis2), "a data layer raises the GIS data's version to 2"
+    out["broken/data-layer-without-gis.kcad"] = container(
+        head(5, 3) + text("format") + text("kentos.document") + data_payload[len(with_gis2):])
+
+    def data_broken(change):
+        d = copy.deepcopy(load("data-layers.json"))
+        change(d)
+        return container(document(d))
+
+    def parcels(d):
+        return next(n for n in d["layers"] if n["id"] == "parseller")
+
+    out["broken/data-layer-on-group.kcad"] = data_broken(lambda d: d["layers"][2].update(data=dict(parcels(d)["data"])))
+    out["broken/data-layer-password.kcad"] = data_broken(
+        lambda d: parcels(d)["data"].update(address="postgresql://kbs:gizli@db.ornek.bel.tr:5432/kent"))
+    out["broken/data-layer-false-written.kcad"] = data_broken(lambda d: parcels(d)["data"].update(readOnly=False))
+    out["broken/data-layer-and-service.kcad"] = data_broken(lambda d: parcels(d).update(
+        service={"kind": "xyz", "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"}))
+    out["broken/data-layer-type.kcad"] = data_broken(lambda d: parcels(d)["data"]["geometry"].update(typeName="Polygon"))
+    out["broken/data-layer-extent.kcad"] = data_broken(
+        lambda d: parcels(d)["data"].update(extent=[617000.0, 4400000.0, 587000.0, 4430000.0]))
     # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
     # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
     # two columns of one name, an unknown way, an empty list of columns.

@@ -54,7 +54,6 @@ pub use kentos_scene_query::{
 };
 
 #[path = "gis/address_define.rs"]
-
 pub mod address_define;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/addresses.rs"]
@@ -492,6 +491,8 @@ pub mod layers_renderer;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_service.rs"]
 pub mod layers_service;
+#[path = "gis/layers_data.rs"]
+pub mod layers_data;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_set.rs"]
 pub mod layers_set;
@@ -3138,6 +3139,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_RECORDS_PAGE_VERSION,
     ),
     // A layer's source system and its objects moved from it ([`layers_crs`], docs/adr/0583).
+    // A data layer added, changed or removed: its rows stay in the source ([`layers_data`], docs/adr/9101 §4).
+    (
+        kentos_commands::CAD_LAYERS_DATA,
+        kentos_commands::CAD_LAYERS_DATA_VERSION,
+    ),
     (
         kentos_commands::CAD_LAYERS_CRS,
         kentos_commands::CAD_LAYERS_CRS_VERSION,

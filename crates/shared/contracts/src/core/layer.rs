@@ -499,6 +499,12 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub service: Option<crate::service::ServiceLayer>,
+    /// A data layer (docs/adr/9101 §2): drawn from a table of a GeoPackage or a database as it is now, its rows asked
+    /// of the source, never copied into the drawing; it holds no objects. Only a layer has it, never a group, and
+    /// never with a service or a feed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub data: Option<crate::data_layer::DataLayer>,
     /// Where the layer's objects were taken from, to take them again
     /// (docs/adr/0208 §10). Only a layer has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -553,12 +559,12 @@ pub struct LayerNode {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<LayerGeometry>,
     /// Yazdır: absent, it is printed; `false`, it is drawn on screen but not
-    /// on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
+    /// on a sheet, its PDF or a print (DXF's 290;
     /// docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
-    /// Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,
+    /// Dondur (DXF's 70 bit 1; docs/adr/0311 §1): absent,
     /// thawed; `true`, frozen: neither drawn, picked, snapped to nor counted
     /// in the drawing's extent, and Hepsini göster leaves it frozen; the
     /// active layer is never frozen. A group's covers what it holds. Only
@@ -686,10 +692,10 @@ impl LayerSnap {
     }
 }
 
-/// A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's
-/// layer states): the tree's nodes as they were when it was saved, their
-/// visibility and, when it was saved with them, their locks and the layers'
-/// styles. The project keeps them (`ProjectSettings::layer_states`).
+/// A named layer state (docs/adr/0177 §4): the tree's nodes as they were
+/// when it was saved, their visibility and, when it was saved with them,
+/// their locks and the layers' styles. The project keeps them
+/// (`ProjectSettings::layer_states`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

@@ -24,22 +24,35 @@ ADR'ler **9100**'den başlar.
   - Uygunluk takımını iki sürücü de geçer. Bir milyon parselde PostGIS'te sokak görünümü 11 ms, bütün kent 1,26 s;
     GeoPackage'da 0,2 ms ve 0,8 s.
   - Kalan: masaüstüne bağlanması VY-02'de.
-- [ ] **VY-02 — Katman türleri ve veri katmanı.**
-  - Projede “veri katmanı” ayrı bir tür olur. Taşıdıkları:
+- [x] **VY-02 — Katman türleri ve veri katmanı.** ([ADR 9101](../docs/adr/9101-data-layers.md) §2–§5, §7)
+  - Projede “veri katmanı” ayrı bir türdür (`LayerNode.data`). Taşıdıkları:
     - kaynak: sürücü, adres ve tablo;
-    - şema, geometri türü ve sistem;
-    - anahtar ve alt küme süzgeci;
-    - salt okunur ya da düzenlenebilir olduğu.
-  - Satırları çizime kopyalanmaz. Katmanlar'da türüyle görünür: çizim katmanı, veri katmanı (nokta, çizgi, alan,
-    tablo), raster, servis, nokta bulutu, grup.
-  - Kaynaklar'dan ve PostGIS'e bağlan'dan eklemek yalnız kataloğu okur.
-  - Proje kapatılıp açılınca kaynak yeniden bağlanır; parola projeye yazılmaz.
-- [ ] **VY-03 — Canlı çizim.**
-  - Veri katmanı görünen alanı arka planda okur ve parça geldikçe çizer; görünüm başka yere gidince eski istek durur.
-  - Sunucuda sadeleştirilmiş geometri; aynı görünüm için önbellek.
-  - Kategorili, dereceli ve kurallı stiller ile etiketler, çizim katmanlarıyla aynı motordan geçer.
-  - Bilgi aracı, seçim ve kenet kaynaktan sorar.
-  - Bütçe ADR 9100 §9'da.
+    - anahtar, geometri sütunu, türü ve sistemi;
+    - tablonun kutusu;
+    - salt okunur olduğu.
+  - Tablonun sütunları katmanın alanlarıdır. Komut: `cad.layers.data` (ekle, değiştir, kaldır; 33 ortak durum).
+    `.kcad`'da CBS verisi sürüm 2.
+  - Satırları çizime kopyalanmaz. Katmanlar'da türünün simgesi, kaynağının imi ve ipucuyla görünür: veri katmanı
+    (nokta, çizgi, alan, tablo).
+  - Kaynaklar'dan (“Veri katmanı olarak ekle”) ve PostGIS'e bağlan'dan eklemek yalnız kataloğu okur.
+  - Proje kapatılıp açılınca kaynak yeniden bağlanır; parola projeye yazılmaz, cihazın kayıtlı bağlantısından bulunur.
+  - Kalan:
+    - katmanın süzgeci veri katmanında henüz uygulanmıyor (VY-04'te SQL'e);
+    - göreli yolun yazılması ve çözülmesi VY-09'da;
+    - SQL sorgusu katmanı bağlı kopya olarak kaldı.
+- [ ] **VY-03 — Canlı çizim.** ([ADR 9101](../docs/adr/9101-data-layers.md) §6; çekirdeği yapıldı, etiket ve bilgi
+  aracı sürüyor)
+  - Veri katmanı görünen alanı ve her yandan yarısı kadar payı arka planda okur, parça geldikçe çizer. Görünüm başka
+    yere gidince eski istek durur.
+  - Geometri yarım piksele sadeleştirilir; PostGIS'te sunucuda. Pay içindeki kaydırma yeniden okumaz.
+  - Kategorili, dereceli ve kurallı stiller çizim katmanlarıyla aynı motordan geçer.
+  - Gerçek pencerede bir milyon PostGIS parseli ve bir GeoPackage'ın yolları ve direkleri, bütün kentten sokağa kadar
+    kaynaktan çizildi. Çizimde 0 nesne vardı.
+  - Kalan:
+    - veri katmanının etiketleri;
+    - bilgi aracının kaynaktan sorması;
+    - seçim VY-04'te (tablo ile birlikte), kenet VY-05'te (düzenleme oturumu ile birlikte);
+    - stil penceresinin sınıflandırmasının sürücüden okuması VY-07'de.
 - [ ] **VY-04 — Alttaki tablo kaynakta.**
   - Öznitelik tablosu veri katmanında sayfa sayfa okunur.
   - Sıralama, süzgeç, arama ve sayı SQL'de; “görünümdekiler” ve “seçililer” kaynaktan.

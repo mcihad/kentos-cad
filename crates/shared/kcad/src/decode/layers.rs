@@ -17,6 +17,7 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
     let mut source_crs: Option<kentos_contracts::LayerSourceCrs> = None;
     let mut dataset: Option<kentos_contracts::DatasetInfo> = None;
     let mut derivation: Option<kentos_contracts::LayerDerivation> = None;
+    let mut data: Option<kentos_contracts::DataLayer> = None;
     let mut geometry: Option<kentos_contracts::LayerGeometry> = None;
     let mut contingents: Option<(usize, Vec<kentos_contracts::FieldGroup>)> = None;
     let mut rules: Option<(usize, Vec<kentos_contracts::LayerRule>)> = None;
@@ -228,6 +229,32 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
                 }
                 dataset = Some(read);
             }
+            // GIS data 2 (docs/adr/9101 §3): a data layer's table, read whole and checked; before it an unknown field.
+            "data" if has.gis >= crate::GIS_WITH_DATA_LAYERS => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let read: kentos_contracts::DataLayer = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("veri katmanının tablosu okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "veri katmanının tablosu yazıcının biçiminde değil (boş ya da yanlış bir alan yazılmış)",
+                    ));
+                }
+                if let Some(problem) = read.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                data = Some(read);
+            }
             "derivation" if has.datasets => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -411,6 +438,18 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
             "grubun türü olmaz; nokta, çizgi, alan ya da açıklama yalnız katmanın türüdür",
         ));
     }
+    if data.is_some() && kind == Some(LayerNodeType::Group) {
+        return Err(r.fail(
+            Code::BadValue,
+            "grubun veri tablosu olmaz; yalnız katmanın olur",
+        ));
+    }
+    if data.is_some() && (service.is_some() || feed.is_some()) {
+        return Err(r.fail(
+            Code::BadValue,
+            "katman tek bir yerden gelir: bir harita servisinden, bir servisin nesnelerinden ya da bir veri tablosundan",
+        ));
+    }
     if (dataset.is_some() || derivation.is_some()) && kind == Some(LayerNodeType::Group) {
         return Err(r.fail(
             Code::BadValue,
@@ -418,6 +457,7 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
         ));
     }
     Ok(LayerNode {
+        data,
         dataset,
         derivation,
         source_crs,

@@ -1452,7 +1452,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             plan: Some(schema::<crate::GisImported>()),
             capabilities: None,
             examples: vec![CommandExample {
-                title: "Google Earth'ün yer imleri projenin sistemine çevrilerek".into(),
+                title: "KMZ'nin yer imleri projenin sistemine çevrilerek".into(),
                 input: json!({ "path": "/veri/yerler.kmz", "reproject": true }),
                 output: None,
             }],
@@ -3183,6 +3183,9 @@ mod tests {
                     crate::CAD_LAYERS_FILTER => {
                         serde_json::from_value::<crate::LayersFilter>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_DATA => {
+                        serde_json::from_value::<crate::LayersData>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_CRS => {
                         serde_json::from_value::<crate::LayersCrs>(e.input.clone()).map(|_| ())
                     }
@@ -4182,6 +4185,10 @@ mod tests {
                         }
                         crate::CAD_LAYERS_FILTER => {
                             serde_json::from_value::<crate::LayersFiltered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_DATA => {
+                            serde_json::from_value::<crate::LayersDataDone>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_CRS => {

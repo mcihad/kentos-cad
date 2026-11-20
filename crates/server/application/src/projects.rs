@@ -1320,6 +1320,7 @@ mod tests {
             snap,
             fields: Vec::new(),
             service: None,
+            data: None,
             feed: None,
             time: None,
             scenario: None,

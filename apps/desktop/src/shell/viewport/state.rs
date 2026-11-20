@@ -465,6 +465,22 @@ impl Viewport {
         let nodes = themed
             .as_deref()
             .map_or(doc.model.layers().nodes(), |t| t.nodes());
+        // The data layers shown read what the view shows from their sources (docs/adr/9101 §6).
+        let data_nodes: Vec<&kentos_commands::LayerNode> = crate::style::scene::shown_layers(nodes)
+            .into_iter()
+            .filter(|n| n.data.is_some())
+            .collect();
+        if !data_nodes.is_empty() || crate::data_view::in_use() {
+            crate::data_view::service().want(
+                &data_nodes,
+                doc.model.settings(),
+                &self.camera.visible_bounds(),
+                self.camera.scale,
+                &look,
+                &s.styles.library,
+                self.settling().is_none(),
+            );
+        }
         // A filter calling an extension's function worked out again with its answers: its layer is drawn again.
         self.styled
             .borrow_mut()

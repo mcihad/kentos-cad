@@ -172,6 +172,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             snap: None,
             fields: Vec::new(),
             service: None,
+            data: None,
             feed: None,
             time: None,
             scenario: None,

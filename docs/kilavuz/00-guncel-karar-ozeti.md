@@ -5,7 +5,7 @@
 ## 0. Güncel karar özeti
 
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
-  [plan/veri.md](../../plan/veri.md)).**
+  [ADR 9101](../adr/9101-data-layers.md), [plan/veri.md](../../plan/veri.md)).**
   - Veritabanı ve dosya katmanları ayrı crate'lerdeki sürücülerden geçer:
     - ortak sözleşme `kentos-data`;
     - `kentos-data-gpkg`;
@@ -14,8 +14,13 @@
   - İstek (kutu, koşul, sıra, sayfa, sadeleştirme) kaynağa gider. PostGIS'te satırlar sunucu imleciyle okunur;
     veritabanı başına tek bağlantı havuzu vardır.
   - Yeni bir sürücü, kaydedilmeden önce `kentos_data::conformance`'ı geçer.
-  - Sıradaki maddeler: veri katmanı türü (satırlar çizime kopyalanmaz), canlı çizim, kaynakta tablo, düzenleme
-    oturumu, işlem kipleri, sınıflar katman ağacında, dışa aktarma penceresi, GeoPackage projeleri.
+  - **Veri katmanı** ayrı bir katman türüdür (`LayerNode.data`, `cad.layers.data`, `.kcad`'da CBS verisi sürüm 2).
+    Satırları çizime kopyalanmaz; proje adresi taşır, parolayı taşımaz. Kaynaklar'dan ve PostGIS'e bağlan'dan eklenen
+    tablo veri katmanı olur.
+  - Veri katmanı görünümü kaynaktan okur: görünüm ve yarısı kadar pay, yarım piksel sadeleştirme, parça parça çizim,
+    çizim katmanlarıyla aynı stil motoru. Yaklaşmak projede saklanan kutuyla yapılır, kaynağa gitmez.
+  - Sıradaki maddeler: kaynakta tablo, düzenleme oturumu, işlem kipleri, sınıflar katman ağacında, dışa aktarma
+    penceresi, GeoPackage projeleri.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

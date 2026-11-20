@@ -430,6 +430,74 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Veri katmanı (docs/adr/9101 §4), held together by fixtures/commands/v1/cad.layers.data.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_DATA.into(),
+            version: crate::CAD_LAYERS_DATA_VERSION,
+            title: "Veri katmanı".into(),
+            summary: "Katman ağacına bir GeoPackage dosyasının ya da bir PostGIS veritabanının tablosundan çizilen veri katmanı ekler (add), birini değiştirir (update: adı, tablonun yeri, alanları) ya da kaldırır (remove; tablo olduğu gibi kalır); tek geri alma adımı, adı işlemin. \
+                      Veri katmanının satırları çizime kopyalanmaz: kaynağında kalır, görünüm, tablo ve araçlar gerektikçe kaynaktan okunur. \
+                      data: sürücü (gpkg ya da postgis), kaynağın adresi (dosyanın mutlak yolu ya da postgresql://kullanıcı@sunucu:port/veritabanı; parola yazılmaz), tablo, tam sayı anahtar sütunu, geometri sütunu (türü, EPSG kodu, Z, M), salt okunur. \
+                      fields tablonun sütunlarıdır; ev sahibi tablonun kataloğunu okuyup verir, komut kaynağı okumaz. Katman tablonun çizdiği türü alır (nokta, çizgi, alan). \
+                      parent katmanın gireceği grup, index gruptaki yeri: ilki en üstte çizilir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["verikatmani".into(), "tabloekle".into(), "postgis".into(), "geopackage".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersData>(),
+            output: schema::<crate::LayersDataDone>(),
+            plan: Some(schema::<crate::LayersDataPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Belediyenin PostGIS parselleri".into(),
+                    input: json!({
+                        "operation": "add",
+                        "name": "Parseller",
+                        "data": {
+                            "driver": "postgis",
+                            "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                            "table": "kadastro.parseller",
+                            "key": "fid",
+                            "geometry": { "column": "geom", "typeName": "MULTIPOLYGON", "srid": 5256 }
+                        },
+                        "fields": [
+                            { "name": "ada", "kind": "integer" },
+                            { "name": "parsel", "kind": "integer" },
+                            { "name": "mahalle", "kind": "text" }
+                        ]
+                    }),
+                    output: Some(json!({ "layer": "layer-7", "revision": "41" })),
+                },
+                CommandExample {
+                    title: "GeoPackage'taki direkler, salt okunur".into(),
+                    input: json!({
+                        "operation": "add",
+                        "name": "Direkler",
+                        "data": {
+                            "driver": "gpkg",
+                            "address": "/veri/altyapi.gpkg",
+                            "table": "direkler",
+                            "key": "fid",
+                            "geometry": { "column": "geom", "typeName": "POINT", "srid": 5256 },
+                            "readOnly": true
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Veri katmanını kaldır (tablo kalır)".into(),
+                    input: json!({ "operation": "remove", "layer": "layer-7" }),
+                    output: None,
+                },
+            ],
+        },
         // Katmanın koordinat sistemini tanımla (docs/adr/0583 §2), held together by fixtures/commands/v1/cad.layers.crs.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_CRS.into(),

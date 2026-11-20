@@ -49,6 +49,8 @@ pub struct NewLayer {
     /// (docs/adr/0208 §2); a group keeps neither.
     pub service: Option<ServiceLayer>,
     pub feed: Option<FeatureFeed>,
+    /// A data layer's table (docs/adr/9101 §2): its rows stay in the source; a group keeps none.
+    pub data: Option<kentos_contracts::DataLayer>,
     /// A layer's time setting, a group's scenario and a scenario layer's
     /// base layer (docs/adr/0210 §2): Senaryo oluştur's copies keep their
     /// source's time and stand for it; a group keeps only `scenario`.
@@ -91,6 +93,7 @@ impl NewLayer {
             snap: None,
             fields: Vec::new(),
             service: None,
+            data: None,
             feed: None,
             time: None,
             scenario: None,
@@ -725,6 +728,7 @@ impl LayerTree {
             node.name.clone_from(&served.name);
             node.service.clone_from(&served.by.service);
             node.feed.clone_from(&served.by.feed);
+            node.data.clone_from(&served.by.data);
         }
     }
 
@@ -763,6 +767,7 @@ impl LayerTree {
                 Vec::new()
             },
             service: new.service.filter(|_| new.kind == LayerNodeType::Layer),
+            data: new.data.filter(|_| new.kind == LayerNodeType::Layer),
             feed: new.feed.filter(|_| new.kind == LayerNodeType::Layer),
             time: new.time.filter(|_| new.kind == LayerNodeType::Layer),
             scenario: new.scenario.filter(|_| new.kind == LayerNodeType::Group),

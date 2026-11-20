@@ -1,10 +1,11 @@
-//! PostGIS'e bağlan (docs/adr/0505, 0582, 0623; QGIS's Veri kaynağı yöneticisi › PostgreSQL): a saved connection is
-//! chosen (Yeni and Düzenle open the connection window, db_connections.rs), its tables, views and materialized views
-//! are read from the database's catalogue off the interface's thread (`kentos_postgis::probe::browse`: no row is
-//! counted) and searched, and the chosen ones and a query layer are bound to new layers with `cad.sources.edit`, by
-//! the view's area when asked, a table in another system only with Projenin sistemine çevir ticked. A server asking
-//! for a password KentOS does not know opens the password question. Nobody types an address: the one a bound layer
-//! keeps is built from the connection's fields and carries no password.
+//! PostGIS'e bağlan (docs/adr/0505, 0582, 0623, 9101): a saved connection is chosen (Yeni and Düzenle open the
+//! connection window, db_connections.rs), its tables, views and materialized views are read from the database's
+//! catalogue off the interface's thread (`kentos_postgis::probe::browse`: no row is counted) and searched. The chosen
+//! tables are added as data layers (`cad.layers.data`): their rows stay in the database and the view reads them as it
+//! draws. A query layer is still bound to a new layer with `cad.sources.edit`, by the view's area when asked, in
+//! another system only with Projenin sistemine çevir ticked. A server asking for a password KentOS does not know opens
+//! the password question. Nobody types an address: the one a layer keeps is built from the connection's fields and
+//! carries no password.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -256,62 +257,60 @@ impl App {
             }
             Event::Advanced => s.advanced = !s.advanced,
             Event::Area => s.area = !s.area,
-            Event::Run => self.postgis_bind(),
+            Event::Run => return self.postgis_bind(),
         }
         Task::none()
     }
 
-    /// Bağla: the chosen tables and the query layer bound to new layers on threads of their own while the window closes
-    /// (exchange/binding.rs); a refusal at once is said in the window.
-    fn postgis_bind(&mut self) {
+    /// Bağla: the chosen tables, views and materialized views added as data layers (docs/adr/9101): their rows stay in
+    /// the database and the view reads them as it draws; the window closes at once and the catalogue is read on a thread
+    /// of its own. A query layer is still bound as a read-only copy (exchange/binding.rs), the view's area with it.
+    fn postgis_bind(&mut self) -> Task<Message> {
         let Some(Window::Postgis(s)) = &self.exchange else {
-            return;
+            return Task::none();
         };
         let Some(c) = s.connection.as_deref().and_then(|n| self.db_store.get(n)) else {
-            return;
+            return Task::none();
         };
-        // The view's area, for what has geometry (a query: whatever it holds; docs/adr/0582 §1).
-        let area = s.area.then(|| {
-            let b = self.viewport.camera.visible_bounds();
-            [b.min_x, b.min_y, b.max_x, b.max_y]
-        });
-        let mut tables: Vec<Table> = s
+        let tables: Vec<String> = s
             .catalog
             .iter()
             .flat_map(|catalog| catalog.relations.iter())
             .filter(|r| s.chosen.contains(&r.table()))
-            .map(|r| Table {
-                name: r.table(),
-                geometry: r.geometry.is_some(),
-                rows: r.estimate,
-            })
+            .map(|r| r.table())
             .collect();
-        if !s.query.trim().is_empty() {
-            tables.push(Table {
-                name: s.query.trim().to_owned(),
-                geometry: true,
-                rows: None,
+        let query = s.query.trim().to_owned();
+        let address = c.address();
+        let shown = c.name.clone();
+        if !query.is_empty() {
+            // The view's area, for what a query holds (docs/adr/0582 §1).
+            let area = s.area.then(|| {
+                let b = self.viewport.camera.visible_bounds();
+                [b.min_x, b.min_y, b.max_x, b.max_y]
             });
-        }
-        let ask = Ask {
-            source: c.address(),
-            shown: c.name.clone(),
-            tables,
-            reproject: s.reproject,
-            area,
-            key: None,
-            file: false,
-            then: "Tabloların değişikliklerini Kaynağa yaz ile veritabanına yazın; view ve sorgu salt okunurdur."
-                .to_owned(),
-        };
-        match self.start_binding(ask) {
-            Started::Done | Started::Going => self.close_exchange(),
-            Started::Failed(why) => {
+            let ask = Ask {
+                source: address.clone(),
+                shown,
+                tables: vec![Table {
+                    name: query,
+                    geometry: true,
+                    rows: None,
+                }],
+                reproject: s.reproject,
+                area,
+                key: None,
+                file: false,
+                then: "Sorgu katmanı salt okunurdur.".to_owned(),
+            };
+            if let Started::Failed(why) = self.start_binding(ask) {
                 if let Some(Window::Postgis(s)) = &mut self.exchange {
                     s.status = Some((true, why));
                 }
+                return Task::none();
             }
         }
+        self.close_exchange();
+        self.add_tables(address, tables)
     }
 
     pub(super) fn postgis_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {

@@ -225,6 +225,7 @@ impl<'d> Encoder<'d> {
             8 + usize::from(n.snap.is_some())
                 + usize::from(fields)
                 + usize::from(n.service.is_some())
+                + usize::from(n.data.is_some())
                 + usize::from(n.feed.is_some())
                 + usize::from(n.time.is_some())
                 + usize::from(n.scenario.is_some())
@@ -246,13 +247,13 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.derivation.is_some()),
             true,
         )?;
-        // id (2), card feed name plot snap time type (4), rules style (5), fields filter frozen locked (6),
+        // id (2), card data feed name plot snap time type (4), rules style (5), fields filter frozen locked (6),
         // actions compose dataset indexes service visible (7), children expanded geometry replaces scenario
         // subtypes (8), sourceCrs (9), derivation (10), contingents tableStyles (11).
-        if n.service.is_some() && n.feed.is_some() {
+        if usize::from(n.service.is_some()) + usize::from(n.feed.is_some()) + usize::from(n.data.is_some()) > 1 {
             return Err(self.fail(
                 Code::BadValue,
-                "katman hem servisten çizilir hem nesnelerini bir kaynaktan alır; ikisi birden olmaz",
+                "katman tek bir yerden gelir: bir harita servisinden, bir servisin nesnelerinden ya da bir veri tablosundan",
             ));
         }
         self.key("id");
@@ -260,6 +261,24 @@ impl<'d> Encoder<'d> {
         if let Some(card) = &n.card {
             self.key("card");
             self.at(Seg::Name("card"), |e| e.info_card(n.kind, card))?;
+        }
+        // GIS data 2 (docs/adr/9101 §3): a data layer's table, as its JSON, checked whole.
+        if let Some(d) = &n.data {
+            self.key("data");
+            self.at(Seg::Name("data"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "grubun veri tablosu olmaz; yalnız katmanın olur",
+                    ));
+                }
+                if let Some(problem) = d.problem() {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(d)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
         }
         if let Some(feed) = &n.feed {
             self.key("feed");
