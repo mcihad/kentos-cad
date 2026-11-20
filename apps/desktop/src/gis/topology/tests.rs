@@ -709,3 +709,23 @@ fn the_recheck_after_a_move_finds_what_checking_all_finds() {
     all.sort();
     assert_eq!(again, all);
 }
+
+/// UR2-034: the reason written for one finding stays with it: another finding chosen brings its own recorded reason or
+/// an empty field, so marking it an error does not write the first one's words; chosen again, the first's reason
+/// comes back.
+#[test]
+fn a_reason_stays_with_its_finding() {
+    let mut app = checked();
+    ev(&mut app, Event::Press(0));
+    ev(&mut app, Event::Reason("QA: örnek hattın açık başlangıcı".into()));
+    ev(&mut app, Event::Exception(true));
+    ev(&mut app, Event::Filter(Filter::All));
+    let other = app.topology_shown().len() - 1;
+    ev(&mut app, Event::Press(other));
+    assert_eq!(app.gis.topology.reason, "", "another finding: its own words, none yet");
+    ev(&mut app, Event::Error);
+    let reasons: Vec<Option<String>> = topology(&app).exceptions.iter().map(|x| x.reason.clone()).collect();
+    assert_eq!(reasons.iter().filter(|r| r.as_deref() == Some("QA: örnek hattın açık başlangıcı")).count(), 1, "{reasons:?}");
+    ev(&mut app, Event::Press(0));
+    assert_eq!(app.gis.topology.reason, "QA: örnek hattın açık başlangıcı", "its own reason back");
+}

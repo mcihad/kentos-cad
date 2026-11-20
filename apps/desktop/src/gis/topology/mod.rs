@@ -565,6 +565,14 @@ impl App {
             return;
         }
         self.gis.topology.anchor = Some(at);
+        // Another finding chosen: Gerekçe is its own recorded reason, or empty (UR2-034: the last row's words were
+        // written on the next finding marked).
+        if self.gis.topology.selected != [finding] {
+            self.gis.topology.reason = self
+                .topology_checked()
+                .and_then(|c| c.findings.get(finding).and_then(|f| c.g.review(f)).and_then(|r| r.reason.clone()))
+                .unwrap_or_default();
+        }
         self.gis.topology.selected = vec![finding];
         self.topology_previews();
         self.topology_show(finding);
