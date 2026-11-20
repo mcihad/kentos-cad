@@ -24,6 +24,11 @@ layers?: Array<string>,
  */
 uids?: Array<string>, 
 /**
+ * With no `layers` and no `uids`: also every layer without objects whose type (point, line, area) or fields make
+ * a table, written empty with its columns (a field team's template, docs/adr/1076).
+ */
+emptyLayers?: boolean, 
+/**
  * Write over a file that is there.
  */
 overwrite: boolean, 
