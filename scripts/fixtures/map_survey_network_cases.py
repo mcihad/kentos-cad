@@ -654,6 +654,19 @@ def epoch_text(e):
     return f"{e:.2f}".replace(".", ",")
 
 
+def epochs_apart(a, b):
+    """Two epochs with as many decimals as tell them apart (two to eight), a decimal comma."""
+    def at(d, v):
+        return f"{v:.{d}f}".replace(".", ",")
+    d = next((d for d in range(2, 9) if at(d, a) != at(d, b)), 8)
+    return at(d, a), at(d, b)
+
+
+def days_text(days):
+    """Days as a reader takes them: a tenth below ten, whole above; a decimal comma."""
+    return f"{days:.1f}".replace(".", ",") if days < 10 else f"{days:.0f}"
+
+
 def analyse(m, inp, prefix=""):
     """ADR 1740's network of the model's archive: (output, the facts a write needs), or Refused."""
     path = lambda f: prefix + f  # noqa: E731
@@ -749,12 +762,18 @@ def analyse(m, inp, prefix=""):
                 by = "velocity"
             else:
                 if vel is None:
-                    raise Refused("epoch_unsupported", f"“{k['id']}” bilinen noktası {epoch_text(k['epoch'])} "
-                                                       f"epokunda, ağın ölçme epoku {epoch_text(measured[0])}: Madde "
-                                                       "15(1)(a) uyarınca ölçme epokuna taşınmalı. Bilinen noktaya "
-                                                       "kendi hızını (yer merkezli VX, VY, VZ) verin, arazi ölçümüne "
-                                                       "hız ızgarasını verin (Proje ayarları › Izgaralar) ya da "
-                                                       "bilinen noktayı ölçme epokunda girin.", held_wrong)
+                    # UR2-019: the two epochs with the decimals that tell them apart, their gap in days, and
+                    # where the network's came from.
+                    known_at, network_at = epochs_apart(k["epoch"], measured[0])
+                    source = " (bazların gözlem zamanlarından)" if measured[1] == "baselines" else ""
+                    gap = abs(measured[0] - k["epoch"]) * 365.25
+                    raise Refused("epoch_unsupported", f"“{k['id']}” bilinen noktası {known_at} epokunda, ağın "
+                                                       f"ölçme epoku {network_at}{source}; arada {days_text(gap)} "
+                                                       "gün var. Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı. "
+                                                       "Bilinen noktaya kendi hızını (yer merkezli VX, VY, VZ) "
+                                                       "verin, arazi ölçümüne hız ızgarasını verin (Proje ayarları "
+                                                       "› Izgaralar) ya da bilinen noktayı ölçme epokunda girin.",
+                                  held_wrong)
                 s = ms.gc.transformed([ms.cv.pt(k["lon"], k["lat"], k["height"])],
                                       frm={"srid": srid, "epoch": k["epoch"], "heights": ms.ELL},
                                       to={"srid": srid, "epoch": measured[0], "heights": ms.ELL}, vel=vel)

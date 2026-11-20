@@ -50354,7 +50354,7 @@
       "status": "failed",
       "error": {
        "code": "epoch_unsupported",
-       "message": "“bn-1” bilinen noktası 2005,00 epokunda, ağın ölçme epoku 2026,84: Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı. Bilinen noktaya kendi hızını (yer merkezli VX, VY, VZ) verin, arazi ölçümüne hız ızgarasını verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme epokunda girin."
+       "message": "“bn-1” bilinen noktası 2005,00 epokunda, ağın ölçme epoku 2026,84 (bazların gözlem zamanlarından); arada 7976 gün var. Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı. Bilinen noktaya kendi hızını (yer merkezli VX, VY, VZ) verin, arazi ölçümüne hız ızgarasını verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme epokunda girin."
       }
      },
      "expect": {

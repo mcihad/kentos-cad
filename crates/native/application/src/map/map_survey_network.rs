@@ -614,19 +614,31 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     for k in &known {
         let given = (k.lat, k.lon, k.height);
         let place_now = match (measured, k.epoch) {
-            (Some((t, _)), Some(e)) if e != t => {
+            (Some((t, from)), Some(e)) if e != t => {
                 let (now, by) = match k.velocity {
                     Some(v) => (by_velocity(given, shape, v, t - e), KnownMovedBy::Velocity),
                     None => {
                         let Some(grid) = velocity_of(campaign.as_ref()) else {
                             return Err(held_wrong(
                                 codes::EPOCH_UNSUPPORTED,
-                                format!(
-                                    "“{}” bilinen noktası {} epokunda, ağın ölçme epoku {}: Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı. Bilinen noktaya kendi hızını (yer merkezli VX, VY, VZ) verin, arazi ölçümüne hız ızgarasını verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme epokunda girin.",
-                                    k.id,
-                                    epoch_text(e),
-                                    epoch_text(t)
-                                ),
+                                {
+                                    // Written so that the two differ, with their gap in days, and where the network's
+                                    // came from (UR2-019: both read 2026,84).
+                                    let (known_at, network_at) = epochs_apart(e, t);
+                                    let source = match from {
+                                        NetworkEpochFrom::Baselines => " (bazların gözlem zamanlarından)",
+                                        _ => "",
+                                    };
+                                    format!(
+                                        "“{}” bilinen noktası {known_at} epokunda, ağın ölçme epoku {network_at}{source}; \
+                                         arada {} gün var. Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı. Bilinen \
+                                         noktaya kendi hızını (yer merkezli VX, VY, VZ) verin, arazi ölçümüne hız \
+                                         ızgarasını verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme \
+                                         epokunda girin.",
+                                        k.id,
+                                        days_text((t - e).abs() * 365.25)
+                                    )
+                                },
                                 prefix,
                             ));
                         };
@@ -940,6 +952,18 @@ pub(crate) fn epoch_text(e: f64) -> String {
     format!("{e:.2}").replace('.', ",")
 }
 
+/// Two epochs written with as many decimals as tell them apart (two at least, eight at most), comma decimal.
+fn epochs_apart(a: f64, b: f64) -> (String, String) {
+    let at = |d: usize, v: f64| format!("{v:.d$}").replace('.', ",");
+    let d = (2..=8).find(|&d| at(d, a) != at(d, b)).unwrap_or(8);
+    (at(d, a), at(d, b))
+}
+
+/// Days as a reader takes them: a tenth below ten days, whole above; comma decimal.
+fn days_text(days: f64) -> String {
+    if days < 10.0 { format!("{days:.1}").replace('.', ",") } else { format!("{days:.0}") }
+}
+
 /// The answer's warnings: a class that does not hold, a network without degrees of freedom; `prefix` is the input's
 /// path (“operation.” in an edit).
 pub(crate) fn warnings_of(out: &MapSurveyNetworked, prefix: &str) -> Vec<CommandWarning> {
@@ -1008,4 +1032,18 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: MapSurveyNetwork) -> Comman
 /// The network for a window, or why it does not adjust.
 pub fn preview(doc: &Document, input: &MapSurveyNetwork) -> Result<MapSurveyNetworked, String> {
     analyse(doc, input, "").map(|a| a.out).map_err(|stop| stop.into_error().message)
+}
+
+#[cfg(test)]
+mod epoch_words_tests {
+    use super::{days_text, epochs_apart};
+
+    /// UR2-019: two epochs that round to one 2026,84 are written with the decimals that tell them apart.
+    #[test]
+    fn two_epochs_are_written_apart() {
+        assert_eq!(epochs_apart(2026.84, 2026.8412), ("2026,840".to_owned(), "2026,841".to_owned()));
+        assert_eq!(epochs_apart(2005.0, 2026.84), ("2005,00".to_owned(), "2026,84".to_owned()));
+        assert_eq!(days_text(0.0012 * 365.25), "0,4");
+        assert_eq!(days_text(21.84 * 365.25), "7977");
+    }
 }
