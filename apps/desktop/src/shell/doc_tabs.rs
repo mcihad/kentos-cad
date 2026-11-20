@@ -215,12 +215,22 @@ impl App {
         }
     }
 
+    /// The drawing set aside in another tab whose file is `path` (by its canonical place: another folder's file of the
+    /// same name is not it, a link to it is): its name and file (UR2-056: Farklı kaydet wrote over it).
+    pub(crate) fn open_in_another_tab(&self, path: &std::path::Path) -> Option<(String, std::path::PathBuf)> {
+        let want = canonical(path);
+        self.doc_tabs
+            .parked
+            .iter()
+            .find(|p| is_file(&p.document, &want))
+            .map(|p| (p.document.display_name().into_owned(), p.document.path.clone().unwrap_or_default()))
+    }
+
     /// The drawing whose file is `path` (by its canonical place), brought in front if it is open, said; false when
     /// no open drawing is that file.
     pub(crate) fn show_open_file(&mut self, path: &std::path::Path) -> bool {
-        let canonical = |p: &std::path::Path| std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
         let want = canonical(path);
-        let same = |d: &Document| d.path.as_deref().is_some_and(|p| canonical(p) == want) && d.cloud_source().is_none();
+        let same = |d: &Document| is_file(d, &want);
         let front = self.document.as_ref().is_some_and(same);
         let at = if front {
             Some(self.doc_tabs.at)
@@ -364,6 +374,16 @@ pub(crate) fn tab_titles(docs: &[&Document]) -> Vec<String> {
         }
     }
     out
+}
+
+/// A file's place with its links followed; as it is when it cannot be read (not written yet).
+fn canonical(p: &std::path::Path) -> std::path::PathBuf {
+    std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
+}
+
+/// Whether the drawing's own file (not a cloud project's copy) is at the canonical place `want`.
+fn is_file(d: &Document, want: &std::path::Path) -> bool {
+    d.path.as_deref().is_some_and(|p| canonical(p) == want) && d.cloud_source().is_none()
 }
 
 #[cfg(test)]
@@ -584,6 +604,44 @@ mod tests {
         );
         assert_eq!(app.document.as_ref().unwrap().model.len(), 15);
         assert!(!app.document.as_ref().unwrap().dirty());
+    }
+
+    /// UR2-056: Farklı kaydet onto the file of a drawing open in another tab (by its own path or a link to it) is
+    /// refused and said with its name and file; the file stays as it was. Another folder's file of the same name is
+    /// not it.
+    #[test]
+    fn save_as_over_another_tabs_file_is_refused() {
+        use crate::saving::Target;
+        let dir = std::env::temp_dir().join(format!("kentos-ur2-056-{}", std::process::id()));
+        let (a, b) = (dir.join("a"), dir.join("b"));
+        std::fs::create_dir_all(&a).expect("a folder");
+        std::fs::create_dir_all(&b).expect("a folder");
+        let theirs = b.join("Parsel.kcad");
+        std::fs::write(&theirs, "B'nin dosyası").expect("written");
+        let link = dir.join("bag.kcad");
+        let _ = std::fs::remove_file(&link);
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&theirs, &link).expect("a link");
+        let mut app = app_with_drawing();
+        app.document.as_mut().expect("a drawing").path = Some(a.join("Parsel.kcad"));
+        assert!(app.park_active());
+        let mut other = drawing(2);
+        other.path = Some(theirs.clone());
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(other)))));
+        let _ = app.update(Message::DocTabs(Event::Show(0)));
+        for over in [theirs.clone(), link.clone()] {
+            let _ = app.start_save(Target::File(over.clone()));
+            assert!(app.saving.is_none(), "nothing is written over {over:?}");
+            let said = crate::files_testing::last_said(&app);
+            assert!(said.contains("başka bir sekmede açık") && said.contains("Parsel.kcad"), "{said}");
+            let _ = app.start_save(Target::Copy(over));
+            assert!(app.saving.is_none());
+        }
+        assert_eq!(std::fs::read_to_string(&theirs).expect("kept"), "B'nin dosyası");
+        // The same name in this drawing's own folder is another file: written.
+        let _ = app.start_save(Target::File(a.join("Parsel 2.kcad")));
+        assert!(app.saving.is_some());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     /// UR2-057, UR2-055: a tab brought back keeps its middle and scale, but takes the size the drawing area has now:

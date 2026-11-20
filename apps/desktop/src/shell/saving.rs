@@ -476,6 +476,16 @@ impl App {
             self.save_then_dropped();
             return Task::none();
         }
+        // Over the file of a drawing open in another tab: refused, both files and both tabs kept (UR2-056).
+        if let Target::File(path) | Target::Copy(path) = &target
+            && let Some((name, file)) = self.open_in_another_tab(path)
+        {
+            self.warn(format!(
+                "“{name}” başka bir sekmede açık ({}); bu çizim onun dosyasının üstüne yazılmadı. Başka bir ad seçin ya da o sekmeye geçip orada kaydedin.",
+                file.display()
+            ));
+            return Task::none();
+        }
         let Some(doc) = &self.document else {
             return Task::none();
         };
