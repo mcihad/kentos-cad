@@ -644,6 +644,8 @@ impl App {
             return;
         };
         let model = &mut doc.model;
+        // Where the group goes (GIS-059): over the base map at the top of the tree, said with the result.
+        let over = stac_prepare::base_index(model).and_then(|i| model.layers().nodes().get(i)).map(|n| n.name.clone());
         match stac_prepare::execute(&mut ExecutionContext::new(model), input) {
             CommandResult::Completed { output, warnings } => {
                 let first = output
@@ -662,10 +664,11 @@ impl App {
                 self.say(
                     Level::Success,
                     format!(
-                        "STAC verisi hazırlandı: {} ({} bant{}). Ctrl+Z grubu, katmanları ve rasterleri birlikte geri alır.",
+                        "STAC verisi hazırlandı: {} ({} bant{}){}. Ctrl+Z grubu, katmanları ve rasterleri birlikte geri alır.",
                         p.item,
                         p.bands.len(),
-                        p.qa.as_ref().map_or_else(String::new, |q| format!(", kalite bandı {}", q.asset))
+                        p.qa.as_ref().map_or_else(String::new, |q| format!(", kalite bandı {}", q.asset)),
+                        over.as_ref().map_or_else(String::new, |o| format!("; grubu “{o}” altlığının üstünde çizilir"))
                     ),
                 );
                 if let Some(r) = p.reflectance {
@@ -1248,6 +1251,36 @@ mod tests {
         s.waiting = Some(ticket);
         send(&mut app, Event::Found(ticket, Box::new(Err("Katalog yanıt vermedi.".into()))));
         assert_eq!(app.gis.rasters.stac.as_ref().map(|s| s.answered), Some(Some(false)));
+    }
+
+
+    /// GIS-059 (docs/adr/1118): a drawing with an opaque base map at the top of its tree: the prepared rasters' group
+    /// goes just above it, so the map service does not cover them; the base map stays under.
+    #[test]
+    fn the_rasters_go_above_the_base_map() {
+        let mut app = app();
+        let doc = app.document.as_mut().expect("a drawing");
+        let base = doc
+            .model
+            .add_layer_at(kentos_domain::NewLayer::layer("Altlık".to_owned()), None, Some(0), None, false)
+            .expect("a layer");
+        let service: kentos_commands::ServiceLayer = serde_json::from_value(serde_json::json!({
+            "kind": "xyz", "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "maxZoom": 19
+        }))
+        .expect("a service");
+        let _ = doc.model.set_layer_service(&base, kentos_domain::ServedBy { service: Some(service), ..Default::default() }, None, "Altlık");
+        app.raster_stac_with(searching());
+        send(&mut app, Event::Search);
+        send(&mut app, Event::Choose(0));
+        send(&mut app, Event::Prepare);
+        let layers = app.document.as_ref().expect("a drawing").model.layers().nodes().to_vec();
+        let at = |id: &str| layers.iter().position(|n| n.id == id).expect("on top");
+        let group = layers.iter().position(|n| n.kind == kentos_commands::LayerNodeType::Group && n.name.starts_with("STAC")).expect("the group");
+        assert!(group < at(&base), "the rasters drawn over the base map: {group} vs {}", at(&base));
+        assert!(
+            app.log.lines().any(|l| l.text.contains("grubu “Altlık” altlığının üstünde çizilir")),
+            "the place said"
+        );
     }
 
 }

@@ -263,9 +263,12 @@ fn write(cx: &mut ExecutionContext<'_>, input: StacPrepare) -> CommandResult<Sta
             }
         }
     }
+    // GIS-059: the rasters go just above the drawing's first base map (a map service's layer, or a group holding one)
+    // at the top of the tree, so an opaque map service never covers them; without one, where a new group goes.
+    let above_base = base_index(cx.doc);
     let written = cx.doc.transact("STAC verisini hazırla", |doc| {
         let group = doc
-            .add_layer(NewLayer::group(planned.group.clone()), None, false)
+            .add_layer_at(NewLayer::group(planned.group.clone()), None, above_base, None, false)
             .map_err(|r| {
                 Stop::failed(checks::error(
                     kentos_commands::codes::INVALID_GROUP_NAME,
@@ -301,4 +304,13 @@ fn write(cx: &mut ExecutionContext<'_>, input: StacPrepare) -> CommandResult<Sta
         output: out,
         warnings,
     }
+}
+
+/// The place among the tree's top nodes of its first base map (a map service's layer, or a group holding one): what is
+/// put there is drawn over it and the base maps under it (GIS-059); none without one.
+pub fn base_index(doc: &Document) -> Option<usize> {
+    fn holds_service(n: &kentos_commands::LayerNode) -> bool {
+        n.service.is_some() || n.children.iter().any(holds_service)
+    }
+    doc.layers().nodes().iter().position(holds_service)
 }
