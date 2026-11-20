@@ -159,7 +159,7 @@ impl App {
         let name = document.display_name().into_owned();
         self.show_document(document);
         self.gis.calc = calc;
-        self.viewport.camera = camera;
+        self.viewport.put_camera(camera);
         self.selection = selection;
         self.view_history = views;
         self.give_level_state(level);
@@ -198,7 +198,7 @@ impl App {
                 self.doc_tabs.at = index;
                 self.show_document(document);
                 self.gis.calc = calc;
-                self.viewport.camera = camera;
+                self.viewport.put_camera(camera);
                 self.selection = selection;
                 self.view_history = views;
                 self.give_level_state(level);
@@ -584,6 +584,41 @@ mod tests {
         );
         assert_eq!(app.document.as_ref().unwrap().model.len(), 15);
         assert!(!app.document.as_ref().unwrap().dirty());
+    }
+
+    /// UR2-057, UR2-055: a tab brought back keeps its middle and scale, but takes the size the drawing area has now:
+    /// the strip that came with the second drawing (14 px) or the split view that went changed it, and a camera of
+    /// the old size drew the picture away from where the pointer reads it.
+    #[test]
+    fn a_tab_brought_back_takes_the_areas_size_now() {
+        use crate::viewport::Event as View;
+        use iced::{Point, Rectangle, Size};
+        let sized = |app: &mut App, y: f32, w: f32, h: f32| {
+            let _ = app.update(Message::Viewport(View::Resized(Rectangle::new(Point::new(0.0, y), Size::new(w, h)))));
+        };
+        // One drawing, then a second in a tab: the strip takes 14 px off the area.
+        let mut app = app_with_drawing();
+        sized(&mut app, 0.0, 1000.0, 800.0);
+        let (center, scale) = (app.viewport.camera.center, app.viewport.camera.scale);
+        assert!(app.park_active());
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
+        sized(&mut app, 14.0, 1000.0, 786.0);
+        let _ = app.update(Message::DocTabs(Event::Show(0)));
+        let c = app.viewport.camera;
+        assert_eq!((c.width, c.height), (1000.0, 786.0), "the area's size now");
+        assert_eq!((c.center, c.scale), (center, scale), "its own middle and scale");
+        // Left in a split view (the active view half the width), brought back after the split went.
+        let mut app = app_with_drawing();
+        sized(&mut app, 14.0, 500.0, 786.0);
+        let _ = app.update(Message::Run("view.split"));
+        assert!(app.split.is_some());
+        assert!(app.park_active());
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
+        sized(&mut app, 14.0, 1000.0, 786.0);
+        let _ = app.update(Message::DocTabs(Event::Show(0)));
+        assert!(app.split.is_none(), "the split stays with the drawing it was made on");
+        let c = app.viewport.camera;
+        assert_eq!((c.width, c.height), (1000.0, 786.0));
     }
 
     /// UR2-046: a drawing opened after one turned by Görünümü döndür opens north up; the turned one, brought in front

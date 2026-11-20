@@ -483,7 +483,7 @@ impl App {
             && let Some(camera) = self.viewport.sheet_saved_camera.take()
         {
             self.cancel();
-            self.viewport.camera = camera;
+            self.viewport.put_camera(camera);
         }
         self.sheet_effects(effects)
     }

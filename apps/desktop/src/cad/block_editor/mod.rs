@@ -413,13 +413,7 @@ impl App {
         self.spatial.reload(&original.model);
         self.followed = Some((original.session, original.model.generation()));
         self.document = Some(original);
-        self.viewport.camera = camera;
-        if self.viewport.bounds.width > 0.0 && self.viewport.bounds.height > 0.0 {
-            self.viewport.camera.set_size(
-                f64::from(self.viewport.bounds.width),
-                f64::from(self.viewport.bounds.height),
-            );
-        }
+        self.viewport.put_camera(camera);
         self.selection = selection;
         if !saving {
             self.say(

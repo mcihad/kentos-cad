@@ -818,6 +818,16 @@ impl Viewport {
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
     }
 
+    /// A camera kept with a drawing set aside (a tab, Blok düzenleyici, a sheet's model view) put back: its middle,
+    /// scale and twist, the size the area has now (UR2-055, UR2-057: the size it was kept with, before the tab strip
+    /// came or a split view went, put the picture and the pointer apart by the difference).
+    pub fn put_camera(&mut self, camera: Camera) {
+        self.camera = camera;
+        if self.bounds.width > 0.0 && self.bounds.height > 0.0 {
+            self.camera.set_size(f64::from(self.bounds.width), f64::from(self.bounds.height));
+        }
+    }
+
     /// Where the camera stands, for the view history (docs/adr/0141).
     pub fn viewpoint(&self) -> Viewpoint {
         Viewpoint {
