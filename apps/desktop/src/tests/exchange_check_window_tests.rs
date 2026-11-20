@@ -206,3 +206,31 @@ fn block_matrix_screens() {
         println!("{}", file.display());
     }
 }
+
+/// GIS-039 (docs/adr/1096): on the sample (arcs, a circle, a parcel with a hole at Ankara's coordinates) each of the
+/// six formats keeps the curves' shape, the length and the area within what the tolerance allows (the chording ones
+/// too); the window says each difference on a line of its own, decided by it.
+#[test]
+fn every_format_keeps_shape_length_and_area_within_the_tolerance() {
+    use kentos_commands::ExchangeState as S;
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("file.exchangeCheck"));
+    let _ = app.update(Message::ExchangeCheck(X::Matrix));
+    let m = app.exchange_check.matrix.clone().expect("a matrix").expect("checked");
+    for aspect in ["shape", "length", "area"] {
+        let row = m.rows.iter().find(|r| r.aspect == aspect).expect(aspect);
+        for c in &row.cells {
+            assert_eq!(c.state, S::Kept, "{aspect} {:?}: {:?}", c.format, m.checks.iter().find(|k| k.format == c.format).map(|k| &k.numeric));
+        }
+    }
+    let _ = app.update(Message::ExchangeCheck(X::Run));
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    let r = app.exchange_check.answer.clone().expect("an answer").expect("checked");
+    let area = format!(
+        "Alan farkı: en çok {} m²; izin çevre × tolerans, aşan 0 nesne.",
+        r.numeric.area.map_or("—".to_owned(), kentos_commands::exchange_words::small)
+    );
+    assert!(crate::files_testing::find_text(&mut shot, &app, &area).is_some(), "{area}");
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-039-gpkg-denetim");
+}

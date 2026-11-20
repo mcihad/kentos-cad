@@ -150366,7 +150366,7 @@
       "type": "object"
     },
     "ExchangeNumeric": {
-      "description": "The numeric differences, the greatest over the objects matched (metres, square metres; none: nothing to measure),\nthe object of the greatest offset, and how many lie farther than the tolerance.",
+      "description": "The numeric differences, the greatest over the objects matched (metres, square metres; none: nothing to measure),\nthe object of the greatest offset, and how many lie farther than the tolerance. Each of the curves' shape, the\nlength and the area is decided apart (gis-usage-report GIS-039, docs/adr/1096): the curve's points between its\nvertices against the original within the tolerance; the length within 2·n·tolerance (n vertices); the area within\nthe perimeter × tolerance. How many objects break each, and the worst one's id; absent when none.",
       "properties": {
         "above": {
           "format": "uint32",
@@ -150381,6 +150381,18 @@
             "null"
           ],
           "x-unit": "area"
+        },
+        "areaAbove": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "areaUid": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "height": {
           "format": "double",
@@ -150397,6 +150409,18 @@
             "null"
           ],
           "x-unit": "length"
+        },
+        "lengthAbove": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "lengthUid": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "measure": {
           "format": "double",
@@ -150415,6 +150439,27 @@
           "x-unit": "length"
         },
         "offsetUid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shape": {
+          "description": "The greatest distance of a read-back curve's points between its vertices from the original's geometry.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "shapeAbove": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "shapeUid": {
           "type": [
             "string",
             "null"

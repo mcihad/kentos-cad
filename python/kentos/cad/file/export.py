@@ -1676,9 +1676,11 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         /,
         *,
         path: str,
+        empty_layers: bool | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         time: QueryTime | None | Unset = UNSET,
+        uids: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> GpkgExported:
@@ -1700,10 +1702,15 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         Args:
             doc: The drawing it works on.
             path: The file to write, an absolute path (`.gpkg`).
+            empty_layers: With no `layers` and no `uids`: also every layer without objects whose type (point, line, area) or fields make
+                a table, written empty with its columns (a field team's template, docs/adr/1076).
             layers: The layers, by id; empty: every layer with objects.
             overwrite: Write over a file that is there.
             time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
                 written layer with time settings (of every one when `fields` names them); a layer without them whole.
+            uids: Only these objects, by persistent id (Seçili nesneler, docs/adr/1073): each on its layer's table, the other
+                objects of those layers and the other layers left out; with `layers`, only those of them on the given layers.
+                Refused `entity_not_found` for an id the drawing does not have.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1718,9 +1725,11 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         """
         return self.execute_input(doc, ExportGpkg(
             path=path,
+            empty_layers=empty_layers,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             time=time,
+            uids=_opt(uids, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -1729,18 +1738,22 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         /,
         *,
         path: str,
+        empty_layers: bool | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         time: QueryTime | None | Unset = UNSET,
+        uids: Sequence[str] | Unset = UNSET,
     ) -> GpkgExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, ExportGpkg(
             path=path,
+            empty_layers=empty_layers,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             time=time,
+            uids=_opt(uids, lambda x: list(x)),
         ))
 
     def validate(
@@ -1749,18 +1762,22 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         /,
         *,
         path: str,
+        empty_layers: bool | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         time: QueryTime | None | Unset = UNSET,
+        uids: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, ExportGpkg(
             path=path,
+            empty_layers=empty_layers,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             time=time,
+            uids=_opt(uids, lambda x: list(x)),
         ))
 
     def answer(
@@ -1769,9 +1786,11 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         /,
         *,
         path: str,
+        empty_layers: bool | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
         time: QueryTime | None | Unset = UNSET,
+        uids: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1783,9 +1802,11 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         """
         return self.answer_input(doc, ExportGpkg(
             path=path,
+            empty_layers=empty_layers,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
             time=time,
+            uids=_opt(uids, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

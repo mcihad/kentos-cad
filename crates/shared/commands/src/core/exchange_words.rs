@@ -74,6 +74,9 @@ pub fn aspect_word(aspect: &str) -> &'static str {
         "style" => "Nesne stili",
         "identity" => "Kalıcı kimlik",
         "position" => "Köşe konumu",
+        "shape" => "Eğri biçimi",
+        "length" => "Uzunluk",
+        "area" => "Alan",
         "extra" => "Fazla nesne",
         "blocks" => "Bloklar",
         "tables" => "Tablolar",
@@ -93,7 +96,8 @@ pub fn cell_words(aspect: &str, c: &ExchangeCell) -> String {
             })
             .collect::<Vec<_>>()
             .join(", "),
-        "position" => d.parse::<f64>().map_or_else(|_| d.to_owned(), |v| format!("{} m", small(v))),
+        "position" | "shape" | "length" => d.parse::<f64>().map_or_else(|_| d.to_owned(), |v| format!("{} m", small(v))),
+        "area" => d.parse::<f64>().map_or_else(|_| d.to_owned(), |v| format!("{} m²", small(v))),
         // Blocks and tables (docs/adr/2380): lost by kind and count, converted by a kind's change or what changed.
         "blocks" | "tables" if c.state == ExchangeState::Lost => d
             .split(", ")
@@ -134,8 +138,11 @@ pub fn cell_words(aspect: &str, c: &ExchangeCell) -> String {
         ExchangeState::Added => "Eklenir",
         ExchangeState::Lost => "Kaybolur",
     };
+    let numeric = matches!(aspect, "position" | "shape" | "length" | "area");
     match (c.state, detail) {
-        (ExchangeState::Kept, Some(d)) if aspect == "position" => format!("{word} ({d})"),
+        (ExchangeState::Kept, Some(d)) if numeric => format!("{word} ({d})"),
+        // GIS-039: a difference beyond what the tolerance allows, not a kind's conversion.
+        (ExchangeState::Converted, Some(d)) if numeric => format!("Toleransı aşar, {} nesne: en çok {d}", c.count),
         (ExchangeState::Kept, _) => word.to_owned(),
         (_, Some(d)) => format!("{word}: {d}"),
         (_, None) => format!("{word} ({})", c.count),

@@ -136,11 +136,20 @@ impl App {
             Event::Select => {
                 let Some(Ok(r)) = &self.exchange_check.answer else { return Task::none() };
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let n = &r.numeric;
+                // The numeric differences' worst objects too (GIS-039).
+                let numeric = [
+                    n.offset_uid.as_ref().filter(|_| n.above > 0),
+                    n.shape_uid.as_ref(),
+                    n.length_uid.as_ref(),
+                    n.area_uid.as_ref(),
+                ];
                 let mut slots: Vec<Slot> = r
                     .losses
                     .iter()
                     .filter(|l| l.kind != "identityLost")
                     .flat_map(|l| l.uids.iter())
+                    .chain(numeric.into_iter().flatten())
                     .filter_map(|u| Uuid::parse_str(u).ok().and_then(|u| doc.model.slot_of(u)))
                     .collect();
                 slots.sort_by_key(|s| s.0);
@@ -157,6 +166,18 @@ impl App {
             }
         }
         Task::none()
+    }
+
+    /// An object of the drawing by its label (else its kind) and its layer: “P7” (Parsel).
+    fn exchange_object(&self, uid: &str) -> String {
+        let Some(doc) = self.document.as_ref() else { return String::new() };
+        let Some(e) = Uuid::parse_str(uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s)) else {
+            return String::new();
+        };
+        let label = e.base().label.as_deref().map(str::trim).filter(|l| !l.is_empty());
+        let name = label.map_or_else(|| kind_word(e.kind()).to_lowercase(), |l| format!("“{l}”"));
+        let layer = doc.model.layers().get(&e.base().layer_id).map(|l| l.name.clone()).unwrap_or_default();
+        format!("{name} ({layer} katmanı)")
     }
 
     pub(crate) fn exchange_check_view(&self) -> Element<'_, Message> {
@@ -227,21 +248,60 @@ impl App {
                         }
                     ),
                 ));
+                // Each difference named and decided apart (GIS-039): the vertices, the curves between them, the length
+                // and the area, each against what the tolerance allows; the worst object by its name and layer.
                 let n = &r.numeric;
                 let opt = |v: Option<f64>| v.map_or("—".to_owned(), small);
+                let who = |uid: &Option<String>| uid.as_deref().map(|u| format!(" En kötüsü {}.", self.exchange_object(u))).unwrap_or_default();
+                let decided = |above: u32| if above == 0 { Kind::Ok } else { Kind::Error };
                 lines.push(words::text_line(
-                    if n.above == 0 { Kind::Ok } else { Kind::Error },
+                    decided(n.above),
                     format!(
-                        "Sayısal: en büyük köşe kayması {} m (tolerans {}; aşan {}), kot {} m, ölçü {}, uzunluk {} m, alan {} m².",
+                        "Köşe konumu: en büyük kayma {} m; tolerans {}, aşan {} nesne.{}",
                         opt(n.offset),
                         f.length(r.tolerance),
                         n.above,
-                        opt(n.height),
-                        opt(n.measure),
-                        opt(n.length),
-                        opt(n.area)
+                        if n.above > 0 { who(&n.offset_uid) } else { String::new() }
                     ),
                 ));
+                if n.shape.is_some() || n.shape_above > 0 {
+                    lines.push(words::text_line(
+                        decided(n.shape_above),
+                        format!(
+                            "Eğri biçimi: yayların köşeler arasındaki noktalarının en büyük sapması {} m; tolerans {}, aşan {} nesne.{}",
+                            opt(n.shape),
+                            f.length(r.tolerance),
+                            n.shape_above,
+                            who(&n.shape_uid)
+                        ),
+                    ));
+                }
+                lines.push(words::text_line(
+                    decided(n.length_above),
+                    format!(
+                        "Uzunluk farkı: en çok {} m; izin köşe başına iki tolerans, aşan {} nesne.{}",
+                        opt(n.length),
+                        n.length_above,
+                        who(&n.length_uid)
+                    ),
+                ));
+                lines.push(words::text_line(
+                    decided(n.area_above),
+                    format!(
+                        "Alan farkı: en çok {} m²; izin çevre × tolerans, aşan {} nesne.{}",
+                        opt(n.area),
+                        n.area_above,
+                        who(&n.area_uid)
+                    ),
+                ));
+                if n.height.is_some() || n.measure.is_some() {
+                    lines.push(words::text_line(
+                        Kind::Info,
+                        format!("Kot farkı en çok {} m, ölçü (M) farkı en çok {}.", opt(n.height), opt(n.measure)),
+                    ));
+                }
+                let numeric = [n.above, n.shape_above, n.length_above, n.area_above].iter().filter(|a| **a > 0).count();
+                lost += numeric;
                 for w in r.writer.iter().chain(&r.reader) {
                     lines.push(words::text_line(Kind::Info, w.clone()));
                 }

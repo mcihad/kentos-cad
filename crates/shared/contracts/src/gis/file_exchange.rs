@@ -152,7 +152,10 @@ pub struct ExchangeLoss {
 }
 
 /// The numeric differences, the greatest over the objects matched (metres, square metres; none: nothing to measure),
-/// the object of the greatest offset, and how many lie farther than the tolerance.
+/// the object of the greatest offset, and how many lie farther than the tolerance. Each of the curves' shape, the
+/// length and the area is decided apart (gis-usage-report GIS-039, docs/adr/1096): the curve's points between its
+/// vertices against the original within the tolerance; the length within 2·n·tolerance (n vertices); the area within
+/// the perimeter × tolerance. How many objects break each, and the worst one's id; absent when none.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -184,6 +187,36 @@ pub struct ExchangeNumeric {
     pub area: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub above: u32,
+    /// The greatest distance of a read-back curve's points between its vertices from the original's geometry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub shape: Option<f64>,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub shape_above: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shape_uid: Option<String>,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub length_above: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub length_uid: Option<String>,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub area_above: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub area_uid: Option<String>,
+}
+
+fn is_zero_u32(v: &u32) -> bool {
+    *v == 0
 }
 
 /// Output of `file.exchange.check` v1: the format and tolerance, the objects of the layers checked, how many were
@@ -213,9 +246,10 @@ pub const FILE_EXCHANGE_MATRIX: &str = "file.exchange.matrix";
 pub const FILE_EXCHANGE_MATRIX_VERSION: u32 = 1;
 
 /// A support matrix's rows (docs/adr/1880), in order: the objects written, their kinds, curves, heights, measures,
-/// attributes, style, persistent ids, the vertices' places, objects read back that match none, and (docs/adr/2380) the
-/// blocks, the tables and the project's relations.
-pub const EXCHANGE_ASPECTS: [&str; 13] = [
+/// attributes, style, persistent ids, the vertices' places, the curves' shape, the length and the area (GIS-039,
+/// docs/adr/1096), objects read back that match none, and (docs/adr/2380) the blocks, the tables and the project's
+/// relations.
+pub const EXCHANGE_ASPECTS: [&str; 16] = [
     "objects",
     "kinds",
     "curves",
@@ -225,6 +259,9 @@ pub const EXCHANGE_ASPECTS: [&str; 13] = [
     "style",
     "identity",
     "position",
+    "shape",
+    "length",
+    "area",
     "extra",
     "blocks",
     "tables",

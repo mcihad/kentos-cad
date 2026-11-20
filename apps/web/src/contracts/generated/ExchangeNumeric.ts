@@ -2,6 +2,13 @@
 
 /**
  * The numeric differences, the greatest over the objects matched (metres, square metres; none: nothing to measure),
- * the object of the greatest offset, and how many lie farther than the tolerance.
+ * the object of the greatest offset, and how many lie farther than the tolerance. Each of the curves' shape, the
+ * length and the area is decided apart (gis-usage-report GIS-039, docs/adr/1096): the curve's points between its
+ * vertices against the original within the tolerance; the length within 2·n·tolerance (n vertices); the area within
+ * the perimeter × tolerance. How many objects break each, and the worst one's id; absent when none.
  */
-export type ExchangeNumeric = { offset?: number, offsetUid?: string, height?: number, measure?: number, length?: number, area?: number, above: number, };
+export type ExchangeNumeric = { offset?: number, offsetUid?: string, height?: number, measure?: number, length?: number, area?: number, above: number, 
+/**
+ * The greatest distance of a read-back curve's points between its vertices from the original's geometry.
+ */
+shape?: number, shapeAbove?: number, shapeUid?: string, lengthAbove?: number, lengthUid?: string, areaAbove?: number, areaUid?: string, };

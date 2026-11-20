@@ -18933,6 +18933,7 @@ class AsbuiltChecked(_Model):
         surface_changed: docs/adr/3220: the drawing's surface (`surface`, given) is not the one the package names: another surface, or its
             sources changed since the package was written.
         tracks: A monitoring job's series (docs/adr/4420): each point measured now and in another epoch, in this epoch's order.
+        untoleranced: Matched points no tolerance was given for (UR2-026): their deviations shown, their conformity not judged. Unit: count.
     """
     design_digest: str
     points: list[AsbuiltPoint]
@@ -18952,6 +18953,7 @@ class AsbuiltChecked(_Model):
     rms_vertical: float | None | Unset = UNSET
     surface_changed: bool | Unset = UNSET
     tracks: list[AsbuiltTrack] | Unset = UNSET
+    untoleranced: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -18983,6 +18985,8 @@ class AsbuiltChecked(_Model):
             out["surfaceChanged"] = self.surface_changed
         if self.tracks is not UNSET:
             out["tracks"] = [e0.to_json() for e0 in self.tracks]
+        if self.untoleranced is not UNSET:
+            out["untoleranced"] = self.untoleranced
         return out
 
     @classmethod
@@ -19006,6 +19010,7 @@ class AsbuiltChecked(_Model):
             rms_vertical=UNSET if "rmsVertical" not in data else None if data["rmsVertical"] is None else float(data["rmsVertical"]),
             surface_changed=data.get("surfaceChanged", UNSET),
             tracks=[AsbuiltTrack.from_json(e0) for e0 in data["tracks"]] if "tracks" in data else UNSET,
+            untoleranced=data.get("untoleranced", UNSET),
         )
 
 
@@ -40414,38 +40419,66 @@ class ExchangeMatrixed(_Model):
 @dataclass(kw_only=True, slots=True)
 class ExchangeNumeric(_Model):
     """The numeric differences, the greatest over the objects matched (metres, square metres; none: nothing to measure),
-    the object of the greatest offset, and how many lie farther than the tolerance.
+    the object of the greatest offset, and how many lie farther than the tolerance. Each of the curves' shape, the
+    length and the area is decided apart (gis-usage-report GIS-039, docs/adr/1096): the curve's points between its
+    vertices against the original within the tolerance; the length within 2·n·tolerance (n vertices); the area within
+    the perimeter × tolerance. How many objects break each, and the worst one's id; absent when none.
     Attributes:
         above: Unit: count.
         area: Unit: area.
+        area_above: Unit: count.
         height: Unit: length.
         length: Unit: length.
+        length_above: Unit: count.
         measure: Unit: measure.
         offset: Unit: length.
+        shape: The greatest distance of a read-back curve's points between its vertices from the original's geometry. Unit: length.
+        shape_above: Unit: count.
     """
     above: int
     area: float | None | Unset = UNSET
+    area_above: int | Unset = UNSET
+    area_uid: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
     length: float | None | Unset = UNSET
+    length_above: int | Unset = UNSET
+    length_uid: str | None | Unset = UNSET
     measure: float | None | Unset = UNSET
     offset: float | None | Unset = UNSET
     offset_uid: str | None | Unset = UNSET
+    shape: float | None | Unset = UNSET
+    shape_above: int | Unset = UNSET
+    shape_uid: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["above"] = self.above
         if self.area is not UNSET:
             out["area"] = None if self.area is None else float(self.area)
+        if self.area_above is not UNSET:
+            out["areaAbove"] = self.area_above
+        if self.area_uid is not UNSET:
+            out["areaUid"] = self.area_uid
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.length is not UNSET:
             out["length"] = None if self.length is None else float(self.length)
+        if self.length_above is not UNSET:
+            out["lengthAbove"] = self.length_above
+        if self.length_uid is not UNSET:
+            out["lengthUid"] = self.length_uid
         if self.measure is not UNSET:
             out["measure"] = None if self.measure is None else float(self.measure)
         if self.offset is not UNSET:
             out["offset"] = None if self.offset is None else float(self.offset)
         if self.offset_uid is not UNSET:
             out["offsetUid"] = self.offset_uid
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else float(self.shape)
+        if self.shape_above is not UNSET:
+            out["shapeAbove"] = self.shape_above
+        if self.shape_uid is not UNSET:
+            out["shapeUid"] = self.shape_uid
         return out
 
     @classmethod
@@ -40453,11 +40486,18 @@ class ExchangeNumeric(_Model):
         return cls(
             above=data["above"],
             area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            area_above=data.get("areaAbove", UNSET),
+            area_uid=data.get("areaUid", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+            length_above=data.get("lengthAbove", UNSET),
+            length_uid=data.get("lengthUid", UNSET),
             measure=UNSET if "measure" not in data else None if data["measure"] is None else float(data["measure"]),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             offset_uid=data.get("offsetUid", UNSET),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else float(data["shape"]),
+            shape_above=data.get("shapeAbove", UNSET),
+            shape_uid=data.get("shapeUid", UNSET),
         )
 
 
@@ -40935,40 +40975,53 @@ class ExportGml(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ExportGpkg(_Model):
-    """Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object
-    a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
+    """Input of `file.export.gpkg` v1: the layers (all with objects when none), or only the objects named, as tables of a
+    new GeoPackage, each object a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
     coordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,
-    `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves
+    `entity_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves
     written as chords).
     Attributes:
         path: The file to write, an absolute path (`.gpkg`).
+        empty_layers: With no `layers` and no `uids`: also every layer without objects whose type (point, line, area) or fields make
+            a table, written empty with its columns (a field team's template, docs/adr/1076).
         layers: The layers, by id; empty: every layer with objects.
         overwrite: Write over a file that is there.
         time: Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
             written layer with time settings (of every one when `fields` names them); a layer without them whole.
+        uids: Only these objects, by persistent id (Seçili nesneler, docs/adr/1073): each on its layer's table, the other
+            objects of those layers and the other layers left out; with `layers`, only those of them on the given layers.
+            Refused `entity_not_found` for an id the drawing does not have.
     """
     path: str
+    empty_layers: bool | Unset = UNSET
     layers: list[str] | Unset = UNSET
     overwrite: bool = False
     time: QueryTime | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.empty_layers is not UNSET:
+            out["emptyLayers"] = self.empty_layers
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
         out["overwrite"] = self.overwrite
         if self.time is not UNSET:
             out["time"] = None if self.time is None else self.time.to_json()
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ExportGpkg:
         return cls(
             path=data["path"],
+            empty_layers=data.get("emptyLayers", UNSET),
             layers=list(data["layers"]) if "layers" in data else UNSET,
             overwrite=data["overwrite"] if "overwrite" in data else False,
             time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 

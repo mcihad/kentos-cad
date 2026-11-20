@@ -359,6 +359,10 @@ def expected_cell(check: dict, aspect: str) -> tuple[str, int]:
     if aspect == "position":
         above = check["numeric"]["above"]
         return ("approximated" if above else "kept"), above
+    # GIS-039 (docs/adr/1096): the curves' shape, the length and the area beyond what the tolerance allows.
+    if aspect in ("shape", "length", "area"):
+        above = check["numeric"].get(f"{aspect}Above", 0)
+        return ("converted" if above else "kept"), above
     if aspect in PARTS:
         kind, changed = PARTS[aspect]
         n = sum(k["count"] for k in check["notWritten"] if k["kind"] == kind)
@@ -394,8 +398,8 @@ class MatrixFromTheChecks(unittest.TestCase):
                 alone = check.run(drawing(), check.input_type.from_json({"format": c["format"]}),
                                   op="execute").output.to_json()
                 self.assertEqual(c, alone, c["format"])
-            aspects = ["objects", "kinds", "curves", "z", "m", "attributes", "style", "identity", "position", "extra",
-                       "blocks", "tables", "relations"]
+            aspects = ["objects", "kinds", "curves", "z", "m", "attributes", "style", "identity", "position", "shape",
+                       "length", "area", "extra", "blocks", "tables", "relations"]
             self.assertEqual([r["aspect"] for r in m["rows"]], aspects)
             for row in m["rows"]:
                 for cell, c in zip(row["cells"], m["checks"]):

@@ -76,10 +76,26 @@ pub fn cell_of(r: &ExchangeChecked, aspect: &str) -> ExchangeCell {
                 cell(r.format, S::Kept, 0, offset)
             }
         }
+        // GIS-039: a curve whose points between its vertices left the original is not kept, though its ends are; the
+        // length and the area beyond what the tolerance allows likewise.
+        "shape" => numeric(r, r.numeric.shape_above, r.numeric.shape),
+        "length" => numeric(r, r.numeric.length_above, r.numeric.length),
+        "area" => numeric(r, r.numeric.area_above, r.numeric.area),
         "blocks" => part(r, "insert", "blockChanged"),
         "tables" => part(r, "table", "tableChanged"),
         "relations" => first(r, &[("relationLost", S::Lost)]),
         _ => first(r, &[("extra", S::Added)]),
+    }
+}
+
+/// A numeric row: converted (beyond what the tolerance allows) with how many objects, else kept; the greatest
+/// difference as its detail.
+fn numeric(r: &ExchangeChecked, above: u32, greatest: Option<f64>) -> ExchangeCell {
+    let detail = greatest.map(|v| format!("{v}"));
+    if above > 0 {
+        cell(r.format, ExchangeState::Converted, above, detail)
+    } else {
+        cell(r.format, ExchangeState::Kept, 0, detail)
     }
 }
 

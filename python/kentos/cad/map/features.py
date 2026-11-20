@@ -35,8 +35,9 @@ class _MapFeaturesCode(LocalCommand[FeaturesCode, FeaturesCoded, FeaturesCoded])
     görünen ve kilitsiz katmanlardaki kodlu noktalar çizimin sırasıyla. name KentOS'un
     profili (tucbs-temel, harita-varliklari) ya da drawing'in yanındaki profil. Tek geri
     alma adımı “Kodla çiz”. Uyarılar: unknown_code (profilde olmayan kod, noktaları
-    kalır), control_unknown, string_too_short, area_not_closed. Retler:
-    invalid_revision, revision_conflict, unknown_profile, invalid_profile,
+    kalır), control_unknown, string_too_short, area_not_closed, string_already_drawn
+    (aynı noktalardan, aynı kodla, aynı katmanda çizilmiş dizi yeniden yazılmaz).
+    Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile,
     invalid_input, invalid_uid, entity_not_found, not_a_point, no_coded_points,
     class_layer_missing (önce profili uygulayın), layer_locked.
     """
@@ -73,10 +74,11 @@ class _MapFeaturesCode(LocalCommand[FeaturesCode, FeaturesCoded, FeaturesCoded])
         katmanlardaki kodlu noktalar çizimin sırasıyla. name KentOS'un profili (tucbs-temel,
         harita-varliklari) ya da drawing'in yanındaki profil. Tek geri alma adımı “Kodla
         çiz”. Uyarılar: unknown_code (profilde olmayan kod, noktaları kalır),
-        control_unknown, string_too_short, area_not_closed. Retler: invalid_revision,
-        revision_conflict, unknown_profile, invalid_profile, invalid_input, invalid_uid,
-        entity_not_found, not_a_point, no_coded_points, class_layer_missing (önce profili
-        uygulayın), layer_locked.
+        control_unknown, string_too_short, area_not_closed, string_already_drawn (aynı
+        noktalardan, aynı kodla, aynı katmanda çizilmiş dizi yeniden yazılmaz). Retler:
+        invalid_revision, revision_conflict, unknown_profile, invalid_profile,
+        invalid_input, invalid_uid, entity_not_found, not_a_point, no_coded_points,
+        class_layer_missing (önce profili uygulayın), layer_locked.
 
         Args:
             doc: The drawing it works on.

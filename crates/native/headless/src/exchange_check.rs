@@ -210,6 +210,51 @@ pub(crate) fn places(e: &Entity) -> Vec<Vec2> {
     }
 }
 
+/// The points of a bulged edge from `a` to `b` at a quarter, the half and three quarters of its arc; none for a
+/// straight one.
+fn arc_points(a: Vec2, b: Vec2, bulge: f64) -> Vec<Vec2> {
+    let chord = dist(a, b);
+    if bulge == 0.0 || !bulge.is_finite() || chord == 0.0 {
+        return Vec::new();
+    }
+    let theta = 4.0 * bulge.atan();
+    let r = chord / (2.0 * (theta / 2.0).sin().abs());
+    let (mx, my) = ((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
+    let (ux, uy) = ((b.x - a.x) / chord, (b.y - a.y) / chord);
+    let k = chord * (1.0 - bulge * bulge) / (4.0 * bulge);
+    let c = Vec2 { x: mx - uy * k, y: my + ux * k };
+    let sa = (a.y - c.y).atan2(a.x - c.x);
+    [0.25, 0.5, 0.75].iter().map(|t| Vec2 { x: c.x + r * (sa + theta * t).cos(), y: c.y + r * (sa + theta * t).sin() }).collect()
+}
+
+/// The points of an object read back between its vertices, on its curved edges (GIS-039): a wrong arc whose ends are
+/// right shows there.
+pub(crate) fn curve_points(e: &Entity) -> Vec<Vec2> {
+    let ring = |pts: &[Vec2], bulges: Option<&Vec<f64>>, closed: bool| -> Vec<Vec2> {
+        let n = pts.len();
+        let Some(b) = bulges else { return Vec::new() };
+        let edges = if closed { n } else { n.saturating_sub(1) };
+        (0..edges).flat_map(|i| arc_points(pts[i], pts[(i + 1) % n], b.get(i).copied().unwrap_or(0.0))).collect()
+    };
+    match e {
+        Entity::Polyline(p) | Entity::Polygon(p) => {
+            let area = matches!(e, Entity::Polygon(_));
+            let mut out = ring(&p.pts, p.bulges.as_ref(), area || p.closed);
+            for h in p.holes.iter().flatten() {
+                out.extend(ring(&h.pts, h.bulges.as_ref(), true));
+            }
+            for q in p.parts.iter().flatten() {
+                out.extend(ring(&q.pts, q.bulges.as_ref(), area));
+                for h in q.holes.iter().flatten() {
+                    out.extend(ring(&h.pts, h.bulges.as_ref(), true));
+                }
+            }
+            out
+        }
+        _ => Vec::new(),
+    }
+}
+
 fn plain(text: &str) -> Option<f64> {
     let t = text.trim();
     let body = t.strip_prefix('-').unwrap_or(t);
@@ -452,6 +497,21 @@ fn compare(
         if offset > tolerance {
             numeric.above += 1;
         }
+        // The curves' shape between the vertices (GIS-039), apart from the vertices' places.
+        let bend = curve_points(n).into_iter().map(|p| to_original(o, p)).fold(None, |m: Option<f64>, d| {
+            Some(m.map_or(d, |m| m.max(d)))
+        });
+        if let Some(bend) = bend.filter(|b| b.is_finite()) {
+            if numeric.shape.is_none_or(|m| bend > m) {
+                numeric.shape = Some(bend);
+                if bend > tolerance {
+                    numeric.shape_uid = Some(ouid.clone());
+                }
+            }
+            if bend > tolerance {
+                numeric.shape_above += 1;
+            }
+        }
         let ((zo, mo), (zn, mn)) = (heights(o), heights(n));
         let some = |v: &[Option<f64>]| v.iter().any(Option::is_some);
         if some(&zo) && !some(&zn) {
@@ -475,13 +535,33 @@ fn compare(
             }
         }
         let (so, sn) = (shape(o), shape(n));
-        if let (Some(a), Some(b)) = (entity_length(&so), entity_length(&sn)) {
-            bigger(&mut numeric.length, (a - b).abs());
+        // Length and area within what the vertices' tolerance allows (GIS-039): each vertex within the tolerance moves
+        // its two edges' length by at most twice it; the boundary within it moves the area by at most its length times.
+        // An area read back as a line (its hole split off in DXF) is the kind's loss, said apart: not measured here.
+        let comparable = class(o) == class(n);
+        let vertices = places(o).len().max(1) as f64;
+        let perimeter = entity_length(&so).filter(|_| comparable);
+        if let (Some(a), Some(b)) = (perimeter, entity_length(&sn)) {
+            let d = (a - b).abs();
+            if d > 2.0 * vertices * tolerance {
+                if numeric.length_above == 0 || numeric.length.is_none_or(|m| d > m) {
+                    numeric.length_uid = Some(ouid.clone());
+                }
+                numeric.length_above += 1;
+            }
+            bigger(&mut numeric.length, d);
         }
         if class(o) == "area"
             && let (Some(a), Some(b)) = (entity_area(&so), entity_area(&sn))
         {
-            bigger(&mut numeric.area, (a.abs() - b.abs()).abs());
+            let d = (a.abs() - b.abs()).abs();
+            if d > perimeter.unwrap_or(0.0) * tolerance {
+                if numeric.area_above == 0 || numeric.area.is_none_or(|m| d > m) {
+                    numeric.area_uid = Some(ouid.clone());
+                }
+                numeric.area_above += 1;
+            }
+            bigger(&mut numeric.area, d);
         }
         // Attributes, style and identity.
         let (ao, an) = (&o.base().attrs, &n.base().attrs);
@@ -559,7 +639,7 @@ fn compare(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kentos_commands::{DocumentSnapshotV2, ExchangeFormat};
+    use kentos_commands::{DocumentSnapshotV2, ExchangeFormat, ExchangeState};
 
     fn drawing() -> Document {
         let text = include_str!("../../../../fixtures/exchange/v1/devir.json");
@@ -630,4 +710,64 @@ mod tests {
         assert_eq!(output["objects"], 1);
         assert_eq!(doc.revision(), before);
     }
+
+    /// A drawing of one area at Ankara's coordinates: a square, or a 10 m buffer's half-disc end (`bulge` on its last
+    /// edge).
+    fn one_area(bulge: Option<f64>) -> Document {
+        let pts = [(487100.0, 4420200.0), (487140.0, 4420200.0), (487140.0, 4420220.0), (487100.0, 4420220.0)];
+        let mut e = serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "0", "attrs": {},
+            "pts": pts.iter().map(|(x, y)| serde_json::json!({"x": x, "y": y})).collect::<Vec<_>>() });
+        if let Some(b) = bulge {
+            e["bulges"] = serde_json::json!([0.0, 0.0, 0.0, b]);
+        }
+        // The exchange sample's settings and layers, this one area alone.
+        let mut text: serde_json::Value =
+            serde_json::from_str(include_str!("../../../../fixtures/exchange/v1/devir.json")).expect("the sample");
+        text["entities"] = serde_json::json!([e]);
+        text["uids"] = serde_json::json!(["0192f660-1660-7000-8000-000000000001"]);
+        let snapshot: DocumentSnapshotV2 = serde_json::from_value(text).expect("the drawing");
+        Document::from_snapshot_v2(snapshot).expect("opens")
+    }
+
+    fn compared(doc: &Document, back: &Document) -> ExchangeChecked {
+        let input = ExchangeCheck { format: ExchangeFormat::Gpkg, layers: Vec::new(), tolerance: Some(0.001) };
+        compare(doc, back, &input, 0.001, Vec::new(), Vec::new())
+    }
+
+    /// GIS-039 (docs/adr/1096): a buffer's arc read back bulging the other way, its ends right: the vertices pass, the
+    /// curve's shape and the area do not, each with the object's id; the same square read back passes everything.
+    #[test]
+    fn a_wrong_arc_with_right_ends_fails_its_shape_and_area() {
+        let doc = one_area(Some(1.0));
+        let back = one_area(Some(-1.0));
+        let r = compared(&doc, &back);
+        let n = &r.numeric;
+        assert_eq!(n.above, 0, "the vertices are where they were: {n:?}");
+        assert_eq!(n.shape_above, 1, "{n:?}");
+        // The flipped half-disc's far point (487110, 4420210) lies 10 m from the square's long edges, its nearest
+        // original geometry; its area 2 × π·10²/2 off.
+        assert!(n.shape.is_some_and(|d| (d - 10.0).abs() < 1e-6), "{n:?}");
+        assert!(n.area.is_some_and(|a| (a - 100.0 * std::f64::consts::PI).abs() < 1e-6), "{n:?}");
+        assert_eq!(n.area_above, 1, "{n:?}");
+        assert_eq!(n.length_above, 0, "the same arc's length: {n:?}");
+        let uid = doc.uid(Slot(1)).map(|u| u.to_string());
+        assert_eq!((n.shape_uid.clone(), n.area_uid.clone()), (uid.clone(), uid));
+        let cells: Vec<ExchangeState> =
+            ["shape", "length", "area"].iter().map(|a| crate::exchange_matrix::cell_of(&r, a).state).collect();
+        assert_eq!(cells, [ExchangeState::Converted, ExchangeState::Kept, ExchangeState::Converted]);
+        // A straight edge read back as an arc: the length too.
+        let r = compared(&one_area(None), &one_area(Some(1.0)));
+        assert!(r.numeric.length_above == 1 && r.numeric.shape_above == 1, "{:?}", r.numeric);
+        // Unchanged: nothing above.
+        let square = one_area(None);
+        let r = compared(&square, &one_area(None));
+        let n = &r.numeric;
+        assert_eq!((n.above, n.shape_above, n.length_above, n.area_above), (0, 0, 0, 0), "{n:?}");
+        let buffer = one_area(Some(1.0));
+        let r = compared(&buffer, &one_area(Some(1.0)));
+        let n = &r.numeric;
+        assert_eq!((n.above, n.shape_above, n.length_above, n.area_above), (0, 0, 0, 0), "{n:?}");
+        assert!(n.shape.is_some_and(|d| d < 1e-6), "{n:?}");
+    }
+
 }
