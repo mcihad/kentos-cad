@@ -331,8 +331,7 @@ impl Files for LocalFiles {
         let dir = dir.ok_or(
             "Kaynağın yanında yazılacak klasör yok (gömülü raster); çıktı dosyasını yazın.",
         )?;
-        Ok(dir
-            .join(format!("{stem}{suffix}{ext}"))
+        Ok(crate::files::free_output(&dir, &stem, suffix, ext)
             .to_string_lossy()
             .into_owned())
     }

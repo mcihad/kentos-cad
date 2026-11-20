@@ -202,6 +202,33 @@ pub struct CubeOpen<'f> {
     pub read: ReadRun<'f>,
 }
 
+/// A result's file named for it when none is asked (gis-usage-report GIS-012, docs/adr/1078): `dir/<stem><suffix><ext>`,
+/// else `…-2`, `…-3` …: the first no file has and no run of this process has taken. It is taken here, so two runs
+/// started together never write one file, and a later run never writes over an earlier result a layer shows.
+pub fn free_output(dir: &std::path::Path, stem: &str, suffix: &str, ext: &str) -> std::path::PathBuf {
+    use std::collections::HashSet;
+    use std::sync::{Mutex, OnceLock, PoisonError};
+    static TAKEN: OnceLock<Mutex<HashSet<std::path::PathBuf>>> = OnceLock::new();
+    let mut taken = TAKEN
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner);
+    let mut n = 1u32;
+    loop {
+        let name = if n == 1 {
+            format!("{stem}{suffix}{ext}")
+        } else {
+            format!("{stem}{suffix}-{n}{ext}")
+        };
+        let path = dir.join(name);
+        if !path.exists() && !taken.contains(&path) {
+            taken.insert(path.clone());
+            return path;
+        }
+        n += 1;
+    }
+}
+
 /// The host's files for a run.
 pub trait Files: Send + Sync {
     /// A cloud's file opened for a full read.
@@ -265,9 +292,18 @@ pub fn with_extension(path: &str, ext: &str) -> String {
         return path.to_owned();
     }
     let lower = path.to_ascii_lowercase();
-    let cut = [".copc.laz", ".laz", ".las", ".tif", ".tiff", ".vpc", ".nc", ".vrt"]
-        .iter()
-        .find(|e| lower.ends_with(*e))
-        .map_or(path.len(), |e| path.len() - e.len());
+    let cut = [
+        ".copc.laz",
+        ".laz",
+        ".las",
+        ".tif",
+        ".tiff",
+        ".vpc",
+        ".nc",
+        ".vrt",
+    ]
+    .iter()
+    .find(|e| lower.ends_with(*e))
+    .map_or(path.len(), |e| path.len() - e.len());
     format!("{}{ext}", &path[..cut])
 }

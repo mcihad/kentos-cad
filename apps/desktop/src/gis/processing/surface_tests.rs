@@ -280,3 +280,55 @@ fn slope_on_an_area_is_written_on_the_source_s_grid() {
         "{i}, {j}"
     );
 }
+
+/// GIS-012 (docs/adr/1078): with no output file asked, each run takes a file of its own beside the model — a degree
+/// slope `dem-egim.tif`, a percent one `dem-egim-yuzde.tif`, a second degree one `dem-egim-2.tif` — so no layer's file
+/// is written over; undone and opened again, the first result's file still holds its own values.
+#[test]
+fn an_automatic_result_file_never_writes_over_an_earlier_one() {
+    let dir = crate::files_testing::scratch("yuzey-otomatik-ad");
+    std::fs::create_dir_all(dir.join("rasters")).expect("a folder");
+    std::fs::copy(fixtures().join("interaction/v1/rasters/dem.tif"), dir.join("rasters/dem.tif")).expect("the model");
+    let snapshot = DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+    let doc = Document::new(snapshot, Some(dir.join("vadi.kcad"))).expect("opens");
+    let (mut app, _) = App::boot(None);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let slope = |app: &mut App, unit: &str| {
+        let _ = app.update(Message::Run("processing.run.surface.slope"));
+        value(app, "input", json!({ "scope": "layer", "layerId": "dem" }));
+        value(app, "unit", json!(unit));
+        let s = run(app);
+        assert!(matches!(s, RunStatus::Ok { .. }), "{s:?}");
+    };
+    slope(&mut app, "degrees");
+    let first = dir.join("rasters/dem-egim.tif");
+    let before = std::fs::read(&first).expect("the degree slope");
+    slope(&mut app, "percent");
+    assert!(dir.join("rasters/dem-egim-yuzde.tif").exists());
+    // GIS-016: each file names its band's unit in GDAL's metadata, whatever it is renamed to.
+    let unit_of = |path: &std::path::Path| {
+        let bytes = std::fs::read(path).expect("written");
+        let text = String::from_utf8_lossy(&bytes).into_owned();
+        ["degree", "percent"].into_iter().find(|u| {
+            text.contains(&format!("<Item name=\"UNITTYPE\" sample=\"0\" role=\"unittype\">{u}</Item>"))
+        })
+    };
+    assert_eq!(unit_of(&first), Some("degree"));
+    assert_eq!(unit_of(&dir.join("rasters/dem-egim-yuzde.tif")), Some("percent"));
+    slope(&mut app, "degrees");
+    assert!(dir.join("rasters/dem-egim-2.tif").exists(), "a second degree slope takes its own file");
+    assert_eq!(std::fs::read(&first).expect("still there"), before, "the first result is not written over");
+    // Each result's object reads its own file.
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let files: Vec<String> = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Raster(r) if r.raster.file.as_deref().is_some_and(|f| f.contains("egim")) => r.raster.file.clone(),
+            _ => None,
+        })
+        .collect();
+    let unique: std::collections::BTreeSet<&String> = files.iter().collect();
+    assert_eq!((files.len(), unique.len()), (3, 3), "{files:?}");
+    doc.undo();
+    assert_eq!(std::fs::read(&first).expect("kept after undo"), before);
+}

@@ -136,8 +136,8 @@ impl Files for DesktopFiles {
         }
         .or_else(|| std::env::var_os("HOME").map(PathBuf::from))
         .ok_or("Çıktının klasörü bulunamadı: bir çıktı dosyası seçin.")?;
-        Ok(folder
-            .join(format!("{stem}{suffix}{ext}"))
+        // A name no file and no running job has (GIS-012): an earlier result is never written over.
+        Ok(kentos_processing::files::free_output(&folder, &stem, suffix, ext)
             .to_string_lossy()
             .into_owned())
     }

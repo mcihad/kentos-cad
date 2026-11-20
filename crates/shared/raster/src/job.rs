@@ -597,7 +597,7 @@ impl Job {
                 );
             }
         };
-        let (out, header) = Out::new(
+        let (mut out, header) = Out::new(
             OutSpec {
                 width: win.width,
                 height: win.height,
@@ -613,6 +613,16 @@ impl Job {
             },
             threads,
         )?;
+        // What the values are, for a reader without KentOS (GIS-016): a slope's degrees or percent, an aspect's
+        // azimuth.
+        match &spec.tool {
+            Tool::Slope { unit: SlopeUnit::Degrees, .. } => out.band_unit("degree", "Eğim (derece)"),
+            Tool::Slope { unit: SlopeUnit::Percent, .. } => out.band_unit("percent", "Eğim (yüzde)"),
+            Tool::Aspect { .. } => {
+                out.band_unit("degree", "Bakı (kuzeyden saat yönünde derece; düzlük -1)")
+            }
+            _ => {}
+        }
         Ok((
             Job {
                 reader,

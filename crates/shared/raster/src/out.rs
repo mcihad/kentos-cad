@@ -167,6 +167,11 @@ impl Out {
         ))
     }
 
+    /// The band's unit and description in the file's metadata (docs/adr/1078): what its values are.
+    pub fn band_unit(&mut self, unit: &str, description: &str) {
+        self.writer.band_unit(unit, description);
+    }
+
     /// How many level-0 rows have come in.
     pub fn rows_done(&self) -> u32 {
         self.levels[0].rows

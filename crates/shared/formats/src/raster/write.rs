@@ -47,6 +47,8 @@ pub struct Writer {
     /// Each image's tiles' offsets and byte counts, by tile index.
     offsets: Vec<Vec<u64>>,
     counts: Vec<Vec<u64>>,
+    /// The first band's unit and description, as GDAL's metadata tag (42112) holds them (docs/adr/1078).
+    band: Option<(String, String)>,
     /// The file's length so far.
     pos: u64,
 }
@@ -87,10 +89,18 @@ impl Writer {
                 level,
                 offsets,
                 counts,
+                band: None,
                 pos,
             },
             header,
         ))
+    }
+
+    /// The first band's unit (`degree`, `percent`, `metre` …) and its description, written in GDAL's metadata
+    /// (`GDAL_METADATA`, tag 42112) as the band's unit type and description: a reader knows what 12.6 is without
+    /// the program that wrote it (gis-usage-report GIS-016).
+    pub fn band_unit(&mut self, unit: &str, description: &str) {
+        self.band = Some((unit.to_owned(), description.to_owned()));
     }
 
     /// The bytes of tile (`tx`, `ty`) of image `image` to append: its
@@ -159,11 +169,12 @@ impl Writer {
         for (k, img) in self.images.iter().enumerate() {
             let at = self.pos + out.len() as u64;
             starts.push(at);
-            let dir = directory(
-                self.big,
-                at,
-                &entries(img, k > 0, &self.offsets[k], &self.counts[k]),
-            );
+            let mut tags = entries(img, k > 0, &self.offsets[k], &self.counts[k]);
+            if let (0, Some((unit, description))) = (k, &self.band) {
+                tags.push((42112, Val::Ascii(gdal_metadata(unit, description))));
+                tags.sort_by_key(|(t, _)| *t);
+            }
+            let dir = directory(self.big, at, &tags);
             let base = out.len();
             out.extend_from_slice(&dir.bytes);
             nexts.push(base + dir.bytes.len() - dir.next_at_from_end);
@@ -182,6 +193,16 @@ impl Writer {
         }
         Ok((out, header(self.big, starts[0])))
     }
+}
+
+/// GDAL's metadata of the first band: its unit type and description (XML, escaped).
+fn gdal_metadata(unit: &str, description: &str) -> String {
+    let esc = |t: &str| t.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;");
+    format!(
+        "<GDALMetadata>\n  <Item name=\"DESCRIPTION\" sample=\"0\" role=\"description\">{}</Item>\n  <Item name=\"UNITTYPE\" sample=\"0\" role=\"unittype\">{}</Item>\n</GDALMetadata>",
+        esc(description),
+        esc(unit)
+    )
 }
 
 /// The header: classic (8 bytes) or BigTIFF (16), little endian, naming the first directory.
