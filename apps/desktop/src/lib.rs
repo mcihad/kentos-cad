@@ -487,8 +487,8 @@ mod standard_install;
 #[path = "tests/edge_shift_scenes.rs"]
 mod edge_shift_scenes;
 #[cfg(test)]
-#[path = "tests/ifraz_scenes.rs"]
-mod ifraz_scenes;
+#[path = "tests/area_cut_scenes.rs"]
+mod area_cut_scenes;
 #[cfg(test)]
 #[path = "tests/select_typed_tests.rs"]
 mod select_typed_tests;

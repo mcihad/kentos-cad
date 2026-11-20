@@ -921,10 +921,6 @@
         "size": "small"
        },
        {
-        "command": "tool.subdivide",
-        "size": "small"
-       },
-       {
         "command": "parcels.check",
         "size": "small"
        },
@@ -990,6 +986,7 @@
        }
       ],
       "overflow": [
+       "tool.areaSplitByArea",
        "tool.holeAdd",
        "tool.holeRemove",
        "tool.holeFill",
@@ -3853,6 +3850,7 @@
       ],
       "overflow": [
        "tool.areaIntersect",
+       "tool.areaSplitByArea",
        "tool.boundary",
        "tool.polygonize",
        "tool.partsJoin",

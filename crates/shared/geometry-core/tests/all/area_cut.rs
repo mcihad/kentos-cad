@@ -1,12 +1,12 @@
-//! İfraz (docs/adr/1069) against the independent reference in `fixtures/ifraz/v1/cases.json`
-//! (`scripts/fixtures/ifraz_cases.py`: bisection on the clipped area at 50 digits, no KentOS code).
+//! Alanla böl (docs/adr/1069) against the independent reference in `fixtures/area-cut/v1/cases.json`
+//! (`scripts/fixtures/area_cut_cases.py`: bisection on the clipped area at 50 digits, no KentOS code).
 
-use kentos_geometry_core::ops::ifraz::cut_for_area;
+use kentos_geometry_core::ops::area_cut::cut_for_area;
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
 fn cases() -> Value {
-    let path = format!("{}/../../../fixtures/ifraz/v1/cases.json", env!("CARGO_MANIFEST_DIR"));
+    let path = format!("{}/../../../fixtures/area-cut/v1/cases.json", env!("CARGO_MANIFEST_DIR"));
     serde_json::from_str(&std::fs::read_to_string(path).expect("the cases")).expect("JSON")
 }
 
@@ -47,7 +47,7 @@ fn the_cut_leaves_the_target_beside_the_edge() {
         near(cut.b.x, num(&want["b"][0]), &format!("{name}: b.x"));
         near(cut.b.y, num(&want["b"][1]), &format!("{name}: b.y"));
         near(cut.distance, num(&want["distance"]), &format!("{name}: distance"));
-        // The pieces' areas as the shoelace gives them: to 1e-9 m² of the parcel's size.
+        // The pieces' areas as the shoelace gives them: to 1e-9 of the whole area.
         let scale = num(&want["near"]) + num(&want["far"]);
         for (g, w, what) in [(cut.near, &want["near"], "near"), (cut.far, &want["far"], "far")] {
             assert!((g - num(w)).abs() <= 1e-9 * scale.max(1.0), "{name}: {what} {g} ≠ {w}");

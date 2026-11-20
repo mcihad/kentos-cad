@@ -1,11 +1,11 @@
-//! İfraz (docs/adr/1069) in a Harita CAD project: a four-cornered parcel, its south edge clicked, 450 m² typed; the cut
+//! Alanla böl (docs/adr/1069) in a Harita CAD project: a four-cornered area, its south edge clicked, 450 m² typed; the cut
 //! parallel to the edge, the piece asked for filled and both sizes shown; Enter cuts it. With `KENTOS_SHOTS=1` the
 //! pictures go to `.run/gui-evidence/ur2-052/`. Test code only.
 
 use crate::app::App;
 use crate::tools_scenes::{E, N, Objects, click, open, run, typed};
 
-/// A parcel of 1 152 m² whose south edge runs a little north of east.
+/// An area of 1 152 m² whose south edge runs a little north of east.
 fn ground() -> Objects {
     let mut o = Objects::new();
     o.path("parsel", &[[0.0, 0.0], [40.0, 4.0], [36.0, 36.0], [2.0, 30.0]], true);
@@ -41,19 +41,27 @@ fn shot(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App, name: &str) {
 }
 
 #[test]
-fn ifraz_cuts_the_parcel_parallel_to_its_edge() {
+fn alanla_bol_cuts_the_area_parallel_to_its_edge() {
     let (mut app, _) = App::boot(None);
     let mut s = crate::files_testing::offscreen(iced::Size::new(1440., 900.));
     opened(&mut app, &mut s);
-    run(&mut app, "tool.subdivide");
-    assert_eq!(app.session.tool_id(), "subdivide");
+    // Its place: Plan › Alan işlemleri ▾, the panel's list.
+    if std::env::var_os("KENTOS_SHOTS").is_some()
+        && let Some(at) = crate::files_testing::find_text(&mut s, &app, "Alan işlemleri")
+    {
+        s.input(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)), kentos_ui::snapshot::Input::Click(at.center()));
+        shot(&mut s, &mut app, "alanla-bol-serit");
+        let _ = app.update(crate::app::Message::DialogClosed);
+    }
+    run(&mut app, "tool.areaSplitByArea");
+    assert_eq!(app.session.tool_id(), "areaSplitByArea");
     click(&mut app, [20.0, 2.0]);
     typed(&mut app, "450");
-    shot(&mut s, &mut app, "ifraz-onizleme");
+    shot(&mut s, &mut app, "alanla-bol-onizleme");
     let before = app.document.as_ref().expect("open").model.len();
     let _ = app.update(crate::app::Message::CommandSubmitted);
     let doc = &app.document.as_ref().expect("open").model;
-    assert_eq!(doc.len(), before + 1, "the parcel cut in two: {}", crate::files_testing::last_said(&app));
-    assert!(crate::files_testing::last_said(&app).starts_with("İfraz: parsel ikiye bölündü: istenen 450"), "{}", crate::files_testing::last_said(&app));
-    shot(&mut s, &mut app, "ifraz-yazildi");
+    assert_eq!(doc.len(), before + 1, "the area cut in two: {}", crate::files_testing::last_said(&app));
+    assert!(crate::files_testing::last_said(&app).starts_with("Alanla böl: alan ikiye bölündü: istenen 450"), "{}", crate::files_testing::last_said(&app));
+    shot(&mut s, &mut app, "alanla-bol-yazildi");
 }

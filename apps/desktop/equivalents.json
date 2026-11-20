@@ -16,7 +16,7 @@
     "map.profile": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "map.sheet": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "tool.stakeout": { "desktop": "implemented", "where": "Aplikasyon penceresi (calc.stakeout), seçili noktalar hedef satırlarında (apps/desktop/src/gis/calc/mod.rs, UR2-053)" },
-    "tool.subdivide": { "desktop": "partial", "where": "İfraz aracı: referans kenar, ayrılacak alan, karşı taraf, önizleme ve tek adımda bölme (crates/native/interaction/src/map/ifraz.rs, ADR 1069)", "reason": "İlk aşama: deliksiz, düz kenarlı tek parçalı alan ve tek düz kesim; doğrultu ile bölme ve parsel kaydı sonraki aşama." },
+    "tool.subdivide": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "workspace.disaster": { "desktop": "pending", "where": "apps/desktop/src/shell/modes.rs (menüde “Yakında”)" },
     "workspace.plan3d": { "desktop": "pending", "where": "apps/desktop/src/shell/modes.rs (menüde “Yakında”)" },
     "view.renderer.webgl2": {

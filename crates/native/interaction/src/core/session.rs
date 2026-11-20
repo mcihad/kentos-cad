@@ -356,7 +356,7 @@ pub const TOOLS: &[&str] = &[
     crate::centerline::ID,
     // docs/adr/0191: Paralel kaydır.
     crate::edge_shift::ID,
-    crate::ifraz::ID,
+    crate::area_cut::ID,
     // docs/adr/0249 §3: Yeniden bağla.
     crate::dimension_reassociate::ID,
     // docs/adr/0335: Kısıt.
@@ -817,7 +817,7 @@ impl Session {
             crate::station_labels::ID => Box::new(crate::station_labels::StationLabels::new()),
             crate::centerline::ID => Box::new(crate::centerline::Centerline::new()),
             crate::edge_shift::ID => Box::new(crate::edge_shift::EdgeShift::new()),
-            crate::ifraz::ID => Box::new(crate::ifraz::Subdivide::new()),
+            crate::area_cut::ID => Box::new(crate::area_cut::AreaCut::new()),
             crate::constraint_tool::ID => Box::new(crate::constraint_tool::ConstraintTool::new()),
             crate::dimension_reassociate::ID => {
                 Box::new(crate::dimension_reassociate::DimensionReassociate::new())

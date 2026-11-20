@@ -1,10 +1,10 @@
-//! İfraz (docs/adr/1069): a parcel cut into a piece of a target size beside a chosen edge, the cut parallel to that
-//! edge (the core's `ops::ifraz`). The reference edge is clicked on an area; the target area is typed; the cut, the two
+//! Alanla böl (docs/adr/1069): a closed area cut into a piece of a target size beside a chosen edge, the cut parallel
+//! to that edge (the core's `ops::area_cut`). The reference edge is clicked on an area; the target area is typed; the cut, the two
 //! pieces and their sizes are shown; Karşı taraf (T) gives the target to the piece across from the edge; Enter cuts
 //! through `cad.areas.edit` as Alan böl does (one undo step). Esc and Ctrl+Z go back a step.
 //!
-//! Stage one: an area of straight edges with no holes, cut by one straight chord. The pieces are geometry: the parcel
-//! register's ifraz document and the shares are recorded apart.
+//! Stage one: an area of straight edges with no holes, cut by one straight chord. The pieces are geometry only: a
+//! parcel's legal subdivision (İfraz) and its shares are a work of their own.
 
 use kentos_commands::{AreaWork, Entity};
 use kentos_domain::{Document, Slot};
@@ -14,7 +14,7 @@ use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::region::{net_area, split_area};
 use kentos_geometry_core::ops::areas::area_of_entity;
 use kentos_geometry_core::ops::edge_shift;
-use kentos_geometry_core::ops::ifraz::{Cut, cut_for_area};
+use kentos_geometry_core::ops::area_cut::{Cut, cut_for_area};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::geometry::shape;
 
@@ -26,16 +26,16 @@ use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{self, Context, Cursor, Flow, Pointer, Preview, Stroke, Tag, Tone, Tool};
 
-/// The tool's id: its command is `tool.subdivide` (IFRAZ).
-pub const ID: &str = "subdivide";
-pub const LABEL: &str = "İfraz";
-pub const NO_EDGE_HERE: &str = "Tıklanan yerde parsel kenarı yok; kilitsiz bir alanın kenarına tıklayın.";
+/// The tool's id: its command is `tool.areaSplitByArea`.
+pub const ID: &str = "areaSplitByArea";
+pub const LABEL: &str = "Alanla böl";
+pub const NO_EDGE_HERE: &str = "Tıklanan yerde alan kenarı yok; kilitsiz bir kapalı alanın kenarına tıklayın.";
 pub const STRAIGHT_ONLY: &str =
-    "İfraz şimdilik deliksiz, düz kenarlı tek parçalı alanda çalışır; yaylı ya da delikli parseli Alan böl ile elle kesin.";
+    "Alanla böl şimdilik deliksiz, düz kenarlı tek parçalı alanda çalışır; yaylı ya da delikli alanı Alan böl ile elle kesin.";
 /// How far the cut is drawn past the boundary, so that the command meets it there whatever the last digit.
 const PAST: f64 = 0.01;
 
-/// The parcel and its reference edge.
+/// The area and its reference edge.
 #[derive(Clone, Debug)]
 struct Picked {
     slot: Slot,
@@ -56,7 +56,7 @@ struct Asked {
 }
 
 #[derive(Default)]
-pub struct Subdivide {
+pub struct AreaCut {
     picked: Option<Picked>,
     /// Karşı taraf (T): the target is the piece across from the edge.
     across: bool,
@@ -64,12 +64,12 @@ pub struct Subdivide {
     format: Format,
 }
 
-impl Subdivide {
+impl AreaCut {
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// The parcel's edge under the click, or why none is taken.
+    /// The area's edge under the click, or why none is taken.
     fn pick(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let Some(slot) = edge::pick_said(p, cx, editable) else {
             cx.say(Level::Warn, NO_EDGE_HERE);
@@ -119,7 +119,7 @@ impl Subdivide {
         };
         let mut pieces = split_area(&k.area, &line_source(&cut));
         if pieces.len() != 2 {
-            cx.say(Level::Warn, kentos_geometry_core::ops::ifraz::MORE_PIECES);
+            cx.say(Level::Warn, kentos_geometry_core::ops::area_cut::MORE_PIECES);
             return;
         }
         // The piece beside the edge first: the one of the core's size, else (two equal halves) the one whose middle
@@ -144,7 +144,7 @@ impl Subdivide {
         Some(if self.across { (far, near) } else { (near, far) })
     }
 
-    /// Enter: the parcel cut through the command, the pieces selected.
+    /// Enter: the area cut through the command, the pieces selected.
     fn write(&mut self, cx: &mut Context<'_>) -> Flow {
         let (Some(k), Some(asked), Some((wanted, rest))) = (&self.picked, &self.asked, self.sizes()) else {
             return Flow::Stay;
@@ -169,7 +169,7 @@ impl Subdivide {
         cx.say(
             Level::Success,
             format!(
-                "{LABEL}: parsel ikiye bölündü: istenen {} ({}), kalan {}. Parçalar özgün alanın özniteliklerini taşır; parsel numaralarını ve ifraz kaydını ayrıca işleyin.",
+                "{LABEL}: alan ikiye bölündü: istenen {} ({}), kalan {}. Parçalar özgün alanın özniteliklerini taşır; parsel numaralarını güncelleyin.",
                 format.area(wanted),
                 if self.across { "karşı taraf" } else { "kenar yanı" },
                 format.area(rest)
@@ -225,7 +225,7 @@ fn rings(a: &Area) -> Vec<Vec<Vec2>> {
         .collect()
 }
 
-impl Tool for Subdivide {
+impl Tool for AreaCut {
     fn id(&self) -> &'static str {
         ID
     }
@@ -237,7 +237,7 @@ impl Tool for Subdivide {
     fn prompt(&self) -> Prompt {
         let side = if self.across { "karşı taraf" } else { "kenar yanı" };
         match (&self.picked, &self.asked) {
-            (None, _) => Prompt::new(LABEL, "parselin referans kenarına tıklayın (kesim bu kenara paralel olur)"),
+            (None, _) => Prompt::new(LABEL, "alanın referans kenarına tıklayın (kesim bu kenara paralel olur)"),
             (Some(_), None) => Prompt::new(
                 LABEL,
                 format!("ayrılacak alanı yazın ({})", self.format.area_unit_label()),
@@ -339,7 +339,7 @@ impl Tool for Subdivide {
         let Some(asked) = &self.asked else {
             out.tag = Some(Tag {
                 at: Vec2::new((k.a.x + k.b.x) / 2.0, (k.a.y + k.b.y) / 2.0),
-                lines: vec![format!("parsel {}", format.area(k.total))],
+                lines: vec![format!("alan {}", format.area(k.total))],
             });
             return out;
         };

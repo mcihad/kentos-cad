@@ -824,14 +824,17 @@
    "id": "arch.sheetSet",
    "kind": "command",
    "title": "Pafta seti",
-   "level": "query",
+   "level": "semantic",
    "via": [
-    "cad.sheets.set"
+    "cad.sheets.set",
+    "cad.sections.edit",
+    "cad.elevations.edit",
+    "cad.openingtypes.edit"
    ],
    "operation": null,
-   "python": "kentos.cad.sheets.set",
-   "mcp": "cad.sheets.set",
-   "note": "Pencere cad.sheets.set'in cevabını gösterir; etkilenen paftalar seçili nesnelerin kimlikleriyle (ADR 0347 §1).",
+   "python": "kentos.cad.sheets.set, kentos.cad.sections.edit, kentos.cad.elevations.edit, kentos.cad.openingtypes.edit",
+   "mcp": "cad.sheets.set, cad.sections.edit, cad.elevations.edit, cad.openingtypes.edit",
+   "note": "cad.sheets.set etkilenen paftaları ve isteğe bağlı üretim bağımlılıklarını listeler. Toplu yenileme mevcut kesitleri, iç görünüşleri ve doğrama listesini yerinde yeniler.",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -3162,6 +3165,22 @@
    "python": "kentos.cad.entities.order",
    "mcp": "cad.entities.order",
    "note": "Seçimin kalıcı kimlikleri ve yön komuta verilir (ADR 0260 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "edit.browseScene",
+   "kind": "command",
+   "title": "Nesnelerde gezin",
+   "level": "session",
+   "via": [
+    "cad.entities.select"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.select",
+   "mcp": "cad.entities.select",
+   "note": "Klavye gezinmesi masaüstü oturumuna aittir. Adaylar ortak cad.entities.select sorgusundan gelir.",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -11490,6 +11509,22 @@
    "tests": 1
   },
   {
+   "id": "tool.areaSplitByArea",
+   "kind": "command",
+   "title": "Alanla böl",
+   "level": "semantic",
+   "via": [
+    "cad.areas.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.areas.edit",
+   "mcp": "cad.areas.edit",
+   "note": "Alanla böl (ADR 1069): kesim çizgisini çekirdek (ops::area_cut) istenen alandan hesaplar, alan kalıcı kimliği ve kesim çizgisiyle Alan böl'ün yazıcısına gider. Araç, Python ve MCP aynı yazıcıyı kullanır.",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.areaSubtract",
    "kind": "tool",
    "title": "Alan çıkar",
@@ -11707,6 +11742,23 @@
    "python": "kentos.cad.casework.run",
    "mcp": "cad.casework.run",
    "note": "Yolun noktaları (Düz, L, U), yan, köşe, modül eni, derinlik, evye, ocak, bulaşık makinesi, fırın, buzdolabı ve üst dolap komuta verilir; köşeler, modüller, dolgu, tezgâh ve kesimleri, duvar bağları ve kitaplık blokları komutun hesabı, önizleme aynı planı okur (ADR 0706, 0727).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.ceilingDevice",
+   "kind": "command",
+   "title": "Tavan cihazı",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.edit",
+    "cad.blocks.insert"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.edit, kentos.cad.blocks.insert",
+   "mcp": "cad.blocks.edit, cad.blocks.insert",
+   "note": "Tavan cihazı sembolünü metre birimli blok olarak ekler; yerleşim öznitelikleri cihaz türünü ve kaynak mahal kimliğini tutar.",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -14812,6 +14864,22 @@
    "tests": 0
   },
   {
+   "id": "tool.slabEdgeBind",
+   "kind": "command",
+   "title": "Döşeme kenarı bağla",
+   "level": "semantic",
+   "via": [
+    "cad.slabs.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.slabs.edit",
+   "mcp": "cad.slabs.edit",
+   "note": "Tek döşeme dış kenarını duvar bileşen yüzü, öteleme ve kilitle bağlar veya serbest bırakır.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.space",
    "kind": "command",
    "title": "Mahal",
@@ -15616,6 +15684,22 @@
    "mcp": null,
    "note": "Görünümün dönüşü oturumun kamerasıdır; çizim değişmez. Adlı görünümün dönüşü cad.views.edit ile saklanır (ADR 0285 §2).",
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.walkRoute",
+   "kind": "command",
+   "title": "Dolaşım güzergâhı",
+   "level": "semantic",
+   "via": [
+    "cad.arch.walk"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arch.walk",
+   "mcp": "cad.arch.walk",
+   "note": "Etkin katta iki konum, geçiş genişliği ve donatı kapsamı ile tasarım güzergâhını hesaplar. Çizimi değiştirmez.",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },

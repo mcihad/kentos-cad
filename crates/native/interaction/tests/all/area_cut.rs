@@ -1,4 +1,4 @@
-//! İfraz (docs/adr/1069) on a 10 m square parcel: the edge clicked, 40 m² typed, the cut 4 m from it; Karşı taraf gives
+//! Alanla böl (docs/adr/1069) on a 10 m square area: the edge clicked, 40 m² typed, the cut 4 m from it; Karşı taraf gives
 //! the 40 m² to the far side; Enter cuts it in one undo step; what cannot be cut is said and nothing is written.
 
 use crate::common::{Bench, E, N};
@@ -6,7 +6,7 @@ use kentos_commands::Entity;
 use kentos_interaction::Level;
 
 fn square() -> (Bench, kentos_domain::Slot) {
-    let mut b = Bench::new("subdivide");
+    let mut b = Bench::new("areaSplitByArea");
     let slot = b.add_path("cizim", &[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], true);
     (b, slot)
 }
@@ -64,7 +64,7 @@ fn karsi_taraf_gives_the_target_to_the_far_side() {
 }
 
 #[test]
-fn a_target_the_parcel_cannot_give_is_said_and_nothing_is_cut() {
+fn a_target_the_area_cannot_give_is_said_and_nothing_is_cut() {
     let (mut b, _) = square();
     b.click(5.0, 0.0);
     let revision = b.doc.revision();
@@ -73,11 +73,11 @@ fn a_target_the_parcel_cannot_give_is_said_and_nothing_is_cut() {
     b.confirm();
     assert_eq!(b.doc.revision(), revision);
     let said: Vec<_> = b.said(before).into_iter().map(|(_, t)| t.to_owned()).collect();
-    assert!(said.iter().any(|t| t.contains("parselin alanından küçük")), "{said:?}");
+    assert!(said.iter().any(|t| t.contains("alanın tamamından küçük")), "{said:?}");
 }
 
 #[test]
-fn a_parcel_with_a_hole_is_left_to_alan_bol() {
+fn an_area_with_a_hole_is_left_to_alan_bol() {
     let mut b = Bench::on(crate::common::EMPTY);
     let w = |q: [f64; 2]| kentos_commands::Vec2 { x: E + q[0], y: N + q[1] };
     let path = kentos_commands::PathEntity {
@@ -98,7 +98,7 @@ fn a_parcel_with_a_hole_is_left_to_alan_bol() {
     };
     b.doc.add(Entity::Polygon(path)).expect("a slot");
     b.draft.snap = false;
-    b.start("subdivide");
+    b.start("areaSplitByArea");
     b.click(5.0, 0.0);
     assert!(b.last_text().is_some_and(|t| t.contains("deliksiz")), "{:?}", b.last_text());
 }

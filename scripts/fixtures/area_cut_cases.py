@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""İfraz (docs/adr/1069): the shared cases, written from the ADR's rules without KentOS code, at 50 digits with mpmath.
+"""Alanla böl (docs/adr/1069): the shared cases, written from the ADR's rules without KentOS code, at 50 digits with mpmath.
 
-- The parcel is its outer ring (either way round, a closing repeat dropped). The reference edge runs from vertex i to
+- The area is its outer ring (either way round, a closing repeat dropped). The reference edge runs from vertex i to
   the next; the piece asked for lies beside it, on the area's side.
 - The cut is the line parallel to the edge at the distance d into the area where the ring's part on the edge's side of
   it has the target area. That area grows with d; here d is found by bisection on the clipped area itself (200 halvings
@@ -11,10 +11,10 @@
 - Refused also: fewer than three vertices or no area, an edge the ring has not, an edge of no length, a target not
   between zero and the ring's area.
 
-The core runs the cases (crates/shared/geometry-core/tests/all/ifraz.rs).
+The core runs the cases (crates/shared/geometry-core/tests/all/area_cut.rs).
 
-    python3 scripts/fixtures/ifraz_cases.py          # write
-    python3 scripts/fixtures/ifraz_cases.py --check  # compare
+    python3 scripts/fixtures/area_cut_cases.py          # write
+    python3 scripts/fixtures/area_cut_cases.py --check  # compare
 """
 
 import json
@@ -25,15 +25,15 @@ import mpmath as mp
 
 mp.mp.dps = 50
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "fixtures" / "ifraz" / "v1" / "cases.json"
-SOURCE = "scripts/fixtures/ifraz_cases.py (docs/adr/1069)"
+OUT = ROOT / "fixtures" / "area-cut" / "v1" / "cases.json"
+SOURCE = "scripts/fixtures/area_cut_cases.py (docs/adr/1069)"
 
-TOO_FEW = "İfraz için en az üç köşeli, alanı olan bir parsel gerekir."
-NO_EDGE = "Bu parselde böyle bir kenar yok."
+TOO_FEW = "Alanla bölmek için en az üç köşeli, alanı olan kapalı bir alan gerekir."
+NO_EDGE = "Bu alanda böyle bir kenar yok."
 ZERO_EDGE = "Referans kenarın uzunluğu yok; başka bir kenar seçin."
-TARGET = "Hedef alan sıfırdan büyük ve parselin alanından küçük olmalı."
+TARGET = "Ayrılacak alan sıfırdan büyük ve alanın tamamından küçük olmalı."
 MORE_PIECES = (
-    "Bu alanı veren kesim çizgisi parseli ikiden çok parçaya böler; başka bir kenar seçin ya da Alan böl ile elle kesin."
+    "Bu alanı veren kesim çizgisi alanı ikiden çok parçaya böler; başka bir kenar seçin ya da Alan böl ile elle kesin."
 )
 
 
@@ -139,7 +139,7 @@ CASES = [
     ("Eğik dörtgen, eğik kenardan", [[2, 1], [27, 7], [21, 31], [-3, 22]], 1, 333.333),
     ("Kenar doğrultusunda ara köşe", [[0, 0], [5, 0], [10, 0], [10, 10], [0, 10]], 0, 60),
     ("Büyük koordinat, kare", [[E, N], [E + 10, N], [E + 10, N + 10], [E, N + 10]], 0, 40),
-    ("Büyük koordinat, eğik parsel", [[E + 2.31, N + 1.07], [E + 47.92, N + 9.55], [E + 41.6, N + 38.4], [E - 3.2, N + 30.1]], 0, 812.5),
+    ("Büyük koordinat, eğik alan", [[E + 2.31, N + 1.07], [E + 47.92, N + 9.55], [E + 41.6, N + 38.4], [E - 3.2, N + 30.1]], 0, 812.5),
     ("Çok küçük hedef", SQUARE, 0, 0.001),
     ("Toplama çok yakın hedef", SQUARE, 0, 99.999),
     ("İçbükey L, iki kesişimli", [[0, 0], [20, 0], [20, 10], [10, 10], [10, 20], [0, 20]], 0, 150),
@@ -171,7 +171,7 @@ def main():
     if "--check" in sys.argv:
         if OUT.read_text() != text:
             sys.exit(f"{OUT} is out of date: python3 {Path(__file__).relative_to(ROOT)}")
-        print("ifraz cases: current")
+        print("area cut cases: current")
         return
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text)

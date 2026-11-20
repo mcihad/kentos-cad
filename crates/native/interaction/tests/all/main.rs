@@ -5,6 +5,7 @@
 mod adjoin;
 mod aids;
 mod area;
+mod area_cut;
 mod cad_axes_names;
 mod arrange;
 mod beam_tool;
@@ -42,7 +43,6 @@ mod explode_density;
 mod feature_export;
 mod fencing;
 mod find_replace;
-mod ifraz;
 mod gnss;
 mod grip_modes;
 mod grips;

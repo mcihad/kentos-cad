@@ -1,6 +1,6 @@
-//! İfraz (docs/adr/1069): the line that cuts a parcel's area into a piece of a target size along a chosen edge, the
-//! line parallel to that edge. The independent reference is `scripts/fixtures/ifraz_cases.py`
-//! (`fixtures/ifraz/v1/cases.json`).
+//! Alanla böl (docs/adr/1069): the line that cuts a closed area into a piece of a target size beside a chosen edge,
+//! the line parallel to that edge. Geometry only: a parcel's legal subdivision (ifraz) is recorded apart. The
+//! independent reference is `scripts/fixtures/area_cut_cases.py` (`fixtures/area-cut/v1/cases.json`).
 //!
 //! In the edge's own frame (s along the edge from its first vertex, h square to it into the area) the piece is the
 //! area's part with h ≤ d. Its size A(d) grows with d; between two vertices' heights the cut's length w(h) is linear,
@@ -14,12 +14,12 @@ use crate::jsmath::js_hypot;
 use crate::vec2::Vec2;
 
 /// Why no cut is given, in the tool's words.
-pub const TOO_FEW: &str = "İfraz için en az üç köşeli, alanı olan bir parsel gerekir.";
-pub const NO_EDGE: &str = "Bu parselde böyle bir kenar yok.";
+pub const TOO_FEW: &str = "Alanla bölmek için en az üç köşeli, alanı olan kapalı bir alan gerekir.";
+pub const NO_EDGE: &str = "Bu alanda böyle bir kenar yok.";
 pub const ZERO_EDGE: &str = "Referans kenarın uzunluğu yok; başka bir kenar seçin.";
-pub const TARGET: &str = "Hedef alan sıfırdan büyük ve parselin alanından küçük olmalı.";
+pub const TARGET: &str = "Ayrılacak alan sıfırdan büyük ve alanın tamamından küçük olmalı.";
 pub const MORE_PIECES: &str =
-    "Bu alanı veren kesim çizgisi parseli ikiden çok parçaya böler; başka bir kenar seçin ya da Alan böl ile elle kesin.";
+    "Bu alanı veren kesim çizgisi alanı ikiden çok parçaya böler; başka bir kenar seçin ya da Alan böl ile elle kesin.";
 
 /// The cut: its two ends on the boundary (in the edge's direction), how far it lies from the edge, and the two
 /// pieces' areas, the one beside the edge first.

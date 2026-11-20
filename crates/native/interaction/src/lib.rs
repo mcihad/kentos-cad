@@ -195,6 +195,8 @@ pub mod draw_order;
 pub mod drawing_extras;
 #[path = "core/edge.rs"]
 mod edge;
+#[path = "core/area_cut.rs"]
+pub mod area_cut;
 #[path = "core/edge_shift.rs"]
 pub mod edge_shift;
 #[path = "arch/elevation.rs"]
@@ -215,8 +217,6 @@ pub mod find_replace;
 mod format {
     pub use kentos_project::format::*;
 }
-#[path = "map/ifraz.rs"]
-pub mod ifraz;
 #[path = "map/gnss.rs"]
 pub mod gnss;
 #[path = "core/grip_edit.rs"]

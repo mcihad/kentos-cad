@@ -2,6 +2,7 @@
 
 pub mod adjoin;
 pub mod arch_bonds;
+pub mod area_cut;
 pub mod areas;
 pub mod arrange;
 pub mod assoc_array;
@@ -44,7 +45,6 @@ pub mod grid_ref;
 pub mod grips;
 pub mod hatch_region;
 pub mod holes;
-pub mod ifraz;
 pub mod image;
 pub mod interior_dims;
 pub mod join;
