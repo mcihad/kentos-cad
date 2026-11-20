@@ -1143,6 +1143,19 @@ impl Memory {
     pub fn forget_heights(&mut self) {
         self.heights = Heights::default();
     }
+
+    /// Nokta's name series, code and height, taken from the memory (UR2-060: one drawing's series, code and measured
+    /// height went on in another's points): a drawing set aside keeps them, another starts with none.
+    pub fn take_point(&mut self) -> (Name, Name, Option<f64>) {
+        let kept = (self.point_name, self.point_code, self.point_z);
+        (self.point_name, self.point_code, self.point_z) = (Name::EMPTY, Name::EMPTY, None);
+        kept
+    }
+
+    /// A drawing's Nokta memory back (its tab in front again).
+    pub fn give_point(&mut self, (name, code, z): (Name, Name, Option<f64>)) {
+        (self.point_name, self.point_code, self.point_z) = (name, code, z);
+    }
 }
 
 impl Default for Memory {

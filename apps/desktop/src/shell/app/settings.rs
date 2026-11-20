@@ -247,6 +247,8 @@ impl App {
         // The annotation tools' heights typed in the last drawing: the new one's annotations take
         // its own project's (docs/adr/0205 §2).
         self.memory.forget_heights();
+        // So are Nokta's name series, code and height (UR2-060); a tab brought in front gets its own back (doc_tabs.rs).
+        let _ = self.memory.take_point();
         self.selected_layer = None;
         // A linked photo's key is its path from the drawing's folder (attachments.rs); Bilgi's card was
         // on an object of the drawing left.

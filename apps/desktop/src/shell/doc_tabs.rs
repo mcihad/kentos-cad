@@ -32,6 +32,8 @@ pub struct Parked {
     /// Its Hesap windows' tables, solutions and names (UR2-049: one drawing's levelling went on in the next), its
     /// window closed.
     calc: crate::calc::Calc,
+    /// Its Nokta name series, code and height (UR2-060).
+    point: (kentos_interaction::Name, kentos_interaction::Name, Option<f64>),
 }
 
 /// The drawings set aside, and where the one on screen stands among them.
@@ -132,6 +134,7 @@ impl App {
                 std::mem::take(&mut self.level_view),
             ),
             calc: std::mem::take(&mut self.gis.calc).set_aside(),
+            point: self.memory.take_point(),
         };
         let at = self.doc_tabs.at.min(self.doc_tabs.parked.len());
         self.doc_tabs.parked.insert(at, parked);
@@ -154,11 +157,12 @@ impl App {
         }
         // Parking put the drawing on screen at `at - 1`: the one asked for shifted when it stood after.
         let index = if k_parked >= self.doc_tabs.at - 1 { k_parked + 1 } else { k_parked };
-        let Parked { document, camera, selection, views, level, calc } = self.doc_tabs.parked.remove(index);
+        let Parked { document, camera, selection, views, level, calc, point } = self.doc_tabs.parked.remove(index);
         self.doc_tabs.at = index;
         let name = document.display_name().into_owned();
         self.show_document(document);
         self.gis.calc = calc;
+        self.memory.give_point(point);
         self.viewport.put_camera(camera);
         self.selection = selection;
         self.view_history = views;
@@ -194,10 +198,11 @@ impl App {
         };
         match next {
             Some(index) => {
-                let Parked { document, camera, selection, views, level, calc } = self.doc_tabs.parked.remove(index);
+                let Parked { document, camera, selection, views, level, calc, point } = self.doc_tabs.parked.remove(index);
                 self.doc_tabs.at = index;
                 self.show_document(document);
                 self.gis.calc = calc;
+                self.memory.give_point(point);
                 self.viewport.put_camera(camera);
                 self.selection = selection;
                 self.view_history = views;
@@ -604,6 +609,27 @@ mod tests {
         );
         assert_eq!(app.document.as_ref().unwrap().model.len(), 15);
         assert!(!app.document.as_ref().unwrap().dirty());
+    }
+
+    /// UR2-060: Nokta's name series, code and height are the drawing's: another drawing opened starts with none, so
+    /// its points get no other project's measured height; back in the first, its series goes on.
+    #[test]
+    fn nokta_memory_stays_with_its_drawing() {
+        use kentos_interaction::Name;
+        let mut app = app_with_drawing();
+        app.memory.point_name = Name::new("BATI-711").expect("short");
+        app.memory.point_code = Name::new("BATI-KANAL").expect("short");
+        app.memory.point_z = Some(173.625);
+        assert!(app.park_active());
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
+        assert_eq!((app.memory.point_name, app.memory.point_code, app.memory.point_z), (Name::EMPTY, Name::EMPTY, None));
+        app.memory.point_name = Name::new("B-102").expect("short");
+        let _ = app.update(Message::DocTabs(Event::Show(0)));
+        assert_eq!(app.memory.point_name, Name::new("BATI-711").expect("short"));
+        assert_eq!(app.memory.point_code, Name::new("BATI-KANAL").expect("short"));
+        assert_eq!(app.memory.point_z, Some(173.625));
+        let _ = app.update(Message::DocTabs(Event::Show(1)));
+        assert_eq!((app.memory.point_name, app.memory.point_z), (Name::new("B-102").expect("short"), None));
     }
 
     /// UR2-056: Farklı kaydet onto the file of a drawing open in another tab (by its own path or a link to it) is
