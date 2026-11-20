@@ -334,8 +334,16 @@ impl App {
         }
     }
 
-    /// How a conflict's object is named in its row: its first attributes in the layer's field order (the table's for
-    /// one the layer removed), else the start of its lasting id.
+    /// Each conflict's row title as the window shows it (GIS-047), for the window's tests.
+    #[cfg(test)]
+    pub(crate) fn reconcile_titles(&self) -> Vec<String> {
+        let Some(w) = &self.gis.reconcile else { return Vec::new() };
+        w.plan.conflicts.iter().map(|c| self.reconcile_name(&w.layer, c)).collect()
+    }
+
+    /// How a conflict's object is named in its row: the link's key and its value first (GIS-047), then its first
+    /// attributes in the layer's field order (the table's for one the layer removed), else the start of its lasting id;
+    /// its layer's name after.
     fn reconcile_name(&self, default_layer: &str, c: &ReconcileConflict) -> String {
         let layer = c.layer.as_deref().unwrap_or(default_layer);
         let short: String = c.object.chars().take(8).collect();
@@ -353,16 +361,30 @@ impl App {
             .get(layer)
             .map(|n| n.fields.iter().map(|f| f.name.clone()).collect())
             .unwrap_or_default();
-        let named: Vec<String> = match attrs {
-            Some(a) => fields
-                .iter()
-                .filter_map(|f| {
-                    a.get(f)
-                        .filter(|v| !v.is_empty())
-                        .map(|v| format!("{f} {v}"))
-                })
-                .take(2)
-                .collect(),
+        // The link's key first (GIS-047): the value that tells this row from the others of the same block.
+        let key = doc
+            .model
+            .settings()
+            .sources
+            .iter()
+            .find(|b| b.layer == layer)
+            .and_then(|b| b.key.clone());
+        let mut named: Vec<String> = match attrs {
+            Some(a) => {
+                let keyed = key
+                    .as_ref()
+                    .and_then(|k| a.get(k).filter(|v| !v.is_empty()).map(|v| format!("{k} {v}")));
+                keyed
+                    .into_iter()
+                    .chain(
+                        fields
+                            .iter()
+                            .filter(|f| Some(*f) != key.as_ref())
+                            .filter_map(|f| a.get(f).filter(|v| !v.is_empty()).map(|v| format!("{f} {v}")))
+                            .take(2),
+                    )
+                    .collect()
+            }
             // The layer removed it: the table's values, as the differences say them.
             None => c
                 .fields
@@ -372,9 +394,14 @@ impl App {
                 .collect(),
         };
         if named.is_empty() {
-            short
-        } else {
+            named.push(format!("kimlik {short}"));
+        }
+        // Its layer, as the drawing names it (several may be reconciled together).
+        let layer_name = doc.model.layers().get(layer).map(|n| n.name.clone()).unwrap_or_default();
+        if layer_name.is_empty() {
             named.join(" · ")
+        } else {
+            format!("{} ({layer_name})", named.join(" · "))
         }
     }
 

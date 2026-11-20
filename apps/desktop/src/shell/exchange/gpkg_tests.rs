@@ -2176,3 +2176,24 @@ fn the_park_buffer_keeps_its_arcs_through_fgb_gml_and_csv() {
     let kentos_commands::Entity::Polygon(p) = back else { unreachable!() };
     assert!(p.bulges.iter().flatten().all(|b| b.abs() < 0.5), "{:?}", p.bulges);
 }
+
+/// GIS-047 (docs/adr/1104): with the link's key set (parsel_no), each conflict's row starts with the key and its value
+/// and names its layer, so two parcels of one block with the same other values are told apart.
+#[test]
+fn a_conflict_s_row_names_the_key_and_the_layer() {
+    let (mut app, _) = reconcile_scene("gpkg-uzlas-anahtar");
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let mut settings = doc.settings().clone();
+    settings.sources[0].key = Some("parsel_no".into());
+    doc.set_settings(settings);
+    let _ = app.update(Message::Bound(crate::bound::Event::Write(Some("import-parsel".into()))));
+    let titles = app.reconcile_titles();
+    assert!(!titles.is_empty(), "the window with its conflicts");
+    let layer = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.layers().get("import-parsel").map(|n| n.name.clone()))
+        .expect("the layer");
+    assert!(titles.iter().any(|t| t.starts_with("parsel_no 6") && t.ends_with(&format!("({layer})"))), "{titles:?}");
+    assert!(titles.iter().filter(|t| t.starts_with("parsel_no ")).count() >= 2, "{titles:?}");
+}
