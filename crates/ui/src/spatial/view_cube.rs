@@ -230,12 +230,12 @@ impl shader::Primitive for CubePrimitive {
         viewport: &Viewport,
     ) {
         let aspect = (bounds.width / bounds.height.max(1.0)).max(0.1);
-        // ViewCube gibi üstten, hafif eğik bakış; küp yalnızca düşey
+        // Üstten, hafif eğik bakış; küp yalnızca düşey
         // eksende döner.
         let eye = Vec3::new(3.0, 2.5, 3.8);
 
-        let projection = Mat4::perspective_rh(42f32.to_radians(), aspect, 0.1, 100.0);
-        let view = Mat4::look_at_rh(eye, Vec3::ZERO, Vec3::Y);
+        let projection = glam::camera::rh::proj::directx::perspective(42f32.to_radians(), aspect, 0.1, 100.0);
+        let view = glam::camera::rh::view::look_at_mat4(eye, Vec3::ZERO, Vec3::Y);
         let model = Mat4::from_rotation_y(self.rotation);
 
         let uniforms = CubeUniforms {

@@ -32,6 +32,7 @@ pub(crate) fn xml(text: &str) -> Result<Document<'_>, String> {
     let opts = roxmltree::ParsingOptions {
         allow_dtd: true,
         nodes_limit: 20_000_000,
+        entity_resolver: None,
     };
     let doc = Document::parse_with_options(text, opts).map_err(|e| {
         let head: String = text.trim_start().chars().take(60).collect();

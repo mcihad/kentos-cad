@@ -135,7 +135,7 @@ kentos-ifc = { path = "../../crates/shared/ifc", features = ["view"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # AppKit's native accessibility tree for the Winit content view. These packages are already in the lockfile.
-objc2 = "=0.6.4"
+objc2 = "=0.6.5"
 objc2-app-kit = { version = "=0.3.2", default-features = false, features = ["NSAccessibility", "NSAccessibilityElement", "NSAccessibilityConstants", "NSAccessibilityProtocols", "NSResponder", "NSView", "NSWindow"] }
 objc2-foundation = { version = "=0.3.2", default-features = false, features = ["NSArray", "NSDictionary", "NSGeometry", "NSObject", "NSString", "NSValue"] }
 raw-window-handle = "=0.6.2"
@@ -150,6 +150,6 @@ esign-mock = ["kentos-imza-signature/mock-token", "kentos-imza-security/issue"]
 kentos-imza-signature = { path = "../../crates/imza/signature", features = ["mock-token"] }
 kentos-imza-security = { path = "../../crates/imza/security", features = ["issue"] }
 # App boot and font-sensitive widget tests share a reentrant test-only guard.
-parking_lot = "=0.12.5"
+parking_lot = "=0.13.0"
 # Inflating the PDF's streams in the acceptance test's own reader (the plotter's tests/support/files.rs).
 miniz_oxide = { workspace = true }

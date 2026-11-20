@@ -212,7 +212,7 @@ fn office_storey(side: &str, rating: &str) -> Document {
     .expect("the program");
     doc.set_settings(settings);
     let gone: Vec<Value> = doc.entities_with_uids().map(|(u, _)| json!(u.to_string())).collect();
-    let mut call = |doc: &mut Document, name: &str, input: Value| -> Value {
+    let call = |doc: &mut Document, name: &str, input: Value| -> Value {
         let answer = kentos_native_application::registry::run(
             &mut kentos_native_application::ExecutionContext::new(doc),
             name,
@@ -315,7 +315,7 @@ fn a_headless_building_ifc_writes_the_package_s_fire_compartments() {
         json!({"operation": {"kind": "objects", "uids": walls, "fireRating": {"value": "EI 60", "basis": {"kind": "author"}}}}),
     );
     let file = std::env::temp_dir().join(format!("kentos-headless-kompartiman-{}.ifc", std::process::id()));
-    let mut export = |doc: &mut Document, compartments: Option<Value>| -> (Value, String) {
+    let export = |doc: &mut Document, compartments: Option<Value>| -> (Value, String) {
         let mut input = json!({"path": file.display().to_string(), "overwrite": true, "stamp": "2026-11-17T12:00:00"});
         if let Some(c) = compartments {
             input["compartments"] = c;

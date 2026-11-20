@@ -83,6 +83,7 @@ basemap-vector
 basemap-vector-bright
 basemap-vector-light
 basins
+bcf-issues
 beam
 bearing-line
 block-attributes
@@ -126,6 +127,7 @@ calc-slope
 capture-line
 casework
 catalog-migration
+ceiling-device
 cell-center
 cell-left
 cell-right
@@ -240,6 +242,7 @@ data-transfer
 dataset-info
 delaunay
 delete-duplicates
+delivery
 densify
 deselect
 design-check
@@ -289,6 +292,12 @@ edge-lengths
 edge-shift
 edgematch
 edit
+element-detach
+element-push
+element-reset
+element-same-type
+element-type-from
+element-types
 eliminate-small
 ellipse
 ellipse-arc
@@ -515,6 +524,7 @@ hole-fill
 hole-remove
 identify
 idw
+ifc-compare
 ifc-export
 ifc-export-cut
 ifc-view
@@ -677,6 +687,7 @@ mode-disaster
 mode-gis
 mode-plan3d
 model-new
+model-underlay
 module-add-members
 module-detach
 module-except
@@ -734,6 +745,7 @@ overlap-allow
 overlap-layer
 overlap-layers
 overview
+package-review
 pairwise
 pan
 panel-bottom
@@ -809,6 +821,7 @@ polygon-neighbors
 polygon-to-line
 polygonize
 polyline
+portal-dossiers
 post
 pour-point
 print
@@ -1038,6 +1051,7 @@ sign-out
 simplify
 site-parcel
 slab
+slab-edge-bind
 slab-hole
 slab-parapet
 slab-railing
@@ -1297,6 +1311,7 @@ volume-editor
 volume-export
 volume-new
 voronoi
+walk-route
 wall
 wall-center
 wall-dimensions

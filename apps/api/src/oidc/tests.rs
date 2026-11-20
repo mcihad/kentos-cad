@@ -210,7 +210,7 @@ async fn tokens_that_do_not_belong_are_refused() {
                 encode(
                     &h,
                     &claims,
-                    &EncodingKey::from_secret(b"public-key-as-secret"),
+                    &EncodingKey::from_secret(b"public-key-as-secret").unwrap(),
                 )
                 .unwrap()
             } else {

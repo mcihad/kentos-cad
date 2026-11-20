@@ -228,7 +228,7 @@ acadrust = { git = "https://github.com/hakanaktt/acadrust.git", rev = "934492229
 serde = { version = "=1.0.229", features = ["derive"] }
 # float_roundtrip: parsed floats are exact (the default parser may be one ulp off), so
 # coordinates cross the WASM boundary and files bit for bit (docs/adr/0008).
-serde_json = { version = "=1.0.151", features = ["float_roundtrip"] }
+serde_json = { version = "=1.0.154", features = ["float_roundtrip"] }
 # Transcendental functions of the geometry core: the same code on every target, so native
 # and WASM agree bit for bit (CLAUDE.md §23.4, docs/adr/0008).
 libm = "=0.2.16"
@@ -245,7 +245,7 @@ rust_decimal = { version = "=1.43.0", default-features = false, features = ["std
 # module waits); only its chunk compressors and decompressors are used, LAS and COPC are read and
 # written by KentOS.
 # Without `parallel` (rayon): the hosts decompress chunks on their own threads.
-laz = { version = "=0.13.0", default-features = false }
+laz = { version = "=0.14.0", default-features = false }
 # Geodesics and areas on the ellipsoid (Karney 2013): the measurements' ellipsoid and ground values
 # (docs/adr/0171, the owner's approval of 4 October). The crates.io release with libm's functions
 # on every target (crates/shared/geographiclib-rs, written by scripts/vendor/geographiclib.py):
@@ -256,30 +256,30 @@ geographiclib-rs = { path = "crates/shared/geographiclib-rs", version = "=0.2.7"
 # the sha256 of its canonical text through UUIDv5 (SHA-1). Both were locked already (axum
 # and sqlx use them); the 0.10 line shares one `digest`. The `uuid` crate's `v5` feature
 # would bring a package of its own (`sha1_smol`).
-sha1 = { version = "=0.10.7", default-features = false }
-sha2 = { version = "=0.10.9", default-features = false }
+sha1 = { version = "=0.11.0", default-features = false }
+sha2 = { version = "=0.11.1", default-features = false }
 # `no-serde-warnings`: ts-rs reads the serde attributes it knows and warned at every build about the rest
 # (`deny_unknown_fields`, which has no TypeScript form, and the custom `serialize_with`/`deserialize_with` fields, whose
 # TypeScript type each states with `#[ts(as = ...)]`); the generated types do not change.
 ts-rs = { version = "=12.0.1", features = ["serde-json-impl", "no-serde-warnings"] }
 # JSON Schema of the contract types, for the product command catalog (docs/adr/0013):
 # the schemas are derived from the same serde types, so type and schema cannot drift.
-schemars = { version = "=1.2.2", default-features = false, features = ["derive", "std"] }
-wasm-bindgen = "=0.2.128"
+schemars = { version = "=1.2.3", default-features = false, features = ["derive", "std"] }
+wasm-bindgen = "=0.2.130"
 axum = { version = "=0.8.9", features = ["ws"] }
 # The response body of a streamed download (apps/api http/files.rs, docs/adr/0031): already in the
 # binary through axum and hyper; named here only for its `Frame` type.
 http-body = { version = "=1.1.0" }
-tokio = { version = "=1.53.1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }
+tokio = { version = "=1.54.1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }
 # Faz B (docs/adr/0006, 0007): PostgreSQL/PostGIS, HTTP middleware, identity.
 # Database TLS is off for the local server; production enables a TLS feature (ADR 0006).
-sqlx = { version = "=0.9.0", default-features = false, features = ["runtime-tokio", "tls-none", "postgres", "macros", "migrate", "uuid", "json", "time"] }
+sqlx = { version = "=0.9.1", default-features = false, features = ["runtime-tokio", "tls-none", "postgres", "macros", "migrate", "uuid", "json", "time"] }
 tower = { version = "=0.5.3", features = ["util"] }
 tower-http = { version = "=0.7.1", features = ["request-id", "timeout", "limit", "trace", "catch-panic", "util"] }
-uuid = { version = "=1.26.1", features = ["v4", "v7", "serde"] }
+uuid = { version = "=1.29.3", features = ["v4", "v7", "serde"] }
 # The server job's process group and its end (docs/adr/8057 §58): kill(2) of the group and waitid(2) without reaping;
 # std has neither. Unix only. The cloud audit box's filter (§63) takes its call numbers from it, constants only.
-libc = "=0.2.189"
+libc = "=0.2.191"
 # The cloud audit box (docs/adr/8057 §61): Landlock's safe interface (rulesets, restrict_self); only the job runner,
 # only Linux.
 landlock = "=0.4.7"
@@ -287,12 +287,12 @@ landlock = "=0.4.7"
 # over libc, no system library; only the job runner, only Linux on x86_64 and aarch64.
 seccompiler = "=0.5.0"
 # GeoPackage is SQLite (docs/adr/0502): SQLite compiled in, no system library; only crates/native/geopackage.
-rusqlite = { version = "=0.39.0", features = ["bundled", "functions"] }
-jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["rust_crypto", "use_pem"] }
+rusqlite = { version = "=0.43.0", features = ["bundled", "functions"] }
+jsonwebtoken = { version = "=12.0.0", default-features = false, features = ["rust_crypto", "use_pem"] }
 reqwest = { version = "=0.13.5", default-features = false, features = ["rustls", "json", "form"] }
 # The desktop's cloud client (docs/adr/0040): a file's bytes as a request body that every retry of
 # an upload shares without a copy. Already in every binary that has reqwest (hyper's buffer type).
-bytes = { version = "=1.12.1" }
+bytes = { version = "=1.12.2" }
 time = { version = "=0.3.55", features = ["serde", "formatting", "parsing"] }
 tracing = "=0.1.44"
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter", "fmt"] }
@@ -300,12 +300,12 @@ tracing-subscriber = { version = "=0.3.23", features = ["env-filter", "fmt"] }
 # was built and tested with (its lockfile, dc2e8df).
 iced = { version = "=0.14.0" }
 iced_runtime = { version = "=0.14.0" }
-glam = { version = "=0.30.10" }
+glam = { version = "=0.34.3" }
 bytemuck = { version = "=1.25.2" }
 png = { version = "=0.18.1" }
 # Native open and save dialogs of the desktop app (owner's approval, 2026-09-25;
 # docs/adr/0017): xdg-desktop-portal on Linux, the system dialog elsewhere.
-rfd = { version = "=0.17.2" }
+rfd = { version = "=0.18.0" }
 # The desktop's CAD drawing pipeline (docs/adr/0019): the wgpu Iced is built on, used
 # directly so the renderer shares Iced's device (TODOS.md REN-01, REN-02). Same version
 # and features as through Iced: nothing new in the lockfile.
@@ -318,10 +318,10 @@ tiny-skia = { version = "=0.11.4", default-features = false, features = ["std", 
 # 2026-09-28): CPython 3.10 and later through the stable ABI, one wheel per platform. maturin
 # (1.9.4 and later) builds it and sets PYO3_BUILD_EXTENSION_MODULE, so the deprecated
 # `extension-module` feature is not used; a plain cargo build links the system's libpython.
-pyo3 = { version = "=0.29.2", default-features = false, features = ["macros", "abi3-py310"] }
+pyo3 = { version = "=0.30.1", default-features = false, features = ["macros", "abi3-py310"] }
 # SVG text read into the SVG core's element tree on the desktop (docs/adr/0090; the owner's
 # approval, 2026-09-27); the web lets the browser parse it. Locked already through fontdb.
-roxmltree = { version = "=0.20.0" }
+roxmltree = { version = "=0.21.2" }
 # SVG pictures of a sheet on the desktop (docs/sheet/design.md, open question 6; the owner's
 # approval, 2026-10-03): their size read when one is added (usvg through resvg). The version
 # Iced's SVG support draws them with; its default features come with Iced anyway.
@@ -339,23 +339,23 @@ image-webp = { version = "=0.2.4", default-features = false }
 # written for 0.14), ed25519-dalek 2 and base64 0.22.
 thiserror = "=2.0.21"
 hex = "=0.4.3"
-base64 = "=0.22.1"
-ed25519-dalek = "=2.2.0"
-p256 = { version = "=0.13.2", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
-p384 = { version = "=0.13.1", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
-rsa = { version = "=0.9.10", default-features = false, features = ["std"] }
+base64 = "=0.23.1"
+ed25519-dalek = "=3.0.0"
+p256 = { version = "=0.14.0", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
+p384 = { version = "=0.14.0", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
+rsa = { version = "=0.10.0", default-features = false, features = ["std", "encoding", "pkcs1v15"] }
 # New to the lockfile: X.509 parsing (qualified certificate, the signer's key on the server) and PKCS#11.
 x509-parser = "=0.18.1"
 cryptoki = "=0.12.1"
 # The server's envelope key, generated (feature `issue` of kentos-imza-security only).
-getrandom = "=0.3.4"
+getrandom = "=0.4.3"
 # The PIN window's link to the local bridge's event stream.
-tokio-tungstenite = "=0.29.0"
+tokio-tungstenite = "=0.30.0"
 futures-util = "=0.3.34"
 # Tests only: the naga wgpu uses validates the shared WGSL (shaders/wgsl, REN-05).
 naga = { version = "=27.0.3", features = ["wgsl-in"] }
 # Tests only: waits on wgpu's futures in the renderer's GPU test (locked through rfd).
-pollster = { version = "=0.4.0" }
+pollster = { version = "=1.0.3" }
 # The sheet layouts' PDF and GeoPDF writer (docs/sheet/design.md §9a; the owner's approval,
 # 2026-10-03): pure Rust, the same bytes in the browser and on the desktop. It writes the objects
 # only; compression is miniz_oxide's.

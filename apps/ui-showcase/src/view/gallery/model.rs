@@ -69,7 +69,9 @@ impl Showcase {
             to: |m| Message::Gallery(Demo::Model(m)),
             end: Vec::new(),
             sky: look::sky(t.window, Some(t.accent)),
+            quality: kentos_model_view_ui::scene::Quality::Balanced,
             coordinate: Box::new(|v| number::real(v, 3)),
+            measure: Box::new(|v, _| number::real(v, 3)),
             east: "Y",
             north: "X",
         });

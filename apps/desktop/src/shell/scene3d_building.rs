@@ -189,6 +189,7 @@ impl Drop for Building3d {
 impl Building3d {
     /// How many of the drawing's objects have an element's body (a room and an opening are no body): what the IFC
     /// file holds.
+    #[cfg(test)]
     pub(crate) fn bodies(&self) -> usize {
         self.with_body(|c| !c.is_volume())
     }
@@ -206,6 +207,7 @@ impl Building3d {
     }
 
     /// How many of the drawing's objects of the categories `of` have a body (an object's bodies are one after another).
+    #[cfg(test)]
     fn with_body(&self, of: impl Fn(Category) -> bool) -> usize {
         let Some(v) = self.viewer.view() else { return 0 };
         let input = v.input();
@@ -217,6 +219,7 @@ impl Building3d {
     }
 
     /// How many bodies the viewer has: the drawing's, its rooms', the underlays'.
+    #[cfg(test)]
     pub(crate) fn count(&self) -> usize {
         self.viewer.view().map_or(0, |v| v.input().bodies.len())
     }

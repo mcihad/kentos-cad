@@ -156,8 +156,6 @@ pub enum Event {
     Flat,
     /// A building's storey shown or hidden, by its place.
     Storey(usize),
-    /// A building's rooms shown or hidden.
-    Rooms,
     /// Every storey of a building shown again.
     AllStoreys,
     /// A building's viewer's own message (its tree, details, section, switches and scene).
@@ -428,7 +426,7 @@ impl App {
             Event::Close => self.scene3d_gone(),
             Event::Sized(..) => {}
             // A building's alone.
-            Event::Storey(_) | Event::Rooms | Event::AllStoreys | Event::Viewer(_) | Event::Made(..) => {}
+            Event::Storey(_) | Event::AllStoreys | Event::Viewer(_) | Event::Made(..) => {}
         }
         Task::none()
     }
@@ -451,7 +449,6 @@ impl App {
             Event::North => V::North,
             Event::Legend => V::Legend,
             Event::SeeThrough => V::SeeThrough,
-            Event::Rooms => V::Spaces,
             Event::Close => V::Close,
             Event::Storey(i) => {
                 if let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) {

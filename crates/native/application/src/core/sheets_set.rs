@@ -376,7 +376,7 @@ fn dependencies(doc: &Document, sheets: &[SetSheet], book: Option<&kentos_sheet:
     use sha2::{Digest, Sha256};
     let fingerprint = |objects: &[Entity]| {
         let bytes = serde_json::to_vec(&crate::sections_edit::bare(objects)).unwrap_or_default();
-        format!("{:x}", Sha256::digest(bytes))
+        Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect::<String>()
     };
     let where_shown = |uids: &[String]| {
         let objects: Vec<_> = uids.iter().filter_map(|u| {

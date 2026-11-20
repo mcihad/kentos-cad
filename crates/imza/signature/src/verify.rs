@@ -48,7 +48,7 @@ pub fn scheme_of(spki_der: &[u8]) -> Result<KeyScheme, ImzaError> {
         return Ok(KeyScheme::EcdsaP256);
     }
     if rsa::pkcs8::DecodePublicKey::from_public_key_der(spki_der)
-        .map(|k: rsa::RsaPublicKey| k)
+        .map(|k: rsa::PublicKey| k)
         .is_ok()
     {
         return Ok(KeyScheme::RsaPkcs1v15);
@@ -161,7 +161,7 @@ fn rsa_pkcs1(spki: &[u8], digest: &[u8], sig: &[u8], alg: &str) -> (bool, Option
     use rsa::pkcs1v15::Pkcs1v15Sign;
     use rsa::pkcs8::DecodePublicKey as _;
 
-    let Ok(pk) = rsa::RsaPublicKey::from_public_key_der(spki) else {
+    let Ok(pk) = rsa::PublicKey::from_public_key_der(spki) else {
         return (false, Some("RSA açık anahtarı çözülemedi".to_owned()));
     };
     // RSA PKCS#1 v1.5, özetin **hangi algoritmadan** geldiğini DigestInfo önekiyle taşır: özet uzunluğu yetmez,

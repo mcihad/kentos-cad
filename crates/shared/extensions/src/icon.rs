@@ -143,6 +143,7 @@ pub(crate) fn problem(text: &str) -> Option<String> {
         ParsingOptions {
             allow_dtd: false,
             nodes_limit: 4 * MAX_ELEMENTS as u32,
+            entity_resolver: None,
         },
     ) {
         Ok(doc) => doc,

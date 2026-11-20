@@ -935,7 +935,7 @@ fn unicode_v1_font_bytes_and_runtime_ids_are_frozen_independently_of_ui_asset_up
         assert_eq!(face["family"], family);
         assert_eq!(face["weight"].as_u64().unwrap(), u64::from(weight));
         assert_eq!(face["italic"].as_bool().unwrap(), italic);
-        let hash = format!("{:x}", Sha256::digest(shaping::font_bytes(id).unwrap()));
+        let hash: String = Sha256::digest(shaping::font_bytes(id).unwrap()).iter().map(|b| format!("{b:02x}")).collect();
         assert_eq!(face["sha256"].as_str().unwrap(), hash, "{}", face["file"]);
     }
 }

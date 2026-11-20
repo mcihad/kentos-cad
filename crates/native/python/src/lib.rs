@@ -11,6 +11,9 @@
 //! run), so other Python threads go on. A second call on the same drawing in
 //! the meantime is refused by PyO3's borrow check, not queued.
 #![forbid(unsafe_code)]
+// The linker's note that __eh_frame passes 16 MB (docs/adr/1136): the module's functions in DWARF mode, past what the
+// compact table can point to; unwinding still works, only its lookup is slower.
+#![allow(linker_messages)]
 #![cfg_attr(
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)

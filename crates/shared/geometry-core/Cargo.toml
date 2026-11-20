@@ -21,7 +21,7 @@ geographiclib-rs = { workspace = true }
 # Native plot's existing OpenType shaper; pure Rust on native/WASM.
 rustybuzz = "=0.20.1"
 unicode-bidi = "=0.3.18"
-unicode-script = "=0.5.8"
+unicode-script = "=0.5.9"
 unicode-segmentation = "=1.13.3"
 
 [dev-dependencies]

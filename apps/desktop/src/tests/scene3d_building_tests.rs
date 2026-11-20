@@ -142,11 +142,11 @@ fn the_section_building_shows_the_bodies_its_ifc_file_holds() {
     let w = app.scene3d_window.as_ref().expect("the window");
     assert!(w.scene_sources() < all);
     send(&mut app, W::Storey(storeys - 1));
-    send(&mut app, W::Rooms);
+    send(&mut app, W::Viewer(kentos_model_view_ui::Message::Spaces));
     let w = app.scene3d_window.as_ref().expect("the window");
     assert_eq!(w.scene_sources(), all - room_bodies);
     assert!(!w.scene_parts().contains(&ROOM));
-    send(&mut app, W::Rooms);
+    send(&mut app, W::Viewer(kentos_model_view_ui::Message::Spaces));
     assert_eq!(app.scene3d_window.as_ref().expect("the window").scene_sources(), all);
     // The building is seen as it is: no vertical exaggeration.
     assert_eq!(app.scene3d_window.as_ref().expect("the window").exaggeration().factor, 1.0);
@@ -523,7 +523,7 @@ fn missing_elements_screens() {
         let _ = app.update(Message::Run("scene3d.view"));
         shot(&mut app, "1-cati-baca-rampa");
         send(&mut app, W::Storey(1));
-        send(&mut app, W::Rooms);
+        send(&mut app, W::Viewer(kentos_model_view_ui::Message::Spaces));
         send(&mut app, W::Dolly(1.5));
         shot(&mut app, "2-zemin-kat-donati");
         send(&mut app, W::View(1));
@@ -677,7 +677,7 @@ fn shaft_screens() {
         let _ = app.update(Message::Run("scene3d.view"));
         // The 1. kat alone, its rooms off, from above: its floor slab with the stair's hole and the shaft's.
         send(&mut app, W::Storey(0));
-        send(&mut app, W::Rooms);
+        send(&mut app, W::Viewer(kentos_model_view_ui::Message::Spaces));
         send(&mut app, W::View(3));
         snapshot.settle(&mut app, App::view, &mut update);
         snapshot.settle(&mut app, App::view, &mut update);
@@ -1239,7 +1239,7 @@ fn covering_screens() {
         shot(&mut app, "1-kesit-a");
         let _ = app.update(Message::Run("scene3d.view"));
         send(&mut app, W::Storey(1));
-        send(&mut app, W::Rooms);
+        send(&mut app, W::Viewer(kentos_model_view_ui::Message::Spaces));
         send(&mut app, W::View(1));
         shot(&mut app, "2-3b-zemin-kat-guneybati");
         send(&mut app, W::View(3));
@@ -1343,7 +1343,7 @@ fn railing_screens() {
         let _ = app.update(Message::Run("scene3d.view"));
         shot(&mut app, "4-3b-kuzeydogu");
         send(&mut app, W::Storey(1));
-        send(&mut app, W::Rooms);
+        send(&mut app, W::Viewer(kentos_model_view_ui::Message::Spaces));
         send(&mut app, W::Dolly(1.5));
         shot(&mut app, "5-3b-zemin-kat");
         send(&mut app, W::View(1));

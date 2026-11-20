@@ -40,7 +40,10 @@ pub const MARK: &str = "KENTOS-KUTU";
 /// The job's scratch beside the bytecode: the rule's `TMPDIR`.
 pub const SCRATCH: &str = "tmp";
 
-pub use plan::{Landlock, Plan, here};
+pub use plan::{Plan, here};
+// The kernel's domain: Linux alone builds one (and the tests).
+#[cfg(any(target_os = "linux", test))]
+pub use plan::Landlock;
 #[cfg(test)]
 pub use plan::{Policy, filter, landlock, plan};
 
