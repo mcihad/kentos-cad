@@ -121,13 +121,17 @@ impl App {
             .unwrap_or_default();
         let ids: Vec<String> = rows.layers.iter().map(|(id, _, _)| id.clone()).collect();
         let n = ids.len();
-        let chosen = match self.gis.features.join.view.as_deref() {
-            Some(v) => views.iter().position(|(id, _)| id == v).map(|k| n + k),
-            None => rows
-                .layer
-                .as_ref()
-                .and_then(|l| ids.iter().position(|id| id == l)),
-        };
+        // The view chosen when the drawing has it; else the layer whose rows the table shows (GIS-048): the picker and
+        // the rows never disagree, a view of another drawing never leaves it empty.
+        let layer_at = rows.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l));
+        let chosen = self
+            .gis
+            .features
+            .join
+            .view
+            .as_deref()
+            .and_then(|v| views.iter().position(|(id, _)| id == v).map(|k| n + k))
+            .or(layer_at);
         let choices = rows
             .layers
             .iter()

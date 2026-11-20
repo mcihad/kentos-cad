@@ -557,10 +557,11 @@ Dışarıya proje verisi göndermeden, yalnız bu bilgisayarda çalışan bir te
   - **Düzeltme ve kabul.** Başlığa yapılandırılmış anahtarın **adı ve değeri** ile kaynak katmanı ekle. Anahtarsız veride sağlayıcının sabit satır kimliğini kullan. Aynı adada aynı metin değerlerini taşıyan iki satır aynı anda çakıştığında operatör her ikisini ayırt edip farklı karar verebilmeli.
   - **Durum (20.11.2026):** Çatışma satırı önce bağın anahtar alanı ve değeriyle başlar (parsel_no 6), sonra iki öznitelik ve katmanın adı; anahtarsız bağda ilk öznitelikler, değer yoksa kalıcı kimliğin başı. Kalan: anahtarsız veride sağlayıcının satır kimliği (fid) gösterilmiyor; kalıcı kimlik fid'den türetildiği için geri çözülmüyor. ADR 1104; test a_conflict_s_row_names_the_key_and_the_layer.
 
-- [ ] **GIS-048 · Birleşik görünümden başka projeye geçince öznitelik tablosu veri gösterdiği halde katman seçicisi “Çizimde katman yok” diyor.**
+- [x] **GIS-048 · Birleşik görünümden başka projeye geçince öznitelik tablosu veri gösterdiği halde katman seçicisi “Çizimde katman yok” diyor.**
   - **Tekrar.** İki katmanlı bir projede alt panelde birleşik görünümü aç. Açık paneli koruyarak tek Bina katmanlı **CBS-domains.kcad** dosyasını aç. Tablo başlığını oku, katman listesini aç ve Bina’yı seç.
   - **Gözlenen.** Bina’nın bir kaydı ve Durum, Kat ve Not sütunları görünürken seçici “Çizimde katman yok” yazdı. Listeyi açınca **Bina (1)** seçilebiliyordu. O sırada Durum alanından “Sahada doğrulandı” seçip kaydetmek de mümkündü. Elle Bina’yı seçince başlık düzeldi. [Seçici ile satırın çelişkisi](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/cbs-harita-dPt9z7/292-tabloda-domain.jpg) · [Açılan listenin kanıtı](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/cbs-harita-dPt9z7/294-katmansiz-iddiasi.jpg)
   - **Düzeltme ve kabul.** Proje geçişinde seçici, hücre editörü ve tablo satırları için aynı geçerli katman kimliğini kullan. Önceki birleşik görünüm yeni belgede bulunmadığında etkin katmana dön. Gerçekten katmansız belgede boş durum, tek katmanlı belgede **Bina (1)** ilk çizimde doğru görünmeli.
+  - **Durum (20.11.2026):** Katman ▾ seçicisi seçili birleşik görünüm çizimde yoksa tablonun satırlarının katmanını gösterir (Kadastro / Parsel (5)); seçici ile satırlar çelişmez. Belge değişince tablo yeni çizimin katmanıyla, görünümsüz başlar (GIS-022'den). ADR 1105; test the_layer_picker_and_the_rows_never_disagree.
 
 ### Form kuralları ve parsel geometrisi
 

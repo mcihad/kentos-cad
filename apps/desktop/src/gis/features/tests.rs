@@ -517,3 +517,37 @@ fn a_locked_layers_cell_opens_no_editor() {
     assert!(!app.gis.features.editing(), "no editor on a locked layer");
     assert!(crate::files_testing::last_said(&app).contains("kilitli"));
 }
+
+/// GIS-048 (docs/adr/1105): a join view the drawing does not have (one of the last drawing's) never leaves Katman ▾
+/// saying there is no layer while the table shows a layer's rows: the picker shows that layer; another drawing
+/// opened starts the table on its own layer, no view.
+#[test]
+fn the_layer_picker_and_the_rows_never_disagree() {
+    let mut app = app_with_table();
+    let _ = app.update(Message::Run("data.featureTable"));
+    assert_eq!(app.bottom_tab, BottomTab::Table);
+    app.gis.features.join.view = Some("baska-projenin-gorunumu".into());
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, super::texts::NO_LAYERS).is_none(),
+        "the picker names the layer the rows are of"
+    );
+    let doc = app.document.as_ref().expect("open");
+    let rows = app.feature_rows(doc);
+    let layer = rows.layer.clone().expect("the rows' layer");
+    let (_, path, count) = rows.layers.iter().find(|(id, _, _)| *id == layer).cloned().expect("listed");
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, &format!("{path} ({count})")).is_some(),
+        "the picker shows {path} ({count})"
+    );
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-048-tablo-katman");
+    // Another drawing: no view of the last one.
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
+        "../../../../../fixtures/interaction/v1/empty.kcad"
+    ))
+    .expect("reads");
+    let doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    assert!(app.gis.features.join.view.is_none());
+}
