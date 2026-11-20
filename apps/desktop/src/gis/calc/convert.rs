@@ -330,6 +330,16 @@ pub fn write_point(sys: &core::System, p: Vec2, f: &ConvertFormat) -> [(&'static
     ]
 }
 
+/// A point of `sys` (its own order) in the two fields with every digit it has: latitude and longitude in decimal
+/// degrees, or east and north; read back by `read_point` as the same numbers.
+fn exact_fields(sys: &core::System, p: Vec2) -> [String; 2] {
+    if geographic(sys) {
+        [format!("{}", p.y), format!("{}", p.x)]
+    } else {
+        [format!("{}", p.x), format!("{}", p.y)]
+    }
+}
+
 /// `a` and `b` typed in `from`, taken to `to` with the project's datum
 /// choices and written; or why not.
 pub fn convert_point(
@@ -872,11 +882,25 @@ impl App {
             Event::From(pick) => form.from = Some(pick),
             Event::To(pick) => form.to = Some(pick),
             Event::Swap => {
-                if let Some((settings, _)) = self.convert_format() {
+                if let Some((settings, f)) = self.convert_format() {
                     let (from, to) = self.gis.calc.convert.systems(&settings);
+                    let result = self.gis.calc.convert.point(&settings, &f);
                     let form = &mut self.gis.calc.convert;
                     form.from = Some(to.pick);
                     form.to = Some(from.pick);
+                    // One point: its result is the new source, in full (UR2-050: the metres stayed in the latitude
+                    // and longitude fields; the result's written degrees would round it). Without one, fields whose
+                    // unit changes are emptied.
+                    if form.mode == Mode::Point {
+                        match result {
+                            Some(Ok(c)) => [form.a, form.b] = exact_fields(&to.system, c.point),
+                            _ if geographic(&from.system) != geographic(&to.system) => {
+                                form.a.clear();
+                                form.b.clear();
+                            }
+                            _ => {}
+                        }
+                    }
                 }
             }
             Event::Mode(mode) => form.mode = mode,
@@ -1239,6 +1263,48 @@ mod screens {
 
     fn send(app: &mut App, e: Event) {
         let _ = app.update(message(e));
+    }
+
+    /// UR2-050: Yönü değiştir with a point's result: the result is the new source in full, so two turns give the
+    /// point typed; without a result, fields whose unit changes are emptied, never left to be read as degrees.
+    #[test]
+    fn swapping_takes_the_result_as_the_new_source() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.update(Message::Run("crs.transform"));
+        send(&mut app, Event::From(Pick::Srid(5256)));
+        send(&mut app, Event::To(Pick::Srid(4326)));
+        send(&mut app, Event::A("500000".into()));
+        send(&mut app, Event::B("4420000".into()));
+        let (settings, f) = app.convert_format().expect("a drawing");
+        assert!(matches!(app.gis.calc.convert.point(&settings, &f), Some(Ok(_))));
+        send(&mut app, Event::Swap);
+        let form = &app.gis.calc.convert;
+        assert_eq!((form.from, form.to), (Some(Pick::Srid(4326)), Some(Pick::Srid(5256))));
+        let lat: f64 = form.a.parse().expect("the latitude in degrees");
+        let lon: f64 = form.b.parse().expect("the longitude in degrees");
+        assert!((lat - 39.914_179).abs() < 1e-6 && (lon - 36.0).abs() < 1e-9, "{lat} {lon}");
+        let back = form.point(&settings, &f).expect("typed").expect("converted back");
+        assert!((back.point.x - 500_000.0).abs() < 1e-6 && (back.point.y - 4_420_000.0).abs() < 1e-6, "{:?}", back.point);
+        if std::env::var_os("KENTOS_SHOTS").is_some() {
+            let mut shot = crate::files_testing::offscreen(Size::new(1440., 900.));
+            shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+            crate::files_testing::evidence(&mut shot, &app, "ur2-050", "yon-degisti");
+        }
+        send(&mut app, Event::Swap);
+        let form = &app.gis.calc.convert;
+        let (e, n): (f64, f64) = (form.a.parse().expect("east"), form.b.parse().expect("north"));
+        assert!((e - 500_000.0).abs() < 1e-6 && (n - 4_420_000.0).abs() < 1e-6, "{e} {n}");
+        // No result: the metres typed do not stay as degrees.
+        send(&mut app, Event::A("50000x".into()));
+        send(&mut app, Event::Swap);
+        let form = &app.gis.calc.convert;
+        assert_eq!((form.a.as_str(), form.b.as_str()), ("", ""));
+        // The same unit on both sides: what is typed stays.
+        send(&mut app, Event::From(Pick::Srid(5256)));
+        send(&mut app, Event::To(Pick::Srid(5254)));
+        send(&mut app, Event::A("50000x".into()));
+        send(&mut app, Event::Swap);
+        assert_eq!(app.gis.calc.convert.a, "50000x");
     }
 
     #[test]
