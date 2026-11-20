@@ -264,6 +264,18 @@ def accumulation_says(dem, method, exponent, unit, fill=True):
     return f" En büyük birikim {trimmed(most, 3)} {name}."
 
 
+def points_said(notes, written, what):
+    """A point tool's summary (docs/adr/1082): the points that came in (written, left out, and with an empty
+    watershed), the results written and the points left out by their places."""
+    skipped = notes.get("skipped") or []
+    total = written + len(skipped) + len(notes.get("empty") or [])
+    if not skipped:
+        return f"{words(written)} {what} yazıldı."
+    places = ", ".join(f"{i + 1}." for i in skipped[:5]) + (", …" if len(skipped) > 5 else "")
+    return (f"{words(total)} noktadan {words(written)} {what} yazıldı; {words(len(skipped))} nokta ({places} nokta) "
+            "rasterin dışında ya da değersiz hücrede kaldı.")
+
+
 def skipped_warning(notes):
     return {"level": "warn", "text": f"{words(len(notes['skipped']))} nokta rasterin dışında ya da değersiz hücrede kaldığı için atlandı."}
 
@@ -303,10 +315,11 @@ def cases_first():
                     f" {words(ref('teras-twi-mfd-0.1')['expect']['notes']['cells'])} hücrede en küçük eğim kullanıldı."),
         object_case("pour-points", "Döküm noktası, 25 m: noktalar derenin en büyük birikimli hücresine; rasterin dışındaki atlanır",
                     "hydrology.pourPoint", {**points, "snap": 25}, "ag-dokum-25", "Döküm noktaları",
-                    lambda f, added, n: f"{words(len(added))} döküm noktası yazıldı.", log=[skipped_warning(ref("ag-dokum-25")["expect"]["notes"])]),
+                    lambda f, added, n: points_said(ref("ag-dokum-25")["expect"]["notes"], len(added), "döküm noktası"),
+                    log=[skipped_warning(ref("ag-dokum-25")["expect"]["notes"])]),
         object_case("watershed", "Noktadan havza, 25 m: aynı hücreye düşen iki noktadan öncekinin havzası boş, söylenir",
                     "hydrology.watershed", {**points, "snap": 25}, "ag-havza-25", "Havzalar",
-                    lambda f, added, n: f"{words(len(added))} havza yazıldı.",
+                    lambda f, added, n: points_said(ref("ag-havza-25")["expect"]["notes"], len(added), "havza"),
                     log=[skipped_warning(ref("ag-havza-25")["expect"]["notes"]),
                          {"level": "warn", "text": f"{words(len(ref('ag-havza-25')['expect']['notes']['empty']))} noktanın hücresini sonraki "
                           "bir nokta aldığı için havzası boş."}]),
@@ -357,11 +370,11 @@ def more_cases():
                     {"method": "dinf", "slope": 1}, "vadi-twi-dinf-1", "vadi", WETNESS, wetness_says("vadi-twi-dinf-1")),
         object_case("pour-points-unfilled", "Döküm noktası, 25 m, Çukurları doldur kapalı", "hydrology.pourPoint",
                     {**points, "snap": 25, "fill": False}, "ag-dokum-25-dolgusuz", "Döküm noktaları",
-                    lambda f, added, n: f"{words(len(added))} döküm noktası yazıldı.",
+                    lambda f, added, n: points_said(ref("ag-dokum-25-dolgusuz")["expect"]["notes"], len(added), "döküm noktası"),
                     log=[skipped_warning(ref("ag-dokum-25-dolgusuz")["expect"]["notes"])]),
         object_case("watershed-unfilled", "Noktadan havza, 25 m, Çukurları doldur kapalı", "hydrology.watershed",
                     {**points, "snap": 25, "fill": False}, "ag-havza-25-dolgusuz", "Havzalar",
-                    lambda f, added, n: f"{words(len(added))} havza yazıldı.",
+                    lambda f, added, n: points_said(unfilled_havza, len(added), "havza"),
                     log=[skipped_warning(unfilled_havza)] + ([
                         {"level": "warn", "text": f"{words(len(unfilled_havza['empty']))} noktanın hücresini sonraki bir nokta aldığı "
                                                   "için havzası boş."}] if unfilled_havza["empty"] else [])),

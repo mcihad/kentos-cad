@@ -446,6 +446,7 @@ pub fn pour_point() -> Tool {
                 "fill": r.flag("fill"),
                 "snap": r.number("snap").unwrap_or(0.0),
             });
+            let total = r.features("points").entities.len();
             run_objects(
                 r,
                 cx,
@@ -455,7 +456,7 @@ pub fn pour_point() -> Tool {
                 "Döküm noktaları bulunuyor",
                 &|f, n, fb| {
                     warn_skipped(n, fb);
-                    format!("{} döküm noktası yazıldı.", count_words(f.len() as u64))
+                    super::points_said(total, f.len(), &n.hydro.skipped, "döküm noktası")
                 },
             )
         },
@@ -497,6 +498,7 @@ pub fn watershed() -> Tool {
                 "fill": r.flag("fill"),
                 "snap": r.number("snap").unwrap_or(0.0),
             });
+            let total = r.features("points").entities.len();
             run_objects(
                 r,
                 cx,
@@ -512,7 +514,7 @@ pub fn watershed() -> Tool {
                             count_words(n.hydro.empty_points.len() as u64)
                         ));
                     }
-                    format!("{} havza yazıldı.", count_words(f.len() as u64))
+                    super::points_said(total, f.len(), &n.hydro.skipped, "havza")
                 },
             )
         },

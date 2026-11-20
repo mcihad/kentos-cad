@@ -937,7 +937,7 @@
    "expect": {
     "status": "ok",
     "undo": "Döküm noktası",
-    "summary": "5 döküm noktası yazıldı.",
+    "summary": "6 noktadan 5 döküm noktası yazıldı; 1 nokta (4. nokta) rasterin dışında ya da değersiz hücrede kaldı.",
     "outputs": {
      "count": 5
     },
@@ -1058,7 +1058,7 @@
    "expect": {
     "status": "ok",
     "undo": "Noktadan havza",
-    "summary": "4 havza yazıldı.",
+    "summary": "6 noktadan 4 havza yazıldı; 1 nokta (4. nokta) rasterin dışında ya da değersiz hücrede kaldı.",
     "outputs": {
      "count": 4
     },
@@ -4811,7 +4811,7 @@
    "expect": {
     "status": "ok",
     "undo": "Döküm noktası",
-    "summary": "5 döküm noktası yazıldı.",
+    "summary": "6 noktadan 5 döküm noktası yazıldı; 1 nokta (4. nokta) rasterin dışında ya da değersiz hücrede kaldı.",
     "outputs": {
      "count": 5
     },
@@ -4933,7 +4933,7 @@
    "expect": {
     "status": "ok",
     "undo": "Noktadan havza",
-    "summary": "4 havza yazıldı.",
+    "summary": "6 noktadan 4 havza yazıldı; 1 nokta (4. nokta) rasterin dışında ya da değersiz hücrede kaldı.",
     "outputs": {
      "count": 4
     },

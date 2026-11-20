@@ -195,6 +195,32 @@ pub fn run_objects(
 }
 
 /// The points of the input that no cell took, said.
+/// A point tool's summary (gis-usage-report GIS-017, docs/adr/1082): every point taken says the results alone;
+/// some left out, how many points came in, how many results were written and which points were left out and why;
+/// all left out, that nothing was written.
+pub fn points_said(total: usize, written: usize, skipped: &[u32], what: &str) -> String {
+    if skipped.is_empty() {
+        return format!("{} {what} yazıldı.", count_words(written as u64));
+    }
+    if written == 0 && skipped.len() >= total {
+        return format!(
+            "Noktaların hiçbiri rasterin üstünde ya da değerli hücrede değil: {} noktanın hepsi atlandı; {what} yazılmadı.",
+            count_words(total as u64)
+        );
+    }
+    let mut places: Vec<String> = skipped.iter().take(5).map(|i| format!("{}.", i + 1)).collect();
+    if skipped.len() > 5 {
+        places.push("…".into());
+    }
+    format!(
+        "{} noktadan {} {what} yazıldı; {} nokta ({} nokta) rasterin dışında ya da değersiz hücrede kaldı.",
+        count_words(total as u64),
+        count_words(written as u64),
+        count_words(skipped.len() as u64),
+        places.join(", ")
+    )
+}
+
 pub fn warn_skipped(n: &Notes, feedback: &mut dyn Feedback) {
     if !n.hydro.skipped.is_empty() {
         feedback.warn(format!(
