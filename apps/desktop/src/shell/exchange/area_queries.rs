@@ -9,15 +9,17 @@
 
 use std::fmt::Write as _;
 
-use iced::widget::Column;
+use iced::widget::{Column, row};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
     CommandResult, CommandWarning, Entity, MeshZonal, MeshesProfile, MeshesProfiled, MeshesQueried,
     MeshesQuery, MeshesRegion, MeshesRegioned, PointCloudsProfile, PointCloudsProfiled,
     PointCloudsRegion, PointCloudsRegioned, Vec2,
 };
+use kentos_interaction::Format;
 use kentos_native_application::{ExecutionContext, mesh_areas, meshes, pointcloud_areas};
 use kentos_ui::widget::segmented::Segmented;
+use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, overlay};
 
 use super::words::{self, Kind as Line};
@@ -63,8 +65,30 @@ pub struct Shape {
     pub said: String,
 }
 
+/// The drawing's point clouds a window may read (GIS-036): each one's id and its name as the window says it; with
+/// one, it is named and taken; with more, Tüm bulutlar or one of them.
+#[derive(Debug, Clone, Default)]
+pub struct Clouds {
+    pub all: Vec<(String, String)>,
+    /// With more than one: 0 Tüm bulutlar, `i` the `i`-th cloud.
+    pub chosen: usize,
+}
+
+impl Clouds {
+    /// The ids the command reads: none for all.
+    fn uids(&self) -> Vec<String> {
+        match self.chosen {
+            0 => Vec::new(),
+            i => self.all.get(i - 1).map(|c| vec![c.0.clone()]).unwrap_or_default(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct RegionState {
+    pub clouds: Clouds,
+    /// The project's units, as the answer is written.
+    pub format: Format,
     pub shape: Result<Shape, String>,
     pub result: Option<Outcome>,
     pub running: bool,
@@ -72,6 +96,8 @@ pub struct RegionState {
 
 #[derive(Debug)]
 pub struct ProfileState {
+    pub clouds: Clouds,
+    pub format: Format,
     /// The path taken from the selection and what it is said to be.
     pub path: Result<(Vec<Vec2>, String), String>,
     pub width: String,
@@ -103,6 +129,11 @@ pub struct MeshState {
 pub enum Event {
     /// Seçimden al: the shape, the path or the place read from the selection again.
     Use,
+    /// Sahneden seç: the window steps aside while the area or the line is picked on the drawing, and comes back with
+    /// the same values (GIS-036).
+    Pick,
+    /// The cloud read: 0 Tüm bulutlar, `i` the `i`-th.
+    Cloud(usize),
     Width(String),
     Step(String),
     X(String),
@@ -146,6 +177,9 @@ fn shape_of(app: &App) -> Result<Shape, String> {
             _ => None,
         };
         let Some(p) = path else { continue };
+        if p.pts.len() < 3 || ring_area(&p.pts).abs() <= 0.0 {
+            return Err("Seçilen alan geçersiz: en az üç ayrı köşesi ve sıfırdan büyük alanı olmalı. Başka bir alan seçin.".into());
+        }
         let curved = p
             .bulges
             .as_ref()
@@ -168,7 +202,16 @@ fn shape_of(app: &App) -> Result<Shape, String> {
             said,
         });
     }
-    Err("Seçimde alan yok. Pencereyi kapatın, alanı (ya da kapalı çoklu çizgiyi) nokta bulutuyla birlikte Shift ile seçin; Nokta bulutu sekmesi açık kalır, komutu oradan yeniden açın.".into())
+    Err("Seçimde alan yok: Sahneden seç ile çizimde alanı (ya da kapalı çoklu çizgiyi) tıklayıp Enter'a basın; pencere aynı ayarlarla döner.".into())
+}
+
+/// The ring's signed area (the shoelace), only to tell a flat ring.
+fn ring_area(pts: &[Vec2]) -> f64 {
+    let n = pts.len();
+    (0..n).map(|i| {
+        let (a, b) = (pts[i], pts[(i + 1) % n]);
+        (a.x - pts[0].x) * (b.y - pts[0].y) - (b.x - pts[0].x) * (a.y - pts[0].y)
+    }).sum::<f64>() / 2.0
 }
 
 /// The line or polyline the selection holds; why not.
@@ -185,8 +228,61 @@ fn path_of(app: &App) -> Result<(Vec<Vec2>, String), String> {
             _ => {}
         }
     }
-    // The way to it said (UR-038): the window does not let the drawing be clicked while it is open.
-    Err("Seçimde çizgi yok. Pencereyi kapatın, profil yolunu (çizgi ya da çoklu çizgi) nokta bulutuyla birlikte Shift ile seçin; Nokta bulutu sekmesi açık kalır, profili oradan yeniden açın.".into())
+    // The way to it said (UR-038, GIS-036): Sahneden seç steps the window aside; the cloud needs no selecting.
+    Err("Seçimde çizgi yok: Sahneden seç ile çizimde profil yolunu (çizgi ya da çoklu çizgi) tıklayıp Enter'a basın; pencere aynı ayarlarla döner.".into())
+}
+
+/// The drawing's point clouds, each by its label, else its first file's name, with its points.
+fn clouds_of(app: &App) -> Clouds {
+    let Some(doc) = &app.document else {
+        return Clouds::default();
+    };
+    let all = doc
+        .model
+        .entities_with_uids()
+        .filter_map(|(u, e)| match e {
+            Entity::PointCloud(c) => {
+                let label = c.base.label.as_deref().map(str::trim).filter(|l| !l.is_empty());
+                let file = c.cloud.sources.iter().find_map(|s| {
+                    s.file.as_deref().or(s.url.as_deref()).map(|f| {
+                        std::path::Path::new(f)
+                            .file_name()
+                            .map_or_else(|| f.to_owned(), |n| n.to_string_lossy().into_owned())
+                    })
+                });
+                let name = label
+                    .map(str::to_owned)
+                    .or(file)
+                    .unwrap_or_else(|| doc.model.layers().get(&c.base.layer_id).map_or_else(|| "Nokta bulutu".to_owned(), |l| l.name.clone()));
+                Some((u.to_string(), format!("“{name}” · {} nokta", grouped(c.cloud.count))))
+            }
+            _ => None,
+        })
+        .collect();
+    Clouds { all, chosen: 0 }
+}
+
+/// Points per square metre with three significant digits below one (0.00237), else three decimals.
+fn density(d: f64) -> String {
+    if d >= 1.0 || d <= 0.0 || !d.is_finite() {
+        return fixed(d);
+    }
+    let decimals = (2 - d.log10().floor() as i32).clamp(3, 12) as usize;
+    let t = format!("{d:.decimals$}");
+    t.trim_end_matches('0').trim_end_matches('.').to_owned()
+}
+
+/// A count with its thousands apart by dots (2.822).
+fn grouped(n: u64) -> String {
+    let digits = n.to_string();
+    let mut out = String::new();
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i) % 3 == 0 {
+            out.push('.');
+        }
+        out.push(c);
+    }
+    out
 }
 
 /// The first selected point, its place as typed text.
@@ -215,6 +311,8 @@ impl App {
     pub(super) fn region_open(&mut self) -> Task<Message> {
         let shape = shape_of(self);
         self.open_window(Window::CloudRegion(RegionState {
+            clouds: clouds_of(self),
+            format: self.area_format(),
             shape,
             result: None,
             running: false,
@@ -225,6 +323,8 @@ impl App {
     pub(super) fn profile_open(&mut self) -> Task<Message> {
         let path = path_of(self);
         self.open_window(Window::CloudProfile(ProfileState {
+            clouds: clouds_of(self),
+            format: self.area_format(),
             path,
             width: "10".into(),
             step: "25".into(),
@@ -262,8 +362,44 @@ impl App {
         Task::none()
     }
 
+    /// The project's units, as the answers are written.
+    fn area_format(&self) -> Format {
+        self.document.as_ref().map_or_else(Format::default, |d| Format::of(d.settings()))
+    }
+
+    /// Back from Sahneden seç (window_pick.rs): the area or the line read from the selection again.
+    pub(crate) fn area_after_pick(&mut self) {
+        if matches!(self.exchange, Some(Window::CloudRegion(_) | Window::CloudProfile(_) | Window::MeshQuery(_))) {
+            let _ = self.area_event(Event::Use);
+        }
+    }
+
     pub(super) fn area_event(&mut self, e: Event) -> Task<Message> {
         match e {
+            Event::Pick => {
+                let what = match &self.exchange {
+                    Some(Window::CloudProfile(_)) => "Profil yolu",
+                    Some(Window::MeshQuery(s)) if s.mode == MeshMode::Path => "Hat",
+                    Some(Window::MeshQuery(s)) if s.mode == MeshMode::Place => "Yer (nokta)",
+                    _ => "Alan",
+                };
+                self.pick_for_window(crate::app::Dialog::Exchange, what);
+                Task::none()
+            }
+            Event::Cloud(i) => {
+                match &mut self.exchange {
+                    Some(Window::CloudRegion(s)) => {
+                        s.clouds.chosen = i;
+                        s.result = None;
+                    }
+                    Some(Window::CloudProfile(s)) => {
+                        s.clouds.chosen = i;
+                        s.result = None;
+                    }
+                    _ => {}
+                }
+                Task::none()
+            }
             Event::Use => {
                 match &mut self.exchange {
                     Some(Window::CloudRegion(_)) => {
@@ -374,9 +510,9 @@ impl App {
             }
             Event::Copy => {
                 let text = match &self.exchange {
-                    Some(Window::CloudRegion(s)) => s.result.as_ref().map(copy_text),
-                    Some(Window::CloudProfile(s)) => s.result.as_ref().map(copy_text),
-                    Some(Window::MeshQuery(s)) => s.result.as_ref().map(copy_text),
+                    Some(Window::CloudRegion(s)) => s.result.as_ref().map(|r| copy_text(r, &s.format)),
+                    Some(Window::CloudProfile(s)) => s.result.as_ref().map(|r| copy_text(r, &s.format)),
+                    Some(Window::MeshQuery(s)) => s.result.as_ref().map(|r| copy_text(r, &self.area_format())),
                     _ => None,
                 };
                 text.map_or_else(Task::none, iced::clipboard::write)
@@ -400,10 +536,13 @@ impl App {
                 let Ok(shape) = &s.shape else {
                     return Task::none();
                 };
+                if s.clouds.all.is_empty() {
+                    return Task::none();
+                }
                 let input = PointCloudsRegion {
                     ring: shape.ring.clone(),
                     holes: shape.holes.clone(),
-                    uids: Vec::new(),
+                    uids: s.clouds.uids(),
                     drawing,
                 };
                 s.running = true;
@@ -425,6 +564,9 @@ impl App {
                 let Ok((path, _)) = &s.path else {
                     return Task::none();
                 };
+                if s.clouds.all.is_empty() {
+                    return Task::none();
+                }
                 let (width, step) = (parse(&s.width), parse(&s.step));
                 let (Some(width), Some(step)) = (width, step) else {
                     s.result = Some(Outcome::Profile(Err(
@@ -437,7 +579,7 @@ impl App {
                     width,
                     step,
                     points: s.points,
-                    uids: Vec::new(),
+                    uids: s.clouds.uids(),
                     drawing,
                 };
                 s.running = true;
@@ -568,17 +710,19 @@ impl App {
             Ok(shape) => (true, words::text_line(Line::Info, shape.said.clone())),
             Err(why) => (false, words::text_line(Line::Warn, why.clone())),
         };
+        let (has_cloud, cloud) = cloud_field(&s.clouds);
+        body = body.push(cloud);
         body = body.push(words::field(
             "Alan",
             said,
             Some("Alanın içindeki nokta bulutu noktaları kaynak dosyalarının tam çözünürlüğünde okunur; sınırdaki nokta içeridedir.".into()),
         ));
-        body = body.push(words::ghost("Seçimden al", Some(event(Event::Use))));
-        body = body.push(result_view(s.result.as_ref(), s.running));
+        body = body.push(pick_row());
+        body = body.push(result_view(s.result.as_ref(), s.running, &s.format));
         window(
             "Nokta bulutu alan istatistiği",
             body,
-            ready && !s.running,
+            ready && has_cloud && !s.running,
             s.result.is_some(),
         )
     }
@@ -589,15 +733,17 @@ impl App {
             Ok((_, said)) => (true, words::text_line(Line::Info, said.clone())),
             Err(why) => (false, words::text_line(Line::Warn, why.clone())),
         };
+        let (has_cloud, cloud) = cloud_field(&s.clouds);
+        body = body.push(cloud);
         body = body.push(words::field("Yol", said, None));
-        body = body.push(words::ghost("Seçimden al", Some(event(Event::Use))));
+        body = body.push(pick_row());
         body = body.push(words::field(
-            "Koridorun genişliği (iki yanda toplam)",
+            "Koridorun genişliği, m (iki yanda toplam)",
             input("10", &s.width, Event::Width),
             None,
         ));
         body = body.push(words::field(
-            "İstasyon adımı (yol boyunca)",
+            "İstasyon adımı, m (yol boyunca)",
             input("25", &s.step, Event::Step),
             None,
         ));
@@ -606,11 +752,11 @@ impl App {
             "Noktaları da listele (istasyon, ofset, yer, sınıf)",
             Some(event(Event::Toggle)),
         ));
-        body = body.push(result_view(s.result.as_ref(), s.running));
+        body = body.push(result_view(s.result.as_ref(), s.running, &s.format));
         window(
             "Nokta bulutu profili",
             body,
-            ready && !s.running,
+            ready && has_cloud && !s.running,
             s.result.is_some(),
         )
     }
@@ -662,7 +808,7 @@ impl App {
                 body = body.push(words::field("Yol", said, None));
                 body = body.push(words::ghost("Seçimden al", Some(event(Event::Use))));
                 body = body.push(words::field(
-                    "İstasyon adımı (yol boyunca)",
+                    "İstasyon adımı, m (yol boyunca)",
                     input("10", &s.step, Event::Step),
                     None,
                 ));
@@ -691,7 +837,7 @@ impl App {
             }
             MeshMode::Path => {}
         }
-        body = body.push(result_view(s.result.as_ref(), s.running));
+        body = body.push(result_view(s.result.as_ref(), s.running, &self.area_format()));
         window("Mesh sor", body, ready && !s.running, s.result.is_some())
     }
 }
@@ -731,7 +877,33 @@ fn window<'a>(
     )
 }
 
-fn result_view(r: Option<&Outcome>, running: bool) -> Element<'_, Message> {
+/// Sahneden seç and Seçimden al side by side.
+fn pick_row<'a>() -> Element<'a, Message> {
+    row![
+        words::secondary("Sahneden seç", Some(event(Event::Pick))),
+        words::ghost("Seçimden al", Some(event(Event::Use))),
+    ]
+    .spacing(8)
+    .into()
+}
+
+/// Bulut: none said with the way to one, one named, more chosen from (Tüm bulutlar first); whether one is there.
+fn cloud_field(c: &Clouds) -> (bool, Element<'_, Message>) {
+    let body: Element<'_, Message> = match c.all.len() {
+        0 => words::text_line(Line::Warn, "Çizimde nokta bulutu yok: önce Ekle › Nokta bulutu ile bir bulut ekleyin."),
+        1 => words::text_line(Line::Info, c.all[0].1.clone()),
+        n => Select::new(
+            std::iter::once(Choice::new(format!("Tüm bulutlar ({n})")))
+                .chain(c.all.iter().map(|(_, name)| Choice::new(name.clone()))),
+            Some(c.chosen),
+            |i| event(Event::Cloud(i)),
+        )
+        .into(),
+    };
+    (!c.all.is_empty(), words::field("Nokta bulutu", body, None))
+}
+
+fn result_view<'a>(r: Option<&'a Outcome>, running: bool, f: &Format) -> Element<'a, Message> {
     if running {
         return words::summary(vec![words::text_line(Line::Info, "Dosyalar okunuyor…")]);
     }
@@ -761,11 +933,11 @@ fn result_view(r: Option<&Outcome>, running: bool) -> Element<'_, Message> {
             warn(warnings, &mut lines);
         }
         Outcome::Region(Ok((o, warnings))) => {
-            lines.extend(region_lines(o));
+            lines.extend(region_lines(o, f));
             warn(warnings, &mut lines);
         }
         Outcome::Profile(Ok((o, warnings))) => {
-            lines.extend(profile_lines(o));
+            lines.extend(profile_lines(o, f));
             warn(warnings, &mut lines);
         }
         Outcome::Mesh(Ok((o, warnings))) => {
@@ -803,14 +975,15 @@ fn stats_text(s: &kentos_commands::CloudStats) -> Vec<String> {
     out
 }
 
-fn region_texts(o: &PointCloudsRegioned) -> Vec<String> {
+fn region_texts(o: &PointCloudsRegioned, f: &Format) -> Vec<String> {
+    // The area in the project's unit, the density per square metre (GIS-036): the drawing is in metres.
     let mut out = vec![format!(
         "Alan {}; {} nokta{}; {} nokta okundu.",
-        fixed(o.area),
-        o.total.count,
+        f.area(o.area),
+        grouped(o.total.count),
         o.density
-            .map_or_else(String::new, |d| format!(" ({} nokta/birim²)", fixed(d))),
-        o.read
+            .map_or_else(String::new, |d| format!(" ({} nokta/m²)", density(d))),
+        grouped(o.read)
     )];
     out.extend(stats_text(&o.total));
     if o.clouds.len() > 1 {
@@ -826,8 +999,8 @@ fn region_texts(o: &PointCloudsRegioned) -> Vec<String> {
     out
 }
 
-fn region_lines(o: &PointCloudsRegioned) -> Vec<Element<'_, Message>> {
-    let texts = region_texts(o);
+fn region_lines(o: &PointCloudsRegioned, f: &Format) -> Vec<Element<'static, Message>> {
+    let texts = region_texts(o, f);
     let kind = if o.total.count == 0 {
         Line::Warn
     } else {
@@ -840,33 +1013,33 @@ fn region_lines(o: &PointCloudsRegioned) -> Vec<Element<'_, Message>> {
         .collect()
 }
 
-fn profile_texts(o: &PointCloudsProfiled) -> Vec<String> {
+fn profile_texts(o: &PointCloudsProfiled, f: &Format) -> Vec<String> {
     let mut out = vec![format!(
         "Yol {}; koridorda {} nokta; {} nokta okundu; {} istasyon.",
-        fixed(o.length),
-        o.count,
-        o.read,
+        f.length(o.length),
+        grouped(o.count),
+        grouped(o.read),
         o.bins.len()
     )];
     for b in &o.bins {
         out.push(match &b.z {
             Some(z) => format!(
                 "{} – {}: {} nokta, yükseklik {} … {} (ort. {})",
-                fixed(b.from),
-                fixed(b.to),
-                b.count,
-                fixed(z.min),
-                fixed(z.max),
-                fixed(z.mean)
+                f.length_bare(b.from),
+                f.length(b.to),
+                grouped(b.count),
+                f.length_bare(z.min),
+                f.length(z.max),
+                f.length(z.mean)
             ),
-            None => format!("{} – {}: nokta yok", fixed(b.from), fixed(b.to)),
+            None => format!("{} – {}: nokta yok", f.length_bare(b.from), f.length(b.to)),
         });
     }
     out
 }
 
-fn profile_lines(o: &PointCloudsProfiled) -> Vec<Element<'_, Message>> {
-    let texts = profile_texts(o);
+fn profile_lines<'a>(o: &'a PointCloudsProfiled, f: &Format) -> Vec<Element<'a, Message>> {
+    let texts = profile_texts(o, f);
     let more = texts.len().saturating_sub(SHOWN + 1);
     let mut lines: Vec<Element<'_, Message>> = texts
         .into_iter()
@@ -1077,11 +1250,11 @@ fn mesh_lines(o: &MeshesQueried) -> Vec<Element<'_, Message>> {
 }
 
 /// The answer as text for the clipboard: the lines, a profile's points as tab separated rows.
-fn copy_text(r: &Outcome) -> String {
+pub(super) fn copy_text(r: &Outcome, f: &Format) -> String {
     match r {
-        Outcome::Region(Ok((o, _))) => region_texts(o).join("\n"),
+        Outcome::Region(Ok((o, _))) => region_texts(o, f).join("\n"),
         Outcome::Profile(Ok((o, _))) => {
-            let mut t = profile_texts(o).join("\n");
+            let mut t = profile_texts(o, f).join("\n");
             if !o.points.is_empty() {
                 t.push_str("\nİstasyon\tOfset\tY\tX\tZ\tSınıf\n");
                 for p in &o.points {

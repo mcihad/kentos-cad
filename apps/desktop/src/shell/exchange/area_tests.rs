@@ -23,7 +23,7 @@ fn fixtures() -> PathBuf {
 }
 
 /// A shared case file's drawing with `extra` entities added, opened in the app.
-fn opened(app: &mut App, file: &str, extra: Vec<Value>) {
+pub(super) fn opened(app: &mut App, file: &str, extra: Vec<Value>) {
     let text =
         std::fs::read_to_string(fixtures().join("commands/v1").join(file)).expect("the cases");
     let cases: Value = serde_json::from_str(&text).expect("JSON");
@@ -40,13 +40,13 @@ fn opened(app: &mut App, file: &str, extra: Vec<Value>) {
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
 }
 
-fn pts(v: &[(f64, f64)]) -> Vec<Value> {
+pub(super) fn pts(v: &[(f64, f64)]) -> Vec<Value> {
     v.iter().map(|(x, y)| json!({ "x": x, "y": y })).collect()
 }
 
 /// An area, a path and a point over las12-f0.las's ground (the mesh drawing: a point at a mesh place), ids 100, 101, 102,
 /// on `layer`.
-fn shapes(layer: &str) -> Vec<Value> {
+pub(super) fn shapes(layer: &str) -> Vec<Value> {
     vec![
         json!({ "kind": "polygon", "id": 100, "layerId": layer, "attrs": {},
                 "pts": pts(&[(500050.0, 4400050.0), (500250.0, 4400050.0), (500250.0, 4400200.0), (500050.0, 4400200.0)]) }),
@@ -56,7 +56,7 @@ fn shapes(layer: &str) -> Vec<Value> {
     ]
 }
 
-fn select(app: &mut App, id: u64) {
+pub(super) fn select(app: &mut App, id: u64) {
     let doc = app.document.as_ref().expect("open");
     let slot = doc
         .model

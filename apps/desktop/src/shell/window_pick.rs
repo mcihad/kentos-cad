@@ -35,7 +35,12 @@ impl App {
         if !keep {
             self.selection.set(before);
         }
+        let exchange = matches!(dialog, Dialog::Exchange);
         self.dialog = Some(dialog);
+        // An exchange window's area or line is read from what was picked (GIS-036).
+        if exchange {
+            self.area_after_pick();
+        }
         true
     }
 }

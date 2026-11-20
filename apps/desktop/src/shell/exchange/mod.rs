@@ -20,6 +20,8 @@
 mod area_queries;
 #[cfg(test)]
 mod area_tests;
+#[cfg(test)]
+mod area_cloud_tests;
 pub mod apply;
 mod atlas_export;
 pub(crate) mod permit_bim;
