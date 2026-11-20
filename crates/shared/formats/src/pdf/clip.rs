@@ -1,4 +1,4 @@
-//! A PDF page's clipping (gis-usage-report GIS-053, docs/adr/1110; ISO 32000-1 §8.5.4): the page's crop box first, then
+//! A PDF page's clipping (gis-usage-report GIS-053, docs/adr/1113; ISO 32000-1 §8.5.4): the page's crop box first, then
 //! every `W` (nonzero) or `W*` (even-odd) path, each kept with the graphics state it was set in, so `Q` gives the outer
 //! one back. What is painted is cut by every clip in force when it is painted: a stroked part keeps its pieces inside;
 //! a filled part is cut exactly by a convex clip (Sutherland–Hodgman), and otherwise by the plane's area overlay. The

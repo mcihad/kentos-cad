@@ -323,7 +323,7 @@ mod tests {
         assert_eq!(read_page(&bytes, 2), Err(PdfError::NoPage { count: 1 }));
     }
 
-    /// GIS-053 (docs/adr/1110): an atlas page's map frame clips its map: a path drawn past the frame keeps only its
+    /// GIS-053 (docs/adr/1113): an atlas page's map frame clips its map: a path drawn past the frame keeps only its
     /// piece inside; `Q` gives the page back its whole box (the legend's line outside the frame stays); two frames
     /// keep a line's two pieces; an even-odd frame's hole is cut out; nested clips narrow; what is past the page's own
     /// box is not on the page; a text outside the frame is left out.

@@ -69,6 +69,8 @@ pub(crate) enum Event {
     PointCalc(kentos_interaction::point_calc::CalcKind),
     /// Harita sistemi chosen (docs/adr/0583 §3).
     MapCrs(crate::map_crs::Choose),
+    /// Harita sistemi's window closed (GIS-054).
+    MapCrsClose,
 }
 
 /// The surveying, cadastre and zoning (Harita) module's windows, `Dialog::Map`.
@@ -108,6 +110,8 @@ pub(crate) enum MapDialogKind {
     Register,
     /// Tarama ağı dengelemesi (scan_network_window.rs, docs/adr/4720); its state is `MapUiState::scan_network`.
     ScanNetwork,
+    /// Harita sistemi (map_crs.rs, GIS-054): the systems to draw the map in.
+    MapCrs,
     /// Bulutu konumla (cloud_place_window.rs, docs/adr/5100); its state is `MapUiState::cloud_place`.
     CloudPlace,
     /// Kayıtlı ölçüleri denetle (cogo.rs, docs/adr/0180); the window is `MapUiState::cogo`.
@@ -141,6 +145,11 @@ impl App {
             Event::CloudPlace(event) => return self.cloud_place_event(event),
             Event::Cogo(event) => return self.cogo_event(event),
             Event::MapCrs(choose) => self.choose_map(choose),
+            Event::MapCrsClose => {
+                if self.dialog == Some(crate::app::Dialog::Map(MapDialogKind::MapCrs)) {
+                    self.dialog = None;
+                }
+            }
         }
         Task::none()
     }
@@ -165,6 +174,7 @@ impl App {
             MapDialogKind::Overlap => self.overlap_view(),
             MapDialogKind::Register => self.register_view(),
             MapDialogKind::ScanNetwork => self.scan_network_view(),
+            MapDialogKind::MapCrs => self.map_crs_view(),
             MapDialogKind::CloudPlace => self.cloud_place_view(),
             MapDialogKind::Cogo => self.cogo_view(),
         }

@@ -294,6 +294,7 @@ impl App {
             Dialog::Map(map::MapDialogKind::ScanNetwork) => {
                 crate::scan_network_window::TITLE.to_owned()
             }
+            Dialog::Map(map::MapDialogKind::MapCrs) => crate::map_crs::TITLE.to_owned(),
             Dialog::Map(map::MapDialogKind::CloudPlace) => {
                 crate::cloud_place_window::TITLE.to_owned()
             }

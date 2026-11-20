@@ -17,6 +17,9 @@ use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 use crate::app::{App, Message};
 use crate::crs;
 
+/// The window's title (GIS-054).
+pub const TITLE: &str = "Harita sistemi";
+
 /// The map system chosen; none: the project's own.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Choose(pub Option<u32>);
@@ -60,23 +63,82 @@ impl App {
         }
     }
 
-    /// Harita sistemi from the command line: which it is, and where it is chosen.
+    /// Harita sistemi from the ribbon or the command line (GIS-054): its window, the systems listed at once, whatever
+    /// the status bar shows.
     pub(crate) fn map_crs_run(&mut self) {
-        let Some(doc) = &self.document else {
+        if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
+        }
+        self.dialog = Some(crate::app::Dialog::Map(map::MapDialogKind::MapCrs));
+    }
+
+    /// Harita sistemi's window: the objects' system and the map's, each named; the project's own, the web map's and
+    /// GPS's as buttons, every other system of the registry by datum in a searchable list; Kapat.
+    pub(crate) fn map_crs_view(&self) -> Element<'_, Message> {
+        use crate::exchange::words::{self, Kind};
+        let Some(doc) = &self.document else {
+            return iced::widget::text("").into();
         };
-        let now = match doc.settings().map_srid {
-            Some(s) => crs::title_of(s),
-            None => "projenin sistemi".to_owned(),
+        let settings = doc.settings();
+        let close = Message::Map(map::Event::MapCrsClose);
+        let mut body = iced::widget::Column::new().spacing(10);
+        if !settings.has_system() {
+            body = body.push(words::text_line(Kind::Warn, "Yerel proje başka sistemde gösterilmez."));
+            return kentos_ui::widget::Dialog::new(TITLE)
+                .push(body)
+                .action(words::primary("Kapat", Some(close.clone())))
+                .width(520.0)
+                .modal(close);
+        }
+        let current = settings.map_srid.filter(|m| *m != settings.srid);
+        body = body
+            .push(words::text_line(
+                Kind::Info,
+                format!("Nesnelerin saklandığı sistem: {}.", crs::title_of(settings.srid)),
+            ))
+            .push(words::text_line(
+                Kind::Info,
+                format!(
+                    "Harita şimdi şu sistemde çiziliyor: {}.",
+                    current.map_or_else(|| "projenin sistemi".to_owned(), crs::title_of)
+                ),
+            ));
+        let pick = |caption: String, srid: Option<u32>| {
+            let chosen = current == srid;
+            iced::widget::button(label::body(caption))
+                .on_press(message(srid))
+                .padding(kentos_ui::theme::metrics::action())
+                .style(if chosen { kentos_ui::style::button::primary } else { kentos_ui::style::button::secondary })
         };
-        self.say(
-            Level::Info,
-            format!(
-                "Harita sistemi: {now}. Değiştirmek için durum çubuğunda koordinat sistemi düğmesine sağ tıklayın \
-                 › Harita sistemi ▸."
-            ),
-        );
+        let mut quick = iced::widget::Row::new().spacing(8);
+        quick = quick.push(pick(format!("Projenin sistemi (EPSG:{})", settings.srid), None));
+        for srid in FIRST.into_iter().filter(|s| *s != settings.srid) {
+            if let Some(s) = kentos_project::crs::system(srid) {
+                quick = quick.push(pick(s.name.clone(), Some(srid)));
+            }
+        }
+        body = body.push(quick);
+        let others: Vec<(u32, String)> = crate::second_crs::choices(settings.srid)
+            .into_iter()
+            .flat_map(|(datum, systems)| {
+                systems.into_iter().filter(|s| !FIRST.contains(&s.srid)).map(move |s| (s.srid, format!("{datum} · {} (EPSG:{})", s.name, s.srid)))
+            })
+            .collect();
+        let at = current.and_then(|c| others.iter().position(|(s, _)| *s == c));
+        let ids: Vec<u32> = others.iter().map(|(s, _)| *s).collect();
+        let select = kentos_ui::widget::select::Select::new(
+            others.iter().map(|(_, n)| kentos_ui::widget::select::Choice::new(n.clone())),
+            at,
+            move |i| message(ids.get(i).copied()),
+        )
+        .placeholder("Başka bir sistem ara…");
+        body = body.push(words::field("Başka sistem", select, Some("Çizim dönüştürülmez; yalnız haritanın çizildiği sistem değişir.".to_owned())));
+        kentos_ui::widget::Dialog::new(TITLE)
+            .push(body)
+            .action(words::primary("Kapat", Some(close.clone())))
+            .width(620.0)
+            .modal(close)
     }
 
     /// Harita sistemi: the project's own, the web map's and GPS's, a submenu of systems for each datum.

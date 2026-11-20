@@ -312,3 +312,30 @@ fn screens() {
         }
     }
 }
+
+/// GIS-054 (docs/adr/1114): Harita sistemi from the ribbon opens its window at once, naming the objects' system and the
+/// map's apart; Pseudo-Mercator chosen there draws the map in it (the objects stay), the project's own brings it back,
+/// whatever the status bar shows. Picture `gis-054-harita-sistemi`.
+#[test]
+fn the_ribbon_s_map_system_lists_the_systems_at_once() {
+    let mut app = app();
+    let _ = app.run("view.mapCrs");
+    assert_eq!(app.dialog, Some(crate::app::Dialog::Map(map::MapDialogKind::MapCrs)));
+    let own = app.document.as_ref().expect("open").settings().srid;
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    let objects = format!("Nesnelerin saklandığı sistem: {}.", crate::crs::title_of(own));
+    assert!(crate::files_testing::find_text(&mut shot, &app, &objects).is_some(), "{objects}");
+    assert!(crate::files_testing::find_text(&mut shot, &app, "Harita şimdi şu sistemde çiziliyor: projenin sistemi.").is_some());
+    let _ = app.update(Message::Map(map::Event::MapCrs(Choose(Some(3857)))));
+    assert_eq!(app.document.as_ref().expect("open").settings().map_srid, Some(3857));
+    assert_eq!(app.dialog, Some(crate::app::Dialog::Map(map::MapDialogKind::MapCrs)), "the window stays");
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    let drawn = format!("Harita şimdi şu sistemde çiziliyor: {}.", crate::crs::title_of(3857));
+    assert!(crate::files_testing::find_text(&mut shot, &app, &drawn).is_some(), "{drawn}");
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-054-harita-sistemi");
+    let _ = app.update(Message::Map(map::Event::MapCrs(Choose(None))));
+    assert_eq!(app.document.as_ref().expect("open").settings().map_srid, None);
+    let _ = app.update(Message::Map(map::Event::MapCrsClose));
+    assert_eq!(app.dialog, None);
+}

@@ -1,4 +1,4 @@
-# 1110 — PDF okuyucusu kırpma yollarını uygular
+# 1113 — PDF okuyucusu kırpma yollarını uygular
 
 Tarih: 2026-11-20. gis-usage-report.md GIS-053. Durum: kabul edildi.
 
