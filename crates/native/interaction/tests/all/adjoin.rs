@@ -213,3 +213,22 @@ fn a_hidden_layers_areas_are_no_neighbours() {
     draw(&mut b, &ACROSS);
     assert_eq!(b.last_text(), Some(NO_REGION));
 }
+
+/// UR2-032: the path's ends inside the road, on Yol, while the neighbours are sought on Parsel (the active layer): the
+/// refusal names the road's layer and the layers searched, instead of blaming the clicks.
+#[test]
+fn ends_inside_another_layers_area_name_that_layer() {
+    let mut b = bench();
+    b.start("adjoin");
+    b.click(-5.0, -4.0);
+    b.click(0.0, 6.0);
+    b.click(5.0, -4.0);
+    b.confirm();
+    assert_eq!(b.last_level(), Some(Level::Warn));
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "Yolun uçları “Yol” katmanındaki alanın içinde, ama komşu alanlar yalnız “Parsel” katmanında aranır. O katmanı etkin yapın ya da komşu katmanlara ekleyin."
+        )
+    );
+}

@@ -155,6 +155,37 @@ fn region(
     let bulges = input.bulges.as_deref().filter(|b| has_bulges(Some(b)));
     let region = Neighbours::new(sets).fill(&pts, bulges);
     if region.is_empty() {
+        // Both ends inside an area that is not a neighbour (UR2-032): the layer it is on is named, not the clicks blamed.
+        let ends = [pts.first().copied(), pts.last().copied()];
+        let elsewhere = store
+            .in_rect(&window, true)
+            .into_iter()
+            .filter_map(slot)
+            .filter_map(|s| doc.get(s))
+            .filter(|e| !layers.iter().any(|l| *l == e.base().layer_id) && doc.layers().is_visible(&e.base().layer_id))
+            .find(|e| {
+                let areas = areas_of_entity(&shape(e));
+                ends.iter().flatten().all(|end| {
+                    areas.iter().any(|a| {
+                        let ring = kentos_geometry_core::entity::polygon_ring(&a.outer.pts, a.outer.bulges.as_deref());
+                        kentos_geometry_core::geometry::point_in_polygon(*end, &ring)
+                    })
+                })
+            });
+        if let Some(e) = elsewhere {
+            let name = |id: &str| doc.layers().get(id).map_or_else(|| id.to_owned(), |n| n.name.clone());
+            let searched: Vec<String> = layers.iter().map(|l| format!("“{}”", name(l))).collect();
+            return Err(refuse(
+                codes::NO_REGION,
+                format!(
+                    "Yolun uçları “{}” katmanındaki alanın içinde, ama komşu alanlar yalnız {} katmanında aranır. O \
+                     katmanı etkin yapın ya da komşu katmanlara ekleyin.",
+                    name(&e.base().layer_id),
+                    searched.join(", ")
+                ),
+                "pts",
+            ));
+        }
         return Err(refuse(codes::NO_REGION, NO_REGION.into(), "pts"));
     }
     Ok(region)
