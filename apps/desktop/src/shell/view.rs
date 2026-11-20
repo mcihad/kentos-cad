@@ -78,7 +78,9 @@ impl App {
     /// The window: a widget's own change on an event (a letter typed into a number field, a grid's cell, a chip) is
     /// drawn at the next frame, not at the next timer (kentos_ui's `presented`, docs/adr/0976).
     pub fn view(&self) -> Element<'_, Message> {
-        kentos_ui::widget::presented(self.shell_view()).into()
+        // A ⌘ shortcut's letter is never typed into the focused box (GIS-025: ⌘S made a field's 18 “18s”); the
+        // shortcut itself goes on through the app's keyboard subscription.
+        kentos_ui::widget::presented(kentos_ui::widget::command_keys(self.shell_view())).into()
     }
 
     fn shell_view(&self) -> Element<'_, Message> {
