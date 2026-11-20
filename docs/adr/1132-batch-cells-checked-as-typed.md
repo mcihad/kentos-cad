@@ -1,4 +1,4 @@
-# 1120 — Toplu çalıştırmanın hücreleri yazılırken denetlenir
+# 1132 — Toplu çalıştırmanın hücreleri yazılırken denetlenir
 
 Tarih: 2026-11-20. gis-usage-report.md GIS-061. Durum: kabul edildi.
 

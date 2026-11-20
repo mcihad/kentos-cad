@@ -360,7 +360,7 @@ fn screens() {
     }
 }
 
-/// GIS-061 (docs/adr/1120): a cell that cannot be read is said under the table as it is typed, with its row and
+/// GIS-061 (docs/adr/1132): a cell that cannot be read is said under the table as it is typed, with its row and
 /// column, whichever of Dur and Devam et is chosen, and Toplu çalıştır waits until it is fixed. Picture
 /// `gis-061-toplu-hucre`.
 #[test]
