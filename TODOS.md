@@ -62,6 +62,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   sözleşmesi ve Uygulama kontrolü görünümü buna göre yenilenir.
   UR2-052'de Alan böl tek alanda Hedef alan (H) seçeneğini sunar: kenara paralel kesim, istenen alan ([ADR 1069](docs/adr/1069-area-cut-by-target-area.md));
   web'in `AreaSplitTool`'u aynısını ister, `areas` izi tek alanda `["N", "H"]` bekler.
+  GIS-001/002'de bir CBS projesinde işlemin açtığı yeni katman, yazdığı nesnelere uyan türü (Alan, Çizgi, Nokta) ve
+  kaynak katmanların taşınan değerlerinin alan tanımlarını alır; Tampon'un Uzaklık ve Halka'sı sayıdır, var olan türlü
+  katmana uymayan yazım yazmadan reddedilir ([ADR 1070](docs/adr/1070-gis-run-output-layer-type-and-fields.md)); web'in
+  işlem çalıştırıcısı (`processing/runner.ts`) aynısını ister.
 - Yangın ve performans ([ADR 8068](docs/adr/8068-fire-performance-material-declarations.md), `cad.arch.performance`):
   web'e dönüşte komutun işleyicisi (`product/`), Öznitelikler'in Yangın dayanımı ve Acil çıkış satırları, Duvar stilleri
   alanı; TS sözleşmeleri üretildi (`Declared`, `DeclaredBasis`, `DeclaredExit`, `ArchPerformance` …); `.kcad` mimari verisi

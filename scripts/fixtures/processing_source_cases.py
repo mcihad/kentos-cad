@@ -141,9 +141,9 @@ COLUMNS = {"bina": ["kat", "ad"], "nokta": ["ad", "tur", "kot", "no"]}
 
 def answer(n, the_input, sink_path, *, mode="new", table="Merkezler", columns=None, untouched=()):
     """convert.toPoints's answer with a sink: n points to a new table of the file."""
-    # The writer's columns: the result layer's fields (none here), then the attributes the objects carry in their
-    # names' order (docs/adr/0508 §4).
-    cols = [{"attribute": c, "column": c} for c in sorted(columns or [])]
+    # The writer's columns: the result layer's fields, then the attributes the objects carry in their names' order
+    # (docs/adr/0508 §4); the result layer takes the source table's fields in their order (docs/adr/1070).
+    cols = [{"attribute": c, "column": c} for c in columns or []]
     out = {
         "tool": "convert.toPoints",
         "summary": f"{n} nesneden {n} nokta yazıldı.",

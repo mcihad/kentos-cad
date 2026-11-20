@@ -93,7 +93,7 @@ def batched(rows_ran, tables, path, *, failed_rows=(), record=ANY, mode="new", u
                  "approximated": 0},
         "sinkReport": {"mode": mode,
                        "tables": [{"table": t, "layer": lay, "rows": n, "geometry": ANY, "z": ANY, "m": ANY,
-                                   "columns": [{"attribute": c, "column": c} for c in sorted(cols)]}
+                                   "columns": [{"attribute": c, "column": c} for c in cols]}
                                   for t, lay, n, cols in tables],
                        "batches": sum(math.ceil(n / 5000) for _, _, n, _ in tables), "batchRows": 5000,
                        "ids": "kentos_uids"},

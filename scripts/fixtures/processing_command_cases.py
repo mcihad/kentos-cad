@@ -233,14 +233,17 @@ LEFT_KINDS = {"text": "yazı", "dimension": "ölçü", "insert": "blok", "hatch"
 BATCH_ROWS = 5000
 
 
-def columns_of(made: list[dict]) -> list[dict]:
-    """The columns a table of these objects has (docs/adr/0549 §4): a new layer has no fields, so one text column per
+def columns_of(made: list[dict], fields: list[dict] | None = None) -> list[dict]:
+    """The columns a table of these objects has (docs/adr/0549 §4): the new layer's fields in their order (a GIS
+    project's run gives it its sources' fields and the tool's own, docs/adr/1070), then one text column per other
     attribute the written objects carry, in the attributes' byte order (a name is its own column here)."""
     keys: set[str] = set()
     for a in made:
         if a.get("kind", "") not in LEFT_KINDS:
             keys |= set(a.get("attrs", {}))
-    return [{"attribute": k, "column": k} for k in sorted(keys, key=lambda k: k.encode("utf-8"))]
+    named = [f["name"] for f in fields or [] if f["name"] in keys]
+    rest = sorted(keys - set(named), key=lambda k: k.encode("utf-8"))
+    return [{"attribute": k, "column": k} for k in named + rest]
 
 
 def sink_base(c: dict, inputs: list[str]) -> dict:
@@ -266,7 +269,7 @@ def sink_base(c: dict, inputs: list[str]) -> dict:
     out["layers"] = [layer["id"]]
     return {
         "case": c, "setup": document(c["document"]), "step": step, "layer": layer, "left": left, "rows": rows,
-        "columns": columns_of(made),
+        "columns": columns_of(made, layer.get("fields")),
     }
 
 

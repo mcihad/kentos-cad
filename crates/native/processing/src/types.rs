@@ -751,6 +751,9 @@ pub struct RunResult {
     pub like: Option<String>,
     /// The rasters a raster tool read and wrote with their grids, for the run's record (docs/adr/0535).
     pub grids: Vec<kentos_commands::RecordGrid>,
+    /// The fields of the values the tool itself writes to a new layer of a GIS project (Tampon's Uzaklık and Halka,
+    /// docs/adr/1070); the values it carries over from its inputs take their source layers' fields.
+    pub fields: Vec<kentos_commands::fields::LayerField>,
 }
 
 /// A layer or group a run makes (docs/adr/0217 §7): its key (what the run's

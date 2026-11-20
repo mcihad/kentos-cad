@@ -91,6 +91,41 @@ fn buffer_rings_go_to_a_layer_of_their_own_in_one_step() {
     assert!(doc.layers().leaves().iter().all(|l| l.name != "Tampon"));
 }
 
+/// GIS-001: Tampon's new layer in a GIS project is an area layer; made active, it turns the point tool off and keeps
+/// the area tool. With `KENTOS_SHOTS=1` the picture goes to `.run/gui-evidence/gis-001/`.
+#[test]
+fn a_gis_buffers_layer_is_an_area_layer_that_turns_the_point_tool_off() {
+    let mut app = app_with_geometry();
+    let mut shot = crate::files_testing::offscreen(iced::Size::new(1440., 900.));
+    let _ = app.update(Message::Run("processing.run.geometry.buffer"));
+    value(&mut app, "input", layer("parsel"));
+    value(&mut app, "distance", json!(10));
+    event(&mut app, Event::Run);
+    assert!(matches!(status(&app), RunStatus::Ok { .. }), "{:?}", status(&app));
+    let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let made = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "Tampon")
+        .cloned()
+        .expect("the new layer");
+    assert_eq!(made.geometry, Some(kentos_commands::LayerGeometry::Area));
+    assert!(made.fields.iter().any(|f| f.name == "Uzaklık"));
+    assert!(doc.set_active_layer(&made.id));
+    let why = crate::layer_types::misfit(doc, "tool.point").expect("the point tool is off");
+    assert!(why.contains("alan katmanı"), "{why}");
+    assert!(crate::layer_types::misfit(doc, "tool.polygon").is_none());
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        app.tab = "edit";
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        crate::files_testing::evidence(&mut shot, &app, "gis-001", "tampon-alan-katmani");
+    }
+}
+
 #[test]
 fn the_validity_check_shows_its_table_selects_and_changes_nothing() {
     let mut app = app_with_geometry();

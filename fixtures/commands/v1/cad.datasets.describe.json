@@ -7999,6 +7999,33 @@
          ],
          "upstream": [
           "parsel"
+         ],
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          },
+          {
+           "name": "Uzaklık",
+           "kind": "decimal",
+           "unit": "m",
+           "filled": 3
+          }
          ]
         }
        ],
@@ -8427,6 +8454,33 @@
          "stale": true,
          "upstream": [
           "parsel"
+         ],
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          },
+          {
+           "name": "Uzaklık",
+           "kind": "decimal",
+           "unit": "m",
+           "filled": 3
+          }
          ]
         }
        ],
@@ -8863,6 +8917,33 @@
          ],
          "upstream": [
           "parsel"
+         ],
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          },
+          {
+           "name": "Uzaklık",
+           "kind": "decimal",
+           "unit": "m",
+           "filled": 3
+          }
          ]
         }
        ],

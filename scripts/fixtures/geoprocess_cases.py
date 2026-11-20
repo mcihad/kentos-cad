@@ -879,6 +879,15 @@ def new_layer(name, color):
     return {"id": layer_id(name), "name": name, "style": {"color": color, "lineType": "continuous", "lineWeight": 0.25, "fill": color + "26"}}
 
 
+def buffer_layer(rings=False):
+    """Tampon's new layer: its own values are numbers there (docs/adr/1070), Halka only when it draws rings."""
+    layer = new_layer("Tampon", "#0090FF")
+    layer["fields"] = [{"name": "Uzaklık", "kind": "decimal", "unit": "m"}]
+    if rings:
+        layer["fields"].append({"name": "Halka", "kind": "integer", "min": "1"})
+    return layer
+
+
 def shape(kind, layer_name, attrs, parts=1, holes=0, area=None, length=None, points=None, vertices=None):
     out = {"kind": kind, "layerId": layer_id(layer_name), "attrs": attrs, "parts": parts, "holes": holes}
     if area is not None:
@@ -928,31 +937,31 @@ def build_processing():
     cases = [
         proc_case("buffer-points", "Tampon, noktalar 2 m: üç daire, π d²; kotlu nokta söylenir", "geometry.buffer",
                   {"input": LAY("agac"), "distance": 2},
-                  ok("3 nesnenin tamponu yazıldı (3 alan).", "Tampon", [new_layer("Tampon", buf)],
+                  ok("3 nesnenin tamponu yazıldı (3 alan).", "Tampon", [buffer_layer()],
                      [shape("polygon", "Tampon", {**a[i], "Uzaklık": "2"}, area=4 * PI) for i in (9, 10, 11)], [HEIGHTS], {"count": 3})),
         proc_case("buffer-rings", "Tampon, iki halka, birleştirerek: halka başına tek alan, “Uzaklık” ve “Halka”", "geometry.buffer",
                   {"input": LAY("agac"), "distance": 2, "rings": 2, "dissolve": True},
-                  ok("3 nesnenin tamponu birleştirilerek yazıldı (2 alan).", "Tampon", [new_layer("Tampon", buf)],
+                  ok("3 nesnenin tamponu birleştirilerek yazıldı (2 alan).", "Tampon", [buffer_layer(True)],
                      [shape("polygon", "Tampon", {"Uzaklık": "2", "Halka": "1"}, parts=3, area=12 * PI),
                       shape("polygon", "Tampon", {"Uzaklık": "4", "Halka": "2"}, parts=3, holes=3, area=36 * PI)], [HEIGHTS], {"count": 2})),
         proc_case("buffer-inward", "Tampon, eksi uzaklık: parseller 1 m içe küçülür", "geometry.buffer",
                   {"input": LAY("parsel"), "distance": -1},
-                  ok("4 nesnenin tamponu yazıldı (4 alan).", "Tampon", [new_layer("Tampon", buf)],
+                  ok("4 nesnenin tamponu yazıldı (4 alan).", "Tampon", [buffer_layer()],
                      [shape("polygon", "Tampon", {**a[i], "Uzaklık": "-1"}, area=ar) for i, ar in ((1, 18 * 28), (2, 23 * 28), (3, 13 * 28), (4, 28 * 18))], [],
                      {"count": 4})),
         proc_case("buffer-field", "Tampon, Uzaklık alanından: virgüllü değer okunur, okunamayan söylenir", "geometry.buffer",
                   {"input": LAY("agac"), "distanceField": "Yarıçap"},
-                  ok("2 nesnenin tamponu yazıldı (2 alan).", "Tampon", [new_layer("Tampon", buf)],
+                  ok("2 nesnenin tamponu yazıldı (2 alan).", "Tampon", [buffer_layer()],
                      [shape("polygon", "Tampon", {**a[9], "Uzaklık": "1.5"}, area=PI * mp.mpf("2.25")),
                       shape("polygon", "Tampon", {**a[11], "Uzaklık": "3"}, area=9 * PI)],
                      [HEIGHTS, "1 nesnenin uzaklığı “Yarıçap” alanından sayı olarak okunamadı; alınmadı."], {"count": 2})),
         proc_case("buffer-left", "Tampon, Sol: sağa dönen sokağın solu, dönüşte çeyrek daire, uçları düz", "geometry.buffer",
                   {"input": {"scope": "selection"}, "distance": 1, "side": "left"},
-                  ok("1 nesnenin tamponu yazıldı (1 alan).", "Tampon", [new_layer("Tampon", buf)],
+                  ok("1 nesnenin tamponu yazıldı (1 alan).", "Tampon", [buffer_layer()],
                      [shape("polygon", "Tampon", {**a[8], "Uzaklık": "1"}, area=45 + 60 + PI / 4)], [], {"count": 1}), selection=[8]),
         proc_case("buffer-right", "Tampon, Sağ: sağa dönen sokağın içi, iki şeridin ortak 1 m²'si bir kez (docs/adr/0741)",
                   "geometry.buffer", {"input": {"scope": "selection"}, "distance": 1, "side": "right"},
-                  ok("1 nesnenin tamponu yazıldı (1 alan).", "Tampon", [new_layer("Tampon", buf)],
+                  ok("1 nesnenin tamponu yazıldı (1 alan).", "Tampon", [buffer_layer()],
                      [shape("polygon", "Tampon", {**a[8], "Uzaklık": "1"}, area=45 + 60 - 1)], [], {"count": 1}), selection=[8]),
         proc_case("refuse-buffer-rings", "Eksi uzaklıkla birden çok halka çizilmez", "geometry.buffer",
                   {"input": LAY("parsel"), "distance": -1, "rings": 2},

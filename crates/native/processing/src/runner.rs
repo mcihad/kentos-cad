@@ -1128,6 +1128,7 @@ impl Runner {
             .collect();
         let derivation = makes_layer
             .then(|| derivation_of(host.doc(), tool, values, &inputs, &layers_read, started.0));
+        let sources = sources_of(host.doc(), &inputs);
         let added = match apply(
             host.doc_mut(),
             tool,
@@ -1137,6 +1138,8 @@ impl Runner {
                 above: result.above.as_deref(),
                 made: &result.layers,
                 like: result.like.as_deref(),
+                sources: &sources,
+                declared: &result.fields,
                 derivation: derivation.as_ref(),
             },
             log,
@@ -1243,6 +1246,10 @@ struct Placing<'a> {
     above: Option<&'a str>,
     made: &'a [ToolLayer],
     like: Option<&'a str>,
+    /// The layers of the features inputs' objects, in their order: a new GIS layer takes their fields (docs/adr/1070).
+    sources: &'a [String],
+    /// The fields of the values the tool writes itself (`RunResult::fields`).
+    declared: &'a [kentos_commands::fields::LayerField],
     /// What every layer the run makes was derived from (docs/adr/0633 §2).
     derivation: Option<&'a kentos_commands::LayerDerivation>,
 }
@@ -1302,7 +1309,10 @@ fn derivation_of(
             !v.is_null()
                 && !tool.parameters.iter().any(|p| {
                     p.name == **name
-                        && matches!(p.kind, ParamKind::Features { .. } | ParamKind::Layers { .. })
+                        && matches!(
+                            p.kind,
+                            ParamKind::Features { .. } | ParamKind::Layers { .. }
+                        )
                 })
         })
         .map(|(k, v)| (k.clone(), v.clone()))
@@ -1325,7 +1335,12 @@ fn derivation_of(
 }
 
 /// Writes `derivation` on the layer the run just made, in its undo step.
-fn stamp(doc: &mut Document, id: &str, derivation: Option<&kentos_commands::LayerDerivation>, label: &str) {
+fn stamp(
+    doc: &mut Document,
+    id: &str,
+    derivation: Option<&kentos_commands::LayerDerivation>,
+    label: &str,
+) {
     let Some(d) = derivation else {
         return;
     };
@@ -1349,6 +1364,37 @@ fn look_of(
         .then(|| (node.style.clone(), node.fields.clone()))
 }
 
+/// The layers of the features inputs' objects, each once, in the inputs' order.
+fn sources_of(doc: &Document, inputs: &BTreeMap<String, Input>) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for input in inputs.values() {
+        for &slot in &input.ids {
+            if let Some(e) = doc.get(slot)
+                && !out.iter().any(|l| *l == e.base().layer_id)
+            {
+                out.push(e.base().layer_id.clone());
+            }
+        }
+    }
+    out
+}
+
+/// A new layer of a GIS project typed by what the run writes to it (`key`: its id in the change set) and, when no
+/// layer gave it fields, given the source layers' fields of the values written (docs/adr/1070).
+fn type_layer(
+    doc: &Document,
+    node: &mut NewLayer,
+    key: &str,
+    added: &[Entity],
+    sources: &[String],
+    declared: &[kentos_commands::fields::LayerField],
+) {
+    node.geometry = crate::output_layer::geometry_of(key, added);
+    if node.fields.is_empty() {
+        node.fields = crate::output_layer::fields_of(doc, key, added, sources, declared);
+    }
+}
+
 /// Applies the change set in one undo step named after the tool; locked
 /// layers are left alone and counted. Returns the objects added.
 fn apply(
@@ -1363,8 +1409,15 @@ fn apply(
         above,
         made,
         like,
+        sources,
+        declared,
         derivation,
     } = placing;
+    let gis = crate::output_layer::is_gis(doc);
+    // An existing typed layer is checked before anything is written (docs/adr/1070): the run is refused whole.
+    if let Some(why) = crate::output_layer::misfit(doc, &ch.add) {
+        return Err(why);
+    }
     let mut skipped = 0usize;
     // Removals, then updates, then additions, each as one change.
     let added = doc.transact(&tool.label, |doc| {
@@ -1410,6 +1463,9 @@ fn apply(
                 node.style = style;
                 node.fields = fields;
             }
+            if gis && !t.group {
+                type_layer(doc, &mut node, &t.key, &ch.add, sources, declared);
+            }
             doc.add_layer_at(node, group.as_deref(), index, None, false)
                 .map_err(|r| r.0)?;
             if !t.group {
@@ -1454,6 +1510,9 @@ fn apply(
                     layer.fields = fields;
                 }
                 None => layer.style = plan.style.over(default_style()),
+            }
+            if gis {
+                type_layer(doc, &mut layer, id, &ch.add, sources, declared);
             }
             // Right above or below the layer its plan names (its group, its place), else last;
             // the tool may name it.

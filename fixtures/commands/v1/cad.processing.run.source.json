@@ -140,12 +140,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }
@@ -244,12 +244,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }
@@ -374,12 +374,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }
@@ -470,12 +470,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }
@@ -564,12 +564,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }
@@ -699,12 +699,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }
@@ -800,12 +800,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }
@@ -947,16 +947,16 @@
             "column": "ad"
            },
            {
+            "attribute": "tur",
+            "column": "tur"
+           },
+           {
             "attribute": "kot",
             "column": "kot"
            },
            {
             "attribute": "no",
             "column": "no"
-           },
-           {
-            "attribute": "tur",
-            "column": "tur"
            }
           ]
          }
@@ -1098,16 +1098,16 @@
             "column": "ad"
            },
            {
+            "attribute": "tur",
+            "column": "tur"
+           },
+           {
             "attribute": "kot",
             "column": "kot"
            },
            {
             "attribute": "no",
             "column": "no"
-           },
-           {
-            "attribute": "tur",
-            "column": "tur"
            }
           ]
          }
@@ -1231,12 +1231,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }
@@ -1349,12 +1349,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }
@@ -1476,12 +1476,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "ad",
-            "column": "ad"
-           },
-           {
             "attribute": "kat",
             "column": "kat"
+           },
+           {
+            "attribute": "ad",
+            "column": "ad"
            }
           ]
          }

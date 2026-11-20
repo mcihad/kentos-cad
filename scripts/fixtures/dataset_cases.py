@@ -480,11 +480,19 @@ def describe_cases():
     after_run = {"ids": "$any", "canUndo": True, "canRedo": False, "revision": "changed", "dirty": True}
     same = {"ids": "$any", "canUndo": True, "canRedo": False, "revision": "same", "dirty": True}
 
+    # The buffer's layer takes the parcels' fields of the values it carries and its own Uzaklık (docs/adr/1070).
+    parcels = [x for x in doc["entities"] if x["layerId"] == "parsel"]
+    buffers = [{"layerId": "islem-tampon", "attrs": {**x.get("attrs", {}), "Uzaklık": "2"}} for x in parcels]
+    parsel = next(n for n, _ in leaves(doc["layers"]) if n["id"] == "parsel")
+    carried = [f for f in parsel.get("fields") or [] if any(f["name"] in b["attrs"] for b in buffers)]
+    buffer_dictionary = dictionary(carried + [{"name": "Uzaklık", "kind": "decimal", "unit": "m"}], buffers,
+                                   "islem-tampon")
+
     def made(stale_now, state):
         return {"datasets": [{
             "layer": "islem-tampon", "name": "Tampon", "path": "Tampon", "title": "Tampon", "objects": 3,
             "kinds": {"polygon": 3}, "extent": BUFFERED, "geographic": wgs84(BUFFERED, 5256), "srid": 5256,
-            "crs": crs_title(5256),
+            "crs": crs_title(5256), "dictionary": buffer_dictionary,
             # The values the run took, the tool's defaults filled in (docs/adr/0201 §2), but its features input.
             "derivation": {"tool": "geometry.buffer", "label": "Tampon", "toolVersion": 1,
                            "parameters": {"dissolve": False, "distance": 2, "distanceField": "",

@@ -1,5 +1,4 @@
-//! Tampon (the web's `builtin/geometry/buffer.ts`; docs/adr/0201 §2; Netcad's
-//! Tampon Bölge, ArcGIS Buffer and Multiple Ring Buffer): the places within a
+//! Tampon (the web's `builtin/geometry/buffer.ts`; docs/adr/0201 §2): the places within a
 //! distance of each object, written to the output layer. A point's buffer is
 //! a disc, a segment's a capsule, an arc's a band with discs at its ends, an
 //! area's all of them around its boundary and the area itself; a minus
@@ -7,6 +6,7 @@
 //! with its ends flat; rings are the bands between (k − 1)·d and k·d. The
 //! pieces and their joins are the core's (`ops::geoprocess::buffer`).
 
+use kentos_commands::fields::{LayerField, LayerFieldKind};
 use kentos_geometry_core::ops::geoprocess::buffer::Side;
 use kentos_geometry_core::ops::geoprocess::calls::buffer_run;
 use serde_json::{Value, json};
@@ -228,6 +228,18 @@ fn run(v: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> 
         }),
         outputs: [("count".to_owned(), json!(count))].into_iter().collect(),
         summary: Some(summary),
+        // Its own values are numbers in a GIS project's new layer (docs/adr/1070): a distance in metres, a ring's
+        // place from the object out.
+        fields: vec![
+            LayerField {
+                unit: Some("m".into()),
+                ..LayerField::new("Uzaklık", LayerFieldKind::Decimal)
+            },
+            LayerField {
+                min: Some("1".into()),
+                ..LayerField::new("Halka", LayerFieldKind::Integer)
+            },
+        ],
         ..RunResult::default()
     }
 }

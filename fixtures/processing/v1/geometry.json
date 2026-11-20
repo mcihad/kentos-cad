@@ -197,7 +197,14 @@
        "lineType": "continuous",
        "lineWeight": 0.25,
        "fill": "#0090FF26"
-      }
+      },
+      "fields": [
+       {
+        "name": "Uzaklık",
+        "kind": "decimal",
+        "unit": "m"
+       }
+      ]
      }
     ],
     "addedShapes": [
@@ -278,7 +285,19 @@
        "lineType": "continuous",
        "lineWeight": 0.25,
        "fill": "#0090FF26"
-      }
+      },
+      "fields": [
+       {
+        "name": "Uzaklık",
+        "kind": "decimal",
+        "unit": "m"
+       },
+       {
+        "name": "Halka",
+        "kind": "integer",
+        "min": "1"
+       }
+      ]
      }
     ],
     "addedShapes": [
@@ -343,7 +362,14 @@
        "lineType": "continuous",
        "lineWeight": 0.25,
        "fill": "#0090FF26"
-      }
+      },
+      "fields": [
+       {
+        "name": "Uzaklık",
+        "kind": "decimal",
+        "unit": "m"
+       }
+      ]
      }
     ],
     "addedShapes": [
@@ -436,7 +462,14 @@
        "lineType": "continuous",
        "lineWeight": 0.25,
        "fill": "#0090FF26"
-      }
+      },
+      "fields": [
+       {
+        "name": "Uzaklık",
+        "kind": "decimal",
+        "unit": "m"
+       }
+      ]
      }
     ],
     "addedShapes": [
@@ -507,7 +540,14 @@
        "lineType": "continuous",
        "lineWeight": 0.25,
        "fill": "#0090FF26"
-      }
+      },
+      "fields": [
+       {
+        "name": "Uzaklık",
+        "kind": "decimal",
+        "unit": "m"
+       }
+      ]
      }
     ],
     "addedShapes": [
@@ -558,7 +598,14 @@
        "lineType": "continuous",
        "lineWeight": 0.25,
        "fill": "#0090FF26"
-      }
+      },
+      "fields": [
+       {
+        "name": "Uzaklık",
+        "kind": "decimal",
+        "unit": "m"
+       }
+      ]
      }
     ],
     "addedShapes": [

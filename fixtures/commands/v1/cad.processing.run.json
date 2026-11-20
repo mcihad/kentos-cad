@@ -15234,12 +15234,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "Tür",
-            "column": "Tür"
-           },
-           {
             "attribute": "Uzaklık",
             "column": "Uzaklık"
+           },
+           {
+            "attribute": "Tür",
+            "column": "Tür"
            },
            {
             "attribute": "Yarıçap",
@@ -22837,12 +22837,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "Tür",
-            "column": "Tür"
-           },
-           {
             "attribute": "Uzaklık",
             "column": "Uzaklık"
+           },
+           {
+            "attribute": "Tür",
+            "column": "Tür"
            },
            {
             "attribute": "Yarıçap",
@@ -23878,12 +23878,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "Tür",
-            "column": "Tür"
-           },
-           {
             "attribute": "Uzaklık",
             "column": "Uzaklık"
+           },
+           {
+            "attribute": "Tür",
+            "column": "Tür"
            },
            {
             "attribute": "Yarıçap",
@@ -24909,12 +24909,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "Tür",
-            "column": "Tür"
-           },
-           {
             "attribute": "Uzaklık",
             "column": "Uzaklık"
+           },
+           {
+            "attribute": "Tür",
+            "column": "Tür"
            },
            {
             "attribute": "Yarıçap",
@@ -25979,12 +25979,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "Tür",
-            "column": "Tür"
-           },
-           {
             "attribute": "Uzaklık",
             "column": "Uzaklık"
+           },
+           {
+            "attribute": "Tür",
+            "column": "Tür"
            },
            {
             "attribute": "Yarıçap",
@@ -26087,12 +26087,12 @@
           "replaced": true,
           "columns": [
            {
-            "attribute": "Tür",
-            "column": "Tür"
-           },
-           {
             "attribute": "Uzaklık",
             "column": "Uzaklık"
+           },
+           {
+            "attribute": "Tür",
+            "column": "Tür"
            },
            {
             "attribute": "Yarıçap",
@@ -27128,12 +27128,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "Tür",
-            "column": "Tür"
-           },
-           {
             "attribute": "Uzaklık",
             "column": "Uzaklık"
+           },
+           {
+            "attribute": "Tür",
+            "column": "Tür"
            },
            {
             "attribute": "Yarıçap",
