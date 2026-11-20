@@ -674,6 +674,8 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         }
     };
     let major_every = i64::from(rules.major_every);
+    // Intermediate lines the steep rule left out, counted so that an empty result names the rule, not the interval.
+    let mut dropped = 0usize;
     let mut m = 2.0 * first - 1.0;
     while m <= 2.0 * last + 1.0 {
         let half = m / 2.0;
@@ -682,12 +684,27 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             let z = base + half * interval;
             let major = major_every > 0 && k.rem_euclid(major_every) == 0;
             let found = if major { surface.level_lines(z, &|_| true) } else { surface.level_lines(z, &|t| !steep[t]) };
+            if !major && steep_on && found.is_empty() {
+                dropped += surface.level_lines(z, &|_| true).len();
+            }
             add(z, if major { "major" } else { "minor" }, found, &mut lines);
         } else if aux_on {
             let z = base + half * interval;
             add(z, "auxiliary", surface.level_lines(z, &|t| gentle[t]), &mut lines);
         }
         m += 1.0;
+    }
+    if lines.is_empty() && dropped > 0 {
+        // UR2-010: the surface is cut, but every line was an intermediate one on steep ground.
+        return Err(fail(
+            codes::NO_CONTOURS,
+            format!(
+                "{dropped} ara eğri dik yer kuralıyla elendi: eğri arası paftada {} mm'den az olan yerde yalnız kalın \
+                 eğriler çizilir ve bu aralıkta kalın eğri yok. “Dik yerde yalnız kalın”ı kapatın ya da aralığı büyütün.",
+                rules.steep_below
+            ),
+            "steep",
+        ));
     }
     if lines.is_empty() {
         return Err(no_contours());

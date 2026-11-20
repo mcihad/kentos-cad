@@ -627,3 +627,44 @@ fn screens() {
     snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
     println!("{}", file.display());
 }
+
+/// UR2-010, the report's own surface: a 10 m square at 100 m with its middle at 103 m, 1:1000, 1 m apart. Its slope
+/// (60 %) puts the lines 1.7 mm apart on the sheet, so “Dik yerde yalnız kalın” leaves only the major lines, and none
+/// falls in 100–103: the answer names that rule, not the interval; unticked, the two intermediate lines come.
+#[test]
+fn the_steep_rule_dropping_every_line_is_said_as_such() {
+    let point = |id: u32, x: f64, y: f64, z: f64| {
+        serde_json::json!({"kind": "point", "id": id, "layerId": "zemin", "attrs": {}, "p": {"x": x, "y": y}, "z": z})
+    };
+    let mut setup = cases()["setup"].clone();
+    setup["settings"]["road"] = serde_json::json!({"surfaces": [{"id": "t-1", "name": "Tepe", "points": {"layers": ["zemin"]}}]});
+    setup["entities"] = serde_json::json!([
+        point(1, 0.0, 0.0, 100.0),
+        point(2, 10.0, 0.0, 100.0),
+        point(3, 10.0, 10.0, 100.0),
+        point(4, 0.0, 10.0, 100.0),
+        point(5, 5.0, 5.0, 103.0),
+    ]);
+    setup["uids"] = serde_json::json!((1..=5).map(|n| format!("0192f5c0-1820-7000-8000-0000000002{n:02}")).collect::<Vec<_>>());
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
+    let (mut app, _) = App::boot(None);
+    app.program = Some(Module::Map);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let _ = app.update(Message::Run("terrain.sheetContours"));
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Interval("1".into()))));
+    let why = app.road.sheet_contours.answer.clone().expect("an answer").expect_err("no line with the rule");
+    assert!(why.contains("ara eğri dik yer kuralıyla elendi"), "{why}");
+    assert!(!why.contains("aralığı ya da taban kotunu"), "{why}");
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-010", "dik-yer");
+    }
+    let _ = app.update(Message::Road(road::Event::SheetContours(E::Steep(false))));
+    let plan = app.road.sheet_contours.answer.clone().expect("an answer").expect("lines without the rule");
+    assert_eq!(plan.lines.iter().filter(|l| l.kind == "minor").count(), 2, "{:?}", plan.lines);
+}
