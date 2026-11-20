@@ -837,3 +837,20 @@ fn screens() {
         }
     }
 }
+
+/// UR2-051: the pairs, the solution and the layer to fit are the drawing's: in another drawing opened Vektör
+/// oturtma starts empty, and Uygula writes nothing there.
+#[test]
+fn another_drawing_starts_the_fit_empty() {
+    let mut app = matched();
+    assert!(app.gis.calc.fit.rows.iter().any(|r| !r[0].is_empty()), "pairs matched");
+    calc(&mut app, Calc::Close);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(crate::files_testing::drawing(2))))));
+    let _ = app.run("transform.fit");
+    assert!(app.gis.calc.fit.rows.iter().all(|r| r.iter().all(String::is_empty)), "no pairs from the last drawing");
+    let doc = app.document.as_ref().expect("open");
+    let (count, revision) = (doc.model.len(), doc.model.revision());
+    fit(&mut app, Event::Apply);
+    let doc = app.document.as_ref().expect("open");
+    assert_eq!((doc.model.len(), doc.model.revision()), (count, revision), "nothing written");
+}
