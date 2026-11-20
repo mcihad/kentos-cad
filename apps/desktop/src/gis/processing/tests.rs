@@ -860,3 +860,36 @@ fn a_search_puts_the_tool_named_exactly_first() {
         crate::files_testing::evidence(&mut shot, &app, "gis-015", "en-yakin-tesis-arama");
     }
 }
+
+/// GIS-064–066 (docs/adr/1135): in a geographic project (EPSG:4326) Tampon's 10 m, En yakını bul and Konuma göre seç's
+/// 10 m are refused before they run, the parameter named with the reason and the way out; in a projected project they
+/// are not.
+#[test]
+fn metres_in_a_geographic_project_are_refused_before_the_run() {
+    let open = |srid: u32| {
+        let mut drawing: serde_json::Value =
+            serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
+        drawing["settings"]["srid"] = serde_json::json!(srid);
+        drawing["settings"]["workspace"] = serde_json::json!("gis");
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+        let doc = crate::document::Document::new(snapshot, None).expect("opens");
+        let (mut app, _) = App::boot(None);
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        app
+    };
+    let issue = |app: &mut App, tool: &'static str, values: &[(&str, serde_json::Value)]| -> Option<String> {
+        let _ = app.update(Message::Run(tool));
+        for (k, v) in values {
+            let _ = app.update(Message::Gis(gis::Event::Processing(super::Event::Value((*k).into(), v.clone()))));
+        }
+        let w = app.gis.processing.dialog.as_ref().expect("the window");
+        w.issues.iter().find(|i| i.message.contains("coğrafi")).map(|i| i.message.clone())
+    };
+    let mut wgs = open(4326);
+    let said = issue(&mut wgs, "processing.run.geometry.buffer", &[("distance", serde_json::json!(10))]).expect("Tampon refused");
+    assert!(said.contains("“Uzaklık” metre ister") && said.contains("Koordinat dönüştür"), "{said}");
+    assert!(issue(&mut wgs, "processing.run.proximity.nearest", &[]).is_some(), "En yakını bul refused");
+    assert!(issue(&mut wgs, "processing.run.selection.byLocation", &[("distance", serde_json::json!(10))]).is_some(), "Konuma göre seç refused");
+    let mut tm = open(5256);
+    assert!(issue(&mut tm, "processing.run.geometry.buffer", &[("distance", serde_json::json!(10))]).is_none());
+}

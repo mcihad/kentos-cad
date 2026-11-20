@@ -445,7 +445,9 @@ impl Runner {
     }
 
     pub fn validate(&self, tool: &Tool, values: &Values, doc: &Document) -> Vec<Issue> {
-        validate_with(tool, values, doc.layers(), &doc.settings().networks)
+        let mut issues = validate_with(tool, values, doc.layers(), &doc.settings().networks);
+        issues.extend(metres_in_degrees(tool, values, doc));
+        issues
     }
 
     /// What each features parameter resolves to now ("12 kapalı alan; seçili
@@ -1673,6 +1675,37 @@ pub fn world_layers<'d, 'e>(
                 .find(|l| l.id == *id)
                 .map_or_else(|| (*id).to_owned(), |l| l.name.clone());
             (name, list)
+        })
+        .collect()
+}
+
+/// A distance in metres asked in a geographic project (gis-usage-report GIS-064–066, docs/adr/1135): the drawing's
+/// coordinates are degrees, and the tools measure in the drawing's unit, so a 10 m buffer would reach a thousand
+/// kilometres and a 10 m search would take what is kilometres away. Refused before the run, with the reason and the
+/// way out, never computed in degrees. Each metre parameter given a value other than 0 is one issue.
+fn metres_in_degrees(tool: &Tool, values: &Values, doc: &Document) -> Vec<Issue> {
+    let geographic = kentos_project::systems::own(doc.settings()).is_some_and(|n| n.geographic());
+    if !geographic {
+        return Vec::new();
+    }
+    tool.parameters
+        .iter()
+        .filter(|p| matches!(&p.kind, ParamKind::Number { unit, .. } if unit == "m"))
+        .filter(|p| {
+            let fixed = match &p.default {
+                Some(crate::types::DefaultValue::Value(v)) => Some(v.clone()),
+                _ => None,
+            };
+            let v = values.get(&p.name).cloned().or(fixed);
+            // A proximity tool measures and orders by distance whatever its limit (0: none): refused too.
+            tool.id.starts_with("proximity.") || v.as_ref().and_then(serde_json::Value::as_f64).is_some_and(|n| n != 0.0)
+        })
+        .map(|p| Issue {
+            param: Some(p.name.clone()),
+            message: format!(
+                "Projenin sistemi coğrafi (enlem ve boylam, derece): “{}” metre ister ama bu araç uzaklığı çizimin biriminde, derecede ölçer; sonuç yanlış yere düşerdi. Veriyi Koordinat dönüştür ile metre birimli bir sisteme (TUREF/TM ya da UTM dilimi) taşıyıp orada çalıştırın.",
+                p.label
+            ),
         })
         .collect()
 }
