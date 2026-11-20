@@ -107,6 +107,8 @@ pub(crate) struct Row {
     /// Where an element's value comes from (docs/adr/8106 §5): “Tipten”, its type's; “Örnekten”, its own (an
     /// exception). Written after its cell, quiet; its own in the accent colour.
     pub source: Option<&'static str>,
+    /// The stored figure an edit starts from when `value` shows it rounded (a point's elevation, UR2-015).
+    pub full: Option<String>,
 }
 
 /// An attachment's picture in its row.
@@ -164,8 +166,12 @@ pub(super) fn survey_identity_section(doc: &Document, selected: &[Slot], active:
     } else {
         "Kot (Z)"
     };
-    rows.push(Row::figure(kot, value(EditColumn::Z))
-        .unit(Format::of(doc.settings()).length_unit_label())
+    // Shown at the project's precision, edited from the stored figure (UR2-015: 103,82731135400061 at rest).
+    let format = Format::of(doc.settings());
+    let shown = point.z.map(|z| format.length_bare(z)).unwrap_or_default();
+    rows.push(Row::figure(kot, shown)
+        .full(value(EditColumn::Z))
+        .unit(format.length_unit_label())
         .editor(editable.then_some(Editor::Number(Field::SurveyPoint(slot, EditColumn::Z)))));
     Some(Section { id: "surveyIdentity".into(), title: "Nokta bilgileri".into(), rows })
 }
@@ -226,6 +232,7 @@ impl Row {
             warn: false,
             thumb: None,
             source: None,
+            full: None,
         }
     }
 
@@ -242,6 +249,12 @@ impl Row {
             numeric: true,
             ..Self::text(label, value)
         }
+    }
+
+    /// The stored figure an edit starts from, `value` being its display.
+    fn full(mut self, text: String) -> Self {
+        self.full = Some(text);
+        self
     }
 
     fn unit(mut self, unit: impl Into<Cow<'static, str>>) -> Self {

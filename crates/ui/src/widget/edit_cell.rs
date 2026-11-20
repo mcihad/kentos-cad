@@ -59,6 +59,8 @@ type Paragraph = <Renderer as iced::advanced::text::Renderer>::Paragraph;
 /// Özellik hücresi.
 pub struct EditCell<'a, Message> {
     value: String,
+    /// What an edit starts from when it is not the value shown: the full stored figure behind a rounded one.
+    edit_text: Option<String>,
     on_commit: Box<dyn Fn(String) -> Message + 'a>,
     numeric: bool,
     unit: String,
@@ -76,10 +78,23 @@ impl<'a, Message: Clone + 'a> EditCell<'a, Message> {
                 unit_text(String::new()).into(),
             ],
             value,
+            edit_text: None,
             on_commit: Box::new(on_commit),
             numeric: false,
             unit: String::new(),
         }
+    }
+
+    /// Düzenleme bu metinle başlar, hücre durgunken `value` görünür: yuvarlanmış gösterimin ardındaki tam kayıt
+    /// değeri (kot, koordinat). Değiştirilmeden çıkılırsa hiçbir şey gönderilmez; model yuvarlanmaz.
+    pub fn editing(mut self, text: impl Into<String>) -> Self {
+        self.edit_text = Some(text.into());
+        self
+    }
+
+    /// The text an edit starts from: the full figure, or the value.
+    fn edit_start(&self) -> &str {
+        self.edit_text.as_deref().unwrap_or(&self.value)
     }
 
     /// Sayı: rakamlar eş aralıklı yazılır.
@@ -145,7 +160,7 @@ impl<'a, Message: Clone + 'a> EditCell<'a, Message> {
         state.buffer = if varies(&self.value) {
             String::new()
         } else {
-            self.value.clone()
+            self.edit_start().to_owned()
         };
     }
 }
@@ -382,7 +397,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
         if submitted || blurred {
             // A mixed value left empty is kept as it is (nothing typed for them all).
             let kept = varies(&self.value) && state.buffer.is_empty();
-            if state.buffer != self.value && !kept {
+            if state.buffer != self.edit_start() && !kept {
                 shell.publish((self.on_commit)(state.buffer.clone()));
             }
             finish(state, &mut children[0]);

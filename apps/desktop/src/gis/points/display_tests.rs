@@ -993,3 +993,42 @@ fn shared_inspector_attributes_keep_imported_point_names_in_sync_and_preserve_in
         );
     }
 }
+
+/// UR2-015: a computed elevation shows at the project's precision in Öznitelikler; an edit starts from the stored
+/// figure; opening the cell and leaving it unchanged writes nothing, so neither the value nor the undo history moves.
+#[test]
+fn a_points_elevation_shows_rounded_and_edits_from_its_stored_figure() {
+    use iced::{Point, Size, keyboard::key::Named};
+    use kentos_ui::snapshot::{Input, Snapshot};
+
+    const STORED: f64 = 103.827_311_354_000_61;
+    let mut app = survey_project("cad", "map", serde_json::Value::Null);
+    let mut survey = app.document.as_ref().unwrap().model.to_snapshot();
+    let Entity::Point(point) = &mut survey.entities[1] else {
+        unreachable!()
+    };
+    point.z = Some(STORED);
+    app.show_document(crate::document::Document::new(survey, None).unwrap());
+    app.selection.set([Slot(2)]);
+    let mut snap = Snapshot::new(Size::new(1440., 900.)).unwrap();
+    fn update(app: &mut App, message: Message) {
+        let _ = app.update(message);
+    }
+    snap.settle(&mut app, App::view, &mut update);
+    let shown = app.format().length_bare(STORED);
+    assert!(shown.len() < 10, "rounded: {shown}");
+    crate::files_testing::evidence(&mut snap, &app, "ur2-015", "kot");
+    assert!(!crate::files_testing::find_texts(&mut snap, &app, &shown).is_empty(), "{shown} at rest");
+    assert!(crate::files_testing::find_texts(&mut snap, &app, "103.82731135400061").is_empty());
+    let revision = app.document.as_ref().unwrap().model.revision().to_string();
+    let label = crate::files_testing::find_texts(&mut snap, &app, "Kot (Z)")
+        .into_iter()
+        .max_by(|a, b| a.x.total_cmp(&b.x))
+        .expect("the row");
+    snap.input(&mut app, App::view, &mut update, Input::Click(Point::new(label.x + 214., label.center().y)));
+    snap.input(&mut app, App::view, &mut update, Input::Key(Named::Enter));
+    let doc = &app.document.as_ref().unwrap().model;
+    assert_eq!(doc.revision().to_string(), revision, "nothing written");
+    let Some(Entity::Point(p)) = doc.get(Slot(2)) else { unreachable!() };
+    assert_eq!(p.z, Some(STORED), "the stored figure kept");
+}

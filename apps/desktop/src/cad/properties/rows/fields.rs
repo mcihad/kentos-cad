@@ -153,6 +153,7 @@ pub(super) fn field_rows(
             warn: false,
             thumb: None,
             source: None,
+            full: None,
         });
         if let Err(refused) = checked {
             rows.push(Row {

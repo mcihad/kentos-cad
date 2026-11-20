@@ -501,9 +501,13 @@ impl App {
                 ].spacing(5).align_y(Center).into()
             }
             Some(Editor::Text(field) | Editor::Number(field)) => {
-                EditCell::new(row.value, move |text| {
+                let cell = EditCell::new(row.value, move |text| {
                     Message::Properties(Event::Commit(field.clone(), text))
-                })
+                });
+                match row.full {
+                    Some(full) => cell.editing(full),
+                    None => cell,
+                }
                 .numeric(row.numeric)
                 .unit(unit.map(|u| u.into_owned()).unwrap_or_default())
                 .into()

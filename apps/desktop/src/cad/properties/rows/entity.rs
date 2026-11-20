@@ -1258,6 +1258,7 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                     warn: false,
                     thumb: None,
                     source: None,
+                    full: None,
                 })
                 .collect(),
         });
@@ -1318,6 +1319,7 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                     warn: false,
                     thumb: None,
                     source: None,
+                    full: None,
                 })
                 .collect(),
         });
