@@ -573,7 +573,7 @@ impl App {
                 ),
             );
             // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
-                self.map.pipes_check.answer = None;
+            self.map.pipes_check.answer = None;
             self.dialog = None;
         }
     }
