@@ -489,6 +489,14 @@ impl App {
                 {
                     return self.start_point_calc(def.kind);
                 }
+                // A command named in full that the step does not take runs (UR2-062: tool.select and SEC typed during
+                // Çoklu çizgi were refused as a point): three letters at least, so that a mistyped option letter
+                // never starts another command.
+                if text.chars().count() >= 3
+                    && matches!(crate::typed_names::named(text, self.sheet_tab), crate::typed_names::Named::One(_, false))
+                {
+                    return self.run_typed(text);
+                }
                 let f = self.format();
                 let step = self.session.prompt().step.into_owned();
                 self.warn(

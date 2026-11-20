@@ -490,6 +490,9 @@ mod edge_shift_scenes;
 #[path = "tests/ifraz_scenes.rs"]
 mod ifraz_scenes;
 #[cfg(test)]
+#[path = "tests/select_typed_tests.rs"]
+mod select_typed_tests;
+#[cfg(test)]
 #[path = "tests/edge_shift_bond_scenes.rs"]
 mod edge_shift_bond_scenes;
 #[cfg(test)]
