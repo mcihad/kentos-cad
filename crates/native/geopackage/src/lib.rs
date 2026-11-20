@@ -15,6 +15,7 @@ pub mod foreign;
 pub mod geom;
 pub mod made;
 pub mod relations;
+pub mod schema;
 pub mod styles;
 pub mod tiles;
 pub mod wkt;

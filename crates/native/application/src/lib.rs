@@ -220,6 +220,8 @@ pub mod sld;
 pub mod sources;
 #[path = "gis/geopackage.rs"]
 pub mod geopackage;
+#[path = "gis/gpkg_fields.rs"]
+pub mod gpkg_fields;
 #[path = "core/import_merge.rs"]
 pub mod import_merge;
 #[path = "core/blocks_library.rs"]

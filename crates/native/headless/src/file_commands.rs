@@ -630,6 +630,17 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
             path: Some("layers".into()),
         });
     }
+    // What the written objects break of their fields' rules (docs/adr/1075): said before it is taken as a delivery.
+    if !written.rule_notes.is_empty() {
+        warnings.push(CommandWarning {
+            code: codes::EXPORT_LOSSES.into(),
+            message: format!(
+                "Yazılan nesnelerin bir kısmı alan kurallarına uymuyor: {}.",
+                written.rule_notes.join("; ")
+            ),
+            path: Some("layers".into()),
+        });
+    }
     // What of the layers' indexes the file could not hold as given (docs/adr/0758 §5).
     if !written.index_notes.is_empty() {
         warnings.push(CommandWarning {

@@ -86,6 +86,7 @@ mod array_assoc;
 mod arrays_adopt;
 mod arrays_find;
 mod audit_cmd;
+mod gpkg_field_rules;
 mod gpkg_tiles_files;
 mod gpkg_tiles_timing;
 mod import_robust;

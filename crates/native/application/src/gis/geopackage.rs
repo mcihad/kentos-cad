@@ -870,6 +870,8 @@ pub fn read_in(
         let hints = field_hints(&gp, &layer.name)?;
         let mut table =
             table_of_rows_hinted(&layer, &rows, &uids, &|fid| row_uid(&name, fid), &hints)?;
+        // The fields' rules the file keeps: KentOS's own document, else the schema extension (docs/adr/1075).
+        crate::gpkg_fields::take_rules(&gp, &layer.name, &mut table.fields)?;
         // The table's indexes (docs/adr/0758 §5); one that cannot be read is no index of the layer.
         let read = gp.indexes(&layer.name).unwrap_or_default();
         table.indexes = layer_indexes_of(&layer.name, &table.fields, &read);
@@ -1068,6 +1070,10 @@ pub(crate) fn layer_indexes_of(
     let most = kentos_commands::MAX_NAME;
     let mut out: Vec<kentos_commands::LayerIndex> = Vec::new();
     for x in read {
+        // KentOS's unique index of a Tekil field is the field's rule, not an index of the layer (docs/adr/1075).
+        if x.name.starts_with("kentos_tekil_") {
+            continue;
+        }
         let Some(keys) = x
             .columns
             .iter()
@@ -1169,6 +1175,8 @@ pub struct Written {
     pub profile: crate::gpkg_profile::ProfileWritten,
     /// What of the layers' indexes the file could not hold as given (docs/adr/0758 §5).
     pub index_notes: Vec<String>,
+    /// What the written objects break of their fields' rules, a line a field (docs/adr/1075).
+    pub rule_notes: Vec<String>,
 }
 
 fn c2(p: &kentos_commands::Vec2, z: Option<f64>, m: Option<f64>) -> Coord {
@@ -1705,6 +1713,26 @@ fn write_indexes(
             ));
         }
     }
+    // A Tekil field is a unique index another program keeps (docs/adr/1075), unless an index of the layer says it
+    // already; the rows breaking it leave it plain and say so.
+    for f in node.fields.iter().filter(|f| f.unique) {
+        let Some(i) = p.keys.iter().position(|a| *a == f.name) else {
+            continue;
+        };
+        let column = p.columns[i].name.clone();
+        let said = node.indexes.iter().any(|x| x.unique && x.fields.len() == 1 && x.fields[0] == f.key());
+        if said {
+            continue;
+        }
+        let name = format!("kentos_tekil_{}_{}", p.table, column);
+        let written = session.create_index(&p.table, &name, &[column], true)?;
+        if !written.unique {
+            notes.push(format!(
+                "“{}” tablosunun tekil “{}” alanı tekil dizin olarak yazılamadı: değerler yineleniyor; düz dizin yazıldı",
+                p.table, f.name
+            ));
+        }
+    }
     Ok(made)
 }
 
@@ -1770,6 +1798,8 @@ pub fn write_with_tables(
     session.add_srs(&srs)?;
     let mut out = Written::default();
     let (plans, text_plans) = plan(doc, layers, tables, session, clash, &mut out)?;
+    let written_layers: Vec<String> = plans.iter().map(|p| p.layer.clone()).collect();
+    out.rule_notes = crate::gpkg_fields::rule_breaks(doc, &written_layers);
     let total: u64 = plans.iter().map(|p| u64::from(p.rows)).sum::<u64>()
         + text_plans.iter().map(|p| p.rows as u64).sum::<u64>();
     let mut done = 0u64;
@@ -2018,6 +2048,17 @@ fn plan(
             if &c.name != k {
                 out.renamed
                     .push((node.name.clone(), k.clone(), c.name.clone()));
+            }
+        }
+        // A required field every object fills is a NOT NULL column (docs/adr/1075): another program keeps it so.
+        for (c, k) in columns.iter_mut().zip(&keys) {
+            let required = node.fields.iter().any(|f| f.name == *k && f.required);
+            if required
+                && doc
+                    .by_layer_with_uids(&id)
+                    .all(|(_, e)| e.base().attrs.get(k).is_some_and(|v| !v.trim().is_empty()))
+            {
+                c.not_null = true;
             }
         }
         let (table, replaces) = table_name(&node.name, "katman", &mut names, session, clash)?;

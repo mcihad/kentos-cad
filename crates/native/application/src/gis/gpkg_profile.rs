@@ -139,6 +139,13 @@ pub fn write_profile(
             gp.add_metadata(&t.table, DERIVATION_STANDARD, "application/json", &text, made)
                 .map_err(|e| e.0)?;
         }
+        // The fields' rules (docs/adr/1075): KentOS's whole document, and the schema extension for other programs.
+        if let Some(text) = crate::gpkg_fields::rules_document(&node.fields, &t.columns) {
+            gp.add_metadata(&t.table, crate::gpkg_fields::RULES_STANDARD, "application/json", &text, made)
+                .map_err(|e| e.0)?;
+        }
+        let (columns, rules) = crate::gpkg_fields::schema_rows(&t.table, &node.fields, &t.columns);
+        gp.write_schema(&columns, &rules).map_err(|e| e.0)?;
         if let Some(text) = crate::geopackage::field_document(&node.fields, &t.columns) {
             gp.add_metadata(
                 &t.table,
