@@ -1046,12 +1046,19 @@ impl App {
 /// layer (docs/adr/0599 §4) picked and named.
 fn took_read(w: &mut Window, c: Connecting) {
     let offer = c.offer().cloned();
+    // The collections whose tile sets could not be read, said beside the offer (GIS-058).
+    let failed = c.collections_failed().to_vec();
     w.connecting = Some(c);
     if let Some(o) = offer {
+        let left = if failed.is_empty() {
+            String::new()
+        } else {
+            format!(" Karo kümesi okunamayan koleksiyonlar: {}.", failed.join(", "))
+        };
         w.said = Some((
-            Kind::Ok,
+            if failed.is_empty() { Kind::Ok } else { Kind::Warn },
             format!(
-                "{}: {} katman.",
+                "{}: {} katman.{left}",
                 if o.title.is_empty() {
                     "Servis okundu".to_owned()
                 } else {

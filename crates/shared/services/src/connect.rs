@@ -111,6 +111,8 @@ enum Stage {
     Vector,
     /// An OGC API document of unknown kind: a landing page, collections, a list of tile sets or one.
     OgcAny,
+    /// Each collection's tile sets' list still to read (GIS-058).
+    OgcCollections,
     /// The tile sets' own documents and matrix sets still to read.
     OgcSets,
     Done,
@@ -131,6 +133,10 @@ pub struct Connecting {
     sets: Vec<(TileSet, Option<MatrixSet>)>,
     /// What is still to be asked for an OGC set: (set, its own document) or (set, its matrix set).
     queue: VecDeque<(usize, bool, String)>,
+    /// The collections whose tile sets' lists are still to read (GIS-058): its title and the list's address; and
+    /// the collections whose list could not be read, by title.
+    collections: VecDeque<(String, String)>,
+    collections_failed: Vec<String>,
     /// The request whose answer comes next.
     asked: Option<String>,
     offer: Option<Offer>,
@@ -168,6 +174,8 @@ impl Connecting {
             arcgis: None,
             vector: None,
             sets: Vec::new(),
+            collections: VecDeque::new(),
+            collections_failed: Vec::new(),
             queue: VecDeque::new(),
             asked: None,
             offer: None,
@@ -293,6 +301,23 @@ impl Connecting {
                 Ok(None)
             }
             Stage::OgcAny => self.read_ogc(body, &asked),
+            // A collection's tile sets (GIS-058): each named after its collection when there are several, then the next
+            // collection; a list that cannot be read leaves the others.
+            Stage::OgcCollections => {
+                let (title, _) = self.collections.pop_front().unwrap_or_default();
+                match ogc::tile_sets(body, &asked) {
+                    Ok(sets) => self.sets.extend(sets.into_iter().map(|mut set| {
+                        set.title = if set.title.is_empty() || set.title == title {
+                            title.clone()
+                        } else {
+                            format!("{title} — {}", set.title)
+                        };
+                        (set, None)
+                    })),
+                    Err(_) => self.collections_failed.push(title),
+                }
+                self.next_collection()
+            }
             Stage::OgcSets => {
                 let Some((i, own, _)) = self.queue.pop_front() else {
                     return self.finish_ogc();
@@ -606,11 +631,21 @@ impl Connecting {
             return self.queue_ogc();
         }
         if v["collections"].is_array() {
+            // Every collection with tile sets, not the first only (GIS-058).
             let list = ogc::collections(body, asked)?;
-            let Some(tiles) = list.iter().find_map(|c| c.tiles.clone()) else {
+            self.collections = list
+                .iter()
+                .filter_map(|c| {
+                    let title = if c.title.is_empty() { c.id.clone() } else { c.title.clone() };
+                    c.tiles.clone().map(|t| (title, t))
+                })
+                .collect();
+            if self.collections.is_empty() {
                 return Err("Koleksiyonların hiçbirinin karo kümesi yok.".into());
-            };
-            return Ok(Some(self.ask(with_params(&tiles, &[("f", "json")]))));
+            }
+            self.sets.clear();
+            self.stage = Stage::OgcCollections;
+            return self.next_collection();
         }
         let page = ogc::landing(body, asked)?;
         let next = ogc::link(&page.links, &["tilesets-map", "tilesets-vector", "tiles"])
@@ -618,6 +653,26 @@ impl Connecting {
             .map(|l| l.href.clone())
             .ok_or("Sayfada karo kümesi ya da koleksiyon bağlantısı yok.")?;
         Ok(Some(self.ask(with_params(&next, &[("f", "json")]))))
+    }
+
+    /// The next collection's tile sets' list, or, all read, the sets' own documents (GIS-058).
+    fn next_collection(&mut self) -> Result<Option<Request>, String> {
+        if let Some((_, url)) = self.collections.front() {
+            let url = url.clone();
+            return Ok(Some(self.ask(with_params(&url, &[("f", "json")]))));
+        }
+        if self.sets.is_empty() {
+            return Err(format!(
+                "Koleksiyonların karo kümesi listeleri okunamadı ({}).",
+                self.collections_failed.join(", ")
+            ));
+        }
+        self.queue_ogc()
+    }
+
+    /// The collections whose tile sets could not be read, by title (GIS-058): said beside the offer.
+    pub fn collections_failed(&self) -> &[String] {
+        &self.collections_failed
     }
 
     fn ask(&mut self, url: String) -> Request {
@@ -1114,5 +1169,48 @@ pub fn empty(kind: ServiceKind) -> ServiceLayer {
         connection: None,
         preset: None,
         bbox: None,
+    }
+}
+
+#[cfg(test)]
+mod collection_tests {
+    use super::*;
+
+    fn tile_sets(title: &str, path: &str) -> String {
+        serde_json::json!({ "tilesets": [{
+            "title": title, "dataType": "map", "tileMatrixSetURI": "http://www.opengis.net/def/tilematrixset/OGC/1.0/WebMercatorQuad",
+            "links": [{ "rel": "item", "type": "image/png", "templated": true,
+                "href": format!("https://ornek.org/ogc/collections/{path}/map/tiles/WebMercatorQuad/{{tileMatrix}}/{{tileRow}}/{{tileCol}}") }]
+        }]})
+        .to_string()
+    }
+
+    /// GIS-058 (docs/adr/1117): from the root's collections every collection's tile sets are read, not the first's
+    /// only: Park zemini and Bisiklet yolu both offered; a collection whose list cannot be read is left and named.
+    #[test]
+    fn every_collection_s_tile_sets_are_offered() {
+        let (mut c, first) = Connecting::start(ServiceKind::OgcTiles, "https://ornek.org/ogc/collections").expect("starts");
+        assert!(first.is_some());
+        let collections = serde_json::json!({ "collections": [
+            { "id": "park", "title": "Park zemini", "links": [{ "rel": "http://www.opengis.net/def/rel/ogc/1.0/tilesets-map",
+                "href": "https://ornek.org/ogc/collections/park/map/tiles" }] },
+            { "id": "yol", "title": "Bisiklet yolu", "links": [{ "rel": "http://www.opengis.net/def/rel/ogc/1.0/tilesets-map",
+                "href": "https://ornek.org/ogc/collections/yol/map/tiles" }] },
+            { "id": "bozuk", "title": "Bozuk", "links": [{ "rel": "http://www.opengis.net/def/rel/ogc/1.0/tilesets-map",
+                "href": "https://ornek.org/ogc/collections/bozuk/map/tiles" }] }
+        ]})
+        .to_string();
+        let mut next = c.answer(&collections).expect("collections read");
+        let mut answers = vec![tile_sets("WebMercatorQuad", "park"), tile_sets("WebMercatorQuad", "yol"), "<html>".to_owned()];
+        answers.reverse();
+        while next.is_some() {
+            let Some(body) = answers.pop() else { break };
+            next = c.answer(&body).expect("read");
+        }
+        let offer = c.offer().expect("an offer");
+        let titles: Vec<&str> = offer.items.iter().map(|i| i.title.as_str()).collect();
+        assert_eq!(titles, ["Park zemini — WebMercatorQuad", "Bisiklet yolu — WebMercatorQuad"], "{titles:?}");
+        assert_eq!(offer.pickable, 2);
+        assert_eq!(c.collections_failed(), ["Bozuk"]);
     }
 }
