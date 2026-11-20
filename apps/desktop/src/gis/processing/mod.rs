@@ -54,6 +54,8 @@ mod generate_tests;
 #[cfg(test)]
 mod geometry_tests;
 #[cfg(test)]
+mod input_layer_tests;
+#[cfg(test)]
 mod hydrology_tests;
 #[cfg(test)]
 mod interpolation_tests;
@@ -427,6 +429,7 @@ impl App {
         });
         let mut window =
             ToolDialog::new(tool, stored.as_ref(), explicit, &Defaults::of(&doc.model));
+        window.propose_layers(&doc.model, stored.as_ref());
         window.reread_files();
         window.environment = self.gis.processing.environment.clone();
         window.takes_environment = self.processing_takes_environment(&window.tool);
@@ -619,6 +622,7 @@ impl App {
                 if let (Some(doc), Some(window)) = (&self.document, &mut self.gis.processing.dialog)
                 {
                     window.reset(&Defaults::of(&doc.model));
+                    window.propose_layers(&doc.model, None);
                 }
             }
             e => {

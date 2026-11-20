@@ -688,6 +688,8 @@ impl Runner {
         let mut new_layers: BTreeMap<String, NewLayerPlan> = BTreeMap::new();
         // What resolving the inputs left out, said once the run starts.
         let mut notes: Vec<String> = Vec::new();
+        // Every input that cannot run is said in one go (GIS-014): the user mends them all at once.
+        let mut stopped: Vec<Issue> = Vec::new();
         {
             let scene: &dyn Scene = host;
             let doc = scene.doc();
@@ -714,16 +716,15 @@ impl Runner {
                         if locked > 0 {
                             entities.retain(|e| !is_locked(e));
                             if entities.is_empty() && !p.optional && !is_ids {
-                                return Prepared::Done(Outcome::Invalid {
-                                    issues: vec![Issue {
+                                stopped.push(Issue {
                                         param: Some(p.name.clone()),
                                         message: format!(
                                             "“{}”: {} hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın.",
                                             p.label,
                                             locked_where(&fv.scope)
                                         ),
-                                    }],
-                                });
+                                    });
+                                continue;
                             }
                             notes.push(format!(
                                 "“{}”: {locked} nesne kilitli katmanda olduğu için işleme alınmadı.",
@@ -734,12 +735,11 @@ impl Runner {
                         // empty output passed along a model is not, nor an input that may be empty (a
                         // layer a run may only add to, docs/adr/0216 §3).
                         if entities.is_empty() && !p.optional && !p.allow_empty && !is_ids {
-                            return Prepared::Done(Outcome::Invalid {
-                                issues: vec![Issue {
-                                    param: Some(p.name.clone()),
-                                    message: empty_input_message(&p.label, &fv.scope),
-                                }],
+                            stopped.push(Issue {
+                                param: Some(p.name.clone()),
+                                message: empty_input_message(&p.label, &fv.scope),
                             });
+                            continue;
                         }
                         inputs.insert(
                             p.name.clone(),
@@ -768,15 +768,14 @@ impl Runner {
                         }
                         let count: usize = taken.iter().map(|l| l.entities.len()).sum();
                         if count == 0 && !p.optional {
-                            return Prepared::Done(Outcome::Invalid {
-                                issues: vec![Issue {
-                                    param: Some(p.name.clone()),
-                                    message: format!(
-                                        "“{}”: seçilen katmanlarda uygun nesne yok.",
-                                        p.label
-                                    ),
-                                }],
+                            stopped.push(Issue {
+                                param: Some(p.name.clone()),
+                                message: format!(
+                                    "“{}”: seçilen katmanlarda uygun nesne yok.",
+                                    p.label
+                                ),
                             });
+                            continue;
                         }
                         layer_inputs.insert(
                             p.name.clone(),
@@ -816,6 +815,9 @@ impl Runner {
                     _ => {}
                 }
             }
+        }
+        if !stopped.is_empty() {
+            return Prepared::Done(Outcome::Invalid { issues: stopped });
         }
         // This program runs a tool here or on its own thread (the web's worker);
         // the server and PostGIS are elsewhere.

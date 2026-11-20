@@ -296,6 +296,45 @@ impl ToolDialog {
         }
     }
 
+    /// The features inputs left at their default, the active layer, when it holds none of the kinds the input takes:
+    /// the first layer in the tree that does instead (gis-usage-report GIS-014, docs/adr/1080). Each input is
+    /// proposed on its own and stays changeable; one the user or history gave is left as it is.
+    pub fn propose_layers(&mut self, doc: &kentos_domain::Document, given: Option<&Values>) {
+        use std::collections::{BTreeSet, HashMap};
+        let mut held: HashMap<&str, BTreeSet<&'static str>> = HashMap::new();
+        let mut taken = false;
+        for p in &self.tool.parameters {
+            let ParamKind::Features { kinds: Some(kinds), .. } = &p.kind else {
+                continue;
+            };
+            if kinds.is_empty() || given.is_some_and(|g| g.contains_key(&p.name)) {
+                continue;
+            }
+            let Some(v) = self.values.get(&p.name) else {
+                continue;
+            };
+            if v.get("scope").and_then(|s| s.as_str()) != Some("layer") {
+                continue;
+            }
+            if !taken {
+                for e in doc.entities() {
+                    held.entry(e.base().layer_id.as_str()).or_default().insert(e.kind());
+                }
+                taken = true;
+            }
+            let holds = |id: &str| held.get(id).is_some_and(|k| k.iter().any(|k| kinds.iter().any(|w| w == k)));
+            let now = v.get("layerId").and_then(|l| l.as_str()).unwrap_or("");
+            if holds(now) {
+                continue;
+            }
+            if let Some(fit) = doc.layers().leaves().iter().find(|n| holds(&n.id)) {
+                let mut next = v.clone();
+                next["layerId"] = serde_json::Value::String(fit.id.clone());
+                self.values.insert(p.name.clone(), next);
+            }
+        }
+    }
+
     /// Varsayılanlar: every field back to its default.
     pub fn reset(&mut self, defaults: &Defaults) {
         // It waits while a run is going (the web's footer disables it).
