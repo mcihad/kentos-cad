@@ -43,7 +43,7 @@ pub struct SheetRow {
 }
 
 /// The atlas's definition as the window edits it (`Atlas`).
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Definition {
     /// The coverage layer: 0 none, then the layers in order.
     pub layer: usize,
@@ -787,7 +787,22 @@ impl App {
                 .style(style::container::bordered),
         );
         let mut lines = Vec::new();
+        // A definition changed but not applied (GIS-030): the pages are the applied one's, so its warnings (an empty
+        // coverage) are not said over the choice on screen; the summary asks for Tanımı uygula, its button beside it.
+        let applied = Definition::of(s.sheets.get(s.sheet).and_then(|r| r.atlas.as_ref()), &s.layers);
+        let pending = s.definition != applied;
+        if pending {
+            lines.push(words::text_line(
+                Line::Warn,
+                if s.definition.layer == 0 {
+                    "Kapsam katmanı seçilmedi: sayfalar için bir katman seçin."
+                } else {
+                    "Atlas tanımı değişti: sayfaları bu tanımla hesaplamak için Tanımı uygula'ya basın."
+                },
+            ));
+        }
         let ready = match &s.plan {
+            _ if pending => false,
             Ok(p) => {
                 lines.push(words::text_line(
                     Line::Ok,
@@ -955,8 +970,19 @@ impl App {
             said.push('.');
             lines.push(words::text_line(if count(AtlasPageState::Same) == c.pages.len() { Line::Ok } else { Line::Info }, said));
         }
-        preview = preview.push(words::summary(lines)).push(previous);
-        if let Ok(p) = &s.plan {
+        preview = preview.push(words::summary(lines));
+        if pending {
+            preview = preview.push(
+                row![
+                    words::primary("Tanımı uygula", Some(event(Event::Apply))),
+                    label::caption("Paftaya yazılır; Pafta kipinde Geri al ile alınır."),
+                ]
+                .spacing(10)
+                .align_y(iced::Center),
+            );
+        }
+        preview = preview.push(previous);
+        if let (Ok(p), false) = (&s.plan, pending) {
             let mut pages = Column::new().spacing(2).push(
                 row![
                     container(label::caption("Sayfa")).width(48),

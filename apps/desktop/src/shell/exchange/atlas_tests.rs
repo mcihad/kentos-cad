@@ -451,3 +451,26 @@ fn update_screens() {
         println!("{}", file.display());
     }
 }
+
+/// GIS-030: a coverage chosen but not applied says so, not the applied definition's empty coverage, and offers Tanımı
+/// uygula beside it; applied, the pages come and the line goes.
+#[test]
+fn a_chosen_coverage_not_applied_says_so_beside_its_button() {
+    let mut app = app_with_atlas();
+    run(&mut app, "file.export.atlas");
+    send(&mut app, Event::Atlas(A::Sheet(1)));
+    let layer = window(&app).layers.iter().position(|(id, _)| id == "parsel").expect("the parcel layer") + 1;
+    send(&mut app, Event::Atlas(A::Layer(layer)));
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, "Atlas tanımı değişti: sayfaları bu tanımla hesaplamak için Tanımı uygula'ya basın.").is_some(),
+        "the pending definition is said"
+    );
+    assert!(crate::files_testing::find_texts(&mut shot, &app, "Tanımı uygula").len() >= 2, "a button beside the line");
+    crate::files_testing::evidence(&mut shot, &app, "gis-030", "atlas-uygulanmamis-tanim");
+    send(&mut app, Event::Atlas(A::Apply));
+    assert!(window(&app).plan.as_ref().is_ok_and(|p| !p.pages.is_empty()));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    assert!(crate::files_testing::find_text(&mut shot, &app, "Atlas tanımı değişti: sayfaları bu tanımla hesaplamak için Tanımı uygula'ya basın.").is_none());
+}
