@@ -85,6 +85,12 @@ pub(crate) fn work(
         if let Some(p) = progress {
             p.set(n as u64, chosen.len() as u64);
         }
+        // An atlas sheet is read page by page in each page's context, as the atlas's PDF draws it (GIS-031): its
+        // maps' places and its @atlas_ fields come from the page; what is still missing is said with the page.
+        if book.sheet(id).is_some_and(|sh| sh.atlas.is_some()) {
+            atlas_issues(&copy, &book, id, &render, input.drawing.as_deref(), &user, &date, &mut issues)?;
+            continue;
+        }
         let findings =
             kentos_plot::preflight::inspect(&copy, &book, id, &render, input.drawing.as_deref())
                 .map_err(|e| refuse(&e.code, e.message, "sheets"))?;
@@ -154,6 +160,98 @@ pub(crate) fn work(
         issues,
     })
 }
+/// The sheets' preflight on `doc` at once, with no progress to tell (a test's, a script's).
+pub fn preflight(doc: &Document, input: &PreflightSheets) -> Result<SheetsPreflighted, Refused> {
+    work(doc, input, None)
+}
+
+/// The pages most read of an atlas in one preflight; past them the rest are said not read.
+const MOST_ATLAS_PAGES: usize = 200;
+
+/// An atlas sheet's issues (GIS-031, docs/adr/1090): its pages planned as the atlas's PDF plans them, each read in its
+/// own context; a finding is said once with the pages it is on, an error when it is one on any page.
+#[allow(clippy::too_many_arguments)]
+fn atlas_issues(
+    doc: &Document,
+    book: &kentos_sheet::model::SheetBook,
+    id: &str,
+    render: &kentos_sheet::display::RenderInputs,
+    drawing: Option<&str>,
+    user: &str,
+    date: &str,
+    issues: &mut Vec<SheetPublishIssue>,
+) -> Result<(), Refused> {
+    let asked = kentos_plot::atlas::AtlasInput {
+        sheet: id,
+        fields: None,
+        theme: None,
+        time: None,
+        crs: None,
+        pin: None,
+        coverage: kentos_commands::AtlasCoverage::Drawing,
+        user,
+        date,
+    };
+    let planned = match kentos_plot::atlas::plan(doc, &asked) {
+        Ok(p) => p,
+        Err(e) => {
+            issues.push(SheetPublishIssue {
+                sheet: id.to_owned(),
+                code: e.code,
+                message: format!("Atlas paftası: {}", e.message),
+                fix: "Atlas tanımını Atlası PDF yap penceresinde düzeltin.".into(),
+                error: true,
+            });
+            return Ok(());
+        }
+    };
+    let pages = planned.page_contexts();
+    let mut said: Vec<(String, String, String, bool, Vec<String>)> = Vec::new();
+    for (name, page) in pages.iter().take(MOST_ATLAS_PAGES) {
+        let mut on_page = render.clone();
+        on_page.atlas = Some(page.clone());
+        let findings = kentos_plot::preflight::inspect(doc, book, id, &on_page, drawing)
+            .map_err(|e| refuse(&e.code, e.message, "sheets"))?;
+        for f in findings {
+            let error = f.severity == kentos_sheet::preflight::Severity::Error || f.code == "map_unplaced";
+            match said.iter_mut().find(|s| s.0 == f.code && s.1 == f.message) {
+                Some(s) => {
+                    s.3 |= error;
+                    s.4.push(name.clone());
+                }
+                None => said.push((f.code, f.message, f.fix, error, vec![name.clone()])),
+            }
+        }
+    }
+    issues.push(SheetPublishIssue {
+        sheet: id.to_owned(),
+        code: "atlas_sheet".into(),
+        message: format!(
+            "Atlas paftası: {} sayfa, her biri kendi nesnesi ve alanlarıyla denetlendi{}.",
+            pages.len(),
+            if pages.len() > MOST_ATLAS_PAGES {
+                format!(" (ilk {MOST_ATLAS_PAGES} sayfa)")
+            } else {
+                String::new()
+            }
+        ),
+        fix: String::new(),
+        error: false,
+    });
+    for (code, message, fix, error, on) in said {
+        let shown: Vec<String> = on.iter().take(3).map(|n| format!("“{n}”")).collect();
+        let more = if on.len() > 3 { format!(" ve {} sayfa daha", on.len() - 3) } else { String::new() };
+        issues.push(SheetPublishIssue {
+            sheet: id.to_owned(),
+            code,
+            message: format!("{message} (sayfa {}{more})", shown.join(", ")),
+            fix,
+            error,
+        });
+    }
+    Ok(())
+}
+
 pub(crate) fn run(
     doc: &Document,
     input: &PreflightSheets,

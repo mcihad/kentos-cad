@@ -62,7 +62,7 @@ pub mod recover;
 #[cfg(feature = "mod-gis")]
 pub mod regulation;
 mod sheet_resources;
-mod sheet_preflight;
+pub mod sheet_preflight;
 mod delivery_integrity;
 /// The delivery package's open files and their losses (docs/adr/2780).
 pub mod package_exchange;

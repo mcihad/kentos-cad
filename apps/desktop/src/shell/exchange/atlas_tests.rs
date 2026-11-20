@@ -474,3 +474,25 @@ fn a_chosen_coverage_not_applied_says_so_beside_its_button() {
     shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
     assert!(crate::files_testing::find_text(&mut shot, &app, "Atlas tanımı değişti: sayfaları bu tanımla hesaplamak için Tanımı uygula'ya basın.").is_none());
 }
+
+/// GIS-031 (docs/adr/1090): the sheets' preflight reads an atlas sheet page by page, each in its own context as the
+/// atlas's PDF draws it: its atlas maps are placed and its @atlas_ fields resolved; it says it is an atlas and how many
+/// pages it read, and a value really missing is said with the pages it is on.
+#[test]
+fn the_preflight_reads_an_atlas_page_by_page() {
+    let app = app_with_atlas();
+    let doc = &app.document.as_ref().expect("open").model;
+    let sheets = doc.sheets().expect("a book");
+    let (book, _) = kentos_sheet::project::read_project_sheets(sheets).expect("reads");
+    let atlas = book.sheets.iter().find(|s| s.atlas.is_some()).map(|s| s.id.clone()).expect("an atlas sheet");
+    let input = kentos_commands::PreflightSheets { drawing: None, sheets: Some(vec![atlas.clone()]), dpi: None };
+    let checked = kentos_headless::sheet_preflight::preflight(doc, &input).expect("checked");
+    let codes: Vec<(&str, bool)> = checked.issues.iter().map(|i| (i.code.as_str(), i.error)).collect();
+    assert!(codes.iter().any(|(c, e)| *c == "atlas_sheet" && !e), "{codes:?}");
+    assert!(!codes.iter().any(|(c, _)| *c == "map_unplaced"), "the atlas maps are placed on each page: {codes:?}");
+    // The atlas's own fields resolve on each page; a value the fixture really lacks (@kaynak) is an error said with
+    // its pages.
+    assert!(checked.issues.iter().all(|i| !i.message.contains("@atlas_")), "{:?}", checked.issues);
+    let missing = checked.issues.iter().find(|i| i.code == "value_missing").expect("the fixture's missing @kaynak");
+    assert!(missing.error && missing.message.contains("(sayfa “"), "{}", missing.message);
+}

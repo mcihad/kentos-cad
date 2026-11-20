@@ -393,6 +393,15 @@ fn carried(
 
 /// Plans an atlas: the pages, the pin and the bindings, with no file made (what a plan answers and what the
 /// desktop's window previews). Refuses in the order the command's capabilities list.
+impl AtlasPlanned {
+    /// Each page's name and the context its sheet is drawn in (its object, its maps' places, its fields), as the
+    /// atlas's PDF draws it: what the sheets' preflight reads an atlas sheet with, page by page (GIS-031,
+    /// docs/adr/1090).
+    pub fn page_contexts(&self) -> Vec<(String, display::AtlasPageInput)> {
+        self.pages.iter().map(|p| p.name.clone()).zip(self.plan.iter().cloned()).collect()
+    }
+}
+
 pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, AtlasError> {
     let Some(kept) = doc.sheets() else {
         return Err(AtlasError::new(
