@@ -299,3 +299,27 @@ fn screens_heights() {
         println!("{}", file.display());
     }
 }
+
+/// UR2-039: the same drawing with its cloud's file not where it says: the preview says the source could not be read
+/// and keeps the classes chosen, instead of saying no point passed the filter.
+#[test]
+fn a_missing_cloud_file_is_said_as_such() {
+    let (mut app, _) = App::boot(None);
+    let text = std::fs::read_to_string(fixtures().join("commands/v1/road.terrains.cloud.json")).expect("cases");
+    let cases: serde_json::Value = serde_json::from_str(&text).expect("JSON");
+    let whole = cases["setup"].to_string().replace("$fixture:", "/olmayan/klasor/");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(&whole).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let _ = app.update(Message::Run("terrain.cloud"));
+    send(&mut app, W::Field(0, "2".into()));
+    send(&mut app, W::Layer("zemin".into()));
+    send(&mut app, W::Class(2));
+    send(&mut app, W::Preview);
+    let why = match &app.road.terrain_cloud_window.as_ref().expect("open").preview {
+        Some(Err(why)) => why.clone(),
+        other => panic!("refused: {other:?}"),
+    };
+    assert!(why.starts_with("Bulutun kaynağı okunamadı, nokta okunmadı"), "{why}");
+    assert!(!why.contains("sınıfları, dönüşü ya da alanı denetleyin"), "{why}");
+}

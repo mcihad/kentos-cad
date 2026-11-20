@@ -354,6 +354,22 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
         Err(stop) => return stop.into(),
     };
     let mut thinned = thinner.finish();
+    // No record read at all because the sources could not be read (UR2-039: a linked LAZ not beside the drawing was
+    // said to have no ground points): the file is named, the classes are not blamed.
+    if scanned == 0
+        && let Some(unread) = warnings.iter().find(|w| w.code == codes::CLOUD_SOURCE_UNREADABLE)
+    {
+        return fail(
+            codes::FILE_NOT_FOUND,
+            format!(
+                "Bulutun kaynağı okunamadı, nokta okunmadı: {} Dosyayı yerine koyun ya da bulutun kaynağını yeniden \
+                 bağlayın; sınıf ve dönüş seçimleri kalır.",
+                unread.message
+            ),
+            "clouds",
+        )
+        .into();
+    }
     if thinned.read == 0 {
         return fail(
             codes::CLOUD_GROUND_EMPTY,
