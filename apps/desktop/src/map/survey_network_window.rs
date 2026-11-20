@@ -411,7 +411,14 @@ impl App {
         let Some(campaign) = self.survey_campaign() else { return };
         let operation = Op::Baselines { campaign, file: path.to_string_lossy().into_owned() };
         if let Some(out) = self.map_survey_edit(operation) {
-            self.say(Level::Success, format!("{} baz arşive alındı.", out.records.len()));
+            // The records are the new baselines (`bz-`) and the file's sessions (`bo-`), counted apart (UR2-018).
+            let baselines = out.records.iter().filter(|r| r.starts_with("bz-")).count();
+            let sessions = out.records.iter().filter(|r| r.starts_with("bo-")).count();
+            let words = match sessions {
+                0 => format!("{baselines} baz arşive alındı."),
+                n => format!("{baselines} baz ve {n} baz oturumu arşive alındı."),
+            };
+            self.say(Level::Success, words);
         }
         self.survey_network_run();
     }

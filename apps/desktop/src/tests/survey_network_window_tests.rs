@@ -136,6 +136,9 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
         .join("../../fixtures/map-survey/v1/ag.gvx");
     app.survey_network_file(gvx);
     assert_eq!(survey(&app).baselines.len(), 8);
+    // UR2-018: the eight baselines and the file's one session, counted apart, as the archive counts them.
+    let said = app.log.lines().last().map(|l| l.text.clone()).unwrap_or_default();
+    assert_eq!(said, "8 baz ve 1 baz oturumu arşive alındı.");
     let why = app
         .map
         .survey_network
