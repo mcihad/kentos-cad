@@ -172,3 +172,27 @@ Kurallar:
 - Gerçek pencerede: Option+Q ile “@12,0” yazıldı; duvar 12 m çizildi ve ardından göreli noktalarla kapandı.
 
 **Web:** ertelendi (ADR 0228; TODOS.md §0.2).
+
+## Güncelleme (20 Kasım 2026): Çizgi'nin Bitir'i aracı kapatır
+
+**Bulgu (kullanım raporu 2, UR2-001):** Çizgi'de iki noktadan sonra sağ tık › Bitir zinciri bitiriyordu, ama araç açık
+kalıyordu. Kullanıcı yeni çizgisini seçmek için ortasına tıkladı; tık ikinci bir zincirin ilk noktası oldu. Menü “Bitir”
+diyordu, sonuç “yeni zincire başla”ydı.
+
+**Karar:**
+
+- Çizgi zinciri en az bir çizgi yazmışsa Enter, Boşluk, kısa sağ tık (seçilmişse) ya da menünün Bitir'i zinciri bitirir
+  ve aracı kapatır. Sonraki tık seçer.
+- Boşta Enter ya da Boşluk Çizgi'yi yeniden açar; art arda bağımsız çizgiler böyle çizilir.
+- Tek noktayla onay hiçbir şey yazmaz; araç yeni ilk noktayı bekler. Noktasız onay araçtan çıkar.
+- Kapat (K) zinciri ilk noktaya kapatır; araç açık kalır.
+- Öbür araçların onayı değişmedi (yukarıdaki tablo).
+
+**Doğrulama:**
+
+- `line::every_segment_is_its_own_object_and_undo_step`.
+- `drawing_menus::tests::bitir_in_the_menu_ends_the_line_and_the_next_click_selects_it`: iki tık, sağ tık, menünün
+  Bitir'i ve çizginin ortasına tık pencerenin kendi bileşenlerinden geçer; nesne sayısı aynı kalır, çizgi seçilir.
+- `line-chain`, `point-calc`, `arc-variants` ve `usage-blocks-view` izleri yeni davranışı bekler.
+
+**Web:** ertelendi (ADR 0228; TODOS.md §0.2).

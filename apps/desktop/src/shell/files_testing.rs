@@ -153,6 +153,19 @@ pub fn usage_shots(ur: &str, name: &str, prepare: impl Fn() -> App) {
     }
 }
 
+/// A picture of the window as a test leaves it, for the owner: written only when `KENTOS_SHOTS` is set, into
+/// `.run/gui-evidence/<folder>/<name>.png` (not committed). `KENTOS_SHOTS=1 cargo test … <test>` takes them.
+pub fn evidence(snapshot: &mut kentos_ui::snapshot::Snapshot, app: &App, folder: &str, name: &str) {
+    if std::env::var_os("KENTOS_SHOTS").is_none() {
+        return;
+    }
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!("../../.run/gui-evidence/{folder}"));
+    std::fs::create_dir_all(&out).expect("a folder");
+    let file = out.join(format!("{name}.png"));
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
+}
+
 /// Where a text is drawn: the first widget showing exactly `caption`.
 pub fn find_text(
     snapshot: &mut kentos_ui::snapshot::Snapshot,

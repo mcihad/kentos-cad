@@ -291,12 +291,16 @@ impl Tool for Line {
         }
     }
 
+    /// Enter, Space or the menu's Bitir: a chain that wrote lines ends and the tool closes, so the next click selects
+    /// (UR2-001); Enter in an idle drawing opens Çizgi again (docs/adr/0018). A single point with no line yet is let go
+    /// and the tool waits for a new first point; with no point it leaves.
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
         if self.pts.is_empty() {
             return Flow::Exit;
         }
+        let wrote = !self.created.is_empty();
         self.finish(cx);
-        Flow::Stay
+        if wrote { Flow::Exit } else { Flow::Stay }
     }
 
     /// Ctrl+Z while the tool runs (ADR 0018): newest first, its own Geri (G),

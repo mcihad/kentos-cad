@@ -896,6 +896,49 @@ mod tests {
         );
     }
 
+    /// UR2-001: Çizgi's two points, a right click and the menu's Bitir, clicked through the window's own widgets: the
+    /// menu closes at one click, the tool leaves, and the next click on the new line selects it (no second chain).
+    #[test]
+    fn bitir_in_the_menu_ends_the_line_and_the_next_click_selects_it() {
+        use iced::Size;
+        use kentos_ui::snapshot::{Input, Snapshot};
+
+        let mut app = app_with_drawing();
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let area = app.viewport.bounds;
+        let screen = |x: f32, y: f32| Point::new(area.x + area.width * x, area.y + area.height * y);
+        let count = |app: &App| app.document.as_ref().map_or(0, |d| d.model.len());
+        let _ = app.update(Message::Run("tool.line"));
+        let (a, b) = (screen(0.30, 0.12), screen(0.50, 0.12));
+        for at in [a, b] {
+            snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
+        }
+        let lines = count(&app);
+        snapshot.input(&mut app, App::view, &mut update, Input::RightClick(b));
+        assert_eq!(app.drawing_menu.map(|m| m.kind), Some(Kind::Command));
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-001", "1-menu");
+        // The menu's Bitir, beside the pointer (the command line's chip says Bitir too).
+        let bitir = crate::files_testing::find_texts(&mut snapshot, &app, "Bitir")
+            .into_iter()
+            .min_by(|p, q| (p.center().y - b.y).abs().total_cmp(&(q.center().y - b.y).abs()))
+            .expect("the menu's Bitir");
+        snapshot.input(&mut app, App::view, &mut update, Input::Click(bitir.center()));
+        assert!(app.drawing_menu.is_none(), "one click closes the menu");
+        assert!(!app.session.is_running(), "Bitir leaves the tool");
+        assert_eq!(count(&app), lines, "the menu's click drew nothing");
+        let middle = Point::new((a.x + b.x) / 2.0, a.y);
+        snapshot.input(&mut app, App::view, &mut update, Input::Click(middle));
+        assert_eq!(count(&app), lines, "no second chain began");
+        assert_eq!(app.selection.ids().len(), 1, "the new line is selected");
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-001", "2-secildi");
+        let picked = app.document.as_ref().unwrap().model.get(app.selection.ids()[0]).map(|e| e.kind());
+        assert_eq!(picked, Some("line"));
+    }
+
     #[test]
     fn the_menu_names_the_enter_action_of_the_current_move_stage() {
         use kentos_domain::Slot;

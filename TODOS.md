@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- Kullanım raporu 2'nin masaüstü düzeltmeleri (`usage-reporting-2.md`): UR2-001'de Çizgi'nin Bitir'i (Enter, kısa sağ tık,
+  menü) zinciri bitirip aracı kapatır ([ADR 0018](docs/adr/0018-tool-session-and-input.md) güncellemesi); web'in çizgi
+  aracı hâlâ açık kalır, `line-chain`, `point-calc`, `arc-variants`, `usage-blocks-view` izleri yeni davranışı bekler.
 - Yangın ve performans ([ADR 8068](docs/adr/8068-fire-performance-material-declarations.md), `cad.arch.performance`):
   web'e dönüşte komutun işleyicisi (`product/`), Öznitelikler'in Yangın dayanımı ve Acil çıkış satırları, Duvar stilleri
   alanı; TS sözleşmeleri üretildi (`Declared`, `DeclaredBasis`, `DeclaredExit`, `ArchPerformance` …); `.kcad` mimari verisi

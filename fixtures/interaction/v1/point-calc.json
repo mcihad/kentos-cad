@@ -186,6 +186,6 @@
       "expect": {"points": 0, "entities": 14, "canUndo": true, "prompt": "Hat üzerinde nokta: hattın başlangıcı (A) gösterin"}
     },
     {"key": "Esc", "expect": {"tool": "line", "points": 8, "entities": 14, "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]"}},
-    {"key": "Enter", "note": "Enter zinciri bitirir: her hesaplanan nokta bir çizgi verdi.", "expect": {"tool": "line", "points": 0, "entities": 14, "log": "success"}}
+    {"key": "Enter", "note": "Enter zinciri bitirir ve aracı kapatır: her hesaplanan nokta bir çizgi verdi.", "expect": {"tool": "select", "entities": 14, "log": "success"}}
   ]
 }

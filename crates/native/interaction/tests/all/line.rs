@@ -55,11 +55,9 @@ fn every_segment_is_its_own_object_and_undo_step() {
         [(Level::Success, "2 çizgi eklendi.")],
         "the web's message"
     );
-    assert_eq!(
-        (b.session.tool_id(), b.points()),
-        ("line", 0),
-        "ready for the next chain"
-    );
+    // Bitir ends the tool (UR2-001): the next click selects, Enter in the idle drawing opens Çizgi again.
+    assert!(!b.session.is_running(), "back to selecting");
+    assert_eq!(b.session.last(), Some("line"), "Enter repeats it");
     assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
     assert_eq!(b.doc.len(), 1, "one step took one line back");
     assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));

@@ -42,7 +42,8 @@
     { "key": "Enter", "note": "Komut yokken Enter son komutu yeniden başlatır.", "expect": { "tool": "line", "points": 0 } },
     { "click": [0, -15] },
     { "click": [10, -15], "expect": { "points": 2, "entities": 4 } },
-    { "rightClick": [10, -15], "note": "Kısa sağ tık Enter'dır: zincir biter, araç açık kalır.", "expect": { "tool": "line", "points": 0, "entities": 4, "log": "success" } },
+    { "rightClick": [10, -15], "note": "Kısa sağ tık Enter'dır: zincir biter, araç kapanır; sonraki tık seçer (UR2-001).", "expect": { "tool": "select", "entities": 4, "log": "success" } },
+    { "key": "Enter", "note": "Komut yokken Enter Çizgi'yi yeniden açar.", "expect": { "tool": "line", "points": 0 } },
     { "click": [0, -20], "expect": { "points": 1 } },
     { "key": "Enter", "note": "Tek noktayla onay hiçbir şey yazmaz; araç ilk noktaya döner.", "expect": { "tool": "line", "points": 0, "entities": 4 } },
     { "rightClick": [0, -20], "note": "Taslak boşken sağ tık komuttan çıkar.", "expect": { "tool": "select", "entities": 4 } }

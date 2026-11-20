@@ -23,7 +23,7 @@
     { "click": [0, -1.5], "expect": { "entities": 13, "newest": { "kind": "line", "points": [[-10, -1.5], [0, -1.5]] } } },
     { "move": [10, -1.5], "expect": { "snap": "insertion" } },
     { "click": [10, -1.5], "note": "Her parça ayrı çizgidir.", "expect": { "entities": 14, "newest": { "kind": "line", "points": [[0, -1.5], [10, -1.5]] } } },
-    { "key": "Enter", "note": "Enter zinciri bitirir, araç yeni zincire hazırdır.", "expect": { "tool": "line", "points": 0, "entities": 14 } },
+    { "key": "Enter", "note": "Enter zinciri bitirir ve aracı kapatır.", "expect": { "tool": "select", "entities": 14 } },
     { "key": "Esc", "expect": { "tool": "select" } },
     { "shot": "kanal" },
     { "click": [-6, 4.8], "note": "Batıdaki direğin temeli tıklanır.", "expect": { "selected": [7] } },

@@ -36,7 +36,7 @@
     { "run": "tool.line" },
     { "click": [-25, -15] },
     { "click": [-15, -15] },
-    { "key": "Enter", "expect": { "entities": 5, "tool": "line" } },
+    { "key": "Enter", "expect": { "entities": 5, "tool": "select" } },
     { "run": "tool.arc", "expect": { "options": ["M", "D"] } },
     { "key": "D", "note": "Son çizginin ucundan, doğrultusuna teğet.", "expect": { "points": 1, "options": [] } },
     { "move": [-15, -5], "note": "Önizleme: çizgiye teğet devam eden yay." },
