@@ -215,6 +215,8 @@ pub mod find_replace;
 mod format {
     pub use kentos_project::format::*;
 }
+#[path = "map/ifraz.rs"]
+pub mod ifraz;
 #[path = "map/gnss.rs"]
 pub mod gnss;
 #[path = "core/grip_edit.rs"]

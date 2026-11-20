@@ -14,7 +14,7 @@ use kentos_interaction::{
     View, ViewChange,
 };
 
-const EMPTY: &str = include_str!("../../../../../fixtures/interaction/v1/empty.kcad");
+pub const EMPTY: &str = include_str!("../../../../../fixtures/interaction/v1/empty.kcad");
 pub const E: f64 = 487000.0;
 pub const N: f64 = 4420000.0;
 

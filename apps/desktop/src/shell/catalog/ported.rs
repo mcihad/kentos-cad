@@ -213,6 +213,8 @@ pub const PORTED: &[&str] = &[
     "calc.stakeout",
     // UR2-053: the scene tool's id and its APL open Aplikasyon (gis/calc/mod.rs).
     "tool.stakeout",
+    // İfraz (docs/adr/1069): crates/native/interaction/src/map/ifraz.rs.
+    "tool.subdivide",
     "calc.traverse",
     "calc.polar",
     "calc.fieldbook",

@@ -487,6 +487,9 @@ mod standard_install;
 #[path = "tests/edge_shift_scenes.rs"]
 mod edge_shift_scenes;
 #[cfg(test)]
+#[path = "tests/ifraz_scenes.rs"]
+mod ifraz_scenes;
+#[cfg(test)]
 #[path = "tests/edge_shift_bond_scenes.rs"]
 mod edge_shift_bond_scenes;
 #[cfg(test)]

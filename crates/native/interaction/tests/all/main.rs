@@ -42,6 +42,7 @@ mod explode_density;
 mod feature_export;
 mod fencing;
 mod find_replace;
+mod ifraz;
 mod gnss;
 mod grip_modes;
 mod grips;

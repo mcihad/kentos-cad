@@ -921,6 +921,10 @@
         "size": "small"
        },
        {
+        "command": "tool.subdivide",
+        "size": "small"
+       },
+       {
         "command": "parcels.check",
         "size": "small"
        },
