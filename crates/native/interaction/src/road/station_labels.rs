@@ -298,6 +298,34 @@ impl StationLabels {
             Level::Success,
             format!("{LABEL}: {count} istasyon yazıldı."),
         );
+        // By measure, a stretch whose corners have no M stays without stations (UR2-043: Sürdür's 7.619 m past the
+        // last measured corner went unsaid): its length is said, so the last km is not taken for the route's end.
+        if self.measuring()
+            && let Some(kentos_commands::Entity::Polyline(p)) = cx.doc.get(route.slot)
+            && let Some(ms) = &p.ms
+        {
+            let n = p.pts.len().min(ms.len());
+            let seg = |i: usize| ((p.pts[i + 1].x - p.pts[i].x).powi(2) + (p.pts[i + 1].y - p.pts[i].y).powi(2)).sqrt();
+            let first = ms[..n].iter().position(Option::is_some);
+            let last = ms[..n].iter().rposition(Option::is_some);
+            if let (Some(first), Some(last)) = (first, last) {
+                let head: f64 = (0..first).map(seg).sum();
+                let tail: f64 = (last..n.saturating_sub(1)).map(seg).sum();
+                let f = cx.format();
+                for (len, side) in [(head, "başındaki"), (tail, "sonundaki")] {
+                    if len > 1e-9 {
+                        cx.say(
+                            Level::Warn,
+                            format!(
+                                "{LABEL}: güzergâhın {side} {} ölçüsüz (köşelerinde M yok), istasyon yazılmadı; son istasyon \
+                                 güzergâhın ucu değil. Bu köşelere M verin ya da Ölçü'yü (M) kapatıp geometrik uzunlukla yazın.",
+                                f.length(len)
+                            ),
+                        );
+                    }
+                }
+            }
+        }
         self.drop_route();
         self.plan = None;
         self.seen = None;
