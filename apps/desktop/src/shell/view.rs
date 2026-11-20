@@ -330,6 +330,7 @@ impl App {
             Asking::CleanReport => self.clean_report_view(),
             Asking::OpenReport => self.open_report_view(),
             Asking::ExchangeCheck => self.exchange_check_view(),
+            Asking::OverlapLayers => self.overlap_layers_view(),
             Asking::CatalogReport => self.catalog_report_view(),
             Asking::XrefAttach => self.xref_attach_view(),
             Asking::LayerPurge => self.layer_purge_view(),

@@ -244,7 +244,7 @@ pub(crate) fn area_rules(cx: &mut Context<'_>, layer: &str) -> Option<kentos_com
     if avoid.is_empty() && cx.draft.overlap == crate::tool::Overlap::Layers {
         cx.say(
             Level::Warn,
-            "Seçili katmanlarda önle kipinde seçili katman yok: alan olduğu gibi yazıldı. Katmanları Çakışma hücresinin menüsünden seçin.",
+            "Seçili katmanlarda önle kipinde seçili katman yok: katmanlar arası çakışma denetlenmedi. Katmanları Çakışma hücresinin menüsünden ya da şeritteki Seçili katmanlarda önle'den seçin.",
         );
     }
     let rules = kentos_commands::AreaRules {

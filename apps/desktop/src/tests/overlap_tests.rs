@@ -183,3 +183,39 @@ fn screens() {
         }
     }
 }
+
+/// GIS-050 (docs/adr/1107): Seçili katmanlarda önle chosen from the ribbon with no layer opens its layers at once,
+/// saying none is chosen; ticking two says two; Tamam goes back to the drawing with them. Chosen again with layers,
+/// it asks nothing. Picture `gis-050-katmanlar`.
+#[test]
+fn the_ribbon_s_layered_mode_asks_its_layers() {
+    let mut app = crate::files_testing::app_with_drawing();
+    assert!(app.overlap_layers.is_empty());
+    let _ = app.run("draft.overlap.layers");
+    assert_eq!(app.draft.overlap, Overlap::Layers);
+    assert_eq!(app.dialog, Some(crate::app::Dialog::OverlapLayers), "the layers asked");
+    let ids: Vec<String> = app
+        .document
+        .as_ref()
+        .expect("open")
+        .model
+        .layers()
+        .leaves()
+        .iter()
+        .take(2)
+        .map(|n| n.id.clone())
+        .collect();
+    for id in &ids {
+        let _ = app.update(Message::OverlapLayer(id.clone()));
+    }
+    assert_eq!(app.overlap_layers, ids);
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    let said = format!("{} katman seçili: yeni bir alan bu katmanların alanlarıyla çakışan yerinden kırpılır.", ids.len());
+    assert!(crate::files_testing::find_text(&mut shot, &app, &said).is_some(), "{said}");
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-050-katmanlar");
+    let _ = app.update(Message::OverlapLayersDone);
+    assert_eq!(app.dialog, None);
+    let _ = app.run("draft.overlap.layers");
+    assert_eq!(app.dialog, None, "layers chosen: nothing asked");
+}

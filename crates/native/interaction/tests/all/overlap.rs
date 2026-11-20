@@ -136,7 +136,7 @@ fn seçili_katmanlarda_with_no_layer_chosen_says_so_and_writes_the_area() {
     draw(&mut b, "polygon", &SIDE);
     assert_eq!(newest_ring(&b), SIDE);
     let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
-    assert!(said.contains(&"Seçili katmanlarda önle kipinde seçili katman yok: alan olduğu gibi yazıldı. Katmanları Çakışma hücresinin menüsünden seçin."), "{said:?}");
+    assert!(said.contains(&"Seçili katmanlarda önle kipinde seçili katman yok: katmanlar arası çakışma denetlenmedi. Katmanları Çakışma hücresinin menüsünden ya da şeritteki Seçili katmanlarda önle'den seçin."), "{said:?}");
 }
 
 #[test]

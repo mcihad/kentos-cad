@@ -900,6 +900,12 @@ impl App {
             Message::Recovery(event) => return self.recovery_event(event),
             Message::ServerChecked(answer) => self.server_checked(answer),
             Message::OverlapLayer(id) => self.toggle_overlap_layer(id),
+            Message::OverlapLayersMode => self.choose_overlap(kentos_interaction::Overlap::Layers),
+            Message::OverlapLayersDone => {
+                if self.dialog == Some(crate::app::Dialog::OverlapLayers) {
+                    self.dialog = None;
+                }
+            }
             Message::CycleTo(index) => {
                 self.selection.cycle_to(index);
                 self.say_sub_object();

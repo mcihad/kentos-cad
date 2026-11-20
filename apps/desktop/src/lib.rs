@@ -166,6 +166,8 @@ mod pipes_check_window;
 mod pipes_check_rules;
 #[path = "shell/exchange_check_window.rs"]
 mod exchange_check_window;
+#[path = "shell/overlap_layers_window.rs"]
+mod overlap_layers_window;
 #[path = "map/asbuilt_window.rs"]
 mod asbuilt_window;
 #[path = "map/asbuilt_trend.rs"]

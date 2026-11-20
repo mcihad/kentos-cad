@@ -273,6 +273,8 @@ pub enum Dialog {
     OpenReport,
     /// Dışa aktarma kaybı denetimi (exchange_check_window.rs, docs/adr/1660); its state is `App::exchange_check`.
     ExchangeCheck,
+    /// Seçili katmanlarda önle's layers (overlap_layers_window.rs, GIS-050); the layers are `App::overlap_layers`.
+    OverlapLayers,
     /// Katalog geçiş raporu (catalog_report_window.rs, docs/adr/4940); its state is `App::catalog_report`.
     CatalogReport,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
@@ -694,6 +696,10 @@ pub enum Message {
     ServerChecked(Result<kentos_commands::Health, String>),
     /// A layer ticked or unticked on the Çakışma cell's menu (docs/adr/0162 §1).
     OverlapLayer(String),
+    /// Seçili katmanlarda önle's window closed (overlap_layers_window.rs, GIS-050).
+    OverlapLayersDone,
+    /// Seçili katmanlarda önle from the Çakışma cell's menu: the mode alone, its layers beside it in the menu.
+    OverlapLayersMode,
     /// Sıradakini seç's list: the chip's candidate to choose (docs/adr/0187 §1).
     CycleTo(usize),
     /// The candidate the pointer rests on in that list: highlighted in the drawing.

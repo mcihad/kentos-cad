@@ -486,7 +486,12 @@ impl App {
             ("draft.overlap.layers", "Seçili katmanlarda önle"),
         ] {
             let command = catalog().get(id);
-            let on_press = command.and_then(enabled);
+            // The layers are in this menu (GIS-050): Seçili katmanlarda önle here sets the mode without asking them.
+            let on_press = if id == "draft.overlap.layers" {
+                command.and_then(enabled).map(|_| Message::OverlapLayersMode)
+            } else {
+                command.and_then(enabled)
+            };
             menu = menu.radio(label, self.checked(id).unwrap_or(false), on_press);
             if let Some(c) = command {
                 menu = menu.icon(c.icon);

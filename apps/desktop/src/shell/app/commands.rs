@@ -206,7 +206,8 @@ impl App {
             }
             "draft.overlap.allow" => self.choose_overlap(kentos_interaction::Overlap::Allow),
             "draft.overlap.layer" => self.choose_overlap(kentos_interaction::Overlap::Layer),
-            "draft.overlap.layers" => self.choose_overlap(kentos_interaction::Overlap::Layers),
+            // GIS-050: the layers asked at once when none is chosen.
+            "draft.overlap.layers" => self.choose_overlap_layers(),
             "draft.snap" => self.toggle_session("drafting.snap", "Kenetleme"),
             "draft.grid" => self.toggle_session("drafting.grid", "Izgara"),
             // The styled drawing's view choices (style/, docs/adr/0090).

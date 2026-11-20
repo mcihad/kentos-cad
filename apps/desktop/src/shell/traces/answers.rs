@@ -260,6 +260,7 @@ impl App {
                 crate::pipes_check_window::TITLE.to_owned()
             }
             Dialog::ExchangeCheck => crate::exchange_check_window::TITLE.to_owned(),
+            Dialog::OverlapLayers => crate::overlap_layers_window::TITLE.to_owned(),
             Dialog::Map(map::MapDialogKind::Asbuilt) => crate::asbuilt_window::TITLE.to_owned(),
             Dialog::Road(road::RoadDialogKind::ProjectGraph) => {
                 crate::project_graph_window::TITLE.to_owned()
