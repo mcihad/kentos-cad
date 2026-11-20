@@ -29,6 +29,9 @@ pub struct Parked {
     views: ViewHistory,
     /// Its Etkin kat and Kat görünümü (docs/adr/0720 §2).
     level: (crate::active_level::Chosen, kentos_interaction::level_view::LevelView),
+    /// Its Hesap windows' tables, solutions and names (UR2-049: one drawing's levelling went on in the next), its
+    /// window closed.
+    calc: crate::calc::Calc,
 }
 
 /// The drawings set aside, and where the one on screen stands among them.
@@ -128,6 +131,7 @@ impl App {
                 std::mem::take(&mut self.arch.active_level),
                 std::mem::take(&mut self.level_view),
             ),
+            calc: std::mem::take(&mut self.gis.calc).set_aside(),
         };
         let at = self.doc_tabs.at.min(self.doc_tabs.parked.len());
         self.doc_tabs.parked.insert(at, parked);
@@ -150,10 +154,11 @@ impl App {
         }
         // Parking put the drawing on screen at `at - 1`: the one asked for shifted when it stood after.
         let index = if k_parked >= self.doc_tabs.at - 1 { k_parked + 1 } else { k_parked };
-        let Parked { document, camera, selection, views, level } = self.doc_tabs.parked.remove(index);
+        let Parked { document, camera, selection, views, level, calc } = self.doc_tabs.parked.remove(index);
         self.doc_tabs.at = index;
         let name = document.display_name().into_owned();
         self.show_document(document);
+        self.gis.calc = calc;
         self.viewport.camera = camera;
         self.selection = selection;
         self.view_history = views;
@@ -189,9 +194,10 @@ impl App {
         };
         match next {
             Some(index) => {
-                let Parked { document, camera, selection, views, level } = self.doc_tabs.parked.remove(index);
+                let Parked { document, camera, selection, views, level, calc } = self.doc_tabs.parked.remove(index);
                 self.doc_tabs.at = index;
                 self.show_document(document);
+                self.gis.calc = calc;
                 self.viewport.camera = camera;
                 self.selection = selection;
                 self.view_history = views;

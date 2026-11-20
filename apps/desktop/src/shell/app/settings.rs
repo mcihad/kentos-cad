@@ -254,6 +254,10 @@ impl App {
         self.info_card = None;
         self.networks_reset();
         self.address_reset();
+        // Hesap's tables, solutions and the names they are kept under are the drawing's (UR2-049: a levelling's
+        // rows and name wrote another project's N2): another drawing starts them empty, its window closed; a tab
+        // brought in front gets its own back (doc_tabs.rs).
+        self.calc_reset();
         self.spatial.reload(&doc.model);
         self.viewport.opened(&doc, self.spatial.extent());
         // The views left belong to the drawing they were left on (docs/adr/0141).

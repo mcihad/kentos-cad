@@ -190,6 +190,13 @@ pub struct Calc {
 }
 
 impl Calc {
+    /// Set aside with its drawing (UR2-049): the tables and solutions stay, the window and a pick are left.
+    pub(crate) fn set_aside(mut self) -> Self {
+        self.open = None;
+        self.picking = None;
+        self
+    }
+
     /// A window's measurements table; Kestirme has none.
     fn table(&mut self, window: Window) -> Option<&mut dyn Table> {
         match window {
@@ -328,6 +335,14 @@ impl App {
         self.dialog = Some(Asking::Gis(gis::GisDialogKind::Calc));
         // The adjustments are solved again on the drawing as it is now.
         self.network_solve();
+    }
+
+    /// Another drawing on screen (UR2-049): Hesap's forms start again and its window closes.
+    pub(crate) fn calc_reset(&mut self) {
+        self.gis.calc = Calc::default();
+        if matches!(self.dialog, Some(Asking::Gis(gis::GisDialogKind::Calc))) {
+            self.dialog = None;
+        }
     }
 
     pub(crate) fn calc_event(&mut self, e: Event) -> Task<Message> {
