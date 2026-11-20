@@ -5300,6 +5300,601 @@
    ]
   },
   {
+   "name": "İkinci çalıştırma: aynı noktalardan çizilmiş diziler yeniden yazılmaz, söylenir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "hv-kn",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "hv-rog",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 500030.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500030.0,
+        "y": 4400010.0
+       }
+      ],
+      "zs": [
+       851.0,
+       851.0,
+       851.0,
+       851.0
+      ],
+      "id": 18,
+      "layerId": "hv-bna",
+      "attrs": {
+       "Kod": "BNA"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400012.0
+       }
+      ],
+      "zs": [
+       850.3,
+       850.4,
+       850.5
+      ],
+      "id": 19,
+      "layerId": "hv-brd",
+      "attrs": {
+       "Kod": "BRD1"
+      }
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400022.0
+       }
+      ],
+      "id": 20,
+      "layerId": "hv-brd",
+      "attrs": {
+       "Kod": "BRD2"
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011",
+     "0192f5c0-1360-7000-8000-000000000012",
+     "0192f5c0-1360-7000-8000-000000000013",
+     "0192f5c0-1360-7000-8000-000000000014"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "kontrol-noktasi",
+         "title": "Kontrol noktası",
+         "layer": "hv-kn",
+         "points": 1,
+         "moved": 0,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "rogar",
+         "title": "Rögar",
+         "layer": "hv-rog",
+         "points": 1,
+         "moved": 0,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "agac",
+         "title": "Ağaç",
+         "layer": "hv-agc",
+         "points": 2,
+         "moved": 0,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "bordur",
+         "title": "Bordür",
+         "layer": "hv-brd",
+         "points": 5,
+         "moved": 0,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "bina-izi",
+         "title": "Bina izi",
+         "layer": "hv-bna",
+         "points": 4,
+         "moved": 0,
+         "lines": 0,
+         "areas": 0
+        }
+       ],
+       "revision": "$current",
+       "unknown": [
+        {
+         "code": "XYZ",
+         "points": 1
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "string_already_drawn",
+        "message": "3 dizi zaten çizilmiş (aynı noktalardan, aynı kodla, aynı katmanda); yeniden yazılmadı."
+       },
+       {
+        "code": "unknown_code",
+        "message": "“XYZ” kodu “harita-varliklari” profilinin hiçbir sınıfında yok; 1 nokta olduğu gibi bırakıldı."
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
    "name": "Kodlu nokta yok",
    "setup": {
     "format": "kentos.document",

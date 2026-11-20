@@ -281,6 +281,35 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
             finish(s, false, &mut makes, &mut rows, &mut short, &mut unclosed);
         }
     }
+    // UR2-022: a string drawn before from the same points, code and class (its layer, its geometry, its code field)
+    // is not written again; its count leaves the class's, and the plan says so. Another object that only looks alike
+    // (no code, another code) is not one.
+    let before = makes.len();
+    makes.retain(|(layer, geometry, token)| {
+        let drawn = doc.layer_slots(layer).filter_map(|(_, slot)| doc.get(slot)).any(|e| {
+            e.base().attrs.get(&field) == Some(token)
+                && crate::geometry::entity_of(geometry, e.base().clone()) == *e
+        });
+        if drawn
+            && let Some(r) = rows.iter().position(|r| r.layer == *layer && (r.lines > 0 || r.areas > 0))
+        {
+            match geometry {
+                EntityGeometry::Polygon { .. } if rows[r].areas > 0 => rows[r].areas -= 1,
+                _ if rows[r].lines > 0 => rows[r].lines -= 1,
+                _ => rows[r].areas = rows[r].areas.saturating_sub(1),
+            }
+        }
+        !drawn
+    });
+    if makes.len() < before {
+        warnings.push(warning(
+            codes::STRING_ALREADY_DRAWN,
+            format!(
+                "{} dizi zaten çizilmiş (aynı noktalardan, aynı kodla, aynı katmanda); yeniden yazılmadı.",
+                before - makes.len()
+            ),
+        ));
+    }
     for (layer, _, _) in &makes {
         if layers.is_locked(layer) {
             return Err(fail(

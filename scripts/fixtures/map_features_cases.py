@@ -225,10 +225,33 @@ def code_points(d, uids=None, field="Kod"):
     for key in opened:
         if key in strings:
             finish(key, False)
+    # UR2-022: a string already drawn (the same class layer, the same code field, the same geometry) is not written
+    # again; the first class row of that layer with a count gives one up.
+    drawn_before = 0
+    kept = []
+    for lid, g, token in makes:
+        same = any(x.get("layerId") == lid and x.get("attrs", {}).get(field) == token and x.get("kind") == g["kind"]
+                   and x.get("pts") == g["pts"] and bool(x.get("closed")) == bool(g.get("closed"))
+                   and x.get("zs") == g.get("zs") for x in d["entities"])
+        if not same:
+            kept.append((lid, g, token))
+            continue
+        drawn_before += 1
+        row = next(r for r in rows.values() if r["layer"] == lid and (r["lines"] or r["areas"]))
+        if g["kind"] == "polygon" and row["areas"]:
+            row["areas"] -= 1
+        elif row["lines"]:
+            row["lines"] -= 1
+        else:
+            row["areas"] -= 1
+    makes = kept
     for lid, _, _ in makes:
         if layers[lid][1]:
             return ("layer_locked", f"“{G} / {layers[lid][2]}” katmanı kilitli: Kodla çiz oraya çizemez. Kilidi açın.", "name")
     warnings = []
+    if drawn_before:
+        warnings.append({"code": "string_already_drawn", "message": f"{drawn_before} dizi zaten çizilmiş (aynı noktalardan, "
+                                                                    "aynı kodla, aynı katmanda); yeniden yazılmadı."})
     for code, n in unknown.items():
         warnings.append({"code": "unknown_code", "message": f"“{code}” kodu “{PROFILE['name']}” profilinin hiçbir "
                                                             f"sınıfında yok; {n} nokta olduğu gibi bırakıldı."})
@@ -323,6 +346,8 @@ def cases():
         case("Zaten sınıfının katmanındaki nokta taşınmaz", setup([("AGC", 0, 0, None, "hv-agc")]),
              {"name": "harita-varliklari"}),
         case("Kod başka alanda: field", setup_field(), {"name": "harita-varliklari", "field": "SahaKodu"}),
+        case("İkinci çalıştırma: aynı noktalardan çizilmiş diziler yeniden yazılmaz, söylenir", drawn_once(base),
+             {"name": "harita-varliklari"}),
         refused("Kodlu nokta yok", setup([("", 0, 0, None, "olcum")]), {"name": "harita-varliklari"}),
         refused("Yalnız bilinmeyen kod: kodlu nokta yok", setup([("XYZ", 0, 0, None, "olcum")]), {"name": "harita-varliklari"}),
         refused("Sınıfın katmanı çizimde yok", setup([("BRD", 0, 0, None, "olcum"), ("BRD", 1, 0, None, "olcum")],
@@ -361,6 +386,20 @@ def cases():
                                                             "Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
                     "path": "expectedRevision", "revision": "$current"}}, "expect": SAME}]})
     return out
+
+
+def drawn_once(d):
+    """The drawing after a first Kodla çiz (UR2-022): its points moved to their class layers, its strings drawn."""
+    rows, moves, makes, _, _ = code_points(d)
+    d = json.loads(json.dumps(d))
+    for e in d["entities"]:
+        if e["id"] in moves:
+            e["layerId"] = moves[e["id"]]
+    n = len(d["entities"])
+    for k, (lid, g, token) in enumerate(makes):
+        d["entities"].append(dict(g, id=n + 1 + k, layerId=lid, attrs={"Kod": token}))
+    d["uids"] = [uid(i + 1) for i in range(len(d["entities"]))]
+    return d
 
 
 def setup_field():

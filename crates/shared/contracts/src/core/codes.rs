@@ -2202,6 +2202,8 @@ codes! {
     AREA_NOT_CLOSED = "area_not_closed", Warning, false, "Alan sınıfının dizisi K ile kapatılmadı; alan çizilmedi.";
     /// Kodla çiz: a word after a code that is not a control (B, K, S): passed over.
     CONTROL_UNKNOWN = "control_unknown", Warning, false, "Kodun ardındaki sözcük bir denetim kodu değil (B başla, K kapat, S son); yok sayıldı.";
+    /// Kodla çiz: a string drawn before from the same points, code and class: not written again (UR2-022).
+    STRING_ALREADY_DRAWN = "string_already_drawn", Warning, false, "Bu dizi aynı noktalardan, aynı kodla ve aynı katmanda zaten çizilmiş; yeniden yazılmadı.";
     /// A data profile whose shape does not hold (docs/adr/0541).
     INVALID_PROFILE = "invalid_profile", Failed, false, "Veri profili geçersiz; iletisi neyin tutmadığını söyler.";
     /// A field the layer has with another kind than the profile's; the layer's was kept (docs/adr/0541).

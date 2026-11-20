@@ -56,6 +56,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   aracı hâlâ açık kalır, `line-chain`, `point-calc`, `arc-variants`, `usage-blocks-view` izleri yeni davranışı bekler.
   UR2-005'te Yazı alanı açıkken yazılan metin sahnede yerleşeceği gibi çizilir, alan altına iner (ADR 0145 güncellemesi);
   web'in `InlineTextEditor`'ı aynısını ister.
+  UR2-022'de `map.features.code` yeni `string_already_drawn` uyarısını verir; web kataloğu
+  (`commandCatalog.json`) ve ondan üretilen Python yardımı (`python/kentos/cad/map/features.py`) web'e dönüşte yenilenir.
 - Yangın ve performans ([ADR 8068](docs/adr/8068-fire-performance-material-declarations.md), `cad.arch.performance`):
   web'e dönüşte komutun işleyicisi (`product/`), Öznitelikler'in Yangın dayanımı ve Acil çıkış satırları, Duvar stilleri
   alanı; TS sözleşmeleri üretildi (`Declared`, `DeclaredBasis`, `DeclaredExit`, `ArchPerformance` …); `.kcad` mimari verisi

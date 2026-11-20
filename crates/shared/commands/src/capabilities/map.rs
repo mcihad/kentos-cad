@@ -421,7 +421,7 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "layer_locked",
             ],
         ],
-        warnings: &["unknown_code", "control_unknown", "string_too_short", "area_not_closed"],
+        warnings: &["unknown_code", "control_unknown", "string_too_short", "area_not_closed", "string_already_drawn"],
         targets: none,
     },
     // The scales between the ground, the ellipsoid and the map (plan/map-cad.md MAP-02, docs/adr/1231).
