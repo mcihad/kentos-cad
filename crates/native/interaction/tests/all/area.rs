@@ -142,12 +142,12 @@ fn split_by_clicked_points_keeps_the_area_as_its_first_piece() {
     b.start("areaSplit");
     assert_eq!(
         b.session.prompt().text(),
-        "Alan böl: kesme çizgisinin ilk noktasını gösterin [Çizgiyle kes (N)]"
+        "Alan böl: kesme çizgisinin ilk noktasını gösterin [Çizgiyle kes (N) / Hedef alan (H)]"
     );
     b.click(5.0, -3.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Alan böl: sonraki noktayı gösterin [Geri (G) / Çizgiyle kes (N)]"
+        "Alan böl: sonraki noktayı gösterin [Geri (G) / Çizgiyle kes (N) / Hedef alan (H)]"
     );
     // One point is not a line.
     b.confirm();

@@ -66626,6 +66626,13 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "untoleranced": {
+            "description": "Matched points no tolerance was given for (UR2-026): their deviations shown, their conformity not judged.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "within": {
             "format": "uint32",
             "minimum": 0,
@@ -66763,6 +66770,13 @@
             "type": "array"
           },
           "unmatched": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "untoleranced": {
+            "description": "Matched points no tolerance was given for (UR2-026): their deviations shown, their conformity not judged.",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -69377,7 +69391,7 @@
       "id": "map.features.code",
       "version": 1,
       "title": "Kodla çiz",
-      "summary": "Sahada kodla alınmış noktaları veri profilinin sınıflarına göre işler. Noktanın kodu field alanındadır (yoksa Kod): ilk sözcük büyük harfli kod ve ardından dizinin numarası (BRD1), sonraki sözcükler denetim kodu: B yeni dizi başlatır, K diziyi kapatır, S bitirir. Kod profilin bir sınıfının codes'unda aranır. Nokta sınıfının noktaları sınıfın katmanına taşınır; çizgi sınıfının dizileri çoklu çizgi (K ile kapalı), alan sınıfının K ile kapatılmış dizileri alan olarak sınıfın katmanına çizilir, noktalar yerinde kalır; bütün noktaların kotu varsa köşeler kotlu. uids verilirse o noktalar o sırayla, verilmezse görünen ve kilitsiz katmanlardaki kodlu noktalar çizimin sırasıyla. name KentOS'un profili (tucbs-temel, harita-varliklari) ya da drawing'in yanındaki profil. Tek geri alma adımı “Kodla çiz”. Uyarılar: unknown_code (profilde olmayan kod, noktaları kalır), control_unknown, string_too_short, area_not_closed. Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, invalid_input, invalid_uid, entity_not_found, not_a_point, no_coded_points, class_layer_missing (önce profili uygulayın), layer_locked.",
+      "summary": "Sahada kodla alınmış noktaları veri profilinin sınıflarına göre işler. Noktanın kodu field alanındadır (yoksa Kod): ilk sözcük büyük harfli kod ve ardından dizinin numarası (BRD1), sonraki sözcükler denetim kodu: B yeni dizi başlatır, K diziyi kapatır, S bitirir. Kod profilin bir sınıfının codes'unda aranır. Nokta sınıfının noktaları sınıfın katmanına taşınır; çizgi sınıfının dizileri çoklu çizgi (K ile kapalı), alan sınıfının K ile kapatılmış dizileri alan olarak sınıfın katmanına çizilir, noktalar yerinde kalır; bütün noktaların kotu varsa köşeler kotlu. uids verilirse o noktalar o sırayla, verilmezse görünen ve kilitsiz katmanlardaki kodlu noktalar çizimin sırasıyla. name KentOS'un profili (tucbs-temel, harita-varliklari) ya da drawing'in yanındaki profil. Tek geri alma adımı “Kodla çiz”. Uyarılar: unknown_code (profilde olmayan kod, noktaları kalır), control_unknown, string_too_short, area_not_closed, string_already_drawn (aynı noktalardan, aynı kodla, aynı katmanda çizilmiş dizi yeniden yazılmaz). Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, invalid_input, invalid_uid, entity_not_found, not_a_point, no_coded_points, class_layer_missing (önce profili uygulayın), layer_locked.",
       "aliases": [
         "kodlaciz",
         "fieldtofinish"
@@ -69520,7 +69534,8 @@
           "unknown_code",
           "control_unknown",
           "string_too_short",
-          "area_not_closed"
+          "area_not_closed",
+          "string_already_drawn"
         ]
       },
       "examples": [
@@ -100061,7 +100076,7 @@
       },
       "examples": [
         {
-          "title": "İki parseli birleştir (tevhit)",
+          "title": "İki alanı birleştir",
           "input": {
             "work": {
               "ids": [
@@ -100073,7 +100088,7 @@
           }
         },
         {
-          "title": "Parseli iki noktadan geçen çizgiyle böl (ifraz)",
+          "title": "Alanı iki noktadan geçen çizgiyle böl",
           "input": {
             "work": {
               "ids": [
@@ -117059,6 +117074,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Kodun ardındaki sözcük bir denetim kodu değil (B başla, K kapat, S son); yok sayıldı."
+    },
+    {
+      "code": "string_already_drawn",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bu dizi aynı noktalardan, aynı kodla ve aynı katmanda zaten çizilmiş; yeniden yazılmadı."
     },
     {
       "code": "invalid_profile",

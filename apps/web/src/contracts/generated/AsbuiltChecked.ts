@@ -16,7 +16,11 @@ export type AsbuiltChecked = { designDigest: string, designChanged?: boolean,
  * docs/adr/3220: the drawing's surface (`surface`, given) is not the one the package names: another surface, or its
  * sources changed since the package was written.
  */
-surfaceChanged?: boolean, points: Array<AsbuiltPoint>, missing: Array<AsbuiltMissing>, within: number, outside: number, unmatched: number, ambiguous: number, lowQuality: number, rmsHorizontal?: number, rmsVertical?: number, maxHorizontal?: number, maxVertical?: number, 
+surfaceChanged?: boolean, points: Array<AsbuiltPoint>, missing: Array<AsbuiltMissing>, within: number, outside: number, unmatched: number, ambiguous: number, lowQuality: number, 
+/**
+ * Matched points no tolerance was given for (UR2-026): their deviations shown, their conformity not judged.
+ */
+untoleranced?: number, rmsHorizontal?: number, rmsVertical?: number, maxHorizontal?: number, maxVertical?: number, 
 /**
  * The field package given (docs/adr/2420).
  */

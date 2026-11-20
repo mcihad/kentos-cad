@@ -732,13 +732,13 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             capabilities: None,
             examples: vec![
                 CommandExample {
-                    title: "İki parseli birleştir (tevhit)".into(),
+                    title: "İki alanı birleştir".into(),
                     input: json!({ "work": { "kind": "union", "ids": [
                         "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002" ] } }),
                     output: None,
                 },
                 CommandExample {
-                    title: "Parseli iki noktadan geçen çizgiyle böl (ifraz)".into(),
+                    title: "Alanı iki noktadan geçen çizgiyle böl".into(),
                     input: json!({ "work": { "kind": "split", "ids": [ "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001" ],
                         "line": [ { "x": 423510.0, "y": 4512290.0 }, { "x": 423510.0, "y": 4512340.0 } ] } }),
                     output: None,

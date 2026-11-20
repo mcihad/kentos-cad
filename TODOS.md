@@ -60,6 +60,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (`commandCatalog.json`) ve ondan üretilen Python yardımı (`python/kentos/cad/map/features.py`) web'e dönüşte yenilenir.
   UR2-026'da `cad.asbuilt.check` `untoleranced` durumu ve sayacı (`AsbuiltChecked.untoleranced`) geldi; web'in TS
   sözleşmesi ve Uygulama kontrolü görünümü buna göre yenilenir.
+  UR2-052'de Alan böl tek alanda Hedef alan (H) seçeneğini sunar: kenara paralel kesim, istenen alan ([ADR 1069](docs/adr/1069-area-cut-by-target-area.md));
+  web'in `AreaSplitTool`'u aynısını ister, `areas` izi tek alanda `["N", "H"]` bekler.
 - Yangın ve performans ([ADR 8068](docs/adr/8068-fire-performance-material-declarations.md), `cad.arch.performance`):
   web'e dönüşte komutun işleyicisi (`product/`), Öznitelikler'in Yangın dayanımı ve Acil çıkış satırları, Duvar stilleri
   alanı; TS sözleşmeleri üretildi (`Declared`, `DeclaredBasis`, `DeclaredExit`, `ArchPerformance` …); `.kcad` mimari verisi

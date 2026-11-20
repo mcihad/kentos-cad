@@ -1,14 +1,25 @@
-//! Alanla böl (docs/adr/1069) on a 10 m square area: the edge clicked, 40 m² typed, the cut 4 m from it; Karşı taraf gives
-//! the 40 m² to the far side; Enter cuts it in one undo step; what cannot be cut is said and nothing is written.
+//! Alan böl's Hedef alan (H, docs/adr/1069) on a 10 m square area: the edge clicked, 40 m² typed, the cut 4 m from it;
+//! Karşı taraf gives the 40 m² to the far side; Enter cuts it in one undo step; what cannot be cut is said and nothing
+//! is written.
 
 use crate::common::{Bench, E, N};
 use kentos_commands::Entity;
 use kentos_interaction::Level;
 
 fn square() -> (Bench, kentos_domain::Slot) {
-    let mut b = Bench::new("areaSplitByArea");
+    let mut b = Bench::on(crate::common::EMPTY);
+    b.draft.snap = false;
     let slot = b.add_path("cizim", &[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], true);
+    hedef_alan(&mut b, slot);
     (b, slot)
+}
+
+/// Alan böl on the area at `slot`, then Hedef alan.
+fn hedef_alan(b: &mut Bench, slot: kentos_domain::Slot) {
+    b.selection.set([slot]);
+    b.start("areaSplit");
+    assert!(b.session.prompt().text().contains("Hedef alan (H)"), "{}", b.session.prompt().text());
+    assert!(b.type_text("H"));
 }
 
 /// The areas of the drawing's areas, smallest first, and their lowest north (relative to N).
@@ -96,9 +107,11 @@ fn an_area_with_a_hole_is_left_to_alan_bol() {
         closed: false,
         widths: None,
     };
-    b.doc.add(Entity::Polygon(path)).expect("a slot");
+    let slot = b.doc.add(Entity::Polygon(path)).expect("a slot");
     b.draft.snap = false;
-    b.start("areaSplitByArea");
+    b.selection.set([slot]);
+    b.start("areaSplit");
+    assert!(b.type_text("H"));
     b.click(5.0, 0.0);
     assert!(b.last_text().is_some_and(|t| t.contains("deliksiz")), "{:?}", b.last_text());
 }

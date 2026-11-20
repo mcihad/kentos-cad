@@ -1,4 +1,4 @@
-# 1069 — Alanla böl: istenen alanı ayıran, kenara paralel kesim
+# 1069 — Alan böl › Hedef alan: istenen alanı ayıran, kenara paralel kesim
 
 Tarih: 2026-11-20. usage-reporting-2.md UR2-052. Durum: ilk aşama.
 
@@ -8,10 +8,12 @@ Tarih: 2026-11-20. usage-reporting-2.md UR2-052. Durum: ilk aşama.
 
 ## Ad
 
-Bu iş geometrik bir alan işlemidir: kapalı bir alan istenen büyüklükte bir parça ve kalan olarak bölünür. **İfraz** değildir.
-İfraz hukuki işlemdir (parsel kaydı, belge, hisse); ayrı iş olarak yapılacaktır, `tool.subdivide` (IFRAZ) bu yüzden
-“Geliştirme aşamasında” kalır. Sahibin kararı, 20 Kasım 2026: “Bu kavramın adı ifraz değil alandır; ifraz hukuki, onu
-ayrıca yapacağız.” Araç **Alanla böl** (`tool.areaSplitByArea`, ALANLABOL), Alan böl'ün yanındadır.
+Bu iş geometrik bir alan işlemidir: kapalı bir alan istenen büyüklükte bir parça ve kalan olarak bölünür. **İfraz**
+değildir; ifraz hukuki işlemdir (parsel kaydı, belge, hisse), ayrı iş olarak yapılacaktır ve `tool.subdivide` (IFRAZ)
+“Geliştirme aşamasında” kalır. Ayrı bir araç da değildir: sahibin kararıyla (20 Kasım 2026, “İsmi alan böl olacak”) kesim
+**Alan böl**'ün bir seçeneğidir, **Hedef alan (H)**. Aynı gün geometrik metinlerden hukuki terimler çıkarıldı: alan
+komutunun örnekleri “İki alanı birleştir”, “Alanı iki noktadan geçen çizgiyle böl”; Alan birleştir'in açıklamasında ve
+Eritme aracının arama sözcüklerinde “tevhit” yok. Proje türü “İfraz / tevhit” ve parsel kaydı hukuki olduğundan kalır.
 
 ## Dayanak
 
@@ -40,16 +42,18 @@ ayrıca yapacağız.” Araç **Alanla böl** (`tool.areaSplitByArea`, ALANLABOL
    ve toplama çok yakın hedef, içbükey L ve U (iki ve dört kesişim) ile bütün retler. Çekirdek testi
    `crates/shared/geometry-core/tests/all/area_cut.rs`: koordinatta 1 nm ya da büyük koordinatın 2 ulp'i, alanda tüm
    alanın 1e-9'u.
-3. **Araç** `tool.areaSplitByArea` (`crates/native/interaction/src/core/area_cut.rs`):
-   - referans kenara tıklanır (kilitsiz kapalı alan); ayrılacak alan projenin alan biriminde yazılır;
-   - Karşı taraf (T) istenen alanı kenarın karşısındaki parçaya verir;
+3. **Alan böl › Hedef alan (H)** (`crates/native/interaction/src/core/area_cut.rs`, Alan böl `area.rs`):
+   - tek alan seçiliyken Alan böl'ün istemi Hedef alan (H) sunar; H'den sonra referans kenara tıklanır, ayrılacak alan
+     projenin alan biriminde yazılır;
+   - Karşı taraf (T) istenen alanı kenarın karşısındaki parçaya verir; Geri (G) kesimi, sonra kenarı bırakır; H yeniden
+     noktalarla kesmeye döner; bu adımda kenet yoktur;
    - önizleme: alan, referans kenar, kesim, istenen parça dolu, kalan soluk; etikette istenen, kalan ve kenara uzaklık;
-   - Enter kesimi Alan böl'ün komutuyla (`cad.areas.edit`, `AreaWork::Split`) tek geri alma adımında yazar. Kesim
-     sınırın iki ucundan 1 cm uzatılır: komut sınırla kesişimi kendisi bulur, köşeler kesim doğrusundadır;
+   - Enter kesimi Alan böl'ün kendi yazma yoluyla (`cad.areas.edit`, `AreaWork::Split`) tek geri alma adımında yazar,
+     Alan böl'ün iletisiyle. Kesim sınırın iki ucundan 1 cm uzatılır: komut sınırla kesişimi kendisi bulur;
    - yazmadan önce aynı bölme önizlemede yapılır; iki parça çıkmazsa söylenir, yazılmaz.
-   Yeni ürün komutu yok: yazma mevcut `cad.areas.edit` ile olur (Python ve MCP onu sarar). Katalog kaydı
-   `catalog/v1/additions.json`'dadır (web dururken, ADR 0228).
-4. **Masaüstü:** Plan › Alan işlemleri ▾ (Harita CAD), Düzenle › Alan işlemleri ▾ (CBS).
+   Yeni ürün komutu ve yeni araç yok: Alan böl'ün seçeneğidir, yazma mevcut `cad.areas.edit` ile olur (Python ve MCP onu
+   sarar). Ortak iz `fixtures/interaction/v1/areas.json` tek alanda H'yi bekler; web'deki karşılığı TODOS §0.2'dedir.
+4. **Masaüstü:** Alan böl nerede ise oradadır (Plan › Alan işlemleri, Değiştir, Düzenle).
 
 ## Sonra
 

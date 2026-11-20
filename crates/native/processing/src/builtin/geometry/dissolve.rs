@@ -43,7 +43,7 @@ pub fn tool() -> Tool {
             "Sonucun öznitelikleri: grup alanı ve değeri, “Nesne sayısı” ve Toplanacak alanların toplamları. Toplamlar kesindir; sayı olarak okunamayan değerler atlanır ve söylenir.",
         ]
         .join("\n\n")),
-        keywords: ["birleştir", "grupla", "dissolve", "erit", "ada", "tevhit", "topla", "merge"]
+        keywords: ["birleştir", "grupla", "dissolve", "erit", "ada", "topla", "merge"]
             .map(String::from)
             .to_vec(),
         aliases: ["GRUPBIRLESTIR", "DISSOLVE"].map(String::from).to_vec(),

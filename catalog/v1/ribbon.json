@@ -986,7 +986,6 @@
        }
       ],
       "overflow": [
-       "tool.areaSplitByArea",
        "tool.holeAdd",
        "tool.holeRemove",
        "tool.holeFill",
@@ -3850,7 +3849,6 @@
       ],
       "overflow": [
        "tool.areaIntersect",
-       "tool.areaSplitByArea",
        "tool.boundary",
        "tool.polygonize",
        "tool.partsJoin",

@@ -11509,22 +11509,6 @@
    "tests": 1
   },
   {
-   "id": "tool.areaSplitByArea",
-   "kind": "command",
-   "title": "Alanla böl",
-   "level": "semantic",
-   "via": [
-    "cad.areas.edit"
-   ],
-   "operation": null,
-   "python": "kentos.cad.areas.edit",
-   "mcp": "cad.areas.edit",
-   "note": "Alanla böl (ADR 1069): kesim çizgisini çekirdek (ops::area_cut) istenen alandan hesaplar, alan kalıcı kimliği ve kesim çizgisiyle Alan böl'ün yazıcısına gider. Araç, Python ve MCP aynı yazıcıyı kullanır.",
-   "scope": "shared",
-   "desktop": "implemented",
-   "tests": 0
-  },
-  {
    "id": "tool.areaSubtract",
    "kind": "tool",
    "title": "Alan çıkar",

@@ -2,7 +2,7 @@
 //! on the desktop's selection-first base ([`crate::modify`]), step for step
 //! (docs/adr/0065):
 //!
-//! - Alan birleştir (tevhit): the selected areas become one, the first
+//! - Alan birleştir: the selected areas become one, the first
 //!   picked lending its layer, colour and data; areas that do not touch stay
 //!   apart;
 //! - Alan kesiştir: their common part becomes a new area; Kaynakları sil (S)
@@ -10,8 +10,10 @@
 //! - Alan çıkar: two selections, the areas to cut from, then the areas to
 //!   take away; one wholly inside leaves a hole; Çıkarılanları sil (S);
 //! - Alan böl: the areas, then a cut line clicked point by point (the pieces
-//!   and their areas shown live) or an existing line (Çizgiyle kes, N); the
-//!   first piece is the area itself, the others new, with its data;
+//!   and their areas shown live) or an existing line (Çizgiyle kes, N), or, on
+//!   one area, a cut parallel to a clicked edge leaving the size typed (Hedef
+//!   alan, H; docs/adr/1069, area_cut.rs); the first piece is the area itself,
+//!   the others new, with its data;
 //! - Alana çevir: closed objects become areas, and line work closing regions
 //!   gives an area per region (the lines stay);
 //! - Çizgiye çevir: an area becomes closed polylines, its holes ones of
@@ -40,7 +42,7 @@ use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::region::{net_area, split_area};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::ops::areas::{area_of_entity, areas_of_entity};
-use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, areas};
 
@@ -729,6 +731,8 @@ pub struct AreaSplit {
     /// The line under the cursor in Çizgiyle kes.
     cutter: Option<Slot>,
     cutter_shape: Option<Shape>,
+    /// Hedef alan (H, docs/adr/1069): the cut parallel to a clicked edge, leaving the size typed.
+    by_area: Option<crate::area_cut::ByArea>,
 }
 
 impl AreaSplit {
@@ -824,6 +828,11 @@ impl Stages for AreaSplit {
         SPLIT_ID
     }
 
+    /// Hedef alan picks an edge and reads a size: no snaps then.
+    fn snaps(&self) -> bool {
+        self.by_area.is_none()
+    }
+
     fn label(&self) -> &'static str {
         "Alan böl"
     }
@@ -852,7 +861,7 @@ impl Stages for AreaSplit {
     }
 
     fn anchor(&self) -> Option<Vec2> {
-        if self.by_object {
+        if self.by_object || self.by_area.is_some() {
             None
         } else {
             self.pts.last().copied()
@@ -860,6 +869,17 @@ impl Stages for AreaSplit {
     }
 
     fn prompt(&self, _n: usize) -> Prompt {
+        if let Some(by) = &self.by_area {
+            let side = if by.across() { "karşı taraf" } else { "kenar yanı" };
+            let prompt = match (by.has_edge(), by.has_cut()) {
+                (false, _) => Prompt::new("Alan böl", "alanın referans kenarına tıklayın (kesim bu kenara paralel olur)"),
+                (true, false) => Prompt::new("Alan böl", "ayrılacak alanı yazın").option_with("Karşı taraf", "T", side),
+                (true, true) => Prompt::new("Alan böl", "kesimi onaylamak için Enter'a basın ya da başka bir alan yazın")
+                    .option_with("Karşı taraf", "T", side),
+            };
+            let prompt = if by.has_edge() { prompt.option("Geri", "G") } else { prompt };
+            return prompt.option("Noktalarla kes", "H");
+        }
         if self.by_object {
             return Prompt::new(
                 "Alan böl",
@@ -878,10 +898,14 @@ impl Stages for AreaSplit {
         } else {
             prompt.option("Geri", "G")
         };
-        prompt.option("Çizgiyle kes", "N")
+        let prompt = prompt.option("Çizgiyle kes", "N");
+        if self.list.len() == 1 { prompt.option("Hedef alan", "H") } else { prompt }
     }
 
     fn point(&mut self, p: Vec2, _cx: &mut Context<'_>) -> Flow {
+        if self.by_area.is_some() {
+            return Flow::Stay;
+        }
         if self.pts.last().is_none_or(|&last| dist(last, p) > 1e-9) {
             self.pts.push(p);
         }
@@ -890,6 +914,13 @@ impl Stages for AreaSplit {
 
     /// Çizgiyle kes: the line under the cursor is highlighted, a press cuts with it.
     fn pointer(&mut self, p: &Pointer, down: bool, cx: &mut Context<'_>) -> Option<Flow> {
+        // Hedef alan: a press picks the reference edge; the pointer draws nothing else.
+        if let Some(by) = &mut self.by_area {
+            if down && !by.has_edge() && !by.pick_edge(p.raw, cx.pick_tolerance()) {
+                cx.say(Level::Warn, crate::area_cut::NO_EDGE_HERE);
+            }
+            return Some(Flow::Stay);
+        }
         if !self.by_object {
             return None;
         }
@@ -913,7 +944,45 @@ impl Stages for AreaSplit {
     }
 
     fn typed(&mut self, text: &str, cx: &mut Context<'_>) -> Option<Flow> {
-        match upper_tr(js_trim(text)).as_str() {
+        let word = upper_tr(js_trim(text));
+        if word == "H" {
+            if self.by_area.take().is_some() {
+                return Some(Flow::Stay);
+            }
+            if self.list.len() != 1 {
+                cx.say(Level::Warn, crate::area_cut::ONE_AREA);
+                return Some(Flow::Stay);
+            }
+            match crate::area_cut::ByArea::over(&self.list[0].a) {
+                Ok(by) => {
+                    self.by_area = Some(by);
+                    (self.by_object, self.cutter, self.cutter_shape) = (false, None, None);
+                    self.pts.clear();
+                    cx.selection.set_hover(None);
+                }
+                Err(why) => cx.say(Level::Warn, why),
+            }
+            return Some(Flow::Stay);
+        }
+        if let Some(by) = &mut self.by_area {
+            let said = match word.as_str() {
+                "T" => by.turn().err(),
+                "G" => {
+                    by.back();
+                    None
+                }
+                _ if !by.has_edge() => return None,
+                _ => match parse_number(js_trim(text)) {
+                    Some(n) if n.is_finite() => by.ask(cx.format().area_to_square_metres(n)).err(),
+                    _ => Some("Ayrılacak alan bir sayı olmalı."),
+                },
+            };
+            if let Some(why) = said {
+                cx.say(Level::Warn, why);
+            }
+            return Some(Flow::Stay);
+        }
+        match word.as_str() {
             "N" => {
                 self.by_object = !self.by_object;
                 self.cutter = None;
@@ -929,8 +998,18 @@ impl Stages for AreaSplit {
         }
     }
 
-    /// Two points or more cut; one is not a line; none leaves.
+    /// Two points or more cut; one is not a line; none leaves. Hedef alan: its cut.
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        if let Some(by) = &self.by_area {
+            return match by.line() {
+                Some(line) => self.split(Some(line), None, cx),
+                None => {
+                    let why = if by.has_edge() { "Önce ayrılacak alanı yazın." } else { "Önce alanın referans kenarına tıklayın." };
+                    cx.say(Level::Warn, why);
+                    Flow::Stay
+                }
+            };
+        }
         match self.pts.len() {
             0 => Flow::Exit,
             1 => {
@@ -951,6 +1030,9 @@ impl Stages for AreaSplit {
     /// The areas outlined; the cut line in the danger colour with the pieces
     /// it would leave and their areas, or the line under the cursor.
     fn stage_preview(&self, hover: Option<Vec2>, format: &Format) -> Option<Preview> {
+        if let Some(by) = &self.by_area {
+            return Some(by.preview(format));
+        }
         let mut preview = Preview {
             areas: self.list.iter().map(|t| outlined(&t.a)).collect(),
             ..Preview::default()
