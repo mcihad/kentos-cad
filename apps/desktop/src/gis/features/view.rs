@@ -737,14 +737,28 @@ impl App {
             Some(form) => form,
             None => {
                 let layer = rows.layer.as_deref().unwrap_or_default();
+                let formless = !rows.shown.is_empty() && self.form_of_layer(layer).is_none();
                 let words = if rows.shown.is_empty() {
                     "Gösterilen kayıt yok.".to_owned()
-                } else if self.form_of_layer(layer).is_none() {
-                    "Bu katmanın formu yok: Veri › Formlar'dan katmanın alanlarından bir form oluşturun.".to_owned()
+                } else if formless {
+                    "Bu katmanın formu yok: katmanın alanlarından bir form oluşturun.".to_owned()
                 } else {
                     "Soldan bir kayıt seçin.".to_owned()
                 };
-                container(label::muted(words)).padding(16).into()
+                let mut body = iced::widget::column![label::muted(words)].spacing(10);
+                // The table's own layer goes to the designer, not the map's active one (GIS-026).
+                if formless && let Some(doc) = &self.document {
+                    let name = doc.model.layers().get(layer).map_or(layer, |n| n.name.as_str());
+                    body = body.push(
+                        iced::widget::button(label::body(format!("“{name}” için form oluştur")))
+                            .style(style::button::secondary)
+                            .padding(kentos_ui::theme::metrics::action_small())
+                            .on_press(Message::Gis(gis::Event::Features(super::Event::NewFormFor(
+                                layer.to_owned(),
+                            )))),
+                    );
+                }
+                container(body).padding(16).into()
             }
         };
         iced::widget::row![left, container(right).width(Fill).height(Fill)]

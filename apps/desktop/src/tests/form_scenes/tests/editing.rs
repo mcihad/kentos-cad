@@ -1237,3 +1237,29 @@ fn the_table_form_steps_through_the_rows_shown_only() {
         assert_eq!(e.record_slot(&app.document.as_ref().unwrap().model), Some(other), "no hidden record opens");
     }
 }
+
+/// GIS-026: a record of a layer with no form offers “… için form oluştur” in the table's Form view; it opens the
+/// designer's new form on the table's layer, not the map's active one, and the form made has its fields.
+#[test]
+fn a_formless_layer_makes_its_form_from_the_table() {
+    use crate::features::{Event, Pane};
+    let mut app = crate::files_testing::app_with_drawing();
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let parcel = doc.layers().leaves().iter().find(|l| l.name == "Parsel").map(|l| l.id.clone()).expect("parsel");
+    let other = doc.layers().leaves().iter().find(|l| l.id != parcel).map(|l| l.id.clone()).expect("another");
+    assert!(doc.set_active_layer(&other), "the map's active layer is another one");
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Layer(parcel.clone()))));
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::Pane(Pane::Form))));
+    assert!(app.form_of_layer(&parcel).is_none(), "the parcels have no form yet");
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        app.show_bottom(crate::bottom::BottomTab::Table);
+        let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        crate::files_testing::evidence(&mut shot, &app, "gis-026", "formu-olmayan-katman");
+    }
+    let _ = app.update(Message::Gis(gis::Event::Features(Event::NewFormFor(parcel.clone()))));
+    let w = app.gis.forms_window.as_ref().expect("the designer is open");
+    let new = w.new_form.as_ref().expect("a new form is asked");
+    assert_eq!(new.layer.as_deref(), Some(parcel.as_str()), "on the table's layer");
+    assert_eq!(new.name, "Parsel");
+}

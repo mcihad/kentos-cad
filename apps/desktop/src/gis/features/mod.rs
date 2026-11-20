@@ -140,6 +140,8 @@ pub(crate) fn walk(shift: bool) -> Walk {
 pub enum Event {
     /// Katman ▾: a layer by id.
     Layer(String),
+    /// The Form view's “… için form oluştur” (GIS-026): the designer's new form on this layer.
+    NewFormFor(String),
     Search(String),
     Show(Show),
     Filter(String),
@@ -665,6 +667,24 @@ impl App {
                 self.gis.features.sort = None;
                 self.gis.features.editing = None;
                 self.gis.features.changed();
+            }
+            Event::NewFormFor(layer) => {
+                // The designer opened on a new form of the table's layer, its name the layer's: the fields come
+                // with it whatever layer is active on the map (GIS-026).
+                let name = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| d.model.layers().get(&layer).map(|n| n.name.clone()))
+                    .unwrap_or_default();
+                let opened = self.update(Message::Run("data.forms"));
+                for e in [
+                    crate::forms::designer::Event::NewForm,
+                    crate::forms::designer::Event::NewLayer(layer),
+                    crate::forms::designer::Event::NewName(name),
+                ] {
+                    let _ = self.forms_event(e);
+                }
+                return opened;
             }
             Event::Search(text) => {
                 self.gis.features.search = text;

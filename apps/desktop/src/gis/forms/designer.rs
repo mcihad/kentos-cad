@@ -153,8 +153,8 @@ pub enum Text {
 /// A new form being made: its name and layer.
 #[derive(Debug, Clone, Default)]
 pub struct NewForm {
-    pub(super) name: String,
-    pub(super) layer: Option<String>,
+    pub(crate) name: String,
+    pub(crate) layer: Option<String>,
 }
 
 /// The window.

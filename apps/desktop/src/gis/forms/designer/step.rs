@@ -33,10 +33,15 @@ impl App {
                 self.choose_into(&mut w, &id);
             }
             Event::NewForm => {
-                let layer = self
-                    .document
-                    .as_ref()
-                    .map(|d| d.model.layers().active().to_owned());
+                // The selected record's layer before the map's active one (GIS-026): a form is made for the data the
+                // user is looking at.
+                let selected = self.selection.ids().first().copied();
+                let layer = self.document.as_ref().map(|d| {
+                    selected
+                        .and_then(|s| d.model.get(s))
+                        .map(|e| e.base().layer_id.clone())
+                        .unwrap_or_else(|| d.model.layers().active().to_owned())
+                });
                 w.new_form = Some(NewForm {
                     name: String::new(),
                     layer,
