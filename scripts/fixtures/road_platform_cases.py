@@ -643,14 +643,24 @@ def drawing(p, labels):
             objects.append({"a": {"x": l["from"][0], "y": l["from"][1]}, "b": {"x": to[0], "y": to[1]},
                             "za": l["from"][2], "zb": to[2]})
     if labels:
-        n = len(r["top"])
-        cx = sum(q[0] / n for q in r["top"])
-        cy = sum(q[1] / n for q in r["top"])
-        vol = ""
+        # Two lines at 2.5 mm (1/1000: 2.5 m): the name and base height, then cut and fill (UR2-012). In the pad's middle
+        # when its room fits nine tenths of the pad's extent (letters 0.62 of the height wide, a line 1.3 heights tall, lines 1.5 heights apart),
+        # else centred over the daylight line's top, one height above it.
+        h = 2.5
+        text = f"{p['name']} · Kot {comma(p['base'][2], 2)}"
         if "cut" in r and r["cut"] != ANY:
-            vol = f" · Kazı {comma(r['cut'], 1)} m³ · Dolgu {comma(r['fill'], 1)} m³"
-        objects.append({"p": {"x": cx, "y": cy}, "rotation": 0.0, "height": 2.5,
-                        "text": f"{p['name']} · Kot {comma(p['base'][2], 2)}{vol}"})
+            text += f"\nKazı {comma(r['cut'], 1)} m³ · Dolgu {comma(r['fill'], 1)} m³"
+        lines = text.split("\n")
+        room = (max(len(l) for l in lines) * h * 0.62, h * (1.3 + 1.5 * (len(lines) - 1)))
+        xs, ys = [q[0] for q in r["top"]], [q[1] for q in r["top"]]
+        if room[0] <= 0.9 * (max(xs) - min(xs)) and room[1] <= 0.9 * (max(ys) - min(ys)):
+            n = len(r["top"])
+            at = (sum(q[0] / n for q in r["top"]), sum(q[1] / n for q in r["top"]))
+        else:
+            outer = r["daylight"] if len(r["daylight"]) >= 3 else r["top"]
+            ox, oy = [q[0] for q in outer] + xs, [q[1] for q in outer] + ys
+            at = ((min(ox) + max(ox)) / 2, max(oy) + h)
+        objects.append({"p": {"x": at[0], "y": at[1]}, "rotation": 0.0, "height": h, "text": text})
     return {"platform": p["id"]}, objects, warnings
 
 

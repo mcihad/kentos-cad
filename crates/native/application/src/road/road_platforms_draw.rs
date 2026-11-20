@@ -16,6 +16,55 @@ use crate::road_platforms as common;
 /// A text's paper height (mm) at the drawing's plot scale.
 const TEXT_MM: f64 = 2.5;
 
+/// The pad's summary text as Platform çiz writes it and its window previews it (UR2-012): two lines (name and base
+/// height; cut and fill) at the plot scale's 2.5 mm, in the pad's middle when it fits inside the pad, else over the
+/// daylight line's top, outside the slopes, so that it neither covers the pad nor runs off it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlatformLabel {
+    pub text: String,
+    pub at: [f64; 2],
+    pub height: f64,
+    pub align: TextAlign,
+    /// Its room, metres: width and height (an estimate of the drawing font's, a little generous).
+    pub size: [f64; 2],
+    /// Whether it stands outside the pad.
+    pub outside: bool,
+}
+
+/// [`PlatformLabel`] for a pad; none without a top.
+pub fn platform_label(name: &str, base: f64, r: &kentos_commands::PlatformReport, plot_scale: f64) -> Option<PlatformLabel> {
+    if r.top.len() < 3 {
+        return None;
+    }
+    let height = TEXT_MM * plot_scale / 1000.0;
+    let mut text = format!("{name} · Kot {}", comma(base, 2));
+    if let (Some(c), Some(f)) = (r.cut, r.fill) {
+        text.push_str(&format!("\nKazı {} m³ · Dolgu {} m³", comma(c, 1), comma(f, 1)));
+    }
+    let lines = text.lines().count() as f64;
+    let longest = text.lines().map(|l| l.chars().count()).max().unwrap_or(0) as f64;
+    // The drawing font's letters run about 0.6 of the height wide, a line with its descenders 1.3 heights tall, lines 1.5
+    // heights apart.
+    let size = [longest * height * 0.62, height * (1.3 + 1.5 * (lines - 1.0))];
+    let bounds = |pts: &[[f64; 3]]| {
+        pts.iter().fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
+            [b[0].min(p[0]), b[1].min(p[1]), b[2].max(p[0]), b[3].max(p[1])]
+        })
+    };
+    let top = bounds(&r.top);
+    let fits = size[0] <= 0.9 * (top[2] - top[0]) && size[1] <= 0.9 * (top[3] - top[1]);
+    let (at, align) = if fits {
+        let n = r.top.len() as f64;
+        let (cx, cy) = r.top.iter().fold((0.0, 0.0), |(x, y), p| (x + p[0] / n, y + p[1] / n));
+        ([cx, cy], TextAlign::MiddleCenter)
+    } else {
+        let all = bounds(if r.daylight.len() >= 3 { &r.daylight } else { &r.top });
+        let outer = [all[0].min(top[0]), all[1].min(top[1]), all[2].max(top[2]), all[3].max(top[3])];
+        ([(outer[0] + outer[2]) / 2.0, outer[3] + height], TextAlign::BottomCenter)
+    };
+    Some(PlatformLabel { text, at, height, align, size, outside: !fits })
+}
+
 struct Checked {
     id: String,
     objects: Vec<NewObject>,
@@ -80,22 +129,17 @@ fn check(doc: &Document, input: &PlatformsDraw, told: &dyn Fn(u64, u64) -> bool)
             }));
         }
     }
-    if input.labels {
-        let h = TEXT_MM * doc.settings().plot_scale / 1000.0;
-        let n = r.top.len() as f64;
-        let (cx, cy) = r.top.iter().fold((0.0, 0.0), |(x, y), p| (x + p[0] / n, y + p[1] / n));
-        let volumes = match (r.cut, r.fill) {
-            (Some(c), Some(f)) => format!(" · Kazı {} m³ · Dolgu {} m³", comma(c, 1), comma(f, 1)),
-            _ => String::new(),
-        };
+    if input.labels
+        && let Some(label) = platform_label(&def.name, def.base[2], r, doc.settings().plot_scale)
+    {
         objects.push(object(EntityGeometry::Text {
             layout: None,
             annotative: None,
-            p: Vec2 { x: cx, y: cy },
-            text: format!("{} · Kot {}{volumes}", def.name, comma(def.base[2], 2)),
-            height: h,
+            p: Vec2 { x: label.at[0], y: label.at[1] },
+            text: label.text,
+            height: label.height,
             rotation: 0.0,
-            align: Some(TextAlign::MiddleCenter),
+            align: Some(label.align),
             width_factor: None,
             mask: false,
             box_width: None,

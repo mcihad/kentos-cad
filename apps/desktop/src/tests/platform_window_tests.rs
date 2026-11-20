@@ -313,3 +313,53 @@ fn screens_map() {
         println!("{}", file.display());
     }
 }
+
+/// UR2-012: the summary Planda çiz writes is the one its window previews: the same words at the plot scale's 2.5 mm, in
+/// the same place. A pad too small for it (the report's 2 × 2 m) has it over its daylight line, outside the slopes; a
+/// large pad keeps it in its middle.
+#[test]
+fn the_pads_summary_is_previewed_where_and_as_large_as_it_is_drawn() {
+    use kentos_commands::Entity;
+    use kentos_native_application::road_platforms_draw::platform_label;
+
+    let mut app = app();
+    let _ = app.update(Message::Run("platform.editor"));
+    let plot_scale = app.document.as_ref().expect("a drawing").model.settings().plot_scale;
+    let w = app.road.platform_window.as_ref().expect("open");
+    let r = w.preview.report.clone().expect("grades");
+    let base: f64 = w.fields[4].replace(',', ".").parse().expect("the base typed");
+    let label = platform_label(&r.name, base, &r, plot_scale).expect("a summary");
+    assert_eq!(label.height, 2.5 * plot_scale / 1000.0);
+    assert_eq!(label.text.lines().count(), 2, "{}", label.text);
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-012", "onizleme");
+    }
+    send(&mut app, W::Layer("platform".into()));
+    send(&mut app, W::Draw);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let drawn = doc
+        .entities()
+        .find_map(|e| match e {
+            Entity::Text(t) if t.text == label.text => Some((t.p.x, t.p.y, t.height)),
+            _ => None,
+        })
+        .expect("the summary drawn as previewed");
+    assert_eq!(drawn, (label.at[0], label.at[1], label.height));
+
+    // The report's 2 × 2 m pad: its summary does not fit inside, so it stands over the daylight line.
+    let small = kentos_commands::PlatformReport {
+        top: vec![[0.0, 0.0, 102.0], [2.0, 0.0, 102.0], [2.0, 2.0, 102.0], [0.0, 2.0, 102.0]],
+        daylight: vec![[-3.0, -3.0, 100.0], [5.0, -3.0, 100.0], [5.0, 5.0, 100.0], [-3.0, 5.0, 100.0]],
+        cut: Some(1.0),
+        fill: Some(2.0),
+        ..r.clone()
+    };
+    let l = platform_label("Kare", 102.0, &small, 1000.0).expect("a summary");
+    assert!(l.outside && l.at[1] > 5.0, "over the daylight line: {l:?}");
+    assert_eq!(l.align, kentos_commands::TextAlign::BottomCenter);
+}

@@ -96,3 +96,24 @@ taban kotu alanına yazar, Kaydet tek geri alma adımıdır (ROAD-GRADE-08: öne
 dolgu şevi değişince dolgu artar, denge ve uygula, kaydet, çiz ve geri al, yeni platform, seçimden köşeler); resimler
 `.run/gui-evidence/yol-y14-platform-*` (açık geniş, koyu dar). İlk resimde dar pencerede Uygula kesiliyor ve Uygula'dan
 sonra denge sözü kayboluyordu: denge düğmeleri kendi satırında, söz uygulamadan sonra kalır.
+
+## Güncelleme (20 Kasım 2026): platform yazısı iki satır, sığmazsa dışarıda, önizlemede gerçek boyunda
+
+**Bulgu (kullanım raporu 2, UR2-012):** 1:1000'de 2 × 2 m platformun tek satırlık özet yazısı (2,5 m yüksekliğinde,
+yaklaşık 120 m uzunluğunda) platformu örttü, iki yanda görünümden taştı ve havza yazısıyla çakıştı. Pencerenin önizlemesi
+yazıyı göstermiyordu.
+
+**Karar:**
+
+- Yazı iki satırdır: ad ve taban kotu; kazı ve dolgu. Yüksekliği çizim ölçeğinde 2,5 mm'dir (değişmedi).
+- Yazının yeri (harfler yüksekliğin 0,62'si genişliğinde, satır 1,3 yükseklik, satır arası 1,5 yükseklik tahminiyle) platform
+  kapsamının onda dokuzuna sığıyorsa platformun ortasıdır; sığmıyorsa günışığı çizgisinin üstünde, bir yükseklik yukarıda,
+  ortalanmış (alt orta hiza).
+- Kural tek yerdedir (`road_platforms_draw::platform_label`); Platform penceresinin planı yazının yerini kesikli çerçeveyle,
+  okunur boydaysa metniyle gerçek ölçüsünde gösterir.
+- Yazı stili ve elle yer seçimi bu güncellemede yok; Açıklama işareti kapatılırsa yazı çizilmez.
+
+**Doğrulama:** `platform_window_tests::the_pads_summary_is_previewed_where_and_as_large_as_it_is_drawn` (önizlenen yazı
+çizilenle aynı nokta ve yükseklik; 2 × 2 m platformda dışarıda). Ortak durumlar bağımsız üreticiyle
+(`scripts/fixtures/road_platform_cases.py`) yeni kurala göre yazıldı; üç yazılı durumun beklenen yeri ve metni değişti.
+

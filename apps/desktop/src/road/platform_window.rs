@@ -523,7 +523,16 @@ impl App {
                 if let Some(why) = &r.why {
                     body = body.push(label::caption(why.clone()).style(danger));
                 }
-                let picture = crate::picture::picture(iced::widget::canvas(Plan { report: r }).width(Fill).height(Fill), TITLE);
+                // The summary text Planda çiz will write, at its real size and place (UR2-012).
+                let plot_scale = self.document.as_ref().map_or(1000.0, |d| d.model.settings().plot_scale);
+                let base = crate::road_dialog::decimal_of(&w.fields[4], FIELDS[4]).ok().flatten();
+                let label = base.and_then(|b| {
+                    kentos_native_application::road_platforms_draw::platform_label(&r.name, b, r, plot_scale)
+                });
+                let picture = crate::picture::picture(
+                    iced::widget::canvas(Plan { report: r, label: label.clone() }).width(Fill).height(Fill),
+                    TITLE,
+                );
                 let mut side = Column::new()
                     .spacing(8)
                     .width(360)
@@ -621,6 +630,8 @@ fn chosen_boundary(app: &App) -> Option<Vec<[f64; 2]>> {
 /// The pad in plan: its slope lines by side, the daylight line, the pad's boundary over them.
 struct Plan<'a> {
     report: &'a PlatformReport,
+    /// The text Planda çiz writes, drawn at its size on the drawing.
+    label: Option<kentos_native_application::road_platforms_draw::PlatformLabel>,
 }
 
 impl canvas::Program<Message> for Plan<'_> {
@@ -630,12 +641,21 @@ impl canvas::Program<Message> for Plan<'_> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let r = self.report;
+        // The label's corners, so that the picture holds it.
+        let label_box = self.label.as_ref().map(|l| {
+            let (w, h) = (l.size[0], l.size[1]);
+            let (along, up) = (l.align.along(), l.align.up());
+            // The block about `at` as its alignment says: bottom (0), middle (½) or top (1) of all its lines.
+            let (x0, y0) = (l.at[0] - along * w, l.at[1] - up * h);
+            [x0, y0, x0 + w, y0 + h]
+        });
         let all = r
             .top
             .iter()
             .map(|p| [p[0], p[1]])
             .chain(r.lines.iter().filter_map(|l| l.to.map(|t| [t[0], t[1]])))
-            .chain(r.lines.iter().map(|l| [l.from[0], l.from[1]]));
+            .chain(r.lines.iter().map(|l| [l.from[0], l.from[1]]))
+            .chain(label_box.iter().flat_map(|b| [[b[0], b[1]], [b[2], b[3]]]));
         let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
         for p in all {
             x0 = x0.min(p[0]);
@@ -693,6 +713,28 @@ impl canvas::Program<Message> for Plan<'_> {
                 size: Pixels(11.0),
                 ..Text::default()
             });
+        }
+        if let (Some(l), Some(b)) = (&self.label, label_box) {
+            let (a, c) = (at(b[0], b[3]), at(b[2], b[1]));
+            let room = Path::rectangle(a, iced::Size::new(c.x - a.x, c.y - a.y));
+            frame.stroke(
+                &room,
+                Stroke { line_dash: canvas::LineDash { segments: &[4.0, 3.0], offset: 0 }, ..Stroke::default() }
+                    .with_width(1.0)
+                    .with_color(tk.text),
+            );
+            let px = (l.height * scale) as f32;
+            if px >= 6.0 {
+                for (k, line) in l.text.lines().enumerate() {
+                    frame.fill_text(Text {
+                        content: line.to_owned(),
+                        position: Point::new(a.x + 3.0, a.y + k as f32 * px * 1.5),
+                        color: tk.text,
+                        size: Pixels(px),
+                        ..Text::default()
+                    });
+                }
+            }
         }
         let legend = [("yarma", tk.danger), ("dolgu", tk.success), ("açık", tk.warning), ("günışığı", tk.muted)];
         let mut x = 8.0_f32;
