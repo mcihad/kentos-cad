@@ -462,3 +462,24 @@ fn reads_a_scale_as_one_to_n_or_n() {
     assert_eq!(read_scale("1000"), Some(1000));
     assert_eq!(read_scale("1:0"), None);
 }
+
+/// UR2-041: label-engine.kcad, whose layers draw their labels bold or slanted: Etiketleri yazıya çevir writes every
+/// text the preview counts (the styled faces take the project's font), not invalid_style and nothing.
+#[test]
+fn styled_labels_are_written_with_the_projects_font() {
+    let mut b = Bench::on(include_str!("../../../../../fixtures/interaction/v1/label-engine.kcad"));
+    let n0 = texts(&b).len();
+    b.start("labelsToText");
+    let promised = b
+        .said(0)
+        .iter()
+        .find_map(|(_, words)| words.split(" yazı olacak").next().and_then(|w| w.rsplit(' ').next()).and_then(|n| n.parse::<usize>().ok()))
+        .expect("the preview's count");
+    b.confirm();
+    let said: Vec<String> = b.said(0).iter().map(|(_, w)| (*w).to_owned()).collect();
+    assert!(!said.iter().any(|w| w.contains("invalid_style") || w.contains("Kalın, eğik")), "{said:?}");
+    assert!(said.iter().any(|w| w.ends_with(&format!("{promised} etiket yazıya çevrildi."))), "{said:?}");
+    assert_eq!(texts(&b).len(), n0 + promised, "{said:?}");
+    let styled = texts(&b).into_iter().filter(|t| t.face.bold || t.face.italic).collect::<Vec<_>>();
+    assert!(!styled.is_empty() && styled.iter().all(|t| t.face.font.is_some()));
+}

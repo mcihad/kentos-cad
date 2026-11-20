@@ -123,11 +123,14 @@ fn face_of(doc: &Document, wanted: &[f64], t: &LabelText) -> TextFace {
                 None => node.style.label.clone(),
             }
         });
+    let bold = style.as_ref().is_some_and(|s| s.weight.unwrap_or(500) >= 600);
+    let italic = style.as_ref().is_some_and(|s| s.italic == Some(true));
     TextFace {
-        bold: style
-            .as_ref()
-            .is_some_and(|s| s.weight.unwrap_or(500) >= 600),
-        italic: style.as_ref().is_some_and(|s| s.italic == Some(true)),
+        bold,
+        italic,
+        // A bold or slanted face is a typeface's (the text's own rule): the project's font the label is drawn in
+        // (UR2-041: every styled label was refused, invalid_style, nothing written).
+        font: (bold || italic).then(|| doc.settings().drawing_font.unwrap_or(kentos_commands::DrawingFont::Barlow)),
         ..TextFace::default()
     }
 }
