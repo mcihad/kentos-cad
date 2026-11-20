@@ -64,6 +64,8 @@ pub struct State {
     pub downloading: Option<u64>,
     /// A search is out (its ticket).
     pub waiting: Option<u64>,
+    /// How the last search ended (GIS-045): none before one, true answered (perhaps with no item), false failed.
+    pub answered: Option<bool>,
     pub(crate) ticket: u64,
     pub said: Option<(Line, String)>,
 }
@@ -93,6 +95,7 @@ impl Default for State {
             fetch: Vec::new(),
             downloading: None,
             waiting: None,
+            answered: None,
             ticket: 0,
             said: None,
         }
@@ -111,6 +114,8 @@ pub enum Event {
     Preset(&'static str),
     UseView,
     NoBox,
+    /// Tarihleri kaldır: the search over every time (GIS-045).
+    NoDates,
     Search,
     More,
     Found(u64, Box<Result<StacSearched, String>>),
@@ -126,6 +131,24 @@ pub enum Event {
 
 fn msg(e: Event) -> Message {
     Message::Gis(gis::Event::Rasters(Rasters::Stac(e)))
+}
+
+/// A search that found nothing, said with what it asked (GIS-045): the collections, the box, the time and the cloud
+/// limit, and what to widen.
+pub(crate) fn nothing_found(r: &StacSearchRecord) -> String {
+    let collections = if r.collections.is_empty() { "bütün koleksiyonlarda".to_owned() } else { format!("“{}” koleksiyonunda", r.collections.join(", ")) };
+    let bbox = r.bbox.map_or_else(
+        || "bütün katalogda".to_owned(),
+        |b| format!("{:.4}°–{:.4}° D, {:.4}°–{:.4}° K kutusunda", b[0], b[2], b[1], b[3]),
+    );
+    let time = r.datetime.as_deref().map_or_else(
+        || "her zaman".to_owned(),
+        |d| format!("{} arasında", d.replace("..", "…").replace('/', " – ")),
+    );
+    let cloud = r.max_cloud_cover.map_or_else(String::new, |c| format!(", bulut en çok %{c}"));
+    format!(
+        "Arama yanıtlandı ama {collections}, {bbox}, {time}{cloud} öğe yok. Kutuyu kaldırın, tarihleri ya da bulut sınırını genişletin."
+    )
 }
 
 /// A number typed with a dot or a comma; none when empty, an error when not a number.
@@ -460,6 +483,7 @@ impl App {
             }
         } else {
             s.searched = Some(record_of(&input));
+            s.answered = None;
             s.items.clear();
             s.chosen = None;
             s.planned = None;
@@ -500,6 +524,10 @@ impl App {
                 }
             }
             Event::NoBox => s.bbox = None,
+            Event::NoDates => {
+                s.from.clear();
+                s.to.clear();
+            }
             Event::Search => return self.stac_search_task(false),
             Event::More => return self.stac_search_task(true),
             Event::Found(ticket, found) => {
@@ -507,6 +535,7 @@ impl App {
                     return Task::none();
                 }
                 s.waiting = None;
+                s.answered = Some(found.is_ok());
                 match *found {
                     Err(why) => s.said = Some((Line::Error, why)),
                     Ok(page) => {
@@ -813,12 +842,30 @@ impl App {
             table::Column::new("Öğe").width(Length::Fill),
         ])
         .extend(rows)
-        .empty("Öğe yok: Ara ile arayın.");
+        // What the empty table means (GIS-045): before a search, while it runs, an answer with no item, a failure.
+        .empty(match (searching, s.answered) {
+            (true, _) => "Aranıyor…",
+            (false, Some(false)) => "Arama yapılamadı: nedeni aşağıda.",
+            (false, Some(true)) => "Eşleşen öğe yok.",
+            (false, None) => "Öğe yok: Ara ile arayın.",
+        });
         body = body.push(words::field(
             "Bulunan öğeler",
             container(words::fitted(items, n)).width(Fill),
             None,
         ));
+        // An answer with no item: what was asked, and how to ask wider.
+        if !searching && s.answered == Some(true) && s.items.is_empty() {
+            let asked = s.searched.as_ref().map(nothing_found).unwrap_or_default();
+            let mut wider = row![container(words::text_line(Line::Warn, asked)).width(Fill)].spacing(6).align_y(iced::Center);
+            if s.bbox.is_some() {
+                wider = wider.push(small("Kutuyu kaldır", Some(msg(Event::NoBox))));
+            }
+            if !s.from.trim().is_empty() || !s.to.trim().is_empty() {
+                wider = wider.push(small("Tarihleri kaldır", Some(msg(Event::NoDates))));
+            }
+            body = body.push(wider);
+        }
         // The chosen item's assets.
         if let Some(item) = s.chosen.and_then(|k| s.items.get(k)) {
             let rows: Vec<table::Row<'_, Message>> = listed(item)
@@ -910,6 +957,8 @@ impl App {
                     s.fetch.iter().map(|(k, _)| k.as_str()).collect::<Vec<_>>().join(", ")
                 ),
             )),
+            // Nothing to choose from yet: no pointer to a choice (GIS-045).
+            None if s.items.is_empty() => {}
             None => lines.push(words::text_line(
                 Line::Info,
                 "Bir öğe seçin: kırmızı ve yakın kızılötesi bantlarla kalite bandı kendiliğinden işaretlenir.",
@@ -938,7 +987,9 @@ impl App {
         if let Some((kind, why)) = &s.said {
             lines.push(words::text_line(*kind, why.clone()));
         }
-        body = body.push(words::summary(lines));
+        if !lines.is_empty() {
+            body = body.push(words::summary(lines));
+        }
         let can =
             s.downloading.is_none() && (matches!(&s.planned, Some(Ok(_))) || !s.fetch.is_empty());
         overlay::blocking(
@@ -1145,4 +1196,58 @@ mod tests {
                 .is_some_and(|(k, w)| *k == Line::Error && w.contains("çok"))
         );
     }
+
+    /// GIS-045 (docs/adr/1102): the table says what its emptiness means: before a search, while one runs, an answer
+    /// with no item (with what was asked and Kutuyu kaldır / Tarihleri kaldır to widen it, no pointer to choose an
+    /// item), and a failure. Picture `gis-045-stac-bos`.
+    #[test]
+    fn an_answer_with_no_item_says_what_was_asked() {
+        let mut app = app();
+        app.raster_stac_with(searching());
+        assert_eq!(app.gis.rasters.stac.as_ref().map(|s| s.answered), Some(None), "no search yet");
+        // The recorded search's answer, its items taken out: a catalog that has nothing there.
+        let s = app.gis.rasters.stac.as_mut().expect("the window");
+        let input = search_of(s).expect("the input");
+        let mut page = stac_search::search(&input).expect("the recorded answer");
+        page.items.clear();
+        page.matched = Some(0);
+        page.next = None;
+        s.searched = Some(record_of(&input));
+        s.ticket += 1;
+        let ticket = s.ticket;
+        s.waiting = Some(ticket);
+        send(&mut app, Event::Found(ticket, Box::new(Ok(page))));
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
+        assert_eq!(s.answered, Some(true));
+        let said = nothing_found(s.searched.as_ref().expect("asked"));
+        assert!(said.starts_with("Arama yanıtlandı ama “sentinel-2-l2a” koleksiyonunda, 36.9000°–37.1000° D"), "{said}");
+        assert!(said.contains("2024-07-01 – 2024-07-20 arasında, bulut en çok %20 öğe yok."), "{said}");
+        let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        assert!(crate::files_testing::find_text(&mut shot, &app, "Eşleşen öğe yok.").is_some());
+        assert!(crate::files_testing::find_text(&mut shot, &app, &said).is_some(), "{said}");
+        assert!(crate::files_testing::find_text(&mut shot, &app, "Tarihleri kaldır").is_some());
+        assert!(
+            crate::files_testing::find_text(
+                &mut shot,
+                &app,
+                "Bir öğe seçin: kırmızı ve yakın kızılötesi bantlarla kalite bandı kendiliğinden işaretlenir."
+            )
+            .is_none(),
+            "no item to choose"
+        );
+        crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-045-stac-bos");
+        // Tarihleri kaldır widens the time.
+        send(&mut app, Event::NoDates);
+        let s = app.gis.rasters.stac.as_ref().expect("the window");
+        assert!(s.from.is_empty() && s.to.is_empty());
+        // A failure: its own words.
+        let s = app.gis.rasters.stac.as_mut().expect("the window");
+        s.ticket += 1;
+        let ticket = s.ticket;
+        s.waiting = Some(ticket);
+        send(&mut app, Event::Found(ticket, Box::new(Err("Katalog yanıt vermedi.".into()))));
+        assert_eq!(app.gis.rasters.stac.as_ref().map(|s| s.answered), Some(Some(false)));
+    }
+
 }
