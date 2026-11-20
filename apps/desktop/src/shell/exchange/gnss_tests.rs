@@ -280,3 +280,30 @@ fn screens() {
         }
     }
 }
+
+/// GIS-034 (docs/adr/1089): the sample's positions (about 35.84° E) lie outside TUREF / TM30's area of use (west of
+/// 31.5° E): the preview says how many, their longitudes and the zone; in TM36, the drawing's own, it says nothing.
+#[test]
+fn positions_outside_the_projects_zone_are_said() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(sample("sample.gpx"));
+    run(&mut app, "file.import.gnss");
+    let points = window(&app).positions();
+    assert!(app.gnss_zone_line(&points).is_none(), "TM36 holds them");
+    let doc = app.document.as_mut().expect("open");
+    let mut settings = doc.settings().clone();
+    settings.srid = 5254;
+    doc.model.set_settings(settings);
+    assert!(app.gnss_zone_line(&points).is_some(), "TM30 does not");
+    let area = kentos_project::crs::area(5254).expect("TM30's area");
+    let out = points.iter().filter(|p| !area.holds_near(p.lon, p.lat)).count();
+    assert_eq!(out, points.len(), "every sample position is east of TM30's zone");
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        send(&mut app, Event::Close);
+        app.picker = Picker::File(sample("sample.gpx"));
+        run(&mut app, "file.import.gnss");
+        let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        crate::files_testing::evidence(&mut shot, &app, "gis-034", "tm30-dilim-disi");
+    }
+}

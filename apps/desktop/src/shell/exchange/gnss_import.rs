@@ -561,6 +561,46 @@ impl App {
         .into()
     }
 
+    /// Whether the file's positions lie in the project system's area of use (GIS-034, docs/adr/1089): how many do
+    /// not, the system's zone and their longitudes; for a system whose area is not known, that it was not looked at.
+    pub(super) fn gnss_zone_line<'a>(
+        &self,
+        points: &[kentos_commands::GnssPoint],
+    ) -> Option<Element<'a, Message>> {
+        if points.is_empty() {
+            return None;
+        }
+        let srid = self.document.as_ref()?.settings().srid;
+        let Some(area) = kentos_project::crs::area(srid) else {
+            return Some(words::text_line(
+                Line::Info,
+                "Projenin sisteminin kullanım alanı bilinmiyor; konumların dilime uygunluğu denetlenmedi.",
+            ));
+        };
+        let out: Vec<&kentos_commands::GnssPoint> =
+            points.iter().filter(|p| !area.holds_near(p.lon, p.lat)).collect();
+        if out.is_empty() {
+            return None;
+        }
+        let (least, most) = out
+            .iter()
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p.lon), b.max(p.lon)));
+        let deg = |v: f64| format!("{v:.3}°");
+        // The registry's own words for the zone (“28.5°–31.5° D (3° dilim)”) before EPSG's English name.
+        let zone = kentos_project::crs::system(srid)
+            .and_then(|s| s.area.clone())
+            .unwrap_or_else(|| area.name.clone());
+        Some(words::text_line(
+            Line::Warn,
+            format!(
+                "{} konum sistemin kullanım alanının dışında: boylamları {}–{}, sistemin alanı {zone}. Sayısal dönüşüm yapılır ama bu dilim o konumlar için seçilmemiş olabilir; projenin sistemini denetleyin.",
+                out.len(),
+                deg(least),
+                deg(most),
+            ),
+        ))
+    }
+
     fn gnss_summary<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let Some(r) = &s.read else {
             return words::summary(vec![match &s.failed {
@@ -649,6 +689,11 @@ impl App {
                         Line::Info,
                         words::extent_text(&self.number_format(), &bounds(&plan.placed)),
                     ));
+                }
+                // The target zone (GIS-034): points outside the project system's EPSG area of use are said with the
+                // zone and the points' longitudes, apart from the transformation's accuracy.
+                if let Some(line) = self.gnss_zone_line(&r.points) {
+                    lines.push(line);
                 }
             }
             (Some(_), None) => {}
@@ -742,5 +787,11 @@ impl State {
     /// How many of the file's records were not read.
     pub(super) fn problems(&self) -> usize {
         self.read.as_ref().map_or(0, |r| r.problems.len())
+    }
+
+    /// The file's positions as read (WGS 84).
+    #[cfg(test)]
+    pub(super) fn positions(&self) -> Vec<kentos_commands::GnssPoint> {
+        self.read.as_ref().map_or_else(Vec::new, |r| r.points.clone())
     }
 }
