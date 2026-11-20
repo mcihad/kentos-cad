@@ -140,6 +140,7 @@
     "calc.forward",
     "calc.resection",
     "calc.stakeout",
+    "tool.stakeout",
     "calc.traverse",
     "calc.polar",
     "calc.fieldbook",

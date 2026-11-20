@@ -211,6 +211,8 @@ pub const PORTED: &[&str] = &[
     "calc.forward",
     "calc.resection",
     "calc.stakeout",
+    // UR2-053: the scene tool's id and its APL open Aplikasyon (gis/calc/mod.rs).
+    "tool.stakeout",
     "calc.traverse",
     "calc.polar",
     "calc.fieldbook",

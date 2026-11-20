@@ -968,3 +968,26 @@ fn hesap_says_dogu_and_kuzey_in_a_cad_project() {
     assert!(!has("Y (sağa)") && !has("X (yukarı)"), "no survey letter");
     assert!(has("Doğu 487000.000  Kuzey 4420000.000"), "the field's point");
 }
+
+/// UR2-053: APL and the scene tool's id open the working Aplikasyon, not a note that it is coming; the points
+/// selected are its targets, as Seçili noktaları ekle would add them.
+#[test]
+fn apl_opens_aplikasyon_with_the_selected_points() {
+    let mut app = app_with_drawing();
+    let doc = &app.document.as_ref().expect("open").model;
+    let points: Vec<_> = doc
+        .entities_with_uids()
+        .filter(|(_, e)| matches!(e, Entity::Point(_)))
+        .filter_map(|(uid, _)| doc.slot_of(uid))
+        .take(2)
+        .collect();
+    assert!(!points.is_empty(), "the sample has points");
+    app.selection.set(points.clone());
+    let _ = app.update(Message::CommandInput("APL".into()));
+    let _ = app.update(Message::CommandSubmitted);
+    assert_eq!(app.gis.calc.open, Some(Window::Stakeout), "{:?}", last_said(&app));
+    assert_eq!(app.gis.calc.stakeout.rows.iter().filter(|r| !r.is_empty()).count(), points.len());
+    let _ = app.update(Message::Gis(gis::Event::Calc(Event::Close)));
+    let _ = app.run("tool.stakeout");
+    assert_eq!(app.gis.calc.open, Some(Window::Stakeout));
+}

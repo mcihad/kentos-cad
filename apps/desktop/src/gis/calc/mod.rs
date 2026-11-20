@@ -58,6 +58,8 @@ pub const COMMANDS: &[&str] = &[
     "calc.forward",
     "calc.resection",
     "calc.stakeout",
+    // UR2-053: the scene tool's id and its APL open the same Aplikasyon, the points selected as its targets.
+    "tool.stakeout",
     "transform.fit",
     "transform.edgematch",
     "crs.transform",
@@ -270,6 +272,15 @@ impl App {
                 self.calc_show(Window::Intersection);
             }
             "calc.stakeout" => self.calc_show(Window::Stakeout),
+            "tool.stakeout" => {
+                self.calc_show(Window::Stakeout);
+                let points = self.document.as_ref().is_some_and(|doc| {
+                    self.selection.ids().iter().any(|&s| matches!(doc.model.get(s), Some(Entity::Point(_))))
+                });
+                if points {
+                    self.calc_from_selection();
+                }
+            }
             "transform.fit" => self.calc_show(Window::Fit),
             "transform.edgematch" => self.calc_show(Window::Edgematch),
             "crs.transform" => self.calc_show(Window::Convert),

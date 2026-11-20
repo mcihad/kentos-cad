@@ -15,7 +15,7 @@
     "map.parcelReport": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "map.profile": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "map.sheet": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
-    "tool.stakeout": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "tool.stakeout": { "desktop": "implemented", "where": "Aplikasyon penceresi (calc.stakeout), seçili noktalar hedef satırlarında (apps/desktop/src/gis/calc/mod.rs, UR2-053)" },
     "tool.subdivide": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "workspace.disaster": { "desktop": "pending", "where": "apps/desktop/src/shell/modes.rs (menüde “Yakında”)" },
     "workspace.plan3d": { "desktop": "pending", "where": "apps/desktop/src/shell/modes.rs (menüde “Yakında”)" },

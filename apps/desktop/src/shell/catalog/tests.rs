@@ -376,6 +376,10 @@ fn the_ribbon_keeps_every_command_the_old_one_placed() {
     now.extend(crate::view::STATUS_AIDS.iter().map(|(id, _)| *id));
     now.extend(catalog.menu("help").iter().flatten().copied());
     now.insert("view.commandSearch");
+    // The scene tool's id opens the Aplikasyon the ribbon places as calc.stakeout (UR2-053).
+    if now.contains("calc.stakeout") {
+        now.insert("tool.stakeout");
+    }
     let lost: Vec<&String> = old
         .iter()
         .filter(|id| !now.contains(id.as_str()))
