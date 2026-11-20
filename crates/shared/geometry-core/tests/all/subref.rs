@@ -652,3 +652,18 @@ fn nonclamped_nurbs_end_references_are_evaluated_curve_ends_not_control_points()
     assert_eq!(point(&e, Place::Start), Some(Vec2::new(1., 0.)));
     assert_eq!(point(&e, Place::End), Some(Vec2::new(3., 2.)));
 }
+
+/// UR2-045: a 30 × 10 rectangle made a polyline (its first corner repeated at its end, as Çizgiye çevir writes it): a
+/// reference on its first corner follows to vertex 0, not broken as two places; on another corner it follows as before.
+#[test]
+fn the_first_corner_and_its_closing_repeat_are_one_corner() {
+    let before = entity(&json!({"kind": "polygon", "pts": [{"x":0,"y":0},{"x":30,"y":0},{"x":30,"y":10},{"x":0,"y":10}]}));
+    let after = entity(&json!({"kind": "polyline", "pts": [{"x":0,"y":0},{"x":30,"y":0},{"x":30,"y":10},{"x":0,"y":10},{"x":0,"y":0}]}));
+    let first = Place::Vertex { part: 0, ring: 0, index: 0 };
+    match follow(first, &before, Some(&after)) {
+        Followed::At(Place::Vertex { index: 0, .. }, p) => assert_eq!((p.x, p.y), (0.0, 0.0)),
+        other => panic!("the first corner: {other:?}"),
+    }
+    let second = Place::Vertex { part: 0, ring: 0, index: 1 };
+    assert!(matches!(follow(second, &before, Some(&after)), Followed::At(Place::Vertex { index: 1, .. }, _)));
+}

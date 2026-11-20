@@ -521,6 +521,14 @@ fn same_structure(before: &Shape, after: &Shape, place: Place) -> bool {
 }
 
 /// Every vertex place of a shape, in order (parts, then rings, then vertices).
+/// How many vertices ring `ring` of part `part` of a path has (0 for none).
+fn ring_len(shape: &Shape, part: usize, ring: usize) -> usize {
+    vertex_places(shape)
+        .iter()
+        .filter(|(p, _)| matches!(p, Place::Vertex { part: pp, ring: rr, .. } if *pp == part && *rr == ring))
+        .count()
+}
+
 fn vertex_places(shape: &Shape) -> Vec<(Place, Vec2)> {
     let mut out = Vec::new();
     let extra = match shape {
@@ -618,6 +626,12 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
         match hits.as_slice() {
             [one] => Ok(*one),
             [] => Err(Reason::VertexGone),
+            // A ring's first vertex and its closing repeat (an area made a polyline repeats its first corner at its
+            // end, UR2-045) are one corner: the first is taken.
+            [
+                a @ Place::Vertex { part: pa, ring: ra, index: 0 },
+                Place::Vertex { part: pb, ring: rb, index: last },
+            ] if pa == pb && ra == rb && *last + 1 == ring_len(&after.shape, *pa, *ra) => Ok(*a),
             _ => Err(Reason::Ambiguous),
         }
     };
