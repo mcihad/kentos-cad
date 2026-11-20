@@ -1756,3 +1756,43 @@ fn a_real_agents_extension_tool_runs_as_a_job_through_mcp() {
     let _ = app.update(Message::Python(Event::Link));
     let _ = std::fs::remove_dir_all(dir);
 }
+
+/// GIS-018 (docs/adr/1083): the console never says ready before the chosen Python opened KentOS's session; a Python
+/// that closes before that did not start, and one message says which Python, where to choose another and how to try
+/// again (no developer's command).
+#[test]
+fn the_console_is_ready_only_once_its_python_says_so() {
+    let mut app = app_with_drawing();
+    assert!(app.python.greeting().starts_with("Python henüz başlatılmadı"), "{}", app.python.greeting());
+    let id = running(&mut app);
+    let generation = app.python.generation;
+    let _ = app.update(Message::Python(Event::Host(generation, Said::Closed)));
+    let said: Vec<(EntryKind, String)> = entries(&app);
+    let last = said.last().expect("a line").1.clone();
+    assert!(last.contains("Python başlatılamadı") && last.contains("Python ve eklentiler"), "{last}");
+    assert!(!last.contains("pnpm") && !last.contains("beklenmedik"), "{last}");
+    assert!(app.python.running.is_none(), "the run {id} ended");
+    // Said ready, it is ready.
+    app.python.ready = Some("Python 3.14 · kentos 0.1.0".into());
+    assert_eq!(app.python.greeting(), "Python oturumunuz hazır (Python 3.14 · kentos 0.1.0).");
+}
+
+/// GIS-021 (docs/adr/1083): a CBS project's console offers an example that reads its layers and changes nothing; a CAD
+/// project's one that draws.
+#[test]
+fn the_consoles_first_example_fits_the_project() {
+    let mut app = app_with_drawing();
+    let cad = app.python_example();
+    assert!(cad.starts_with("cad.polygon.create"), "{cad}");
+    let doc = app.document.as_mut().expect("open");
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(kentos_commands::Workspace::Gis);
+    doc.model.set_settings(settings);
+    assert_eq!(app.python_example(), "print([k.name for k in doc.layers()])");
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        let _ = app.update(Message::Run(crate::catalog::PYTHON_CONSOLE));
+        let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        crate::files_testing::evidence(&mut shot, &app, "gis-018-021", "cbs-python-konsolu");
+    }
+}

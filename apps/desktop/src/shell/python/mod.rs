@@ -193,6 +193,19 @@ impl Console {
     pub fn started(&self) -> bool {
         self.host.is_some()
     }
+
+    /// The console's first line (gis-usage-report GIS-018, docs/adr/1083): ready only once the chosen Python opened
+    /// KentOS's session; being checked while it starts; else what the first expression will start.
+    pub fn greeting(&self) -> String {
+        match (&self.ready, &self.host) {
+            (Some(ready), _) => format!("Python oturumunuz hazır ({ready})."),
+            (None, Some(_)) => "Python denetleniyor…".to_owned(),
+            (None, None) => format!(
+                "Python henüz başlatılmadı: ilk ifade {} ile KentOS oturumunu açar.",
+                self.python.display()
+            ),
+        }
+    }
 }
 
 /// What the Python tab asked for, or what its process said.
@@ -703,26 +716,27 @@ impl App {
         let was_ready = self.python.ready.is_some();
         self.python.host = None;
         self.python.ready = None;
+        // A Python that never opened KentOS's session did not close unexpectedly: it did not start (GIS-018). One
+        // message says which Python, where to choose another and how to try again.
+        let start = format!(
+            "Python başlatılamadı ({}): KentOS oturumu açılmadı; kentos paketi bu Python'da kurulu olmayabilir. Ayarlar › Python ve eklentiler'den başka bir Python seçin ya da kurun, sonra Yeniden başlat'a basın.",
+            self.python.python.display()
+        );
         if let Some(run) = self.python.running.take() {
             let id = run.id;
             let wrote = self.python_close(run, false);
             self.python.repl.finish(
                 id,
-                failed(if wrote {
-                    "Python beklenmedik biçimde kapandı; bu çalıştırmanın çizime yazdıkları geri alındı."
-                } else {
-                    "Python beklenmedik biçimde kapandı."
+                failed(match (was_ready, wrote) {
+                    (false, _) => start.as_str(),
+                    (true, true) => {
+                        "Python beklenmedik biçimde kapandı; bu çalıştırmanın çizime yazdıkları geri alındı."
+                    }
+                    (true, false) => "Python beklenmedik biçimde kapandı.",
                 }),
             );
-        }
-        if !was_ready {
-            self.python.push(
-                Kind::Error,
-                format!(
-                    "Python konsolu başlamadı ({}): kentos paketi bu Python'da kurulu olmayabilir. Geliştirme ortamını `pnpm py:test` kurar; başka bir Python için KENTOS_PYTHON.",
-                    self.python.python.display()
-                ),
-            );
+        } else if !was_ready {
+            self.python.push(Kind::Error, start);
         }
     }
 

@@ -26,6 +26,10 @@ pub struct PythonRepl<'a, Message> {
     placeholder: &'a str,
     input_id: Option<iced::widget::Id>,
     compact: bool,
+    /// The empty transcript's first line: the session's state as the host knows it.
+    greeting: std::borrow::Cow<'a, str>,
+    /// What the header says instead of “Hazır” while the host's session is not (not started, being checked).
+    idle: Option<&'a str>,
 }
 
 impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
@@ -40,7 +44,21 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             placeholder: "print(\"Merhaba, KentOS\")",
             input_id: None,
             compact: false,
+            greeting: std::borrow::Cow::Borrowed("Python oturumunuz hazır."),
+            idle: None,
         }
+    }
+    /// The header's word for a console with nothing running whose session is not ready (“Başlatılmadı”,
+    /// “Denetleniyor”); none: “Hazır”.
+    pub fn idle(mut self, words: Option<&'a str>) -> Self {
+        self.idle = words;
+        self
+    }
+    /// The empty transcript's first line: the session's state as the host knows it (not started, being checked,
+    /// ready), so it never says ready before the interpreter is.
+    pub fn greeting(mut self, greeting: impl Into<std::borrow::Cow<'a, str>>) -> Self {
+        self.greeting = greeting.into();
+        self
     }
     /// The code box's id: an application can focus it (`focusable::focus`).
     pub fn input_id(mut self, id: impl Into<iced::widget::Id>) -> Self {
@@ -117,7 +135,13 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
         };
         let header = header
             .push(
-                text(format!("●  {}", status.label()))
+                text(format!(
+                    "●  {}",
+                    match (status, self.idle) {
+                        (RunStatus::Ready, Some(words)) => words,
+                        _ => status.label(),
+                    }
+                ))
                     .font(typography::ui())
                     .size(typography::caption())
                     .wrapping(advanced_text::Wrapping::None)
@@ -138,7 +162,7 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             transcript = transcript.push(
                 column![
                     text(">>>").font(strong_font()).size(typography::figure()).style(|theme: &Theme| text::Style { color: Some(Tokens::of(theme).accent) }),
-                    text("Python oturumunuz hazır.").font(typography::ui()).size(typography::body()),
+                    text(self.greeting.clone().into_owned()).font(typography::ui()).size(typography::body()),
                     text("Bir ifade yazın. Enter çalıştırır; Shift+Enter yeni satır açar.\n↑ ve ↓ önceki komutları getirir.").font(typography::ui()).size(typography::caption()).style(style::text::muted),
                 ].spacing(8)
             );

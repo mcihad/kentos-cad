@@ -131,6 +131,20 @@ impl App {
         }
     }
 
+    /// The code box's first example, fitting the project (GIS-021): a CBS project's reads its layers, changing
+    /// nothing; a CAD project's draws.
+    pub(crate) fn python_example(&self) -> &'static str {
+        let gis = self
+            .document
+            .as_ref()
+            .is_some_and(|d| d.settings().workspace == Some(kentos_commands::Workspace::Gis));
+        if gis {
+            "print([k.name for k in doc.layers()])"
+        } else {
+            "cad.polygon.create(doc, layer_id=…, pts=[…])"
+        }
+    }
+
     /// The console: KentOS UI's REPL, its header carrying the desktop's
     /// controls (with `switch`, Konsol | Betik first).
     fn python_console(&self, switch: bool) -> Element<'_, Message> {
@@ -164,9 +178,17 @@ impl App {
             tools = tools.push(signature_view(signature));
         }
         // Compact: the bottom panel is short; Çalıştır sits beside the code box.
+        let example = self.python_example();
+        let greeting = c.greeting();
         let repl = PythonRepl::new(&c.repl, |e| ev(Event::Repl(e)))
             .title("Python")
-            .placeholder("cad.polygon.create(doc, layer_id=…, pts=[…])")
+            .placeholder(example)
+            .greeting(greeting)
+            .idle(match (&c.ready, c.started()) {
+                (Some(_), _) => None,
+                (None, true) => Some("Denetleniyor"),
+                (None, false) => Some("Başlatılmadı"),
+            })
             .output_id(OUTPUT)
             .input_id(INPUT)
             .compact(true)
