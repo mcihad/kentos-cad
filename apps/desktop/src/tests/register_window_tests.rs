@@ -907,3 +907,27 @@ fn axis_screens() {
         println!("{}", file.display());
     }
 }
+
+/// UR2-030: at 1440 × 860 with a result and its table shown, CSV kaydet, Buluta uygula and Kapat are whole buttons (the
+/// body scrolls, the actions keep their row), each as tall as a button is.
+#[test]
+fn the_actions_keep_their_row_at_the_usual_size() {
+    let mut app = opened(Some(Module::Map));
+    let size = iced::Size::new(1440.0, 860.0);
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.update(Message::Run("pointcloud.register"));
+    assert!(matches!(app.map.register.answer, Some(Ok(_))));
+    let mut snapshot = crate::files_testing::offscreen(size);
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut snapshot, &app, "ur2-030", "tarama-kaydi");
+    for caption in ["CSV kaydet…", "Buluta uygula…", "Kapat"] {
+        let at = crate::files_testing::find_texts(&mut snapshot, &app, caption)
+            .into_iter()
+            .max_by(|a, b| a.y.total_cmp(&b.y))
+            .unwrap_or_else(|| panic!("{caption} drawn"));
+        assert!(at.height >= 12.0 && at.y + at.height <= size.height, "{caption}: {at:?}");
+    }
+}

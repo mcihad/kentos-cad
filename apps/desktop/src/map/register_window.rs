@@ -596,8 +596,10 @@ impl App {
             .push(Segmented::new([View::Worst, View::Control], s.view, |v| msg(Event::View(v))))
             .push(table);
         let ready = matches!(s.answer, Some(Ok(_)));
+        // The body scrolls; the actions keep their row whatever the window's height (UR2-030: at 1440 × 860 with a
+        // result the three buttons were thin lines).
         Frame::new(TITLE)
-            .push(body)
+            .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
             .aside(words::secondary(APPLY, ready.then(|| msg(Event::Apply))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
