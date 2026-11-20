@@ -178,6 +178,8 @@ pub struct Entry {
     conflict: Option<String>,
     /// The next Kaydet writes over the record as it is now (Üzerine yaz).
     overwrite: bool,
+    /// What Kaydet on many records was refused for, on its field (GIS-027): said in the form until a value is typed.
+    refused: Option<FormIssue>,
     /// The conflict is a new release of the form (docs/adr/0442 §2): Yeni sürümle aç instead of
     /// Üzerine yaz.
     release_changed: bool,
@@ -602,7 +604,12 @@ impl Entry {
         let all: Vec<&Attrs> = afters.iter().collect();
         let (same, mixed) = common(&all);
         self.items = merged.unwrap_or_default();
-        self.issues = issues.unwrap_or_default();
+        let mut issues = issues.unwrap_or_default();
+        if let Some(r) = &self.refused {
+            issues.retain(|i| i.field != r.field);
+            issues.insert(0, r.clone());
+        }
+        self.issues = issues;
         self.after = same;
         self.mixed = mixed;
     }
@@ -733,6 +740,29 @@ impl Entry {
     }
 
     /// Whether a value was typed that the record does not hold yet.
+    /// Kaydet on many records refused on `field` (its name) for `why`: the field says it, nothing was written.
+    pub(crate) fn refuse_on(&mut self, field: &str, why: String) {
+        self.refused = Some(FormIssue {
+            code: "not_unique".into(),
+            severity: kentos_commands::FormSeverity::Error,
+            item: None,
+            field: Some(field.to_owned()),
+            rule: None,
+            message: why,
+        });
+        self.recompute_many();
+    }
+
+    /// A field's shown name (its alias, else its name), by its name.
+    pub(crate) fn field_label(&self, name: &str) -> Option<String> {
+        self.fields.iter().find(|f| f.name == name).map(|f| f.label().to_owned())
+    }
+
+    /// A value typed: the last refusal no longer stands.
+    pub(crate) fn clear_refusal(&mut self) {
+        self.refused = None;
+    }
+
     /// Its record's slot in `doc`, when the drawing still has it.
     pub(crate) fn record_slot(&self, doc: &kentos_domain::Document) -> Option<kentos_domain::Slot> {
         controls::record_slot(doc, &self.uid)

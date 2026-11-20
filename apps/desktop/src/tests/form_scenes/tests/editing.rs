@@ -1263,3 +1263,33 @@ fn a_formless_layer_makes_its_form_from_the_table() {
     assert_eq!(new.layer.as_deref(), Some(parcel.as_str()), "on the table's layer");
     assert_eq!(new.name, "Parsel");
 }
+
+/// GIS-027: one unique code given to three buildings is refused on its field in the form itself, saying nothing was
+/// written; the other values typed stay, and typing again clears the refusal.
+#[test]
+fn a_unique_value_for_many_records_is_said_on_its_field() {
+    let mut app = crate::files_testing::app_with_drawing();
+    calc_buildings(&mut app);
+    app.selection.set([Slot(1), Slot(2), Slot(3)]);
+    run(&mut app, "data.formEdit");
+    entry(&mut app, entry::Event::Value("Kod".into(), "ORTAK-24".into()));
+    entry(&mut app, entry::Event::Value("Durum".into(), "iyi".into()));
+    entry(&mut app, entry::Event::Value("kat-sayisi".into(), "8".into()));
+    entry(&mut app, entry::Event::Save);
+    let e = app.gis.form_entry.as_ref().expect("the form stays");
+    let on_code = e
+        .issues
+        .iter()
+        .find(|i| i.field.as_deref() == Some("Kod"))
+        .unwrap_or_else(|| panic!("{:?} / {}", e.issues, crate::files_testing::last_said(&app)));
+    assert!(
+        on_code.message.contains("3 kayıtta aynı olamaz") && on_code.message.contains("Hiçbir kayıt değiştirilmedi"),
+        "{}",
+        on_code.message
+    );
+    assert_eq!(e.value_of("Kat").as_deref(), Some("8"), "the storeys typed stay");
+    assert_eq!(attrs(&app, 2), std::collections::BTreeMap::new(), "nothing written");
+    entry(&mut app, entry::Event::Value("Kod".into(), "".into()));
+    let e = app.gis.form_entry.as_ref().expect("open");
+    assert!(e.issues.iter().all(|i| !i.message.contains("aynı olamaz")), "typing clears it");
+}

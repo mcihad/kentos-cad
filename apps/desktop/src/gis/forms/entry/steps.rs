@@ -52,6 +52,7 @@ impl App {
                 return Task::none();
             }
             Event::Value(key, text) => {
+                e.clear_refusal();
                 e.queries.remove(&key);
                 e.searched.remove(&key);
                 e.pending.remove(&key);
@@ -810,6 +811,43 @@ impl App {
             Some(waiting) => kentos_forms::answering_with(waiting, fill),
             None => fill(),
         };
+        // A refusal on one field (a unique value given to many records, a value a record's rules refuse) is said on
+        // that field in the form, the values typed kept and nothing written said (GIS-027).
+        if let kentos_commands::CommandResult::Failed { error } = &result
+            && let Some(field) = error.path.as_deref().and_then(|p| {
+                p.strip_prefix("values.").or_else(|| {
+                    (error.code == kentos_commands::codes::NOT_UNIQUE)
+                        .then(|| p.rsplit('.').next().unwrap_or(p))
+                })
+            })
+        {
+            let field = field.to_owned();
+            let label = self
+                .gis
+                .form_entry
+                .as_ref()
+                .and_then(|e| e.field_label(&field))
+                .unwrap_or_else(|| field.clone());
+            let unique =
+                error.code == kentos_commands::codes::NOT_UNIQUE || error.message.contains("tekil");
+            let why = if unique {
+                format!(
+                    "“{label}” {count} kayıtta aynı olamaz: alan katmanda tekil. Hiçbir kayıt değiştirilmedi."
+                )
+            } else {
+                // The record's id the core starts with means nothing to the user: the rule's words alone.
+                let words = error
+                    .message
+                    .split_once("kaydı: ")
+                    .map_or(error.message.as_str(), |(_, w)| w);
+                format!("{} Hiçbir kayıt değiştirilmedi.", words.trim_end())
+            };
+            if let Some(e) = self.gis.form_entry.as_mut() {
+                e.refuse_on(&field, why.clone());
+            }
+            self.warn(why);
+            return self.go_to_first_issue();
+        }
         match self.answered(result) {
             Some(done) => {
                 self.gis.form_entry = None;

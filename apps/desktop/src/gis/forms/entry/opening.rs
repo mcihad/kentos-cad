@@ -227,6 +227,7 @@ impl App {
             tried: false,
             conflict: None,
             overwrite: false,
+            refused: None,
             release_changed: false,
             reviewing: false,
             commit: false,
