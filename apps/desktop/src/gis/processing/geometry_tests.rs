@@ -242,7 +242,11 @@ fn the_zoning_error_layer_goes_to_a_geopackage() {
     };
     assert!(!undo);
     assert!(text.contains("1 bulgunun 2 bölgesi hata katmanına yazıldı."), "{text}");
-    assert!(text.contains("Sonuç imar-bulgulari.gpkg dosyasına yazıldı: İmar bulguları (2 satır)."), "{text}");
+    // The tool's findings table goes to the file too (UR2-029).
+    assert!(
+        text.contains("Sonuç imar-bulgulari.gpkg dosyasına yazıldı: İmar bulguları (2 satır), Bulgular (1 satır)."),
+        "{text}"
+    );
     assert!(out.exists(), "the file is written");
     assert_eq!(app.document.as_ref().expect("open").model.revision(), before, "the drawing does not change");
 }

@@ -158,7 +158,9 @@ impl LocalSink {
             schema: (self.place == Place::Database).then(|| self.schema.trim().to_owned()),
             overwrite: self.overwrite && self.mode == SinkMode::New,
             mode: self.mode,
-            tables: false,
+            // A tool's table output goes to the file too (UR2-029: Nokta bulutu alan sorgusu's table was refused, the
+            // window having no way to ask for it).
+            tables: true,
         })
     }
 
@@ -489,7 +491,9 @@ impl App {
             selection,
             view: Some([v.min_x, v.min_y, v.max_x, v.max_y]),
             sink: window.sink.sink(),
-            drawing: None,
+            // The drawing's path, so a file it links by a relative path (a point cloud's LAZ, a raster) is found from its
+            // folder as the run on the drawing finds it (UR2-029).
+            drawing: doc.path.as_ref().map(|p| p.display().to_string()),
         })
     }
 

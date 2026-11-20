@@ -331,3 +331,25 @@ fn the_tools_write_the_references_answers() {
     assert!(ok_text(&s).contains("6 parçalı"), "{s:?}");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// UR2-029: Nokta bulutu alan sorgusu with its result in a new GeoPackage: the table is written there (the window asks
+/// for the tool's tables), not refused for want of a table option.
+#[test]
+fn the_area_query_writes_its_table_to_a_geopackage() {
+    use crate::processing::sink::{Place, SinkEvent};
+    let dir = crate::files_testing::scratch("bulut-alan-gpkg");
+    let out = dir.join("alanlar.gpkg");
+    let _ = std::fs::remove_file(&out);
+    let mut app = app();
+    let _ = app.update(Message::Run("processing.run.pointcloud.areaStats"));
+    value(&mut app, "input", layer("koy"));
+    value(&mut app, "areas", layer("alanlar"));
+    let sink = |app: &mut App, e: SinkEvent| {
+        let _ = app.update(Message::Gis(gis::Event::Processing(Event::Sink(e))));
+    };
+    sink(&mut app, SinkEvent::Place(Place::File));
+    sink(&mut app, SinkEvent::Path(out.display().to_string()));
+    let text = ok_text(&run(&mut app));
+    assert!(text.contains("alanlar.gpkg dosyasına yazıldı"), "{text}");
+    assert!(out.exists(), "the file is written");
+}
