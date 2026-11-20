@@ -412,3 +412,46 @@ fn found_grid_screens() {
         println!("{}", file.display());
     }
 }
+
+/// GIS-046 (docs/adr/1103): a package with a parcel's document not found says it is not whole: no “finds its
+/// sources”, the missing file by its path with the object that keeps it and how to bind it again; one without a missing
+/// file says the sources are found.
+#[test]
+fn a_missing_document_is_said_and_the_package_is_not_called_whole() {
+    let mut app = sample();
+    run(&mut app, "file.package");
+    let out = scratch("paket-eksik-belge").join("teslim");
+    let input = app.package_input(&out).expect("an input");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let planned = kentos_headless::package::plan(doc, &input).expect("planned");
+    let (uid, label) = doc
+        .entities_with_uids()
+        .map(|(u, e)| (u.to_string(), e.base().label.clone()))
+        .next()
+        .expect("an object");
+    // The whole one first.
+    let mut whole = planned.output.clone();
+    whole.left.retain(|l| !matches!(l.why, kentos_commands::LeftWhy::Missing | kentos_commands::LeftWhy::Unreadable));
+    send(&mut app, Event::Package(P::Done(Ok(Box::new((whole, Vec::new()))))));
+    let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(said.iter().any(|l| l.ends_with("kaynaklarını bulur.")), "{said:?}");
+    // A parcel's PDF missing.
+    let mut missing = planned.output;
+    missing.left.push(kentos_commands::PackageLeft {
+        kind: kentos_commands::PackagedKind::Attachment,
+        path: "belgeler/tapu-101-5.pdf".into(),
+        why: kentos_commands::LeftWhy::Missing,
+        at: uid,
+        objects: None,
+    });
+    let before = app.log.lines().count();
+    send(&mut app, Event::Package(P::Done(Ok(Box::new((missing, Vec::new()))))));
+    let said: Vec<String> = app.log.lines().skip(before).map(|l| l.text.clone()).collect();
+    assert!(said.iter().all(|l| !l.contains("kaynaklarını bulur")), "{said:?}");
+    assert!(said.iter().any(|l| l.contains("Paket eksik: 1 bağlı dosya")), "{said:?}");
+    let line = said.iter().find(|l| l.starts_with("Eksik: “belgeler/tapu-101-5.pdf” bulunamadı")).expect("the file said");
+    if let Some(label) = label.filter(|l| !l.trim().is_empty()) {
+        assert!(line.contains(&format!("“{}” nesnesinde", label.trim())), "{line}");
+    }
+    assert!(line.contains("yeniden bağlayın"), "{line}");
+}

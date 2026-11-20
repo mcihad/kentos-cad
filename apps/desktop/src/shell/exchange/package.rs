@@ -279,14 +279,40 @@ impl App {
                         }
                     );
                 }
+                // The links whose files did not come (GIS-046): not there, or not readable. The package is whole only
+                // without them; each is said with what keeps it and how to bind it again.
+                let missing: Vec<&kentos_commands::PackageLeft> = out
+                    .left
+                    .iter()
+                    .filter(|l| matches!(l.why, kentos_commands::LeftWhy::Missing | kentos_commands::LeftWhy::Unreadable))
+                    .collect();
+                let whole = if missing.is_empty() {
+                    " Klasör başka bilgisayarda açılınca dış başvurular, bağlı dosyalar ve katmanlar kaynaklarını bulur.".to_owned()
+                } else {
+                    format!(
+                        " Paket eksik: {} bağlı dosya bulunamadığı ya da okunamadığı için girmedi; aşağıda tek tek.",
+                        missing.len()
+                    )
+                };
                 self.announce(
                     if out.left.is_empty() && findings == 0 { Level::Success } else { Level::Warn },
                     format!(
-                        "Paket yapıldı: {} ve {} dosya ({mb:.1} MB{extra}); içindekiler paket.json'da.{embedded} Klasör başka bilgisayarda açılınca dış başvurular, bağlı dosyalar ve katmanlar kaynaklarını bulur.",
+                        "Paket yapıldı: {} ve {} dosya ({mb:.1} MB{extra}); içindekiler paket.json'da.{embedded}{whole}",
                         out.project,
                         out.files.len(),
                     ),
                 );
+                for l in &missing {
+                    let why = if l.why == kentos_commands::LeftWhy::Missing { "bulunamadı" } else { "okunamadı" };
+                    let who = self.package_holder(&l.at);
+                    self.say(
+                        Level::Warn,
+                        format!(
+                            "Eksik: “{}” {why}{who}. Dosyayı o yola koyun ya da bağlantıyı Öznitelikler'deki ekten yeniden bağlayın, sonra Paketle'yi yeniden çalıştırın.",
+                            l.path
+                        ),
+                    );
+                }
                 for w in warnings {
                     self.say(Level::Warn, w.message);
                 }
@@ -296,6 +322,25 @@ impl App {
                 self.announce(Level::Error, format!("Paket yapılamadı. {why}"));
                 Task::none()
             }
+        }
+    }
+
+    /// What keeps a link left out, as the user knows it (GIS-046): “ (“P-5” nesnesinde, Parsel katmanı)” for an object
+    /// by its lasting id, the reference otherwise; empty when it is not found.
+    fn package_holder(&self, at: &str) -> String {
+        let Some(doc) = &self.document else { return String::new() };
+        let object = kentos_domain::Uuid::parse_str(at).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s));
+        match object {
+            Some(e) => {
+                let label = e.base().label.as_deref().map(str::trim).filter(|l| !l.is_empty());
+                let layer = doc.model.layers().get(&e.base().layer_id).map(|l| l.name.clone()).unwrap_or_default();
+                match label {
+                    Some(l) => format!(" (“{l}” nesnesinde, {layer} katmanı)"),
+                    None => format!(" ({layer} katmanındaki bir nesnede)"),
+                }
+            }
+            None if at.is_empty() => String::new(),
+            None => format!(" ({at})"),
         }
     }
 
