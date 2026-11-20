@@ -96,6 +96,8 @@ pub struct Window {
     pub(crate) edit_report: Option<TerrainReport>,
     /// Yüzey yapıştır (docs/adr/3920): the saved surface chosen to paste into the chosen one.
     pub(crate) paste_from: Option<String>,
+    /// Why Kaydet was refused, shown in the window over the sources (UR2-008); any change clears it.
+    pub(crate) error: Option<String>,
 }
 
 impl Window {
@@ -237,6 +239,7 @@ impl App {
             edit_z: String::new(),
             edit_report: None,
             paste_from: None,
+            error: None,
         });
         self.dialog = Some(Dialog::Road(road::RoadDialogKind::Terrains));
         self.refresh_edit_report();
@@ -280,6 +283,9 @@ impl App {
         let Some(w) = self.road.terrain_window.as_mut() else {
             return Task::none();
         };
+        if !matches!(event, Event::Save) {
+            w.error = None;
+        }
         let chosen = w.chosen.and_then(|i| w.rows.get_mut(i));
         let mut warning = None;
         match event {
@@ -551,13 +557,12 @@ impl App {
             return Task::none();
         };
         let mut defs = Vec::new();
-        for r in &w.rows {
+        for (i, r) in w.rows.iter().enumerate() {
             let (Ok(max_edge), Ok(tolerance)) = (number(&r.max_edge), number(&r.tolerance)) else {
-                self.warn(format!(
-                    "“{}” yüzeyinin en uzun dış kenarı ve kot toleransı sayı olmalı (metre).",
-                    r.def.name
-                ));
-                return Task::none();
+                return self.terrain_refused(
+                    i,
+                    format!("“{}” yüzeyinin en uzun dış kenarı ve kot toleransı sayı olmalı (metre).", r.def.name),
+                );
             };
             defs.push(TerrainSurfaceDef {
                 max_edge,
@@ -586,17 +591,19 @@ impl App {
             match w.kept.iter().find(|k| k.id == d.id) {
                 Some(k) if *k == d => {}
                 Some(_) => {
+                    let row = w.rows.iter().position(|r| r.def.id == d.id);
                     let edit = TerrainsEdit {
                         operation: TerrainsEditOperation::Set,
                         surface: Some(TerrainSurfaceDef { built: None, ..d }),
                         id: None,
                         expected_revision: None,
                     };
-                    if !self.terrain_write(|cx| road_terrains_edit::execute(cx, edit)) {
-                        return Task::none();
+                    if let Err(why) = self.terrain_try(|cx| road_terrains_edit::execute(cx, edit)) {
+                        return self.terrain_refused(row.unwrap_or_default(), why);
                     }
                 }
                 None => {
+                    let id_of_new = d.id.clone();
                     let create = TerrainsCreate {
                         name: d.name,
                         id: Some(d.id),
@@ -608,8 +615,9 @@ impl App {
                         max_edge: d.max_edge,
                         expected_revision: None,
                     };
-                    if !self.terrain_write(|cx| road_terrains_create::execute(cx, create)) {
-                        return Task::none();
+                    let row = w.rows.iter().position(|r| r.def.id == id_of_new);
+                    if let Err(why) = self.terrain_try(|cx| road_terrains_create::execute(cx, create)) {
+                        return self.terrain_refused(row.unwrap_or_default(), why);
                     }
                 }
             }
@@ -621,6 +629,45 @@ impl App {
     }
 
     /// One write; on a refusal the window stays with the project's definitions as they are now.
+    /// Kaydet refused (UR2-008): the window stays with its draft, the surface chosen and its sources in sight, the
+    /// reason over them; the log has it too.
+    fn terrain_refused(&mut self, row: usize, why: String) -> Task<Message> {
+        self.warn(why.clone());
+        if let Some(w) = self.road.terrain_window.as_mut() {
+            w.chosen = Some(row.min(w.rows.len().saturating_sub(1)));
+            w.edits_pane = false;
+            w.error = Some(why);
+        }
+        Task::none()
+    }
+
+    /// A surface command on the open drawing: its refusal's words, the log left to [`Self::terrain_refused`].
+    fn terrain_try<T: serde::Serialize>(
+        &mut self,
+        write: impl FnOnce(&mut ExecutionContext<'_>) -> kentos_commands::CommandResult<T>,
+    ) -> Result<(), String> {
+        let Some(doc) = self.document.as_mut() else {
+            return Err("Açık çizim yok.".into());
+        };
+        match write(&mut ExecutionContext::new(&mut doc.model)) {
+            kentos_commands::CommandResult::Completed { warnings, .. } => {
+                for w in warnings {
+                    self.warn(w.message);
+                }
+                Ok(())
+            }
+            kentos_commands::CommandResult::Failed { error }
+            | kentos_commands::CommandResult::Conflict { error }
+            | kentos_commands::CommandResult::NeedsInput { error } => {
+                self.refresh_terrains();
+                Err(error.message)
+            }
+            kentos_commands::CommandResult::Queued { .. } | kentos_commands::CommandResult::Cancelled => {
+                Err("Yüzey yazılmadı.".into())
+            }
+        }
+    }
+
     fn terrain_write<T: serde::Serialize>(
         &mut self,
         write: impl FnOnce(&mut ExecutionContext<'_>) -> kentos_commands::CommandResult<T>,
@@ -803,6 +850,19 @@ impl App {
                 .into();
         }
         head
+            .extend(w.error.as_ref().map(|why| {
+                // The command's rule, and where to answer it when the surface has no source yet.
+                let none = d.points.layers.is_empty()
+                    && d.points.uids.is_empty()
+                    && d.breaklines.layers.is_empty()
+                    && d.breaklines.uids.is_empty();
+                let what = if none {
+                    format!("{why} Aşağıda Nokta katmanlarından ya da Kırık hat katmanlarından en az birini seçin.")
+                } else {
+                    why.clone()
+                };
+                words::text_line(words::Kind::Error, what)
+            }))
             .push(words::field("Nokta katmanları", checks(&d.points.layers, Event::PointLayer), None))
             .extend((!d.points.uids.is_empty()).then(|| {
                 label::caption(format!("ve kimliğiyle {} nokta nesnesi", d.points.uids.len())).style(muted).into()

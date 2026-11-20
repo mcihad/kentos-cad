@@ -647,3 +647,29 @@ fn a_work_without_a_surface_leads_to_yuzey_olustur() {
         assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Terrains)), "{work}");
     }
 }
+
+/// UR2-008: Kaydet with no point layer keeps the draft and says why in the window, over the sources; a layer chosen
+/// clears it, and the same window saves.
+#[test]
+fn a_refused_save_is_said_in_the_window_and_the_draft_stays() {
+    let mut app = app("road");
+    let _ = app.update(Message::Run("terrain.new"));
+    send(&mut app, W::Save);
+    assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Terrains)), "the window stays");
+    let w = app.road.terrain_window.as_ref().expect("the draft stays");
+    let why = w.error.clone().expect("the reason in the window");
+    assert!(why.contains("noktası ya da kırık hattı olmalı"), "{why}");
+    assert!(!w.edits_pane, "the sources in sight");
+    if std::env::var_os("KENTOS_SHOTS").is_some() {
+        let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::files_testing::evidence(&mut snapshot, &app, "ur2-008", "kaynaksiz-kaydet");
+    }
+    send(&mut app, W::PointLayer("zemin".into()));
+    assert!(app.road.terrain_window.as_ref().is_some_and(|w| w.error.is_none()), "fixed, the reason goes");
+    send(&mut app, W::Save);
+    assert!(app.road.terrain_window.is_none(), "saved from the same window");
+}
