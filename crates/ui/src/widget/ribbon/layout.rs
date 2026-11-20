@@ -1005,4 +1005,21 @@ mod tests {
         let icon = Button::<()>::small(Icon::Button, "Ölçülendirme");
         assert_eq!(tools_width(&[lead()], 2), tools_width(&[icon], 2));
     }
+
+    /// A small split button reserving its family's faces is as wide whichever member is on top, so the panels beside
+    /// it keep their place (UR2-004: Düzgün çokgen moved Çizgi, Taşı and Yazı).
+    #[test]
+    fn a_reserving_split_is_as_wide_whichever_member_is_on_top() {
+        let faces = ["Dikdörtgen", "Döndürülmüş dikdörtgen", "Düzgün çokgen"];
+        let split = |label: &str| {
+            Button::<()>::small(Icon::Button, label.to_owned()).on_press(()).menu(Menu::new).reserve(faces)
+        };
+        for level in 0..3 {
+            let widths: Vec<f32> = faces.iter().map(|face| tools_width(&[split(face)], level)).collect();
+            assert!(widths.iter().all(|w| *w == widths[0]), "level {level}: {widths:?}");
+        }
+        // Without the reservation the faces differ, as they did.
+        let bare = |label: &str| Button::<()>::small(Icon::Button, label.to_owned()).on_press(()).menu(Menu::new);
+        assert!(tools_width(&[bare("Dikdörtgen")], 1) < tools_width(&[bare("Düzgün çokgen")], 1));
+    }
 }

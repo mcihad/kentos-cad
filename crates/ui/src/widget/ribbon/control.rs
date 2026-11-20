@@ -81,6 +81,9 @@ pub struct Button<'a, Message> {
     /// A small button drawn with its icon only (a narrow custom panel).
     icon_only: bool,
     layout_id: Option<widget::Id>,
+    /// Labels the face may take (a split button's other members): it is as wide as the widest, so that choosing
+    /// another member does not move its neighbours.
+    reserve: Vec<String>,
 }
 
 impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
@@ -99,6 +102,7 @@ impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
             flash: self.flash,
             icon_only: self.icon_only,
             layout_id: self.layout_id.clone(),
+            reserve: self.reserve.clone(),
         }
     }
 }
@@ -135,7 +139,15 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             flash: false,
             icon_only: false,
             layout_id: None,
+            reserve: Vec::new(),
         }
+    }
+
+    /// Bölünmüş düğmenin alabileceği öbür etiketler: düğme en genişi kadar yer tutar. Listeden başka bir yöntem
+    /// seçilince komşu düğmeler yerinden oynamaz, panel aynı genişlikte kalır.
+    pub fn reserve<S: Into<String>>(mut self, labels: impl IntoIterator<Item = S>) -> Self {
+        self.reserve = labels.into_iter().map(Into::into).collect();
+        self
     }
 
     /// Düğmeye menü ekler. `on_press` da verilmişse düğme bölünür: ikon
@@ -257,10 +269,12 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
 
     /// Etiketin en uzun satırının genişliği (açıklama boyutunda).
     fn label_width(&self) -> f32 {
-        self.label
-            .lines()
-            .map(|line| typography::measured_width(line, typography::caption(), false))
-            .fold(0.0, f32::max)
+        widest_line(&self.label)
+    }
+
+    /// The small face's label room: its own label or, reserving, the widest it may take.
+    fn small_label_width(&self) -> f32 {
+        self.reserve.iter().map(|label| widest_line(label)).fold(self.label_width(), f32::max)
     }
 
     /// Biçimdeki genişliği (piksel): şerit panelleri buna göre sığdırır.
@@ -272,7 +286,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
         match form {
             Form::Large => large_width(self.label_width()),
             Form::Small => {
-                let face = SMALL_LEFT + ICON + GAP + self.label_width();
+                let face = SMALL_LEFT + ICON + GAP + self.small_label_width();
                 if split {
                     face + 5.0 + arrow
                 } else if menu_only {
@@ -317,6 +331,13 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
                 ContextMenu::new(content, move |_| menu()).into()
             }
             None => content,
+        };
+        // A reserving small button holds its widest face's room: its column does not shrink round a shorter one. A
+        // large button keeps its own width (a family's longest name under one icon would crowd a narrow ribbon).
+        let content: Element<'a, Message> = if !self.reserve.is_empty() && form == Form::Small {
+            container(content).width(iced::Length::Fixed(self.width(form))).into()
+        } else {
+            content
         };
         match &self.layout_id {
             Some(id) => container(content).id(id.clone()).into(),
@@ -675,4 +696,11 @@ impl<'a, Message: Clone + 'a> From<AppButton<'a, Message>> for Element<'a, Messa
             .align_y(Center)
             .into()
     }
+}
+
+/// The widest line of a label, in the caption's size.
+fn widest_line(text: &str) -> f32 {
+    text.lines()
+        .map(|line| typography::measured_width(line, typography::caption(), false))
+        .fold(0.0, f32::max)
 }

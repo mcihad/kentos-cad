@@ -387,6 +387,55 @@ mod tests {
         }
     }
 
+    /// UR2-004: at one window width, Düzgün çokgen chosen from Dikdörtgen's list moves none of Giriş's other buttons.
+    #[test]
+    fn choosing_a_method_moves_no_other_ribbon_button() {
+        use kentos_ui::snapshot::Snapshot;
+        use kentos_ui::theme::typography::{self, Typography};
+
+        // The words measured in the interface's own typefaces at the default size, as other tests change it.
+        let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+        typography::set(Typography::DEFAULT);
+        typography::load();
+        let places = |choose: bool| {
+            let mut app = app_with_drawing();
+            crate::files_testing::make_cad(&mut app);
+            let _ = app.update(Message::RibbonTab("home"));
+            let size = iced::Size::new(1440.0, 860.0);
+            let _ = app.update(Message::WindowResized(size));
+            if choose {
+                let key = catalog()
+                    .tabs()
+                    .flat_map(|t| t.panels.iter())
+                    .flat_map(|p| p.items.iter())
+                    .find_map(|item| match item {
+                        Item::Split { key, entries, .. } if entries.iter().any(|e| e.id == "tool.regularPolygon") => {
+                            Some(*key)
+                        }
+                        _ => None,
+                    })
+                    .expect("the shapes' split");
+                let _ = app.split_chosen(key, "tool.regularPolygon", Some("İÇ"), "Düzgün çokgen, çember içinde");
+                app.session.exit();
+            }
+            let mut snapshot: Snapshot = crate::files_testing::offscreen(size);
+            let mut update = |app: &mut crate::app::App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, crate::app::App::view, &mut update);
+            if choose {
+                crate::files_testing::evidence(&mut snapshot, &app, "ur2-004", "cokgen-secili");
+            } else {
+                crate::files_testing::evidence(&mut snapshot, &app, "ur2-004", "acilis");
+            }
+            ["Çizgi", "Nokta", "Taşı", "Yazı", "Yeni katman"]
+                .map(|caption| crate::files_testing::find_text(&mut snapshot, &app, caption).map(|r| (r.x, r.y, r.width)))
+        };
+        let (before, after) = (places(false), places(true));
+        assert!(before.iter().all(Option::is_some), "{before:?}");
+        assert_eq!(before, after, "the buttons stay where they were");
+    }
+
     #[test]
     fn a_method_the_tool_does_not_take_is_said_in_the_log() {
         let mut app = app_with_drawing();
