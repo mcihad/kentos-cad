@@ -42,7 +42,8 @@ struct Asked {
     limit: u64,
 }
 
-fn asked(doc: &Document, input: &LayersRows) -> Result<Asked, Stop> {
+/// The input's own checks: the layer named, the page's size, the box.
+fn checked(input: &LayersRows) -> Result<(), Stop> {
     let layer = input.layer.trim();
     if layer.is_empty() {
         return Err(fail(codes::NO_LAYER, "Satırları okunacak veri katmanını (layer) verin.".into(), "layer"));
@@ -64,13 +65,29 @@ fn asked(doc: &Document, input: &LayersRows) -> Result<Asked, Stop> {
             "bbox",
         ));
     }
-    let Some(node) = doc.layers().get(layer) else {
-        return Err(fail(
+    Ok(())
+}
+
+/// The layer the input names, after its own checks.
+fn found<'d>(doc: &'d Document, input: &LayersRows) -> Result<&'d kentos_commands::LayerNode, Stop> {
+    checked(input)?;
+    let layer = input.layer.trim();
+    doc.layers().get(layer).ok_or_else(|| {
+        fail(
             codes::LAYER_NOT_FOUND,
             format!("“{layer}” kimlikli katman çizimde yok."),
             "layer",
-        ));
-    };
+        )
+    })
+}
+
+/// What the input asks of `node`: its table, the fields, the order, the filter compiled.
+fn asked(
+    node: &kentos_commands::LayerNode,
+    settings: &kentos_commands::ProjectSettings,
+    input: &LayersRows,
+) -> Result<Asked, Stop> {
+    let limit = input.limit.unwrap_or(100);
     let Some(data) = node.data.clone() else {
         return Err(fail(
             codes::NOT_A_DATA_LAYER,
@@ -110,7 +127,7 @@ fn asked(doc: &Document, input: &LayersRows) -> Result<Asked, Stop> {
     let filter = match input.filter.as_deref().map(str::trim) {
         None | Some("") => None,
         Some(text) => {
-            let unit = crate::expression_unit::reading_unit(doc.settings());
+            let unit = crate::expression_unit::reading_unit(settings);
             let f = compile_filter(
                 &LayerFilter {
                     expression: Some(text.to_owned()),
@@ -159,11 +176,41 @@ fn row_of(f: &Feature, names: &[String], system: Option<&TableSystem>, wkt: bool
 }
 
 fn run(doc: &Document, input: &LayersRows, stopped: &dyn Fn() -> bool) -> Result<LayerRowsAnswer, Stop> {
-    let asked = asked(doc, input)?;
+    let node = found(doc, input)?;
+    rows_of(node, doc.settings(), input, stopped)
+}
+
+/// The command's answer for a layer and the project's settings a host holds (the attribute table reads its pages with
+/// it off the interface's thread, without a document): the same checks after the layer's lookup, the same answer.
+pub fn read(
+    node: &kentos_commands::LayerNode,
+    settings: &kentos_commands::ProjectSettings,
+    input: &LayersRows,
+    stopped: &dyn Fn() -> bool,
+) -> Result<LayerRowsAnswer, Box<kentos_commands::CommandError>> {
+    let stop = match checked(input).and_then(|()| rows_of(node, settings, input, stopped)) {
+        Ok(answer) => return Ok(answer),
+        Err(stop) => stop,
+    };
+    match CommandResult::<LayerRowsAnswer>::from(stop) {
+        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            Err(Box::new(error))
+        }
+        _ => Err(Box::new(error(codes::SOURCE_UNREACHABLE, "Kaynak okunamadı.".into(), None))),
+    }
+}
+
+fn rows_of(
+    node: &kentos_commands::LayerNode,
+    settings: &kentos_commands::ProjectSettings,
+    input: &LayersRows,
+    stopped: &dyn Fn() -> bool,
+) -> Result<LayerRowsAnswer, Stop> {
+    let asked = asked(node, settings, input)?;
     let data = &asked.data;
     let source = kentos_data::registry().source(&data.address).map_err(unreachable)?;
     let srid = data.geometry.as_ref().and_then(|g| g.srid);
-    let system = TableSystem::of(doc.settings(), srid).map_err(unreachable)?;
+    let system = TableSystem::of(settings, srid).map_err(unreachable)?;
     let bbox = match (input.bbox, &system, &data.geometry) {
         (None, ..) | (_, _, None) => None,
         (Some(b), None, Some(_)) => Some(b),
@@ -337,7 +384,7 @@ fn keys_of(
 
 /// Checks `input` against the document, reading no source.
 pub fn validate(cx: &ExecutionContext<'_>, input: &LayersRows) -> CommandResult<()> {
-    match asked(cx.doc, input) {
+    match found(cx.doc, input).and_then(|node| asked(node, cx.doc.settings(), input)) {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),

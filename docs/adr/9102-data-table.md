@@ -86,13 +86,55 @@ Bir veri katmanının satırlarını kaynağından okur; hiçbir şey yazmaz.
 - **Python ve MCP:** komut `kentos.cad.layers.rows`'tur, MCP katalogdan çağırır. Bilgi aracının Python ve MCP'deki
   karşılığı da budur (ADR 9101 §10).
 
-## §5 Planda olmayan kararlarım
+## §5 Karar: masaüstünde tablo (`apps/desktop/src/gis/features/data.rs`)
+
+Katman ▾'da veri katmanı seçilince Öznitelik tablosu satırları kaynaktan okur. Katman listede “(veri)” diye görünür.
+
+- **Sayfalar:** satırlar 200'lük sayfalar hâlinde okunur. Sanal tablo görünen satır aralığını bildirir; bunun için
+  `kentos_ui`'nin `VirtualList::on_range` ve `Table::on_range` olayları eklendi. Yalnız görünen sayfalar istenir.
+  En çok 40 sayfa tutulur; görünümden en uzaktakiler bırakılır.
+- **Okuma** `layers_rows::read` ile arayüzün dışında yapılır. Komutun aynı denetimlerini katmanın ve ayarların
+  kopyasıyla çalıştırır; çizim kopyalanmaz.
+- **Başlığa basmak** o alanla sıralar; ikinci basış ters, üçüncüsü anahtar sırası.
+- **Ara ve İfade süzgeci Enter'la sorulur.** Bir milyon satırı her harfte aramak yerine. Süzgeçli sorunun ilk
+  sayfası bütün anahtarları getirir; sonraki sayfalar anahtarla okunur, tarama bir kez yapılır.
+- **Göster:**
+  - Görünümdekiler görünümün kutusunu okur; görünüm değişince yeniden okunur.
+  - Seçililer, tabloda basılan satırlardır.
+- **İptal:** yeni soru, eskisinin süren okumasını durdurur (taramanın bir sonraki parçasında).
+- **Satıra basmak** satırı seçer; Ctrl ile seçimi tersine çevirir.
+- **Salt okunur:** tablo bu maddede yalnız okur. Hücre düzenlemesi VY-05'in oturumunda.
+
+Tablonun satır önbelleği, katman seçilmemişken etkin katmanın değişmesini görmüyordu (önceden de böyleydi). Anahtara
+tablonun çözdüğü katman eklendi.
+
+## §6 Planda olmayan kararlarım
 
 1. **Metin her zaman Türk alfabesiyle sıralanır**; kaynağın kendi harmanlaması kullanılmaz (`tr-x-icu` dışında).
 2. **Süzgeç her zaman burada sorulur.** Satır taranır, ifade SQL'e çevrilmez. Doğruluk önce geldi; SQL'e çeviri
    ileride tarama hızlandırması olarak gelebilir.
 3. **Arama bütün alanlarda yapılır**; metin olmayan alanlar da metin olarak okunur.
-4. **Sayfa en çok 1 000 satırdır.**
+4. **Sayfa en çok 1 000 satırdır.** Masaüstü 200'lük sayfa okur, en çok 40 sayfa tutar.
+5. **Ara ve süzgeç Enter'la uygulanır.** Yazarken uygulanmaz.
+
+## §7 Kanıt
+
+Gerçek pencerede, PostGIS'te 1 000 000 parselle denendi (`.run/gui-evidence/veri/vy04/`, `vy04b/`).
+
+| Adım | Sonuç |
+|---|---|
+| Tabloyu açmak | 1.000.000 satır sayıldı; ilk sayfa geldi |
+| Mahalleye göre sıralayıp ortalara kaydırmak | Satırlar anında geldi |
+| Ara “Mahalle 9” | 50.000 satır; veritabanı da 50.000 sayıyor |
+| İfade süzgeci “alan > 650 ve kullanim = 'Park'” | 19.986 satır; veritabanı da 19.986 sayıyor |
+| Görünümdekiler (1:9 994) | 3.400 satır |
+| Bir satır basılıp Seçililer | 1 satır |
+
+## §8 Kalan
+
+- **Haritada seçim:** tabloda seçilen satırın haritada vurgulanması, Seç aracının veri katmanında satır seçmesi ve
+  Seçime yakınlaş.
+- **Yazma:** düzenleme VY-05'te.
 
 ## Uygulama
 
@@ -109,3 +151,6 @@ Bir veri katmanının satırlarını kaynağından okur; hiçbir şey yazmaz.
   conformance`: mahalleye göre Türkçe sıra dahil geçti.
 - `KENTOS_CASES_ONLY=cad.layers.rows … every_command_case_matches`: 28/28.
 - `cargo test -p kentos-commands`: katalog ve birim denetimleri geçti.
+- `cargo test -p kentos-desktop --lib data_layers_tests`: tablo, gösterdiği sayfayı kaynaktan okur, göstermediğini
+  okumaz; sona kaydırınca son sayfayı okur; başlık Türkçe sıralar ve tersine çevirir; arama Enter'la sorulur
+  (450 satırdan 225'i); eski yanıt bayattır.

@@ -135,7 +135,15 @@ impl App {
         let choices = rows
             .layers
             .iter()
-            .map(|(_, path, c)| Choice::new(format!("{path} ({c})")))
+            .map(|(id, path, c)| {
+                // A data layer's rows are in its source, not counted here (docs/adr/9102 §5).
+                let data = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| d.model.layers().get(id))
+                    .is_some_and(|n| n.data.is_some());
+                Choice::new(if data { format!("{path} (veri)") } else { format!("{path} ({c})") })
+            })
             .chain(
                 views
                     .iter()
@@ -151,6 +159,39 @@ impl App {
         })
         .placeholder(texts::NO_LAYERS)
         .prefix(texts::LAYER)
+    }
+
+    /// A data layer's bar: Katman ▾, Ara, Göster and İfade süzgeci (data.rs).
+    fn data_layer_bar<'a>(&self, rows: &Rows) -> Element<'a, Message> {
+        let panel = &self.gis.features;
+        // Asked with Enter: a million rows are not searched at every letter (data.rs).
+        let apply = msg(Event::Data(super::data::DataEvent::Apply));
+        let search = kentos_ui::widget::text_field(super::data::words::SEARCH, &panel.search)
+            .on_input(|t| msg(Event::Search(t)))
+            .on_submit(apply.clone());
+        let show = Select::new(
+            Show::ALL.iter().map(|s| Choice::new(s.label())),
+            Show::ALL.iter().position(|s| *s == panel.show),
+            |i| msg(Event::Show(Show::ALL[i])),
+        )
+        .prefix(texts::SHOW);
+        let filter = kentos_ui::widget::text_field(super::data::words::FILTER, &panel.filter)
+            .on_input(|t| msg(Event::Filter(t)))
+            .on_submit(apply);
+        container(
+            row![
+                container(self.layer_select(rows)).width(Length::Fixed(250.0)),
+                container(search).width(Length::Fixed(170.0)),
+                container(show).width(Length::Fixed(170.0)),
+                container(filter).width(Length::Fixed(260.0)),
+            ]
+            .spacing(8)
+            .align_y(Center)
+            .wrap()
+            .vertical_spacing(6),
+        )
+        .padding([4, 8])
+        .into()
     }
 
     fn features_bar<'a>(&self, rows: &Rows, width: f32) -> Element<'a, Message> {
@@ -369,6 +410,22 @@ impl App {
                 .width(Length::Fixed(260.0))
                 .into();
             return self.joins_tab(doc, v, picker);
+        }
+        // A data layer: its rows read from its source a page at a time (data.rs, docs/adr/9102 §5).
+        if let Some(node) = rows
+            .layer
+            .as_deref()
+            .and_then(|l| doc.model.layers().get(l))
+            .filter(|n| n.data.is_some())
+        {
+            return iced::widget::column![
+                self.data_layer_bar(&rows),
+                kentos_ui::widget::horizontal_divider(),
+                self.data_table_view(node)
+            ]
+            .width(Fill)
+            .height(Fill)
+            .into();
         }
         let bar = self.features_bar(&rows, self.viewport.bounds.width);
         // A bound layer's table: its source, state and the one way out (docs/adr/0546 §3).

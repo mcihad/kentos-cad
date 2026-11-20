@@ -236,3 +236,71 @@ fn a_labelled_data_layer_keeps_its_read_for_the_label_engine_and_another_keeps_n
     assert_eq!(spatial.label_texts(kentos_domain::Slot(40)), ["101"]);
     let _ = std::fs::remove_file(&path);
 }
+
+/// What the table's reads would answer: each page read as its task reads it, answered in order.
+fn answer_pages(app: &mut crate::app::App) {
+    use crate::features::data::DataEvent;
+    for _ in 0..4 {
+        let _ = app.data_table_tasks();
+        let asked = app.gis.features.data.pending();
+        if asked.is_empty() {
+            return;
+        }
+        for (generation, page, input) in asked {
+            let node = app.data_table_layer().expect("a data layer in the table");
+            let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+            let answer = kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false)
+                .map(Box::new)
+                .map_err(|e| e.message);
+            let _ = app.data_table_event(DataEvent::Answered(generation, page, answer));
+        }
+    }
+}
+
+#[test]
+fn a_data_layer_s_table_reads_its_pages_from_the_source_and_orders_and_searches_there() {
+    use crate::features::data::DataEvent;
+    crate::data_layers::register();
+    let path = parcels("tablo", 450);
+    let address = path.display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
+        .expect("added");
+    let layer = node(&app, "parseller").expect("the layer").id.clone();
+    app.gis.features.layer = Some(layer);
+    app.command_expanded = true;
+    app.bottom_tab = crate::bottom::BottomTab::Table;
+    // The table shows its first rows: the first page and the count come from the source.
+    let _ = app.data_table_event(DataEvent::Range(0, 12));
+    answer_pages(&mut app);
+    let data = &app.gis.features.data;
+    assert_eq!(data.total_rows(), Some(450));
+    assert_eq!(data.row(0).map(|r| r.key), Some(1));
+    assert_eq!(data.row(199).map(|r| r.key), Some(200));
+    assert!(data.row(200).is_none(), "a page the table does not show is not read");
+    // Scrolled to the end: its page is read.
+    let _ = app.data_table_event(DataEvent::Range(440, 450));
+    answer_pages(&mut app);
+    assert_eq!(app.gis.features.data.row(449).map(|r| r.key), Some(450));
+    // A header orders by its field, down the second time: kullanim, Turkish letters in place.
+    let _ = app.data_table_event(DataEvent::Sort("kullanim".into()));
+    let _ = app.data_table_event(DataEvent::Range(0, 12));
+    answer_pages(&mut app);
+    let first = app.gis.features.data.row(0).and_then(|r| r.attrs.get("kullanim").cloned());
+    assert_eq!(first.as_deref(), Some("Konut"));
+    let _ = app.data_table_event(DataEvent::Sort("kullanim".into()));
+    answer_pages(&mut app);
+    let first = app.gis.features.data.row(0).and_then(|r| r.attrs.get("kullanim").cloned());
+    assert_eq!(first.as_deref(), Some("Park"));
+    // Ara is asked with Enter, not at every letter.
+    app.gis.features.search = "park".into();
+    answer_pages(&mut app);
+    assert_eq!(app.gis.features.data.total_rows(), Some(450), "typed, not asked");
+    let _ = app.data_table_event(DataEvent::Apply);
+    answer_pages(&mut app);
+    assert_eq!(app.gis.features.data.total_rows(), Some(225));
+    // An answer to an earlier question is stale.
+    let _ = app.data_table_event(DataEvent::Answered(0, 0, Err("eski".into())));
+    assert!(app.gis.features.data.row(0).is_some());
+    let _ = std::fs::remove_file(&path);
+}

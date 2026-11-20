@@ -35,6 +35,7 @@ use crate::app::{App, Message};
 use crate::document::Document;
 use crate::points::{click_pick, focus_field};
 
+pub(crate) mod data;
 pub(crate) mod joins;
 #[cfg(test)]
 mod joins_tests;
@@ -194,6 +195,8 @@ pub enum Event {
     Analyse(outgoing::Analyse),
     /// The source line of a bound layer (source.rs, docs/adr/0546 §3).
     Source(source::SourceEvent),
+    /// A data layer's table (data.rs, docs/adr/9102 §5).
+    Data(data::DataEvent),
     /// Kaynağın tümü (whole.rs, docs/adr/0591 §4).
     Whole(whole::WholeEvent),
     /// Katman ▾: a join view by id (joins.rs, docs/adr/0527).
@@ -308,6 +311,8 @@ pub(crate) struct FeaturesPanel {
     pub(crate) source_refresh: u64,
     /// Kaynağın tümü: the bound layer's source read whole (whole.rs).
     pub(crate) whole: whole::WholePane,
+    /// A data layer's rows read from its source a page at a time (data.rs, docs/adr/9102 §5).
+    pub(crate) data: data::DataTable,
 }
 
 impl FeaturesPanel {
@@ -425,12 +430,20 @@ impl App {
         } else {
             [0; 4]
         };
+        // The layer the table resolves to counts too: without a layer picked it is the active one, and making another
+        // layer active changes no drawing.
+        let resolved = {
+            use std::hash::{Hash, Hasher};
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            self.feature_layer(doc).hash(&mut h);
+            h.finish()
+        };
         let key = (
             doc.session,
             doc.model.generation(),
             self.selection.version(),
             view_key,
-            panel.version,
+            panel.version.wrapping_add(resolved),
         );
         if let Some((known, rows)) = panel.cache.borrow().as_ref()
             && *known == key
@@ -709,6 +722,7 @@ impl App {
             Event::Analyse(to) => self.features_analyse(to),
             Event::Source(e) => return self.features_source_event(e),
             Event::Whole(e) => return self.whole_event(e),
+            Event::Data(e) => return self.data_table_event(e),
             Event::View(id) => {
                 self.gis.features.join.view = Some(id);
                 self.gis.features.editing = None;

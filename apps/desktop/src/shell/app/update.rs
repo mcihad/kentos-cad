@@ -228,6 +228,8 @@ impl App {
             self.cloud_query_tasks(),
             // Bilgi's clicks on the data layers, asked of their sources (data_info.rs, docs/adr/9101 §6).
             self.data_info_tasks(),
+            // A data layer's table: its pages read from its source (features/data.rs, docs/adr/9102 §5).
+            self.data_table_tasks(),
             self.network_tasks(),
             // Konumdan adres's places, asked on the address thread or of a provider (address/).
             self.address_tasks(),
