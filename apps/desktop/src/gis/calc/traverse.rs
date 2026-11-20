@@ -884,10 +884,10 @@ impl Form {
                 }
                 head.extend(["ΔY (m)", "ΔX (m)", "Y (sağa)", "X (yukarı)", "H (m)"]);
                 let numeric: Vec<bool> = (0..head.len()).map(|k| k > 0).collect();
-                result_table(&head, rows, &numeric)
+                result_table(&super::parts::axis_heads(model, &head), rows, &numeric)
             } else if reduced {
                 result_table(
-                    &[
+                    &super::parts::axis_heads(model, &[
                         "Nokta",
                         "Semt",
                         "Zeminde (m)",
@@ -896,13 +896,13 @@ impl Form {
                         "ΔX (m)",
                         "Y (sağa)",
                         "X (yukarı)",
-                    ],
+                    ]),
                     rows,
                     &[false, true, true, true, true, true, true, true],
                 )
             } else {
                 result_table(
-                    &[
+                    &super::parts::axis_heads(model, &[
                         "Nokta",
                         "Semt",
                         "Kenar (m)",
@@ -910,7 +910,7 @@ impl Form {
                         "ΔX (m)",
                         "Y (sağa)",
                         "X (yukarı)",
-                    ],
+                    ]),
                     rows,
                     &[false, true, true, true, true, true, true],
                 )

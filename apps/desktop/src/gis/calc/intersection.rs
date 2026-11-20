@@ -303,7 +303,7 @@ impl Form {
         }
         if let Some(found) = &computed.result {
             answer = answer.push(result_table(
-                &["Nokta", "Y (sağa)", "X (yukarı)"],
+                &super::parts::axis_heads(model, &["Nokta", "Y (sağa)", "X (yukarı)"]),
                 vec![vec![
                     found.name.clone(),
                     format.coord(found.p.x),

@@ -939,3 +939,32 @@ fn a_picked_station_is_the_point_clicked_though_another_has_its_name() {
         crate::files_testing::evidence(&mut snapshot, &app, "ur2-016", "ayni-ad");
     }
 }
+
+/// UR2-017: in a CAD project, whose point table names east X, Kestirme says Doğu and Kuzey instead of the surveyor's
+/// Y and X, so no letter reads crossed between the two; the numbers stay east first. A CBS project keeps Y and X.
+#[test]
+fn hesap_says_dogu_and_kuzey_in_a_cad_project() {
+    let mut app = app_with_drawing();
+    crate::files_testing::make_cad(&mut app);
+    let size = iced::Size::new(1440.0, 900.0);
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.run("calc.forward");
+    for e in [
+        Event::Known(Field::A, "487000,4420000".into()),
+        Event::Known(Field::B, "487010,4420000".into()),
+        Event::Alpha("50".into()),
+        Event::Beta("50".into()),
+    ] {
+        calc(&mut app, e);
+    }
+    let mut snapshot = crate::files_testing::offscreen(size);
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut snapshot, &app, "ur2-017", "cad-dogu-kuzey");
+    let mut has = |t: &str| !crate::files_testing::find_texts(&mut snapshot, &app, t).is_empty();
+    assert!(has("Doğu (sağa)") && has("Kuzey (yukarı)"), "the directions");
+    assert!(!has("Y (sağa)") && !has("X (yukarı)"), "no survey letter");
+    assert!(has("Doğu 487000.000  Kuzey 4420000.000"), "the field's point");
+}

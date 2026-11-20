@@ -48,7 +48,8 @@ pub(crate) fn known_field<'a>(
     text: &'a str,
     hint: Option<&'a str>,
 ) -> Element<'a, Message> {
-    let input = kentos_ui::widget::text_field("Nokta adı ya da Y,X", text)
+    let placeholder = axis_words(model, "Nokta adı ya da Y,X");
+    let input = kentos_ui::widget::text_field(&placeholder, text)
         .on_input(move |t| event(Event::Known(field, t)))
         .width(Fill);
     let input = input;
@@ -66,8 +67,8 @@ pub(crate) fn known_field<'a>(
     );
     let resolved = match read::resolve_point(model, text) {
         Known::Empty => label::caption(hint.unwrap_or("Henüz verilmedi")),
-        Known::Error(e) => label::caption(e).style(style::text::danger),
-        Known::Point { p, .. } => label::caption(format.point(p)),
+        Known::Error(e) => label::caption(axis_words(model, &e)).style(style::text::danger),
+        Known::Point { p, .. } => label::caption(point_words(model, format, p)),
     };
     words::field(
         title,
@@ -148,8 +149,8 @@ pub(crate) fn summary<'a>(lines: Vec<(Line, String)>) -> Option<Element<'a, Mess
 }
 
 /// A results table: a header and rows of text, numbers right-aligned.
-pub(crate) fn result_table<'a>(
-    head: &[&'a str],
+pub(crate) fn result_table<'a, S: AsRef<str>>(
+    head: &[S],
     rows: Vec<Vec<String>>,
     numeric: &[bool],
 ) -> Element<'a, Message> {
@@ -157,16 +158,44 @@ pub(crate) fn result_table<'a>(
     result_table_marked(head, rows, numeric, &marked)
 }
 
+/// Hesap's words for the axes in a CAD project (UR2-017). The windows read field work as a surveyor does (Y east, X
+/// north, docs/adr/0165 §4) while a CAD project's own tables name east X; by letter the two read crossed. There the
+/// windows say Doğu and Kuzey instead, so no letter means one thing here and another in the point table; the numbers
+/// stay east first in both. A CBS project keeps Y and X.
+pub(crate) fn axis_words(model: &kentos_domain::Document, text: &str) -> String {
+    if model.settings().project_type() != Some(kentos_commands::Workspace::Cad) {
+        return text.to_owned();
+    }
+    text.replace("Y (sağa)", "Doğu (sağa)")
+        .replace("X (yukarı)", "Kuzey (yukarı)")
+        .replace("ΔY", "Δ doğu")
+        .replace("ΔX", "Δ kuzey")
+        .replace("Y,X", "doğu,kuzey")
+}
+
+/// [`axis_words`] over a table's headings.
+pub(crate) fn axis_heads(model: &kentos_domain::Document, head: &[&str]) -> Vec<String> {
+    head.iter().map(|h| axis_words(model, h)).collect()
+}
+
+/// A resolved point as a Hesap field shows it: `Y … X …`, or in a CAD project `Doğu … Kuzey …` (UR2-017).
+pub(crate) fn point_words(model: &kentos_domain::Document, format: &Format, p: kentos_interaction::Vec2) -> String {
+    if model.settings().project_type() != Some(kentos_commands::Workspace::Cad) {
+        return format.point(p);
+    }
+    format!("Doğu {}  Kuzey {}", format.coord(p.x), format.coord(p.y))
+}
+
 /// A results table whose `marked` rows read in the danger colour (an
 /// observation the test flags, docs/adr/0203 §4).
-pub(crate) fn result_table_marked<'a>(
-    head: &[&'a str],
+pub(crate) fn result_table_marked<'a, S: AsRef<str>>(
+    head: &[S],
     rows: Vec<Vec<String>>,
     numeric: &[bool],
     marked: &[bool],
 ) -> Element<'a, Message> {
     let columns = head.iter().zip(numeric).map(|(title, &number)| {
-        let column = table::Column::new(*title).width(Fill);
+        let column = table::Column::new(title.as_ref().to_owned()).width(Fill);
         if number { column.align_right() } else { column }
     });
     let lines = rows.into_iter().enumerate().map(|(i, line)| {

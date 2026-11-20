@@ -329,7 +329,7 @@ impl Form {
             };
             let table = if reduced && own {
                 result_table(
-                    &[
+                    &super::parts::axis_heads(model, &[
                         "Nokta",
                         "Semt",
                         "Zeminde (m)",
@@ -339,13 +339,13 @@ impl Form {
                         "X (yukarı)",
                         "Z (m)",
                         "h (m)",
-                    ],
+                    ]),
                     rows,
                     &[false, true, true, true, true, true, true, true, true],
                 )
             } else if reduced {
                 result_table(
-                    &[
+                    &super::parts::axis_heads(model, &[
                         "Nokta",
                         "Semt",
                         "Zeminde (m)",
@@ -354,20 +354,20 @@ impl Form {
                         "Y (sağa)",
                         "X (yukarı)",
                         "Z (m)",
-                    ],
+                    ]),
                     rows,
                     &[false, true, true, true, true, true, true, true],
                 )
             } else {
                 result_table(
-                    &[
+                    &super::parts::axis_heads(model, &[
                         "Nokta",
                         "Semt",
                         "Yatay uzunluk (m)",
                         "Y (sağa)",
                         "X (yukarı)",
                         "Z (m)",
-                    ],
+                    ]),
                     rows,
                     &[false, true, true, true, true, true],
                 )

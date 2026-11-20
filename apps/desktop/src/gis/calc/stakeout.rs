@@ -184,9 +184,10 @@ impl Form {
         .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary);
         let head = row![
-            label::caption(
-                "Noktaları adlarıyla ya da Y,X olarak yazın; çizimde seçili noktaları da ekleyebilirsiniz."
-            )
+            label::caption(super::parts::axis_words(
+                model,
+                "Noktaları adlarıyla ya da Y,X olarak yazın; çizimde seçili noktaları da ekleyebilirsiniz.",
+            ))
             .width(Fill),
             from_selection,
         ]
@@ -199,7 +200,7 @@ impl Form {
                 .errors
                 .iter()
                 .take(6)
-                .map(|e| (Line::Warn, e.clone()))
+                .map(|e| (Line::Warn, super::parts::axis_words(model, e)))
                 .collect(),
             Some(stakes) => {
                 let mut lines = vec![(
@@ -335,7 +336,8 @@ fn own_height_note(mean: f64, model: Option<&str>) -> String {
 }
 
 const COLUMNS: [Col; 1] = [Col {
-    label: "Aplike edilecek nokta (ad ya da Y,X)",
+    // No axis letter (UR2-017): the hint above names the order in the project's words.
+    label: "Aplike edilecek nokta (ad ya da koordinat)",
     unit: None,
     numeric: false,
 }];
