@@ -27,10 +27,12 @@ impl App {
         let shown = search_shown(&depths, &matched);
         let mut out = vec![note(
             "arama:not".to_owned(),
+            // GIS-060: the ready base maps and the saved connections' names are searched in closed branches too; a
+            // folder's or a server's content not read yet is not.
             if found == 0 {
-                "Eşleşen satır yok. Yalnız açılmış satırlar aranır.".to_owned()
+                "Eşleşen satır yok. Hazır altlıklar ve kayıtlı bağlantılar kapalı dallarda da aranır; klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.".to_owned()
             } else {
-                format!("{found} satır eşleşti. Yalnız açılmış satırlar aranır.")
+                format!("{found} satır eşleşti. Klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.")
             },
             false,
             0,
@@ -42,6 +44,13 @@ impl App {
                 .filter_map(|(l, keep)| keep.then_some(l)),
         );
         out
+    }
+
+    /// Whether a top branch of the panel is open: as the user left it, or, while searching (GIS-060), always for the
+    /// branches whose rows are known without reading anything (KentOS's, the services, the ready base maps, the saved
+    /// connections, the extensions', the databases and folders by name).
+    fn source_branch_open(&self, key: &str) -> bool {
+        self.gis.sources.open.contains(key) || !search_words(&self.gis.sources.search).is_empty()
     }
 
     pub(super) fn all_source_lines(&self) -> Vec<Line> {
@@ -61,7 +70,7 @@ impl App {
             s.folders.favourites(),
             &mut lines,
         );
-        let open = s.open.contains(FOLDERS);
+        let open = self.source_branch_open(FOLDERS);
         lines.push(Line::Section {
             key: FOLDERS,
             label: "Klasörler",
@@ -90,7 +99,7 @@ impl App {
         if self.shows_source_section(SourceSection::Services) {
             self.service_lines(&mut lines);
         }
-        let open = s.open.contains(KENTOS);
+        let open = self.source_branch_open(KENTOS);
         lines.push(Line::Section {
             key: KENTOS,
             label: "KentOS",
@@ -335,7 +344,7 @@ impl App {
 
     /// Veritabanları: the device's connections, each open into its schemas and tables.
     pub(super) fn database_lines(&self, lines: &mut Vec<Line>) {
-        let open = self.gis.sources.open.contains(DATABASES);
+        let open = self.source_branch_open(DATABASES);
         lines.push(Line::Section {
             key: DATABASES,
             label: "Veritabanları",
@@ -466,7 +475,7 @@ impl App {
     /// Servisler (docs/adr/0599 §4): the ready basemaps, then the services added before.
     pub(super) fn service_lines(&self, lines: &mut Vec<Line>) {
         let s = &self.gis.sources;
-        let open = s.open.contains(SERVICES);
+        let open = self.source_branch_open(SERVICES);
         lines.push(Line::Section {
             key: SERVICES,
             label: "Servisler",
@@ -476,7 +485,7 @@ impl App {
         if !open {
             return;
         }
-        let presets_open = s.open.contains(PRESETS);
+        let presets_open = self.source_branch_open(PRESETS);
         lines.push(Line::Branch {
             key: PRESETS.to_owned(),
             label: "Hazır altlıklar",
@@ -499,7 +508,7 @@ impl App {
         // Eklentilerden (docs/adr/8057 §3): the running extensions' data sources, opened as a service is.
         let brought = self.extension_sources();
         if !brought.is_empty() {
-            let open = s.open.contains(EXTENSIONS);
+            let open = self.source_branch_open(EXTENSIONS);
             lines.push(Line::Branch {
                 key: EXTENSIONS.to_owned(),
                 label: "Eklentilerden",
@@ -521,7 +530,7 @@ impl App {
                 }
             }
         }
-        let saved_open = s.open.contains(SAVED);
+        let saved_open = self.source_branch_open(SAVED);
         lines.push(Line::Branch {
             key: SAVED.to_owned(),
             label: "Kayıtlı servisler",

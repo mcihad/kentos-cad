@@ -651,10 +651,11 @@ TM39 kontrol noktasını önce tek nokta olarak, sonra ikinci bir noktayla birli
 
 ### Kaynak araması ve toplu analiz
 
-- [ ] **GIS-060 · Kaynaklar araması, hazır altlığın adını ancak kullanıcı doğru dalı kendisi açtıktan sonra buluyor.**
+- [x] **GIS-060 · Kaynaklar araması, hazır altlığın adını ancak kullanıcı doğru dalı kendisi açtıktan sonra buluyor.**
   - **Tekrar.** Kaynaklar panelinde Servisler ve Hazır altlıklar dallarını kapat. Aramaya `Ortofoto` yaz. Süzgeci temizle, **Servisler → Hazır altlıklar** dalını aç ve aynı kelimeyi yeniden yaz.
   - **Gözlenen.** İlk arama eşleşme göstermedi ve yalnız açılmış satırlarda arandığını bildirdi. İkinci arama **HGM ATLAS Ortofoto** kaydını buldu. İki deneme arasında bağlantı eklenmedi. [Kapalı dalda arama](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/cbs-harita-dPt9z7/560-altlik-aramasi-kapali.jpg) · [Hazır altlıklar](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/cbs-harita-dPt9z7/561-hazir-altliklar-acik.jpg) · [Aynı aramanın sonucu](/Users/cihad/.codex/visualizations/2026/10/12/01a12fc7-a034-7d91-8f34-1cd2709edf15/cbs-harita-dPt9z7/562-altlik-aramasi-acik.jpg)
   - **Düzeltme ve kabul.** Hazır altlıklar ve kayıtlı bağlantıların adları için aramayı ağacın açılma durumundan bağımsız çalıştır. Sonuçla birlikte üst dalın yolunu göster. Uzak sunucunun henüz keşfedilmemiş içeriğini ayrıca belirt. Uygulama ilk açıldığında kapalı dallarla yapılan `Ortofoto` araması bu hazır kaydı bulmalı. [Kaynak ağacını üreten kod](apps/desktop/src/gis/sources/view/lines.rs)
+  - **Durum (20.11.2026):** Arama yazılıyken okumadan bilinen dallar (KentOS, Servisler, Hazır altlıklar, Kayıtlı servisler, eklentiler, Veritabanları, Klasörler adlarıyla) açık sayılır: kapalı dallarla Ortofoto araması hazır kaydı üst dal yoluyla bulur; arama silinince dallar kullanıcının bıraktığı gibi. Not satırı klasör ve sunucuların açılmamış içeriğinin aranmadığını söyler. ADR 1119; test a_ready_base_map_is_found_in_closed_branches.
 
 - [ ] **GIS-061 · Toplu analizde “Devam et” seçeneği, geçersiz sayısal parametre girildiğinde sağlam satıra ne olacağını yanlış anlatıyor.**
   - **Tekrar.** Altı parsel içeren Yeni katmanında **Tampon → Toplu çalıştır** penceresinde iki satır oluştur. Uzaklıklara `2` ve `ölçülmedi` yaz. Önce **Dur**, sonra **Devam et** ile çalıştır. İkinci değeri `5` yapıp yeniden dene.

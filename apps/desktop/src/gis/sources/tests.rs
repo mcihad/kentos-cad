@@ -513,7 +513,7 @@ fn the_search_keeps_the_rows_that_match_and_their_ancestors() {
     assert_eq!(
         all,
         [
-            "(1 satır eşleşti. Yalnız açılmış satırlar aranır.)".to_owned(),
+            "(1 satır eşleşti. Klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.)".to_owned(),
             "▾ Klasörler".to_owned(),
             format!("  ▾ {name}"),
             "    kadastro.gpkg · GeoPackage".to_owned(),
@@ -525,11 +525,26 @@ fn the_search_keeps_the_rows_that_match_and_their_ancestors() {
     send(&mut app, Event::Search("böyle bir şey yok".into()));
     assert_eq!(
         rows(&app),
-        ["(Eşleşen satır yok. Yalnız açılmış satırlar aranır.)"]
+        ["(Eşleşen satır yok. Hazır altlıklar ve kayıtlı bağlantılar kapalı dallarda da aranır; klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.)"]
     );
     send(&mut app, Event::Search(String::new()));
     assert!(rows(&app).len() > 5);
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// GIS-060 (docs/adr/1119): with every branch closed, as the panel first opens, a ready base map's name is found by the
+/// search with its branches' path; the branches stay closed once the search is cleared.
+#[test]
+fn a_ready_base_map_is_found_in_closed_branches() {
+    let mut app = app_with_drawing();
+    let preset = kentos_services::presets::catalog().presets[0].name.clone();
+    assert!(!rows(&app).iter().any(|r| r.trim() == preset), "closed: not listed");
+    send(&mut app, Event::Search(preset.clone()));
+    let all = rows(&app);
+    assert!(all.iter().any(|r| r.trim() == preset), "{all:?}");
+    assert!(all.iter().any(|r| r.contains("Hazır altlıklar")), "its branch's path: {all:?}");
+    send(&mut app, Event::Search(String::new()));
+    assert!(!rows(&app).iter().any(|r| r.trim() == preset), "closed again");
 }
 
 #[test]
