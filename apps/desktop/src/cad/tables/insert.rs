@@ -164,6 +164,9 @@ pub struct Insert {
     pub frame_mm: String,
     /// The file read: its name and sheets.
     pub file: Option<(String, TableFileRead)>,
+    /// The file's path and its bytes' digest, as Tabloyu güncelle keeps them: the table is placed linked to it, its
+    /// row key ready at once (UR2-038).
+    pub file_link: Option<(std::path::PathBuf, String)>,
     pub sheet: usize,
     /// The schedule's objects, by persistent id, in the drawing's order.
     pub objects: Vec<Uuid>,
@@ -185,6 +188,7 @@ impl Default for Insert {
             frame: false,
             frame_mm: "0.7".to_owned(),
             file: None,
+            file_link: None,
             sheet: 0,
             objects: Vec::new(),
             style: None,
@@ -206,7 +210,7 @@ pub enum Event {
     Style(Option<String>),
     Sheet(usize),
     ChooseFile,
-    FileRead(Option<(String, Vec<u8>)>),
+    FileRead(Option<(String, Option<std::path::PathBuf>, Vec<u8>)>),
     Pick,
     Place,
     Close,
@@ -313,15 +317,17 @@ impl App {
                     return Now::Why(Kind::Error, "Dosyada okunacak sayfa yok.".to_owned());
                 };
                 let cells = kentos_interaction::table::sheet_cells(sheet, w.header);
+                let copy = w.file_link.as_ref().map(|_| cells.cells.clone());
                 match &cells.problem {
                     Some(p) => Now::Why(Kind::Error, p.clone()),
                     None => Now::Cells(
                         cells,
                         Some(Box::new(TableSource::File {
-                            path: None,
+                            path: w.file_link.as_ref().map(|(p, _)| p.display().to_string()),
                             overrides: Default::default(),
-                            digest: None,
-                            copy: None,
+                            digest: w.file_link.as_ref().map(|(_, d)| d.clone()),
+                            // The source's cells as read: what Tabloyu güncelle compares the file with later.
+                            copy,
                             key_column: None,
                             name: name.clone(),
                             sheet: sheet.name.clone(),
@@ -420,14 +426,15 @@ impl App {
                             .pick_file()
                             .await?;
                         let bytes = file.read().await;
-                        Some((file.file_name(), bytes))
+                        Some((file.file_name(), Some(file.path().to_path_buf()), bytes))
                     },
                     |read| msg(Event::FileRead(read)),
                 );
             }
             Event::FileRead(None) => {}
-            Event::FileRead(Some((name, bytes))) => {
+            Event::FileRead(Some((name, path, bytes))) => {
                 let read = kentos_formats::table_file::read(&bytes);
+                w.file_link = path.map(|p| (p, kentos_native_application::tables_edit::digest_of(&bytes)));
                 w.file = Some((name, read));
                 w.sheet = 0;
             }

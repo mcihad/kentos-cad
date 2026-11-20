@@ -264,3 +264,34 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("tablo-oznitelikler", properties),
     ]
 }
+
+/// UR2-038: a table placed from a file is linked to it at once (its path, digest and cells kept): Tabloyu düzenle
+/// offers the row key without choosing the same file again.
+#[test]
+fn a_table_from_a_file_is_linked_at_once() {
+    let mut app = crate::app::App::boot(None).0;
+    drawn(&mut app);
+    run(&mut app, "table.insert");
+    let _ = app.update(Message::TableInsert(Insert::Source(Source::File)));
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/table/v1/files/noktali-virgul.csv");
+    let bytes = std::fs::read(&path).expect("the file");
+    let _ = app.update(Message::TableInsert(Insert::FileRead(Some(("noktali-virgul.csv".into(), Some(path.clone()), bytes)))));
+    let before: Vec<Slot> = app.document.as_ref().unwrap().model.entities().map(|e| Slot(e.base().id)).collect();
+    let _ = app.update(Message::TableInsert(Insert::Place));
+    crate::tools_scenes::click(&mut app, [80.0, 60.0]);
+    let doc = &app.document.as_ref().unwrap().model;
+    let table = doc
+        .entities()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Table(t) if !before.contains(&Slot(t.base.id)) => Some(t.clone()),
+            _ => None,
+        })
+        .expect("the placed table");
+    match table.source {
+        Some(kentos_commands::TableSource::File { path: Some(p), digest: Some(_), copy: Some(copy), .. }) => {
+            assert_eq!(std::path::PathBuf::from(p), path);
+            assert!(!copy.is_empty());
+        }
+        other => panic!("linked at once: {other:?}"),
+    }
+}
