@@ -454,7 +454,10 @@ impl App {
                 ),
                 Some("Milyon satırlı tabloda ilk harita bütün tabloyu indirmeden gelir: yalnız kutusu görünen alana değen satırlar alınır, yazma alanın dışına dokunmaz. Geometrisiz tablo bütün bağlanır.".to_owned()),
             ));
-            if other {
+            // A query's system is known only once it runs (GIS-055): the same choice is offered for it; a query in the
+            // project's own system is not moved by it.
+            let query = !s.query.trim().is_empty();
+            if other || query {
                 body = body.push(words::field(
                     "Koordinat sistemi",
                     words::check(
@@ -462,7 +465,10 @@ impl App {
                         format!("Projenin sistemine çevir (EPSG:{project}); tablo kendi sisteminde kalır"),
                         Some(event(Event::Reproject)),
                     ),
-                    None,
+                    (query && !other).then(|| {
+                        "Sorgunun sistemi bağlanınca okunur: projeninkinden başkaysa bu kutu onu projenin sistemine çevirir, aynıysa bir şey değiştirmez."
+                            .to_owned()
+                    }),
                 ));
             }
             let advanced = iced::widget::button(

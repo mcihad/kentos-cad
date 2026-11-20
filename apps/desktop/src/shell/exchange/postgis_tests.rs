@@ -656,3 +656,33 @@ fn every_kind_of_table_is_drawn_once_bound() {
         let _ = app.db_store.remove(&c.name);
     }
 }
+
+/// GIS-055 (docs/adr/1115): a query layer alone (no table chosen) is offered “Projenin sistemine çevir” as a table in
+/// another system is, its system read when it runs; with it ticked, Ekle is there. Picture `gis-055-sorgu-sistemi`.
+#[test]
+fn a_query_alone_is_offered_the_system_move() {
+    let mut app = app_with_drawing();
+    let name = "Sorgu penceresi";
+    keep_connection(&app, &connection(name));
+    run(&mut app, "source.postgis");
+    let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+    send(&mut app, Event::Postgis(P::Choose(at)));
+    send(&mut app, Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)));
+    send(&mut app, Event::Postgis(P::Advanced));
+    send(
+        &mut app,
+        Event::Postgis(P::Query(
+            "SELECT 1 AS fid, ST_SetSRID(ST_MakePoint(38.07267801,40.16263730),4326)::geometry(Point,4326) AS geom".into(),
+        )),
+    );
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    let project = app.document.as_ref().expect("open").settings().srid;
+    let label = format!("Projenin sistemine çevir (EPSG:{project}); tablo kendi sisteminde kalır");
+    assert!(crate::files_testing::find_text(&mut shot, &app, &label).is_some(), "{label}");
+    send(&mut app, Event::Postgis(P::Reproject));
+    assert!(window(&app).reproject);
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-055-sorgu-sistemi");
+    let _ = app.db_store.remove(name);
+}
