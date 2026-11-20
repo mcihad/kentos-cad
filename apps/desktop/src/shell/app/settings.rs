@@ -274,6 +274,8 @@ impl App {
         // unsaved entry is said, not carried. The table starts on the new drawing's layer, its widths and hidden
         // columns kept for the session.
         self.leave_forms_of_document();
+        // Servis bilgisi's point and answers are the last drawing's (GIS-044).
+        self.leave_service_info();
         self.followed = Some((doc.session, doc.model.generation()));
         self.xrefs = Default::default();
         self.document = Some(doc);

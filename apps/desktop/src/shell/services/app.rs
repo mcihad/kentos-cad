@@ -39,7 +39,8 @@ pub enum Event {
     /// A feed layer's Yenile.
     FeedRefresh(String),
     /// Servis bilgisi's answers (info.rs).
-    Info(Vec<super::info::Answer>),
+    /// A Servis bilgisi ask's answers, with the ask they are for.
+    Info(u64, Vec<super::info::Answer>),
     /// Servis ayarları from a layer's menu: Harita servisi on that layer.
     Settings(String),
 }
@@ -170,7 +171,7 @@ impl App {
             Event::Window(e) => return self.service_window_event(e),
             Event::Feed(e) => return self.feed_event(e),
             Event::FeedRefresh(id) => return self.refresh_feed(&id),
-            Event::Info(answers) => self.service_info_answered(answers),
+            Event::Info(asked, answers) => self.service_info_answered(asked, answers),
             Event::Settings(id) => self.open_service_window(Some(id)),
             Event::Opacity(id, opacity) => self.service_opacity(&id, opacity),
             Event::Credits(open) => self.service_credits = open,

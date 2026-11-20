@@ -494,8 +494,10 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                             .map(|body| kentos_services::info::read(&media, &body))
                     })
                     .ok_or_else(|| "yanıt yok".to_owned());
-                app.service_info_answered(vec![crate::services::info::Answer {
+                let asked = app.service_info.asked;
+                app.service_info_answered(asked, vec![crate::services::info::Answer {
                     layer: "ABD eyaletleri".into(),
+                    layer_id: String::new(),
                     rows: answers,
                 }]);
             },

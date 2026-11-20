@@ -26,12 +26,16 @@ pub struct Info {
     pub busy: bool,
     pub at: Option<Vec2>,
     pub answers: Vec<Answer>,
+    /// The ask the answers are for (GIS-044): another ask, or another drawing, makes a late answer stale.
+    pub asked: u64,
 }
 
 #[derive(Clone, Debug)]
 pub struct Answer {
     /// The layer's name.
     pub layer: String,
+    /// The layer's id in the drawing it was asked on.
+    pub layer_id: String,
     pub rows: Result<Vec<InfoRow>, String>,
 }
 
@@ -110,7 +114,7 @@ impl App {
                 .as_ref()
                 .and_then(|c| super::secrets::secrets().get(&c.origin, &c.id));
             jobs.push((
-                n.name.clone(),
+                (n.name.clone(), n.id.clone()),
                 s.clone(),
                 srid,
                 Vec2::new(x, y),
@@ -122,11 +126,13 @@ impl App {
         self.service_info.busy = true;
         self.service_info.at = Some(p);
         self.service_info.answers.clear();
+        self.service_info.asked += 1;
+        let asked = self.service_info.asked;
         self.show_bottom(crate::bottom::BottomTab::ServiceInfo);
         super::app::off_thread(
             move || {
                 jobs.into_iter()
-                    .map(|(name, s, srid, q, units, conn, secret)| {
+                    .map(|((name, layer_id), s, srid, q, units, conn, secret)| {
                         let mut last = Err("Servis bu noktada bilgi vermedi.".to_owned());
                         for (media, req) in requests(&s, srid, q.x, q.y, units) {
                             match super::net::send_text(
@@ -144,18 +150,35 @@ impl App {
                         }
                         Answer {
                             layer: name,
+                            layer_id,
                             rows: last,
                         }
                     })
                     .collect::<Vec<_>>()
             },
-            super::app::Event::Info,
+            move |answers| super::app::Event::Info(asked, answers),
         )
     }
 
-    pub(crate) fn service_info_answered(&mut self, answers: Vec<Answer>) {
+    /// The answers of the ask `asked`: kept only when it is still the one asked (GIS-044): one that comes after
+    /// another drawing was opened, or after another point was asked, is dropped.
+    pub(crate) fn service_info_answered(&mut self, asked: u64, answers: Vec<Answer>) {
+        if asked != self.service_info.asked {
+            return;
+        }
         self.service_info.busy = false;
-        self.service_info.answers = answers;
+        // Each answer of a layer the drawing still has (an id is the drawing's own, a name may be another's).
+        let held = |a: &Answer| {
+            a.layer_id.is_empty() || self.document.as_ref().is_some_and(|d| d.model.layers().get(&a.layer_id).is_some())
+        };
+        self.service_info.answers = answers.into_iter().filter(|a| held(a)).collect();
+    }
+
+    /// Another drawing (GIS-044): the point, its answers and a pick going on are the last drawing's, never shown on
+    /// this one; an answer still on its way is dropped when it comes.
+    pub(crate) fn leave_service_info(&mut self) {
+        let asked = self.service_info.asked + 1;
+        self.service_info = Info { asked, ..Info::default() };
     }
 
     /// The bottom panel's Servis bilgisi tab.
@@ -206,5 +229,44 @@ impl App {
             list = list.push(block);
         }
         scrollable(column![list].width(Fill)).height(Fill).into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app::Message;
+
+    fn answer(layer: &str) -> Answer {
+        Answer { layer: layer.into(), layer_id: String::new(), rows: Ok(Vec::new()) }
+    }
+
+    /// GIS-044 (docs/adr/1101): Servis bilgisi's point and answers are the drawing's they were asked on. Another
+    /// drawing opened clears the tab; an answer that comes after it, or after another point was asked, is dropped,
+    /// even when both drawings have a layer of the same name.
+    #[test]
+    fn another_drawing_never_shows_the_last_ones_answers() {
+        let mut app = crate::files_testing::app_with_drawing();
+        app.service_info.at = Some(Vec2::new(487_434.292, 4_421_766.999));
+        app.service_info.asked = 7;
+        app.service_info.busy = true;
+        app.service_info_answered(7, vec![answer("Parseller")]);
+        assert_eq!(app.service_info.answers.len(), 1, "the ask's own answer is shown");
+        // Another point asked meanwhile: the first one's late answer is dropped.
+        app.service_info.asked = 8;
+        app.service_info_answered(7, vec![answer("Parseller")]);
+        assert_eq!(app.service_info.answers.len(), 1);
+        app.service_info.busy = true;
+        // Another drawing opened while the answer is on its way.
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
+            "../../../../../fixtures/interaction/v1/empty.kcad"
+        ))
+        .expect("reads");
+        let doc = crate::document::Document::new(snapshot, None).expect("opens");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        assert!(app.service_info.at.is_none() && app.service_info.answers.is_empty(), "cleared");
+        assert!(!app.service_info.busy);
+        app.service_info_answered(8, vec![answer("Parseller")]);
+        assert!(app.service_info.answers.is_empty(), "the late answer is not the new drawing's");
     }
 }
