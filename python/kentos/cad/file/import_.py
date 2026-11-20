@@ -473,8 +473,10 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
+        srid: int | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> DxfImported:
@@ -521,8 +523,14 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
                 its objects go onto. A layer not named here goes onto the drawing's
                 layer of the same name (case and Turkish marks aside), else onto a new
                 layer with the file's look.
+            reproject: Move the coordinates from `srid` into the project's system, as Koordinat dönüştür moves a point (the
+                projections, the datum shift, the project's datum choices). Only points and straight-edged paths move exactly;
+                arcs, circles, texts, blocks and the like are left out and said. Refused `crs_mismatch` in a local project or for
+                a system the transforms do not read.
             scale_reference: Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit.
             skip_layers: The file's layers (by their names in the file) whose objects are left out.
+            srid: The file's coordinate system (EPSG) when `reproject` moves it (gis-usage-report GIS-052, docs/adr/1109); absent:
+                the one the file declares. Unit: epsg.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -544,8 +552,10 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            reproject=reproject,
             scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
+            srid=srid,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -561,8 +571,10 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
+        srid: int | None | Unset = UNSET,
     ) -> DxfImported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -576,8 +588,10 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            reproject=reproject,
             scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
+            srid=srid,
         ))
 
     def validate(
@@ -593,8 +607,10 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
+        srid: int | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -608,8 +624,10 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            reproject=reproject,
             scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
+            srid=srid,
         ))
 
     def answer(
@@ -625,8 +643,10 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
+        srid: int | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -645,8 +665,10 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            reproject=reproject,
             scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
+            srid=srid,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -697,8 +719,10 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
+        srid: int | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> DxfImported:
@@ -742,8 +766,14 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
                 its objects go onto. A layer not named here goes onto the drawing's
                 layer of the same name (case and Turkish marks aside), else onto a new
                 layer with the file's look.
+            reproject: Move the coordinates from `srid` into the project's system, as Koordinat dönüştür moves a point (the
+                projections, the datum shift, the project's datum choices). Only points and straight-edged paths move exactly;
+                arcs, circles, texts, blocks and the like are left out and said. Refused `crs_mismatch` in a local project or for
+                a system the transforms do not read.
             scale_reference: Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit.
             skip_layers: The file's layers (by their names in the file) whose objects are left out.
+            srid: The file's coordinate system (EPSG) when `reproject` moves it (gis-usage-report GIS-052, docs/adr/1109); absent:
+                the one the file declares. Unit: epsg.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -765,8 +795,10 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            reproject=reproject,
             scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
+            srid=srid,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -782,8 +814,10 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
+        srid: int | None | Unset = UNSET,
     ) -> DxfImported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -797,8 +831,10 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            reproject=reproject,
             scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
+            srid=srid,
         ))
 
     def validate(
@@ -814,8 +850,10 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
+        srid: int | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -829,8 +867,10 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            reproject=reproject,
             scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
+            srid=srid,
         ))
 
     def answer(
@@ -846,8 +886,10 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         file_unit: FileUnit | FileUnitName | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         scale_reference: CadImportScale | None | Unset = UNSET,
         skip_layers: Sequence[str] | Unset = UNSET,
+        srid: int | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -866,8 +908,10 @@ class _FileImportDxf(LocalCommand[ImportDxf, DxfImported, DxfImported]):
             file_unit=file_unit,
             group=group,
             layers=_opt(layers, lambda x: dict(x)),
+            reproject=reproject,
             scale_reference=scale_reference,
             skip_layers=_opt(skip_layers, lambda x: list(x)),
+            srid=srid,
         ), op=op, request_id=request_id, expected=expected)
 
 

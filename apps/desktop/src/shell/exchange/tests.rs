@@ -1409,3 +1409,47 @@ fn import_scale_framing_keeps_a_four_millimetre_part_visible_within_camera_limit
     let view=app.viewport.named("small");assert!(view.width<=0.201 && view.height<=0.141,"{view:?}"); // At the camera limit the 4 mm part spans 20 logical pixels, rather than vanishing in 20 m.
     assert!((view.center.x-10.002).abs()<1e-9 && (view.center.y-20.0015).abs()<1e-9);
 }
+
+/// GIS-052 (docs/adr/1109): the TM39 NCZ in the TM36 project goes in moved when “Projenin sistemine çevir” is asked:
+/// the points land where an independent transform puts them (pyproj,
+/// TUREF / TM39 → TUREF / TM36), the objects that do not move exactly are left out and said; one undo step.
+#[test]
+fn an_ncz_in_another_zone_goes_in_moved_when_asked() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(fixture("ncz/01-her-tur.ncz"));
+    let before = count(&app);
+    run(&mut app, "file.import.ncz");
+    let Some(super::Window::DrawingImport(s)) = &app.exchange else { panic!("the window") };
+    let first = s
+        .result
+        .as_ref()
+        .expect("read")
+        .entities
+        .iter()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Point(p) => Some((p.p.x, p.p.y, p.base.label.clone())),
+            _ => None,
+        })
+        .expect("a point");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Convert(true)));
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-052-ncz-cevir");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    let added = count(&app) - before;
+    assert!(added > 0 && added < 18, "the straight ones moved, the rest left out: {added}");
+    let model = &app.document.as_ref().expect("open").model;
+    let moved = model
+        .entities()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Point(p) if p.base.label == first.2 => Some((p.p.x, p.p.y)),
+            _ => None,
+        })
+        .expect("the point moved");
+    // pyproj (PROJ 9, EPSG:5257 → EPSG:5256) puts 1284 (421 000, 4 448 000) at (676 579.8990742341, 4 449 648.080327207).
+    assert!((moved.0 - 676_579.899_074_234_1).abs() < 1e-6 && (moved.1 - 4_449_648.080_327_207).abs() < 1e-6, "{moved:?}");
+    assert!(first.0 == 421_000.0 && first.1 == 4_448_000.0);
+    let doc = app.document.as_mut().expect("open");
+    assert!(doc.model.undo().is_some());
+    assert_eq!(count(&app), before, "one undo step");
+}

@@ -231,7 +231,7 @@ pub struct State {
     read: u64,
     /// The read under way: how far (0..1), and the flag that stops it.
     reading: Option<(f32, Arc<AtomicBool>)>,
-    result: Option<Arc<ImportResult>>,
+    pub(super) result: Option<Arc<ImportResult>>,
     failed: Option<String>,
     /// The first object with a number that is not finite: nothing is imported.
     unusable: Option<String>,
@@ -293,6 +293,8 @@ pub enum Event {
     /// Kapalı çoklu çizgiler chosen (none: the project type's): the file is read again.
     Closed(Option<ClosedPolylines>),
     Crs(u32),
+    /// “Projenin sistemine çevir” ticked or not (GIS-052): the command moves the coordinates.
+    Convert(bool),
     Another,
     Run,
     /// Vazgeç: a read under way stops, and the window closes.
@@ -429,7 +431,8 @@ impl App {
             Some(Window::DrawingImport(s)) if s.source == source && source.cad().is_some() => {
                 (s.crs.clone(), s.explode, s.closed)
             }
-            _ => (CrsQuestion::new(srid), false, None),
+            // A drawing's coordinates can be moved into the project's system (GIS-052), on asking.
+            _ => (CrsQuestion::convertible(srid), false, None),
         };
         if let Some(Window::DrawingImport(s)) = &self.exchange {
             s.stop_reading();
@@ -652,6 +655,7 @@ impl App {
                 }
             }
             Event::Crs(srid) => s.crs.pick(srid),
+            Event::Convert(on) => s.crs.convert = on,
             Event::Another
             | Event::Run
             | Event::Explode
@@ -684,7 +688,13 @@ impl App {
                 || s.result
                     .as_ref()
                     .is_some_and(|r| r.entities.is_empty() && !r.layouts.is_empty()))
-            && s.crs.matches(&self.project_system())
+            && (s.crs.matches(&self.project_system()) || self.drawing_moves(s))
+    }
+
+    /// Whether the window's import moves the coordinates into the project's system (GIS-052): asked, and a way there.
+    fn drawing_moves(&self, s: &State) -> bool {
+        let own = self.project_system();
+        s.crs.convert && !s.crs.matches(&own) && s.crs.move_between(&own).is_some()
     }
 
     fn run_drawing_import(&mut self) -> Task<Message> {
@@ -700,6 +710,24 @@ impl App {
         if s.source.cad().is_some() {
             return self.run_dxf_import(result);
         }
+        // An NCZ is written by the window: its coordinates moved here first when asked (GIS-052).
+        let result = if self.drawing_moves(s) {
+            let mut moved = (*result).clone();
+            let srid = s.crs.srid;
+            let Some(doc) = &self.document else { return Task::none() };
+            if let Err(why) = file_import::moved_into_project(&doc.model, srid, &mut moved) {
+                if let Some(Window::DrawingImport(s)) = &mut self.exchange {
+                    s.status = Some((true, why));
+                }
+                return Task::none();
+            }
+            Arc::new(moved)
+        } else {
+            result
+        };
+        let Some(Window::DrawingImport(s)) = &self.exchange else {
+            return Task::none();
+        };
         let (name, source) = (s.file.name.clone(), s.source);
         let layers: Vec<(String, LayerTarget)> = self
             .drawing_included(s)
@@ -775,11 +803,26 @@ impl App {
             layers: std::collections::BTreeMap::new(),
             group: None,
             expected_revision: None,
+            srid: self.drawing_moves(s).then_some(s.crs.srid).flatten(),
+            reproject: self.drawing_moves(s),
         };
         let (name, bytes) = (s.file.name.clone(), s.file.bytes.clone());
         let chosen = included.len();
         let Some(doc) = &mut self.document else {
             return Task::none();
+        };
+        // A large import is written a frame at a time from the result: moved here first when asked (GIS-052).
+        let result = if input.reproject && result.entities.len() > AT_ONCE {
+            let mut moved = (*result).clone();
+            if let Err(why) = file_import::moved_into_project(&doc.model, input.srid, &mut moved) {
+                if let Some(Window::DrawingImport(s)) = &mut self.exchange {
+                    s.status = Some((true, why));
+                }
+                return Task::none();
+            }
+            Arc::new(moved)
+        } else {
+            result
         };
         if result.entities.len() > AT_ONCE {
             let plan = match file_import::import_plan_format(
@@ -1208,6 +1251,15 @@ impl App {
             .push(s.crs.view(&project, &self.number_format(), |srid| {
                 event(Event::Crs(srid))
             }));
+        if let Some(convert) = s.crs.convert_view(&project, |on| event(Event::Convert(on))) {
+            body = body.push(convert);
+            if s.crs.convert {
+                body = body.push(words::text_line(
+                    Line::Warn,
+                    "Çevirmede noktalar ve düz kenarlı çizgi ve alanlar tam taşınır; yay, daire, yazı, blok ve pafta çerçevesi gibi nesneler yaklaşık taşınmaz, dışarıda kalır ve raporda sayılır.",
+                ));
+            }
+        }
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
                 if *error { Line::Error } else { Line::Info },
@@ -1272,6 +1324,8 @@ impl App {
             layers: std::collections::BTreeMap::new(),
             group: None,
             expected_revision: None,
+            srid: self.drawing_moves(s).then_some(s.crs.srid).flatten(),
+            reproject: self.drawing_moves(s),
         };
         Some(super::server_work::Work::import(
             kentos_commands::ImportFormat::Dxf,

@@ -63,4 +63,16 @@ group?: string,
 /**
  * The drawing's revision the input was prepared against.
  */
-expectedRevision?: string, };
+expectedRevision?: string, 
+/**
+ * The file's coordinate system (EPSG) when `reproject` moves it (gis-usage-report GIS-052, docs/adr/1109); absent:
+ * the one the file declares.
+ */
+srid?: number, 
+/**
+ * Move the coordinates from `srid` into the project's system, as Koordinat dönüştür moves a point (the
+ * projections, the datum shift, the project's datum choices). Only points and straight-edged paths move exactly;
+ * arcs, circles, texts, blocks and the like are left out and said. Refused `crs_mismatch` in a local project or for
+ * a system the transforms do not read.
+ */
+reproject?: boolean, };

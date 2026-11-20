@@ -51913,8 +51913,14 @@ class ImportDxf(_Model):
             its objects go onto. A layer not named here goes onto the drawing's
             layer of the same name (case and Turkish marks aside), else onto a new
             layer with the file's look.
+        reproject: Move the coordinates from `srid` into the project's system, as Koordinat dönüştür moves a point (the
+            projections, the datum shift, the project's datum choices). Only points and straight-edged paths move exactly;
+            arcs, circles, texts, blocks and the like are left out and said. Refused `crs_mismatch` in a local project or for
+            a system the transforms do not read.
         scale_reference: Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit.
         skip_layers: The file's layers (by their names in the file) whose objects are left out.
+        srid: The file's coordinate system (EPSG) when `reproject` moves it (gis-usage-report GIS-052, docs/adr/1109); absent:
+            the one the file declares. Unit: epsg.
     """
     path: str
     allow_polyline_loss: bool | Unset = UNSET
@@ -51924,8 +51930,10 @@ class ImportDxf(_Model):
     file_unit: FileUnit | FileUnitName | None | Unset = UNSET
     group: str | None | Unset = UNSET
     layers: dict[str, str] | Unset = UNSET
+    reproject: bool | Unset = UNSET
     scale_reference: CadImportScale | None | Unset = UNSET
     skip_layers: list[str] | Unset = UNSET
+    srid: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -51944,10 +51952,14 @@ class ImportDxf(_Model):
             out["group"] = self.group
         if self.layers is not UNSET:
             out["layers"] = dict(self.layers)
+        if self.reproject is not UNSET:
+            out["reproject"] = self.reproject
         if self.scale_reference is not UNSET:
             out["scaleReference"] = None if self.scale_reference is None else self.scale_reference.to_json()
         if self.skip_layers is not UNSET:
             out["skipLayers"] = list(self.skip_layers)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
         return out
 
     @classmethod
@@ -51961,8 +51973,10 @@ class ImportDxf(_Model):
             file_unit=UNSET if "fileUnit" not in data else None if data["fileUnit"] is None else _enum_in(FileUnit, data["fileUnit"]),
             group=data.get("group", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
+            reproject=data.get("reproject", UNSET),
             scale_reference=UNSET if "scaleReference" not in data else None if data["scaleReference"] is None else CadImportScale.from_json(data["scaleReference"]),
             skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+            srid=data.get("srid", UNSET),
         )
 
 

@@ -93150,6 +93150,10 @@
             "description": "The file to read, an absolute path.",
             "type": "string"
           },
+          "reproject": {
+            "description": "Move the coordinates from `srid` into the project's system, as Koordinat dönüştür moves a point (the\nprojections, the datum shift, the project's datum choices). Only points and straight-edged paths move exactly;\narcs, circles, texts, blocks and the like are left out and said. Refused `crs_mismatch` in a local project or for\na system the transforms do not read.",
+            "type": "boolean"
+          },
           "scaleReference": {
             "anyOf": [
               {
@@ -93167,6 +93171,16 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "srid": {
+            "description": "The file's coordinate system (EPSG) when `reproject` moves it (gis-usage-report GIS-052, docs/adr/1109); absent:\nthe one the file declares.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
           }
         },
         "required": [
@@ -93618,6 +93632,10 @@
             "description": "The file to read, an absolute path.",
             "type": "string"
           },
+          "reproject": {
+            "description": "Move the coordinates from `srid` into the project's system, as Koordinat dönüştür moves a point (the\nprojections, the datum shift, the project's datum choices). Only points and straight-edged paths move exactly;\narcs, circles, texts, blocks and the like are left out and said. Refused `crs_mismatch` in a local project or for\na system the transforms do not read.",
+            "type": "boolean"
+          },
           "scaleReference": {
             "anyOf": [
               {
@@ -93635,6 +93653,16 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "srid": {
+            "description": "The file's coordinate system (EPSG) when `reproject` moves it (gis-usage-report GIS-052, docs/adr/1109); absent:\nthe one the file declares.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
           }
         },
         "required": [

@@ -79,6 +79,19 @@ pub struct ImportDxf {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
+    /// The file's coordinate system (EPSG) when `reproject` moves it (gis-usage-report GIS-052, docs/adr/1109); absent:
+    /// the one the file declares.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub srid: Option<u32>,
+    /// Move the coordinates from `srid` into the project's system, as Koordinat dönüştür moves a point (the
+    /// projections, the datum shift, the project's datum choices). Only points and straight-edged paths move exactly;
+    /// arcs, circles, texts, blocks and the like are left out and said. Refused `crs_mismatch` in a local project or for
+    /// a system the transforms do not read.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub reproject: bool,
 }
 
 /// A layer an import made.

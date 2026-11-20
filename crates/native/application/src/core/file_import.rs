@@ -684,5 +684,51 @@ fn write_execute(
     }
     if let Err(stop) = prepare_cad(cx.doc, Path::new(&input.path), &mut read.result) { return stop.into(); }
     if !input.allow_polyline_loss && let Some(error) = kentos_formats::dxf::polyline_policy::refusal(read.result.report.notes.iter().chain(&read.result.report.skipped)) { return refuse(error.code, error.message, "allowPolylineLoss").into(); }
+    if input.reproject && let Err(stop) = move_into_project(cx.doc, input.srid, &mut read.result) {
+        return stop.into();
+    }
     write(cx.doc, &input, read, format)
+}
+
+/// [`move_into_project`] for the desktop's large import, written a frame at a time: why not, as the command says it.
+pub fn moved_into_project(doc: &Document, srid: Option<u32>, result: &mut ImportResult) -> Result<(), String> {
+    move_into_project(doc, srid, result).map_err(|stop| match CommandResult::<()>::from(stop) {
+        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => error.message,
+        _ => "Koordinatlar projenin sistemine çevrilemedi.".to_owned(),
+    })
+}
+
+/// The file's coordinates moved into the project's system (GIS-052, docs/adr/1109): from `srid`, else the system the
+/// file declares; exactly, points and straight-edged paths only, the rest left out and said in the report.
+pub(crate) fn move_into_project(doc: &Document, srid: Option<u32>, result: &mut ImportResult) -> Result<(), Stop> {
+    let settings = doc.settings();
+    if !settings.has_system() {
+        return Err(refuse(
+            codes::CRS_MISMATCH,
+            "Projenin koordinat sistemi yok (yerel proje): çevrilecek bir sistem yok. reproject vermeyin; koordinatlar olduğu gibi alınır.".into(),
+            "reproject",
+        ));
+    }
+    let Some(from_srid) = srid.or_else(|| result.declared_crs.as_ref().and_then(|d| d.srid)) else {
+        return Err(refuse(
+            codes::CRS_MISMATCH,
+            "Dosyanın koordinat sistemi bilinmiyor: srid ile verin.".into(),
+            "srid",
+        ));
+    };
+    if from_srid == settings.srid {
+        return Ok(());
+    }
+    let from = kentos_project::crs::system(from_srid).and_then(|s| s.transform_system());
+    let to = kentos_project::systems::own(settings).and_then(|n| n.system);
+    let (Some(from), Some(to)) = (from, to) else {
+        return Err(refuse(
+            codes::CRS_MISMATCH,
+            format!("EPSG:{from_srid} ya da projenin sistemi KentOS'un çevirebildiği sistemlerde yok; dosyayı projenin sistemine çevirip verin."),
+            "reproject",
+        ));
+    };
+    let choices = kentos_project::systems::choices(settings);
+    kentos_formats::reproject::reproject(result, &from, &to, &choices);
+    Ok(())
 }
