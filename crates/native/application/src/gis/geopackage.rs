@@ -27,6 +27,7 @@ use kentos_commands::{
     Entity, LayerField, LayerFieldKind, MAX_BINARY, MAX_INTEGER, binary_bytes, check_value,
     instant_moment, instant_utc,
 };
+use kentos_commands::LayerGeometry;
 use kentos_commands::encoding::base64_encode;
 use kentos_domain::{Document, Uuid};
 use kentos_geopackage as gpkg;
@@ -1998,7 +1999,13 @@ fn plan(
             rows += 1;
             extra.extend(e.base().attrs.keys().cloned());
         }
-        if rows == 0 {
+        // A layer without objects is written when it is asked for by name and its type or fields make a table to
+        // fill (a field team's empty template, docs/adr/1076): an empty table of its type with its columns.
+        let template = rows == 0
+            && !layers.is_empty()
+            && (matches!(node.geometry, Some(LayerGeometry::Point | LayerGeometry::Line | LayerGeometry::Area))
+                || !node.fields.is_empty());
+        if rows == 0 && !template {
             continue;
         }
         let flag = |any: bool, all: bool| -> u8 {
@@ -2065,7 +2072,12 @@ fn plan(
         plans.push(Plan {
             layer: id.clone(),
             table,
-            type_name: fams.type_name(),
+            type_name: fams.type_name().or_else(|| match node.geometry {
+                Some(LayerGeometry::Point) => Some("POINT".into()),
+                Some(LayerGeometry::Line) => Some("LINESTRING".into()),
+                Some(LayerGeometry::Area) => Some("POLYGON".into()),
+                _ => None,
+            }),
             z: flag(z, all_z),
             m: flag(m, all_m),
             columns,

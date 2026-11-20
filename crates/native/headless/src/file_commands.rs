@@ -533,6 +533,10 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
     let picked = only_objects(doc, &input.uids)?;
     let doc = picked.as_ref().unwrap_or(doc);
     let mut ids = Vec::new();
+    // Every layer, the empty ones a table can be made of too (docs/adr/1076): named, the writer keeps them.
+    if input.layers.is_empty() && input.uids.is_empty() && input.empty_layers {
+        ids = doc.layers().leaves().iter().map(|n| n.id.clone()).collect();
+    }
     if input.layers.is_empty() && !input.uids.is_empty() {
         ids = doc
             .layers()

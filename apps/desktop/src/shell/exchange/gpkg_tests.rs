@@ -2058,3 +2058,54 @@ fn a_geopackage_tables_declared_type_types_its_layer() {
     let app = open("hybrid", "egri-tampon.gpkg");
     assert_eq!(type_of(&app, "Park koruma 10 m"), None);
 }
+
+/// GIS-010 (docs/adr/1076): a line layer with a required, named code field and no route yet is written as an empty
+/// LINESTRING table with its column, so a field team enters the first route without making a column; left out when
+/// the box is cleared.
+#[test]
+fn a_layers_empty_template_goes_out_as_an_empty_table() {
+    use super::gpkg_out::Event as O;
+    use serde_json::json;
+    let dir = scratch("gpkg-template");
+    let (mut app, _) = App::boot(None);
+    let mut o = crate::tools_scenes::Objects::new();
+    o.point("nokta", [0.0, 0.0], None);
+    crate::tools_scenes::open_edited(&mut app, o, |d| {
+        d["settings"]["workspace"] = json!("gis");
+        d["settings"]["srid"] = json!(5255);
+        let mut route = crate::tools_scenes::layer("rota", "Bakım rotaları", "#E5484D", 0.5);
+        route["geometry"] = json!("line");
+        route["fields"] = json!([{ "name": "rota_kodu", "alias": "Rota kodu", "kind": "text", "required": true }]);
+        d["layers"] = json!([crate::tools_scenes::layer("nokta", "Saha noktaları", "#30A46C", 0.25), route]);
+        d["activeLayer"] = json!("nokta");
+    });
+    run(&mut app, "file.export.gpkg");
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    let mut update = |app: &mut App, m| drop(app.update(m));
+    shot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut shot, &app, "gis-010", "bos-katman-sablonu");
+    let out = dir.join("saha.gpkg");
+    app.picker = Picker::File(out.clone());
+    send(&mut app, Event::GpkgOut(O::Save));
+    assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    let gp = kentos_geopackage::GeoPackage::open(&out, false).expect("opens");
+    let layers = gp.layers().expect("tables");
+    let route = layers.iter().find(|l| l.name == "Bakım rotaları").expect("the empty template");
+    assert_eq!(route.geometry.as_ref().map(|g| g.type_name.as_str()), Some("LINESTRING"));
+    assert!(route.columns.iter().any(|c| c.name == "rota_kodu"));
+    assert_eq!(gp.count(route).expect("rows"), 0);
+    drop(gp);
+    // Read back, the template is a typed line layer with its field and no object.
+    let read = kentos_native_application::geopackage::read(&out, None).expect("reads");
+    let t = read.tables.iter().find(|t| t.name == "Bakım rotaları").expect("read");
+    assert!(t.objects.is_empty());
+    assert!(t.fields.iter().any(|f| f.name == "rota_kodu" && f.alias.as_deref() == Some("Rota kodu") && f.required));
+    // The box cleared: only the layer with objects.
+    run(&mut app, "file.export.gpkg");
+    send(&mut app, Event::GpkgOut(O::Empty));
+    let out = dir.join("yalniz-dolu.gpkg");
+    app.picker = Picker::File(out.clone());
+    send(&mut app, Event::GpkgOut(O::Save));
+    let gp = kentos_geopackage::GeoPackage::open(&out, false).expect("opens");
+    assert!(gp.layers().expect("tables").iter().all(|l| l.name != "Bakım rotaları"));
+}

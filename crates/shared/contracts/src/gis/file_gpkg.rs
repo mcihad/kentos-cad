@@ -165,6 +165,11 @@ pub struct ExportGpkg {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
+    /// With no `layers` and no `uids`: also every layer without objects whose type (point, line, area) or fields make
+    /// a table, written empty with its columns (a field team's template, docs/adr/1076).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub empty_layers: bool,
     /// Write over a file that is there.
     #[serde(default)]
     pub overwrite: bool,

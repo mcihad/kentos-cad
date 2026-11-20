@@ -42,12 +42,15 @@ impl fmt::Display for Counted {
 #[derive(Debug, Clone)]
 pub struct State {
     pub scope: Scope,
+    /// Tüm proje's empty layers whose type or fields make a table (a field template), written empty (GIS-010).
+    pub empty: bool,
     pub status: Option<(bool, String)>,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
     Scope(Scope),
+    Empty,
     Save,
     Picked(Option<PathBuf>),
 }
@@ -82,10 +85,41 @@ impl App {
         reach
     }
 
+    /// The empty layers a table can be made of (typed point, line or area, or with fields), by id.
+    fn gpkg_template_ids(&self) -> Vec<String> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        let doc = &doc.model;
+        doc.layers()
+            .leaves()
+            .iter()
+            .filter(|n| doc.by_layer_with_uids(&n.id).next().is_none())
+            .filter(|n| {
+                matches!(
+                    n.geometry,
+                    Some(kentos_commands::LayerGeometry::Point | kentos_commands::LayerGeometry::Line | kentos_commands::LayerGeometry::Area)
+                ) || !n.fields.is_empty()
+            })
+            .map(|n| n.id.clone())
+            .collect()
+    }
+
+    /// Their names.
+    fn gpkg_templates(&self) -> Vec<String> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        self.gpkg_template_ids()
+            .iter()
+            .filter_map(|id| doc.model.layers().get(id).map(|n| n.name.clone()))
+            .collect()
+    }
+
     /// File › GeoPackage dışa aktar: the window, Seçili nesneler first when something is selected.
     pub(super) fn gpkg_out_open(&mut self) -> Task<Message> {
         let scope = if self.selection.ids().is_empty() { Scope::All } else { Scope::Selection };
-        self.open_window(Window::GpkgOut(State { scope, status: None }));
+        self.open_window(Window::GpkgOut(State { scope, empty: true, status: None }));
         Task::none()
     }
 
@@ -95,6 +129,12 @@ impl App {
                 if let Some(Window::GpkgOut(s)) = &mut self.exchange {
                     s.scope = scope;
                     s.status = None;
+                }
+                Task::none()
+            }
+            Event::Empty => {
+                if let Some(Window::GpkgOut(s)) = &mut self.exchange {
+                    s.empty = !s.empty;
                 }
                 Task::none()
             }
@@ -126,6 +166,7 @@ impl App {
                     return Task::none();
                 };
                 let scope = s.scope;
+                let empty = s.empty && scope == Scope::All;
                 let Some(doc) = &self.document else {
                     return Task::none();
                 };
@@ -147,6 +188,7 @@ impl App {
                     path: path.display().to_string(),
                     layers,
                     uids,
+                    empty_layers: empty,
                     overwrite: true,
                     time: self.export_time(),
                 };
@@ -173,16 +215,34 @@ impl App {
             ),
             Some("Seçili nesneler yalnız seçimi, kendi katmanlarının tablolarına yazar; Etkin katman o katmanın bütün nesnelerini; Tüm proje nesnesi olan her katmanı.".to_owned()),
         ));
+        let templates = self.gpkg_templates();
+        if s.scope == Scope::All && !templates.is_empty() {
+            body = body.push(words::field(
+                "Boş katmanlar",
+                words::check(
+                    s.empty,
+                    format!("Şeması hazır boş katmanları da yaz ({})", templates.len()),
+                    Some(event(Event::Empty)),
+                ),
+                Some(format!(
+                    "Türü ya da alanları tanımlı ama nesnesi olmayan katmanlar ({}) boş tablo olarak, sütunlarıyla yazılır: saha ekibi ilk kaydı yeni sütun açmadan girer.",
+                    templates.join(", ")
+                )),
+            ));
+        }
         if let Some(row) = self.export_time_row() {
             body = body.push(row);
         }
-        let reach = self.gpkg_reach(s.scope);
+        let mut reach = self.gpkg_reach(s.scope);
+        if s.scope == Scope::All && s.empty {
+            reach.layers.extend(self.gpkg_template_ids());
+        }
         let names: Vec<String> = reach
             .layers
             .iter()
             .filter_map(|id| self.document.as_ref()?.model.layers().get(id).map(|n| n.name.clone()))
             .collect();
-        let lines = vec![if reach.objects == 0 {
+        let lines = vec![if reach.objects == 0 && reach.layers.is_empty() {
             words::text_line(Line::Warn, "Bu kapsamda yazılacak nesne yok.")
         } else {
             words::text_line(
@@ -203,7 +263,7 @@ impl App {
             Dialog::new("GeoPackage dışa aktar")
                 .scroll(body)
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-                .action(words::primary("Dışa aktar…", (reach.objects > 0).then(|| event(Event::Save))))
+                .action(words::primary("Dışa aktar…", (!reach.layers.is_empty()).then(|| event(Event::Save))))
                 .width(640.0)
                 .max_height(720.0)
                 .on_close(Some(message(Exchange::Close))),

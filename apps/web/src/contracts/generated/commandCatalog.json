@@ -102341,6 +102341,10 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.export.gpkg` v1: the layers (all with objects when none), or only the objects named, as tables of a\nnew GeoPackage, each object a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's\ncoordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,\n`entity_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves\nwritten as chords).",
         "properties": {
+          "emptyLayers": {
+            "description": "With no `layers` and no `uids`: also every layer without objects whose type (point, line, area) or fields make\na table, written empty with its columns (a field team's template, docs/adr/1076).",
+            "type": "boolean"
+          },
           "layers": {
             "description": "The layers, by id; empty: every layer with objects.",
             "items": {
