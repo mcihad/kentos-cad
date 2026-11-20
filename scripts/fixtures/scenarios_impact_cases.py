@@ -485,6 +485,30 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
     reach = None
     near_out = None
     slope_map = None
+    if access is not None:
+        # UR2-033: the uses typed resolved to the plan's own, letter case as Turkish folds it; one the plan does not
+        # have is said.
+        present = list(dict.fromkeys(list(b["uses"]) + list(a["uses"])))
+
+        def fold(t):
+            return t.strip().replace("i", "İ").replace("ı", "I").upper()
+
+        unknown = []
+
+        def resolve(names):
+            out_ = []
+            for n_ in names:
+                hit = n_ if n_ in present else next((p_ for p_ in present if fold(p_) == fold(n_)), None)
+                if hit is None:
+                    unknown.append(n_.strip())
+                    hit = n_
+                out_.append(hit)
+            return out_
+
+        access = dict(access, **{"from": resolve(access["from"]), "to": resolve(access["to"])})
+        if unknown:
+            asked_gaps.append("Planda olmayan kullanım: " + ", ".join(f"“{u_}”" for u_ in unknown)
+                              + "; erişim ona göre hesaplanamaz. Planın kullanım değerlerinden birini yazın.")
     if access is not None and access.get("network"):
         net = s["settings"]["networks"][0]
         layer = net["edges"][0]["layer"]
@@ -894,6 +918,9 @@ def cases():
         ok("erişim: 50 m'de mevcut durumdaki konut da erişir", BASE_SETUP, access=dict(ACCESS, distance=50.0)),
         ok("erişilecek kullanım hiçbir tarafta yok: iki eksik", BASE_SETUP,
            access={"distance": 40.0, "from": ["konut"], "to": ["meydan"]}),
+        # UR2-033: the letter case of a use typed does not change what it finds.
+        ok("erişim: büyük harfle yazılan kullanımlar planınkilerdir", BASE_SETUP,
+           access={"distance": 40.0, "from": ["Konut"], "to": ["Park", "YESİL"]}),
         ok("geçirimsizlik ve erişim birlikte", BASE_SETUP, impervious=SHARES, access=ACCESS),
         # docs/adr/2660: the area near an infrastructure layer, the user's distance.
         ok("altyapıya yakınlık: kanalizasyon hattına 40 m", INFRA_SETUP, infrastructure={"layer": "altyapi", "distance": 40.0}),

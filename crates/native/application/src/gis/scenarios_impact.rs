@@ -545,7 +545,38 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
         }
     }
     let mut reach = None;
-    if let Some(access) = &input.access {
+    // The uses typed resolved to those the plan has, letter case as Turkish folds it (UR2-033: “Park” found no park
+    // where “park” found one); one the plan does not have is said, not counted as no access.
+    let resolved_access = input.access.as_ref().map(|access| {
+        let present: Vec<&String> = b.uses.keys().chain(a.uses.keys()).collect();
+        let fold = |t: &str| kentos_expression::js::text::upper_tr(t.trim());
+        let mut unknown = Vec::new();
+        let mut resolve = |names: &[String]| -> Vec<String> {
+            names
+                .iter()
+                .map(|n| match present.iter().find(|p| ***p == *n).or_else(|| present.iter().find(|p| fold(p) == fold(n))) {
+                    Some(p) => (*p).clone(),
+                    None => {
+                        unknown.push(n.trim().to_owned());
+                        n.clone()
+                    }
+                })
+                .collect()
+        };
+        let mut access = access.clone();
+        access.from = resolve(&access.from);
+        access.to = resolve(&access.to);
+        (access, unknown)
+    });
+    if let Some((_, unknown)) = &resolved_access
+        && !unknown.is_empty()
+    {
+        asked_gaps.push(format!(
+            "Planda olmayan kullanım: {}; erişim ona göre hesaplanamaz. Planın kullanım değerlerinden birini yazın.",
+            unknown.iter().map(|u| format!("“{u}”")).collect::<Vec<_>>().join(", ")
+        ));
+    }
+    if let Some((access, _)) = &resolved_access {
         let (from, to) = (access.from.join(", "), access.to.join(", "));
         let network = access.network.as_deref().map(str::trim).filter(|n| !n.is_empty());
         let (xg, xw, xt, yg, yw, yt, label, method);
