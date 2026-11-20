@@ -251,3 +251,30 @@ mod tests {
         );
     }
 }
+
+/// GIS-029: a CBS project without storeys offers no building options in Görünümler's recipe (Kat, Alt kat soluk,
+/// Yansıtılmış tavan planı, Tadilat görünümü, Duvar ayrıntısı); the map's own (Katman durumu, Ölçek) stay.
+#[test]
+fn a_map_projects_view_offers_no_building_options() {
+    let mut app = crate::files_testing::app_with_drawing();
+    let doc = app.document.as_mut().expect("open");
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(kentos_commands::Workspace::Gis);
+    doc.model.set_settings(settings);
+    command(
+        &mut app,
+        "cad.views.edit",
+        json!({"edit": {"kind": "save", "name": "Bütün parklar", "center": {"x": E, "y": N}, "width": 100.0, "height": 80.0}}),
+    );
+    let _ = app.update(Message::Run("view.namedViews"));
+    let _ = app.update(Message::Views(crate::views::Event::Choose("Bütün parklar".into())));
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    for gone in ["Alt kat soluk", "Yansıtılmış tavan planı", "Tadilat görünümü", "Duvar ayrıntısı"] {
+        assert!(crate::files_testing::find_text(&mut shot, &app, gone).is_none(), "{gone} offered");
+    }
+    for kept in ["Katman durumu", "Ölçek"] {
+        assert!(crate::files_testing::find_text(&mut shot, &app, kept).is_some(), "{kept} missing");
+    }
+    crate::files_testing::evidence(&mut shot, &app, "gis-029", "cbs-gorunum");
+}

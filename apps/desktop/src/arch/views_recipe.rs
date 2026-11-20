@@ -659,12 +659,20 @@ impl App {
             |title: &'static str, e: Element<'static, Message>| -> Element<'static, Message> {
                 container(words::field(title, e, None)).width(Fill).into()
             };
+        // A project without storeys (a CBS project's map): the building's options — Kat, Alt kat soluk, Yansıtılmış
+        // tavan planı, Tadilat görünümü, Duvar ayrıntısı, the building's pens — are not offered (GIS-029); the map's
+        // own, Katman durumu, Ölçek, the crop and what is hidden, stay.
+        let building = !levels.is_empty();
         let mut body = Column::new()
             .spacing(10)
-            .push(words::field("Görünüş tarifi", preset, Some(version)))
-            .push(row![cell("Şablon", template.into()), cell("Kat", level.into())].spacing(12))
-            .push(below)
-            .push(options);
+            .push(words::field("Görünüş tarifi", preset, Some(version)));
+        body = if building {
+            body.push(row![cell("Şablon", template.into()), cell("Kat", level.into())].spacing(12))
+                .push(below)
+        } else {
+            body.push(cell("Şablon", template.into()))
+        };
+        body = body.push(options);
         match followed {
             // Following a template: the level and the crop are the view's, the rest the template's (docs/adr/0783 §2).
             Some(t) => {
@@ -675,6 +683,14 @@ impl App {
                         kentos_ui::label::muted(recipe_caption(self, &t.recipe)),
                         Some("Tadilat görünümü, katman durumu, ölçek, ayrıntı, gizlenenler ve kalemler şablondan gelir; şablon değişince bağlı paftalar da değişir.".to_owned()),
                     ));
+            }
+            None if !building => {
+                body = body
+                    .push(row![cell("Katman durumu", state.into()), cell("Ölçek", scale.into())].spacing(12))
+                    .push(container(crop).width(Fill))
+                    .push(words::field("Gizlenen türler", hide, None))
+                    .push(mono);
+                let _ = (reflected, phase, detail, pens);
             }
             None => {
                 body = body.push(reflected);
