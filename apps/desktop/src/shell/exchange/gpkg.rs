@@ -32,6 +32,9 @@ pub struct Table {
     pub features: bool,
     pub rows: u64,
     pub geometry: Option<String>,
+    /// The EPSG code its geometry column declares (a GeoPackage says it per table, GIS-006); none for an undefined
+    /// system or an attribute table.
+    pub srid: Option<u32>,
 }
 
 #[derive(Debug)]
@@ -40,7 +43,7 @@ pub struct State {
     pub file: String,
     pub tables: Vec<Table>,
     pub chosen: Vec<bool>,
-    /// The EPSG code the file declares, none for an undefined system.
+    /// The first EPSG code the file's tables declare, none for an undefined system; each table's is its own.
     pub srid: Option<u32>,
     pub reproject: bool,
     /// Bağlı katman olarak aç: each table bound to its layer (`cad.sources.edit`).
@@ -92,14 +95,18 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
         {
             continue;
         }
-        if srid.is_none()
-            && let Some(id) = l.srs_id.filter(|&id| id > 0)
+        let mut own = None;
+        if let Some(id) = l.srs_id.filter(|&id| id > 0)
             && let Some(s) = gp.srs(id).map_err(|e| e.0)?
             && s.organization.eq_ignore_ascii_case("EPSG")
         {
-            srid = u32::try_from(s.organization_id).ok();
+            own = u32::try_from(s.organization_id).ok();
+        }
+        if srid.is_none() {
+            srid = own;
         }
         tables.push(Table {
+            srid: own.filter(|_| l.data_type == DataType::Features),
             rows: gp.count(&l).map_err(|e| e.0)?,
             features: l.data_type == DataType::Features,
             geometry: l.geometry.as_ref().map(|g| g.type_name.clone()),
@@ -239,11 +246,14 @@ impl App {
                     && let Some(c) = s.chosen.get_mut(i)
                 {
                     *c = !*c;
+                    // What a run said was about the tables as they were chosen then.
+                    s.status = None;
                 }
             }
             Event::Reproject => {
                 if let Some(Window::Gpkg(s)) = &mut self.exchange {
                     s.reproject = !s.reproject;
+                    s.status = None;
                 }
             }
             Event::Bind => {
@@ -528,7 +538,12 @@ impl App {
                 (Some(g), true) => g.to_lowercase(),
                 _ => "öznitelik tablosu".into(),
             };
-            let label = format!("{} — {kind}, {} satır", t.name, t.rows);
+            let system = match (t.features, t.srid) {
+                (false, _) => String::new(),
+                (true, Some(f)) => format!(", EPSG:{f}"),
+                (true, None) => ", sistemi yok".to_owned(),
+            };
+            let label = format!("{} — {kind}, {} satır{system}", t.name, t.rows);
             list = list.push(words::check(
                 s.chosen[i],
                 label,
@@ -536,22 +551,48 @@ impl App {
             ));
         }
         let mut lines = Vec::new();
-        let mismatch = s.srid.is_some_and(|f| f != project);
-        match s.srid {
-            None => lines.push(words::text_line(
-                Line::Info,
-                "Dosya koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alınır.",
-            )),
-            Some(f) if f == project => lines.push(words::text_line(
+        // The chosen tables' systems (GIS-006): each table declares its own, the move is asked for those not the
+        // project's, the summary says what the import will do with each.
+        let picked: Vec<&Table> = s
+            .tables
+            .iter()
+            .zip(&s.chosen)
+            .filter(|(t, c)| **c && t.features)
+            .map(|(t, _)| t)
+            .collect();
+        let foreign: std::collections::BTreeSet<u32> =
+            picked.iter().filter_map(|t| t.srid).filter(|&f| f != project).collect();
+        let own = picked.iter().filter(|t| t.srid == Some(project)).count();
+        let undeclared = picked.iter().filter(|t| t.srid.is_none()).count();
+        let mismatch = !foreign.is_empty();
+        let foreign_words = foreign.iter().map(|f| format!("EPSG:{f}")).collect::<Vec<_>>().join(", ");
+        if own > 0 && !mismatch && undeclared == 0 {
+            lines.push(words::text_line(
                 Line::Ok,
-                format!("Dosya projenin sisteminde (EPSG:{f}); koordinatlar olduğu gibi alınır."),
-            )),
-            Some(f) => lines.push(words::text_line(
-                Line::Warn,
-                format!(
-                    "Dosya EPSG:{f} sisteminde, proje EPSG:{project}. Almak için koordinatlar projenin sistemine çevrilmeli."
-                ),
-            )),
+                format!("Seçilen tablolar projenin sisteminde (EPSG:{project}); koordinatlar olduğu gibi alınır."),
+            ));
+        } else if own > 0 {
+            lines.push(words::text_line(
+                Line::Info,
+                format!("{own} tablo projenin sisteminde (EPSG:{project}); koordinatları olduğu gibi alınır."),
+            ));
+        }
+        if undeclared > 0 {
+            lines.push(words::text_line(
+                Line::Info,
+                format!("{undeclared} tablo koordinat sistemi bildirmiyor; koordinatları projenin sisteminde sayılıp olduğu gibi alınır."),
+            ));
+        }
+        if mismatch {
+            let n = picked.iter().filter(|t| t.srid.is_some_and(|f| f != project)).count();
+            lines.push(words::text_line(
+                if s.reproject { Line::Info } else { Line::Warn },
+                if s.reproject {
+                    format!("{n} tablo {foreign_words} sisteminden projenin sistemine (EPSG:{project}) çevrilerek alınır.")
+                } else {
+                    format!("{n} tablo {foreign_words} sisteminde, proje EPSG:{project}. Almak için koordinatlar projenin sistemine çevrilmeli.")
+                },
+            ));
         }
         let chosen = s.chosen.iter().filter(|c| **c).count();
         let rows: u64 = s
@@ -639,7 +680,7 @@ impl App {
                 "Koordinat sistemi",
                 words::check(
                     s.reproject,
-                    format!("Projenin sistemine çevir (EPSG:{} → EPSG:{project})", s.srid.unwrap_or(0)),
+                    format!("Projenin sistemine çevir ({foreign_words} → EPSG:{project})"),
                     Some(event(Event::Reproject)),
                 ),
                 Some("Projenin datum seçimleriyle; yaylı nesneler kesin çevrilemez, alınmaz ve söylenir.".to_owned()),

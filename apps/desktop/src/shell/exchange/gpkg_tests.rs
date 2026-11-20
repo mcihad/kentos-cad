@@ -1860,3 +1860,86 @@ fn a_curve_polygons_near_straight_arc_stays_in_the_park() {
     assert!(width < 1_000.0, "the view is {width} m wide");
     crate::files_testing::evidence(&mut shot, &app, "gis-005", "egri-tampon-tumunu-goster");
 }
+
+/// A TM33 CBS project with the report's two-system file open in GeoPackage içe aktar (GIS-006).
+fn two_systems() -> App {
+    use serde_json::json;
+    let (mut app, _) = App::boot(None);
+    crate::tools_scenes::open_edited(&mut app, crate::tools_scenes::Objects::new(), |d| {
+        d["settings"]["workspace"] = json!("gis");
+        d["settings"]["srid"] = json!(5255);
+    });
+    app.picker = Picker::File(gpkg("cift-sistem.gpkg"));
+    run(&mut app, "file.import.gpkg");
+    app
+}
+
+/// The points of the layer the table `table` went onto, with the layer's recorded source system.
+fn points_of(app: &App, table: &str) -> (Vec<(f64, f64)>, Option<u32>) {
+    let doc = &app.document.as_ref().expect("open").model;
+    let layer = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == table)
+        .cloned()
+        .unwrap_or_else(|| panic!("the layer {table}"));
+    let pts = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer.id)
+        .map(|e| {
+            let v = serde_json::to_value(e).expect("json");
+            (v["p"]["x"].as_f64().unwrap(), v["p"]["y"].as_f64().unwrap())
+        })
+        .collect();
+    (pts, layer.source_crs.and_then(|c| c.srid))
+}
+
+/// GIS-006 (docs/adr/1072): each table of a GeoPackage keeps its own system. Both tables chosen, the WGS 84 one asks
+/// for the move and the TM33 one does not; moved, the WGS 84 trees land on the TM33 ones (pyproj 3.7, PROJ 9.8.1:
+/// within a millimetre) and each layer records its table's system. The WGS 84 table alone asks for the move too.
+#[test]
+fn a_geopackages_tables_each_keep_their_own_system() {
+    let mut app = two_systems();
+    let s = window(&app);
+    let systems: Vec<Option<u32>> = s.tables.iter().map(|t| t.srid).collect();
+    assert_eq!(systems, [Some(5255), Some(4326)]);
+    // Without the move the WGS 84 table cannot come in; asked, both do.
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(app.exchange.is_some(), "the import waits for the move");
+    send(&mut app, Event::Gpkg(G::Reproject));
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    let (a, a_crs) = points_of(&app, "A_TM33");
+    let (b, b_crs) = points_of(&app, "B_WGS84");
+    assert_eq!(a_crs, Some(5255));
+    assert_eq!(b_crs, Some(4326));
+    let reference = [
+        (487_871.452_153_085_5, 4_422_114.306_225_088),
+        (487_985.549_516_165_4, 4_422_175.158_152_065),
+        (488_175.711_787_969_3, 4_422_205.584_115_55),
+    ];
+    for (got, want) in [(&a, &reference), (&b, &reference)] {
+        assert_eq!(got.len(), 3);
+        for (p, w) in got.iter().zip(want.iter()) {
+            assert!((p.0 - w.0).abs() < 1e-3 && (p.1 - w.1).abs() < 1e-3, "{p:?} for {w:?}");
+        }
+    }
+}
+
+#[test]
+fn the_wgs84_table_alone_asks_for_the_move() {
+    let mut app = two_systems();
+    send(&mut app, Event::Gpkg(G::Toggle(0)));
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(app.exchange.is_some(), "the WGS 84 table waits for the move");
+    send(&mut app, Event::Gpkg(G::Reproject));
+    let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
+    let mut update = |app: &mut App, m| drop(app.update(m));
+    shot.settle(&mut app, App::view, &mut update);
+    crate::files_testing::evidence(&mut shot, &app, "gis-006", "yalniz-wgs84");
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(app.exchange.is_none());
+    let (b, _) = points_of(&app, "B_WGS84");
+    assert_eq!(b.len(), 3);
+}

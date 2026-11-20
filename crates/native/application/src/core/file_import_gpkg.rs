@@ -193,10 +193,10 @@ fn target(
 
 /// The objects of the tables moved into the project's system, one by one so each keeps its id; those the move
 /// leaves out are counted by why.
-fn moved(
+fn moved<'a>(
     doc: &Document,
     from: u32,
-    read: &mut Read,
+    tables: impl Iterator<Item = &'a mut geopackage::TableRead>,
     losses: &mut BTreeSet<String>,
 ) -> Result<(), Stop> {
     let settings = doc.settings();
@@ -219,7 +219,7 @@ fn moved(
         ));
     };
     let choices = kentos_project::systems::choices(settings);
-    for t in &mut read.tables {
+    for t in tables {
         let objects = std::mem::take(&mut t.objects);
         for (uid, e) in objects {
             if matches!(e, Entity::Record(_)) {
@@ -468,40 +468,66 @@ pub(crate) fn run_read(
         .iter()
         .flat_map(|t| t.losses.iter().cloned())
         .collect();
-    let declared: BTreeSet<u32> = read
-        .systems
-        .values()
-        .flatten()
-        .filter(|(org, _)| org == "EPSG")
-        .filter_map(|(_, id)| u32::try_from(*id).ok())
-        .collect();
+    // Each table's own system (gis-usage-report GIS-006, docs/adr/1072): a GeoPackage declares it per geometry
+    // column, so one file may hold a table in the project's system beside one in WGS 84.
+    let table_srid = |t: &geopackage::TableRead| -> Option<u32> {
+        let (org, id) = read.systems.get(&t.srs_id?)?.as_ref()?;
+        org.eq_ignore_ascii_case("EPSG").then(|| u32::try_from(*id).ok()).flatten()
+    };
+    let srids: Vec<Option<u32>> = read.tables.iter().map(table_srid).collect();
+    let declared: BTreeSet<u32> = srids.iter().flatten().copied().collect();
     let srid = declared.iter().next().copied();
     let project = doc.settings().srid;
     let mut was_moved = false;
-    match srid {
-        None => warnings.push(CommandWarning {
+    if declared.is_empty() || read.tables.iter().zip(&srids).any(|(t, s)| s.is_none() && t.srs_id.is_some()) {
+        warnings.push(CommandWarning {
             code: codes::CRS_UNDECLARED.into(),
-            message: format!(
-                "{} koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
-                read.file
-            ),
+            message: if declared.is_empty() {
+                format!(
+                    "{} koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+                    read.file
+                )
+            } else {
+                format!(
+                    "{} dosyasının bazı tabloları koordinat sistemi bildirmiyor; onların koordinatları projenin sisteminde sayılıp olduğu gibi alındı.",
+                    read.file
+                )
+            },
             path: Some("path".into()),
-        }),
-        Some(s) if s == project => {}
-        Some(s) => {
-            if !input.reproject {
-                return Err(refuse(
-                    codes::CRS_MISMATCH,
-                    format!(
-                        "{} EPSG:{s} sisteminde, proje EPSG:{project}. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:{s}'de açın.",
-                        read.file
-                    ),
-                    "reproject",
-                ));
-            }
-            moved(doc, s, &mut read, &mut losses)?;
-            was_moved = true;
+        });
+    }
+    let foreign: BTreeSet<u32> = declared.iter().copied().filter(|&s| s != project).collect();
+    if !foreign.is_empty() {
+        let names = foreign.iter().map(|s| format!("EPSG:{s}")).collect::<Vec<_>>().join(", ");
+        if !input.reproject {
+            let tables: Vec<&str> = read
+                .tables
+                .iter()
+                .zip(&srids)
+                .filter(|(_, s)| s.is_some_and(|s| s != project))
+                .map(|(t, _)| t.name.as_str())
+                .collect();
+            return Err(refuse(
+                codes::CRS_MISMATCH,
+                format!(
+                    "{} dosyasının {} tablosu {names} sisteminde, proje EPSG:{project}. Koordinatların projenin sistemine çevrilmesi için reproject verin, bu tabloları almayın ya da projeyi o sistemde açın.",
+                    read.file,
+                    tables.iter().map(|t| format!("“{t}”")).collect::<Vec<_>>().join(", ")
+                ),
+                "reproject",
+            ));
         }
+        // Each foreign table moved from its own system; the project's own and the undeclared ones stay as they are.
+        for from in &foreign {
+            let tables = read
+                .tables
+                .iter_mut()
+                .zip(&srids)
+                .filter(|(_, s)| **s == Some(*from))
+                .map(|(t, _)| t);
+            moved(doc, *from, tables, &mut losses)?;
+        }
+        was_moved = true;
     }
     // The heights' system a table's compound definition names (docs/adr/0631 §4), once a system.
     for v in read.verticals.values() {
@@ -509,16 +535,6 @@ pub(crate) fn run_read(
         if !warnings.iter().any(|x: &CommandWarning| x.message == w.message) {
             warnings.push(w);
         }
-    }
-    if declared.len() > 1 {
-        losses.insert(format!(
-            "tablolar birden çok sistem bildiriyor ({}); ilki esas alındı",
-            declared
-                .iter()
-                .map(|s| format!("EPSG:{s}"))
-                .collect::<Vec<_>>()
-                .join(", ")
-        ));
     }
     let mut layers = Vec::new();
     let mut objects: Vec<(Uuid, Entity)> = Vec::new();
@@ -578,8 +594,9 @@ pub(crate) fn run_read(
             "path",
         ));
     }
+    // One system: every new layer records it; several: each layer its table's, after the import (docs/adr/1072).
     let plan = ImportPlan {
-        source_srid: srid,
+        source_srid: (declared.len() == 1).then_some(srid).flatten(),
         label: format!("{word}: {}", read.file),
         layers,
         group: Some(read.file.trim_end_matches(ext).to_owned()),
@@ -597,6 +614,18 @@ pub(crate) fn run_read(
             }
             let applied = apply_import_with_uids(doc, objects, &plan)
                 .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "path"))?;
+            if declared.len() > 1 {
+                for (t, s) in read.tables.iter().zip(&srids) {
+                    let (Some(s), Some((_, layer))) = (s, applied.targets.iter().find(|(from, _)| *from == t.name))
+                    else {
+                        continue;
+                    };
+                    if applied.made.iter().any(|(id, _)| id == layer) {
+                        doc.set_layer_source_crs(layer, kentos_project::wkt2::source_crs(*s), &plan.label)
+                            .map_err(|r| refuse(codes::IMPORT_UNREADABLE, r.0, "path"))?;
+                    }
+                }
+            }
             if let (Some(path), Some(bytes)) = (&input.rejects, &rejects_bytes) {
                 rejects_written = Some(crate::import_merge::write_rejects(path, bytes, rejected.len() as u32)?);
             }
