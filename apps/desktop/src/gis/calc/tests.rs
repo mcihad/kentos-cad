@@ -991,3 +991,27 @@ fn apl_opens_aplikasyon_with_the_selected_points() {
     let _ = app.run("tool.stakeout");
     assert_eq!(app.gis.calc.open, Some(Window::Stakeout));
 }
+
+/// UR2-054: Aplikasyon's station, back point and targets are the drawing's: closed and opened again on the same
+/// drawing they stay; another drawing opened starts them empty; the first drawing's tab brings them back.
+#[test]
+fn aplikasyon_keeps_its_rows_with_its_drawing() {
+    let mut app = app_with_drawing();
+    let _ = app.run("calc.stakeout");
+    calc(&mut app, Event::Known(Field::Station, "0,0".into()));
+    calc(&mut app, Event::Known(Field::Back, "412350,4521900".into()));
+    calc(&mut app, Event::Cell(0, 0, "101".into()));
+    calc(&mut app, Event::Close);
+    let _ = app.run("calc.stakeout");
+    assert_eq!(app.gis.calc.stakeout.back, "412350,4521900", "the same drawing keeps them");
+    calc(&mut app, Event::Close);
+    assert!(app.park_active());
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
+    let _ = app.run("calc.stakeout");
+    let form = &app.gis.calc.stakeout;
+    assert_eq!((form.station.as_str(), form.back.as_str()), ("", ""));
+    assert!(form.rows.iter().all(String::is_empty), "{:?}", form.rows);
+    calc(&mut app, Event::Close);
+    let _ = app.update(Message::DocTabs(crate::doc_tabs::Event::Show(0)));
+    assert_eq!(app.gis.calc.stakeout.rows[0], "101");
+}
