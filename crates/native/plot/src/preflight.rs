@@ -227,14 +227,31 @@ pub fn inspect(
     inspect_captured(doc,book,sheet,render,drawing,None)
 }
 pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&RenderInputs,drawing:Option<&str>,sources:Option<std::sync::Arc<crate::source_images::SourceImages>>)->Result<Vec<Finding>,PlotError>{
+    let mut spatial = Spatial::new();
+    spatial.ignore_object_isolation();
+    spatial.reload(doc);
+    // The sheet's legends, tables and coordinate lists as its output reads them (UR2-023: a legend the PDF printed
+    // with four rows was said empty), when the caller gave none.
+    let mut owned;
+    let render = if render.legends.is_empty() && render.tables.is_empty() && render.coordinates.is_empty()
+        && let Some(page) = book.sheet(sheet)
+    {
+        owned = render.clone();
+        let library = crate::book::library_of(doc);
+        let first = display::display_list(book, sheet, &owned).ok();
+        let data = crate::inputs::sheet_data(doc, &spatial, &library, &[], book, page, first.as_ref());
+        owned.tables.extend(data.tables);
+        owned.coordinates.extend(data.coordinates);
+        owned.legends.extend(data.legends);
+        &owned
+    } else {
+        render
+    };
     let mut out = kentos_sheet::preflight::preflight(book, sheet, render)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     out.retain(|f| f.code != "svg_not_in_pdf");
     let list = display::display_list(book, sheet, render)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
-    let mut spatial = Spatial::new();
-    spatial.ignore_object_isolation();
-    spatial.reload(doc);
     let images=match sources{Some(sources)=>Images::captured(doc,drawing,sources),None=>Images::new(doc,drawing)};
     let factor = kentos_sheet::print_setup::plan_for(book, sheet)
         .map_err(|e| PlotError::new(&e.code, e.message))?
