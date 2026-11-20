@@ -190,7 +190,7 @@ impl App {
         // The selection's own surface when every selected object is its source (docs/adr/2480), else the first.
         let picked = self.selection_roles().surface.filter(|id| surfaces.iter().any(|(s, _)| s == id));
         let Some(first) = picked.or_else(|| surfaces.first().map(|s| s.0.clone())) else {
-            self.warn("Pafta eğrileri: projede arazi yüzeyi yok; önce Arazi › Yeni yüzey ile kurun.");
+            self.no_surface("Pafta eğrileri");
             return Task::none();
         };
         let layers: Vec<(String, String)> =

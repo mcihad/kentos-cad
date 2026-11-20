@@ -242,6 +242,19 @@ impl App {
         self.refresh_edit_report();
     }
 
+    /// A work that needs a terrain surface found none (UR2-007): it says so by the ribbon's own name, Arazi › Yüzey
+    /// oluştur, and the notice's button opens it, so the way the line names is the way it takes.
+    pub(crate) fn no_surface(&mut self, work: &str) {
+        let line = format!("{work}: projede arazi yüzeyi yok; önce Arazi › Yüzey oluştur ile kurun.");
+        self.warn(line.clone());
+        self.toast(
+            kentos_ui::widget::Toast::warning("Arazi yüzeyi yok")
+                .body(format!("{work} bir arazi yüzeyi ister. Yüzey oluştur noktalardan ve kırık hatlardan kurar."))
+                .action("Yüzey oluştur", Message::Run("terrain.new"))
+                .duration(std::time::Duration::from_secs(8)),
+        );
+    }
+
     /// Yeni yüzey from the ribbon: the window with a new surface chosen.
     pub(crate) fn new_terrain(&mut self) {
         self.open_terrains();

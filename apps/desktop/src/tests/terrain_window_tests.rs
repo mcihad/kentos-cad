@@ -616,3 +616,34 @@ fn screens_paste() {
         println!("{}", file.display());
     }
 }
+
+/// UR2-007: Stok hacmi and Pafta eğrileri with no surface name the ribbon's Yüzey oluştur, and the notice's button is
+/// that command: following the words opens the new surface's window.
+#[test]
+fn a_work_without_a_surface_leads_to_yuzey_olustur() {
+    for (command, work) in [("terrain.stockpile", "Stok hacmi"), ("terrain.sheetContours", "Pafta eğrileri")] {
+        let mut app = app("road");
+        app.toasts.clear();
+        let _ = app.update(Message::Run(command));
+        let said = app.log.lines().last().map(|l| l.text.clone()).unwrap_or_default();
+        assert_eq!(said, format!("{work}: projede arazi yüzeyi yok; önce Arazi › Yüzey oluştur ile kurun."));
+        let short = crate::catalog::catalog().get("terrain.new").map(|c| c.short);
+        assert_eq!(short, Some("Yüzey oluştur"), "the words are the ribbon's");
+        let action = {
+            let (_, toast, _) = app.toasts.iter().last().expect("a notice");
+            toast.action_of().map(|(label, m)| (label.to_owned(), m.clone()))
+        };
+        let (label, message) = action.expect("a button");
+        assert_eq!(label, "Yüzey oluştur");
+        if std::env::var_os("KENTOS_SHOTS").is_some() && command == "terrain.stockpile" {
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            crate::files_testing::evidence(&mut snapshot, &app, "ur2-007", "uyari");
+        }
+        let _ = app.update(message);
+        assert_eq!(app.dialog, Some(Dialog::Road(road::RoadDialogKind::Terrains)), "{work}");
+    }
+}

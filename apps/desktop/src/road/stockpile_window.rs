@@ -141,7 +141,7 @@ impl App {
             .unwrap_or_default();
         let picked = self.selection_roles().surface.filter(|id| surfaces.iter().any(|(s, _)| s == id));
         let Some(first) = picked.or_else(|| surfaces.first().map(|s| s.0.clone())) else {
-            self.warn("Stok hacmi: projede arazi yüzeyi yok; önce Arazi › Yeni yüzey ile kurun.");
+            self.no_surface("Stok hacmi");
             return Task::none();
         };
         let layer_name = |id: &str| doc.model.layers().get(id).map(|n| n.name.clone()).unwrap_or_default();

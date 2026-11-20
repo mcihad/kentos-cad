@@ -144,7 +144,7 @@ impl App {
         if surfaces.is_empty() {
             let line = words::text_line(
                 Kind::Error,
-                "Projede arazi yüzeyi yok: önce Arazi yüzeyleri penceresinden bir yüzey kurun.",
+                "Projede arazi yüzeyi yok: önce Arazi › Yüzey oluştur ile bir yüzey kurun.",
             );
             return (form, vec![line], false);
         }
