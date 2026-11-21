@@ -177,5 +177,5 @@ kurulu programın ekranları `.run/gui-evidence/veri/qgis/08`, `11`, `12`):
   GB'tan ~285 MB'a indi.
 - PostGIS hedefi kayıtlı bir bağlantı ister (PostGIS'e bağlan). ~~Kapsam yalnız görünümdür.~~ Kapandı (ADR 9112 §2):
   kutu yazılır, görünümden ya da katmandan alınır, haritada çizilir. ~~Sistem EPSG koduyla verilir.~~ Kapandı (ADR 9112
-  §3): aranabilir liste. DXF, KML ve TAB'a sembol yazma yok.
+  §3): aranabilir liste. ~~KML'ye sembol yazma yok.~~ Kapandı (ADR 9112 §4): katmanın stili, rengi ya da sembolsüz.
 - Web (ADR 0228).

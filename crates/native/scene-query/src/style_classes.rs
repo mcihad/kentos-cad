@@ -401,6 +401,52 @@ impl ClassReader {
         }
     }
 
+    /// The class whose symbols draw each object, by its place in [`style_classes`]' order (docs/adr/9112 §4): a
+    /// categorized or graduated object's class when it is switched on; a rule's object the last rule in the tree's
+    /// order that takes it and draws (its own symbols, it and every rule above it on): a child after its parent, the
+    /// look drawn on top. None: nothing draws it, or its class's condition cannot be read.
+    pub fn drawing_classes<'s>(
+        &self,
+        list: &[&Entity],
+        layer_name: &dyn Fn(&str) -> String,
+        shape: &dyn Fn(usize) -> Option<&'s Shape>,
+    ) -> Vec<Option<usize>> {
+        match &self.reading {
+            Reading::Rules(rules) => {
+                let drawn: Vec<bool> = list.iter().map(|o| drawn_by_style(o)).collect();
+                let mut masks = Vec::new();
+                Self::rule_masks(rules, &drawn, list, layer_name, shape, &mut masks);
+                let mut drawing: Vec<bool> = Vec::new();
+                fn walk(rules: &[RuleReader], above: bool, out: &mut Vec<bool>) {
+                    for r in rules {
+                        let on = above && r.enabled;
+                        out.push(on && r.draws);
+                        walk(&r.children, on, out);
+                    }
+                }
+                walk(rules, true, &mut drawing);
+                let mut out = vec![None; list.len()];
+                for (at, (mask, draws)) in masks.into_iter().zip(drawing).enumerate() {
+                    if let (Ok(m), true) = (mask, draws) {
+                        for (o, takes) in out.iter_mut().zip(m) {
+                            if takes {
+                                *o = Some(at);
+                            }
+                        }
+                    }
+                }
+                out
+            }
+            _ => match self.placed(list, layer_name, shape) {
+                Some(Ok(placed)) => placed
+                    .into_iter()
+                    .map(|p| p.filter(|i| self.enabled.get(*i).copied().unwrap_or(false)))
+                    .collect(),
+                _ => vec![None; list.len()],
+            },
+        }
+    }
+
     /// The fields the classes read (a data layer's scan asks only for these).
     pub fn fields(&self) -> &[String] {
         &self.fields

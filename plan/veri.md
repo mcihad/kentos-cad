@@ -199,8 +199,14 @@ ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, AD
   - Çıkarken “Projede tut” cevabı değişiklikleri tabloya yazmadan projede bırakır.
   - Bulunup kapatılan açık: proje kaydından sonra tabloya yazılan yeni satırlar dosyada kalıyordu. Proje yeniden
     açılıp kaydedilince tabloya ikinci kez yazılıyorlardı. Artık açılışta çizime alınmazlar.
-- [ ] **VY-15 — Dışa aktarmanın kalanları.** GeoJSON, Shapefile ve KML akışlı yazılır (katman bütün belleğe alınmaz);
-  kapsam için serbest kutu (koordinatla ya da haritada çizerek); koordinat sistemi seçici; KML'ye sembol (stil).
+- [x] **VY-15 — Dışa aktarmanın kalanları.** ([ADR 9112](../docs/adr/9112-export-streams-extent-systems.md))
+  - GeoJSON, Shapefile ve KML akışlı yazılır. Bir milyon parselde en yüksek bellek GeoJSON 2 905 → 290 MB, KML 3 455 →
+    284 MB, Shapefile 3 739 → 287 MB; çıktı bütün yazıcınınkiyle bayt bayt aynı.
+  - Kapsam: Bütün katman, Görünümdekiler, Kutuya değenler. Kutu projenin eksenleriyle (Y doğu, X kuzey) yazılır,
+    görünümden ya da katmanın kapsamından alınır, ya da haritada çizilir.
+  - Koordinat sistemi aranabilir listeden seçilir; Yeni katman da aynı listeyi kullanır.
+  - KML'ye semboller: katmanın stili (her sınıf kendi stili), katmanın rengi ya da sembolsüz. Başka bir CBS'nin
+    kitaplığı dosyayı aynı renklerde çizdi.
 - [ ] **VY-16 — SQL sorgusu katmanı canlı.** Bir SQL sorgusundan yapılan katman bağlı kopya değil, sorguyu kaynağında
   okuyan veri katmanıdır (benzersiz anahtar sütunu ve geometri sütunu seçilir); salt okunur.
 - [ ] **VY-17 — Taşımada yazılar.** Tabloya yazılamayan yazılar taşıma sırasında aynı kaynakta ayrı bir yazı tablosuna

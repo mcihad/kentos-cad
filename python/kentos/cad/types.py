@@ -2895,6 +2895,22 @@ ExportGeometryName = Literal["point", "line", "area", "auto", "none"]
 """The names of :class:`ExportGeometry`, for a plain string."""
 
 
+class ExportSymbols(_StrEnum):
+    """What a KML file's placemarks are drawn with (docs/adr/9112 §4).
+
+    - ``color``: The layer's colour: one style for every placemark.
+    - ``style``: The layer's style: each class (category, graduated class, rule) a style of its own with its fill, outline and
+    - ``none``: No style: the reading program draws them its own way.
+    """
+    COLOR = "color"
+    STYLE = "style"
+    NONE = "none"
+
+
+ExportSymbolsName = Literal["color", "style", "none"]
+"""The names of :class:`ExportSymbols`, for a plain string."""
+
+
 class ExtractAreaUnit(_StrEnum):
     """An area's unit (CLAUDE.md §5: a dönüm 1000 m², a hectare 10000 m²)."""
     M2 = "m2"
@@ -41545,6 +41561,7 @@ class ExportOptions(_Model):
         project_coordinates: GeoJSON: the coordinates in the system written (`srid`, or the layer's) with the old `crs` member, not moved
             into WGS 84.
         separator: CSV: the separator, one character; none: `,`.
+        symbols: KML: what the placemarks are drawn with; none: the layer's colour.
         xy: CSV: the geometry as `x` and `y` columns (points only) instead of a `wkt` column.
     """
     description: str | None | Unset = UNSET
@@ -41553,6 +41570,7 @@ class ExportOptions(_Model):
     no_spatial_index: bool | None | Unset = UNSET
     project_coordinates: bool | None | Unset = UNSET
     separator: str | None | Unset = UNSET
+    symbols: ExportSymbols | ExportSymbolsName | None | Unset = UNSET
     xy: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -41569,6 +41587,8 @@ class ExportOptions(_Model):
             out["projectCoordinates"] = self.project_coordinates
         if self.separator is not UNSET:
             out["separator"] = self.separator
+        if self.symbols is not UNSET:
+            out["symbols"] = None if self.symbols is None else _enum_out(self.symbols)
         if self.xy is not UNSET:
             out["xy"] = self.xy
         return out
@@ -41582,6 +41602,7 @@ class ExportOptions(_Model):
             no_spatial_index=data.get("noSpatialIndex", UNSET),
             project_coordinates=data.get("projectCoordinates", UNSET),
             separator=data.get("separator", UNSET),
+            symbols=UNSET if "symbols" not in data else None if data["symbols"] is None else _enum_in(ExportSymbols, data["symbols"]),
             xy=data.get("xy", UNSET),
         )
 
@@ -148812,6 +148833,8 @@ __all__ = [
     "ExportReport",
     "ExportShp",
     "ExportSld",
+    "ExportSymbols",
+    "ExportSymbolsName",
     "ExportTable",
     "ExportXyz",
     "ExpressionPaperGridLabelFormat",

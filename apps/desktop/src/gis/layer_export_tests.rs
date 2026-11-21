@@ -204,3 +204,29 @@ fn the_box_is_typed_taken_or_drawn_and_the_system_chosen_from_the_list() {
     assert!(!rows.iter().skip(1).any(|(s, _)| *s == Some(5256)), "the default not twice");
     let _ = std::fs::remove_file(&path);
 }
+
+/// KML's symbols (docs/adr/9112 §4): the window asks for the layer's style unless another choice is made; the layer's
+/// colour is the command's own default and is not sent; the choice goes only with KML.
+#[test]
+fn kml_takes_the_layers_style_unless_another_choice_is_made() {
+    use kentos_commands::{ExportFormat, ExportSymbols};
+    crate::data_layers::register();
+    let path = crate::data_layers_tests::parcels("disa-kml", 6);
+    let mut app = crate::files_testing::app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described")])
+        .expect("added");
+    let id = crate::data_layers_tests::node(&app, "parseller").expect("the layer").id.clone();
+    let _ = app.layer_export_event(Event::Open(id, false));
+    let symbols = |app: &crate::app::App| {
+        app.export_input(&app.gis.layer_export.clone().expect("the window")).options.and_then(|o| o.symbols)
+    };
+    assert_eq!(symbols(&app), None, "not KML: nothing sent");
+    let kml = crate::layer_export::FORMATS.iter().position(|f| *f == ExportFormat::Kml).expect("KML");
+    let _ = app.layer_export_event(Event::Format(kml));
+    assert_eq!(symbols(&app), Some(ExportSymbols::Style), "the layer's style by default");
+    let _ = app.layer_export_event(Event::Symbols(1));
+    assert_eq!(symbols(&app), None, "the layer's colour: the command's default");
+    let _ = app.layer_export_event(Event::Symbols(2));
+    assert_eq!(symbols(&app), Some(ExportSymbols::None));
+    let _ = std::fs::remove_file(&path);
+}

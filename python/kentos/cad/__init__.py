@@ -1328,6 +1328,8 @@ __all__ = [
     "ExportReport",
     "ExportShp",
     "ExportSld",
+    "ExportSymbols",
+    "ExportSymbolsName",
     "ExportTable",
     "ExportXyz",
     "Exported",

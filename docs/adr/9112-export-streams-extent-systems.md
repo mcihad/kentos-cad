@@ -78,7 +78,37 @@ Kutu komuta `bbox` olarak gider (ADR 9106 §2). Veri katmanında tablonun sistem
 
 ## §4 Karar: KML'ye semboller
 
-*(VY-15c'de yazılacak.)*
+**Masaüstü CBS:** QGIS'in Farklı kaydet penceresi KML için “Symbology export” sunar: No symbology, Feature symbology,
+Symbol layer symbology. Semboller GDAL'ın detay stil dizeleriyle yazılır ve çok sınırlıdır: alanların dolgusu görünmez
+çıkar, yalnız siyah kenar kalır. Nokta ve alan katmanlarında sembolün yazılmaması hatası (#13688) düzeltilmeden
+kapatılmıştır. Kategorili ve aralıklı stilleri ancak eklentiler yazar (Export 2KML, Batch KMZ Exporter).
+
+**Karar:**
+
+- `options.symbols` yalnız KML'de verilir:
+  - `style`: katmanın stili;
+  - `color`: katmanın rengi; varsayılan, önceki davranış;
+  - `none`: sembolsüz.
+
+  Başka bir biçimde verilirse `invalid_option`.
+- **Katmanın stili:**
+  - İşleyicinin her sınıfı kendi KML stilini alır (s1, s2 … sınıfların sırasıyla).
+  - Her yer imi kendi sınıfının stilini çizimin kuralıyla alır (`ClassReader::drawing_classes`): değerinin ilk
+    kategorisi, sayısını alan aralık (sonuncunun üst sınırı dahil), kurallarda onu alan ve çizen son kural. Çocuk
+    kural ebeveyninden sonra gelir; üstte çizilen görünüm odur.
+  - Kapalı sınıfın ve hiçbir sınıfın almadığı nesnenin yer imi stilsiz yazılır.
+- **Sembolden KML'ye:**
+  - alanın ilk düz, taramalı ya da degrade dolgusu PolyStyle'ın rengi olur, ilk basit çizgisi kenarı;
+  - çizginin ilk basit çizgisi LineStyle olur;
+  - noktanın ilk şekil ya da SVG işaretinin dolgusu simgenin rengi, boyu ölçeği olur (KML simgesi 32 piksel).
+
+  Saydamlıklar çarpılıp rengin alfası olur. Kalınlık mm (varsayılan), pt ya da px ise piksele çevrilir. `#rrggbb`
+  olmayan renk (tema adı, ifade) ve kitaplık sembolü başvurusu katmanın rengine düşer.
+- Tek sembollü stil tek bir stil verir. Tematik stiller (sürekli renk, orantılı sembol…) taban sembolüyle tek stil verir;
+  bu bir yaklaşıklıktır.
+- Veri katmanında sınıfların okuduğu alanlar dışa aktarılmasa da kaynaktan okunur.
+- Pencerenin KML seçeneklerinde “Semboller” vardır: Katmanın stili (sınıflarıyla) varsayılan; Katmanın rengi (tek
+  stil); Sembolsüz.
 
 ## §5 Kanıt
 
@@ -110,6 +140,15 @@ koşuldu, en yüksek bellek `/usr/bin/time -v` ile ölçüldü (`layer_export_me
   - listeden seçilen sistem komuta gider, KML'de gitmez;
   - listenin ilk satırı varsayılandır ve varsayılan sistem ikinci kez listelenmez.
 
+- KML sembolleri:
+  - `cad.layers.export` 39 durum, 5'i yeni: noktalarda katmanın stili (kategoriler, kapalı sınıf, Diğer değerler),
+    veri katmanının alanları (sınıfın alanı yazılmadan), sembolsüz, katmanın rengi, ret.
+  - Koşuculara `kmlStyles` okuma türü eklendi: KML'nin stillerini ve yer imlerinin stilini özetler; Rust ve Python aynı
+    özeti çıkarır. Beklenen stiller bağımsız betikte renklerden, saydamlıklardan ve kalınlıklardan hesaplanır.
+  - Bozuk bir beklentinin (yer iminin stili) Python koşucusunda yakalandığı ayrıca denendi.
+  - `layer_export_kml` birim sınamaları: alanın dolgusu ve kenarı, nokta ve çizgi, KML'nin tutamadığı.
+  - Masaüstü: KML'de varsayılan katmanın stilidir; katmanın rengi gönderilmez (komutun varsayılanı); sembolsüz.
+
 **Gerçek pencere:** bir milyon satırlık yalıtılmış PostGIS tablosu, Parseller'in Farklı kaydet… penceresi.
 
 - Biçim Shapefile seçildi. Sistem listesinde “TM33” arandı: “TUREF (ITRF96) · TUREF / TM33 (EPSG:5255)” ve “ED50 ·
@@ -122,13 +161,23 @@ koşuldu, en yüksek bellek `/usr/bin/time -v` ile ölçüldü (`layer_export_me
   - .shx'te de .dbf'te de 5 184 kayıt, şekil türü 5 (alan);
   - .shp başlığındaki boy dosyanın gerçek boyuyla aynı;
   - kapsam TM33'te (doğu 844 232–846 463), .prj “TUREF_TM33”.
-- Görüntüler `.run/gui-evidence/veri/vy15/sonra`.
+- KML, katmanın stiliyle: Parseller kullanıma göre kategorili, bir kutuyla yazıldı.
+  - 4 stil katmanın renklerini taşıdı: Konut `ff4ec1f2`, Ticaret `ff5957e1`, Park `ff4fa159`, Eğitim `ffa7794e`.
+  - 1 332 yer iminin her biri kendi kullanımının stilini aldı (333'er).
+  - GDAL'ın okuyucusu yer imlerinin stilini okudu (`@s4`, `@s1`).
+  - Kurulu masaüstü CBS'nin kitaplığı dosyayı gömülü sembolleriyle aynı renklerde çizdi; yedek gri hiç görünmedi.
+- Görüntüler `.run/gui-evidence/veri/vy15/{sonra,kml}`.
 
 ## Uygulama
 
 - Biçim çekirdeği: `crates/shared/formats/src/geojson/write.rs` (`Stream`), `kml/stream.rs` (yeni),
   `shp/stream.rs` (yeni), `shp/columns.rs` (yeni), `shp/write.rs` (.dbf'in başı ve kaydı ayrıldı).
-- Uygulama: `crates/native/application/src/gis/layer_export_streams.rs` (yeni), `layer_export_sinks.rs` (bütün katman
-  hedefi kaldırıldı).
+- Uygulama: `crates/native/application/src/gis/layer_export_streams.rs` (yeni), `layer_export_kml.rs` (yeni),
+  `layer_export_sinks.rs` (bütün katman hedefi kaldırıldı; hedef satırların geldiği nesneleri de alır).
+- Sahne sorgusu: `crates/native/scene-query/src/style_classes.rs` (`ClassReader::drawing_classes`).
+- Sözleşme: `crates/shared/commands/src/gis/cad_layers_export.rs` (`ExportSymbols`, `options.symbols`); katalog,
+  TypeScript ve Python yeniden üretildi.
+- Ortak durumlar: `scripts/fixtures/layer_export_command_cases.py`; koşucular
+  `crates/native/application/tests/all/fixtures/mod.rs` ve `python/tests/test_command_cases.py` (`kmlStyles`).
 - Masaüstü: `apps/desktop/src/gis/layer_export_extent.rs` (yeni), `system_select.rs` (yeni), `layer_export.rs`,
   `layer_create.rs`, `shell/input.rs` (çizilen kutu), `layer_export_memory_tests.rs` (elle koşulan ölçüm).

@@ -11,7 +11,6 @@ use std::path::{Path, PathBuf};
 use kentos_commands::{ExportEncoding, ExportFormat, LayerField};
 use kentos_data::{NewFeature, Value};
 use kentos_formats::blocks::Placing;
-use kentos_formats::kml::PlaceStyle;
 
 use crate::checks::Stop;
 use crate::layer_export::{Plan, unreachable};
@@ -68,19 +67,19 @@ pub(crate) fn open(plan: &Plan<'_>, path: PathBuf) -> Result<Box<dyn Sink>, Stop
         }
         ExportFormat::Kml => {
             let (system, choices) = wgs84_of(plan)?;
-            let style = layer_style(plan);
+            let symbols = crate::layer_export_kml::KmlSymbols::of(plan);
             let part = part_of(&path);
             let out = BufWriter::new(File::create(&part).map_err(unreachable)?);
             let stream = kentos_formats::kml::LayerStream::begin(
                 out,
                 &name,
                 &name,
-                std::slice::from_ref(&style),
+                &symbols.styles,
                 system,
                 choices,
                 Placing::new(&[]),
             );
-            Ok(Box::new(Kml { stream: Some(stream), part, path, layer, made: 0 }))
+            Ok(Box::new(Kml { stream: Some(stream), part, path, layer, made: 0, symbols }))
         }
         _ => {
             let stem = path.file_stem().map_or_else(|| "katman".to_owned(), |s| s.to_string_lossy().into_owned());
@@ -102,24 +101,6 @@ pub(crate) fn open(plan: &Plan<'_>, path: PathBuf) -> Result<Box<dyn Sink>, Stop
     }
 }
 
-/// The layer's one style, as the whole KML writer gives a layer's objects that have no colour of their own: the
-/// layer's colour, a 0.25 mm line, an area's fill two fifths opaque, a point's icon in the colour.
-fn layer_style(plan: &Plan<'_>) -> PlaceStyle {
-    use kentos_formats::kml::style::{MM_PER_PIXEL, to_kml};
-    let color = to_kml(&plan.node.style.color, 0xff).unwrap_or_else(|| "ff000000".to_owned());
-    let width = ((0.25 / MM_PER_PIXEL) * 100.0).round().max(1.0) / 100.0;
-    let kind = plan.schema.geometry.as_ref().map(|g| g.type_name.to_ascii_uppercase()).unwrap_or_default();
-    let area = kind.contains("POLYGON");
-    let point = kind.contains("POINT");
-    PlaceStyle {
-        icon: point.then(|| color.clone()),
-        icon_scale: None,
-        fill: area.then(|| format!("66{}", &color[2..])),
-        line: Some((color, width)),
-        area,
-    }
-}
-
 fn written_back(result: (Result<BufWriter<File>, std::io::Error>, kentos_commands::ExportReport)) -> Result<(), String> {
     let mut out = result.0.map_err(|e| e.to_string())?;
     out.flush().map_err(|e| e.to_string())
@@ -134,7 +115,7 @@ struct GeoJson {
 }
 
 impl Sink for GeoJson {
-    fn write(&mut self, rows: &[NewFeature]) -> Result<(), String> {
+    fn write(&mut self, rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
         let Some(stream) = self.stream.as_mut() else { return Ok(()) };
         for r in rows {
             self.made += 1;
@@ -167,15 +148,18 @@ struct Kml {
     path: PathBuf,
     layer: String,
     made: u32,
+    /// The styles and each placemark's (layer_export_kml.rs, docs/adr/9112 §4).
+    symbols: crate::layer_export_kml::KmlSymbols,
 }
 
 impl Sink for Kml {
-    fn write(&mut self, rows: &[NewFeature]) -> Result<(), String> {
+    fn write(&mut self, rows: &[NewFeature], objects: &[&kentos_commands::Entity]) -> Result<(), String> {
         let Some(stream) = self.stream.as_mut() else { return Ok(()) };
-        for r in rows {
+        let styles = self.symbols.styles_of(objects);
+        for (i, r) in rows.iter().enumerate() {
             self.made += 1;
             if let Some(e) = object_of(r, &self.layer, self.made) {
-                stream.put(&e, Some(0));
+                stream.put(&e, styles.get(i).copied().flatten());
             }
         }
         Ok(())
@@ -204,7 +188,7 @@ struct Shapefile {
 }
 
 impl Sink for Shapefile {
-    fn write(&mut self, rows: &[NewFeature]) -> Result<(), String> {
+    fn write(&mut self, rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
         let Some(stream) = self.stream.as_mut() else { return Ok(()) };
         for r in rows {
             self.made += 1;

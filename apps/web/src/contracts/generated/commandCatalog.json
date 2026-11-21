@@ -152784,6 +152784,17 @@
             "null"
           ]
         },
+        "symbols": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExportSymbols"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "KML: what the placemarks are drawn with; none: the layer's colour."
+        },
         "xy": {
           "description": "CSV: the geometry as `x` and `y` columns (points only) instead of a `wkt` column.",
           "type": [
@@ -152825,6 +152836,26 @@
         "skipped"
       ],
       "type": "object"
+    },
+    "ExportSymbols": {
+      "description": "What a KML file's placemarks are drawn with (docs/adr/9112 §4).",
+      "oneOf": [
+        {
+          "const": "color",
+          "description": "The layer's colour: one style for every placemark.",
+          "type": "string"
+        },
+        {
+          "const": "style",
+          "description": "The layer's style: each class (category, graduated class, rule) a style of its own with its fill, outline and\nicon colours and widths, each placemark its class's; a placemark no switched-on class draws without one.",
+          "type": "string"
+        },
+        {
+          "const": "none",
+          "description": "No style: the reading program draws them its own way.",
+          "type": "string"
+        }
+      ]
     },
     "ExtensionPin": {
       "additionalProperties": false,

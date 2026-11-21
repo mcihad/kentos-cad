@@ -82,6 +82,23 @@ pub enum ExportEncoding {
     Windows1254,
 }
 
+/// What a KML file's placemarks are drawn with (docs/adr/9112 §4).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ExportSymbols {
+    /// The layer's colour: one style for every placemark.
+    #[default]
+    Color,
+    /// The layer's style: each class (category, graduated class, rule) a style of its own with its fill, outline and
+    /// icon colours and widths, each placemark its class's; a placemark no switched-on class draws without one.
+    Style,
+    /// No style: the reading program draws them its own way.
+    None,
+}
+
 /// A field written: the layer's field by name, the name it is written under, its listed values' labels.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -137,6 +154,10 @@ pub struct ExportOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub project_coordinates: Option<bool>,
+    /// KML: what the placemarks are drawn with; none: the layer's colour.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub symbols: Option<ExportSymbols>,
 }
 
 /// Input of `cad.layers.export` v1: `layer`'s objects or rows written as `format`.

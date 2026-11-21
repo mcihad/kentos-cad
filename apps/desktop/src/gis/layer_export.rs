@@ -18,7 +18,7 @@ use iced::futures::channel::mpsc;
 use iced::widget::{Column, column, container, row, scrollable};
 use iced::{Element, Length, Task};
 use kentos_commands::{
-    CommandWarning, ExportEncoding, ExportExisting, ExportField, ExportFormat, ExportGeometry, ExportOptions,
+    CommandWarning, ExportEncoding, ExportExisting, ExportField, ExportFormat, ExportGeometry, ExportOptions, ExportSymbols,
     LayersData, LayersExport, LayersExported,
 };
 use kentos_native_application::ExecutionContext;
@@ -40,6 +40,13 @@ static RUNS: AtomicU64 = AtomicU64::new(0);
 const PROGRESS_EVERY: Duration = Duration::from_millis(100);
 /// The field list's most height: about eight fields, then it scrolls.
 const FIELDS_HEIGHT: f32 = 264.0;
+
+/// KML's symbol choices and their words.
+const SYMBOLS: [(ExportSymbols, &str); 3] = [
+    (ExportSymbols::Style, "Katmanın stili (sınıflarıyla)"),
+    (ExportSymbols::Color, "Katmanın rengi (tek stil)"),
+    (ExportSymbols::None, "Sembolsüz"),
+];
 
 pub(crate) const FORMATS: [ExportFormat; 6] = [
     ExportFormat::Gpkg,
@@ -189,6 +196,8 @@ pub(crate) struct ExportWindow {
     separator: String,
     xy: bool,
     project_coordinates: bool,
+    /// KML: what the placemarks are drawn with (docs/adr/9112 §4); the layer's style unless chosen otherwise.
+    symbols: ExportSymbols,
     metadata: bool,
     add_to_map: bool,
     running: bool,
@@ -243,6 +252,7 @@ pub enum Event {
     Separator(String),
     Xy(bool),
     ProjectCoordinates(bool),
+    Symbols(usize),
     Metadata(bool),
     AddToMap(bool),
     Run,
@@ -374,6 +384,7 @@ impl App {
             separator: ",".into(),
             xy: false,
             project_coordinates: false,
+            symbols: ExportSymbols::Style,
             metadata: false,
             add_to_map: true,
             running: false,
@@ -460,6 +471,7 @@ impl App {
             separator: (w.format == ExportFormat::Csv && w.separator != ",").then(|| w.separator.clone()),
             xy: (w.format == ExportFormat::Csv && w.xy).then_some(true),
             project_coordinates: (w.format == ExportFormat::Geojson && w.project_coordinates).then_some(true),
+            symbols: (w.format == ExportFormat::Kml && w.symbols != ExportSymbols::Color).then_some(w.symbols),
         };
         let empty = options == ExportOptions::default();
         LayersExport {
@@ -580,6 +592,7 @@ impl App {
             Event::Separator(s) => w.separator = s.chars().last().map(String::from).unwrap_or_default(),
             Event::Xy(on) => w.xy = on,
             Event::ProjectCoordinates(on) => w.project_coordinates = on,
+            Event::Symbols(i) => w.symbols = SYMBOLS[i.min(SYMBOLS.len() - 1)].0,
             Event::Metadata(on) => w.metadata = on,
             Event::AddToMap(on) => w.add_to_map = on,
             Event::Close => {
@@ -898,6 +911,15 @@ impl App {
                 form = form
                     .section("GeoJSON seçenekleri")
                     .row(switch(w.project_coordinates, "Proje koordinatlarıyla yaz (eski crs üyesiyle)", Event::ProjectCoordinates));
+            }
+            ExportFormat::Kml => {
+                form = form
+                    .section("KML seçenekleri")
+                    .field(
+                        "Semboller",
+                        select(SYMBOLS.iter().map(|(_, l)| *l).collect(), SYMBOLS.iter().position(|(s, _)| *s == w.symbols), Event::Symbols),
+                    )
+                    .help("Katmanın stili: her sınıf kendi KML stilini alır (dolgu, kenar ve simge renkleri, kalınlıklar).");
             }
             _ => {}
         }

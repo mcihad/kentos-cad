@@ -139,6 +139,9 @@ fn checked(input: &LayersExport) -> Result<(), Stop> {
         if input.format != ExportFormat::Geojson && o.project_coordinates.is_some() {
             option("Proje koordinatları", "options.projectCoordinates")?;
         }
+        if input.format != ExportFormat::Kml && o.symbols.is_some() {
+            option("Semboller", "options.symbols")?;
+        }
         if let Some(s) = &o.separator
             && s.chars().count() != 1
         {
@@ -447,6 +450,7 @@ pub(crate) struct Run {
 /// Makes the rows of `objects` (in the project's system) and hands them to the sink.
 fn feed(plan: &Plan<'_>, rows: &Rows<'_>, objects: &[Entity], sink: &mut dyn Sink, run: &mut Run) -> Result<(), Stop> {
     let mut made: Vec<NewFeature> = Vec::with_capacity(objects.len());
+    let mut from: Vec<&Entity> = Vec::with_capacity(objects.len());
     for e in objects {
         // A text or a dimension has no geometry a table holds: left out of a table with geometry.
         if plan.schema.geometry.is_some() && matches!(geometry_of(e), Ok(None) | Err(_)) {
@@ -455,7 +459,10 @@ fn feed(plan: &Plan<'_>, rows: &Rows<'_>, objects: &[Entity], sink: &mut dyn Sin
             continue;
         }
         match rows.new_row(&mapped(plan, e)) {
-            Ok(row) => made.push(row),
+            Ok(row) => {
+                made.push(row);
+                from.push(e);
+            }
             Err(why) => {
                 run.skipped += 1;
                 run.first_skip.get_or_insert(why);
@@ -463,7 +470,7 @@ fn feed(plan: &Plan<'_>, rows: &Rows<'_>, objects: &[Entity], sink: &mut dyn Sin
         }
     }
     run.written += made.len() as u64;
-    sink.write(&made).map_err(unreachable)
+    sink.write(&made, &from).map_err(unreachable)
 }
 
 /// The objects of a drawing layer the export keeps.
@@ -534,6 +541,12 @@ fn data_rows(
             if known.contains(f) && !columns.contains(f) {
                 columns.push(f.clone());
             }
+        }
+    }
+    // The fields a KML file's classes read (docs/adr/9112 §4): read, not written.
+    for f in crate::layer_export_kml::fields_read(plan) {
+        if known.contains(&f) && !columns.contains(&f) {
+            columns.push(f);
         }
     }
     // The keys and the filter's part the source answers itself (docs/adr/9109); the filter is still asked here.

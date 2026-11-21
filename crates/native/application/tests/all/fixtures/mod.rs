@@ -1963,6 +1963,7 @@ fn run_step(
                     &bytes,
                     kentos_formats::text::Encoding::Windows1254,
                 )),
+                "kmlStyles" => kml_styles(&String::from_utf8(bytes).map_err(|e| format!("{at}: UTF-8 değil: {e}"))?),
                 _ => Value::String(String::from_utf8(bytes).map_err(|e| format!("{at}: UTF-8 değil: {e}"))?),
             };
             let want = &step["returns"];
@@ -1980,6 +1981,50 @@ fn run_step(
         at,
         step.get("within").and_then(Value::as_f64),
     )
+}
+
+/// A KML file's styles and its placemarks' (docs/adr/9112 §4), as written: `styles` by id, each its icon's colour and
+/// scale, its line's colour and width, its polygon's colour, fill and outline (none when the element is not there);
+/// `placemarks` each one's style URL in the file's order (null: none). The Python runner sums the file up the same way.
+fn kml_styles(text: &str) -> Value {
+    fn between<'a>(s: &'a str, open: &str, close: &str) -> Option<&'a str> {
+        let a = s.find(open)? + open.len();
+        let b = s[a..].find(close)? + a;
+        Some(&s[a..b])
+    }
+    let mut styles = serde_json::Map::new();
+    let mut rest = text;
+    while let Some(at) = rest.find("<Style id=\"") {
+        let s = &rest[at + "<Style id=\"".len()..];
+        let id = &s[..s.find('"').unwrap_or(0)];
+        let end = s.find("</Style>").unwrap_or(s.len());
+        let body = &s[..end];
+        let mut style = serde_json::Map::new();
+        if let Some(icon) = between(body, "<IconStyle>", "</IconStyle>") {
+            style.insert("icon".into(), json!({ "color": between(icon, "<color>", "</color>"), "scale": between(icon, "<scale>", "</scale>") }));
+        }
+        if let Some(line) = between(body, "<LineStyle>", "</LineStyle>") {
+            style.insert("line".into(), json!({ "color": between(line, "<color>", "</color>"), "width": between(line, "<width>", "</width>") }));
+        }
+        if let Some(poly) = between(body, "<PolyStyle>", "</PolyStyle>") {
+            style.insert(
+                "poly".into(),
+                json!({ "color": between(poly, "<color>", "</color>"), "fill": between(poly, "<fill>", "</fill>"),
+                        "outline": between(poly, "<outline>", "</outline>") }),
+            );
+        }
+        styles.insert(id.to_owned(), Value::Object(style));
+        rest = &s[end..];
+    }
+    let placemarks: Vec<Value> = text
+        .split("<Placemark>")
+        .skip(1)
+        .map(|p| {
+            let p = &p[..p.find("</Placemark>").unwrap_or(p.len())];
+            between(p, "<styleUrl>", "</styleUrl>").map_or(Value::Null, |u| Value::String(u.to_owned()))
+        })
+        .collect();
+    json!({ "styles": styles, "placemarks": placemarks })
 }
 
 /// An object's rings summed up whatever their starting corner: `corners` every corner of every ring (outer rings,

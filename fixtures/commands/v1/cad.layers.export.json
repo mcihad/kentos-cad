@@ -1826,6 +1826,976 @@
    ]
   },
   {
+   "name": "KML: katmanın stili; her sınıf kendi stili, kapalı sınıfın yer imi stilsiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "kml",
+      "path": "$tmp:disa/stil.kml",
+      "options": {
+       "symbols": "style"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kml",
+       "files": [
+        "$tmp:disa/stil.kml"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/stil.kml",
+     "as": "kmlStyles",
+     "returns": {
+      "styles": {
+       "s1": {
+        "icon": {
+         "color": "ff1c1ae3",
+         "scale": "0.35"
+        }
+       },
+       "s2": {
+        "icon": {
+         "color": "802ca033",
+         "scale": "0.47"
+        }
+       },
+       "s3": {
+        "icon": {
+         "color": "ff999999",
+         "scale": "0.3"
+        }
+       }
+      },
+      "placemarks": [
+       "#s1",
+       "#s2",
+       "#s1",
+       null,
+       "#s3"
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Katmanı dışa aktar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "noktalar",
+      "name": "Noktalar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "renderer": {
+        "type": "categorized",
+        "expr": "kullanim",
+        "categories": [
+         {
+          "value": "Konut",
+          "label": "Konut",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "fill": "#e31a1c",
+              "size": 3
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "Park",
+          "label": "Park",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "fill": "#33a02c",
+              "size": 4,
+              "opacity": 0.5
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "Ticaret",
+          "label": "Ticaret",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "fill": "#1f78b4",
+              "size": 3
+             }
+            ]
+           }
+          },
+          "enabled": false
+         }
+        ],
+        "other": {
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "type": "shape",
+            "shape": "circle",
+            "fill": "#999999",
+            "size": 2.5
+           }
+          ]
+         }
+        }
+       }
+      },
+      "children": [],
+      "geometry": "point",
+      "fields": [
+       {
+        "name": "kullanim",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "1",
+          "label": "Sağlam"
+         },
+         {
+          "code": "2",
+          "label": "Bakımda"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "karisik",
+      "name": "Karışık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
+     }
+    ],
+    "activeLayer": "noktalar",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Konut",
+       "alan": "120",
+       "durum": "1"
+      },
+      "p": {
+       "x": 600000.0,
+       "y": 4410000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Park",
+       "alan": "480.5",
+       "durum": "2"
+      },
+      "p": {
+       "x": 600010.0,
+       "y": 4410005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Konut",
+       "alan": "900",
+       "durum": "1"
+      },
+      "p": {
+       "x": 600020.0,
+       "y": 4410010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Ticaret",
+       "alan": "1500"
+      },
+      "p": {
+       "x": 600030.0,
+       "y": 4410015.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Eğitim",
+       "alan": "60",
+       "durum": "2"
+      },
+      "p": {
+       "x": 600040.0,
+       "y": 4410020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "karisik",
+      "attrs": {
+       "ad": "A"
+      },
+      "p": {
+       "x": 600100.0,
+       "y": 4410100.0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 21,
+      "layerId": "karisik",
+      "attrs": {
+       "ad": "B"
+      },
+      "p": {
+       "x": 600110.0,
+       "y": 4410100.0
+      },
+      "text": "Yazı",
+      "height": 2.5,
+      "rotation": 0
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "KML: veri katmanının alanları sınıflarının stiliyle; sınıfın alanı yazılmasa da",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "kml",
+      "path": "$tmp:disa/alanlar.kml",
+      "fields": [
+       {
+        "name": "ada"
+       }
+      ],
+      "options": {
+       "symbols": "style"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kml",
+       "files": [
+        "$tmp:disa/alanlar.kml"
+       ],
+       "written": 30,
+       "fields": [
+        "ada"
+       ],
+       "geometry": "POLYGON",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/alanlar.kml",
+     "as": "kmlStyles",
+     "returns": {
+      "styles": {
+       "s1": {
+        "line": {
+         "color": "ff333333",
+         "width": "1.89"
+        },
+        "poly": {
+         "color": "ff7ac2d9",
+         "fill": "1",
+         "outline": "1"
+        }
+       },
+       "s2": {
+        "poly": {
+         "color": "ff3d7a2b",
+         "fill": "1",
+         "outline": "0"
+        }
+       },
+       "s3": {
+        "line": {
+         "color": "ff888888",
+         "width": "0.94"
+        },
+        "poly": {
+         "color": "80cccccc",
+         "fill": "1",
+         "outline": "1"
+        }
+       }
+      },
+      "placemarks": [
+       "#s1",
+       "#s2",
+       "#s3",
+       "#s2",
+       "#s3",
+       "#s1",
+       "#s3",
+       "#s3",
+       "#s3",
+       "#s3",
+       "#s1",
+       "#s3",
+       "#s1",
+       "#s2",
+       "#s3",
+       "#s2",
+       "#s3",
+       "#s3",
+       "#s3",
+       "#s3",
+       "#s2",
+       "#s3",
+       "#s1",
+       "#s3",
+       "#s1",
+       "#s2",
+       "#s3",
+       "#s2",
+       "#s3",
+       "#s1"
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Katmanı dışa aktar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "noktalar",
+      "name": "Noktalar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "point",
+      "fields": [
+       {
+        "name": "kullanim",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "1",
+          "label": "Sağlam"
+         },
+         {
+          "code": "2",
+          "label": "Bakımda"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "karisik",
+      "name": "Karışık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "renderer": {
+        "type": "categorized",
+        "expr": "kullanim",
+        "categories": [
+         {
+          "value": "Konut",
+          "label": "Konut",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#d9c27a"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#333333",
+              "width": 0.5
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "Park",
+          "label": "Park",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#2b7a3d"
+             }
+            ]
+           }
+          }
+         }
+        ],
+        "other": {
+         "fill": {
+          "type": "fill",
+          "layers": [
+           {
+            "type": "simpleFill",
+            "color": "#cccccc",
+            "opacity": 0.5
+           },
+           {
+            "type": "simpleLine",
+            "color": "#888888",
+            "width": 0.25
+           }
+          ]
+         }
+        }
+       }
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
+     }
+    ],
+    "activeLayer": "noktalar",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Konut",
+       "alan": "120",
+       "durum": "1"
+      },
+      "p": {
+       "x": 600000.0,
+       "y": 4410000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Park",
+       "alan": "480.5",
+       "durum": "2"
+      },
+      "p": {
+       "x": 600010.0,
+       "y": 4410005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Konut",
+       "alan": "900",
+       "durum": "1"
+      },
+      "p": {
+       "x": 600020.0,
+       "y": 4410010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Ticaret",
+       "alan": "1500"
+      },
+      "p": {
+       "x": 600030.0,
+       "y": 4410015.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Eğitim",
+       "alan": "60",
+       "durum": "2"
+      },
+      "p": {
+       "x": 600040.0,
+       "y": 4410020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "karisik",
+      "attrs": {
+       "ad": "A"
+      },
+      "p": {
+       "x": 600100.0,
+       "y": 4410100.0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 21,
+      "layerId": "karisik",
+      "attrs": {
+       "ad": "B"
+      },
+      "p": {
+       "x": 600110.0,
+       "y": 4410100.0
+      },
+      "text": "Yazı",
+      "height": 2.5,
+      "rotation": 0
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "KML: sembolsüz; yer imlerinin stili yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "kml",
+      "path": "$tmp:disa/sembolsuz.kml",
+      "options": {
+       "symbols": "none"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kml",
+       "files": [
+        "$tmp:disa/sembolsuz.kml"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/sembolsuz.kml",
+     "as": "kmlStyles",
+     "returns": {
+      "styles": {},
+      "placemarks": [
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "KML: katmanın rengi; tek stil, tema rengi siyah",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "kml",
+      "path": "$tmp:disa/renk.kml",
+      "options": {
+       "symbols": "color"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kml",
+       "files": [
+        "$tmp:disa/renk.kml"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/renk.kml",
+     "as": "kmlStyles",
+     "returns": {
+      "styles": {
+       "s1": {
+        "icon": {
+         "color": "ff000000",
+         "scale": null
+        },
+        "line": {
+         "color": "ff000000",
+         "width": "0.94"
+        }
+       }
+      },
+      "placemarks": [
+       "#s1",
+       "#s1",
+       "#s1",
+       "#s1",
+       "#s1"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: semboller yalnız KML'de",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "geojson",
+      "path": "$tmp:disa/semboller.geojson",
+      "options": {
+       "symbols": "style"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_option",
+       "message": "Semboller bu biçimde yoktur; GeoJSON için verilmez.",
+       "path": "options.symbols"
+      }
+     }
+    }
+   ]
+  },
+  {
    "name": "Plan: yazılacak satırları sayar, hiçbir şey yazmaz",
    "steps": [
     {

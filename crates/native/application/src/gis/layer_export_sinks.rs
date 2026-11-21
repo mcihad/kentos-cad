@@ -25,8 +25,9 @@ use crate::layer_export::{Plan, fail, format_words, table_name_of, unreachable};
 
 /// A target of the export.
 pub(crate) trait Sink {
-    /// Writes rows (each in the system written, its values the fields' kinds).
-    fn write(&mut self, rows: &[NewFeature]) -> Result<(), String>;
+    /// Writes rows (each in the system written, its values the fields' kinds); `objects` are the layer's objects they
+    /// were made from, in their order (a KML file's styles are their classes', docs/adr/9112 §4).
+    fn write(&mut self, rows: &[NewFeature], objects: &[&kentos_commands::Entity]) -> Result<(), String>;
     /// The fields an `append` left out (the table lacks them).
     fn left_out(&self) -> Vec<String> {
         Vec::new()
@@ -41,7 +42,7 @@ pub(crate) trait Sink {
 struct Nothing;
 
 impl Sink for Nothing {
-    fn write(&mut self, _rows: &[NewFeature]) -> Result<(), String> {
+    fn write(&mut self, _rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
         Ok(())
     }
 
@@ -218,7 +219,7 @@ impl Table {
 }
 
 impl Sink for Table {
-    fn write(&mut self, rows: &[NewFeature]) -> Result<(), String> {
+    fn write(&mut self, rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
         let Some(tx) = self.tx.as_mut() else {
             return Ok(());
         };
@@ -400,7 +401,7 @@ pub(crate) fn cell(v: &Value) -> String {
 }
 
 impl Sink for Csv {
-    fn write(&mut self, rows: &[NewFeature]) -> Result<(), String> {
+    fn write(&mut self, rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
         for r in rows {
             let mut cells: Vec<String> = self
                 .fields

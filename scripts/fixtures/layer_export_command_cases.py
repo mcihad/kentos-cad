@@ -16,6 +16,7 @@ are that script's own definition. The `.prj` text is fixtures/crs/v1/esri-prj.js
 import copy
 import importlib.util
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -349,6 +350,8 @@ def cases():
                exported("kml", [tmp("noktalar.kml")], None, 5, ["kullanim", "alan", "durum"], "POINT", 4326)),
         read_file(tmp("noktalar.kml"), "$any"),
     ]))
+    # KML's symbols (docs/adr/9112 §4): the layer's style, its colour, none.
+    out += kml_symbol_cases(tmp)
     # Plan: the rows made, nothing written.
     out.append(case("Plan: yazılacak satırları sayar, hiçbir şey yazmaz", [
         export({"layer": "parseller", "format": "gpkg", "path": tmp("plan.gpkg"), "filter": "kullanim = 'Konut'"},
@@ -411,6 +414,126 @@ def cases():
         for s in c["steps"]:
             if isinstance(s.get("input"), dict) and s["input"].get("keys", 0) is None:
                 del s["input"]["keys"]
+    return out
+
+
+# ── KML's symbols (docs/adr/9112 §4) ──────────────────────────────────────────────────────────────────────
+
+MM_PER_PIXEL = 25.4 / 96
+
+
+def half_up(v):
+    """Rounding as the writer rounds: halves away from zero (Rust's f64::round), not to even."""
+    return math.floor(v + 0.5)
+
+
+def kml_color(hex_color, opacity=1.0):
+    """A `#rrggbb` colour as KML writes it, `aabbggrr`, its alpha the opacity."""
+    a = half_up(max(0.0, min(1.0, opacity)) * 255)
+    h = hex_color.lstrip("#").lower()
+    return f"{a:02x}{h[4:6]}{h[2:4]}{h[0:2]}"
+
+
+def two(v):
+    """A number with two decimals at most, its trailing zeros left out."""
+    s = f"{v:.2f}".rstrip("0").rstrip(".")
+    return "0" if s == "-0" else s
+
+
+def pixels(mm):
+    return half_up(mm / MM_PER_PIXEL * 100) / 100
+
+
+def icon_scale(mm):
+    """A marker's size against KML's 32-pixel icon."""
+    return half_up(pixels(mm) / 32 * 100) / 100
+
+
+def marker(color, size, opacity=None):
+    layer = {"type": "shape", "shape": "circle", "fill": color, "size": size}
+    if opacity is not None:
+        layer["opacity"] = opacity
+    return {"marker": {"type": "marker", "layers": [layer]}}
+
+
+def area(fill, outline=None, width=None, opacity=None):
+    layers = [{"type": "simpleFill", "color": fill}]
+    if opacity is not None:
+        layers[0]["opacity"] = opacity
+    if outline is not None:
+        layers.append({"type": "simpleLine", "color": outline, "width": width})
+    return {"fill": {"type": "fill", "layers": layers}}
+
+
+def kml_symbol_cases(tmp):
+    out = []
+    # The point layer by its use: Konut and Park each a style, Ticaret switched off, the rest Diğer değerler.
+    renderer = {"type": "categorized", "expr": "kullanim", "categories": [
+        {"value": "Konut", "label": "Konut", "symbols": marker("#e31a1c", 3)},
+        {"value": "Park", "label": "Park", "symbols": marker("#33a02c", 4, 0.5)},
+        {"value": "Ticaret", "label": "Ticaret", "symbols": marker("#1f78b4", 3), "enabled": False},
+    ], "other": marker("#999999", 2.5)}
+    setup = copy.deepcopy(SETUP)
+    for node in setup["layers"]:
+        if node["id"] == "noktalar":
+            node["style"] = dict(STYLE, renderer=renderer)
+    styles = {
+        "s1": {"icon": {"color": kml_color("#e31a1c"), "scale": two(icon_scale(3))}},
+        "s2": {"icon": {"color": kml_color("#33a02c", 0.5), "scale": two(icon_scale(4))}},
+        "s3": {"icon": {"color": kml_color("#999999"), "scale": two(icon_scale(2.5))}},
+    }
+    by_use = {"Konut": "#s1", "Park": "#s2", "Ticaret": None}
+    placemarks = [by_use.get(use, "#s3") for use, _, _ in POINTS]
+    out.append(case("KML: katmanın stili; her sınıf kendi stili, kapalı sınıfın yer imi stilsiz", [
+        export({"layer": "noktalar", "format": "kml", "path": tmp("stil.kml"), "options": {"symbols": "style"}},
+               exported("kml", [tmp("stil.kml")], None, 5, ["kullanim", "alan", "durum"], "POINT", 4326)),
+        read_file(tmp("stil.kml"), {"styles": styles, "placemarks": placemarks}, "kmlStyles"),
+    ], setup))
+    # The data layer's areas by their use, the use not written: its rows are read with it all the same.
+    uses = []
+    for r in TABLE:
+        if r["kullanim"] is not None and r["kullanim"] not in uses:
+            uses.append(r["kullanim"])
+    first, second = uses[0], uses[1]
+    renderer = {"type": "categorized", "expr": "kullanim", "categories": [
+        {"value": first, "label": first, "symbols": area("#d9c27a", "#333333", 0.5)},
+        {"value": second, "label": second, "symbols": area("#2b7a3d")},
+    ], "other": area("#cccccc", "#888888", 0.25, 0.5)}
+    setup = copy.deepcopy(SETUP)
+    for node in setup["layers"]:
+        if node["id"] == "parseller":
+            node["style"] = dict(STYLE, renderer=renderer)
+    styles = {
+        "s1": {"line": {"color": kml_color("#333333"), "width": two(pixels(0.5))},
+               "poly": {"color": kml_color("#d9c27a"), "fill": "1", "outline": "1"}},
+        "s2": {"poly": {"color": kml_color("#2b7a3d"), "fill": "1", "outline": "0"}},
+        "s3": {"line": {"color": kml_color("#888888"), "width": two(pixels(0.25))},
+               "poly": {"color": kml_color("#cccccc", 0.5), "fill": "1", "outline": "1"}},
+    }
+    placemarks = ["#s1" if r["kullanim"] == first else "#s2" if r["kullanim"] == second else "#s3" for r in TABLE]
+    out.append(case("KML: veri katmanının alanları sınıflarının stiliyle; sınıfın alanı yazılmasa da", [
+        export({"layer": "parseller", "format": "kml", "path": tmp("alanlar.kml"), "fields": [{"name": "ada"}],
+                "options": {"symbols": "style"}},
+               exported("kml", [tmp("alanlar.kml")], None, len(TABLE), ["ada"], "POLYGON", 4326)),
+        read_file(tmp("alanlar.kml"), {"styles": styles, "placemarks": placemarks}, "kmlStyles"),
+    ], setup))
+    # None: no style; the layer's colour (the default): one style, its theme colour black.
+    out.append(case("KML: sembolsüz; yer imlerinin stili yok", [
+        export({"layer": "noktalar", "format": "kml", "path": tmp("sembolsuz.kml"), "options": {"symbols": "none"}},
+               exported("kml", [tmp("sembolsuz.kml")], None, 5, ["kullanim", "alan", "durum"], "POINT", 4326)),
+        read_file(tmp("sembolsuz.kml"), {"styles": {}, "placemarks": [None] * len(POINTS)}, "kmlStyles"),
+    ]))
+    color = {"s1": {"icon": {"color": "ff000000", "scale": None},
+                    "line": {"color": "ff000000", "width": two(half_up(0.25 / MM_PER_PIXEL * 100) / 100)}}}
+    out.append(case("KML: katmanın rengi; tek stil, tema rengi siyah", [
+        export({"layer": "noktalar", "format": "kml", "path": tmp("renk.kml"), "options": {"symbols": "color"}},
+               exported("kml", [tmp("renk.kml")], None, 5, ["kullanim", "alan", "durum"], "POINT", 4326)),
+        read_file(tmp("renk.kml"), {"styles": color, "placemarks": ["#s1"] * len(POINTS)}, "kmlStyles"),
+    ]))
+    out.append(case("Ret: semboller yalnız KML'de", [
+        export({"layer": "noktalar", "format": "geojson", "path": tmp("semboller.geojson"), "options": {"symbols": "style"}},
+               refused("invalid_option", "Semboller bu biçimde yoktur; GeoJSON için verilmez.", "options.symbols")),
+    ]))
     return out
 
 
