@@ -1,6 +1,6 @@
 # ADR 9107: Proje bir veri kaynağında
 
-- **Durum:** kabul edildi (2026-11-21); adımlar VY-09a (§2–§5) ve VY-09b (§6). Plan: [plan/veri.md](../../plan/veri.md) VY-09.
+- **Durum:** kabul edildi (2026-11-21); adımlar VY-09a (§2–§5), VY-09b (§6), VY-09c (§7). Plan: [plan/veri.md](../../plan/veri.md) VY-09.
 - **İstek:** sahibin sözü (21 Kasım 2026): projeler veritabanında “saklanacak değil saklanabilecek”; “veriler her
   halükarda veritabanında saklanacak CBS projelerinde”; GeoPackage, PostgreSQL ya da ileride başka bir veritabanı.
   Sürücü soyutlaması ileride başka veritabanlarını da desteklemek içindir.
@@ -8,6 +8,7 @@
   sözleşmedeydi, şimdi yazılıyor ve okunuyor (§3). **Komut:** yok. Kaydet ve Aç kabuk işlemleridir, katalog komutu
   değildir. Python'da `Document.save_to`, `Document.open_from`, `kentos.cad.projects`.
 - **Sürücü sözleşmesi:** `kentos_data::ProjectStore` ve `Source::project_store`; hata türü `NoProject`.
+- **Komut (09c):** yeni `cad.layers.create` v1 (Yeni veri katmanı, 24 ortak durum).
 - **Bağımlılık:** yeni dış kitaplık yok.
 
 ## §1 Bağlam ve araştırma
@@ -125,9 +126,39 @@ programın ekranları `.run/gui-evidence/veri/qgis/09`, `13`, `14`, `16`):
   açıldı. Gerçek pencere betiğine `KENTOS_REAL_STATE` eklendi: Kaynaklar'ın klasörleri, sistemin klasör penceresi
   açılmadan oturuma verilir.
 
-## §7 Sıradaki adımlar (VY-09)
+## §7 Karar: yeni katman bir kaynağın yeni tablosudur (VY-09c)
 
-- **09c** CBS projesinde yeni katman bir kaynağın yeni tablosudur (projenin GeoPackage'ı ya da seçilen GeoPackage
-  veya şema).
+**Araştırma:** QGIS'te Layer ► Create Layer ► New GeoPackage Layer… penceresi dosyayı (yoksa yapılır), tablo adını,
+geometri türünü (geometrisiz, nokta, çizgi, poligon, çok parçalıları, eğriler), Z/M'yi, sistemi ve alan listesini (ad,
+tür, uzunluk) sorar (kurulu programın ekranı `.run/gui-evidence/veri/qgis/14`).
+
+- **Komut `cad.layers.create`:** tabloyu bir GeoPackage dosyasında (`path`; yoksa yapılır) ya da bir PostgreSQL
+  şemasında (`address`, `schema`) yapar ve veri katmanı olarak ekler.
+  - Geometri: `point`, `line`, `area` ya da `none` (geometrisiz kayıt tablosu); `multi` çok parçalı, `z` Z ile.
+    `srid` verilmezse projenin sistemi kullanılır. Sistem GeoPackage'a adı ve WKT'siyle yazılır (ADR 9106 §4).
+  - Tablo adı verilmezse katmanın adından üretilir (dışa aktarmanın kuralı).
+  - `fields` sütunlardır (ad, tür, metinde uzunluk); `key` (fid) ve `geometryColumn` (geom) sütun adlarıdır.
+  - Tablo kendi işlemiyle yapılır. Katmanın eklenmesi tek geri alma adımıdır; geri alınınca katman gider, tablo
+    kaynakta kalır (kaynağı okuyan her tablo gibi).
+  - Retler, bu sırayla: `empty_name`, `no_target`, `invalid_name` (en çok 63 bayt; `gpkg_`, `rtree_`, `sqlite_` ile
+    başlayan ve `kentos_projects` adları kaynağındır; anahtar ya da geometri sütununun adını taşıyan alan),
+    `invalid_fields`, `unknown_srid`, `target_exists`, `source_unreachable`.
+- **Masaüstünde:** CBS projesinde Katmanlar'ın + ▸ Nokta, Çizgi, Alan katmanı… ve şeridin aynı komutları (`layer.newPoint`,
+  `layer.newLine`, `layer.newArea`) Yeni katman penceresini açar, nesneleri proje dosyasına giden bir katman yapmaz.
+  - Pencere: kaynak (GeoPackage dosyası ya da PostgreSQL bağlantısı, adresi, şeması), katmanın ve tablonun adı
+    (tablo adı katmanın adını izler, elle yazılınca bırakır), geometri, çok parçalı, Z, sistem, alanlar (ad, tür,
+    metinde uzunluk; Alan ekle, Kaldır).
+  - Önerilen yer: projenin saklandığı GeoPackage, proje dosyasının yanındaki aynı adlı `.gpkg`, ya da ilk veri
+    katmanının GeoPackage'ı.
+  - Oluştur'da tablo yapılır, katman etkin katmanın yanına eklenir, etkin yapılır, seçilir ve görünür kaydırılır
+    (GIS-004). Ret pencerenin alt çubuğunda söylenir.
+  - Açıklama katmanı (yazılar, ölçüler) çizimin katmanı olarak kalır; Karışık katman da öyle. İkisi de bir tablonun
+    satırı olacak CBS nesnesi tutmaz.
+- **Kanıt:** 24 ortak durum (`scripts/fixtures/layer_create_command_cases.py`; Rust ve Python). Koşucunun dosyayı
+  okuduğu bir beklenti bozularak doğrulandı. Masaüstü GIS-004 sınamaları yeni akışla geçer: tablo GeoPackage'ta yapılır,
+  katman seçilir ve görünür.
+
+## §8 Sıradaki adımlar (VY-09)
+
 - **09d** Nesne tutan eski CBS katmanlarını tek adımda bir kaynağa taşıma.
 - Web (ADR 0228).

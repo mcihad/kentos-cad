@@ -709,7 +709,16 @@ impl App {
             // A typed layer (layer_types.rs, docs/adr/0622 §5).
             id if crate::layer_types::NEW_TYPED.iter().any(|(c, _)| *c == id) => {
                 if let Some((_, g)) = crate::layer_types::NEW_TYPED.iter().find(|(c, _)| *c == id) {
-                    self.new_typed_layer(*g);
+                    // In a CBS project a point, line or area layer is a new table of a data source (docs/adr/9107
+                    // §7): its objects never go into the project file. An annotation layer stays the drawing's.
+                    let gis = self.document.as_ref().is_some_and(|d| {
+                        d.model.settings().project_type() == Some(kentos_commands::Workspace::Gis)
+                    });
+                    if gis && *g != kentos_commands::LayerGeometry::Annotation {
+                        self.open_layer_create(*g);
+                    } else {
+                        self.new_typed_layer(*g);
+                    }
                 }
             }
             "layer.newGroup" => self.new_group(),

@@ -139,5 +139,6 @@ ADR'ler **9100**'den başlar.
       taşınınca katman bulunur; Python `save_to`, `open_from`, `projects`.
     - [x] **09b** Kaynaklar'da projeler: GeoPackage'ın tablolarının ve şemanın tablolarının yanında; tıklayınca
       açılır; Veri kaynağı penceresinden onaylı silinir.
-    - [ ] **09c** Yeni katman bir kaynağın yeni tablosu.
+    - [x] **09c** Yeni katman bir kaynağın yeni tablosu: `cad.layers.create` (24 ortak durum); CBS projesinde Nokta,
+      Çizgi, Alan katmanı… Yeni katman penceresini açar (GeoPackage ya da PostgreSQL, geometri, alanlar).
     - [ ] **09d** Nesne tutan eski CBS katmanlarını bir kaynağa taşıma.

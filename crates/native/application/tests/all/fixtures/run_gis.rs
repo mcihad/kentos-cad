@@ -92,6 +92,7 @@ macro_rules! gis_cases {
             kentos_commands::CAD_LAYERS_SESSION => $then!(layers_session, kentos_commands::LayersSession),
             kentos_commands::CAD_LAYERS_CLASSES => $then!(layer_classes, kentos_commands::LayersClasses),
             kentos_commands::CAD_LAYERS_EXPORT => $then!(layer_export, kentos_commands::LayersExport),
+            kentos_commands::CAD_LAYERS_CREATE => $then!(layers_create, kentos_commands::LayersCreate),
             kentos_commands::CAD_LAYERS_CRS => $then!(layers_crs_assign, kentos_commands::LayersCrs),
             kentos_commands::CAD_LAYERS_REPROJECT => {
                 $then!(layers_reproject, kentos_commands::LayersReproject)

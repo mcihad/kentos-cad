@@ -196,7 +196,7 @@ pub(crate) fn format_words(f: ExportFormat) -> &'static str {
 }
 
 /// A layer field's kind as a table's.
-fn field_kind(kind: LayerFieldKind, length: Option<u32>) -> FieldKind {
+pub(crate) fn field_kind(kind: LayerFieldKind, length: Option<u32>) -> FieldKind {
     match kind {
         LayerFieldKind::Integer | LayerFieldKind::BigInt => FieldKind::Int,
         LayerFieldKind::Decimal => FieldKind::Real,
@@ -794,7 +794,9 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersExport) -> CommandR
             Ok(p) => p,
             Err(stop) => return stop.into(),
         };
-        let (run, files) = match run(cx.doc, &plan, true, &|| false, &|_| {}) {
+        // The protocol's plan runs this on a reading copy: nothing written then (docs/adr/0532 §4).
+        let write = !cx.dry();
+        let (run, files) = match run(cx.doc, &plan, write, &|| false, &|_| {}) {
             Ok(r) => r,
             Err(stop) => return stop.into(),
         };

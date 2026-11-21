@@ -204,7 +204,7 @@ impl App {
     }
 
     /// Whether Katmanlar's search leaves the layer `id`'s row out.
-    fn layer_row_hidden(&self, id: &str) -> bool {
+    pub(crate) fn layer_row_hidden(&self, id: &str) -> bool {
         let Some(doc) = &self.document else {
             return false;
         };
@@ -320,7 +320,7 @@ impl App {
 const ACTION_NOTICE: std::time::Duration = std::time::Duration::from_secs(8);
 
 /// A new layer's name by its type.
-fn new_name(geometry: LayerGeometry) -> &'static str {
+pub(crate) fn new_name(geometry: LayerGeometry) -> &'static str {
     match geometry {
         LayerGeometry::Point => "Yeni nokta katmanı",
         LayerGeometry::Line => "Yeni çizgi katmanı",

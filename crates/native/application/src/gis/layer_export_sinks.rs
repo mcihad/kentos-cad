@@ -275,7 +275,7 @@ impl Sink for Table {
 
 /// The system's name and OGC WKT 1 written with a GeoPackage's table (as geopackage.rs's `srs_of` writes the project's):
 /// other programs read the system from them. None for a code the catalogue lacks: named by its code then.
-fn system_text(srid: Option<i32>) -> Option<kentos_data::SystemText> {
+pub(crate) fn system_text(srid: Option<i32>) -> Option<kentos_data::SystemText> {
     let s = kentos_project::crs::system(u32::try_from(srid?).ok()?)?;
     let core = s.transform_system()?;
     let wkt = kentos_geometry_core::crs::text::write_wkt(&s.name, &core, None)?;

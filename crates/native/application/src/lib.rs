@@ -506,6 +506,9 @@ mod layer_export_sinks;
 // A project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107).
 #[path = "gis/project_store.rs"]
 pub mod project_store;
+// A new layer made as a new table of a data source (docs/adr/9107 §7).
+#[path = "gis/layers_create.rs"]
+pub mod layers_create;
 #[path = "gis/data_write.rs"]
 pub mod data_write;
 #[cfg(feature = "mod-gis")]
@@ -3169,6 +3172,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LAYERS_EXPORT,
         kentos_commands::CAD_LAYERS_EXPORT_VERSION,
+    ),
+    // A new layer made as a new table of a data source ([`layers_create`], docs/adr/9107 §7).
+    (
+        kentos_commands::CAD_LAYERS_CREATE,
+        kentos_commands::CAD_LAYERS_CREATE_VERSION,
     ),
     // A layer's style classes, counted by the drawing's rule ([`layer_classes`], docs/adr/9105 §2).
     (

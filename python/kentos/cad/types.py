@@ -1718,6 +1718,24 @@ ConvertFailName = Literal["keep", "clear"]
 """The names of :class:`ConvertFail`, for a plain string."""
 
 
+class CreateGeometry(_StrEnum):
+    """What the table's rows are.
+
+    - ``point``
+    - ``line``
+    - ``area``
+    - ``none``: No geometry: a table of records.
+    """
+    POINT = "point"
+    LINE = "line"
+    AREA = "area"
+    NONE = "none"
+
+
+CreateGeometryName = Literal["point", "line", "area", "none"]
+"""The names of :class:`CreateGeometry`, for a plain string."""
+
+
 class CreateOperation(_StrEnum):
     """The drawing tool or Hesap window whose step has its own name; without
     one the step is “Ekle”, as for every object a drawing tool adds.
@@ -1841,6 +1859,20 @@ class CreateOperation(_StrEnum):
 
 CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "terrainCutFill", "pipeProfile", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse", "scenarioRecord"]
 """The names of :class:`CreateOperation`, for a plain string."""
+
+
+class CreateTarget(_StrEnum):
+    """Where the table is made.
+
+    - ``gpkg``: A table of a GeoPackage file (`path`), the file made when it is not there.
+    - ``postgis``: A table of a PostgreSQL database (`address`) in `schema`.
+    """
+    GPKG = "gpkg"
+    POSTGIS = "postgis"
+
+
+CreateTargetName = Literal["gpkg", "postgis"]
+"""The names of :class:`CreateTarget`, for a plain string."""
 
 
 class CrossingHatch(_StrEnum):
@@ -57578,6 +57610,145 @@ class LayersContingents(_Model):
             layer=data["layer"],
             expected_revision=data.get("expectedRevision", UNSET),
             groups=[FieldGroup.from_json(e0) for e0 in data["groups"]] if "groups" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersCreate(_Model):
+    """Input of `cad.layers.create` v1.
+
+    The table: `table` (none: the layer's `name` made a table name), in `path` (`gpkg`) or `address` and `schema`
+    (`postgis`); its rows `geometry`, multi-part with `multi`, with Z with `z`, in `srid` (none: the project's system);
+    its columns `fields` (their names and kinds; a text's length); its key column `key` (none: `fid`) and geometry
+    column `geometryColumn` (none: `geom`). The layer: `name`, placed by `parent` and `index` as `cad.layers.data`
+    places one.
+
+    Refusals (`CommandError.code`), checked in this order: `empty_name` (`name` empty or only white space), `no_target`
+    (`gpkg` without `path`, `postgis` without `address`), `invalid_name` (a table or column name the source cannot take:
+    letters, digits and `_`, not starting with a digit, at most 63 characters), `invalid_fields` (`fields` as layers
+    take them: a repeated name, a kind's choices), `unknown_srid` (a system this project cannot write), `target_exists`
+    (the table is there), `source_unreachable` (the source could not be read or written; the message says why).
+    Attributes:
+        name: The layer's name in Katmanlar.
+        address: `postgis`: the database, `postgresql://user@host:port/db` (its password is never written).
+        fields: The columns, in order: each one's name, kind and (a text's) length; none: no column but the key.
+        geometry_column: The geometry column's name; none: `geom`.
+        index: Its place among its siblings; none: the first. Unit: count.
+        key: The key column's name; none: `fid`.
+        multi: Every geometry a multi-part one (`MULTIPOINT` …).
+        parent: The group the layer goes in; none: the top of the tree.
+        path: `gpkg`: the GeoPackage file.
+        schema: `postgis`: the schema; none: `public`.
+        srid: The table's system, an EPSG code; none: the project's. Unit: id.
+        table: The table's name; none: the layer's name made a table name.
+        z: With Z.
+    """
+    name: str
+    target: CreateTarget | CreateTargetName
+    geometry: CreateGeometry | CreateGeometryName
+    address: str | None | Unset = UNSET
+    fields: list[LayerField] | None | Unset = UNSET
+    geometry_column: str | None | Unset = UNSET
+    index: int | None | Unset = UNSET
+    key: str | None | Unset = UNSET
+    multi: bool | None | Unset = UNSET
+    parent: str | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    schema: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+    z: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["target"] = _enum_out(self.target)
+        out["geometry"] = _enum_out(self.geometry)
+        if self.address is not UNSET:
+            out["address"] = self.address
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
+        if self.geometry_column is not UNSET:
+            out["geometryColumn"] = self.geometry_column
+        if self.index is not UNSET:
+            out["index"] = self.index
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.multi is not UNSET:
+            out["multi"] = self.multi
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.table is not UNSET:
+            out["table"] = self.table
+        if self.z is not UNSET:
+            out["z"] = self.z
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersCreate:
+        return cls(
+            name=data["name"],
+            target=_enum_in(CreateTarget, data["target"]),
+            geometry=_enum_in(CreateGeometry, data["geometry"]),
+            address=data.get("address", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else [LayerField.from_json(e0) for e0 in data["fields"]],
+            geometry_column=data.get("geometryColumn", UNSET),
+            index=data.get("index", UNSET),
+            key=data.get("key", UNSET),
+            multi=data.get("multi", UNSET),
+            parent=data.get("parent", UNSET),
+            path=data.get("path", UNSET),
+            schema=data.get("schema", UNSET),
+            srid=data.get("srid", UNSET),
+            table=data.get("table", UNSET),
+            z=data.get("z", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersCreated(_Model):
+    """What `cad.layers.create` made: the layer added, the table, where it is, its geometry type, its system.
+    Attributes:
+        layer: The data layer added (its id); empty in a plan.
+        table: The table: a GeoPackage's table name, PostGIS's `schema.table`.
+        address: The source: the GeoPackage's path, the database's address.
+        geometry: OGC's name of the geometry type made (`MULTIPOLYGON Z`); none for a table of records.
+        srid: The table's system; none for a table of records. Unit: id.
+    """
+    layer: str
+    table: str
+    address: str
+    revision: str
+    geometry: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["table"] = self.table
+        out["address"] = self.address
+        out["revision"] = self.revision
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersCreated:
+        return cls(
+            layer=data["layer"],
+            table=data["table"],
+            address=data["address"],
+            revision=data["revision"],
+            geometry=data.get("geometry", UNSET),
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -148038,11 +148209,15 @@ __all__ = [
     "CreateDomainsOp",
     "CreateFeatureChange",
     "CreateFormsOp",
+    "CreateGeometry",
+    "CreateGeometryName",
     "CreateJoinsOp",
     "CreateOperation",
     "CreateOperationName",
     "CreateRelationsOp",
     "CreateSpaceSeparatorOperation",
+    "CreateTarget",
+    "CreateTargetName",
     "CrossfallZero",
     "CrossingHatch",
     "CrossingHatchName",
@@ -149185,6 +149360,8 @@ __all__ = [
     "LayersComposePlan",
     "LayersComposed",
     "LayersContingents",
+    "LayersCreate",
+    "LayersCreated",
     "LayersCrs",
     "LayersCrsSet",
     "LayersData",

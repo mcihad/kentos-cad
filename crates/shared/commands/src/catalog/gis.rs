@@ -588,6 +588,46 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Yeni veri katmanı (docs/adr/9107 §7), held together by fixtures/commands/v1/cad.layers.create.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_CREATE.into(),
+            version: crate::CAD_LAYERS_CREATE_VERSION,
+            title: "Yeni veri katmanı".into(),
+            summary: "CBS projesinde yeni katmanı bir veri kaynağının yeni tablosu olarak yapar: bir GeoPackage dosyasında (dosya yoksa yapılır) ya da bir PostgreSQL şemasında tabloyu kurar ve onu veri katmanı olarak ekler (Yeni katman ▸ Nokta, Çizgi, Alan katmanı…). Nesneleri proje dosyasında değil tablonun satırlarında durur. \
+                      table tablonun adıdır (verilmezse katmanın adından üretilir); geometry point, line, area ya da none (geometrisiz kayıt tablosu); multi çok parçalı, z üç boyutlu yapar; srid tablonun sistemidir (verilmezse projeninki). \
+                      fields sütunlardır (ad, tür, metinde uzunluk); key anahtar sütunu (fid), geometryColumn geometri sütunu (geom). parent ve index katmanın ağaçtaki yeri. \
+                      Tablo kendi işlemiyle yapılır; katmanın eklenmesi tek geri alma adımıdır, geri alınınca katman gider, tablo kaynakta kalır.".into(),
+            aliases: vec!["yenikatman".into(), "yenitablo".into(), "newlayer".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersCreate>(),
+            output: schema::<crate::LayersCreated>(),
+            plan: Some(schema::<crate::LayersCreated>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Projenin GeoPackage'ında bir direk (nokta) katmanı".into(),
+                    input: json!({
+                        "name": "Direkler", "target": "gpkg", "path": "/veri/sivas.gpkg", "geometry": "point",
+                        "fields": [{ "name": "no", "kind": "integer" }, { "name": "durum", "kind": "text", "length": 20 }]
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "PostgreSQL'de çok parçalı bir imar adası katmanı".into(),
+                    input: json!({
+                        "name": "İmar adaları", "target": "postgis", "address": "postgresql://cbs@sunucu:5432/kent",
+                        "schema": "imar", "table": "imar_adalari", "geometry": "area", "multi": true
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Veri katmanı (docs/adr/9101 §4), held together by fixtures/commands/v1/cad.layers.data.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_DATA.into(),

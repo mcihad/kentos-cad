@@ -78833,6 +78833,282 @@
       ]
     },
     {
+      "id": "cad.layers.create",
+      "version": 1,
+      "title": "Yeni veri katmanı",
+      "summary": "CBS projesinde yeni katmanı bir veri kaynağının yeni tablosu olarak yapar: bir GeoPackage dosyasında (dosya yoksa yapılır) ya da bir PostgreSQL şemasında tabloyu kurar ve onu veri katmanı olarak ekler (Yeni katman ▸ Nokta, Çizgi, Alan katmanı…). Nesneleri proje dosyasında değil tablonun satırlarında durur. table tablonun adıdır (verilmezse katmanın adından üretilir); geometry point, line, area ya da none (geometrisiz kayıt tablosu); multi çok parçalı, z üç boyutlu yapar; srid tablonun sistemidir (verilmezse projeninki). fields sütunlardır (ad, tür, metinde uzunluk); key anahtar sütunu (fid), geometryColumn geometri sütunu (geom). parent ve index katmanın ağaçtaki yeri. Tablo kendi işlemiyle yapılır; katmanın eklenmesi tek geri alma adımıdır, geri alınınca katman gider, tablo kaynakta kalır.",
+      "aliases": [
+        "yenikatman",
+        "yenitablo",
+        "newlayer"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.create` v1.\n\nThe table: `table` (none: the layer's `name` made a table name), in `path` (`gpkg`) or `address` and `schema`\n(`postgis`); its rows `geometry`, multi-part with `multi`, with Z with `z`, in `srid` (none: the project's system);\nits columns `fields` (their names and kinds; a text's length); its key column `key` (none: `fid`) and geometry\ncolumn `geometryColumn` (none: `geom`). The layer: `name`, placed by `parent` and `index` as `cad.layers.data`\nplaces one.\n\nRefusals (`CommandError.code`), checked in this order: `empty_name` (`name` empty or only white space), `no_target`\n(`gpkg` without `path`, `postgis` without `address`), `invalid_name` (a table or column name the source cannot take:\nletters, digits and `_`, not starting with a digit, at most 63 characters), `invalid_fields` (`fields` as layers\ntake them: a repeated name, a kind's choices), `unknown_srid` (a system this project cannot write), `target_exists`\n(the table is there), `source_unreachable` (the source could not be read or written; the message says why).",
+        "properties": {
+          "address": {
+            "description": "`postgis`: the database, `postgresql://user@host:port/db` (its password is never written).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fields": {
+            "description": "The columns, in order: each one's name, kind and (a text's) length; none: no column but the key.",
+            "items": {
+              "$ref": "#/$defs/LayerField"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "geometry": {
+            "$ref": "#/$defs/CreateGeometry"
+          },
+          "geometryColumn": {
+            "description": "The geometry column's name; none: `geom`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "index": {
+            "description": "Its place among its siblings; none: the first.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "key": {
+            "description": "The key column's name; none: `fid`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "multi": {
+            "description": "Every geometry a multi-part one (`MULTIPOINT` …).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "The layer's name in Katmanlar.",
+            "type": "string"
+          },
+          "parent": {
+            "description": "The group the layer goes in; none: the top of the tree.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "`gpkg`: the GeoPackage file.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "schema": {
+            "description": "`postgis`: the schema; none: `public`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "srid": {
+            "description": "The table's system, an EPSG code; none: the project's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "table": {
+            "description": "The table's name; none: the layer's name made a table name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target": {
+            "$ref": "#/$defs/CreateTarget"
+          },
+          "z": {
+            "description": "With Z.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "target",
+          "geometry"
+        ],
+        "title": "LayersCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.layers.create` made: the layer added, the table, where it is, its geometry type, its system.",
+        "properties": {
+          "address": {
+            "description": "The source: the GeoPackage's path, the database's address.",
+            "type": "string"
+          },
+          "geometry": {
+            "description": "OGC's name of the geometry type made (`MULTIPOLYGON Z`); none for a table of records.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The data layer added (its id); empty in a plan.",
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The table's system; none for a table of records.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "table": {
+            "description": "The table: a GeoPackage's table name, PostGIS's `schema.table`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "table",
+          "address",
+          "revision"
+        ],
+        "title": "LayersCreated",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.layers.create` made: the layer added, the table, where it is, its geometry type, its system.",
+        "properties": {
+          "address": {
+            "description": "The source: the GeoPackage's path, the database's address.",
+            "type": "string"
+          },
+          "geometry": {
+            "description": "OGC's name of the geometry type made (`MULTIPOLYGON Z`); none for a table of records.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The data layer added (its id); empty in a plan.",
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The table's system; none for a table of records.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "table": {
+            "description": "The table: a GeoPackage's table name, PostGIS's `schema.table`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "table",
+          "address",
+          "revision"
+        ],
+        "title": "LayersCreated",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "empty_name",
+          "no_target",
+          "invalid_name",
+          "invalid_fields",
+          "unknown_srid",
+          "target_exists",
+          "source_unreachable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Projenin GeoPackage'ında bir direk (nokta) katmanı",
+          "input": {
+            "fields": [
+              {
+                "kind": "integer",
+                "name": "no"
+              },
+              {
+                "kind": "text",
+                "length": 20,
+                "name": "durum"
+              }
+            ],
+            "geometry": "point",
+            "name": "Direkler",
+            "path": "/veri/sivas.gpkg",
+            "target": "gpkg"
+          }
+        },
+        {
+          "title": "PostgreSQL'de çok parçalı bir imar adası katmanı",
+          "input": {
+            "address": "postgresql://cbs@sunucu:5432/kent",
+            "geometry": "area",
+            "multi": true,
+            "name": "İmar adaları",
+            "schema": "imar",
+            "table": "imar_adalari",
+            "target": "postgis"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.data",
       "version": 1,
       "title": "Veri katmanı",
@@ -139472,6 +139748,24 @@
       ],
       "type": "object"
     },
+    "CreateGeometry": {
+      "description": "What the table's rows are.",
+      "oneOf": [
+        {
+          "enum": [
+            "point",
+            "line",
+            "area"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "none",
+          "description": "No geometry: a table of records.",
+          "type": "string"
+        }
+      ]
+    },
     "CreateOperation": {
       "description": "The drawing tool or Hesap window whose step has its own name; without\none the step is “Ekle”, as for every object a drawing tool adds.",
       "oneOf": [
@@ -139759,6 +140053,21 @@
         {
           "const": "scenarioRecord",
           "description": "`cad.scenarios.record` (docs/adr/5060): a comparison written as a table, “Ölçüleri çizime yaz”.",
+          "type": "string"
+        }
+      ]
+    },
+    "CreateTarget": {
+      "description": "Where the table is made.",
+      "oneOf": [
+        {
+          "const": "gpkg",
+          "description": "A table of a GeoPackage file (`path`), the file made when it is not there.",
+          "type": "string"
+        },
+        {
+          "const": "postgis",
+          "description": "A table of a PostgreSQL database (`address`) in `schema`.",
           "type": "string"
         }
       ]

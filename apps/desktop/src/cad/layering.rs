@@ -794,10 +794,13 @@ impl App {
                 container(icon(crate::icons::from_web(Some("layerAdd"))).size(14.0))
                     .padding([2, 4]),
                 || {
+                    // A point, line or area layer is a new table of a data source (docs/adr/9107 §7): its window asks
+                    // where, so the item ends with “…”; an annotation layer is the drawing's.
                     crate::layer_types::NEW_TYPED
                         .iter()
                         .fold(Menu::new().header("Yeni katman"), |m, (id, g)| {
-                            m.item(format!("{} katmanı", g.label()), Message::Run(id))
+                            let window = *g != kentos_commands::LayerGeometry::Annotation;
+                            m.item(format!("{} katmanı{}", g.label(), if window { "…" } else { "" }), Message::Run(id))
                                 .icon(crate::layer_types::glyph(Some(*g)))
                         })
                         .separator()
@@ -808,7 +811,7 @@ impl App {
             tip(
                 menu,
                 Tip::new("Yeni katman").body(
-                    "Nokta, çizgi, alan ya da açıklama katmanı: türlü katman yalnız kendi türünden nesne alır. Karışık katman her türü alır.",
+                    "Nokta, çizgi ve alan katmanı bir veri kaynağının yeni tablosudur (GeoPackage ya da PostgreSQL): nesneleri proje dosyasında değil tablonun satırlarında durur. Açıklama ve karışık katman çizimin katmanıdır.",
                 ),
                 tooltip::Position::Bottom,
             )

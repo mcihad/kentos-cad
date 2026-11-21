@@ -3195,6 +3195,9 @@ mod tests {
                     crate::CAD_LAYERS_EXPORT => {
                         serde_json::from_value::<crate::LayersExport>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_CREATE => {
+                        serde_json::from_value::<crate::LayersCreate>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_SESSION => {
                         serde_json::from_value::<crate::LayersSession>(e.input.clone()).map(|_| ())
                     }
@@ -4213,6 +4216,10 @@ mod tests {
                         }
                         crate::CAD_LAYERS_EXPORT => {
                             serde_json::from_value::<crate::LayersExported>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_CREATE => {
+                            serde_json::from_value::<crate::LayersCreated>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_SESSION => {

@@ -1531,6 +1531,8 @@ mod layer_classes;
 mod layer_export;
 #[path = "gis/project_store.rs"]
 mod project_store;
+#[path = "gis/layer_create.rs"]
+mod layer_create;
 #[cfg(test)]
 #[path = "gis/project_store_tests.rs"]
 mod project_store_tests;

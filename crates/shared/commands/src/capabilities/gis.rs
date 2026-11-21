@@ -179,6 +179,16 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &["export_skipped", "field_left_out"],
         targets: none,
     },
+    // docs/adr/9107 §7: a new layer made as a new table of a data source.
+    Entry {
+        id: "cad.layers.create",
+        refusals: &[
+            &["empty_name", "no_target", "invalid_name", "invalid_fields"],
+            &["unknown_srid", "target_exists", "source_unreachable"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // docs/adr/9103 §3: a data layer's edit session.
     Entry {
         id: "cad.layers.session",

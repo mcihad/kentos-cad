@@ -20,6 +20,8 @@ pub(crate) struct GisUiState {
     pub(crate) layer_export: Option<crate::layer_export::ExportWindow>,
     /// Dosya › Veri kaynağı's window (project_store.rs, docs/adr/9107).
     pub(crate) project_store: Option<crate::project_store::StoreWindow>,
+    /// Yeni katman's window in a CBS project (layer_create.rs, docs/adr/9107 §7).
+    pub(crate) layer_create: Option<crate::layer_create::NewLayerWindow>,
     /// Bilgi's asks of the data layers and the row it shows (data_info.rs, docs/adr/9101 §6).
     pub(crate) data_info: crate::data_info::State,
     /// A data layer's selected rows outlined on the map (data_selection.rs, docs/adr/9102 §5).
@@ -147,6 +149,8 @@ pub(crate) enum Event {
     LayerExport(crate::layer_export::Event),
     /// Dosya › Veri kaynağı (project_store.rs, docs/adr/9107).
     ProjectStore(crate::project_store::Event),
+    /// Yeni katman in a CBS project (layer_create.rs, docs/adr/9107 §7).
+    LayerCreate(crate::layer_create::Event),
     /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
     DataPick(crate::data_pick::Event),
     /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
@@ -250,6 +254,8 @@ pub(crate) enum GisDialogKind {
     LayerExport,
     /// Veri kaynağına kaydet / aç (project_store.rs, docs/adr/9107); the window is `GisUiState::project_store`.
     ProjectStore,
+    /// Yeni katman (layer_create.rs, docs/adr/9107 §7); the window is `GisUiState::layer_create`.
+    LayerCreate,
     /// A Hesap window (calc/).
     Calc,
     /// A processing tool's or model's window (processing/).
@@ -376,6 +382,7 @@ impl App {
             Event::LayerClasses(event) => return self.layer_classes_event(event),
             Event::LayerExport(event) => return self.layer_export_event(event),
             Event::ProjectStore(event) => return self.project_store_event(event),
+            Event::LayerCreate(event) => return self.layer_create_event(event),
             Event::DataPick(event) => return self.data_pick_event(event),
             Event::Rasters(event) => return self.rasters_event(event),
             Event::PointClouds(event) => return self.pointclouds_event(event),
@@ -427,6 +434,7 @@ impl App {
             GisDialogKind::DataConflict => self.data_conflict_question(),
             GisDialogKind::LayerExport => self.layer_export_view(),
             GisDialogKind::ProjectStore => self.project_store_view(),
+            GisDialogKind::LayerCreate => self.layer_create_view(),
             GisDialogKind::SourceReconcile => self.reconcile_view(),
             GisDialogKind::Calc => self.calc_view(),
             GisDialogKind::Processing => self.processing_view(),

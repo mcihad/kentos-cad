@@ -155,6 +155,7 @@ COMMANDS: dict[str, Any] = {
     "cad.layers.classes": layers.classes,
     "cad.layers.compose": layers.compose,
     "cad.layers.contingents": layers.contingents,
+    "cad.layers.create": layers.create,
     "cad.layers.crs": layers.crs,
     "cad.layers.data": layers.data,
     "cad.layers.edit": layers.edit,
