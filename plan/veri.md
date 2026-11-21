@@ -6,6 +6,8 @@ veriyi önbelleğe almaması, görüneni gerçek zamanlı okuması; alttaki tabl
 kategorili/dereceli/kurallı stillerin sınıflarının katmanın altında görünmesi ve açılıp kapanması; düzenleme modu,
 kaydetme yapısı, işlem (transaction) yönetimi, etkin katman ve katman türlerinin bir CBS'ye uygun hâle gelmesi
 (“şu anki yapı uygun değil”); katmanın sağ tuşunda ayrıntılı bir dışa aktarma penceresi; GeoPackage projeleri.
+21 Kasım'da: bütün maddeler bitene kadar durmadan sürülür; proje dosyaya ya da veritabanına kaydedilebilir, CBS verisi
+ise her zaman bir veri kaynağındadır (VY-09).
 
 Sıra mantık sırasıdır: her madde bir öncekinin üstüne kurulur. Her madde: araştırma (resmî belgeler, kurulu masaüstü
 CBS'nin ekranları, Türkiye mevzuatı), ADR, kod, testler, gerçek pencerede ekran görüntüleri, commit ve push. Başvuru
@@ -106,7 +108,15 @@ ADR'ler **9100**'den başlar.
   - biçime özel seçenekler;
   - var olan dosyada: üstüne yaz, katmanı değiştir ya da ekle;
   - üst veri, haritaya ekle.
-- [ ] **VY-09 — Projeler GeoPackage'ta ve PostgreSQL'de.**
-  - Proje GeoPackage dosyasının içine (`kentos_projects`) ve bir PostgreSQL şemasına kaydedilir ve açılır.
-  - Kaynaklar'da dosyanın katmanlarıyla birlikte görünür.
-  - Aynı dosyadaki katmanlar dosyayla birlikte taşınır.
+- [ ] **VY-09 — Proje dosyada ya da veritabanında; CBS verisi her zaman bir veri kaynağında.** Sahibin sözü (21 Kasım
+  2026): projeler veritabanında “saklanacak değil saklanabilecek”; “veriler her halükarda veritabanında saklanacak CBS
+  projelerinde”; GeoPackage, PostgreSQL ya da ileride başka bir veritabanı.
+  - Proje her zamanki gibi dosyaya (`.kcad`) kaydedilir. İsteyen onu bir GeoPackage dosyasının içine (`kentos_projects`)
+    ya da bir PostgreSQL şemasına da kaydeder ve oradan açar. Bu bir seçenektir, zorunlu değildir.
+  - Projenin veritabanında saklanması da sürücü soyutlamasından geçer (`kentos-data`'da bir proje deposu sözleşmesi,
+    GeoPackage ve PostGIS sürücülerinde gerçekleşmesi). Yeni bir veritabanı sürücüsü projeyi de saklayabilir.
+  - CBS projesinde nesne verisi proje dosyasına gömülmez, her zaman bir veri kaynağındadır. Yeni katman bir kaynağın
+    yeni tablosudur: projenin GeoPackage'ı ya da seçilen GeoPackage veya veritabanı şeması. Nesne tutan eski CBS
+    katmanları için tek adımda bir kaynağa taşıma yolu sunulur.
+  - Veritabanındaki proje Kaynaklar'da kendi dosyasının ya da şemasının katmanlarıyla birlikte görünür. Aynı
+    dosyadaki katmanlar dosyayla birlikte taşınır.
