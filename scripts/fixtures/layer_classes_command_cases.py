@@ -332,6 +332,8 @@ SETUP = {
         layer("parseller", "Parseller", TABLE_CATEGORIZED, geometry="area", data=DATA, fields=TABLE_FIELDS),
         layer("alanlar", "Alanlar", TABLE_GRADUATED, geometry="area", data=DATA, fields=TABLE_FIELDS),
         layer("buyukler", "Büyükler", TABLE_RULES, geometry="area", data=DATA, fields=TABLE_FIELDS),
+        layer("altlik", "OpenStreetMap",
+              service={"kind": "xyz", "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "maxZoom": 19}),
     ],
     "activeLayer": "noktalar",
     "entities": [],
@@ -511,6 +513,8 @@ def cases():
         case("Ret: grup", [step({"layer": "grup"}, refused(
             "not_a_layer", "“Grup” bir katman grubu; sınıflar katmanın stilinindir. Grubun bir katmanını verin.",
             "layer"))]),
+        case("Ret: harita servisi katmanı", [step({"layer": "altlik"}, refused(
+            "service_layer", "“OpenStreetMap” bir harita servisinden çizilir; sınıfları yoktur.", "layer"))]),
     ]
     return out
 

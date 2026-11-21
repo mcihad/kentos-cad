@@ -160,6 +160,9 @@ def cases():
             make(gpkg("A", "iki.gpkg", fields=[{"name": "ad", "kind": "text"}, {"name": "ad", "kind": "text"}]),
                  refused("invalid_fields", "$any", "fields"))]),
         case("Ret: bilinmeyen sistem", [make(gpkg("A", "sistem.gpkg", srid=999999), refused("unknown_srid", "$any", "srid"))]),
+        case("Ret: kaynak yapılamıyor (bir dosyanın içinde)", [
+            make({"name": "A", "target": "gpkg", "geometry": "point", "path": "$fixture:geopackage/v1/qgis.gpkg/alt.gpkg"},
+                 refused("source_unreachable", "$any", None))]),
         case("Ret: tablo var", [
             make(gpkg("Direkler", "var.gpkg"), created("direkler", tmp("var.gpkg"), "POINT", 5256)),
             make(gpkg("Direkler", "var.gpkg"), refused(

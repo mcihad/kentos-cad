@@ -85,10 +85,21 @@ fn checked(doc: &Document, input: &LayersMigrate) -> Result<(), Stop> {
     Ok(())
 }
 
+/// An export's refusal in the migration's words: the table's name is its `table`, not the export's `name`.
+fn as_migration(stop: Stop) -> Stop {
+    match stop {
+        Stop::Failed(mut e) if e.path.as_deref() == Some("name") => {
+            e.path = Some("table".to_owned());
+            Stop::Failed(e)
+        }
+        other => other,
+    }
+}
+
 /// The layer's objects counted by a dry export: written, and what a table cannot hold (refused then).
 fn counted(doc: &Document, input: &LayersMigrate, export: &LayersExport) -> Result<crate::layer_export::Run, Stop> {
     checked(doc, input)?;
-    let mut plan = crate::layer_export::planned(doc, export)?;
+    let mut plan = crate::layer_export::planned(doc, export).map_err(as_migration)?;
     plan.all_objects = true;
     // The table there already: said for the migration (the export's words name its `existing`, which this has not).
     let table = crate::layer_export_sinks::table_of(&plan).unwrap_or_default();

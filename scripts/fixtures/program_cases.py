@@ -453,6 +453,16 @@ def check(walls, spaces, program, doors=(), fixtures=(), units_filter=None, leve
                 if i != j and si != sj and j not in conn[i]:
                     conn[i].append(j)
                     conn[j].append(i)
+    def subjects(ri, usage):
+        # A missing neighbour or passage names the space it asks for when that space can be told (the architecture
+        # usage review, 19 Kasım 2026): the one other space of that usage on the level in the room's own group, else
+        # the one on the level; neither one alone, only the room.
+        me_i, me = rooms[ri]
+        asked = [j for j, t in rooms if j != me_i and t["level"] == me["level"] and not t["void"] and t["usage"] == usage]
+        same = [j for j in asked if next(t for k, t in rooms if k == j)["unit"] == me["unit"]]
+        pick = same if len(same) == 1 else asked if len(asked) == 1 else []
+        return [f"$uidOf:{me_i}"] + [f"$uidOf:{j}" for j in pick]
+
     rows, found = [], []
     for ri, (i, s) in enumerate(rooms):
         brief = briefs.get(s["usage"]) if s["usage"] else None
@@ -505,12 +515,12 @@ def check(walls, spaces, program, doors=(), fixtures=(), units_filter=None, leve
                               "Dar yeri genişletin (duvarı, kolonu ya da donatıyı kaydırın) ya da tasarım hedefini değiştirin.", None))
             for lk in adjacent:
                 if "by" not in lk:
-                    found.append(("program_adjacent_missing", [uid], at,
+                    found.append(("program_adjacent_missing", subjects(ri, lk["usage"]), at,
                                   f"{wd}: tasarım hedefi “{lk['usage']}” komşusu istiyor; yanında öyle bir mahal yok ({rule}).",
                                   "Komşu mahali bu mahalin yanına alın ya da tasarım hedefini değiştirin.", None))
             for lk in reach:
                 if "by" not in lk:
-                    found.append(("program_reach_missing", [uid], at,
+                    found.append(("program_reach_missing", subjects(ri, lk["usage"]), at,
                                   f"{wd}: tasarım hedefi “{lk['usage']}” mahaline geçiş istiyor; kapı ya da açık geçiş yok ({rule}).",
                                   "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.", None))
             grouped = s["unit"] in units and units[s["unit"]].get("kind", "unit") != "outdoor"

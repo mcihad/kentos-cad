@@ -706,6 +706,25 @@
       "kind": "text"
      }
     ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
    }
   ],
   "activeLayer": "noktalar",
@@ -1472,6 +1491,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -2372,6 +2410,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -3272,6 +3329,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -4147,6 +4223,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -5026,6 +5121,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -5951,6 +6065,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -6854,6 +6987,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -7738,6 +7890,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -8630,6 +8801,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -9537,6 +9727,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -10602,6 +10811,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -11375,6 +11603,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -12210,6 +12457,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -13116,6 +13382,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -13972,6 +14257,25 @@
         "kind": "text"
        }
       ]
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
      }
     ],
     "activeLayer": "noktalar",
@@ -14033,6 +14337,25 @@
       "error": {
        "code": "not_a_layer",
        "message": "“Grup” bir katman grubu; sınıflar katmanın stilinindir. Grubun bir katmanını verin.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: harita servisi katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "altlik"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "service_layer",
+       "message": "“OpenStreetMap” bir harita servisinden çizilir; sınıfları yoktur.",
        "path": "layer"
       }
      }

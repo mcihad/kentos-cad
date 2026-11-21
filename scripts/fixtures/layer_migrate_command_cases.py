@@ -96,6 +96,7 @@ SETUP = {
               fields=[{"name": "ada", "kind": "integer"}]),
         {"id": "grup", "name": "Grup", "type": "group", "visible": True, "locked": False, "expanded": True,
          "style": STYLE, "children": [layer("gruptaki", "Gruptaki", geometry="point", fields=FIELDS)]},
+        layer("altlik", "OpenStreetMap", service={"kind": "xyz", "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "maxZoom": 19}),
     ],
     "activeLayer": "0",
     "entities": entities(),
@@ -201,6 +202,12 @@ def cases():
             "not_a_layer", "“Grup” bir katman grubu; kaynağa taşınan bir katmandır. Grubun bir katmanını verin.", "layer"))]),
         case("Ret: zaten veri katmanı", [step(gpkg("veri", "x.gpkg"), refused(
             "data_layer", "“Parseller” zaten “parseller” tablosunu okuyor; nesneleri kaynağında.", "layer"))]),
+        case("Ret: harita servisi katmanı", [step(gpkg("altlik", "x.gpkg"), refused(
+            "service_layer", "“OpenStreetMap” bir harita servisinden çizilir; taşınacak nesnesi yoktur.", "layer"))]),
+        case("Ret: tablonun adı 63 karakterden uzun", [step(gpkg("direkler", "uzun.gpkg", table="a" * 64), refused(
+            "invalid_name", "Tablonun adı boş ya da 63 karakterden uzun olamaz.", "table"))]),
+        case("Ret: hedef yapılamıyor (bir dosyanın içinde)", [
+            step({"layer": "direkler", "target": "gpkg", "path": "$fixture:geopackage/v1/qgis.gpkg/alt.gpkg"}, refused("source_unreachable", "$any", None))]),
         case("Ret: kilitli katman", [step(gpkg("kilitli", "x.gpkg"), refused(
             "layer_locked", "“Kilitli” kilitli; nesneleri taşınmaz. Kilidi açıp yeniden deneyin.", "layer"))]),
         case("Ret: tablo var", [

@@ -75,6 +75,7 @@ macro_rules! arch_cases {
             kentos_commands::CAD_ARCH_EXCEPTIONS => {
                 $then!(arch_exceptions, kentos_commands::ArchExceptions)
             }
+            kentos_commands::CAD_ARCH_WALK => $then!(arch_walk, kentos_commands::ArchWalk),
             kentos_commands::CAD_CASEWORK_RUN => {
                 $then!(casework_run, kentos_commands::CaseworkRun)
             }

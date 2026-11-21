@@ -24689,6 +24689,13 @@
         "title": "ArchWalked",
         "type": "object"
       },
+      "capabilities": {
+        "refusals": [
+          "not_finite",
+          "invalid_input",
+          "level_not_found"
+        ]
+      },
       "examples": [
         {
           "title": "Zemin katta 90 cm genişliğinde dolaşım",
@@ -29140,6 +29147,7 @@
           "material_not_found",
           "invalid_declared",
           "invalid_strength",
+          "uid_in_both_lists",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -82329,6 +82337,8 @@
           "no_value",
           "layer_frozen",
           "active_frozen",
+          "class_not_found",
+          "no_classes",
           "invalid_revision",
           "revision_conflict"
         ]

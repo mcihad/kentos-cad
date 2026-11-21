@@ -772,6 +772,20 @@ impl Input for kentos_commands::ArchAudit {
     }
 }
 
+impl Input for kentos_commands::ArchWalk {
+    /// The route's ends and its walking width (`cad.arch.walk`).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "start.x" => Some(&mut self.start.x),
+            "start.y" => Some(&mut self.start.y),
+            "end.x" => Some(&mut self.end.x),
+            "end.y" => Some(&mut self.end.y),
+            "width" => Some(&mut self.width),
+            _ => None,
+        }
+    }
+}
+
 impl Input for kentos_commands::WallsJoins {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None

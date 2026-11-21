@@ -385,6 +385,8 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "no_value",
                 "layer_frozen",
                 "active_frozen",
+                "class_not_found",
+                "no_classes",
             ],
             REVISION,
         ],

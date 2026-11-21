@@ -151,9 +151,18 @@ Sahibin sözü (21 Kasım 2026, VY-09'un raporundan sonra): “Hepsini düzelt e
 “Kalan” bölümlerinde yazılı her eksik ve testlerdeki kırıklar. Bilerek yapılmayanlar (sunucuda açık işlem, ADR 9104 §2)
 ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, ADR, kod, testler, gerçek pencere, commit ve push.
 
-- [ ] **VY-10 — Kırık testler.** Masaüstü: 2000 satır sınırını aşan `shell/exchange/gpkg_tests.rs` konularına göre
-  bölünür (ADR 8054 §7); eklentinin form demosu ADR 1080'in kuralına göre beklenir (varsayılanındaki girdi türünü
-  tutan katmanda açılır). Headless: shapefile dışa aktarma testi ve üç BIM paket testi. Tam ortak durum koşusu.
+- [x] **VY-10 — Kırık testler.** Masaüstü: 2000 satır sınırını aşan `shell/exchange/gpkg_tests.rs` konularına göre
+  bölündü (ADR 8054 §7); eklentinin form demosu ADR 1080'in kuralına göre beklenir. Headless: shapefile testi "nokta"
+  katmanını önce Karışık yapar (ADR 1074); BIM paket testleri ADR 8133'e göre (7. soru dosyanın; dairenin ocağı
+  yüksekliğiyle). Tam ortak durum koşusu temiz:
+  - 41 mimari durumu bağımsız betiklerinden yeniden üretildi: görünüşte `memberHashes`, IFC'de kayıt sayıları
+    (IfcOpenShell), programda adı geçen komşu, bölüm çizelgesinde boş kapsam notu, altlıkta dosyanın özeti. Python
+    yolunda bağımsız KCAD yazıcısı altlıklı belgenin mimari modül sürümünü (18) yazar.
+  - `cad.arch.walk`'ın hiç ortak durumu yoktu: 27 durum (`scripts/fixtures/arch_walk_cases.py`, shapely), koşucu
+    kaydı ve yetenekleri.
+  - Yetenek denetimi: veri komutlarımın andığı ama hiçbir durumun vermediği kodlara durum (servis katmanı, yapılamayan
+    hedef, bilinmeyen sistem, uzun tablo adı); `cad.layers.set` ile `cad.arch.performance` verdikleri kodları anar;
+    taşıma tablo adı hatasını `table` alanında söyler.
 - [ ] **VY-11 — Sürücü sözleşmesi: 32 ve 64 bit tam sayı, ayrık değerler, gruplanmış sayım.** `FieldKind`'da tam
   sayının genişliği; GeoPackage'a 32 bit `MEDIUMINT`, 64 bit `INTEGER` yazılır (GDAL'ın eşlemesi); PostGIS'te
   `integer`/`bigint`. Kaynaktan bir alanın ayrık değerleri (sınırlı) ve bir alana göre gruplanmış sayım (`GROUP BY`);

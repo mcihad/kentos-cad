@@ -3014,22 +3014,16 @@ def document(d):
     # GIS data 4 (docs/adr/9105 §4): a layer's class counts shown.
     def counted(nodes):
         return any(n.get("classCounts") is not None or counted(n.get("children", [])) for n in nodes)
-    if counted(d["layers"]):
-        schema = max(schema, 254)
-        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(4)})
-                + text("version") + uint(schema) + text("document") + cmap(body))
     # GIS data 3 (docs/adr/9104 §2): the data layers' edit grouping.
-    if "editGrouping" in d.get("settings", {}):
+    gis = (4 if counted(d["layers"]) else 3 if "editGrouping" in d.get("settings", {})
+           else 2 if data_layers(d["layers"]) else 1 if extended(d["layers"]) else 0)
+    # Architecture data 18 (docs/adr/8101 §2): the underlay models (`settings.arch.underlays`), the one version-gated
+    # architecture data the shared cases' v2 setups hold; a reader refuses them in an older version.
+    arch = 18 if (d.get("settings", {}).get("arch") or {}).get("underlays") else 0
+    modules = {k: uint(v) for k, v in (("arch", arch), ("gis", gis)) if v}
+    if modules:
         schema = max(schema, 254)
-        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(3)})
-                + text("version") + uint(schema) + text("document") + cmap(body))
-    if data_layers(d["layers"]):
-        schema = max(schema, 254)
-        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(2)})
-                + text("version") + uint(schema) + text("document") + cmap(body))
-    if extended(d["layers"]):
-        schema = max(schema, 254)
-        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(1)})
+        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap(modules)
                 + text("version") + uint(schema) + text("document") + cmap(body))
     return root(cmap(body), version=uint(schema))
 

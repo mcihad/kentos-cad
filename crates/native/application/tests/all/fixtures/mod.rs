@@ -65,6 +65,8 @@ use kentos_native_application::{dimension_sets_create, dimension_sets_edit, dime
 #[cfg(feature = "mod-arch")]
 use kentos_native_application::arch_exceptions;
 #[cfg(feature = "mod-arch")]
+use kentos_native_application::arch_walk;
+#[cfg(feature = "mod-arch")]
 use kentos_native_application::arch_recognize;
 use kentos_native_application::dimensions_interior;
 #[cfg(feature = "mod-arch")]

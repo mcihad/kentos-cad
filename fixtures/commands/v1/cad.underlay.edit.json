@@ -94,8 +94,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "yerel-sistem.ifc",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2"
                 }
               ],
@@ -114,8 +114,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   }
                 ]
@@ -154,8 +154,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   }
                 ]
@@ -190,8 +190,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "Statik model",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2",
                   "discipline": "Statik",
                   "revision": "R2"
@@ -212,8 +212,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "Statik model",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R2"
@@ -254,8 +254,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "Statik model",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R2"
@@ -290,8 +290,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "yerel-sistem.ifc",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2"
                 }
               ],
@@ -310,8 +310,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   }
                 ]
@@ -350,8 +350,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   }
                 ]
@@ -578,8 +578,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "yerel-sistem.ifc",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2",
                   "placement": "origin"
                 }
@@ -599,8 +599,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "placement": "origin"
                   }
@@ -640,8 +640,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "placement": "origin"
                   }
@@ -742,8 +742,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "yerel-sistem.ifc",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2",
                   "discipline": "Statik",
                   "revision": "R1"
@@ -773,8 +773,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -810,8 +810,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -836,8 +836,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -879,8 +879,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -959,8 +959,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "yerel-sistem.ifc",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2",
                   "discipline": "Statik",
                   "revision": "R1",
@@ -982,8 +982,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1",
@@ -1011,8 +1011,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -1037,8 +1037,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1",
@@ -1072,8 +1072,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -1153,8 +1153,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "Statik R3",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2",
                   "discipline": "Statik"
                 }
@@ -1174,8 +1174,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "Statik R3",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik"
                   }
@@ -1201,8 +1201,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -1227,8 +1227,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "Statik R3",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik"
                   }
@@ -1260,8 +1260,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -1525,8 +1525,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "yerel-sistem.ifc",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2",
                   "discipline": "Statik",
                   "revision": "R1",
@@ -1548,8 +1548,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1",
@@ -1577,8 +1577,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -1603,8 +1603,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1",
@@ -1638,8 +1638,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -1929,8 +1929,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -1977,8 +1977,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -2056,8 +2056,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "yerel-sistem.ifc",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2",
                   "discipline": "Statik",
                   "revision": "R1"
@@ -2078,8 +2078,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -2114,8 +2114,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -2194,8 +2194,8 @@
                   "id": "0192f5a1-8101-7000-8000-00000000000a",
                   "name": "yerel-sistem.ifc",
                   "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                  "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                  "bytes": 161752,
+                  "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                  "bytes": 163613,
                   "schema": "IFC4X3_ADD2",
                   "discipline": "Statik",
                   "revision": "R1"
@@ -2216,8 +2216,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -2252,8 +2252,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -2778,8 +2778,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -2814,8 +2814,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -2976,400 +2976,400 @@
                     "id": "0192f5a1-8101-7000-8000-000000000100",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000101",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000102",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000103",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000104",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000105",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000106",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000107",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000108",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000109",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000010a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000010b",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000010c",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000010d",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000010e",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000010f",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000110",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000111",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000112",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000113",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000114",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000115",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000116",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000117",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000118",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000119",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000011a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000011b",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000011c",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000011d",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000011e",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000011f",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000120",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000121",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000122",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000123",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000124",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000125",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000126",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000127",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000128",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000129",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000012a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000012b",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000012c",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000012d",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000012e",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-00000000012f",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000130",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   },
                   {
                     "id": "0192f5a1-8101-7000-8000-000000000131",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2"
                   }
                 ]
@@ -3402,400 +3402,400 @@
                 "id": "0192f5a1-8101-7000-8000-000000000100",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000101",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000102",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000103",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000104",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000105",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000106",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000107",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000108",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000109",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000010a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000010b",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000010c",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000010d",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000010e",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000010f",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000110",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000111",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000112",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000113",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000114",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000115",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000116",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000117",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000118",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000119",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000011a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000011b",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000011c",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000011d",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000011e",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000011f",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000120",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000121",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000122",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000123",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000124",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000125",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000126",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000127",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000128",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000129",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000012a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000012b",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000012c",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000012d",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000012e",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-00000000012f",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000130",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               },
               {
                 "id": "0192f5a1-8101-7000-8000-000000000131",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2"
               }
             ]
@@ -3881,8 +3881,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -3917,8 +3917,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -4006,8 +4006,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -4042,8 +4042,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"
@@ -4132,8 +4132,8 @@
                     "id": "0192f5a1-8101-7000-8000-00000000000a",
                     "name": "yerel-sistem.ifc",
                     "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                    "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                    "bytes": 161752,
+                    "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                    "bytes": 163613,
                     "schema": "IFC4X3_ADD2",
                     "discipline": "Statik",
                     "revision": "R1"
@@ -4168,8 +4168,8 @@
                 "id": "0192f5a1-8101-7000-8000-00000000000a",
                 "name": "yerel-sistem.ifc",
                 "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
-                "sha256": "5d9b54f5a34cddb9be8e64c71773f3f6d7cdf32f285afbd4022b5d8b895204ac",
-                "bytes": 161752,
+                "sha256": "30cd433ef711a1ffd1e440078cd1edeffa9ea88d3445bfd72e2a8acff7f38bce",
+                "bytes": 163613,
                 "schema": "IFC4X3_ADD2",
                 "discipline": "Statik",
                 "revision": "R1"

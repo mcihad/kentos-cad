@@ -301,6 +301,25 @@
       ]
      }
     ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
    }
   ],
   "activeLayer": "0",
@@ -1218,6 +1237,69 @@
        "code": "data_layer",
        "message": "“Parseller” zaten “parseller” tablosunu okuyor; nesneleri kaynağında.",
        "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: harita servisi katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "altlik",
+      "target": "gpkg",
+      "path": "$tmp:tasi/x.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "service_layer",
+       "message": "“OpenStreetMap” bir harita servisinden çizilir; taşınacak nesnesi yoktur.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tablonun adı 63 karakterden uzun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/uzun.gpkg",
+      "table": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_name",
+       "message": "Tablonun adı boş ya da 63 karakterden uzun olamaz.",
+       "path": "table"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: hedef yapılamıyor (bir dosyanın içinde)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$fixture:geopackage/v1/qgis.gpkg/alt.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any"
       }
      }
     }

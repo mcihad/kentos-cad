@@ -825,6 +825,27 @@
    ]
   },
   {
+   "name": "Ret: kaynak yapılamıyor (bir dosyanın içinde)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "A",
+      "target": "gpkg",
+      "geometry": "point",
+      "path": "$fixture:geopackage/v1/qgis.gpkg/alt.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any"
+      }
+     }
+    }
+   ]
+  },
+  {
    "name": "Ret: tablo var",
    "steps": [
     {

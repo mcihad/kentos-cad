@@ -89,6 +89,7 @@ SETUP = {
               fields=TABLE_FIELDS),
         {"id": "grup", "name": "Grup", "type": "group", "visible": True, "locked": False, "expanded": True,
          "style": STYLE, "children": []},
+        layer("altlik", "OpenStreetMap", service={"kind": "xyz", "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "maxZoom": 19}),
     ],
     "activeLayer": "noktalar",
     "entities": entities(),
@@ -385,6 +386,18 @@ def cases():
                                                  "filter": "ada > 10000"}, refused(
             "nothing_to_export", "Yazılacak nesne kalmadı: seçim, kutu ve süzgeç hiçbir nesne bırakmadı.", "layer"))]),
     ]
+    # A map service's layer (no object, no row), a system the project cannot write in, a target that cannot be made
+    # (a path inside a file).
+    out.extend([
+        case("Ret: harita servisi katmanı", [export({"layer": "altlik", "format": "gpkg", "path": tmp("servis.gpkg")},
+                                                    refused("service_layer", "“OpenStreetMap” bir harita servisinden "
+                                                            "çizilir; nesnesi ya da satırı yoktur.", "layer"))]),
+        case("Ret: bilinmeyen sistem", [export({"layer": "noktalar", "format": "gpkg", "path": tmp("sistem.gpkg"),
+                                                "srid": 999999}, refused("unknown_srid", "$any", "srid"))]),
+        case("Ret: hedef yapılamıyor (bir dosyanın içinde)", [
+            export({"layer": "noktalar", "format": "gpkg", "path": "$fixture:geopackage/v1/qgis.gpkg/alt.gpkg"},
+                   refused("source_unreachable", "$any", None))]),
+    ])
     # A file there already: refused unless written over.
     out.append(case("Ret: dosya var (CSV)", [
         export({"layer": "noktalar", "format": "csv", "path": tmp("var.csv"), "fields": [{"name": "kullanim"}],

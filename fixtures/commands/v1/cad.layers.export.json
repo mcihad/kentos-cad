@@ -144,6 +144,25 @@
      "lineWeight": 0.25
     },
     "children": []
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
    }
   ],
   "activeLayer": "noktalar",
@@ -2059,6 +2078,69 @@
        "code": "nothing_to_export",
        "message": "Yazılacak nesne kalmadı: seçim, kutu ve süzgeç hiçbir nesne bırakmadı.",
        "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: harita servisi katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "altlik",
+      "format": "gpkg",
+      "path": "$tmp:disa/servis.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "service_layer",
+       "message": "“OpenStreetMap” bir harita servisinden çizilir; nesnesi ya da satırı yoktur.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: bilinmeyen sistem",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "gpkg",
+      "path": "$tmp:disa/sistem.gpkg",
+      "srid": 999999
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_srid",
+       "message": "$any",
+       "path": "srid"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: hedef yapılamıyor (bir dosyanın içinde)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "gpkg",
+      "path": "$fixture:geopackage/v1/qgis.gpkg/alt.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any"
       }
      }
     }
