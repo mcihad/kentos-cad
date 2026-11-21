@@ -78,6 +78,11 @@ pub(crate) struct DataTable {
     filter: String,
     /// The stop switch of the question's reads.
     stop: Arc<AtomicBool>,
+    /// The cell being edited (docs/adr/9103 §5): the row's key and the field, with the text typed.
+    editing: Option<(i64, String)>,
+    edit_text: String,
+    /// The last edit sent to take its row: an answer to an earlier one is stale.
+    edit_asked: u64,
     /// The reads started, as a test answers them.
     #[cfg(test)]
     inputs: Vec<(u64, u64, LayersRows)>,
@@ -98,6 +103,33 @@ pub enum DataEvent {
     Apply,
     /// Seçime yakınlaş: the selected rows framed.
     Zoom,
+    /// A cell double-clicked while the layer is being edited: the row's key and the field.
+    Edit(i64, String),
+    /// The cell's text typed.
+    Input(String),
+    /// Enter: the value written into the layer's edit session.
+    Enter,
+    /// Esc, or a press elsewhere: the edit given up.
+    Cancel,
+    /// The row of an edit read to be taken: the edit's number, the key, the field, the value, the row read or why not.
+    Taken(u64, i64, String, Option<String>, Result<Vec<(i64, kentos_commands::Entity)>, String>),
+}
+
+/// An edited cell's row read off the thread to be taken (data_write.rs).
+fn data_write_task(
+    app: &mut App,
+    node: LayerNode,
+    settings: kentos_commands::ProjectSettings,
+    key: i64,
+    field: String,
+    value: Option<String>,
+) -> Task<Message> {
+    app.gis.features.data.edit_asked += 1;
+    let asked = app.gis.features.data.edit_asked;
+    crate::db_connections::off_thread(
+        move || kentos_native_application::data_write::rows_to_take(&node, &settings, &[key], &|| false),
+        move |rows| msg(DataEvent::Taken(asked, key, field, value, rows)),
+    )
 }
 
 fn msg(e: DataEvent) -> Message {
@@ -125,6 +157,12 @@ impl DataTable {
 }
 
 impl DataTable {
+    /// The cell being edited: its row's key, its field and the text typed.
+    #[cfg(test)]
+    pub(crate) fn cell_editing(&self) -> Option<(i64, String, String)> {
+        self.editing.clone().map(|(k, f)| (k, f, self.edit_text.clone()))
+    }
+
     /// Seç's rows of a data layer that is not being edited (data_pick.rs): the table's selection, of that layer.
     pub(crate) fn select_rows(&mut self, layer: &str, keys: Vec<i64>) {
         if self.selected_of.as_deref() != Some(layer) {
@@ -275,6 +313,12 @@ impl App {
             self.zoom_to_data_selection();
             return Task::none();
         }
+        if matches!(
+            event,
+            DataEvent::Edit(..) | DataEvent::Input(_) | DataEvent::Enter | DataEvent::Cancel | DataEvent::Taken(..)
+        ) {
+            return self.data_cell_event(event);
+        }
         let data = &mut self.gis.features.data;
         match event {
             DataEvent::Range(first, last) => data.range = (first, last),
@@ -335,8 +379,132 @@ impl App {
                     data.selected = BTreeSet::from([key]);
                 }
             }
+            // A cell's edit: data_cell_event above.
+            DataEvent::Edit(..) | DataEvent::Input(_) | DataEvent::Enter | DataEvent::Cancel | DataEvent::Taken(..) => {}
         }
         Task::none()
+    }
+
+    /// A cell edited into the layer's edit session (docs/adr/9103 §5): a row taken already gets the value at once (an
+    /// undo step, `cad.entities.set`); another is read off the thread, taken, then given it.
+    fn data_cell_event(&mut self, event: DataEvent) -> Task<Message> {
+        let Some(node) = self.data_table_layer() else {
+            return Task::none();
+        };
+        match event {
+            DataEvent::Edit(key, field) => {
+                let editing = self.document.as_ref().is_some_and(|d| d.model.editing(&node.id));
+                if !editing {
+                    self.warn(format!(
+                        "“{}” düzenlemeye açık değil; bir değeri değiştirmek için Katmanlar'da katmanın sağ tuşundan Düzenlemeyi başlat'ı seçin.",
+                        node.name
+                    ));
+                    return Task::none();
+                }
+                let shown = self.data_cell_value(&node, key, &field).unwrap_or_default();
+                let data = &mut self.gis.features.data;
+                data.editing = Some((key, field));
+                data.edit_text = shown;
+                crate::points::focus_field()
+            }
+            DataEvent::Input(text) => {
+                self.gis.features.data.edit_text = text;
+                Task::none()
+            }
+            DataEvent::Cancel => {
+                self.gis.features.data.editing = None;
+                Task::none()
+            }
+            DataEvent::Enter => {
+                let data = &mut self.gis.features.data;
+                let Some((key, field)) = data.editing.take() else {
+                    return Task::none();
+                };
+                let text = std::mem::take(&mut data.edit_text);
+                let value = (!text.trim().is_empty()).then_some(text);
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
+                if let Some(uid) = doc.model.taken_uid(&node.id, key) {
+                    self.write_data_cell(uid, field, value);
+                    return Task::none();
+                }
+                let settings = doc.model.settings().clone();
+                data_write_task(self, node, settings, key, field, value)
+            }
+            DataEvent::Taken(asked, key, field, value, rows) => {
+                if asked != self.gis.features.data.edit_asked {
+                    return Task::none();
+                }
+                let rows = match rows {
+                    Ok(rows) if !rows.is_empty() => rows,
+                    Ok(_) => {
+                        self.warn(format!("{key} anahtarlı satır tabloda yok."));
+                        return Task::none();
+                    }
+                    Err(why) => {
+                        self.warn(why);
+                        return Task::none();
+                    }
+                };
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
+                match doc.model.take_data_rows(&node.id, rows) {
+                    Ok(uids) => {
+                        if let Some(uid) = uids.into_iter().flatten().next() {
+                            self.write_data_cell(uid, field, value);
+                        }
+                    }
+                    Err(refusal) => self.warn(refusal.0),
+                }
+                Task::none()
+            }
+            _ => Task::none(),
+        }
+    }
+
+    /// The value written to a taken row's object, as Öznitelik tablosu writes a drawing's (blank takes it away).
+    fn write_data_cell(&mut self, uid: kentos_domain::Uuid, field: String, value: Option<String>) {
+        let input = kentos_commands::EntitiesSetProperties {
+            line_pattern: None,
+            line_type: None,
+            line_type_scale: None,
+            transparency: None,
+            wipeout: None,
+            uids: vec![uid.to_string()],
+            layer_id: None,
+            color: None,
+            line_weight: None,
+            symbol: None,
+            attrs: Some([(field, value)].into_iter().collect()),
+            label: None,
+            unlink: false,
+            operation: kentos_commands::PropertiesOperation::Attributes,
+            expected_revision: None,
+            attachments: None,
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        if let Err(why) = super::write_attribute(&mut doc.model, input) {
+            self.warn(why);
+        }
+    }
+
+    /// What a cell shows: a taken row's value as its object holds it now, else the page's.
+    fn data_cell_value(&self, node: &LayerNode, key: i64, field: &str) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        if let Some(uid) = doc.model.taken_uid(&node.id, key) {
+            let slot = doc.model.slot_of(uid)?;
+            return doc.model.get(slot)?.base().attrs.get(field).cloned();
+        }
+        let data = &self.gis.features.data;
+        data.pages
+            .values()
+            .flat_map(|p| p.iter())
+            .find(|r| r.key == key)
+            .and_then(|r| r.attrs.get(field).cloned())
     }
 
     /// The table's rows: a page's cells when it is read, else a row waiting for it.
@@ -366,6 +534,19 @@ impl App {
         let pages = &data.pages;
         let selected = &data.selected;
         let shown = fields.clone();
+        // An edit session's rows (docs/adr/9103 §5): a taken one shows its object's values, a deleted one fades.
+        let model = self.document.as_ref().map(|d| &d.model);
+        let editing_layer = model.is_some_and(|m| m.editing(&node.id));
+        let taken: HashMap<i64, std::sync::Arc<kentos_commands::Entity>> = if editing_layer {
+            model.map(|m| m.taken_objects(&node.id).into_iter().collect()).unwrap_or_default()
+        } else {
+            HashMap::new()
+        };
+        let changes = model.filter(|_| editing_layer).map(|m| m.data_changes(&node.id));
+        let deleted: HashSet<i64> = changes.as_ref().map(|c| c.deleted.iter().copied().collect()).unwrap_or_default();
+        let editing = data.editing.clone();
+        let edit_text = data.edit_text.clone();
+        let field_count = fields.len() + 1;
         let table = Table::new(columns)
             .horizontal()
             .virtualized(count, move |i| {
@@ -373,13 +554,42 @@ impl App {
                 let at = (i as u64 % PAGE) as usize;
                 match pages.get(&page).and_then(|p| p.get(at)) {
                     Some(r) => {
+                        let key = r.key;
+                        let gone = deleted.contains(&key);
                         let mut cells: Vec<Element<'_, Message>> = vec![kentos_ui::widget::table::number(r.key.to_string()).into()];
-                        for f in &shown {
+                        for (j, f) in shown.iter().enumerate() {
+                            if editing.as_ref().is_some_and(|(k, e)| *k == key && e == f) {
+                                cells.push(crate::points::cell::edit_box(
+                                    &edit_text,
+                                    false,
+                                    kentos_ui::widget::table::cell_pads(j + 1, field_count),
+                                    |t| msg(DataEvent::Input(t)),
+                                    msg(DataEvent::Enter),
+                                    msg(DataEvent::Cancel),
+                                    msg(DataEvent::Cancel),
+                                ));
+                                continue;
+                            }
+                            let value = match taken.get(&key) {
+                                Some(e) => e.base().attrs.get(f).cloned().unwrap_or_default(),
+                                None => r.attrs.get(f).cloned().unwrap_or_default(),
+                            };
+                            let face = kentos_ui::widget::table::text(value);
+                            let face: Element<'_, Message> = if gone {
+                                face.style(kentos_ui::style::text::muted).into()
+                            } else {
+                                face.into()
+                            };
+                            // The whole cell takes the double click, an empty value too; its press selects the row as
+                            // the row's own does (a cell that takes a press keeps it from the row).
+                            let face = container(face).width(Fill).height(Fill).align_y(Center);
                             cells.push(
-                                kentos_ui::widget::table::text(r.attrs.get(f).cloned().unwrap_or_default()).into(),
+                                iced::widget::mouse_area(face)
+                                    .on_press(msg(DataEvent::Press(key, false)))
+                                    .on_double_click(msg(DataEvent::Edit(key, f.clone())))
+                                    .into(),
                             );
                         }
-                        let key = r.key;
                         TableLine::new(cells)
                             .selected(selected.contains(&key))
                             .on_press(msg(DataEvent::Press(key, false)))
@@ -391,11 +601,18 @@ impl App {
             })
             .on_range(|a, b| msg(DataEvent::Range(a, b)))
             .empty(if data.total == Some(0) { words::NONE } else { words::READING });
+        // Being edited: what waits to be saved, new rows among it (they are not in the table yet).
+        let session = changes.map(|c| {
+            format!(
+                " · düzenleniyor; kaydedilmemiş: {}",
+                crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len())
+            )
+        });
         let status = match (&data.error, data.total) {
             (Some(why), _) => label::caption(why.clone()).style(kentos_ui::style::text::warning),
             (None, None) => label::caption(words::READING),
             (None, Some(n)) => label::caption(format!(
-                "{} · {}{}",
+                "{} · {}{}{}",
                 words::count(n),
                 match data.checked {
                     Some(RowsChecked::Here) => words::HERE,
@@ -405,7 +622,8 @@ impl App {
                     String::new()
                 } else {
                     format!(" · {} seçili", selected.len())
-                }
+                },
+                session.unwrap_or_default()
             )),
         };
         column![

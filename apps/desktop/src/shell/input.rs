@@ -682,8 +682,17 @@ impl App {
             Some(doc) => {
                 self.spatial.sync(&doc.model);
                 let view = CameraView(&self.viewport.camera);
-                self.session
-                    .snap(&self.spatial, raw, &view, &draft, &self.tracking)
+                let own = self
+                    .session
+                    .snap(&self.spatial, raw, &view, &draft, &self.tracking);
+                // An edited data layer's rows snap too (data_labels.rs, docs/adr/9103 §5): the nearer of the two.
+                match (own, self.data_snap(raw, &view, &draft)) {
+                    (Some(a), Some(b)) => {
+                        let far = |h: &kentos_geometry_core::store::snap::SnapHit| (h.point.x - raw.x).hypot(h.point.y - raw.y);
+                        Some(if far(&b) < far(&a) { b } else { a })
+                    }
+                    (a, b) => a.or(b),
+                }
             }
             None => None,
         };

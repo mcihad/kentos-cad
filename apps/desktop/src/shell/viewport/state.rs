@@ -481,6 +481,7 @@ impl Viewport {
                 &s.styles.library,
                 self.settling().is_none(),
                 &|layer| doc.model.data_hidden(layer),
+                &|layer| doc.model.editing(layer),
             );
         }
         // A filter calling an extension's function worked out again with its answers: its layer is drawn again.

@@ -8,7 +8,7 @@ use kentos_native_application::data_write;
 
 use crate::app::{Dialog, Then};
 use crate::data_edits::{Answer, Event};
-use crate::data_layers_tests::{node, parcel_point, parcels};
+use crate::data_layers_tests::{answer_pages, node, parcel_point, parcels, read_whole_as};
 use crate::files_testing::app_with_drawing;
 
 /// A polygon drawn on `layer` by `cad.entities.create`, as a drawing tool writes it: a new row.
@@ -32,12 +32,15 @@ fn rows(app: &crate::app::App, layer: &kentos_commands::LayerNode, keys: &[i64])
     data_write::rows_to_take(layer, &settings, keys, &|| false).expect("read")
 }
 
-/// The save the window runs on a thread, run here and its outcome handed back.
+/// The save the window runs on a thread, run here and its outcome handed back. (Event::Save itself starts its thread
+/// at once: sent here, the rows would be written twice.)
 fn save(app: &mut crate::app::App, layer: &str) {
-    let _ = app.data_edits_event(Event::Save(vec![layer.to_owned()]));
     let doc = &app.document.as_ref().expect("a drawing").model;
     let writes = data_write::writes_of(doc, layer).expect("being edited");
     let outcome = data_write::write(&writes, doc.settings()).map(|keys| (writes, keys));
+    if let Err(failure) = &outcome {
+        panic!("not written: {}", failure.message());
+    }
     let _ = app.data_edits_event(Event::Saved(layer.to_owned(), Box::new(outcome)));
 }
 
@@ -150,5 +153,79 @@ fn a_box_of_sec_keeps_the_rows_wholly_inside_it_or_meeting_it() {
     // Past the most a session takes: refused with the count.
     let refused = crate::data_pick::keys_in(&layer, &settings, DataRegion::Box { a, b, crossing: true }, 3);
     assert!(refused.is_err_and(|why| why.contains("en çok 3 satır")));
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn a_layer_being_edited_is_read_whole_and_kept_for_the_snap() {
+    crate::data_layers::register();
+    let path = parcels("kenet", 40);
+    let address = path.display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
+        .expect("added");
+    let layer = node(&app, "parseller").expect("the layer").clone();
+    // Not edited and not labelled: nothing kept. Edited: the read's rows, whole.
+    assert!(read_whole_as(&crate::data_view::DataView::new(), &app, &layer, false).is_none());
+    let (_, _, doc) = read_whole_as(&crate::data_view::DataView::new(), &app, &layer, true).expect("kept");
+    assert_eq!(doc.len(), 40);
+    // The 22nd parcel's corner (its second row, second column), snapped from a hair away: the row's own vertex.
+    let spatial = kentos_interaction::Spatial::of(&doc);
+    let corner = parcel_point(30.0, 30.0);
+    let near = kentos_interaction::Vec2::new(corner.x + 0.2, corner.y - 0.15);
+    let endpoint = kentos_interaction::snap_kinds(|k| k == "snap.endpoint");
+    let hit = spatial.snap_ex(near, 0.5, endpoint, None, &Default::default()).expect("a snap");
+    assert_eq!((hit.point.x, hit.point.y), (corner.x, corner.y));
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn a_cell_of_an_edited_layer_takes_its_row_and_writes_the_value_into_the_session() {
+    use crate::features::data::DataEvent;
+    crate::data_layers::register();
+    let path = parcels("hucre", 40);
+    let address = path.display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
+        .expect("added");
+    let layer = node(&app, "parseller").expect("the layer").clone();
+    let id = layer.id.clone();
+    app.gis.features.layer = Some(id.clone());
+    app.command_expanded = true;
+    app.bottom_tab = crate::bottom::BottomTab::Table;
+    let _ = app.data_table_event(DataEvent::Range(0, 12));
+    answer_pages(&mut app);
+
+    // Not being edited: the double click says how to start, no editor opens.
+    let _ = app.data_table_event(DataEvent::Edit(3, "kullanim".into()));
+    assert!(app.gis.features.data.cell_editing().is_none());
+
+    let _ = app.data_edits_event(Event::Start(id.clone()));
+    let _ = app.data_table_event(DataEvent::Edit(3, "kullanim".into()));
+    assert_eq!(app.gis.features.data.cell_editing(), Some((3, "kullanim".to_owned(), "Konut".to_owned())));
+    let _ = app.data_table_event(DataEvent::Input("Okul".into()));
+    // Enter: the row is not taken yet, so it is read off the thread; here read and handed back.
+    let _ = app.data_table_event(DataEvent::Enter);
+    let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+    let row = data_write::rows_to_take(&layer, &settings, &[3], &|| false);
+    let _ = app.data_table_event(DataEvent::Taken(1, 3, "kullanim".into(), Some("Okul".into()), row));
+    let model = &app.document.as_ref().expect("a drawing").model;
+    let c = model.data_changes(&id);
+    assert_eq!((c.added.len(), c.changed.len(), c.deleted.len()), (0, 1, 0));
+    assert_eq!(c.changed[0].now.base().attrs.get("kullanim").map(String::as_str), Some("Okul"));
+    // Taken now: the next cell of the row is written at once.
+    let _ = app.data_table_event(DataEvent::Edit(3, "ada".into()));
+    let _ = app.data_table_event(DataEvent::Input("999".into()));
+    let _ = app.data_table_event(DataEvent::Enter);
+    let model = &app.document.as_ref().expect("a drawing").model;
+    let c = model.data_changes(&id);
+    assert_eq!(c.changed[0].now.base().attrs.get("ada").map(String::as_str), Some("999"));
+    assert!(model.can_undo(), "each value is an undo step");
+
+    save(&mut app, &id);
+    let saved = rows(&app, &layer, &[3]);
+    let attrs = &saved[0].1.base().attrs;
+    assert_eq!(attrs.get("kullanim").map(String::as_str), Some("Okul"));
+    assert_eq!(attrs.get("ada").map(String::as_str), Some("999"));
     let _ = std::fs::remove_file(&path);
 }

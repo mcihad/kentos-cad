@@ -177,6 +177,13 @@ verir.
     yoksa noktayı tutan en küçük alanı alır;
   - soldan sağa çerçeve içinde kalanları, sağdan sola değenleri alır; 10 000 satırı geçen çerçeve sayısıyla reddedilir;
   - düzenlenmeyen etkin veri katmanında satırlar tablonun seçimine girer.
+- **Kenet:** düzenlenen katman sadeleştirilmeden okunur. Okumanın satırları, 20 000'i geçmiyorsa, etiketlerin tuttuğu
+  gibi küçük bir belgede tutulur. Çizim araçlarının keneti çizimin kendi keneti ile bu belgelerinkinin yakınını alır;
+  satıra kenet çizimde nesne göstermez (`NO_OBJECT`).
+- **Öznitelik tablosu:** düzenlenen katmanda hücre çift tıklanınca düzenlenir; Enter yazar, Esc bırakır. Alınmamış
+  satır önce kaynaktan arka planda okunup alınır, sonra değeri yazılır. Her değer bir geri alma adımıdır
+  (`cad.entities.set`). Tablo alınan satırları tampondaki değerleriyle gösterir, silinecekleri soluk gösterir; durum
+  satırı kaydedilmemişleri sayar. Düzenlenmeyen katmanda çift tık nasıl başlatılacağını söyler.
 
 ## §6 Arayüz sözcükleri
 
@@ -201,6 +208,9 @@ verir.
   - Katmanlar'dan açılan oturumda çizilen, Seç'le alınıp taşınan, anahtarla silinen satırlar kaydedilir, GeoPackage'ta
     okunur; bitirirken ve çizimden çıkarken sorulur;
   - Seç'in çerçevesi içinde kalanları ya da değenleri alır.
+- Kenet ve tablo: `a_layer_being_edited_is_read_whole_and_kept_for_the_snap` (kenet satırın kendi köşesine düşer),
+  `a_cell_of_an_edited_layer_takes_its_row_and_writes_the_value_into_the_session`. Seçim, kenet, tutamaç ve Bilgi'nin 12
+  ortak izi her türevde geçti.
 - Gerçek pencere (`scripts/usage/real/session.sh`, 1440×900; 1 000 000 parsellik PostGIS tablosu
   `public.perf_parseller`; resimler `.run/gui-evidence/veri/vy05/`):
   - Parseller'in sağ tuşunda Düzenlemeyi başlat; kaydedilecek bir şey yokken Kaydet ve Geri al kapalı.
@@ -216,10 +226,14 @@ verir.
   - Soldan sağa çerçeve 100/4 ile 100/5'i aldı (“2 seçili”); Delete ikisini sildi. Ctrl+O çizimden çıkmadan önce
     “Kaydedilmemiş katman değişiklikleri — Parseller: 2 silinen satır” diye sordu. Vazgeç; Değişiklikleri geri al ikisini
     geri getirdi, tablo değişmedi.
+  - Kapalı alan aracında imleç 100/4'ün köşesine gelince “Uç nokta”: Y 587092,000 X 4400028,000, satırın kendi köşesi.
+    Üst kenarın ortasındaki köşe noktası da (587105,000) kenet aldı.
+  - Tabloda 3 numaralı satırın kullanim hücresi çift tıklanıp “Okul” yazıldı. Satır alındı; durum satırı “düzenleniyor;
+    kaydedilmemiş: 1 değişen satır” dedi. Kaydedince veritabanında “Okul” oldu.
 
 ## §8 Kalan
 
-- Düzenlenen katmanın satırlarına kenet ve Öznitelik tablosunda hücre düzenlemesi: VY-05'in sıradaki işi.
+- Kaydedilmemiş yeni satırlar tabloda listelenmez (tabloda değiller); durum satırı onları sayar.
 - Değeri boş alan etiket şablonunda yer tutucusuyla görünür (“{ada}/{parsel}”); çizim katmanlarında da böyledir,
   etiket motorunun kuralıdır.
 - İşlem kipleri ve başkasının değiştirdiği kayıtla çakışmanın söylenmesi VY-06'da.

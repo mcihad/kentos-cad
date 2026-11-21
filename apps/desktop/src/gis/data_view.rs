@@ -11,8 +11,10 @@
 //! simplified to half a pixel; a new read starts once the view stops moving. The earlier parts stay drawn until the new
 //! read is whole.
 //!
-//! A layer whose labels are on keeps a whole read's objects, up to [`LABEL_ROWS`], in a document of their own
-//! ([`take_labels`](DataView::take_labels)); the label engine places them as it places the drawing's (data_labels.rs).
+//! A layer whose labels are on, or that is being edited, keeps a whole read's objects, up to [`LABEL_ROWS`], in a document
+//! of their own ([`take_labels`](DataView::take_labels)): the label engine places them as it places the drawing's, and
+//! the drawing tools snap to them (data_labels.rs, docs/adr/9103 §5). A layer being edited is read whole, not
+//! simplified: a snap lands on the row's own vertices.
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -47,6 +49,8 @@ struct Key {
     /// The rows left out: an edit session's taken and deleted ones (docs/adr/9103 §5), drawn by the drawing's objects
     /// or not at all.
     hidden: Arc<BTreeSet<i64>>,
+    /// Being edited: read whole (not simplified) and kept for the snap.
+    exact: bool,
     /// The view's scale in quarter octaves: a zoom past a step reads again (the geometry's simplification follows it).
     step: i64,
 }
@@ -148,7 +152,7 @@ fn inside(view: &Bounds, cover: &[f64; 4]) -> bool {
 }
 
 /// Whether a layer's labels are on: a single label or rules with a class (an absent style labels nothing of a table).
-fn labelled(node: &LayerNode) -> bool {
+pub(crate) fn labelled(node: &LayerNode) -> bool {
     match &node.style.labels {
         Some(l) if l.mode == LabelsMode::Off => false,
         Some(l) if l.mode == LabelsMode::Rules => !l.classes.is_empty(),
@@ -196,7 +200,7 @@ struct Job {
     library: Arc<StyleLibrary>,
     cancel: Cancel,
     to: Sender<Said>,
-    /// The project's styles, for the labels' document; none: the layer's labels are off.
+    /// The project's styles, for the document of the read's objects; none: neither labels nor a snap keep them.
     labels: Option<ProjectStyles>,
 }
 
@@ -294,7 +298,7 @@ fn run(job: Job) {
         bbox: data.geometry.as_ref().map(|_| bbox),
         columns: Some(job.columns.clone()),
         geometry: data.geometry.is_some(),
-        simplify: Some(tolerance),
+        simplify: (!job.key.exact).then_some(tolerance),
         chunk: CHUNK,
         ..Request::default()
     };
@@ -483,6 +487,7 @@ impl DataView {
         library: &StyleLibrary,
         settled: bool,
         hidden: &dyn Fn(&str) -> BTreeSet<i64>,
+        editing: &dyn Fn(&str) -> bool,
     ) {
         self.drain();
         let shown: HashSet<&str> = nodes.iter().map(|n| n.id.as_str()).collect();
@@ -520,6 +525,7 @@ impl DataView {
                 look: look.clone(),
                 library: version,
                 hidden: Arc::new(hidden(&node.id)),
+                exact: editing(&node.id),
                 step,
             };
             let l = layers.entry(node.id.clone()).or_default();
@@ -533,7 +539,11 @@ impl DataView {
                 .as_ref()
                 .or(l.going.as_ref())
                 .is_some_and(|r| {
-                    r.key.data == key.data && r.key.node == key.node && r.key.look == key.look && r.key.hidden == key.hidden
+                    r.key.data == key.data
+                        && r.key.node == key.node
+                        && r.key.look == key.look
+                        && r.key.hidden == key.hidden
+                        && r.key.exact == key.exact
                 });
             if same_look && !settled {
                 continue;
@@ -561,7 +571,7 @@ impl DataView {
                 library: Arc::clone(&library),
                 cancel: read.cancel.clone(),
                 to: self.to.clone(),
-                labels: labelled(node).then(|| styles.clone()),
+                labels: (labelled(node) || editing(&node.id)).then(|| styles.clone()),
             };
             l.going = Some(read);
             let _ = std::thread::Builder::new()

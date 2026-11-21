@@ -200,6 +200,30 @@ impl Document {
         Ok(out)
     }
 
+    /// The object a row of the table was taken as, by its key.
+    pub fn taken_uid(&self, layer: &str, key: i64) -> Option<Uuid> {
+        self.data_edits
+            .get(layer)?
+            .taken
+            .iter()
+            .find(|(_, t)| t.key == key)
+            .map(|(u, _)| *u)
+    }
+
+    /// The taken rows still on the layer, by key, as their objects are now (Öznitelik tablosu shows them so).
+    pub fn taken_objects(&self, layer: &str) -> Vec<(i64, Arc<Entity>)> {
+        let Some(edit) = self.data_edits.get(layer) else {
+            return Vec::new();
+        };
+        edit.taken
+            .iter()
+            .filter_map(|(uid, t)| {
+                let stored = self.store.get(self.store.slot_of(*uid)?)?;
+                (stored.entity.base().layer_id == layer).then(|| (t.key, stored.entity.clone()))
+            })
+            .collect()
+    }
+
     /// The key of the row a taken object stands for.
     pub fn taken_key(&self, layer: &str, uid: Uuid) -> Option<i64> {
         Some(self.data_edits.get(layer)?.taken.get(&uid)?.key)

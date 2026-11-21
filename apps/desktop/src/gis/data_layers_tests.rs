@@ -178,6 +178,16 @@ fn read_whole(
     app: &crate::app::App,
     layer: &LayerNode,
 ) -> Option<(String, u64, Box<kentos_domain::Document>)> {
+    read_whole_as(view, app, layer, false)
+}
+
+/// [`read_whole`] with the layer being edited or not.
+pub(crate) fn read_whole_as(
+    view: &crate::data_view::DataView,
+    app: &crate::app::App,
+    layer: &LayerNode,
+    editing: bool,
+) -> Option<(String, u64, Box<kentos_domain::Document>)> {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let look = kentos_plot::layers::Look {
         line_types: Default::default(),
@@ -199,7 +209,7 @@ fn read_whole(
         max_x: 487_150.0,
         max_y: 4_420_300.0,
     };
-    view.want(&[layer], doc.settings(), doc.styles(), &bounds, 1.0, &look, &library, true, &|_| Default::default());
+    view.want(&[layer], doc.settings(), doc.styles(), &bounds, 1.0, &look, &library, true, &|_| Default::default(), &|_| editing);
     let start = std::time::Instant::now();
     let mut labels = None;
     while view.drawn_read(&layer.id).is_none() {
@@ -238,7 +248,7 @@ fn a_labelled_data_layer_keeps_its_read_for_the_label_engine_and_another_keeps_n
 }
 
 /// What the table's reads would answer: each page read as its task reads it, answered in order.
-fn answer_pages(app: &mut crate::app::App) {
+pub(crate) fn answer_pages(app: &mut crate::app::App) {
     use crate::features::data::DataEvent;
     for _ in 0..4 {
         let _ = app.data_table_tasks();

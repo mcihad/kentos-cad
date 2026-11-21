@@ -17,6 +17,8 @@ pub struct DataLabels {
     doc: Box<kentos_domain::Document>,
     spatial: Spatial,
     spots: crate::labels::Spots,
+    /// Its labels are on (else the read is kept for the snap alone).
+    labelled: bool,
 }
 
 impl App {
@@ -26,12 +28,18 @@ impl App {
         for (layer, read, doc) in view.take_labels() {
             self.data_labels.retain(|d| d.layer != layer);
             let spatial = Spatial::of(&doc);
+            let labelled = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.layers().get(&layer))
+                .is_some_and(crate::data_view::labelled);
             self.data_labels.push(DataLabels {
                 layer,
                 read,
                 doc,
                 spatial,
                 spots: crate::labels::Spots::default(),
+                labelled,
             });
         }
         self.data_labels
@@ -47,7 +55,7 @@ impl App {
         let palette = crate::viewport::palette(self.canvas());
         self.data_labels
             .iter()
-            .filter(|d| view.drawn_read(&d.layer) == Some(d.read))
+            .filter(|d| d.labelled && view.drawn_read(&d.layer) == Some(d.read))
             .map(|d| {
                 crate::labels::data_layer(
                     &d.doc,
@@ -64,5 +72,30 @@ impl App {
                 )
             })
             .collect()
+    }
+
+    /// The snap to the rows of the data layers being edited under the cursor (docs/adr/9103 §5): their drawn read's
+    /// objects, whole, snapped as the drawing's are; the nearest point. A snap to no object of the drawing.
+    pub(crate) fn data_snap(
+        &self,
+        at: kentos_interaction::Vec2,
+        view: &dyn kentos_interaction::View,
+        draft: &kentos_interaction::Draft,
+    ) -> Option<kentos_geometry_core::store::snap::SnapHit> {
+        let doc = self.document.as_ref()?;
+        let shown = crate::data_view::service();
+        self.data_labels
+            .iter()
+            .filter(|d| doc.model.editing(&d.layer) && shown.drawn_read(&d.layer) == Some(d.read))
+            .filter_map(|d| self.session.snap(&d.spatial, at, view, draft, &self.tracking))
+            .map(|mut hit| {
+                hit.id = kentos_geometry_core::store::snap::NO_OBJECT;
+                hit
+            })
+            .min_by(|a, b| {
+                let da = (a.point.x - at.x).hypot(a.point.y - at.y);
+                let db = (b.point.x - at.x).hypot(b.point.y - at.y);
+                da.total_cmp(&db)
+            })
     }
 }

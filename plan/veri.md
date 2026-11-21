@@ -61,7 +61,7 @@ ADR'ler **9100**'den başlar.
   - Öznitelik tablosu veri katmanında sayfa sayfa okunur.
   - Sıralama, süzgeç, arama ve sayı SQL'de; “görünümdekiler” ve “seçililer” kaynaktan.
   - Hücre düzenlemesi düzenleme tamponuna yazılır (VY-05).
-- [ ] **VY-05 — Etkin katman ve düzenleme oturumu.** ([ADR 9103](../docs/adr/9103-edit-session.md))
+- [x] **VY-05 — Etkin katman ve düzenleme oturumu.** ([ADR 9103](../docs/adr/9103-edit-session.md))
   - Katman Katmanlar'ın sağ tuşundan düzenlemeye açılır ve kapatılır; açılınca etkin katman olur.
   - Değişiklikler kaydedilene kadar çizimde katmanın nesneleri olarak bekler: çizilen yeni satır, Seç'le alınıp
     değiştirilen satır, silinen satır. Çizimin bütün araçları onlarda çalışır; geri alma çizimle tek sıradadır.
@@ -72,7 +72,10 @@ ADR'ler **9100**'den başlar.
   - `cad.layers.session` 29 ortak durumla; Python ve MCP veri sürücülerini kaydeder.
   - Gerçek pencerede bir milyon PostGIS parselinde çizildi, taşındı, silindi, kaydedildi. Veritabanı her adımı doğru
     tuttu.
-  - Kalan (sıradaki iş): düzenlenen katmanın satırlarına kenet; Öznitelik tablosunda hücre düzenlemesi.
+  - Düzenlenen katmanın satırlarına kenetlenilir; satır sadeleştirilmeden okunur, kenet kendi köşesine düşer.
+  - Öznitelik tablosunda hücre çift tıklanıp düzenlenir; satır alınır, değer tampona yazılır.
+  - Kalan: kaydedilmemiş yeni satırlar tabloda listelenmez (durum satırı sayar); alınan satırların dosyada saklanması
+    ve çakışma denetimi VY-06'da.
 - [ ] **VY-06 — İşlem yönetimi.** Proje ayarı, üç kip:
   - yerel düzenleme tamponu;
   - aynı veritabanının katmanları için otomatik işlem grubu;
