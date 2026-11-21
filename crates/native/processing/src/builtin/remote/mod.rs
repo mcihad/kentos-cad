@@ -163,7 +163,9 @@ pub fn run_raster(
     shapes: Vec<kentos_geometry_core::entity::Shape>,
     names: (&str, &str),
 ) -> RunResult {
-    run_raster_noted(r, ctx, feedback, tool, inputs, shapes, names, &|_| BTreeMap::new())
+    run_raster_noted(r, ctx, feedback, tool, inputs, shapes, names, &|_| {
+        BTreeMap::new()
+    })
 }
 
 /// [`run_raster`] whose raster carries the attributes `noted` makes of the run's notes (a model's record,
@@ -443,7 +445,11 @@ fn leaked(r: &Resolved<'_>, ctx: &RunContext<'_>, raster: &RasterEntity) -> Opti
         .flat_map(|l| ctx.doc.by_layer(l))
         .filter_map(|e| geometry_of(&shape(e)))
         .collect();
-    if training.is_empty() && !layers.split(',').any(|l| ctx.doc.layers().get(l.trim()).is_some()) {
+    if training.is_empty()
+        && !layers
+            .split(',')
+            .any(|l| ctx.doc.layers().get(l.trim()).is_some())
+    {
         return None;
     }
     Some(

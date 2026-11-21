@@ -14,8 +14,8 @@ use serde_json::{Value, json};
 
 use crate::text::to_fixed;
 use crate::types::{
-    Feedback, NewLayerStyle, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext, RunResult, Target,
-    Tool,
+    Feedback, NewLayerStyle, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext,
+    RunResult, Target, Tool,
 };
 
 /// The findings' table.
@@ -82,34 +82,61 @@ pub fn tool() -> Tool {
 
 fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> RunResult {
     feedback.progress(0.0, "İmar planı denetleniyor");
-    let input = ZoningCheck { tolerance: v.number("tolerance") };
+    let input = ZoningCheck {
+        tolerance: v.number("tolerance"),
+    };
     let checked = match with_regions(ctx.doc, &input) {
         Ok((checked, _)) => checked,
-        Err(why) => return RunResult { refused: Some(why), ..RunResult::default() },
+        Err(why) => {
+            return RunResult {
+                refused: Some(why),
+                ..RunResult::default()
+            };
+        }
     };
     let slot_of = |uid: &str| Uuid::parse_str(uid).ok().and_then(|u| ctx.doc.slot_of(u));
-    let area_text = |a: Option<f64>| a.map_or(String::new(), |a| format!("{} m²", to_fixed(a, ctx.units.area_decimals)));
+    let area_text = |a: Option<f64>| {
+        a.map_or(String::new(), |a| {
+            format!("{} m²", to_fixed(a, ctx.units.area_decimals))
+        })
+    };
     let rows: Vec<Vec<String>> = checked
         .findings
         .iter()
         .map(|f| {
-            let objects: Vec<String> =
-                f.uids.iter().map(|u| slot_of(u).map_or_else(|| u.clone(), |s| format!("#{}", s.0))).collect();
+            let objects: Vec<String> = f
+                .uids
+                .iter()
+                .map(|u| slot_of(u).map_or_else(|| u.clone(), |s| format!("#{}", s.0)))
+                .collect();
             vec![
                 kind_word(&f.kind).to_owned(),
                 objects.join(", "),
                 area_text(f.area),
-                if f.regions.is_empty() { String::new() } else { f.regions.len().to_string() },
+                if f.regions.is_empty() {
+                    String::new()
+                } else {
+                    f.regions.len().to_string()
+                },
                 f.message.clone(),
             ]
         })
         .collect();
-    let mut ids: Vec<u32> = checked.findings.iter().flat_map(|f| f.uids.iter()).filter_map(|u| slot_of(u)).map(|s| s.0).collect();
+    let mut ids: Vec<u32> = checked
+        .findings
+        .iter()
+        .flat_map(|f| f.uids.iter())
+        .filter_map(|u| slot_of(u))
+        .map(|s| s.0)
+        .collect();
     ids.sort_unstable();
     ids.dedup();
     let n = checked.findings.len();
     let outputs: serde_json::Map<String, Value> = [
-        ("findings".to_owned(), json!({ "columns": COLUMNS, "rows": rows })),
+        (
+            "findings".to_owned(),
+            json!({ "columns": COLUMNS, "rows": rows }),
+        ),
         ("objects".to_owned(), json!(ids)),
         ("count".to_owned(), json!(n)),
     ]
@@ -123,7 +150,10 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             .iter()
             .flat_map(|f| {
                 let count = f.regions.len();
-                f.regions.iter().enumerate().map(move |(k, r)| (f, k, count, r))
+                f.regions
+                    .iter()
+                    .enumerate()
+                    .map(move |(k, r)| (f, k, count, r))
             })
             .map(|(f, k, count, r)| {
                 let mut attrs = BTreeMap::new();
@@ -163,11 +193,21 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         Vec::new()
     };
     let wrote = errors.len();
-    let with_place = checked.findings.iter().filter(|f| !f.regions.is_empty()).count();
+    let with_place = checked
+        .findings
+        .iter()
+        .filter(|f| !f.regions.is_empty())
+        .count();
     let said = if n == 0 {
-        format!("İmar denetimi {} planda, {} karar alanında bulgu vermedi.", checked.plans, checked.decisions)
+        format!(
+            "İmar denetimi {} planda, {} karar alanında bulgu vermedi.",
+            checked.plans, checked.decisions
+        )
     } else {
-        format!("İmar denetimi {} planda, {} karar alanında {n} bulgu verdi", checked.plans, checked.decisions)
+        format!(
+            "İmar denetimi {} planda, {} karar alanında {n} bulgu verdi",
+            checked.plans, checked.decisions
+        )
     };
     let summary = match (n, wrote) {
         (0, _) => said,
@@ -180,7 +220,10 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     };
     RunResult {
         select: (!ids.is_empty() && wrote == 0).then(|| ids.iter().map(|id| Slot(*id)).collect()),
-        changes: (wrote > 0).then(|| crate::types::ChangeSet { add: errors, ..Default::default() }),
+        changes: (wrote > 0).then(|| crate::types::ChangeSet {
+            add: errors,
+            ..Default::default()
+        }),
         outputs,
         summary: Some(summary),
         ..RunResult::default()

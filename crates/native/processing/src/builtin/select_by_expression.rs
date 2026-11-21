@@ -115,9 +115,21 @@ fn cad_filter(values: &crate::types::Values) -> bool {
 }
 
 fn height_limit(name: &str, label: &str) -> ParamDef {
-    ParamDef::new(name, label, ParamKind::Number {
-        min: Some(0.0), max: None, integer: false, unit:"m".into(), placeholder:Some("Sınır yok".into())
-    }).optional().default_value(serde_json::Value::Null).advanced().shown_when(cad_filter)
+    ParamDef::new(
+        name,
+        label,
+        ParamKind::Number {
+            min: Some(0.0),
+            max: None,
+            integer: false,
+            unit: "m".into(),
+            placeholder: Some("Sınır yok".into()),
+        },
+    )
+    .optional()
+    .default_value(serde_json::Value::Null)
+    .advanced()
+    .shown_when(cad_filter)
 }
 
 fn color_limit(name: &str, label: &str, placeholder: &str) -> ParamDef {
@@ -125,15 +137,32 @@ fn color_limit(name: &str, label: &str, placeholder: &str) -> ParamDef {
 }
 
 fn text_limit(name: &str, label: &str, placeholder: &str) -> ParamDef {
-    ParamDef::new(name, label, ParamKind::Text {
-        placeholder:Some(placeholder.into()), max_length:Some(128), allow_empty:true
-    }).optional().default_value(serde_json::Value::Null).advanced().shown_when(cad_filter)
+    ParamDef::new(
+        name,
+        label,
+        ParamKind::Text {
+            placeholder: Some(placeholder.into()),
+            max_length: Some(128),
+            allow_empty: true,
+        },
+    )
+    .optional()
+    .default_value(serde_json::Value::Null)
+    .advanced()
+    .shown_when(cad_filter)
 }
 
 fn block_path(text: &str) -> Result<Vec<u32>, ()> {
-    if text.trim().is_empty() { return Ok(Vec::new()); }
-    let path: Vec<_> = text.split('/').map(|n| n.trim().parse::<u32>().map_err(|_| ())).collect::<Result<_,_>>()?;
-    if path.len() > kentos_commands::SUBREF_PATH_DEPTH { return Err(()); }
+    if text.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    let path: Vec<_> = text
+        .split('/')
+        .map(|n| n.trim().parse::<u32>().map_err(|_| ()))
+        .collect::<Result<_, _>>()?;
+    if path.len() > kentos_commands::SUBREF_PATH_DEPTH {
+        return Err(());
+    }
     Ok(path)
 }
 
@@ -152,23 +181,48 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         .filter(|(_, m)| **m == ExprValue::Bool(true))
         .map(|(id, _)| *id)
         .collect();
-    if feedback.canceled() { return RunResult::default(); }
+    if feedback.canceled() {
+        return RunResult::default();
+    }
     if cad_filter(&v.values) {
         let color = |name| {
             let value = v.text(name).trim();
             (!value.is_empty()).then(|| value.to_owned())
         };
         let query = kentos_commands::SelectProperties {
-            block_path: match block_path(v.text("blockPath")) { Ok(path) => path, Err(()) => return RunResult {refused:Some("Geçersiz blok parçası yolu.".into()), ..RunResult::default()} },
-            text_height_min:v.number("textHeightMin"), text_height_max:v.number("textHeightMax"),
-            assigned_color:color("assignedColor"), displayed_color:color("displayedColor"), expression:None,
+            block_path: match block_path(v.text("blockPath")) {
+                Ok(path) => path,
+                Err(()) => {
+                    return RunResult {
+                        refused: Some("Geçersiz blok parçası yolu.".into()),
+                        ..RunResult::default()
+                    };
+                }
+            },
+            text_height_min: v.number("textHeightMin"),
+            text_height_max: v.number("textHeightMax"),
+            assigned_color: color("assignedColor"),
+            displayed_color: color("displayedColor"),
+            expression: None,
         };
-        hits = match kentos_native_application::entities_select::refine_properties(ctx.doc, ctx.geometry.store(), hits, &query) {
+        hits = match kentos_native_application::entities_select::refine_properties(
+            ctx.doc,
+            ctx.geometry.store(),
+            hits,
+            &query,
+        ) {
             Ok(ids) => ids,
-            Err(error) => return RunResult {refused:Some(error.message), ..RunResult::default()},
+            Err(error) => {
+                return RunResult {
+                    refused: Some(error.message),
+                    ..RunResult::default()
+                };
+            }
         };
     }
-    if feedback.canceled() { return RunResult::default(); }
+    if feedback.canceled() {
+        return RunResult::default();
+    }
     let current = ctx.selection;
     let hit: HashSet<Slot> = hits.iter().copied().collect();
     let select: Vec<Slot> = match v.text("mode") {

@@ -27,7 +27,10 @@ fn parameter(kind: &str) -> Value {
     properties.insert("description".into(), text.clone());
     properties.insert("optional".into(), boolean.clone());
     properties.insert("advanced".into(), boolean.clone());
-    properties.insert("default".into(), json!({ "description": "Türüne göre bir değer." }));
+    properties.insert(
+        "default".into(),
+        json!({ "description": "Türüne göre bir değer." }),
+    );
     properties.insert(
         "visibleWhen".into(),
         json!({ "type": "object", "required": ["param"], "additionalProperties": false,
@@ -176,8 +179,7 @@ mod tests {
         }
         let mut out = json!({ "name": "sonuc", "label": "Sonuç", "type": output });
         if output == "features" {
-            out["sinkParameter"] =
-                json!(if kind == "layer" { "girdi" } else { "katman" });
+            out["sinkParameter"] = json!(if kind == "layer" { "girdi" } else { "katman" });
         }
         json!({ "format": "kentos.processingTool", "schemaVersion": 1, "id": "deneme", "label": "Deneme",
                 "parameters": parameters, "outputs": [out] })
@@ -210,7 +212,11 @@ mod tests {
                     "deneme",
                     &descriptor(kind, output),
                 );
-                assert!(read.is_ok(), "{kind} → {output}: {read:?}", read = read.err());
+                assert!(
+                    read.is_ok(),
+                    "{kind} → {output}: {read:?}",
+                    read = read.err()
+                );
             }
         }
     }

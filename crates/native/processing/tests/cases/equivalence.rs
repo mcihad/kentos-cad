@@ -224,8 +224,12 @@ fn both_ways(
         .expect("the tools")
         .run(&mut doc, &input, true, &Go)
         .map(|end| match end {
-            kentos_native_application::processing_host::RunEnd::Ran(ran, warnings) => (ran, warnings),
-            kentos_native_application::processing_host::RunEnd::Cancelled => panic!("it was not stopped"),
+            kentos_native_application::processing_host::RunEnd::Ran(ran, warnings) => {
+                (ran, warnings)
+            }
+            kentos_native_application::processing_host::RunEnd::Cancelled => {
+                panic!("it was not stopped")
+            }
         });
 
     match (&window.outcome, ran) {

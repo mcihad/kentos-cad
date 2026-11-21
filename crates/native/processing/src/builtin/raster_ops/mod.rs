@@ -118,11 +118,18 @@ pub fn drive(
     let mut jpegs = Vec::with_capacity(rasters.len());
     // A raster read through an address by a tool that reads it whole goes to a local copy first (docs/adr/0643 §3);
     // the copies go when the run ends, however it ends.
-    let mut staged = Staged { files, paths: Vec::new() };
+    let mut staged = Staged {
+        files,
+        paths: Vec::new(),
+    };
     for x in rasters {
         crate::grid_record::input(&x.raster);
         let local;
-        let fields = if spec.whole() && x.raster.url.is_some() && x.raster.file.is_none() && x.raster.asset.is_none() {
+        let fields = if spec.whole()
+            && x.raster.url.is_some()
+            && x.raster.file.is_none()
+            && x.raster.asset.is_none()
+        {
             feedback.progress(0.0, "Adresteki raster diske alınıyor");
             match files.stage_raster(&x.raster)? {
                 Some(path) => {

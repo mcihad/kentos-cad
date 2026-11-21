@@ -22,12 +22,13 @@ use kentos_pointcloud::ops::transform::Affine;
 use serde_json::json;
 
 use super::{
-    CATEGORY, Out, add_param, broke, cloud_object, clouds_param, count_words, files_of,
-    format_param, grid_notes, inputs, any_cloud, output_param, pass, place, result_layer_param,
-    settle, targets, written,
+    CATEGORY, Out, add_param, any_cloud, broke, cloud_object, clouds_param, count_words, files_of,
+    format_param, grid_notes, inputs, output_param, pass, place, result_layer_param, settle,
+    targets, written,
 };
 use crate::types::{
-    EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext, RunResult, Tool,
+    EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext,
+    RunResult, Tool,
 };
 
 /// The result's file name after the source's.
@@ -207,18 +208,35 @@ fn axis_map(r: &Resolved<'_>, cloud: &kentos_commands::PointCloudEntity) -> Resu
 }
 
 /// Euler açıları's map (docs/adr/5100): yaw about Z, pitch about Y′, roll about X″, about the centre, then the move.
-fn euler_map(r: &Resolved<'_>, cloud: &kentos_commands::PointCloudEntity) -> Result<Affine, String> {
+fn euler_map(
+    r: &Resolved<'_>,
+    cloud: &kentos_commands::PointCloudEntity,
+) -> Result<Affine, String> {
     let (center, translation) = centre_and_move(r, cloud)?;
     let angle = |k: &str| r.number(k).unwrap_or(0.0);
-    Affine::euler(angle("yaw"), angle("pitch"), angle("roll"), center, translation).map_err(|e| e.0)
+    Affine::euler(
+        angle("yaw"),
+        angle("pitch"),
+        angle("roll"),
+        center,
+        translation,
+    )
+    .map_err(|e| e.0)
 }
 
 /// The centre (empty: the middle of the cloud's box in the drawing) and the move (empty: none) of a turn.
-fn centre_and_move(r: &Resolved<'_>, cloud: &kentos_commands::PointCloudEntity) -> Result<([f64; 3], [f64; 3]), String> {
+fn centre_and_move(
+    r: &Resolved<'_>,
+    cloud: &kentos_commands::PointCloudEntity,
+) -> Result<([f64; 3], [f64; 3]), String> {
     let center = match r.text("center").trim() {
         "" => {
             let b = cloud.cloud.bounds;
-            [(b[0] + b[3]) / 2.0, (b[1] + b[4]) / 2.0, (b[2] + b[5]) / 2.0]
+            [
+                (b[0] + b[3]) / 2.0,
+                (b[1] + b[4]) / 2.0,
+                (b[2] + b[5]) / 2.0,
+            ]
         }
         text => Affine::triple(text, "Merkez").map_err(|e| e.0)?,
     };
@@ -242,12 +260,22 @@ fn shared_place(cloud: &kentos_commands::PointCloudEntity) -> Result<Option<Affi
 /// Son dönüşümü geri al (docs/adr/3900): the inverse of the last matrix of the cloud's history, and the history without
 /// it (empty when it was the only one); refused without a history.
 fn undone(cloud: &kentos_commands::PointCloudEntity) -> Result<(Affine, String), String> {
-    let had = cloud.base.attrs.get(HISTORY).map(|h| h.trim()).unwrap_or_default();
-    let steps: Vec<&str> = had.split(" | ").map(str::trim).filter(|t| !t.is_empty()).collect();
+    let had = cloud
+        .base
+        .attrs
+        .get(HISTORY)
+        .map(|h| h.trim())
+        .unwrap_or_default();
+    let steps: Vec<&str> = had
+        .split(" | ")
+        .map(str::trim)
+        .filter(|t| !t.is_empty())
+        .collect();
     let Some((last, before)) = steps.split_last() else {
         return Err("Bulutun dönüşüm geçmişi (Dönüşümler) yok; geri alınacak adım yok.".to_owned());
     };
-    let affine = Affine::parse(last).map_err(|e| format!("Geçmişin son matrisi okunmadı: {}", e.0))?;
+    let affine =
+        Affine::parse(last).map_err(|e| format!("Geçmişin son matrisi okunmadı: {}", e.0))?;
     Ok((affine.inverse(), before.join(" | ")))
 }
 
@@ -377,7 +405,9 @@ fn go(
     );
     // The history (docs/adr/3500): the chain's first file and the matrices applied from it, this one last.
     let had = |k: &str| cloud.base.attrs.get(k).cloned();
-    let origin = had(ORIGIN).or_else(|| sources.first().and_then(|s| s.file.clone())).unwrap_or_default();
+    let origin = had(ORIGIN)
+        .or_else(|| sources.first().and_then(|s| s.file.clone()))
+        .unwrap_or_default();
     // Son dönüşümü geri al (docs/adr/3900): the history without its last step; none left, no Dönüşümler.
     let history = match undone {
         Some(before) => before,
@@ -393,7 +423,9 @@ fn go(
         }
     };
     if pose.is_some() {
-        feedback.info("Bulutun nesnedeki konumu da dosyaya yazıldı; yazılan bulutun konumu yok.".to_owned());
+        feedback.info(
+            "Bulutun nesnedeki konumu da dosyaya yazıldı; yazılan bulutun konumu yok.".to_owned(),
+        );
     }
     let attrs = &mut object.base_mut().attrs;
     attrs.insert(ORIGIN.to_owned(), origin);

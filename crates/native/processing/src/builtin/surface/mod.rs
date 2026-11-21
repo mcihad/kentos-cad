@@ -65,9 +65,7 @@ pub fn method_param() -> ParamDef {
             ("zevenbergenThorne", "Zevenbergen-Thorne"),
         ],
     )
-    .describe(
-        "Horn: sekiz komşu, yaygın varsayılan; Zevenbergen-Thorne: dört komşu.",
-    )
+    .describe("Horn: sekiz komşu, yaygın varsayılan; Zevenbergen-Thorne: dört komşu.")
 }
 
 /// A choice, its first option the default.

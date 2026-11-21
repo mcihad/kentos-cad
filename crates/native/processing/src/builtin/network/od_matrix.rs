@@ -11,8 +11,8 @@ use kentos_commands::EntityGeometry;
 use serde_json::{Value, json};
 
 use super::{
-    RunNetwork, cost_value, missing_note, name_of, network_param, places_of, points_param,
-    reach_param, run_network, time_param, date_param, profile_param, unreached_words,
+    RunNetwork, cost_value, date_param, missing_note, name_of, network_param, places_of,
+    points_param, profile_param, reach_param, run_network, time_param, unreached_words,
 };
 use crate::builtin::geometry::{edit_object, layer_param_styled};
 use crate::types::{

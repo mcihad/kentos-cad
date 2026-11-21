@@ -163,7 +163,13 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     let hits: Vec<Slot> = input_ids
         .iter()
         .enumerate()
-        .filter(|(i, id)| if disjoint { !met.contains(i) && has_other(id) } else { met.contains(i) })
+        .filter(|(i, id)| {
+            if disjoint {
+                !met.contains(i) && has_other(id)
+            } else {
+                met.contains(i)
+            }
+        })
         .map(|(_, id)| *id)
         .collect();
     let current = ctx.selection;

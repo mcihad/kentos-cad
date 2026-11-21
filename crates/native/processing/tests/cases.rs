@@ -39,9 +39,12 @@ fn fixture(name: &str) -> String {
 /// A case's drawing: the v1 form, or the v2 form with its objects' lasting ids (topology.kcad, docs/adr/2200).
 fn load(name: &str) -> Document {
     let text = fixture(name);
-    let version = serde_json::from_str::<serde_json::Value>(&text).ok().and_then(|v| v["version"].as_u64());
+    let version = serde_json::from_str::<serde_json::Value>(&text)
+        .ok()
+        .and_then(|v| v["version"].as_u64());
     if version == Some(2) {
-        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(&text).expect("the drawing reads");
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_str(&text).expect("the drawing reads");
         return Document::from_snapshot_v2(snapshot).expect("the drawing opens");
     }
     let snapshot = DocumentSnapshotV1::from_json(&text).expect("the drawing reads");
@@ -2299,13 +2302,20 @@ fn the_geometry_cases_do_what_they_say() {
 fn the_zoning_cases_do_what_they_say() {
     let file = case_file("zoning.json");
     let tol = file["tolerance"].as_f64().expect("a tolerance");
-    let measure_tol = file["measureTolerance"].as_f64().expect("a measure tolerance");
+    let measure_tol = file["measureTolerance"]
+        .as_f64()
+        .expect("a measure tolerance");
     let registry = Registry::builtin();
     let mut problems = Vec::new();
     let mut report = Vec::new();
     for c in file["cases"].as_array().expect("cases") {
         let mut found = check_measured(c, play(c, &registry, false, &json!({})), tol, measure_tol);
-        found.extend(check_measured(c, play(c, &registry, true, &json!({})), tol, measure_tol));
+        found.extend(check_measured(
+            c,
+            play(c, &registry, true, &json!({})),
+            tol,
+            measure_tol,
+        ));
         report.push(format!(
             "{} {}: {}",
             if found.is_empty() { "✓" } else { "✗" },
@@ -2316,7 +2326,12 @@ fn the_zoning_cases_do_what_they_say() {
     }
     println!("{}", report.join("\n"));
     assert_eq!(report.len(), 3);
-    assert!(problems.is_empty(), "\n{}\n\n{}", report.join("\n"), problems.join("\n"));
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
 }
 
 /// Altyapı bağlarını çiz (docs/adr/3860): `cad.scenarios.impact`'s shared case's drawing from the toolbox; each link
@@ -2325,13 +2340,20 @@ fn the_zoning_cases_do_what_they_say() {
 fn the_scenario_link_cases_do_what_they_say() {
     let file = case_file("scenario-links.json");
     let tol = file["tolerance"].as_f64().expect("a tolerance");
-    let measure_tol = file["measureTolerance"].as_f64().expect("a measure tolerance");
+    let measure_tol = file["measureTolerance"]
+        .as_f64()
+        .expect("a measure tolerance");
     let registry = Registry::builtin();
     let mut problems = Vec::new();
     let mut report = Vec::new();
     for c in file["cases"].as_array().expect("cases") {
         let mut found = check_measured(c, play(c, &registry, false, &json!({})), tol, measure_tol);
-        found.extend(check_measured(c, play(c, &registry, true, &json!({})), tol, measure_tol));
+        found.extend(check_measured(
+            c,
+            play(c, &registry, true, &json!({})),
+            tol,
+            measure_tol,
+        ));
         report.push(format!(
             "{} {}: {}",
             if found.is_empty() { "✓" } else { "✗" },
@@ -2342,7 +2364,12 @@ fn the_scenario_link_cases_do_what_they_say() {
     }
     println!("{}", report.join("\n"));
     assert_eq!(report.len(), 2);
-    assert!(problems.is_empty(), "\n{}\n\n{}", report.join("\n"), problems.join("\n"));
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
 }
 
 /// Koordinat sistemine dönüştür from every source system it offers

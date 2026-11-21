@@ -6,8 +6,10 @@ use super::*;
 
 /// The audit facts' architecture drawing with nothing drawn: its layers and settings, no object.
 fn empty() -> Document {
-    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/audit-facts/v1/mimari.kcad");
-    let mut snapshot: kentos_commands::DocumentSnapshotV2 = kentos_kcad::decode(&std::fs::read(path).unwrap()).unwrap();
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/audit-facts/v1/mimari.kcad");
+    let mut snapshot: kentos_commands::DocumentSnapshotV2 =
+        kentos_kcad::decode(&std::fs::read(path).unwrap()).unwrap();
     snapshot.entities.clear();
     snapshot.uids.clear();
     if let Some(arch) = snapshot.settings.arch.as_mut() {
@@ -81,11 +83,25 @@ pub(crate) fn basement_with_annexes() -> Document {
 #[test]
 fn each_storey_says_its_rooms_by_group_and_its_elevators() {
     let facts = measure(&basement_with_annexes()).normalized();
-    assert_eq!((facts.units, facts.dwellings, facts.local.as_deref()), (3, 3, None));
+    assert_eq!(
+        (facts.units, facts.dwellings, facts.local.as_deref()),
+        (3, 3, None)
+    );
     let s: Vec<(&str, u32, u32, u32, u32, u32, u32, u32)> = facts
         .storeys
         .iter()
-        .map(|s| (s.level.as_str(), s.units, s.common, s.annexes, s.other, s.technical, s.inhabited, s.elevators))
+        .map(|s| {
+            (
+                s.level.as_str(),
+                s.units,
+                s.common,
+                s.annexes,
+                s.other,
+                s.technical,
+                s.inhabited,
+                s.elevators,
+            )
+        })
         .collect();
     assert_eq!(
         s,
@@ -104,7 +120,8 @@ fn each_storey_says_its_rooms_by_group_and_its_elevators() {
 fn a_project_without_storeys_gives_no_section() {
     let facts = measure(&empty());
     assert!(facts.is_empty());
-    let project = kentos_extensions::audit_facts::ProjectAuditFacts::new(0.0, Vec::new(), false).with_building(facts);
+    let project = kentos_extensions::audit_facts::ProjectAuditFacts::new(0.0, Vec::new(), false)
+        .with_building(facts);
     assert!(!project.to_json().contains("building"));
 }
 
@@ -126,7 +143,13 @@ fn meeting_room(side: &str) -> (Document, String, String) {
     let layer = doc.layers().active().to_owned();
     let p = |x: f64, y: f64| json!({"x": x, "y": y});
     let run = |doc: &mut Document, name: &str, input: Value| -> Value {
-        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).expect(name);
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .expect(name);
         assert_eq!(answer["status"], "completed", "{name}: {answer}");
         answer
     };
@@ -141,14 +164,18 @@ fn meeting_room(side: &str) -> (Document, String, String) {
             {"pts": [p(0.0, 12.0), p(10.0, 12.0)], "width": 0.1, "arch": {"level": "k00"}}
         ]}),
     );
-    let partition = walls["output"]["uids"][4].as_str().expect("the partition").to_owned();
+    let partition = walls["output"]["uids"][4]
+        .as_str()
+        .expect("the partition")
+        .to_owned();
     run(
         &mut doc,
         "cad.openings.create",
         json!({"layerId": layer, "openings": [{"host": partition, "at": 5.0, "form": "door", "width": 1.0, "head": 2.1,
             "side": side}]}),
     );
-    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
+    let rect =
+        |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
     let made = run(
         &mut doc,
         "cad.spaces.create",
@@ -159,7 +186,12 @@ fn meeting_room(side: &str) -> (Document, String, String) {
              "arch": {"level": "k00"}}
         ]}),
     );
-    let uid = |i: usize| made["output"]["uids"][i].as_str().expect("a room").to_owned();
+    let uid = |i: usize| {
+        made["output"]["uids"][i]
+            .as_str()
+            .expect("a room")
+            .to_owned()
+    };
     (doc, uid(0), uid(1))
 }
 
@@ -168,9 +200,19 @@ fn a_room_carries_its_people_and_a_door_says_its_rooms_and_where_it_swings() {
     for (side, into_room) in [("left", false), ("right", true)] {
         let (doc, room, corridor) = meeting_room(side);
         let facts = measure(&doc).normalized();
-        let people = facts.rooms.iter().find(|r| r.uid == room).expect("the meeting room's people");
-        assert!(people.persons > 50.0 && people.name.starts_with("Toplantı salonu"), "{people:?}");
-        assert!(facts.rooms.iter().all(|r| r.uid != corridor), "a corridor carries none (Ek-5/A)");
+        let people = facts
+            .rooms
+            .iter()
+            .find(|r| r.uid == room)
+            .expect("the meeting room's people");
+        assert!(
+            people.persons > 50.0 && people.name.starts_with("Toplantı salonu"),
+            "{people:?}"
+        );
+        assert!(
+            facts.rooms.iter().all(|r| r.uid != corridor),
+            "a corridor carries none (Ek-5/A)"
+        );
         assert_eq!(facts.doors.len(), 1, "{:?}", facts.doors);
         let door = &facts.doors[0];
         let mut between: Vec<_> = door.between.iter().flatten().cloned().collect();
@@ -180,7 +222,10 @@ fn a_room_carries_its_people_and_a_door_says_its_rooms_and_where_it_swings() {
         assert_eq!(between, want, "{door:?}");
         let expect = if into_room { &room } else { &corridor };
         assert_eq!(door.opens_into.as_ref(), Some(expect), "{side}: {door:?}");
-        assert_eq!((door.operation.as_str(), door.stair, door.lobby), ("swing", false, false));
+        assert_eq!(
+            (door.operation.as_str(), door.stair, door.lobby),
+            ("swing", false, false)
+        );
     }
 }
 
@@ -193,7 +238,17 @@ fn the_storage_annexes_under_the_ground_are_the_emsal_s_limited_uses() {
     let got: Vec<(&str, Option<&str>, usize, f64, f64, f64, bool)> = facts
         .limits
         .iter()
-        .map(|l| (l.limit.as_str(), l.unit.as_deref(), l.rooms.len(), l.area, l.allowed, l.over, l.common))
+        .map(|l| {
+            (
+                l.limit.as_str(),
+                l.unit.as_deref(),
+                l.rooms.len(),
+                l.area,
+                l.allowed,
+                l.over,
+                l.common,
+            )
+        })
         .collect();
     assert_eq!(
         got,
@@ -202,5 +257,9 @@ fn the_storage_annexes_under_the_ground_are_the_emsal_s_limited_uses() {
             ("storage", Some("d2"), 1, 16.0, 16.0, 0.0, false),
         ]
     );
-    assert!(facts.uses.is_empty(), "the program names no building: {:?}", facts.uses);
+    assert!(
+        facts.uses.is_empty(),
+        "the program names no building: {:?}",
+        facts.uses
+    );
 }

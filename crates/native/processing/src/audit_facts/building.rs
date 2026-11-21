@@ -56,10 +56,11 @@ use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, CoveringFacts, DoorExitFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, FinishFacts,
-    InsulationFacts, LinkFacts, MasonryFacts, MasonryStorey, PartyFacts, PlanNoteFacts, ProjectionEdgeFacts,
-    ProjectionFacts, RoofFacts, RoofFormFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts,
-    ShaftFacts, ShaftVentFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom
+    BuildingFacts, CoveringFacts, DoorExitFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap,
+    FinishFacts, InsulationFacts, LinkFacts, MasonryFacts, MasonryStorey, PartyFacts,
+    PlanNoteFacts, ProjectionEdgeFacts, ProjectionFacts, RoofFacts, RoofFormFacts, RoofLayerFacts,
+    RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts, ShaftVentFacts, SpaceFacts,
+    StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -74,7 +75,10 @@ pub fn measure(doc: &Document) -> BuildingFacts {
     let height_of = |id: &str| {
         let i = by_elevation.iter().position(|l| l.id == id)?;
         let l = by_elevation[i];
-        let over = by_elevation.get(i + 1).map(|n| n.elevation - l.elevation).filter(|h| *h > 0.0);
+        let over = by_elevation
+            .get(i + 1)
+            .map(|n| n.elevation - l.elevation)
+            .filter(|h| *h > 0.0);
         l.height.or(over)
     };
     let mut storeys: Vec<StoreyHolds> = arch
@@ -86,47 +90,77 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             elevation: l.elevation,
             height: height_of(&l.id),
             // A mezzanine by its name (docs/adr/8085), as the inside heights read it (28/4).
-            mezzanine: kentos_domain::room_names::has(&kentos_domain::room_names::words(Some(&l.name), None), "ASMA"),
+            mezzanine: kentos_domain::room_names::has(
+                &kentos_domain::room_names::words(Some(&l.name), None),
+                "ASMA",
+            ),
             // Its building and that building's own Bölge (docs/adr/8072, 8144).
             building: program.building_of_level(&l.id).map(|b| b.id.clone()),
             // And its building's own ±0.00 (docs/adr/8072, 8153).
             zero: program.building_of_level(&l.id).and_then(|b| b.zero),
-            zone: program.building_of_level(&l.id).and_then(|b| b.zone).map(|z| z.name().to_owned()),
+            zone: program
+                .building_of_level(&l.id)
+                .and_then(|b| b.zone)
+                .map(|z| z.name().to_owned()),
             // And that building's own structural system (docs/adr/8145).
             structural_system: program
                 .building_of_level(&l.id)
                 .and_then(|b| b.structure)
                 .map(|x| x.system.name().to_owned()),
-            traditional: program.building_of_level(&l.id).and_then(|b| b.structure).is_some_and(|x| x.traditional),
+            traditional: program
+                .building_of_level(&l.id)
+                .and_then(|b| b.structure)
+                .is_some_and(|x| x.traditional),
             // And that building's own plan notes and its name (docs/adr/8163).
             plan_notes: program.building_of_level(&l.id).map_or_else(Vec::new, |b| {
                 b.plan_notes
                     .iter()
-                    .map(|n| PlanNoteFacts { key: n.key.name().to_owned(), value: n.value, source: n.source.clone() })
+                    .map(|n| PlanNoteFacts {
+                        key: n.key.name().to_owned(),
+                        value: n.value,
+                        source: n.source.clone(),
+                    })
                     .collect()
             }),
             building_name: program.building_of_level(&l.id).map(|b| b.name.clone()),
             ..StoreyHolds::default()
         })
         .collect();
-    let units: Vec<_> = program.units.iter().filter(|u| u.kind == UnitKind::Unit).collect();
-    let dwellings = units.iter().filter(|u| dwelling_nature(u.nature.as_deref())).count();
+    let units: Vec<_> = program
+        .units
+        .iter()
+        .filter(|u| u.kind == UnitKind::Unit)
+        .collect();
+    let dwellings = units
+        .iter()
+        .filter(|u| dwelling_nature(u.nature.as_deref()))
+        .count();
     let shafts = elevators(doc, &mut storeys);
     for (uid, e) in doc.entities_with_uids() {
         let Entity::Space(s) = e else { continue };
         let x = &s.space;
-        let Some(at) = e.own_level().and_then(|id| storeys.iter().position(|l| l.level == id)) else {
+        let Some(at) = e
+            .own_level()
+            .and_then(|id| storeys.iter().position(|l| l.level == id))
+        else {
             continue;
         };
         let (name, usage) = (x.name.as_deref(), x.usage.as_deref());
-        let outdoor = usage.and_then(|u| program.brief(u)).is_some_and(|b| b.outdoor);
+        let outdoor = usage
+            .and_then(|u| program.brief(u))
+            .is_some_and(|b| b.outdoor);
         if x.void || outdoor || shafts.contains(&s.base.id) {
             continue;
         }
         let storey = &mut storeys[at];
         storey.rooms.push(uid.to_string());
         let tech = technical(name, usage);
-        match x.unit.as_deref().and_then(|u| program.unit(u)).map(|u| u.kind) {
+        match x
+            .unit
+            .as_deref()
+            .and_then(|u| program.unit(u))
+            .map(|u| u.kind)
+        {
             Some(UnitKind::Unit) => storey.units += 1,
             Some(UnitKind::Annex) => storey.annexes += 1,
             Some(UnitKind::Common) if !tech => storey.common += 1,
@@ -137,7 +171,10 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             storey.technical += 1;
         }
         let kind = kind_of(name, usage);
-        if matches!(kind, Some(RoomKind::Living | RoomKind::Bedroom | RoomKind::Kitchen)) {
+        if matches!(
+            kind,
+            Some(RoomKind::Living | RoomKind::Bedroom | RoomKind::Kitchen)
+        ) {
             storey.inhabited += 1;
         }
         if kind == Some(RoomKind::Bedroom) {
@@ -176,12 +213,18 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         .under_stairs()
         .into_iter()
         .map(|u| {
-            let area = |a: &[kentos_geometry_core::geom::arrangement::Area]| kentos_geometry_core::geom::space::area(a);
+            let area = |a: &[kentos_geometry_core::geom::arrangement::Area]| {
+                kentos_geometry_core::geom::space::area(a)
+            };
             UnderStairFacts {
                 rooms: doc
                     .under_stair_rooms(&u)
                     .into_iter()
-                    .map(|(uid, area)| UnderStairRoom { name: names.get(&uid).cloned().unwrap_or_default(), uid, area })
+                    .map(|(uid, area)| UnderStairRoom {
+                        name: names.get(&uid).cloned().unwrap_or_default(),
+                        uid,
+                        area,
+                    })
                     .collect(),
                 stair: u.uid,
                 level: u.level,
@@ -191,20 +234,26 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             }
         })
         .collect();
-    let gross: std::collections::HashMap<String, f64> =
-        counted.rooms.iter().map(|r| (r.uid.clone(), r.gross)).collect();
+    let gross: std::collections::HashMap<String, f64> = counted
+        .rooms
+        .iter()
+        .map(|r| (r.uid.clone(), r.gross))
+        .collect();
     // An escape stair's room: named or used as Merdiven, no dwelling unit's own (the escape routes' reading).
     let stair_rooms: std::collections::HashSet<String> = doc
         .entities_with_uids()
         .filter_map(|(uid, e)| match e {
             Entity::Space(s) => {
                 let x = &s.space;
-                let own_dwelling = x
-                    .unit
-                    .as_deref()
-                    .and_then(|u| program.unit(u))
-                    .is_some_and(|u| u.kind == UnitKind::Unit && dwelling_nature(u.nature.as_deref()));
-                (kentos_domain::escape::stair_name(x.name.as_deref(), x.usage.as_deref()) && !own_dwelling)
+                let own_dwelling =
+                    x.unit
+                        .as_deref()
+                        .and_then(|u| program.unit(u))
+                        .is_some_and(|u| {
+                            u.kind == UnitKind::Unit && dwelling_nature(u.nature.as_deref())
+                        });
+                (kentos_domain::escape::stair_name(x.name.as_deref(), x.usage.as_deref())
+                    && !own_dwelling)
                     .then(|| uid.to_string())
             }
             _ => None,
@@ -218,7 +267,8 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         .filter_map(|(uid, e)| match e {
             Entity::Space(s)
                 if s.space.broken.is_none()
-                    && kind_of(s.space.name.as_deref(), s.space.usage.as_deref()) == Some(RoomKind::Corridor) =>
+                    && kind_of(s.space.name.as_deref(), s.space.usage.as_deref())
+                        == Some(RoomKind::Corridor) =>
             {
                 let parts = kentos_domain::room_width::net_parts(&mut search, &s.space);
                 kentos_domain::room_width::least_of(&parts).map(|w| (uid.to_string(), w.width))
@@ -230,7 +280,9 @@ pub fn measure(doc: &Document) -> BuildingFacts {
     let net: std::collections::HashMap<String, f64> = doc
         .entities_with_uids()
         .filter_map(|(uid, e)| match e {
-            Entity::Space(s) if s.space.broken.is_none() => Some((uid.to_string(), search.net_area(&s.space)?)),
+            Entity::Space(s) if s.space.broken.is_none() => {
+                Some((uid.to_string(), search.net_area(&s.space)?))
+            }
             _ => None,
         })
         .collect();
@@ -266,7 +318,11 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         .collect();
     let spaces = storeys
         .iter()
-        .flat_map(|st| st.rooms.iter().map(move |uid| (st.level.clone(), uid.clone())))
+        .flat_map(|st| {
+            st.rooms
+                .iter()
+                .map(move |uid| (st.level.clone(), uid.clone()))
+        })
         .map(|(level, uid)| SpaceFacts {
             name: names.get(&uid).cloned().unwrap_or_default(),
             area: gross.get(&uid).copied().unwrap_or(0.0),
@@ -298,19 +354,31 @@ pub fn measure(doc: &Document) -> BuildingFacts {
     let (separations, party) = separations(doc);
     let (elements, (height, structure_height)) = elements(doc);
     let enclosed = shaft_facts(doc, &names);
-    let basement_depth = arch.levels.iter().map(|l| -l.elevation).fold(0.0_f64, f64::max);
+    let basement_depth = arch
+        .levels
+        .iter()
+        .map(|l| -l.elevation)
+        .fold(0.0_f64, f64::max);
     BuildingFacts {
         storeys,
         units: units.len() as u32,
         dwellings: dwellings as u32,
-        commons: program.units.iter().filter(|u| u.kind == UnitKind::Common).count() as u32,
+        commons: program
+            .units
+            .iter()
+            .filter(|u| u.kind == UnitKind::Common)
+            .count() as u32,
         local: arch.local_rules.map(|l| match l {
             LocalRules::Sivas => "sivas".to_owned(),
         }),
         plan_notes: arch
             .plan_notes
             .iter()
-            .map(|n| PlanNoteFacts { key: n.key.name().to_owned(), value: n.value, source: n.source.clone() })
+            .map(|n| PlanNoteFacts {
+                key: n.key.name().to_owned(),
+                value: n.value,
+                source: n.source.clone(),
+            })
             .collect(),
         zone: arch.zone.map(|z| z.name().to_owned()),
         layout: arch.layout.map(|l| l.name().to_owned()),
@@ -323,11 +391,18 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             undeclared: counted.masonry_undeclared.clone(),
             storeys: masonry_storeys(doc, &counted),
         }),
-        exempt_cap: counted.cap.map(|cap| ExemptCap { cap, exempt: counted.exempt }),
+        exempt_cap: counted.cap.map(|cap| ExemptCap {
+            cap,
+            exempt: counted.exempt,
+        }),
         rooms,
         doors,
         limits,
-        uses: program.buildings.iter().filter_map(|b| b.usage.clone()).collect(),
+        uses: program
+            .buildings
+            .iter()
+            .filter_map(|b| b.usage.clone())
+            .collect(),
         under_stairs,
         spaces,
         separations,
@@ -349,9 +424,13 @@ pub fn measure(doc: &Document) -> BuildingFacts {
 /// Ek-3's elements with their declared classes, and the building's height as the fire rules measure it (docs/adr/8082).
 #[cfg(feature = "mod-arch")]
 fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
-    use kentos_native_application::arch_performance::{exit_of, fire_rating_of, fire_stop_of, load_bearing_carried};
-    let by_uid: std::collections::HashMap<String, &Entity> =
-        doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
+    use kentos_native_application::arch_performance::{
+        exit_of, fire_rating_of, fire_stop_of, load_bearing_carried,
+    };
+    let by_uid: std::collections::HashMap<String, &Entity> = doc
+        .entities_with_uids()
+        .map(|(u, e)| (u.to_string(), e))
+        .collect();
     let elements = doc
         .fire_elements()
         .into_iter()
@@ -364,12 +443,22 @@ fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
             // roof's escape route. A column's declared role is its `frame` (docs/adr/8124).
             load_bearing: (x.kind == "wall")
                 .then(|| {
-                    by_uid.get(&x.uid).and_then(|e| load_bearing_carried(doc.settings(), e)).map(|(b, _)| b.bearing)
+                    by_uid
+                        .get(&x.uid)
+                        .and_then(|e| load_bearing_carried(doc.settings(), e))
+                        .map(|(b, _)| b.bearing)
                 })
                 .flatten(),
-            escape: x.kind == "roof" && by_uid.get(&x.uid).and_then(|e| exit_of(e)).is_some_and(|d| d.exit),
+            escape: x.kind == "roof"
+                && by_uid
+                    .get(&x.uid)
+                    .and_then(|e| exit_of(e))
+                    .is_some_and(|d| d.exit),
             // A wall's or a slab's declared fire stop role (docs/adr/8136).
-            fire_stop: by_uid.get(&x.uid).and_then(|e| fire_stop_of(e)).is_some_and(|f| f.fire_stop),
+            fire_stop: by_uid
+                .get(&x.uid)
+                .and_then(|e| fire_stop_of(e))
+                .is_some_and(|f| f.fire_stop),
             uid: x.uid,
             kind: x.kind.to_owned(),
             level: x.level,
@@ -377,7 +466,10 @@ fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
             exterior: x.exterior,
         })
         .collect();
-    (elements, kentos_native_application::fire_audit::heights(doc))
+    (
+        elements,
+        kentos_native_application::fire_audit::heights(doc),
+    )
 }
 
 /// Without Mimari's performance declarations there are no classes to read.
@@ -393,8 +485,10 @@ fn elements(_: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
 fn separations(doc: &Document) -> (Vec<SeparationFacts>, Vec<PartyFacts>) {
     use kentos_commands::OpeningForm;
     use kentos_native_application::arch_performance::fire_rating_of;
-    let by_uid: std::collections::HashMap<String, &Entity> =
-        doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
+    let by_uid: std::collections::HashMap<String, &Entity> = doc
+        .entities_with_uids()
+        .map(|(u, e)| (u.to_string(), e))
+        .collect();
     let element = |uid: &str, length: f64| {
         let e = by_uid.get(uid);
         let kind = match e {
@@ -408,7 +502,9 @@ fn separations(doc: &Document) -> (Vec<SeparationFacts>, Vec<PartyFacts>) {
         SeparatingElement {
             uid: uid.to_owned(),
             kind: kind.to_owned(),
-            fire_rating: e.and_then(|e| fire_rating_of(doc.settings(), e)).map(|(d, _)| d.value.clone()),
+            fire_rating: e
+                .and_then(|e| fire_rating_of(doc.settings(), e))
+                .map(|(d, _)| d.value.clone()),
             length,
         }
     };
@@ -440,7 +536,11 @@ fn separations(doc: &Document) -> (Vec<SeparationFacts>, Vec<PartyFacts>) {
 /// The coverings with their materials' declared reaction to fire classes (docs/adr/8091; BYKHY 26/2, 26/4): a material
 /// named by its id or its name (case aside) in the project's materials.
 fn coverings(doc: &Document) -> Vec<CoveringFacts> {
-    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    let materials = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.materials.as_slice());
     doc.entities_with_uids()
         .filter_map(|(uid, e)| {
             let Entity::Slab(s) = e else { return None };
@@ -501,7 +601,11 @@ fn projections(doc: &Document) -> Vec<ProjectionFacts> {
 /// The walls' insulation layers on their inner side (docs/adr/8151; BYKHY 20/3), each with its project material's
 /// declared reaction to fire class.
 fn insulations(doc: &Document) -> Vec<InsulationFacts> {
-    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    let materials = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.materials.as_slice());
     doc.inner_insulations()
         .into_iter()
         .flat_map(|w| {
@@ -528,27 +632,49 @@ fn insulations(doc: &Document) -> Vec<InsulationFacts> {
 /// A room's floor, wall and ceiling finishes (docs/adr/8138): each named one with the project material whose id or name
 /// (case aside) is its name, and that material's declared reaction to fire class; none of that name, no material.
 fn finish_facts(doc: &Document, f: &kentos_commands::SpaceFinishes) -> Vec<FinishFacts> {
-    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
-    [("floor", &f.floor), ("wall", &f.wall), ("ceiling", &f.ceiling)]
-        .into_iter()
-        .filter_map(|(part, name)| {
-            let name = name.as_deref().map(str::trim).filter(|n| !n.is_empty())?;
-            let folded = name.to_lowercase();
-            let found = materials.iter().find(|m| m.id == name || m.name.to_lowercase() == folded);
-            Some(FinishFacts {
-                part: part.to_owned(),
-                name: name.to_owned(),
-                material: found.map(|m| m.name.clone()),
-                reaction: found.and_then(|m| m.reaction.as_ref()).map(|d| d.value.clone()),
-            })
+    let materials = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.materials.as_slice());
+    [
+        ("floor", &f.floor),
+        ("wall", &f.wall),
+        ("ceiling", &f.ceiling),
+    ]
+    .into_iter()
+    .filter_map(|(part, name)| {
+        let name = name.as_deref().map(str::trim).filter(|n| !n.is_empty())?;
+        let folded = name.to_lowercase();
+        let found = materials
+            .iter()
+            .find(|m| m.id == name || m.name.to_lowercase() == folded);
+        Some(FinishFacts {
+            part: part.to_owned(),
+            name: name.to_owned(),
+            material: found.map(|m| m.name.clone()),
+            reaction: found
+                .and_then(|m| m.reaction.as_ref())
+                .map(|d| d.value.clone()),
         })
-        .collect()
+    })
+    .collect()
 }
 
 /// The slabs a roof may sit on (docs/adr/8139): each floor's or terrace's slab with no covering and no slope, its top
 /// (its storey's floor and its offset) and its outline.
-fn seat_candidates(doc: &Document) -> Vec<(String, f64, Vec<kentos_geometry_core::geom::arrangement::Area>)> {
-    let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+fn seat_candidates(
+    doc: &Document,
+) -> Vec<(
+    String,
+    f64,
+    Vec<kentos_geometry_core::geom::arrangement::Area>,
+)> {
+    let levels = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.levels.as_slice());
     doc.entities_with_uids()
         .filter_map(|(uid, e)| match e {
             Entity::Slab(s)
@@ -556,8 +682,15 @@ fn seat_candidates(doc: &Document) -> Vec<(String, f64, Vec<kentos_geometry_core
                     && s.slab.slope.is_none()
                     && s.slab.role != kentos_commands::SlabRole::Balcony =>
             {
-                let floor = levels.iter().find(|l| Some(l.id.as_str()) == s.slab.arch.level.as_deref())?.elevation;
-                Some((uid.to_string(), floor + s.slab.offset, kentos_domain::arch_values::core_areas(&s.slab.parts)))
+                let floor = levels
+                    .iter()
+                    .find(|l| Some(l.id.as_str()) == s.slab.arch.level.as_deref())?
+                    .elevation;
+                Some((
+                    uid.to_string(),
+                    floor + s.slab.offset,
+                    kentos_domain::arch_values::core_areas(&s.slab.parts),
+                ))
             }
             _ => None,
         })
@@ -568,26 +701,38 @@ fn seat_candidates(doc: &Document) -> Vec<(String, f64, Vec<kentos_geometry_core
 /// storey's top, where its eaves stand (within 1 cm), and whose outline holds the middle of its outline.
 fn seat_slabs(
     doc: &Document,
-    slabs: &[(String, f64, Vec<kentos_geometry_core::geom::arrangement::Area>)],
+    slabs: &[(
+        String,
+        f64,
+        Vec<kentos_geometry_core::geom::arrangement::Area>,
+    )],
     roof: &kentos_commands::RoofFields,
 ) -> Vec<String> {
     use kentos_geometry_core::geom::arrangement::{Area, Ring};
     use kentos_geometry_core::vec2::Vec2;
-    let Some(seat) = kentos_native_application::geometry::storey_top(doc.settings(), roof.arch.level.as_deref()) else {
+    let Some(seat) =
+        kentos_native_application::geometry::storey_top(doc.settings(), roof.arch.level.as_deref())
+    else {
         return Vec::new();
     };
     let outline = Area {
-        outer: Ring { pts: roof.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect(), bulges: None },
+        outer: Ring {
+            pts: roof.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect(),
+            bulges: None,
+        },
         holes: Vec::new(),
     };
-    let Some(middle) = kentos_geometry_core::geom::space::label_at(std::slice::from_ref(&outline)) else {
+    let Some(middle) = kentos_geometry_core::geom::space::label_at(std::slice::from_ref(&outline))
+    else {
         return Vec::new();
     };
     slabs
         .iter()
         .filter(|(_, top, areas)| {
             (top - seat).abs() <= 0.01
-                && areas.iter().any(|a| kentos_geometry_core::geom::region::inside_area(a, middle))
+                && areas
+                    .iter()
+                    .any(|a| kentos_geometry_core::geom::region::inside_area(a, middle))
         })
         .map(|(uid, _, _)| uid.clone())
         .collect()
@@ -597,18 +742,28 @@ fn seat_slabs(
 /// material named by its id or its name (case aside) in the project's materials; a roof without layers one covering of
 /// its own material.
 fn roofs(doc: &Document) -> Vec<RoofFacts> {
-    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    let materials = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.materials.as_slice());
     let slabs = seat_candidates(doc);
     let mut forms = roof_forms(doc);
     let layer = |kind: &str, material: Option<String>| {
         let found = material.as_deref().and_then(|name| {
             let folded = name.to_lowercase();
-            materials.iter().find(|m| m.id == name || m.name.to_lowercase() == folded)
+            materials
+                .iter()
+                .find(|m| m.id == name || m.name.to_lowercase() == folded)
         });
         RoofLayerFacts {
             kind: kind.to_owned(),
-            reaction: found.and_then(|m| m.reaction.as_ref()).map(|d| d.value.clone()),
-            roof_class: found.and_then(|m| m.roof_class.as_ref()).map(|d| d.value.clone()),
+            reaction: found
+                .and_then(|m| m.reaction.as_ref())
+                .map(|d| d.value.clone()),
+            roof_class: found
+                .and_then(|m| m.roof_class.as_ref())
+                .map(|d| d.value.clone()),
             material,
         }
     };
@@ -623,14 +778,23 @@ fn roofs(doc: &Document) -> Vec<RoofFacts> {
                 f.layers
                     .iter()
                     .map(|l| {
-                        let kind = serde_json::to_value(l.kind).ok().and_then(|v| v.as_str().map(str::to_owned)).unwrap_or_default();
+                        let kind = serde_json::to_value(l.kind)
+                            .ok()
+                            .and_then(|v| v.as_str().map(str::to_owned))
+                            .unwrap_or_default();
                         layer(&kind, l.material.clone().filter(|m| !m.trim().is_empty()))
                     })
                     .collect()
             };
             let seat = seat_slabs(doc, &slabs, &r.roof);
             let form = forms.remove(&e.base().id);
-            Some(RoofFacts { uid: uid.to_string(), level: e.own_level().map(str::to_owned), layers, seat, form })
+            Some(RoofFacts {
+                uid: uid.to_string(),
+                level: e.own_level().map(str::to_owned),
+                layers,
+                seat,
+                form,
+            })
         })
         .collect()
 }
@@ -667,7 +831,11 @@ fn roof_forms(doc: &Document) -> std::collections::HashMap<u32, RoofFormFacts> {
                 snow_guard: m.snow_guard,
                 at: [m.at.x, m.at.y],
                 parts,
-                window_gaps: m.window_gaps.into_iter().map(|(a, b, apart)| WindowGapFacts { a, b, apart }).collect(),
+                window_gaps: m
+                    .window_gaps
+                    .into_iter()
+                    .map(|(a, b, apart)| WindowGapFacts { a, b, apart })
+                    .collect(),
                 outside: m.outside,
                 over_projection: m.over_projection,
                 walls: m
@@ -693,11 +861,16 @@ fn roof_forms(_doc: &Document) -> std::collections::HashMap<u32, RoofFormFacts> 
 
 /// Each shaft and what encloses it (docs/adr/8087), the walls' and openings' declared classes read as the separations'.
 #[cfg(feature = "mod-arch")]
-fn shaft_facts(doc: &Document, names: &std::collections::HashMap<String, String>) -> Vec<ShaftFacts> {
+fn shaft_facts(
+    doc: &Document,
+    names: &std::collections::HashMap<String, String>,
+) -> Vec<ShaftFacts> {
     use kentos_commands::OpeningForm;
     use kentos_native_application::arch_performance::fire_rating_of;
-    let by_uid: std::collections::HashMap<String, &Entity> =
-        doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
+    let by_uid: std::collections::HashMap<String, &Entity> = doc
+        .entities_with_uids()
+        .map(|(u, e)| (u.to_string(), e))
+        .collect();
     let element = |uid: &str, length: f64| {
         let e = by_uid.get(uid);
         let kind = match e {
@@ -711,18 +884,26 @@ fn shaft_facts(doc: &Document, names: &std::collections::HashMap<String, String>
         SeparatingElement {
             uid: uid.to_owned(),
             kind: kind.to_owned(),
-            fire_rating: e.and_then(|e| fire_rating_of(doc.settings(), e)).map(|(d, _)| d.value.clone()),
+            fire_rating: e
+                .and_then(|e| fire_rating_of(doc.settings(), e))
+                .map(|(d, _)| d.value.clone()),
             length,
         }
     };
     // A shaft's declared protected role (docs/adr/8136), as its room holds it.
     let protected = |uid: &str| {
-        by_uid.get(uid).and_then(|e| kentos_native_application::arch_performance::protected_of(e)).map(|p| p.protected)
+        by_uid
+            .get(uid)
+            .and_then(|e| kentos_native_application::arch_performance::protected_of(e))
+            .map(|p| p.protected)
     };
     // A lift shaft's declared vent (docs/adr/8135), as its room holds it.
     let vent = |uid: &str| {
         let v = by_uid.get(uid)?.arch_info()?.shaft_vent.as_ref()?;
-        Some(ShaftVentFacts { area: v.area, pressurized: v.pressurized })
+        Some(ShaftVentFacts {
+            area: v.area,
+            pressurized: v.pressurized,
+        })
     };
     doc.shaft_enclosures()
         .into_iter()
@@ -734,7 +915,11 @@ fn shaft_facts(doc: &Document, names: &std::collections::HashMap<String, String>
             level: x.level,
             open: x.open,
             area: x.area,
-            vent: if x.kind == "elevator" { vent(&x.uid) } else { None },
+            vent: if x.kind == "elevator" {
+                vent(&x.uid)
+            } else {
+                None
+            },
             protected: protected(&x.uid),
             stack: x.stack,
             uid: x.uid,
@@ -756,7 +941,11 @@ fn separations(_: &Document) -> (Vec<SeparationFacts>, Vec<PartyFacts>) {
 
 /// A room's name as a finding says it: its name, else its use, else "Mahal"; its number after it.
 fn room_name(x: &kentos_commands::SpaceFields) -> String {
-    let name = x.name.clone().or_else(|| x.usage.clone()).unwrap_or_else(|| "Mahal".to_owned());
+    let name = x
+        .name
+        .clone()
+        .or_else(|| x.usage.clone())
+        .unwrap_or_else(|| "Mahal".to_owned());
     match x.number.as_deref().filter(|n| !n.is_empty()) {
         Some(n) => format!("{name} ({n})"),
         None => name,
@@ -765,26 +954,46 @@ fn room_name(x: &kentos_commands::SpaceFields) -> String {
 
 /// The rooms' people and the doors; each storey holding an escape stair's room marked.
 #[cfg(feature = "mod-arch")]
-fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeople>, Vec<DoorFacts>) {
+fn people_and_doors(
+    doc: &Document,
+    storeys: &mut [StoreyHolds],
+) -> (Vec<RoomPeople>, Vec<DoorFacts>) {
     use kentos_commands::{OpeningForm, OpeningOperation, OpeningSide};
     use kentos_domain::room_names::{has, words};
     use kentos_geometry_core::geom::region::inside_area;
     let people = kentos_native_application::fire_audit::room_people(doc)
         .into_iter()
         .filter_map(|(slot, level, name, persons)| {
-            Some(RoomPeople { uid: doc.uid(slot)?.to_string(), level, name, persons })
+            Some(RoomPeople {
+                uid: doc.uid(slot)?.to_string(),
+                level,
+                name,
+                persons,
+            })
         })
         .collect();
     let program = doc.program();
     // The rooms each storey's points are found in: id, storey, outline, an escape stair's, a fire safety lobby.
-    let mut rooms: Vec<(String, Option<String>, Vec<kentos_geometry_core::geom::arrangement::Area>, bool, bool)> =
-        Vec::new();
+    let mut rooms: Vec<(
+        String,
+        Option<String>,
+        Vec<kentos_geometry_core::geom::arrangement::Area>,
+        bool,
+        bool,
+    )> = Vec::new();
     // What a door's side is as 39/1 reads it (docs/adr/8083): by uid, its program group's kind (or `room`, `void`), a
     // toilet, a balcony; the voids' outlines apart, found when no room is.
-    let mut what: std::collections::HashMap<String, (&'static str, bool, bool)> = std::collections::HashMap::new();
-    let mut voids: Vec<(Option<String>, Vec<kentos_geometry_core::geom::arrangement::Area>)> = Vec::new();
+    let mut what: std::collections::HashMap<String, (&'static str, bool, bool)> =
+        std::collections::HashMap::new();
+    let mut voids: Vec<(
+        Option<String>,
+        Vec<kentos_geometry_core::geom::arrangement::Area>,
+    )> = Vec::new();
     // The elevators' shafts (BYKHY 62/4, Ek-3/B 12) and the passages an elevator may open onto (docs/adr/8087).
-    let mut elevators: Vec<(Option<String>, Vec<kentos_geometry_core::geom::arrangement::Area>)> = Vec::new();
+    let mut elevators: Vec<(
+        Option<String>,
+        Vec<kentos_geometry_core::geom::arrangement::Area>,
+    )> = Vec::new();
     let mut passages: std::collections::HashSet<String> = std::collections::HashSet::new();
     for (uid, e) in doc.entities_with_uids() {
         let Entity::Space(s) = e else { continue };
@@ -793,20 +1002,34 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
         let balcony = has(&words(name, usage), "BALKON");
         if x.void {
             let areas = kentos_domain::arch_values::core_areas(&x.parts);
-            if kentos_domain::room_names::shaft_of(name, usage) == Some(kentos_domain::room_names::ShaftKind::Elevator) {
+            if kentos_domain::room_names::shaft_of(name, usage)
+                == Some(kentos_domain::room_names::ShaftKind::Elevator)
+            {
                 elevators.push((e.own_level().map(str::to_owned), areas.clone()));
             }
             voids.push((e.own_level().map(str::to_owned), areas));
             continue;
         }
-        let group = match x.unit.as_deref().and_then(|u| program.unit(u)).map(|u| u.kind) {
+        let group = match x
+            .unit
+            .as_deref()
+            .and_then(|u| program.unit(u))
+            .map(|u| u.kind)
+        {
             Some(UnitKind::Unit) => "unit",
             Some(UnitKind::Common) => "common",
             Some(UnitKind::Annex) => "annex",
             Some(UnitKind::Outdoor) => "outdoor",
             None => "room",
         };
-        what.insert(uid.to_string(), (group, kind_of(name, usage) == Some(RoomKind::Toilet), balcony));
+        what.insert(
+            uid.to_string(),
+            (
+                group,
+                kind_of(name, usage) == Some(RoomKind::Toilet),
+                balcony,
+            ),
+        );
         let own_dwelling = x
             .unit
             .as_deref()
@@ -824,13 +1047,25 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
         }
         let lobby = has(&w, "GUVENLIK") && has(&w, "HOL");
         let level = e.own_level().map(str::to_owned);
-        if stair && let Some(storey) = storeys.iter_mut().find(|l| Some(&l.level) == level.as_ref()) {
+        if stair
+            && let Some(storey) = storeys
+                .iter_mut()
+                .find(|l| Some(&l.level) == level.as_ref())
+        {
             storey.stair = true;
         }
-        rooms.push((uid.to_string(), level, kentos_domain::arch_values::core_areas(&x.parts), stair, lobby));
+        rooms.push((
+            uid.to_string(),
+            level,
+            kentos_domain::arch_values::core_areas(&x.parts),
+            stair,
+            lobby,
+        ));
     }
     let at = |level: &Option<String>, p: kentos_geometry_core::Vec2| {
-        rooms.iter().find(|(_, l, areas, _, _)| l == level && areas.iter().any(|a| inside_area(a, p)))
+        rooms
+            .iter()
+            .find(|(_, l, areas, _, _)| l == level && areas.iter().any(|a| inside_area(a, p)))
     };
     let mut doors = Vec::new();
     for (uid, e) in doc.entities_with_uids() {
@@ -839,7 +1074,9 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
         if f.form != OpeningForm::Door || f.operation == OpeningOperation::Fixed {
             continue;
         }
-        let Some((_, left, right)) = kentos_domain::room_openings::opening_sides(f) else { continue };
+        let Some((_, left, right)) = kentos_domain::room_openings::opening_sides(f) else {
+            continue;
+        };
         let level = doc.wall_of(&f.host).and_then(|w| w.arch.level);
         let (l, r) = (at(&level, left), at(&level, right));
         // A side's room by its group, else a void there, else nothing.
@@ -851,10 +1088,16 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
                 .then(|| "void".to_owned()),
         };
         let sides = [side(l.map(|x| &x.0), left), side(r.map(|x| &x.0), right)];
-        let sides_what: Vec<&(&str, bool, bool)> = [l, r].iter().flatten().filter_map(|x| what.get(&x.0)).collect();
-        let elevator = [left, right]
+        let sides_what: Vec<&(&str, bool, bool)> = [l, r]
             .iter()
-            .any(|p| elevators.iter().any(|(lv, areas)| *lv == level && areas.iter().any(|a| inside_area(a, *p))));
+            .flatten()
+            .filter_map(|x| what.get(&x.0))
+            .collect();
+        let elevator = [left, right].iter().any(|p| {
+            elevators
+                .iter()
+                .any(|(lv, areas)| *lv == level && areas.iter().any(|a| inside_area(a, *p)))
+        });
         let passage = [l, r].iter().flatten().any(|x| passages.contains(&x.0));
         let opens_into = match (f.operation, f.side) {
             (OpeningOperation::Swing, OpeningSide::Right) => r.map(|x| x.0.clone()),
@@ -887,7 +1130,11 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
             clear: sizes.clear,
             height: f.head.map(|head| head - f.sill.unwrap_or(0.0)),
             // A double door's leaves and its first leaf's net clear (docs/adr/8093; PAİY 39/1-b).
-            leaves: if sizes.leaves.len() > 1 { sizes.leaves.clone() } else { Vec::new() },
+            leaves: if sizes.leaves.len() > 1 {
+                sizes.leaves.clone()
+            } else {
+                Vec::new()
+            },
             clear_first: sizes.clear_first,
             sides,
             toilet: sides_what.iter().any(|w| w.1),
@@ -923,13 +1170,20 @@ fn elevators(doc: &Document, storeys: &mut [StoreyHolds]) -> Vec<u32> {
         let Some(level) = e.own_level() else { continue };
         if let Some(storey) = storeys.iter_mut().find(|l| l.level == level) {
             storey.elevators += 1;
-            areas.push((level.to_owned(), kentos_domain::arch_values::core_areas(&x.parts)));
+            areas.push((
+                level.to_owned(),
+                kentos_domain::arch_values::core_areas(&x.parts),
+            ));
         }
     }
     for cabin in kentos_native_application::elevator_cabins::cabins(doc) {
-        let Some(level) = cabin.level.as_deref() else { continue };
+        let Some(level) = cabin.level.as_deref() else {
+            continue;
+        };
         let at = kentos_geometry_core::Vec2::new(cabin.at.x, cabin.at.y);
-        let in_shaft = areas.iter().any(|(l, a)| l == level && a.iter().any(|a| inside_area(a, at)));
+        let in_shaft = areas
+            .iter()
+            .any(|(l, a)| l == level && a.iter().any(|a| inside_area(a, at)));
         if !in_shaft && let Some(storey) = storeys.iter_mut().find(|l| l.level == level) {
             storey.elevators += 1;
         }
@@ -945,7 +1199,10 @@ fn elevators(_: &Document, _: &mut [StoreyHolds]) -> Vec<u32> {
 
 /// Each storey's share of the stone walls (docs/adr/8150): its walls' and footprint's parts from the table's storeys,
 /// its thick load-bearing walls by their own storey; a storey with none of them left out.
-fn masonry_storeys(doc: &Document, counted: &kentos_domain::zoning::ZoningReport) -> Vec<MasonryStorey> {
+fn masonry_storeys(
+    doc: &Document,
+    counted: &kentos_domain::zoning::ZoningReport,
+) -> Vec<MasonryStorey> {
     let mut out: Vec<MasonryStorey> = counted
         .levels
         .iter()
@@ -966,7 +1223,11 @@ fn masonry_storeys(doc: &Document, counted: &kentos_domain::zoning::ZoningReport
         let Some(level) = e.own_level() else { continue };
         match out.iter_mut().find(|s| s.level == level) {
             Some(s) => s.thick.push(uid),
-            None => out.push(MasonryStorey { level: level.to_owned(), thick: vec![uid], ..MasonryStorey::default() }),
+            None => out.push(MasonryStorey {
+                level: level.to_owned(),
+                thick: vec![uid],
+                ..MasonryStorey::default()
+            }),
         }
     }
     out.retain(|s| s.walls > 0.0 || s.footprint > 0.0 || !s.thick.is_empty());

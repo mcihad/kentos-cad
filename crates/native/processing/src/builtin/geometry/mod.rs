@@ -13,8 +13,8 @@ pub mod overlay;
 pub mod reproject;
 pub mod simplify;
 pub mod topology;
-pub mod zoning;
 pub mod validity;
+pub mod zoning;
 
 use std::collections::BTreeMap;
 

@@ -153,7 +153,13 @@ pub fn run_network(
         problems,
     } = from_document(ctx.doc, id)?;
     session.time = time.map(f64::from);
-    let text_of = |key: &str| v.values.get(key).and_then(Value::as_str).map(js_trim).filter(|t| !t.is_empty());
+    let text_of = |key: &str| {
+        v.values
+            .get(key)
+            .and_then(Value::as_str)
+            .map(js_trim)
+            .filter(|t| !t.is_empty())
+    };
     let (profile, date) = (text_of("profile"), text_of("date"));
     if date.is_some() && def.closures.is_none() {
         feedback.warn(format!(
@@ -279,7 +285,11 @@ pub fn unreached_words(
         })
         .collect();
     let more = pairs.len().saturating_sub(3);
-    let tail = if more > 0 { format!("; {more} tane daha") } else { String::new() };
+    let tail = if more > 0 {
+        format!("; {more} tane daha")
+    } else {
+        String::new()
+    };
     format!("{}{tail}", said.join("; "))
 }
 

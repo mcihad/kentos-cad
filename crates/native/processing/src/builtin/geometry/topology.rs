@@ -18,12 +18,14 @@ use serde_json::{Value, json};
 
 use crate::text::to_fixed;
 use crate::types::{
-    Feedback, NewLayerStyle, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext, RunResult, Target,
-    Tool,
+    Feedback, NewLayerStyle, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext,
+    RunResult, Target, Tool,
 };
 
 /// The findings' table.
-const COLUMNS: [&str; 8] = ["Kural", "Sorun", "Durum", "Nesneler", "Doğu", "Kuzey", "Ölçü", "Gerekçe"];
+const COLUMNS: [&str; 8] = [
+    "Kural", "Sorun", "Durum", "Nesneler", "Doğu", "Kuzey", "Ölçü", "Gerekçe",
+];
 
 /// A finding's state in words.
 pub fn state_word(s: TopologyFindingState) -> &'static str {
@@ -102,7 +104,12 @@ pub fn tool() -> Tool {
 
 /// The rules asked: the ids between the commas; none when empty.
 fn rules_of(text: &str) -> Option<Vec<String>> {
-    let ids: Vec<String> = text.split(',').map(str::trim).filter(|s| !s.is_empty()).map(str::to_owned).collect();
+    let ids: Vec<String> = text
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_owned)
+        .collect();
     (!ids.is_empty()).then_some(ids)
 }
 
@@ -110,7 +117,9 @@ fn rules_of(text: &str) -> Option<Vec<String>> {
 fn measure_text(measure: Option<f64>, kind: Option<&str>, ctx: &RunContext<'_>) -> String {
     match (measure, kind) {
         (Some(m), Some("area")) => format!("{} m²", to_fixed(m, ctx.units.area_decimals)),
-        (Some(m), Some("angle")) => format!("{}°", to_fixed(m.to_degrees(), ctx.units.length_decimals)),
+        (Some(m), Some("angle")) => {
+            format!("{}°", to_fixed(m.to_degrees(), ctx.units.length_decimals))
+        }
         (Some(m), _) => format!("{} m", to_fixed(m, ctx.units.length_decimals)),
         (None, _) => String::new(),
     }
@@ -118,13 +127,23 @@ fn measure_text(measure: Option<f64>, kind: Option<&str>, ctx: &RunContext<'_>) 
 
 fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> RunResult {
     feedback.progress(0.0, "Topoloji kuralları denetleniyor");
-    let input = TopologyCheck { rules: rules_of(v.text("rules")), limit: None, preview: None, uids: None };
+    let input = TopologyCheck {
+        rules: rules_of(v.text("rules")),
+        limit: None,
+        preview: None,
+        uids: None,
+    };
     let with_exceptions = v.flag("exceptions");
     let (checked, warnings) = {
         let canceled = || feedback.canceled();
         match check_on(ctx.doc, &input, &canceled) {
             Ok(answer) => answer,
-            Err(why) => return RunResult { refused: Some(why), ..RunResult::default() },
+            Err(why) => {
+                return RunResult {
+                    refused: Some(why),
+                    ..RunResult::default()
+                };
+            }
         }
     };
     for w in warnings {
@@ -141,8 +160,11 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     let rows: Vec<Vec<String>> = listed
         .iter()
         .map(|f| {
-            let objects: Vec<String> =
-                f.uids.iter().map(|u| slot_of(u).map_or_else(|| u.clone(), |s| format!("#{}", s.0))).collect();
+            let objects: Vec<String> = f
+                .uids
+                .iter()
+                .map(|u| slot_of(u).map_or_else(|| u.clone(), |s| format!("#{}", s.0)))
+                .collect();
             vec![
                 f.rule.clone(),
                 problem_label(&f.problem).to_owned(),
@@ -167,12 +189,20 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     for f in &checked.findings {
         *counts.entry(state_word(f.state)).or_default() += 1;
     }
-    let said: Vec<String> = ["Değerlendirilmedi", "Hata", "İstisna", "Yeniden değerlendir"]
-        .iter()
-        .filter_map(|w| counts.get(w).map(|n| format!("{n} {}", w.to_lowercase())))
-        .collect();
+    let said: Vec<String> = [
+        "Değerlendirilmedi",
+        "Hata",
+        "İstisna",
+        "Yeniden değerlendir",
+    ]
+    .iter()
+    .filter_map(|w| counts.get(w).map(|n| format!("{n} {}", w.to_lowercase())))
+    .collect();
     let summary = if checked.findings.is_empty() {
-        format!("{} kural {} nesnede bulgu vermedi.", checked.rules, checked.objects)
+        format!(
+            "{} kural {} nesnede bulgu vermedi.",
+            checked.rules, checked.objects
+        )
     } else {
         format!(
             "{} kural {} nesnede {} bulgu verdi ({}); bulgulu nesneler seçildi.",
@@ -183,7 +213,10 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         )
     };
     let outputs: serde_json::Map<String, Value> = [
-        ("findings".to_owned(), json!({ "columns": COLUMNS, "rows": rows })),
+        (
+            "findings".to_owned(),
+            json!({ "columns": COLUMNS, "rows": rows }),
+        ),
         ("objects".to_owned(), json!(ids)),
         ("count".to_owned(), json!(checked.total)),
         ("open".to_owned(), json!(checked.open)),
@@ -247,7 +280,10 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     };
     RunResult {
         select: (!ids.is_empty() && wrote == 0).then(|| ids.iter().map(|id| Slot(*id)).collect()),
-        changes: (wrote > 0).then(|| crate::types::ChangeSet { add: errors, ..Default::default() }),
+        changes: (wrote > 0).then(|| crate::types::ChangeSet {
+            add: errors,
+            ..Default::default()
+        }),
         outputs,
         summary: Some(summary),
         ..RunResult::default()

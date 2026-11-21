@@ -11,16 +11,16 @@ use std::collections::BTreeMap;
 use serde_json::{Value, json};
 
 use super::{
-    RunNetwork, cost_value, line_geometry, missing_note, name_of, network_param, places_of,
-    points_param, reach_param, run_network, time_param, date_param, profile_param, unreached_words,
+    RunNetwork, cost_value, date_param, line_geometry, missing_note, name_of, network_param,
+    places_of, points_param, profile_param, reach_param, run_network, time_param, unreached_words,
 };
 use crate::builtin::geometry::{edit_object, layer_param_styled};
 use crate::text::js_number;
-use kentos_geometry_core::geometry::dist;
 use crate::types::{
     ChangeSet, EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved,
     RunContext, RunResult, Target, Tool, Values,
 };
+use kentos_geometry_core::geometry::dist;
 
 pub fn tool() -> Tool {
     Tool {
@@ -183,7 +183,9 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         }
     }
     if none > 0 && cutoff.is_some() {
-        feedback.warn(format!("{none} olaya üst sınır içinde ulaşılabilen tesis yok."));
+        feedback.warn(format!(
+            "{none} olaya üst sınır içinde ulaşılabilen tesis yok."
+        ));
     } else if none > 0 {
         feedback.warn(format!(
             "{none} olaya ulaşılabilen tesis yok; en yakın tesisle: {}.",

@@ -109,8 +109,16 @@ fn the_plan_s_storeys_rooms_groups_and_walks() {
     // A group's net is its counted rooms' (voids and outdoor rooms out), less the places under its stairs lower than
     // 1.80 m (4/1-ğ-3, docs/adr/8080): the common stair hall's first flight.
     let groups = Document::from_snapshot_v2(plan()).unwrap().paiy_areas();
-    let under = |id: &str| groups.iter().find(|(g, _)| g == id).map_or(0.0, |(_, g)| g.under_stair);
-    assert!(under("ortak") > 0.0 && under("d1") == 0.0, "the stair stands in the hall");
+    let under = |id: &str| {
+        groups
+            .iter()
+            .find(|(g, _)| g == id)
+            .map_or(0.0, |(_, g)| g.under_stair)
+    };
+    assert!(
+        under("ortak") > 0.0 && under("d1") == 0.0,
+        "the stair stands in the hall"
+    );
     for u in &a.units {
         let rooms: f64 = a
             .rooms

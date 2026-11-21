@@ -24,8 +24,8 @@ use kentos_commands::{DrawingFont, Entity};
 use kentos_domain::Document;
 use kentos_domain::arch_values::core_areas;
 use kentos_extensions::audit_facts::cad::{
-    CadBlock, CadBroken, CadDerived, CadExit, CadFacts, CadGrid, CadLayer, CadModelGap, CadRoom, CadRoomOverlap,
-    FontUse,
+    CadBlock, CadBroken, CadDerived, CadExit, CadFacts, CadGrid, CadLayer, CadModelGap, CadRoom,
+    CadRoomOverlap, FontUse,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::arrangement::Area;
@@ -54,8 +54,14 @@ pub fn measure(doc: &Document) -> CadFacts {
         .arch
         .as_ref()
         .map(|a| {
-            let levels: Vec<(String, f64)> = a.levels.iter().map(|l| (l.id.clone(), l.elevation)).collect();
-            kentos_sheet::permit::level_codes(&levels).into_iter().collect()
+            let levels: Vec<(String, f64)> = a
+                .levels
+                .iter()
+                .map(|l| (l.id.clone(), l.elevation))
+                .collect();
+            kentos_sheet::permit::level_codes(&levels)
+                .into_iter()
+                .collect()
         })
         .unwrap_or_default();
     for (uid, e) in doc.entities_with_uids() {
@@ -63,7 +69,11 @@ pub fn measure(doc: &Document) -> CadFacts {
         let count = objects.entry(layer).or_default();
         count.objects += 1;
         count.first.push(uid.to_string());
-        let class = if generated.contains(&uid.to_string()) { Class::Model } else { class(e) };
+        let class = if generated.contains(&uid.to_string()) {
+            Class::Model
+        } else {
+            class(e)
+        };
         match class {
             Class::Model => count.model += 1,
             Class::Annotation => count.annotations += 1,
@@ -79,29 +89,52 @@ pub fn measure(doc: &Document) -> CadFacts {
                 count.first_hatches.push(uid.to_string());
             }
             Entity::Tag(t) if doc.tag_target(&t.tag.of).is_none() => {
-                broken.push(CadBroken { kind: "tag".into(), uid: uid.to_string() });
+                broken.push(CadBroken {
+                    kind: "tag".into(),
+                    uid: uid.to_string(),
+                });
             }
             Entity::Insert(x) => {
-                let name = doc.block(x.block).map_or_else(|| x.block.to_string(), |b| b.name.clone());
-                let block = blocks.entry(name.clone()).or_insert_with(|| CadBlock { name, inserts: 0, layers: Vec::new() });
+                let name = doc
+                    .block(x.block)
+                    .map_or_else(|| x.block.to_string(), |b| b.name.clone());
+                let block = blocks.entry(name.clone()).or_insert_with(|| CadBlock {
+                    name,
+                    inserts: 0,
+                    layers: Vec::new(),
+                });
                 block.inserts += 1;
-                block.layers.push(name_of(layer).unwrap_or_else(|| layer.to_owned()));
+                block
+                    .layers
+                    .push(name_of(layer).unwrap_or_else(|| layer.to_owned()));
             }
             Entity::Dimension(d) => {
                 let tied = d.refs.as_deref().is_some_and(|r| {
-                    [&r.a, &r.b, &r.c].into_iter().any(|x| x.as_ref().is_some_and(|x| x.broken.is_some()))
+                    [&r.a, &r.b, &r.c]
+                        .into_iter()
+                        .any(|x| x.as_ref().is_some_and(|x| x.broken.is_some()))
                 });
                 if tied {
-                    broken.push(CadBroken { kind: "dimension".into(), uid: uid.to_string() });
+                    broken.push(CadBroken {
+                        kind: "dimension".into(),
+                        uid: uid.to_string(),
+                    });
                 }
                 let settings = doc.settings();
                 let styled = d.look.dim_style.as_deref().and_then(|id| {
-                    settings.dimension_styles.iter().find(|s| s.id == id).and_then(|s| s.font)
+                    settings
+                        .dimension_styles
+                        .iter()
+                        .find(|s| s.id == id)
+                        .and_then(|s| s.font)
                 });
                 let font = d.look.font.or(styled).or(settings.drawing_font);
                 *fonts.entry(font_name(font).to_owned()).or_default() += 1;
             }
-            Entity::Grid(_) => grids.push(CadGrid { uid: uid.to_string(), layer: layer.to_owned() }),
+            Entity::Grid(_) => grids.push(CadGrid {
+                uid: uid.to_string(),
+                layer: layer.to_owned(),
+            }),
             Entity::Space(s) => {
                 let level = e.own_level().map(str::to_owned);
                 let areas = core_areas(&s.space.parts);
@@ -146,7 +179,10 @@ pub fn measure(doc: &Document) -> CadFacts {
     CadFacts {
         layers,
         blocks: blocks.into_values().collect(),
-        dimension_fonts: fonts.into_iter().map(|(font, count)| FontUse { font, count }).collect(),
+        dimension_fonts: fonts
+            .into_iter()
+            .map(|(font, count)| FontUse { font, count })
+            .collect(),
         grids,
         rooms,
         derived: derived(doc),
@@ -160,11 +196,15 @@ pub fn measure(doc: &Document) -> CadFacts {
 /// A storey's elevation range over ±0.00 (docs/adr/8125): its level to the next storey's, else to its level plus its
 /// height; none for a level the project lacks.
 fn storey_range(doc: &Document, level: &str) -> Option<(f64, Option<f64>)> {
-    let mut levels: Vec<&kentos_commands::ArchLevel> = doc.settings().arch.as_ref()?.levels.iter().collect();
+    let mut levels: Vec<&kentos_commands::ArchLevel> =
+        doc.settings().arch.as_ref()?.levels.iter().collect();
     levels.sort_by(|a, b| a.elevation.total_cmp(&b.elevation));
     let i = levels.iter().position(|l| l.id == level)?;
     let l = levels[i];
-    let to = levels.get(i + 1).map(|n| n.elevation).or_else(|| l.height.map(|h| l.elevation + h));
+    let to = levels
+        .get(i + 1)
+        .map(|n| n.elevation)
+        .or_else(|| l.height.map(|h| l.elevation + h));
     Some((l.elevation, to))
 }
 
@@ -174,11 +214,17 @@ fn exits(doc: &Document) -> Vec<CadExit> {
     use kentos_commands::OpeningForm;
     use kentos_native_application::arch_performance::exit_of;
     let by: std::collections::HashMap<String, kentos_domain::escape::ExitWhy> =
-        kentos_domain::escape::escape(doc).exits_by.into_iter().map(|x| (x.uid, x.why)).collect();
+        kentos_domain::escape::escape(doc)
+            .exits_by
+            .into_iter()
+            .map(|x| (x.uid, x.why))
+            .collect();
     doc.entities_with_uids()
         .filter_map(|(uid, e)| {
             let (kind, name) = match e {
-                Entity::Opening(o) if o.opening.form == OpeningForm::Door => ("door", o.opening.number.clone()),
+                Entity::Opening(o) if o.opening.form == OpeningForm::Door => {
+                    ("door", o.opening.number.clone())
+                }
                 Entity::Stair(_) => ("stair", None),
                 _ => return None,
             };
@@ -226,7 +272,14 @@ fn model_gaps(doc: &Document) -> Vec<CadModelGap> {
                 .iter()
                 .find(|c| c.class.eq_ignore_ascii_case(&g.class))
                 .map_or_else(|| g.class.clone(), |c| c.tr.clone()),
-            missing: g.missing.iter().map(|id| id.map(|i| kentos_domain::Uuid::from_u128(i).to_string()).unwrap_or_default()).collect(),
+            missing: g
+                .missing
+                .iter()
+                .map(|id| {
+                    id.map(|i| kentos_domain::Uuid::from_u128(i).to_string())
+                        .unwrap_or_default()
+                })
+                .collect(),
             of: g.of as u32,
             class: g.class,
             path: g.path,
@@ -248,23 +301,35 @@ fn overlaps(grounds: &[(String, Option<String>, Vec<Area>)]) -> Vec<CadRoomOverl
     let boxes: Vec<Option<[f64; 4]>> = grounds
         .iter()
         .map(|(_, _, areas)| {
-            areas.iter().flat_map(|a| a.outer.pts.iter()).fold(None, |b: Option<[f64; 4]>, p| {
-                Some(b.map_or([p.x, p.y, p.x, p.y], |b| [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]))
-            })
+            areas
+                .iter()
+                .flat_map(|a| a.outer.pts.iter())
+                .fold(None, |b: Option<[f64; 4]>, p| {
+                    Some(b.map_or([p.x, p.y, p.x, p.y], |b| {
+                        [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
+                    }))
+                })
         })
         .collect();
     let mut out = Vec::new();
     for i in 0..grounds.len() {
         for j in i + 1..grounds.len() {
             let ((ua, la, aa), (ub, lb, ab)) = (&grounds[i], &grounds[j]);
-            let (Some(p), Some(q)) = (boxes[i], boxes[j]) else { continue };
+            let (Some(p), Some(q)) = (boxes[i], boxes[j]) else {
+                continue;
+            };
             if la != lb || p[2] <= q[0] || q[2] <= p[0] || p[3] <= q[1] || q[3] <= p[1] {
                 continue;
             }
             let shared = intersect_area_sets(&[aa.clone(), ab.clone()]);
             let area: f64 = shared.iter().map(net_area).sum();
             if area > 0.0 {
-                out.push(CadRoomOverlap { a: ua.clone(), b: ub.clone(), area, at: centre(&shared) });
+                out.push(CadRoomOverlap {
+                    a: ua.clone(),
+                    b: ub.clone(),
+                    area,
+                    at: centre(&shared),
+                });
             }
         }
     }
@@ -335,7 +400,12 @@ fn derived(doc: &Document) -> Vec<CadDerived> {
     kentos_native_application::sections_query::rows(doc)
         .into_iter()
         .map(|r| CadDerived {
-            kind: if r.name.ends_with("görünüşü") { "elevation" } else { "section" }.into(),
+            kind: if r.name.ends_with("görünüşü") {
+                "elevation"
+            } else {
+                "section"
+            }
+            .into(),
             state: match r.state {
                 S::Current => "current",
                 S::Stale => "stale",
@@ -400,7 +470,10 @@ fn centre(areas: &[kentos_geometry_core::geom::arrangement::Area]) -> [f64; 2] {
         return [sx / sa, sy / sa];
     }
     let n = points.len().max(1) as f64;
-    [points.iter().map(|p| p.x).sum::<f64>() / n, points.iter().map(|p| p.y).sum::<f64>() / n]
+    [
+        points.iter().map(|p| p.x).sum::<f64>() / n,
+        points.iter().map(|p| p.y).sum::<f64>() / n,
+    ]
 }
 
 #[cfg(test)]

@@ -152,7 +152,11 @@ fn described(registry: &Registry, tool: &Tool, doc: &Document) -> ProcessingTool
 }
 
 /// The objects `uids` name, in their order.
-pub(crate) fn slots_of(doc: &Document, uids: &[String], path: &str) -> Result<Vec<Slot>, Box<CommandError>> {
+pub(crate) fn slots_of(
+    doc: &Document,
+    uids: &[String],
+    path: &str,
+) -> Result<Vec<Slot>, Box<CommandError>> {
     uids.iter()
         .enumerate()
         .map(|(i, text)| {
@@ -373,10 +377,11 @@ pub(crate) fn ready(
     // of its steps does.
     if environment.is_some() {
         let takes = match &model {
-            Some(m) => m
-                .steps
-                .iter()
-                .any(|s| registry.get(&s.tool).is_some_and(|t| crate::raster_env::takes(&t))),
+            Some(m) => m.steps.iter().any(|s| {
+                registry
+                    .get(&s.tool)
+                    .is_some_and(|t| crate::raster_env::takes(&t))
+            }),
             None => crate::raster_env::takes(&tool),
         };
         if !takes {
@@ -1392,7 +1397,11 @@ pub(crate) type Digests = BTreeMap<(ChangeMark, String), String>;
 
 /// The bound layers a run reads by the part of their table the drawing holds (`scope: layer` on a layer bound with an
 /// area, docs/adr/0592 §1): said, so a result of the part is not taken for the table's.
-pub(crate) fn partial_inputs(doc: &Document, ready: &Ready, read_whole: &[&str]) -> Vec<CommandWarning> {
+pub(crate) fn partial_inputs(
+    doc: &Document,
+    ready: &Ready,
+    read_whole: &[&str],
+) -> Vec<CommandWarning> {
     let mut out = Vec::new();
     for p in &ready.tool.parameters {
         let (ParamKind::Features { .. }, Some(v)) = (&p.kind, ready.values.get(&p.name)) else {
@@ -1407,7 +1416,12 @@ pub(crate) fn partial_inputs(doc: &Document, ready: &Ready, read_whole: &[&str])
         if read_whole.contains(&id) {
             continue;
         }
-        if let Some(link) = doc.settings().sources.iter().find(|s| s.layer == id && s.extent.is_some()) {
+        if let Some(link) = doc
+            .settings()
+            .sources
+            .iter()
+            .find(|s| s.layer == id && s.extent.is_some())
+        {
             let name = doc.layers().get(id).map_or(id, |n| n.name.as_str());
             out.push(CommandWarning {
                 code: codes::PARTIAL_SCOPE.into(),
@@ -1503,7 +1517,11 @@ pub(crate) fn sink_target(sink: &RunSink) -> Result<Target, Box<CommandError>> {
     let path = sink.path.trim();
     if kentos_commands::is_database(path) {
         if let Some(why) = kentos_commands::address_problem(path) {
-            return Err(refused(codes::INVALID_ADDRESS, format!("{path}: {why}."), at));
+            return Err(refused(
+                codes::INVALID_ADDRESS,
+                format!("{path}: {why}."),
+                at,
+            ));
         }
         if sink.overwrite && sink.mode != SinkMode::New {
             return Err(refused(
@@ -1513,7 +1531,12 @@ pub(crate) fn sink_target(sink: &RunSink) -> Result<Target, Box<CommandError>> {
                 Some("sink.overwrite".to_owned()),
             ));
         }
-        let schema = sink.schema.as_deref().map(str::trim).filter(|s| !s.is_empty()).unwrap_or("public");
+        let schema = sink
+            .schema
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("public");
         if schema.contains('.') || schema.contains('"') {
             return Err(refused(
                 codes::INVALID_INPUT,
@@ -1615,12 +1638,7 @@ pub(crate) fn text_tables(
     outputs
         .iter()
         .filter_map(|(name, v)| {
-            let columns: Vec<String> = v
-                .get("columns")?
-                .as_array()?
-                .iter()
-                .map(text)
-                .collect();
+            let columns: Vec<String> = v.get("columns")?.as_array()?.iter().map(text).collect();
             let rows: Vec<Vec<String>> = v
                 .get("rows")?
                 .as_array()?
@@ -1678,7 +1696,11 @@ pub(crate) fn record_sink(
             .tables
             .iter()
             .map(|t| {
-                let of = t.layer.clone().or_else(|| t.output.clone()).unwrap_or_default();
+                let of = t
+                    .layer
+                    .clone()
+                    .or_else(|| t.output.clone())
+                    .unwrap_or_default();
                 kentos_commands::RecordSinkTable {
                     table: t.table.clone(),
                     row: rows.get(&of).cloned(),
@@ -1697,7 +1719,13 @@ pub const LINEAGE_STANDARD: &str = "https://kentos.app/lineage/1";
 
 impl Lineage<'_> {
     /// The table's lineage document: `kentos.lineage` 1, as JSON.
-    fn document(&self, table: &str, layer: Option<&str>, output: Option<&str>, made: &str) -> String {
+    fn document(
+        &self,
+        table: &str,
+        layer: Option<&str>,
+        output: Option<&str>,
+        made: &str,
+    ) -> String {
         let request = &self.request;
         json!({
             "format": "kentos.lineage",
@@ -1885,7 +1913,9 @@ pub(crate) fn write_sink(
         ));
     }
     if let Some((address, schema)) = &target.database {
-        return write_database(copy, &layers, texts, target, address, schema, write, lineage, flow);
+        return write_database(
+            copy, &layers, texts, target, address, schema, write, lineage, flow,
+        );
     }
     let path = &target.path;
     let fresh = target.mode == SinkMode::New;
@@ -1982,7 +2012,6 @@ pub(crate) fn write_sink(
     );
     Ok(Sunk::Done(Box::new(answer)))
 }
-
 
 /// The objects a run made written to a PostGIS database (docs/adr/0592 §2). The tables are made first in a passing
 /// GeoPackage by the writer a file's sink uses (their shape, columns, Z and M, the losses are the same), then read back
@@ -2137,7 +2166,10 @@ fn write_database(
         ),
         other => refused(
             codes::FILE_UNWRITABLE,
-            format!("Veritabanına yazılamadı: {}. Hiçbir tablo yazılmadı.", provider_words(&other)),
+            format!(
+                "Veritabanına yazılamadı: {}. Hiçbir tablo yazılmadı.",
+                provider_words(&other)
+            ),
             at.clone(),
         ),
     };

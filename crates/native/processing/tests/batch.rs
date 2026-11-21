@@ -9,9 +9,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use kentos_commands::{
-    BatchOnError, BatchRow, DocumentSnapshotV1, ProcessingBatch, ProcessingRun,
-};
+use kentos_commands::{BatchOnError, BatchRow, DocumentSnapshotV1, ProcessingBatch, ProcessingRun};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::processing_host::{BatchEnd, BatchFlow, RunEnd, tools};
 use kentos_processing::record::{Rerun, rerun_kind};
@@ -561,13 +559,21 @@ fn with_continue_a_row_that_stops_is_taken_back_alone_and_the_others_are_written
         (ran.failed[0].index, ran.failed[0].code.as_str()),
         (1, "tool_failed")
     );
-    assert!(ran.failed[0].message.contains("tam sayı ister"), "{}", ran.failed[0].message);
+    assert!(
+        ran.failed[0].message.contains("tam sayı ister"),
+        "{}",
+        ran.failed[0].message
+    );
     assert_eq!(warnings.len(), 1);
     assert_eq!(warnings[0].code, "batch_rows_failed");
     assert!(ran.summary.contains("1 satır çalışmadı"), "{}", ran.summary);
     // The record names the rows that ran as steps and the one that stopped as a failure.
     assert_eq!(
-        ran.record.steps.iter().map(|s| s.id.as_str()).collect::<Vec<_>>(),
+        ran.record
+            .steps
+            .iter()
+            .map(|s| s.id.as_str())
+            .collect::<Vec<_>>(),
         ["rows[0]", "rows[2]"]
     );
     assert_eq!(ran.record.failed.len(), 1);
@@ -666,8 +672,16 @@ fn with_continue_a_model_row_that_stops_in_the_middle_leaves_no_layer_behind() {
     };
     assert!(ran.rows.is_empty());
     assert_eq!(ran.failed.len(), 2, "both rows stop at their second step");
-    assert!(ran.failed[0].message.contains("2. adım"), "{}", ran.failed[0].message);
-    assert_eq!(doc.entities().count(), count, "each row's first step is taken back");
+    assert!(
+        ran.failed[0].message.contains("2. adım"),
+        "{}",
+        ran.failed[0].message
+    );
+    assert_eq!(
+        doc.entities().count(),
+        count,
+        "each row's first step is taken back"
+    );
     assert!(doc.layers().get("islem-kose-noktalari").is_none());
     assert!(!doc.can_undo());
     assert_eq!(doc.revision(), revision);
@@ -686,7 +700,11 @@ fn a_stop_heard_inside_a_row_takes_the_whole_batch_back() {
         // The between-rows question is never answered yes; only the flag the tool reads is set.
         let flag = Arc::new(AtomicBool::new(true));
         let flow = Flow::with_flag(Arc::clone(&flag));
-        assert!(flow.flag.as_ref().is_some_and(|f| f.load(Ordering::Relaxed)));
+        assert!(
+            flow.flag
+                .as_ref()
+                .is_some_and(|f| f.load(Ordering::Relaxed))
+        );
         let end = tools()
             .expect("registered")
             .batch(&mut doc, &batch, true, &flow)
@@ -777,16 +795,28 @@ fn a_run_with_a_request_id_keeps_its_record_in_the_projects_ledger() {
         expected: None,
     };
     let answer = kentos_native_application::call::call(&mut doc, None, envelope);
-    assert!(matches!(answer.result, CommandResult::Completed { .. }), "{:?}", answer.result);
+    assert!(
+        matches!(answer.result, CommandResult::Completed { .. }),
+        "{:?}",
+        answer.result
+    );
     let ledger = doc.requests();
-    let kept = ledger.iter().find(|r| r.request_id == "kayit:1").expect("in the ledger");
+    let kept = ledger
+        .iter()
+        .find(|r| r.request_id == "kayit:1")
+        .expect("in the ledger");
     assert_eq!(kept.command, "cad.processing.run");
-    let stored: Value = serde_json::from_str(kept.answer.as_deref().expect("the answer")).expect("JSON");
+    let stored: Value =
+        serde_json::from_str(kept.answer.as_deref().expect("the answer")).expect("JSON");
     let record = &stored["output"]["record"];
     assert_eq!(record["format"], "kentos.run-record");
     assert_eq!(record["tool"], "attributes.calculate");
     assert_eq!(record["inputs"][0]["layer"], "parsel");
-    assert!(record["inputs"][0]["digest"].as_str().is_some_and(|d| d.len() == 64));
+    assert!(
+        record["inputs"][0]["digest"]
+            .as_str()
+            .is_some_and(|d| d.len() == 64)
+    );
 }
 
 /// A copy of the sources' GeoPackage in a folder of its own, and that folder.
@@ -828,7 +858,10 @@ fn a_record_of_a_source_keeps_the_file_and_the_journal_the_result() {
     assert_eq!(answer["status"], "completed", "{answer}");
     let ran: ProcessingRan = serde_json::from_value(answer["output"].clone()).expect("an answer");
     let record = &ran.record;
-    assert_eq!(record.parameters["input"], given, "the input as given runs it again");
+    assert_eq!(
+        record.parameters["input"], given,
+        "the input as given runs it again"
+    );
     let input = &record.inputs[0];
     assert_eq!(input.path.as_deref(), Some(file.to_str().expect("a path")));
     assert_eq!(input.table.as_deref(), Some("sorgu.gpkg › bina"));
@@ -840,7 +873,10 @@ fn a_record_of_a_source_keeps_the_file_and_the_journal_the_result() {
     assert_eq!(row.command.as_deref(), Some("cad.processing.run"));
     assert_eq!(row.effects.len(), 1);
     assert_eq!(row.effects[0].path, out.display().to_string());
-    assert_eq!((row.effects[0].bytes, row.effects[0].sha256.as_str()), (made.bytes, made.sha256.as_str()));
+    assert_eq!(
+        (row.effects[0].bytes, row.effects[0].sha256.as_str()),
+        (made.bytes, made.sha256.as_str())
+    );
     assert_eq!(rerun_kind(record, &doc), Rerun::SameRevision);
 
     // A batch to a second file: its record and its journal row say the same.
@@ -856,7 +892,8 @@ fn a_record_of_a_source_keeps_the_file_and_the_journal_the_result() {
     )
     .expect("runs");
     assert_eq!(answer["status"], "completed", "{answer}");
-    let done: ProcessingBatched = serde_json::from_value(answer["output"].clone()).expect("an answer");
+    let done: ProcessingBatched =
+        serde_json::from_value(answer["output"].clone()).expect("an answer");
     let tables: Vec<(&str, Option<&str>)> = done
         .record
         .sink
@@ -875,7 +912,10 @@ fn a_record_of_a_source_keeps_the_file_and_the_journal_the_result() {
     // The source changes: both records meet changed data, the result files they name are as they were.
     {
         use std::io::Write;
-        let mut f = std::fs::OpenOptions::new().append(true).open(&file).expect("opens");
+        let mut f = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&file)
+            .expect("opens");
         f.write_all(b"\0").expect("writes");
     }
     let changed = Rerun::ChangedData(vec!["sorgu.gpkg › bina".into()]);
@@ -985,7 +1025,8 @@ fn a_model_reads_its_source_and_writes_to_a_file_alone_and_in_a_batch() {
     )
     .expect("runs");
     assert_eq!(answer["status"], "completed", "{answer}");
-    let done: ProcessingBatched = serde_json::from_value(answer["output"].clone()).expect("an answer");
+    let done: ProcessingBatched =
+        serde_json::from_value(answer["output"].clone()).expect("an answer");
     assert_eq!(done.record.kind, "batch");
     assert!(done.rows.iter().all(|r| r.ran.record.steps.len() == 3));
     // Both rows write to the model's one layer. Numbering finds the first row's corners where the second's would go
@@ -996,7 +1037,13 @@ fn a_model_reads_its_source_and_writes_to_a_file_alone_and_in_a_batch() {
         (sink.tables[0].rows, sink.tables[0].row.as_deref()),
         (48, Some("rows[0]"))
     );
-    assert!(done.rows[1].ran.added.iter().all(|u| !done.rows[0].ran.added.contains(u)));
+    assert!(
+        done.rows[1]
+            .ran
+            .added
+            .iter()
+            .all(|u| !done.rows[0].ran.added.contains(u))
+    );
     assert_eq!(doc.revision(), before);
     let _ = std::fs::remove_dir_all(&dir);
 }

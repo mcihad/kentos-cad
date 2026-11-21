@@ -6,14 +6,16 @@
 
 use std::collections::BTreeMap;
 
-use kentos_commands::{Entity, EntityBase, ImpactInfrastructure, ImpactLink, LineEntity, ScenariosImpact, Vec2};
+use kentos_commands::{
+    Entity, EntityBase, ImpactInfrastructure, ImpactLink, LineEntity, ScenariosImpact, Vec2,
+};
 use kentos_native_application::scenarios_impact::preview;
 use serde_json::{Value, json};
 
 use crate::text::to_fixed;
 use crate::types::{
-    EnumOption, Feedback, NewLayerStyle, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext, RunResult,
-    ScopeKind, Target, Tool,
+    EnumOption, Feedback, NewLayerStyle, OutputDef, OutputKind, ParamDef, ParamKind, Resolved,
+    RunContext, RunResult, ScopeKind, Target, Tool,
 };
 
 /// The links' table.
@@ -108,29 +110,57 @@ fn scenario_of(ctx: &RunContext<'_>, text: &str) -> String {
     if layers.get(text).is_some() {
         return text.to_owned();
     }
-    layers.nodes().iter().find(|n| n.name == text).map_or_else(|| text.to_owned(), |n| n.id.clone())
+    layers
+        .nodes()
+        .iter()
+        .find(|n| n.name == text)
+        .map_or_else(|| text.to_owned(), |n| n.id.clone())
 }
 
 fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> RunResult {
     feedback.progress(0.0, "Altyapı bağları ölçülüyor");
     let Some(layer) = v.features("infrastructure").layer_id.clone() else {
-        return RunResult { refused: Some("Altyapı katmanını seçin.".into()), ..RunResult::default() };
+        return RunResult {
+            refused: Some("Altyapı katmanını seçin.".into()),
+            ..RunResult::default()
+        };
     };
     let Some(distance) = v.number("distance") else {
-        return RunResult { refused: Some("Uzaklığı yazın (m); KentOS öntanımlı değer vermez.".into()), ..RunResult::default() };
+        return RunResult {
+            refused: Some("Uzaklığı yazın (m); KentOS öntanımlı değer vermez.".into()),
+            ..RunResult::default()
+        };
     };
-    let from: Vec<String> = v.text("uses").split(',').map(str::trim).filter(|s| !s.is_empty()).map(str::to_owned).collect();
+    let from: Vec<String> = v
+        .text("uses")
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_owned)
+        .collect();
     let input = ScenariosImpact {
         scenario: scenario_of(ctx, v.text("scenario").trim()),
-        infrastructure: Some(ImpactInfrastructure { layer, distance, from }),
+        infrastructure: Some(ImpactInfrastructure {
+            layer,
+            distance,
+            from,
+        }),
         ..ScenariosImpact::default()
     };
     let answer = match preview(ctx.doc, &input) {
         Ok(a) => a,
-        Err(why) => return RunResult { refused: Some(why), ..RunResult::default() },
+        Err(why) => {
+            return RunResult {
+                refused: Some(why),
+                ..RunResult::default()
+            };
+        }
     };
     let Some(near) = answer.near else {
-        return RunResult { refused: Some("Senaryo ölçüsü yakınlığı vermedi.".into()), ..RunResult::default() };
+        return RunResult {
+            refused: Some("Senaryo ölçüsü yakınlığı vermedi.".into()),
+            ..RunResult::default()
+        };
     };
     let side = v.text("side");
     let mut links: Vec<(&str, &ImpactLink)> = Vec::new();
@@ -152,7 +182,11 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             l.area.clone(),
             l.line.clone(),
             length(l.distance),
-            if drawn { "evet".to_owned() } else { "boyu yok".to_owned() },
+            if drawn {
+                "evet".to_owned()
+            } else {
+                "boyu yok".to_owned()
+            },
         ]);
         if !drawn {
             continue;
@@ -175,8 +209,14 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 label_pins: Vec::new(),
                 attachments: Vec::new(),
             },
-            a: Vec2 { x: l.from[0], y: l.from[1] },
-            b: Vec2 { x: l.to[0], y: l.to[1] },
+            a: Vec2 {
+                x: l.from[0],
+                y: l.from[1],
+            },
+            b: Vec2 {
+                x: l.to[0],
+                y: l.to[1],
+            },
             za: None,
             zb: None,
             ma: None,
@@ -185,17 +225,31 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     }
     let wrote = lines.len();
     let flat = links.len() - wrote;
-    let mut summary = format!("“{}”: {} alan en yakın altyapı nesnesine bağlandı; {wrote} bağ yazıldı", answer.name, links.len());
+    let mut summary = format!(
+        "“{}”: {} alan en yakın altyapı nesnesine bağlandı; {wrote} bağ yazıldı",
+        answer.name,
+        links.len()
+    );
     if flat > 0 {
-        summary.push_str(&format!(", {flat} alanın merkezi hattın üstünde (bağı çizilmedi)"));
+        summary.push_str(&format!(
+            ", {flat} alanın merkezi hattın üstünde (bağı çizilmedi)"
+        ));
     }
     summary.push('.');
-    let outputs: serde_json::Map<String, Value> =
-        [("links".to_owned(), json!({ "columns": COLUMNS, "rows": rows })), ("count".to_owned(), json!(wrote))]
-            .into_iter()
-            .collect();
+    let outputs: serde_json::Map<String, Value> = [
+        (
+            "links".to_owned(),
+            json!({ "columns": COLUMNS, "rows": rows }),
+        ),
+        ("count".to_owned(), json!(wrote)),
+    ]
+    .into_iter()
+    .collect();
     RunResult {
-        changes: (wrote > 0).then(|| crate::types::ChangeSet { add: lines, ..Default::default() }),
+        changes: (wrote > 0).then(|| crate::types::ChangeSet {
+            add: lines,
+            ..Default::default()
+        }),
         outputs,
         summary: Some(summary),
         ..RunResult::default()
