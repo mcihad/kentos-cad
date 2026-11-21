@@ -273,6 +273,8 @@ pub struct SourcesPanel {
     pub(crate) focused: Option<String>,
     /// A GeoPackage's tables by its path, a database's by its address (docs/adr/0599 §2, §3).
     pub(crate) tables: HashMap<Origin, Read<Vec<SourceTable>>>,
+    /// The projects kept in a GeoPackage or a schema (docs/adr/9107), by `stored_key`.
+    pub(crate) stored: HashMap<String, Vec<kentos_data::StoredProject>>,
     /// A table's sample rows by its row's key.
     pub(crate) samples: HashMap<String, Read<Vec<String>>>,
     /// A saved service's offer by its row's key (docs/adr/0599 §4).
@@ -303,6 +305,7 @@ impl Default for SourcesPanel {
             requests: HashMap::new(),
             focused: None,
             tables: HashMap::new(),
+            stored: HashMap::new(),
             samples: HashMap::new(),
             services: HashMap::new(),
             search: String::new(),
@@ -339,6 +342,10 @@ pub enum Event {
     Search(String),
     /// A GeoPackage's tables, or why not.
     Tables(Origin, Result<Vec<SourceTable>, String>),
+    /// The projects kept in a GeoPackage or a schema (docs/adr/9107), by `stored_key`; none when they cannot be read.
+    StoredListed(String, Vec<kentos_data::StoredProject>),
+    /// A project kept in a source chosen: it opens.
+    OpenStored(Box<crate::document::StoredSource>),
     /// A table's sample rows by its row's key, or why not.
     Sample(String, Result<Vec<String>, String>),
     /// A saved service read, by its row's key.
@@ -578,6 +585,16 @@ impl App {
                 if !self.gis.sources.open.contains(&connection_key(&name)) {
                     return Task::none();
                 }
+                // The projects kept in its schemas (docs/adr/9107): read where a schema has the projects table.
+                let mut reads = Vec::new();
+                if let Ok(catalog) = &result
+                    && let Some(c) = kentos_postgis::connections::store().list().into_iter().find(|c| c.name == name)
+                {
+                    let address = c.address();
+                    for r in catalog.relations.iter().filter(|r| r.name == kentos_data::projects::PROJECTS_TABLE) {
+                        reads.push(self.read_stored(address.clone(), Some(r.schema.clone())));
+                    }
+                }
                 let browse = match result {
                     Ok(catalog) => Browse::Ready(catalog),
                     Err(d) => {
@@ -592,6 +609,7 @@ impl App {
                     }
                 };
                 self.gis.sources.catalogs.insert(name, browse);
+                return Task::batch(reads);
             }
             Event::Refresh(name) => {
                 self.gis.sources.open.insert(connection_key(&name));
@@ -624,6 +642,10 @@ impl App {
                 self.take_layer_into(&drawing.drawing, &path, &from);
             }
             Event::Search(words) => self.gis.sources.search = words,
+            Event::StoredListed(key, list) => {
+                self.gis.sources.stored.insert(key, list);
+            }
+            Event::OpenStored(at) => return self.open_stored_project(*at),
             Event::Tables(origin, result) => {
                 let key = tables_key(&origin);
                 if !self.gis.sources.open.contains(&key) {
@@ -904,6 +926,7 @@ impl App {
             .insert(origin.clone(), Read::Reading);
         let key = tables_key(&origin);
         let back = origin.clone();
+        let path = origin.path();
         let (task, handle) = off_thread(
             move || crate::exchange::list_tables(origin.path()),
             move |r| Event::Tables(back, r),
@@ -913,7 +936,17 @@ impl App {
             .sources
             .requests
             .insert(key, handle.abort_on_drop());
-        task
+        // The projects kept beside its tables (docs/adr/9107), read with them.
+        Task::batch([task, self.read_stored(path, None)])
+    }
+
+    /// Reads the projects kept in a GeoPackage or a schema off the thread; none listed when they cannot be read.
+    pub(crate) fn read_stored(&mut self, address: String, schema: Option<String>) -> Task<Message> {
+        let key = stored_key(&address, schema.as_deref());
+        off_thread(
+            move || kentos_native_application::project_store::list(&address, schema.as_deref()).unwrap_or_default(),
+            move |list| Event::StoredListed(key, list),
+        )
     }
 
     fn read_sample(&mut self, key: String) -> Task<Message> {
@@ -1277,6 +1310,11 @@ pub(crate) fn tables_key(origin: &Origin) -> String {
 
 fn origin_of_key(key: &str) -> Option<Origin> {
     key.strip_prefix("g:").map(|p| Origin::File(PathBuf::from(p)))
+}
+
+/// The key of a place's projects (docs/adr/9107): its address and, for a database, its schema.
+pub(crate) fn stored_key(address: &str, schema: Option<&str>) -> String {
+    format!("{address}\0{}", schema.unwrap_or(""))
 }
 
 /// A table's row, opened into its preview.

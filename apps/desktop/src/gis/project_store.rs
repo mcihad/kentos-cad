@@ -47,6 +47,8 @@ pub(crate) struct StoreWindow {
     selected: Option<usize>,
     busy: bool,
     said: Option<String>,
+    /// Projeyi sil… pressed: the selected project's removal waits for Sil.
+    deleting: bool,
 }
 
 /// What the window says.
@@ -67,6 +69,12 @@ pub enum Event {
     Run,
     /// A project read and opened, or why not.
     Read(Box<Result<Document, String>>),
+    /// Projeyi sil…: asks; Sil removes it, Vazgeç keeps it.
+    Delete,
+    DeleteConfirmed,
+    DeleteCancelled,
+    /// The removal done, or why not.
+    Deleted(Result<String, String>),
     Close,
 }
 
@@ -107,6 +115,11 @@ impl StoreWindow {
     #[cfg(test)]
     pub(crate) fn listed_for_test(&self) -> Option<Vec<String>> {
         self.listed.as_ref().and_then(|l| l.as_ref().ok()).map(|l| l.iter().map(|p| p.name.clone()).collect())
+    }
+
+    /// The place in words: the file's name, the database and schema.
+    fn place_words(&self) -> String {
+        StoredSource { address: self.source(), schema: self.schema(), name: String::new() }.place()
     }
 
     /// The name typed is a project kept there already: Kaydet writes over it.
@@ -155,6 +168,7 @@ impl App {
             selected: None,
             busy: false,
             said: None,
+            deleting: false,
         };
         // Where the drawing is kept, or the GeoPackage of its first data layer: the likely place.
         if let Some(s) = stored {
@@ -272,6 +286,40 @@ impl App {
                 if let Some(p) = w.there().get(i) {
                     w.name = p.name.clone();
                     w.selected = Some(i);
+                    w.deleting = false;
+                }
+            }
+            Event::Delete => {
+                if w.selected.is_some() {
+                    w.deleting = true;
+                    w.said = None;
+                }
+            }
+            Event::DeleteCancelled => w.deleting = false,
+            Event::DeleteConfirmed => {
+                let Some(p) = w.selected.and_then(|i| w.there().get(i)).cloned() else {
+                    w.deleting = false;
+                    return Task::none();
+                };
+                let (address, schema) = (w.source(), w.schema());
+                w.deleting = false;
+                w.busy = true;
+                return crate::db_connections::off_thread(
+                    move || {
+                        kentos_native_application::project_store::delete(&address, schema.as_deref(), &p.name).map(|()| p.name)
+                    },
+                    |done| message(Event::Deleted(done)),
+                );
+            }
+            Event::Deleted(done) => {
+                w.busy = false;
+                match done {
+                    Ok(name) => {
+                        w.selected = None;
+                        self.say(kentos_interaction::Level::Success, format!("“{name}” projesi silindi."));
+                        return self.list_projects();
+                    }
+                    Err(why) => w.said = Some(why),
                 }
             }
             Event::Run => return self.run_project_store(),
@@ -310,6 +358,13 @@ impl App {
         }
         w.busy = true;
         w.said = None;
+        self.open_stored_project(at)
+    }
+
+    /// Opens a project kept in a source (the window's Aç, a Kaynaklar row): read and built off the interface's thread,
+    /// opened in a tab of its own; why not, in the window or said.
+    pub(crate) fn open_stored_project(&mut self, at: StoredSource) -> Task<Message> {
+        self.say(kentos_interaction::Level::Info, format!("“{}” projesi okunuyor ({})…", at.name, at.place()));
         crate::db_connections::off_thread(
             move || {
                 let bytes = kentos_native_application::project_store::read(&at.address, at.schema.as_deref(), &at.name)?;
@@ -331,9 +386,12 @@ impl App {
                 self.update(Message::Opened(Some(Ok(Box::new(doc)))))
             }
             Err(why) => {
-                if let Some(w) = self.gis.project_store.as_mut() {
-                    w.busy = false;
-                    w.said = Some(why);
+                match self.gis.project_store.as_mut() {
+                    Some(w) => {
+                        w.busy = false;
+                        w.said = Some(why);
+                    }
+                    None => self.warn(why),
                 }
                 Task::none()
             }
@@ -460,12 +518,33 @@ impl App {
         }
         let title = if w.save { "Veri kaynağına kaydet" } else { "Veri kaynağından aç" };
         let mut dialog = Dialog::new(title).scroll(form);
+        let chosen = w.selected.and_then(|i| w.there().get(i));
+        // Projeyi sil… asks first: the project goes from the source and cannot be taken back.
+        if w.deleting
+            && let Some(p) = chosen
+        {
+            return overlay::blocking(
+                dialog
+                    .status(words::text_line(
+                        words::Kind::Warn,
+                        format!("“{}” projesi {} içinden silinecek; geri alınamaz. Verisi yerinde kalır.", p.name, w.place_words()),
+                    ))
+                    .action(words::secondary("Vazgeç", Some(message(Event::DeleteCancelled))))
+                    .action(words::danger("Sil", Some(message(Event::DeleteConfirmed))))
+                    .width(640.0)
+                    .max_height(720.0)
+                    .on_close(Some(message(Event::Close))),
+            );
+        }
         if let Some(said) = &w.said {
             dialog = dialog.status(words::text_line(words::Kind::Error, said.clone()));
         } else if w.busy {
-            dialog = dialog.status(label::caption("Proje okunuyor…"));
+            dialog = dialog.status(label::caption("Bekleyin…"));
         }
         let can = !w.busy && !w.source().is_empty() && !w.name.trim().is_empty();
+        if chosen.is_some() {
+            dialog = dialog.aside(words::ghost("Projeyi sil…", (!w.busy).then(|| message(Event::Delete))));
+        }
         overlay::blocking(
             dialog
                 .action(words::secondary("Vazgeç", Some(message(Event::Close))))

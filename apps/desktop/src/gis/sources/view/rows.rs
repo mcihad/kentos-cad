@@ -213,6 +213,30 @@ impl App {
                 depth,
                 open,
             } => self.file_table_row(key, origin, table, bound.as_ref(), *depth, *open, chosen),
+            // A project kept in the source (docs/adr/9107): a click opens it.
+            Line::Stored { key, at, meta: about, depth } => {
+                let face = self.row_button(
+                    row![
+                        indent(*depth),
+                        space().width(Length::Fixed(12.0)),
+                        glyph("fileOpen"),
+                        name(at.name.clone(), false),
+                        meta("proje".to_owned()),
+                    ],
+                    msg(Event::OpenStored(at.clone())),
+                    chosen,
+                );
+                let _ = key;
+                let written = if about.is_empty() { String::new() } else { format!(" Son yazan: {about}.") };
+                tip(
+                    face,
+                    Tip::new(at.name.clone()).body(format!(
+                        "KentOS projesi, {} içinde saklanıyor.{written} Tıklayınca açılır; katmanları kaynaklarından okunur.",
+                        at.place()
+                    )),
+                    tooltip::Position::Left,
+                )
+            }
             Line::Extent {
                 key,
                 srid,

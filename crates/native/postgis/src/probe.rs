@@ -146,6 +146,9 @@ impl Relation {
     }
 }
 
+/// The table a schema keeps KentOS projects in (docs/adr/9107; the data drivers' `kentos_projects`).
+pub const PROJECTS_TABLE: &str = "kentos_projects";
+
 /// A database's relations and the server they came from.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Catalog {
@@ -159,6 +162,10 @@ impl Catalog {
         let mut out: Vec<(&str, Vec<&Relation>)> = Vec::new();
         for r in &self.relations {
             if connection.public_only && r.schema != "public" {
+                continue;
+            }
+            // A schema's projects table (docs/adr/9107) is the program's own: its projects are listed instead.
+            if r.name == PROJECTS_TABLE {
                 continue;
             }
             if !connection.geometryless && r.geometry.is_none() {
@@ -179,6 +186,7 @@ impl Catalog {
         }
         self.relations
             .iter()
+            .filter(|r| r.name != PROJECTS_TABLE)
             .filter(|r| r.geometry.is_none() && (!connection.public_only || r.schema == "public"))
             .count()
     }

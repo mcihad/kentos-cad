@@ -36,6 +36,12 @@ fi
 # owner's list, which keeps ten.
 export XDG_CONFIG_HOME=$HOME_DIR/.config XDG_DATA_HOME=$HOME_DIR/.local/share XDG_STATE_HOME=$HOME_DIR/.local/state \
   XDG_CACHE_HOME=$HOME_DIR/.cache
+# A session's own state when given (KENTOS_REAL_STATE: a folder of files such as kaynak-klasorleri.json, Kaynaklar's
+# folders): what a scenario needs listed without the system's folder window, which a scenario cannot drive.
+if [ -n "${KENTOS_REAL_STATE:-}" ] && [ -d "$KENTOS_REAL_STATE" ]; then
+  mkdir -p "$HOME_DIR/.local/state/kentos-cad"
+  cp -r "$KENTOS_REAL_STATE"/. "$HOME_DIR/.local/state/kentos-cad/"
+fi
 # The runtime folder too: the agents' links open there (masaustu-<modül>.sock, docs/adr/0137); in the owner's they would
 # meet the owner's own program's (13 November 2026). Its path is written to OUT/runtime.txt, for an agent outside the
 # session; a socket's path is at most ~107 bytes, so KENTOS_REAL_RUNTIME, when given, must be short.

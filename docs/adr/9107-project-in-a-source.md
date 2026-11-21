@@ -1,6 +1,6 @@
 # ADR 9107: Proje bir veri kaynağında
 
-- **Durum:** kabul edildi (2026-11-21); ilk adım (VY-09a). Plan: [plan/veri.md](../../plan/veri.md) VY-09.
+- **Durum:** kabul edildi (2026-11-21); adımlar VY-09a (§2–§5) ve VY-09b (§6). Plan: [plan/veri.md](../../plan/veri.md) VY-09.
 - **İstek:** sahibin sözü (21 Kasım 2026): projeler veritabanında “saklanacak değil saklanabilecek”; “veriler her
   halükarda veritabanında saklanacak CBS projelerinde”; GeoPackage, PostgreSQL ya da ileride başka bir veritabanı.
   Sürücü soyutlaması ileride başka veritabanlarını da desteklemek içindir.
@@ -107,10 +107,26 @@ programın ekranları `.run/gui-evidence/veri/qgis/09`, `13`, `14`, `16`):
   kaydedildi (5141 bayt, yazan ve an `metadata`'da); Kaydet satırı yeni yeri söyledi; Aç listesi projeyi yerel saatle
   gösterdi; proje açıldı.
 
-## §6 Sıradaki adımlar (VY-09)
+## §6 Karar: Kaynaklar'da projeler (VY-09b)
 
-- **09b** Kaynaklar'da projeler: GeoPackage'ın ve şemanın altında katmanların yanında; çift tıkla açılır,
-  silinir.
+- **Nerede görünür:** GeoPackage açılınca tablolarıyla birlikte saklı projeleri de okunur ve tabloların altında
+  listelenir (QGIS tarayıcısında olduğu gibi). Veritabanı bağlantısı açılınca `kentos_projects` tablosu olan
+  şemaların projeleri okunur ve şemanın tablolarının altına gelir. Satırda ad ve “proje” yazar; kim ve ne zaman
+  yazdığı ipucundadır, çünkü satır dardır (ilk denemede ad ile ayrıntı üst üste bindi).
+- **Tıklayınca** proje Veri kaynağından aç'taki yoldan açılır: arka planda okunur, kendi sekmesinde açılır,
+  katmanları bulunur. Okunamazsa söylenir.
+- **Silme** Veri kaynağı penceresindedir: listeden seçilen projede Projeyi sil… çıkar. Önce “… silinecek; geri
+  alınamaz. Verisi yerinde kalır.” diye sorar, Sil'den sonra siler ve listeyi yeniden okur.
+- **Katalog:** veritabanı kataloğu (Kaynaklar'ın bağlantıları) `kentos_projects`'i tablo olarak göstermez ve gizli
+  geometrisiz tablolar arasında da saymaz.
+- **Kanıt:** masaüstü `sources` sınaması (GeoPackage'taki proje tablonun yanında listelenir, `kentos_projects`
+  tablo olarak görünmez, tıklayınca açılır); `project_store_tests` silme (Vazgeç tutar, Sil siler, liste yenilenir).
+  Gerçek pencere: Kaynaklar › demo › binalar.gpkg altında binalar tablosu ve “Sivas altyapı” projesi; tıklayınca
+  açıldı. Gerçek pencere betiğine `KENTOS_REAL_STATE` eklendi: Kaynaklar'ın klasörleri, sistemin klasör penceresi
+  açılmadan oturuma verilir.
+
+## §7 Sıradaki adımlar (VY-09)
+
 - **09c** CBS projesinde yeni katman bir kaynağın yeni tablosudur (projenin GeoPackage'ı ya da seçilen GeoPackage
   veya şema).
 - **09d** Nesne tutan eski CBS katmanlarını tek adımda bir kaynağa taşıma.

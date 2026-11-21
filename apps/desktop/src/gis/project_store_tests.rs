@@ -75,3 +75,33 @@ fn a_project_kept_in_its_geopackage_opens_from_there_and_moves_with_the_file() {
     assert_eq!(rows.total, Some(30));
     let _ = std::fs::remove_dir_all(&folder);
 }
+
+#[test]
+fn a_kept_project_is_removed_only_after_sil() {
+    crate::data_layers::register();
+    let mut app = crate::files_testing::app_with_drawing();
+    let folder = crate::files_testing::scratch("proje-sil");
+    let gpkg = folder.join("depo.gpkg");
+    let address = gpkg.display().to_string();
+    let bytes = kentos_kcad::encode_verified(&app.document.as_ref().expect("a drawing").model.to_snapshot_v2()).expect("encoded");
+    kentos_native_application::project_store::write(&address, None, "Eski", &bytes).expect("kept");
+    kentos_native_application::project_store::write(&address, None, "Yeni", &bytes).expect("kept");
+    let task = app.open_project_store(false);
+    drive(&mut app, task);
+    let _ = app.project_store_event(Event::Path(address.clone()));
+    let task = app.project_store_event(Event::List);
+    drive(&mut app, task);
+    let _ = app.project_store_event(Event::Select(0));
+    // Projeyi sil… asks; Vazgeç keeps it.
+    let _ = app.project_store_event(Event::Delete);
+    let _ = app.project_store_event(Event::DeleteCancelled);
+    let kept = |a: &str| kentos_native_application::project_store::list(a, None).expect("listed").into_iter().map(|p| p.name).collect::<Vec<_>>();
+    assert_eq!(kept(&address), ["Eski", "Yeni"]);
+    // Sil removes it and the list is read again.
+    let _ = app.project_store_event(Event::Delete);
+    let task = app.project_store_event(Event::DeleteConfirmed);
+    drive(&mut app, task);
+    assert_eq!(kept(&address), ["Yeni"]);
+    assert_eq!(app.gis.project_store.as_ref().and_then(|w| w.listed_for_test()), Some(vec!["Yeni".to_owned()]));
+    let _ = std::fs::remove_dir_all(&folder);
+}

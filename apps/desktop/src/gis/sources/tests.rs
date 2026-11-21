@@ -136,6 +136,7 @@ fn rows(app: &App) -> Vec<String> {
             Line::Table {
                 relation, depth, ..
             } => format!("{}{}", "  ".repeat(depth), relation.name),
+            Line::Stored { at, meta, depth, .. } => format!("{}[proje {} · {meta}]", "  ".repeat(depth), at.name),
         })
         .collect()
 }
@@ -857,4 +858,39 @@ fn screens() {
         }
     }
     let _ = std::fs::remove_dir_all(&data);
+}
+
+#[test]
+fn a_project_kept_in_a_geopackage_is_listed_beside_its_tables_and_opens() {
+    crate::data_layers::register();
+    let mut app = app_with_drawing();
+    let dir = browser_folder("proje");
+    let gpkg = dir.join("kadastro.gpkg");
+    let address = gpkg.display().to_string();
+    // A project kept in the file (docs/adr/9107), as Veri kaynağına kaydet writes it.
+    let bytes = {
+        let doc = app.document.as_ref().expect("a drawing");
+        kentos_kcad::encode_verified(&doc.model.to_snapshot_v2()).expect("encoded")
+    };
+    kentos_native_application::project_store::write(&address, None, "Kadastro projesi", &bytes).expect("kept");
+    let origin = open_tables(&mut app, &dir);
+    // Listed with the tables, as the off-thread read lists it.
+    let list = kentos_native_application::project_store::list(&address, None).expect("listed");
+    send(&mut app, Event::StoredListed(super::stored_key(&address, None), list));
+    let all = rows(&app);
+    let row = all
+        .iter()
+        .find(|r| r.contains("[proje Kadastro projesi · "))
+        .unwrap_or_else(|| panic!("the project's row: {all:?}"));
+    assert!(row.starts_with("      "), "under the file, beside its tables: {row}");
+    // The projects table is not listed as a table.
+    assert!(all.iter().all(|r| !r.contains("kentos_projects")), "{all:?}");
+    let _ = origin;
+    // A click opens it in a tab of its own.
+    let at = crate::document::StoredSource { address: address.clone(), schema: None, name: "Kadastro projesi".into() };
+    let task = app.update(Message::Gis(gis::Event::Sources(Event::OpenStored(Box::new(at)))));
+    crate::files_testing::drive(&mut app, task);
+    let doc = app.document.as_ref().expect("opened");
+    assert_eq!(doc.stored_source().map(|s| s.name.as_str()), Some("Kadastro projesi"));
+    let _ = std::fs::remove_dir_all(&dir);
 }

@@ -137,6 +137,7 @@ ADR'ler **9100**'den başlar.
     - [x] **09a** Proje deposu sürücü sözleşmesinde (`ProjectStore`; GeoPackage `kentos_projects` uzantısı,
       PostgreSQL şeması); Dosya › Veri kaynağı'ndan kaydet ve aç; veri katmanının göreli yolu yazılır ve okunur, dosya
       taşınınca katman bulunur; Python `save_to`, `open_from`, `projects`.
-    - [ ] **09b** Kaynaklar'da projeler.
+    - [x] **09b** Kaynaklar'da projeler: GeoPackage'ın tablolarının ve şemanın tablolarının yanında; tıklayınca
+      açılır; Veri kaynağı penceresinden onaylı silinir.
     - [ ] **09c** Yeni katman bir kaynağın yeni tablosu.
     - [ ] **09d** Nesne tutan eski CBS katmanlarını bir kaynağa taşıma.

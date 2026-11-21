@@ -185,6 +185,14 @@ pub(crate) enum Line {
         relation: Box<Relation>,
         depth: usize,
     },
+    /// A project kept in a GeoPackage or a schema (docs/adr/9107): where, its name; who wrote it last and when (its
+    /// tip says them: the row is narrow).
+    Stored {
+        key: String,
+        at: Box<crate::document::StoredSource>,
+        meta: String,
+        depth: usize,
+    },
 }
 
 impl Line {
@@ -198,6 +206,7 @@ impl Line {
             | Line::Database { key, .. }
             | Line::Schema { key, .. }
             | Line::Table { key, .. }
+            | Line::Stored { key, .. }
             | Line::Branch { key, .. }
             | Line::Preset { key, .. }
             | Line::Extension { key, .. }
@@ -222,6 +231,7 @@ impl Line {
             | Line::FileTable { depth, .. }
             | Line::Schema { depth, .. }
             | Line::Table { depth, .. }
+            | Line::Stored { depth, .. }
             | Line::Extent { depth, .. }
             | Line::Branch { depth, .. }
             | Line::Preset { depth, .. }
@@ -275,6 +285,7 @@ impl Line {
                 out.extend(relation.comment.clone());
                 out
             }
+            Line::Stored { at, meta, .. } => vec![at.name.clone(), meta.clone(), "Proje".to_owned()],
             Line::Preset { name, group, .. } => {
                 vec![name.clone(), group.clone(), "Hazır altlık".to_owned()]
             }
