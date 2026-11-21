@@ -36,6 +36,8 @@ pub mod words {
     pub const SOURCE: &str = "süzgeç ve sıra kaynakta";
     pub const HERE: &str = "süzgeç burada soruldu";
     pub const NONE: &str = "Kaynakta soruya uyan satır yok.";
+    /// A new row's key cell: it has none until it is saved.
+    pub const NEW: &str = "yeni";
     pub fn count(n: u64) -> String {
         format!("{} satır", crate::view::thousands(n as f64))
     }
@@ -107,6 +109,8 @@ pub enum DataEvent {
     Answered(u64, u64, Result<Box<LayerRowsAnswer>, String>),
     /// A row pressed: its key and whether Ctrl turns it over.
     Press(i64, bool),
+    /// A new row not saved yet pressed: its object chosen in the drawing (docs/adr/9111 §1).
+    PressNew(kentos_domain::Uuid),
     /// Enter in Ara or İfade süzgeci: what is typed is asked.
     Apply,
     /// Seçime yakınlaş: the selected rows framed.
@@ -351,6 +355,12 @@ impl App {
             self.zoom_to_data_selection();
             return Task::none();
         }
+        if let DataEvent::PressNew(uid) = event {
+            if let Some(slot) = self.document.as_ref().and_then(|d| d.model.slot_of(uid)) {
+                self.selection.set([slot]);
+            }
+            return Task::none();
+        }
         if matches!(
             event,
             DataEvent::Edit(..) | DataEvent::Input(_) | DataEvent::Enter | DataEvent::Cancel | DataEvent::Taken(..)
@@ -408,7 +418,7 @@ impl App {
                     Err(why) => data.error = Some(why),
                 }
             }
-            DataEvent::Zoom => {}
+            DataEvent::Zoom | DataEvent::PressNew(_) => {}
             DataEvent::Apply => {
                 data.search = self.gis.features.search.trim().to_owned();
                 data.filter = self.gis.features.filter.trim().to_owned();
@@ -573,7 +583,6 @@ impl App {
                     .sortable(order, msg(DataEvent::Sort(f.clone()))),
             );
         }
-        let count = data.total.unwrap_or(0) as usize;
         let pages = &data.pages;
         let selected = &data.selected;
         let shown = fields.clone();
@@ -587,12 +596,32 @@ impl App {
         };
         let changes = model.filter(|_| editing_layer).map(|m| m.data_changes(&node.id));
         let deleted: HashSet<i64> = changes.as_ref().map(|c| c.deleted.iter().copied().collect()).unwrap_or_default();
+        // Its new rows, not saved yet, come first and marked “yeni” (docs/adr/9111 §1): the source's rows follow them, their
+        // pages read for the places below the new ones.
+        let added = changes.as_ref().map(|c| c.added.clone()).unwrap_or_default();
+        let chosen: HashSet<kentos_domain::Uuid> = model
+            .map(|m| self.selection.ids().iter().filter_map(|s| m.uid(*s)).collect())
+            .unwrap_or_default();
+        let new_rows = added.len();
+        let count = new_rows + data.total.unwrap_or(0) as usize;
         let editing = data.editing.clone();
         let edit_text = data.edit_text.clone();
         let field_count = fields.len() + 1;
+        let shown_new = fields.clone();
         let table = Table::new(columns)
             .horizontal()
             .virtualized(count, move |i| {
+                if let Some((uid, e)) = added.get(i) {
+                    let mut cells: Vec<Element<'_, Message>> =
+                        vec![kentos_ui::widget::table::text(words::NEW).style(kentos_ui::style::text::warning).into()];
+                    cells.extend(shown_new.iter().map(|f| {
+                        kentos_ui::widget::table::text(e.base().attrs.get(f).cloned().unwrap_or_default()).into()
+                    }));
+                    return TableLine::new(cells)
+                        .selected(chosen.contains(uid))
+                        .on_press(msg(DataEvent::PressNew(*uid)));
+                }
+                let i = i - new_rows;
                 let page = i as u64 / PAGE;
                 let at = (i as u64 % PAGE) as usize;
                 match pages.get(&page).and_then(|p| p.get(at)) {
@@ -642,9 +671,9 @@ impl App {
                     ),
                 }
             })
-            .on_range(|a, b| msg(DataEvent::Range(a, b)))
+            .on_range(move |a, b| msg(DataEvent::Range(a.saturating_sub(new_rows), b.saturating_sub(new_rows))))
             .empty(if data.total == Some(0) { words::NONE } else { words::READING });
-        // Being edited: what waits to be saved, new rows among it (they are not in the table yet).
+        // Being edited: what waits to be saved.
         let session = changes.map(|c| {
             format!(
                 " · düzenleniyor; kaydedilmemiş: {}",

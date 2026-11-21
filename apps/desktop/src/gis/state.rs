@@ -12,6 +12,8 @@ pub(crate) struct GisUiState {
     pub(crate) sources: crate::sources::SourcesPanel,
     /// The data layers' edit sessions' saves and question (data_edits.rs, docs/adr/9103 §5).
     pub(crate) data_edits: crate::data_edits::DataEdits,
+    /// Where the projects' pending data edits are kept on this device (data_journal.rs, docs/adr/9111 §3).
+    pub(crate) data_journal: crate::data_journal::Journals,
     /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
     pub(crate) data_pick: crate::data_pick::DataPick,
     /// The counted layers' class counts (docs/adr/9105 §4).

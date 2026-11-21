@@ -291,6 +291,7 @@ impl SheetMaps {
                         session: drawing.session,
                         legacy: false,
                         disk: None,
+                        kept: None,
                     };
                     (copy, spatial)
                 });

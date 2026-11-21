@@ -1,6 +1,7 @@
 //! A data layer's edit session in the window (docs/adr/9103 §5, plan/veri.md VY-05): Katmanlar's Düzenlemeyi başlat and
 //! Düzenlemeyi bitir on a data layer, Değişiklikleri kaydet and Değişiklikleri geri al on it or on every edited layer,
-//! the question when a layer with changes stops being edited or the drawing is left (Kaydet, Kaydetme, Vazgeç), and the
+//! the question when a layer with changes stops being edited or the drawing is left (Kaydet, Kaydetme, Vazgeç; leaving, also
+//! Projede tut: the changes wait with the project, docs/adr/9111 §3), and the
 //! save off the interface's thread: the layer's changes read off the drawing (`data_write::writes_of`), written to its
 //! table on a thread of its own in one transaction (`data_write::write`), taken out of the drawing once written
 //! (`Document::data_saved`). A save the table refuses leaves the changes as they were and says why, selecting the
@@ -29,6 +30,9 @@ pub(crate) struct DataEdits {
     pending: Option<(u64, crate::approved_layer::Approved)>,
     /// A save that met rows others changed (docs/adr/9104 §3): its layers and the words; Üstüne yaz writes over them.
     pub(crate) conflict: Option<(Vec<String>, String)>,
+    /// Projede tut answered for this leaving: the drawing is left without its changes being asked about again; they wait
+    /// with the project (docs/adr/9111 §3).
+    kept_for: Option<Then>,
 }
 
 /// The question: these layers have changes; what comes after the answer.
@@ -53,6 +57,9 @@ pub enum Answer {
     Save,
     Discard,
     Cancel,
+    /// Projede tut (leaving only): the changes are not written; saved with the project, they come back when it is opened
+    /// (docs/adr/9111 §3).
+    Keep,
 }
 
 /// A group's save as its thread hands it back: the layers written and each one's new keys, or why nothing was.
@@ -154,6 +161,9 @@ impl App {
         if self.data_saving() {
             self.warn("Katman değişiklikleri tabloya yazılıyor; yazma bitince yeniden deneyin.");
             return Some(Task::none());
+        }
+        if self.gis.data_edits.kept_for.take() == Some(then) {
+            return None;
         }
         let layers = self.data_modified_layers(&[]);
         if layers.is_empty() {
@@ -257,6 +267,16 @@ impl App {
             Answer::Cancel => {
                 self.gis.data_edits.after = None;
                 Task::none()
+            }
+            Answer::Keep => {
+                let After::Leave(then) = ask.after else {
+                    return Task::none();
+                };
+                self.gis.data_edits.kept_for = Some(then);
+                self.output(
+                    "Katman değişiklikleri tabloya yazılmadı; proje kaydedilince bu cihazda projeyle saklanır, proje açılınca geri gelir.",
+                );
+                self.leave(then)
             }
             Answer::Save => {
                 self.gis.data_edits.after = Some((ask.after, ask.layers.clone()));
@@ -478,17 +498,25 @@ impl App {
             After::Stop => "Düzenlemeyi bitir",
             After::Leave(_) => "Kaydedilmemiş katman değişiklikleri",
         };
-        kentos_ui::widget::overlay::modal(
+        // Leaving a project kept on this computer, the changes may wait with it (docs/adr/9111 §3).
+        let can_keep = matches!(ask.after, After::Leave(_))
+            && self.document.as_ref().is_some_and(|d| d.cloud_source().is_none());
+        let keeps = if can_keep {
+            " Projede tut, tabloya yazmadan projeyle saklar: proje açılınca geri gelir."
+        } else {
+            ""
+        };
+        let question =
             kentos_ui::widget::Confirm::new(title, message(Event::Answer(Answer::Discard)), message(Event::Answer(Answer::Cancel)))
                 .message(format!("{whose} değişiklikler tablosuna kaydedilsin mi?"))
                 .detail(format!(
-                    "{} Kaydetmezseniz bu değişiklikler bırakılır; tablo olduğu gibi kalır.",
+                    "{} Kaydetmezseniz bu değişiklikler bırakılır; tablo olduğu gibi kalır.{keeps}",
                     detail.join(" ")
                 ))
                 .confirm("Kaydetme")
                 .destructive()
-                .keep("Kaydet", message(Event::Answer(Answer::Save))),
-            message(Event::Answer(Answer::Cancel)),
-        )
+                .keep("Kaydet", message(Event::Answer(Answer::Save)));
+        let question = if can_keep { question.also("Projede tut", message(Event::Answer(Answer::Keep))) } else { question };
+        kentos_ui::widget::overlay::modal(question, message(Event::Answer(Answer::Cancel)))
     }
 }

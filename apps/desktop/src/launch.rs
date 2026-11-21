@@ -132,6 +132,8 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             app.arch.grids.library = grids::Library::device();
             // The forms designer's section library and kept drafts (docs/adr/0441 §1, §5).
             app.gis.form_files = forms::library::FormFiles::device();
+            // The projects' pending data edits, readable by the user alone (docs/adr/9111 §3).
+            app.gis.data_journal = crate::data_journal::Journals::device();
             // The user's AI agents, in a file of their own readable by the user alone (docs/adr/8056 §4).
             app.assistant.store = kentos_agent::ProfileStore::device();
             app.assistant.ledger = kentos_agent::UsageLedger::device();

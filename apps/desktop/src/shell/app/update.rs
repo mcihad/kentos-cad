@@ -211,6 +211,8 @@ impl App {
         self.dialog_back();
         // The edited data layers' unsaved rows outlined (data_edits.rs, docs/adr/9103 §5).
         self.data_edits_tasks();
+        // The project's pending data edits kept beside it follow its tables (data_journal.rs, docs/adr/9111 §3).
+        self.journal_tasks();
         let task = Task::batch([
             task,
             self.text_field_tasks(),
@@ -788,6 +790,8 @@ impl App {
                         "Dosya eski biçimde (KCAD v1). Kaydet, yeni biçimde (v2) yazmak için yer sorar; eski dosyanın üzerine kendiliğinden yazmaz.",
                     );
                 }
+                // What its file left out given back from this device (docs/adr/9111 §3).
+                self.journal_opened(&mut doc);
                 self.show_document(*doc);
                 // The level and view the drawing was saved with (docs/adr/0720 §1).
                 self.say_level_state();

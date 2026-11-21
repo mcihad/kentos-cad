@@ -116,7 +116,8 @@ QGIS'te yerel tamponda böyle bir denetim yoktur; sonra yazan öncekinin değiş
 
 ## §5 Kalan
 
-- Alınan satırların proje dosyasında saklanması: çakışma denetimi artık eski bir alınmış hâli güvenle yakalayabildiği için
-  yapılabilir; ayrı bir iş.
+- ~~Alınan satırların proje dosyasında saklanması.~~ Kapandı (VY-14,
+  [ADR 9111](9111-editing-pending-with-the-project.md) §3): bu cihazda projenin yanında saklanır; geri gelen satır §3'ün
+  çakışma denetiminden geçer.
 - Kaydetme sırasında varsayılan değerlerin ve tetikleyicilerin sonucunun düzenlerken görünmesi (sunucuda açık işlem)
   bilerek yapılmadı (§2).

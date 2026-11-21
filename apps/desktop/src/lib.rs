@@ -1513,6 +1513,9 @@ mod data_layers_tests;
 #[cfg(test)]
 #[path = "gis/data_edits_tests.rs"]
 mod data_edits_tests;
+#[cfg(test)]
+#[path = "gis/data_journal_tests.rs"]
+mod data_journal_tests;
 #[path = "gis/data_view.rs"]
 mod data_view;
 #[path = "gis/data_info.rs"]
@@ -1523,6 +1526,8 @@ mod data_labels;
 mod data_selection;
 #[path = "gis/data_edits.rs"]
 mod data_edits;
+#[path = "gis/data_journal.rs"]
+mod data_journal;
 #[path = "gis/data_pick.rs"]
 mod data_pick;
 #[path = "gis/layer_classes.rs"]

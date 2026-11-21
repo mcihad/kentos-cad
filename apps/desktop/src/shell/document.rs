@@ -116,6 +116,8 @@ pub struct Document {
     /// Its file as this drawing last read or wrote it (its time and size): a save over a file that changed since
     /// (another tab, another program) is refused rather than losing that work.
     pub disk: Option<DiskStamp>,
+    /// Its project's pending data edits as kept on this device beside its place (data_journal.rs, docs/adr/9111 §3).
+    pub kept: Option<crate::data_journal::Kept>,
 }
 
 /// A file's last change and size.
@@ -144,6 +146,7 @@ impl Document {
             source: Source::Local,
             session: session(),
             disk: None,
+            kept: None,
         })
     }
 
@@ -156,6 +159,7 @@ impl Document {
             source: Source::Local,
             session: session(),
             disk: None,
+            kept: None,
         })
     }
 
@@ -176,6 +180,7 @@ impl Document {
             session: session(),
             legacy: false,
             disk: None,
+            kept: None,
         }
     }
 
@@ -189,6 +194,7 @@ impl Document {
             session: session(),
             legacy: false,
             disk: None,
+            kept: None,
         }
     }
 

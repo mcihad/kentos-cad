@@ -234,9 +234,11 @@ verir.
 
 ## §8 Kalan
 
-- Kaydedilmemiş yeni satırlar tabloda listelenmez (tabloda değiller); durum satırı onları sayar.
+- ~~Kaydedilmemiş yeni satırlar tabloda listelenmez.~~ Kapandı (VY-14, [ADR 9111](9111-editing-pending-with-the-project.md)
+  §1): tablonun başında “yeni” imiyle durur.
 - ~~Değeri boş alan etiket şablonunda yer tutucusuyla görünür.~~ Kapandı (VY-13,
   [ADR 9110](9110-classes-from-the-source.md) §5): katmanın alanı boşsa boş yazılır.
 - İşlem kipleri ve başkasının değiştirdiği kayıtla çakışmanın söylenmesi VY-06'da.
-- Alınan satırların dosyada saklanması (çakışma denetimiyle) VY-06'da.
-- Çizimden sonra açılan öznitelik formu: bugün nesne şablonunun değerlerini alır; form açılması ayrı bir iş.
+- ~~Alınan satırların dosyada saklanması (çakışma denetimiyle).~~ Kapandı (VY-14, ADR 9111 §3): bu cihazda projenin
+  yanında saklanır, açılınca geri gelir, kaydederken denetlenir. Dosyaya yazılmaz (§1).
+- ~~Çizimden sonra açılan öznitelik formu.~~ Kapandı (VY-14, ADR 9111 §2): formsuz veri katmanında Öznitelikler açılır.

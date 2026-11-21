@@ -217,6 +217,7 @@ impl Document {
             works_tables: true,
             data_edits: Default::default(),
             data_written: 0,
+            data_left: Default::default(),
         }
         .with_held_sessions()
     }

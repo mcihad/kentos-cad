@@ -188,9 +188,17 @@ ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, AD
   - Sınıf satırına çift tık sınıfın sembolünü tasarımcıda açar.
   - Çizim katmanında kapalı sınıfın nesnesi etiketlenmez.
   - Değeri boş alan etikette boş görünür.
-- [ ] **VY-14 — Düzenleme.** Kaydedilmemiş yeni satırlar alttaki tabloda listelenir; çizimden sonra öznitelik formu
-  açılır (katmanda kapatılabilir); bekleyen değişiklikler (alınan satırlar, yeni ve silinen satırlar) proje dosyasıyla
-  saklanır ve proje açılınca geri gelir, kaydederken çakışma denetiminden geçer.
+- [x] **VY-14 — Düzenleme.** ([ADR 9111](../docs/adr/9111-editing-pending-with-the-project.md))
+  - Kaydedilmemiş yeni satırlar alttaki tablonun başında, “yeni” imiyle durur. Basmak nesneyi çizimde seçer.
+  - Formu olmayan veri katmanında çizilen satır seçilir ve Öznitelikler açılır. “Çizimden sonra formu aç” ikisini de
+    kapatır.
+  - Bekleyen değişiklikler proje kaydedilince saklanır: yeni satırlar dosyada, alınan satırlar ve silinen anahtarlar
+    **bu cihazda**, projenin yanında, yalnız kullanıcının okuyabildiği bir günlükte. Proje dosyasına kişisel veri
+    yazılmaz (6698 md. 12).
+  - Açılınca hepsi geri gelir. Kaydederken başkasının değiştirdiği satır sorulur.
+  - Çıkarken “Projede tut” cevabı değişiklikleri tabloya yazmadan projede bırakır.
+  - Bulunup kapatılan açık: proje kaydından sonra tabloya yazılan yeni satırlar dosyada kalıyordu. Proje yeniden
+    açılıp kaydedilince tabloya ikinci kez yazılıyorlardı. Artık açılışta çizime alınmazlar.
 - [ ] **VY-15 — Dışa aktarmanın kalanları.** GeoJSON, Shapefile ve KML akışlı yazılır (katman bütün belleğe alınmaz);
   kapsam için serbest kutu (koordinatla ya da haritada çizerek); koordinat sistemi seçici; KML'ye sembol (stil).
 - [ ] **VY-16 — SQL sorgusu katmanı canlı.** Bir SQL sorgusundan yapılan katman bağlı kopya değil, sorguyu kaynağında

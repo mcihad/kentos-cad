@@ -404,6 +404,7 @@ impl Document {
         }
         self.forget_data_history(layer);
         if !remove.is_empty() {
+            Arc::make_mut(&mut self.data_left).extend(remove.iter().copied());
             self.apply_external(External {
                 remove,
                 ..External::default()
@@ -429,6 +430,7 @@ impl Document {
         }
         self.forget_data_history(layer);
         if !remove.is_empty() {
+            Arc::make_mut(&mut self.data_left).extend(remove.iter().copied());
             self.apply_external(External {
                 remove,
                 ..External::default()

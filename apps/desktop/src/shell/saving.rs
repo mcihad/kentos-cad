@@ -395,6 +395,9 @@ pub struct Saving {
     pub upload: Option<iced::task::Handle>,
     /// A cloud save's bytes, kept for this device's copy should the server not answer (docs/adr/0043).
     pub bytes: Option<Vec<u8>>,
+    /// The pending data edits its file leaves out, taken with the drawing it writes: written beside the project once it is
+    /// saved (data_journal.rs, docs/adr/9111 §3). None for a copy and a cloud project.
+    pub kept: Option<crate::data_journal::Kept>,
 }
 
 impl Saving {
@@ -502,6 +505,11 @@ impl App {
         }
         let model = doc.model.clone();
         let (id, session, revision) = (next_id(), doc.session, doc.model.revision());
+        let kept = match &target {
+            Target::File(path) => Some(crate::data_journal::kept_for(&model, crate::data_journal::file_place(path))),
+            Target::Source(at) => Some(crate::data_journal::kept_for(&model, crate::data_journal::source_place(at))),
+            Target::Copy(_) | Target::Cloud { .. } => None,
+        };
         // The level and view on screen go with the file, no edit of the drawing (docs/adr/0720 §1).
         let level = (self.arch.active_level.clone(), self.level_view);
         let stop = Arc::new(AtomicBool::new(false));
@@ -518,6 +526,7 @@ impl App {
             stop: stop.clone(),
             upload: None,
             bytes: None,
+            kept,
         });
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
             let mut last = Instant::now();
@@ -642,7 +651,13 @@ impl App {
                     return Task::none();
                 };
                 let name = s.name();
-                return match result {
+                // The journal beside the project before its drawing may close (Kaydet ve kapat); what it kept is said
+                // after the save's own sentence.
+                let kept = match (&result, s.kept.clone()) {
+                    (Ok(()), Some(kept)) => self.journal_saved(s.session, kept),
+                    _ => None,
+                };
+                let task = match result {
                     Ok(()) => match s.target {
                         Target::File(path) => self.update(Message::Saved(Some(Ok(Written {
                             session: s.session,
@@ -687,6 +702,10 @@ impl App {
                         Task::none()
                     }
                 };
+                if let Some((level, words)) = kept {
+                    self.say(level, words);
+                }
+                return task;
             }
         }
         Task::none()

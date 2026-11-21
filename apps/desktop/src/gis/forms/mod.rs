@@ -168,6 +168,13 @@ impl App {
         match form {
             Some(id) => self.open_entry(slot, &id),
             None => {
+                // A new row of a data layer being edited, with fields and no form: the row chosen and Öznitelikler shown,
+                // its values typed there at once, as a GIS opens the layer's fields after a feature is drawn
+                // (docs/adr/9111 §2). Drafting › Çizimden sonra formu aç turns it off with the forms.
+                if self.settings.bool(ON_CREATE) && self.dialog.is_none() && self.edited_with_fields(&layer) {
+                    self.selection.set([slot]);
+                    self.docks.show(crate::app::Panel::Properties, kentos_ui::widget::docking::Side::Right);
+                }
                 // No form takes the new object: a required field it left empty is said now, not found later.
                 if let Some(note) = self.required_left_empty(slot) {
                     self.warn(note);
@@ -175,6 +182,13 @@ impl App {
                 Task::none()
             }
         }
+    }
+
+    /// Whether `layer` is a data layer being edited that has fields: its new rows' values are typed after drawing.
+    fn edited_with_fields(&self, layer: &str) -> bool {
+        self.document.as_ref().is_some_and(|d| {
+            d.model.editing(layer) && d.model.layers().get(layer).is_some_and(|n| !n.fields.is_empty())
+        })
     }
 
     /// The layer's required fields without a default that the object at `slot` has no value for, said with the way
