@@ -4357,6 +4357,110 @@
       ]
     },
     {
+      "name": "Düzenleme grubu: aynı kaynaktakiler, hepsi, her katman ayrı; proje ayarıdır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "editGrouping": "source"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "editGrouping"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "editGrouping": "source"
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "editGrouping": "source"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "editGrouping": "source"
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "editGrouping": "all"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "editGrouping"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "editGrouping": "all"
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "editGrouping": "layer"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "editGrouping"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "editGrouping": "layer"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Basamaklar ve birimler",
       "steps": [
         {

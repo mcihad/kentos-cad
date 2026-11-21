@@ -4,7 +4,9 @@
 //! in the Turkish alphabet's order), then the other way, then by key. Without a filter the count, the order and the
 //! pages are the source's; with one, its first page brings every kept key and the later pages are read by key.
 //! Göster's Görünümdekiler reads the view's box, read again when the view has moved; Seçililer reads the rows pressed.
-//! A row press selects its row (Ctrl turns one over). The rows are read only here: they are edited in VY-05's session.
+//! A row press selects its row (Ctrl turns one over). In a layer being edited a double-clicked cell is edited into the
+//! session (docs/adr/9103 §5); once the layer's changes are written or let go the table reads its rows again where it is,
+//! the rows read before shown until the new ones come.
 //!
 //! Ara and İfade süzgeci are asked when Enter is pressed: a search or a filter of a million rows is not asked at every
 //! letter. A new question stops the reads of the one before it (their scans end at the next part).
@@ -66,6 +68,12 @@ pub(crate) struct DataTable {
     checked: Option<RowsChecked>,
     pages: HashMap<u64, Vec<LayerRow>>,
     reading: HashSet<u64>,
+    /// Pages read before the layer's changes were written or let go: shown until they are read again.
+    stale: HashSet<u64>,
+    /// The first page read again for the count and the kept keys (after a write).
+    recount: bool,
+    /// The drawing's writes the pages were read after (`Document::data_written`).
+    written: u64,
     range: (usize, usize),
     error: Option<String>,
     /// The order the headers give: the field and whether it goes down.
@@ -157,6 +165,19 @@ impl DataTable {
 }
 
 impl DataTable {
+    /// The question read again where the table is, its layer's changes written or let go (a taken row then shows what
+    /// the table holds): the pages stay shown until their new reads come, the first page read again for the count and,
+    /// filtered, the kept keys the later pages wait for.
+    fn reread(&mut self) {
+        self.generation += 1;
+        self.stop.store(true, Ordering::Relaxed);
+        self.stop = Arc::new(AtomicBool::new(false));
+        self.reading.clear();
+        self.stale = self.pages.keys().copied().collect();
+        self.keys = None;
+        self.recount = true;
+    }
+
     /// The cell being edited: its row's key, its field and the text typed.
     #[cfg(test)]
     pub(crate) fn cell_editing(&self) -> Option<(i64, String, String)> {
@@ -216,7 +237,12 @@ impl App {
             return Task::none();
         };
         let asked = self.data_asked(&node);
+        let written = self.document.as_ref().map_or(0, |d| d.model.data_written());
         let data = &mut self.gis.features.data;
+        if data.asked.as_ref() == Some(&asked) && data.written != written {
+            data.reread();
+        }
+        data.written = written;
         if data.asked.as_ref() != Some(&asked) {
             if data.selected_of.as_deref() != Some(node.id.as_str()) {
                 data.selected.clear();
@@ -228,6 +254,8 @@ impl App {
             data.asked = Some(asked.clone());
             data.pages.clear();
             data.reading.clear();
+            data.stale.clear();
+            data.recount = false;
             data.total = None;
             data.keys = None;
             data.checked = None;
@@ -235,7 +263,7 @@ impl App {
         }
         let (first, last) = data.range;
         let mut wanted: Vec<u64> = (first as u64 / PAGE..=(last.max(first + 1) as u64 - 1) / PAGE).collect();
-        if data.total.is_none() && !wanted.contains(&0) {
+        if (data.total.is_none() || data.recount) && !wanted.contains(&0) {
             wanted.insert(0, 0);
         }
         let Some(doc) = self.document.as_ref() else {
@@ -245,7 +273,7 @@ impl App {
         let data = &mut self.gis.features.data;
         let mut tasks = Vec::new();
         for page in wanted {
-            if data.pages.contains_key(&page) || data.reading.contains(&page) {
+            if (data.pages.contains_key(&page) && !data.stale.contains(&page)) || data.reading.contains(&page) {
                 continue;
             }
             let filtered = !asked.filter.is_empty();
@@ -336,6 +364,10 @@ impl App {
                     return Task::none();
                 }
                 data.reading.remove(&page);
+                data.stale.remove(&page);
+                if page == 0 {
+                    data.recount = false;
+                }
                 match answer {
                     Ok(a) => {
                         data.error = None;
@@ -359,6 +391,7 @@ impl App {
                             far.sort_by_key(|p| std::cmp::Reverse(p.abs_diff(at)));
                             for p in far.into_iter().take(data.pages.len() - KEPT) {
                                 data.pages.remove(&p);
+                                data.stale.remove(&p);
                             }
                         }
                     }

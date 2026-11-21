@@ -151,6 +151,54 @@ impl PgTransaction {
 }
 
 impl Transaction for PgTransaction {
+    fn rows(&mut self, table: &str, fids: &[i64]) -> Result<Vec<kentos_data::Feature>, DataError> {
+        if fids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let shape = self.shape(table)?;
+        let mut q = Sql::default();
+        let keys = q.bind(Arg::Ints(fids.to_vec()));
+        let mut select = vec![format!("t.{}::int8", quote(&shape.schema.key))];
+        select.push(match crate::sql::geometry_expr(&shape) {
+            Some(g) => format!("ST_AsBinary({g})"),
+            None => "NULL::bytea".to_owned(),
+        });
+        select.extend(
+            shape
+                .schema
+                .fields
+                .iter()
+                .map(|f| crate::sql::read_expr(&format!("t.{}", quote(&f.name)), &f.kind)),
+        );
+        // Locked until the transaction ends: no other writer changes them meanwhile.
+        let sql = format!(
+            "SELECT {} FROM {} t WHERE t.{}::int8 = ANY({keys}::int8[]) ORDER BY 1 FOR UPDATE OF t",
+            select.join(", "),
+            shape.sql,
+            quote(&shape.schema.key)
+        );
+        let rt = runtime()?;
+        let tx = self.tx()?;
+        let rows = rt
+            .block_on(bound(&sql, &q.args).fetch_all(&mut **tx))
+            .map_err(error_of)?;
+        let mut out = Vec::with_capacity(rows.len());
+        for r in &rows {
+            let fid: i64 = r.try_get(0).map_err(error_of)?;
+            let wkb: Option<Vec<u8>> = r.try_get(1).map_err(error_of)?;
+            let mut values = Vec::with_capacity(shape.schema.fields.len());
+            for (i, f) in shape.schema.fields.iter().enumerate() {
+                values.push(crate::sql::value_of(r.try_get(i + 2).map_err(error_of)?, &f.kind));
+            }
+            out.push(kentos_data::Feature {
+                fid,
+                geometry: wkb.map(|b| kentos_data::geom::read_wkb(&b).map_err(|e| e.to_string())),
+                values,
+            });
+        }
+        Ok(out)
+    }
+
     fn insert(&mut self, table: &str, rows: &[NewFeature]) -> Result<Vec<i64>, DataError> {
         let shape = self.shape(table)?;
         let mut keys = Vec::with_capacity(rows.len());

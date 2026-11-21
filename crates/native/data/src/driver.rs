@@ -108,6 +108,11 @@ pub trait Transaction: Send {
     fn update(&mut self, table: &str, changes: &[Change]) -> Result<(), DataError>;
     /// Deletes rows; a key not in the table is refused.
     fn delete(&mut self, table: &str, fids: &[i64]) -> Result<(), DataError>;
+    /// The rows of these keys as they are inside the transaction, every field (in the schema's order) and the geometry
+    /// whole, by key; held against other writers until the transaction ends where the source can hold rows (a database
+    /// locks them; a file's transaction holds the whole file). A key not in the table is left out. What a writer checks
+    /// its rows against before it changes them (docs/adr/9104 §3).
+    fn rows(&mut self, table: &str, fids: &[i64]) -> Result<Vec<Feature>, DataError>;
     /// Makes a table; one of its name is refused unless `replace`, which drops it first.
     fn create_table(&mut self, table: &NewTable, replace: bool) -> Result<(), DataError>;
     /// Drops a table.

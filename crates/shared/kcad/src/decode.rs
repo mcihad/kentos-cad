@@ -1015,6 +1015,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
     let mut auto_select: Option<bool> = None;
+    let mut edit_grouping: Option<kentos_contracts::EditGrouping> = None;
     let mut source_bases: Vec<kentos_contracts::SourceBase> = Vec::new();
     let mut sources = Vec::new();
     let mut length_style = None;
@@ -1069,6 +1070,17 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "joinViews" if has.join_views => join_views = gis::join_views(r, has)?,
             // Schema 102 (docs/adr/0622 §5): Otomatik seçim.
             "autoSelect" if has.layer_geometry => auto_select = Some(r.bool()?),
+            // GIS 3 (docs/adr/9104 §2): the data layers' edit grouping.
+            "editGrouping" if has.gis >= crate::GIS_WITH_EDIT_GROUPING => {
+                edit_grouping = Some(named(
+                    r,
+                    &[
+                        ("layer", kentos_contracts::EditGrouping::Layer),
+                        ("source", kentos_contracts::EditGrouping::Source),
+                        ("all", kentos_contracts::EditGrouping::All),
+                    ],
+                )?)
+            }
             // Schema 98 (docs/adr/0583 §3): the map's system.
             // Schema 188 (docs/adr/1200 §2): a map project's work structure, read whole and checked.
             // Schema 194 (docs/adr/1340 §5): a map project's GNSS archive, read whole and checked.
@@ -1659,6 +1671,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         lineage,
         map_srid,
         auto_select,
+        edit_grouping,
         sources,
         length_style,
         domains,

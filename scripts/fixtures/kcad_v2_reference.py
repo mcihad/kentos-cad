@@ -310,6 +310,8 @@ def settings(s):
                 "mapSrid": (uint, False),
                 # Schema 102 (docs/adr/0622 §5): Otomatik seçim, written only when the project chose.
                 "autoSelect": (boolean, False),
+                # GIS data 3 (docs/adr/9104 §2): the data layers' edit grouping, written only when the project chose.
+                "editGrouping": (text, False),
                 "customCrs": (crs_definition, False),
                 "secondCustomCrs": (crs_definition, False),
                 "datumTransforms": (datum_transforms, False),
@@ -3007,6 +3009,11 @@ def document(d):
     # GIS data 2 (docs/adr/9101 §3): a data layer.
     def data_layers(nodes):
         return any("data" in n or data_layers(n.get("children", [])) for n in nodes)
+    # GIS data 3 (docs/adr/9104 §2): the data layers' edit grouping.
+    if "editGrouping" in d.get("settings", {}):
+        schema = max(schema, 254)
+        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(3)})
+                + text("version") + uint(schema) + text("document") + cmap(body))
     if data_layers(d["layers"]):
         schema = max(schema, 254)
         return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(2)})
@@ -5780,6 +5787,18 @@ def build():
     out["broken/data-layer-type.kcad"] = data_broken(lambda d: parcels(d)["data"]["geometry"].update(typeName="Polygon"))
     out["broken/data-layer-extent.kcad"] = data_broken(
         lambda d: parcels(d)["data"].update(extent=[617000.0, 4400000.0, 587000.0, 4430000.0]))
+    # The data layers' edit grouping (docs/adr/9104 §2): GIS data 3; under GIS data 2 an unknown field; a grouping of no
+    # name a bad value.
+    grouping = copy.deepcopy(load("data-layers.json"))
+    grouping["settings"]["editGrouping"] = "source"
+    out["edit-grouping.kcad"] = container(document(grouping))
+    grouping_payload = document(grouping)
+    with_gis3 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(3)})
+    assert grouping_payload.startswith(with_gis3), "an edit grouping raises the GIS data's version to 3"
+    with_gis2 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(2)})
+    out["broken/edit-grouping-in-gis-2.kcad"] = container(with_gis2 + grouping_payload[len(with_gis3):])
+    grouping["settings"]["editGrouping"] = "katman"
+    out["broken/edit-grouping-unknown.kcad"] = container(document(grouping))
     # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
     # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
     # two columns of one name, an unknown way, an empty list of columns.

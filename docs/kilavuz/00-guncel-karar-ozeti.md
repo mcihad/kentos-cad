@@ -6,7 +6,7 @@
 
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
   [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),
-  [plan/veri.md](../../plan/veri.md)).**
+  [ADR 9104](../adr/9104-transactions.md), [plan/veri.md](../../plan/veri.md)).**
   - Veritabanı ve dosya katmanları ayrı crate'lerdeki sürücülerden geçer:
     - ortak sözleşme `kentos-data`;
     - `kentos-data-gpkg`;
@@ -24,7 +24,11 @@
   - **Düzenleme oturumu** (`cad.layers.session`): veri katmanı düzenlemeye açılır. Değişiklikleri kaydedilene kadar
     çizimde katmanın nesneleri olarak bekler, Kaydet kaynağın tek işlemiyle yazar. Düzenlenmeyen veri katmanına nesne
     yazılmaz (bütünlük denetimi). Alınan satırlar dosyaya yazılmaz; yeni satırlar dosyada kalır.
-  - Sıradaki maddeler: işlem kipleri, sınıflar katman ağacında, dışa aktarma penceresi, GeoPackage projeleri.
+  - **Düzenleme grubu** proje ayarıdır (`settings.editGrouping`: her katman ayrı, aynı kaynaktakiler, bütün katmanlar).
+    Grubun katmanları birlikte açılıp kapanır; aynı kaynağınkiler tek işlemle yazılır. Kaydetmeden önce alınan satırlar
+    aynı işlemde yeniden okunur: başkası değiştirdiyse hiçbir şey yazılmaz (`rows_changed`); üstüne yazmak yalnız
+    değiştirilen alanları ve şekli yazar. Sunucuda açık işlem tutulmaz.
+  - Sıradaki maddeler: sınıflar katman ağacında, dışa aktarma penceresi, GeoPackage projeleri.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

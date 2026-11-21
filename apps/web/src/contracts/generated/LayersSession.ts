@@ -8,9 +8,15 @@ import type { SessionAction } from "./SessionAction";
  * `one_layer` (`take` or `delete` naming more than one), `no_keys` (`take` or `delete` without keys),
  * `invalid_count` (more than 10 000 keys), `layer_not_found`, `not_a_data_layer`, `data_layer_read_only` (`start` of a
  * layer kept read-only), `data_layer_not_editing` (any other action naming a layer not being edited),
- * `data_edits_unsaved` (`stop` of a layer with changes), `source_unreachable` (the table could not be read or opened;
- * the message says why), `data_save_failed` (the table refused the writes: nothing of that layer was written, its
- * changes wait; with several layers, a warning of the layers not written while the others were).
+ * `data_edits_unsaved` (`stop` of a layer with changes, or of one that stops with it), `source_unreachable` (the table
+ * could not be read or opened; the message says why), `data_save_failed` (the table refused the writes: nothing of the
+ * layers written together was written, their changes wait; with several groups, a warning of those not written while
+ * the others were), `rows_changed` (a row taken was changed or deleted by someone else since: nothing written; `force`
+ * writes over it).
+ *
+ * The project's edit grouping (`settings.editGrouping`, docs/adr/9104 §2) widens `start`, `save`, `rollback`, `cancel`,
+ * `stop` and `status` of a named layer to the layers of its source, or to every data layer; `save` then writes a
+ * source's layers in one transaction.
  */
 export type LayersSession = { action: SessionAction, 
 /**
@@ -21,4 +27,8 @@ layers?: Array<string>,
 /**
  * `take`, `delete`: the rows' keys, 1–10 000.
  */
-keys?: Array<bigint>, };
+keys?: Array<bigint>, 
+/**
+ * `save`: write over the rows others changed or deleted since they were taken (a `rows_changed` otherwise).
+ */
+force?: boolean, };

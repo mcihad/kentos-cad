@@ -699,13 +699,15 @@ SCHEMA_WITH_TOOL_LAYERS = 255
 GIS_WITH_EXTENSION_DERIVATIONS = 1
 # GIS 2 (docs/adr/9101 §3): a data layer (`data` of a layer node), a table drawn as it is now, its rows not in the file.
 GIS_WITH_DATA_LAYERS = 2
+# GIS data 3 (docs/adr/9104 §2): the settings' `editGrouping`, how the data layers' edit sessions go together.
+GIS_WITH_EDIT_GROUPING = 3
 ARCH_WITH_BLOCK_ELEMENTS = 2
 ARCH_WITH_COVERINGS = 5
 ARCH_WITH_SLAB_EDGE_BINDINGS = 36
 ARCH_WITH_CEILING_RECIPE = 37
 ARCH_WITH_ELECTRIC_APPLIANCES = 38
 ARCH_WITH_CASEWORK_PLACEMENT = 39
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_DATA_LAYERS), "map": ("harita", 0),
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_EDIT_GROUPING), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -4805,6 +4807,8 @@ class _Schema:
                 **({"lineage": (self.lineage_, False)} if self.lineage else {}),
                 **({"mapSrid": (self.uint(32), False)} if self.source_crs else {}),
                 **({"autoSelect": (self.bool, False)} if self.layer_geometry else {}),
+                **({"editGrouping": (self.enum(("layer", "source", "all")), False)}
+                   if getattr(self, "gis_version", 0) >= GIS_WITH_EDIT_GROUPING else {}),
                 **({"heights": (self.heights_, False), "coordinateEpoch": (self.epoch_, False)} if self.heights else {}),
                 **({"road": (self.road_, False)} if self.road_work else {}),
                 **({"mapWork": (self.map_work_, False)} if self.map_work else {}),

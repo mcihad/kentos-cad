@@ -80,6 +80,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
     ProjectSettings {
         map_srid: None,
         auto_select: None,
+        edit_grouping: None,
         leader_styles: Vec::new(),
         wall_styles: Vec::new(),
         arch: None,

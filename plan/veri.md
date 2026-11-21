@@ -75,13 +75,22 @@ ADR'ler **9100**'den başlar.
   - Düzenlenen katmanın satırlarına kenetlenilir; satır sadeleştirilmeden okunur, kenet kendi köşesine düşer.
   - Öznitelik tablosunda hücre çift tıklanıp düzenlenir; satır alınır, değer tampona yazılır.
   - Kalan: kaydedilmemiş yeni satırlar tabloda listelenmez (durum satırı sayar); alınan satırların dosyada saklanması
-    ve çakışma denetimi VY-06'da.
-- [ ] **VY-06 — İşlem yönetimi.** Proje ayarı, üç kip:
-  - yerel düzenleme tamponu;
-  - aynı veritabanının katmanları için otomatik işlem grubu;
-  - bütün düzenlenebilir katmanların birlikte açılıp kapandığı tamponlu işlem grubu.
-  
-  Kaynak başına tek işlemde yazılır; başkasının değiştirdiği kayıtla çakışma söylenir.
+    (ADR 9104 §5).
+- [x] **VY-06 — İşlem yönetimi.** ([ADR 9104](../docs/adr/9104-transactions.md))
+  - Proje ayarları › Genel › Birlikte düzenlenen katmanlar: Her katman ayrı, Aynı kaynaktakiler birlikte, Bütün
+    katmanlar birlikte (`settings.editGrouping`; `.kcad`'da CBS verisi sürüm 3).
+  - Grubun katmanları birlikte açılır, kaydedilir, geri alınır, kapanır. Aynı kaynağın katmanları tek işlemle yazılır;
+    biri yazılamazsa hiçbiri yazılmaz.
+  - Kaydetmeden önce alınan satırlar aynı işlemde yeniden okunur (`Transaction::rows`, PostGIS'te `FOR UPDATE`).
+    Başkası değiştirdiyse ya da sildiyse hiçbir şey yazılmaz ve `rows_changed` söylenir. Üstüne yaz (`force`) yalnız
+    değiştirilen alanları ve şekli yazar; başkasının öbür alanlardaki değişikliği kalır.
+  - Sunucuda açık işlem tutulmaz: kilit uzun tutulmaz, bağlantı koparsa iş gitmez (ADR 9104 §2).
+  - Kaydetme ya da geri almadan sonra Öznitelik tablosu bulunduğu yeri yeniden okur.
+  - Gerçek pencerede, bir milyon satırlık PostGIS tablosunda:
+    - başka bir bağlantının değiştirdiği parsel kaydedilirken çakışma soruldu, hiçbir şey yazılmadı;
+    - Üstüne yaz taşınan şekli yazdı, öbür kullanıcının kullanım değeri kaldı;
+    - aynı GeoPackage'ın iki katmanı birlikte açılıp kapandı, PostGIS katmanı açılmadı.
+  - Kalan: alınan satırların proje dosyasında saklanması.
 - [ ] **VY-07 — Sınıflar katman ağacında.**
   - Kategorili, dereceli ve kurallı stilin sınıfları katmanın altında listelenir; her birinin kutusu o sınıfı açar ya da
     kapar.

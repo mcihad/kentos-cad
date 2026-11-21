@@ -1135,6 +1135,8 @@ __all__ = [
     "EdgeShiftShapeWork",
     "EdgeStraightened",
     "EditFeatureChange",
+    "EditGrouping",
+    "EditGroupingName",
     "EditOperation",
     "EditOperationName",
     "EditTablesOperation",

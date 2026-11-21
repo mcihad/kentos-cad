@@ -2453,6 +2453,23 @@ DxfFormName = Literal["native", "block"]
 """The names of :class:`DxfForm`, for a plain string."""
 
 
+class EditGrouping(_StrEnum):
+    """How the project's data layers' edit sessions go together (docs/adr/9104 §2): which layers open, save, let go and
+    close together, and which are written in one transaction.
+
+    - ``layer``: Each layer alone: its changes in a transaction of their own.
+    - ``source``: The layers of a source (a GeoPackage, a database) together: opened and closed together, written in one
+    - ``all``: Every editable data layer together: opened and closed together, written in one transaction a source.
+    """
+    LAYER = "layer"
+    SOURCE = "source"
+    ALL = "all"
+
+
+EditGroupingName = Literal["layer", "source", "all"]
+"""The names of :class:`EditGrouping`, for a plain string."""
+
+
 class EditOperation(_StrEnum):
     """The modify tool an edit comes from; it names the undo step.
 
@@ -58596,21 +58613,31 @@ class LayersSession(_Model):
     `one_layer` (`take` or `delete` naming more than one), `no_keys` (`take` or `delete` without keys),
     `invalid_count` (more than 10 000 keys), `layer_not_found`, `not_a_data_layer`, `data_layer_read_only` (`start` of a
     layer kept read-only), `data_layer_not_editing` (any other action naming a layer not being edited),
-    `data_edits_unsaved` (`stop` of a layer with changes), `source_unreachable` (the table could not be read or opened;
-    the message says why), `data_save_failed` (the table refused the writes: nothing of that layer was written, its
-    changes wait; with several layers, a warning of the layers not written while the others were).
+    `data_edits_unsaved` (`stop` of a layer with changes, or of one that stops with it), `source_unreachable` (the table
+    could not be read or opened; the message says why), `data_save_failed` (the table refused the writes: nothing of the
+    layers written together was written, their changes wait; with several groups, a warning of those not written while
+    the others were), `rows_changed` (a row taken was changed or deleted by someone else since: nothing written; `force`
+    writes over it).
+
+    The project's edit grouping (`settings.editGrouping`, docs/adr/9104 §2) widens `start`, `save`, `rollback`, `cancel`,
+    `stop` and `status` of a named layer to the layers of its source, or to every data layer; `save` then writes a
+    source's layers in one transaction.
     Attributes:
+        force: `save`: write over the rows others changed or deleted since they were taken (a `rows_changed` otherwise).
         keys: `take`, `delete`: the rows' keys, 1–10 000. Unit: id.
         layers: The data layers (their ids). None: every layer being edited (`save`, `rollback`, `cancel`, `stop`, `status`).
             `start` names at least one; `take` and `delete` exactly one.
     """
     action: SessionAction | SessionActionName
+    force: bool | None | Unset = UNSET
     keys: list[int] | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["action"] = _enum_out(self.action)
+        if self.force is not UNSET:
+            out["force"] = self.force
         if self.keys is not UNSET:
             out["keys"] = None if self.keys is None else list(self.keys)
         if self.layers is not UNSET:
@@ -58621,6 +58648,7 @@ class LayersSession(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> LayersSession:
         return cls(
             action=_enum_in(SessionAction, data["action"]),
+            force=data.get("force", UNSET),
             keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
         )
@@ -84820,6 +84848,7 @@ class ProjectSettings(_Model):
         drawing_font: Absent in files written before drawing typefaces (read as Barlow).
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
+        edit_grouping: How the data layers' edit sessions go together (docs/adr/9104 §2); absent: each layer alone.
         forms: The project's forms, in the order they were made (docs/adr/0401).
         hatch_patterns: The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
         heights: What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
@@ -84911,6 +84940,7 @@ class ProjectSettings(_Model):
     domains: list[FieldDomain] | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET
     forms: list[ProjectForm] | Unset = UNSET
     hatch_patterns: list[HatchPatternDef] | Unset = UNSET
     heights: HeightReference | None | Unset = UNSET
@@ -84990,6 +85020,8 @@ class ProjectSettings(_Model):
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.edit_grouping is not UNSET:
+            out["editGrouping"] = None if self.edit_grouping is None else _enum_out(self.edit_grouping)
         if self.forms is not UNSET:
             out["forms"] = [e0.to_json() for e0 in self.forms]
         if self.hatch_patterns is not UNSET:
@@ -85099,6 +85131,7 @@ class ProjectSettings(_Model):
             domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            edit_grouping=UNSET if "editGrouping" not in data else None if data["editGrouping"] is None else _enum_in(EditGrouping, data["editGrouping"]),
             forms=[ProjectForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
             hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
             heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
@@ -97769,6 +97802,8 @@ class SettingsSet(_Model):
             the active layer's. No object changes.
         cad_work: What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon.
         coordinate_epoch: Unit: year.
+        edit_grouping: How the data layers' edit sessions go together (docs/adr/9104 §2): each layer alone, a source's layers
+            together, or every editable layer together. No object changes.
         expected_revision: The document revision the input was prepared against, as decimal text.
         length_decimals: Unit: count.
         length_style: How lengths are written (docs/adr/0262 §2): decimal, or architectural,
@@ -97792,6 +97827,7 @@ class SettingsSet(_Model):
     coordinate_epoch: float | None | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     heights: HeightReference | None | Unset = UNSET
     length_decimals: int | None | Unset = UNSET
@@ -97826,6 +97862,8 @@ class SettingsSet(_Model):
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.edit_grouping is not UNSET:
+            out["editGrouping"] = None if self.edit_grouping is None else _enum_out(self.edit_grouping)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.heights is not UNSET:
@@ -97866,6 +97904,7 @@ class SettingsSet(_Model):
             coordinate_epoch=UNSET if "coordinateEpoch" not in data else None if data["coordinateEpoch"] is None else float(data["coordinateEpoch"]),
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            edit_grouping=UNSET if "editGrouping" not in data else None if data["editGrouping"] is None else _enum_in(EditGrouping, data["editGrouping"]),
             expected_revision=data.get("expectedRevision", UNSET),
             heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
             length_decimals=data.get("lengthDecimals", UNSET),
@@ -147841,6 +147880,8 @@ __all__ = [
     "EdgeShiftShapeWork",
     "EdgeStraightened",
     "EditFeatureChange",
+    "EditGrouping",
+    "EditGroupingName",
     "EditOperation",
     "EditOperationName",
     "EditTablesOperation",

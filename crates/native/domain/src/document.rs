@@ -90,6 +90,9 @@ pub struct Document {
     pub(crate) works_tables: bool,
     /// The data layers being edited (docs/adr/9103 §2, data_edits.rs): the session's, not the file's.
     pub(crate) data_edits: Arc<crate::data_edits::DataEdits>,
+    /// How many times a data layer's changes were written to its table or let go: what is read from a table again when
+    /// it moves.
+    pub(crate) data_written: u64,
 }
 
 /// What a step may do to the drawing's objects (docs/adr/0411 §5).
@@ -339,6 +342,7 @@ impl Document {
             isolation_version: self.isolation_version,
             works_tables: self.works_tables,
             data_edits: self.data_edits.clone(),
+            data_written: self.data_written,
         }
     }
 

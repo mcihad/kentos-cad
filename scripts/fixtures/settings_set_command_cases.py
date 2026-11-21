@@ -155,6 +155,13 @@ def cases():
                 "steps": [step("execute", {"autoSelect": False}, done(["autoSelect"]), {**FLAGS, "settings": {"autoSelect": False}}),
                           step("execute", {"autoSelect": False}, done([]), {"settings": {"autoSelect": False}}),
                           step("execute", {"autoSelect": True}, done(["autoSelect"]), {"settings": {"autoSelect": True}})]})
+    # Veri katmanlarının düzenleme grubu (docs/adr/9104 §2): the project's choice, written even when it is the default;
+    # an unknown one is refused by the input's own shape.
+    out.append({"name": "Düzenleme grubu: aynı kaynaktakiler, hepsi, her katman ayrı; proje ayarıdır",
+                "steps": [step("execute", {"editGrouping": "source"}, done(["editGrouping"]), {**FLAGS, "settings": {"editGrouping": "source"}}),
+                          step("execute", {"editGrouping": "source"}, done([]), {"settings": {"editGrouping": "source"}}),
+                          step("execute", {"editGrouping": "all"}, done(["editGrouping"]), {"settings": {"editGrouping": "all"}}),
+                          step("execute", {"editGrouping": "layer"}, done(["editGrouping"]), {"settings": {"editGrouping": "layer"}})]})
     out.append({"name": "Basamaklar ve birimler",
                 "steps": [step("execute", {"lengthDecimals": 2, "areaDecimals": 4, "areaUnit": "donum", "angleUnit": "deg", "drawingFont": "arimo"},
                                done(["lengthDecimals", "areaDecimals", "areaUnit", "angleUnit", "drawingFont"]),

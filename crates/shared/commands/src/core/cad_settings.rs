@@ -143,6 +143,11 @@ pub struct SettingsSet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub auto_select: Option<bool>,
+    /// How the data layers' edit sessions go together (docs/adr/9104 §2): each layer alone, a source's layers
+    /// together, or every editable layer together. No object changes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub edit_grouping: Option<crate::EditGrouping>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_unit: Option<DrawingUnit>,

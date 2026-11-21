@@ -14,6 +14,35 @@ pub const DATA_DRIVERS: [&str; 2] = ["gpkg", "postgis"];
 /// Longest address, table and column names kept.
 pub const MAX_DATA_TEXT: usize = 2048;
 
+/// How the project's data layers' edit sessions go together (docs/adr/9104 §2): which layers open, save, let go and
+/// close together, and which are written in one transaction.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum EditGrouping {
+    /// Each layer alone: its changes in a transaction of their own.
+    #[default]
+    Layer,
+    /// The layers of a source (a GeoPackage, a database) together: opened and closed together, written in one
+    /// transaction.
+    Source,
+    /// Every editable data layer together: opened and closed together, written in one transaction a source.
+    All,
+}
+
+impl EditGrouping {
+    /// Its name in the interface.
+    pub fn label(self) -> &'static str {
+        match self {
+            EditGrouping::Layer => "Her katman ayrı",
+            EditGrouping::Source => "Aynı kaynaktakiler birlikte",
+            EditGrouping::All => "Bütün katmanlar birlikte",
+        }
+    }
+}
+
 /// The geometry column of a data layer's table as last read.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

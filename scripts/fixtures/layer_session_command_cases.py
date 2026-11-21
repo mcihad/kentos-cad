@@ -507,6 +507,91 @@ def cases():
         session({"action": "take", "layers": ["layer-1"], "keys": [1]},
                 failed("source_unreachable", "$any", "layers"), {"ids": []}),
     ])
+    # ── Düzenleme grupları ve çakışma (docs/adr/9104) ────────────────────────────────────────────────────────────
+    def grouping(name):
+        return {"op": "execute", "command": "cad.settings.set", "input": {"editGrouping": name},
+                "result": completed({"changed": ["editGrouping"], "followed": 0, "locked": 0, "revision": "$current"})}
+
+    k = next(n)
+    case("Aynı kaynaktakiler birlikte: biri açılınca öteki de açılır, ikisi tek işlemle yazılır", [
+        copy(k), add_layer(k), add_layer(k, "layer-2", "Parseller B"), grouping("source"),
+        session({"action": "start", "layers": ["layer-1"]},
+                completed(done([layer_state(), layer_state("layer-2")]))),
+        draw(NEW_RING, NEW_ATTRS, 1),
+        draw(NEW_RING, NEW_ATTRS, 2, "layer-2"),
+        session({"action": "save", "layers": ["layer-1"]},
+                completed(done([layer_state(added=1, keys=[11]), layer_state("layer-2", added=1, keys=[12])])),
+                {"ids": []}),
+        rows_of([11, 12], rows_answer([NEW_ROW, dict(NEW_ROW, fid=12)])),
+    ])
+    k = next(n)
+    case("Aynı kaynaktakiler birlikte: biri yazılamazsa hiçbiri yazılmaz", [
+        copy(k), add_layer(k), add_layer(k, "layer-2", "Parseller B"), grouping("source"),
+        session({"action": "start", "layers": ["layer-1"]},
+                completed(done([layer_state(), layer_state("layer-2")]))),
+        draw(NEW_RING, NEW_ATTRS, 1),
+        draw(NEW_RING, no_ada, 2, "layer-2"),
+        session({"action": "save"},
+                failed("data_save_failed",
+                       "“Parseller B” katmanının değişiklikleri tablosuna yazılamadı: “ada” alanı boş geçilemez.",
+                       "layers[0]", ["$uidOf:2"]),
+                {"ids": [1, 2]}),
+        rows_of([11], rows_answer([])),
+    ])
+    a, b = next(n), next(n)
+    case("Bütün katmanlar birlikte: ayrı dosyalardaki katmanlar birlikte açılır ve kapanır", [
+        copy(a), add_layer(a), copy(b), add_layer(b, "layer-2", "Parseller B"), grouping("all"),
+        session({"action": "start", "layers": ["layer-1"]},
+                completed(done([layer_state(), layer_state("layer-2")]))),
+        session({"action": "stop", "layers": ["layer-1"]},
+                completed(done([layer_state(editing=False), layer_state("layer-2", editing=False)]))),
+    ])
+    k = next(n)
+    AGAIN = "Değişikliği bırakıp satırları yeniden alın (action: rollback, sonra take) ya da üstüne yazın (force: true)."
+    changed3 = "Başkası bu satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş (değiştirilmiş: 3); hiçbir şey yazılmadı. " + AGAIN
+    case("Başkasının değiştirdiği satır: çakışma söylenir; üstüne yazmak yalnız değiştirileni yazar", [
+        copy(k), add_layer(k), add_layer(k, "layer-2", "Parseller B"),
+        start(("layer-1", "layer-2")),
+        session({"action": "take", "layers": ["layer-1"], "keys": [3]},
+                completed(done([layer_state()], ["$uidOf:1"]))),
+        session({"action": "take", "layers": ["layer-2"], "keys": [3]},
+                completed(done([layer_state("layer-2")], ["$uidOf:2"]))),
+        {"op": "execute", "command": "cad.fields.write",
+         "input": {"layer": "layer-2", "write": {"kind": "calculate", "field": "kullanim", "expression": "'Okul'"}},
+         "result": any_result()},
+        {"op": "execute", "command": "cad.fields.write",
+         "input": {"layer": "layer-2", "write": {"kind": "calculate", "field": "mahalle", "expression": "'Yeni'"}},
+         "result": any_result()},
+        session({"action": "save", "layers": ["layer-2"]}, completed(done([layer_state("layer-2", changed=1)]))),
+        {"op": "execute", "command": "cad.fields.write",
+         "input": {"layer": "layer-1", "write": {"kind": "calculate", "field": "kullanim", "expression": "'Pazar'"}},
+         "result": any_result()},
+        session({"action": "save", "layers": ["layer-1"]},
+                {"status": "conflict", "error": {"code": "rows_changed", "message": changed3, "path": "layers[0]",
+                                                 "uids": ["$uidOf:1"], "retryable": True}},
+                {"ids": [1]}),
+        rows_of([3], rows_answer([dict(BY_KEY[3], kullanim="Okul", mahalle="Yeni")])),
+        session({"action": "save", "layers": ["layer-1"], "force": True},
+                completed(done([layer_state(changed=1)])), {"ids": []}),
+        rows_of([3], rows_answer([dict(BY_KEY[3], kullanim="Pazar", mahalle="Yeni")])),
+    ])
+    k = next(n)
+    gone4 = "Başkası bu satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş (silinmiş: 4); hiçbir şey yazılmadı. " + AGAIN
+    case("Başkasının sildiği satır: çakışma söylenir, hiçbir şey yazılmaz", [
+        copy(k), add_layer(k), add_layer(k, "layer-2", "Parseller B"),
+        start(("layer-1", "layer-2")),
+        session({"action": "take", "layers": ["layer-1"], "keys": [4]},
+                completed(done([layer_state()], ["$uidOf:1"]))),
+        session({"action": "delete", "layers": ["layer-2"], "keys": [4]},
+                completed(done([layer_state("layer-2", deleted=1)]))),
+        session({"action": "save", "layers": ["layer-2"]}, completed(done([layer_state("layer-2", deleted=1)]))),
+        {"op": "execute", "command": "cad.entities.transform",
+         "input": {"uids": ["$uidOf:1"], "transform": {"kind": "move", "dx": 5, "dy": -2}}, "result": any_result()},
+        session({"action": "save", "layers": ["layer-1"]},
+                {"status": "conflict", "error": {"code": "rows_changed", "message": gone4, "path": "layers[0]",
+                                                 "uids": ["$uidOf:1"], "retryable": True}},
+                {"ids": [1]}),
+    ])
     k = next(n)
     case("plan oturumu söyler, hiçbir şey yazmaz", [
         copy(k), add_layer(k), start(),

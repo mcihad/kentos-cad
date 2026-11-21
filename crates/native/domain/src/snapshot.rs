@@ -216,6 +216,7 @@ impl Document {
             isolation_version: 0,
             works_tables: true,
             data_edits: Default::default(),
+            data_written: 0,
         }
         .with_held_sessions()
     }

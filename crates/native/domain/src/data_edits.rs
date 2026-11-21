@@ -72,6 +72,9 @@ pub struct DataChanges {
     pub changed: Vec<DataChange>,
     /// Keys of rows to delete, ascending.
     pub deleted: Vec<i64>,
+    /// The taken rows it changes or deletes, by key: their objects' ids and the rows as they came, what a save checks the
+    /// table against (docs/adr/9104 §3).
+    pub originals: BTreeMap<i64, (Uuid, Arc<Entity>)>,
 }
 
 impl DataChanges {
@@ -299,6 +302,7 @@ impl Document {
                             now: stored.entity.clone(),
                             row: t.row.clone(),
                         });
+                        out.originals.insert(t.key, (stored.uid, t.row.clone()));
                     }
                 }
                 None => out.added.push((stored.uid, stored.entity.clone())),
@@ -312,6 +316,7 @@ impl Document {
                 .is_some_and(|s| s.entity.base().layer_id == layer);
             if !here {
                 out.deleted.push(t.key);
+                out.originals.insert(t.key, (*uid, t.row.clone()));
             }
         }
         out.deleted.extend(edit.deleted.iter().copied());
@@ -344,6 +349,7 @@ impl Document {
         if !self.editing(layer) {
             return Ok(());
         }
+        self.data_written += 1;
         let now = |doc: &Document, uid: Uuid| {
             doc.store
                 .slot_of(uid)
@@ -415,6 +421,9 @@ impl Document {
         let had = !edit.taken.is_empty() || !edit.deleted.is_empty();
         let remove: Vec<Uuid> = self.store.on_layer(layer).map(|s| s.uid).collect();
         let had = had || !remove.is_empty();
+        if had {
+            self.data_written += 1;
+        }
         if let Some(edit) = Arc::make_mut(&mut self.data_edits).get_mut(layer) {
             *edit = LayerEdit::default();
         }
@@ -451,6 +460,13 @@ impl Document {
             .map_err(Refusal)?;
         }
         Ok(true)
+    }
+
+    /// How many times a data layer's changes were written ([`Document::data_saved`]) or let go
+    /// ([`Document::discard_data_edits`]): a table read from its source is read again when this moves, its taken rows
+    /// gone back to what the table holds.
+    pub fn data_written(&self) -> u64 {
+        self.data_written
     }
 
     /// The objects a saved file leaves out: the rows taken from their tables (their rows are in the tables).

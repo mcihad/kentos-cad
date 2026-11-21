@@ -2599,6 +2599,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         /,
         *,
         action: SessionAction | SessionActionName,
+        force: bool | None | Unset = UNSET,
         keys: Sequence[int] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         request_id: str | None = None,
@@ -2622,6 +2623,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         Args:
             doc: The drawing it works on.
             action:
+            force: `save`: write over the rows others changed or deleted since they were taken (a `rows_changed` otherwise).
             keys: `take`, `delete`: the rows' keys, 1–10 000. Unit: id.
             layers: The data layers (their ids). None: every layer being edited (`save`, `rollback`, `cancel`, `stop`, `status`).
                 `start` names at least one; `take` and `delete` exactly one.
@@ -2639,6 +2641,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         """
         return self.execute_input(doc, LayersSession(
             action=action,
+            force=force,
             keys=_opt(keys, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
@@ -2649,6 +2652,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         /,
         *,
         action: SessionAction | SessionActionName,
+        force: bool | None | Unset = UNSET,
         keys: Sequence[int] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
     ) -> LayersSessionDone:
@@ -2657,6 +2661,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         """
         return self.plan_input(doc, LayersSession(
             action=action,
+            force=force,
             keys=_opt(keys, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
         ))
@@ -2667,6 +2672,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         /,
         *,
         action: SessionAction | SessionActionName,
+        force: bool | None | Unset = UNSET,
         keys: Sequence[int] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -2675,6 +2681,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         """
         return self.validate_input(doc, LayersSession(
             action=action,
+            force=force,
             keys=_opt(keys, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
         ))
@@ -2685,6 +2692,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         /,
         *,
         action: SessionAction | SessionActionName,
+        force: bool | None | Unset = UNSET,
         keys: Sequence[int] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         op: str = "execute",
@@ -2698,6 +2706,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         """
         return self.answer_input(doc, LayersSession(
             action=action,
+            force=force,
             keys=_opt(keys, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)

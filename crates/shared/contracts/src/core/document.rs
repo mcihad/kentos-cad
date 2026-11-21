@@ -270,6 +270,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub auto_select: Option<bool>,
+    /// How the data layers' edit sessions go together (docs/adr/9104 §2); absent: each layer alone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub edit_grouping: Option<crate::EditGrouping>,
     /// Absent in files written before drawing typefaces (read as Barlow).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -869,6 +873,11 @@ impl ProjectSettings {
     pub fn auto_select(&self) -> bool {
         self.auto_select
             .unwrap_or(self.project_type() != Some(Workspace::Gis))
+    }
+
+    /// How the data layers' edit sessions go together (docs/adr/9104 §2): the project's, else each layer alone.
+    pub fn edit_grouping(&self) -> crate::EditGrouping {
+        self.edit_grouping.unwrap_or_default()
     }
 
     /// The refraction coefficient k of trigonometric heights: the project's,

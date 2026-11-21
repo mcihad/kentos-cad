@@ -99,7 +99,30 @@ fn check(doc: &Document, input: &LayersSession) -> Result<Vec<String>, Stop> {
             ));
         }
     }
-    Ok(layers)
+    // The layers that go together with the named ones (docs/adr/9104 §2): a source's or every one, as the project says.
+    let grouping = doc.settings().edit_grouping();
+    if single || grouping == kentos_commands::EditGrouping::Layer || named_none(input) {
+        return Ok(layers);
+    }
+    let together = data_write::grouped(doc, &layers, grouping, action != SessionAction::Start);
+    if action == SessionAction::Stop
+        && let Some(id) = together.iter().find(|l| doc.data_modified(l))
+    {
+        let name = doc.layers().get(id).map_or(id.as_str(), |n| n.name.as_str());
+        return Err(fail(
+            codes::DATA_EDITS_UNSAVED,
+            format!(
+                "“{name}” katmanında kaydedilmemiş değişiklik var ve düzenlemesi bu katmanla birlikte biter; önce kaydedin (save) ya da bırakın (rollback, cancel)."
+            ),
+            "layers",
+        ));
+    }
+    Ok(together)
+}
+
+/// Whether the input names no layer (then every layer being edited is meant already).
+fn named_none(input: &LayersSession) -> bool {
+    input.layers.as_ref().is_none_or(Vec::is_empty)
 }
 
 /// A layer's session as it is now.
@@ -159,7 +182,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersSession) -> CommandRe
             input,
             write_delete,
         ),
-        SessionAction::Save => save(cx, &layers),
+        SessionAction::Save => save(cx, &layers, input.force == Some(true)),
         SessionAction::Take => take(cx, &layers[0], input.keys.as_deref().unwrap_or_default()),
         action => {
             let doc = &mut *cx.doc;
@@ -229,63 +252,87 @@ fn take(cx: &mut ExecutionContext<'_>, layer: &str, keys: &[i64]) -> CommandResu
     }
 }
 
-/// `save`: each layer's changes written in one transaction of its source and taken out of the drawing. One layer that
-/// fails is the command's refusal; of several, those that fail are warnings while the others are written.
-fn save(cx: &mut ExecutionContext<'_>, layers: &[String]) -> CommandResult<LayersSessionDone> {
+/// `save`: the layers' changes written, each alone or a source's together in one transaction (docs/adr/9104 §2),
+/// checked against what others wrote since (unless `force`), and taken out of the drawing. One group that fails is the
+/// command's refusal (a conflict's own); of several, those that fail are warnings while the others are written.
+fn save(cx: &mut ExecutionContext<'_>, layers: &[String], force: bool) -> CommandResult<LayersSessionDone> {
     let settings = cx.doc.settings().clone();
-    let mut out = Vec::with_capacity(layers.len());
+    let grouping = settings.edit_grouping();
+    let groups = data_write::groups_of(cx.doc, layers, grouping);
+    let mut out: Vec<SessionLayer> = Vec::with_capacity(layers.len());
     let mut failures: Vec<(String, WriteFailure)> = Vec::new();
-    for id in layers {
-        let Some(writes) = data_write::writes_of(cx.doc, id) else {
-            continue;
-        };
-        let counts = (
-            writes.changes.added.len() as u32,
-            writes.changes.changed.len() as u32,
-            writes.changes.deleted.len() as u32,
-        );
-        match data_write::write(&writes, &settings) {
+    for group in &groups {
+        match data_write::write_group(group, &settings, force) {
             Ok(keys) => {
-                if let Err(message) = cx.doc.data_saved(id, data_write::written(&writes, &keys)) {
-                    failures.push((id.clone(), WriteFailure::Refused(message, None)));
-                    continue;
+                for (w, keys) in group.iter().zip(keys) {
+                    let counts = (
+                        w.changes.added.len() as u32,
+                        w.changes.changed.len() as u32,
+                        w.changes.deleted.len() as u32,
+                    );
+                    if let Err(message) = cx.doc.data_saved(&w.layer, data_write::written(w, &keys)) {
+                        failures.push((w.layer.clone(), WriteFailure::Refused(message, None)));
+                        continue;
+                    }
+                    out.push(SessionLayer {
+                        layer: w.layer.clone(),
+                        editing: cx.doc.editing(&w.layer),
+                        added: counts.0,
+                        changed: counts.1,
+                        deleted: counts.2,
+                        keys,
+                        failed: None,
+                    });
                 }
-                out.push(SessionLayer {
-                    layer: id.clone(),
-                    editing: cx.doc.editing(id),
-                    added: counts.0,
-                    changed: counts.1,
-                    deleted: counts.2,
-                    keys,
-                    failed: None,
-                });
             }
             Err(failure) => {
-                let mut s = state(cx.doc, id);
-                s.failed = Some(failure.message().to_owned());
-                out.push(s);
-                failures.push((id.clone(), failure));
+                for w in group {
+                    let mut s = state(cx.doc, &w.layer);
+                    s.failed = Some(failure.message().to_owned());
+                    out.push(s);
+                }
+                failures.push((group[0].layer.clone(), failure));
             }
         }
     }
+    // The layers with nothing to write are said as they are.
+    for id in layers {
+        if !out.iter().any(|s| &s.layer == id) {
+            out.push(state(cx.doc, id));
+        }
+    }
+    let order = |id: &str| layers.iter().position(|l| l == id).unwrap_or(usize::MAX);
+    out.sort_by_key(|s| order(&s.layer));
     let doc = &*cx.doc;
-    if !failures.is_empty() && failures.len() == out.len() {
+    let written = out.iter().any(|s| s.failed.is_none() && (s.added + s.changed + s.deleted) > 0);
+    if !failures.is_empty() && !written {
         let (id, failure) = failures.swap_remove(0);
-        let i = layers.iter().position(|l| *l == id).unwrap_or(0);
-        let (code, message, uid) = match failure {
-            WriteFailure::Unreachable(m) => (codes::SOURCE_UNREACHABLE, m, None),
-            WriteFailure::Refused(m, uid) => (codes::DATA_SAVE_FAILED, m, uid),
+        let path = format!("layers[{}]", order(&id).min(layers.len().saturating_sub(1)));
+        return match failure {
+            WriteFailure::Conflict(m, uids) => {
+                let words = format!(
+                    "{m} Değişikliği bırakıp satırları yeniden alın (action: rollback, sonra take) ya da üstüne yazın \
+                     (force: true)."
+                );
+                let mut e = error(codes::ROWS_CHANGED, words, Some(path));
+                e.uids = uids.iter().map(ToString::to_string).collect();
+                e.retryable = true;
+                CommandResult::Conflict { error: e }
+            }
+            WriteFailure::Unreachable(m) => Stop::failed(error(codes::SOURCE_UNREACHABLE, m, Some(path))).into(),
+            WriteFailure::Refused(m, uid) => {
+                let mut e = error(codes::DATA_SAVE_FAILED, m, Some(path));
+                e.uids = uid.iter().map(ToString::to_string).collect();
+                Stop::failed(e).into()
+            }
         };
-        let mut e = error(code, message, Some(format!("layers[{i}]")));
-        e.uids = uid.iter().map(ToString::to_string).collect();
-        return Stop::failed(e).into();
     }
     let warnings = failures
         .into_iter()
         .map(|(id, failure)| CommandWarning {
             code: codes::DATA_SAVE_FAILED.into(),
             message: failure.message().to_owned(),
-            path: Some(format!("layers[{}]", layers.iter().position(|l| *l == id).unwrap_or(0))),
+            path: Some(format!("layers[{}]", order(&id))),
         })
         .collect();
     CommandResult::Completed {

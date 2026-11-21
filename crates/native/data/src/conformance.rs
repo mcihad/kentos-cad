@@ -315,6 +315,23 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
             format!("{}: geometri farklı", f.fid)
         });
     }
+    // The same rows read inside a transaction by key, a missing key left out (docs/adr/9104 §3).
+    {
+        let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
+        let asked = [keys[2], keys[0], i64::MAX - 7];
+        let got = tx.rows(table_name, &asked).map_err(|e| format!("rows: {e}"))?;
+        report.check(fids(&got) == sorted(vec![keys[0], keys[2]]), || {
+            format!("işlemde okunan anahtarlar {:?}", fids(&got))
+        });
+        for f in &got {
+            if let Some((_, r)) = truth.rows.iter().find(|(k, _)| *k == f.fid) {
+                report.check(f.values == r.values && f.shape() == r.geometry.as_ref(), || {
+                    format!("{}: işlemde okunan satır farklı", f.fid)
+                });
+            }
+        }
+        tx.rollback().map_err(|e| format!("rollback: {e}"))?;
+    }
     let count = source
         .count(table_name, &Request::all(), false)
         .map_err(|e| format!("count: {e}"))?;

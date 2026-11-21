@@ -622,6 +622,8 @@ codes! {
     DATA_LAYER_READ_ONLY = "data_layer_read_only", Failed, false, "Veri katmanı salt okunur; düzenlenemez.";
     /// `stop` of a layer with changes not saved (docs/adr/9103 §3): save them or let them go first.
     DATA_EDITS_UNSAVED = "data_edits_unsaved", Failed, false, "Katmanda kaydedilmemiş değişiklik var; düzenlemeyi bitirmeden önce kaydedin ya da geri alın.";
+    /// A save over rows someone else changed or deleted since they were taken (docs/adr/9104 §3): nothing written.
+    ROWS_CHANGED = "rows_changed", Conflict, true, "Başkası satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş; hiçbir şey yazılmadı. Satırları yeniden alın ya da üstüne yazın.";
     /// `take` or `delete` of `cad.layers.session` naming more than one layer (docs/adr/9103 §3).
     ONE_LAYER = "one_layer", Failed, false, "Satır alma ve silme tek bir katmanın satırlarıyla çalışır; bir katman verin.";
     /// `take` or `delete` of `cad.layers.session` without keys (docs/adr/9103 §3).

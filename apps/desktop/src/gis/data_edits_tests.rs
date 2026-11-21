@@ -37,11 +37,12 @@ fn rows(app: &crate::app::App, layer: &kentos_commands::LayerNode, keys: &[i64])
 fn save(app: &mut crate::app::App, layer: &str) {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let writes = data_write::writes_of(doc, layer).expect("being edited");
-    let outcome = data_write::write(&writes, doc.settings()).map(|keys| (writes, keys));
+    let outcome = data_write::write_group(std::slice::from_ref(&writes), doc.settings(), false)
+        .map(|keys| (vec![writes], keys));
     if let Err(failure) = &outcome {
         panic!("not written: {}", failure.message());
     }
-    let _ = app.data_edits_event(Event::Saved(layer.to_owned(), Box::new(outcome)));
+    let _ = app.data_edits_event(Event::Saved(vec![layer.to_owned()], Box::new(outcome)));
 }
 
 #[test]
@@ -227,5 +228,24 @@ fn a_cell_of_an_edited_layer_takes_its_row_and_writes_the_value_into_the_session
     let attrs = &saved[0].1.base().attrs;
     assert_eq!(attrs.get("kullanim").map(String::as_str), Some("Okul"));
     assert_eq!(attrs.get("ada").map(String::as_str), Some("999"));
+
+    // Saved: the row left the drawing, so the table reads its rows again where it is; the rows read before stay shown
+    // until the new ones come.
+    let _ = app.data_table_tasks();
+    let again = app.gis.features.data.pending();
+    assert!(again.iter().any(|(_, page, _)| *page == 0), "the first page read again: {again:?}");
+    let shown = |app: &crate::app::App| app.gis.features.data.row(2).map(|r| (r.key, r.attrs.get("kullanim").cloned()));
+    assert_eq!(shown(&app), Some((3, Some("Konut".to_owned()))), "the rows read before, meanwhile");
+    for (generation, page, input) in again {
+        let node = app.data_table_layer().expect("a data layer in the table");
+        let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+        let answer = kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false)
+            .map(Box::new)
+            .map_err(|e| e.message);
+        let _ = app.data_table_event(DataEvent::Answered(generation, page, answer));
+    }
+    assert_eq!(shown(&app), Some((3, Some("Okul".to_owned()))), "the table's row as written");
+    let _ = app.data_table_tasks();
+    assert!(app.gis.features.data.pending().is_empty(), "read once");
     let _ = std::fs::remove_file(&path);
 }

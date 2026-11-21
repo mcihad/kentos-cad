@@ -181,6 +181,7 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
         || input.second_srid.is_some()
         || input.map_srid.is_some()
         || input.auto_select.is_some()
+        || input.edit_grouping.is_some()
         || input.drawing_unit.is_some()
         || input.length_style.is_some()
         || input.length_decimals.is_some()
@@ -386,6 +387,10 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
     // Otomatik seçim (docs/adr/0622 §5): the project's choice, written even when it is the type's own.
     if let Some(on) = input.auto_select {
         s.auto_select = Some(on);
+    }
+    // The data layers' edit grouping (docs/adr/9104 §2): the project's choice, written even when it is the default.
+    if let Some(g) = input.edit_grouping {
+        s.edit_grouping = Some(g);
     }
     if let Some(map) = input.map_srid {
         // The map's system is a view of the project's (docs/adr/0583 §3): none of the project's own, none for a
@@ -648,6 +653,7 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
     );
     key(before.map_srid != after.map_srid, "mapSrid");
     key(before.auto_select != after.auto_select, "autoSelect");
+    key(before.edit_grouping != after.edit_grouping, "editGrouping");
     key(before.drawing_unit != after.drawing_unit, "drawingUnit");
     key(before.length_style != after.length_style, "lengthStyle");
     key(

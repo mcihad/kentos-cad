@@ -16,7 +16,7 @@
 
 use std::collections::BTreeSet;
 
-use kentos_commands::{DataLayer, Entity, LayerNode, ProjectSettings};
+use kentos_commands::{DataLayer, EditGrouping, Entity, LayerNode, ProjectSettings};
 use kentos_data::{
     Cancel, Capabilities, Change, Condition, Coord, Curve, DataError, Family, Feature, Geometry,
     GeometryField, NewFeature, Request, Schema, Value,
@@ -38,22 +38,26 @@ pub struct LayerWrites {
     /// The layer's name, for the words.
     pub name: String,
     pub data: DataLayer,
+    /// The layer's fields, in its order: what a taken row's object holds (a conflict is found against them).
+    pub fields: Vec<String>,
     pub changes: DataChanges,
 }
 
-/// Why a write did not happen: nothing of the layer was written.
+/// Why a write did not happen: nothing of the layers written together was written.
 #[derive(Clone, Debug, PartialEq)]
 pub enum WriteFailure {
     /// The table could not be opened or read.
     Unreachable(String),
     /// The table, or a row made of an object, refused: the words, and the object when one was at fault.
     Refused(String, Option<Uuid>),
+    /// Rows taken were changed or deleted by someone else since (docs/adr/9104 §3): the words and the taken objects.
+    Conflict(String, Vec<Uuid>),
 }
 
 impl WriteFailure {
     pub fn message(&self) -> &str {
         match self {
-            WriteFailure::Unreachable(m) | WriteFailure::Refused(m, _) => m,
+            WriteFailure::Unreachable(m) | WriteFailure::Refused(m, _) | WriteFailure::Conflict(m, _) => m,
         }
     }
 }
@@ -68,8 +72,57 @@ pub fn writes_of(doc: &Document, layer: &str) -> Option<LayerWrites> {
         layer: layer.to_owned(),
         name: node.name.clone(),
         data: node.data.clone()?,
+        fields: node.fields.iter().map(|f| f.name.clone()).collect(),
         changes: doc.data_changes(layer),
     })
+}
+
+/// The layers a session acts on together (docs/adr/9104 §2): each named layer alone, or with every data layer of its
+/// source, or every data layer; those being edited when `editing`, else those that may be (not read-only). In the tree's
+/// order.
+pub fn grouped(doc: &Document, named: &[String], grouping: EditGrouping, editing: bool) -> Vec<String> {
+    let layers = doc.layers();
+    let fits = |n: &LayerNode| {
+        n.data.as_ref().is_some_and(|d| if editing { doc.editing(&n.id) } else { !d.read_only })
+    };
+    let addresses: BTreeSet<&str> = named
+        .iter()
+        .filter_map(|id| layers.get(id)?.data.as_ref().map(|d| d.address.as_str()))
+        .collect();
+    layers
+        .leaves()
+        .into_iter()
+        .filter(|n| match grouping {
+            EditGrouping::Layer => named.contains(&n.id),
+            EditGrouping::Source => {
+                named.contains(&n.id)
+                    || (fits(n) && n.data.as_ref().is_some_and(|d| addresses.contains(d.address.as_str())))
+            }
+            EditGrouping::All => named.contains(&n.id) || fits(n),
+        })
+        .map(|n| n.id.clone())
+        .collect()
+}
+
+/// What `layers` write, in the groups written together: each alone, or a source's in one transaction (docs/adr/9104
+/// §2). A layer with nothing to write is left out.
+pub fn groups_of(doc: &Document, layers: &[String], grouping: EditGrouping) -> Vec<Vec<LayerWrites>> {
+    let writes: Vec<LayerWrites> = layers
+        .iter()
+        .filter_map(|l| writes_of(doc, l))
+        .filter(|w| !w.changes.is_empty())
+        .collect();
+    if grouping == EditGrouping::Layer {
+        return writes.into_iter().map(|w| vec![w]).collect();
+    }
+    let mut out: Vec<Vec<LayerWrites>> = Vec::new();
+    for w in writes {
+        match out.iter_mut().find(|g| g[0].data.address == w.data.address) {
+            Some(g) => g.push(w),
+            None => out.push(vec![w]),
+        }
+    }
+    out
 }
 
 /// What a write of `w` that gave `keys` to its new rows wrote, for the drawing to take out ([`Document::data_saved`]).
@@ -87,69 +140,187 @@ pub fn written(w: &LayerWrites, keys: &[i64]) -> DataWritten {
     }
 }
 
-/// Writes `w`'s changes to its table in one transaction of its source; the keys the table gave the new rows, in
-/// order. Nothing is written when it fails.
+/// Writes `w`'s changes to its table in one transaction of its source, checked against what others wrote since its
+/// rows were taken; the keys the table gave the new rows, in order. Nothing is written when it fails.
 pub fn write(w: &LayerWrites, settings: &ProjectSettings) -> Result<Vec<i64>, WriteFailure> {
-    if w.changes.is_empty() {
+    write_group(std::slice::from_ref(w), settings, false).map(|mut keys| keys.pop().unwrap_or_default())
+}
+
+/// One layer's rows as its table takes them, worked out before the transaction.
+struct Planned<'a> {
+    w: &'a LayerWrites,
+    schema: Schema,
+    system: Option<TableSystem>,
+    inserts: Vec<NewFeature>,
+    updates: Vec<Change>,
+}
+
+/// Writes the layers of one source together in one transaction (docs/adr/9104 §2): first each taken row is read again
+/// inside it, held, and checked against the row as it was taken; a row changed or deleted by someone else since stops the
+/// write (unless `force`), then every layer's new, changed and deleted rows. All or nothing; the new rows' keys, a list a
+/// layer.
+pub fn write_group(
+    group: &[LayerWrites],
+    settings: &ProjectSettings,
+    force: bool,
+) -> Result<Vec<Vec<i64>>, WriteFailure> {
+    let Some(first) = group.first() else {
         return Ok(Vec::new());
-    }
-    let unreachable = |e: DataError| WriteFailure::Unreachable(format!("“{}” tablosu açılamadı: {e}", w.data.table));
-    let source = kentos_data::registry().source(&w.data.address).map_err(unreachable)?;
-    let schema = source.schema(&w.data.table).map_err(unreachable)?;
-    let caps = source.capabilities(&w.data.table).map_err(unreachable)?;
-    allowed(w, &caps)?;
-    let srid = w.data.geometry.as_ref().and_then(|g| g.srid);
-    let system = TableSystem::of(settings, srid).map_err(WriteFailure::Unreachable)?;
-    let row = Rows {
-        schema: &schema,
-        curves: caps.curves,
-        system: system.as_ref(),
     };
-    let mut inserts = Vec::with_capacity(w.changes.added.len());
-    for (uid, e) in &w.changes.added {
-        inserts.push(row.new_row(e).map_err(|m| refused(w, &m, Some(*uid)))?);
-    }
-    // A key the table does not make: the next ones after its greatest. Another writer taking them meanwhile makes the
-    // table refuse the write (its primary key), and nothing is written.
-    if !schema.key_made && !inserts.is_empty() {
-        let last = greatest_key(source.as_ref(), &w.data.table, &schema.key).map_err(unreachable)?;
-        for (i, row) in inserts.iter_mut().enumerate() {
-            row.fid = Some(last + 1 + i as i64);
-        }
-    }
-    let mut updates = Vec::with_capacity(w.changes.changed.len());
-    for c in &w.changes.changed {
-        if let Some(change) = row.change(c.key, &c.now, &c.row).map_err(|m| refused(w, &m, Some(c.uid)))? {
-            updates.push(change);
-        }
-    }
-    let table = w.data.table.as_str();
-    let mut tx = source.begin().map_err(unreachable)?;
-    let wrote = (|| -> Result<Vec<i64>, DataError> {
-        let keys = if inserts.is_empty() {
-            Vec::new()
-        } else {
-            tx.insert(table, &inserts)?
+    let unreachable = |w: &LayerWrites, e: DataError| {
+        WriteFailure::Unreachable(format!("“{}” tablosu açılamadı: {e}", w.data.table))
+    };
+    let source = kentos_data::registry()
+        .source(&first.data.address)
+        .map_err(|e| unreachable(first, e))?;
+    let mut planned = Vec::with_capacity(group.len());
+    for w in group {
+        let schema = source.schema(&w.data.table).map_err(|e| unreachable(w, e))?;
+        let caps = source.capabilities(&w.data.table).map_err(|e| unreachable(w, e))?;
+        allowed(w, &caps)?;
+        let srid = w.data.geometry.as_ref().and_then(|g| g.srid);
+        let system = TableSystem::of(settings, srid).map_err(WriteFailure::Unreachable)?;
+        let (inserts, updates) = {
+            let row = Rows {
+                schema: &schema,
+                curves: caps.curves,
+                system: system.as_ref(),
+            };
+            let mut inserts = Vec::with_capacity(w.changes.added.len());
+            for (uid, e) in &w.changes.added {
+                inserts.push(row.new_row(e).map_err(|m| refused(w, &m, Some(*uid)))?);
+            }
+            // A key the table does not make: the next ones after its greatest. Another writer taking them meanwhile
+            // makes the table refuse the write (its primary key), and nothing is written.
+            if !schema.key_made && !inserts.is_empty() {
+                let last = greatest_key(source.as_ref(), &w.data.table, &schema.key).map_err(|e| unreachable(w, e))?;
+                for (i, row) in inserts.iter_mut().enumerate() {
+                    row.fid = Some(last + 1 + i as i64);
+                }
+            }
+            let mut updates = Vec::with_capacity(w.changes.changed.len());
+            for c in &w.changes.changed {
+                if let Some(change) = row.change(c.key, &c.now, &c.row).map_err(|m| refused(w, &m, Some(c.uid)))? {
+                    updates.push(change);
+                }
+            }
+            (inserts, updates)
         };
-        if !updates.is_empty() {
-            tx.update(table, &updates)?;
-        }
-        if !w.changes.deleted.is_empty() {
-            tx.delete(table, &w.changes.deleted)?;
-        }
-        Ok(keys)
-    })();
-    match wrote {
-        Ok(keys) => {
-            tx.commit().map_err(|e| refused(w, &e.to_string(), None))?;
-            Ok(keys)
-        }
-        Err(e) => {
-            // Nothing of the layer is written; a rollback that fails too leaves the source to drop it.
-            let _ = tx.rollback();
-            Err(refused(w, &e.to_string(), None))
+        planned.push(Planned {
+            w,
+            schema,
+            system,
+            inserts,
+            updates,
+        });
+    }
+    let mut tx = source.begin().map_err(|e| unreachable(first, e))?;
+    if !force {
+        match conflicts(tx.as_mut(), &planned) {
+            Ok(None) => {}
+            Ok(Some(failure)) => {
+                let _ = tx.rollback();
+                return Err(failure);
+            }
+            Err((w, e)) => {
+                let _ = tx.rollback();
+                return Err(refused(w, &e.to_string(), None));
+            }
         }
     }
+    let mut keys = Vec::with_capacity(planned.len());
+    for p in &planned {
+        let table = p.w.data.table.as_str();
+        let wrote = (|| -> Result<Vec<i64>, DataError> {
+            let keys = if p.inserts.is_empty() {
+                Vec::new()
+            } else {
+                tx.insert(table, &p.inserts)?
+            };
+            if !p.updates.is_empty() {
+                tx.update(table, &p.updates)?;
+            }
+            if !p.w.changes.deleted.is_empty() {
+                tx.delete(table, &p.w.changes.deleted)?;
+            }
+            Ok(keys)
+        })();
+        match wrote {
+            Ok(k) => keys.push(k),
+            Err(e) => {
+                // Nothing of the group is written; a rollback that fails too leaves the source to drop it.
+                let _ = tx.rollback();
+                return Err(refused(p.w, &e.to_string(), None));
+            }
+        }
+    }
+    tx.commit().map_err(|e| refused(first, &e.to_string(), None))?;
+    Ok(keys)
+}
+
+/// The taken rows others changed or deleted since they were taken (docs/adr/9104 §3): each read again inside the
+/// transaction and compared with the row as it came, as the take made its object.
+fn conflicts<'a>(
+    tx: &mut dyn kentos_data::Transaction,
+    planned: &[Planned<'a>],
+) -> Result<Option<WriteFailure>, (&'a LayerWrites, DataError)> {
+    let mut gone = Vec::new();
+    let mut changed = Vec::new();
+    let mut uids = Vec::new();
+    for p in planned {
+        let originals = &p.w.changes.originals;
+        if originals.is_empty() {
+            continue;
+        }
+        let keys: Vec<i64> = originals.keys().copied().collect();
+        let rows = tx.rows(&p.w.data.table, &keys).map_err(|e| (p.w, e))?;
+        let by_key: std::collections::HashMap<i64, &Feature> = rows.iter().map(|f| (f.fid, f)).collect();
+        // The layer's fields out of the schema's order, as the take read them.
+        let at: Vec<Option<usize>> = p.w.fields.iter().map(|n| p.schema.index(n)).collect();
+        for (key, (uid, row)) in originals {
+            let now = by_key.get(key).map(|f| {
+                let values: Vec<Value> = at
+                    .iter()
+                    .map(|i| i.and_then(|i| f.values.get(i).cloned()).unwrap_or(Value::Null))
+                    .collect();
+                let read = Feature {
+                    fid: f.fid,
+                    geometry: f.geometry.clone(),
+                    values,
+                };
+                object_from(&read, &p.w.fields, &p.w.layer, p.system.as_ref())
+            });
+            match now {
+                None => {
+                    gone.push(*key);
+                    uids.push(*uid);
+                }
+                Some(Ok(e)) if e.base().attrs == row.base().attrs && geometry_of(&e) == geometry_of(row) => {}
+                Some(_) => {
+                    changed.push(*key);
+                    uids.push(*uid);
+                }
+            }
+        }
+    }
+    if gone.is_empty() && changed.is_empty() {
+        return Ok(None);
+    }
+    let list = |keys: &[i64]| keys.iter().map(i64::to_string).collect::<Vec<_>>().join(", ");
+    let mut said = Vec::new();
+    if !changed.is_empty() {
+        said.push(format!("değiştirilmiş: {}", list(&changed)));
+    }
+    if !gone.is_empty() {
+        said.push(format!("silinmiş: {}", list(&gone)));
+    }
+    Ok(Some(WriteFailure::Conflict(
+        format!(
+            "Başkası bu satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş ({}); hiçbir şey yazılmadı.",
+            said.join("; ")
+        ),
+        uids,
+    )))
 }
 
 /// The table's greatest key; 0 for an empty table.
@@ -480,7 +651,7 @@ pub fn rows_to_take(
     source
         .features(&data.table, &request, &Cancel::new(), &mut |part: Vec<Feature>| {
             for f in &part {
-                match object_from(f, &fields, node, system.as_ref()) {
+                match object_from(f, &fields, &node.id, system.as_ref()) {
                     Ok(e) => out.push((f.fid, e)),
                     Err(m) => failed = Some(m),
                 }
@@ -494,12 +665,12 @@ pub fn rows_to_take(
     }
 }
 
-/// A row as an object of the layer: its values as attributes, its geometry moved into the project's system; a row
-/// without geometry a record.
+/// A row as an object of the layer `layer`: its values (`fields` in order) as attributes, its geometry moved into the
+/// project's system; a row without geometry a record.
 fn object_from(
     f: &Feature,
     fields: &[String],
-    node: &LayerNode,
+    layer: &str,
     system: Option<&TableSystem>,
 ) -> Result<Entity, String> {
     let attrs: serde_json::Map<String, serde_json::Value> = fields
@@ -516,10 +687,10 @@ fn object_from(
         (None, _) => None,
     };
     if let Some(g) = shape.filter(|g| !g.is_empty())
-        && let Some(e) = object_of(&g, &node.id, 1, attrs.clone())
+        && let Some(e) = object_of(&g, layer, 1, attrs.clone())
     {
         return Ok(e);
     }
-    let record = serde_json::json!({ "kind": "record", "id": 1, "layerId": node.id, "attrs": attrs });
+    let record = serde_json::json!({ "kind": "record", "id": 1, "layerId": layer, "attrs": attrs });
     serde_json::from_value(record).map_err(|e| format!("{} anahtarlı satır nesneye çevrilemedi: {e}", f.fid))
 }

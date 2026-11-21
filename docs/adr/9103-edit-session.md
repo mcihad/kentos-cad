@@ -183,7 +183,8 @@ verir.
 - **Öznitelik tablosu:** düzenlenen katmanda hücre çift tıklanınca düzenlenir; Enter yazar, Esc bırakır. Alınmamış
   satır önce kaynaktan arka planda okunup alınır, sonra değeri yazılır. Her değer bir geri alma adımıdır
   (`cad.entities.set`). Tablo alınan satırları tampondaki değerleriyle gösterir, silinecekleri soluk gösterir; durum
-  satırı kaydedilmemişleri sayar. Düzenlenmeyen katmanda çift tık nasıl başlatılacağını söyler.
+  satırı kaydedilmemişleri sayar. Düzenlenmeyen katmanda çift tık nasıl başlatılacağını söyler. Kaydedilince ya da
+  geri alınınca tablo bulunduğu yeri kaynaktan yeniden okur; eski satırlar yenileri gelene kadar görünür (ADR 9104 §4).
 
 ## §6 Arayüz sözcükleri
 

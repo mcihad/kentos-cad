@@ -989,7 +989,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
     ("arch", "mimari", ARCH_WITH_CASEWORK_PLACEMENT),
-    ("gis", "CBS", GIS_WITH_DATA_LAYERS),
+    ("gis", "CBS", GIS_WITH_EDIT_GROUPING),
     ("map", "harita", 0),
     ("road", "yol", 0),
 ];
@@ -1612,6 +1612,9 @@ pub const GIS_WITH_EXTENSION_DERIVATIONS: u16 = 1;
 /// GIS data version 2 (docs/adr/9101 §3): a data layer (`data` of a layer node): a table of a GeoPackage or a database
 /// drawn as it is now, its rows never in the file. The document schema stays as it is.
 pub const GIS_WITH_DATA_LAYERS: u16 = 2;
+/// GIS data version 3 (docs/adr/9104 §2): how the data layers' edit sessions go together (the settings'
+/// `editGrouping`: `layer`, `source` or `all`). The document schema stays as it is.
+pub const GIS_WITH_EDIT_GROUPING: u16 = 3;
 
 /// A payload root's `modules` (schema 254): the versions above 0 of each module's and each `.kek` extension's data.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

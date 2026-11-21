@@ -110,7 +110,11 @@ fn modules_of(doc: &DocumentSnapshotV2, objects: Objs<'_>) -> ModuleVersions {
     fn data(nodes: &[kentos_contracts::LayerNode]) -> bool {
         nodes.iter().any(|n| n.data.is_some() || data(&n.children))
     }
-    if data(&doc.layers) {
+    // GIS 3 (docs/adr/9104 §2): the data layers' edit grouping.
+    if doc.settings.edit_grouping.is_some() {
+        out.modules
+            .push(("gis".to_owned(), crate::GIS_WITH_EDIT_GROUPING));
+    } else if data(&doc.layers) {
         out.modules
             .push(("gis".to_owned(), crate::GIS_WITH_DATA_LAYERS));
     } else if extended(&doc.layers) {
@@ -617,6 +621,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.hatch_patterns.is_empty())
             + usize::from(s.line_type_scale.is_some())
             + usize::from(s.auto_select.is_some())
+            + usize::from(s.edit_grouping.is_some())
             + usize::from(s.road.is_some())
             + usize::from(s.map_work.is_some())
             + usize::from(s.map_survey.is_some());
@@ -996,6 +1001,16 @@ impl<'d> Encoder<'d> {
         }
         self.key("areaDecimals");
         self.w.uint(u64::from(s.area_decimals));
+        // GIS 3 (docs/adr/9104 §2): the data layers' edit grouping, only when the project chose one (after `areaDecimals`:
+        // the keys go in their encoded bytes' order).
+        if let Some(g) = s.edit_grouping {
+            self.key("editGrouping");
+            self.w.text(match g {
+                kentos_contracts::EditGrouping::Layer => "layer",
+                kentos_contracts::EditGrouping::Source => "source",
+                kentos_contracts::EditGrouping::All => "all",
+            });
+        }
         // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
         if !s.leader_styles.is_empty() {
             self.key("leaderStyles");

@@ -22,6 +22,8 @@ from .types import (  # noqa: F401
     DrawingFontName,
     DrawingUnit,
     DrawingUnitName,
+    EditGrouping,
+    EditGroupingName,
     HeightReference,
     LengthStyle,
     LengthStyleName,
@@ -110,6 +112,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
+        edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
@@ -190,6 +193,8 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             coordinate_epoch: Unit: year.
             drawing_font:
             drawing_unit:
+            edit_grouping: How the data layers' edit sessions go together (docs/adr/9104 §2): each layer alone, a source's layers
+                together, or every editable layer together. No object changes.
             expected_revision: The document revision the input was prepared against, as decimal text.
             heights:
             length_decimals: Unit: count.
@@ -228,6 +233,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
+            edit_grouping=edit_grouping,
             expected_revision=expected_revision,
             heights=heights,
             length_decimals=length_decimals,
@@ -257,6 +263,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
+        edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
@@ -284,6 +291,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
+            edit_grouping=edit_grouping,
             expected_revision=expected_revision,
             heights=heights,
             length_decimals=length_decimals,
@@ -313,6 +321,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
+        edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
@@ -340,6 +349,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
+            edit_grouping=edit_grouping,
             expected_revision=expected_revision,
             heights=heights,
             length_decimals=length_decimals,
@@ -369,6 +379,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
+        edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
@@ -401,6 +412,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
+            edit_grouping=edit_grouping,
             expected_revision=expected_revision,
             heights=heights,
             length_decimals=length_decimals,

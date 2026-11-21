@@ -226,6 +226,8 @@ pub(crate) enum GisDialogKind {
     /// A data layer's changes asked about: Kaydet, Kaydetme, Vazgeç (data_edits.rs); the question is
     /// `GisUiState::data_edits.asking`.
     DataEdits,
+    /// A save that met rows others changed: Üstüne yaz, Vazgeç (data_edits.rs, docs/adr/9104 §3).
+    DataConflict,
     /// A Hesap window (calc/).
     Calc,
     /// A processing tool's or model's window (processing/).
@@ -397,6 +399,7 @@ impl App {
     pub(crate) fn gis_dialog_view(&self, kind: GisDialogKind) -> Element<'_, Message> {
         match kind {
             GisDialogKind::DataEdits => self.data_edits_question(),
+            GisDialogKind::DataConflict => self.data_conflict_question(),
             GisDialogKind::SourceReconcile => self.reconcile_view(),
             GisDialogKind::Calc => self.calc_view(),
             GisDialogKind::Processing => self.processing_view(),

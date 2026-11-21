@@ -224,6 +224,11 @@ Yük, üç (şema 254'ten beri en çok dört) anahtarlı bir haritadır (anahtar
   - servisi de olan katman (`broken/data-layer-and-service.kcad`);
   - tanınmayan geometri türü (`broken/data-layer-type.kcad`);
   - ters çevrilmiş kutu (`broken/data-layer-extent.kcad`).
+- **CBS verisi sürüm 3** ([ADR 9104 §2](../adr/9104-transactions.md)): ayarların `editGrouping`'i, veri katmanlarının
+  düzenleme oturumlarının nasıl birlikte gittiğidir: `layer` (her katman ayrı), `source` (aynı kaynaktakiler birlikte) ya
+  da `all` (bütün katmanlar birlikte). Yalnız proje seçtiyse yazılır; yazıcı o zaman `modules`'e `gis: 3` yazar. CBS
+  verisi sürüm 2'nin yükünde anahtar bilinmeyen alandır (`unknown_field`, `broken/edit-grouping-in-gis-2.kcad`),
+  bilinmeyen değer `bad_value`'dur (`broken/edit-grouping-unknown.kcad`). Örnek dosya `edit-grouping.kcad`.
 - Yazıcı `modules`'ü yalnız bir modül sürümünü yükselttiğinde, şema en az `254` olarak yazar; başka her çizim eskisiyle bayt bayt aynıdır.
 
 **Şema 255, araç katmanları** (kullanım incelemesi UR-003): ayarların `toolLayers`'ı, ölçü (`dimension`), yazı (`text`) ve taramanın (`hatch`) çizildiği katmanın kimliğidir; boş liste yazılmaz, bir araç bir kez, katman kimliği boş olmaz (`bad_value`; `broken/tool-layers-tool-twice.kcad`, `tool-layers-blank-layer.kcad`); şema 254'te bilinmeyen alandır (`broken/tool-layers-in-schema-254.kcad`). Örnek `tool-layers.kcad`. Verilmezse araçlar etkin katmana çizer.

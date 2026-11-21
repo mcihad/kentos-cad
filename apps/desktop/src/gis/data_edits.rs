@@ -27,6 +27,8 @@ pub(crate) struct DataEdits {
     after: Option<(After, Vec<String>)>,
     /// The unsaved rows' outlines and the drawing's generation they were drawn for.
     pending: Option<(u64, crate::approved_layer::Approved)>,
+    /// A save that met rows others changed (docs/adr/9104 §3): its layers and the words; Üstüne yaz writes over them.
+    pub(crate) conflict: Option<(Vec<String>, String)>,
 }
 
 /// The question: these layers have changes; what comes after the answer.
@@ -53,6 +55,9 @@ pub enum Answer {
     Cancel,
 }
 
+/// A group's save as its thread hands it back: the layers written and each one's new keys, or why nothing was.
+pub type GroupSaved = Result<(Vec<LayerWrites>, Vec<Vec<i64>>), WriteFailure>;
+
 /// What the session's controls and its saves say.
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -65,8 +70,12 @@ pub enum Event {
     /// Değişiklikleri geri al: let go, the layers staying open; every edited one when none is named.
     Rollback(Vec<String>),
     Answer(Answer),
-    /// A save's outcome: what was written and the new rows' keys, or why nothing was.
-    Saved(String, Box<Result<(LayerWrites, Vec<i64>), WriteFailure>>),
+    /// A group's save: its layers, what was written and each layer's new keys, or why nothing was.
+    Saved(Vec<String>, Box<GroupSaved>),
+    /// Üstüne yaz: the layers saved over the rows others changed.
+    SaveOver(Vec<String>),
+    /// The conflict's question closed without writing.
+    KeepConflict,
 }
 
 fn message(e: Event) -> Message {
@@ -102,6 +111,7 @@ impl App {
             action,
             layers: (!layers.is_empty()).then_some(layers),
             keys: None,
+            force: None,
         };
         match layers_session::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => Ok(output),
@@ -176,16 +186,37 @@ impl App {
                 Task::none()
             }
             Event::Stop(id) => {
-                if self.gis.data_edits.saving.contains(&id) {
+                // The layers that stop with it (docs/adr/9104 §2), their changes asked about together.
+                let group = self.document.as_ref().map_or_else(Vec::new, |d| {
+                    data_write::grouped(&d.model, std::slice::from_ref(&id), d.model.settings().edit_grouping(), true)
+                });
+                if group.iter().any(|l| self.gis.data_edits.saving.contains(l)) {
                     self.warn("Katmanın değişiklikleri tabloya yazılıyor; yazma bitince yeniden deneyin.");
-                } else if self.data_modified_layers(std::slice::from_ref(&id)).is_empty() {
-                    self.stop_data_layers(vec![id]);
                 } else {
-                    self.ask_data_edits(vec![id], After::Stop);
+                    let modified = self.data_modified_layers(&group);
+                    if modified.is_empty() {
+                        self.stop_data_layers(vec![id]);
+                    } else {
+                        self.ask_data_edits(modified, After::Stop);
+                    }
                 }
                 Task::none()
             }
-            Event::Save(layers) => self.save_data_layers(&layers),
+            Event::Save(layers) => self.save_data_layers(&layers, false),
+            Event::SaveOver(layers) => {
+                self.gis.data_edits.conflict = None;
+                if matches!(self.dialog, Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict))) {
+                    self.dialog = None;
+                }
+                self.save_data_layers(&layers, true)
+            }
+            Event::KeepConflict => {
+                self.gis.data_edits.conflict = None;
+                if matches!(self.dialog, Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict))) {
+                    self.dialog = None;
+                }
+                Task::none()
+            }
             Event::Rollback(layers) => {
                 let modified = self.data_modified_layers(&layers);
                 if modified.is_empty() {
@@ -229,7 +260,7 @@ impl App {
             }
             Answer::Save => {
                 self.gis.data_edits.after = Some((ask.after, ask.layers.clone()));
-                let task = self.save_data_layers(&ask.layers);
+                let task = self.save_data_layers(&ask.layers, false);
                 // Nothing went to be written: what comes after waits for no save.
                 if self.gis.data_edits.saving.is_empty() {
                     return Task::batch([task, self.data_edits_then()]);
@@ -273,8 +304,10 @@ impl App {
         }
     }
 
-    /// Writes the layers' changes to their tables, each on a thread of its own.
-    fn save_data_layers(&mut self, layers: &[String]) -> Task<Message> {
+    /// Writes the layers' changes to their tables, each group on a thread of its own: each layer alone, or a source's
+    /// layers together in one transaction, as the project groups them (docs/adr/9104 §2). `force` writes over the rows
+    /// others changed since they were taken.
+    fn save_data_layers(&mut self, layers: &[String], force: bool) -> Task<Message> {
         let modified = self.data_modified_layers(layers);
         let Some(doc) = &self.document else {
             return Task::none();
@@ -286,54 +319,69 @@ impl App {
             return Task::none();
         }
         let settings = doc.model.settings().clone();
+        let groups = data_write::groups_of(&doc.model, &modified, settings.edit_grouping());
         let mut tasks = Vec::new();
-        for id in modified {
-            if self.gis.data_edits.saving.contains(&id) {
+        for group in groups {
+            let ids: Vec<String> = group.iter().map(|w| w.layer.clone()).collect();
+            if ids.iter().any(|l| self.gis.data_edits.saving.contains(l)) {
                 continue;
             }
-            let Some(writes) = self.document.as_ref().and_then(|d| data_write::writes_of(&d.model, &id)) else {
-                continue;
-            };
-            self.gis.data_edits.saving.insert(id.clone());
+            self.gis.data_edits.saving.extend(ids.iter().cloned());
             let settings = settings.clone();
-            let layer = id.clone();
             tasks.push(crate::db_connections::off_thread(
-                move || data_write::write(&writes, &settings).map(|keys| (writes, keys)),
-                move |outcome| message(Event::Saved(layer, Box::new(outcome))),
+                move || data_write::write_group(&group, &settings, force).map(|keys| (group, keys)),
+                move |outcome| message(Event::Saved(ids, Box::new(outcome))),
             ));
         }
         Task::batch(tasks)
     }
 
-    /// A save's outcome: what was written taken out of the drawing, or why nothing was.
-    fn data_saved(&mut self, id: String, outcome: Result<(LayerWrites, Vec<i64>), WriteFailure>) -> Task<Message> {
-        self.gis.data_edits.saving.remove(&id);
-        let name = self.data_layer_name(&id);
+    /// A group's save: what was written taken out of the drawing, or why nothing was; a conflict asks to write over it.
+    fn data_saved(
+        &mut self,
+        ids: Vec<String>,
+        outcome: GroupSaved,
+    ) -> Task<Message> {
+        for id in &ids {
+            self.gis.data_edits.saving.remove(id);
+        }
         match outcome {
-            Ok((writes, keys)) => {
-                let written = data_write::written(&writes, &keys);
-                let words = counts_words(written.added.len(), written.changed.len(), written.deleted.len());
-                let taken = self
-                    .document
-                    .as_mut()
-                    .map(|d| d.model.data_saved(&id, written))
-                    .unwrap_or(Ok(()));
-                match taken {
-                    Ok(()) => {
-                        self.say(
-                            kentos_interaction::Level::Success,
-                            format!("“{name}” kaydedildi: {words} tabloya yazıldı."),
-                        );
-                        self.toast_saved(format!("“{name}” kaydedildi"), format!("{words} tabloya yazıldı."));
+            Ok((group, keys)) => {
+                let mut said = Vec::new();
+                for (w, keys) in group.iter().zip(keys) {
+                    let written = data_write::written(w, &keys);
+                    let words = counts_words(written.added.len(), written.changed.len(), written.deleted.len());
+                    let taken = self
+                        .document
+                        .as_mut()
+                        .map(|d| d.model.data_saved(&w.layer, written))
+                        .unwrap_or(Ok(()));
+                    match taken {
+                        Ok(()) => said.push(format!("“{}”: {words}", w.name)),
+                        Err(why) => self.warn(why),
                     }
-                    Err(why) => self.warn(why),
+                }
+                if !said.is_empty() {
+                    let names: Vec<String> = group.iter().map(|w| format!("“{}”", w.name)).collect();
+                    let title = format!("{} kaydedildi", names.join(", "));
+                    let body = format!("{} tabloya yazıldı.", said.join("; "));
+                    self.say(kentos_interaction::Level::Success, format!("{title}: {body}"));
+                    self.toast_saved(title, body);
                 }
             }
             Err(failure) => {
                 self.gis.data_edits.after = None;
-                self.warn(failure.message().to_owned());
-                if let WriteFailure::Refused(_, Some(uid)) = &failure {
-                    self.select_data_objects(&[*uid]);
+                match &failure {
+                    WriteFailure::Conflict(words, uids) => {
+                        self.select_data_objects(uids);
+                        self.gis.data_edits.conflict = Some((ids.clone(), words.clone()));
+                        self.dialog = Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict));
+                    }
+                    WriteFailure::Refused(_, Some(uid)) => {
+                        self.warn(failure.message().to_owned());
+                        self.select_data_objects(&[*uid]);
+                    }
+                    _ => self.warn(failure.message().to_owned()),
                 }
             }
         }
@@ -341,6 +389,27 @@ impl App {
             return self.data_edits_then();
         }
         Task::none()
+    }
+
+    /// The conflict's question: Üstüne yaz, Vazgeç.
+    pub(crate) fn data_conflict_question(&self) -> Element<'_, Message> {
+        let (layers, words) = self.gis.data_edits.conflict.clone().unwrap_or_default();
+        kentos_ui::widget::overlay::modal(
+            kentos_ui::widget::Confirm::new(
+                "Satırlar başkasınca değiştirilmiş",
+                message(Event::SaveOver(layers)),
+                message(Event::KeepConflict),
+            )
+            .message(words)
+            .detail(
+                "Üstüne yaz yalnız sizin değiştirdiğiniz alanları ve şekli yazar: aynısını başkası da değiştirdiyse \
+                 onunki gider, öbür değişiklikleri kalır. Değişikliğinizi bırakmak için Vazgeç'i, sonra katmanın \
+                 menüsünde Değişiklikleri geri al'ı seçin: satırlar tablodaki şimdiki hâliyle görünür.",
+            )
+            .confirm("Üstüne yaz")
+            .destructive(),
+            message(Event::KeepConflict),
+        )
     }
 
     /// Selects objects by their persistent ids (the object a refused save was about).

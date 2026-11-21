@@ -178,6 +178,47 @@ impl GpkgTransaction {
 }
 
 impl Transaction for GpkgTransaction {
+    fn rows(&mut self, table: &str, fids: &[i64]) -> Result<Vec<kentos_data::Feature>, DataError> {
+        if fids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let target = self.target(table)?;
+        let (key, geometry, fields) = (target.key.clone(), target.geometry.clone(), target.fields.clone());
+        let mut select = vec![quote(&key)];
+        select.push(geometry.as_ref().map_or_else(|| "NULL".to_owned(), |g| quote(&g.0)));
+        select.extend(fields.iter().map(|f| quote(&f.name)));
+        let keys = fids.iter().map(i64::to_string).collect::<Vec<_>>().join(", ");
+        // The transaction holds the file (BEGIN IMMEDIATE): no other writer changes these rows before it ends.
+        let sql = format!(
+            "SELECT {} FROM {} WHERE {} IN ({keys}) ORDER BY {}",
+            select.join(", "),
+            quote(table),
+            quote(&key),
+            quote(&key)
+        );
+        let conn = self.gp()?.connection();
+        let mut st = conn.prepare(&sql).map_err(failed)?;
+        let mut rows = st.query([]).map_err(failed)?;
+        let mut out = Vec::new();
+        while let Some(r) = rows.next().map_err(failed)? {
+            let fid: i64 = r.get(0).map_err(failed)?;
+            let geometry = match r.get_ref(1).map_err(failed)? {
+                rusqlite::types::ValueRef::Blob(b) => Some(
+                    kentos_geopackage::read_blob(b)
+                        .map(|blob| blob.geometry)
+                        .map_err(|e| e.to_string()),
+                ),
+                _ => None,
+            };
+            let mut values = Vec::with_capacity(fields.len());
+            for (i, f) in fields.iter().enumerate() {
+                values.push(crate::convert::value_of(r.get_ref(i + 2).map_err(failed)?, &f.kind));
+            }
+            out.push(kentos_data::Feature { fid, geometry, values });
+        }
+        Ok(out)
+    }
+
     fn insert(&mut self, table: &str, rows: &[NewFeature]) -> Result<Vec<i64>, DataError> {
         let (key, geometry) = {
             let t = self.target(table)?;
