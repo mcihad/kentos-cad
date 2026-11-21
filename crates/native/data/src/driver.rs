@@ -97,11 +97,56 @@ pub trait Source: Send + Sync {
         condition: Option<&Condition>,
         limit: usize,
     ) -> Result<Vec<Value>, DataError>;
+    /// The rows per value of a field among the rows the condition keeps (`GROUP BY`, docs/adr/9108 §2): the empty value as
+    /// [`Value::Null`], in the field's order (a text in the Turkish alphabet's, docs/adr/9102 §3) with the empty value
+    /// last, at most `limit` groups. A driver without its own reads the field's values and counts them here.
+    fn groups(
+        &self,
+        table: &str,
+        field: &str,
+        condition: Option<&Condition>,
+        limit: usize,
+    ) -> Result<Vec<(Value, u64)>, DataError> {
+        let request = Request {
+            condition: condition.cloned(),
+            columns: Some(vec![field.to_owned()]),
+            geometry: false,
+            ..Request::all()
+        };
+        let mut counted: Vec<(Value, u64)> = Vec::new();
+        self.features(table, &request, &Cancel::new(), &mut |part| {
+            for f in part {
+                let v = f.values.into_iter().next().unwrap_or(Value::Null);
+                match counted.iter_mut().find(|(w, _)| *w == v) {
+                    Some((_, n)) => *n += 1,
+                    None => counted.push((v, 1)),
+                }
+            }
+            true
+        })?;
+        counted.sort_by(|(a, _), (b, _)| group_order(a, b));
+        counted.truncate(limit);
+        Ok(counted)
+    }
     /// Starts a transaction.
     fn begin(&self) -> Result<Box<dyn Transaction>, DataError>;
     /// Where it keeps projects with its data (docs/adr/9107); none for a source that cannot keep them.
     fn project_store(&self) -> Option<&dyn ProjectStore> {
         None
+    }
+}
+
+/// The order of a field's groups: the empty value last, numbers by their size, texts in the Turkish alphabet's order.
+pub fn group_order(a: &Value, b: &Value) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+    match (a, b) {
+        (Value::Null, Value::Null) => Ordering::Equal,
+        (Value::Null, _) => Ordering::Greater,
+        (_, Value::Null) => Ordering::Less,
+        _ => match (a.number(), b.number()) {
+            (Some(x), Some(y)) => x.total_cmp(&y),
+            _ => crate::turkish::compare(&a.to_string(), &b.to_string()),
+        },
     }
 }
 

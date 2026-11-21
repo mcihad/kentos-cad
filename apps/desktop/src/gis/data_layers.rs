@@ -72,8 +72,9 @@ fn field_kind(kind: &FieldKind, native: &str) -> Option<LayerFieldKind> {
     let n = native.to_ascii_lowercase();
     Some(match kind {
         FieldKind::Bool => LayerFieldKind::Boolean,
-        FieldKind::Int if n.starts_with("bigint") || n.starts_with("int8") => LayerFieldKind::BigInt,
-        FieldKind::Int => LayerFieldKind::Integer,
+        // A 64-bit column (`bigint`, a GeoPackage `INTEGER`) is a big integer, a narrower one an integer (docs/adr/9108 §1).
+        FieldKind::Int { bits } if *bits > 32 => LayerFieldKind::BigInt,
+        FieldKind::Int { .. } => LayerFieldKind::Integer,
         FieldKind::Real | FieldKind::Decimal { .. } => LayerFieldKind::Decimal,
         FieldKind::Text { .. } | FieldKind::Other => LayerFieldKind::Text,
         FieldKind::Date => LayerFieldKind::Date,
@@ -284,10 +285,8 @@ mod tests {
     fn columns_become_fields_and_types_their_names() {
         assert_eq!(type_name("MultiPolygon"), "MULTIPOLYGON");
         assert_eq!(type_name("TIN"), "GEOMETRY");
-        assert_eq!(
-            field_kind(&FieldKind::Int, "bigint"),
-            Some(LayerFieldKind::BigInt)
-        );
+        assert_eq!(field_kind(&FieldKind::INT, "bigint"), Some(LayerFieldKind::BigInt));
+        assert_eq!(field_kind(&FieldKind::INT32, "MEDIUMINT"), Some(LayerFieldKind::Integer));
         assert_eq!(
             field_kind(&FieldKind::DateTime, "timestamp with time zone"),
             Some(LayerFieldKind::Instant)

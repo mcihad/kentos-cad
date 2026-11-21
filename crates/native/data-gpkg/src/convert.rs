@@ -6,11 +6,32 @@ use kentos_data::{Field, FieldKind, GeometryField, Value};
 use kentos_geopackage::{Column, ColumnKind, Layer};
 use rusqlite::types::{ToSqlOutput, Value as Sql, ValueRef};
 
-/// A column's kind.
-pub fn kind_of(c: &ColumnKind) -> FieldKind {
+/// An integer column's width by its declared type: TINYINT 8, SMALLINT 16, MEDIUMINT 32, INT and INTEGER 64 bits
+/// (GeoPackage 1.3, Table 1; GDAL reads them so).
+fn int_bits(decl: &str) -> u8 {
+    match decl.split('(').next().unwrap_or_default().trim().to_ascii_uppercase().as_str() {
+        "TINYINT" => 8,
+        "SMALLINT" => 16,
+        "MEDIUMINT" => 32,
+        _ => 64,
+    }
+}
+
+/// An integer of `bits` bits as a GeoPackage declares it (the narrowest type that holds it).
+fn int_decl(bits: u8) -> &'static str {
+    match bits {
+        0..=8 => "TINYINT",
+        9..=16 => "SMALLINT",
+        17..=32 => "MEDIUMINT",
+        _ => "INTEGER",
+    }
+}
+
+/// A column's kind, by its kind and its declared type (empty: the kind's).
+pub fn kind_of(c: &ColumnKind, decl: &str) -> FieldKind {
     match c {
         ColumnKind::Boolean => FieldKind::Bool,
-        ColumnKind::Integer => FieldKind::Int,
+        ColumnKind::Integer => FieldKind::Int { bits: int_bits(decl) },
         ColumnKind::Real => FieldKind::Real,
         ColumnKind::Text(max) => FieldKind::Text { max: *max },
         ColumnKind::Blob(_) => FieldKind::Blob,
@@ -21,7 +42,7 @@ pub fn kind_of(c: &ColumnKind) -> FieldKind {
             if d.contains("CHAR") || d.contains("CLOB") || d.contains("TEXT") {
                 FieldKind::Text { max: None }
             } else if d.contains("INT") {
-                FieldKind::Int
+                FieldKind::INT
             } else if d.contains("REAL")
                 || d.contains("FLOA")
                 || d.contains("DOUB")
@@ -39,7 +60,7 @@ pub fn kind_of(c: &ColumnKind) -> FieldKind {
 pub fn column_of(f: &Field) -> Column {
     let kind = match &f.kind {
         FieldKind::Bool => ColumnKind::Boolean,
-        FieldKind::Int => ColumnKind::Integer,
+        FieldKind::Int { .. } => ColumnKind::Integer,
         // GeoPackage has no exact decimal: a double, as other writers do.
         FieldKind::Real | FieldKind::Decimal { .. } => ColumnKind::Real,
         FieldKind::Text { max } => ColumnKind::Text(*max),
@@ -51,7 +72,11 @@ pub fn column_of(f: &Field) -> Column {
     };
     Column {
         name: f.name.clone(),
-        decl: String::new(),
+        // A 32-bit integer is MEDIUMINT, not INTEGER: another program reads INTEGER as a 64-bit one (docs/adr/9108 §1).
+        decl: match &f.kind {
+            FieldKind::Int { bits } => int_decl(*bits).to_owned(),
+            _ => String::new(),
+        },
         kind,
         not_null: !f.nullable,
         default: f.default.clone(),
@@ -65,7 +90,7 @@ pub fn fields_of(layer: &Layer) -> Vec<Field> {
         .iter()
         .map(|c| Field {
             name: c.name.clone(),
-            kind: kind_of(&c.kind),
+            kind: kind_of(&c.kind, &c.decl),
             native: if c.decl.is_empty() {
                 c.kind.decl()
             } else {

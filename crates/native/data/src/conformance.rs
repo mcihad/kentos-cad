@@ -62,8 +62,8 @@ pub fn table(name: &str, srid: i32) -> NewTable {
         description: Some("KentOS sürücü uygunluk takımı".into()),
         key: "fid".into(),
         fields: vec![
-            Field::new("ada", FieldKind::Int),
-            Field::new("parsel", FieldKind::Int),
+            Field::new("ada", FieldKind::INT32),
+            Field::new("parsel", FieldKind::INT32),
             Field::new("kod", FieldKind::Text { max: Some(16) }),
             Field::new("mahalle", FieldKind::Text { max: Some(40) }),
             Field::new("alan", FieldKind::Real),
@@ -283,7 +283,7 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
             .is_some_and(|f| f.kind == FieldKind::Real)
             && schema
                 .field("ada")
-                .is_some_and(|f| f.kind == FieldKind::Int)
+                .is_some_and(|f| f.kind == FieldKind::INT32)
             && schema
                 .field("onayli")
                 .is_some_and(|f| f.kind == FieldKind::Bool)
@@ -527,6 +527,41 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
         .map_err(|e| format!("unique: {e}"))?;
     let want: Vec<Value> = KULLANIM.iter().map(|k| Value::Text((*k).into())).collect();
     report.check(got == want, || format!("farklı değerler {got:?}"));
+
+    // Rows per value (docs/adr/9108 §2): every row counted once, in the Turkish alphabet's order, the empty value last;
+    // an integer field by its size; a condition counts what it keeps.
+    let at = FIELDS.iter().position(|f| *f == "kullanim").unwrap_or(0);
+    let mut want: Vec<(Value, u64)> = KULLANIM
+        .iter()
+        .map(|k| {
+            let n = data.iter().filter(|r| r.values[at] == Value::Text((*k).into())).count();
+            (Value::Text((*k).into()), n as u64)
+        })
+        .collect();
+    want.push((Value::Null, data.iter().filter(|r| r.values[at] == Value::Null).count() as u64));
+    let got = source
+        .groups(table_name, "kullanim", None, 10)
+        .map_err(|e| format!("groups: {e}"))?;
+    report.check(got == want, || format!("gruplar {got:?}, beklenen {want:?}"));
+    let got = source
+        .groups(table_name, "kullanim", None, 2)
+        .map_err(|e| format!("groups 2: {e}"))?;
+    report.check(got == want[..2], || format!("ilk iki grup {got:?}"));
+    let ada = FIELDS.iter().position(|f| *f == "ada").unwrap_or(0);
+    let parks = Condition::eq("kullanim", "Park");
+    let got = source
+        .groups(table_name, "ada", Some(&parks), 1000)
+        .map_err(|e| format!("groups ada: {e}"))?;
+    let mut ada_want: Vec<(Value, u64)> = Vec::new();
+    for r in data.iter().filter(|r| r.values[at] == Value::Text("Park".into())) {
+        match ada_want.iter_mut().find(|(v, _)| *v == r.values[ada]) {
+            Some((_, n)) => *n += 1,
+            None => ada_want.push((r.values[ada].clone(), 1)),
+        }
+    }
+    ada_want.sort_by(|(a, _), (b, _)| crate::driver::group_order(a, b));
+    report.check(got == ada_want, || format!("ada grupları {got:?}"));
+    report.check(got.iter().map(|(_, n)| n).sum::<u64>() == data.iter().filter(|r| r.values[at] == Value::Text("Park".into())).count() as u64, || "ada gruplarının toplamı".into());
 
     // Simplified geometry: rings keep closing, the nearly straight vertex goes.
     let got = collect(

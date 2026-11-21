@@ -52,13 +52,20 @@ pub fn coerce(field: &Field, v: &Value) -> Result<Value, DataError> {
                 _ => return Err(refuse(field, v)),
             },
         },
-        FieldKind::Int => match v.int() {
-            Some(i) => Value::Int(i),
-            None => match text(v).and_then(|t| t.parse::<i64>().ok()) {
-                Some(i) => Value::Int(i),
-                None => return Err(refuse(field, v)),
-            },
-        },
+        FieldKind::Int { bits } => {
+            let Some(i) = v.int().or_else(|| text(v).and_then(|t| t.parse::<i64>().ok())) else {
+                return Err(refuse(field, v));
+            };
+            // Past the column's width the source would refuse it or keep another number (docs/adr/9108 §1).
+            let (lo, hi) = FieldKind::int_range(*bits);
+            if i < lo || i > hi {
+                return Err(DataError::Invalid(format!(
+                    "“{}” alanı {bits} bitlik tam sayı tutar ({lo}…{hi}); “{i}” sığmaz.",
+                    field.name
+                )));
+            }
+            Value::Int(i)
+        }
         FieldKind::Real => match v.number().filter(|_| !matches!(v, Value::Bool(_))) {
             Some(x) => Value::Real(x),
             None => match text(v).and_then(|t| t.replace(',', ".").parse::<f64>().ok()) {
@@ -144,8 +151,14 @@ mod tests {
 
     #[test]
     fn values_fit_their_fields_or_are_refused() {
-        let int = Field::new("kat", FieldKind::Int);
+        let int = Field::new("kat", FieldKind::INT);
         assert_eq!(coerce(&int, &Value::Real(4.0)), Ok(Value::Int(4)));
+        // A 32-bit column refuses what it cannot hold (docs/adr/9108 §1); a 64-bit one keeps it.
+        let narrow = Field::new("ada", FieldKind::INT32);
+        assert_eq!(coerce(&narrow, &Value::Int(2_147_483_647)), Ok(Value::Int(2_147_483_647)));
+        assert!(coerce(&narrow, &Value::Int(2_147_483_648)).is_err());
+        assert!(coerce(&narrow, &Value::Text("-2147483649".into())).is_err());
+        assert_eq!(coerce(&int, &Value::Int(3_000_000_000)), Ok(Value::Int(3_000_000_000)));
         assert!(coerce(&int, &Value::Real(4.5)).is_err());
         assert_eq!(coerce(&int, &Value::Text(" 7 ".into())), Ok(Value::Int(7)));
         let real = Field::new("alan", FieldKind::Real);

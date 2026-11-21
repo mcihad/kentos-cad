@@ -50,7 +50,7 @@ fn column(
     if field == shape.schema.key {
         return Ok((
             format!("t.{}", quote(field)),
-            FieldKind::Int,
+            FieldKind::INT,
             "bigint".into(),
         ));
     }
@@ -78,8 +78,8 @@ fn operand(
     s: &mut Sql,
 ) -> Option<(String, String)> {
     match kind {
-        FieldKind::Int | FieldKind::Real | FieldKind::Decimal { .. } => match (kind, v) {
-            (FieldKind::Int, Value::Int(i)) => Some((col.to_owned(), s.bind(Arg::Int(*i)))),
+        FieldKind::Int { .. } | FieldKind::Real | FieldKind::Decimal { .. } => match (kind, v) {
+            (FieldKind::Int { .. }, Value::Int(i)) => Some((col.to_owned(), s.bind(Arg::Int(*i)))),
             _ => v
                 .number()
                 .filter(|_| !matches!(v, Value::Bool(_)))
@@ -320,7 +320,7 @@ pub fn value_of(text: Option<String>, kind: &FieldKind) -> Value {
             "false" | "f" => Value::Bool(false),
             _ => Value::Text(t),
         },
-        FieldKind::Int => t.parse().map_or(Value::Text(t), Value::Int),
+        FieldKind::Int { .. } => t.parse().map_or(Value::Text(t), Value::Int),
         FieldKind::Real => t.parse().map_or(Value::Text(t), Value::Real),
         FieldKind::Decimal { .. } => Value::Decimal(t),
         FieldKind::Text { .. } | FieldKind::Uuid | FieldKind::Other => Value::Text(t),

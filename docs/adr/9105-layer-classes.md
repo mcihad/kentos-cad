@@ -112,6 +112,6 @@ docs/STYLE.md §1.1.
   bir kaynakta durduğu için (plan/veri.md VY-09) öncelik veri katmanınındır; çizim katmanı ayrı iş.
 - Sınıf satırında çift tık (QGIS'te sembol penceresi) yok; Sembolü düzenle… menüdedir ve Katman stili'ni katmanda açar,
   sınıfı seçmez.
-- Sayım her değişiklikte bütün tabloyu tarar. Kaynakta gruplanmış sayım (`GROUP BY`) sürücü sözleşmesine eklenirse
-  kategorili stilin sayısı anında gelir.
+- Sayım her değişiklikte bütün tabloyu tarar. Kaynakta gruplanmış sayım (`GROUP BY`) artık sürücü sözleşmesinde
+  (`Source::groups`, [ADR 9108](9108-integer-widths-and-groups.md) §3); sınıflara bağlanması VY-13'te.
 - Web (ADR 0228).

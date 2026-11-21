@@ -168,9 +168,8 @@ kurulu programın ekranları `.run/gui-evidence/veri/qgis/08`, `11`, `12`):
 
 ## §7 Kalan
 
-- KentOS'un 32 bitlik tam sayısı GeoPackage'ta `INTEGER` (64 bit) yazılır; başka program onu Integer64 okur. Sürücü
-  sözleşmesinde tek tam sayı türü var (`FieldKind::Int`). 32 ve 64 bit ayrımı sözleşmeye eklenirse `MEDIUMINT`
-  yazılır.
+- ~~KentOS'un 32 bitlik tam sayısı GeoPackage'ta `INTEGER` (64 bit) yazılır.~~ Kapandı (VY-11,
+  [ADR 9108](9108-integer-widths-and-groups.md) §2): Tam sayı `MEDIUMINT`, Büyük tam sayı `INTEGER` yazılır.
 - Süzgeç kaynağa gitmez: satırların hepsi okunur, süzgeç burada sorulur. İki geçiş (önce anahtar ve süzgeç alanları,
   sonra tutulanların tamamı) ya da İfadeyle seç'ten SQL'e çeviri ileride.
 - GeoJSON, Shapefile ve KML yazıcıları katmanı bütün alır. Milyonluk veri katmanında bellek ister; akışlı yazıcı

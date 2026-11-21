@@ -8,8 +8,9 @@ use crate::value::Value;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FieldKind {
     Bool,
-    /// A 64-bit integer at most.
-    Int,
+    /// An integer of `bits` bits (8, 16, 32 or 64) as the source declares it (`SMALLINT`, `int4`, `MEDIUMINT`, `bigint`):
+    /// a writer makes the column that holds it and a value past its range is refused (docs/adr/9108 §1).
+    Int { bits: u8 },
     /// A double.
     Real,
     /// An exact decimal: digits in all and after the point, when the source says them.
@@ -32,11 +33,27 @@ pub enum FieldKind {
 }
 
 impl FieldKind {
+    /// A 64-bit integer: what a source declares without a width.
+    pub const INT: FieldKind = FieldKind::Int { bits: 64 };
+    /// A 32-bit integer (`MEDIUMINT`, `integer`).
+    pub const INT32: FieldKind = FieldKind::Int { bits: 32 };
+
+    /// The smallest and the largest value an integer of `bits` bits holds.
+    pub fn int_range(bits: u8) -> (i64, i64) {
+        match bits {
+            8 => (i64::from(i8::MIN), i64::from(i8::MAX)),
+            16 => (i64::from(i16::MIN), i64::from(i16::MAX)),
+            32 => (i64::from(i32::MIN), i64::from(i32::MAX)),
+            _ => (i64::MIN, i64::MAX),
+        }
+    }
+
     /// Its name in the interface.
     pub fn words(&self) -> &'static str {
         match self {
             FieldKind::Bool => "Evet/Hayır",
-            FieldKind::Int => "Tam sayı",
+            FieldKind::Int { bits } if *bits > 32 => "Büyük tam sayı",
+            FieldKind::Int { .. } => "Tam sayı",
             FieldKind::Real => "Ondalık sayı",
             FieldKind::Decimal { .. } => "Kesin ondalık",
             FieldKind::Text { .. } => "Metin",
@@ -54,7 +71,7 @@ impl FieldKind {
     pub fn is_number(&self) -> bool {
         matches!(
             self,
-            FieldKind::Int | FieldKind::Real | FieldKind::Decimal { .. }
+            FieldKind::Int { .. } | FieldKind::Real | FieldKind::Decimal { .. }
         )
     }
 

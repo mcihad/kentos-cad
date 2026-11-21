@@ -377,8 +377,10 @@ impl Source for GpkgSource {
         };
         let w = where_of(&request, &s.schema, table, s.layer.indexed)?;
         let col = format!("t.{}", quote(field));
+        // A text in the Turkish alphabet's order, as a group's (docs/adr/9108 §2).
+        let by = if kind.is_text() { format!("kentos_order({col})") } else { col.clone() };
         let sql = format!(
-            "SELECT DISTINCT {col} FROM {} t{} ORDER BY {col} LIMIT {limit}",
+            "SELECT DISTINCT {col} FROM {} t{} ORDER BY {by} LIMIT {limit}",
             quote(table),
             w.text()
         );
@@ -391,6 +393,50 @@ impl Source for GpkgSource {
             let mut out = Vec::new();
             while let Some(r) = rows.next().map_err(failed)? {
                 out.push(value_of(r.get_ref(0).map_err(failed)?, &kind));
+            }
+            Ok(out)
+        })
+    }
+
+    /// `GROUP BY` in the file: a text in the Turkish alphabet's order (`kentos_order`), the empty value last.
+    fn groups(
+        &self,
+        table: &str,
+        field: &str,
+        condition: Option<&Condition>,
+        limit: usize,
+    ) -> Result<Vec<(Value, u64)>, DataError> {
+        let s = self.shape(table)?;
+        let kind = s
+            .schema
+            .field(field)
+            .map(|f| f.kind.clone())
+            .ok_or_else(|| DataError::NoField {
+                table: table.to_owned(),
+                field: field.to_owned(),
+            })?;
+        let request = Request {
+            condition: condition.cloned(),
+            ..Request::default()
+        };
+        let w = where_of(&request, &s.schema, table, s.layer.indexed)?;
+        let col = format!("t.{}", quote(field));
+        let by = if kind.is_text() { format!("kentos_order({col})") } else { col.clone() };
+        let sql = format!(
+            "SELECT {col}, count(*) FROM {} t{} GROUP BY {col} ORDER BY ({col} IS NULL), {by} LIMIT {limit}",
+            quote(table),
+            w.text()
+        );
+        self.with(|gp| {
+            let mut st = gp.connection().prepare(&sql).map_err(failed)?;
+            let binds: Vec<Bind<'_>> = w.args.iter().map(Bind).collect();
+            let mut rows = st
+                .query(rusqlite::params_from_iter(binds.iter()))
+                .map_err(failed)?;
+            let mut out = Vec::new();
+            while let Some(r) = rows.next().map_err(failed)? {
+                let n: i64 = r.get(1).map_err(failed)?;
+                out.push((value_of(r.get_ref(0).map_err(failed)?, &kind), u64::try_from(n).unwrap_or(0)));
             }
             Ok(out)
         })

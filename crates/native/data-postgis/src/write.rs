@@ -54,7 +54,9 @@ fn geometry_value(shape: &Shape, g: &Geometry, s: &mut Sql) -> Result<String, Da
 fn native_of(kind: &FieldKind) -> String {
     match kind {
         FieldKind::Bool => "boolean".into(),
-        FieldKind::Int => "bigint".into(),
+        FieldKind::Int { bits: 0..=16 } => "smallint".into(),
+        FieldKind::Int { bits: 17..=32 } => "integer".into(),
+        FieldKind::Int { .. } => "bigint".into(),
         FieldKind::Real => "double precision".into(),
         FieldKind::Decimal {
             precision: Some(p),

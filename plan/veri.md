@@ -163,10 +163,15 @@ ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, AD
   - Yetenek denetimi: veri komutlarımın andığı ama hiçbir durumun vermediği kodlara durum (servis katmanı, yapılamayan
     hedef, bilinmeyen sistem, uzun tablo adı); `cad.layers.set` ile `cad.arch.performance` verdikleri kodları anar;
     taşıma tablo adı hatasını `table` alanında söyler.
-- [ ] **VY-11 — Sürücü sözleşmesi: 32 ve 64 bit tam sayı, ayrık değerler, gruplanmış sayım.** `FieldKind`'da tam
-  sayının genişliği; GeoPackage'a 32 bit `MEDIUMINT`, 64 bit `INTEGER` yazılır (GDAL'ın eşlemesi); PostGIS'te
-  `integer`/`bigint`. Kaynaktan bir alanın ayrık değerleri (sınırlı) ve bir alana göre gruplanmış sayım (`GROUP BY`);
-  uygunluk takımında iki sürücü.
+- [x] **VY-11 — Sürücü sözleşmesi: 32 ve 64 bit tam sayı, ayrık değerler, gruplanmış sayım.**
+  ([ADR 9108](../docs/adr/9108-integer-widths-and-groups.md))
+  - `FieldKind::Int { bits }`. GeoPackage'a genişliği tutan en dar tür yazılır: 32 bit `MEDIUMINT`, 64 bit `INTEGER`
+    (GDAL'ın eşlemesi). PostGIS'te `smallint`, `integer` ya da `bigint`. Sütunun tutmadığı değer reddedilir.
+  - Kaynakta gruplanmış sayım `Source::groups` (`GROUP BY`; Türk alfabesinin sırası, boş değer sonda). Kendi sorgusu
+    olmayan sürücü için varsayılan sayar. Ayrık değerler de Türkçe sıralı döner.
+  - Uygunluk takımı iki sürücüde geçti. Kurulu masaüstü CBS kitaplığı KentOS'un yazdığı `no` alanını `Integer`,
+    `sayac` alanını `Integer64` okudu; önce ikisi de `Integer64` okunuyordu.
+  - Gerçek pencere: Kaynaklar'dan eklenen tablonun Alanlar'ında “Tam sayı” ve “Büyük tam sayı”.
 - [ ] **VY-12 — İfadeden SQL'e.** İfadeyle seç dilindeki bir ifade koşul ağacına çevrilebiliyorsa kaynakta sorulur
   (karşılaştırma, VE/VEYA/DEĞİL, içinde, boş mu, benzer); çevrilemeyen parça yerelde sorulur, sonuç aynıdır. Alttaki
   tablonun süzgeci, katmanın süzgeci (canlı çizim), dışa aktarmanın süzgeci ve kurallı sınıfların sayımı bundan geçer.

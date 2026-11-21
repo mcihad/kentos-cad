@@ -8,7 +8,7 @@
   [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),
   [ADR 9104](../adr/9104-transactions.md), [ADR 9105](../adr/9105-layer-classes.md),
   [ADR 9106](../adr/9106-layer-export.md), [ADR 9107](../adr/9107-project-in-a-source.md),
-  [plan/veri.md](../../plan/veri.md)).**
+  [ADR 9108](../adr/9108-integer-widths-and-groups.md), [plan/veri.md](../../plan/veri.md)).**
   - Veritabanı ve dosya katmanları ayrı crate'lerdeki sürücülerden geçer:
     - ortak sözleşme `kentos-data`;
     - `kentos-data-gpkg`;
@@ -45,6 +45,10 @@
   - **CBS projesinde nesne verisi proje dosyasına gömülmez:** Nokta, Çizgi, Alan katmanı… bir kaynağın yeni tablosunu
     yapar (`cad.layers.create`); nesne tutan eski katman tek adımda kaynağa taşınır (`cad.layers.migrate`; süzgecin
     gizledikleri de, tabloya yazılamayan nesne varsa hiçbiri). Plan/veri.md'nin dokuz maddesi tamam.
+  - **İkinci tur (21 Kasım, “hepsini düzelt”):** tam sayının genişliği sözleşmede (`FieldKind::Int { bits }`): KentOS'un
+    Tam sayısı GeoPackage'a `MEDIUMINT`, Büyük tam sayısı `INTEGER` yazılır; sütunun tutmadığı değer reddedilir.
+    Kaynakta gruplanmış sayım `Source::groups` (Türk alfabesinin sırası, boş değer sonda); kendi sorgusu olmayan sürücü
+    için varsayılan sayar. Tam ortak durum koşusu ve yetenek denetimi temiz tutulur (VY-10).
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

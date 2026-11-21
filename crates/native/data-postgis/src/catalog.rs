@@ -46,7 +46,9 @@ pub fn kind_of(typname: &str, formatted: &str) -> FieldKind {
     let f = formatted.to_ascii_lowercase();
     match typname {
         "bool" => FieldKind::Bool,
-        "int2" | "int4" | "int8" | "oid" => FieldKind::Int,
+        "int2" => FieldKind::Int { bits: 16 },
+        "int4" => FieldKind::INT32,
+        "int8" | "oid" => FieldKind::INT,
         "float4" | "float8" => FieldKind::Real,
         "numeric" => {
             // numeric(12,2)

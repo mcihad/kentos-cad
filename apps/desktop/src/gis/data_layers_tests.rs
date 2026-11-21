@@ -24,7 +24,7 @@ pub(crate) fn parcels(name: &str, n: usize) -> PathBuf {
             description: None,
             key: "fid".into(),
             fields: vec![
-                Field::new("ada", FieldKind::Int),
+                Field::new("ada", FieldKind::INT32),
                 Field::new("kullanim", FieldKind::Text { max: Some(20) }),
                 Field::new("alan", FieldKind::Real),
             ],

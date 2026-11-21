@@ -299,8 +299,17 @@ impl Source for PgSource {
         let mut q = Sql::default();
         let w = where_of(&request, &s, table, &mut q)?;
         let col = format!("t.{}", quote(field));
+        // A text in the Turkish alphabet's order, as a group's (docs/adr/9108 §2).
+        let by = match (kind.is_text(), s.turkish) {
+            (true, true) => "d.v COLLATE \"tr-x-icu\"".to_owned(),
+            (true, false) => {
+                let (from, to) = kentos_data::turkish::sort_key_translation();
+                format!("translate(d.v::text, '{from}', '{to}') COLLATE \"C\"")
+            }
+            _ => "d.v".to_owned(),
+        };
         let sql = format!(
-            "SELECT {} FROM (SELECT DISTINCT {col} AS v FROM {} t{w}) d ORDER BY d.v LIMIT {limit}",
+            "SELECT {} FROM (SELECT DISTINCT {col} AS v FROM {} t{w}) d ORDER BY {by} LIMIT {limit}",
             read_expr("d.v", &kind),
             s.sql
         );
@@ -312,6 +321,60 @@ impl Source for PgSource {
                 .map_err(error_of)?;
             rows.iter()
                 .map(|r| Ok(value_of(r.try_get(0).map_err(error_of)?, &kind)))
+                .collect()
+        })
+    }
+
+    /// `GROUP BY` on the server: a text in the Turkish alphabet's order (`tr-x-icu`, or the translation where the server
+    /// has no ICU), the empty value last.
+    fn groups(
+        &self,
+        table: &str,
+        field: &str,
+        condition: Option<&Condition>,
+        limit: usize,
+    ) -> Result<Vec<(Value, u64)>, DataError> {
+        let s = self.shape(table)?;
+        let kind = s
+            .schema
+            .field(field)
+            .map(|f| f.kind.clone())
+            .ok_or_else(|| DataError::NoField {
+                table: table.to_owned(),
+                field: field.to_owned(),
+            })?;
+        let request = Request {
+            condition: condition.cloned(),
+            ..Request::default()
+        };
+        let mut q = Sql::default();
+        let w = where_of(&request, &s, table, &mut q)?;
+        let col = format!("t.{}", quote(field));
+        let by = match (kind.is_text(), s.turkish) {
+            (true, true) => "g.v COLLATE \"tr-x-icu\"".to_owned(),
+            (true, false) => {
+                let (from, to) = kentos_data::turkish::sort_key_translation();
+                format!("translate(g.v::text, '{from}', '{to}') COLLATE \"C\"")
+            }
+            _ => "g.v".to_owned(),
+        };
+        let sql = format!(
+            "SELECT {}, g.n FROM (SELECT {col} AS v, count(*) AS n FROM {} t{w} GROUP BY {col}) g \
+             ORDER BY {by} NULLS LAST LIMIT {limit}",
+            read_expr("g.v", &kind),
+            s.sql
+        );
+        runtime()?.block_on(async {
+            let mut conn = self.pool.acquire().await.map_err(error_of)?;
+            let rows = bound(&sql, &q.args)
+                .fetch_all(&mut *conn)
+                .await
+                .map_err(error_of)?;
+            rows.iter()
+                .map(|r| {
+                    let n: i64 = r.try_get(1).map_err(error_of)?;
+                    Ok((value_of(r.try_get(0).map_err(error_of)?, &kind), u64::try_from(n).unwrap_or(0)))
+                })
                 .collect()
         })
     }

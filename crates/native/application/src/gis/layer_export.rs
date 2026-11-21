@@ -201,7 +201,9 @@ pub(crate) fn format_words(f: ExportFormat) -> &'static str {
 /// A layer field's kind as a table's.
 pub(crate) fn field_kind(kind: LayerFieldKind, length: Option<u32>) -> FieldKind {
     match kind {
-        LayerFieldKind::Integer | LayerFieldKind::BigInt => FieldKind::Int,
+        // KentOS's integer is a 32-bit one (MEDIUMINT, integer), its big integer a 64-bit one (docs/adr/9108 §1).
+        LayerFieldKind::Integer => FieldKind::INT32,
+        LayerFieldKind::BigInt => FieldKind::INT,
         LayerFieldKind::Decimal => FieldKind::Real,
         LayerFieldKind::Boolean => FieldKind::Bool,
         LayerFieldKind::Date => FieldKind::Date,
