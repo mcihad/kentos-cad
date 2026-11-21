@@ -677,7 +677,7 @@ impl App {
     }
 
     /// How many objects a layer, or every layer below a group, holds.
-    fn objects_below(&self, node: &LayerNode) -> usize {
+    pub(crate) fn objects_below(&self, node: &LayerNode) -> usize {
         self.document
             .as_ref()
             .map_or(0, |doc| doc.count_below(node))

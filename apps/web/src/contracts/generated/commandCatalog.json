@@ -79109,6 +79109,190 @@
       ]
     },
     {
+      "id": "cad.layers.migrate",
+      "version": 1,
+      "title": "Katmanı kaynağa taşı",
+      "summary": "Nesneleri proje dosyasında duran bir CBS çizim katmanını tek adımda bir veri kaynağına taşır: nesnelerini bir GeoPackage dosyasında (yoksa yapılır) ya da bir PostgreSQL şemasında yeni bir tablonun satırları olarak yazar ve katmanın yerine o tabloyu okuyan bir veri katmanı koyar; adı, stili (işleyicisi, etiketleri), etkinliği aynen kalır, çizim katmanı nesneleriyle gider. Katmanın bütün nesneleri yazılır, katman süzgecinin gizledikleri de. Tabloya yazılamayan nesne (yazı, ölçü) varsa hiçbir şey yazılmaz (unwritable_objects): katmanla birlikte kaybolurlardı. table tablonun adıdır (verilmezse katmanın adından üretilir). Tek geri alma adımıdır: geri alınınca çizim katmanı nesneleriyle döner, tablo kaynakta kalır.",
+      "aliases": [
+        "kaynagatasi",
+        "tasi",
+        "migrate"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.migrate` v1.\n\n`layer`'s objects written to `table` (none: the layer's name made a table name) in `path` (`gpkg`) or `address` and\n`schema` (`postgis`), in the project's system, every field of the layer a column, every object of the layer (those\nits layer filter hides too: the layer goes, so none may stay behind).\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (`gpkg` without\n`path`, `postgis` without `address`), `invalid_name`, `layer_not_found`, `not_a_layer` (a group), `service_layer`,\n`data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table is there),\n`source_unreachable`, `nothing_to_export` (nothing a table holds: an empty layer, or one of texts only),\n`unwritable_objects` (texts, dimensions or anything a table cannot hold beside what it can: they would be lost with\nthe layer, so nothing is written; their count and the first's kind are said).",
+        "properties": {
+          "address": {
+            "description": "`postgis`: the database, `postgresql://user@host:port/db` (its password is never written).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The drawing layer (its id).",
+            "type": "string"
+          },
+          "path": {
+            "description": "`gpkg`: the GeoPackage file.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "schema": {
+            "description": "`postgis`: the schema; none: `public`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "table": {
+            "description": "The table's name; none: the layer's name made a table name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target": {
+            "$ref": "#/$defs/CreateTarget"
+          }
+        },
+        "required": [
+          "layer",
+          "target"
+        ],
+        "title": "LayersMigrate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.layers.migrate` did: the data layer that took the layer's place, the table, where, how many rows.",
+        "properties": {
+          "address": {
+            "description": "The source: the GeoPackage's path, the database's address.",
+            "type": "string"
+          },
+          "geometry": {
+            "description": "OGC's name of the geometry type written; none for a table of records.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The data layer (its id); empty in a plan.",
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "table": {
+            "description": "The table: a GeoPackage's table name, PostGIS's `schema.table`.",
+            "type": "string"
+          },
+          "written": {
+            "description": "The rows written: the layer's objects a table holds.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "table",
+          "address",
+          "written",
+          "revision"
+        ],
+        "title": "LayersMigrated",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.layers.migrate` did: the data layer that took the layer's place, the table, where, how many rows.",
+        "properties": {
+          "address": {
+            "description": "The source: the GeoPackage's path, the database's address.",
+            "type": "string"
+          },
+          "geometry": {
+            "description": "OGC's name of the geometry type written; none for a table of records.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The data layer (its id); empty in a plan.",
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "table": {
+            "description": "The table: a GeoPackage's table name, PostGIS's `schema.table`.",
+            "type": "string"
+          },
+          "written": {
+            "description": "The rows written: the layer's objects a table holds.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "table",
+          "address",
+          "written",
+          "revision"
+        ],
+        "title": "LayersMigrated",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_layer",
+          "no_target",
+          "invalid_name",
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer",
+          "data_layer",
+          "layer_locked",
+          "target_exists",
+          "source_unreachable",
+          "nothing_to_export",
+          "unwritable_objects"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Direkler katmanını projenin GeoPackage'ına taşı",
+          "input": {
+            "layer": "direkler",
+            "path": "/veri/sivas.gpkg",
+            "target": "gpkg"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.data",
       "version": 1,
       "title": "Veri katmanı",
@@ -114146,6 +114330,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Katman bir veri katmanı değil."
+    },
+    {
+      "code": "data_layer",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman zaten bir veri kaynağının tablosunu okuyor."
+    },
+    {
+      "code": "unwritable_objects",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katmanın bazı nesneleri bir tabloya yazılamaz; hiçbir şey yazılmadı."
     },
     {
       "code": "data_layer_not_editing",

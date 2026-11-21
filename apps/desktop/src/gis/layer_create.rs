@@ -144,7 +144,7 @@ impl NewLayerWindow {
 impl App {
     /// The likely GeoPackage of a new table: the one the project is kept in, the project file's own beside it, or the
     /// first data layer's.
-    fn likely_geopackage(&self) -> String {
+    pub(crate) fn likely_geopackage(&self) -> String {
         let Some(doc) = &self.document else {
             return String::new();
         };

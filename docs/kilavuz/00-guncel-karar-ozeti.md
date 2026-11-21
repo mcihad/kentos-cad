@@ -41,8 +41,10 @@
   - **Proje bir veri kaynağında** (Dosya › Veri kaynağı; ADR 9107): proje dosyaya kaydedildiği gibi bir GeoPackage'a
     (`kentos_projects` uzantısı) ya da PostgreSQL şemasına da kaydedilebilir. Depo sürücü sözleşmesindedir
     (`ProjectStore`); yeni bir sürücü projeyi de saklar. Veri katmanının göreli yolu yazılır: GeoPackage, içindeki proje
-    ve katmanlarıyla taşınır. Sıradaki: Kaynaklar'da projeler, yeni katman bir kaynağın tablosu, eski katmanları bir
-    kaynağa taşıma.
+    ve katmanlarıyla taşınır. Kaynaklar GeoPackage'ın ve şemanın projelerini tablolarının yanında listeler.
+  - **CBS projesinde nesne verisi proje dosyasına gömülmez:** Nokta, Çizgi, Alan katmanı… bir kaynağın yeni tablosunu
+    yapar (`cad.layers.create`); nesne tutan eski katman tek adımda kaynağa taşınır (`cad.layers.migrate`; süzgecin
+    gizledikleri de, tabloya yazılamayan nesne varsa hiçbiri). Plan/veri.md'nin dokuz maddesi tamam.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

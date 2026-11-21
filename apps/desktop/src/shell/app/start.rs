@@ -350,6 +350,7 @@ impl App {
                 layer_export: None,
                 project_store: None,
                 layer_create: None,
+                layer_migrate: None,
                 data_info: Default::default(),
                 data_selection: Default::default(),
                 data_labels: Vec::new(),

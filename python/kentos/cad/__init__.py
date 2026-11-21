@@ -2003,6 +2003,8 @@ __all__ = [
     "LayersLabelled",
     "LayersLabels",
     "LayersLabelsPlan",
+    "LayersMigrate",
+    "LayersMigrated",
     "LayersRendered",
     "LayersRenderer",
     "LayersRendererPlan",

@@ -616,6 +616,8 @@ codes! {
     INVALID_DATA = "invalid_data", Failed, false, "Veri tablosu kurallarına uymuyor.";
     /// An update or a removal of a layer that is not a data layer.
     NOT_A_DATA_LAYER = "not_a_data_layer", Failed, false, "Katman bir veri katmanı değil.";
+    DATA_LAYER = "data_layer", Failed, false, "Katman zaten bir veri kaynağının tablosunu okuyor.";
+    UNWRITABLE_OBJECTS = "unwritable_objects", Failed, false, "Katmanın bazı nesneleri bir tabloya yazılamaz; hiçbir şey yazılmadı.";
     /// An object written on a data layer that is not being edited (docs/adr/9103 §2): its rows stay in its table.
     DATA_LAYER_NOT_EDITING = "data_layer_not_editing", Failed, false, "Veri katmanı düzenlemeye açık değil; satırları tablosunda durur. Önce katmanın düzenlemesini başlatın. Hiçbir şey yazılmadı.";
     /// A data layer kept read-only, or whose table the account may not write (docs/adr/9103 §3).

@@ -1,0 +1,1354 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.layers.migrate",
+ "commandVersion": 1,
+ "title": "Katmanı kaynağa taşı: nokta, çizgi, alan katmanı bir GeoPackage tablosuna; süzgeçli katman; retler (ADR 9107 §8)",
+ "note": "ADR 9107 §8. Beklentiler sözleşmenin kurallarıyla burada hesaplanır; taşınan katmanın tablosu cad.layers.rows ile okunur, katmanın gittiği ikinci bir taşımanın reddiyle görülür.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Katmanı kaynağa taşı",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 600000.0,
+   "y": 4410000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "direkler",
+    "name": "Direkler",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "point",
+    "fields": [
+     {
+      "name": "no",
+      "kind": "integer"
+     },
+     {
+      "name": "durum",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "hatlar",
+    "name": "Hatlar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "line",
+    "fields": [
+     {
+      "name": "no",
+      "kind": "integer"
+     },
+     {
+      "name": "durum",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "alanlar",
+    "name": "Alanlar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "area",
+    "fields": [
+     {
+      "name": "no",
+      "kind": "integer"
+     },
+     {
+      "name": "durum",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "suzgecli",
+    "name": "Süzgeçli",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "point",
+    "fields": [
+     {
+      "name": "no",
+      "kind": "integer"
+     },
+     {
+      "name": "durum",
+      "kind": "text"
+     }
+    ],
+    "filter": {
+     "expression": "no > 1"
+    }
+   },
+   {
+    "id": "su_vanalari",
+    "name": "Su Vanaları",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "point",
+    "fields": [
+     {
+      "name": "no",
+      "kind": "integer"
+     },
+     {
+      "name": "durum",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "point"
+   },
+   {
+    "id": "yazili",
+    "name": "Yazılı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "no",
+      "kind": "integer"
+     }
+    ]
+   },
+   {
+    "id": "yazilar",
+    "name": "Yazılar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bos",
+    "name": "Boş",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "point"
+   },
+   {
+    "id": "veri",
+    "name": "Parseller",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "area",
+    "data": {
+     "driver": "gpkg",
+     "address": "$fixture:data/v1/satirlar.gpkg",
+     "table": "parseller",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "typeName": "POLYGON",
+      "srid": 5256
+     }
+    },
+    "fields": [
+     {
+      "name": "ada",
+      "kind": "integer"
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "gruptaki",
+      "name": "Gruptaki",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "point",
+      "fields": [
+       {
+        "name": "no",
+        "kind": "integer"
+       },
+       {
+        "name": "durum",
+        "kind": "text"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "direkler",
+    "attrs": {
+     "no": "1",
+     "durum": "Sağlam"
+    },
+    "p": {
+     "x": 600000.0,
+     "y": 4410000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 2,
+    "layerId": "direkler",
+    "attrs": {
+     "no": "2",
+     "durum": "Bakımda"
+    },
+    "p": {
+     "x": 600010.0,
+     "y": 4410005.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 3,
+    "layerId": "direkler",
+    "attrs": {
+     "no": "3",
+     "durum": "Arızalı"
+    },
+    "p": {
+     "x": 600020.0,
+     "y": 4410010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 4,
+    "layerId": "suzgecli",
+    "attrs": {
+     "no": "1",
+     "durum": "Sağlam"
+    },
+    "p": {
+     "x": 600000.0,
+     "y": 4410000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "suzgecli",
+    "attrs": {
+     "no": "2",
+     "durum": "Bakımda"
+    },
+    "p": {
+     "x": 600010.0,
+     "y": 4410005.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "suzgecli",
+    "attrs": {
+     "no": "3",
+     "durum": "Arızalı"
+    },
+    "p": {
+     "x": 600020.0,
+     "y": 4410010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "gruptaki",
+    "attrs": {
+     "no": "1",
+     "durum": "Sağlam"
+    },
+    "p": {
+     "x": 600000.0,
+     "y": 4410000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "gruptaki",
+    "attrs": {
+     "no": "2",
+     "durum": "Bakımda"
+    },
+    "p": {
+     "x": 600010.0,
+     "y": 4410005.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "gruptaki",
+    "attrs": {
+     "no": "3",
+     "durum": "Arızalı"
+    },
+    "p": {
+     "x": 600020.0,
+     "y": 4410010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "su_vanalari",
+    "attrs": {
+     "no": "1",
+     "durum": "Sağlam"
+    },
+    "p": {
+     "x": 600000.0,
+     "y": 4410000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 11,
+    "layerId": "su_vanalari",
+    "attrs": {
+     "no": "2",
+     "durum": "Bakımda"
+    },
+    "p": {
+     "x": 600010.0,
+     "y": 4410005.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 12,
+    "layerId": "su_vanalari",
+    "attrs": {
+     "no": "3",
+     "durum": "Arızalı"
+    },
+    "p": {
+     "x": 600020.0,
+     "y": 4410010.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 13,
+    "layerId": "hatlar",
+    "attrs": {
+     "no": "1",
+     "durum": "Açık"
+    },
+    "pts": [
+     {
+      "x": 600000.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 600100.0,
+      "y": 4410000.0
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 14,
+    "layerId": "hatlar",
+    "attrs": {
+     "no": "2",
+     "durum": "Açık"
+    },
+    "pts": [
+     {
+      "x": 600000.0,
+      "y": 4410050.0
+     },
+     {
+      "x": 600060.0,
+      "y": 4410080.0
+     },
+     {
+      "x": 600120.0,
+      "y": 4410050.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 15,
+    "layerId": "alanlar",
+    "attrs": {
+     "no": "1",
+     "durum": "Konut"
+    },
+    "pts": [
+     {
+      "x": 600000.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 600040.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 600040.0,
+      "y": 4410030.0
+     },
+     {
+      "x": 600000.0,
+      "y": 4410030.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 16,
+    "layerId": "alanlar",
+    "attrs": {
+     "no": "2",
+     "durum": "Konut"
+    },
+    "pts": [
+     {
+      "x": 600100.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 600150.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 600150.0,
+      "y": 4410025.0
+     },
+     {
+      "x": 600100.0,
+      "y": 4410025.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 17,
+    "layerId": "kilitli",
+    "attrs": {},
+    "p": {
+     "x": 600000.0,
+     "y": 4410000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 18,
+    "layerId": "yazili",
+    "attrs": {
+     "no": "1"
+    },
+    "p": {
+     "x": 600000.0,
+     "y": 4410000.0
+    }
+   },
+   {
+    "kind": "text",
+    "id": 19,
+    "layerId": "yazili",
+    "attrs": {},
+    "p": {
+     "x": 600005.0,
+     "y": 4410005.0
+    },
+    "text": "Not",
+    "height": 2.5,
+    "rotation": 0
+   },
+   {
+    "kind": "text",
+    "id": 20,
+    "layerId": "yazilar",
+    "attrs": {},
+    "p": {
+     "x": 600005.0,
+     "y": 4410005.0
+    },
+    "text": "Yalnız yazı",
+    "height": 2.5,
+    "rotation": 0
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Nokta katmanı GeoPackage'a taşınır; satırları okunur, katman gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/direk.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "direkler",
+       "address": "$tmp:tasi/direk.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no",
+        "durum"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "no": "1",
+          "durum": "Sağlam"
+         },
+         "wkt": "POINT (600000 4410000)"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "no": "2",
+          "durum": "Bakımda"
+         },
+         "wkt": "POINT (600010 4410005)"
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "no": "3",
+          "durum": "Arızalı"
+         },
+         "wkt": "POINT (600020 4410010)"
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/direk2.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“direkler” kimlikli katman çizimde yok.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "hatlar",
+      "target": "gpkg",
+      "path": "$tmp:tasi/hat.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "hatlar",
+       "address": "$tmp:tasi/hat.gpkg",
+       "written": 2,
+       "geometry": "LINESTRING",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no",
+        "durum"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "no": "1",
+          "durum": "Açık"
+         },
+         "wkt": "LINESTRING (600000 4410000, 600100 4410000)"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "no": "2",
+          "durum": "Açık"
+         },
+         "wkt": "LINESTRING (600000 4410050, 600060 4410080, 600120 4410050)"
+        }
+       ],
+       "offset": 0,
+       "total": 2,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "alanlar",
+      "target": "gpkg",
+      "path": "$tmp:tasi/alan.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "alanlar",
+       "address": "$tmp:tasi/alan.gpkg",
+       "written": 2,
+       "geometry": "POLYGON",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no",
+        "durum"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "no": "1",
+          "durum": "Konut"
+         },
+         "wkt": "POLYGON ((600000 4410000, 600040 4410000, 600040 4410030, 600000 4410030, 600000 4410000))"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "no": "2",
+          "durum": "Konut"
+         },
+         "wkt": "POLYGON ((600100 4410000, 600150 4410000, 600150 4410025, 600100 4410025, 600100 4410000))"
+        }
+       ],
+       "offset": 0,
+       "total": 2,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Verilen tablo adı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/ad.gpkg",
+      "table": "direk_2026"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "direk_2026",
+       "address": "$tmp:tasi/ad.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Türkçe adlı katmanın tablo adı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "su_vanalari",
+      "target": "gpkg",
+      "path": "$tmp:tasi/vana.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "su_vanalari",
+       "address": "$tmp:tasi/vana.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgecin gizlediği nesneler de taşınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "suzgecli",
+      "target": "gpkg",
+      "path": "$tmp:tasi/suzgec.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "suzgecli",
+       "address": "$tmp:tasi/suzgec.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no",
+        "durum"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "no": "1",
+          "durum": "Sağlam"
+         },
+         "wkt": "POINT (600000 4410000)"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "no": "2",
+          "durum": "Bakımda"
+         },
+         "wkt": "POINT (600010 4410005)"
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "no": "3",
+          "durum": "Arızalı"
+         },
+         "wkt": "POINT (600020 4410010)"
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Grubun içindeki katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "gruptaki",
+      "target": "gpkg",
+      "path": "$tmp:tasi/grup.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "gruptaki",
+       "address": "$tmp:tasi/grup.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni bir klasördeki dosya yapılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "alanlar",
+      "target": "gpkg",
+      "path": "$tmp:tasi/yeni/klasor/alan.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "alanlar",
+       "address": "$tmp:tasi/yeni/klasor/alan.gpkg",
+       "written": 2,
+       "geometry": "POLYGON",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı dosyaya iki katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/ortak.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "direkler",
+       "address": "$tmp:tasi/ortak.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "hatlar",
+      "target": "gpkg",
+      "path": "$tmp:tasi/ortak.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-2",
+       "table": "hatlar",
+       "address": "$tmp:tasi/ortak.gpkg",
+       "written": 2,
+       "geometry": "LINESTRING",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan sayar, yazmaz: aynı taşıma sonra yapılır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/plan.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "",
+       "table": "direkler",
+       "address": "$tmp:tasi/plan.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/plan.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "direkler",
+       "address": "$tmp:tasi/plan.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman verilmedi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "  ",
+      "target": "gpkg",
+      "path": "$tmp:tasi/x.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_layer",
+       "message": "Taşınacak katman verilmedi (layer).",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: GeoPackage dosyası yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_target",
+       "message": "Tablonun yapılacağı GeoPackage dosyası verilmedi (path).",
+       "path": "path"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: veritabanı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "postgis"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_target",
+       "message": "Tablonun yapılacağı veritabanı verilmedi (address).",
+       "path": "address"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok",
+      "target": "gpkg",
+      "path": "$tmp:tasi/x.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "grup",
+      "target": "gpkg",
+      "path": "$tmp:tasi/x.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir katman grubu; kaynağa taşınan bir katmandır. Grubun bir katmanını verin.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: zaten veri katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "veri",
+      "target": "gpkg",
+      "path": "$tmp:tasi/x.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "data_layer",
+       "message": "“Parseller” zaten “parseller” tablosunu okuyor; nesneleri kaynağında.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kilitli",
+      "target": "gpkg",
+      "path": "$tmp:tasi/x.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” kilitli; nesneleri taşınmaz. Kilidi açıp yeniden deneyin.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tablo var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "direkler",
+      "target": "gpkg",
+      "path": "$tmp:tasi/var.gpkg",
+      "table": "ortak"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "ortak",
+       "address": "$tmp:tasi/var.gpkg",
+       "written": 3,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "hatlar",
+      "target": "gpkg",
+      "path": "$tmp:tasi/var.gpkg",
+      "table": "ortak"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "target_exists",
+       "message": "“ortak” tablosu kaynakta var; başka bir tablo adı verin (table).",
+       "path": "table"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: boş katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "bos",
+      "target": "gpkg",
+      "path": "$tmp:tasi/bos.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_export",
+       "message": "Yazılacak nesne kalmadı: seçim, kutu ve süzgeç hiçbir nesne bırakmadı.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yalnız yazı tutan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yazilar",
+      "target": "gpkg",
+      "path": "$tmp:tasi/yazi.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_export",
+       "message": "Yazılacak nesne kalmadı: 1 nesne yazılamadı (yazı ya da ölçü bir geometri sütununa yazılmaz).",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tabloya yazılamayan nesne kaybolurdu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yazili",
+      "target": "gpkg",
+      "path": "$tmp:tasi/yazili.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unwritable_objects",
+       "message": "Katmanın 1 nesnesi bir tabloya yazılamaz (yazı ya da ölçü bir geometri sütununa yazılmaz); katman taşınırsa kaybolurdu, hiçbir şey yazılmadı. Onları başka bir katmana alıp yeniden deneyin.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

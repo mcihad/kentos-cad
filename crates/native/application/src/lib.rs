@@ -509,6 +509,9 @@ pub mod project_store;
 // A new layer made as a new table of a data source (docs/adr/9107 §7).
 #[path = "gis/layers_create.rs"]
 pub mod layers_create;
+// A drawing layer moved into a data source (docs/adr/9107 §8).
+#[path = "gis/layers_migrate.rs"]
+pub mod layers_migrate;
 #[path = "gis/data_write.rs"]
 pub mod data_write;
 #[cfg(feature = "mod-gis")]
@@ -3177,6 +3180,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LAYERS_CREATE,
         kentos_commands::CAD_LAYERS_CREATE_VERSION,
+    ),
+    // A drawing layer moved into a data source ([`layers_migrate`], docs/adr/9107 §8).
+    (
+        kentos_commands::CAD_LAYERS_MIGRATE,
+        kentos_commands::CAD_LAYERS_MIGRATE_VERSION,
     ),
     // A layer's style classes, counted by the drawing's rule ([`layer_classes`], docs/adr/9105 §2).
     (

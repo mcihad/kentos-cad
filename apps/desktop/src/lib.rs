@@ -1533,6 +1533,11 @@ mod layer_export;
 mod project_store;
 #[path = "gis/layer_create.rs"]
 mod layer_create;
+#[path = "gis/layer_migrate.rs"]
+mod layer_migrate;
+#[cfg(test)]
+#[path = "gis/layer_migrate_tests.rs"]
+mod layer_migrate_tests;
 #[cfg(test)]
 #[path = "gis/project_store_tests.rs"]
 mod project_store_tests;

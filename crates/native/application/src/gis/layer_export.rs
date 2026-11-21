@@ -62,6 +62,9 @@ pub(crate) struct Plan<'d> {
     /// The system written: an EPSG code; none for a local project.
     pub srid: Option<u32>,
     pub filter: Option<CompiledFilter>,
+    /// Every object of a drawing layer, those its layer filter hides too: a layer moved into a source
+    /// (`cad.layers.migrate`) leaves none behind (docs/adr/9107 §8).
+    pub all_objects: bool,
 }
 
 /// The table name a layer's name makes: its letters and digits, others `_`, Turkish letters kept as their bare ones.
@@ -370,6 +373,7 @@ pub(crate) fn planned<'d>(doc: &'d Document, input: &'d LayersExport) -> Result<
         schema,
         srid,
         filter,
+        all_objects: false,
     })
 }
 
@@ -463,7 +467,7 @@ fn feed(plan: &Plan<'_>, rows: &Rows<'_>, objects: &[Entity], sink: &mut dyn Sin
 /// The objects of a drawing layer the export keeps.
 fn drawing_objects(doc: &Document, plan: &Plan<'_>) -> Result<Vec<Entity>, Stop> {
     let input = plan.input;
-    let hidden = plan.node.filter.as_ref().map(|_| crate::layer_filter::left_out(doc));
+    let hidden = plan.node.filter.as_ref().filter(|_| !plan.all_objects).map(|_| crate::layer_filter::left_out(doc));
     let wanted: Option<std::collections::HashSet<&str>> =
         input.uids.as_ref().map(|u| u.iter().map(String::as_str).collect());
     let mut list: Vec<Entity> = Vec::new();

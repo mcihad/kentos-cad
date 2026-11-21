@@ -179,6 +179,17 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &["export_skipped", "field_left_out"],
         targets: none,
     },
+    // docs/adr/9107 §8: a drawing layer moved into a data source.
+    Entry {
+        id: "cad.layers.migrate",
+        refusals: &[
+            &["no_layer", "no_target", "invalid_name", "layer_not_found"],
+            &["not_a_layer", "service_layer", "data_layer", "layer_locked"],
+            &["target_exists", "source_unreachable", "nothing_to_export", "unwritable_objects"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // docs/adr/9107 §7: a new layer made as a new table of a data source.
     Entry {
         id: "cad.layers.create",

@@ -628,6 +628,32 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Katmanı kaynağa taşı (docs/adr/9107 §8), held together by fixtures/commands/v1/cad.layers.migrate.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_MIGRATE.into(),
+            version: crate::CAD_LAYERS_MIGRATE_VERSION,
+            title: "Katmanı kaynağa taşı".into(),
+            summary: "Nesneleri proje dosyasında duran bir CBS çizim katmanını tek adımda bir veri kaynağına taşır: nesnelerini bir GeoPackage dosyasında (yoksa yapılır) ya da bir PostgreSQL şemasında yeni bir tablonun satırları olarak yazar ve katmanın yerine o tabloyu okuyan bir veri katmanı koyar; adı, stili (işleyicisi, etiketleri), etkinliği aynen kalır, çizim katmanı nesneleriyle gider. \
+                      Katmanın bütün nesneleri yazılır, katman süzgecinin gizledikleri de. Tabloya yazılamayan nesne (yazı, ölçü) varsa hiçbir şey yazılmaz (unwritable_objects): katmanla birlikte kaybolurlardı. \
+                      table tablonun adıdır (verilmezse katmanın adından üretilir). Tek geri alma adımıdır: geri alınınca çizim katmanı nesneleriyle döner, tablo kaynakta kalır.".into(),
+            aliases: vec!["kaynagatasi".into(), "tasi".into(), "migrate".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersMigrate>(),
+            output: schema::<crate::LayersMigrated>(),
+            plan: Some(schema::<crate::LayersMigrated>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Direkler katmanını projenin GeoPackage'ına taşı".into(),
+                input: json!({ "layer": "direkler", "target": "gpkg", "path": "/veri/sivas.gpkg" }),
+                output: None,
+            }],
+        },
         // Veri katmanı (docs/adr/9101 §4), held together by fixtures/commands/v1/cad.layers.data.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_DATA.into(),

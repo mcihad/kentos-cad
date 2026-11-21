@@ -58770,6 +58770,100 @@ class LayersLabelsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayersMigrate(_Model):
+    """Input of `cad.layers.migrate` v1.
+
+    `layer`'s objects written to `table` (none: the layer's name made a table name) in `path` (`gpkg`) or `address` and
+    `schema` (`postgis`), in the project's system, every field of the layer a column, every object of the layer (those
+    its layer filter hides too: the layer goes, so none may stay behind).
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (`gpkg` without
+    `path`, `postgis` without `address`), `invalid_name`, `layer_not_found`, `not_a_layer` (a group), `service_layer`,
+    `data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table is there),
+    `source_unreachable`, `nothing_to_export` (nothing a table holds: an empty layer, or one of texts only),
+    `unwritable_objects` (texts, dimensions or anything a table cannot hold beside what it can: they would be lost with
+    the layer, so nothing is written; their count and the first's kind are said).
+    Attributes:
+        layer: The drawing layer (its id).
+        address: `postgis`: the database, `postgresql://user@host:port/db` (its password is never written).
+        path: `gpkg`: the GeoPackage file.
+        schema: `postgis`: the schema; none: `public`.
+        table: The table's name; none: the layer's name made a table name.
+    """
+    layer: str
+    target: CreateTarget | CreateTargetName
+    address: str | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    schema: str | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["target"] = _enum_out(self.target)
+        if self.address is not UNSET:
+            out["address"] = self.address
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersMigrate:
+        return cls(
+            layer=data["layer"],
+            target=_enum_in(CreateTarget, data["target"]),
+            address=data.get("address", UNSET),
+            path=data.get("path", UNSET),
+            schema=data.get("schema", UNSET),
+            table=data.get("table", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersMigrated(_Model):
+    """What `cad.layers.migrate` did: the data layer that took the layer's place, the table, where, how many rows.
+    Attributes:
+        layer: The data layer (its id); empty in a plan.
+        table: The table: a GeoPackage's table name, PostGIS's `schema.table`.
+        address: The source: the GeoPackage's path, the database's address.
+        written: The rows written: the layer's objects a table holds. Unit: count.
+        geometry: OGC's name of the geometry type written; none for a table of records.
+    """
+    layer: str
+    table: str
+    address: str
+    written: int
+    revision: str
+    geometry: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["table"] = self.table
+        out["address"] = self.address
+        out["written"] = self.written
+        out["revision"] = self.revision
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersMigrated:
+        return cls(
+            layer=data["layer"],
+            table=data["table"],
+            address=data["address"],
+            written=data["written"],
+            revision=data["revision"],
+            geometry=data.get("geometry", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersRendered(_Model):
     """Output of `cad.layers.renderer` v1.
     Attributes:
@@ -149383,6 +149477,8 @@ __all__ = [
     "LayersLabelled",
     "LayersLabels",
     "LayersLabelsPlan",
+    "LayersMigrate",
+    "LayersMigrated",
     "LayersRendered",
     "LayersRenderer",
     "LayersRendererPlan",

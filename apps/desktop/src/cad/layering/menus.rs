@@ -195,6 +195,15 @@ impl App {
                 )
                 .icon(icon("export"));
         }
+        // Veri kaynağına taşı… (docs/adr/9107 §8): a CBS project's drawing layer holding objects, into a table.
+        if self.migrates(node) {
+            menu = menu
+                .item(
+                    "Veri kaynağına taşı…",
+                    Message::Gis(crate::gis::Event::LayerMigrate(crate::layer_migrate::Event::Open(id.clone()))),
+                )
+                .icon(icon("import"));
+        }
         // Nesne sayısını göster (docs/adr/9105 §4): the layer's objects and its classes' after their names.
         if is_layer && node.service.is_none() {
             menu = menu.check(

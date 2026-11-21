@@ -1,6 +1,6 @@
 # ADR 9107: Proje bir veri kaynağında
 
-- **Durum:** kabul edildi (2026-11-21); adımlar VY-09a (§2–§5), VY-09b (§6), VY-09c (§7). Plan: [plan/veri.md](../../plan/veri.md) VY-09.
+- **Durum:** kabul edildi (2026-11-21); adımlar VY-09a (§2–§5), VY-09b (§6), VY-09c (§7), VY-09d (§8). Plan: [plan/veri.md](../../plan/veri.md) VY-09.
 - **İstek:** sahibin sözü (21 Kasım 2026): projeler veritabanında “saklanacak değil saklanabilecek”; “veriler her
   halükarda veritabanında saklanacak CBS projelerinde”; GeoPackage, PostgreSQL ya da ileride başka bir veritabanı.
   Sürücü soyutlaması ileride başka veritabanlarını da desteklemek içindir.
@@ -8,7 +8,7 @@
   sözleşmedeydi, şimdi yazılıyor ve okunuyor (§3). **Komut:** yok. Kaydet ve Aç kabuk işlemleridir, katalog komutu
   değildir. Python'da `Document.save_to`, `Document.open_from`, `kentos.cad.projects`.
 - **Sürücü sözleşmesi:** `kentos_data::ProjectStore` ve `Source::project_store`; hata türü `NoProject`.
-- **Komut (09c):** yeni `cad.layers.create` v1 (Yeni veri katmanı, 24 ortak durum).
+- **Komutlar:** yeni `cad.layers.create` v1 (09c, Yeni veri katmanı, 24 ortak durum) ve `cad.layers.migrate` v1 (09d, Katmanı kaynağa taşı, 21 ortak durum).
 - **Bağımlılık:** yeni dış kitaplık yok.
 
 ## §1 Bağlam ve araştırma
@@ -158,7 +158,46 @@ tür, uzunluk) sorar (kurulu programın ekranı `.run/gui-evidence/veri/qgis/14`
   okuduğu bir beklenti bozularak doğrulandı. Masaüstü GIS-004 sınamaları yeni akışla geçer: tablo GeoPackage'ta yapılır,
   katman seçilir ve görünür.
 
-## §8 Sıradaki adımlar (VY-09)
+## §8 Karar: eski katman tek adımda kaynağa taşınır (VY-09d)
 
-- **09d** Nesne tutan eski CBS katmanlarını tek adımda bir kaynağa taşıma.
+- **Komut `cad.layers.migrate`:** nesneleri proje dosyasında duran bir CBS çizim katmanını bir GeoPackage dosyasına
+  (yoksa yapılır) ya da bir PostgreSQL şemasına taşır.
+  - Nesneler `cad.layers.export`'un yazdığı gibi yeni bir tablonun satırları olur.
+  - O tabloyu okuyan bir veri katmanı katmanın yerine geçer: aynı yerde, aynı adla, aynı stille (işleyici, etiketler,
+    renk); katman etkinse o da etkin olur.
+  - Çizim katmanı nesneleriyle gider. Hepsi tek geri alma adımıdır: geri alınınca çizim katmanı nesneleriyle döner,
+    tablo kaynakta kalır.
+- **Hiçbir şey kaybolmaz:**
+  - Katman süzgecinin gizlediği nesneler de taşınır. Dışa aktarma onları atlıyordu; taşımada atlansalardı katmanla
+    birlikte silinirlerdi. Bu yüzden dışa aktarma planına `all_objects` bayrağı eklendi.
+  - Tabloya yazılamayan nesne (yazı, ölçü) varsa hiçbir şey yazılmaz (`unwritable_objects`). Sayıları ve ilkinin türü
+    söylenir; önce bir kuru dışa aktarmayla sayılır.
+  - Kilitli katman taşınmaz (`layer_locked`); veri katmanı zaten kaynağındadır (`data_layer`).
+- **Retler, bu sırayla:** `no_layer`, `no_target`, `invalid_name`, `layer_not_found`, `not_a_layer`, `service_layer`,
+  `data_layer`, `layer_locked`, `target_exists` (“… tablosu kaynakta var; başka bir tablo adı verin”),
+  `source_unreachable`, `nothing_to_export` (boş katman ya da yalnız yazı), `unwritable_objects`.
+- **Masaüstünde:** CBS projesinde nesne tutan çizim katmanının sağ tuşunda Veri kaynağına taşı… çıkar.
+  - Pencere: kaynak (GeoPackage dosyası ya da PostgreSQL bağlantısı, adresi, şeması) ve tablonun adı. Önerilen yer
+    09c'deki gibidir.
+  - Taşı'dan sonra bildirim: “… veri kaynağına taşındı: N nesne … içinde “…” tablosunun satırları oldu … geri al
+    (Ctrl+Z) çizimdeki hâline döndürür.”
+- **Kanıt:**
+  - 21 ortak durum (`scripts/fixtures/layer_migrate_command_cases.py`; Rust ve Python), koşucunun okuduğu bir beklenti
+    bozularak doğrulandı. Durumlar: nokta, çizgi ve alan katmanı; satırlar WKT'leriyle geri okunur; katmanın gittiği
+    ikinci taşımanın reddiyle görülür; süzgeçli katmanın bütün nesneleri; retler.
+  - Masaüstü `layer_migrate_tests`: katman GeoPackage'a taşınır; yerinde aynı adlı, aynı renkli, etkin veri katmanı;
+    proje dosyasında nesne kalmaz; tablo 3 satır; tek geri al katmanı nesneleriyle ve etkin olarak döndürür, tablo
+    dosyada kalır.
+  - Gerçek pencere: 60 direkli “Eski direkler” `eski.gpkg`'ye taşındı (60 satır, 3 durum); katman sınıflarıyla
+    tablodan çizildi; Ctrl+Z katmanı 60 nesnesiyle ve etkin olarak döndürdü. İlk denemede geri almadan sonra etkin
+    katman “0”a düşüyordu: etkinlik ayrı bir çağrıydı, artık veri katmanının eklendiği adımın içinde verilir
+    (`layers_data::write_activated`).
+
+## §9 Kalan
+
+- Projeyi veritabanında saklamak masaüstünde PostgreSQL için kayıtlı bir bağlantı ya da adres ister; parola
+  sistemin parola deposundan ya da ortamdan gelir (adreste yazılmaz).
+- Yeni katman ve taşıma tabloyu kendi işleminde yapar; geri alma katmanı geri alır, tabloyu silmez (QGIS'teki gibi).
+- Taşıma tabloya yazılamayan nesneleri (yazı, ölçü) ayrı bir katmana kendisi almaz; kullanıcı onları önce başka bir
+  katmana taşır.
 - Web (ADR 0228).

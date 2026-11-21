@@ -174,6 +174,16 @@ pub(crate) fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: LayersData,
 ) -> CommandResult<LayersDataDone> {
+    write_activated(cx, input, false)
+}
+
+/// [`write_execute`], the layer added made active in the same step when `activate` (undo makes the one before active
+/// again): a layer moved into a source takes the active role of the one it replaces (docs/adr/9107 §8).
+pub(crate) fn write_activated(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersData,
+    activate: bool,
+) -> CommandResult<LayersDataDone> {
     let node = match check(cx.doc, &input) {
         Ok(n) => n,
         Err(stop) => return stop.into(),
@@ -186,7 +196,7 @@ pub(crate) fn write_execute(
             input.parent.as_deref(),
             input.index.map(|i| i as usize),
             Some(label),
-            false,
+            activate,
         ),
         LayerDataOperation::Update => {
             let Some(n) = node else {
