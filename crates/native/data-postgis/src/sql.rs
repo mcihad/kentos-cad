@@ -168,6 +168,11 @@ pub fn condition(
         }
         Condition::IsNull(f) => format!("({} IS NULL)", column(shape, table, f)?.0),
         Condition::NotNull(f) => format!("({} IS NOT NULL)", column(shape, table, f)?.0),
+        // A typed column holds its own type: a text only in a text column (docs/adr/9109 §2).
+        Condition::Text(f) => {
+            let (col, kind, _) = column(shape, table, f)?;
+            if kind.is_text() { format!("({col} IS NOT NULL)") } else { "FALSE".into() }
+        }
         Condition::Like {
             field,
             pattern,

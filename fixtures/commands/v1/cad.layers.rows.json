@@ -1555,7 +1555,7 @@
    ]
   },
   {
-   "name": "Süzgeç: kullanim = 'Konut' (burada sorulur)",
+   "name": "Süzgeç: kullanim = 'Konut' (kaynakta sorulur)",
    "steps": [
     {
      "op": "execute",
@@ -1648,6 +1648,513 @@
        ],
        "offset": 0,
        "total": 7,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgeç: içinde, kaynakta sorulur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "filter": "kullanim içinde ('Konut', 'Park')",
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "400",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "ada": "100",
+          "parsel": "2",
+          "mahalle": "Işıklar",
+          "alan": "729.25",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "ada": "100",
+          "parsel": "4",
+          "mahalle": "Ağaçlı",
+          "alan": "676.75",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "ada": "100",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "625.25",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 11,
+         "attrs": {
+          "ada": "101",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "900.5",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 13,
+         "attrs": {
+          "ada": "101",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "841",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 14,
+         "attrs": {
+          "ada": "101",
+          "parsel": "4",
+          "mahalle": "Ağaçlı",
+          "alan": "441.25",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "ada": "101",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "400.75",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 21,
+         "attrs": {
+          "ada": "102",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "625",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 23,
+         "attrs": {
+          "ada": "102",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "576.5",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 25,
+         "attrs": {
+          "ada": "102",
+          "parsel": "5",
+          "mahalle": "İnönü",
+          "alan": "529",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 26,
+         "attrs": {
+          "ada": "102",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "900.25",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 28,
+         "attrs": {
+          "ada": "102",
+          "parsel": "8",
+          "mahalle": "Cumhuriyet",
+          "alan": "841.75",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 30,
+         "attrs": {
+          "ada": "102",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "784.25",
+          "kullanim": "Konut"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 14,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgeç: boş metin ya da boş değer, kaynakta sorulur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "filter": "kullanim boş",
+      "count": true,
+      "fields": [
+       "ada",
+       "kullanim"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 9,
+         "attrs": {
+          "ada": "100"
+         }
+        },
+        {
+         "key": 18,
+         "attrs": {
+          "ada": "101"
+         }
+        },
+        {
+         "key": 27,
+         "attrs": {
+          "ada": "102"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgeç: sayı aralığı GeoPackage'ta burada da sorulur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "filter": "alan arasında 300 ve 900",
+      "count": true,
+      "fields": [
+       "alan"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "alan"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "alan": "400"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "alan": "729.25"
+         }
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "alan": "676.75"
+         }
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "alan": "625.25"
+         }
+        },
+        {
+         "key": 8,
+         "attrs": {
+          "alan": "576.75"
+         }
+        },
+        {
+         "key": 10,
+         "attrs": {
+          "alan": "529.25"
+         }
+        },
+        {
+         "key": 12,
+         "attrs": {
+          "alan": "484.75"
+         }
+        },
+        {
+         "key": 13,
+         "attrs": {
+          "alan": "841"
+         }
+        },
+        {
+         "key": 14,
+         "attrs": {
+          "alan": "441.25"
+         }
+        },
+        {
+         "key": 15,
+         "attrs": {
+          "alan": "784.5"
+         }
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "alan": "400.75"
+         }
+        },
+        {
+         "key": 17,
+         "attrs": {
+          "alan": "729"
+         }
+        },
+        {
+         "key": 19,
+         "attrs": {
+          "alan": "676.5"
+         }
+        },
+        {
+         "key": 21,
+         "attrs": {
+          "alan": "625"
+         }
+        },
+        {
+         "key": 23,
+         "attrs": {
+          "alan": "576.5"
+         }
+        },
+        {
+         "key": 25,
+         "attrs": {
+          "alan": "529"
+         }
+        },
+        {
+         "key": 27,
+         "attrs": {
+          "alan": "484.5"
+         }
+        },
+        {
+         "key": 28,
+         "attrs": {
+          "alan": "841.75"
+         }
+        },
+        {
+         "key": 29,
+         "attrs": {
+          "alan": "441"
+         }
+        },
+        {
+         "key": 30,
+         "attrs": {
+          "alan": "784.25"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 20,
+       "checked": "here"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Süzgeç: veya, biri sayı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "filter": "kullanim = 'Ticaret' veya ada < 101",
+      "count": true,
+      "fields": [
+       "ada",
+       "kullanim"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "ada": "100",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "ada": "100",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "ada": "100",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 5,
+         "attrs": {
+          "ada": "100",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "ada": "100",
+          "kullanim": "Konut"
+         }
+        },
+        {
+         "key": 7,
+         "attrs": {
+          "ada": "100",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 8,
+         "attrs": {
+          "ada": "100",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 9,
+         "attrs": {
+          "ada": "100"
+         }
+        },
+        {
+         "key": 10,
+         "attrs": {
+          "ada": "100",
+          "kullanim": "Eğitim"
+         }
+        },
+        {
+         "key": 12,
+         "attrs": {
+          "ada": "101",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 17,
+         "attrs": {
+          "ada": "101",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 19,
+         "attrs": {
+          "ada": "101",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 24,
+         "attrs": {
+          "ada": "102",
+          "kullanim": "Ticaret"
+         }
+        },
+        {
+         "key": 29,
+         "attrs": {
+          "ada": "102",
+          "kullanim": "Ticaret"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 15,
        "checked": "here"
       },
       "warnings": []

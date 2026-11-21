@@ -38,11 +38,12 @@ fn a_data_layers_rows_a_condition_keeps_are_written_to_a_geopackage_and_added_to
     let doc = app.document.as_ref().expect("a drawing").model.reading_copy();
     let seen = std::cell::Cell::new(0u64);
     let answer = kentos_native_application::layer_export::written(&doc, &input, &|| false, &|p| {
-        // Every part said: all 40 rows read of the 40 counted, the 20 kept written.
-        assert_eq!(p.total, Some(40));
+        // Every part said. The filter is sent to the source (docs/adr/9109): the 20 rows it keeps are counted, read
+        // and written, not the table's 40.
+        assert_eq!(p.total, Some(20));
         seen.set(p.read);
     });
-    assert_eq!(seen.get(), 40);
+    assert_eq!(seen.get(), 20);
     let (exported, _, add) = answer.clone().expect("written");
     assert_eq!(exported.written, 20);
     assert!(add.is_some(), "the table to add");

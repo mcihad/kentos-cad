@@ -107,9 +107,10 @@ pub struct LayerRow {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum RowsChecked {
-    /// By the source: there was no filter, the box, the keys and the search are the source's.
+    /// By the source: the box, the keys, the search and the filter, if any, which the source answered exactly
+    /// (docs/adr/9109).
     Source,
-    /// Here: every row the source kept was read and the filter asked of it.
+    /// Here: every row the source kept (by the filter's part it could answer) was read and the filter asked of it.
     Here,
 }
 

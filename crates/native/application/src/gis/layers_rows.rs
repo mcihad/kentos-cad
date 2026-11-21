@@ -1,9 +1,10 @@
 //! `cad.layers.rows` v1 (docs/adr/9102 §4): a data layer's rows read from its source through its driver
 //! (`kentos_data::registry`, registered by the host). The box, the keys and the search are the source's; so are the
 //! order (a text in the Turkish alphabet's order, docs/adr/9102 §3), the page and the count, while there is no filter.
-//! A filter is the language's own: every row the source keeps is read (its key, the fields the filter names, its
-//! geometry when the filter measures it) and the filter asked of it, in the order; the page and the count are then of
-//! the rows it held for. Nothing is written.
+//! A filter is the language's own. Its part the source can answer is sent with the request (docs/adr/9109): when that
+//! part is the whole filter and exact, the source answers it all as above. Otherwise every row the sent part keeps is
+//! read (its key, the fields the filter names, its geometry when the filter measures it) and the filter asked of it, in
+//! the order; the page and the count are then of the rows it held for. Nothing is written.
 
 use std::collections::BTreeMap;
 
@@ -229,6 +230,17 @@ fn rows_of(
             text: words.to_owned(),
         });
     }
+    // The filter's part the source answers itself (docs/adr/9109): all of it when exact.
+    let pushed = match asked.filter.as_ref().and_then(|f| f.expr()) {
+        Some(e) => {
+            let schema = source.schema(&data.table).map_err(unreachable)?;
+            crate::data_condition::pushed(e, &schema, crate::data_condition::typed(source.driver()))
+        }
+        None => crate::data_condition::Pushed::default(),
+    };
+    if let Some(c) = &pushed.condition {
+        parts.push(c.clone());
+    }
     let condition = (!parts.is_empty()).then(|| Condition::and(parts));
     let base = Request {
         bbox,
@@ -261,7 +273,7 @@ fn rows_of(
         offset,
         ..base.clone()
     };
-    let Some(filter) = &asked.filter else {
+    let Some(filter) = asked.filter.as_ref().filter(|_| !pushed.exact) else {
         let total = match input.count {
             Some(true) => Some(source.count(&data.table, &base, false).map_err(unreachable)?),
             _ => None,

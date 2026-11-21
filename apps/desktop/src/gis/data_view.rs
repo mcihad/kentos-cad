@@ -319,8 +319,18 @@ fn run(job: Job) {
     let metres = 0.5 / job.px_per_m.max(1e-9);
     let geographic = matches!(srid, Some(4326) | Some(4258) | Some(4269));
     let tolerance = if geographic { metres / 111_320.0 } else { metres };
+    // The layer filter's part the source answers itself (docs/adr/9109): fewer rows read; the drawing still asks the
+    // filter of those it draws.
+    let condition = job.key.node.filter.as_ref().and_then(|f| {
+        let unit = kentos_native_application::expression_unit::reading_unit(&job.settings);
+        let compiled = kentos_native_application::layer_filter::compile_filter(f, unit).ok()?;
+        let schema = source.schema(&data.table).ok()?;
+        let typed = kentos_native_application::data_condition::typed(source.driver());
+        kentos_native_application::data_condition::pushed(compiled.expr()?, &schema, typed).condition
+    });
     let request = Request {
         bbox: data.geometry.as_ref().map(|_| bbox),
+        condition,
         columns: Some(job.columns.clone()),
         geometry: data.geometry.is_some(),
         simplify: (!job.key.exact).then_some(tolerance),

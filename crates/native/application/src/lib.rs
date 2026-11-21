@@ -512,6 +512,9 @@ pub mod layers_create;
 // A drawing layer moved into a data source (docs/adr/9107 §8).
 #[path = "gis/layers_migrate.rs"]
 pub mod layers_migrate;
+// An İfadeyle seç expression's part a data source answers itself (docs/adr/9109).
+#[path = "gis/data_condition.rs"]
+pub mod data_condition;
 #[path = "gis/data_write.rs"]
 pub mod data_write;
 #[cfg(feature = "mod-gis")]

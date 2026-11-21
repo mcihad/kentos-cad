@@ -71,6 +71,10 @@ pub enum Condition {
         text: String,
     },
     Fids(Vec<i64>),
+    /// The field's value is held as a text: a source that keeps any value in any column (SQLite) may hold one in a
+    /// number column, where the language still orders it as a text (docs/adr/9109 §2); a typed column of another type
+    /// holds none.
+    Text(String),
 }
 
 impl Condition {
@@ -118,7 +122,7 @@ impl Condition {
                 | Condition::In { field, .. }
                 | Condition::Between { field, .. }
                 | Condition::Like { field, .. } => push(out, field),
-                Condition::IsNull(f) | Condition::NotNull(f) => push(out, f),
+                Condition::IsNull(f) | Condition::NotNull(f) | Condition::Text(f) => push(out, f),
                 Condition::Contains { fields, .. } => fields.iter().for_each(|f| push(out, f)),
                 Condition::Fids(_) => {}
             }
@@ -207,6 +211,7 @@ impl Condition {
                 }))
             }
             Condition::Fids(fids) => Some(fids.contains(&fid)),
+            Condition::Text(f) => Some(get(f).is_some_and(|v| matches!(v, Value::Text(_)))),
         }
     }
 }

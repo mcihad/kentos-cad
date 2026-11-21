@@ -172,9 +172,14 @@ ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, AD
   - Uygunluk takımı iki sürücüde geçti. Kurulu masaüstü CBS kitaplığı KentOS'un yazdığı `no` alanını `Integer`,
     `sayac` alanını `Integer64` okudu; önce ikisi de `Integer64` okunuyordu.
   - Gerçek pencere: Kaynaklar'dan eklenen tablonun Alanlar'ında “Tam sayı” ve “Büyük tam sayı”.
-- [ ] **VY-12 — İfadeden SQL'e.** İfadeyle seç dilindeki bir ifade koşul ağacına çevrilebiliyorsa kaynakta sorulur
-  (karşılaştırma, VE/VEYA/DEĞİL, içinde, boş mu, benzer); çevrilemeyen parça yerelde sorulur, sonuç aynıdır. Alttaki
-  tablonun süzgeci, katmanın süzgeci (canlı çizim), dışa aktarmanın süzgeci ve kurallı sınıfların sayımı bundan geçer.
+- [x] **VY-12 — İfadeden SQL'e.** ([ADR 9109](../docs/adr/9109-expression-to-the-source.md))
+  - ADR 0581 §3'ün kuralı tek yerde: `pushdown::sent` bir ağaç verir. SQL ve sürücülerin koşul ağacı onun iki
+    yazılışıdır (`data_condition`). SQLite'ta sayı koşulu metinleri de geçirir (`Condition::Text`).
+  - Alttaki tablonun süzgeci tam gidiyorsa kaynak cevaplar, gitmiyorsa daraltılmış satırlar burada sorulur. Dışa
+    aktarmanın ve canlı çizimin süzgeci de kaynağa gider.
+  - Bir milyon PostGIS parselinde `kullanim = 'Konut'` sayımı 7 550 ms'den 28 ms'ye indi;
+    `alan > 600 ve kullanim = 'Park'` 9 008 ms'den 26 ms'ye.
+  - Kurallı sınıfların sayımı VY-13'te.
 - [ ] **VY-13 — Sınıflar ve stil.** Stil penceresinin Sınıflandır'ı veri katmanında değerleri kaynaktan alır; sınıf
   sayımı kaynakta gruplanır; sınıf satırına çift tık o sınıfın sembolünü açar; çizim katmanında kapalı sınıfın nesnesi
   etiketlenmez; değeri boş alan etikette boş görünür (yer tutucu yazılmaz).

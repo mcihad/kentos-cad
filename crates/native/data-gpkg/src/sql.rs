@@ -147,6 +147,7 @@ pub fn condition(
             format!("({col} BETWEEN ? AND ?)")
         }
         Condition::IsNull(f) => format!("({} IS NULL)", column(schema, table, f)?),
+        Condition::Text(f) => format!("(typeof({}) = 'text')", column(schema, table, f)?),
         Condition::NotNull(f) => format!("({} IS NOT NULL)", column(schema, table, f)?),
         Condition::Like {
             field,

@@ -7321,8 +7321,8 @@ RoofPartKindName = Literal["chimney", "vent", "window", "downpipe"]
 class RowsChecked(_StrEnum):
     """Where a question's filter was checked.
 
-    - ``source``: By the source: there was no filter, the box, the keys and the search are the source's.
-    - ``here``: Here: every row the source kept was read and the filter asked of it.
+    - ``source``: By the source: the box, the keys, the search and the filter, if any, which the source answered exactly
+    - ``here``: Here: every row the source kept (by the filter's part it could answer) was read and the filter asked of it.
     """
     SOURCE = "source"
     HERE = "here"

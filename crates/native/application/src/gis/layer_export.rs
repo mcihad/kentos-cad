@@ -536,9 +536,16 @@ fn data_rows(
             }
         }
     }
+    // The keys and the filter's part the source answers itself (docs/adr/9109); the filter is still asked here.
+    let mut parts: Vec<Condition> = input.keys.iter().map(|k| Condition::Fids(k.clone())).collect();
+    if let Some(e) = plan.filter.as_ref().and_then(|f| f.expr()) {
+        let schema = source.schema(&data.table).map_err(unreachable)?;
+        let typed = crate::data_condition::typed(source.driver());
+        parts.extend(crate::data_condition::pushed(e, &schema, typed).condition);
+    }
     let request = Request {
         bbox,
-        condition: input.keys.as_ref().map(|k| Condition::Fids(k.clone())),
+        condition: (!parts.is_empty()).then(|| Condition::and(parts)),
         columns: Some(columns.clone()),
         geometry: data.geometry.is_some(),
         chunk: CHUNK,

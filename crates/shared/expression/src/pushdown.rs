@@ -110,6 +110,44 @@ const LIMIT: f64 = 9_007_199_254_740_992.0;
 /// The column a field names: its SQL name (quoted) and what it holds; none: not a column of the source.
 pub type Columns<'a> = dyn Fn(&str) -> Option<(String, ColumnSort)> + 'a;
 
+/// What a source is sent of a condition before it is written in any source's words (docs/adr/9109 §1): the rules of
+/// this module once. [`push`] writes it as SQL here; the application writes it as a data driver's condition tree.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Sent {
+    And(Box<Sent>, Box<Sent>),
+    Or(Box<Sent>, Box<Sent>),
+    /// A number column against a number: `op` is `<`, `<=`, `>` or `>=`.
+    Order { column: String, op: BinOp, number: f64 },
+    /// A number column between two numbers, both kept: an equality's window (wider than the language's tolerance) or
+    /// `arasında`.
+    Between { column: String, low: f64, high: f64 },
+    /// A text column equal to a text (not empty, not a number).
+    Equals { column: String, text: String },
+    /// `içinde`: any of its parts (each an equality: a window or `Equals`).
+    Any(Vec<Sent>),
+    /// `boş` (`negated`: `boş değil`) on a number or text column: an empty text is empty too.
+    Empty { column: String, sort: ColumnSort, negated: bool },
+}
+
+impl Sent {
+    /// Whether it orders or bounds a number column: in SQLite such a column may hold a text, which the language orders
+    /// as a text, so what is sent keeps texts too and is not exact.
+    pub fn bounds_numbers(&self) -> bool {
+        match self {
+            Sent::And(a, b) | Sent::Or(a, b) => a.bounds_numbers() || b.bounds_numbers(),
+            Sent::Any(parts) => parts.iter().any(Sent::bounds_numbers),
+            Sent::Order { .. } | Sent::Between { .. } => true,
+            Sent::Equals { .. } | Sent::Empty { .. } => false,
+        }
+    }
+}
+
+/// The part of `e` a source can check and whether it keeps exactly the language's rows where a number column holds only
+/// numbers (docs/adr/0581 §3, docs/adr/9109 §1); none: nothing can be sent.
+pub fn sent(e: &Expr, columns: &Columns<'_>) -> Option<(Sent, bool)> {
+    Builder { e, columns }.node(&e.root)
+}
+
 /// The part of `e` a source can check (docs/adr/0581 §3).
 pub fn push(e: &Expr, columns: &Columns<'_>, dialect: Dialect) -> Pushed {
     push_after(e, columns, dialect, 0)
@@ -118,30 +156,20 @@ pub fn push(e: &Expr, columns: &Columns<'_>, dialect: Dialect) -> Pushed {
 /// [`push`] into a query that already binds `taken` values: PostgreSQL's placeholders start at `$taken+1`
 /// (docs/adr/0649 §1). SQLite's `?` are not numbered.
 pub fn push_after(e: &Expr, columns: &Columns<'_>, dialect: Dialect, taken: usize) -> Pushed {
+    let Some((tree, exact)) = sent(e, columns) else {
+        return Pushed::default();
+    };
     let mut w = Writer {
-        e,
-        columns,
         dialect,
         params: Vec::new(),
         taken,
     };
-    match w.node(&e.root) {
-        Some((sql, exact)) => Pushed {
-            sql,
-            params: w.params,
-            exact,
-        },
-        None => Pushed::default(),
+    let sql = w.sql(&tree);
+    Pushed {
+        sql,
+        params: w.params,
+        exact: exact && (dialect == Dialect::Postgres || !tree.bounds_numbers()),
     }
-}
-
-struct Writer<'a, 'c> {
-    e: &'a Expr,
-    columns: &'a Columns<'c>,
-    dialect: Dialect,
-    params: Vec<Param>,
-    /// Values the query binds before these.
-    taken: usize,
 }
 
 /// A literal as a number to send: finite and below 2⁵³ (a number, or a text that reads as one).
@@ -178,47 +206,31 @@ fn literal(n: &Node) -> Option<Value<'static>> {
     }
 }
 
-impl Writer<'_, '_> {
+/// The rules: what of a node is sent, and whether it is exact where a number column holds only numbers.
+struct Builder<'a, 'c> {
+    e: &'a Expr,
+    columns: &'a Columns<'c>,
+}
+
+impl Builder<'_, '_> {
     fn column(&self, n: &Node) -> Option<(String, ColumnSort)> {
         let Node::Field(i) = n else { return None };
         let name = self.e.fields.get(*i)?;
         (self.columns)(name)
     }
 
-    fn param(&mut self, p: Param) -> String {
-        let number = matches!(p, Param::Number(_));
-        self.params.push(p);
-        match self.dialect {
-            Dialect::Sqlite => "?".into(),
-            Dialect::Postgres if number => format!("${}::float8", self.taken + self.params.len()),
-            Dialect::Postgres => format!("${}", self.taken + self.params.len()),
-        }
-    }
-
-    /// The SQL of a node and whether it is exact; none: the node cannot be sent.
-    fn node(&mut self, n: &Node) -> Option<(String, bool)> {
+    fn node(&self, n: &Node) -> Option<(Sent, bool)> {
         match n {
-            Node::Bin(BinOp::And, a, b) => {
-                let a = self.node(a);
-                let b = self.node(b);
-                match (a, b) {
-                    (Some((a, ea)), Some((b, eb))) => Some((format!("({a} AND {b})"), ea && eb)),
-                    // What cannot be sent is left out: the rest keeps more, not fewer.
-                    (Some((s, _)), None) | (None, Some((s, _))) => Some((s, false)),
-                    (None, None) => None,
-                }
-            }
+            Node::Bin(BinOp::And, a, b) => match (self.node(a), self.node(b)) {
+                (Some((a, ea)), Some((b, eb))) => Some((Sent::And(Box::new(a), Box::new(b)), ea && eb)),
+                // What cannot be sent is left out: the rest keeps more, not fewer.
+                (Some((s, _)), None) | (None, Some((s, _))) => Some((s, false)),
+                (None, None) => None,
+            },
             Node::Bin(BinOp::Or, a, b) => {
-                let mark = self.params.len();
-                let a = self.node(a);
-                let b = a.as_ref().and_then(|_| self.node(b));
-                match (a, b) {
-                    (Some((a, ea)), Some((b, eb))) => Some((format!("({a} OR {b})"), ea && eb)),
-                    _ => {
-                        self.params.truncate(mark);
-                        None
-                    }
-                }
+                let (a, ea) = self.node(a)?;
+                let (b, eb) = self.node(b)?;
+                Some((Sent::Or(Box::new(a), Box::new(b)), ea && eb))
             }
             Node::Bin(op @ (BinOp::Lt | BinOp::Le | BinOp::Gt | BinOp::Ge | BinOp::Eq), a, b) => {
                 // The field on the left: `100 < alan` is `alan > 100`.
@@ -229,90 +241,119 @@ impl Writer<'_, '_> {
                         _ => return None,
                     },
                 };
-                self.compare(col, &lit, op)
+                compare(col, &lit, op)
             }
             Node::In(x, items, false) => {
                 let col = self.column(x)?;
                 let lits: Vec<Value<'static>> = items.iter().map(literal).collect::<Option<_>>()?;
-                let mark = self.params.len();
                 let mut parts = Vec::with_capacity(lits.len());
                 let mut exact = true;
                 for l in &lits {
-                    match self.compare(col.clone(), l, BinOp::Eq) {
-                        Some((s, e)) => {
-                            parts.push(s);
-                            exact &= e;
-                        }
-                        None => {
-                            self.params.truncate(mark);
-                            return None;
-                        }
-                    }
+                    let (s, e) = compare(col.clone(), l, BinOp::Eq)?;
+                    parts.push(s);
+                    exact &= e;
                 }
-                (!parts.is_empty()).then(|| (format!("({})", parts.join(" OR ")), exact))
+                (!parts.is_empty()).then_some((Sent::Any(parts), exact))
             }
             Node::Between(x, low, high, false) => {
-                let (name, sort) = self.column(x)?;
+                let (column, sort) = self.column(x)?;
                 if sort != ColumnSort::Number {
                     return None;
                 }
-                let lo = number_of(&literal(low)?)?;
-                let hi = number_of(&literal(high)?)?;
-                let a = self.param(Param::Number(lo));
-                let b = self.param(Param::Number(hi));
-                let exact = self.exact_number();
-                Some((self.keep_text(&name, format!("{name} BETWEEN {a} AND {b}")), exact))
+                let low = number_of(&literal(low)?)?;
+                let high = number_of(&literal(high)?)?;
+                Some((Sent::Between { column, low, high }, true))
             }
             Node::IsNull(x, negated) => {
-                let (name, sort) = self.column(x)?;
-                let typed_number = self.dialect == Dialect::Postgres && sort == ColumnSort::Number;
-                match sort {
-                    ColumnSort::Other => None,
-                    _ if typed_number && !negated => Some((format!("{name} IS NULL"), true)),
-                    _ if typed_number => Some((format!("{name} IS NOT NULL"), true)),
-                    _ if !negated => Some((format!("({name} IS NULL OR {name} = '')"), true)),
-                    _ => Some((format!("({name} IS NOT NULL AND {name} <> '')"), true)),
-                }
+                let (column, sort) = self.column(x)?;
+                (sort != ColumnSort::Other).then_some((Sent::Empty { column, sort, negated: *negated }, true))
             }
             _ => None,
         }
     }
+}
 
-    /// `name op lit` on a column of `sort`.
-    fn compare(&mut self, (name, sort): (String, ColumnSort), lit: &Value, op: BinOp) -> Option<(String, bool)> {
-        match sort {
-            ColumnSort::Number => {
-                let x = number_of(lit)?;
-                if op == BinOp::Eq {
-                    // Wider than the language's 1e-9 · max(1, |a|, |b|): what it calls equal is inside.
-                    let d = 1e-8 * js_max(x.abs(), 1.0);
-                    let a = self.param(Param::Number(x - d));
-                    let b = self.param(Param::Number(x + d));
-                    return Some((self.keep_text(&name, format!("{name} BETWEEN {a} AND {b}")), false));
-                }
-                let p = self.param(Param::Number(x));
+/// `column op lit` on a column of `sort`.
+fn compare((column, sort): (String, ColumnSort), lit: &Value, op: BinOp) -> Option<(Sent, bool)> {
+    match sort {
+        ColumnSort::Number => {
+            let x = number_of(lit)?;
+            if op == BinOp::Eq {
+                // Wider than the language's 1e-9 · max(1, |a|, |b|): what it calls equal is inside.
+                let d = 1e-8 * js_max(x.abs(), 1.0);
+                return Some((Sent::Between { column, low: x - d, high: x + d }, false));
+            }
+            Some((Sent::Order { column, op, number: x }, true))
+        }
+        ColumnSort::Text if op == BinOp::Eq => Some((Sent::Equals { column, text: text_of(lit)? }, true)),
+        _ => None,
+    }
+}
+
+/// [`Sent`] written as SQL.
+struct Writer {
+    dialect: Dialect,
+    params: Vec<Param>,
+    /// Values the query binds before these.
+    taken: usize,
+}
+
+impl Writer {
+    fn param(&mut self, p: Param) -> String {
+        let number = matches!(p, Param::Number(_));
+        self.params.push(p);
+        match self.dialect {
+            Dialect::Sqlite => "?".into(),
+            Dialect::Postgres if number => format!("${}::float8", self.taken + self.params.len()),
+            Dialect::Postgres => format!("${}", self.taken + self.params.len()),
+        }
+    }
+
+    fn sql(&mut self, s: &Sent) -> String {
+        match s {
+            Sent::And(a, b) => {
+                let a = self.sql(a);
+                let b = self.sql(b);
+                format!("({a} AND {b})")
+            }
+            Sent::Or(a, b) => {
+                let a = self.sql(a);
+                let b = self.sql(b);
+                format!("({a} OR {b})")
+            }
+            Sent::Order { column, op, number } => {
+                let p = self.param(Param::Number(*number));
                 let sym = match op {
                     BinOp::Lt => "<",
                     BinOp::Le => "<=",
                     BinOp::Gt => ">",
                     _ => ">=",
                 };
-                let exact = self.exact_number();
-                Some((self.keep_text(&name, format!("{name} {sym} {p}")), exact))
+                self.keep_text(column, format!("{column} {sym} {p}"))
             }
-            ColumnSort::Text if op == BinOp::Eq => {
-                let t = text_of(lit)?;
-                let p = self.param(Param::Text(t));
-                Some((format!("{name} = {p}"), true))
+            Sent::Between { column, low, high } => {
+                let a = self.param(Param::Number(*low));
+                let b = self.param(Param::Number(*high));
+                self.keep_text(column, format!("{column} BETWEEN {a} AND {b}"))
             }
-            _ => None,
+            Sent::Equals { column, text } => {
+                let p = self.param(Param::Text(text.clone()));
+                format!("{column} = {p}")
+            }
+            Sent::Any(parts) => {
+                let parts: Vec<String> = parts.iter().map(|p| self.sql(p)).collect();
+                format!("({})", parts.join(" OR "))
+            }
+            Sent::Empty { column, sort, negated } => {
+                let typed_number = self.dialect == Dialect::Postgres && *sort == ColumnSort::Number;
+                match (typed_number, negated) {
+                    (true, false) => format!("{column} IS NULL"),
+                    (true, true) => format!("{column} IS NOT NULL"),
+                    (false, false) => format!("({column} IS NULL OR {column} = '')"),
+                    (false, true) => format!("({column} IS NOT NULL AND {column} <> '')"),
+                }
+            }
         }
-    }
-
-    /// Whether a number condition keeps exactly the language's rows: in PostgreSQL a number column holds numbers;
-    /// in SQLite its texts go through as well (`keep_text`), more than the language may keep.
-    fn exact_number(&self) -> bool {
-        self.dialect == Dialect::Postgres
     }
 
     /// In SQLite a number column may hold text, which the language may keep: such rows go through too.

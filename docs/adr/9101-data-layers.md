@@ -221,8 +221,8 @@ Bütün kent, ilçe, mahalle ve sokak ölçeğinde ve bir kaydırmada katmanlar 
 - **Seçim** tabloyla birlikte VY-04'te, **kenet** düzenleme oturumuyla birlikte VY-05'te.
 - **Python ve MCP'de veri katmanının satırları:** Bilgi'nin bu yüzlerdeki karşılığı, VY-04'te tablonun satırlarını
   okuyan komuttur.
-- **Katmanın süzgeci** (ADR 0211) veri katmanında uygulanmıyor. Süzgecin koşul ağacına çevrilip okumaya verilmesi
-  VY-04'te.
+- **Katmanın süzgeci** (ADR 0211) veri katmanında çizimde uygulanır; gönderilebilir parçası görünümün isteğiyle kaynağa
+  gider (VY-12, [ADR 9109](9109-expression-to-the-source.md) §3).
 - **Stil penceresinin sınıflandırması** değerleri bugün çizimdeki nesnelerden alıyor. Sürücünün ayrık değerlerinden
   okuması VY-07'de.
 - **Göreli yol:** `relative` sözleşmede ve dosyada var. Masaüstünün bunu yazması ve dosya taşınınca çözmesi VY-09'da.

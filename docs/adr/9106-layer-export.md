@@ -170,8 +170,8 @@ kurulu programın ekranları `.run/gui-evidence/veri/qgis/08`, `11`, `12`):
 
 - ~~KentOS'un 32 bitlik tam sayısı GeoPackage'ta `INTEGER` (64 bit) yazılır.~~ Kapandı (VY-11,
   [ADR 9108](9108-integer-widths-and-groups.md) §2): Tam sayı `MEDIUMINT`, Büyük tam sayı `INTEGER` yazılır.
-- Süzgeç kaynağa gitmez: satırların hepsi okunur, süzgeç burada sorulur. İki geçiş (önce anahtar ve süzgeç alanları,
-  sonra tutulanların tamamı) ya da İfadeyle seç'ten SQL'e çeviri ileride.
+- ~~Süzgeç kaynağa gitmez.~~ Kapandı (VY-12, [ADR 9109](9109-expression-to-the-source.md) §3): süzgecin gönderilebilir
+  parçası kaynakta sorulur, satırlar ve toplam onunla okunur; süzgeç yine burada da sorulur.
 - GeoJSON, Shapefile ve KML yazıcıları katmanı bütün alır. Milyonluk veri katmanında bellek ister; akışlı yazıcı
   ileride.
 - PostGIS hedefi kayıtlı bir bağlantı ister (PostGIS'e bağlan). Kapsam yalnız görünümdür (QGIS'teki serbest kutu yok).
