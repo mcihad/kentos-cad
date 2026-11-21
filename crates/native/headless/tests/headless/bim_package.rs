@@ -213,9 +213,10 @@ fn report(answer: &kentos_commands::CallAnswer) -> SheetsPublished {
     serde_json::from_value(output.clone()).unwrap()
 }
 
-/// The author's answers to the questions KentOS leaves to them (the file size, the development level, the area tables).
+/// The author's answers to the questions KentOS leaves to them (the file size, the area tables); the 7th, the
+/// development level, is the written file's (docs/adr/8133).
 fn answers() -> Value {
-    json!([{"no": 1, "yes": true, "note": "Sınır yayımlanmadı"}, {"no": 7, "yes": true}, {"no": 10, "yes": true}])
+    json!([{"no": 1, "yes": true, "note": "Sınır yayımlanmadı"}, {"no": 10, "yes": true}])
 }
 
 #[test]
@@ -231,8 +232,8 @@ fn the_real_rule_stops_what_the_model_lacks_and_publishes_a_declared_building_wh
     assert_eq!(bim.results.iter().map(|r| r.key.as_str()).collect::<Vec<_>>(), ["okunuyor", "sema", "profil", "model_pafta", "idare"]);
     assert_eq!(bim.results.iter().map(|r| r.holds).collect::<Vec<_>>(), [Some(true), Some(true), Some(false), Some(true), None]);
     let codes: Vec<&str> = planned.issues.iter().filter(|i| i.error).map(|i| i.code.as_str()).collect();
-    // The 10th is answered from the file (docs/adr/8126): two left to the author.
-    assert_eq!(codes.iter().filter(|c| **c == "digital_form_unanswered").count(), 2, "{codes:?}");
+    // The 10th (docs/adr/8126) and the 7th (docs/adr/8133) are answered from the file: one left to the author.
+    assert_eq!(codes.iter().filter(|c| **c == "digital_form_unanswered").count(), 1, "{codes:?}");
     assert!(codes.contains(&"digital_required_field"), "{codes:?}");
     // A drawing without a system or a north arrow: the model's north is not known, and the finding says what gives it.
     let north = planned.issues.iter().find(|i| i.message.contains("(TrueNorth)")).expect("the context's north");
@@ -307,7 +308,8 @@ fn a_declared_building_is_published_whole() {
 /// does, its package published with the real rule (docs/adr/8076, 8077; plan/bim-plan.md BIM-14 "2+1'de paket").
 /// What the apartment's author completes for the model beyond the declarations (the real rule's first findings on it):
 /// the walls' styles by their widths (Dış duvar 25 outside, İç duvar 15 inside: their materials and plasters), the
-/// floor slab's material and layers (Zemine oturan döşeme) and a terrace slab over the storey (its height and ceiling).
+/// floor slab's material and layers (Zemine oturan döşeme), a terrace slab over the storey (its height and ceiling) and
+/// the cooktop's height.
 fn complete_flat(snap: &mut kentos_commands::DocumentSnapshotV2) {
     use kentos_commands::Entity as E;
     let styles: Vec<kentos_commands::WallStyleDef> = kentos_commands::builtin_wall_styles()
@@ -346,6 +348,10 @@ fn complete_flat(snap: &mut kentos_commands::DocumentSnapshotV2) {
     );
     snap.entities.push(serde_json::from_value(terrace).expect("the terrace"));
     snap.uids.push(serde_json::from_value(json!("0192f5a1-8077-7000-8000-00000000f1a7")).expect("an id"));
+    // The cooktop's height on its block's card, the counter's 0.90 m as the sink's: a library appliance has none until
+    // its author enters it (docs/adr/8070 §5), and an element without a body fails the 7th question (docs/adr/8133 K319).
+    let cooktop = snap.blocks.iter_mut().find(|b| b.name == "Ocak").expect("the kitchen run's cooktop");
+    cooktop.card.as_mut().and_then(|c| c.element.as_mut()).expect("an appliance").height = Some(0.9);
 }
 
 #[test]
@@ -355,8 +361,12 @@ fn the_flat_s_declared_package_holds() {
     complete_flat(&mut snap);
     let mut doc = permit_drawing_of(snap, true);
     // The 5th question too: the apartment's doors and windows are named without a description (K49), the author's call.
+    // And the 7th: the kitchen's and the bathroom's library blocks are boxes over their outlines, so the level of
+    // development is the author's review (docs/adr/8133 K318).
     let mut given = answers();
-    given.as_array_mut().expect("a list").push(json!({"no": 5, "yes": true, "note": "Açıklama EK-5 kalıbında isteğe bağlı"}));
+    let list = given.as_array_mut().expect("a list");
+    list.push(json!({"no": 5, "yes": true, "note": "Açıklama EK-5 kalıbında isteğe bağlı"}));
+    list.push(json!({"no": 7, "yes": true, "note": "Kitaplık blokları dış ölçüleriyle yeterli"}));
     run(&mut doc, "cad.form.answer", json!({"answers": given}));
     let path = folder("daire");
     let published = report(&publish(&mut doc, &path, CallOp::Execute, json!([])));
@@ -365,7 +375,7 @@ fn the_flat_s_declared_package_holds() {
     assert!(published.ready, "{errors:#?}");
     let bim = published.bim.as_ref().expect("the package's part");
     assert_eq!(bim.results.iter().map(|r| r.holds).collect::<Vec<_>>(), [Some(true), Some(true), Some(true), Some(true), None]);
-    // The model delivered beside the sheets; the form's record keeps the author's five answers.
+    // The model delivered beside the sheets; the form's record keeps the author's four answers.
     assert!(path.join(&bim.model).is_file());
     let record: Value = serde_json::from_slice(&fs::read(path.join(&bim.form)).expect("the form's record")).unwrap();
     let nos: Vec<u64> = record["answers"].as_array().expect("answers").iter().filter_map(|a| a["no"].as_u64()).collect();
@@ -374,8 +384,9 @@ fn the_flat_s_declared_package_holds() {
 }
 
 /// An answer remembers the evidence it answered (docs/adr/8077 §7): answered with the report's rows' KentOS notes, the
-/// package holds; once the 10th question's evidence is another than its answer's, the answer is stale, the question
-/// open again and the publication stopped (`digital_form_answer_stale`).
+/// package holds; once the 1st question's evidence (the file size, the one question of the declared section building
+/// left to its author: the 7th and the 10th are the file's, docs/adr/8126, 8133) is another than its answer's, the
+/// answer is stale, the question open again and the publication stopped (`digital_form_answer_stale`).
 #[test]
 fn a_stale_answer_stops_the_package() {
     let mut doc = permit_drawing(true);
@@ -383,17 +394,17 @@ fn a_stale_answer_stops_the_package() {
     let first = report(&publish(&mut doc, &path, CallOp::Plan, json!([])));
     let rows = &first.bim.as_ref().expect("the package's part").rows;
     let basis = |no: u8| rows.iter().find(|r| r.no == no).map(|r| r.basis.clone()).expect("the row");
-    let given: Vec<Value> = [1u8, 7].iter().map(|&no| json!({"no": no, "yes": true, "basis": basis(no)})).collect();
+    let given: Vec<Value> = [1u8].iter().map(|&no| json!({"no": no, "yes": true, "basis": basis(no)})).collect();
     run(&mut doc, "cad.form.answer", json!({"answers": given}));
     let answered = report(&publish(&mut doc, &path, CallOp::Plan, json!([])));
     assert!(answered.ready, "{:?}", answered.issues.iter().filter(|i| i.error).map(|i| &i.code).collect::<Vec<_>>());
     // The evidence it answered is not the form's now: stale.
-    run(&mut doc, "cad.form.answer", json!({"answers": [{"no": 7, "yes": true, "basis": "eski kanıt"}]}));
+    run(&mut doc, "cad.form.answer", json!({"answers": [{"no": 1, "yes": true, "basis": "eski kanıt"}]}));
     let stale = report(&publish(&mut doc, &path, CallOp::Plan, json!([])));
     assert!(!stale.ready);
     let codes: Vec<&str> = stale.issues.iter().filter(|i| i.error).map(|i| i.code.as_str()).collect();
     assert_eq!(codes, ["digital_form_answer_stale"]);
-    let row = stale.bim.as_ref().expect("the part").rows.iter().find(|r| r.no == 7).expect("row 7");
+    let row = stale.bim.as_ref().expect("the part").rows.iter().find(|r| r.no == 1).expect("row 1");
     assert_eq!(row.answer, "", "the stale answer is not the form's");
     assert!(!path.exists());
 }

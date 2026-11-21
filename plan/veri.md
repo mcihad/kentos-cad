@@ -144,3 +144,34 @@ ADR'ler **9100**'den başlar.
     - [x] **09d** Nesne tutan eski CBS katmanlarını bir kaynağa taşıma: `cad.layers.migrate` (21 ortak durum); katmanın
       sağ tuşunda Veri kaynağına taşı…; süzgecin gizledikleri de taşınır, tabloya yazılamayan nesne varsa hiçbir şey
       yazılmaz; tek geri alma adımı.
+
+## İkinci tur: kalanlar ve kırık testler (21 Kasım 2026)
+
+Sahibin sözü (21 Kasım 2026, VY-09'un raporundan sonra): “Hepsini düzelt eksikleri tamamla.” Kapsam: ADR 9100–9107'nin
+“Kalan” bölümlerinde yazılı her eksik ve testlerdeki kırıklar. Bilerek yapılmayanlar (sunucuda açık işlem, ADR 9104 §2)
+ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, ADR, kod, testler, gerçek pencere, commit ve push.
+
+- [ ] **VY-10 — Kırık testler.** Masaüstü: 2000 satır sınırını aşan `shell/exchange/gpkg_tests.rs` konularına göre
+  bölünür (ADR 8054 §7); eklentinin form demosu ADR 1080'in kuralına göre beklenir (varsayılanındaki girdi türünü
+  tutan katmanda açılır). Headless: shapefile dışa aktarma testi ve üç BIM paket testi. Tam ortak durum koşusu.
+- [ ] **VY-11 — Sürücü sözleşmesi: 32 ve 64 bit tam sayı, ayrık değerler, gruplanmış sayım.** `FieldKind`'da tam
+  sayının genişliği; GeoPackage'a 32 bit `MEDIUMINT`, 64 bit `INTEGER` yazılır (GDAL'ın eşlemesi); PostGIS'te
+  `integer`/`bigint`. Kaynaktan bir alanın ayrık değerleri (sınırlı) ve bir alana göre gruplanmış sayım (`GROUP BY`);
+  uygunluk takımında iki sürücü.
+- [ ] **VY-12 — İfadeden SQL'e.** İfadeyle seç dilindeki bir ifade koşul ağacına çevrilebiliyorsa kaynakta sorulur
+  (karşılaştırma, VE/VEYA/DEĞİL, içinde, boş mu, benzer); çevrilemeyen parça yerelde sorulur, sonuç aynıdır. Alttaki
+  tablonun süzgeci, katmanın süzgeci (canlı çizim), dışa aktarmanın süzgeci ve kurallı sınıfların sayımı bundan geçer.
+- [ ] **VY-13 — Sınıflar ve stil.** Stil penceresinin Sınıflandır'ı veri katmanında değerleri kaynaktan alır; sınıf
+  sayımı kaynakta gruplanır; sınıf satırına çift tık o sınıfın sembolünü açar; çizim katmanında kapalı sınıfın nesnesi
+  etiketlenmez; değeri boş alan etikette boş görünür (yer tutucu yazılmaz).
+- [ ] **VY-14 — Düzenleme.** Kaydedilmemiş yeni satırlar alttaki tabloda listelenir; çizimden sonra öznitelik formu
+  açılır (katmanda kapatılabilir); bekleyen değişiklikler (alınan satırlar, yeni ve silinen satırlar) proje dosyasıyla
+  saklanır ve proje açılınca geri gelir, kaydederken çakışma denetiminden geçer.
+- [ ] **VY-15 — Dışa aktarmanın kalanları.** GeoJSON, Shapefile ve KML akışlı yazılır (katman bütün belleğe alınmaz);
+  kapsam için serbest kutu (koordinatla ya da haritada çizerek); koordinat sistemi seçici; KML'ye sembol (stil).
+- [ ] **VY-16 — SQL sorgusu katmanı canlı.** Bir SQL sorgusundan yapılan katman bağlı kopya değil, sorguyu kaynağında
+  okuyan veri katmanıdır (benzersiz anahtar sütunu ve geometri sütunu seçilir); salt okunur.
+- [ ] **VY-17 — Taşımada yazılar.** Tabloya yazılamayan yazılar taşıma sırasında aynı kaynakta ayrı bir yazı tablosuna
+  (nokta, metin, yükseklik, açı) yazılır ve etiketleriyle çizilir; taşıma reddedilmez.
+- [ ] **VY-18 — Küçük ölçekte ince çizgiler.** Veri katmanının çizgileri küçük ölçekte de görünür kalınlıkta çizilir
+  (ölçeğe bağlı kalınlık).

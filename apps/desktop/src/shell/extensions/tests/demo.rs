@@ -191,9 +191,11 @@ fn a_forms_action_opens_an_extensions_tool_pinned_and_says_why_when_it_cannot() 
         serde_json::json!({ "scope": "selection" }),
         "the record is the tool's input"
     );
+    // Its other input, left at the descriptor's default ("yapi", no layer of this drawing), opens on the first layer
+    // holding its kinds (docs/adr/1080 §1): the buildings.
     assert_eq!(
-        values["yapilar"]["layerId"], "yapi",
-        "its other input as it was"
+        values["yapilar"]["layerId"], "bina",
+        "its other input on a layer holding polygons"
     );
     // The pin: the installed version and digest; another version, another build or none is said.
     let pin = gis.tool_pin_of(TOOL).expect("installed");

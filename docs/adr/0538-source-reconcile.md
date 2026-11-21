@@ -79,5 +79,5 @@ farkı ve açık uzlaştırmayı ister.
   `kentos-uzlasti.gpkg` olarak yazar. `reconcile_cases.py --written` onu OGR'la satır satır denetler.
 - `.kcad` şema 91: `fixtures/kcad/v2/source-bases.kcad` bağımsız Python yazıcısıyla, üç bozuk örnek;
   `kcad_v2_reference.py --check`, `cargo test -p kentos-kcad`.
-- Resimler: `cargo test -p kentos-desktop exchange::gpkg_tests::reconcile_screens -- --ignored
+- Resimler: `cargo test -p kentos-desktop exchange::gpkg_tests::reconcile::reconcile_screens -- --ignored
   --nocapture` (`.run/shots/gpkg-uzlastir-*`).

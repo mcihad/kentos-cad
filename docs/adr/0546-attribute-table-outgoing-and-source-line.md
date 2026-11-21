@@ -130,13 +130,13 @@ sayfa arayüzü gerektirir ve bu ADR'nin kapsamını aşar. Tasarım:
 - `cargo test -p kentos-desktop features::tests`:
   - `a_hidden_column_is_out_of_the_table_the_copy_and_the_file_and_a_redacted_field_is_out_of_the_last_two`;
   - `statistics_and_charts_over_the_tables_rows_follow_its_filter_and_leave_redacted_fields_out`.
-- `cargo test -p kentos-desktop exchange::gpkg_tests::the_table_of_a_bound_layer_says_its_state_and_takes_the_way_out`: dört
+- `cargo test -p kentos-desktop exchange::gpkg_tests::status::the_table_of_a_bound_layer_says_its_state_and_takes_the_way_out`: dört
   bağlı katmanda Uzlaştır, Yaz, Aynı, Yeniden bağla; Kaynağa yaz dosyayı yazar; katman düzenlemesi hemen Yaz olur; Uzlaştır… kendi
   penceresini açar; bağlı olmayan katmanda satır yok.
 - Resimler (1440×900 ve 1100×650, koyu ve açık):
   - `cargo test -p kentos-desktop features::tests::outgoing_screens -- --ignored --nocapture`: `.run/shots/oznitelik-sutun-*`,
     `oznitelik-istatistik-*`, `oznitelik-grafik-*`;
-  - `cargo test -p kentos-desktop exchange::gpkg_tests::table_source_screens -- --ignored --nocapture`:
+  - `cargo test -p kentos-desktop exchange::gpkg_tests::status::table_source_screens -- --ignored --nocapture`:
     `.run/shots/gpkg-tablo-kaynak-*`.
 
 ## Ek (22 Ekim 2026): tablonun sade düzeni

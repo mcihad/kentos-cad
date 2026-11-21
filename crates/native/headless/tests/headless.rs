@@ -1814,6 +1814,12 @@ fn shapefile_drawing() -> Session {
             .to_owned()
     };
     let (nokta, yol, parsel) = (layer("nokta"), layer("yol"), layer("parsel"));
+    // The points' table types its layer a point layer (docs/adr/1074): made Karışık first, as an author would, to hold
+    // the area the export splits into its own set.
+    let mixed = s
+        .call(json!({ "command": "cad.layers.edit", "input": { "operation": "geometry", "layer": nokta, "geometry": "mixed" } }))
+        .expect("answers");
+    assert_eq!(mixed["status"], "completed", "{mixed}");
     let poly = s
         .call(json!({ "command": "cad.polygon.create", "input": { "layerId": nokta,
             "pts": [{ "x": 487400.0, "y": 4420000.0 }, { "x": 487410.0, "y": 4420000.0 }, { "x": 487410.0, "y": 4420010.0 }],
