@@ -150,6 +150,8 @@ raw-window-handle = "=0.6.2"
 esign-mock = ["kentos-imza-signature/mock-token", "kentos-imza-security/issue"]
 
 [dev-dependencies]
+# The drivers' conformance dataset: the same rows in a PostGIS table and a GeoPackage (gis/layer_classes_source_tests.rs).
+kentos-data = { path = "../../crates/native/data", features = ["conformance"] }
 # Tests sign with the software card against the in-process test server.
 kentos-imza-signature = { path = "../../crates/imza/signature", features = ["mock-token"] }
 kentos-imza-security = { path = "../../crates/imza/security", features = ["issue"] }

@@ -58,6 +58,9 @@ pub enum Event {
     Color(String, usize, String),
     /// Sembolü düzenle…: Katman stili on the layer.
     Symbol(String),
+    /// A class's row pressed: the layer and the class's place. A second press soon after opens the class's symbol in
+    /// the symbol designer over Katman stili (docs/adr/9110 §3).
+    Pressed(String, usize),
     /// A data layer's counts read: the layer, what they were asked for, the answer.
     Counted(String, String, CountsAnswer),
     /// A data layer's class's rows read for Seç: the layer, the class's label, the keys and whether there were more.
@@ -217,7 +220,7 @@ impl App {
             .tip(kentos_ui::widget::Tip::new(tip))
             .icon(face)
             .check(class.enabled, message(Event::Toggle(layer.clone(), id)))
-            .on_press(Message::LayerSelected(layer))
+            .on_press(message(Event::Pressed(layer, at)))
             .muted(!parent_visible || !class.enabled)
             .menu(move |_| self.class_menu(node, at))
     }
@@ -263,6 +266,42 @@ impl App {
             )
     }
 
+    /// A class's symbol in the symbol designer over Katman stili (docs/adr/9110 §3): the window opens on the layer's
+    /// style, the designer on the class's slot for the layer's geometry; Kaydet puts the symbol back in the window and
+    /// Tamam writes the style (one undo step), as from the window itself.
+    fn edit_class_symbol(&mut self, layer: String, at: usize) -> Task<Message> {
+        use kentos_native_style::renderer::GeometryClass as G;
+        let opened = self.update(Message::LayerStyle(crate::style::layer_style::Event::Open(Some(layer.clone()))));
+        let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(&layer)).cloned() else {
+            return opened;
+        };
+        let Some(class) = classes_of(&node).into_iter().nth(at) else {
+            return opened;
+        };
+        let Some(window) = self.styles.layer_style.as_ref() else {
+            return opened;
+        };
+        let geometry = match node.geometry {
+            Some(kentos_commands::LayerGeometry::Point) => G::Marker,
+            Some(kentos_commands::LayerGeometry::Line) => G::Line,
+            Some(kentos_commands::LayerGeometry::Area) => G::Fill,
+            _ => window.classes.first().copied().unwrap_or(G::Fill),
+        };
+        let Some((slot, set)) = window.slot_of_class(&class.id) else {
+            return opened;
+        };
+        let Some(symbol) = set.and_then(|s| s.get(geometry)).or_else(|| window.simple.get(geometry)).cloned() else {
+            return opened;
+        };
+        let designer = self.update(Message::LayerStyle(crate::style::layer_style::Event::Design(
+            slot,
+            geometry,
+            class.label,
+            symbol,
+        )));
+        Task::batch([opened, designer])
+    }
+
     pub(crate) fn layer_classes_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Toggle(layer, id) => {
@@ -290,6 +329,20 @@ impl App {
             Event::Select(layer, at) => return self.select_class(&layer, at),
             Event::Table(layer, at) => return self.class_in_table(&layer, at),
             Event::Color(layer, at, color) => self.class_colored(&layer, at, &color),
+            Event::Pressed(layer, at) => {
+                // Its own key: a press on the layer's row and then on its class is not a double one.
+                let key = format!("{layer}\u{0}{at}");
+                let now = std::time::Instant::now();
+                let double = self
+                    .last_layer_press
+                    .as_ref()
+                    .is_some_and(|(last, t)| *last == key && now.duration_since(*t) <= crate::layering::DOUBLE_CLICK);
+                self.last_layer_press = (!double).then_some((key, now));
+                self.row_chosen(&layer);
+                if double {
+                    return self.edit_class_symbol(layer, at);
+                }
+            }
             Event::Symbol(layer) => {
                 return self.update(Message::LayerStyle(crate::style::layer_style::Event::Open(Some(layer))));
             }

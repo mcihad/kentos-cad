@@ -223,8 +223,8 @@ Bütün kent, ilçe, mahalle ve sokak ölçeğinde ve bir kaydırmada katmanlar 
   okuyan komuttur.
 - **Katmanın süzgeci** (ADR 0211) veri katmanında çizimde uygulanır; gönderilebilir parçası görünümün isteğiyle kaynağa
   gider (VY-12, [ADR 9109](9109-expression-to-the-source.md) §3).
-- **Stil penceresinin sınıflandırması** değerleri bugün çizimdeki nesnelerden alıyor. Sürücünün ayrık değerlerinden
-  okuması VY-07'de.
+- **Stil penceresinin sınıflandırması** veri katmanında değerleri kaynaktan okur (VY-13,
+  [ADR 9110](9110-classes-from-the-source.md) §1).
 - **Göreli yol:** `relative` sözleşmede ve dosyada var. Masaüstünün bunu yazması ve dosya taşınınca çözmesi VY-09'da.
 - **SQL sorgusundan yapılan katman** bağlı kopya olarak kaldı.
 - **Küçük ölçekte ince çizgiler:** kâğıt kalınlıkları yüzünden çizgiler soluk görünüyor; ölçeğe bağlı kalınlık stil

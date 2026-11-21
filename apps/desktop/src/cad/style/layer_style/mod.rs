@@ -20,6 +20,9 @@
 mod compose;
 mod panels;
 mod rules;
+pub(crate) mod source_values;
+#[cfg(test)]
+mod source_values_tests;
 #[cfg(test)]
 mod tests;
 mod thematic;
@@ -277,6 +280,8 @@ pub enum Event {
     Ramp(&'static str),
     /// Sınıfla.
     Graduate,
+    /// A data layer's field values read from its source (docs/adr/9110 §1), and what to do with them.
+    SourceValues(source_values::Then, Result<source_values::SourceValues, String>),
     ClassMin(usize, String),
     ClassMax(usize, String),
     ClassLabel(usize, String),
@@ -414,6 +419,11 @@ pub struct LayerStyleWindow {
     /// Fields whose typed text is kept apart from the value it gives (expressions, numbers).
     pub(super) typed: HashMap<String, String>,
     cache: RefCell<Cache>,
+    /// A data layer's source (docs/adr/9110 §1): the drawing holds none of its rows, its values come from there.
+    pub data: Option<kentos_commands::DataLayer>,
+    /// What the source said of a field, and whether a read is under way.
+    pub(super) source: Option<source_values::SourceValues>,
+    pub(super) reading: bool,
 }
 
 impl LayerStyleWindow {
@@ -485,7 +495,27 @@ impl LayerStyleWindow {
             asking: false,
             typed: HashMap::new(),
             cache: RefCell::new(Cache::default()),
+            data: node.data.clone(),
+            source: None,
+            reading: false,
         };
+        // A data layer's classes are made by one of its table's fields: a text one for categories, a number one for
+        // classes (its objects are not in the drawing to guess from).
+        if node.data.is_some() {
+            use kentos_commands::LayerFieldKind as K;
+            let first = |number: bool| {
+                node.fields
+                    .iter()
+                    .find(|f| matches!(f.kind, K::Integer | K::BigInt | K::Decimal) == number)
+                    .map(|f| f.name.clone())
+            };
+            if let Some(f) = first(false) {
+                window.categorized.expr = f;
+            }
+            if let Some(f) = first(true) {
+                window.graduated.expr = f;
+            }
+        }
         window.single = simple;
         if let Some(r) = read {
             window.take(r);
@@ -707,6 +737,64 @@ impl LayerStyleWindow {
         doc.by_layer(&self.layer).collect()
     }
 
+    /// The slot a class of the layer tree draws with (`kentos_scene_query::style_classes`' ids: `c3`, `other`, `g2`,
+    /// `r0.1`) and its symbols there, for its double click (docs/adr/9110 §3).
+    pub fn slot_of_class(&self, id: &str) -> Option<(SetAt, Option<&SymbolSet>)> {
+        if id == "other" {
+            return Some((SetAt::Other, self.categorized.other.as_ref()));
+        }
+        let (head, rest) = id.split_at(1);
+        match head {
+            "c" => {
+                let i: usize = rest.parse().ok()?;
+                Some((SetAt::Category(i), self.categorized.categories.get(i).map(|k| &k.symbols)))
+            }
+            "g" => {
+                let i: usize = rest.parse().ok()?;
+                Some((SetAt::Class(i), self.graduated.classes.get(i).map(|k| &k.symbols)))
+            }
+            "r" => {
+                let path: Vec<usize> = rest.split('.').map(str::parse).collect::<Result<_, _>>().ok()?;
+                let mut level: &[Rule] = &self.rules;
+                let mut rule = None;
+                for &i in &path {
+                    let r = level.get(i)?;
+                    rule = Some(r);
+                    level = r.children.as_deref().unwrap_or_default();
+                }
+                Some((SetAt::Rule(path), rule.and_then(|r| r.symbols.as_ref())))
+            }
+            _ => None,
+        }
+    }
+
+    /// A data layer's categories counted from its source's groups (docs/adr/9110 §1); none: a drawing layer, counted
+    /// from its objects. Before the values come (or for another field), nothing is counted.
+    pub fn source_category_tally(&self) -> Option<(Vec<usize>, usize)> {
+        self.data.as_ref()?;
+        let c = &self.categorized;
+        Some(match self.source.as_ref().filter(|s| s.field == c.expr.trim()) {
+            Some(s) => {
+                let (counts, rest) = kentos_native_style::tally::category_tally_grouped(&s.groups, &c.categories);
+                (counts.into_iter().map(|n| n as usize).collect(), rest as usize)
+            }
+            None => (vec![0; c.categories.len()], 0),
+        })
+    }
+
+    /// A data layer's classes counted from its source's numbers, as [`Self::source_category_tally`].
+    pub fn source_class_tally(&self) -> Option<(Vec<usize>, usize)> {
+        self.data.as_ref()?;
+        let g = &self.graduated;
+        Some(match self.source.as_ref().filter(|s| s.field == g.expr.trim()) {
+            Some(s) => {
+                let (counts, rest) = kentos_native_style::tally::class_tally_grouped(&s.numbers, &g.classes);
+                (counts.into_iter().map(|n| n as usize).collect(), rest as usize)
+            }
+            None => (vec![0; g.classes.len()], 0),
+        })
+    }
+
     /// The categorized expression's text per object.
     pub fn values(&self, src: &Source<'_>) -> Rc<Evaluated<Option<String>>> {
         self.fresh(src.doc);
@@ -826,6 +914,43 @@ impl LayerStyleWindow {
                     " "
                 };
                 self.set_expr(&field, format!("{before}{pad}{text}"));
+            }
+            Event::SourceValues(then, read) => {
+                self.reading = false;
+                match read {
+                    Ok(values) => {
+                        let more = values.more;
+                        let found = values.values();
+                        let numbers = values.every_number();
+                        self.source = Some(values);
+                        match then {
+                            source_values::Then::Show => {}
+                            source_values::Then::Classify if found.is_empty() => self.say(texts::NO_VALUES, true),
+                            source_values::Then::Classify => {
+                                self.categorized.categories =
+                                    categories_of(&found, &self.present, &self.categorized.categories);
+                                self.typed.clear();
+                                let words = texts::found(found.len());
+                                self.say(if more { format!("{words} {}", source_values::MORE) } else { words }, more);
+                            }
+                            source_values::Then::Graduate if numbers.is_empty() => self.say(texts::NO_VALUES, true),
+                            source_values::Then::Graduate => {
+                                let classes = graduated_of(
+                                    &numbers,
+                                    self.method,
+                                    class_count(&self.count),
+                                    self.ramp,
+                                    &self.present,
+                                );
+                                let n = classes.len();
+                                self.graduated.classes = classes;
+                                self.typed.clear();
+                                self.say(texts::classified(n, numbers.len()), false);
+                            }
+                        }
+                    }
+                    Err(why) => self.say(format!("{} {why}", source_values::UNREAD), true),
+                }
             }
             Event::Classify => {
                 let found = unique_values(&self.values(src).values);
@@ -1358,12 +1483,61 @@ impl App {
         true
     }
 
+    /// Whether the style window is a data layer's: its classes' values come from its source (docs/adr/9110 §1).
+    fn layer_style_reads_source(&self) -> bool {
+        self.styles.layer_style.as_ref().is_some_and(|w| w.data.is_some())
+    }
+
+    /// A data layer's field values read off the interface's thread (docs/adr/9110 §1): the categories' field for
+    /// Değerlerden sınıfla, the classes' for Sınıfla; on opening, the style's own for the Nesne column. Only a field of
+    /// the table: an expression is the language's, asked of rows the source does not hand over whole.
+    fn read_layer_style_values(&mut self, then: source_values::Then) -> Task<Message> {
+        use source_values::Then;
+        let Some(w) = self.styles.layer_style.as_mut() else {
+            return Task::none();
+        };
+        let Some(data) = w.data.clone() else {
+            return Task::none();
+        };
+        let field = match (then, w.kind) {
+            (Then::Classify, _) | (Then::Show, Kind::Categorized) => w.categorized.expr.trim().to_owned(),
+            (Then::Graduate, _) | (Then::Show, Kind::Graduated) => w.graduated.expr.trim().to_owned(),
+            (Then::Show, _) => return Task::none(),
+        };
+        let is_field = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(&w.layer))
+            .is_some_and(|n| n.fields.iter().any(|f| f.name == field));
+        if !is_field {
+            if then != Then::Show {
+                w.say(source_values::FIELD_ONLY, true);
+            }
+            return Task::none();
+        }
+        w.reading = true;
+        if then != Then::Show {
+            w.say(source_values::READING, false);
+        }
+        crate::db_connections::off_thread(
+            move || source_values::read(&data, &field, then),
+            move |read| Message::LayerStyle(Event::SourceValues(then, read)),
+        )
+    }
+
     pub(crate) fn layer_style_event(&mut self, event: Event) -> Task<Message> {
         let event = match event {
             Event::OpenBuilder(field) => return self.open_builder_for_layer_style(field),
             Event::Open(id) => {
                 self.open_layer_style(id);
-                return Task::none();
+                return self.read_layer_style_values(source_values::Then::Show);
+            }
+            // A data layer's classes are made from its source's values (docs/adr/9110 §1).
+            Event::Classify if self.layer_style_reads_source() => {
+                return self.read_layer_style_values(source_values::Then::Classify);
+            }
+            Event::Graduate if self.layer_style_reads_source() => {
+                return self.read_layer_style_values(source_values::Then::Graduate);
             }
             // The library's windows (style/manager/).
             Event::Pick(at, class, title, current) => {

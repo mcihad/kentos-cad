@@ -44,6 +44,44 @@ pub fn category_tally(
     (counts, rest)
 }
 
+/// [`category_tally`] over a data layer's grouped values (docs/adr/9110 §1): each value (none: empty) with how many
+/// rows hold it, as its source counts them; every row is drawn.
+pub fn category_tally_grouped(groups: &[(Option<String>, u64)], categories: &[Category]) -> (Vec<u64>, u64) {
+    let mut first: HashMap<&str, usize> = HashMap::new();
+    for (i, k) in categories.iter().enumerate() {
+        first.entry(k.value.as_str()).or_insert(i);
+    }
+    let mut counts = vec![0; categories.len()];
+    let mut rest = 0;
+    for (v, n) in groups {
+        match first.get(v.as_deref().unwrap_or("")) {
+            Some(&i) => counts[i] += n,
+            None => rest += n,
+        }
+    }
+    (counts, rest)
+}
+
+/// [`class_tally`] over grouped numbers: each number (none: no number) with how many rows hold it.
+pub fn class_tally_grouped(groups: &[(Option<f64>, u64)], classes: &[GraduatedClass]) -> (Vec<u64>, u64) {
+    let mut counts = vec![0; classes.len()];
+    let mut rest = 0;
+    let last = classes.len().wrapping_sub(1);
+    for (v, n) in groups {
+        let taken = v.and_then(|v| {
+            classes
+                .iter()
+                .enumerate()
+                .position(|(i, k)| v >= k.min && (v < k.max || (i == last && v <= k.max)))
+        });
+        match taken {
+            Some(i) => counts[i] += n,
+            None => rest += n,
+        }
+    }
+    (counts, rest)
+}
+
 /// Whether an earlier category has the same value: this one never draws.
 pub fn shadowed(categories: &[Category], i: usize) -> bool {
     categories
@@ -173,5 +211,37 @@ pub fn field_token(name: &str) -> String {
         name.to_owned()
     } else {
         format!("[{name}]")
+    }
+}
+
+#[cfg(test)]
+mod grouped_tests {
+    use super::*;
+
+    fn category(value: &str) -> Category {
+        serde_json::from_value(serde_json::json!({ "value": value, "label": value })).expect("a category")
+    }
+
+    fn class(min: f64, max: f64) -> GraduatedClass {
+        serde_json::from_value(serde_json::json!({ "min": min, "max": max, "label": "" })).expect("a class")
+    }
+
+    #[test]
+    fn grouped_values_are_tallied_as_their_rows_are() {
+        let categories = [category("Konut"), category("Park"), category("Konut"), category("")];
+        let groups = vec![(Some("Konut".to_owned()), 3), (Some("Park".to_owned()), 2), (None, 4), (Some("Okul".to_owned()), 1)];
+        let rows: Vec<Option<String>> = groups.iter().flat_map(|(v, n)| std::iter::repeat_n(v.clone(), *n as usize)).collect();
+        let (each, rest) = category_tally(&rows, &vec![true; rows.len()], &categories);
+        let (grouped, grouped_rest) = category_tally_grouped(&groups, &categories);
+        assert_eq!(grouped, each.iter().map(|&n| n as u64).collect::<Vec<_>>());
+        assert_eq!(grouped_rest, rest as u64);
+        assert_eq!(grouped, [3, 2, 0, 4], "a value goes to its first category, the empty one to \"\"");
+        let classes = [class(0.0, 10.0), class(10.0, 20.0)];
+        let numbers = vec![(Some(0.0), 2), (Some(10.0), 1), (Some(20.0), 5), (Some(21.0), 1), (None, 3)];
+        let rows: Vec<Option<f64>> = numbers.iter().flat_map(|(v, n)| std::iter::repeat_n(*v, *n as usize)).collect();
+        let (each, rest) = class_tally(&rows, &vec![true; rows.len()], &classes);
+        let (grouped, grouped_rest) = class_tally_grouped(&numbers, &classes);
+        assert_eq!(grouped, each.iter().map(|&n| n as u64).collect::<Vec<_>>());
+        assert_eq!((grouped, grouped_rest), (vec![2, 6], 4), "the last class keeps its upper bound");
     }
 }

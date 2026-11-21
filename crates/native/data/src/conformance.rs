@@ -147,7 +147,7 @@ pub fn rows() -> Vec<Row> {
     out
 }
 
-fn new_features(rows: &[Row]) -> Vec<NewFeature> {
+pub fn new_features(rows: &[Row]) -> Vec<NewFeature> {
     rows.iter()
         .map(|r| NewFeature {
             fid: None,

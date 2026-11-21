@@ -29,13 +29,16 @@ pub const PX_PER_M: f64 = 96.0 / 0.0254;
 const LINE_SPACING: f64 = 1.2 / (5.0 / 3.0);
 
 /// A template filled with the object's own values: its first `{label}` the label (empty without one), each `{Name}`
-/// the attribute of that name (its letters' case as written first, else any case), literally; a `{…}` that names no
-/// attribute is left as written, so a misspelt field shows rather than vanishing. Without a template, or with an
-/// empty one, the label. The labels window offers `{Ad}` as well as `{label}`.
+/// the attribute of that name (its letters' case as written first, else any case), literally. A `{…}` naming one of
+/// the layer's `fields` the object has no value of is empty (docs/adr/9110 §5: “{ada}/{parsel}” of a parcel without a
+/// parcel number is “101/”); one naming neither an attribute nor a field is left as written, so a misspelt field shows
+/// rather than vanishing. Without a template, or with an empty one, the label. The labels window offers `{Ad}` as well
+/// as `{label}`.
 pub fn fill_template_with(
     template: Option<&str>,
     label: Option<&str>,
     attrs: &std::collections::BTreeMap<String, String>,
+    fields: &[String],
 ) -> String {
     let Some(t) = template.filter(|t| !t.is_empty()) else {
         return label.unwrap_or_default().to_owned();
@@ -53,8 +56,13 @@ pub fn fill_template_with(
                     let folded = name.to_lowercase();
                     attrs.iter().find(|(k, _)| k.to_lowercase() == folded).map(|(_, v)| v)
                 });
+                let known = || {
+                    let folded = name.to_lowercase();
+                    fields.iter().any(|f| f.to_lowercase() == folded)
+                };
                 match value {
                     Some(v) if !name.is_empty() => out.push_str(v),
+                    None if !name.is_empty() && known() => {}
                     _ => {
                         out.push('{');
                         out.push_str(name);

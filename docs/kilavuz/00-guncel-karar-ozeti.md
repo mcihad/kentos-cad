@@ -9,7 +9,7 @@
   [ADR 9104](../adr/9104-transactions.md), [ADR 9105](../adr/9105-layer-classes.md),
   [ADR 9106](../adr/9106-layer-export.md), [ADR 9107](../adr/9107-project-in-a-source.md),
   [ADR 9108](../adr/9108-integer-widths-and-groups.md), [ADR 9109](../adr/9109-expression-to-the-source.md),
-  [plan/veri.md](../../plan/veri.md)).**
+  [ADR 9110](../adr/9110-classes-from-the-source.md), [plan/veri.md](../../plan/veri.md)).**
   - Veritabanı ve dosya katmanları ayrı crate'lerdeki sürücülerden geçer:
     - ortak sözleşme `kentos-data`;
     - `kentos-data-gpkg`;
@@ -53,6 +53,9 @@
   - **İfadeden kaynağın koşuluna** (ADR 9109): ADR 0581 §3'ün kuralı tek yerde (`pushdown::sent`); SQL ve
     `kentos_data::Condition` onun iki yazılışı. Tablonun, dışa aktarmanın ve canlı çizimin süzgeci kaynakta sorulur; tam
     olmayan kısım burada yeniden sorulur. SQLite'ta sayı koşulu sütunun metinlerini de geçirir (`Condition::Text`).
+  - **Sınıflar kaynaktan** (ADR 9110): veri katmanında stil penceresi değerleri ve Nesne sayılarını kaynaktan okur;
+    katman ağacının sayımı kaynakta (`GROUP BY`, tam giden koşullar); sınıf satırına çift tık sembolü açar; çizim
+    katmanında kapalı sınıfın nesnesi etiketlenmez; değeri boş alan etikette boş.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

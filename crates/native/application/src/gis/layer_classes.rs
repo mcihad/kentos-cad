@@ -1,7 +1,9 @@
 //! `cad.layers.classes` v1 (docs/adr/9105 §2): a layer's style classes as the layer tree lists them, with `count` how
 //! many objects each takes by the drawing's own rule (`kentos_scene_query::style_classes`). A layer's objects are its
-//! drawing's, those its filter shows; a data layer's are its table's rows, read from the source once a part at a time,
-//! only the fields the classes read (and the geometry when one reads it). Nothing is written.
+//! drawing's, those its filter shows; a data layer's are its table's rows. The source counts them itself when it can
+//! (docs/adr/9110 §2): a categorized style over a field by one grouped count, a graduated style's or the rules' classes
+//! each by its condition when every one is sent exactly. Otherwise the rows are read once a part at a time, only the
+//! fields the classes read (and the geometry when one reads it). Nothing is written.
 //!
 //! [`data_counts`] and [`data_class_keys`] are the desktop's too: the tree's counts and Bu sınıfın nesnelerini seç,
 //! off the interface's thread.
@@ -19,6 +21,8 @@ use crate::sources::TableSystem;
 
 /// Rows asked of the source at a time.
 const CHUNK: usize = 2048;
+/// The most values a grouped count reads: past it the rows are read instead.
+const GROUPS_MOST: usize = 100_000;
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
@@ -90,6 +94,9 @@ fn counted(
         // Without classes only the rows are counted, by the source.
         return Ok((Vec::new(), rows_counted(node)?));
     };
+    if let Some(asked) = source_counts(node, renderer)? {
+        return Ok(asked);
+    }
     let mut counts: Vec<Result<u64, String>> = Vec::new();
     let mut total = 0u64;
     scan(node, settings, &reader, stopped, &mut |objects| {
@@ -112,6 +119,95 @@ fn counted(
         counts = vec![Ok(0); style_classes(renderer).len()];
     }
     Ok((counts, total))
+}
+
+/// The classes' counts asked of the source itself (docs/adr/9110 §2), each class as the drawing's rule takes it: a
+/// categorized style over a field by one grouped count (a value goes to its first category, the rest to “Diğer
+/// değerler”); a graduated style's classes (when they do not overlap) or the rules (without “değilse”) each by its own
+/// condition, when every condition is sent exactly. None: the rows are read and counted here.
+fn source_counts(
+    node: &kentos_commands::LayerNode,
+    renderer: &serde_json::Value,
+) -> Result<Option<(Vec<Result<u64, String>>, u64)>, Stop> {
+    let Some(data) = &node.data else {
+        return Ok(None);
+    };
+    let source = kentos_data::registry().source(&data.address).map_err(unreachable)?;
+    let schema = source.schema(&data.table).map_err(unreachable)?;
+    let classes = style_classes(renderer);
+    let expr = renderer.get("expr").and_then(serde_json::Value::as_str).unwrap_or_default().trim();
+    if classes_kind(renderer) == Some("categorized") && schema.field(expr).is_some() {
+        let groups = source.groups(&data.table, expr, None, GROUPS_MOST).map_err(unreachable)?;
+        if groups.len() >= GROUPS_MOST {
+            return Ok(None);
+        }
+        let categories = renderer.get("categories").and_then(serde_json::Value::as_array).cloned().unwrap_or_default();
+        let values: Vec<String> = categories
+            .iter()
+            .map(|k| k.get("value").and_then(serde_json::Value::as_str).unwrap_or_default().to_owned())
+            .collect();
+        let mut counts = vec![0u64; values.len()];
+        let (mut rest, mut total) = (0u64, 0u64);
+        for (v, n) in &groups {
+            // A row without a value has the value "", as the drawing reads it.
+            let text = attribute_text(v).unwrap_or_default();
+            match values.iter().position(|w| *w == text) {
+                Some(i) => counts[i] += n,
+                None => rest += n,
+            }
+            total += n;
+        }
+        let mut out: Vec<Result<u64, String>> = counts.into_iter().map(Ok).collect();
+        if classes.len() > out.len() {
+            out.push(Ok(rest));
+        }
+        return Ok(Some((out, total)));
+    }
+    if !matches!(classes_kind(renderer), Some("graduated" | "rules")) || overlapping(renderer) {
+        return Ok(None);
+    }
+    let typed = crate::data_condition::typed(source.driver());
+    let mut conditions = Vec::with_capacity(classes.len());
+    for c in &classes {
+        let condition = match c.expression.as_deref() {
+            None => None,
+            Some(text) => {
+                let Ok(e) = kentos_expression::compile(text) else {
+                    return Ok(None);
+                };
+                let pushed = crate::data_condition::pushed(&e, &schema, typed);
+                if !pushed.exact {
+                    return Ok(None);
+                }
+                pushed.condition
+            }
+        };
+        conditions.push(condition);
+    }
+    let count = |condition: Option<kentos_data::Condition>| {
+        source
+            .count(&data.table, &Request { condition, ..Request::default() }, false)
+            .map_err(unreachable)
+    };
+    let counts = conditions.into_iter().map(|c| count(c).map(Ok)).collect::<Result<Vec<_>, Stop>>()?;
+    Ok(Some((counts, count(None)?)))
+}
+
+/// Whether a graduated style's classes overlap (a number goes to the first that takes it: counted by reading then).
+fn overlapping(renderer: &serde_json::Value) -> bool {
+    let Some(classes) = renderer.get("classes").and_then(serde_json::Value::as_array) else {
+        return false;
+    };
+    let bounds: Vec<(f64, f64)> = classes
+        .iter()
+        .map(|k| {
+            let b = |key: &str| k.get(key).and_then(serde_json::Value::as_f64).unwrap_or(f64::NAN);
+            (b("min"), b("max"))
+        })
+        .collect();
+    bounds.iter().enumerate().any(|(i, a)| {
+        a.0.is_nan() || a.1.is_nan() || bounds[..i].iter().any(|b| a.0 < b.1 && b.0 < a.1)
+    })
 }
 
 /// The keys of a data layer's rows the class at `at` ([`style_classes`]' order) takes, in the table's order, at most

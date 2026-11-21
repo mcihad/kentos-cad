@@ -180,9 +180,14 @@ ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, AD
   - Bir milyon PostGIS parselinde `kullanim = 'Konut'` sayımı 7 550 ms'den 28 ms'ye indi;
     `alan > 600 ve kullanim = 'Park'` 9 008 ms'den 26 ms'ye.
   - Kurallı sınıfların sayımı VY-13'te.
-- [ ] **VY-13 — Sınıflar ve stil.** Stil penceresinin Sınıflandır'ı veri katmanında değerleri kaynaktan alır; sınıf
-  sayımı kaynakta gruplanır; sınıf satırına çift tık o sınıfın sembolünü açar; çizim katmanında kapalı sınıfın nesnesi
-  etiketlenmez; değeri boş alan etikette boş görünür (yer tutucu yazılmaz).
+- [x] **VY-13 — Sınıflar ve stil.** ([ADR 9110](../docs/adr/9110-classes-from-the-source.md))
+  - Stil penceresinin Sınıflandır ve Sınıfla düğmeleri veri katmanında değerleri kaynaktan alır; Nesne sütunu kaynağın
+    satır sayılarını gösterir.
+  - Katman ağacının sayımı kaynakta: kategorili stil tek `GROUP BY` (bir milyonda 8,1 sn'den 0,56 sn'ye), aralıklı
+    stil sınıf başına koşulla (8,0 sn'den 0,12 sn'ye).
+  - Sınıf satırına çift tık sınıfın sembolünü tasarımcıda açar.
+  - Çizim katmanında kapalı sınıfın nesnesi etiketlenmez.
+  - Değeri boş alan etikette boş görünür.
 - [ ] **VY-14 — Düzenleme.** Kaydedilmemiş yeni satırlar alttaki tabloda listelenir; çizimden sonra öznitelik formu
   açılır (katmanda kapatılabilir); bekleyen değişiklikler (alınan satırlar, yeni ve silinen satırlar) proje dosyasıyla
   saklanır ve proje açılınca geri gelir, kaydederken çakışma denetiminden geçer.

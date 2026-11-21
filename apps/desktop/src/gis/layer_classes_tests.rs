@@ -140,3 +140,58 @@ fn a_data_layers_classes_are_counted_and_selected_from_its_source() {
     assert_eq!(few.map(|(k, more)| (k.len(), more)), Ok((5, true)));
     let _ = std::fs::remove_file(&path);
 }
+
+/// A class's row pressed twice opens its symbol in the symbol designer over Katman stili (docs/adr/9110 §3); one press
+/// only chooses the layer's row, and a press on the layer's row and then on its class is not a double one.
+#[test]
+fn a_class_rows_double_click_opens_its_symbol_in_the_designer() {
+    use crate::style::designer::Target;
+    use crate::style::layer_style::SetAt;
+    let mut app = app_with_drawing();
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    style(&mut app, &layer, renderer());
+    let _ = app.layer_classes_event(Event::Pressed(layer.clone(), 1));
+    assert_eq!(app.selected_layer.as_deref(), Some(layer.as_str()));
+    assert!(app.styles.layer_style.is_none(), "one press only chooses the row");
+    let _ = app.update(crate::app::Message::LayerSelected(layer.clone()));
+    let _ = app.layer_classes_event(Event::Pressed(layer.clone(), 1));
+    assert!(app.styles.layer_style.is_none(), "the layer's row, then its class: two single presses");
+    let _ = app.layer_classes_event(Event::Pressed(layer.clone(), 1));
+    assert!(app.styles.layer_style.is_some(), "Katman stili on the layer");
+    let designer = app.styles.designer.as_ref().expect("the designer");
+    match &designer.target {
+        Target::Slot { at, title, .. } => {
+            assert_eq!(*at, SetAt::Category(1));
+            assert_eq!(title, "Park");
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
+/// A drawing layer's object of a class switched off is not labelled, as a data layer's (docs/adr/9110 §4): the labels
+/// follow what the style draws.
+#[test]
+fn a_drawing_layers_objects_of_a_class_switched_off_are_not_labelled() {
+    let mut app = app_with_drawing();
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let mut r = renderer();
+    r["categories"][0]["enabled"] = json!(false);
+    style(&mut app, &layer, r);
+    points(&mut app, &layer, &["Konut", "Park", "Sanayi"]);
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let mut look = doc.layers().get(&layer).expect("the layer").style.clone();
+    look.label = Some(kentos_commands::LabelStyle { template: Some("{kullanim}".into()), ..Default::default() });
+    doc.set_layer_style(&layer, look, "Etiket");
+    let spatial = kentos_interaction::Spatial::of(doc);
+    let texts = |use_: &str| -> Vec<String> {
+        let slot = doc
+            .entities()
+            .find(|e| e.base().attrs.get("kullanim").is_some_and(|v| v == use_))
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .expect("the object");
+        spatial.label_texts(slot)
+    };
+    assert!(texts("Konut").is_empty(), "Konut is switched off: not drawn, not labelled");
+    assert_eq!(texts("Park"), ["Park"]);
+    assert_eq!(texts("Sanayi"), ["Sanayi"], "Diğer değerler draws it");
+}

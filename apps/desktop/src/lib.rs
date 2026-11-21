@@ -1547,6 +1547,9 @@ mod layer_export_tests;
 #[cfg(test)]
 #[path = "gis/layer_classes_tests.rs"]
 mod layer_classes_tests;
+#[cfg(test)]
+#[path = "gis/layer_classes_source_tests.rs"]
+mod layer_classes_source_tests;
 #[path = "gis/db_connections.rs"]
 mod db_connections;
 #[path = "gis/sources/mod.rs"]

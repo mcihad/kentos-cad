@@ -82,10 +82,12 @@ pub struct TextClass {
 #[derive(Clone, Debug)]
 pub enum LayerTexts {
     Off,
-    /// `defaults`: its objects' kinds' defaults (one class each).
+    /// `defaults`: its objects' kinds' defaults (one class each). `fields`: the layer's field names: a template's
+    /// `{field}` without a value is empty (docs/adr/9110 §5).
     Classes {
         classes: Vec<TextClass>,
         defaults: bool,
+        fields: Vec<String>,
     },
 }
 
@@ -106,6 +108,7 @@ fn text_class(style: &LabelStyle, when: Option<&str>, unit: Unit) -> TextClass {
 /// A layer's classes as the desktop asks them, their expressions in `unit`.
 pub fn layer_texts(node: Option<&LayerNode>, unit: Unit) -> LayerTexts {
     let style = node.map(|n| &n.style);
+    let fields: Vec<String> = node.map(|n| n.fields.iter().map(|f| f.name.clone()).collect()).unwrap_or_default();
     match style.and_then(|s| s.labels.as_ref()) {
         Some(l) if l.mode == LabelsMode::Off => LayerTexts::Off,
         Some(l) if l.mode == LabelsMode::Rules => LayerTexts::Classes {
@@ -115,15 +118,18 @@ pub fn layer_texts(node: Option<&LayerNode>, unit: Unit) -> LayerTexts {
                 .map(|c| text_class(&c.style, c.when.as_deref(), unit))
                 .collect(),
             defaults: false,
+            fields,
         },
         _ => match style.and_then(|s| s.label.as_ref()) {
             Some(single) => LayerTexts::Classes {
                 classes: vec![text_class(single, None, unit)],
                 defaults: false,
+                fields,
             },
             None => LayerTexts::Classes {
                 classes: Vec::new(),
                 defaults: true,
+                fields,
             },
         },
     }
@@ -264,7 +270,7 @@ pub fn object_texts<'s>(
 ) -> Vec<(Vec<(u16, String)>, f64)> {
     let mut out: Vec<(Vec<(u16, String)>, f64)> =
         list.iter().map(|_| (Vec::new(), f64::NAN)).collect();
-    let LayerTexts::Classes { classes, defaults } = t else {
+    let LayerTexts::Classes { classes, defaults, fields } = t else {
         return out;
     };
     if *defaults {
@@ -306,6 +312,7 @@ pub fn object_texts<'s>(
                     c.template.as_deref(),
                     e.base().label.as_deref(),
                     &e.base().attrs,
+                    fields,
                 ),
                 None => e
                     .base()
@@ -366,12 +373,15 @@ pub fn label_defaults_json() -> String {
 }
 
 /// What a layer's texts are made with: its name (`$katman`), its single
-/// label and its rules; when it changes, the layer's texts are made again.
+/// label and its rules, and its style's classes (an object of a class switched
+/// off is not labelled, docs/adr/9110 §4); when it changes, the layer's texts
+/// are made again.
 pub fn texts_key(l: &LayerNode) -> String {
     serde_json::to_string(&(
         &l.name,
         &l.style.label,
         l.style.labels.as_ref().map(|x| (&x.mode, &x.classes)),
+        &l.style.renderer,
     ))
     .unwrap_or_default()
 }
@@ -395,7 +405,7 @@ mod tests {
             base.label = label.map(str::to_owned);
             e
         };
-        let class = |template: &str| LayerTexts::Classes {
+        let with = |template: &str, fields: &[&str]| LayerTexts::Classes {
             classes: vec![TextClass {
                 when: None,
                 text: None,
@@ -404,7 +414,9 @@ mod tests {
                 error: None,
             }],
             defaults: false,
+            fields: fields.iter().map(|f| (*f).to_owned()).collect(),
         };
+        let class = |template: &str| with(template, &[]);
         let a = area(&[("ad", "Deneme parseli")], None);
         let b = area(&[("Ad", "Test alanı"), ("No", "7")], Some("101/7"));
         let list = [&a, &b];
@@ -419,5 +431,10 @@ mod tests {
             [vec![" · {No} · {yok}".to_owned()], vec!["101/7 · 7 · {yok}".to_owned()]]
         );
         assert_eq!(texts(&class("{label} m²")), [Vec::<String>::new(), vec!["101/7 m²".to_owned()]]);
+        // docs/adr/9110 §5: a field of the layer without a value is empty; a name that is no field still shows.
+        assert_eq!(
+            texts(&with("{ad}/{No} {yok}", &["ad", "No"])),
+            [vec!["Deneme parseli/ {yok}".to_owned()], vec!["Test alanı/7 {yok}".to_owned()]]
+        );
     }
 }

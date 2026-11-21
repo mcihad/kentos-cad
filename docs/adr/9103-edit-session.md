@@ -235,8 +235,8 @@ verir.
 ## §8 Kalan
 
 - Kaydedilmemiş yeni satırlar tabloda listelenmez (tabloda değiller); durum satırı onları sayar.
-- Değeri boş alan etiket şablonunda yer tutucusuyla görünür (“{ada}/{parsel}”); çizim katmanlarında da böyledir,
-  etiket motorunun kuralıdır.
+- ~~Değeri boş alan etiket şablonunda yer tutucusuyla görünür.~~ Kapandı (VY-13,
+  [ADR 9110](9110-classes-from-the-source.md) §5): katmanın alanı boşsa boş yazılır.
 - İşlem kipleri ve başkasının değiştirdiği kayıtla çakışmanın söylenmesi VY-06'da.
 - Alınan satırların dosyada saklanması (çakışma denetimiyle) VY-06'da.
 - Çizimden sonra açılan öznitelik formu: bugün nesne şablonunun değerlerini alır; form açılması ayrı bir iş.

@@ -108,10 +108,8 @@ docs/STYLE.md §1.1.
 
 ## §6 Kalan
 
-- Çizim katmanının etiketleri kapalı sınıfa bakmaz (etiket motoru katmanın bütün nesnelerini alır). CBS projesinde veri
-  bir kaynakta durduğu için (plan/veri.md VY-09) öncelik veri katmanınındır; çizim katmanı ayrı iş.
-- Sınıf satırında çift tık (QGIS'te sembol penceresi) yok; Sembolü düzenle… menüdedir ve Katman stili'ni katmanda açar,
-  sınıfı seçmez.
-- Sayım her değişiklikte bütün tabloyu tarar. Kaynakta gruplanmış sayım (`GROUP BY`) artık sürücü sözleşmesinde
-  (`Source::groups`, [ADR 9108](9108-integer-widths-and-groups.md) §3); sınıflara bağlanması VY-13'te.
+- ~~Çizim katmanının etiketleri kapalı sınıfa bakmaz.~~ Kapandı ([ADR 9110](9110-classes-from-the-source.md) §4).
+- ~~Sınıf satırında çift tık yok.~~ Kapandı (ADR 9110 §3): çift tık sınıfın sembolünü tasarımcıda açar.
+- ~~Sayım her değişiklikte bütün tabloyu tarar.~~ Kapandı (ADR 9110 §2): kategorili stil tek `GROUP BY`, aralıklı stil
+  ve kurallar tam giden koşullarla kaynakta sayılır.
 - Web (ADR 0228).

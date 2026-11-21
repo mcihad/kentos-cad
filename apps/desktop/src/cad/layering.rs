@@ -41,7 +41,7 @@ use crate::module_surfaces::LayerEntry;
 pub const TREE_LOCKED: &str = "Bu projede katman ağacını değiştirme yetkiniz yok (project.edit); proje sahibinden ya da yöneticisinden isteyin.";
 
 /// Two presses on one row closer than this are a double click (KentOS UI's sash's).
-const DOUBLE_CLICK: Duration = Duration::from_millis(400);
+pub(crate) const DOUBLE_CLICK: Duration = Duration::from_millis(400);
 
 // The colours of the layer's colour menu after the theme's two inks, the line
 // types and weights: the web's `DRAW_COLORS`, `LINE_TYPE_LABEL` and
@@ -185,7 +185,15 @@ impl App {
             .as_ref()
             .is_some_and(|(last, at)| *last == id && now.duration_since(*at) <= DOUBLE_CLICK);
         self.last_layer_press = (!double).then(|| (id.clone(), now));
-        self.selected_layer = Some(id.clone());
+        self.row_chosen(&id);
+        if double {
+            self.activate_row(&id);
+        }
+    }
+
+    /// A row of the tree pressed: its layer chosen, the tree holding the keyboard.
+    pub(crate) fn row_chosen(&mut self, id: &str) {
+        self.selected_layer = Some(id.to_owned());
         // A click in the tree chooses its rows until the selection changes again.
         self.layers_follow = false;
         self.layers_keyboard = true;
@@ -194,9 +202,6 @@ impl App {
         self.arch.templates_panel.keyboard = false;
         // The pressed row is in view already.
         self.layer_reveal = None;
-        if double {
-            self.activate_row(&id);
-        }
     }
 
     pub(crate) fn layer_event(&mut self, event: Event) -> Task<Message> {
