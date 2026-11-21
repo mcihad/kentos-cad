@@ -254,7 +254,7 @@ fn wide_standard_menu_keeps_natural_height_and_keyboard_reveals_hidden_commands(
     drive(&mut shot, &app, task);
     let task = press(&mut app, iced::keyboard::key::Named::ArrowUp);
     drive(&mut shot, &app, task);
-    assert_eq!(app.app_menu.as_ref().unwrap().focus, Some(Focus::Nav(8)));
+    assert_eq!(app.app_menu.as_ref().unwrap().focus, Some(Focus::Nav(9)));
     let last = layout(&mut shot, &app);
     assert!(last.nav().offset > 20.);
     assert!(inside(last.nav_text("Proje ayarları"), last.nav().bounds));

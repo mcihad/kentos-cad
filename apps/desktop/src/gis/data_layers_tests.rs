@@ -142,7 +142,7 @@ fn bilgi_on_no_object_asks_the_data_layers_and_shows_the_row_read_from_its_table
     let at = parcel_point(42.0, 42.0);
     crate::tools_scenes::click(&mut app, [at.x - crate::tools_scenes::E, at.y - crate::tools_scenes::N]);
     assert!(app.info_card.is_none(), "no object of the drawing is there");
-    assert_eq!(app.data_info.asked, 1, "the data layers were asked");
+    assert_eq!(app.gis.data_info.asked, 1, "the data layers were asked");
     // What the thread answers: the row under the point with every column.
     let layer = node(&app, "parseller").expect("the layer").clone();
     let settings = app.document.as_ref().expect("a drawing").model.settings().clone();

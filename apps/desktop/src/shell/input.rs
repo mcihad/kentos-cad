@@ -233,7 +233,7 @@ impl App {
         self.image_file_wanted = false;
         self.raster_values_wanted.clear();
         self.cloud_query_wanted.clear();
-        self.data_info.wanted.clear();
+        self.gis.data_info.wanted.clear();
         self.network_wanted.clear();
         self.command_wanted.clear();
         self.form_on_create = None;
@@ -353,10 +353,10 @@ impl App {
                 // Bilgi's card moves to the object clicked, or closes (info_card.rs, docs/adr/0225 §5).
                 ViewChange::InfoCard(card) => {
                     self.info_card = card;
-                    self.data_info.card = None;
+                    self.gis.data_info.card = None;
                 }
                 // Bilgi's click on no object of the drawing: the data layers asked after the update (data_info.rs).
-                ViewChange::DataInfo { at, reach } => self.data_info.wanted.push((at, reach)),
+                ViewChange::DataInfo { at, reach } => self.gis.data_info.wanted.push((at, reach)),
                 // Seç's click on no object, or its box: the data layers asked after the update (data_pick.rs).
                 ViewChange::DataSelect(region) => self.gis.data_pick.wanted.push(region),
                 // Konumdan adres's place: its address looked for after the update (address/).

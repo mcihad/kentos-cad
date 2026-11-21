@@ -47,3 +47,19 @@ fn a_password_in_the_address_is_refused() {
         .expect("refused");
     assert!(e.to_string().contains("parola"), "{e}");
 }
+
+#[test]
+fn the_database_keeps_projects_in_a_schema() {
+    let Some(address) = address() else {
+        eprintln!("KENTOS_DATA_PG yok: PostGIS proje deposu atlandı");
+        return;
+    };
+    let source = PostGis.open(&address).expect("open");
+    let store = source.project_store().expect("a database keeps projects");
+    let report = conformance::projects(store, Some("public")).expect("projects");
+    assert!(report.failures.is_empty(), "{} of {}:\n{}", report.failures.len(), report.checks, report.failures.join("\n"));
+    assert!(report.checks >= 14, "{} checks", report.checks);
+    // The projects table is not a layer of the catalog.
+    let tables = source.tables().expect("tables");
+    assert!(tables.iter().all(|t| t.name != "public.kentos_projects"), "the projects table listed as a layer");
+}

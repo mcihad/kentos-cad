@@ -10,6 +10,7 @@
 //! the file's triggers and the table's box in `gpkg_contents` when it commits.
 
 mod convert;
+mod projects;
 mod source;
 mod sql;
 mod write;

@@ -329,6 +329,17 @@ impl LayerTree {
         }
     }
 
+    /// A data layer's source found at another place (docs/adr/9107 §3). Whether it changed.
+    pub(crate) fn set_data_address(&mut self, id: &str, address: &str) -> bool {
+        match self.node_mut(id).and_then(|n| n.data.as_mut()) {
+            Some(data) if data.address != address => {
+                data.address = address.to_owned();
+                true
+            }
+            _ => false,
+        }
+    }
+
     /// Nesne sayısını göster (docs/adr/9105 §4): only `true` is kept. Whether it changed.
     pub(crate) fn set_class_counts(&mut self, id: &str, on: bool) -> bool {
         let want = on.then_some(true);

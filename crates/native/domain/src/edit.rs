@@ -1118,6 +1118,15 @@ impl Document {
         changed
     }
 
+    /// A data layer's GeoPackage found at its path from the project when the project was opened (docs/adr/9107 §3): an
+    /// edit when it changes, never an undo step, as a bound source moved with its project. Whether it changed.
+    pub fn set_layer_data_address(&mut self, id: &str, address: &str) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_data_address(id, address);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
     /// Nesne sayısını göster (docs/adr/9105 §4): an edit when it changes, never an undo step. Whether it changed.
     pub fn set_layer_class_counts(&mut self, id: &str, on: bool) -> bool {
         let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);

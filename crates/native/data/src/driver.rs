@@ -11,6 +11,7 @@ use crate::condition::Condition;
 use crate::edit::{Change, NewFeature, NewTable};
 use crate::error::DataError;
 use crate::feature::Feature;
+use crate::projects::ProjectStore;
 use crate::request::Request;
 use crate::schema::Schema;
 use crate::value::Value;
@@ -98,6 +99,10 @@ pub trait Source: Send + Sync {
     ) -> Result<Vec<Value>, DataError>;
     /// Starts a transaction.
     fn begin(&self) -> Result<Box<dyn Transaction>, DataError>;
+    /// Where it keeps projects with its data (docs/adr/9107); none for a source that cannot keep them.
+    fn project_store(&self) -> Option<&dyn ProjectStore> {
+        None
+    }
 }
 
 /// Writes over a source's tables, all or nothing.

@@ -3,12 +3,15 @@
 //! on the snapshot written, the drawing unchanged); opening, a link whose path is not there is moved to the file its
 //! relative path names when that file has the content the layer last matched (its SHA-256 is the link's revision).
 //! A file that is there with another content is not taken: the link waits for the user (Kaynak ▸ Yeniden bağla).
-//! A database's link has no relative path.
+//! A database's link has no relative path. A GeoPackage data layer (docs/adr/9107 §3) is written the same way, its
+//! `relative` beside its `address`; opened, a layer whose file is not at its address is moved to its relative path when
+//! a file is there (a data layer is live, so its content is not compared). A project kept inside a GeoPackage takes
+//! that file as its own place: its layers in the same file name it by its name and travel with it.
 
 use std::path::{Component, Path, PathBuf};
 
 use kentos_commands::encoding::sha256_hex;
-use kentos_commands::{ProjectSettings, SourceKind};
+use kentos_commands::{LayerNode, ProjectSettings, SourceKind};
 use kentos_domain::Document;
 
 /// `file`'s path from `folder`, `/` between its parts; none when the two are not on the same root (another drive)
@@ -87,6 +90,23 @@ pub fn with_relative(settings: &mut ProjectSettings, project_file: &Path) {
     }
 }
 
+/// The data layers as a save to `project_file` writes them (docs/adr/9107 §3): each GeoPackage data layer with its
+/// file's path from the project's folder, none where there is no such path (another drive) or for a database's. A
+/// project kept in a GeoPackage passes that file: its own layers are named by its name.
+pub fn with_relative_layers(layers: &mut [LayerNode], project_file: &Path) {
+    let Some(folder) = project_file.parent() else {
+        return;
+    };
+    for node in layers {
+        if let Some(d) = node.data.as_mut() {
+            d.relative = (d.driver == "gpkg")
+                .then(|| relative_path(folder, Path::new(d.address.strip_prefix("gpkg:").unwrap_or(&d.address))))
+                .flatten();
+        }
+        with_relative_layers(&mut node.children, project_file);
+    }
+}
+
 /// What opening found of the project's bound files.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Located {
@@ -100,6 +120,10 @@ pub struct Located {
     pub work_moved: Vec<(String, String, String, String)>,
     pub work_missing: Vec<(String, String, String)>,
     pub work_differs: Vec<(String, String, String)>,
+    /// GeoPackage data layers (docs/adr/9107 §3) found at their relative path: layer id, layer name, the paths.
+    pub layers_moved: Vec<(String, String, String, String)>,
+    /// GeoPackage data layers whose file is at neither place: layer id, layer name, path.
+    pub layers_missing: Vec<(String, String, String)>,
 }
 
 impl Located {
@@ -110,6 +134,8 @@ impl Located {
             && self.work_moved.is_empty()
             && self.work_missing.is_empty()
             && self.work_differs.is_empty()
+            && self.layers_moved.is_empty()
+            && self.layers_missing.is_empty()
     }
 }
 
@@ -175,7 +201,30 @@ pub fn relocate(doc: &mut Document, project_file: &Path) -> Located {
     if !found.moved.is_empty() || !found.work_moved.is_empty() {
         doc.set_settings(settings);
     }
+    relocate_layers(doc, folder, &mut found);
     found
+}
+
+/// The GeoPackage data layers whose file is not at its address, moved to their relative path when a file is there.
+fn relocate_layers(doc: &mut Document, folder: &Path, found: &mut Located) {
+    let mut moves: Vec<(String, String, String, String)> = Vec::new();
+    for node in doc.layers().leaves() {
+        let Some(d) = node.data.as_ref().filter(|d| d.driver == "gpkg") else {
+            continue;
+        };
+        let path = d.address.strip_prefix("gpkg:").unwrap_or(&d.address);
+        if Path::new(path).is_file() {
+            continue;
+        }
+        match d.relative.as_deref().map(|rel| resolve(folder, rel)).filter(|p| p.is_file()) {
+            Some(at) => moves.push((node.id.clone(), node.name.clone(), d.address.clone(), at.display().to_string())),
+            None => found.layers_missing.push((node.id.clone(), node.name.clone(), d.address.clone())),
+        }
+    }
+    for (id, name, from, to) in moves {
+        doc.set_layer_data_address(&id, &to);
+        found.layers_moved.push((id, name, from, to));
+    }
 }
 
 #[cfg(test)]

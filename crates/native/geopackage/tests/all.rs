@@ -711,3 +711,43 @@ fn a_session_adds_and_replaces_tables_in_one_transaction_and_a_dropped_one_leave
     assert_eq!(rtree, 1);
     let _ = std::fs::remove_file(&tmp);
 }
+
+#[test]
+fn the_lasting_ids_extension_is_registered_once() {
+    let tmp = std::env::temp_dir().join(format!("kentos-gpkg-uids-{}.gpkg", std::process::id()));
+    let _ = std::fs::remove_file(&tmp);
+    let _ = copy(&dir().join("qgis.gpkg"), &tmp);
+    // A second table written with ids into the same file.
+    let src = GeoPackage::open(&dir().join("qgis.gpkg"), false).expect("opens");
+    let layer = src.layers().expect("layers").into_iter().find(|l| l.name == "parsel").expect("parsel");
+    let rows: Vec<NewRow> = src
+        .rows(&layer, &Query::default())
+        .expect("rows")
+        .into_iter()
+        .map(|r| NewRow { fid: Some(r.fid), geometry: r.geometry.map(|g| g.expect("a geometry")), values: r.values })
+        .collect();
+    let uids: Vec<String> =
+        (0..rows.len()).map(|i| format!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6e{:04}", 7000 + i)).collect();
+    let def = TableDef {
+        name: "parsel_iki".into(),
+        data_type: layer.data_type.clone(),
+        identifier: Some("parsel iki".into()),
+        description: None,
+        srs_id: layer.srs_id,
+        geometry: layer.geometry.clone(),
+        columns: layer.columns.clone(),
+    };
+    let mut out = GeoPackage::open(&tmp, true).expect("opens to write");
+    out.write_table(&def, &rows, Some(&uids[..])).expect("written");
+    let rows_of: i64 = out
+        .connection()
+        .query_row(
+            "SELECT count(*) FROM gpkg_extensions WHERE table_name = 'kentos_uids' AND extension_name = 'kentos_uids'",
+            [],
+            |r| r.get(0),
+        )
+        .expect("count");
+    assert_eq!(rows_of, 1);
+    drop(out);
+    let _ = std::fs::remove_file(&tmp);
+}

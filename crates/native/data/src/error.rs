@@ -43,6 +43,8 @@ pub enum DataError {
     Unreachable { reach: Reach, message: String },
     /// No such table.
     NoTable(String),
+    /// No project of this name kept in the source (docs/adr/9107).
+    NoProject(String),
     /// No such field in the table.
     NoField { table: String, field: String },
     /// The account may not do this (no privilege, a row security policy, a read-only file).
@@ -73,6 +75,10 @@ impl fmt::Display for DataError {
             DataError::NoTable(t) => write!(
                 f,
                 "“{t}” tablosu kaynakta yok; adını ya da şemasını denetleyin."
+            ),
+            DataError::NoProject(p) => write!(
+                f,
+                "“{p}” projesi bu kaynakta yok; adını denetleyin ya da listeden seçin."
             ),
             DataError::NoField { table, field } => {
                 write!(f, "“{table}” tablosunda “{field}” alanı yok.")
@@ -113,6 +119,7 @@ impl DataError {
         match self {
             DataError::Unreachable { .. } => "unreachable",
             DataError::NoTable(_) => "no_table",
+            DataError::NoProject(_) => "no_project",
             DataError::NoField { .. } => "no_field",
             DataError::Denied(_) => "denied",
             DataError::Unsupported(_) => "unsupported",

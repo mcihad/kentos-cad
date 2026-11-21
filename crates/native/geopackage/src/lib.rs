@@ -358,6 +358,19 @@ pub fn quote(name: &str) -> String {
     format!("\"{}\"", name.replace('"', "\"\""))
 }
 
+/// The lasting ids' extension row, added once. `INSERT OR IGNORE` added one at every write of ids: a NULL
+/// `column_name` never equals another in the table's UNIQUE constraint (docs/adr/9107 §4).
+fn register_uids(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    conn.execute(
+        "INSERT INTO gpkg_extensions
+         SELECT 'kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write'
+         WHERE NOT EXISTS (SELECT 1 FROM gpkg_extensions
+           WHERE table_name = 'kentos_uids' AND column_name IS NULL AND extension_name = ?1)",
+        [UIDS_EXTENSION],
+    )?;
+    Ok(())
+}
+
 /// The extensions table, made when a file another writer made has none yet: the table is optional until an
 /// extension is used (OGC 12-128r18 §2.3), and a GeoPackage made without a spatial index may lack it (docs/adr/0750).
 pub(crate) fn ensure_extensions(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
@@ -1390,10 +1403,7 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
                  PRIMARY KEY (table_name, fid));",
             )?;
             ensure_extensions(tx)?;
-            tx.execute(
-                "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write')",
-                [UIDS_EXTENSION],
-            )?;
+            register_uids(tx)?;
             let mut put = tx.prepare("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
             for (row, (uid, _)) in inserted.iter().zip(&edits.insert) {
                 put.execute(params![layer.name, row.fid, uid])?;
@@ -1933,10 +1943,7 @@ fn append_in(
              PRIMARY KEY (table_name, fid));",
         )?;
         ensure_extensions(conn)?;
-        conn.execute(
-            "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write')",
-            [UIDS_EXTENSION],
-        )?;
+        register_uids(conn)?;
         let mut st = conn.prepare_cached("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
         for (fid, uid) in fids.iter().zip(uids) {
             st.execute(params![def.name, fid, uid])?;

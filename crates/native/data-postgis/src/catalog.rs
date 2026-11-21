@@ -76,7 +76,7 @@ pub fn kind_of(typname: &str, formatted: &str) -> FieldKind {
     }
 }
 
-/// The tables the account may read.
+/// The tables the account may read; a schema's projects table (docs/adr/9107) is the program's own, not a layer.
 pub async fn tables(conn: &mut PgConnection) -> Result<Vec<TableInfo>, DataError> {
     let rows = sqlx::query(
         "SELECT c.oid::int8 AS oid, n.nspname::text AS ns, c.relname::text AS rel, c.relkind::text AS kind,
@@ -90,6 +90,7 @@ pub async fn tables(conn: &mut PgConnection) -> Result<Vec<TableInfo>, DataError
            AND has_table_privilege(c.oid, 'SELECT')
            AND NOT (c.relname IN ('spatial_ref_sys', 'geometry_columns', 'geography_columns', 'raster_columns',
                                   'raster_overviews') AND n.nspname = 'public')
+           AND c.relname <> 'kentos_projects'
          ORDER BY n.nspname, c.relname",
     )
     .fetch_all(&mut *conn)

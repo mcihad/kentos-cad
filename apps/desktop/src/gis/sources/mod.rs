@@ -886,18 +886,6 @@ impl App {
         }
     }
 
-    #[cfg(test)]
-    /// The layer a table is bound to in the open drawing (docs/adr/0599 §7): by its file's path or database's
-    /// address and its name.
-    pub(crate) fn bound_layer_of(&self, path: &str, table: &str) -> Option<String> {
-        let doc = self.document.as_ref()?;
-        doc.settings()
-            .sources
-            .iter()
-            .find(|l| l.table == table && (l.path == path || Path::new(&l.path) == Path::new(path)))
-            .map(|l| l.layer.clone())
-    }
-
     /// Kapsamı göster's frame for the drawing as it is.
     pub(crate) fn extent_mark(&self) -> Option<([f64; 4], String)> {
         let doc = self.document.as_ref()?;

@@ -743,8 +743,10 @@ impl App {
                 if doc.disk.is_none() {
                     doc.disk = doc.path.as_deref().and_then(crate::document::disk_stamp);
                 }
-                // Bound GeoPackages moved with the project are found again (docs/adr/0506).
-                let located = match doc.path.clone() {
+                // Bound GeoPackages moved with the project are found again (docs/adr/0506); a project kept in a
+                // GeoPackage finds its layers' files from that file (docs/adr/9107 §3).
+                let place = doc.path.clone().or_else(|| doc.stored_source().and_then(|s| s.file()));
+                let located = match place {
                     Some(path) if doc.cloud_source().is_none() => {
                         kentos_native_application::source_places::relocate(&mut doc.model, &path)
                     }
@@ -766,12 +768,20 @@ impl App {
                             doc.entity_count()
                         ),
                     ),
-                    None => self.output(format!(
-                        "{} açıldı: {} nesne, {} katman.",
-                        doc.name(),
-                        doc.entity_count(),
-                        doc.layer_count()
-                    )),
+                    None => match doc.stored_source() {
+                        Some(s) => self.output(format!(
+                            "“{}” projesi açıldı ({}): {} katman.",
+                            s.name,
+                            s.place(),
+                            doc.layer_count()
+                        )),
+                        None => self.output(format!(
+                            "{} açıldı: {} nesne, {} katman.",
+                            doc.name(),
+                            doc.entity_count(),
+                            doc.layer_count()
+                        )),
+                    },
                 }
                 if doc.legacy {
                     self.output(

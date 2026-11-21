@@ -1529,6 +1529,11 @@ mod data_pick;
 mod layer_classes;
 #[path = "gis/layer_export.rs"]
 mod layer_export;
+#[path = "gis/project_store.rs"]
+mod project_store;
+#[cfg(test)]
+#[path = "gis/project_store_tests.rs"]
+mod project_store_tests;
 #[cfg(test)]
 #[path = "gis/layer_export_tests.rs"]
 mod layer_export_tests;

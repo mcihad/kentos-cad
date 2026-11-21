@@ -818,10 +818,6 @@ pub struct App {
     pub(crate) raster_values_wanted: Vec<kentos_interaction::Vec2>,
     /// XYZ sor's places and reaches whose clouds are to be read (docs/adr/0207 §7).
     pub(crate) cloud_query_wanted: Vec<(kentos_interaction::Vec2, f64)>,
-    /// Bilgi's asks of the data layers and the row it shows (data_info.rs, docs/adr/9101 §6).
-    pub(crate) data_info: crate::data_info::State,
-    /// A data layer's selected rows outlined on the map (data_selection.rs, docs/adr/9102 §5).
-    pub(crate) data_selection: crate::data_selection::DataSelection,
     /// The network tools' questions, asked after the update (networks/, docs/adr/0209 §12).
     pub(crate) network_wanted: Vec<kentos_interaction::network::NetworkAsk>,
     /// Commands a tool asked the host to run (Ağlar from the network tools).
@@ -843,8 +839,6 @@ pub struct App {
     pub(crate) vertices: crate::vertices::VertexPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
     pub(crate) label_spots: crate::labels::Spots,
-    /// The data layers' labels, each of its layer's drawn read (data_labels.rs, docs/adr/9101 §6).
-    pub(crate) data_labels: Vec<crate::data_labels::DataLabels>,
     /// Görünümü böl's other view (split_view.rs, docs/adr/0285 §3); none with one view.
     pub(crate) split: Option<crate::split_view::Split>,
     /// The map services' labels and credits for the view, as last worked out (services/overlay.rs).
@@ -1281,6 +1275,10 @@ impl App {
             self.output("Kaydedilecek çizim yok. Önce bir çizim açın (Ctrl+O).");
             return Task::none();
         };
+        // A project kept in a data source is written there again (docs/adr/9107); Farklı kaydet asks for a file.
+        if !choose && let Some(at) = doc.stored_source().cloned() {
+            return self.start_save(saving::Target::Source(at));
+        }
         let title = if doc.legacy && !choose {
             "Yeni biçimde kaydet (KCAD v2)"
         } else {

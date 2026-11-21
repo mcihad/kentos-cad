@@ -18,6 +18,14 @@ pub(crate) struct GisUiState {
     pub(crate) layer_classes: crate::layer_classes::LayerClasses,
     /// Farklı kaydet…'s window (layer_export.rs, docs/adr/9106).
     pub(crate) layer_export: Option<crate::layer_export::ExportWindow>,
+    /// Dosya › Veri kaynağı's window (project_store.rs, docs/adr/9107).
+    pub(crate) project_store: Option<crate::project_store::StoreWindow>,
+    /// Bilgi's asks of the data layers and the row it shows (data_info.rs, docs/adr/9101 §6).
+    pub(crate) data_info: crate::data_info::State,
+    /// A data layer's selected rows outlined on the map (data_selection.rs, docs/adr/9102 §5).
+    pub(crate) data_selection: crate::data_selection::DataSelection,
+    /// The data layers' labels, each of its layer's drawn read (data_labels.rs, docs/adr/9101 §6).
+    pub(crate) data_labels: Vec<crate::data_labels::DataLabels>,
     /// The connection window while it is open (db_connections.rs, docs/adr/0623).
     pub(crate) db_editor: Option<crate::db_connections::Editor>,
     /// The password question while a server waits for one.
@@ -137,6 +145,8 @@ pub(crate) enum Event {
     LayerClasses(crate::layer_classes::Event),
     /// Farklı kaydet… (docs/adr/9106).
     LayerExport(crate::layer_export::Event),
+    /// Dosya › Veri kaynağı (project_store.rs, docs/adr/9107).
+    ProjectStore(crate::project_store::Event),
     /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
     DataPick(crate::data_pick::Event),
     /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
@@ -238,6 +248,8 @@ pub(crate) enum GisDialogKind {
     DataConflict,
     /// Farklı kaydet… (layer_export.rs, docs/adr/9106); the window is `GisUiState::layer_export`.
     LayerExport,
+    /// Veri kaynağına kaydet / aç (project_store.rs, docs/adr/9107); the window is `GisUiState::project_store`.
+    ProjectStore,
     /// A Hesap window (calc/).
     Calc,
     /// A processing tool's or model's window (processing/).
@@ -363,6 +375,7 @@ impl App {
             Event::DataEdits(event) => return self.data_edits_event(event),
             Event::LayerClasses(event) => return self.layer_classes_event(event),
             Event::LayerExport(event) => return self.layer_export_event(event),
+            Event::ProjectStore(event) => return self.project_store_event(event),
             Event::DataPick(event) => return self.data_pick_event(event),
             Event::Rasters(event) => return self.rasters_event(event),
             Event::PointClouds(event) => return self.pointclouds_event(event),
@@ -413,6 +426,7 @@ impl App {
             GisDialogKind::DataEdits => self.data_edits_question(),
             GisDialogKind::DataConflict => self.data_conflict_question(),
             GisDialogKind::LayerExport => self.layer_export_view(),
+            GisDialogKind::ProjectStore => self.project_store_view(),
             GisDialogKind::SourceReconcile => self.reconcile_view(),
             GisDialogKind::Calc => self.calc_view(),
             GisDialogKind::Processing => self.processing_view(),

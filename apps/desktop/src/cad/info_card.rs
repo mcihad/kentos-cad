@@ -256,9 +256,9 @@ impl App {
     pub(crate) fn info_card_event(&mut self, e: Event) -> iced::Task<Message> {
         match e {
             Event::Close => {
-                let row = self.info_card.is_none() && self.data_info.card.is_some();
+                let row = self.info_card.is_none() && self.gis.data_info.card.is_some();
                 self.info_card = None;
-                self.data_info.card = None;
+                self.gis.data_info.card = None;
                 if row {
                     self.with_tool(|s, cx| s.data_found(None, cx));
                 }
@@ -289,16 +289,16 @@ impl App {
 
     /// After every message: the card goes with the Bilgi tool and with its object (a row's, with its layer).
     pub(crate) fn follow_info_card(&mut self) {
-        if self.data_info.card.is_some() {
+        if self.gis.data_info.card.is_some() {
             let gone = self.document.as_ref().is_none_or(|d| {
-                self.data_info
+                self.gis.data_info
                     .card
                     .as_ref()
                     .is_none_or(|f| d.model.layers().get(&f.layer).is_none_or(|n| n.data.is_none()))
             });
             let identify = self.session.tool_id() == kentos_interaction::identify::ID;
             if gone || !identify {
-                self.data_info.card = None;
+                self.gis.data_info.card = None;
             }
             if gone && identify {
                 self.with_tool(|s, cx| s.data_found(None, cx));

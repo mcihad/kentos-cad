@@ -42,7 +42,7 @@ impl App {
             let keys: Vec<i64> = self.gis.features.data.selected.iter().copied().collect();
             (!keys.is_empty()).then(|| (n.id.clone(), keys))
         });
-        let sel = &mut self.data_selection;
+        let sel = &mut self.gis.data_selection;
         if sel.of == wanted {
             return Task::none();
         }
@@ -81,8 +81,8 @@ impl App {
     pub(crate) fn data_selection_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Read(asked, objects) => {
-                if asked == self.data_selection.asked {
-                    self.data_selection.outlines = Some(Approved::of(&objects, asked));
+                if asked == self.gis.data_selection.asked {
+                    self.gis.data_selection.outlines = Some(Approved::of(&objects, asked));
                 }
             }
         }
@@ -91,7 +91,7 @@ impl App {
 
     /// Seçime yakınlaş on a data layer's table: the selected rows framed.
     pub(crate) fn zoom_to_data_selection(&mut self) {
-        let Some(o) = self.data_selection.outlines.as_ref() else {
+        let Some(o) = self.gis.data_selection.outlines.as_ref() else {
             return;
         };
         let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
@@ -115,8 +115,8 @@ impl App {
 
     /// The selected rows' outlines over the drawing, while the table shows their layer.
     pub(crate) fn data_selection_layer(&self, color: Color) -> Option<Element<'_, Message>> {
-        let outlines = self.data_selection.outlines.as_ref().filter(|o| o.objects > 0)?;
-        self.data_selection.of.as_ref()?;
+        let outlines = self.gis.data_selection.outlines.as_ref().filter(|o| o.objects > 0)?;
+        self.gis.data_selection.of.as_ref()?;
         Some(
             canvas::Canvas::new(Layer {
                 outlines,

@@ -32,6 +32,7 @@ pub mod error;
 pub mod feature;
 pub mod fit;
 pub mod geom;
+pub mod projects;
 pub mod registry;
 pub mod request;
 pub mod schema;
@@ -51,6 +52,7 @@ pub use feature::Feature;
 pub use geom::{
     Blob, BlobError, Coord, Curve, Geometry, read_blob, read_wkb, write_blob, write_wkb,
 };
+pub use projects::{ProjectStore, StoredProject};
 pub use registry::{Registry, registry};
 pub use request::{Order, Request};
 pub use schema::{Family, Field, FieldKind, GeometryField, Schema, family_of};

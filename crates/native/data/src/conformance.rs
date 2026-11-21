@@ -674,3 +674,75 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
 
     Ok(report)
 }
+
+/// The questions a source that keeps projects (docs/adr/9107) answers the same way: a project written, listed, read
+/// back byte for byte (every byte value, a Turkish name with spaces), written over, removed; a missing one and a bad
+/// name refused. `schema` is a database's (a file passes none). Leaves no project behind.
+pub fn projects(store: &dyn crate::projects::ProjectStore, schema: Option<&str>) -> Result<Report, String> {
+    use crate::error::DataError;
+    let mut report = Report::default();
+    let name = "Uygunluk projesi — Şehir İçi Ölçüm";
+    let first: Vec<u8> = (0..=255u8).cycle().take(70_000).collect();
+    let second: Vec<u8> = b"KCAD\x00\x01ikinci s\xc3\xbcr\xc3\xbcm".to_vec();
+    // Nothing of a run before.
+    let _ = store.delete_project(schema, name);
+    let before = store.projects(schema).map_err(|e| format!("projects: {e}"))?;
+    report.check(before.iter().all(|p| p.name != name), || "deneme projesi baştan var".into());
+
+    store
+        .write_project(schema, name, &first, Some("uygunluk"))
+        .map_err(|e| format!("write_project: {e}"))?;
+    let listed = store.projects(schema).map_err(|e| format!("projects: {e}"))?;
+    let entry = listed.iter().find(|p| p.name == name);
+    report.check(entry.is_some(), || "yazılan proje listede yok".into());
+    report.check(entry.is_some_and(|p| p.size == first.len() as u64), || {
+        format!("boyutu {:?}, {} beklendi", entry.map(|p| p.size), first.len())
+    });
+    report.check(entry.is_some_and(|p| p.user.as_deref() == Some("uygunluk")), || {
+        format!("yazanı {:?}", entry.and_then(|p| p.user.clone()))
+    });
+    report.check(
+        entry.is_some_and(|p| p.modified.as_deref().is_some_and(|m| m.len() == 20 && m.ends_with('Z'))),
+        || format!("yazıldığı an {:?}", entry.and_then(|p| p.modified.clone())),
+    );
+    let back = store.read_project(schema, name).map_err(|e| format!("read_project: {e}"))?;
+    report.check(back == first, || format!("geri okunan {} bayt yazılandan farklı", back.len()));
+
+    // Written over: one entry, the new bytes.
+    store
+        .write_project(schema, name, &second, None)
+        .map_err(|e| format!("write_project (üstüne): {e}"))?;
+    let listed = store.projects(schema).map_err(|e| format!("projects: {e}"))?;
+    report.check(listed.iter().filter(|p| p.name == name).count() == 1, || {
+        "üstüne yazılan proje iki kez listelendi".into()
+    });
+    let back = store.read_project(schema, name).map_err(|e| format!("read_project: {e}"))?;
+    report.check(back == second, || "üstüne yazılan proje eski baytlarla okundu".into());
+    // A name is kept trimmed and read by it.
+    let padded = store.read_project(schema, &format!("  {name} ")).map_err(|e| format!("read_project: {e}"))?;
+    report.check(padded == second, || "boşluklu ad aynı projeyi okumadı".into());
+
+    // Refusals.
+    report.check(
+        matches!(store.read_project(schema, "yok böyle bir proje"), Err(DataError::NoProject(_))),
+        || "olmayan proje NoProject ile reddedilmedi".into(),
+    );
+    report.check(
+        matches!(store.write_project(schema, "  ", b"x", None), Err(DataError::Invalid(_))),
+        || "boş ad reddedilmedi".into(),
+    );
+    report.check(
+        matches!(store.write_project(schema, "iki\nsatır", b"x", None), Err(DataError::Invalid(_))),
+        || "satır sonlu ad reddedilmedi".into(),
+    );
+
+    // Removed.
+    store.delete_project(schema, name).map_err(|e| format!("delete_project: {e}"))?;
+    let listed = store.projects(schema).map_err(|e| format!("projects: {e}"))?;
+    report.check(listed.iter().all(|p| p.name != name), || "silinen proje listede".into());
+    report.check(
+        matches!(store.delete_project(schema, name), Err(DataError::NoProject(_))),
+        || "silinmiş proje yeniden silinirken NoProject ile reddedilmedi".into(),
+    );
+    Ok(report)
+}

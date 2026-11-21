@@ -21,6 +21,10 @@ impl App {
             .width(780.0)
             .header(self.menu_header());
         for (i, nav) in NAV.iter().enumerate() {
+            // Veri kaynağı only where the program keeps projects in data sources (docs/adr/9107).
+            if nav.target == Target::Pane(Pane::Store) && !self.stores_projects() {
+                continue;
+            }
             let current = s.focus == Some(Focus::Nav(i));
             let entry = Entry::new(nav.icon, nav.label, self.nav_line(nav)).current(current);
             let entry = match nav.target {
@@ -59,6 +63,7 @@ impl App {
                 focus,
             ),
             Pane::Cloud => self.cloud_pane(s, focus),
+            Pane::Store => self.store_pane(focus),
         };
         let footer = [
             ("tools.options", "Uygulama ayarları", Icon::Properties),
@@ -131,6 +136,7 @@ impl App {
             "Aç" => ".kcad çizim dosyası".to_owned(),
             "Kaydet" => self.save_where(),
             "Farklı kaydet" => "Yeni bir .kcad dosyasına".to_owned(),
+            "Veri kaynağı" => "GeoPackage ya da PostgreSQL'de sakla, oradan aç".to_owned(),
             // The program's own formats (module_surfaces.rs): kentos-cad's line as it was.
             "İçe aktar" if self.program.is_some() => self.formats_line(&IMPORTS),
             "Dışa aktar" if self.program.is_some() => self.formats_line(&EXPORTS),
@@ -147,6 +153,10 @@ impl App {
         let Some(doc) = &self.document else {
             return "Açık çizim yok".to_owned();
         };
+        // A project kept in a data source (docs/adr/9107): Kaydet writes it there.
+        if let Some(s) = doc.stored_source() {
+            return format!("“{}” · {}", s.name, s.place());
+        }
         match (doc.cloud_source(), &doc.path) {
             (Some(_), _) if doc.is_database() => {
                 "Bulut projesi: kendiliğinden kaydediliyor".to_owned()
@@ -368,6 +378,38 @@ impl App {
             },
         );
         column![head(title, Some(lead)), rows].spacing(12).into()
+    }
+}
+
+impl App {
+    /// Veri kaynağı (docs/adr/9107): save the project into a GeoPackage or a PostgreSQL schema, or open one kept there;
+    /// where the drawing is kept, when it is.
+    fn store_pane(&self, focus: Option<usize>) -> Element<'_, Message> {
+        let rows = column![
+            Item::new("Veri kaynağına kaydet…")
+                .subtitle("Projeyi bir GeoPackage dosyasına ya da PostgreSQL şemasına, verisinin yanına yazar")
+                .leading(icon(Icon::Save).size(18.0))
+                .on_press_maybe(self.document.is_some().then(|| event(Event::Store(true))))
+                .current(focus == Some(0)),
+            Item::new("Veri kaynağından aç…")
+                .subtitle("Bir GeoPackage dosyasında ya da PostgreSQL şemasında saklanan projeyi açar")
+                .leading(icon(Icon::Open).size(18.0))
+                .on_press(event(Event::Store(false)))
+                .current(focus == Some(1)),
+        ]
+        .spacing(1);
+        let mut c = column![
+            head(
+                "Veri kaynağı",
+                Some("Proje verisiyle aynı yerde saklanabilir; dosyaya kaydetmek her zaman olduğu gibi kalır."),
+            ),
+            rows
+        ]
+        .spacing(12);
+        if let Some(s) = self.document.as_ref().and_then(|d| d.stored_source()) {
+            c = c.push(label::caption(format!("Bu proje: “{}”, {} içinde. Kaydet oraya yazar.", s.name, s.place())));
+        }
+        c.into()
     }
 }
 

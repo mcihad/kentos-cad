@@ -26,14 +26,14 @@ impl App {
     pub(crate) fn sync_data_labels(&mut self) {
         let view = crate::data_view::service();
         for (layer, read, doc) in view.take_labels() {
-            self.data_labels.retain(|d| d.layer != layer);
+            self.gis.data_labels.retain(|d| d.layer != layer);
             let spatial = Spatial::of(&doc);
             let labelled = self
                 .document
                 .as_ref()
                 .and_then(|d| d.model.layers().get(&layer))
                 .is_some_and(crate::data_view::labelled);
-            self.data_labels.push(DataLabels {
+            self.gis.data_labels.push(DataLabels {
                 layer,
                 read,
                 doc,
@@ -42,18 +42,18 @@ impl App {
                 labelled,
             });
         }
-        self.data_labels
+        self.gis.data_labels
             .retain(|d| view.drawn_read(&d.layer) == Some(d.read));
     }
 
     /// The data layers' labels over the drawing area, each of its layer's drawn read.
     pub(crate) fn data_label_layers(&self, format: &kentos_interaction::Format) -> Vec<Element<'_, Message>> {
-        if self.data_labels.is_empty() {
+        if self.gis.data_labels.is_empty() {
             return Vec::new();
         }
         let view = crate::data_view::service();
         let palette = crate::viewport::palette(self.canvas());
-        self.data_labels
+        self.gis.data_labels
             .iter()
             .filter(|d| d.labelled && view.drawn_read(&d.layer) == Some(d.read))
             .map(|d| {
@@ -84,7 +84,7 @@ impl App {
     ) -> Option<kentos_geometry_core::store::snap::SnapHit> {
         let doc = self.document.as_ref()?;
         let shown = crate::data_view::service();
-        self.data_labels
+        self.gis.data_labels
             .iter()
             .filter(|d| doc.model.editing(&d.layer) && shown.drawn_read(&d.layer) == Some(d.read))
             .filter_map(|d| self.session.snap(&d.spatial, at, view, draft, &self.tracking))

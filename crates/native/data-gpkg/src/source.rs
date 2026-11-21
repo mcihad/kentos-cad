@@ -131,7 +131,7 @@ impl GpkgSource {
         }
     }
 
-    fn writable(&self) -> bool {
+    pub(crate) fn writable(&self) -> bool {
         std::fs::metadata(&self.path).is_ok_and(|m| !m.permissions().readonly())
     }
 }
@@ -406,5 +406,9 @@ impl Source for GpkgSource {
         // A transaction changes tables: the shapes read before are read again afterwards.
         self.forget_shapes();
         Ok(Box::new(GpkgTransaction::begin(self)?))
+    }
+
+    fn project_store(&self) -> Option<&dyn kentos_data::ProjectStore> {
+        Some(self)
     }
 }

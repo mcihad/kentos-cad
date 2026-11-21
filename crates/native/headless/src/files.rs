@@ -62,11 +62,12 @@ pub fn from_bytes(bytes: &[u8]) -> Result<(Document, bool), HeadlessError> {
     }
 }
 
-/// Writes `doc` as `.kcad` v2 to `path`; the bytes written. Bound GeoPackages get their path from the file's folder
-/// (docs/adr/0506), external references theirs (docs/adr/0348).
+/// Writes `doc` as `.kcad` v2 to `path`; the bytes written. Bound GeoPackages and data layers' GeoPackages get their
+/// path from the file's folder (docs/adr/0506, 9107 §3), external references theirs (docs/adr/0348).
 pub fn write(doc: &Document, path: &Path) -> Result<usize, HeadlessError> {
     let mut snapshot = doc.to_snapshot_v2();
     kentos_native_application::source_places::with_relative(&mut snapshot.settings, path);
+    kentos_native_application::source_places::with_relative_layers(&mut snapshot.layers, path);
     kentos_native_application::xrefs::with_relative(&mut snapshot.blocks, path);
     let bytes = kentos_kcad::encode_verified(&snapshot).map_err(|e| {
         HeadlessError::new(

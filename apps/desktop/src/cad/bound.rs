@@ -571,6 +571,19 @@ impl App {
                 format!("“{name}” katmanının projenin yanındaki kaynağı ({}) son eşleştiği dosya değil; bağlanmadı.", file_name(path)),
             );
         }
+        // A data layer's GeoPackage (docs/adr/9107 §3).
+        for (_, layer, from, to) in &found.layers_moved {
+            self.say(
+                Level::Info,
+                format!("“{layer}” veri katmanının dosyası yerinde değildi; projenin yanında bulundu: {} ({from} yerine).", file_name(to)),
+            );
+        }
+        for (_, layer, path) in &found.layers_missing {
+            self.say(
+                Level::Warn,
+                format!("“{layer}” veri katmanının dosyası bulunamadı ({path}). Katman boş çizilir; dosyayı projenin yanına koyup yeniden açın."),
+            );
+        }
         // A map work item's file (docs/adr/1201 §1).
         for (_, item, from, to) in &found.work_moved {
             self.say(

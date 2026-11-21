@@ -133,3 +133,10 @@ ADR'ler **9100**'den başlar.
     katmanları için tek adımda bir kaynağa taşıma yolu sunulur.
   - Veritabanındaki proje Kaynaklar'da kendi dosyasının ya da şemasının katmanlarıyla birlikte görünür. Aynı
     dosyadaki katmanlar dosyayla birlikte taşınır.
+  - Adımlar ([ADR 9107](../docs/adr/9107-project-in-a-source.md)):
+    - [x] **09a** Proje deposu sürücü sözleşmesinde (`ProjectStore`; GeoPackage `kentos_projects` uzantısı,
+      PostgreSQL şeması); Dosya › Veri kaynağı'ndan kaydet ve aç; veri katmanının göreli yolu yazılır ve okunur, dosya
+      taşınınca katman bulunur; Python `save_to`, `open_from`, `projects`.
+    - [ ] **09b** Kaynaklar'da projeler.
+    - [ ] **09c** Yeni katman bir kaynağın yeni tablosu.
+    - [ ] **09d** Nesne tutan eski CBS katmanlarını bir kaynağa taşıma.

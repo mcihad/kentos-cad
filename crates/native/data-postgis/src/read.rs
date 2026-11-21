@@ -319,4 +319,8 @@ impl Source for PgSource {
     fn begin(&self) -> Result<Box<dyn Transaction>, DataError> {
         Ok(Box::new(PgTransaction::begin(self)?))
     }
+
+    fn project_store(&self) -> Option<&dyn kentos_data::ProjectStore> {
+        Some(self)
+    }
 }

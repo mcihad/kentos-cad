@@ -157,6 +157,28 @@ impl PySession {
             .map_err(host)
     }
 
+    /// A project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107), opened.
+    #[staticmethod]
+    #[pyo3(signature = (address, name, schema = None))]
+    fn open_from_source(py: Python<'_>, address: &str, name: &str, schema: Option<String>) -> PyResult<Self> {
+        let (address, name) = (address.to_owned(), name.to_owned());
+        py.detach(|| {
+            extension_tools(None);
+            Session::open_from_source(&address, schema.as_deref(), &name)
+        })
+        .map(|inner| Self { inner })
+        .map_err(host)
+    }
+
+    /// Saves as a project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107); the answer (`address`,
+    /// `schema`, `name`, `bytes`, `revision`) as JSON text.
+    #[pyo3(signature = (address, name, schema = None))]
+    fn save_to_source(&mut self, py: Python<'_>, address: &str, name: &str, schema: Option<String>) -> PyResult<String> {
+        let inner = &mut self.inner;
+        let saved = py.detach(|| inner.save_to_source(address, schema.as_deref(), name)).map_err(host)?;
+        text(&saved)
+    }
+
     /// A drawing from a `.kcad` file's bytes (copied once: Python's buffer
     /// is not read while the GIL is released).
     #[staticmethod]
@@ -439,10 +461,18 @@ fn local_commands() -> Vec<(&'static str, u32)> {
     kentos_headless::commands()
 }
 
+/// The projects kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107), as JSON text.
+#[pyfunction]
+#[pyo3(signature = (address, schema = None))]
+fn projects_in(py: Python<'_>, address: &str, schema: Option<String>) -> PyResult<String> {
+    let list = py.detach(|| kentos_headless::Session::projects_in(address, schema.as_deref())).map_err(host)?;
+    text(&list)
+}
+
 #[pymodule(name = "_native")]
 mod native {
     #[pymodule_export]
-    use super::{PySession, catalog, local_commands};
+    use super::{PySession, catalog, local_commands, projects_in};
     // kentos.address (docs/adr/0229 §14).
     #[pymodule_export]
     use super::address::{PyLocator, address_parse};

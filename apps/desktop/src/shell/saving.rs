@@ -374,6 +374,8 @@ pub enum Target {
         based_on: u64,
         name: String,
     },
+    /// A project kept in a GeoPackage file or a PostgreSQL schema (docs/adr/9107): written there and read back.
+    Source(crate::document::StoredSource),
 }
 
 /// A save under way.
@@ -401,6 +403,7 @@ impl Saving {
         match &self.target {
             Target::File(path) | Target::Copy(path) => path.display().to_string(),
             Target::Cloud { name, .. } => format!("“{name}”"),
+            Target::Source(at) => format!("“{}” ({})", at.name, at.place()),
         }
     }
 }
@@ -535,7 +538,13 @@ impl App {
                     &mut snapshot.settings,
                     path,
                 );
+                // Data layers' GeoPackages too (docs/adr/9107 §3).
+                kentos_native_application::source_places::with_relative_layers(&mut snapshot.layers, path);
                 kentos_native_application::xrefs::with_relative(&mut snapshot.blocks, path);
+            }
+            // A project kept in a GeoPackage: its paths from that file (docs/adr/9107 §3).
+            if let Target::Source(at) = &target {
+                kentos_native_application::project_store::with_relative(&mut snapshot, &at.address);
             }
             let done = match &target {
                 Target::File(path) | Target::Copy(path) => Event::Done {
@@ -546,6 +555,18 @@ impl App {
                     id,
                     result: encode_shared(&snapshot, &objects, &stop, &mut tell)
                         .map(crate::cloud::Once::new),
+                },
+                // Written into the source's projects table and read back (docs/adr/9107).
+                Target::Source(at) => Event::Done {
+                    id,
+                    result: encode_shared(&snapshot, &objects, &stop, &mut tell).and_then(|bytes| {
+                        if stop.load(Ordering::Relaxed) {
+                            return Err(SaveError::Stopped);
+                        }
+                        tell(Stage::Writing { done: 0, total: bytes.len() as u64 });
+                        kentos_native_application::project_store::write(&at.address, at.schema.as_deref(), &at.name, &bytes)
+                            .map_err(SaveError::Failed)
+                    }),
                 },
             };
             let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
@@ -640,6 +661,15 @@ impl App {
                             Task::none()
                         }
                         Target::Cloud { .. } => Task::none(),
+                        Target::Source(at) => {
+                            if let Some(doc) = self.document.as_mut().filter(|d| d.session == s.session) {
+                                doc.stored(at.clone(), s.revision);
+                                let later = if doc.dirty() { " Kayıt sürerken yapılan değişiklikler kaydedilmedi." } else { "" };
+                                self.output(format!("Kaydedildi: “{}” projesi, {}.{later}", at.name, at.place()));
+                                self.recovery_saved();
+                            }
+                            Task::none()
+                        }
                     },
                     Err(SaveError::Stopped) => {
                         self.warn(format!(
@@ -674,6 +704,7 @@ impl App {
                 |n| n.to_string_lossy().into_owned(),
             ),
             Target::Cloud { name, .. } => name.clone(),
+            Target::Source(at) => format!("{} ({})", at.name, at.place()),
         };
         let list = TaskList::new().push(
             Job::new(format!("Kaydediliyor: {name}"))

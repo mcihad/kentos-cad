@@ -162,7 +162,7 @@ pub fn ask(
 impl App {
     /// Bilgi's last click on no object of the drawing: the shown data layers asked off the thread, the top one first.
     pub(crate) fn data_info_tasks(&mut self) -> Task<Message> {
-        let Some((at, reach)) = self.data_info.wanted.drain(..).next_back() else {
+        let Some((at, reach)) = self.gis.data_info.wanted.drain(..).next_back() else {
             return Task::none();
         };
         let Some(doc) = &self.document else {
@@ -177,8 +177,8 @@ impl App {
             return Task::none();
         }
         nodes.reverse();
-        self.data_info.asked += 1;
-        let asked = self.data_info.asked;
+        self.gis.data_info.asked += 1;
+        let asked = self.gis.data_info.asked;
         let settings = doc.model.settings().clone();
         let task = crate::db_connections::off_thread(
             move || ask(&nodes, &settings, at, reach),
@@ -190,14 +190,14 @@ impl App {
     pub(crate) fn data_info_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Answered(asked, found, said) => {
-                if asked != self.data_info.asked {
+                if asked != self.gis.data_info.asked {
                     return Task::none();
                 }
                 for why in said {
                     self.warn(why);
                 }
                 let object = found.as_ref().map(|f| f.object.clone());
-                self.data_info.card = found.map(|f| *f);
+                self.gis.data_info.card = found.map(|f| *f);
                 self.with_tool(|s, cx| s.data_found(object.as_ref(), cx));
             }
         }
@@ -214,7 +214,7 @@ impl App {
         Vec<crate::object_info::ObjectAction>,
         Vec2,
     )> {
-        let found = self.data_info.card.as_ref()?;
+        let found = self.gis.data_info.card.as_ref()?;
         let doc = self.document.as_ref()?;
         let node = doc.model.layers().get(&found.layer)?;
         let data = node.data.as_ref()?;

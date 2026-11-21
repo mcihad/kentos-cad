@@ -112,3 +112,35 @@ fn a_table_without_a_system_text_is_named_by_its_code() {
     drop(conn);
     let _ = std::fs::remove_file(&path);
 }
+
+#[test]
+fn a_geopackage_keeps_projects_beside_its_tables() {
+    let path = fresh("projeler");
+    let source = Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+    // A table first: the projects do not change it, and it stays the only layer listed.
+    let report = conformance::run(source.as_ref(), "parseller", 5256).expect("run");
+    assert!(report.failures.is_empty(), "{}", report.failures.join("\n"));
+    let store = source.project_store().expect("a GeoPackage keeps projects");
+    let report = conformance::projects(store, None).expect("projects");
+    assert!(report.failures.is_empty(), "{} of {}:\n{}", report.failures.len(), report.checks, report.failures.join("\n"));
+    assert!(report.checks >= 14, "{} checks", report.checks);
+    store.write_project(None, "Sivas altyapı", b"KCAD", Some("deneme")).expect("kept");
+    let names: Vec<String> = source.tables().expect("tables").into_iter().map(|t| t.name).collect();
+    assert_eq!(names, ["parseller"]);
+    // Registered as an extension; not a layer.
+    let conn = rusqlite::Connection::open(&path).expect("file");
+    let ext: i64 = conn
+        .query_row(
+            "SELECT count(*) FROM gpkg_extensions WHERE table_name = 'kentos_projects' AND extension_name = 'kentos_projects'",
+            [],
+            |r| r.get(0),
+        )
+        .expect("extension row");
+    assert_eq!(ext, 1);
+    let listed: i64 = conn
+        .query_row("SELECT count(*) FROM gpkg_contents WHERE table_name = 'kentos_projects'", [], |r| r.get(0))
+        .expect("contents");
+    assert_eq!(listed, 0);
+    drop(conn);
+    let _ = std::fs::remove_file(&path);
+}

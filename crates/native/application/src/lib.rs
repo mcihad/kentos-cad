@@ -503,6 +503,9 @@ pub mod layer_classes;
 pub mod layer_export;
 #[path = "gis/layer_export_sinks.rs"]
 mod layer_export_sinks;
+// A project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107).
+#[path = "gis/project_store.rs"]
+pub mod project_store;
 #[path = "gis/data_write.rs"]
 pub mod data_write;
 #[cfg(feature = "mod-gis")]

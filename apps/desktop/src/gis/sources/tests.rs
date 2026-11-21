@@ -412,7 +412,7 @@ fn the_new_kinds_are_listed_and_a_geopackage_opens_into_its_tables_and_a_preview
 }
 
 #[test]
-fn a_table_is_bound_from_the_browser_then_gone_to_and_never_bound_twice() {
+fn a_table_is_taken_from_the_browser_as_a_copy_or_a_data_layer_and_gone_to() {
     let mut app = app_with_drawing();
     let dir = browser_folder("bag");
     let origin = open_tables(&mut app, &dir);
@@ -432,28 +432,20 @@ fn a_table_is_bound_from_the_browser_then_gone_to_and_never_bound_twice() {
         names.iter().map(|n| n == "parsel").collect::<Vec<_>>()
     );
     app.exchange = None;
-    // Bağlı katman olarak aç: the same window with the binding ticked; Çalıştır binds it.
-    send(
-        &mut app,
-        Event::OpenTable(origin.clone(), "parsel".into(), true),
-    );
-    assert_eq!(window_kind(&app).map(|w| w.0), Some(true));
-    let _ = app.update(Message::Exchange(Box::new(crate::exchange::Event::Gpkg(
-        crate::exchange::gpkg::Event::Run,
-    ))));
-    assert!(app.exchange.is_none(), "{}", last_said(&app));
-    let all = rows(&app);
-    let bound = all
-        .iter()
-        .find(|r| r.contains("▸ parsel · Bağlı: "))
-        .unwrap_or_else(|| panic!("the bound row: {all:?}"));
-    assert!(bound.ends_with("parsel"), "{bound}");
-    // Katmana git instead of a second binding: the layer chosen in Katmanlar.
-    let id = app
-        .bound_layer_of(&origin.path(), "parsel")
-        .expect("the layer");
-    send(&mut app, Event::GoToLayer(id.clone()));
-    assert_eq!(app.selected_layer.as_deref(), Some(id.as_str()));
+    // Veri katmanı olarak aç (docs/adr/9101 §2): no window; the table, read off the thread, becomes a data layer whose
+    // rows stay in the file.
+    let task = app.update(Message::Gis(gis::Event::Sources(Event::OpenTable(origin.clone(), "parsel".into(), true))));
+    assert!(window_kind(&app).is_none(), "no binding window");
+    crate::files_testing::drive(&mut app, task);
+    let layer = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.layers().leaves().into_iter().find(|n| n.data.as_ref().is_some_and(|t| t.table == "parsel")).cloned())
+        .unwrap_or_else(|| panic!("the data layer: {}", last_said(&app)));
+    assert_eq!(layer.data.as_ref().map(|d| d.address.clone()), Some(origin.path()));
+    // Katmana git: the layer chosen in Katmanlar.
+    send(&mut app, Event::GoToLayer(layer.id.clone()));
+    assert_eq!(app.selected_layer.as_deref(), Some(layer.id.as_str()));
     // Both opened tables are the newest recent sources, once.
     assert_eq!(
         app.gis.sources.folders.recent(),
