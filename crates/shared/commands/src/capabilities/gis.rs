@@ -168,6 +168,17 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // docs/adr/9106: a layer written to a table or a file.
+    Entry {
+        id: "cad.layers.export",
+        refusals: &[
+            &["no_layer", "no_target", "invalid_option", "invalid_name"],
+            &["layer_not_found", "not_a_layer", "service_layer", "field_not_found"],
+            &["invalid_expression", "unknown_srid", "target_exists", "source_unreachable", "nothing_to_export"],
+        ],
+        warnings: &["export_skipped", "field_left_out"],
+        targets: none,
+    },
     // docs/adr/9103 §3: a data layer's edit session.
     Entry {
         id: "cad.layers.session",

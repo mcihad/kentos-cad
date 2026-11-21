@@ -176,6 +176,25 @@ impl App {
                     .then(|| event(Event::ZoomTo(id.clone()))),
             )
             .icon(icon("zoomSelection"));
+        // Dışa aktar ▸ (docs/adr/9106): the layer written to a table or a file.
+        if is_layer && node.service.is_none() {
+            let export = |selected: bool| {
+                Message::Gis(crate::gis::Event::LayerExport(crate::layer_export::Event::Open(id.clone(), selected)))
+            };
+            menu = menu
+                .submenu(
+                    "Dışa aktar",
+                    Menu::new()
+                        .item("Farklı kaydet…", export(false))
+                        .icon(icon("saveAs"))
+                        .item(
+                            "Seçilenleri farklı kaydet…",
+                            self.layer_has_selection(&id).then(|| export(true)),
+                        )
+                        .icon(icon("select")),
+                )
+                .icon(icon("export"));
+        }
         // Nesne sayısını göster (docs/adr/9105 §4): the layer's objects and its classes' after their names.
         if is_layer && node.service.is_none() {
             menu = menu.check(

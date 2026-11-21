@@ -36,6 +36,7 @@ pub(crate) fn parcels(name: &str, n: usize) -> PathBuf {
                 srid: Some(5256),
             }),
             spatial_index: true,
+            system: None,
         },
         false,
     )

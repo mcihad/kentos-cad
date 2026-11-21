@@ -168,7 +168,9 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersData) -> CommandResul
 }
 
 /// [`execute`]'s write; `call::recorded` runs it as one step of the document, all or nothing, and journals it.
-fn write_execute(
+/// [`execute`]'s write without its own journal row: a command that adds a data layer inside its own step (an export's
+/// `addToMap`, docs/adr/9106).
+pub(crate) fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: LayersData,
 ) -> CommandResult<LayersDataDone> {

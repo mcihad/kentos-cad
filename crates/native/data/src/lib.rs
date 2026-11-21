@@ -45,7 +45,7 @@ pub use cancel::Cancel;
 pub use catalog::{TableInfo, TableKind};
 pub use condition::{Condition, Op};
 pub use driver::{Capabilities, Driver, Read, Source, Transaction};
-pub use edit::{Change, NewFeature, NewTable};
+pub use edit::{Change, NewFeature, NewTable, SystemText};
 pub use error::{ConstraintKind, DataError, Reach};
 pub use feature::Feature;
 pub use geom::{

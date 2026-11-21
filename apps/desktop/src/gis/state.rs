@@ -16,6 +16,8 @@ pub(crate) struct GisUiState {
     pub(crate) data_pick: crate::data_pick::DataPick,
     /// The counted layers' class counts (docs/adr/9105 §4).
     pub(crate) layer_classes: crate::layer_classes::LayerClasses,
+    /// Farklı kaydet…'s window (layer_export.rs, docs/adr/9106).
+    pub(crate) layer_export: Option<crate::layer_export::ExportWindow>,
     /// The connection window while it is open (db_connections.rs, docs/adr/0623).
     pub(crate) db_editor: Option<crate::db_connections::Editor>,
     /// The password question while a server waits for one.
@@ -133,6 +135,8 @@ pub(crate) enum Event {
     DataEdits(crate::data_edits::Event),
     /// A layer's style classes in Katmanlar (docs/adr/9105).
     LayerClasses(crate::layer_classes::Event),
+    /// Farklı kaydet… (docs/adr/9106).
+    LayerExport(crate::layer_export::Event),
     /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
     DataPick(crate::data_pick::Event),
     /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
@@ -232,6 +236,8 @@ pub(crate) enum GisDialogKind {
     DataEdits,
     /// A save that met rows others changed: Üstüne yaz, Vazgeç (data_edits.rs, docs/adr/9104 §3).
     DataConflict,
+    /// Farklı kaydet… (layer_export.rs, docs/adr/9106); the window is `GisUiState::layer_export`.
+    LayerExport,
     /// A Hesap window (calc/).
     Calc,
     /// A processing tool's or model's window (processing/).
@@ -356,6 +362,7 @@ impl App {
             Event::DataSelection(event) => return self.data_selection_event(event),
             Event::DataEdits(event) => return self.data_edits_event(event),
             Event::LayerClasses(event) => return self.layer_classes_event(event),
+            Event::LayerExport(event) => return self.layer_export_event(event),
             Event::DataPick(event) => return self.data_pick_event(event),
             Event::Rasters(event) => return self.rasters_event(event),
             Event::PointClouds(event) => return self.pointclouds_event(event),
@@ -405,6 +412,7 @@ impl App {
         match kind {
             GisDialogKind::DataEdits => self.data_edits_question(),
             GisDialogKind::DataConflict => self.data_conflict_question(),
+            GisDialogKind::LayerExport => self.layer_export_view(),
             GisDialogKind::SourceReconcile => self.reconcile_view(),
             GisDialogKind::Calc => self.calc_view(),
             GisDialogKind::Processing => self.processing_view(),

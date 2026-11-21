@@ -162,7 +162,7 @@ use kentos_native_application::{
 use kentos_native_application::{
     addresses_check, addresses_compare, addresses_normalize, images_clip, layers_compose,
     layers_contingents, layers_edit, layers_filter, layers_find, layers_info, layers_rules,
-    layer_classes, layers_data, layers_rows, layers_session, layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
+    layer_classes, layer_export, layers_data, layers_rows, layers_session, layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     linearref_define, network_define, scenarios_edit, scenarios_impact, scenarios_record,
     time_version, topology_clean,
 };
@@ -1948,6 +1948,25 @@ fn run_step(
                     .map_err(|e| format!("{at}: {}: {e}", folder.display()))?;
             }
             std::fs::rename(&from, &to).map_err(|e| format!("{at}: {from}: {e}"))?;
+        }
+        // A file a command wrote, read back (docs/adr/9106): its text whole, its JSON (numbers as numbers, `$any`
+        // anywhere), or its text in Windows-1254.
+        "readFile" => {
+            let from = step["from"].as_str().ok_or(format!("{at}: “from” yok"))?;
+            let path = with_fixtures(from);
+            let bytes = std::fs::read(&path).map_err(|e| format!("{at}: {path}: {e}"))?;
+            let got = match step["as"].as_str().unwrap_or("text") {
+                "json" => serde_json::from_slice::<Value>(&bytes).map_err(|e| format!("{at}: JSON değil: {e}"))?,
+                "windows1254" => Value::String(kentos_formats::text::decode(
+                    &bytes,
+                    kentos_formats::text::Encoding::Windows1254,
+                )),
+                _ => Value::String(String::from_utf8(bytes).map_err(|e| format!("{at}: UTF-8 değil: {e}"))?),
+            };
+            let want = &step["returns"];
+            if !same(&got, want) {
+                return Err(format!("{at}: dosya beklenenle aynı değil:\n  okunan   {got}\n  beklenen {want}"));
+            }
         }
         other => return Err(format!("{at}: bilinmeyen işlem “{other}”")),
     }

@@ -410,10 +410,15 @@ impl Transaction for GpkgTransaction {
                 )
                 .map_err(failed)?;
             if known == 0 {
-                // The system named by its EPSG code; its definition is the code's (a reader resolves it from there).
+                // The system's name and WKT as the table brings them; without them it is named by its EPSG code and
+                // its definition is the code's (a reader resolves it from there).
+                let (name, definition) = match &t.system {
+                    Some(s) => (s.name.clone(), s.wkt.clone()),
+                    None => (format!("EPSG:{srid}"), "undefined".to_owned()),
+                };
                 conn.execute(
-                    "INSERT INTO gpkg_spatial_ref_sys VALUES (?1, ?2, 'EPSG', ?2, 'undefined', NULL)",
-                    rusqlite::params![format!("EPSG:{srid}"), srid],
+                    "INSERT INTO gpkg_spatial_ref_sys VALUES (?1, ?2, 'EPSG', ?2, ?3, NULL)",
+                    rusqlite::params![name, srid, definition],
                 )
                 .map_err(failed)?;
             }
@@ -425,7 +430,7 @@ impl Transaction for GpkgTransaction {
             } else {
                 DataType::Attributes
             },
-            identifier: t.title.clone(),
+            identifier: Some(free_identifier(conn, t.title.as_deref().unwrap_or(&t.name), &t.name).map_err(failed)?),
             description: t.description.clone(),
             srs_id: t.geometry.as_ref().map(|g| g.srid.unwrap_or(-1)),
             geometry: t
@@ -472,5 +477,34 @@ impl Drop for GpkgTransaction {
         if let Some(gp) = self.gp.take() {
             let _ = gp.connection().execute_batch("ROLLBACK");
         }
+    }
+}
+
+/// The identifier a new table is listed under: its title, unless another table is listed under it
+/// (`gpkg_contents.identifier` is unique; the same layer written twice as two tables met it); then the title with the
+/// table's name, then with a number.
+fn free_identifier(conn: &rusqlite::Connection, title: &str, table: &str) -> rusqlite::Result<String> {
+    let taken = |id: &str| -> rusqlite::Result<bool> {
+        conn.query_row(
+            "SELECT count(*) FROM gpkg_contents WHERE identifier = ?1 AND table_name <> ?2 COLLATE NOCASE",
+            rusqlite::params![id, table],
+            |r| r.get::<_, i64>(0),
+        )
+        .map(|n| n > 0)
+    };
+    if !taken(title)? {
+        return Ok(title.to_owned());
+    }
+    let named = format!("{title} ({table})");
+    if title != table && !taken(&named)? {
+        return Ok(named);
+    }
+    let mut n = 2u32;
+    loop {
+        let numbered = format!("{title} ({n})");
+        if !taken(&numbered)? {
+            return Ok(numbered);
+        }
+        n += 1;
     }
 }

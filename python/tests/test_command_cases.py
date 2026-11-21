@@ -209,7 +209,7 @@ class Case:
                 _, snapshot = _KCAD.read(self.doc.to_bytes())
                 self.uids[step["as"]] = snapshot["casework"][step.get("index", 0)]["id"]
             elif op == "copyFile":
-                # A file changed by someone else between two steps (a QGIS edit of a bound table, docs/adr/0538).
+                # A file changed by someone else between two steps (another program's edit of a bound table, docs/adr/0538).
                 assert step["to"].startswith("$tmp:"), f"{at}: “to” is not a $tmp: file"
                 target = Path(paths(step["to"]))
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -220,6 +220,17 @@ class Case:
                 target = Path(paths(step["to"]))
                 target.parent.mkdir(parents=True, exist_ok=True)
                 os.replace(paths(step["from"]), target)
+            elif op == "readFile":
+                # A file a command wrote, read back (docs/adr/9106): its text whole, its JSON, or its Windows-1254 text.
+                data = Path(paths(step["from"])).read_bytes()
+                kind = step.get("as", "text")
+                if kind == "json":
+                    got: Any = json.loads(data)
+                elif kind == "windows1254":
+                    got = data.decode("cp1254")
+                else:
+                    got = data.decode("utf-8")
+                same(got, step["returns"], f"{at}: {step['from']}")
             elif op == "captureBlock":
                 block = self.block_named(step["name"])
                 assert block is not None, f"{at}: no block {step['name']}"

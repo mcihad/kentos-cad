@@ -499,6 +499,10 @@ pub mod layers_rows;
 pub mod layers_session;
 #[path = "gis/layer_classes.rs"]
 pub mod layer_classes;
+#[path = "gis/layer_export.rs"]
+pub mod layer_export;
+#[path = "gis/layer_export_sinks.rs"]
+mod layer_export_sinks;
 #[path = "gis/data_write.rs"]
 pub mod data_write;
 #[cfg(feature = "mod-gis")]
@@ -3156,6 +3160,12 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LAYERS_ROWS,
         kentos_commands::CAD_LAYERS_ROWS_VERSION,
+    ),
+    // A layer written to a GeoPackage or PostGIS table or a GeoJSON, Shapefile, CSV or KML file ([`layer_export`],
+    // docs/adr/9106).
+    (
+        kentos_commands::CAD_LAYERS_EXPORT,
+        kentos_commands::CAD_LAYERS_EXPORT_VERSION,
     ),
     // A layer's style classes, counted by the drawing's rule ([`layer_classes`], docs/adr/9105 §2).
     (

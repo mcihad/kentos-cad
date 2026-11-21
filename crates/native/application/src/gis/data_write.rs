@@ -375,16 +375,23 @@ fn allowed(w: &LayerWrites, caps: &Capabilities) -> Result<(), WriteFailure> {
     }
 }
 
-/// How an object becomes a row of the table.
-struct Rows<'a> {
+/// How an object becomes a row of the table (an edit session's save, an export's write, docs/adr/9106).
+pub(crate) struct Rows<'a> {
     schema: &'a Schema,
     /// The source keeps arcs.
     curves: bool,
     system: Option<&'a TableSystem>,
 }
 
+impl<'a> Rows<'a> {
+    /// Rows of the table `schema` describes; `curves` when it keeps arcs; `system` the move into its system.
+    pub(crate) fn new(schema: &'a Schema, curves: bool, system: Option<&'a TableSystem>) -> Rows<'a> {
+        Rows { schema, curves, system }
+    }
+}
+
 impl Rows<'_> {
-    fn new_row(&self, e: &Entity) -> Result<NewFeature, String> {
+    pub(crate) fn new_row(&self, e: &Entity) -> Result<NewFeature, String> {
         let attrs = &e.base().attrs;
         let mut values = Vec::new();
         for field in self.writable() {

@@ -6,7 +6,8 @@
 
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
   [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),
-  [ADR 9104](../adr/9104-transactions.md), [ADR 9105](../adr/9105-layer-classes.md), [plan/veri.md](../../plan/veri.md)).**
+  [ADR 9104](../adr/9104-transactions.md), [ADR 9105](../adr/9105-layer-classes.md),
+  [ADR 9106](../adr/9106-layer-export.md), [plan/veri.md](../../plan/veri.md)).**
   - Veritabanı ve dosya katmanları ayrı crate'lerdeki sürücülerden geçer:
     - ortak sözleşme `kentos-data`;
     - `kentos-data-gpkg`;
@@ -32,7 +33,11 @@
     açar kapar (`enabled`, `otherEnabled`), geri alma adımı değildir. Kapalı sınıf çizilmez, etiketlenmez, kenet almaz.
     Sınıf mantığı tek yerde: `kentos_scene_query::style_classes` (sayım ve seçim çizimin kuralıyla). Nesne sayısı
     `classCounts` (CBS verisi sürüm 4).
-  - Sıradaki maddeler: dışa aktarma penceresi, proje dosyada ya da veritabanında.
+  - **Dışa aktarma** (`cad.layers.export`, katmanın sağ tuşunda Dışa aktar ▸ Farklı kaydet… ve Seçilenleri farklı
+    kaydet…): GeoPackage ya da PostGIS tablosu, GeoJSON, Shapefile, CSV, KML. Veri katmanının satırları parça parça okunur
+    ve yazılır. Arka planda yazar; ilerleme ve Durdur. Yeni dosya `.part` olarak yazılıp sonunda yerine konur: durdurulan
+    ya da başarısız yazma hiçbir şey bırakmaz. GeoPackage'a sistem adı ve WKT'siyle yazılır (`NewTable.system`).
+  - Sıradaki madde: proje dosyada ya da veritabanında.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

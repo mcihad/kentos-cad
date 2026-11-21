@@ -1,8 +1,9 @@
 //! The drawing's layers as Shapefiles (docs/adr/0514, plan/gis.md CBS-05): what `file.export.shp` hands the formats
 //! core's writer (`kentos_formats::shp::write`): the layers (a group gives its layers), their fields and objects in
 //! the drawing's order, the blocks the objects place, and the project's system as the .prj: a registry system's ESRI
-//! WKT 1 as GDAL writes it (fixtures/crs/v1/esri-prj.json, `scripts/fixtures/esri_prj.py`), which ArcGIS and QGIS read
-//! back to its EPSG code; a project's own definition as OGC WKT 1 (read as a custom system); none for a local project.
+//! WKT 1 as the common GIS libraries write it (fixtures/crs/v1/esri-prj.json, `scripts/fixtures/esri_prj.py`), which
+//! desktop GIS programs read back to its EPSG code; a project's own definition as OGC WKT 1 (read as a custom system);
+//! none for a local project.
 
 use kentos_commands::{BlockDefinition, Entity, LayerNodeType, ShpEncoding};
 use kentos_domain::Document;
@@ -85,7 +86,7 @@ fn esri_table() -> &'static std::collections::BTreeMap<String, String> {
     &prj_file().prj
 }
 
-/// The project's system as GDAL's CSV driver writes a `.prj`, OGC WKT 1 with its EPSG authority (docs/adr/0522); the
+/// The project's system as a CSV's `.prj` beside it holds it, OGC WKT 1 with its EPSG authority (docs/adr/0522); the
 /// project's own definition as OGC WKT 1.
 pub fn wkt1_prj(doc: &Document) -> Option<String> {
     let settings = doc.settings();
@@ -95,8 +96,8 @@ pub fn wkt1_prj(doc: &Document) -> Option<String> {
     prj(doc).map(|(t, _)| t)
 }
 
-/// The registry systems' ESRI WKT 1, by EPSG code.
-fn esri(srid: u32) -> Option<String> {
+/// A registry system's `.prj` text (ESRI WKT 1 as written for it), by EPSG code; none for a code the table lacks.
+pub fn esri(srid: u32) -> Option<String> {
     esri_table().get(&srid.to_string()).cloned()
 }
 

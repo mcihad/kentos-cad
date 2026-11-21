@@ -628,6 +628,16 @@ codes! {
     NO_CLASSES = "no_classes", Failed, false, "Katmanın görünüşünde sınıf yok: kategorili, aralıklı ya da kurallı bir stil verin.";
     /// A class id the layer's style does not have.
     CLASS_NOT_FOUND = "class_not_found", Failed, false, "Katmanın stilinde bu kimlikli sınıf yok.";
+    /// An export without where it goes (docs/adr/9106): a file format's path, PostGIS's address.
+    NO_TARGET = "no_target", Failed, false, "Dışa aktarmanın yazılacağı yer verilmedi: dosyanın yolu ya da veritabanının adresi.";
+    /// A choice the export's format does not have.
+    INVALID_OPTION = "invalid_option", Failed, false, "Bu seçenek bu biçimde yoktur; ileti hangisi olduğunu söyler.";
+    /// The export's file or table is there and was not to be written over.
+    TARGET_EXISTS = "target_exists", Failed, false, "Yazılacak dosya ya da tablo var; üstüne yazmak, katmanı değiştirmek ya da eklemek seçilmedi.";
+    /// Objects an export could not write as asked, counted.
+    EXPORT_SKIPPED = "export_skipped", Warning, false, "Bazı nesneler istenen geometriyle ya da alanlarla yazılamadı; sayıları ve ilkinin nedeni söylenir.";
+    /// A field an append left out: the table does not have it.
+    FIELD_LEFT_OUT = "field_left_out", Warning, false, "Eklenen tabloda bu alan yok; değerleri yazılmadı.";
     /// `take` or `delete` of `cad.layers.session` naming more than one layer (docs/adr/9103 §3).
     ONE_LAYER = "one_layer", Failed, false, "Satır alma ve silme tek bir katmanın satırlarıyla çalışır; bir katman verin.";
     /// `take` or `delete` of `cad.layers.session` without keys (docs/adr/9103 §3).

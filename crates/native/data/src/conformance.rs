@@ -79,6 +79,7 @@ pub fn table(name: &str, srid: i32) -> NewTable {
             srid: Some(srid),
         }),
         spatial_index: true,
+        system: None,
     }
 }
 

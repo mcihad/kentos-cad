@@ -105,15 +105,22 @@ ADR'ler **9100**'den başlar.
   - Gerçek pencerede bir milyon parselde: dört sınıfın her biri 250.000; Konut kapatılınca parselleri etiketleriyle
     kalktı; tabloda gösterme, seçim, renk.
   - Kalan: çizim katmanının etiketleri kapalı sınıfa bakmaz; sınıf satırında çift tık yok; kaynakta gruplanmış sayım.
-- [ ] **VY-08 — Dışa aktarma penceresi.** Katmanın sağ tuşunda Dışa aktar › Farklı kaydet… ve Seçilenleri farklı
-  kaydet…. Seçenekler:
-  - biçim, dosya ya da veritabanı tablosu, katman adı, koordinat sistemi, kodlama;
-  - yalnız seçilenler, kapsam, süzgeç;
-  - alanlar: seçim, yeniden adlandırma, görünen değer;
-  - geometri türü, çok parçalıya zorla, Z/M;
-  - biçime özel seçenekler;
-  - var olan dosyada: üstüne yaz, katmanı değiştir ya da ekle;
-  - üst veri, haritaya ekle.
+- [x] **VY-08 — Dışa aktarma penceresi.** ([ADR 9106](../docs/adr/9106-layer-export.md))
+  - Katmanın sağ tuşunda Dışa aktar ▸ Farklı kaydet… ve Seçilenleri farklı kaydet… (seçim yokken soluk).
+  - Hedefler: GeoPackage tablosu, PostGIS tablosu, GeoJSON, Shapefile, CSV, KML.
+  - Seçenekler:
+    - koordinat sistemi, kodlama;
+    - yalnız seçilenler, yalnız görünümdekiler, İfadeyle seç dilinde süzgeç;
+    - alanlar: seçim, yeniden adlandırma, görünen değer; liste kendi kaydırma çubuğuyla;
+    - geometri türü (geometrisiz dahil), çok parçalıya zorla, Z/M;
+    - tablo ve biçim seçenekleri;
+    - hedef varsa: yazma, dosyanın üstüne yaz, katmanı değiştir, ekle;
+    - üst veri, haritaya ekle.
+  - Komut `cad.layers.export` (31 ortak durum). Veri katmanının satırları parça parça okunur ve yazılır.
+  - Pencere arka planda yazar: ilerleme, Durdur. Durdurulan ya da başarısız yazma hiçbir şey bırakmaz; üstüne
+    yazılacak dosya olduğu gibi kalır (`.part`).
+  - GeoPackage sistemi adı ve WKT'siyle yazılır, tanıtıcı benzersizdir; başka bir CBS kitaplığı dosyayı doğru okur.
+  - Kalan: 32 bitlik tam sayının GeoPackage türü, süzgecin kaynağa gitmesi, akışlı GeoJSON/Shapefile/KML (ADR 9106 §7).
 - [ ] **VY-09 — Proje dosyada ya da veritabanında; CBS verisi her zaman bir veri kaynağında.** Sahibin sözü (21 Kasım
   2026): projeler veritabanında “saklanacak değil saklanabilecek”; “veriler her halükarda veritabanında saklanacak CBS
   projelerinde”; GeoPackage, PostgreSQL ya da ileride başka bir veritabanı.

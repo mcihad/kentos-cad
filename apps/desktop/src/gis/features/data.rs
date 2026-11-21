@@ -184,6 +184,16 @@ impl DataTable {
         self.editing.clone().map(|(k, f)| (k, f, self.edit_text.clone()))
     }
 
+    /// The rows pressed if they are of this layer (Seçilenleri farklı kaydet, docs/adr/9106): none of another's.
+    pub(crate) fn selected_of(&self, layer: &str) -> Vec<i64> {
+        if self.any_selected_of(layer) { self.selected.iter().copied().collect() } else { Vec::new() }
+    }
+
+    /// Whether rows of this layer are pressed.
+    pub(crate) fn any_selected_of(&self, layer: &str) -> bool {
+        self.selected_of.as_deref() == Some(layer) && !self.selected.is_empty()
+    }
+
     /// Seç's rows of a data layer that is not being edited (data_pick.rs): the table's selection, of that layer.
     pub(crate) fn select_rows(&mut self, layer: &str, keys: Vec<i64>) {
         if self.selected_of.as_deref() != Some(layer) {

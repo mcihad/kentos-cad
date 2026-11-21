@@ -186,6 +186,8 @@ pub mod cad_layers_data;
 pub mod cad_layers_rows;
 #[path = "gis/cad_layers_classes.rs"]
 pub mod cad_layers_classes;
+#[path = "gis/cad_layers_export.rs"]
+pub mod cad_layers_export;
 #[path = "gis/cad_layers_session.rs"]
 pub mod cad_layers_session;
 #[path = "gis/cad_layers_crs.rs"]
@@ -542,6 +544,7 @@ pub use cad_layers::*;
 pub use cad_layers_data::*;
 pub use cad_layers_rows::*;
 pub use cad_layers_classes::*;
+pub use cad_layers_export::*;
 pub use cad_layers_session::*;
 pub use cad_layers_crs::*;
 pub use cad_leaders::*;

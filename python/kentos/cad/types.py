@@ -2789,6 +2789,80 @@ ExchangeStateName = Literal["kept", "approximated", "converted", "added", "lost"
 """The names of :class:`ExchangeState`, for a plain string."""
 
 
+class ExportEncoding(_StrEnum):
+    """The text encoding of a Shapefile's `.dbf` and of a CSV file.
+
+    - ``utf8``
+    - ``windows1254``: Windows-1254 (Turkish Windows): for programs that read only the old code pages.
+    """
+    UTF8 = "utf8"
+    WINDOWS1254 = "windows1254"
+
+
+ExportEncodingName = Literal["utf8", "windows1254"]
+"""The names of :class:`ExportEncoding`, for a plain string."""
+
+
+class ExportExisting(_StrEnum):
+    """What is done when the target is there already.
+
+    - ``refuse``: Nothing is written (`target_exists`).
+    - ``overwriteFile``: The file is written anew (a GeoPackage loses its other tables).
+    - ``replaceLayer``: The table is dropped and made again; the file's other tables stay (GeoPackage, PostGIS).
+    - ``append``: The rows are added to the table; a field it does not have is left out with a warning (GeoPackage, PostGIS).
+    """
+    REFUSE = "refuse"
+    OVERWRITE_FILE = "overwriteFile"
+    REPLACE_LAYER = "replaceLayer"
+    APPEND = "append"
+
+
+ExportExistingName = Literal["refuse", "overwriteFile", "replaceLayer", "append"]
+"""The names of :class:`ExportExisting`, for a plain string."""
+
+
+class ExportFormat(_StrEnum):
+    """Where `cad.layers.export` writes.
+
+    - ``gpkg``: A table of a GeoPackage file (`path`), made when the file is not there.
+    - ``postgis``: A table of a PostGIS database (`address`), in `schema`.
+    - ``geojson``: A GeoJSON file: RFC 7946 (longitude, latitude in WGS 84) unless `options.projectCoordinates`.
+    - ``shapefile``: A Shapefile (`path` ends `.shp`; its `.shx`, `.dbf`, `.prj`, `.cpg` beside it).
+    - ``csv``: A CSV file: the fields, the geometry as WKT or X and Y columns.
+    - ``kml``: A KML file (always longitude, latitude in WGS 84).
+    """
+    GPKG = "gpkg"
+    POSTGIS = "postgis"
+    GEOJSON = "geojson"
+    SHAPEFILE = "shapefile"
+    CSV = "csv"
+    KML = "kml"
+
+
+ExportFormatName = Literal["gpkg", "postgis", "geojson", "shapefile", "csv", "kml"]
+"""The names of :class:`ExportFormat`, for a plain string."""
+
+
+class ExportGeometry(_StrEnum):
+    """The geometry the written rows take.
+
+    - ``point``
+    - ``line``
+    - ``area``
+    - ``auto``: The layer's own kind (a mixed drawing layer: each object's).
+    - ``none``: No geometry: a table of the fields alone.
+    """
+    POINT = "point"
+    LINE = "line"
+    AREA = "area"
+    AUTO = "auto"
+    NONE = "none"
+
+
+ExportGeometryName = Literal["point", "line", "area", "auto", "none"]
+"""The names of :class:`ExportGeometry`, for a plain string."""
+
+
 class ExtractAreaUnit(_StrEnum):
     """An area's unit (CLAUDE.md §5: a dönüm 1000 m², a hectare 10000 m²)."""
     M2 = "m2"
@@ -41010,6 +41084,36 @@ class ExportFgb(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportField(_Model):
+    """A field written: the layer's field by name, the name it is written under, its listed values' labels.
+    Attributes:
+        name: The layer's field.
+        labels: Its listed values written as their labels (Görünen değer); a value not listed stays as it is.
+        to: The name written; none: its own.
+    """
+    name: str
+    labels: bool | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportField:
+        return cls(
+            name=data["name"],
+            labels=data.get("labels", UNSET),
+            to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportGis(_Model):
     """Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new derived dataset:
     a GeoPackage, a zip of Shapefiles, GeoJSON or new tables of a PostGIS database (`format`, docs/adr/0634 §3).
@@ -41395,6 +41499,58 @@ class ExportMaplibre(_Model):
             overwrite=data["overwrite"] if "overwrite" in data else False,
             source_kind=UNSET if "sourceKind" not in data else None if data["sourceKind"] is None else _enum_in(MaplibreSourceKind, data["sourceKind"]),
             source_url=data.get("sourceUrl", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportOptions(_Model):
+    """The format's own choices; each one a format does not have is refused.
+    Attributes:
+        description: GeoPackage, PostGIS: the table's description.
+        geometry_column: GeoPackage, PostGIS: the geometry column's name; none: `geom`.
+        key: GeoPackage, PostGIS: the key column's name; none: `fid`.
+        no_spatial_index: GeoPackage, PostGIS: no spatial index (one is made otherwise).
+        project_coordinates: GeoJSON: the coordinates in the system written (`srid`, or the layer's) with the old `crs` member, not moved
+            into WGS 84.
+        separator: CSV: the separator, one character; none: `,`.
+        xy: CSV: the geometry as `x` and `y` columns (points only) instead of a `wkt` column.
+    """
+    description: str | None | Unset = UNSET
+    geometry_column: str | None | Unset = UNSET
+    key: str | None | Unset = UNSET
+    no_spatial_index: bool | None | Unset = UNSET
+    project_coordinates: bool | None | Unset = UNSET
+    separator: str | None | Unset = UNSET
+    xy: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.geometry_column is not UNSET:
+            out["geometryColumn"] = self.geometry_column
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.no_spatial_index is not UNSET:
+            out["noSpatialIndex"] = self.no_spatial_index
+        if self.project_coordinates is not UNSET:
+            out["projectCoordinates"] = self.project_coordinates
+        if self.separator is not UNSET:
+            out["separator"] = self.separator
+        if self.xy is not UNSET:
+            out["xy"] = self.xy
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportOptions:
+        return cls(
+            description=data.get("description", UNSET),
+            geometry_column=data.get("geometryColumn", UNSET),
+            key=data.get("key", UNSET),
+            no_spatial_index=data.get("noSpatialIndex", UNSET),
+            project_coordinates=data.get("projectCoordinates", UNSET),
+            separator=data.get("separator", UNSET),
+            xy=data.get("xy", UNSET),
         )
 
 
@@ -57810,6 +57966,193 @@ class LayersEdited(_Model):
             kept=data["kept"],
             revision=data["revision"],
             layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersExport(_Model):
+    """Input of `cad.layers.export` v1: `layer`'s objects or rows written as `format`.
+
+    What is written: the layer's objects (a data layer's rows read from its source), those of `uids` (a drawing layer)
+    or `keys` (a data layer) only, those whose box meets `bbox`, those `filter` holds for; the texts and dimensions of a
+    drawing layer are left out of a table with geometry. Fields: `fields` in their order (none: every field of the
+    layer). The system: `srid` (none: a data layer's table's own, a drawing layer's the project's); GeoJSON (unless
+    `options.projectCoordinates`) and KML are always WGS 84.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (a file format without
+    `path`, PostGIS without `address`), `invalid_option` (a choice the format does not have: the message says which),
+    `invalid_name` (a table or field name that is empty or longer than the format takes), `layer_not_found`,
+    `not_a_layer` (a group), `service_layer`, `field_not_found` (in `fields`), `invalid_expression` (`filter`),
+    `unknown_srid` (a system this project cannot write), `target_exists` (the file or table is there and `existing` is `refuse`), `source_unreachable` (the
+    layer's source or the target could not be read or written; the message says why), `nothing_to_export` (no object or
+    row was kept). Warnings: `export_skipped` (objects that could not be written as the geometry asked, counted),
+    `field_left_out` (`append` to a table without the field).
+    Attributes:
+        layer: The layer (its id).
+        add_to_map: GeoPackage, PostGIS: the written table added to the layer tree as a data layer (one undo step).
+        address: PostGIS: the database, `postgresql://user@host:port/db` (its password is never written).
+        bbox: Only what meets this box, in the project's system: west, south, east, north. Unit: length.
+        encoding: Shapefile, CSV: the text encoding; none: UTF-8.
+        existing: The target there already.
+        fields: The fields written, in order; none: every field.
+        filter: Only what this condition in İfadeyle seç's language holds for.
+        geometry: The geometry written; none: the layer's own.
+        keys: A data layer's rows to write (keys): Seçilenleri farklı kaydet. Unit: id.
+        m: With M; none: as the layer has it.
+        metadata: GeoPackage: the layer's dataset information written as the table's metadata.
+        multi: Every geometry written as a multi-part one.
+        name: The table (GeoPackage, PostGIS) or the KML document's name; none: the layer's name made a table name.
+        path: The file written (a GeoPackage, GeoJSON, Shapefile, CSV or KML file).
+        schema: PostGIS: the schema; none: `public`.
+        srid: The system written, an EPSG code. Unit: id.
+        uids: A drawing layer's objects to write (persistent ids): Seçilenleri farklı kaydet.
+        z: With Z (an object without its elevation 0); none: as the layer has it.
+    """
+    layer: str
+    format: ExportFormat | ExportFormatName
+    add_to_map: bool | None | Unset = UNSET
+    address: str | None | Unset = UNSET
+    bbox: list[float] | None | Unset = UNSET
+    encoding: ExportEncoding | ExportEncodingName | None | Unset = UNSET
+    existing: ExportExisting | ExportExistingName | None | Unset = UNSET
+    fields: list[ExportField] | None | Unset = UNSET
+    filter: str | None | Unset = UNSET
+    geometry: ExportGeometry | ExportGeometryName | None | Unset = UNSET
+    keys: list[int] | None | Unset = UNSET
+    m: bool | None | Unset = UNSET
+    metadata: bool | None | Unset = UNSET
+    multi: bool | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    options: ExportOptions | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    schema: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+    z: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["format"] = _enum_out(self.format)
+        if self.add_to_map is not UNSET:
+            out["addToMap"] = self.add_to_map
+        if self.address is not UNSET:
+            out["address"] = self.address
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.encoding is not UNSET:
+            out["encoding"] = None if self.encoding is None else _enum_out(self.encoding)
+        if self.existing is not UNSET:
+            out["existing"] = None if self.existing is None else _enum_out(self.existing)
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        if self.geometry is not UNSET:
+            out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
+        if self.keys is not UNSET:
+            out["keys"] = None if self.keys is None else list(self.keys)
+        if self.m is not UNSET:
+            out["m"] = self.m
+        if self.metadata is not UNSET:
+            out["metadata"] = self.metadata
+        if self.multi is not UNSET:
+            out["multi"] = self.multi
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.options is not UNSET:
+            out["options"] = None if self.options is None else self.options.to_json()
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        if self.z is not UNSET:
+            out["z"] = self.z
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersExport:
+        return cls(
+            layer=data["layer"],
+            format=_enum_in(ExportFormat, data["format"]),
+            add_to_map=data.get("addToMap", UNSET),
+            address=data.get("address", UNSET),
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            encoding=UNSET if "encoding" not in data else None if data["encoding"] is None else _enum_in(ExportEncoding, data["encoding"]),
+            existing=UNSET if "existing" not in data else None if data["existing"] is None else _enum_in(ExportExisting, data["existing"]),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else [ExportField.from_json(e0) for e0 in data["fields"]],
+            filter=data.get("filter", UNSET),
+            geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(ExportGeometry, data["geometry"]),
+            keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
+            m=data.get("m", UNSET),
+            metadata=data.get("metadata", UNSET),
+            multi=data.get("multi", UNSET),
+            name=data.get("name", UNSET),
+            options=UNSET if "options" not in data else None if data["options"] is None else ExportOptions.from_json(data["options"]),
+            path=data.get("path", UNSET),
+            schema=data.get("schema", UNSET),
+            srid=data.get("srid", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+            z=data.get("z", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersExported(_Model):
+    """Output of `cad.layers.export` v1.
+    Attributes:
+        files: The files written, absolute (a Shapefile's every file); none for PostGIS.
+        written: The rows (features, records) written. Unit: count.
+        fields: The fields as written, in order.
+        revision: The document's revision after the export (it moves only when a layer was added), as decimal text.
+        geometry: The geometry written: its type name (`MULTIPOLYGON`, `POINT Z` …); none: no geometry.
+        layer: `addToMap`: the data layer added (its id).
+        srid: The system written, an EPSG code; none: none written (a CSV, a local project). Unit: id.
+        table: The table written (GeoPackage, PostGIS: `schema.table`).
+    """
+    format: ExportFormat | ExportFormatName
+    files: list[str]
+    written: int
+    fields: list[str]
+    revision: str
+    geometry: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = _enum_out(self.format)
+        out["files"] = list(self.files)
+        out["written"] = self.written
+        out["fields"] = list(self.fields)
+        out["revision"] = self.revision
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersExported:
+        return cls(
+            format=_enum_in(ExportFormat, data["format"]),
+            files=list(data["files"]),
+            written=data["written"],
+            fields=list(data["fields"]),
+            revision=data["revision"],
+            geometry=data.get("geometry", UNSET),
+            layer=data.get("layer", UNSET),
+            srid=data.get("srid", UNSET),
+            table=data.get("table", UNSET),
         )
 
 
@@ -148173,7 +148516,16 @@ __all__ = [
     "ExportCsv",
     "ExportDwg",
     "ExportDxf",
+    "ExportEncoding",
+    "ExportEncodingName",
+    "ExportExisting",
+    "ExportExistingName",
     "ExportFgb",
+    "ExportField",
+    "ExportFormat",
+    "ExportFormatName",
+    "ExportGeometry",
+    "ExportGeometryName",
     "ExportGis",
     "ExportGltf",
     "ExportGml",
@@ -148184,6 +148536,7 @@ __all__ = [
     "ExportMaplibre",
     "ExportMaterialsOperation",
     "ExportOpeningTypesOperation",
+    "ExportOptions",
     "ExportParquet",
     "ExportPdf",
     "ExportQml",
@@ -148839,6 +149192,8 @@ __all__ = [
     "LayersDataPlan",
     "LayersEdit",
     "LayersEdited",
+    "LayersExport",
+    "LayersExported",
     "LayersFilter",
     "LayersFilterPlan",
     "LayersFiltered",

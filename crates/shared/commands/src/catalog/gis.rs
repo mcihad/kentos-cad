@@ -547,6 +547,47 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Katmanı dışa aktar (docs/adr/9106), held together by fixtures/commands/v1/cad.layers.export.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_EXPORT.into(),
+            version: crate::CAD_LAYERS_EXPORT_VERSION,
+            title: "Katmanı dışa aktar".into(),
+            summary: "Bir katmanın nesnelerini (veri katmanında kaynaktaki satırlarını) bir GeoPackage ya da PostGIS tablosuna, bir GeoJSON, Shapefile, CSV ya da KML dosyasına yazar (Dışa aktar › Farklı kaydet…). Veri katmanının satırları kaynaktan parça parça okunur ve geldikçe yazılır. \
+                      Ne yazılır: katmanın bütün nesneleri; uids (çizim katmanı) ya da keys (veri katmanı) yalnız seçilenleri, bbox kutuya değenleri, filter İfadeyle seç'in dilindeki koşulu sağlayanları bırakır. fields alanları sırasıyla seçer, to ile yeniden adlandırır, labels ile listeli değerlerin etiketlerini yazar (görünen değer). \
+                      geometry nesneleri bir türe çevirir (alanın çevresi çizgi, kapalı çizgi alan olur; çevrilemeyen yazılmaz ve export_skipped ile sayılır), multi çok parçalı yazar, z ve m boyutları ekler ya da atar; srid yazılan sistemdir (GeoJSON, projectCoordinates verilmezse, ve KML her zaman WGS 84). \
+                      existing hedef varken ne olacağıdır: refuse (target_exists), overwriteFile, replaceLayer, append (tabloda olmayan alan field_left_out ile bırakılır). options biçime özel seçeneklerdir: description, key, geometryColumn, noSpatialIndex (tablolar), separator ve xy (CSV), projectCoordinates (GeoJSON). encoding Shapefile ve CSV'nin kodlaması (utf8, windows1254). metadata GeoPackage tablosuna katmanın veri kümesi bilgisini yazar; addToMap yazılan tabloyu veri katmanı olarak ekler (tek geri alma adımı). plan hiçbir şey yazmadan yazılacak satırları sayar."
+                .into(),
+            aliases: vec!["disaaktar".into(), "farklikaydet".into(), "export".into(), "geopackageyaz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersExport>(),
+            output: schema::<crate::LayersExported>(),
+            plan: Some(schema::<crate::LayersExported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Konut parselleri bir GeoPackage tablosuna, haritaya eklenerek".into(),
+                    input: json!({
+                        "layer": "parseller", "format": "gpkg", "path": "/veri/konut.gpkg", "name": "konut",
+                        "filter": "kullanim = 'Konut'", "addToMap": true
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Seçilen satırlar Windows-1254 bir Shapefile'a".into(),
+                    input: json!({
+                        "layer": "parseller", "format": "shapefile", "path": "/veri/secilen.shp",
+                        "keys": [3, 7, 11], "encoding": "windows1254"
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Veri katmanı (docs/adr/9101 §4), held together by fixtures/commands/v1/cad.layers.data.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_DATA.into(),

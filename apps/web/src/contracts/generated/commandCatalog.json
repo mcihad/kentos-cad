@@ -78425,6 +78425,414 @@
       ]
     },
     {
+      "id": "cad.layers.export",
+      "version": 1,
+      "title": "Katmanı dışa aktar",
+      "summary": "Bir katmanın nesnelerini (veri katmanında kaynaktaki satırlarını) bir GeoPackage ya da PostGIS tablosuna, bir GeoJSON, Shapefile, CSV ya da KML dosyasına yazar (Dışa aktar › Farklı kaydet…). Veri katmanının satırları kaynaktan parça parça okunur ve geldikçe yazılır. Ne yazılır: katmanın bütün nesneleri; uids (çizim katmanı) ya da keys (veri katmanı) yalnız seçilenleri, bbox kutuya değenleri, filter İfadeyle seç'in dilindeki koşulu sağlayanları bırakır. fields alanları sırasıyla seçer, to ile yeniden adlandırır, labels ile listeli değerlerin etiketlerini yazar (görünen değer). geometry nesneleri bir türe çevirir (alanın çevresi çizgi, kapalı çizgi alan olur; çevrilemeyen yazılmaz ve export_skipped ile sayılır), multi çok parçalı yazar, z ve m boyutları ekler ya da atar; srid yazılan sistemdir (GeoJSON, projectCoordinates verilmezse, ve KML her zaman WGS 84). existing hedef varken ne olacağıdır: refuse (target_exists), overwriteFile, replaceLayer, append (tabloda olmayan alan field_left_out ile bırakılır). options biçime özel seçeneklerdir: description, key, geometryColumn, noSpatialIndex (tablolar), separator ve xy (CSV), projectCoordinates (GeoJSON). encoding Shapefile ve CSV'nin kodlaması (utf8, windows1254). metadata GeoPackage tablosuna katmanın veri kümesi bilgisini yazar; addToMap yazılan tabloyu veri katmanı olarak ekler (tek geri alma adımı). plan hiçbir şey yazmadan yazılacak satırları sayar.",
+      "aliases": [
+        "disaaktar",
+        "farklikaydet",
+        "export",
+        "geopackageyaz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.export` v1: `layer`'s objects or rows written as `format`.\n\nWhat is written: the layer's objects (a data layer's rows read from its source), those of `uids` (a drawing layer)\nor `keys` (a data layer) only, those whose box meets `bbox`, those `filter` holds for; the texts and dimensions of a\ndrawing layer are left out of a table with geometry. Fields: `fields` in their order (none: every field of the\nlayer). The system: `srid` (none: a data layer's table's own, a drawing layer's the project's); GeoJSON (unless\n`options.projectCoordinates`) and KML are always WGS 84.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (a file format without\n`path`, PostGIS without `address`), `invalid_option` (a choice the format does not have: the message says which),\n`invalid_name` (a table or field name that is empty or longer than the format takes), `layer_not_found`,\n`not_a_layer` (a group), `service_layer`, `field_not_found` (in `fields`), `invalid_expression` (`filter`),\n`unknown_srid` (a system this project cannot write), `target_exists` (the file or table is there and `existing` is `refuse`), `source_unreachable` (the\nlayer's source or the target could not be read or written; the message says why), `nothing_to_export` (no object or\nrow was kept). Warnings: `export_skipped` (objects that could not be written as the geometry asked, counted),\n`field_left_out` (`append` to a table without the field).",
+        "properties": {
+          "addToMap": {
+            "description": "GeoPackage, PostGIS: the written table added to the layer tree as a data layer (one undo step).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "address": {
+            "description": "PostGIS: the database, `postgresql://user@host:port/db` (its password is never written).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bbox": {
+            "description": "Only what meets this box, in the project's system: west, south, east, north.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "encoding": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExportEncoding"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Shapefile, CSV: the text encoding; none: UTF-8."
+          },
+          "existing": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExportExisting"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The target there already."
+          },
+          "fields": {
+            "description": "The fields written, in order; none: every field.",
+            "items": {
+              "$ref": "#/$defs/ExportField"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "filter": {
+            "description": "Only what this condition in İfadeyle seç's language holds for.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "format": {
+            "$ref": "#/$defs/ExportFormat"
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExportGeometry"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The geometry written; none: the layer's own."
+          },
+          "keys": {
+            "description": "A data layer's rows to write (keys): Seçilenleri farklı kaydet.",
+            "items": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "layer": {
+            "description": "The layer (its id).",
+            "type": "string"
+          },
+          "m": {
+            "description": "With M; none: as the layer has it.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "metadata": {
+            "description": "GeoPackage: the layer's dataset information written as the table's metadata.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "multi": {
+            "description": "Every geometry written as a multi-part one.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "The table (GeoPackage, PostGIS) or the KML document's name; none: the layer's name made a table name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "options": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExportOptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "path": {
+            "description": "The file written (a GeoPackage, GeoJSON, Shapefile, CSV or KML file).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "schema": {
+            "description": "PostGIS: the schema; none: `public`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "srid": {
+            "description": "The system written, an EPSG code.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "uids": {
+            "description": "A drawing layer's objects to write (persistent ids): Seçilenleri farklı kaydet.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "z": {
+            "description": "With Z (an object without its elevation 0); none: as the layer has it.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "layer",
+          "format"
+        ],
+        "title": "LayersExport",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.export` v1.",
+        "properties": {
+          "fields": {
+            "description": "The fields as written, in order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "files": {
+            "description": "The files written, absolute (a Shapefile's every file); none for PostGIS.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "format": {
+            "$ref": "#/$defs/ExportFormat"
+          },
+          "geometry": {
+            "description": "The geometry written: its type name (`MULTIPOLYGON`, `POINT Z` …); none: no geometry.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "`addToMap`: the data layer added (its id).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "description": "The document's revision after the export (it moves only when a layer was added), as decimal text.",
+            "type": "string"
+          },
+          "srid": {
+            "description": "The system written, an EPSG code; none: none written (a CSV, a local project).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "table": {
+            "description": "The table written (GeoPackage, PostGIS: `schema.table`).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "written": {
+            "description": "The rows (features, records) written.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "format",
+          "files",
+          "written",
+          "fields",
+          "revision"
+        ],
+        "title": "LayersExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.export` v1.",
+        "properties": {
+          "fields": {
+            "description": "The fields as written, in order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "files": {
+            "description": "The files written, absolute (a Shapefile's every file); none for PostGIS.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "format": {
+            "$ref": "#/$defs/ExportFormat"
+          },
+          "geometry": {
+            "description": "The geometry written: its type name (`MULTIPOLYGON`, `POINT Z` …); none: no geometry.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "`addToMap`: the data layer added (its id).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "description": "The document's revision after the export (it moves only when a layer was added), as decimal text.",
+            "type": "string"
+          },
+          "srid": {
+            "description": "The system written, an EPSG code; none: none written (a CSV, a local project).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "table": {
+            "description": "The table written (GeoPackage, PostGIS: `schema.table`).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "written": {
+            "description": "The rows (features, records) written.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "format",
+          "files",
+          "written",
+          "fields",
+          "revision"
+        ],
+        "title": "LayersExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_layer",
+          "no_target",
+          "invalid_option",
+          "invalid_name",
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer",
+          "field_not_found",
+          "invalid_expression",
+          "unknown_srid",
+          "target_exists",
+          "source_unreachable",
+          "nothing_to_export"
+        ],
+        "warnings": [
+          "export_skipped",
+          "field_left_out"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Konut parselleri bir GeoPackage tablosuna, haritaya eklenerek",
+          "input": {
+            "addToMap": true,
+            "filter": "kullanim = 'Konut'",
+            "format": "gpkg",
+            "layer": "parseller",
+            "name": "konut",
+            "path": "/veri/konut.gpkg"
+          }
+        },
+        {
+          "title": "Seçilen satırlar Windows-1254 bir Shapefile'a",
+          "input": {
+            "encoding": "windows1254",
+            "format": "shapefile",
+            "keys": [
+              3,
+              7,
+              11
+            ],
+            "layer": "parseller",
+            "path": "/veri/secilen.shp"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.data",
       "version": 1,
       "title": "Veri katmanı",
@@ -113498,6 +113906,36 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Katmanın stilinde bu kimlikli sınıf yok."
+    },
+    {
+      "code": "no_target",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dışa aktarmanın yazılacağı yer verilmedi: dosyanın yolu ya da veritabanının adresi."
+    },
+    {
+      "code": "invalid_option",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu seçenek bu biçimde yoktur; ileti hangisi olduğunu söyler."
+    },
+    {
+      "code": "target_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yazılacak dosya ya da tablo var; üstüne yazmak, katmanı değiştirmek ya da eklemek seçilmedi."
+    },
+    {
+      "code": "export_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı nesneler istenen geometriyle ya da alanlarla yazılamadı; sayıları ve ilkinin nedeni söylenir."
+    },
+    {
+      "code": "field_left_out",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Eklenen tabloda bu alan yok; değerleri yazılmadı."
     },
     {
       "code": "one_layer",
@@ -151657,6 +152095,189 @@
           "type": "object"
         }
       ]
+    },
+    "ExportEncoding": {
+      "description": "The text encoding of a Shapefile's `.dbf` and of a CSV file.",
+      "oneOf": [
+        {
+          "enum": [
+            "utf8"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "windows1254",
+          "description": "Windows-1254 (Turkish Windows): for programs that read only the old code pages.",
+          "type": "string"
+        }
+      ]
+    },
+    "ExportExisting": {
+      "description": "What is done when the target is there already.",
+      "oneOf": [
+        {
+          "const": "refuse",
+          "description": "Nothing is written (`target_exists`).",
+          "type": "string"
+        },
+        {
+          "const": "overwriteFile",
+          "description": "The file is written anew (a GeoPackage loses its other tables).",
+          "type": "string"
+        },
+        {
+          "const": "replaceLayer",
+          "description": "The table is dropped and made again; the file's other tables stay (GeoPackage, PostGIS).",
+          "type": "string"
+        },
+        {
+          "const": "append",
+          "description": "The rows are added to the table; a field it does not have is left out with a warning (GeoPackage, PostGIS).",
+          "type": "string"
+        }
+      ]
+    },
+    "ExportField": {
+      "additionalProperties": false,
+      "description": "A field written: the layer's field by name, the name it is written under, its listed values' labels.",
+      "properties": {
+        "labels": {
+          "description": "Its listed values written as their labels (Görünen değer); a value not listed stays as it is.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "The layer's field.",
+          "type": "string"
+        },
+        "to": {
+          "description": "The name written; none: its own.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "ExportFormat": {
+      "description": "Where `cad.layers.export` writes.",
+      "oneOf": [
+        {
+          "const": "gpkg",
+          "description": "A table of a GeoPackage file (`path`), made when the file is not there.",
+          "type": "string"
+        },
+        {
+          "const": "postgis",
+          "description": "A table of a PostGIS database (`address`), in `schema`.",
+          "type": "string"
+        },
+        {
+          "const": "geojson",
+          "description": "A GeoJSON file: RFC 7946 (longitude, latitude in WGS 84) unless `options.projectCoordinates`.",
+          "type": "string"
+        },
+        {
+          "const": "shapefile",
+          "description": "A Shapefile (`path` ends `.shp`; its `.shx`, `.dbf`, `.prj`, `.cpg` beside it).",
+          "type": "string"
+        },
+        {
+          "const": "csv",
+          "description": "A CSV file: the fields, the geometry as WKT or X and Y columns.",
+          "type": "string"
+        },
+        {
+          "const": "kml",
+          "description": "A KML file (always longitude, latitude in WGS 84).",
+          "type": "string"
+        }
+      ]
+    },
+    "ExportGeometry": {
+      "description": "The geometry the written rows take.",
+      "oneOf": [
+        {
+          "enum": [
+            "point",
+            "line",
+            "area"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "auto",
+          "description": "The layer's own kind (a mixed drawing layer: each object's).",
+          "type": "string"
+        },
+        {
+          "const": "none",
+          "description": "No geometry: a table of the fields alone.",
+          "type": "string"
+        }
+      ]
+    },
+    "ExportOptions": {
+      "additionalProperties": false,
+      "description": "The format's own choices; each one a format does not have is refused.",
+      "properties": {
+        "description": {
+          "description": "GeoPackage, PostGIS: the table's description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "geometryColumn": {
+          "description": "GeoPackage, PostGIS: the geometry column's name; none: `geom`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "description": "GeoPackage, PostGIS: the key column's name; none: `fid`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "noSpatialIndex": {
+          "description": "GeoPackage, PostGIS: no spatial index (one is made otherwise).",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "projectCoordinates": {
+          "description": "GeoJSON: the coordinates in the system written (`srid`, or the layer's) with the old `crs` member, not moved\ninto WGS 84.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "separator": {
+          "description": "CSV: the separator, one character; none: `,`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "xy": {
+          "description": "CSV: the geometry as `x` and `y` columns (points only) instead of a `wkt` column.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
     },
     "ExportReport": {
       "description": "What a writer did besides writing: counts, and anything it could not write as it was.",

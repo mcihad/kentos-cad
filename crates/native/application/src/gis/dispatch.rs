@@ -306,6 +306,14 @@ macro_rules! gis_commands {
                     kentos_commands::LayersClasses
                 )
             }
+            kentos_commands::CAD_LAYERS_EXPORT => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layer_export,
+                    kentos_commands::LayersExport
+                )
+            }
             kentos_commands::CAD_LAYERS_CRS => {
                 crate::gis_dispatch::gis_arm!(
                     $command,

@@ -40,4 +40,16 @@ pub struct NewTable {
     pub geometry: Option<GeometryField>,
     /// With a spatial index on its geometry.
     pub spatial_index: bool,
+    /// The geometry's system as a source that keeps its systems with the data writes it when it lacks the code;
+    /// none: named by its code alone.
+    pub system: Option<SystemText>,
+}
+
+/// A coordinate system written with a table into a source that keeps its systems with the data (a GeoPackage's
+/// `gpkg_spatial_ref_sys`, whose rows other programs read the system from): its name and its OGC WKT 1. A database
+/// with a catalogue of its own (PostGIS's `spatial_ref_sys`) leaves it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SystemText {
+    pub name: String,
+    pub wkt: String,
 }

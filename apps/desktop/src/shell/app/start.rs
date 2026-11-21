@@ -350,6 +350,7 @@ impl App {
                 data_edits: Default::default(),
                 data_pick: Default::default(),
                 layer_classes: Default::default(),
+                layer_export: None,
                 db_editor: None,
                 db_password: None,
                 attribute_values: None,

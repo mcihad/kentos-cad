@@ -1527,6 +1527,11 @@ mod data_edits;
 mod data_pick;
 #[path = "gis/layer_classes.rs"]
 mod layer_classes;
+#[path = "gis/layer_export.rs"]
+mod layer_export;
+#[cfg(test)]
+#[path = "gis/layer_export_tests.rs"]
+mod layer_export_tests;
 #[cfg(test)]
 #[path = "gis/layer_classes_tests.rs"]
 mod layer_classes_tests;

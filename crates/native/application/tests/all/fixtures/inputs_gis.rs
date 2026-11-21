@@ -304,6 +304,12 @@ impl Input for kentos_commands::LayersRows {
     }
 }
 
+impl Input for kentos_commands::LayersExport {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::LayersClasses {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
