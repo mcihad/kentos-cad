@@ -1525,6 +1525,11 @@ mod data_selection;
 mod data_edits;
 #[path = "gis/data_pick.rs"]
 mod data_pick;
+#[path = "gis/layer_classes.rs"]
+mod layer_classes;
+#[cfg(test)]
+#[path = "gis/layer_classes_tests.rs"]
+mod layer_classes_tests;
 #[path = "gis/db_connections.rs"]
 mod db_connections;
 #[path = "gis/sources/mod.rs"]

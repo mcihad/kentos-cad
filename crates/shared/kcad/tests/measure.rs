@@ -186,6 +186,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             indexes: Vec::new(),
             dataset: None,
             derivation: None,
+            class_counts: None,
         }],
         active_layer: "parsel".into(),
         entities,

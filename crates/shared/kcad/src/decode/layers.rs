@@ -22,9 +22,20 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
     let mut contingents: Option<(usize, Vec<kentos_contracts::FieldGroup>)> = None;
     let mut rules: Option<(usize, Vec<kentos_contracts::LayerRule>)> = None;
     let mut indexes: Option<(usize, Vec<kentos_contracts::LayerIndex>)> = None;
+    let mut class_counts: Option<bool> = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
+            // GIS data 4 (docs/adr/9105 §4): Nesne sayısını göster; before it an unknown field.
+            "classCounts" if has.gis >= crate::GIS_WITH_CLASS_COUNTS => {
+                if !r.bool()? {
+                    return Err(r.fail(
+                        Code::BadValue,
+                        "classCounts yalnız true yazılır; sayısı gösterilmeyen katmanda alan yoktur",
+                    ));
+                }
+                class_counts = Some(true);
+            }
             "name" => name = Some(text(r)?),
             "frozen" if has.frozen => {
                 if !r.bool()? {
@@ -450,6 +461,12 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
             "katman tek bir yerden gelir: bir harita servisinden, bir servisin nesnelerinden ya da bir veri tablosundan",
         ));
     }
+    if class_counts.is_some() && kind == Some(LayerNodeType::Group) {
+        return Err(r.fail(
+            Code::BadValue,
+            "grubun nesne sayısı gösterilmez; yalnız katmanınki gösterilir",
+        ));
+    }
     if (dataset.is_some() || derivation.is_some()) && kind == Some(LayerNodeType::Group) {
         return Err(r.fail(
             Code::BadValue,
@@ -460,6 +477,7 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
         data,
         dataset,
         derivation,
+        class_counts,
         source_crs,
         geometry,
         rules: rules.map(|(_, c)| c).unwrap_or_default(),

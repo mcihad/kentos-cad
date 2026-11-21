@@ -1,0 +1,171 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Veri katmanları",
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+        {
+          "name": "ada",
+          "kind": "integer"
+        },
+        {
+          "name": "parsel",
+          "kind": "integer"
+        },
+        {
+          "name": "mahalle",
+          "kind": "text"
+        },
+        {
+          "name": "alan",
+          "kind": "decimal"
+        }
+      ],
+      "geometry": "area",
+      "data": {
+        "driver": "postgis",
+        "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+        "table": "kadastro.parseller",
+        "key": "fid",
+        "geometry": {
+          "column": "geom",
+          "typeName": "MULTIPOLYGON",
+          "srid": 5256
+        },
+        "extent": [
+          587000.0,
+          4400000.0,
+          617000.0,
+          4430000.0
+        ]
+      },
+      "classCounts": true
+    },
+    {
+      "id": "veri",
+      "name": "Veri",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "direkler",
+          "name": "Direkler",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "no",
+              "kind": "integer"
+            },
+            {
+              "name": "durum",
+              "kind": "text"
+            }
+          ],
+          "geometry": "point",
+          "data": {
+            "driver": "gpkg",
+            "address": "/veri/altyapi.gpkg",
+            "relative": "veri/altyapi.gpkg",
+            "table": "direkler",
+            "key": "fid",
+            "geometry": {
+              "column": "geom",
+              "typeName": "POINT",
+              "srid": 5256,
+              "z": true
+            },
+            "readOnly": true
+          }
+        },
+        {
+          "id": "malikler",
+          "name": "Malikler",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "ad",
+              "kind": "text"
+            }
+          ],
+          "data": {
+            "driver": "gpkg",
+            "address": "/veri/altyapi.gpkg",
+            "table": "malikler",
+            "key": "fid"
+          }
+        }
+      ]
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "uids": [],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000
+  }
+}

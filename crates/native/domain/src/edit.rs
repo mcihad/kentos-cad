@@ -1109,6 +1109,23 @@ impl Document {
         changed
     }
 
+    /// A layer's style classes switched on or off in the tree (docs/adr/9105 §3): its renderer as given, an edit when
+    /// it changes, never an undo step, as the eye. Whether it changed.
+    pub fn set_layer_class_switches(&mut self, id: &str, renderer: serde_json::Value) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_class_switches(id, renderer);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
+    /// Nesne sayısını göster (docs/adr/9105 §4): an edit when it changes, never an undo step. Whether it changed.
+    pub fn set_layer_class_counts(&mut self, id: &str, on: bool) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_class_counts(id, on);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
     /// Dondur / Çöz (docs/adr/0311 §1): whether a layer or group is frozen;
     /// an edit when it changes, never an undo step, as a lock. Whether it changed.
     pub fn set_layer_frozen(&mut self, id: &str, frozen: bool) -> bool {

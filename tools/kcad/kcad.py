@@ -701,13 +701,15 @@ GIS_WITH_EXTENSION_DERIVATIONS = 1
 GIS_WITH_DATA_LAYERS = 2
 # GIS data 3 (docs/adr/9104 §2): the settings' `editGrouping`, how the data layers' edit sessions go together.
 GIS_WITH_EDIT_GROUPING = 3
+# GIS data 4 (docs/adr/9105 §4): a layer's `classCounts`, the tree saying how many objects it and its classes hold.
+GIS_WITH_CLASS_COUNTS = 4
 ARCH_WITH_BLOCK_ELEMENTS = 2
 ARCH_WITH_COVERINGS = 5
 ARCH_WITH_SLAB_EDGE_BINDINGS = 36
 ARCH_WITH_CEILING_RECIPE = 37
 ARCH_WITH_ELECTRIC_APPLIANCES = 38
 ARCH_WITH_CASEWORK_PLACEMENT = 39
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_EDIT_GROUPING), "map": ("harita", 0),
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_CLASS_COUNTS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -5344,6 +5346,8 @@ class _Schema:
                 **({"dataset": (self.dataset_, False), "derivation": (self.derivation_, False)} if self.datasets else {}),
                 # GIS data 2 (docs/adr/9101 §3): a data layer's table.
                 **({"data": (self.data_layer_, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_DATA_LAYERS else {}),
+                # GIS data 4 (docs/adr/9105 §4): Nesne sayısını göster, only true.
+                **({"classCounts": (self.only_true, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_CLASS_COUNTS else {}),
                 # Schema 102 (docs/adr/0622 §5): what the layer holds.
                 **({"geometry": (self.enum(("point", "line", "area", "annotation")), False)} if self.layer_geometry else {}),
                 "type": (self.enum(("group", "layer")), True),
@@ -5384,6 +5388,8 @@ class _Schema:
             self.fail("bad_value", "grubun veri kümesi bilgisi ve türetim kaydı olmaz; yalnız katmanın olur")
         if "data" in n and n["type"] == "group":
             self.fail("bad_value", "grubun veri tablosu olmaz; yalnız katmanın olur")
+        if "classCounts" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun nesne sayısı gösterilmez; yalnız katmanınki gösterilir")
         if sum(k in n for k in ("service", "feed", "data")) > 1:
             self.fail("bad_value", "katman tek bir yerden gelir: bir harita servisinden, bir servisin nesnelerinden ya da bir veri tablosundan")
         if "sourceCrs" in n and n["type"] == "group":

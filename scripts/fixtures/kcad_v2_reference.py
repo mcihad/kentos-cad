@@ -1495,6 +1495,8 @@ def layer_entries(n):
                 "derivation": (opaque, False),
                 # GIS data 2 (docs/adr/9101 §3): a data layer's table, as its JSON.
                 "data": (opaque, False),
+                # GIS data 4 (docs/adr/9105 §4): Nesne sayısını göster; only `true` is written.
+                "classCounts": (lambda b: boolean(b) if b is True else None, False),
                 # Schema 102 (docs/adr/0622 §5): what the layer holds.
                 "geometry": (enum(("point", "line", "area", "annotation")), False),
                 "type": (enum(("group", "layer")), True),
@@ -3009,6 +3011,13 @@ def document(d):
     # GIS data 2 (docs/adr/9101 §3): a data layer.
     def data_layers(nodes):
         return any("data" in n or data_layers(n.get("children", [])) for n in nodes)
+    # GIS data 4 (docs/adr/9105 §4): a layer's class counts shown.
+    def counted(nodes):
+        return any(n.get("classCounts") is not None or counted(n.get("children", [])) for n in nodes)
+    if counted(d["layers"]):
+        schema = max(schema, 254)
+        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(4)})
+                + text("version") + uint(schema) + text("document") + cmap(body))
     # GIS data 3 (docs/adr/9104 §2): the data layers' edit grouping.
     if "editGrouping" in d.get("settings", {}):
         schema = max(schema, 254)
@@ -5799,6 +5808,21 @@ def build():
     out["broken/edit-grouping-in-gis-2.kcad"] = container(with_gis2 + grouping_payload[len(with_gis3):])
     grouping["settings"]["editGrouping"] = "katman"
     out["broken/edit-grouping-unknown.kcad"] = container(document(grouping))
+    # Nesne sayısını göster (docs/adr/9105 §4): GIS data 4; under GIS data 3 an unknown field; false written, or on a
+    # group, a bad value.
+    counts = copy.deepcopy(load("data-layers.json"))
+    parcels(counts)["classCounts"] = True
+    out["class-counts.kcad"] = container(document(counts))
+    counts_payload = document(counts)
+    with_gis4 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(4)})
+    assert counts_payload.startswith(with_gis4), "a layer's class counts raise the GIS data's version to 4"
+    out["broken/class-counts-in-gis-3.kcad"] = container(with_gis3 + counts_payload[len(with_gis4):])
+    false_written = document(counts).replace(text("classCounts") + b"\xf5", text("classCounts") + b"\xf4")
+    assert false_written != counts_payload, "the flag is in the payload once"
+    out["broken/class-counts-false.kcad"] = container(false_written)
+    on_group = copy.deepcopy(load("data-layers.json"))
+    on_group["layers"][2]["classCounts"] = True
+    out["broken/class-counts-on-group.kcad"] = container(document(on_group))
     # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
     # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
     # two columns of one name, an unknown way, an empty list of columns.

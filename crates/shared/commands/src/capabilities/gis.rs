@@ -158,6 +158,16 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // docs/adr/9105 §2: a layer's style classes, counted.
+    Entry {
+        id: "cad.layers.classes",
+        refusals: &[
+            &["no_layer", "layer_not_found", "not_a_layer"],
+            &["service_layer", "source_unreachable"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // docs/adr/9103 §3: a data layer's edit session.
     Entry {
         id: "cad.layers.session",

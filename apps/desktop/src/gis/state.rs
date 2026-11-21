@@ -14,6 +14,8 @@ pub(crate) struct GisUiState {
     pub(crate) data_edits: crate::data_edits::DataEdits,
     /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
     pub(crate) data_pick: crate::data_pick::DataPick,
+    /// The counted layers' class counts (docs/adr/9105 §4).
+    pub(crate) layer_classes: crate::layer_classes::LayerClasses,
     /// The connection window while it is open (db_connections.rs, docs/adr/0623).
     pub(crate) db_editor: Option<crate::db_connections::Editor>,
     /// The password question while a server waits for one.
@@ -129,6 +131,8 @@ pub(crate) enum Event {
     DataSelection(crate::data_selection::Event),
     /// A data layer's edit session: opened, saved, let go, closed (data_edits.rs, docs/adr/9103 §5).
     DataEdits(crate::data_edits::Event),
+    /// A layer's style classes in Katmanlar (docs/adr/9105).
+    LayerClasses(crate::layer_classes::Event),
     /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
     DataPick(crate::data_pick::Event),
     /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
@@ -351,6 +355,7 @@ impl App {
             Event::DataInfo(event) => return self.data_info_event(event),
             Event::DataSelection(event) => return self.data_selection_event(event),
             Event::DataEdits(event) => return self.data_edits_event(event),
+            Event::LayerClasses(event) => return self.layer_classes_event(event),
             Event::DataPick(event) => return self.data_pick_event(event),
             Event::Rasters(event) => return self.rasters_event(event),
             Event::PointClouds(event) => return self.pointclouds_event(event),

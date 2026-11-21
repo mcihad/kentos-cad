@@ -622,6 +622,11 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub derivation: Option<crate::dataset::LayerDerivation>,
+    /// Nesne sayısını göster (docs/adr/9105 §4): the layer tree says how many objects the layer and each of its style's
+    /// classes hold. Only a layer has it, never a group; only `true` is written.
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "classCounts")]
+    #[cfg_attr(feature = "ts", ts(optional, rename = "classCounts"))]
+    pub class_counts: Option<bool>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

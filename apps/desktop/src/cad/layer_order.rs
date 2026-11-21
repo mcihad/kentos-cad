@@ -20,22 +20,23 @@ pub enum Step {
 }
 
 impl App {
-    /// The ids of the tree's rows as Katmanlar shows them now (the open groups' children, the search's rows).
-    fn layer_row_ids(&self) -> Vec<String> {
+    /// The ids of the tree's rows as Katmanlar shows them now (the open groups' children, the search's rows); none for
+    /// a style class's row (docs/adr/9105 §2), which is not moved and takes nothing dropped on it.
+    fn layer_row_ids(&self) -> Vec<Option<String>> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
         let search = self.layer_search_state();
         crate::layer_tree::open_rows(doc.layers(), &search)
             .iter()
-            .map(|row| row.node.id.clone())
+            .map(|row| row.class.is_none().then(|| row.node.id.clone()))
             .collect()
     }
 
     /// A row dropped on another: before or after it among its siblings, or into it (a group), last.
     pub(crate) fn layer_dropped(&mut self, from: usize, to: usize, place: Place) {
         let rows = self.layer_row_ids();
-        let (Some(source), Some(target)) = (rows.get(from).cloned(), rows.get(to).cloned()) else {
+        let (Some(Some(source)), Some(Some(target))) = (rows.get(from).cloned(), rows.get(to).cloned()) else {
             return;
         };
         let Some(doc) = &self.document else {
@@ -194,10 +195,10 @@ mod tests {
         let _ = app.update(Message::Run("edit.undo"));
         // Dragged: the rows as the tree shows them; Çizim dropped into Kadastro.
         let rows = app.layer_row_ids();
-        let from = rows.iter().position(|r| r == "cizim").expect("cizim row");
+        let from = rows.iter().position(|r| r.as_deref() == Some("cizim")).expect("cizim row");
         let to = rows
             .iter()
-            .position(|r| r == "layer-g")
+            .position(|r| r.as_deref() == Some("layer-g"))
             .expect("kadastro row");
         layer(&mut app, Event::Move(from, to, Place::Into));
         assert!(
@@ -207,10 +208,10 @@ mod tests {
         );
         // And back before Kadastro.
         let rows = app.layer_row_ids();
-        let from = rows.iter().position(|r| r == "cizim").expect("cizim row");
+        let from = rows.iter().position(|r| r.as_deref() == Some("cizim")).expect("cizim row");
         let to = rows
             .iter()
-            .position(|r| r == "layer-g")
+            .position(|r| r.as_deref() == Some("layer-g"))
             .expect("kadastro row");
         layer(&mut app, Event::Move(from, to, Place::Before));
         let now = order(&app);

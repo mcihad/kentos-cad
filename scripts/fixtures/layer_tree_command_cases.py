@@ -783,6 +783,106 @@ def set_cases():
     out.append(conflict_case("sürüm çakışması: hiçbir şey yazılmaz",
                              step("execute", {"operation": "locked", "layer": "yol", "value": True}, set_result(), {"revision": "changed"}),
                              {"operation": "showAll"}, {"layers": changed(t, "yol", locked=True)}))
+    out.extend(class_cases(t))
+    return out
+
+
+# The classes of a layer's style switched on and off in the tree (docs/adr/9105 §3), and its counts shown (§4): the
+# renderer's `enabled` flags (`otherEnabled` for Diğer değerler), only false written; the tree's own change, as the eye.
+YOL_RENDERER = {
+    "type": "categorized", "expr": "tur",
+    "categories": [
+        {"value": "ana", "label": "Ana yol", "symbols": {}},
+        {"value": "tali", "label": "Tali yol", "symbols": {}, "enabled": False},
+    ],
+    "other": {},
+}
+
+
+def with_renderer(nodes, id_, renderer):
+    out = copy.deepcopy(nodes)
+    get(out, id_)["style"]["renderer"] = copy.deepcopy(renderer)
+    return out
+
+
+def switched(renderer, flags):
+    """The renderer with each class of `flags` (its id → drawn) set: on takes the flag away, off writes false."""
+    r = copy.deepcopy(renderer)
+    for cid, on in flags.items():
+        holder, key = (r, "otherEnabled") if cid == "other" else (r["categories"][int(cid[1:])], "enabled")
+        if on:
+            holder.pop(key, None)
+        else:
+            holder[key] = False
+    return r
+
+
+def class_cases(t):
+    base = with_renderer(t, "yol", YOL_RENDERER)
+    out = []
+    off_ana = with_renderer(t, "yol", switched(YOL_RENDERER, {"c0": False}))
+    out.append({"name": "Sınıf gizle: kategori kapanır (false yazılır); düzenlemedir, geri alma adımı değildir (ADR 9105 §3)",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classVisible", "layer": "yol", "classes": ["c0"], "value": False},
+                               set_result(), edit_flags(off_ana)),
+                          step("undo", returns=None, expect={"layers": off_ana})]})
+    on_tali = with_renderer(t, "yol", switched(YOL_RENDERER, {"c1": True}))
+    out.append({"name": "Sınıf göster: kapalı kategori açılır (alan kalkar)",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classVisible", "layer": "yol", "classes": ["c1"], "value": True},
+                               set_result(), edit_flags(on_tali))]})
+    all_off = with_renderer(t, "yol", switched(YOL_RENDERER, {"c0": False, "c1": False, "other": False}))
+    out.append({"name": "Hepsini gizle: sınıflar verilmezse bütün sınıflar, Diğer değerler de",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classVisible", "layer": "yol", "value": False},
+                               set_result(), edit_flags(all_off))]})
+    inverted = with_renderer(t, "yol", switched(YOL_RENDERER, {"c0": False, "c1": True, "other": False}))
+    out.append({"name": "Tersine çevir: her sınıf öbür yana döner",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classInvert", "layer": "yol"}, set_result(), edit_flags(inverted)),
+                          step("execute", {"operation": "classInvert", "layer": "yol"}, set_result(), edit_flags(base))]})
+    out.append({"name": "Sınıf gizle: zaten kapalı bir şey değiştirmez",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classVisible", "layer": "yol", "classes": ["c1"], "value": False},
+                               set_result(False), unchanged(base))]})
+    counted = changed(base, "yol", classCounts=True)
+    out.append({"name": "Nesne sayısını göster: yalnız true tutulur; kapatılınca alan kalkar (ADR 9105 §4)",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classCounts", "layer": "yol", "value": True}, set_result(), edit_flags(counted)),
+                          step("execute", {"operation": "classCounts", "layer": "yol", "value": False}, set_result(), edit_flags(base))]})
+    out.append({"name": "Nesne sayısı: sınıfsız katmanda da gösterilir",
+                "steps": [step("execute", {"operation": "classCounts", "layer": "bos", "value": True}, set_result(),
+                               edit_flags(changed(t, "bos", classCounts=True)))]})
+    out.append({"name": "Sınıf: katmansız",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classVisible", "value": False},
+                               failed("no_layer", "Katmanı ya da grubu kimliğiyle verin (layer).", "layer"), unchanged(base))]})
+    out.append({"name": "Sınıf: değersiz",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classVisible", "layer": "yol", "classes": ["c0"]},
+                               failed("no_value", "Açık mı kapalı mı olduğunu value ile verin (true ya da false).", "value"),
+                               unchanged(base))]})
+    out.append({"name": "Nesne sayısı: değersiz",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classCounts", "layer": "yol"},
+                               failed("no_value", "Açık mı kapalı mı olduğunu value ile verin (true ya da false).", "value"),
+                               unchanged(base))]})
+    out.append({"name": "Sınıf: grup",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classInvert", "layer": "kadastro"},
+                               failed("not_a_layer", "“Kadastro” bir katman grubu; sınıflar ve nesne sayısı katmanın stilinindir. "
+                                      "Grubun bir katmanını verin.", "layer"), unchanged(base))]})
+    out.append({"name": "Sınıf: sınıfsız katman",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classVisible", "layer": "bos", "value": False},
+                               failed("no_classes", "“Boş” kendi görünüşüyle ya da sınıfsız bir stille çiziliyor; açılıp kapanacak "
+                                      "sınıfı yok. Ona kategorili, aralıklı ya da kurallı bir stil verin (cad.layers.renderer).",
+                                      "layer"), unchanged(base))]})
+    out.append({"name": "Sınıf: stilde olmayan sınıf; hiçbir şey yazılmaz",
+                "setup": setup(base),
+                "steps": [step("execute", {"operation": "classVisible", "layer": "yol", "classes": ["c0", "c9"], "value": False},
+                               failed("class_not_found", "“Yol” katmanının stilinde “c9” kimlikli sınıf yok. Sınıfları "
+                                      "cad.layers.classes verir.", "classes[1]"), unchanged(base))]})
     return out
 
 

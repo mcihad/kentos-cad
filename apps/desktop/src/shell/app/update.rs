@@ -236,6 +236,8 @@ impl App {
             self.data_selection_tasks(),
             // Seç's clicks and boxes on the data layers, asked of their sources (data_pick.rs, docs/adr/9103 §5).
             self.data_pick_tasks(),
+            // The counted layers' class counts, asked again when their style or data changed (layer_classes.rs).
+            self.layer_classes_tasks(),
             self.network_tasks(),
             // Konumdan adres's places, asked on the address thread or of a provider (address/).
             self.address_tasks(),

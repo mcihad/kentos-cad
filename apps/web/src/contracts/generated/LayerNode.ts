@@ -145,4 +145,9 @@ dataset?: DatasetInfo,
 /**
  * What a processing tool made the layer from (docs/adr/0633 §2). Only a layer has it, never a group.
  */
-derivation?: LayerDerivation, };
+derivation?: LayerDerivation, 
+/**
+ * Nesne sayısını göster (docs/adr/9105 §4): the layer tree says how many objects the layer and each of its style's
+ * classes hold. Only a layer has it, never a group; only `true` is written.
+ */
+classCounts?: boolean, };

@@ -93,12 +93,18 @@ ADR'ler **9100**'den başlar.
     - Üstüne yaz taşınan şekli yazdı, öbür kullanıcının kullanım değeri kaldı;
     - aynı GeoPackage'ın iki katmanı birlikte açılıp kapandı, PostGIS katmanı açılmadı.
   - Kalan: alınan satırların proje dosyasında saklanması.
-- [ ] **VY-07 — Sınıflar katman ağacında.**
-  - Kategorili, dereceli ve kurallı stilin sınıfları katmanın altında listelenir; her birinin kutusu o sınıfı açar ya da
-    kapar.
-  - Sağ tuş: Hepsini göster, Hepsini gizle, Tersine çevir, Bu sınıfın nesnelerini seç, Tabloda göster, Sembolü
-    düzenle, renk.
-  - İsteğe bağlı nesne sayısı.
+- [x] **VY-07 — Sınıflar katman ağacında.** ([ADR 9105](../docs/adr/9105-layer-classes.md))
+  - Katman stilinin sınıflandırması (kategorili, aralıklı, kurallı) katmanın altında satır olur: kutu, sembolün rengi,
+    ad; kurallar derinlikleriyle. Kutu sınıfı açar kapar; işleyiciye `enabled: false` (Diğer değerler `otherEnabled`)
+    yazılır, katmanın gözü gibi geri alma adımı değildir. Kapalı sınıfın nesneleri çizilmez, etiketlenmez, kenet almaz.
+  - Sağ tuş: Tümünü göster, Tümünü gizle, Tersine çevir; Bu sınıfın nesnelerini seç; Öznitelik tablosunda göster;
+    Renk ▸; Sembolü düzenle…; Nesne sayısını göster.
+  - Nesne sayısı (`classCounts`, `.kcad`'da CBS verisi sürüm 4): çizimin kuralıyla; veri katmanında kaynaktan bir
+    tarama, arka planda.
+  - `cad.layers.classes` (24 ortak durum); `cad.layers.set`'e `classVisible`, `classInvert`, `classCounts`.
+  - Gerçek pencerede bir milyon parselde: dört sınıfın her biri 250.000; Konut kapatılınca parselleri etiketleriyle
+    kalktı; tabloda gösterme, seçim, renk.
+  - Kalan: çizim katmanının etiketleri kapalı sınıfa bakmaz; sınıf satırında çift tık yok; kaynakta gruplanmış sayım.
 - [ ] **VY-08 — Dışa aktarma penceresi.** Katmanın sağ tuşunda Dışa aktar › Farklı kaydet… ve Seçilenleri farklı
   kaydet…. Seçenekler:
   - biçim, dosya ya da veritabanı tablosu, katman adı, koordinat sistemi, kodlama;

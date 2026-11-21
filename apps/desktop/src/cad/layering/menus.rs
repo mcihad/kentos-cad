@@ -176,6 +176,14 @@ impl App {
                     .then(|| event(Event::ZoomTo(id.clone()))),
             )
             .icon(icon("zoomSelection"));
+        // Nesne sayısını göster (docs/adr/9105 §4): the layer's objects and its classes' after their names.
+        if is_layer && node.service.is_none() {
+            menu = menu.check(
+                "Nesne sayısını göster",
+                node.class_counts == Some(true),
+                Message::Gis(crate::gis::Event::LayerClasses(crate::layer_classes::Event::Counts(id.clone()))),
+            );
+        }
         // A layer whose objects came from a service: taken again (docs/adr/0208 §10), where the program has services.
         if node.feed.is_some() && self.shows_layer_entry(LayerEntry::Service) {
             menu = menu

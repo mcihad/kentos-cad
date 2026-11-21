@@ -189,6 +189,7 @@ fn opened(n: usize) -> Opened {
         indexes: Vec::new(),
         dataset: None,
         derivation: None,
+        class_counts: None,
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {

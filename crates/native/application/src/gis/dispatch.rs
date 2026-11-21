@@ -298,6 +298,14 @@ macro_rules! gis_commands {
                     kentos_commands::LayersSession
                 )
             }
+            kentos_commands::CAD_LAYERS_CLASSES => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layer_classes,
+                    kentos_commands::LayersClasses
+                )
+            }
             kentos_commands::CAD_LAYERS_CRS => {
                 crate::gis_dispatch::gis_arm!(
                     $command,

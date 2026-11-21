@@ -800,6 +800,8 @@ pub struct Class {
     pub min: f64,
     pub max: f64,
     pub symbols: SymbolSet,
+    /// Switched off (`enabled: false`), the class keeps its objects and draws nothing.
+    pub enabled: bool,
 }
 
 /// A value of a thematic renderer's list (Nokta yoğunluğu, Grafik): its
@@ -843,6 +845,8 @@ pub enum Renderer {
         expr: Option<usize>,
         categories: Vec<Category>,
         other: Option<SymbolSet>,
+        /// Whether “Diğer değerler” draws (`otherEnabled: false` switches it off, its objects drawn by nothing).
+        other_enabled: bool,
     },
     Graduated {
         expr: Option<usize>,
@@ -1109,6 +1113,7 @@ impl Reader<'_> {
                     _ => Vec::new(),
                 },
                 other: self.opt_set(v.get("other")),
+                other_enabled: opt_bool(v.get("otherEnabled")) != Some(false),
             },
             "graduated" => Renderer::Graduated {
                 expr: self.expr(v.get("expr")),
@@ -1119,6 +1124,7 @@ impl Reader<'_> {
                             min: num(c.get("min")),
                             max: num(c.get("max")),
                             symbols: self.set(c.get("symbols")),
+                            enabled: opt_bool(c.get("enabled")) != Some(false),
                         })
                         .collect(),
                     _ => Vec::new(),

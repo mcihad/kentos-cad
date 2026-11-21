@@ -110,8 +110,15 @@ fn modules_of(doc: &DocumentSnapshotV2, objects: Objs<'_>) -> ModuleVersions {
     fn data(nodes: &[kentos_contracts::LayerNode]) -> bool {
         nodes.iter().any(|n| n.data.is_some() || data(&n.children))
     }
+    // GIS 4 (docs/adr/9105 §4): a layer's class counts shown.
+    fn counted(nodes: &[kentos_contracts::LayerNode]) -> bool {
+        nodes.iter().any(|n| n.class_counts.is_some() || counted(&n.children))
+    }
     // GIS 3 (docs/adr/9104 §2): the data layers' edit grouping.
-    if doc.settings.edit_grouping.is_some() {
+    if counted(&doc.layers) {
+        out.modules
+            .push(("gis".to_owned(), crate::GIS_WITH_CLASS_COUNTS));
+    } else if doc.settings.edit_grouping.is_some() {
         out.modules
             .push(("gis".to_owned(), crate::GIS_WITH_EDIT_GROUPING));
     } else if data(&doc.layers) {

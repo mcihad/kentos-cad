@@ -512,6 +512,41 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Katmanın sınıfları (docs/adr/9105 §2), held together by fixtures/commands/v1/cad.layers.classes.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_CLASSES.into(),
+            version: crate::CAD_LAYERS_CLASSES_VERSION,
+            title: "Katmanın sınıfları".into(),
+            summary: "Bir katmanın stilindeki sınıfları, katman ağacının katmanın altında listelediği gibi verir: kategorili stilde her kategori ve Diğer değerler, aralıklı stilde her aralık, kurallı stilde her kural (alt kuralları ondan sonra, depth derinliğiyle). Kendi görünüşüyle, tek sembolle ya da tematik bir işleyiciyle çizilen katmanın sınıfı yoktur. Hiçbir şey yazmaz. \
+                      Her sınıf: id (c3, other, g2, r0.1), adı, çizilip çizilmediği (enabled; kapalı sınıfın nesnelerini hiçbir sınıf çizmez), İfadeyle seç'in dilinde koşulu (expression; yoksa katmanın bütün nesneleri). \
+                      count her sınıfın aldığı nesneleri çizimin kuralıyla sayar (kapalı sınıf da aldığını söyler) ve total katmanın nesne sayısıdır: nesne ilk kategorisine ve sayısını alan ilk aralığa gider, alt kural üst kuralın nesnelerinden alır, değilse kuralı hiçbir açık kardeşin almadığını alır. Veri katmanında satırlar kaynağından bir kez okunur, yalnız sınıfların okuduğu alanlarla. \
+                      Sınıflar cad.layers.set ile açılıp kapanır (classVisible, classInvert)."
+                .into(),
+            aliases: vec!["siniflar".into(), "lejant".into(), "kategoriler".into(), "nesnesayisi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersClasses>(),
+            output: schema::<crate::LayerClassesAnswer>(),
+            plan: Some(schema::<crate::LayerClassesAnswer>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsellerin kullanıma göre sınıfları ve nesne sayıları".into(),
+                    input: json!({ "layer": "parseller", "count": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yolların sınıfları".into(),
+                    input: json!({ "layer": "yollar" }),
+                    output: None,
+                },
+            ],
+        },
         // Veri katmanı (docs/adr/9101 §4), held together by fixtures/commands/v1/cad.layers.data.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_DATA.into(),

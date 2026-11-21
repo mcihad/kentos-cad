@@ -49,7 +49,7 @@
 
 // The read-only viewer core's modules, under their old paths (docs/adr/8054 §8).
 pub use kentos_scene_query::{
-    blocks, expression_unit, geometry, geometry_store, label_texts, layer_filter, shx_text,
+    blocks, expression_unit, geometry, geometry_store, label_texts, layer_filter, shx_text, style_classes,
     viewport_scope,
 };
 
@@ -497,6 +497,8 @@ pub mod layers_data;
 pub mod layers_rows;
 #[path = "gis/layers_session.rs"]
 pub mod layers_session;
+#[path = "gis/layer_classes.rs"]
+pub mod layer_classes;
 #[path = "gis/data_write.rs"]
 pub mod data_write;
 #[cfg(feature = "mod-gis")]
@@ -3154,6 +3156,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LAYERS_ROWS,
         kentos_commands::CAD_LAYERS_ROWS_VERSION,
+    ),
+    // A layer's style classes, counted by the drawing's rule ([`layer_classes`], docs/adr/9105 §2).
+    (
+        kentos_commands::CAD_LAYERS_CLASSES,
+        kentos_commands::CAD_LAYERS_CLASSES_VERSION,
     ),
     // A data layer's edit session: opened, saved to its table, let go, closed ([`layers_session`], docs/adr/9103 §3).
     (

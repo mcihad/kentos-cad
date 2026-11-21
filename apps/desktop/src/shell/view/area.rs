@@ -415,11 +415,13 @@ impl App {
                 ])
                 .virtualized(rows.len(), move |index| {
                     let row = &rows[index];
-                    (
-                        row.depth,
+                    let node = match row.class {
+                        // A style class under its layer (layer_classes.rs, docs/adr/9105 §2): not dragged.
+                        Some(at) => self.class_node(doc, row.node, at, row.parent_visible),
                         // The row's place is its id for dragging (layer_order.rs).
-                        self.layer_node(doc, row.node, row.parent_visible).id(index),
-                    )
+                        None => self.layer_node(doc, row.node, row.parent_visible).id(index),
+                    };
+                    (row.depth, node)
                 })
                 // A row dragged before, after or into another (layer_order.rs).
                 .on_move(|from, to, place| {
@@ -570,7 +572,12 @@ impl App {
                     .into(),
             ]
         };
-        let mut row = Node::new(node.name.as_str())
+        // Nesne sayısını göster (docs/adr/9105 §4): the layer's objects after its name, as its classes' are.
+        let name = match self.class_total(node) {
+            Some(n) => format!("{} [{}]", node.name, crate::view::thousands(n as f64)),
+            None => node.name.clone(),
+        };
+        let mut row = Node::new(name)
             // Its place in the tree (the web's name title).
             .tip(kentos_ui::widget::Tip::new(
                 doc.model.layers().path(&node.id),
@@ -602,7 +609,7 @@ impl App {
                 Message::Layer(crate::layering::Event::RenameCancel),
             ));
         }
-        match node.kind {
+        let built = match node.kind {
             // A scenario's own icon, its note in the tip (docs/adr/0210 §10).
             LayerNodeType::Group if node.scenario.is_some() => {
                 let note = node.scenario.as_ref().and_then(|s| s.note.clone());
@@ -719,6 +726,18 @@ impl App {
                 };
                 row.icon(MenuButton::new(face, move || self.layer_colors(node)))
             }
+        };
+        // A layer whose style has classes opens and closes them under it (docs/adr/9105 §2).
+        let classed = node.kind == LayerNodeType::Layer
+            && node
+                .style
+                .renderer
+                .as_ref()
+                .is_some_and(|r| kentos_native_application::style_classes::classes_kind(r).is_some());
+        if classed {
+            built.expanded(node.expanded, Message::LayerExpanded(node.id.clone()))
+        } else {
+            built
         }
     }
 }

@@ -1333,6 +1333,7 @@ mod tests {
             indexes: Vec::new(),
             dataset: None,
             derivation: None,
+            class_counts: None,
         }
     }
 

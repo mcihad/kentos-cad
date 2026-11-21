@@ -152,6 +152,7 @@ COMMANDS: dict[str, Any] = {
     "cad.joins.query": joins.query,
     "cad.labels.pin": labels.pin,
     "cad.labels.report": labels.report,
+    "cad.layers.classes": layers.classes,
     "cad.layers.compose": layers.compose,
     "cad.layers.contingents": layers.contingents,
     "cad.layers.crs": layers.crs,

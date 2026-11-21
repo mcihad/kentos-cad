@@ -6,7 +6,7 @@
 
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
   [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),
-  [ADR 9104](../adr/9104-transactions.md), [plan/veri.md](../../plan/veri.md)).**
+  [ADR 9104](../adr/9104-transactions.md), [ADR 9105](../adr/9105-layer-classes.md), [plan/veri.md](../../plan/veri.md)).**
   - Veritabanı ve dosya katmanları ayrı crate'lerdeki sürücülerden geçer:
     - ortak sözleşme `kentos-data`;
     - `kentos-data-gpkg`;
@@ -28,7 +28,11 @@
     Grubun katmanları birlikte açılıp kapanır; aynı kaynağınkiler tek işlemle yazılır. Kaydetmeden önce alınan satırlar
     aynı işlemde yeniden okunur: başkası değiştirdiyse hiçbir şey yazılmaz (`rows_changed`); üstüne yazmak yalnız
     değiştirilen alanları ve şekli yazar. Sunucuda açık işlem tutulmaz.
-  - Sıradaki maddeler: sınıflar katman ağacında, dışa aktarma penceresi, GeoPackage projeleri.
+  - **Katman ağacında sınıflar:** katman stilinin sınıflandırması katmanın altında satır olur. Kutu sınıfı işleyicide
+    açar kapar (`enabled`, `otherEnabled`), geri alma adımı değildir. Kapalı sınıf çizilmez, etiketlenmez, kenet almaz.
+    Sınıf mantığı tek yerde: `kentos_scene_query::style_classes` (sayım ve seçim çizimin kuralıyla). Nesne sayısı
+    `classCounts` (CBS verisi sürüm 4).
+  - Sıradaki maddeler: dışa aktarma penceresi, proje dosyada ya da veritabanında.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

@@ -244,12 +244,13 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.source_crs.is_some())
                 + usize::from(n.geometry.is_some())
                 + usize::from(n.dataset.is_some())
-                + usize::from(n.derivation.is_some()),
+                + usize::from(n.derivation.is_some())
+                + usize::from(n.class_counts.is_some()),
             true,
         )?;
         // id (2), card data feed name plot snap time type (4), rules style (5), fields filter frozen locked (6),
         // actions compose dataset indexes service visible (7), children expanded geometry replaces scenario
-        // subtypes (8), sourceCrs (9), derivation (10), contingents tableStyles (11).
+        // subtypes (8), sourceCrs (9), derivation (10), classCounts contingents tableStyles (11).
         if usize::from(n.service.is_some()) + usize::from(n.feed.is_some()) + usize::from(n.data.is_some()) > 1 {
             return Err(self.fail(
                 Code::BadValue,
@@ -497,6 +498,26 @@ impl<'d> Encoder<'d> {
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
+        }
+        // GIS data 4 (docs/adr/9105 §4): Nesne sayısını göster; only `true` is written, only by a layer.
+        match n.class_counts {
+            Some(true) if n.kind == LayerNodeType::Group => {
+                return Err(self.fail(
+                    Code::BadValue,
+                    "grubun nesne sayısı gösterilmez; yalnız katmanınki gösterilir",
+                ));
+            }
+            Some(true) => {
+                self.key("classCounts");
+                self.w.bool(true);
+            }
+            Some(false) => {
+                return Err(self.fail(
+                    Code::BadValue,
+                    "classCounts yalnız true yazılır; sayısı gösterilmeyen katmanda alan yoktur",
+                ));
+            }
+            None => {}
         }
         // Schema 72 (docs/adr/0423 §4): the value combinations, as their JSON, fitting the fields.
         if !n.contingents.is_empty() {

@@ -78277,6 +78277,154 @@
       ]
     },
     {
+      "id": "cad.layers.classes",
+      "version": 1,
+      "title": "Katmanın sınıfları",
+      "summary": "Bir katmanın stilindeki sınıfları, katman ağacının katmanın altında listelediği gibi verir: kategorili stilde her kategori ve Diğer değerler, aralıklı stilde her aralık, kurallı stilde her kural (alt kuralları ondan sonra, depth derinliğiyle). Kendi görünüşüyle, tek sembolle ya da tematik bir işleyiciyle çizilen katmanın sınıfı yoktur. Hiçbir şey yazmaz. Her sınıf: id (c3, other, g2, r0.1), adı, çizilip çizilmediği (enabled; kapalı sınıfın nesnelerini hiçbir sınıf çizmez), İfadeyle seç'in dilinde koşulu (expression; yoksa katmanın bütün nesneleri). count her sınıfın aldığı nesneleri çizimin kuralıyla sayar (kapalı sınıf da aldığını söyler) ve total katmanın nesne sayısıdır: nesne ilk kategorisine ve sayısını alan ilk aralığa gider, alt kural üst kuralın nesnelerinden alır, değilse kuralı hiçbir açık kardeşin almadığını alır. Veri katmanında satırlar kaynağından bir kez okunur, yalnız sınıfların okuduğu alanlarla. Sınıflar cad.layers.set ile açılıp kapanır (classVisible, classInvert).",
+      "aliases": [
+        "siniflar",
+        "lejant",
+        "kategoriler",
+        "nesnesayisi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.classes` v1: the classes of `layer`'s renderer (kategorili, aralıklı, kurallı); a layer drawn\nby its own look, tek sembol or a thematic renderer has none.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `layer_not_found`,\n`not_a_layer` (a group), `service_layer` (a layer drawn from a map service), `source_unreachable` (`count` of a\ndata layer whose table could not be read; the message says why). A job stopped answers `cancelled`.",
+        "properties": {
+          "count": {
+            "description": "Count the objects each class takes (Nesne sayısını göster); a class switched off still says what it takes.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer (its id).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "LayersClasses",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.classes` v1.",
+        "properties": {
+          "classes": {
+            "description": "In the tree's order: a rule's children after it.",
+            "items": {
+              "$ref": "#/$defs/LayerClass"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "description": "The renderer's kind: `categorized`, `graduated` or `rules`; none: the layer has no classes.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": "string"
+          },
+          "total": {
+            "description": "`count`: the objects of the layer, every class's and those none takes.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "classes"
+        ],
+        "title": "LayerClassesAnswer",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.classes` v1.",
+        "properties": {
+          "classes": {
+            "description": "In the tree's order: a rule's children after it.",
+            "items": {
+              "$ref": "#/$defs/LayerClass"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "description": "The renderer's kind: `categorized`, `graduated` or `rules`; none: the layer has no classes.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": "string"
+          },
+          "total": {
+            "description": "`count`: the objects of the layer, every class's and those none takes.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "classes"
+        ],
+        "title": "LayerClassesAnswer",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_layer",
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer",
+          "source_unreachable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsellerin kullanıma göre sınıfları ve nesne sayıları",
+          "input": {
+            "count": true,
+            "layer": "parseller"
+          }
+        },
+        {
+          "title": "Yolların sınıfları",
+          "input": {
+            "layer": "yollar"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.data",
       "version": 1,
       "title": "Veri katmanı",
@@ -81193,8 +81341,18 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,\nthe lock and the name in the Katmanlar panel make it. Each is an edit of\nthe drawing (it gets dirty, its revision moves) but no undo step\n(docs/adr/0020); making a layer active is kept in the file but is no\nedit (the revision stays).\n\n- `rename`: `layer`, `name` (trimmed);\n- `plot`: `layer`, `value` (docs/adr/0260 §4): a node not printed is drawn\n  on screen but not on a sheet, its PDF or a print; a group's covers\n  everything under it;\n- `visible`, `locked`: `layer`, `value`; a group's lock holds for\n  everything under it, a hidden group hides everything under it;\n- `active`: `layer`, a layer holding objects;\n- `isolate`: `layers`: these nodes, the groups above them and everything\n  under them shown, the rest hidden; the drawing remembers the nodes it\n  hid (for this session, not in the file);\n- `unisolate`: the nodes the last `isolate` hid that are still hidden\n  shown again; those shown by hand meanwhile stay as they are; nothing\n  remembered changes nothing;\n- `showAll`: every node shown; a frozen node stays frozen;\n- `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither\n  drawn, picked, snapped to nor counted in the extent; a group's covers\n  everything under it;\n- `thawAll`: every node thawed.\n\nThe eye, the lock, the freeze, printing, the name and the active layer\nare the project's (kept in the file); only what `isolate` hid is the\nsession's (docs/adr/0311 §2).\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(rename, visible, locked, plot, frozen, active without `layer`),\n`no_layers` (isolate without a node), `empty_name` (rename with a name\nempty or only white space), `no_value` (visible, locked, plot, frozen\nwithout `value`); then `invalid_revision`, `revision_conflict` (status\n`conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`\n(active: a group), `service_layer` (active: a layer drawn from a map\nservice holds no objects), `layer_frozen` (active: a frozen layer, or one\nin a frozen group), `active_frozen` (frozen: the active layer, or a group\nholding it). A change that changes nothing answers `changed` false.",
+        "description": "Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,\nthe lock and the name in the Katmanlar panel make it. Each is an edit of\nthe drawing (it gets dirty, its revision moves) but no undo step\n(docs/adr/0020); making a layer active is kept in the file but is no\nedit (the revision stays).\n\n- `rename`: `layer`, `name` (trimmed);\n- `plot`: `layer`, `value` (docs/adr/0260 §4): a node not printed is drawn\n  on screen but not on a sheet, its PDF or a print; a group's covers\n  everything under it;\n- `visible`, `locked`: `layer`, `value`; a group's lock holds for\n  everything under it, a hidden group hides everything under it;\n- `active`: `layer`, a layer holding objects;\n- `isolate`: `layers`: these nodes, the groups above them and everything\n  under them shown, the rest hidden; the drawing remembers the nodes it\n  hid (for this session, not in the file);\n- `unisolate`: the nodes the last `isolate` hid that are still hidden\n  shown again; those shown by hand meanwhile stay as they are; nothing\n  remembered changes nothing;\n- `showAll`: every node shown; a frozen node stays frozen;\n- `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither\n  drawn, picked, snapped to nor counted in the extent; a group's covers\n  everything under it;\n- `thawAll`: every node thawed;\n- `classVisible`: `layer`, `value`, and `classes` (their ids, as `cad.layers.classes` gives them; none: every\n  class): the layer's style classes drawn or not (docs/adr/9105 §3); a class switched off keeps its objects, drawn\n  by nothing;\n- `classInvert`: `layer`, and `classes` (none: every class): each turned the other way;\n- `classCounts`: `layer`, `value` (docs/adr/9105 §4): whether the tree says how many objects the layer and each\n  class hold.\n\nThe eye, the lock, the freeze, printing, the name, the classes switched on and off, the counts shown and the\nactive layer are the project's (kept in the file); only what `isolate` hid is the session's (docs/adr/0311 §2).\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts without `layer`),\n`no_layers` (isolate without a node), `empty_name` (rename with a name\nempty or only white space), `no_value` (visible, locked, plot, frozen, classVisible, classCounts\nwithout `value`); then `invalid_revision`, `revision_conflict` (status\n`conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`\n(active and the class operations: a group), `service_layer` (active: a layer drawn from a map\nservice holds no objects), `layer_frozen` (active: a frozen layer, or one\nin a frozen group), `active_frozen` (frozen: the active layer, or a group\nholding it), `no_classes` (classVisible, classInvert: the layer's look has no classes), `class_not_found`\n(`classes[i]` names none of its classes). A change that changes nothing answers `changed` false.",
         "properties": {
+          "classes": {
+            "description": "`classVisible`, `classInvert`: the classes' ids (`c3`, `other`, `g2`, `r0.1`); none: every class.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text.",
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -113328,6 +113486,18 @@
       "kind": "conflict",
       "retryable": true,
       "meaning": "Başkası satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş; hiçbir şey yazılmadı. Satırları yeniden alın ya da üstüne yazın."
+    },
+    {
+      "code": "no_classes",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katmanın görünüşünde sınıf yok: kategorili, aralıklı ya da kurallı bir stil verin."
+    },
+    {
+      "code": "class_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katmanın stilinde bu kimlikli sınıf yok."
     },
     {
       "code": "one_layer",
@@ -164649,6 +164819,60 @@
       ],
       "type": "object"
     },
+    "LayerClass": {
+      "description": "A class of a layer's renderer.",
+      "properties": {
+        "count": {
+          "description": "`count`: the objects it takes.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "countError": {
+          "description": "`count`: why it could not be counted (its expression cannot be read).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "depth": {
+          "description": "A rule's depth under the top; 0 for every other class.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "enabled": {
+          "description": "Drawn; switched off, its objects are drawn by nothing.",
+          "type": "boolean"
+        },
+        "expression": {
+          "description": "Its condition in İfadeyle seç's language; none: every object of the layer.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "`c3` (a category), `other` (Diğer değerler), `g2` (a graduated class), `r0.1` (a rule by its path).",
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "enabled",
+        "depth"
+      ],
+      "type": "object"
+    },
     "LayerCompose": {
       "description": "How a layer is composed into the drawing (Katman çizimi, docs/adr/0226 §3,\n§4); absent, as it always was: opaque, normal, no mask.",
       "properties": {
@@ -165315,6 +165539,13 @@
           },
           "type": "array"
         },
+        "classCounts": {
+          "description": "Nesne sayısını göster (docs/adr/9105 §4): the layer tree says how many objects the layer and each of its style's\nclasses hold. Only a layer has it, never a group; only `true` is written.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "compose": {
           "anyOf": [
             {
@@ -165682,6 +165913,21 @@
         {
           "const": "unisolate",
           "description": "Yalıtımı kaldır: the nodes the last `isolate` hid, still hidden, shown again.",
+          "type": "string"
+        },
+        {
+          "const": "classVisible",
+          "description": "A layer's style classes switched on or off (docs/adr/9105 §3): the tree's boxes under the layer.",
+          "type": "string"
+        },
+        {
+          "const": "classInvert",
+          "description": "A layer's style classes each turned the other way (Tersine çevir).",
+          "type": "string"
+        },
+        {
+          "const": "classCounts",
+          "description": "Nesne sayısını göster (docs/adr/9105 §4): whether the tree says how many objects the layer and its classes hold.",
           "type": "string"
         }
       ]

@@ -3962,6 +3962,9 @@ class LayerSetOperation(_StrEnum):
     - ``frozen``: Dondur / Çöz (docs/adr/0311 §1): whether the node is frozen.
     - ``thawAll``: Bütün katmanları çöz: every node thawed.
     - ``unisolate``: Yalıtımı kaldır: the nodes the last `isolate` hid, still hidden, shown again.
+    - ``classVisible``: A layer's style classes switched on or off (docs/adr/9105 §3): the tree's boxes under the layer.
+    - ``classInvert``: A layer's style classes each turned the other way (Tersine çevir).
+    - ``classCounts``: Nesne sayısını göster (docs/adr/9105 §4): whether the tree says how many objects the layer and its classes hold.
     """
     RENAME = "rename"
     VISIBLE = "visible"
@@ -3973,9 +3976,12 @@ class LayerSetOperation(_StrEnum):
     FROZEN = "frozen"
     THAW_ALL = "thawAll"
     UNISOLATE = "unisolate"
+    CLASS_VISIBLE = "classVisible"
+    CLASS_INVERT = "classInvert"
+    CLASS_COUNTS = "classCounts"
 
 
-LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll", "plot", "frozen", "thawAll", "unisolate"]
+LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll", "plot", "frozen", "thawAll", "unisolate", "classVisible", "classInvert", "classCounts"]
 """The names of :class:`LayerSetOperation`, for a plain string."""
 
 
@@ -55962,6 +55968,85 @@ class LayerAction(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerClass(_Model):
+    """A class of a layer's renderer.
+    Attributes:
+        id: `c3` (a category), `other` (Diğer değerler), `g2` (a graduated class), `r0.1` (a rule by its path).
+        enabled: Drawn; switched off, its objects are drawn by nothing.
+        depth: A rule's depth under the top; 0 for every other class. Unit: count.
+        count: `count`: the objects it takes. Unit: count.
+        count_error: `count`: why it could not be counted (its expression cannot be read).
+        expression: Its condition in İfadeyle seç's language; none: every object of the layer.
+    """
+    id: str
+    label: str
+    enabled: bool
+    depth: int
+    count: int | None | Unset = UNSET
+    count_error: str | None | Unset = UNSET
+    expression: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["label"] = self.label
+        out["enabled"] = self.enabled
+        out["depth"] = self.depth
+        if self.count is not UNSET:
+            out["count"] = self.count
+        if self.count_error is not UNSET:
+            out["countError"] = self.count_error
+        if self.expression is not UNSET:
+            out["expression"] = self.expression
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerClass:
+        return cls(
+            id=data["id"],
+            label=data["label"],
+            enabled=data["enabled"],
+            depth=data["depth"],
+            count=data.get("count", UNSET),
+            count_error=data.get("countError", UNSET),
+            expression=data.get("expression", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerClassesAnswer(_Model):
+    """Output of `cad.layers.classes` v1.
+    Attributes:
+        classes: In the tree's order: a rule's children after it.
+        kind: The renderer's kind: `categorized`, `graduated` or `rules`; none: the layer has no classes.
+        total: `count`: the objects of the layer, every class's and those none takes. Unit: count.
+    """
+    layer: str
+    classes: list[LayerClass]
+    kind: str | None | Unset = UNSET
+    total: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerClassesAnswer:
+        return cls(
+            layer=data["layer"],
+            classes=[LayerClass.from_json(e0) for e0 in data["classes"]],
+            kind=data.get("kind", UNSET),
+            total=data.get("total", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerCompose(_Model):
     """How a layer is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
     §4); absent, as it always was: opaque, normal, no mask.
@@ -56422,6 +56507,8 @@ class LayerNode(_Model):
             service.
         card: What the Bilgi tool shows of its objects (docs/adr/0225 §5); absent:
             the default card. Only on a layer holding objects.
+        class_counts: Nesne sayısını göster (docs/adr/9105 §4): the layer tree says how many objects the layer and each of its style's
+            classes hold. Only a layer has it, never a group; only `true` is written.
         compose: How it is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
             §4): opacity, blending mode, the mask it cuts into other layers;
             absent, opaque and normal. Only a layer has it, never a group.
@@ -56479,6 +56566,7 @@ class LayerNode(_Model):
     children: list[LayerNode]
     actions: list[LayerAction] | Unset = UNSET
     card: InfoCard | None | Unset = UNSET
+    class_counts: bool | None | Unset = UNSET
     compose: LayerCompose | None | Unset = UNSET
     contingents: list[FieldGroup] | Unset = UNSET
     data: DataLayer | None | Unset = UNSET
@@ -56515,6 +56603,8 @@ class LayerNode(_Model):
             out["actions"] = [e0.to_json() for e0 in self.actions]
         if self.card is not UNSET:
             out["card"] = None if self.card is None else self.card.to_json()
+        if self.class_counts is not UNSET:
+            out["classCounts"] = self.class_counts
         if self.compose is not UNSET:
             out["compose"] = None if self.compose is None else self.compose.to_json()
         if self.contingents is not UNSET:
@@ -56572,6 +56662,7 @@ class LayerNode(_Model):
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
             actions=[LayerAction.from_json(e0) for e0 in data["actions"]] if "actions" in data else UNSET,
             card=UNSET if "card" not in data else None if data["card"] is None else InfoCard.from_json(data["card"]),
+            class_counts=data.get("classCounts", UNSET),
             compose=UNSET if "compose" not in data else None if data["compose"] is None else LayerCompose.from_json(data["compose"]),
             contingents=[FieldGroup.from_json(e0) for e0 in data["contingents"]] if "contingents" in data else UNSET,
             data=UNSET if "data" not in data else None if data["data"] is None else DataLayer.from_json(data["data"]),
@@ -57158,6 +57249,36 @@ class LayersChanged(_Model):
             changed=data["changed"],
             active=data["active"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersClasses(_Model):
+    """Input of `cad.layers.classes` v1: the classes of `layer`'s renderer (kategorili, aralıklı, kurallı); a layer drawn
+    by its own look, tek sembol or a thematic renderer has none.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `layer_not_found`,
+    `not_a_layer` (a group), `service_layer` (a layer drawn from a map service), `source_unreachable` (`count` of a
+    data layer whose table could not be read; the message says why). A job stopped answers `cancelled`.
+    Attributes:
+        layer: The layer (its id).
+        count: Count the objects each class takes (Nesne sayısını göster); a class switched off still says what it takes.
+    """
+    layer: str
+    count: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.count is not UNSET:
+            out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersClasses:
+        return cls(
+            layer=data["layer"],
+            count=data.get("count", UNSET),
         )
 
 
@@ -58707,26 +58828,34 @@ class LayersSet(_Model):
     - `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither
       drawn, picked, snapped to nor counted in the extent; a group's covers
       everything under it;
-    - `thawAll`: every node thawed.
+    - `thawAll`: every node thawed;
+    - `classVisible`: `layer`, `value`, and `classes` (their ids, as `cad.layers.classes` gives them; none: every
+      class): the layer's style classes drawn or not (docs/adr/9105 §3); a class switched off keeps its objects, drawn
+      by nothing;
+    - `classInvert`: `layer`, and `classes` (none: every class): each turned the other way;
+    - `classCounts`: `layer`, `value` (docs/adr/9105 §4): whether the tree says how many objects the layer and each
+      class hold.
 
-    The eye, the lock, the freeze, printing, the name and the active layer
-    are the project's (kept in the file); only what `isolate` hid is the
-    session's (docs/adr/0311 §2).
+    The eye, the lock, the freeze, printing, the name, the classes switched on and off, the counts shown and the
+    active layer are the project's (kept in the file); only what `isolate` hid is the session's (docs/adr/0311 §2).
 
     Refusals (`CommandError.code`), checked in this order: `no_layer`
-    (rename, visible, locked, plot, frozen, active without `layer`),
+    (rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts without `layer`),
     `no_layers` (isolate without a node), `empty_name` (rename with a name
-    empty or only white space), `no_value` (visible, locked, plot, frozen
+    empty or only white space), `no_value` (visible, locked, plot, frozen, classVisible, classCounts
     without `value`); then `invalid_revision`, `revision_conflict` (status
     `conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`
-    (active: a group), `service_layer` (active: a layer drawn from a map
+    (active and the class operations: a group), `service_layer` (active: a layer drawn from a map
     service holds no objects), `layer_frozen` (active: a frozen layer, or one
     in a frozen group), `active_frozen` (frozen: the active layer, or a group
-    holding it). A change that changes nothing answers `changed` false.
+    holding it), `no_classes` (classVisible, classInvert: the layer's look has no classes), `class_not_found`
+    (`classes[i]` names none of its classes). A change that changes nothing answers `changed` false.
     Attributes:
+        classes: `classVisible`, `classInvert`: the classes' ids (`c3`, `other`, `g2`, `r0.1`); none: every class.
         expected_revision: The document revision the input was prepared against, as decimal text.
     """
     operation: LayerSetOperation | LayerSetOperationName
+    classes: list[str] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
@@ -58736,6 +58865,8 @@ class LayersSet(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["operation"] = _enum_out(self.operation)
+        if self.classes is not UNSET:
+            out["classes"] = None if self.classes is None else list(self.classes)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.layer is not UNSET:
@@ -58752,6 +58883,7 @@ class LayersSet(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> LayersSet:
         return cls(
             operation=_enum_in(LayerSetOperation, data["operation"]),
+            classes=UNSET if "classes" not in data else None if data["classes"] is None else list(data["classes"]),
             expected_revision=data.get("expectedRevision", UNSET),
             layer=data.get("layer", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
@@ -148648,6 +148780,8 @@ __all__ = [
     "LatePolicyName",
     "LatticeArrayLayout",
     "LayerAction",
+    "LayerClass",
+    "LayerClassesAnswer",
     "LayerCompose",
     "LayerDataOperation",
     "LayerDataOperationName",
@@ -148693,6 +148827,7 @@ __all__ = [
     "LayerTime",
     "LayerTranslation",
     "LayersChanged",
+    "LayersClasses",
     "LayersCompose",
     "LayersComposePlan",
     "LayersComposed",

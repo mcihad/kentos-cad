@@ -58,6 +58,7 @@ fn layer(id: &str, style: LayerStyle) -> LayerNode {
         indexes: Vec::new(),
         dataset: None,
         derivation: None,
+        class_counts: None,
     }
 }
 

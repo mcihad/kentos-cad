@@ -268,6 +268,31 @@ fn label_document(job: &Job, styles: ProjectStyles, entities: Vec<Entity>) -> Op
     kentos_domain::Document::from_snapshot(snapshot).ok()
 }
 
+/// The objects the layer's style draws (docs/adr/9105 §3): those of a class switched off, or of no class, are neither
+/// labelled nor snapped to, as they are not drawn.
+fn drawn_only(job: &Job, objects: Vec<Entity>) -> Vec<Entity> {
+    let unit = kentos_native_application::expression_unit::reading_unit(&job.settings);
+    let Some(reader) = job
+        .key
+        .node
+        .style
+        .renderer
+        .as_ref()
+        .and_then(|r| kentos_native_application::style_classes::ClassReader::new(r, unit))
+    else {
+        return objects;
+    };
+    let refs: Vec<&Entity> = objects.iter().collect();
+    let shapes: Vec<_> = if reader.reads_geometry() {
+        refs.iter().map(|e| kentos_native_application::geometry::shape(e)).collect()
+    } else {
+        Vec::new()
+    };
+    let name = job.key.node.name.clone();
+    let drawn = reader.drawn(&refs, &|_| name.clone(), &|i| shapes.get(i));
+    objects.into_iter().zip(drawn).filter(|(_, d)| *d).map(|(e, _)| e).collect()
+}
+
 /// A read on its thread: the source asked for the cover's rows, each part drawn and handed back as it comes.
 fn run(job: Job) {
     let data = &job.key.data;
@@ -360,7 +385,7 @@ fn run(job: Job) {
         Ok(r) if r.stopped => {}
         Ok(_) => {
             flush(&mut entities);
-            if let (Some(styles), Some(objects)) = (job.labels.clone(), kept)
+            if let (Some(styles), Some(objects)) = (job.labels.clone(), kept.map(|k| drawn_only(&job, k)))
                 && let Some(doc) = label_document(&job, styles, objects)
             {
                 let _ = job.to.send(Said::Labels(job.layer.clone(), job.read, Box::new(doc)));

@@ -471,6 +471,21 @@ fn categorized_graduated_and_single_renderers() {
         r#"{{"type":"graduated","expr":"$uzunluk * 10","classes":[{{"min":0,"max":5,"label":"kısa","symbols":{{"line":{RED}}}}},{{"min":5,"max":10,"label":"uzun","symbols":{{"line":{BLUE}}}}}]}}"#
     ));
     assert_eq!(draw(&grad, &[]), [("#0000FF".into(), None, None)]);
+    // Switched off in the layer tree (docs/adr/9105 §3): the class keeps its object and draws nothing, the class
+    // before it does not take it.
+    let grad_off = program(&format!(
+        r#"{{"type":"graduated","expr":"$uzunluk * 10","classes":[{{"min":0,"max":5,"label":"kısa","symbols":{{"line":{RED}}}}},{{"min":5,"max":10,"label":"uzun","symbols":{{"line":{BLUE}}},"enabled":false}}]}}"#
+    ));
+    assert_eq!(draw(&grad_off, &[]), []);
+    // “Diğer değerler” switched off: a value no category holds draws nothing; a category's value still draws.
+    let other_off = program(&format!(
+        r#"{{"type":"categorized","expr":"Tur","categories":[{{"value":"yol","label":"Yol","symbols":{{"line":{RED}}}}}],"other":{{"line":{BLUE}}},"otherEnabled":false}}"#
+    ));
+    assert_eq!(draw(&other_off, &[("Tur", "dere")]), []);
+    assert_eq!(
+        draw(&other_off, &[("Tur", "yol")]),
+        [("#FF0000".into(), None, None)]
+    );
     let single = program(&format!(
         r#"{{"type":"single","symbols":{{"line":{RED}}}}}"#
     ));
@@ -613,7 +628,7 @@ fn equal_styles_share_a_batch_of_origin_relative_segments() {
     );
 }
 
-/// A line type's pattern runs on along a polyline as AutoCAD's PLINEGEN (docs/adr/0313 §4): each segment carries
+/// A line type's pattern runs on along a polyline as a continuous pattern (docs/adr/0313 §4): each segment carries
 /// the distance from the path's start, the same number the desktop's, the web's and the plot's dashes start from,
 /// so a dash cut at a vertex goes on past it; a closed line's closing edge goes on from its last.
 #[test]

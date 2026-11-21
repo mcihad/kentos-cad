@@ -229,6 +229,12 @@ Yük, üç (şema 254'ten beri en çok dört) anahtarlı bir haritadır (anahtar
   da `all` (bütün katmanlar birlikte). Yalnız proje seçtiyse yazılır; yazıcı o zaman `modules`'e `gis: 3` yazar. CBS
   verisi sürüm 2'nin yükünde anahtar bilinmeyen alandır (`unknown_field`, `broken/edit-grouping-in-gis-2.kcad`),
   bilinmeyen değer `bad_value`'dur (`broken/edit-grouping-unknown.kcad`). Örnek dosya `edit-grouping.kcad`.
+- **CBS verisi sürüm 4** ([ADR 9105 §4](../adr/9105-layer-classes.md)): katman düğümünün `classCounts`'u (Nesne sayısını
+  göster): katman ağacı katmanın ve stilindeki her sınıfın kaç nesne tuttuğunu söyler. Yalnız `true` yazılır, yalnız
+  katmanın olur; bir katmanda varsa yazıcı `modules`'e `gis: 4` yazar. CBS verisi sürüm 3'ün yükünde anahtar bilinmeyen
+  alandır (`unknown_field`, `broken/class-counts-in-gis-3.kcad`); yazılmış `false` (`broken/class-counts-false.kcad`) ve
+  grupta olması (`broken/class-counts-on-group.kcad`) `bad_value`'dur. Örnek dosya `class-counts.kcad`. Sınıfların açık
+  ya da kapalı olması stilin opak işleyicisindedir (`enabled`, `otherEnabled`); dosya biçimi onu yorumlamaz.
 - Yazıcı `modules`'ü yalnız bir modül sürümünü yükselttiğinde, şema en az `254` olarak yazar; başka her çizim eskisiyle bayt bayt aynıdır.
 
 **Şema 255, araç katmanları** (kullanım incelemesi UR-003): ayarların `toolLayers`'ı, ölçü (`dimension`), yazı (`text`) ve taramanın (`hatch`) çizildiği katmanın kimliğidir; boş liste yazılmaz, bir araç bir kez, katman kimliği boş olmaz (`bad_value`; `broken/tool-layers-tool-twice.kcad`, `tool-layers-blank-layer.kcad`); şema 254'te bilinmeyen alandır (`broken/tool-layers-in-schema-254.kcad`). Örnek `tool-layers.kcad`. Verilmezse araçlar etkin katmana çizer.
