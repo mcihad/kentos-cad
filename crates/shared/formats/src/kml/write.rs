@@ -54,7 +54,7 @@ pub(crate) const KML: Words = Words {
 };
 
 /// What a text becomes.
-const TEXT: &str = "yazının metni nokta (Point) yer iminin adı olarak yazıldı";
+pub(super) const TEXT: &str = "yazının metni nokta (Point) yer iminin adı olarak yazıldı";
 
 /// The elevations of a run when every vertex has one.
 fn all_heights(r: &Ring) -> Option<Vec<f64>> {
@@ -63,7 +63,7 @@ fn all_heights(r: &Ring) -> Option<Vec<f64>> {
 }
 
 /// Whether every vertex of the geometry has an elevation.
-fn three_d(g: &Geometry) -> bool {
+pub(super) fn three_d(g: &Geometry) -> bool {
     match g {
         Geometry::Point(_, z) => z.is_some(),
         Geometry::Points(ps) => ps.iter().all(|(_, z)| z.is_some()),
@@ -74,7 +74,7 @@ fn three_d(g: &Geometry) -> bool {
     }
 }
 
-fn has_heights(g: &Geometry) -> bool {
+pub(super) fn has_heights(g: &Geometry) -> bool {
     let some = |r: &Ring| r.zs.iter().flatten().any(Option::is_some);
     match g {
         Geometry::Point(_, z) => z.is_some(),
@@ -133,7 +133,7 @@ fn polygon(rings: &[Ring], z: bool, out: &mut String) {
     out.push_str("</Polygon>");
 }
 
-fn write_geometry(g: &Geometry, z: bool, out: &mut String) {
+pub(super) fn write_geometry(g: &Geometry, z: bool, out: &mut String) {
     match g {
         Geometry::Point(p, h) => {
             out.push_str("<Point>");
@@ -190,7 +190,7 @@ struct StyleKey {
     point: bool,
 }
 
-fn kind_of(g: &Geometry) -> (bool, bool) {
+pub(super) fn kind_of(g: &Geometry) -> (bool, bool) {
     match g {
         Geometry::Point(..) | Geometry::Points(_) => (false, true),
         Geometry::Area(_) | Geometry::Areas(_) => (true, false),
@@ -203,7 +203,7 @@ fn kind_of(g: &Geometry) -> (bool, bool) {
 }
 
 /// The Placemark's name: a text's text; any other object's label, else its Ad attribute.
-fn name_of(e: &Entity) -> Option<&str> {
+pub(super) fn name_of(e: &Entity) -> Option<&str> {
     if let Entity::Text(t) = e {
         return Some(t.text.as_str()).filter(|t| !t.is_empty());
     }

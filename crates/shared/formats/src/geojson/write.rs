@@ -212,67 +212,123 @@ fn write_with(
     input: &GeoJsonWriteInput,
     wgs84: Option<(&System, &[Choice])>,
 ) -> (Vec<u8>, ExportReport) {
-    let fields: HashMap<&str, &[LayerField]> = input
-        .layers
-        .iter()
-        .map(|l| (l.id.as_str(), l.fields.as_slice()))
-        .collect();
-    let names: HashMap<&str, &str> = input
-        .layers
-        .iter()
-        .map(|l: &GeoJsonLayer| (l.id.as_str(), l.name.as_str()))
-        .collect();
-    let mut rep = Report::default();
-    let mut out = String::with_capacity(64 + input.entities.len() * 160);
-    out.push_str("{\"type\":\"FeatureCollection\",\"name\":");
-    quote(&input.name, &mut out);
-    if wgs84.is_some() {
-        rep.note(
-            "Koordinat sistemi",
-            &format!(
-                "EPSG:{} koordinatları WGS 84 boylam ve enlemine çevrilip on basamağa yuvarlandı (RFC 7946); kotlar olduğu gibi yazıldı",
-                input.srid
-            ),
-            0,
-        );
-    } else if input.srid == 0 {
-        // A local project's coordinates are bound to no place (docs/adr/0165 §2): no crs member.
-        rep.note(
-            "Koordinat sistemi",
-            "yerel proje (koordinat sistemi yok): koordinatlar olduğu gibi yazıldı, dosya bir koordinat sistemi adlandırmıyor; okuyan program onları WGS 84 boylam, enlem sayabilir",
-            0,
-        );
-    } else if input.srid != 4326 {
-        let _ = write!(
-            out,
-            ",\"crs\":{{\"type\":\"name\",\"properties\":{{\"name\":\"urn:ogc:def:crs:EPSG::{}\"}}}}",
-            input.srid
-        );
-        rep.note(
-            "Koordinat sistemi",
-            &format!(
-                "EPSG:{}; RFC 7946 WGS 84 boylam, enlem ister: koordinatlar dönüştürülmeden projenin sisteminde yazıldı ve eski (2008) crs üyesiyle adlandırıldı",
-                input.srid
-            ),
-            0,
-        );
-    }
-    out.push_str(",\"features\":[\n");
-    let blocks = Placing::new(&input.blocks);
-    let mut first = true;
-    let mut unreached: Vec<(Unreached, u32)> = Vec::new();
+    let out = Vec::with_capacity(64 + input.entities.len() * 160);
+    let mut stream = Stream::begin(
+        out,
+        &input.name,
+        input.srid,
+        &input.layers,
+        Placing::new(&input.blocks),
+        wgs84.map(|(s, c)| (s.clone(), c.to_vec())),
+    );
     for e in &input.entities {
+        stream.put(e);
+    }
+    let (out, report) = stream.finish();
+    // A `Vec` takes every byte: no write fails.
+    (out.ok().unwrap_or_default(), report)
+}
+
+/// A FeatureCollection written feature by feature (docs/adr/9112 §1): the bytes [`write`] makes for the same objects,
+/// each written as it comes, so a layer of a million rows never stands whole in memory. The first write that fails
+/// ends the writing; [`Stream::finish`] gives it back.
+pub struct Stream<W: std::io::Write> {
+    out: W,
+    fields: HashMap<String, Vec<LayerField>>,
+    names: HashMap<String, String>,
+    wgs84: Option<(System, Vec<Choice>)>,
+    blocks: Placing,
+    rep: Report,
+    first: bool,
+    unreached: Vec<(Unreached, u32)>,
+    /// A feature's text before it is written.
+    buf: String,
+    failed: Option<std::io::Error>,
+}
+
+impl<W: std::io::Write> Stream<W> {
+    /// Begins the collection named `name` in `srid` (moved into WGS 84 when `wgs84` gives the project's system and
+    /// datum choices), its layers' names and fields as given.
+    pub fn begin(
+        out: W,
+        name: &str,
+        srid: u32,
+        layers: &[GeoJsonLayer],
+        blocks: Placing,
+        wgs84: Option<(System, Vec<Choice>)>,
+    ) -> Self {
+        let mut s = Stream {
+            out,
+            fields: layers.iter().map(|l| (l.id.clone(), l.fields.clone())).collect(),
+            names: layers.iter().map(|l| (l.id.clone(), l.name.clone())).collect(),
+            wgs84,
+            blocks,
+            rep: Report::default(),
+            first: true,
+            unreached: Vec::new(),
+            buf: String::with_capacity(256),
+            failed: None,
+        };
+        let mut head = String::with_capacity(160);
+        head.push_str("{\"type\":\"FeatureCollection\",\"name\":");
+        quote(name, &mut head);
+        if s.wgs84.is_some() {
+            s.rep.note(
+                "Koordinat sistemi",
+                &format!(
+                    "EPSG:{srid} koordinatları WGS 84 boylam ve enlemine çevrilip on basamağa yuvarlandı (RFC 7946); kotlar olduğu gibi yazıldı"
+                ),
+                0,
+            );
+        } else if srid == 0 {
+            // A local project's coordinates are bound to no place (docs/adr/0165 §2): no crs member.
+            s.rep.note(
+                "Koordinat sistemi",
+                "yerel proje (koordinat sistemi yok): koordinatlar olduğu gibi yazıldı, dosya bir koordinat sistemi adlandırmıyor; okuyan program onları WGS 84 boylam, enlem sayabilir",
+                0,
+            );
+        } else if srid != 4326 {
+            let _ = write!(
+                head,
+                ",\"crs\":{{\"type\":\"name\",\"properties\":{{\"name\":\"urn:ogc:def:crs:EPSG::{srid}\"}}}}"
+            );
+            s.rep.note(
+                "Koordinat sistemi",
+                &format!(
+                    "EPSG:{srid}; RFC 7946 WGS 84 boylam, enlem ister: koordinatlar dönüştürülmeden projenin sisteminde yazıldı ve eski (2008) crs üyesiyle adlandırıldı"
+                ),
+                0,
+            );
+        }
+        head.push_str(",\"features\":[\n");
+        s.emit_text(&head);
+        s
+    }
+
+    fn emit_text(&mut self, text: &str) {
+        if self.failed.is_none()
+            && let Err(e) = self.out.write_all(text.as_bytes())
+        {
+            self.failed = Some(e);
+        }
+    }
+
+    /// Writes an object as a feature; one it cannot write is left out and said.
+    pub fn put(&mut self, e: &kentos_contracts::Entity) {
+        if self.failed.is_some() {
+            return;
+        }
         // A record has no geometry: a feature with a null one (docs/adr/0410 §4).
         let record = matches!(e, kentos_contracts::Entity::Record(_));
         let mut g = if record {
             None
         } else {
-            match geometry(e, &blocks, &mut rep, &GEOJSON) {
+            match geometry(e, &self.blocks, &mut self.rep, &GEOJSON) {
                 Some(g) => Some(g),
-                None => continue,
+                None => return,
             }
         };
-        if let (Some((from, choices)), Some(g)) = (wgs84, g.as_mut()) {
+        if let (Some((from, choices)), Some(g)) = (self.wgs84.as_ref(), g.as_mut()) {
             let mut why = None;
             let moved = g.map(&mut |p| match to_wgs84(from, choices, p) {
                 Ok(q) => Some(q),
@@ -283,25 +339,27 @@ fn write_with(
             });
             if !moved {
                 if let Some(u) = why {
-                    tally(&mut unreached, u);
+                    tally(&mut self.unreached, u);
                 }
-                continue;
+                return;
             }
         }
         let b = e.base();
         if b.color.is_some() || b.symbol.is_some() {
-            rep.note(
+            self.rep.note(
                 "Renk ve sembol",
                 "nesnenin kendi rengi ve sembolü GeoJSON'a yazılmadı",
                 0,
             );
         }
-        if !first {
+        let mut out = std::mem::take(&mut self.buf);
+        out.clear();
+        if !self.first {
             out.push_str(",\n");
         }
-        first = false;
+        self.first = false;
         out.push_str("{\"type\":\"Feature\",\"properties\":{");
-        let own = fields.get(b.layer_id.as_str()).copied().unwrap_or_default();
+        let own = self.fields.get(b.layer_id.as_str()).map(Vec::as_slice).unwrap_or_default();
         for (i, (k, v)) in b.attrs.iter().enumerate() {
             if i > 0 {
                 out.push(',');
@@ -315,7 +373,7 @@ fn write_with(
             Some(g) => write_geometry(g, &mut out),
             None => out.push_str("null"),
         }
-        let layer = names.get(b.layer_id.as_str());
+        let layer = self.names.get(b.layer_id.as_str());
         let label = b.label.as_deref().filter(|l| !l.is_empty());
         if layer.is_some() || label.is_some() {
             out.push_str(",\"kentos\":{");
@@ -333,11 +391,21 @@ fn write_with(
             out.push('}');
         }
         out.push('}');
-        rep.count(e.kind());
+        self.emit_text(&out);
+        self.buf = out;
+        self.rep.count(e.kind());
     }
-    out.push_str("\n]}\n");
-    say_unreached(&mut rep, unreached);
-    (out.into_bytes(), rep.export())
+
+    /// Ends the collection: the writer back (or the first write that failed) and what was said.
+    pub fn finish(mut self) -> (Result<W, std::io::Error>, ExportReport) {
+        self.emit_text("\n]}\n");
+        say_unreached(&mut self.rep, std::mem::take(&mut self.unreached));
+        let report = self.rep.export();
+        match self.failed {
+            Some(e) => (Err(e), report),
+            None => (Ok(self.out), report),
+        }
+    }
 }
 
 #[derive(Deserialize)]

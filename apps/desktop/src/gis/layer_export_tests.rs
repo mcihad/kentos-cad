@@ -126,3 +126,81 @@ fn a_stopped_export_keeps_nothing_and_a_file_it_was_to_overwrite_stays_as_it_was
     let _ = std::fs::remove_file(&path);
     let _ = std::fs::remove_file(&out);
 }
+
+/// Kapsam (docs/adr/9112 §2): the box typed (a Turkish decimal comma read), taken from the view or from the layer's
+/// extent, or drawn on the map with the window aside; a box that is no place is said and nothing runs. The system
+/// chosen from the list goes to the command; KML writes WGS 84 whatever is chosen (§3).
+#[test]
+fn the_box_is_typed_taken_or_drawn_and_the_system_chosen_from_the_list() {
+    use crate::layer_export_extent::{BAD_BOX, Extent};
+    use kentos_interaction::capture::Shape;
+    use kentos_interaction::Vec2;
+    crate::data_layers::register();
+    let path = crate::data_layers_tests::parcels("disa-kutu", 12);
+    let mut app = crate::files_testing::app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described")])
+        .expect("added");
+    let id = crate::data_layers_tests::node(&app, "parseller").expect("the layer").id.clone();
+    let _ = app.layer_export_event(Event::Open(id, false));
+    let input = |app: &crate::app::App| app.export_input(&app.gis.layer_export.clone().expect("the window"));
+    assert_eq!(input(&app).bbox, None, "the whole layer");
+
+    // Typed: west, south, east, north; a comma reads as a decimal point.
+    let _ = app.layer_export_event(Event::Extent(2));
+    for (i, v) in ["486400", "4420100,5", "486500", "4420200"].into_iter().enumerate() {
+        let _ = app.layer_export_event(Event::Side(i, v.into()));
+    }
+    assert_eq!(input(&app).bbox, Some([486_400.0, 4_420_100.5, 486_500.0, 4_420_200.0]));
+    // East west of west: said, nothing runs.
+    let _ = app.layer_export_event(Event::Side(2, "486300".into()));
+    let _ = app.layer_export_event(Event::Run);
+    let w = app.gis.layer_export.as_ref().expect("the window");
+    assert_eq!(w.said(), Some(BAD_BOX));
+    assert!(!w.is_running(), "nothing runs");
+
+    // From the layer: the table's box, in the project's system.
+    let _ = app.layer_export_event(Event::BoxFromLayer);
+    let b = input(&app).bbox.expect("a box");
+    let table = crate::data_layers::extent_in_project(
+        app.document.as_ref().expect("a drawing").model.layers().get(app.gis.layer_export.as_ref().expect("w").layer_id()).expect("the layer"),
+        app.document.as_ref().expect("a drawing").settings(),
+    )
+    .expect("the table's box");
+    for (got, want) in b.iter().zip(table) {
+        assert!((got - want).abs() < 1e-3, "{b:?} {table:?}");
+    }
+    // From the view.
+    let _ = app.layer_export_event(Event::BoxFromView);
+    let v = app.viewport.camera.visible_bounds();
+    let b = input(&app).bbox.expect("a box");
+    assert!((b[0] - v.min_x).abs() < 1e-3 && (b[3] - v.max_y).abs() < 1e-3, "{b:?} {v:?}");
+
+    // Drawn: the window steps aside and comes back with the box; Esc brings it back as it was.
+    let _ = app.layer_export_event(Event::DrawBox);
+    assert!(app.dialog.is_none() && app.gis.layer_export.as_ref().is_some_and(|w| w.is_drawing()));
+    let corners = vec![Vec2::new(10.0, 20.0), Vec2::new(30.0, 20.0), Vec2::new(30.0, 50.0), Vec2::new(10.0, 50.0)];
+    assert!(app.layer_export_box_drawn(&Some(Shape::Polygon(corners))));
+    assert_eq!(app.dialog, Some(crate::app::Dialog::Gis(crate::gis::GisDialogKind::LayerExport)));
+    assert_eq!(input(&app).bbox, Some([10.0, 20.0, 30.0, 50.0]));
+    let _ = app.layer_export_event(Event::DrawBox);
+    assert!(app.layer_export_box_drawn(&None));
+    assert_eq!(input(&app).bbox, Some([10.0, 20.0, 30.0, 50.0]), "Esc keeps the box");
+    assert!(!app.layer_export_box_drawn(&None), "not waiting any more: an extension's shape");
+
+    // Görünümdekiler: the view's box, whatever the sides say.
+    let _ = app.layer_export_event(Event::Extent(1));
+    assert_eq!(app.gis.layer_export.as_ref().map(|w| w.extent()), Some(Extent::View));
+    assert!(input(&app).bbox.is_some());
+
+    // The system: chosen from the list; KML writes WGS 84.
+    let _ = app.layer_export_event(Event::Srid(Some(4326)));
+    assert_eq!(input(&app).srid, Some(4326));
+    let kml = crate::layer_export::FORMATS.iter().position(|f| *f == kentos_commands::ExportFormat::Kml).expect("KML");
+    let _ = app.layer_export_event(Event::Format(kml));
+    assert_eq!(input(&app).srid, None, "KML: WGS 84 by its writer");
+    let rows = crate::system_select::rows("Katmanın sistemi".into(), Some(5256), 5256);
+    assert_eq!(rows[0].0, None, "the default first");
+    assert!(rows.iter().any(|(s, n)| *s == Some(4326) && n.contains("EPSG:4326")), "the registry's systems");
+    assert!(!rows.iter().skip(1).any(|(s, _)| *s == Some(5256)), "the default not twice");
+    let _ = std::fs::remove_file(&path);
+}

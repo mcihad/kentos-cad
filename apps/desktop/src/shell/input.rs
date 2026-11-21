@@ -380,7 +380,12 @@ impl App {
                     }
                 }
                 // An extension's map tool: what was drawn goes to its code after the update (extensions/runner.rs).
-                ViewChange::Captured(shape) => self.extensions.captured = Some(shape),
+                ViewChange::Captured(shape) => {
+                    // Farklı kaydet…'s box drawn (layer_export_extent.rs), else an extension's.
+                    if !self.layer_export_box_drawn(&shape) {
+                        self.extensions.captured = Some(shape);
+                    }
+                }
                 // Sahneden seç's objects: the processing window opens again (processing/).
                 ViewChange::PickedObjects(keep) => {
                     if !self.window_picked(keep)

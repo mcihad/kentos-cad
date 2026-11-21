@@ -172,8 +172,10 @@ kurulu programın ekranları `.run/gui-evidence/veri/qgis/08`, `11`, `12`):
   [ADR 9108](9108-integer-widths-and-groups.md) §2): Tam sayı `MEDIUMINT`, Büyük tam sayı `INTEGER` yazılır.
 - ~~Süzgeç kaynağa gitmez.~~ Kapandı (VY-12, [ADR 9109](9109-expression-to-the-source.md) §3): süzgecin gönderilebilir
   parçası kaynakta sorulur, satırlar ve toplam onunla okunur; süzgeç yine burada da sorulur.
-- GeoJSON, Shapefile ve KML yazıcıları katmanı bütün alır. Milyonluk veri katmanında bellek ister; akışlı yazıcı
-  ileride.
-- PostGIS hedefi kayıtlı bir bağlantı ister (PostGIS'e bağlan). Kapsam yalnız görünümdür (QGIS'teki serbest kutu yok).
-  Sistem EPSG koduyla verilir, seçici yok. DXF, KML ve TAB'a sembol yazma yok.
+- ~~GeoJSON, Shapefile ve KML yazıcıları katmanı bütün alır.~~ Kapandı (VY-15,
+  [ADR 9112](9112-export-streams-extent-systems.md) §1): akışlı yazılır; bir milyon parselde en yüksek bellek 2,9–3,7
+  GB'tan ~285 MB'a indi.
+- PostGIS hedefi kayıtlı bir bağlantı ister (PostGIS'e bağlan). ~~Kapsam yalnız görünümdür.~~ Kapandı (ADR 9112 §2):
+  kutu yazılır, görünümden ya da katmandan alınır, haritada çizilir. ~~Sistem EPSG koduyla verilir.~~ Kapandı (ADR 9112
+  §3): aranabilir liste. DXF, KML ve TAB'a sembol yazma yok.
 - Web (ADR 0228).

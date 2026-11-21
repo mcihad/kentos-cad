@@ -5,8 +5,10 @@
 //! xml.etree and pyproj, no KentOS code).
 
 pub mod read;
+pub mod stream;
 pub mod style;
 pub mod write;
 
 pub use read::read;
+pub use stream::{LayerStream, PlaceStyle};
 pub use write::write;

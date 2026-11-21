@@ -64,7 +64,7 @@ pub enum DbfEncoding {
 }
 
 impl DbfEncoding {
-    fn cpg(self) -> &'static str {
+    pub(super) fn cpg(self) -> &'static str {
         match self {
             DbfEncoding::Utf8 => "UTF-8",
             DbfEncoding::Windows1254 => "1254",
@@ -72,7 +72,7 @@ impl DbfEncoding {
     }
 
     /// The language driver byte (offset 29): none for UTF-8 (the .cpg names it), 0xCA for Turkish Windows.
-    fn driver(self) -> u8 {
+    pub(super) fn driver(self) -> u8 {
         match self {
             DbfEncoding::Utf8 => 0,
             DbfEncoding::Windows1254 => 0xCA,
@@ -80,7 +80,7 @@ impl DbfEncoding {
     }
 
     /// `s` in the code page; a character it lacks is `?`, counted in `replaced`.
-    fn encode(self, s: &str, replaced: &mut u32) -> Vec<u8> {
+    pub(super) fn encode(self, s: &str, replaced: &mut u32) -> Vec<u8> {
         match self {
             DbfEncoding::Utf8 => s.as_bytes().to_vec(),
             DbfEncoding::Windows1254 => s
@@ -96,7 +96,7 @@ impl DbfEncoding {
     }
 
     /// The bytes of `c` in the code page, if it has it.
-    fn char_bytes(self, c: char) -> Option<Vec<u8>> {
+    pub(super) fn char_bytes(self, c: char) -> Option<Vec<u8>> {
         match self {
             DbfEncoding::Utf8 => Some(c.to_string().into_bytes()),
             DbfEncoding::Windows1254 => windows1254_byte(c).map(|b| vec![b]),
@@ -170,14 +170,14 @@ pub struct Written {
 
 /// Shape type codes (ESRI Shapefile Technical Description, 1998).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-enum Family {
+pub(super) enum Family {
     Point,
     Line,
     Area,
 }
 
 impl Family {
-    fn suffix(self) -> &'static str {
+    pub(super) fn suffix(self) -> &'static str {
         match self {
             Family::Point => "_nokta",
             Family::Line => "_cizgi",
@@ -188,8 +188,8 @@ impl Family {
 
 /// A row's shape in its family: its parts (a point family's parts are one point each).
 #[derive(Clone, Debug, Default)]
-struct Shape {
-    parts: Vec<Ring>,
+pub(super) struct Shape {
+    pub(super) parts: Vec<Ring>,
 }
 
 /// A row: its shape (none: a null shape) and the object whose attributes it carries.
@@ -199,10 +199,10 @@ struct Row<'a> {
 }
 
 /// Below this an M value is “no data”.
-const NO_M: f64 = -1.0e39;
+pub(super) const NO_M: f64 = -1.0e39;
 
 /// The kind a left-out object is counted under.
-fn left_kind(e: &Entity) -> &'static str {
+pub(super) fn left_kind(e: &Entity) -> &'static str {
     match e {
         Entity::Text(_) => "yazı",
         Entity::Dimension(_) => "ölçü",
@@ -217,7 +217,7 @@ fn left_kind(e: &Entity) -> &'static str {
 }
 
 /// Whether an object's line is a curve's chords (an insert: one of its block's).
-fn curved(e: &Entity, blocks: &Placing) -> bool {
+pub(super) fn curved(e: &Entity, blocks: &Placing) -> bool {
     use crate::geom::has_arcs;
     match e {
         Entity::Circle(_)
@@ -242,7 +242,7 @@ fn curved(e: &Entity, blocks: &Placing) -> bool {
 }
 
 /// The geometry sorted into its families: each family's parts (an area's rings turned to the Shapefile's rule).
-fn sort(g: Geometry, into: &mut BTreeMap<Family, Shape>) {
+pub(super) fn sort(g: Geometry, into: &mut BTreeMap<Family, Shape>) {
     match g {
         Geometry::Point(p, z) => into
             .entry(Family::Point)
@@ -288,7 +288,7 @@ fn turned(mut r: Ring) -> Ring {
 }
 
 /// A layer's or a set's file name: the characters no file system takes as `_`; never empty.
-fn file_name(name: &str) -> String {
+pub(super) fn file_name(name: &str) -> String {
     let s: String = name
         .trim()
         .chars()
@@ -306,7 +306,7 @@ fn file_name(name: &str) -> String {
 
 /// The column's dBASE kind as written.
 #[derive(Clone, Debug, PartialEq)]
-enum Kind {
+pub(super) enum Kind {
     /// C of a width (bytes).
     Text(usize),
     /// N of a width and fraction digits.
@@ -317,15 +317,15 @@ enum Kind {
 
 /// A column: its name in the file (≤ 10 bytes), its kind, the attribute it reads and the field whose rule makes its
 /// values canonical (a typed column's).
-struct Column {
-    name: Vec<u8>,
-    kind: Kind,
-    key: String,
-    field: Option<LayerField>,
+pub(super) struct Column {
+    pub(super) name: Vec<u8>,
+    pub(super) kind: Kind,
+    pub(super) key: String,
+    pub(super) field: Option<LayerField>,
 }
 
 /// A decimal's text with exactly `d` fraction digits; none when it has more, or is not a plain decimal.
-fn fixed(v: &str, d: usize) -> Option<String> {
+pub(super) fn fixed(v: &str, d: usize) -> Option<String> {
     let (neg, body) = v.strip_prefix('-').map_or((false, v), |b| (true, b));
     let (int, frac) = body.split_once('.').unwrap_or((body, ""));
     if int.is_empty() && frac.is_empty()
@@ -350,14 +350,14 @@ fn fixed(v: &str, d: usize) -> Option<String> {
 }
 
 /// Significant digits of a plain decimal (leading zeros of the whole part aside).
-fn significant(v: &str) -> usize {
+pub(super) fn significant(v: &str) -> usize {
     let body = v.trim_start_matches('-');
     let (int, frac) = body.split_once('.').unwrap_or((body, ""));
     int.trim_start_matches('0').len() + frac.len()
 }
 
 /// The values a column's attribute takes over the rows, canonical by its field's rule (none: no value).
-fn canonical(field: Option<&LayerField>, raw: Option<&String>) -> Result<Option<String>, ()> {
+pub(super) fn canonical(field: Option<&LayerField>, raw: Option<&String>) -> Result<Option<String>, ()> {
     let Some(raw) = raw else {
         return Ok(None);
     };
@@ -371,111 +371,9 @@ fn canonical(field: Option<&LayerField>, raw: Option<&String>) -> Result<Option<
     }
 }
 
-/// The column's kind from its field and the values it holds; why it is text when its field's type is not.
-fn kind_of(
-    field: Option<&LayerField>,
-    values: &[Option<String>],
-    enc: DbfEncoding,
-) -> (Kind, Option<&'static str>) {
-    let text_width = |len: Option<u32>| {
-        let most = values
-            .iter()
-            .flatten()
-            .map(|v| enc.encode(v, &mut 0).len())
-            .max()
-            .unwrap_or(0);
-        Kind::Text(most.max(len.unwrap_or(0) as usize).clamp(1, 254))
-    };
-    let Some(f) = field else {
-        return (text_width(None), None);
-    };
-    match f.kind {
-        LayerFieldKind::Text => (text_width(f.length), None),
-        // A 64-bit whole number as a whole number too (docs/adr/0629 §4).
-        LayerFieldKind::Integer | LayerFieldKind::BigInt => {
-            let width = values
-                .iter()
-                .flatten()
-                .map(String::len)
-                .max()
-                .unwrap_or(1)
-                .max(1);
-            if width > 18 {
-                (
-                    text_width(None),
-                    Some(
-                        "18 haneyi aşan tam sayılar dBASE okuyucularında kayan noktaya döner; tam basamaklarıyla metin sütununa yazıldı",
-                    ),
-                )
-            } else {
-                (Kind::Number(width, 0), None)
-            }
-        }
-        LayerFieldKind::Decimal => {
-            let frac = |v: &String| v.split_once('.').map_or(0, |(_, f)| f.len());
-            let d = values
-                .iter()
-                .flatten()
-                .map(frac)
-                .max()
-                .unwrap_or(0)
-                .max(f.scale.unwrap_or(0) as usize)
-                // At least one: a reader takes N without fraction digits for an integer.
-                .max(1);
-            let digits = values
-                .iter()
-                .flatten()
-                .map(|v| significant(v))
-                .max()
-                .unwrap_or(0);
-            if d > 15 || digits > 15 {
-                return (
-                    text_width(None),
-                    Some(
-                        "15 anlamlı basamağı aşan ondalık sayılar dBASE okuyucularında yuvarlanır; tam basamaklarıyla metin sütununa yazıldı",
-                    ),
-                );
-            }
-            let width = values
-                .iter()
-                .flatten()
-                .filter_map(|v| fixed(v, d))
-                .map(|s| s.len())
-                .max()
-                .unwrap_or(if d > 0 { d + 2 } else { 1 })
-                .max(1);
-            (Kind::Number(width, d), None)
-        }
-        LayerFieldKind::Date => (Kind::Date, None),
-        LayerFieldKind::Boolean => (Kind::Logical, None),
-        LayerFieldKind::DateTime => (
-            text_width(None),
-            Some("dBASE'te tarih-saat türü yok; YYYY-AA-GGTSS:DD:SS metniyle yazıldı"),
-        ),
-        LayerFieldKind::Time => (
-            text_width(None),
-            Some("dBASE'te saat türü yok; SS:DD:SS metniyle yazıldı"),
-        ),
-        // docs/adr/0629 §4: what dBASE has no type for goes as text, said.
-        LayerFieldKind::Instant => (
-            text_width(None),
-            Some("dBASE'te saat dilimli zaman türü yok; YYYY-AA-GGTSS:DD:SS ve dilimiyle metin olarak yazıldı"),
-        ),
-        LayerFieldKind::Uuid => (text_width(None), None),
-        LayerFieldKind::Json => (
-            text_width(None),
-            Some("dBASE'te JSON türü yok; metin olarak yazıldı"),
-        ),
-        LayerFieldKind::Binary => (
-            text_width(None),
-            Some("dBASE'te ikili tür yok; base64 metni olarak yazıldı"),
-        ),
-    }
-}
-
 /// A name cut to `room` bytes in the code page, at a character's end, without a space at its end; a character the
 /// code page lacks is `_`.
-fn cut_name(name: &str, enc: DbfEncoding, room: usize) -> Vec<u8> {
+pub(super) fn cut_name(name: &str, enc: DbfEncoding, room: usize) -> Vec<u8> {
     let mut out = Vec::new();
     for c in name.chars() {
         let b = enc.char_bytes(c).unwrap_or_else(|| vec![b'_']);
@@ -494,7 +392,7 @@ fn cut_name(name: &str, enc: DbfEncoding, room: usize) -> Vec<u8> {
     out
 }
 
-fn shown(bytes: &[u8], enc: DbfEncoding) -> String {
+pub(super) fn shown(bytes: &[u8], enc: DbfEncoding) -> String {
     match enc {
         DbfEncoding::Utf8 => String::from_utf8_lossy(bytes).into_owned(),
         DbfEncoding::Windows1254 => crate::text::decode(bytes, crate::text::Encoding::Windows1254),
@@ -509,82 +407,14 @@ fn columns(
     rows: &[Row],
     enc: DbfEncoding,
     out: &mut Written,
-) -> Vec<Column> {
-    let mut keys: Vec<(String, Option<&LayerField>)> = Vec::new();
-    for f in fields {
-        if !keys.iter().any(|(k, _)| *k == f.name) {
-            keys.push((f.name.clone(), Some(f)));
+) -> Result<Vec<Column>, String> {
+    let keys: BTreeSet<String> = rows.iter().flat_map(|r| r.of.base().attrs.keys().cloned()).collect();
+    super::columns::columns(set, fields, &keys, enc, out, &mut |each| {
+        for r in rows {
+            each(&r.of.base().attrs);
         }
-    }
-    let extra: BTreeSet<&String> = rows.iter().flat_map(|r| r.of.base().attrs.keys()).collect();
-    for k in extra {
-        if !keys.iter().any(|(n, _)| n == k) {
-            keys.push((k.clone(), None));
-        }
-    }
-    if keys.len() > 255 {
-        out.columns_left += (keys.len() - 255) as u32;
-        keys.truncate(255);
-    }
-    let mut taken: BTreeSet<String> = BTreeSet::new();
-    let mut cols = Vec::new();
-    for (key, field) in keys {
-        let mut name = cut_name(&key, enc, 10);
-        let mut n = 1;
-        while !taken.insert(shown(&name, enc).to_lowercase()) {
-            let tail = format!("_{n}");
-            name = cut_name(&key, enc, 10 - tail.len());
-            name.extend_from_slice(tail.as_bytes());
-            n += 1;
-        }
-        let shown_name = shown(&name, enc);
-        if shown_name != key {
-            out.renamed.push(Renamed {
-                set: set.to_owned(),
-                attribute: key.clone(),
-                column: shown_name.clone(),
-            });
-        }
-        let mut refused = false;
-        let values: Vec<Option<String>> = rows
-            .iter()
-            .map(|r| {
-                canonical(field, r.of.base().attrs.get(&key)).unwrap_or_else(|()| {
-                    refused = true;
-                    None
-                })
-            })
-            .collect();
-        let (kind, reason) = if refused {
-            let raw: Vec<Option<String>> = rows
-                .iter()
-                .map(|r| r.of.base().attrs.get(&key).cloned())
-                .collect();
-            (
-                kind_of(None, &raw, enc).0,
-                Some(
-                    "alanın kuralına uymayan değerleri var; değerler yazıldığı gibi metin sütununa yazıldı",
-                ),
-            )
-        } else {
-            kind_of(field, &values, enc)
-        };
-        if let Some(reason) = reason {
-            out.as_text.push(AsText {
-                set: set.to_owned(),
-                column: shown_name.clone(),
-                reason,
-            });
-        }
-        let typed = matches!(kind, Kind::Number(..) | Kind::Date | Kind::Logical);
-        cols.push(Column {
-            name,
-            kind,
-            key,
-            field: if typed { field.cloned() } else { None },
-        });
-    }
-    cols
+        Ok(())
+    })
 }
 
 /// The .dbf of the rows.
@@ -594,24 +424,29 @@ fn dbf(
     enc: DbfEncoding,
     out: &mut Written,
 ) -> Result<Vec<u8>, String> {
-    let width = |k: &Kind| match k {
-        Kind::Text(w) | Kind::Number(w, _) => *w,
-        Kind::Date => 8,
-        Kind::Logical => 1,
-    };
-    let record_len = 1 + cols.iter().map(|c| width(&c.kind)).sum::<usize>();
+    let mut b = dbf_head(cols, rows.len(), enc)?;
+    for r in rows {
+        dbf_record(cols, &r.of.base().attrs, enc, out, &mut b);
+    }
+    b.push(0x1A);
+    Ok(b)
+}
+
+/// A .dbf's head for `count` records of the columns, its field descriptors and their end mark.
+pub(super) fn dbf_head(cols: &[Column], count: usize, enc: DbfEncoding) -> Result<Vec<u8>, String> {
+    let record_len = 1 + cols.iter().map(|c| dbf_width(&c.kind)).sum::<usize>();
     let header_len = 32 + 32 * cols.len() + 1;
     let (Ok(record_len16), Ok(header_len16), Ok(count)) = (
         u16::try_from(record_len),
         u16::try_from(header_len),
-        u32::try_from(rows.len()),
+        u32::try_from(count),
     ) else {
         return Err(
             "dBASE tablosunun satırı 65 535 baytı aşıyor; daha az ya da daha kısa sütunla yazın."
                 .into(),
         );
     };
-    let mut b = Vec::with_capacity(header_len + record_len * rows.len() + 1);
+    let mut b = Vec::with_capacity(header_len);
     b.push(0x03);
     // 1 January 1980: the same drawing makes the same bytes.
     b.extend_from_slice(&[80, 1, 1]);
@@ -636,66 +471,81 @@ fn dbf(
         b.extend_from_slice(&d);
     }
     b.push(0x0D);
-    for r in rows {
-        b.push(b' ');
-        for c in cols {
-            let raw = r.of.base().attrs.get(&c.key);
-            match &c.kind {
-                Kind::Text(w) => {
-                    let mut cell = Vec::new();
-                    if let Some(v) = raw {
-                        if v.is_empty() {
-                            out.blank_text += 1;
-                        } else if v.ends_with(' ') {
-                            out.trailing_spaces += 1;
-                        }
-                        for ch in v.chars() {
-                            let bytes = match enc.char_bytes(ch) {
-                                Some(bs) => bs,
-                                None => {
-                                    out.replaced += 1;
-                                    vec![b'?']
-                                }
-                            };
-                            if cell.len() + bytes.len() > *w {
-                                out.cut += 1;
-                                break;
-                            }
-                            cell.extend(bytes);
-                        }
+    Ok(b)
+}
+
+fn dbf_width(k: &Kind) -> usize {
+    match k {
+        Kind::Text(w) | Kind::Number(w, _) => *w,
+        Kind::Date => 8,
+        Kind::Logical => 1,
+    }
+}
+
+/// A .dbf record of a row's attributes, added to `b`.
+pub(super) fn dbf_record(
+    cols: &[Column],
+    attrs: &BTreeMap<String, String>,
+    enc: DbfEncoding,
+    out: &mut Written,
+    b: &mut Vec<u8>,
+) {
+    b.push(b' ');
+    for c in cols {
+        let raw = attrs.get(&c.key);
+        match &c.kind {
+            Kind::Text(w) => {
+                let mut cell = Vec::new();
+                if let Some(v) = raw {
+                    if v.is_empty() {
+                        out.blank_text += 1;
+                    } else if v.ends_with(' ') {
+                        out.trailing_spaces += 1;
                     }
-                    cell.resize(*w, b' ');
-                    b.extend(cell);
+                    for ch in v.chars() {
+                        let bytes = match enc.char_bytes(ch) {
+                            Some(bs) => bs,
+                            None => {
+                                out.replaced += 1;
+                                vec![b'?']
+                            }
+                        };
+                        if cell.len() + bytes.len() > *w {
+                            out.cut += 1;
+                            break;
+                        }
+                        cell.extend(bytes);
+                    }
                 }
-                Kind::Number(w, d) => {
-                    let v = canonical(c.field.as_ref(), raw).ok().flatten();
-                    let text = v.and_then(|v| fixed(&v, *d)).unwrap_or_default();
-                    b.extend(std::iter::repeat_n(b' ', w - text.len().min(*w)));
-                    b.extend(text.bytes().take(*w));
-                }
-                Kind::Date => {
-                    let v = canonical(c.field.as_ref(), raw).ok().flatten();
-                    let text = v.map(|v| v.replace('-', "")).filter(|t| t.len() == 8);
-                    b.extend(text.unwrap_or_else(|| "        ".into()).bytes());
-                }
-                Kind::Logical => {
-                    let v = canonical(c.field.as_ref(), raw).ok().flatten();
-                    b.push(match v.as_deref() {
-                        Some("true") => b'T',
-                        Some("false") => b'F',
-                        _ => b'?',
-                    });
-                }
+                cell.resize(*w, b' ');
+                b.extend(cell);
+            }
+            Kind::Number(w, d) => {
+                let v = canonical(c.field.as_ref(), raw).ok().flatten();
+                let text = v.and_then(|v| fixed(&v, *d)).unwrap_or_default();
+                b.extend(std::iter::repeat_n(b' ', w - text.len().min(*w)));
+                b.extend(text.bytes().take(*w));
+            }
+            Kind::Date => {
+                let v = canonical(c.field.as_ref(), raw).ok().flatten();
+                let text = v.map(|v| v.replace('-', "")).filter(|t| t.len() == 8);
+                b.extend(text.unwrap_or_else(|| "        ".into()).bytes());
+            }
+            Kind::Logical => {
+                let v = canonical(c.field.as_ref(), raw).ok().flatten();
+                b.push(match v.as_deref() {
+                    Some("true") => b'T',
+                    Some("false") => b'F',
+                    _ => b'?',
+                });
             }
         }
     }
-    b.push(0x1A);
-    Ok(b)
 }
 
 /// A set's shape type: its family's code, a point family's the multi-point one when a row has several points; + 10
 /// with elevations, + 20 with measures and no elevations.
-fn shape_type(family: Family, multi: bool, z: bool, m: bool) -> (i32, &'static str) {
+pub(super) fn shape_type(family: Family, multi: bool, z: bool, m: bool) -> (i32, &'static str) {
     let base = match (family, multi) {
         (Family::Point, false) => 1,
         (Family::Point, true) => 8,
@@ -718,7 +568,7 @@ fn shape_type(family: Family, multi: bool, z: bool, m: bool) -> (i32, &'static s
 }
 
 /// The least and greatest of `values`; (0, 0) for none.
-fn range(values: impl Iterator<Item = f64>) -> (f64, f64) {
+pub(super) fn range(values: impl Iterator<Item = f64>) -> (f64, f64) {
     let mut lo = f64::INFINITY;
     let mut hi = f64::NEG_INFINITY;
     for v in values {
@@ -735,7 +585,7 @@ fn f64s(out: &mut Vec<u8>, values: &[f64]) {
 }
 
 /// A shape's vertices: (x, y, z, m), a vertex without an elevation at 0 and without a measure at “no data”.
-fn vertices(s: &Shape) -> Vec<(f64, f64, f64, f64)> {
+pub(super) fn vertices(s: &Shape) -> Vec<(f64, f64, f64, f64)> {
     s.parts
         .iter()
         .flat_map(|r| {
@@ -749,7 +599,7 @@ fn vertices(s: &Shape) -> Vec<(f64, f64, f64, f64)> {
 }
 
 /// A record's content (its shape type first).
-fn content(t: i32, shape: Option<&Shape>, z: bool, m: bool) -> Vec<u8> {
+pub(super) fn content(t: i32, shape: Option<&Shape>, z: bool, m: bool) -> Vec<u8> {
     let mut c = Vec::new();
     let Some(s) = shape else {
         c.extend_from_slice(&0i32.to_le_bytes());
@@ -807,7 +657,7 @@ fn content(t: i32, shape: Option<&Shape>, z: bool, m: bool) -> Vec<u8> {
 }
 
 /// The 100-byte header of a .shp or .shx `len` bytes long.
-fn header(t: i32, len: usize, bounds: [f64; 8]) -> Result<Vec<u8>, String> {
+pub(super) fn header(t: i32, len: usize, bounds: [f64; 8]) -> Result<Vec<u8>, String> {
     let words = i32::try_from(len / 2).map_err(|_| {
         "Shapefile'ın bir dosyası 2 GB'ı aşıyor; katmanı bölün ya da GeoPackage'a yazın.".to_owned()
     })?;
@@ -928,7 +778,7 @@ pub fn write(input: &Input) -> Result<Written, String> {
                 name = format!("{stem}_{k}");
                 k += 1;
             }
-            let cols = columns(&name, layer.fields, &rows, input.encoding, &mut out);
+            let cols = columns(&name, layer.fields, &rows, input.encoding, &mut out)?;
             let table = dbf(&cols, &rows, input.encoding, &mut out)?;
             let mut files: Vec<(&'static str, Vec<u8>)> = Vec::new();
             let mut shape_name = None;

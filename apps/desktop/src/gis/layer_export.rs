@@ -32,6 +32,7 @@ use kentos_ui::widget::{Dialog, Form, overlay};
 
 use crate::app::{App, Message};
 use crate::exchange::words;
+use crate::layer_export_extent::{BAD_BOX, EXTENTS, Extent, Sides, box_of, extent_label, sides_view};
 
 /// The exports started: a late answer of one the window no longer waits for is dropped.
 static RUNS: AtomicU64 = AtomicU64::new(0);
@@ -40,7 +41,7 @@ const PROGRESS_EVERY: Duration = Duration::from_millis(100);
 /// The field list's most height: about eight fields, then it scrolls.
 const FIELDS_HEIGHT: f32 = 264.0;
 
-const FORMATS: [ExportFormat; 6] = [
+pub(crate) const FORMATS: [ExportFormat; 6] = [
     ExportFormat::Gpkg,
     ExportFormat::Postgis,
     ExportFormat::Geojson,
@@ -166,9 +167,14 @@ pub(crate) struct ExportWindow {
     connection: Option<usize>,
     schema: String,
     name: String,
-    srid: String,
+    /// The system written; none: the data layer's own, or the project's (system_select.rs).
+    srid: Option<u32>,
     encoding: ExportEncoding,
-    in_view: bool,
+    /// Which objects: all, those in the view, those touching the box (layer_export_extent.rs).
+    extent: Extent,
+    sides: Sides,
+    /// The window stepped aside while the box is drawn on the map.
+    drawing: bool,
     filter: String,
     fields: Vec<FieldRow>,
     geometry: ExportGeometry,
@@ -211,10 +217,15 @@ pub enum Event {
     Connection(usize),
     Schema(String),
     Name(String),
-    Srid(String),
+    Srid(Option<u32>),
     Encoding(usize),
     Selected(bool),
-    InView(bool),
+    Extent(usize),
+    /// A side of the box typed: west, south, east, north.
+    Side(usize, String),
+    BoxFromView,
+    BoxFromLayer,
+    DrawBox,
     Filter(String),
     FieldOn(usize, bool),
     FieldTo(usize, String),
@@ -249,6 +260,36 @@ fn message(e: Event) -> Message {
 }
 
 impl ExportWindow {
+    /// The layer exported.
+    pub(crate) fn layer_id(&self) -> &str {
+        &self.layer
+    }
+
+    /// The box's sides set (from the view, the layer, the map): the box is the extent now.
+    pub(crate) fn set_box(&mut self, sides: Sides) {
+        self.sides = sides;
+        self.extent = Extent::Box;
+        self.said = None;
+    }
+
+    pub(crate) fn set_drawing(&mut self, on: bool) {
+        self.drawing = on;
+    }
+
+    pub(crate) fn is_drawing(&self) -> bool {
+        self.drawing
+    }
+
+    #[cfg(test)]
+    pub(crate) fn is_running(&self) -> bool {
+        self.running
+    }
+
+    #[cfg(test)]
+    pub(crate) fn extent(&self) -> Extent {
+        self.extent
+    }
+
     fn table(&self) -> bool {
         matches!(self.format, ExportFormat::Gpkg | ExportFormat::Postgis)
     }
@@ -260,7 +301,34 @@ impl ExportWindow {
     }
 }
 
+/// The format writes WGS 84 whatever is asked: KML, and GeoJSON unless the project's coordinates are asked.
+fn wgs84_only(w: &ExportWindow) -> bool {
+    w.format == ExportFormat::Kml || (w.format == ExportFormat::Geojson && !w.project_coordinates)
+}
+
 impl App {
+    /// The system written when none is chosen, as the picker's first row names it: a data layer's own, else the
+    /// project's.
+    fn export_default_system(&self, w: &ExportWindow) -> (String, Option<u32>) {
+        let Some(doc) = &self.document else {
+            return ("Varsayılan".to_owned(), None);
+        };
+        let own = doc
+            .model
+            .layers()
+            .get(&w.layer)
+            .and_then(|n| n.data.as_ref())
+            .and_then(|d| d.geometry.as_ref())
+            .and_then(|g| g.srid);
+        let project = doc.model.settings().srid;
+        let named = |srid: u32| kentos_project::crs::system(srid).map_or_else(|| format!("EPSG:{srid}"), |s| format!("{} (EPSG:{srid})", s.name));
+        match own {
+            Some(srid) => (format!("Katmanın sistemi · {}", named(srid)), Some(srid)),
+            None if project > 0 => (format!("Projenin sistemi · {}", named(project)), Some(project)),
+            None => ("Projenin sistemi (yerel, koordinat sistemi yok)".to_owned(), None),
+        }
+    }
+
     /// Farklı kaydet… (`selected`: Seçilenleri farklı kaydet…) on a layer.
     pub(crate) fn open_layer_export(&mut self, layer: &str, selected: bool) {
         let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(layer)).cloned() else {
@@ -287,9 +355,11 @@ impl App {
             connection: None,
             schema: "public".into(),
             name: kentos_native_application::layer_export::table_name_of(&node.name),
-            srid: String::new(),
+            srid: None,
             encoding: ExportEncoding::Utf8,
-            in_view: false,
+            extent: Extent::All,
+            sides: Sides::default(),
+            drawing: false,
             filter: String::new(),
             fields,
             geometry: ExportGeometry::Auto,
@@ -356,10 +426,14 @@ impl App {
     /// The command's input for the window as it is.
     pub(crate) fn export_input(&self, w: &ExportWindow) -> LayersExport {
         let (uids, keys) = if w.selected { self.export_selection(&w.layer) } else { (None, None) };
-        let bbox = w.in_view.then(|| {
-            let b = self.viewport.camera.visible_bounds();
-            [b.min_x, b.min_y, b.max_x, b.max_y]
-        });
+        let bbox = match w.extent {
+            Extent::All => None,
+            Extent::View => {
+                let b = self.viewport.camera.visible_bounds();
+                Some([b.min_x, b.min_y, b.max_x, b.max_y])
+            }
+            Extent::Box => box_of(&w.sides),
+        };
         let address = (w.format == ExportFormat::Postgis)
             .then(|| {
                 w.connection
@@ -395,7 +469,7 @@ impl App {
             address,
             schema: (w.format == ExportFormat::Postgis).then(|| w.schema.trim().to_owned()),
             name: (table || w.format == ExportFormat::Kml).then(|| w.name.trim().to_owned()).filter(|n| !n.is_empty()),
-            srid: w.srid.trim().parse().ok(),
+            srid: w.srid.filter(|_| !wgs84_only(w)),
             encoding: matches!(w.format, ExportFormat::Shapefile | ExportFormat::Csv)
                 .then_some(w.encoding)
                 .filter(|e| *e != ExportEncoding::Utf8),
@@ -460,12 +534,23 @@ impl App {
             Event::Connection(i) => w.connection = Some(i),
             Event::Schema(s) => w.schema = s,
             Event::Name(n) => w.name = n,
-            Event::Srid(s) => w.srid = s.chars().filter(char::is_ascii_digit).collect(),
+            Event::Srid(s) => w.srid = s,
             Event::Encoding(i) => {
                 w.encoding = if i == 1 { ExportEncoding::Windows1254 } else { ExportEncoding::Utf8 }
             }
             Event::Selected(on) => w.selected = on,
-            Event::InView(on) => w.in_view = on,
+            Event::Extent(i) => {
+                w.extent = EXTENTS[i.min(EXTENTS.len() - 1)];
+                w.said = None;
+            }
+            Event::Side(i, t) => {
+                if let Some(side) = w.sides.get_mut(i) {
+                    *side = t;
+                }
+            }
+            Event::BoxFromView => self.export_box_from_view(),
+            Event::BoxFromLayer => self.export_box_from_layer(),
+            Event::DrawBox => self.export_draw_box(),
             Event::Filter(f) => w.filter = f,
             Event::FieldOn(i, on) => {
                 if let Some(f) = w.fields.get_mut(i) {
@@ -532,6 +617,14 @@ impl App {
         let Some(w) = self.gis.layer_export.clone() else {
             return Task::none();
         };
+        // A box that is not four numbers around a place is said here: the command would take it as no box at all.
+        if w.extent == Extent::Box && box_of(&w.sides).is_none() {
+            if let Some(w) = self.gis.layer_export.as_mut() {
+                w.said = Some(BAD_BOX.to_owned());
+                w.said_stopped = false;
+            }
+            return Task::none();
+        }
         let input = self.export_input(&w);
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
@@ -672,12 +765,26 @@ impl App {
         if w.table() || w.format == ExportFormat::Kml {
             form = form.field(if w.table() { "Tablo adı" } else { "Belge adı" }, text("", &w.name, Event::Name));
         }
-        let srid_help = match w.format {
-            ExportFormat::Kml => "KML her zaman WGS 84 (boylam, enlem) yazılır.",
-            ExportFormat::Geojson if !w.project_coordinates => "GeoJSON WGS 84 (boylam, enlem) yazılır; proje koordinatları için aşağıdaki seçeneği açın.",
-            _ => "Boş: veri katmanının kendi sistemi, çizim katmanında projenin sistemi.",
-        };
-        form = form.field("Koordinat sistemi (EPSG)", text("örn. 5256", &w.srid, Event::Srid)).help(srid_help);
+        if wgs84_only(w) {
+            let why = if w.format == ExportFormat::Kml {
+                "KML her zaman WGS 84 (boylam, enlem) yazılır."
+            } else {
+                "GeoJSON WGS 84 (boylam, enlem) yazılır; başka bir sistem için aşağıdaki Proje koordinatları seçeneğini açın."
+            };
+            form = form.field("Koordinat sistemi", kentos_ui::label::muted("WGS 84 (EPSG:4326)")).help(why);
+        } else {
+            let (label, own) = self.export_default_system(w);
+            let project = self.document.as_ref().map_or(0, |d| d.model.settings().srid);
+            let picker = container(crate::system_select::select(
+                crate::system_select::rows(label, own, project),
+                w.srid,
+                |s| message(Event::Srid(s)),
+            ))
+            .width(420);
+            form = form
+                .field("Koordinat sistemi", picker)
+                .help("Satırlar yazılırken bu sisteme çevrilir; varsayılan katmanın kendi sistemidir.");
+        }
         if matches!(w.format, ExportFormat::Shapefile | ExportFormat::Csv) {
             form = form.field(
                 "Kodlama",
@@ -691,8 +798,21 @@ impl App {
         form = form
             .section("Yazılacak nesneler")
             .row(switch(w.selected, "Yalnız seçilenleri yaz", Event::Selected))
-            .row(switch(w.in_view, "Yalnız görünümdekileri yaz", Event::InView))
-            .field("Süzgeç (İfadeyle seç'in dili)", text("örn. kullanim = 'Konut'", &w.filter, Event::Filter));
+            .field(
+                "Kapsam",
+                select(EXTENTS.iter().map(|e| extent_label(*e)).collect(), EXTENTS.iter().position(|e| *e == w.extent), Event::Extent),
+            );
+        if w.extent == Extent::Box {
+            form = form.wide(sides_view(
+                &w.sides,
+                self.export_axis_names(),
+                |i, t| message(Event::Side(i, t)),
+                message(Event::BoxFromView),
+                message(Event::BoxFromLayer),
+                message(Event::DrawBox),
+            ));
+        }
+        form = form.field("Süzgeç (İfadeyle seç'in dili)", text("örn. kullanim = 'Konut'", &w.filter, Event::Filter));
         // Alanlar: each on or off, its kind, its written name, its labels when it has a list. The heads stay; the
         // rows scroll in a list of their own height, so a layer of many fields does not stretch the window.
         let on = w.fields.iter().filter(|f| f.on).count();

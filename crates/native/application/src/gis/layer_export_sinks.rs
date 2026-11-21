@@ -5,8 +5,8 @@
 //!   added to (`append`, a field the table lacks left out); a GeoPackage file made when it is not there or written anew
 //!   (`overwriteFile`). After the commit a GeoPackage's table gets the layer's dataset information as its metadata.
 //! - A CSV file written as the rows come: the fields, then the geometry as WKT (or X and Y), in UTF-8 or Windows-1254.
-//! - GeoJSON, Shapefile and KML files through the formats core's writers, the rows made objects again (in the system
-//!   written): their writers take a whole layer.
+//! - GeoJSON, Shapefile and KML files through the formats core's streams, the rows made objects again (in the system
+//!   written) and written as they come (layer_export_streams.rs, docs/adr/9112 §1).
 //!
 //! Nothing is kept of a target when the export stops or fails: the transaction is rolled back, and a file it makes is
 //! written beside its place (`<file>.part`) and put there only at the end, so a file there before stays as it was.
@@ -81,13 +81,13 @@ pub(crate) fn sink_for(doc: &Document, plan: &Plan<'_>, write: bool) -> Result<B
         ExportFormat::Gpkg | ExportFormat::Postgis => Table::open(doc, plan, path.as_deref(), existing, write),
         _ if !write => Ok(Box::new(Nothing)),
         ExportFormat::Csv => Ok(Box::new(Csv::open(plan, path.as_deref().unwrap_or(Path::new("")))?)),
-        _ => Ok(Box::new(Objects::new(doc, plan, path.unwrap_or_default()))),
+        _ => crate::layer_export_streams::open(plan, path.unwrap_or_default()),
     }
 }
 
 /// Where a file is written while the export runs: beside its place, put there at the end (a file there stays as it
 /// was when the export stops or fails).
-fn part_of(path: &Path) -> PathBuf {
+pub(crate) fn part_of(path: &Path) -> PathBuf {
     let mut name = path.as_os_str().to_owned();
     name.push(".part");
     PathBuf::from(name)
@@ -99,7 +99,7 @@ fn part_address(part: &Path) -> String {
 }
 
 /// Puts a finished part in its place, over a file there; the part is removed when it cannot be.
-fn put_in_place(part: &Path, path: &Path) -> Result<(), String> {
+pub(crate) fn put_in_place(part: &Path, path: &Path) -> Result<(), String> {
     std::fs::rename(part, path).map_err(|e| {
         let _ = std::fs::remove_file(part);
         format!("“{}” yerine konamadı: {e}", path.display())
@@ -392,7 +392,7 @@ fn windows_1254(text: &str) -> Vec<u8> {
 }
 
 /// A value as a CSV cell.
-fn cell(v: &Value) -> String {
+pub(crate) fn cell(v: &Value) -> String {
     match v {
         Value::Null => String::new(),
         other => crate::geopackage::attribute_text(other).unwrap_or_default(),
@@ -436,149 +436,3 @@ impl Sink for Csv {
         let _ = std::fs::remove_file(&self.part);
     }
 }
-
-// ── GeoJSON, Shapefile, KML ────────────────────────────────────────────────────────────────────────────────────
-
-/// The rows made objects again (in the system written) for the writers that take a whole layer.
-struct Objects {
-    format: ExportFormat,
-    path: PathBuf,
-    layer: String,
-    name: String,
-    fields: Vec<LayerField>,
-    objects: Vec<kentos_commands::Entity>,
-    srid: Option<u32>,
-    encoding: ExportEncoding,
-    color: String,
-    project: kentos_commands::ProjectSettings,
-    project_coordinates: bool,
-}
-
-impl Objects {
-    fn new(_doc: &Document, plan: &Plan<'_>, path: PathBuf) -> Objects {
-        let fields = plan.fields.iter().map(|f| f.written()).collect();
-        Objects {
-            format: plan.input.format,
-            path,
-            layer: plan.node.id.clone(),
-            name: plan.input.name.clone().unwrap_or_else(|| plan.node.name.clone()),
-            fields,
-            objects: Vec::new(),
-            srid: plan.srid,
-            encoding: plan.input.encoding.unwrap_or_default(),
-            color: plan.node.style.color.clone(),
-            project: plan.settings.clone(),
-            project_coordinates: plan.input.options.as_ref().and_then(|o| o.project_coordinates) == Some(true),
-        }
-    }
-}
-
-impl Sink for Objects {
-    fn write(&mut self, rows: &[NewFeature]) -> Result<(), String> {
-        for r in rows {
-            let attrs: serde_json::Map<String, serde_json::Value> = r
-                .values
-                .iter()
-                .filter(|(_, v)| !matches!(v, Value::Null))
-                .map(|(n, v)| (n.clone(), serde_json::Value::String(cell(v))))
-                .collect();
-            let shape = r.geometry.clone().unwrap_or(kentos_data::Geometry::Point(None));
-            let id = u32::try_from(self.objects.len() + 1).unwrap_or(u32::MAX);
-            if let Some(e) = crate::geopackage::object_of(&shape, &self.layer, id, attrs) {
-                self.objects.push(e);
-            }
-        }
-        Ok(())
-    }
-
-    fn finish(self: Box<Self>) -> Result<Vec<String>, String> {
-        if let Some(folder) = self.path.parent().filter(|f| !f.as_os_str().is_empty()) {
-            std::fs::create_dir_all(folder).map_err(|e| e.to_string())?;
-        }
-        let written = |path: &Path, bytes: &[u8]| -> Result<String, String> {
-            std::fs::write(path, bytes).map_err(|e| format!("{}: {e}", path.display()))?;
-            Ok(path.display().to_string())
-        };
-        let wgs84 = || -> Result<_, String> {
-            let system = kentos_project::systems::own(&self.project)
-                .and_then(|n| n.system)
-                .ok_or_else(|| "projenin koordinat sistemi WGS 84'e çevrilemiyor".to_owned())?;
-            Ok((system, kentos_project::systems::choices(&self.project)))
-        };
-        match self.format {
-            ExportFormat::Geojson => {
-                let input = kentos_commands::GeoJsonWriteInput {
-                    entities: self.objects,
-                    layers: vec![kentos_commands::GeoJsonLayer {
-                        id: self.layer.clone(),
-                        name: self.name.clone(),
-                        fields: self.fields.clone(),
-                    }],
-                    srid: self.srid.unwrap_or(self.project.srid),
-                    name: self.name.clone(),
-                    blocks: Vec::new(),
-                };
-                let (bytes, _) = if self.project_coordinates || self.project.srid == 4326 {
-                    kentos_formats::geojson::write(&input)
-                } else {
-                    let (system, choices) = wgs84()?;
-                    kentos_formats::geojson::write_wgs84(&input, &system, &choices)
-                };
-                Ok(vec![written(&self.path, &bytes)?])
-            }
-            ExportFormat::Kml => {
-                let input = kentos_commands::KmlWriteInput {
-                    entities: self.objects,
-                    layers: vec![kentos_commands::KmlLayer {
-                        id: self.layer.clone(),
-                        name: self.name.clone(),
-                        path: Vec::new(),
-                        color: self.color.clone(),
-                        line_weight: None,
-                    }],
-                    name: self.name.clone(),
-                    blocks: Vec::new(),
-                    kmz: false,
-                };
-                let (system, choices) = wgs84()?;
-                let (bytes, _) = kentos_formats::kml::write::write(&input, &system, &choices);
-                Ok(vec![written(&self.path, &bytes)?])
-            }
-            ExportFormat::Shapefile => {
-                use kentos_formats::shp::write as shp;
-                let stem = self
-                    .path
-                    .file_stem()
-                    .map_or_else(|| "katman".to_owned(), |s| s.to_string_lossy().into_owned());
-                let folder = self.path.parent().map(Path::to_path_buf).unwrap_or_default();
-                let objects: Vec<&kentos_commands::Entity> = self.objects.iter().collect();
-                let input = shp::Input {
-                    layers: vec![shp::Layer {
-                        id: &self.layer,
-                        name: &stem,
-                        fields: &self.fields,
-                        objects,
-                    }],
-                    blocks: &[],
-                    prj: self.srid.and_then(crate::shapefile::esri),
-                    encoding: match self.encoding {
-                        ExportEncoding::Utf8 => shp::DbfEncoding::Utf8,
-                        ExportEncoding::Windows1254 => shp::DbfEncoding::Windows1254,
-                    },
-                };
-                let out = shp::write(&input)?;
-                let mut files = Vec::new();
-                for set in &out.sets {
-                    for (ext, bytes) in &set.files {
-                        files.push(written(&folder.join(format!("{}.{ext}", set.name)), bytes)?);
-                    }
-                }
-                Ok(files)
-            }
-            _ => Ok(Vec::new()),
-        }
-    }
-
-    fn abandon(self: Box<Self>) {}
-}
-

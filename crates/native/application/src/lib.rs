@@ -503,6 +503,8 @@ pub mod layer_classes;
 pub mod layer_export;
 #[path = "gis/layer_export_sinks.rs"]
 mod layer_export_sinks;
+#[path = "gis/layer_export_streams.rs"]
+mod layer_export_streams;
 // A project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107).
 #[path = "gis/project_store.rs"]
 pub mod project_store;

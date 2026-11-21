@@ -58,7 +58,8 @@ pub(crate) struct NewLayerWindow {
     geometry: CreateGeometry,
     multi: bool,
     z: bool,
-    srid: String,
+    /// The table's system; none: the project's (system_select.rs).
+    srid: Option<u32>,
     fields: Vec<NewField>,
     said: Option<String>,
 }
@@ -78,7 +79,7 @@ pub enum Event {
     Geometry(usize),
     Multi(bool),
     Z(bool),
-    Srid(String),
+    Srid(Option<u32>),
     FieldName(usize, String),
     FieldKind(usize, usize),
     FieldLength(usize, String),
@@ -131,7 +132,7 @@ impl NewLayerWindow {
             geometry: self.geometry,
             multi: self.multi.then_some(true),
             z: self.z.then_some(true),
-            srid: self.srid.trim().parse().ok(),
+            srid: self.srid,
             fields: (!fields.is_empty()).then_some(fields),
             key: None,
             geometry_column: None,
@@ -173,7 +174,6 @@ impl App {
             return;
         };
         let name = doc.model.layers().unique_name(crate::layer_types::new_name(geometry));
-        let srid = doc.model.settings().srid;
         self.gis.layer_create = Some(NewLayerWindow {
             target: CreateTarget::Gpkg,
             path: self.likely_geopackage(),
@@ -186,7 +186,7 @@ impl App {
             geometry: geometry_of(geometry),
             multi: false,
             z: false,
-            srid: if srid > 0 { srid.to_string() } else { String::new() },
+            srid: None,
             fields: vec![NewField { name: String::new(), kind: LayerFieldKind::Text, length: String::new() }],
             said: None,
         });
@@ -242,7 +242,7 @@ impl App {
             Event::Geometry(i) => w.geometry = GEOMETRIES[i.min(GEOMETRIES.len() - 1)].0,
             Event::Multi(on) => w.multi = on,
             Event::Z(on) => w.z = on,
-            Event::Srid(s) => w.srid = s.chars().filter(char::is_ascii_digit).collect(),
+            Event::Srid(s) => w.srid = s,
             Event::FieldName(i, n) => {
                 if let Some(f) = w.fields.get_mut(i) {
                     f.name = n;
@@ -391,8 +391,8 @@ impl App {
             form = form
                 .row(Switch::new(w.multi, |b| message(Event::Multi(b))).label("Çok parçalı"))
                 .row(Switch::new(w.z, |b| message(Event::Z(b))).label("Z (kot) ile"))
-                .field("Koordinat sistemi (EPSG)", text("örn. 5256", &w.srid, Event::Srid))
-                .help("Boş: projenin sistemi.");
+                .field("Koordinat sistemi", container(self.layer_create_systems(w.srid)).width(420))
+                .help("Tablonun geometrisinin sistemi; varsayılan projenin sistemidir.");
         }
         // Alanlar: name, kind, a text's length; + Alan ekle.
         let heads = kentos_ui::widget::table::band(
@@ -454,6 +454,22 @@ impl App {
                 .width(680.0)
                 .max_height(800.0)
                 .on_close(Some(message(Event::Close))),
+        )
+    }
+}
+
+impl App {
+    /// Yeni katman's system list: the project's first (the default), then the registry's systems.
+    fn layer_create_systems(&self, chosen: Option<u32>) -> Element<'_, Message> {
+        let project = self.document.as_ref().map_or(0, |d| d.model.settings().srid);
+        let label = match kentos_project::crs::system(project) {
+            Some(s) if project > 0 => format!("Projenin sistemi · {} (EPSG:{project})", s.name),
+            _ => "Projenin sistemi".to_owned(),
+        };
+        crate::system_select::select(
+            crate::system_select::rows(label, (project > 0).then_some(project), project),
+            chosen,
+            |s| message(Event::Srid(s)),
         )
     }
 }

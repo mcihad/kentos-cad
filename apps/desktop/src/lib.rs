@@ -1516,6 +1516,9 @@ mod data_edits_tests;
 #[cfg(test)]
 #[path = "gis/data_journal_tests.rs"]
 mod data_journal_tests;
+#[cfg(test)]
+#[path = "gis/layer_export_memory_tests.rs"]
+mod layer_export_memory_tests;
 #[path = "gis/data_view.rs"]
 mod data_view;
 #[path = "gis/data_info.rs"]
@@ -1534,6 +1537,10 @@ mod data_pick;
 mod layer_classes;
 #[path = "gis/layer_export.rs"]
 mod layer_export;
+#[path = "gis/layer_export_extent.rs"]
+mod layer_export_extent;
+#[path = "gis/system_select.rs"]
+mod system_select;
 #[path = "gis/project_store.rs"]
 mod project_store;
 #[path = "gis/layer_create.rs"]
