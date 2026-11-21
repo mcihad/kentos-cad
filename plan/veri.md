@@ -61,13 +61,18 @@ ADR'ler **9100**'den başlar.
   - Öznitelik tablosu veri katmanında sayfa sayfa okunur.
   - Sıralama, süzgeç, arama ve sayı SQL'de; “görünümdekiler” ve “seçililer” kaynaktan.
   - Hücre düzenlemesi düzenleme tamponuna yazılır (VY-05).
-- [ ] **VY-05 — Etkin katman ve düzenleme oturumu.** (VY-04'ten: Seç aracı veri katmanında satır seçer.)
-  - Katman düzenlemeye açılır ve kapatılır.
-  - Değişiklikler önce katmanın tamponunda bekler: eklenen, değişen ve silinen kayıtlar, kendi geri alma adımlarıyla.
-  - Çizim araçları etkin ve düzenlenen katmana yazar.
-  - Kaydet, Geri al ve Vazgeç; seçili ya da bütün katmanlar için.
-  - Kaydedilmemiş değişiklik katmanda işaretlenir; düzenleme kapatılırken ve proje kapanırken sorulur.
-  - Kaydetme hatasında tampon korunur.
+- [ ] **VY-05 — Etkin katman ve düzenleme oturumu.** ([ADR 9103](../docs/adr/9103-edit-session.md))
+  - Katman Katmanlar'ın sağ tuşundan düzenlemeye açılır ve kapatılır; açılınca etkin katman olur.
+  - Değişiklikler kaydedilene kadar çizimde katmanın nesneleri olarak bekler: çizilen yeni satır, Seç'le alınıp
+    değiştirilen satır, silinen satır. Çizimin bütün araçları onlarda çalışır; geri alma çizimle tek sıradadır.
+  - Kaydet bir katmanın değişikliklerini kaynağının tek işlemiyle yazar; Geri al bırakır; bitirirken ve çizimden
+    çıkarken Kaydet / Kaydetme / Vazgeç diye sorulur. Bütün katmanlar için de.
+  - Kaydedilmemiş değişiklik Katmanlar'da turuncu kalemle ve çizimde kesik çerçeveyle görünür.
+  - Kaydetme reddedilirse hiçbir şey yazılmaz, değişiklik bekler, suçlu nesne seçilir.
+  - `cad.layers.session` 29 ortak durumla; Python ve MCP veri sürücülerini kaydeder.
+  - Gerçek pencerede bir milyon PostGIS parselinde çizildi, taşındı, silindi, kaydedildi. Veritabanı her adımı doğru
+    tuttu.
+  - Kalan (sıradaki iş): düzenlenen katmanın satırlarına kenet; Öznitelik tablosunda hücre düzenlemesi.
 - [ ] **VY-06 — İşlem yönetimi.** Proje ayarı, üç kip:
   - yerel düzenleme tamponu;
   - aynı veritabanının katmanları için otomatik işlem grubu;

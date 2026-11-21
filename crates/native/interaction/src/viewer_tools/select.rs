@@ -53,7 +53,7 @@ use crate::log::Level;
 use crate::neighbours;
 use crate::points;
 use crate::prompt::Prompt;
-use crate::tool::{Context, Pointer, Preview, Stroke, Tag, Tone};
+use crate::tool::{Context, DataRegion, Pointer, Preview, Stroke, Tag, Tone, ViewChange};
 
 /// How far the pointer must move with the button down to draw a box, logical pixels.
 const DRAG_THRESHOLD: f64 = 4.0;
@@ -430,6 +430,12 @@ impl Select {
                 } else {
                     cx.selection.set(ids);
                 }
+                // The data layers' rows in the box are the host's to read (docs/adr/9103 §5).
+                cx.view_changes.push(ViewChange::DataSelect(DataRegion::Box {
+                    a: start.world,
+                    b: current.world,
+                    crossing,
+                }));
             }
             _ => {
                 // Every object the click could mean, the most specific first (docs/adr/0187 §1):
@@ -440,6 +446,7 @@ impl Select {
                     pick_sub(p.raw, candidates, cx);
                     return;
                 }
+                let missed = candidates.is_empty();
                 match candidates.first().copied() {
                     Some(hit) if p.shift => {
                         cx.selection.toggle(hit);
@@ -453,6 +460,13 @@ impl Select {
                     }
                     None if !p.shift => cx.selection.clear(),
                     None => {}
+                }
+                // No object of the drawing: the row of a data layer under the click, the host's to read (docs/adr/9103 §5).
+                if missed {
+                    cx.view_changes.push(ViewChange::DataSelect(DataRegion::Point {
+                        at: p.raw,
+                        reach: cx.pick_tolerance(),
+                    }));
                 }
             }
         }

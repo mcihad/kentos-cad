@@ -224,6 +224,8 @@ pub const AUDIT_WAIT: std::time::Duration = std::time::Duration::from_secs(130);
 /// Commands that change or take away what is there (the MCP tools' `destructiveHint`); the rest add. Deleting, editing,
 /// moving and setting, a block's changes, cutting and rounding, a processing tool's write.
 pub const DESTRUCTIVE: &[&str] = &[
+    // It writes a data layer's changes to its table and deletes rows; a row written is not unwritten (docs/adr/9103 §3).
+    "cad.layers.session",
     "cad.entities.delete",
     "cad.entities.edit",
     "cad.entities.transform",

@@ -357,6 +357,8 @@ impl App {
                 }
                 // Bilgi's click on no object of the drawing: the data layers asked after the update (data_info.rs).
                 ViewChange::DataInfo { at, reach } => self.data_info.wanted.push((at, reach)),
+                // Seç's click on no object, or its box: the data layers asked after the update (data_pick.rs).
+                ViewChange::DataSelect(region) => self.gis.data_pick.wanted.push(region),
                 // Konumdan adres's place: its address looked for after the update (address/).
                 ViewChange::AddressAt(p) => self.gis.address.wanted.push(p),
                 // Otomatik seçim off left other layers' objects out: a notice offers to turn it on (layer_types.rs).

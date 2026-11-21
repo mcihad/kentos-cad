@@ -74,6 +74,12 @@ impl Document {
         self.history.redo.retain(|step| !touches(step));
     }
 
+    /// Drops the undo and redo steps for which `touches` holds.
+    pub(crate) fn forget_steps(&mut self, touches: impl Fn(&Step) -> bool) {
+        self.history.undo.retain(|step| !touches(step));
+        self.history.redo.retain(|step| !touches(step));
+    }
+
     /// Drops the undo and redo steps that add or remove a node holding one
     /// of these layers, as the step recorded it or as it is in the tree now
     /// (a layer put into an added group since): another editor put objects

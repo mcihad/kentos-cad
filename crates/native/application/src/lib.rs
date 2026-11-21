@@ -495,6 +495,10 @@ pub mod layers_service;
 pub mod layers_data;
 #[path = "gis/layers_rows.rs"]
 pub mod layers_rows;
+#[path = "gis/layers_session.rs"]
+pub mod layers_session;
+#[path = "gis/data_write.rs"]
+pub mod data_write;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_set.rs"]
 pub mod layers_set;
@@ -3150,6 +3154,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LAYERS_ROWS,
         kentos_commands::CAD_LAYERS_ROWS_VERSION,
+    ),
+    // A data layer's edit session: opened, saved to its table, let go, closed ([`layers_session`], docs/adr/9103 §3).
+    (
+        kentos_commands::CAD_LAYERS_SESSION,
+        kentos_commands::CAD_LAYERS_SESSION_VERSION,
     ),
     (
         kentos_commands::CAD_LAYERS_CRS,

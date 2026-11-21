@@ -158,6 +158,18 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // docs/adr/9103 §3: a data layer's edit session.
+    Entry {
+        id: "cad.layers.session",
+        refusals: &[
+            &["no_layer", "one_layer", "no_keys", "invalid_count"],
+            &["layer_not_found", "not_a_data_layer", "data_layer_read_only"],
+            &["data_layer_not_editing", "data_edits_unsaved"],
+            &["source_unreachable", "data_save_failed"],
+        ],
+        warnings: &["data_save_failed"],
+        targets: none,
+    },
     // docs/adr/9101 §4: a data layer added, changed or removed.
     Entry {
         id: "cad.layers.data",

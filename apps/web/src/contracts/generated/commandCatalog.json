@@ -77798,6 +77798,177 @@
       ]
     },
     {
+      "id": "cad.layers.session",
+      "version": 1,
+      "title": "Veri katmanının düzenleme oturumu",
+      "summary": "Bir veri katmanını düzenlemeye açar, değişikliklerini tablosuna yazar, geri alır ya da düzenlemeyi bitirir. Değişiklikler kaydedilene kadar çizimde bekler: katmana çizilen nesne yeni satırdır; take ile anahtarından alınan satır, nesne komutlarıyla değiştirilen, taşınan ya da silinen bir nesne olur; delete satırları anahtarlarıyla, almadan siler (bir geri alma adımı). action: start (düzenlemeye aç; düzenleme değildir), save (her katmanın değişikliklerini tablosuna tek işlemle yazar, katman açık kalır), rollback (değişiklikleri bırakır, katman açık kalır), cancel (bırakır ve kapatır), stop (değişikliği olmayan katmanı kapatır), take, delete, status (oturumu söyler, hiçbir şey yazmaz). layers verilmezse düzenlenen bütün katmanlar (save, rollback, cancel, stop, status); start en az bir, take ve delete tek bir katman ister; keys 1–10 000 anahtar. Tablonun reddettiği kayıtta o katmana hiçbir şey yazılmaz, değişiklikleri bekler; birkaç katman kaydedilirken yazılamayanlar uyarıyla söylenir. Kaydedilen satır buradan geri alınmaz.",
+      "aliases": [
+        "duzenlemeoturumu",
+        "verikaydet",
+        "duzenlemeyibaslat"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.session` v1.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (`start`, `take` or `delete` without a layer),\n`one_layer` (`take` or `delete` naming more than one), `no_keys` (`take` or `delete` without keys),\n`invalid_count` (more than 10 000 keys), `layer_not_found`, `not_a_data_layer`, `data_layer_read_only` (`start` of a\nlayer kept read-only), `data_layer_not_editing` (any other action naming a layer not being edited),\n`data_edits_unsaved` (`stop` of a layer with changes), `source_unreachable` (the table could not be read or opened;\nthe message says why), `data_save_failed` (the table refused the writes: nothing of that layer was written, its\nchanges wait; with several layers, a warning of the layers not written while the others were).",
+        "properties": {
+          "action": {
+            "$ref": "#/$defs/SessionAction"
+          },
+          "keys": {
+            "description": "`take`, `delete`: the rows' keys, 1–10 000.",
+            "items": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "layers": {
+            "description": "The data layers (their ids). None: every layer being edited (`save`, `rollback`, `cancel`, `stop`, `status`).\n`start` names at least one; `take` and `delete` exactly one.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "LayersSession",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.session` v1.",
+        "properties": {
+          "layers": {
+            "description": "The layers acted on, in the tree's order.",
+            "items": {
+              "$ref": "#/$defs/SessionLayer"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "`take`: the objects' persistent ids for the keys, in order; none for a row deleted or not in the table.",
+            "items": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "layers",
+          "revision"
+        ],
+        "title": "LayersSessionDone",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.session` v1.",
+        "properties": {
+          "layers": {
+            "description": "The layers acted on, in the tree's order.",
+            "items": {
+              "$ref": "#/$defs/SessionLayer"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "`take`: the objects' persistent ids for the keys, in order; none for a row deleted or not in the table.",
+            "items": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "layers",
+          "revision"
+        ],
+        "title": "LayersSessionDone",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_layer",
+          "one_layer",
+          "no_keys",
+          "invalid_count",
+          "layer_not_found",
+          "not_a_data_layer",
+          "data_layer_read_only",
+          "data_layer_not_editing",
+          "data_edits_unsaved",
+          "source_unreachable",
+          "data_save_failed"
+        ],
+        "warnings": [
+          "data_save_failed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parselleri düzenlemeye aç",
+          "input": {
+            "action": "start",
+            "layers": [
+              "parseller"
+            ]
+          }
+        },
+        {
+          "title": "İki parseli değiştirmek için çizime al",
+          "input": {
+            "action": "take",
+            "keys": [
+              492776,
+              492777
+            ],
+            "layers": [
+              "parseller"
+            ]
+          }
+        },
+        {
+          "title": "Düzenlenen bütün katmanları kaydet",
+          "input": {
+            "action": "save"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.rows",
       "version": 1,
       "title": "Veri katmanının satırları",
@@ -113114,6 +113285,42 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Katman bir veri katmanı değil."
+    },
+    {
+      "code": "data_layer_not_editing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Veri katmanı düzenlemeye açık değil; satırları tablosunda durur. Önce katmanın düzenlemesini başlatın. Hiçbir şey yazılmadı."
+    },
+    {
+      "code": "data_layer_read_only",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Veri katmanı salt okunur; düzenlenemez."
+    },
+    {
+      "code": "data_edits_unsaved",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katmanda kaydedilmemiş değişiklik var; düzenlemeyi bitirmeden önce kaydedin ya da geri alın."
+    },
+    {
+      "code": "one_layer",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Satır alma ve silme tek bir katmanın satırlarıyla çalışır; bir katman verin."
+    },
+    {
+      "code": "no_keys",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Satırların anahtarları verilmedi."
+    },
+    {
+      "code": "data_save_failed",
+      "kind": "failedOrWarning",
+      "retryable": true,
+      "meaning": "Değişiklikler tabloya yazılamadı; tabloya hiçbir şey yazılmadı, değişiklikler katmanda bekliyor. Söylenen nedeni düzeltip yeniden kaydedin."
     },
     {
       "code": "no_network",
@@ -208887,6 +209094,108 @@
       "required": [
         "name",
         "value"
+      ],
+      "type": "object"
+    },
+    "SessionAction": {
+      "description": "What `cad.layers.session` does.",
+      "oneOf": [
+        {
+          "const": "start",
+          "description": "Opens the layers for editing; not an edit.",
+          "type": "string"
+        },
+        {
+          "const": "save",
+          "description": "Writes each layer's changes to its table, one transaction a layer; the layer stays open.",
+          "type": "string"
+        },
+        {
+          "const": "rollback",
+          "description": "Lets go of each layer's changes; the layer stays open.",
+          "type": "string"
+        },
+        {
+          "const": "cancel",
+          "description": "Lets go of each layer's changes and closes it.",
+          "type": "string"
+        },
+        {
+          "const": "stop",
+          "description": "Closes each layer; refused for one with changes not saved.",
+          "type": "string"
+        },
+        {
+          "const": "take",
+          "description": "Takes rows of the layer into the drawing by key, as objects the object commands change.",
+          "type": "string"
+        },
+        {
+          "const": "delete",
+          "description": "Deletes rows of the layer by key, as one undo step.",
+          "type": "string"
+        },
+        {
+          "const": "status",
+          "description": "Says each layer's session; writes nothing.",
+          "type": "string"
+        }
+      ]
+    },
+    "SessionLayer": {
+      "description": "A layer's session after the action.",
+      "properties": {
+        "added": {
+          "description": "New rows waiting; after `save`, the new rows written.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "changed": {
+          "description": "Changed rows waiting; after `save`, written.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "deleted": {
+          "description": "Deleted rows waiting; after `save`, written.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "editing": {
+          "description": "Being edited after the action.",
+          "type": "boolean"
+        },
+        "failed": {
+          "description": "`save` of several layers: why this one was not written (its changes wait); none: written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "keys": {
+          "description": "`save`: the keys the table gave the new rows, in the drawing's order.",
+          "items": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "layer": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer",
+        "editing",
+        "added",
+        "changed",
+        "deleted"
       ],
       "type": "object"
     },

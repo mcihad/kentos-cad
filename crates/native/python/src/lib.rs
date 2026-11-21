@@ -472,6 +472,9 @@ mod native {
     fn init(m: &Bound<'_, PyModule>) -> PyResult<()> {
         // The PostGIS provider for bound layers (docs/adr/0505), once per process.
         kentos_postgis::register();
+        // The data drivers a data layer's rows are read and written through (docs/adr/9100, 9103 §3).
+        kentos_data_gpkg::register();
+        kentos_data_postgis::register();
         m.add("HostError", m.py().get_type::<super::HostError>())?;
         m.add("__version__", env!("CARGO_PKG_VERSION"))?;
         Ok(())

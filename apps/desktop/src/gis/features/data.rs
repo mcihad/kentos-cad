@@ -124,6 +124,17 @@ impl DataTable {
     }
 }
 
+impl DataTable {
+    /// Seç's rows of a data layer that is not being edited (data_pick.rs): the table's selection, of that layer.
+    pub(crate) fn select_rows(&mut self, layer: &str, keys: Vec<i64>) {
+        if self.selected_of.as_deref() != Some(layer) {
+            self.selected.clear();
+            self.selected_of = Some(layer.to_owned());
+        }
+        self.selected.extend(keys);
+    }
+}
+
 impl App {
     /// The data layer the table shows while the Tablo tab is open, if the layer it shows is one.
     pub(crate) fn data_table_layer(&self) -> Option<LayerNode> {

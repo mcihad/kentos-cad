@@ -347,6 +347,8 @@ impl App {
             },
             gis: crate::gis::GisUiState {
                 sources: crate::sources::SourcesPanel::default(),
+                data_edits: Default::default(),
+                data_pick: Default::default(),
                 db_editor: None,
                 db_password: None,
                 attribute_values: None,

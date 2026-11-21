@@ -88,6 +88,8 @@ pub struct Document {
     /// Whether a step works out the tables' computed cells (docs/adr/0327): not on a dry run's copy that never reads
     /// them (docs/adr/8051 §3).
     pub(crate) works_tables: bool,
+    /// The data layers being edited (docs/adr/9103 §2, data_edits.rs): the session's, not the file's.
+    pub(crate) data_edits: Arc<crate::data_edits::DataEdits>,
 }
 
 /// What a step may do to the drawing's objects (docs/adr/0411 §5).
@@ -336,6 +338,7 @@ impl Document {
             object_isolation: self.object_isolation.clone(),
             isolation_version: self.isolation_version,
             works_tables: self.works_tables,
+            data_edits: self.data_edits.clone(),
         }
     }
 

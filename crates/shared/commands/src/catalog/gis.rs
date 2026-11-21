@@ -430,6 +430,48 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Veri katmanının düzenleme oturumu (docs/adr/9103 §3), held together by
+        // fixtures/commands/v1/cad.layers.session.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_SESSION.into(),
+            version: crate::CAD_LAYERS_SESSION_VERSION,
+            title: "Veri katmanının düzenleme oturumu".into(),
+            summary: "Bir veri katmanını düzenlemeye açar, değişikliklerini tablosuna yazar, geri alır ya da düzenlemeyi bitirir. \
+                      Değişiklikler kaydedilene kadar çizimde bekler: katmana çizilen nesne yeni satırdır; take ile anahtarından alınan satır, nesne komutlarıyla değiştirilen, taşınan ya da silinen bir nesne olur; delete satırları anahtarlarıyla, almadan siler (bir geri alma adımı). \
+                      action: start (düzenlemeye aç; düzenleme değildir), save (her katmanın değişikliklerini tablosuna tek işlemle yazar, katman açık kalır), rollback (değişiklikleri bırakır, katman açık kalır), cancel (bırakır ve kapatır), stop (değişikliği olmayan katmanı kapatır), take, delete, status (oturumu söyler, hiçbir şey yazmaz). \
+                      layers verilmezse düzenlenen bütün katmanlar (save, rollback, cancel, stop, status); start en az bir, take ve delete tek bir katman ister; keys 1–10 000 anahtar. \
+                      Tablonun reddettiği kayıtta o katmana hiçbir şey yazılmaz, değişiklikleri bekler; birkaç katman kaydedilirken yazılamayanlar uyarıyla söylenir. Kaydedilen satır buradan geri alınmaz."
+                .into(),
+            aliases: vec!["duzenlemeoturumu".into(), "verikaydet".into(), "duzenlemeyibaslat".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersSession>(),
+            output: schema::<crate::LayersSessionDone>(),
+            plan: Some(schema::<crate::LayersSessionDone>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parselleri düzenlemeye aç".into(),
+                    input: json!({ "action": "start", "layers": ["parseller"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İki parseli değiştirmek için çizime al".into(),
+                    input: json!({ "action": "take", "layers": ["parseller"], "keys": [492776, 492777] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Düzenlenen bütün katmanları kaydet".into(),
+                    input: json!({ "action": "save" }),
+                    output: None,
+                },
+            ],
+        },
         // Veri katmanının satırları (docs/adr/9102 §4), held together by fixtures/commands/v1/cad.layers.rows.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_ROWS.into(),

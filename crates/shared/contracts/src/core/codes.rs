@@ -616,6 +616,18 @@ codes! {
     INVALID_DATA = "invalid_data", Failed, false, "Veri tablosu kurallarına uymuyor.";
     /// An update or a removal of a layer that is not a data layer.
     NOT_A_DATA_LAYER = "not_a_data_layer", Failed, false, "Katman bir veri katmanı değil.";
+    /// An object written on a data layer that is not being edited (docs/adr/9103 §2): its rows stay in its table.
+    DATA_LAYER_NOT_EDITING = "data_layer_not_editing", Failed, false, "Veri katmanı düzenlemeye açık değil; satırları tablosunda durur. Önce katmanın düzenlemesini başlatın. Hiçbir şey yazılmadı.";
+    /// A data layer kept read-only, or whose table the account may not write (docs/adr/9103 §3).
+    DATA_LAYER_READ_ONLY = "data_layer_read_only", Failed, false, "Veri katmanı salt okunur; düzenlenemez.";
+    /// `stop` of a layer with changes not saved (docs/adr/9103 §3): save them or let them go first.
+    DATA_EDITS_UNSAVED = "data_edits_unsaved", Failed, false, "Katmanda kaydedilmemiş değişiklik var; düzenlemeyi bitirmeden önce kaydedin ya da geri alın.";
+    /// `take` or `delete` of `cad.layers.session` naming more than one layer (docs/adr/9103 §3).
+    ONE_LAYER = "one_layer", Failed, false, "Satır alma ve silme tek bir katmanın satırlarıyla çalışır; bir katman verin.";
+    /// `take` or `delete` of `cad.layers.session` without keys (docs/adr/9103 §3).
+    NO_KEYS = "no_keys", Failed, false, "Satırların anahtarları verilmedi.";
+    /// A save the table refused (docs/adr/9103 §4): nothing of the layer was written, its changes wait in the drawing.
+    DATA_SAVE_FAILED = "data_save_failed", FailedOrWarning, true, "Değişiklikler tabloya yazılamadı; tabloya hiçbir şey yazılmadı, değişiklikler katmanda bekliyor. Söylenen nedeni düzeltip yeniden kaydedin.";
 
     // ── Networks and addresses (docs/adr/0209 §11, 0229 §14) ────────────
     /// `set` without a network.

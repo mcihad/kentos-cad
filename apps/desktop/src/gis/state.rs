@@ -10,6 +10,10 @@ use crate::app::{App, Message};
 pub(crate) struct GisUiState {
     /// Kaynaklar (sources/, docs/adr/0199 §7): its folders, what is open and read.
     pub(crate) sources: crate::sources::SourcesPanel,
+    /// The data layers' edit sessions' saves and question (data_edits.rs, docs/adr/9103 §5).
+    pub(crate) data_edits: crate::data_edits::DataEdits,
+    /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
+    pub(crate) data_pick: crate::data_pick::DataPick,
     /// The connection window while it is open (db_connections.rs, docs/adr/0623).
     pub(crate) db_editor: Option<crate::db_connections::Editor>,
     /// The password question while a server waits for one.
@@ -123,6 +127,10 @@ pub(crate) enum Event {
     DataInfo(crate::data_info::Event),
     /// A data layer's selected rows outlined (data_selection.rs, docs/adr/9102 §5).
     DataSelection(crate::data_selection::Event),
+    /// A data layer's edit session: opened, saved, let go, closed (data_edits.rs, docs/adr/9103 §5).
+    DataEdits(crate::data_edits::Event),
+    /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
+    DataPick(crate::data_pick::Event),
     /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
     Rasters(crate::rasters::Event),
     /// The point cloud windows, XYZ sor's answers and the indexes' panel (pointclouds/).
@@ -215,6 +223,9 @@ pub(crate) enum Event {
 /// The GIS (CBS) module's windows, `Dialog::Gis`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum GisDialogKind {
+    /// A data layer's changes asked about: Kaydet, Kaydetme, Vazgeç (data_edits.rs); the question is
+    /// `GisUiState::data_edits.asking`.
+    DataEdits,
     /// A Hesap window (calc/).
     Calc,
     /// A processing tool's or model's window (processing/).
@@ -337,6 +348,8 @@ impl App {
             Event::DataLayers(event) => return self.data_layers_event(event),
             Event::DataInfo(event) => return self.data_info_event(event),
             Event::DataSelection(event) => return self.data_selection_event(event),
+            Event::DataEdits(event) => return self.data_edits_event(event),
+            Event::DataPick(event) => return self.data_pick_event(event),
             Event::Rasters(event) => return self.rasters_event(event),
             Event::PointClouds(event) => return self.pointclouds_event(event),
             Event::Reconcile(event) => return self.reconcile_event(event),
@@ -383,6 +396,7 @@ impl App {
     /// A window of the module (`Dialog::Gis`).
     pub(crate) fn gis_dialog_view(&self, kind: GisDialogKind) -> Element<'_, Message> {
         match kind {
+            GisDialogKind::DataEdits => self.data_edits_question(),
             GisDialogKind::SourceReconcile => self.reconcile_view(),
             GisDialogKind::Calc => self.calc_view(),
             GisDialogKind::Processing => self.processing_view(),

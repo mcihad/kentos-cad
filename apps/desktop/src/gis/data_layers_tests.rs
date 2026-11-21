@@ -9,7 +9,7 @@ use kentos_data::{Coord, Curve, Driver, Field, FieldKind, Geometry, GeometryFiel
 use crate::files_testing::app_with_drawing;
 
 /// A GeoPackage with a table of `n` parcels in TM36 around the sample drawing.
-fn parcels(name: &str, n: usize) -> PathBuf {
+pub(crate) fn parcels(name: &str, n: usize) -> PathBuf {
     let dir = std::env::temp_dir().join("kentos-desktop-data-layers");
     std::fs::create_dir_all(&dir).expect("a folder");
     let path = dir.join(format!("{name}-{}.gpkg", std::process::id()));
@@ -65,7 +65,7 @@ fn parcels(name: &str, n: usize) -> PathBuf {
     path
 }
 
-fn node<'a>(app: &'a crate::app::App, name: &str) -> Option<&'a LayerNode> {
+pub(crate) fn node<'a>(app: &'a crate::app::App, name: &str) -> Option<&'a LayerNode> {
     app.document
         .as_ref()?
         .model
@@ -123,7 +123,7 @@ fn a_table_in_another_system_is_drawn_in_the_projects() {
 }
 
 /// The world point at `x`, `y` metres from the parcels' corner.
-fn parcel_point(x: f64, y: f64) -> kentos_interaction::Vec2 {
+pub(crate) fn parcel_point(x: f64, y: f64) -> kentos_interaction::Vec2 {
     kentos_interaction::Vec2::new(486_500.0 + x, 4_420_200.0 + y)
 }
 
@@ -199,7 +199,7 @@ fn read_whole(
         max_x: 487_150.0,
         max_y: 4_420_300.0,
     };
-    view.want(&[layer], doc.settings(), doc.styles(), &bounds, 1.0, &look, &library, true);
+    view.want(&[layer], doc.settings(), doc.styles(), &bounds, 1.0, &look, &library, true, &|_| Default::default());
     let start = std::time::Instant::now();
     let mut labels = None;
     while view.drawn_read(&layer.id).is_none() {

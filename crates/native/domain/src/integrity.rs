@@ -9,7 +9,8 @@
 //! - an associative hatch, or a dimension's live reference, to an object
 //!   that is gone; or such a reference left to an object the step removed;
 //! - an object of a kind its layer does not hold (a layer's type, docs/adr/0622 §5):
-//!   one the step put on the layer, or whose kind it changed.
+//!   one the step put on the layer, or whose kind it changed;
+//! - an object written on a data layer that is not being edited (docs/adr/9103 §2).
 //!
 //! Only what the step brought counts: an object the step did not move to
 //! its layer, block or link is not refused for a fault it already had (a
@@ -100,6 +101,21 @@ impl Document {
             };
             let before = change.before.as_deref();
             let base = after.base();
+            // A data layer's objects are its unsaved rows (docs/adr/9103 §2): written only while it is being edited.
+            if let Some(node) = self.layers.get(&base.layer_id)
+                && node.data.is_some()
+                && !self.editing(&base.layer_id)
+            {
+                out.push(Fault {
+                    uid: change.uid,
+                    message: format!(
+                        "“{}” bir veri katmanı ve düzenlemeye açık değil; satırları tablosunda durur. Katmanlar'da katmanın sağ tuşundan Düzenlemeyi başlat'ı seçin.",
+                        node.name
+                    ),
+                    code: Some(kentos_contracts::codes::DATA_LAYER_NOT_EDITING),
+                });
+                continue;
+            }
             let moved = before.is_none_or(|b| b.base().layer_id != base.layer_id);
             // The layer's type (docs/adr/0622 §5): an object the step put on it, or whose kind it changed.
             let retyped = before.is_none_or(|b| b.kind() != after.kind());

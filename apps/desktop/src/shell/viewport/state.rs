@@ -480,6 +480,7 @@ impl Viewport {
                 &look,
                 &s.styles.library,
                 self.settling().is_none(),
+                &|layer| doc.model.data_hidden(layer),
             );
         }
         // A filter calling an extension's function worked out again with its answers: its layer is drawn again.
@@ -824,6 +825,7 @@ impl Viewport {
             | ViewChange::RasterValues(_)
             | ViewChange::CloudQuery { .. }
             | ViewChange::DataInfo { .. }
+            | ViewChange::DataSelect(_)
             | ViewChange::Network(_)
             | ViewChange::Command(_)
             | ViewChange::InfoCard(_)

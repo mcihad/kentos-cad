@@ -274,6 +274,8 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
         .map_err(|e| format!("schema: {e}"))?;
     let names: Vec<&str> = schema.fields.iter().map(|f| f.name.as_str()).collect();
     report.check(names == FIELDS, || format!("alanlar {names:?}"));
+    // A table the driver made gives a new row its key itself (docs/adr/9103 §4).
+    report.check(schema.key_made, || "anahtarı kaynak vermiyor".into());
     report.check(
         schema
             .field("alan")

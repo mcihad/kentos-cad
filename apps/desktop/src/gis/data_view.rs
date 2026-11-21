@@ -14,7 +14,7 @@
 //! A layer whose labels are on keeps a whole read's objects, up to [`LABEL_ROWS`], in a document of their own
 //! ([`take_labels`](DataView::take_labels)); the label engine places them as it places the drawing's (data_labels.rs).
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Condvar, Mutex, OnceLock, PoisonError};
@@ -44,6 +44,9 @@ struct Key {
     node: LayerNode,
     look: Look,
     library: u64,
+    /// The rows left out: an edit session's taken and deleted ones (docs/adr/9103 §5), drawn by the drawing's objects
+    /// or not at all.
+    hidden: Arc<BTreeSet<i64>>,
     /// The view's scale in quarter octaves: a zoom past a step reads again (the geometry's simplification follows it).
     step: i64,
 }
@@ -308,8 +311,12 @@ fn run(job: Job) {
         }
         entities.clear();
     };
+    let hidden = &job.key.hidden;
     let read = source.features(&data.table, &request, &job.cancel, &mut |part: Vec<Feature>| {
         for f in part {
+            if hidden.contains(&f.fid) {
+                continue;
+            }
             let Some(g) = f.shape() else {
                 continue;
             };
@@ -462,7 +469,8 @@ impl DataView {
     }
 
     /// The drawing area's view each frame: each shown data layer read again where its last read does not cover what is
-    /// asked; layers no longer shown are let go (their reads stopped).
+    /// asked, or when the rows it leaves out (`hidden`, an edit session's) changed; layers no longer shown are let go
+    /// (their reads stopped).
     #[allow(clippy::too_many_arguments)]
     pub fn want(
         &self,
@@ -474,6 +482,7 @@ impl DataView {
         look: &Look,
         library: &StyleLibrary,
         settled: bool,
+        hidden: &dyn Fn(&str) -> BTreeSet<i64>,
     ) {
         self.drain();
         let shown: HashSet<&str> = nodes.iter().map(|n| n.id.as_str()).collect();
@@ -510,6 +519,7 @@ impl DataView {
                 node: (*node).clone(),
                 look: look.clone(),
                 library: version,
+                hidden: Arc::new(hidden(&node.id)),
                 step,
             };
             let l = layers.entry(node.id.clone()).or_default();
@@ -522,7 +532,9 @@ impl DataView {
                 .drawn
                 .as_ref()
                 .or(l.going.as_ref())
-                .is_some_and(|r| r.key.data == key.data && r.key.node == key.node && r.key.look == key.look);
+                .is_some_and(|r| {
+                    r.key.data == key.data && r.key.node == key.node && r.key.look == key.look && r.key.hidden == key.hidden
+                });
             if same_look && !settled {
                 continue;
             }

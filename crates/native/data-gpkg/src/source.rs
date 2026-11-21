@@ -111,6 +111,8 @@ impl GpkgSource {
         let shape = Shape {
             schema: Schema {
                 key: layer.fid.clone(),
+                // An INTEGER PRIMARY KEY is the row's id: SQLite gives a new row the next one.
+                key_made: true,
                 fields: fields_of(&layer),
                 geometry: geometry_of(&layer),
             },

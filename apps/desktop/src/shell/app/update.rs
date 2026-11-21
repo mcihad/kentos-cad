@@ -209,6 +209,8 @@ impl App {
         // The key tips follow what the ribbon shows now (ribbon_keys.rs).
         self.refresh_key_tips();
         self.dialog_back();
+        // The edited data layers' unsaved rows outlined (data_edits.rs, docs/adr/9103 §5).
+        self.data_edits_tasks();
         let task = Task::batch([
             task,
             self.text_field_tasks(),
@@ -232,6 +234,8 @@ impl App {
             self.data_table_tasks(),
             // Its selected rows outlined on the map (data_selection.rs).
             self.data_selection_tasks(),
+            // Seç's clicks and boxes on the data layers, asked of their sources (data_pick.rs, docs/adr/9103 §5).
+            self.data_pick_tasks(),
             self.network_tasks(),
             // Konumdan adres's places, asked on the address thread or of a provider (address/).
             self.address_tasks(),

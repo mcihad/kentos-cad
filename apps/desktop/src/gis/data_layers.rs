@@ -294,6 +294,7 @@ mod tests {
         );
         let schema = Schema {
             key: "fid".into(),
+            key_made: true,
             fields: vec![
                 kentos_data::Field::new("ad", FieldKind::Text { max: Some(40) }),
                 kentos_data::Field::new("AD", FieldKind::Text { max: None }),

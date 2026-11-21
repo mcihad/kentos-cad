@@ -948,6 +948,18 @@ fn data_boxes(node: &LayerNode, settings: &kentos_commands::ProjectSettings, out
     }
 }
 
+impl App {
+    /// Whether a data layer at or below `node` has a box to frame.
+    pub(crate) fn data_box_below(&self, node: &LayerNode) -> bool {
+        let Some(doc) = &self.document else {
+            return false;
+        };
+        let mut boxes = Vec::new();
+        data_boxes(node, doc.settings(), &mut boxes);
+        !boxes.is_empty()
+    }
+}
+
 /// The box holding all of `boxes`.
 pub(crate) fn union(boxes: &[[f64; 4]]) -> Option<[f64; 4]> {
     let mut it = boxes.iter();

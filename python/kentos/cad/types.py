@@ -7562,6 +7562,32 @@ ServiceKindName = Literal["wms", "wmts", "xyz", "ogcTiles", "arcgis", "google", 
 """The names of :class:`ServiceKind`, for a plain string."""
 
 
+class SessionAction(_StrEnum):
+    """What `cad.layers.session` does.
+
+    - ``start``: Opens the layers for editing; not an edit.
+    - ``save``: Writes each layer's changes to its table, one transaction a layer; the layer stays open.
+    - ``rollback``: Lets go of each layer's changes; the layer stays open.
+    - ``cancel``: Lets go of each layer's changes and closes it.
+    - ``stop``: Closes each layer; refused for one with changes not saved.
+    - ``take``: Takes rows of the layer into the drawing by key, as objects the object commands change.
+    - ``delete``: Deletes rows of the layer by key, as one undo step.
+    - ``status``: Says each layer's session; writes nothing.
+    """
+    START = "start"
+    SAVE = "save"
+    ROLLBACK = "rollback"
+    CANCEL = "cancel"
+    STOP = "stop"
+    TAKE = "take"
+    DELETE = "delete"
+    STATUS = "status"
+
+
+SessionActionName = Literal["start", "save", "rollback", "cancel", "stop", "take", "delete", "status"]
+"""The names of :class:`SessionAction`, for a plain string."""
+
+
 class ShareRule(_StrEnum):
     """How the common areas are shared out.
 
@@ -58563,6 +58589,72 @@ class LayersServiced(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayersSession(_Model):
+    """Input of `cad.layers.session` v1.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`start`, `take` or `delete` without a layer),
+    `one_layer` (`take` or `delete` naming more than one), `no_keys` (`take` or `delete` without keys),
+    `invalid_count` (more than 10 000 keys), `layer_not_found`, `not_a_data_layer`, `data_layer_read_only` (`start` of a
+    layer kept read-only), `data_layer_not_editing` (any other action naming a layer not being edited),
+    `data_edits_unsaved` (`stop` of a layer with changes), `source_unreachable` (the table could not be read or opened;
+    the message says why), `data_save_failed` (the table refused the writes: nothing of that layer was written, its
+    changes wait; with several layers, a warning of the layers not written while the others were).
+    Attributes:
+        keys: `take`, `delete`: the rows' keys, 1–10 000. Unit: id.
+        layers: The data layers (their ids). None: every layer being edited (`save`, `rollback`, `cancel`, `stop`, `status`).
+            `start` names at least one; `take` and `delete` exactly one.
+    """
+    action: SessionAction | SessionActionName
+    keys: list[int] | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["action"] = _enum_out(self.action)
+        if self.keys is not UNSET:
+            out["keys"] = None if self.keys is None else list(self.keys)
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersSession:
+        return cls(
+            action=_enum_in(SessionAction, data["action"]),
+            keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersSessionDone(_Model):
+    """Output of `cad.layers.session` v1.
+    Attributes:
+        layers: The layers acted on, in the tree's order.
+        objects: `take`: the objects' persistent ids for the keys, in order; none for a row deleted or not in the table.
+    """
+    layers: list[SessionLayer]
+    revision: str
+    objects: list[str | None] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["revision"] = self.revision
+        if self.objects is not UNSET:
+            out["objects"] = list(self.objects)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersSessionDone:
+        return cls(
+            layers=[SessionLayer.from_json(e0) for e0 in data["layers"]],
+            revision=data["revision"],
+            objects=list(data["objects"]) if "objects" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersSet(_Model):
     """Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,
     the lock and the name in the Katmanlar panel make it. Each is an edit of
@@ -97399,6 +97491,51 @@ class ServiceParam(_Model):
         return cls(
             name=data["name"],
             value=data["value"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SessionLayer(_Model):
+    """A layer's session after the action.
+    Attributes:
+        editing: Being edited after the action.
+        added: New rows waiting; after `save`, the new rows written. Unit: count.
+        changed: Changed rows waiting; after `save`, written. Unit: count.
+        deleted: Deleted rows waiting; after `save`, written. Unit: count.
+        failed: `save` of several layers: why this one was not written (its changes wait); none: written.
+        keys: `save`: the keys the table gave the new rows, in the drawing's order. Unit: id.
+    """
+    layer: str
+    editing: bool
+    added: int
+    changed: int
+    deleted: int
+    failed: str | None | Unset = UNSET
+    keys: list[int] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["editing"] = self.editing
+        out["added"] = self.added
+        out["changed"] = self.changed
+        out["deleted"] = self.deleted
+        if self.failed is not UNSET:
+            out["failed"] = self.failed
+        if self.keys is not UNSET:
+            out["keys"] = list(self.keys)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SessionLayer:
+        return cls(
+            layer=data["layer"],
+            editing=data["editing"],
+            added=data["added"],
+            changed=data["changed"],
+            deleted=data["deleted"],
+            failed=data.get("failed", UNSET),
+            keys=list(data["keys"]) if "keys" in data else UNSET,
         )
 
 
@@ -148548,6 +148685,8 @@ __all__ = [
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",
+    "LayersSession",
+    "LayersSessionDone",
     "LayersSet",
     "LayersStates",
     "LayersSubtypes",
@@ -150195,6 +150334,9 @@ __all__ = [
     "ServiceKindName",
     "ServiceLayer",
     "ServiceParam",
+    "SessionAction",
+    "SessionActionName",
+    "SessionLayer",
     "SessionMapSurveyOperation",
     "SetArchOperation",
     "SetAtlasPaperOp",

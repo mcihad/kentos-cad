@@ -145,6 +145,9 @@ impl Server {
     pub fn with_profile(profile: Profile) -> Self {
         // Bound layers on PostGIS (docs/adr/0505): the provider, once per process.
         kentos_postgis::register();
+        // The data drivers a data layer's rows are read and written through (docs/adr/9100, 9103 §3).
+        kentos_data_gpkg::register();
+        kentos_data_postgis::register();
         // STAC searches (docs/adr/0528 §2): over the cloud client's HTTP; CBS's (docs/adr/8054 §11).
         #[cfg(feature = "mod-gis")]
         kentos_native_application::stac_host::register(Box::new(kentos_cloud::stac::HttpFetch));

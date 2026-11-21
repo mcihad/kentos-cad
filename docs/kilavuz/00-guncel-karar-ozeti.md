@@ -5,7 +5,8 @@
 ## 0. Güncel karar özeti
 
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
-  [ADR 9101](../adr/9101-data-layers.md), [plan/veri.md](../../plan/veri.md)).**
+  [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),
+  [plan/veri.md](../../plan/veri.md)).**
   - Veritabanı ve dosya katmanları ayrı crate'lerdeki sürücülerden geçer:
     - ortak sözleşme `kentos-data`;
     - `kentos-data-gpkg`;
@@ -19,8 +20,11 @@
     tablo veri katmanı olur.
   - Veri katmanı görünümü kaynaktan okur: görünüm ve yarısı kadar pay, yarım piksel sadeleştirme, parça parça çizim,
     çizim katmanlarıyla aynı stil motoru. Yaklaşmak projede saklanan kutuyla yapılır, kaynağa gitmez.
-  - Sıradaki maddeler: kaynakta tablo, düzenleme oturumu, işlem kipleri, sınıflar katman ağacında, dışa aktarma
-    penceresi, GeoPackage projeleri.
+  - Öznitelik tablosu veri katmanında sayfa sayfa kaynaktan okunur; metin Türk alfabesiyle sıralanır (`cad.layers.rows`).
+  - **Düzenleme oturumu** (`cad.layers.session`): veri katmanı düzenlemeye açılır. Değişiklikleri kaydedilene kadar
+    çizimde katmanın nesneleri olarak bekler, Kaydet kaynağın tek işlemiyle yazar. Düzenlenmeyen veri katmanına nesne
+    yazılmaz (bütünlük denetimi). Alınan satırlar dosyaya yazılmaz; yeni satırlar dosyada kalır.
+  - Sıradaki maddeler: işlem kipleri, sınıflar katman ağacında, dışa aktarma penceresi, GeoPackage projeleri.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

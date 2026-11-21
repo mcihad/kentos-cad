@@ -982,6 +982,14 @@ impl StyledCache {
                     order.extend((0..part.layer.batches.len()).map(|b| ((base + i) as u32, b as u32)));
                 }
                 parts.extend(list);
+                // Its unsaved rows over its table's (docs/adr/9103 §5): the layer's objects in the drawing.
+                if let Some(layer) = self.layers.get(&node.id) {
+                    for p in layer.parts.values() {
+                        let at = parts.len() as u32;
+                        order.extend((0..p.part.layer.batches.len()).map(|b| (at, b as u32)));
+                        parts.push(p.part.clone());
+                    }
+                }
                 ranges.insert(node.id.as_str(), base as u32..parts.len() as u32);
                 continue;
             }

@@ -37,6 +37,13 @@ pub(crate) enum GisOp {
         before: Arc<Vec<kentos_contracts::AddressLocator>>,
         after: Arc<Vec<kentos_contracts::AddressLocator>>,
     },
+    /// A data layer's keys deleted without being taken (docs/adr/9103 §2), before and after; written while the layer is
+    /// being edited, dropped with the layer's other steps when it is saved or let go.
+    DataDeleted {
+        layer: String,
+        before: Arc<std::collections::BTreeSet<i64>>,
+        after: Arc<std::collections::BTreeSet<i64>>,
+    },
 }
 
 impl GisOp {
@@ -60,6 +67,15 @@ impl GisOp {
                 after: before.clone(),
             },
             GisOp::AddressLocators { before, after } => GisOp::AddressLocators {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            GisOp::DataDeleted {
+                layer,
+                before,
+                after,
+            } => GisOp::DataDeleted {
+                layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -96,6 +112,7 @@ impl GisOp {
             GisOp::AddressLocators { after, .. } => {
                 Arc::make_mut(&mut doc.settings).address_locators = (**after).clone();
             }
+            GisOp::DataDeleted { layer, after, .. } => doc.set_data_deleted(layer, after),
         }
     }
 }

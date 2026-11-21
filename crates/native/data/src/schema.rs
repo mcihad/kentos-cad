@@ -149,6 +149,9 @@ pub fn family_of(type_name: &str) -> Family {
 pub struct Schema {
     /// The integer key column (a GeoPackage's fid, a database table's primary key).
     pub key: String,
+    /// The source gives a new row its key itself (a GeoPackage's integer key, a database's serial or identity column);
+    /// when not, a writer gives it one (docs/adr/9103 §4).
+    pub key_made: bool,
     pub fields: Vec<Field>,
     pub geometry: Option<GeometryField>,
 }

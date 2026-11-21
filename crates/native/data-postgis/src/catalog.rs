@@ -255,6 +255,8 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
     let mut geometry: Option<GeometryField> = None;
     let mut geography = false;
     let mut ints: Vec<String> = Vec::new();
+    // Columns the database fills itself: a serial's default, an identity of either kind.
+    let mut made: Vec<String> = Vec::new();
     for c in &cols {
         let name: String = c.try_get("name").map_err(error_of)?;
         let formatted: String = c.try_get("formatted").map_err(error_of)?;
@@ -284,6 +286,9 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
         }
         let generated: String = c.try_get("generated").unwrap_or_default();
         let identity: String = c.try_get("identity").unwrap_or_default();
+        if !identity.is_empty() || c.try_get::<Option<String>, _>("def").ok().flatten().is_some() {
+            made.push(name.clone());
+        }
         fields.push(Field {
             kind: kind_of(&typ, &formatted),
             native: formatted,
@@ -305,6 +310,7 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
             "“{table}” tablosunun tam sayı birincil anahtarı yok (bir görünümde fid, id, gid ya da ogc_fid adlı tam sayı sütunu); katman olarak okunamaz"
         )));
     };
+    let key_made = made.contains(&key);
     fields.retain(|f| f.name != key);
     let turkish: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM pg_collation WHERE collname = 'tr-x-icu')")
         .fetch_one(&mut *conn)
@@ -313,6 +319,7 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
     Ok(Shape {
         schema: Schema {
             key,
+            key_made,
             fields,
             geometry,
         },

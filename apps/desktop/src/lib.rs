@@ -1510,6 +1510,9 @@ mod data_layers;
 #[cfg(test)]
 #[path = "gis/data_layers_tests.rs"]
 mod data_layers_tests;
+#[cfg(test)]
+#[path = "gis/data_edits_tests.rs"]
+mod data_edits_tests;
 #[path = "gis/data_view.rs"]
 mod data_view;
 #[path = "gis/data_info.rs"]
@@ -1518,6 +1521,10 @@ mod data_info;
 mod data_labels;
 #[path = "gis/data_selection.rs"]
 mod data_selection;
+#[path = "gis/data_edits.rs"]
+mod data_edits;
+#[path = "gis/data_pick.rs"]
+mod data_pick;
 #[path = "gis/db_connections.rs"]
 mod db_connections;
 #[path = "gis/sources/mod.rs"]

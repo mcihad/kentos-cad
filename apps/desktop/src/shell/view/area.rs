@@ -233,6 +233,8 @@ impl App {
                         .extend(self.data_label_layers(&format))
                         // A data layer's rows selected in the table (data_selection.rs, docs/adr/9102 §5).
                         .extend(self.data_selection_layer(crate::view::rgba_color(accent)))
+                        // The edited data layers' rows not saved yet, whatever their style draws (data_edits.rs).
+                        .extend(self.data_edits_layer(Tokens::of(&self.theme()).warning))
                         .push(labels)
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
                         .extend(self.swipe_layer())
@@ -663,13 +665,39 @@ impl App {
                         .into(),
                 };
                 let mark = if data.driver == "gpkg" { "fileOpen" } else { "sourceDatabase" };
-                row.icon(MenuButton::new(face, move || self.layer_colors(node)))
-                    .cells([kentos_ui::icon::icon(crate::icons::from_web(Some(mark)))
+                // One cell (Öğe): where its rows are, and the pencil while it is being edited.
+                let mut marks = iced::widget::Row::new().spacing(4).align_y(iced::Alignment::Center).push(
+                    kentos_ui::icon::icon(crate::icons::from_web(Some(mark)))
                         .size(11.0)
-                        .tone(kentos_ui::icon::Tone::Muted)
-                        .into()])
+                        .tone(kentos_ui::icon::Tone::Muted),
+                );
+                // Being edited, a pencil; with changes not saved, the pencil in the warning's tone (docs/adr/9103 §5).
+                let mut session = String::new();
+                if doc.model.editing(&node.id) {
+                    let c = doc.model.data_changes(&node.id);
+                    let modified = !c.is_empty();
+                    marks = marks.push(
+                        kentos_ui::icon::icon(crate::icons::from_web(Some("edit")))
+                            .size(12.0)
+                            .tone(if modified {
+                                kentos_ui::icon::Tone::Warning
+                            } else {
+                                kentos_ui::icon::Tone::Accent
+                            }),
+                    );
+                    session = if modified {
+                        format!(
+                            "\nDüzenleniyor; kaydedilmemiş: {}",
+                            crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len())
+                        )
+                    } else {
+                        "\nDüzenleniyor".to_owned()
+                    };
+                }
+                row.icon(MenuButton::new(face, move || self.layer_colors(node)))
+                    .cells([marks.into()])
                     .tip(kentos_ui::widget::Tip::new(format!(
-                        "{}\n{}{}",
+                        "{}\n{}{}{session}",
                         data.kind_words(),
                         data.place_words(),
                         if data.read_only { "\nSalt okunur" } else { "" }

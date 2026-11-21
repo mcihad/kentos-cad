@@ -83,6 +83,15 @@ impl App {
             self.dialog = Some(Dialog::Unsaved(then));
             return Task::none();
         }
+        // A data layer's changes not saved to its table are asked about first (docs/adr/9103 §5).
+        if then.replaces()
+            && let Some(task) = self.data_edits_before_leave(then)
+        {
+            return task;
+        }
+        let Some(doc) = &self.document else {
+            return self.proceed(then);
+        };
         if then.replaces() && doc.dirty() && !doc.is_database() {
             self.dialog = Some(Dialog::Unsaved(then));
             return Task::none();

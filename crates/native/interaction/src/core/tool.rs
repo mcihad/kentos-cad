@@ -86,6 +86,15 @@ impl Pointer {
 /// The view a tool works through (docs/adr/8054 §8: the viewer core's, re-exported).
 pub use kentos_scene_query::view::View;
 
+/// Where Seç asks the data layers for rows ([`ViewChange::DataSelect`]), in the drawing's units.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum DataRegion {
+    /// A click: the row under `at` within `reach`.
+    Point { at: Vec2, reach: f64 },
+    /// A box between two corners: every row wholly inside it, or every row meeting it (`crossing`).
+    Box { a: Vec2, b: Vec2, crossing: bool },
+}
+
 /// A change of the view a tool asks for (docs/adr/0056): Kaydır drags it,
 /// Pencere yakınlaştır fits a box. The web's tools move `ctx.view.camera`
 /// themselves; here the host's camera takes the changes, in order, right
@@ -153,6 +162,10 @@ pub enum ViewChange {
     /// `reach` (world units), shows its card and gives the row back with
     /// [`Tool::data_found`].
     DataInfo { at: Vec2, reach: f64 },
+    /// Seç's click on no object of the drawing, or its box (docs/adr/9103 §5): the host takes the rows of the data
+    /// layers being edited under it into the drawing and adds their objects to the selection; a data layer that is not
+    /// being edited (the active one) selects its rows in its table. The selection the tool left stays.
+    DataSelect(DataRegion),
     /// Konumdan adres's place (docs/adr/0229 §13): the host looks for its
     /// address in the Adres tab's source and shows it there.
     AddressAt(Vec2),

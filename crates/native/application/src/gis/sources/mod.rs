@@ -118,45 +118,28 @@ impl TableSystem {
         .map(|t| (t.point.x, t.point.y))
     }
 
+    /// A position of the project in the table's system; none where it has no value there.
+    pub fn to_table_point(&self, x: f64, y: f64) -> Option<(f64, f64)> {
+        kentos_geometry_core::crs::transform_in(
+            &self.mover.project,
+            &self.mover.source,
+            kentos_geometry_core::Vec2 { x, y },
+            &self.mover.choices,
+        )
+        .ok()
+        .map(|t| (t.point.x, t.point.y))
+    }
+
     /// A geometry of the table moved into the project's system, position by position; none where a position has no
     /// value there.
     pub fn moved(&self, g: &kentos_data::Geometry) -> Option<kentos_data::Geometry> {
-        use kentos_data::{Coord, Curve, Geometry};
-        let coord = |c: &Coord| -> Option<Coord> {
-            let (x, y) = self.to_project(c.x, c.y)?;
-            Some(Coord { x, y, ..*c })
-        };
-        fn curve(c: &Curve, coord: &dyn Fn(&Coord) -> Option<Coord>) -> Option<Curve> {
-            Some(match c {
-                Curve::Line(p) => Curve::Line(p.iter().map(coord).collect::<Option<_>>()?),
-                Curve::Arc(p) => Curve::Arc(p.iter().map(coord).collect::<Option<_>>()?),
-                Curve::Compound(parts) => {
-                    Curve::Compound(parts.iter().map(|c| curve(c, coord)).collect::<Option<_>>()?)
-                }
-            })
-        }
-        Some(match g {
-            Geometry::Point(p) => Geometry::Point(match p {
-                Some(c) => Some(coord(c)?),
-                None => None,
-            }),
-            Geometry::MultiPoint(ps) => Geometry::MultiPoint(ps.iter().map(coord).collect::<Option<_>>()?),
-            Geometry::Curve(c) => Geometry::Curve(curve(c, &coord)?),
-            Geometry::Polygon(r) => {
-                Geometry::Polygon(r.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?)
-            }
-            Geometry::MultiCurve(cs) => {
-                Geometry::MultiCurve(cs.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?)
-            }
-            Geometry::MultiPolygon(ps) => Geometry::MultiPolygon(
-                ps.iter()
-                    .map(|r| r.iter().map(|c| curve(c, &coord)).collect::<Option<Vec<_>>>())
-                    .collect::<Option<_>>()?,
-            ),
-            Geometry::Collection(gs) => {
-                Geometry::Collection(gs.iter().map(|g| self.moved(g)).collect::<Option<_>>()?)
-            }
-        })
+        moved_by(g, &|x, y| self.to_project(x, y))
+    }
+
+    /// A geometry of the project moved into the table's system (a row written, docs/adr/9103 §4); none where a position
+    /// has no value there.
+    pub fn moved_back(&self, g: &kentos_data::Geometry) -> Option<kentos_data::Geometry> {
+        moved_by(g, &|x, y| self.to_table_point(x, y))
     }
 
     /// A box of the project's system as one of the table's, its sides densified.
@@ -169,6 +152,47 @@ impl TableSystem {
             &self.mover.choices,
         )
     }
+}
+
+/// `g` with every position moved by `to`; none where a position has no value there.
+fn moved_by(
+    g: &kentos_data::Geometry,
+    to: &dyn Fn(f64, f64) -> Option<(f64, f64)>,
+) -> Option<kentos_data::Geometry> {
+    use kentos_data::{Coord, Curve, Geometry};
+    let coord = |c: &Coord| -> Option<Coord> {
+        let (x, y) = to(c.x, c.y)?;
+        Some(Coord { x, y, ..*c })
+    };
+    fn curve(c: &Curve, coord: &dyn Fn(&Coord) -> Option<Coord>) -> Option<Curve> {
+        Some(match c {
+            Curve::Line(p) => Curve::Line(p.iter().map(coord).collect::<Option<_>>()?),
+            Curve::Arc(p) => Curve::Arc(p.iter().map(coord).collect::<Option<_>>()?),
+            Curve::Compound(parts) => {
+                Curve::Compound(parts.iter().map(|c| curve(c, coord)).collect::<Option<_>>()?)
+            }
+        })
+    }
+    Some(match g {
+        Geometry::Point(p) => Geometry::Point(match p {
+            Some(c) => Some(coord(c)?),
+            None => None,
+        }),
+        Geometry::MultiPoint(ps) => Geometry::MultiPoint(ps.iter().map(coord).collect::<Option<_>>()?),
+        Geometry::Curve(c) => Geometry::Curve(curve(c, &coord)?),
+        Geometry::Polygon(r) => Geometry::Polygon(r.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?),
+        Geometry::MultiCurve(cs) => {
+            Geometry::MultiCurve(cs.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?)
+        }
+        Geometry::MultiPolygon(ps) => Geometry::MultiPolygon(
+            ps.iter()
+                .map(|r| r.iter().map(|c| curve(c, &coord)).collect::<Option<Vec<_>>>())
+                .collect::<Option<_>>()?,
+        ),
+        Geometry::Collection(gs) => {
+            Geometry::Collection(gs.iter().map(|g| moved_by(g, to)).collect::<Option<_>>()?)
+        }
+    })
 }
 
 /// A table's declared box (`SourceTable::extent`) in the project's system, for Kapsamı göster (docs/adr/0599 §9):

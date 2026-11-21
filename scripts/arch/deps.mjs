@@ -109,12 +109,12 @@ const GROUPS = [
   // `processing` for kentos.network (docs/adr/0209 §11): a network built from the drawing as the İşlemler tools build it.
   // `postgis` registers the PostGIS provider (docs/adr/0505): its tokio and sqlx come in only through it.
   // `extension-tools`: the user's extensions' headless tools offered at the first drawing (docs/adr/8057 §70).
-  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage', 'data', 'postgis', 'extension-tools', 'extension-host', 'python-env', 'standards'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage', 'data', 'data-gpkg', 'data-postgis', 'postgis', 'extension-tools', 'extension-host', 'python-env', 'standards'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
   // The MCP server (docs/adr/0133, 0134): the headless host's tools over stdio, JSON-RPC by hand;
   // the server's commands through the desktop's cloud client (`native`). No UI, database or
   // server framework. Listed before `native`.
   // `extension-tools`: the user's extensions' headless tools offered at the program's start (docs/adr/8057 §70).
-  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage', 'data', 'postgis', 'extension-host', 'extension-tools', 'python-env', 'standards', 'imza'], forbid: ['axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage', 'data', 'data-gpkg', 'data-postgis', 'postgis', 'extension-host', 'extension-tools', 'python-env', 'standards', 'imza'], forbid: ['axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The in-app AI agent's provider layer (docs/adr/8056 §4): agents, the providers' wire formats and a chat turn's tool
   // loop over HTTP, on a tokio runtime of its own. A pure network crate: no other KentOS crate (the desktop hands it the
   // tools' schemas and runs the tools), no UI, GPU, database, server framework or browser. Listed before `native`.
