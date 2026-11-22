@@ -468,3 +468,7 @@ numaraları raporunkidir.
   ([ADR 9156](../docs/adr/9156-statistics-of-chosen-and-seen-data-rows.md))
   - Satırlar anahtar ve kutularıyla; Seçililer tablonun seçimi, Görünümdekiler görünümün kutusu.
   - Kalan: tablo/grafik/dışa aktarım toplamının tek sınaması, kaynak satırlarının ölçüleri, web.
+- [~] **VY-56 — İşlemin girdisi seçimin katmanını ve katmanın sayısını söyler (rapor 11'in kalanı).**
+  ([ADR 9157](../docs/adr/9157-processing-selection-names-its-layer.md))
+  - “seçili, “Parsel” katmanından (katmanda 1 nesne)”; birden çok katmanda kaç katmandan.
+  - Kalan: türetilmiş ad, iş kaydının alanları, sınamalar, web.

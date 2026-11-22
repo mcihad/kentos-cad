@@ -77,9 +77,21 @@ def cells(c, place=False):
 
 def status(cands, st):
     line = f"{len(cands)} aday"
-    if cands:
-        line += f" · En iyisi: {st} ({cands[0]['score']})"
-    return line
+    if not cands:
+        return line
+    top = cands[0]["score"]
+    if st == "Belirsiz":
+        # Tied at the top: how many, their score and the neighbourhoods that tell them apart (docs/adr/9154).
+        tied = [c for c in cands if c["score"] == top]
+        places = []
+        for c in tied:
+            n = c["texts"].get("neighbourhood", "")
+            if n and n not in places:
+                places.append(n)
+        if len(places) > 1:
+            return f"{line} · {len(tied)} aday aynı puanda ({top}): {', '.join(places)} mahallelerinde; mahalleyi ekleyerek ayırın"
+        return f"{line} · {len(tied)} aday aynı puanda ({top}): mahalleyi, ilçeyi ya da posta kodunu ekleyerek ayırın"
+    return f"{line} · En iyisi: {st} ({top})"
 
 
 NOT_FOUND = "Aday yok: yazımı, kaynağı ve adres verisinin alanlarını denetleyin."

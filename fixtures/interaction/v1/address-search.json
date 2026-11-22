@@ -116,7 +116,7 @@
    "note": "Mahallesiz: iki mahallede de 2 numaralı kapı var, eşit puan: Belirsiz",
    "expect": {
     "address": {
-     "count": "2 aday · En iyisi: Belirsiz (100)",
+     "count": "2 aday · 2 aday aynı puanda (100): Cumhuriyet, Kızılay mahallelerinde; mahalleyi ekleyerek ayırın",
      "rows": [
       "Cumhuriyet Mahallesi Atatürk Bulvarı No:2 06100 Çankaya/Ankara | Kapı | 100 | Cumhuriyet | Çankaya",
       "Kızılay Mahallesi Atatürk Bulvarı No:2 06420 Çankaya/Ankara | Kapı | 100 | Kızılay | Çankaya"

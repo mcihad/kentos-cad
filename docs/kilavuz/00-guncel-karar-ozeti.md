@@ -174,6 +174,9 @@
   - **Veri katmanında Seçililer ve Görünümdekiler** (23 Kasım, rapor 17'nin kalanı;
     [ADR 9156](../adr/9156-statistics-of-chosen-and-seen-data-rows.md), VY-55): İstatistik ve Grafik tablonun seçimini
     ve görünümdeki satırları sayar.
+  - **Girdide seçimin katmanı** (23 Kasım, rapor 11'in kalanı;
+    [ADR 9157](../adr/9157-processing-selection-names-its-layer.md), VY-56): seçim girdisi katmanını ve katmanın sayısını
+    söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

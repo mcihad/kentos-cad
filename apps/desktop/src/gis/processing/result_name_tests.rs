@@ -43,6 +43,9 @@ fn tampon_reads_the_selection_and_proposes_its_result_by_it() {
     assert_eq!(w.values.get("input"), Some(&json!({ "scope": "selection" })), "the selection, not the last layer");
     assert_eq!(result_name(&app), "Tampon", "the tool's own name, not the last run's");
     assert!(!w.input_empty());
+    // The input's line names the selection's layer and its count (docs/adr/9157).
+    let said = w.inputs.get("input").map(|i| i.description.clone()).unwrap_or_default();
+    assert!(said.ends_with("seçili, “Parsel” katmanından (katmanda 1 nesne)"), "{said}");
     // A name typed is the person's: it stays.
     ev(&mut app, Event::LayerName("layer".into(), "Parsel etki alanı".into()));
     ev(&mut app, Event::Number("distance".into(), "30".into()));

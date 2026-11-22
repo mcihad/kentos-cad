@@ -223,6 +223,25 @@ fn narrow<'d>(
     }
     let place = match &value.scope {
         Scope::Layer(id) => format!("“{}” katmanında", layer_name(doc, id)),
+        // The selection named by its layer and the layer's own count (docs/adr/9157): “seçili, “Yol ekseni” katmanından
+        // (katmanda 1 nesne)”; from several layers, how many.
+        Scope::Selection => {
+            let mut layers: Vec<&str> = Vec::new();
+            for e in &entities {
+                let l = e.base().layer_id.as_str();
+                if !layers.contains(&l) {
+                    layers.push(l);
+                }
+            }
+            match layers[..] {
+                [one] => format!(
+                    "seçili, “{}” katmanından (katmanda {} nesne)",
+                    layer_name(doc, one),
+                    doc.entities().filter(|e| e.base().layer_id == one).count()
+                ),
+                _ => format!("seçili nesneler, {} katmandan", layers.len()),
+            }
+        }
         scope => tr_lower(scope_label(scope)),
     };
     let description = format!("{}; {place}", describe_count(&entities));
