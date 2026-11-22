@@ -320,6 +320,14 @@ fn save(cx: &mut ExecutionContext<'_>, layers: &[String], force: bool) -> Comman
                 CommandResult::Conflict { error: e }
             }
             WriteFailure::Unreachable(m) => Stop::failed(error(codes::SOURCE_UNREACHABLE, m, Some(path))).into(),
+            // The commit's answer lost (docs/adr/9126): not retried by itself, the source may hold the rows already.
+            WriteFailure::Uncertain(m, _) => {
+                let words = format!(
+                    "{m} Değişiklikler katmanda duruyor; yeniden kaydetmeden önce kaynakta satırların yazılıp yazılmadığını \
+                     denetleyin: yeniden yazmak yeni satırları ikinci kez ekleyebilir."
+                );
+                Stop::failed(error(codes::SOURCE_UNREACHABLE, words, Some(path))).into()
+            }
             WriteFailure::Refused(m, uid) => {
                 let mut e = error(codes::DATA_SAVE_FAILED, m, Some(path));
                 e.uids = uid.iter().map(ToString::to_string).collect();

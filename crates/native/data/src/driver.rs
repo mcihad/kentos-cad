@@ -136,6 +136,23 @@ pub trait Source: Send + Sync {
     }
     /// Starts a transaction.
     fn begin(&self) -> Result<Box<dyn Transaction>, DataError>;
+    /// Whether the source keeps write receipts in `scope` (a database's schema; a file has one place, ""): a table
+    /// a write's receipt goes into with its rows, in the same transaction (docs/adr/9126). None is set up silently: the
+    /// owner sets them up ([`Source::set_up_receipts`]).
+    fn receipts(&self, scope: &str) -> Result<bool, DataError> {
+        let _ = scope;
+        Ok(false)
+    }
+    /// Makes the write receipts' table in `scope`, if it is not there; the source's other tables stay as they are.
+    fn set_up_receipts(&self, scope: &str) -> Result<(), DataError> {
+        let _ = scope;
+        Err(DataError::Unsupported("Bu kaynak yazım makbuzu tutmaz.".to_owned()))
+    }
+    /// The receipt of the write `id` in `scope`, read outside any transaction; none when no such write committed.
+    fn receipt(&self, scope: &str, id: &str) -> Result<Option<Receipt>, DataError> {
+        let _ = (scope, id);
+        Err(DataError::Unsupported("Bu kaynak yazım makbuzu tutmaz.".to_owned()))
+    }
     /// Where it keeps projects with its data (docs/adr/9107); none for a source that cannot keep them.
     fn project_store(&self) -> Option<&dyn ProjectStore> {
         None
@@ -173,11 +190,29 @@ pub trait Transaction: Send {
     fn create_table(&mut self, table: &NewTable, replace: bool) -> Result<(), DataError>;
     /// Drops a table.
     fn drop_table(&mut self, table: &str) -> Result<(), DataError>;
+    /// Writes a write's receipt into `scope`'s receipts table, inside the transaction: it commits with the rows or not
+    /// at all (docs/adr/9126). A receipt of the same id already there is refused (its primary key).
+    fn receipt(&mut self, scope: &str, receipt: &Receipt) -> Result<(), DataError> {
+        let _ = (scope, receipt);
+        Err(DataError::Unsupported("Bu kaynak yazım makbuzu tutmaz.".to_owned()))
+    }
     /// Writes it all.
     fn commit(self: Box<Self>) -> Result<(), DataError>;
     /// Writes nothing.
     fn rollback(self: Box<Self>) -> Result<(), DataError>;
 }
+
+/// A write's receipt (docs/adr/9126): its id, who wrote it, and what it wrote as JSON (`{"table": {"added": [[uid,
+/// key], …], "changed": n, "deleted": n}}`): the keys the source gave the new rows, by the objects' ids.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Receipt {
+    pub id: String,
+    pub by: Option<String>,
+    pub written: String,
+}
+
+/// The name of the write receipts' table in a scope.
+pub const RECEIPTS_TABLE: &str = "kentos_writes";
 
 /// Every row of a request gathered (for tests and small tables; a layer streams instead).
 pub fn collect(

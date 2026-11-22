@@ -77,7 +77,7 @@ impl Journals {
         let Some(file) = self.file(&kept.place) else {
             return Ok(());
         };
-        if kept.layers.is_empty() && kept.gone.is_empty() {
+        if kept.layers.is_empty() && kept.gone.is_empty() && kept.uncertain.is_empty() {
             return match std::fs::remove_file(&file) {
                 Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e),
                 _ => Ok(()),
@@ -126,6 +126,20 @@ pub(crate) struct Kept {
     pub left_from: usize,
     /// `Document::data_written` the journal is in step with.
     pub written: u64,
+    /// The writes whose commit's answer was lost (docs/adr/9126), one each: asked by their receipts before the layers
+    /// are written again, the project opened again too.
+    pub uncertain: Vec<crate::data_edits::Uncertain>,
+}
+
+/// The uncertain writes of the edit sessions, one each (a write of several layers is kept under each of them).
+pub(crate) fn uncertain_of(edits: &crate::data_edits::DataEdits) -> Vec<crate::data_edits::Uncertain> {
+    let mut out: Vec<crate::data_edits::Uncertain> = Vec::new();
+    for u in edits.uncertain.values() {
+        if !out.contains(u) {
+            out.push(u.clone());
+        }
+    }
+    out
 }
 
 /// A `.kcad` file's place: its path with the links in it resolved. A file not written yet (a project's first save) is
@@ -162,6 +176,7 @@ pub(crate) fn kept_for(model: &kentos_domain::Document, place: String) -> Kept {
         gone: Vec::new(),
         left_from: model.data_left().len(),
         written: model.data_written(),
+        uncertain: Vec::new(),
     }
 }
 
@@ -180,6 +195,9 @@ struct Written {
     /// The file's objects its tables hold now or that were let go.
     #[serde(default)]
     gone: Vec<String>,
+    /// The writes whose commit's answer was lost (docs/adr/9126).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    uncertain: Vec<crate::data_edits::Uncertain>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -224,6 +242,7 @@ impl Written {
                 })
                 .collect(),
             gone: kept.gone.iter().map(ToString::to_string).collect(),
+            uncertain: kept.uncertain.clone(),
         }
     }
 
@@ -306,7 +325,7 @@ impl App {
             kept.written = doc.model.data_written();
             doc.kept = Some(kept);
         };
-        let written = match read {
+        let mut written = match read {
             Ok(Some(written)) => written,
             Ok(None) => return finish(doc, kept),
             Err(why) => {
@@ -323,6 +342,7 @@ impl App {
             );
             return finish(doc, kept);
         }
+        let uncertain = std::mem::take(&mut written.uncertain);
         let (layers, gone) = written.parts();
         let dropped = doc.model.drop_left(&gone);
         let said = doc.model.restore_pending(layers);
@@ -337,7 +357,21 @@ impl App {
                 format!("{name}: {}", crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len()))
             })
             .collect();
+        // The writes whose answer was lost come back too: asked before the layers are written again (docs/adr/9126).
+        kept.uncertain = uncertain.clone();
+        for u in &uncertain {
+            for l in u.layers() {
+                self.gis.data_edits.failed.insert(l.clone(), u.words.clone());
+                self.gis.data_edits.uncertain.insert(l, u.clone());
+            }
+        }
         finish(doc, kept);
+        if !uncertain.is_empty() {
+            self.warn(format!(
+                "{} yazımın sonucu bilinmiyor (bağlantı yazım bitmek üzereyken kopmuştu); Kaynağa yaz önce kaynağa sorar.",
+                uncertain.len()
+            ));
+        }
         if !back.is_empty() {
             self.say(
                 kentos_interaction::Level::Info,
@@ -354,6 +388,27 @@ impl App {
         }
         for why in said {
             self.warn(why);
+        }
+    }
+
+    /// The open project's journal with the writes whose answer was lost as they stand now (docs/adr/9126): written at
+    /// once when the project keeps a journal (it was saved or opened from its place), so quitting does not lose them.
+    pub(crate) fn journal_uncertain(&mut self) {
+        let journals = self.gis.data_journal.clone();
+        let uncertain = uncertain_of(&self.gis.data_edits);
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let project = doc.model.project_id();
+        let Some(kept) = doc.kept.as_mut() else {
+            return;
+        };
+        if kept.uncertain == uncertain {
+            return;
+        }
+        kept.uncertain = uncertain;
+        if let Err(e) = journals.write(kept, project) {
+            self.warn(format!("Sonucu bilinmeyen yazım bu cihazda saklanamadı ({e})."));
         }
     }
 
@@ -392,6 +447,7 @@ impl App {
         gone.extend(left.iter().copied().filter(|u| !kept.gone.contains(u)));
         let mut written_kept = kept.clone();
         written_kept.gone = gone;
+        written_kept.uncertain = uncertain_of(&self.gis.data_edits);
         let project = model.project_id();
         if let Err(e) = journals.write(&written_kept, project) {
             self.warn(format!("Bekleyen veri düzenlemelerinin günlüğü güncellenemedi ({e})."));

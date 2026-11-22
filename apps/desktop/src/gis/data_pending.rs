@@ -12,6 +12,7 @@
 //!   docs/adr/9111 §3), and a copy of the project file taken to another computer does not carry them.
 
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 
 use iced::widget::{column, container, row};
 use iced::{Element, Length, Task};
@@ -36,6 +37,9 @@ pub(crate) struct Waiting {
     pub deleted: usize,
     /// Why the last write to its source did not go, while its changes wait.
     pub failed: Option<String>,
+    /// A write of it whose commit's answer was lost (docs/adr/9126): whether a receipt went in with it (the source can
+    /// be asked).
+    pub uncertain: Option<bool>,
 }
 
 impl Waiting {
@@ -51,6 +55,10 @@ pub(crate) struct PendingWindow {
     chosen: Option<String>,
     /// Değişiklikleri geri al… pressed for this layer: its rows go at the second press.
     rolling_back: Option<String>,
+    /// Yeniden gönder… pressed for this layer (an uncertain write without a receipt): sent at the second press.
+    resending: Option<String>,
+    /// Whether a database layer's source keeps write receipts, by layer, as last asked; why it could not be asked.
+    receipts: BTreeMap<String, Result<bool, String>>,
 }
 
 /// What the window and the status bar's cell say.
@@ -65,6 +73,15 @@ pub enum Event {
     Rollback(String),
     RollbackConfirmed(String),
     RollbackCancelled,
+    /// Yeniden gönder…: asks; the second press sends the uncertain write's changes again (docs/adr/9126).
+    Resend(String),
+    ResendConfirmed(String),
+    ResendCancelled,
+    /// Whether the layer's source keeps write receipts, as asked off the interface's thread.
+    Receipts(String, Result<bool, String>),
+    /// Yazım makbuzlarını kur: the receipts' table made in the layer's source.
+    SetUpReceipts(String),
+    SetUp(String, Result<(), String>),
     Close,
 }
 
@@ -80,6 +97,11 @@ pub(crate) fn open() -> Message {
 /// A layer menu's Değişiklikleri incele…: the window on that layer.
 pub(crate) fn open_at(layer: String) -> Message {
     message(Event::Open(Some(layer)))
+}
+
+/// The window on this layer, or the first waiting one.
+pub(crate) fn open_at_message(layer: Option<String>) -> Message {
+    message(Event::Open(layer))
 }
 
 /// “1 katmanda 3 satır”.
@@ -174,6 +196,7 @@ fn counted(doc: &crate::document::Document) -> Vec<Waiting> {
                     changed: c.changed.len(),
                     deleted: c.deleted.len(),
                     failed: None,
+                    uncertain: None,
                 })
             })
             .collect();
@@ -192,8 +215,38 @@ impl App {
         let mut waiting = counted(doc);
         for w in &mut waiting {
             w.failed = self.gis.data_edits.failed_of(&w.layer).map(str::to_owned);
+            w.uncertain = self.gis.data_edits.uncertain.get(&w.layer).map(|u| u.receipt.is_some());
         }
         waiting
+    }
+
+    /// A layer's data source, when it is a data layer.
+    fn data_of(&self, layer: &str) -> Option<kentos_commands::DataLayer> {
+        self.document.as_ref()?.model.layers().get(layer)?.data.clone()
+    }
+
+    fn data_layer_name_of(&self, layer: &str) -> String {
+        self.document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(layer).map(|n| n.name.clone()))
+            .unwrap_or_else(|| layer.to_owned())
+    }
+
+    /// Whether the waiting database layers' sources keep write receipts, asked off the interface's thread: a file's
+    /// commit has a sure answer, a database's may be lost (docs/adr/9126).
+    fn ask_receipts(&mut self) -> Task<Message> {
+        let tasks: Vec<Task<Message>> = self
+            .data_waiting()
+            .into_iter()
+            .filter_map(|w| Some((w.layer.clone(), self.data_of(&w.layer).filter(|d| d.driver == "postgis")?)))
+            .map(|(layer, data)| {
+                crate::db_connections::off_thread(
+                    move || kentos_native_application::data_write::receipts_ready(&data),
+                    move |known| message(Event::Receipts(layer, known)),
+                )
+            })
+            .collect();
+        Task::batch(tasks)
     }
 
     /// After a form's Kaydet on a data layer's record (docs/adr/9123): the record waits in its layer, and how many of
@@ -271,12 +324,15 @@ impl App {
         }
         let rows: usize = waiting.iter().map(Waiting::rows).sum();
         let failed = waiting.iter().any(|w| w.failed.is_some());
-        let words = match (fit, failed) {
-            (7.., _) => rows.to_string(),
-            (4.., false) => format!("{rows} satır bekliyor"),
-            (4.., true) => format!("{rows} satır yazılamadı"),
-            (_, false) => format!("Kaynağa yazılmadı: {}", amount(waiting.len(), rows)),
-            (_, true) => format!("Kaynağa yazılamadı: {}", amount(waiting.len(), rows)),
+        let unsure = waiting.iter().any(|w| w.uncertain.is_some());
+        let words = match (fit, failed, unsure) {
+            (7.., _, _) => rows.to_string(),
+            (4.., _, true) => format!("{rows} satırın sonucu bilinmiyor"),
+            (4.., false, _) => format!("{rows} satır bekliyor"),
+            (4.., true, _) => format!("{rows} satır yazılamadı"),
+            (_, _, true) => format!("Yazımın sonucu bilinmiyor: {}", amount(waiting.len(), rows)),
+            (_, false, _) => format!("Kaynağa yazılmadı: {}", amount(waiting.len(), rows)),
+            (_, true, _) => format!("Kaynağa yazılamadı: {}", amount(waiting.len(), rows)),
         };
         Some((words, failed))
     }
@@ -290,6 +346,53 @@ impl App {
                     w.chosen = layer.or(first);
                 }
                 self.dialog = Some(AppDialog::Gis(crate::gis::GisDialogKind::DataPending));
+                return self.ask_receipts();
+            }
+            Event::Receipts(layer, known) => {
+                if let Some(w) = self.gis.data_pending.as_mut() {
+                    w.receipts.insert(layer, known);
+                }
+            }
+            Event::SetUpReceipts(layer) => {
+                let Some(data) = self.data_of(&layer) else {
+                    return Task::none();
+                };
+                return crate::db_connections::off_thread(
+                    move || kentos_native_application::data_write::set_up_receipts(&data),
+                    move |done| message(Event::SetUp(layer, done)),
+                );
+            }
+            Event::SetUp(layer, done) => match done {
+                Ok(()) => {
+                    let name = self.data_layer_name_of(&layer);
+                    self.say(
+                        kentos_interaction::Level::Success,
+                        format!(
+                            "Yazım makbuzları “{name}” katmanının kaynağında kuruldu (kentos_writes tablosu; öbür tablolar \
+                             değişmedi). Bundan sonraki yazımların sonucu bağlantı kopsa da kaynağa sorulabilir."
+                        ),
+                    );
+                    if let Some(w) = self.gis.data_pending.as_mut() {
+                        w.receipts.insert(layer, Ok(true));
+                    }
+                }
+                Err(why) => self.warn(format!("Yazım makbuzları kurulamadı: {why}")),
+            },
+            Event::Resend(layer) => {
+                if let Some(w) = self.gis.data_pending.as_mut() {
+                    w.resending = Some(layer);
+                }
+            }
+            Event::ResendCancelled => {
+                if let Some(w) = self.gis.data_pending.as_mut() {
+                    w.resending = None;
+                }
+            }
+            Event::ResendConfirmed(layer) => {
+                if let Some(w) = self.gis.data_pending.as_mut() {
+                    w.resending = None;
+                }
+                return self.data_edits_event(crate::data_edits::Event::Resend(vec![layer]));
             }
             Event::Choose(layer) => {
                 if let Some(w) = self.gis.data_pending.as_mut() {
@@ -366,7 +469,9 @@ impl App {
             );
             let list = waiting.iter().fold(column![].spacing(1), |c, w| {
                 let mut subtitle = format!("{} · {}", w.place, crate::data_edits::counts_words(w.added, w.changed, w.deleted));
-                if w.failed.is_some() {
+                if w.uncertain.is_some() {
+                    subtitle.push_str(" · sonucu bilinmiyor");
+                } else if w.failed.is_some() {
                     subtitle.push_str(" · yazılamadı");
                 }
                 c.push(
@@ -404,11 +509,49 @@ impl App {
             )),
         ]
         .spacing(4);
-        if let Some(why) = &w.failed {
-            c = c.push(words::text_line(
-                words::Kind::Error,
-                format!("Son yazma denemesi başarısız: {why} Değişiklikler duruyor; Kaynağa yaz yeniden dener."),
-            ));
+        match (w.uncertain, &w.failed) {
+            (Some(true), _) => {
+                c = c.push(words::text_line(
+                    words::Kind::Warn,
+                    "Önceki yazımın sonucu bilinmiyor: bağlantı yazım bitmek üzereyken koptu. Kaynağa yaz önce kaynağa bu \
+                     yazımın makbuzunu sorar; yazılmışsa satırlar ikinci kez yazılmaz.",
+                ));
+            }
+            (Some(false), _) => {
+                c = c.push(words::text_line(
+                    words::Kind::Error,
+                    "Önceki yazımın sonucu bilinmiyor ve bu kaynak yazım makbuzu tutmuyor: kayıt kendiliğinden yeniden \
+                     gönderilmez. Kaynakta satırları denetleyin; yazılmamışsa Yeniden gönder, yazılmışsa Değişiklikleri \
+                     geri al.",
+                ));
+            }
+            (None, Some(why)) => {
+                c = c.push(words::text_line(
+                    words::Kind::Error,
+                    format!("Son yazma denemesi başarısız: {why} Değişiklikler duruyor; Kaynağa yaz yeniden dener."),
+                ));
+            }
+            (None, None) => {}
+        }
+        // A database whose commit's answer may be lost: its receipts, or the way to set them up (docs/adr/9126).
+        match state.receipts.get(&w.layer) {
+            Some(Ok(false)) => {
+                c = c.push(
+                    row![
+                        words::text_line(
+                            words::Kind::Info,
+                            "Bu veritabanı yazım makbuzu tutmuyor: bağlantı yazım sırasında koparsa sonucu sorulamaz.",
+                        ),
+                        words::secondary("Yazım makbuzlarını kur", Some(message(Event::SetUpReceipts(w.layer.clone())))),
+                    ]
+                    .spacing(8)
+                    .align_y(iced::Alignment::Center),
+                );
+            }
+            Some(Err(why)) => {
+                c = c.push(words::text_line(words::Kind::Info, format!("Yazım makbuzları sorulamadı: {why}")));
+            }
+            _ => {}
         }
         let table = table::Table::new([
             table::Column::new("Durum").width(Length::Fixed(kentos_ui::theme::typography::scaled(64.0))),
@@ -428,7 +571,28 @@ impl App {
         }))
         .height(Length::Fill);
         c = c.push(container(table).height(Length::Fill).style(kentos_ui::style::container::bordered));
-        let actions: Element<'_, Message> = if state.rolling_back.as_deref() == Some(w.layer.as_str()) {
+        let actions: Element<'_, Message> = if state.resending.as_deref() == Some(w.layer.as_str()) {
+            row![
+                label::body(
+                    "Satırlar kaynağa yeniden gönderilecek; önceki yazım tamamlanmışsa yeni satırlar ikinci kez eklenir."
+                )
+                .width(Length::Fill),
+                words::secondary("Vazgeç", Some(message(Event::ResendCancelled))),
+                words::danger("Yeniden gönder", Some(message(Event::ResendConfirmed(w.layer.clone())))),
+            ]
+            .spacing(8)
+            .align_y(iced::Alignment::Center)
+            .into()
+        } else if w.uncertain == Some(false) {
+            row![
+                iced::widget::Space::new().width(Length::Fill),
+                words::ghost("Değişiklikleri geri al…", (!saving).then(|| message(Event::Rollback(w.layer.clone())))),
+                words::secondary("Yeniden gönder…", (!saving).then(|| message(Event::Resend(w.layer.clone())))),
+            ]
+            .spacing(8)
+            .align_y(iced::Alignment::Center)
+            .into()
+        } else if state.rolling_back.as_deref() == Some(w.layer.as_str()) {
             row![
                 label::body(format!(
                     "{} değişikliği bırakılacak; kaynak olduğu gibi kalır.",

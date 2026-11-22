@@ -1519,6 +1519,9 @@ mod data_journal_tests;
 #[path = "gis/data_pending_tests.rs"]
 mod data_pending_tests;
 #[cfg(test)]
+#[path = "gis/data_receipts_tests.rs"]
+mod data_receipts_tests;
+#[cfg(test)]
 #[path = "gis/layer_export_memory_tests.rs"]
 mod layer_export_memory_tests;
 #[cfg(test)]

@@ -411,6 +411,18 @@ impl Source for PgSource {
         Ok(Box::new(PgTransaction::begin(self)?))
     }
 
+    fn receipts(&self, scope: &str) -> Result<bool, DataError> {
+        self.receipts_in(scope)
+    }
+
+    fn set_up_receipts(&self, scope: &str) -> Result<(), DataError> {
+        self.set_up_receipts_in(scope)
+    }
+
+    fn receipt(&self, scope: &str, id: &str) -> Result<Option<kentos_data::Receipt>, DataError> {
+        self.receipt_in(scope, id)
+    }
+
     fn project_store(&self) -> Option<&dyn kentos_data::ProjectStore> {
         Some(self)
     }

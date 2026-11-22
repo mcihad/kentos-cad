@@ -10,7 +10,8 @@
 use std::collections::{BTreeMap, HashSet};
 
 use iced::{Element, Task};
-use kentos_commands::{CommandResult, LayersSession, LayersSessionDone, SessionAction};
+use kentos_commands::{CommandResult, Entity, LayersSession, LayersSessionDone, SessionAction};
+use serde::{Deserialize, Serialize};
 use kentos_native_application::ExecutionContext;
 use kentos_native_application::data_write::{self, LayerWrites, WriteFailure};
 use kentos_native_application::layers_session;
@@ -35,7 +36,79 @@ pub(crate) struct DataEdits {
     kept_for: Option<Then>,
     /// Why the last write of a layer's changes to its source did not go, by layer, while they wait (docs/adr/9123):
     /// the status bar's cell and Katman değişiklikleri say it; a write that goes, or the changes let go, clear it.
-    failed: BTreeMap<String, String>,
+    pub(crate) failed: BTreeMap<String, String>,
+    /// A write whose commit's answer was lost (docs/adr/9126), by each layer it wrote: what it sent and its receipt.
+    /// The next Kaynağa yaz of those layers asks the source first; one without a receipt is not sent again by itself.
+    pub(crate) uncertain: BTreeMap<String, Uncertain>,
+}
+
+/// A write whose commit's answer was lost (docs/adr/9126): the source may hold it all or none of it. Kept with the
+/// project's journal on this device, so a project opened again still asks before it writes.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct Uncertain {
+    /// The receipt that went in with the rows; none when the source keeps no receipts and cannot be asked.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub receipt: Option<String>,
+    pub words: String,
+    /// What each layer of the group sent.
+    pub sent: Vec<Sent>,
+}
+
+/// What one layer of an uncertain write sent: its new rows by object id, its changed rows, its deleted keys.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct Sent {
+    pub layer: String,
+    pub table: String,
+    #[serde(default)]
+    pub added: Vec<(String, Entity)>,
+    #[serde(default)]
+    pub changed: Vec<(String, Entity)>,
+    #[serde(default)]
+    pub deleted: Vec<i64>,
+}
+
+impl Uncertain {
+    fn of(group: &[LayerWrites], words: String, receipt: Option<String>) -> Self {
+        let sent = group
+            .iter()
+            .map(|w| Sent {
+                layer: w.layer.clone(),
+                table: w.data.table.clone(),
+                added: w.changes.added.iter().map(|(u, e)| (u.to_string(), (**e).clone())).collect(),
+                changed: w.changes.changed.iter().map(|c| (c.uid.to_string(), (*c.now).clone())).collect(),
+                deleted: w.changes.deleted.clone(),
+            })
+            .collect();
+        Self { receipt, words, sent }
+    }
+
+    pub(crate) fn layers(&self) -> Vec<String> {
+        self.sent.iter().map(|s| s.layer.clone()).collect()
+    }
+
+    /// What the write wrote, its receipt's keys given to its new rows: each layer's part, for the drawing to take out.
+    fn written(&self, keys: &data_write::ReceiptKeys) -> Vec<(String, kentos_domain::DataWritten)> {
+        let uid = |u: &str| kentos_domain::Uuid::parse_str(u).ok();
+        self.sent
+            .iter()
+            .map(|s| {
+                let given = keys.get(&s.table).cloned().unwrap_or_default();
+                let added = s
+                    .added
+                    .iter()
+                    .filter_map(|(u, e)| {
+                        let u = uid(u)?;
+                        let key = given.iter().find(|(g, _)| *g == u)?.1;
+                        Some((u, std::sync::Arc::new(e.clone()), key))
+                    })
+                    .collect();
+                let changed = s.changed.iter().filter_map(|(u, e)| Some((uid(u)?, std::sync::Arc::new(e.clone())))).collect();
+                (s.layer.clone(), kentos_domain::DataWritten { added, changed, deleted: s.deleted.clone() })
+            })
+            .collect()
+    }
 }
 
 impl DataEdits {
@@ -91,6 +164,13 @@ pub enum Event {
     Saved(Vec<String>, Box<GroupSaved>),
     /// Üstüne yaz: the layers saved over the rows others changed.
     SaveOver(Vec<String>),
+    /// A group's commit whose answer was lost (docs/adr/9126): its layers and what it sent.
+    Unsure(Vec<String>, Box<Uncertain>),
+    /// The source asked by an uncertain write's receipt: its new rows' keys when it committed, none when it did not, or
+    /// why it could not be asked.
+    Asked(Vec<String>, Box<Uncertain>, Box<Result<Option<data_write::ReceiptKeys>, String>>),
+    /// Yeniden gönder: an uncertain write without a receipt sent again, the owner having looked at the source.
+    Resend(Vec<String>),
     /// The conflict's question closed without writing.
     KeepConflict,
 }
@@ -247,7 +327,9 @@ impl App {
                     Ok(_) => {
                         for l in &modified {
                             self.gis.data_edits.failed.remove(l);
+                            self.gis.data_edits.uncertain.remove(l);
                         }
+                        self.journal_uncertain();
                         self.output(format!(
                             "Katman değişiklikleri geri alındı ({}): kaynak olduğu gibi kaldı.",
                             names.join(", ")
@@ -259,6 +341,20 @@ impl App {
             }
             Event::Answer(answer) => self.data_edits_answer(answer),
             Event::Saved(id, outcome) => self.data_saved(id, *outcome),
+            Event::Unsure(ids, u) => self.data_unsure(ids, *u),
+            Event::Asked(ids, u, asked) => self.data_receipt_asked(ids, *u, *asked),
+            Event::Resend(layers) => {
+                for l in &layers {
+                    if let Some(u) = self.gis.data_edits.uncertain.remove(l) {
+                        for other in u.layers() {
+                            self.gis.data_edits.uncertain.remove(&other);
+                        }
+                    }
+                    self.gis.data_edits.failed.remove(l);
+                }
+                self.journal_uncertain();
+                self.save_data_layers(&layers, false)
+            }
         }
     }
 
@@ -267,6 +363,7 @@ impl App {
         let names: Vec<String> = layers.iter().map(|l| self.data_layer_name(l)).collect();
         for l in &layers {
             self.gis.data_edits.failed.remove(l);
+            self.gis.data_edits.uncertain.remove(l);
         }
         match self.data_session(SessionAction::Stop, layers) {
             Ok(_) => self.output(format!("Düzenleme bitti: {}.", names.join(", "))),
@@ -317,6 +414,7 @@ impl App {
                 }
                 for l in &ask.layers {
                     self.gis.data_edits.failed.remove(l);
+                    self.gis.data_edits.uncertain.remove(l);
                 }
                 self.output(format!("Katman değişiklikleri geri alındı ({}): kaynak olduğu gibi kaldı.", names.join(", ")));
                 match ask.after {
@@ -367,14 +465,125 @@ impl App {
             if ids.iter().any(|l| self.gis.data_edits.saving.contains(l)) {
                 continue;
             }
+            // A write of these layers whose answer was lost (docs/adr/9126): the source is asked by its receipt first;
+            // one without a receipt is not sent again until the owner says so.
+            if let Some(u) = ids.iter().find_map(|l| self.gis.data_edits.uncertain.get(l)).cloned() {
+                let Some(receipt) = u.receipt.clone() else {
+                    let names: Vec<String> = u.layers().iter().map(|l| self.data_layer_name(l)).collect();
+                    self.warn(format!(
+                        "{} için önceki yazımın sonucu bilinmiyor ve bu kaynak yazım makbuzu tutmuyor: kayıt kendiliğinden \
+                         yeniden gönderilmedi, yeni satırlar ikinci kez eklenebilirdi. Kaynakta satırları denetleyin, sonra \
+                         Katman değişiklikleri'nde Yeniden gönder'i ya da Değişiklikleri geri al'ı seçin.",
+                        names.join(", ")
+                    ));
+                    let first = ids.first().cloned();
+                    tasks.push(self.update(crate::data_pending::open_at_message(first)));
+                    continue;
+                };
+                let Some(data) = group.first().map(|w| w.data.clone()) else {
+                    continue;
+                };
+                self.gis.data_edits.saving.extend(ids.iter().cloned());
+                tasks.push(crate::db_connections::off_thread(
+                    move || data_write::receipt_keys(&data, &receipt),
+                    move |asked| message(Event::Asked(ids, Box::new(u), Box::new(asked))),
+                ));
+                continue;
+            }
             self.gis.data_edits.saving.extend(ids.iter().cloned());
             let settings = settings.clone();
+            // The write's receipt, given before it starts (docs/adr/9126).
+            let receipting = data_write::Receipting {
+                id: kentos_domain::Uuid::now_v7().to_string(),
+                by: kentos_native_application::project_store::user(),
+            };
             tasks.push(crate::db_connections::off_thread(
-                move || data_write::write_group(&group, &settings, force).map(|keys| (group, keys)),
-                move |outcome| message(Event::Saved(ids, Box::new(outcome))),
+                move || match data_write::write_group_receipted(&group, &settings, force, Some(&receipting)) {
+                    Ok(keys) => Ok(Ok((group, keys))),
+                    Err(WriteFailure::Uncertain(words, receipt)) => Err(Uncertain::of(&group, words, receipt)),
+                    Err(failure) => Ok(Err(failure)),
+                },
+                move |done: Result<GroupSaved, Uncertain>| match done {
+                    Ok(outcome) => message(Event::Saved(ids, Box::new(outcome))),
+                    Err(u) => message(Event::Unsure(ids, Box::new(u))),
+                },
             ));
         }
         Task::batch(tasks)
+    }
+
+    /// A commit whose answer was lost (docs/adr/9126): the changes wait as they were and the write is kept, with its
+    /// receipt, until the source says whether it committed; neither success nor failure is said.
+    fn data_unsure(&mut self, ids: Vec<String>, u: Uncertain) -> Task<Message> {
+        for id in &ids {
+            self.gis.data_edits.saving.remove(id);
+            self.gis.data_edits.failed.insert(id.clone(), u.words.clone());
+            self.gis.data_edits.uncertain.insert(id.clone(), u.clone());
+        }
+        self.gis.data_edits.after = None;
+        let next = if u.receipt.is_some() {
+            "Değişiklikler katmanda duruyor; bir dahaki Kaynağa yaz önce kaynağa bu yazımın makbuzunu sorar, yazılmışsa ikinci \
+             kez yazmaz."
+        } else {
+            "Değişiklikler katmanda duruyor. Bu kaynak yazım makbuzu tutmadığı için kayıt kendiliğinden yeniden gönderilmez: \
+             kaynakta satırları denetleyin; makbuzları Katman değişiklikleri'nden kurabilirsiniz."
+        };
+        self.warn(format!("{} {next}", u.words));
+        self.journal_uncertain();
+        Task::none()
+    }
+
+    /// The source asked by an uncertain write's receipt (docs/adr/9126): committed, the write is taken out of the drawing
+    /// with the keys it gave and the rest written; not committed, the changes are written now; not asked, they wait.
+    fn data_receipt_asked(
+        &mut self,
+        ids: Vec<String>,
+        u: Uncertain,
+        asked: Result<Option<data_write::ReceiptKeys>, String>,
+    ) -> Task<Message> {
+        for id in &ids {
+            self.gis.data_edits.saving.remove(id);
+        }
+        match asked {
+            Err(why) => {
+                self.warn(format!(
+                    "Önceki yazımın sonucu kaynağa sorulamadı: {why} Değişiklikler duruyor; bağlantı dönünce Kaynağa yaz yeniden sorar."
+                ));
+                Task::none()
+            }
+            Ok(found) => {
+                for l in u.layers() {
+                    self.gis.data_edits.uncertain.remove(&l);
+                    self.gis.data_edits.failed.remove(&l);
+                }
+                match found {
+                    Some(keys) => {
+                        let mut said = Vec::new();
+                        for (layer, written) in u.written(&keys) {
+                            let words = counts_words(written.added.len(), written.changed.len(), written.deleted.len());
+                            let name = self.data_layer_name(&layer);
+                            match self.document.as_mut().map(|d| d.model.data_saved(&layer, written)) {
+                                Some(Err(why)) => self.warn(why),
+                                _ => said.push(format!("“{name}”: {words}")),
+                            }
+                        }
+                        self.say(
+                            kentos_interaction::Level::Success,
+                            format!(
+                                "Önceki yazım kaynağa ulaşmıştı (makbuzu bulundu): {}. İkinci kez yazılmadı.",
+                                said.join("; ")
+                            ),
+                        );
+                    }
+                    None => self.output(
+                        "Önceki yazım kaynağa ulaşmamıştı (makbuzu yok): değişiklikler şimdi yazılıyor.",
+                    ),
+                }
+                self.journal_uncertain();
+                // What waits after it (changed since, or all of it when it had not committed) is written now.
+                self.save_data_layers(&ids, false)
+            }
+        }
     }
 
     /// A group's save: what was written taken out of the drawing, or why nothing was; a conflict asks to write over it.

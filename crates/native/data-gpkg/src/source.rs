@@ -489,4 +489,16 @@ impl Source for GpkgSource {
     fn project_store(&self) -> Option<&dyn kentos_data::ProjectStore> {
         Some(self)
     }
+
+    fn receipts(&self, _scope: &str) -> Result<bool, DataError> {
+        self.receipts_in()
+    }
+
+    fn set_up_receipts(&self, _scope: &str) -> Result<(), DataError> {
+        self.set_up_receipts_in()
+    }
+
+    fn receipt(&self, _scope: &str, id: &str) -> Result<Option<kentos_data::Receipt>, DataError> {
+        self.receipt_in(id)
+    }
 }

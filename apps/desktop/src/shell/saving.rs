@@ -508,11 +508,15 @@ impl App {
         }
         let model = doc.model.clone();
         let (id, session, revision) = (next_id(), doc.session, doc.model.revision());
-        let kept = match &target {
+        let mut kept = match &target {
             Target::File(path) => Some(crate::data_journal::kept_for(&model, crate::data_journal::file_place(path))),
             Target::Source(at) => Some(crate::data_journal::kept_for(&model, crate::data_journal::source_place(at))),
             Target::Copy(_) | Target::Cloud { .. } => None,
         };
+        // The writes whose answer was lost go with the journal (docs/adr/9126).
+        if let Some(k) = kept.as_mut() {
+            k.uncertain = crate::data_journal::uncertain_of(&self.gis.data_edits);
+        }
         // The level and view on screen go with the file, no edit of the drawing (docs/adr/0720 §1).
         let level = (self.arch.active_level.clone(), self.level_view);
         let stop = Arc::new(AtomicBool::new(false));

@@ -81,6 +81,10 @@
     [ADR 9125](../adr/9125-records-written-by-role-not-by-design-right.md), VY-24): `records_locked` `forms.use` ya da
     `feature.write` arar; Veri girişi yazar, Görüntüleyici formu rolü söylenerek salt okunur açar. Tasarım ve yayın
     `forms_locked`'tadır.
+  - **Yazım makbuzları** (22 Kasım, değerlendirmenin 30. maddesi;
+    [ADR 9126](../adr/9126-write-receipts-and-uncertain-commits.md), VY-25): yanıtı kaybolan COMMIT `Uncertain`'dır;
+    makbuz satırlarla aynı işlemde `kentos_writes`'a yazılır (kurulum sahibin düğmesiyle); sonraki Kaynağa yaz önce
+    makbuzu sorar, makbuzsuzda kendiliğinden yeniden göndermez.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

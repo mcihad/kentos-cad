@@ -462,6 +462,10 @@ impl Transaction for GpkgTransaction {
         Ok(())
     }
 
+    fn receipt(&mut self, _scope: &str, receipt: &kentos_data::Receipt) -> Result<(), DataError> {
+        crate::receipts::insert(self.gp()?.connection(), receipt)
+    }
+
     fn commit(mut self: Box<Self>) -> Result<(), DataError> {
         let touched = std::mem::take(&mut self.touched);
         for (table, column) in &touched {

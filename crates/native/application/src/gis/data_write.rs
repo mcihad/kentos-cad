@@ -52,14 +52,82 @@ pub enum WriteFailure {
     Refused(String, Option<Uuid>),
     /// Rows taken were changed or deleted by someone else since (docs/adr/9104 §3): the words and the taken objects.
     Conflict(String, Vec<Uuid>),
+    /// The commit's answer was lost (docs/adr/9126): the source may have written it all or nothing. The words, and the
+    /// receipt's id when one went in with the rows: the source is asked by it before anything is written again.
+    Uncertain(String, Option<String>),
 }
 
 impl WriteFailure {
     pub fn message(&self) -> &str {
         match self {
-            WriteFailure::Unreachable(m) | WriteFailure::Refused(m, _) | WriteFailure::Conflict(m, _) => m,
+            WriteFailure::Unreachable(m)
+            | WriteFailure::Refused(m, _)
+            | WriteFailure::Conflict(m, _)
+            | WriteFailure::Uncertain(m, _) => m,
         }
     }
+}
+
+/// A write's receipt to go in with its rows (docs/adr/9126): its lasting id, given before the write starts, and who
+/// writes it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Receipting {
+    pub id: String,
+    pub by: Option<String>,
+}
+
+/// Where a data layer's source keeps write receipts: a database table's schema (`schema.table`, “public” without
+/// one); a file has one place ("").
+pub fn receipt_scope(data: &DataLayer) -> String {
+    if data.driver == "postgis" {
+        data.table.rsplit_once('.').map_or_else(|| "public".to_owned(), |(schema, _)| schema.to_owned())
+    } else {
+        String::new()
+    }
+}
+
+/// Whether the layer's source keeps write receipts (set up by the owner).
+pub fn receipts_ready(data: &DataLayer) -> Result<bool, String> {
+    let source = kentos_data::registry().source(&data.address).map_err(|e| e.to_string())?;
+    match source.receipts(&receipt_scope(data)) {
+        Ok(ready) => Ok(ready),
+        Err(DataError::Unsupported(_)) => Ok(false),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+/// Makes the layer's source's write receipts table (docs/adr/9126): a table of its own, the data's tables untouched.
+pub fn set_up_receipts(data: &DataLayer) -> Result<(), String> {
+    let source = kentos_data::registry().source(&data.address).map_err(|e| e.to_string())?;
+    source.set_up_receipts(&receipt_scope(data)).map_err(|e| e.to_string())
+}
+
+/// Each table's new rows' keys by the objects' ids, as a committed write's receipt says them.
+pub type ReceiptKeys = std::collections::BTreeMap<String, Vec<(Uuid, i64)>>;
+
+/// What a committed write's receipt says it wrote ([`ReceiptKeys`]). None when no write of `id` committed (its receipt
+/// is not there).
+pub fn receipt_keys(data: &DataLayer, id: &str) -> Result<Option<ReceiptKeys>, String> {
+    let source = kentos_data::registry().source(&data.address).map_err(|e| e.to_string())?;
+    let Some(receipt) = source.receipt(&receipt_scope(data), id).map_err(|e| e.to_string())? else {
+        return Ok(None);
+    };
+    let value: serde_json::Value =
+        serde_json::from_str(&receipt.written).map_err(|e| format!("yazım makbuzu okunamadı: {e}"))?;
+    let mut out = std::collections::BTreeMap::new();
+    for (table, w) in value.as_object().into_iter().flatten() {
+        let keys = w["added"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|pair| {
+                let uid = Uuid::parse_str(pair.get(0)?.as_str()?).ok()?;
+                Some((uid, pair.get(1)?.as_i64()?))
+            })
+            .collect();
+        out.insert(table.clone(), keys);
+    }
+    Ok(Some(out))
 }
 
 /// What `layer` would write now, read off the drawing; none for a layer that is not a data layer being edited.
@@ -189,6 +257,18 @@ pub fn write_group(
     settings: &ProjectSettings,
     force: bool,
 ) -> Result<Vec<Vec<i64>>, WriteFailure> {
+    write_group_receipted(group, settings, force, None)
+}
+
+/// [`write_group`] with a receipt (docs/adr/9126): where the source keeps write receipts, the receipt goes in with the
+/// rows, in the same transaction, saying the keys the new rows got. A commit whose answer is lost is
+/// [`WriteFailure::Uncertain`], never a refusal: with the receipt's id when it went in, so the source can be asked.
+pub fn write_group_receipted(
+    group: &[LayerWrites],
+    settings: &ProjectSettings,
+    force: bool,
+    receipting: Option<&Receipting>,
+) -> Result<Vec<Vec<i64>>, WriteFailure> {
     let Some(first) = group.first() else {
         return Ok(Vec::new());
     };
@@ -240,6 +320,16 @@ pub fn write_group(
             updates,
         });
     }
+    // A receipt where the source keeps them; a source that keeps none writes as before.
+    let scope = receipt_scope(&first.data);
+    let receipting = match receipting {
+        Some(r) => match source.receipts(&scope) {
+            Ok(true) => Some(r),
+            Ok(false) | Err(DataError::Unsupported(_)) => None,
+            Err(e) => return Err(unreachable(first, e)),
+        },
+        None => None,
+    };
     let mut tx = source.begin().map_err(|e| unreachable(first, e))?;
     if !force {
         match conflicts(tx.as_mut(), &planned, crate::data_text::default_height(settings)) {
@@ -280,7 +370,46 @@ pub fn write_group(
             }
         }
     }
-    tx.commit().map_err(|e| refused(first, &e.to_string(), None))?;
+    if let Some(r) = receipting {
+        let written: serde_json::Map<String, serde_json::Value> = planned
+            .iter()
+            .zip(&keys)
+            .map(|(p, k)| {
+                let added: Vec<serde_json::Value> = p
+                    .w
+                    .changes
+                    .added
+                    .iter()
+                    .zip(k)
+                    .map(|((uid, _), key)| serde_json::json!([uid.to_string(), key]))
+                    .collect();
+                (
+                    p.w.data.table.clone(),
+                    serde_json::json!({
+                        "added": added,
+                        "changed": p.updates.len(),
+                        "deleted": p.w.changes.deleted.len(),
+                    }),
+                )
+            })
+            .collect();
+        let receipt = kentos_data::Receipt {
+            id: r.id.clone(),
+            by: r.by.clone(),
+            written: serde_json::Value::Object(written).to_string(),
+        };
+        if let Err(e) = tx.receipt(&scope, &receipt) {
+            let _ = tx.rollback();
+            return Err(refused(first, &format!("yazım makbuzu yazılamadı: {e}"), None));
+        }
+    }
+    tx.commit().map_err(|e| match e {
+        DataError::Uncertain(_) => WriteFailure::Uncertain(
+            format!("“{}” tablosuna {e}", first.data.table),
+            receipting.map(|r| r.id.clone()),
+        ),
+        e => refused(first, &e.to_string(), None),
+    })?;
     Ok(keys)
 }
 

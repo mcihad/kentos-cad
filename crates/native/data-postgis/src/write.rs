@@ -144,7 +144,14 @@ impl PgTransaction {
                     tx.rollback().await
                 }
             })
-            .map_err(error_of);
+            .map_err(|e| match e {
+                // The server answered: it refused, nothing was written.
+                sqlx::Error::Database(_) => error_of(e),
+                // The connection ended while COMMIT was on its way or its answer was (docs/adr/9126): it may have
+                // committed. A rollback that fails so has written nothing anyway.
+                e if commit => DataError::Uncertain(e.to_string()),
+                e => error_of(e),
+            });
         if let Ok(mut m) = self.shapes.write() {
             m.clear();
         }
@@ -384,6 +391,15 @@ impl Transaction for PgTransaction {
         let (sql, ..) = qualified(table);
         self.run(&format!("DROP TABLE {sql}"), &[])?;
         self.own.remove(table);
+        Ok(())
+    }
+
+    fn receipt(&mut self, scope: &str, receipt: &kentos_data::Receipt) -> Result<(), DataError> {
+        let by = receipt.by.clone().map_or(Arg::Null, Arg::Text);
+        self.run(
+            &crate::receipts::insert_sql(scope),
+            &[Arg::Text(receipt.id.clone()), by, Arg::Text(receipt.written.clone())],
+        )?;
         Ok(())
     }
 

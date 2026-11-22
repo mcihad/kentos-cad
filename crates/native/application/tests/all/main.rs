@@ -267,3 +267,4 @@ mod module_kinds;
 #[cfg(feature = "mod-gis")]
 mod gpkg_open;
 mod topology_sources;
+mod write_receipts;

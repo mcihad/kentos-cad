@@ -91,3 +91,28 @@ fn the_database_keeps_projects_in_a_schema() {
     let tables = source.tables().expect("tables");
     assert!(tables.iter().all(|t| t.name != "public.kentos_projects"), "the projects table listed as a layer");
 }
+
+/// Write receipts (docs/adr/9126): set up only when asked, a receipt goes in with the rows in one transaction and is
+/// read back by its id; a rolled back transaction leaves none.
+#[test]
+fn a_receipt_commits_with_its_rows_and_only_with_them() {
+    let Some(address) = address() else {
+        eprintln!("KENTOS_DATA_PG yok: PostGIS yazım makbuzları atlandı");
+        return;
+    };
+    let source = PostGis.open(&address).expect("open");
+    let scope = "public";
+    source.set_up_receipts(scope).expect("set up");
+    assert!(source.receipts(scope).expect("asked"));
+    let id = format!("sinama-{}", std::process::id());
+    let receipt = kentos_data::Receipt { id: id.clone(), by: Some("sınama".into()), written: "{\"t\": {\"added\": []}}".into() };
+    let mut tx = source.begin().expect("begin");
+    tx.receipt(scope, &receipt).expect("written");
+    tx.rollback().expect("rolled back");
+    assert_eq!(source.receipt(scope, &id).expect("read"), None, "rolled back with its transaction");
+    let mut tx = source.begin().expect("begin");
+    tx.receipt(scope, &receipt).expect("written");
+    tx.commit().expect("committed");
+    let back = source.receipt(scope, &id).expect("read").expect("there");
+    assert_eq!((back.id, back.by.as_deref()), (id, Some("sınama")));
+}

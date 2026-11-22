@@ -66,6 +66,9 @@ pub enum DataError {
     Cancelled,
     /// The source refused for another reason; its words.
     Failed(String),
+    /// A commit whose answer was lost (docs/adr/9126): the connection ended after it was sent, so the source may have
+    /// written it all or nothing. Never taken for a refusal: what it wrote is asked of the source's write receipts.
+    Uncertain(String),
 }
 
 impl fmt::Display for DataError {
@@ -107,6 +110,11 @@ impl fmt::Display for DataError {
             ),
             DataError::Cancelled => f.write_str("Durduruldu."),
             DataError::Failed(m) => f.write_str(m),
+            DataError::Uncertain(m) => write!(
+                f,
+                "Yazımın sonucu bilinmiyor: bağlantı yazım bitmek üzereyken koptu, kaynak yazmış da olabilir hiç yazmamış \
+                 da. {m}"
+            ),
         }
     }
 }
@@ -128,6 +136,7 @@ impl DataError {
             DataError::Conflict(_) => "conflict",
             DataError::Cancelled => "cancelled",
             DataError::Failed(_) => "failed",
+            DataError::Uncertain(_) => "uncertain",
         }
     }
 }

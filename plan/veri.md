@@ -309,3 +309,12 @@ numaraları raporunkidir.
   - Salt okunur form nedenini söyler (rol, arşiv, katman kilidi). Kaydet, iş akışı adımı, çoklu kayıt, alt kayıtlar
     aynı karardan geçer.
   - Kalan: iki gerçek hesapla bulut sunucusunda kabul (sunucu sınamaları veritabanı ister, Docker yanıt vermedi); web.
+- [~] **VY-25 — Yazım makbuzları; yanıtı kaybolan COMMIT sorulur (rapor 30, P0).**
+  ([ADR 9126](../docs/adr/9126-write-receipts-and-uncertain-commits.md))
+  - `DataError::Uncertain`: PostGIS'te sunucudan gelmeyen COMMIT hatası; uygulamada `WriteFailure::Uncertain`, asla ret
+    değil.
+  - Makbuz satırlarla aynı işlemde `kentos_writes`'a (PostGIS şemada, GeoPackage dosyada); kurulum sahibin düğmesiyle.
+  - Yanıt kaybında yazım ve gönderilenin anlık görüntüsü tutulur, günlüğe yazılır; sonraki Kaynağa yaz makbuzu sorar,
+    bulunursa yazılanı çizimden çıkarır, bulunmazsa yazar. Makbuzsuzda kendiliğinden göndermez, Yeniden gönder…
+  - Kayıp yanıtlı sınama kaynağı (`kentos_data::lossy`) ile çekirdek ve masaüstü sınamaları.
+  - Kalan: gerçek PostgreSQL'de kesintiler (Docker yanıt vermedi), Python/MCP'de makbuz, web.

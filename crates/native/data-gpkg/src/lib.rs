@@ -12,6 +12,7 @@
 mod convert;
 mod projects;
 mod query;
+mod receipts;
 mod source;
 mod sql;
 mod write;
