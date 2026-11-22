@@ -11,6 +11,7 @@
 
 mod convert;
 mod projects;
+mod query;
 mod source;
 mod sql;
 mod write;

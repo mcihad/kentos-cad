@@ -220,6 +220,7 @@ impl Transaction for GpkgTransaction {
     }
 
     fn insert(&mut self, table: &str, rows: &[NewFeature]) -> Result<Vec<i64>, DataError> {
+        kentos_data::query::refuse_write(table)?;
         let (key, geometry) = {
             let t = self.target(table)?;
             (t.key.clone(), t.geometry.clone())
@@ -265,6 +266,7 @@ impl Transaction for GpkgTransaction {
     }
 
     fn update(&mut self, table: &str, changes: &[Change]) -> Result<(), DataError> {
+        kentos_data::query::refuse_write(table)?;
         let (key, geometry) = {
             let t = self.target(table)?;
             (t.key.clone(), t.geometry.clone())
@@ -331,6 +333,7 @@ impl Transaction for GpkgTransaction {
     }
 
     fn delete(&mut self, table: &str, fids: &[i64]) -> Result<(), DataError> {
+        kentos_data::query::refuse_write(table)?;
         let (key, geometry) = {
             let t = self.target(table)?;
             (t.key.clone(), t.geometry.clone())

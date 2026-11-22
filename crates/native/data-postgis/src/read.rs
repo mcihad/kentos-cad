@@ -1,6 +1,7 @@
 //! A database's tables read (docs/adr/9100 §6): the catalog, a table's shape (cached until one of our transactions
 //! commits), counts, boxes, distinct values, and rows through a server-side cursor in a read-only transaction: the
-//! cursor is declared once, its rows fetched a part at a time, closed when the reader is done or told to stop.
+//! cursor is declared once, its rows fetched a part at a time, closed when the reader is done or told to stop. A query
+//! layer's counts, values and groups are read in a read-only transaction too (docs/adr/9113 §2).
 
 use kentos_data::driver::{Capabilities, Read};
 use kentos_data::geom::read_wkb;
@@ -36,6 +37,29 @@ pub(crate) fn bound<'q>(
         };
     }
     q
+}
+
+/// A statement's rows on a connection of the pool. A query layer's (docs/adr/9113 §2) are read in a read-only
+/// transaction, as `features` reads every table's: a function the query calls cannot write while it is counted or its
+/// values and groups are read.
+async fn all_rows(
+    pool: &sqlx::PgPool,
+    sql: &str,
+    args: &[Arg],
+    read_only: bool,
+) -> Result<Vec<sqlx::postgres::PgRow>, DataError> {
+    if !read_only {
+        let mut conn = pool.acquire().await.map_err(error_of)?;
+        return bound(sql, args).fetch_all(&mut *conn).await.map_err(error_of);
+    }
+    let mut tx = pool.begin().await.map_err(error_of)?;
+    sqlx::query("SET TRANSACTION READ ONLY")
+        .execute(&mut *tx)
+        .await
+        .map_err(error_of)?;
+    let rows = bound(sql, args).fetch_all(&mut *tx).await.map_err(error_of)?;
+    tx.commit().await.map_err(error_of)?;
+    Ok(rows)
 }
 
 impl PgSource {
@@ -118,7 +142,7 @@ impl Source for PgSource {
         let expr = geometry_expr(&s).unwrap_or_default();
         runtime()?.block_on(async {
             let mut conn = self.pool.acquire().await.map_err(error_of)?;
-            if estimate && !s.geography {
+            if estimate && !s.geography && !s.query {
                 let est = sqlx::query(
                     "SELECT ST_XMin(e)::float8 AS a, ST_YMin(e)::float8 AS b, ST_XMax(e)::float8 AS c, ST_YMax(e)::float8 AS d
                      FROM (SELECT ST_EstimatedExtent($1, $2, $3) AS e) s",
@@ -167,8 +191,8 @@ impl Source for PgSource {
         let mut q = Sql::default();
         let w = where_of(request, &s, table, &mut q)?;
         runtime()?.block_on(async {
-            let mut conn = self.pool.acquire().await.map_err(error_of)?;
-            if estimate && w.is_empty() {
+            if estimate && w.is_empty() && !s.query {
+                let mut conn = self.pool.acquire().await.map_err(error_of)?;
                 let n: Option<f64> = sqlx::query_scalar(
                     "SELECT c.reltuples::float8 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                      WHERE n.nspname = $1 AND c.relname = $2",
@@ -183,9 +207,10 @@ impl Source for PgSource {
                 }
             }
             let sql = format!("SELECT count(*)::int8 FROM {} t{w}", s.sql);
-            let n: i64 = bound(&sql, &q.args)
-                .fetch_one(&mut *conn)
-                .await
+            let rows = all_rows(&self.pool, &sql, &q.args, s.query).await?;
+            let n: i64 = rows
+                .first()
+                .ok_or(sqlx::Error::RowNotFound)
                 .and_then(|r| r.try_get(0))
                 .map_err(error_of)?;
             Ok(n.max(0) as u64)
@@ -285,6 +310,8 @@ impl Source for PgSource {
             .schema
             .field(field)
             .map(|f| f.kind.clone())
+            // The key too: a query's is checked to tell its rows apart (docs/adr/9113 §3).
+            .or_else(|| (field == s.schema.key).then_some(kentos_data::FieldKind::INT))
             .ok_or_else(|| DataError::NoField {
                 table: table.to_owned(),
                 field: field.to_owned(),
@@ -314,11 +341,7 @@ impl Source for PgSource {
             s.sql
         );
         runtime()?.block_on(async {
-            let mut conn = self.pool.acquire().await.map_err(error_of)?;
-            let rows = bound(&sql, &q.args)
-                .fetch_all(&mut *conn)
-                .await
-                .map_err(error_of)?;
+            let rows = all_rows(&self.pool, &sql, &q.args, s.query).await?;
             rows.iter()
                 .map(|r| Ok(value_of(r.try_get(0).map_err(error_of)?, &kind)))
                 .collect()
@@ -339,6 +362,8 @@ impl Source for PgSource {
             .schema
             .field(field)
             .map(|f| f.kind.clone())
+            // The key too: a query's is checked to tell its rows apart (docs/adr/9113 §3).
+            .or_else(|| (field == s.schema.key).then_some(kentos_data::FieldKind::INT))
             .ok_or_else(|| DataError::NoField {
                 table: table.to_owned(),
                 field: field.to_owned(),
@@ -365,17 +390,20 @@ impl Source for PgSource {
             s.sql
         );
         runtime()?.block_on(async {
-            let mut conn = self.pool.acquire().await.map_err(error_of)?;
-            let rows = bound(&sql, &q.args)
-                .fetch_all(&mut *conn)
-                .await
-                .map_err(error_of)?;
+            let rows = all_rows(&self.pool, &sql, &q.args, s.query).await?;
             rows.iter()
                 .map(|r| {
                     let n: i64 = r.try_get(1).map_err(error_of)?;
                     Ok((value_of(r.try_get(0).map_err(error_of)?, &kind), u64::try_from(n).unwrap_or(0)))
                 })
                 .collect()
+        })
+    }
+
+    fn query_columns(&self, sql: &str) -> Result<Vec<kentos_data::QueryColumn>, DataError> {
+        runtime()?.block_on(async {
+            let mut conn = self.pool.acquire().await.map_err(error_of)?;
+            crate::query::columns(&mut conn, sql).await
         })
     }
 

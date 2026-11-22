@@ -28,6 +28,10 @@ pub(crate) const BUSY: Duration = Duration::from_secs(10);
 pub(crate) struct Shape {
     pub schema: Schema,
     pub layer: Layer,
+    /// What is read from: the table's quoted name, or a query in parentheses (docs/adr/9113 §2).
+    pub from: String,
+    /// A query read as a table: never writable.
+    pub query: bool,
 }
 
 /// An opened GeoPackage.
@@ -101,6 +105,24 @@ impl GpkgSource {
         if let Some(s) = self.shapes.read().ok().and_then(|m| m.get(table).cloned()) {
             return Ok(s);
         }
+        if let Some(q) = kentos_data::QueryTable::parse(table) {
+            let layer = self.with(|gp| crate::query::layer(gp, table, &q))?;
+            let shape = Shape {
+                schema: Schema {
+                    key: q.key.clone(),
+                    key_made: false,
+                    fields: fields_of(&layer),
+                    geometry: geometry_of(&layer),
+                },
+                layer,
+                from: format!("({})", q.sql),
+                query: true,
+            };
+            if let Ok(mut m) = self.shapes.write() {
+                m.insert(table.to_owned(), shape.clone());
+            }
+            return Ok(shape);
+        }
         let layer = self.with(|gp| {
             gp.layers()
                 .map_err(failed)?
@@ -117,6 +139,8 @@ impl GpkgSource {
                 geometry: geometry_of(&layer),
             },
             layer,
+            from: quote(table),
+            query: false,
         };
         if let Ok(mut m) = self.shapes.write() {
             m.insert(table.to_owned(), shape.clone());
@@ -184,7 +208,7 @@ impl Source for GpkgSource {
 
     fn capabilities(&self, table: &str) -> Result<Capabilities, DataError> {
         let s = self.shape(table)?;
-        let w = self.writable() && s.layer.fid != "rowid";
+        let w = self.writable() && s.layer.fid != "rowid" && !s.query;
         Ok(Capabilities {
             read: true,
             insert: w,
@@ -217,7 +241,7 @@ impl Source for GpkgSource {
             let c = quote(&g.name);
             format!(
                 "SELECT min(ST_MinX({c})), min(ST_MinY({c})), max(ST_MaxX({c})), max(ST_MaxY({c})) FROM {}",
-                quote(table)
+                s.from
             )
         };
         self.with(|gp| {
@@ -237,7 +261,7 @@ impl Source for GpkgSource {
     fn count(&self, table: &str, request: &Request, _estimate: bool) -> Result<u64, DataError> {
         let s = self.shape(table)?;
         let w = where_of(request, &s.schema, table, s.layer.indexed)?;
-        let sql = format!("SELECT count(*) FROM {} t{}", quote(table), w.text());
+        let sql = format!("SELECT count(*) FROM {} t{}", s.from, w.text());
         self.with(|gp| {
             let binds: Vec<Bind<'_>> = w.args.iter().map(Bind).collect();
             gp.connection()
@@ -280,7 +304,7 @@ impl Source for GpkgSource {
         let sql = format!(
             "SELECT {} FROM {} t{}{}",
             select.join(", "),
-            quote(table),
+            s.from,
             w.text(),
             order_and_page(request, &s.schema, table)?
         );
@@ -364,6 +388,8 @@ impl Source for GpkgSource {
             .schema
             .field(field)
             .map(|f| f.kind.clone())
+            // The key too: a query's is checked to tell its rows apart (docs/adr/9113 §3).
+            .or_else(|| (field == s.schema.key).then_some(kentos_data::FieldKind::INT))
             .ok_or_else(|| DataError::NoField {
                 table: table.to_owned(),
                 field: field.to_owned(),
@@ -381,7 +407,7 @@ impl Source for GpkgSource {
         let by = if kind.is_text() { format!("kentos_order({col})") } else { col.clone() };
         let sql = format!(
             "SELECT DISTINCT {col} FROM {} t{} ORDER BY {by} LIMIT {limit}",
-            quote(table),
+            s.from,
             w.text()
         );
         self.with(|gp| {
@@ -411,6 +437,8 @@ impl Source for GpkgSource {
             .schema
             .field(field)
             .map(|f| f.kind.clone())
+            // The key too: a query's is checked to tell its rows apart (docs/adr/9113 §3).
+            .or_else(|| (field == s.schema.key).then_some(kentos_data::FieldKind::INT))
             .ok_or_else(|| DataError::NoField {
                 table: table.to_owned(),
                 field: field.to_owned(),
@@ -424,7 +452,7 @@ impl Source for GpkgSource {
         let by = if kind.is_text() { format!("kentos_order({col})") } else { col.clone() };
         let sql = format!(
             "SELECT {col}, count(*) FROM {} t{} GROUP BY {col} ORDER BY ({col} IS NULL), {by} LIMIT {limit}",
-            quote(table),
+            s.from,
             w.text()
         );
         self.with(|gp| {
@@ -440,6 +468,10 @@ impl Source for GpkgSource {
             }
             Ok(out)
         })
+    }
+
+    fn query_columns(&self, sql: &str) -> Result<Vec<kentos_data::QueryColumn>, DataError> {
+        self.with(|gp| crate::query::columns(gp, sql))
     }
 
     fn begin(&self) -> Result<Box<dyn Transaction>, DataError> {

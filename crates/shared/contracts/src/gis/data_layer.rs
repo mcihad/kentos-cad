@@ -158,7 +158,7 @@ impl DataLayer {
             return Some("göreli yol boş, çok uzun ya da / yerine \\ ile yazılmış".into());
         }
         if blank_or_long(&self.table) {
-            return Some("veri katmanının tablosu boş".into());
+            return Some(format!("veri katmanının tablosu boş ya da {MAX_DATA_TEXT} karakterden uzun"));
         }
         if blank_or_long(&self.key) {
             return Some("veri katmanının anahtar sütunu boş".into());
@@ -231,7 +231,13 @@ impl DataLayer {
                 .map_or(self.address.as_str(), |(_, r)| r)
                 .to_owned()
         };
-        format!("{source} › {}", self.table)
+        format!("{source} › {}", self.table_words())
+    }
+
+    /// Its table as the interface says it: a query read as a table (docs/adr/9113 §1: its text begins with
+    /// `-- kentos:`) is “SQL sorgusu”, not its text.
+    pub fn table_words(&self) -> &str {
+        if self.table.starts_with("-- kentos:") { "SQL sorgusu" } else { &self.table }
     }
 }
 

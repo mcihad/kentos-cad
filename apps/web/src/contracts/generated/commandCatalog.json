@@ -114434,7 +114434,7 @@
     {
       "code": "data_save_failed",
       "kind": "failedOrWarning",
-      "retryable": true,
+      "retryable": false,
       "meaning": "Değişiklikler tabloya yazılamadı; tabloya hiçbir şey yazılmadı, değişiklikler katmanda bekliyor. Söylenen nedeni düzeltip yeniden kaydedin."
     },
     {

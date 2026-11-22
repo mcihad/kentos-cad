@@ -128,6 +128,12 @@ pub trait Source: Send + Sync {
         counted.truncate(limit);
         Ok(counted)
     }
+    /// The columns a query reads (docs/adr/9113 §1), each with whether it can be a layer's key (an integer) or its
+    /// geometry; the query is not run past its first row. A driver that reads no queries refuses.
+    fn query_columns(&self, sql: &str) -> Result<Vec<crate::query::QueryColumn>, DataError> {
+        let _ = sql;
+        Err(DataError::Unsupported("Bu kaynak sorgu katmanı okumaz.".to_owned()))
+    }
     /// Starts a transaction.
     fn begin(&self) -> Result<Box<dyn Transaction>, DataError>;
     /// Where it keeps projects with its data (docs/adr/9107); none for a source that cannot keep them.

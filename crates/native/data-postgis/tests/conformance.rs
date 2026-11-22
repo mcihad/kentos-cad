@@ -2,7 +2,7 @@
 //! `KENTOS_DATA_PG` (`postgresql://user@host:port/db`, its password in `PGPASSWORD`); without it the test says so and
 //! passes, as every database test of the workspace does on a machine without one.
 
-use kentos_data::{Driver, conformance};
+use kentos_data::{Driver, QueryTable, conformance};
 use kentos_data_postgis::PostGis;
 
 fn address() -> Option<String> {
@@ -37,6 +37,34 @@ fn the_driver_passes_the_conformance_suite() {
     let mut tx = source.begin().expect("begin");
     tx.drop_table("public.kentos_uygunluk").expect("drop");
     tx.commit().expect("commit");
+}
+
+/// A query read as a layer (docs/adr/9113 §2) is only ever run read-only: one that would write (a large object made by
+/// a function it calls) is refused when its shape is read, though the transaction it is read in is taken back anyway.
+#[test]
+fn a_query_layer_is_run_read_only() {
+    let Some(address) = address() else {
+        eprintln!("KENTOS_DATA_PG yok: PostGIS sorgu katmanı atlandı");
+        return;
+    };
+    let source = PostGis.open(&address).expect("open");
+    let point = "SELECT 1::int4 AS fid, ST_SetSRID(ST_MakePoint(0, 0), 5256) AS geom";
+    let reading = QueryTable { sql: point.into(), key: "fid".into(), geometry: Some("geom".into()) };
+    let schema = source.schema(&reading.text()).expect("a reading query");
+    assert_eq!(schema.geometry.as_ref().and_then(|g| g.srid), Some(5256));
+    let writing = QueryTable { sql: format!("{point}, lo_create(0) AS nesne"), ..reading.clone() };
+    let refused = source.schema(&writing.text()).expect_err("a query that writes");
+    assert!(refused.to_string().contains("read-only"), "{refused}");
+    // Without a geometry its shape does not run it: counting it, reading its values and its groups do, read-only too.
+    let table = QueryTable { geometry: None, ..writing }.text();
+    source.schema(&table).expect("its columns, without running it");
+    let all = kentos_data::Request::all();
+    let counted = source.count(&table, &all, false).expect_err("counted read-only");
+    assert!(counted.to_string().contains("read-only"), "{counted}");
+    let values = source.unique(&table, "fid", None, 10).expect_err("its values read read-only");
+    assert!(values.to_string().contains("read-only"), "{values}");
+    let groups = source.groups(&table, "fid", None, 10).expect_err("its groups read read-only");
+    assert!(groups.to_string().contains("read-only"), "{groups}");
 }
 
 #[test]

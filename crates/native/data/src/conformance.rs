@@ -707,7 +707,71 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
         "olmayan satırın değişikliği reddedilmedi".into()
     });
 
+    query_checks(source, table_name, srid, &truth, &mut report)?;
     Ok(report)
+}
+
+/// A query read as a table (docs/adr/9113 §2): its shape (the key and the geometry chosen, its fields in its order, the
+/// system of its geometry), never writable; its rows, a box and a condition over it and its groups as the table's
+/// truth says them; a write refused; a text key and a writing statement refused.
+fn query_checks(source: &dyn Source, table_name: &str, srid: i32, truth: &Truth, report: &mut Report) -> Result<(), String> {
+    use crate::query::QueryTable;
+    let quote = |n: &str| format!("\"{}\"", n.replace('"', "\"\""));
+    let schema = source.schema(table_name).map_err(|e| format!("schema: {e}"))?;
+    let geometry = schema.geometry.as_ref().map(|g| g.name.clone()).unwrap_or_default();
+    let from: Vec<String> = table_name.split('.').map(quote).collect();
+    let q = QueryTable {
+        sql: format!(
+            "SELECT {} AS anahtar, ada, kullanim, alan, {} AS sekil FROM {} WHERE kullanim = 'Park'",
+            quote(&schema.key),
+            quote(&geometry),
+            from.join(".")
+        ),
+        key: "anahtar".into(),
+        geometry: Some("sekil".into()),
+    };
+    let text = q.text();
+    // Its columns before a key and a geometry are chosen, the key offered first.
+    let cols = source.query_columns(&q.sql).map_err(|e| format!("sorgunun sütunları: {e}"))?;
+    let read: Vec<(&str, bool, bool)> = cols.iter().map(|c| (c.name.as_str(), c.integer, c.geometry)).collect();
+    report.check(
+        read == [("anahtar", true, false), ("ada", true, false), ("kullanim", false, false), ("alan", false, false), ("sekil", false, true)],
+        || format!("sorgunun sütunları {read:?}"),
+    );
+    report.check(crate::query::likely_key(&cols) == Some("anahtar"), || "sorgunun anahtarı önerilmedi".into());
+    let shape = source.schema(&text).map_err(|e| format!("sorgunun şekli: {e}"))?;
+    let names: Vec<&str> = shape.fields.iter().map(|f| f.name.as_str()).collect();
+    report.check(shape.key == "anahtar" && names == ["ada", "kullanim", "alan"], || format!("sorgunun şekli {shape:?}"));
+    report.check(
+        shape.geometry.as_ref().is_some_and(|g| g.name == "sekil" && g.srid == Some(srid)),
+        || format!("sorgunun geometrisi {:?}", shape.geometry),
+    );
+    let can = source.capabilities(&text).map_err(|e| format!("sorgunun yetenekleri: {e}"))?;
+    report.check(!can.writable(), || "sorgu yazılabilir sayıldı".into());
+    let park = Condition::eq("kullanim", "Park");
+    let all = truth.keep(None, Some(&park));
+    let got = collect(source, &text, &Request::all()).map_err(|e| format!("sorgunun satırları: {e}"))?;
+    report.check(sorted(fids(&got)) == all, || format!("sorgunun satırları {} ≠ {}", got.len(), all.len()));
+    let n = source.count(&text, &Request::all(), true).map_err(|e| format!("sorgunun sayısı: {e}"))?;
+    report.check(n == all.len() as u64, || format!("sorgunun sayısı {n} ≠ {}", all.len()));
+    // A box and a condition asked of the query as of a table.
+    let b = [X0, Y0, X0 + 10.0 * CELL, Y0 + 10.0 * CELL];
+    let big = Condition::cmp("alan", Op::Gt, 900.0);
+    let want = truth.keep(Some(b), Some(&Condition::and(vec![park.clone(), big.clone()])));
+    let got = collect(source, &text, &Request { bbox: Some(b), condition: Some(big), ..Request::all() })
+        .map_err(|e| format!("sorgunun kutusu: {e}"))?;
+    report.check(sorted(fids(&got)) == want, || format!("sorgunun kutusu {:?} ≠ {want:?}", sorted(fids(&got))));
+    let groups = source.groups(&text, "kullanim", None, 10).map_err(|e| format!("sorgunun grupları: {e}"))?;
+    report.check(groups == vec![(Value::Text("Park".into()), all.len() as u64)], || format!("sorgunun grupları {groups:?}"));
+    let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
+    let refused = tx.insert(&text, &[]).is_err() && tx.update(&text, &[]).is_err() && tx.delete(&text, &[1]).is_err();
+    let _ = tx.rollback();
+    report.check(refused, || "sorguya yazma reddedilmedi".into());
+    let text_key = QueryTable { key: "kullanim".into(), ..q.clone() };
+    report.check(source.schema(&text_key.text()).is_err(), || "metin anahtar reddedilmedi".into());
+    let writing = QueryTable { sql: format!("DELETE FROM {}", from.join(".")), ..q };
+    report.check(source.schema(&writing.text()).is_err(), || "yazan sorgu reddedilmedi".into());
+    Ok(())
 }
 
 /// The questions a source that keeps projects (docs/adr/9107) answers the same way: a project written, listed, read

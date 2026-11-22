@@ -159,6 +159,32 @@ pub fn describe(address: &str, table: &str) -> Result<Described, String> {
     })
 }
 
+/// The most rows a query's key is checked to be unique over when it is added (more are taken as they are).
+pub const KEY_CHECKED: u64 = 1_000_000;
+
+/// A query read as a data layer (docs/adr/9113 §3): its shape as a table's, read-only, named `name` (none: after its
+/// first table). Its key is checked to tell its rows apart (counted at the source, up to [`KEY_CHECKED`] rows): a key
+/// two rows share would pick, label and show the wrong row.
+pub fn describe_query(address: &str, q: &kentos_data::QueryTable, name: Option<&str>) -> Result<Described, String> {
+    let text = q.text();
+    let source = kentos_data::registry().source(address).map_err(|e| e.to_string())?;
+    let mut described = describe(address, &text)?;
+    let rows = source.count(&text, &kentos_data::Request::all(), false).map_err(|e| e.to_string())?;
+    if rows <= KEY_CHECKED {
+        let distinct = source.unique(&text, &q.key, None, rows as usize + 1).map_err(|e| e.to_string())?;
+        if (distinct.len() as u64) < rows {
+            return Err(format!(
+                "“{}” sütunu benzersiz değil: sorgunun {rows} satırında {} farklı değeri var. Anahtar olarak her satırda başka olan bir tam sayı sütunu seçin.",
+                q.key,
+                distinct.len()
+            ));
+        }
+    }
+    described.name = name.map(str::trim).filter(|n| !n.is_empty()).map_or_else(|| q.shown(), str::to_owned);
+    described.data.read_only = true;
+    Ok(described)
+}
+
 /// A data layer's box in the project's system: its table's box as last read, moved when the table is in another
 /// system; none without one.
 pub fn extent_in_project(
@@ -189,6 +215,15 @@ impl App {
                     .map(|t| describe(&address, t))
                     .collect::<Vec<_>>()
             },
+            |r| message(Event::Described(r)),
+        )
+    }
+
+    /// A query added as a data layer (docs/adr/9113 §3), read and checked off the interface's thread.
+    pub(crate) fn add_query(&mut self, address: String, q: kentos_data::QueryTable, name: String) -> Task<Message> {
+        self.say(kentos_interaction::Level::Info, "Sorgu okunuyor…");
+        crate::db_connections::off_thread(
+            move || vec![describe_query(&address, &q, Some(&name))],
             |r| message(Event::Described(r)),
         )
     }

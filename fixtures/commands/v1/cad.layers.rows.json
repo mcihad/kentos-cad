@@ -3,7 +3,7 @@
  "version": 1,
  "command": "cad.layers.rows",
  "commandVersion": 1,
- "title": "Veri katmanının satırları: sıra, sayfa, arama, süzgeç, kutu, seçili anahtarlar (ADR 9102 §4)",
+ "title": "Veri katmanının satırları: sıra, sayfa, arama, süzgeç, kutu, seçili anahtarlar, sorgu katmanı (ADR 9102 §4, ADR 9113)",
  "note": "ADR 9102. GeoPackage'ı bu betik sqlite3 ile yazar (fixtures/data/v1/satirlar.gpkg); beklentiler sözleşmenin kurallarıyla burada hesaplanır: Türk alfabesinin sırası, Türkçe katlanan arama, süzgecin anlamı, sayfa, sayı, retler.",
  "setup": {
   "format": "kentos.document",
@@ -2702,6 +2702,972 @@
      "op": "execute",
      "input": {
       "layer": "parseller"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sorgu katmanı: sorgunun satırları ve sayısı, tablonunki değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri katmanının satırları",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "parklar",
+      "name": "Parklar (sorgu)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "-- kentos: key=fid geometry=geom\nSELECT fid, ada, parsel, mahalle, kullanim, geom FROM parseller WHERE kullanim = 'Park'",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       },
+       "readOnly": true
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parklar",
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 2,
+         "attrs": {
+          "ada": "100",
+          "parsel": "2",
+          "mahalle": "Işıklar",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "ada": "100",
+          "parsel": "4",
+          "mahalle": "Ağaçlı",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 14,
+         "attrs": {
+          "ada": "101",
+          "parsel": "4",
+          "mahalle": "Ağaçlı",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "ada": "101",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 21,
+         "attrs": {
+          "ada": "102",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 26,
+         "attrs": {
+          "ada": "102",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 28,
+         "attrs": {
+          "ada": "102",
+          "parsel": "8",
+          "mahalle": "Cumhuriyet",
+          "kullanim": "Park"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 7,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sorgu katmanı: arama ve Türk alfabesiyle sıra kaynakta",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri katmanının satırları",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "parklar",
+      "name": "Parklar (sorgu)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "-- kentos: key=fid geometry=geom\nSELECT fid, ada, parsel, mahalle, kullanim, geom FROM parseller WHERE kullanim = 'Park'",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       },
+       "readOnly": true
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parklar",
+      "search": "e",
+      "order": [
+       {
+        "field": "mahalle"
+       }
+      ],
+      "count": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 28,
+         "attrs": {
+          "ada": "102",
+          "parsel": "8",
+          "mahalle": "Cumhuriyet",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "ada": "101",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 26,
+         "attrs": {
+          "ada": "102",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "kullanim": "Park"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sorgu katmanı: kutuya değenler, geometri WKT",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri katmanının satırları",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "parklar",
+      "name": "Parklar (sorgu)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "-- kentos: key=fid geometry=geom\nSELECT fid, ada, parsel, mahalle, kullanim, geom FROM parseller WHERE kullanim = 'Park'",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       },
+       "readOnly": true
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parklar",
+      "bbox": [
+       600040.0,
+       4410040.0,
+       600260.0,
+       4410210.0
+      ],
+      "count": true,
+      "geometry": true,
+      "fields": [
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "parsel"
+       ],
+       "rows": [
+        {
+         "key": 14,
+         "attrs": {
+          "parsel": "4"
+         },
+         "wkt": "POLYGON ((600050 4410100, 600071 4410100, 600071 4410121, 600050 4410121, 600050 4410100))"
+        },
+        {
+         "key": 16,
+         "attrs": {
+          "parsel": "6"
+         },
+         "wkt": "POLYGON ((600150 4410100, 600170 4410100, 600170 4410120, 600150 4410120, 600150 4410100))"
+        },
+        {
+         "key": 21,
+         "attrs": {
+          "parsel": "1"
+         },
+         "wkt": "POLYGON ((600100 4410150, 600125 4410150, 600125 4410175, 600100 4410175, 600100 4410150))"
+        },
+        {
+         "key": 26,
+         "attrs": {
+          "parsel": "6"
+         },
+         "wkt": "POLYGON ((600050 4410200, 600080 4410200, 600080 4410230, 600050 4410230, 600050 4410200))"
+        },
+        {
+         "key": 28,
+         "attrs": {
+          "parsel": "8"
+         },
+         "wkt": "POLYGON ((600150 4410200, 600179 4410200, 600179 4410229, 600150 4410229, 600150 4410200))"
+        }
+       ],
+       "offset": 0,
+       "total": 5,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sorgu katmanı: süzgeç sorgunun üstünde kaynakta",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri katmanının satırları",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "parklar",
+      "name": "Parklar (sorgu)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "-- kentos: key=fid geometry=geom\nSELECT fid, ada, parsel, mahalle, kullanim, geom FROM parseller WHERE kullanim = 'Park'",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       },
+       "readOnly": true
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parklar",
+      "filter": "mahalle = 'Şehitler'",
+      "count": true,
+      "allKeys": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 16,
+         "attrs": {
+          "ada": "101",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "kullanim": "Park"
+         }
+        },
+        {
+         "key": 26,
+         "attrs": {
+          "ada": "102",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "kullanim": "Park"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 2,
+       "keys": [
+        16,
+        26
+       ],
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yazan deyim sorgu değildir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri katmanının satırları",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "parklar",
+      "name": "Parklar (sorgu)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "-- kentos: key=fid geometry=geom\nDELETE FROM parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       },
+       "readOnly": true
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parklar"
      },
      "result": {
       "status": "failed",

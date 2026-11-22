@@ -6,7 +6,8 @@
   modu veri kaydetme yapısı aktif katman katman tipleri gibi yapılar GIS için uygun değil … şu anki yapı uygun değil”.
 - **Önceki kararla ilişkisi:** ADR 0503, 0505 ve 0757'nin bağlı katmanı (tablonun bütün satırları çizimin nesnelerine
   kopyalanır) Kaynaklar'dan ve PostGIS'e bağlan'dan eklenen tablolar için kalkar: tablo artık veri katmanı olarak
-  eklenir. SQL sorgusundan yapılan katman (ADR 0581) bugünlük bağlı kopya olarak kalır (§10). Satırları
+  eklenir. SQL sorgusundan yapılan katman (ADR 0582) bir dönem bağlı kopya olarak kaldı; VY-16'dan beri o da veri
+  katmanıdır ([ADR 9113](9113-query-layers.md)). Satırları
   [ADR 9100](9100-data-drivers.md)'ün sürücüleri okur.
 - **Web:** ertelendi (ADR 0228). **`.kcad`:** belge şeması değişmez; CBS modül verisi sürüm 2 (§3).
   **Komut:** `cad.layers.data` v1 (§4).
@@ -188,7 +189,7 @@ eklenir. Sonra ilk tablonun kutusuna yaklaşılır. Alan olarak alınmayan sütu
 1. **Kutu projede saklanır** (`extent`). Yaklaşmak ve projeyi açmak kaynağa gitmez. Kutu tablo eklenirken ve
    değiştirilirken okunur.
 2. **SQL sorgusundan yapılan katman bağlı kopya olarak kaldı.** Sürücü sözleşmesi tablo okuyor; sorgunun kendisini
-   okumak ayrı bir iş (§10).
+   okumak ayrı bir iş (§10). Kapandı: VY-16, [ADR 9113](9113-query-layers.md).
 3. **Okumanın sınırları:** görünümün yarısı kadar pay, çeyrek oktav basamak, yarım piksel sadeleştirme.
 4. **Yeni okuma görünüm durunca başlar.** Eski parçalar yeni okuma bitene kadar durur.
 5. **Yalnız stilin andığı sütunlar okunur.** Alan JSON'da adıyla geçiyorsa okunur; birkaç fazla sütun, değeri olmadan
@@ -226,7 +227,8 @@ Bütün kent, ilçe, mahalle ve sokak ölçeğinde ve bir kaydırmada katmanlar 
 - **Stil penceresinin sınıflandırması** veri katmanında değerleri kaynaktan okur (VY-13,
   [ADR 9110](9110-classes-from-the-source.md) §1).
 - **Göreli yol:** `relative` sözleşmede ve dosyada var. Masaüstünün bunu yazması ve dosya taşınınca çözmesi VY-09'da.
-- **SQL sorgusundan yapılan katman** bağlı kopya olarak kaldı.
+- **SQL sorgusundan yapılan katman** kaynağında canlı okunur ve salt okunurdur (VY-16,
+  [ADR 9113](9113-query-layers.md)).
 - **Küçük ölçekte ince çizgiler:** kâğıt kalınlıkları yüzünden çizgiler soluk görünüyor; ölçeğe bağlı kalınlık stil
   işi.
 

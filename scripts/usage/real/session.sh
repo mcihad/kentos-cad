@@ -32,6 +32,11 @@ done
 if [ -n "${KENTOS_REAL_SETTINGS:-}" ] && [ -f "$SETTINGS/yapay-zeka-ajanlari.json" ]; then
   install -m 600 "$SETTINGS/yapay-zeka-ajanlari.json" "$HOME_DIR/.config/kentos-cad/"
 fi
+# Database connections likewise only from a folder given for the session, never the owner's list: a scenario connects to
+# a test database (its password from PGPASSWORD; the file keeps none unless saved with one).
+if [ -n "${KENTOS_REAL_SETTINGS:-}" ] && [ -f "$SETTINGS/veritabani-baglantilari.json" ]; then
+  install -m 600 "$SETTINGS/veritabani-baglantilari.json" "$HOME_DIR/.config/kentos-cad/"
+fi
 # The state folder too: Son dosyalar lives there (kentos-launch's recent.rs); without it a session's files went into the
 # owner's list, which keeps ten.
 export XDG_CONFIG_HOME=$HOME_DIR/.config XDG_DATA_HOME=$HOME_DIR/.local/share XDG_STATE_HOME=$HOME_DIR/.local/state \

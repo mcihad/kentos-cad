@@ -7,6 +7,9 @@
   - ADR 0510: bağlı katmanın parçası;
   - ADR 0538: kaynakla uzlaştırma ve nesne başına taban;
   - ADR 0581: kaynak sorgusu.
+- **Sonraki karar:** [ADR 9113](9113-query-layers.md) (2026-11-22). PostGIS'e bağlan'da yazılan sorgu artık bağlı kopya
+  değil, kaynağında canlı okunan salt okunur bir veri katmanıdır (§4'ün “Bağla bağlar”ı). Komutların bağlı sorgusu (§3)
+  değişmedi.
 - **Web:** ertelendi (ADR 0228), TODOS.md §0.2.
 - **Sonraya kalan:**
   - tetikleyici ya da outbox ile değişiklik bildirimi: bugün değişiklik, kaynağın durumu sorulunca alanın sürümüyle bulunur

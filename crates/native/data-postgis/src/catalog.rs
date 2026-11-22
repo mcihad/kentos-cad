@@ -24,6 +24,8 @@ pub struct Shape {
     pub writable: bool,
     /// The database has ICU's Turkish collation (`tr-x-icu`): texts are ordered by it (docs/adr/9102 §3).
     pub turkish: bool,
+    /// A query read as a table (docs/adr/9113 §2): the catalog says nothing of it, so nothing is estimated from it.
+    pub query: bool,
 }
 
 /// An identifier quoted.
@@ -170,7 +172,7 @@ pub async fn tables(conn: &mut PgConnection) -> Result<Vec<TableInfo>, DataError
 }
 
 /// A geometry column from `geometry_columns`' type (`MULTIPOLYGON`, `POINTM` …), system and dimensions.
-fn geometry_field(name: String, type_name: &str, srid: i32, dims: i32) -> GeometryField {
+pub(crate) fn geometry_field(name: String, type_name: &str, srid: i32, dims: i32) -> GeometryField {
     let t = type_name.to_ascii_uppercase();
     let m_only = t.ends_with('M') && !t.ends_with("ZM");
     let base = t
@@ -200,6 +202,9 @@ fn geometry_field(name: String, type_name: &str, srid: i32, dims: i32) -> Geomet
 
 /// A table's shape, read on `conn` (a transaction's own connection sees the tables it made).
 pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataError> {
+    if let Some(q) = kentos_data::QueryTable::parse(table) {
+        return crate::query::shape(conn, &q).await;
+    }
     let (sql, ns, rel) = qualified(table);
     let found = sqlx::query(
         "SELECT c.oid::int8 AS oid, c.relkind::text AS kind,
@@ -332,6 +337,7 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
         geography,
         writable: writes && pk.is_some() && matches!(kind.as_str(), "r" | "p"),
         turkish,
+        query: false,
     })
 }
 

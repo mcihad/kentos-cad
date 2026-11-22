@@ -1519,6 +1519,9 @@ mod data_journal_tests;
 #[cfg(test)]
 #[path = "gis/layer_export_memory_tests.rs"]
 mod layer_export_memory_tests;
+#[cfg(test)]
+#[path = "gis/query_layer_tests.rs"]
+mod query_layer_tests;
 #[path = "gis/data_view.rs"]
 mod data_view;
 #[path = "gis/data_info.rs"]

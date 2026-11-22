@@ -202,6 +202,7 @@ impl Transaction for PgTransaction {
     }
 
     fn insert(&mut self, table: &str, rows: &[NewFeature]) -> Result<Vec<i64>, DataError> {
+        kentos_data::query::refuse_write(table)?;
         let shape = self.shape(table)?;
         let mut keys = Vec::with_capacity(rows.len());
         for row in rows {
@@ -248,6 +249,7 @@ impl Transaction for PgTransaction {
     }
 
     fn update(&mut self, table: &str, changes: &[Change]) -> Result<(), DataError> {
+        kentos_data::query::refuse_write(table)?;
         let shape = self.shape(table)?;
         for c in changes {
             let mut s = Sql::default();
@@ -291,6 +293,7 @@ impl Transaction for PgTransaction {
     }
 
     fn delete(&mut self, table: &str, fids: &[i64]) -> Result<(), DataError> {
+        kentos_data::query::refuse_write(table)?;
         if fids.is_empty() {
             return Ok(());
         }

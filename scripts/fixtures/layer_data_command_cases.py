@@ -28,6 +28,13 @@ ROADS = {"driver": "postgis", "address": "postgresql://kbs@db.ornek.bel.tr:5432/
 OWNERS = {"driver": "gpkg", "address": "/veri/altyapi.gpkg", "table": "malikler", "key": "fid"}
 ANY = {"driver": "gpkg", "address": "/veri/altyapi.gpkg", "table": "karisik", "key": "fid",
        "geometry": {"column": "geom", "typeName": "GEOMETRY"}}
+# A query read as a table (docs/adr/9113 §1): its text is the table, its first line an SQL comment saying the key and
+# the geometry; read-only. The command reads no source: the text is kept as given.
+QUERY = {"driver": "postgis", "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+         "table": "-- kentos: key=fid geometry=geom\nSELECT fid, ada, geom FROM kadastro.parseller WHERE ada = 105",
+         "key": "fid", "geometry": {"column": "geom", "typeName": "MULTIPOLYGON", "srid": 5256}, "readOnly": True}
+# The longest text a data layer keeps in a field (contracts' MAX_DATA_TEXT), in bytes.
+MAX_TEXT = 2048
 PARCEL_FIELDS = [{"name": "ada", "kind": "integer"}, {"name": "parsel", "kind": "integer"}, {"name": "mahalle", "kind": "text"}]
 ROAD_FIELDS = [{"name": "ad", "kind": "text"}, {"name": "tur", "kind": "text"}]
 
@@ -217,6 +224,12 @@ def cases():
                        WRITTEN, {"layers": inserted(tree(), copy.deepcopy(roads), "direkler")})],
     })
     out.append({
+        "name": "Ekle: SQL sorgusu tablonun metni olarak (ADR 9113); salt okunur alan katmanı, metni olduğu gibi saklanır",
+        "steps": [step("execute", {"operation": "add", "name": "Sorgu: parseller", "data": QUERY,
+                                   "fields": [{"name": "ada", "kind": "integer"}]},
+                       WRITTEN, {"layers": inserted(tree(), new_layer("Sorgu: parseller", QUERY, [{"name": "ada", "kind": "integer"}]))})],
+    })
+    out.append({
         "name": "Ekle: geometrisiz tablo; türsüz katman, alansız",
         "steps": [step("execute", {"operation": "add", "name": "Malikler", "data": OWNERS}, WRITTEN,
                        {"layers": inserted(tree(), new_layer("Malikler", OWNERS))})],
@@ -311,7 +324,13 @@ def cases():
     out.append(refused("küçük harfli geometri türü", {"operation": "add", "name": "Yollar", "data": {**ROADS, "geometry": {"column": "geom", "typeName": "MultiLineString", "srid": 5256}}},
                        "invalid_data", "geometri türü “MultiLineString” tanınmıyor (büyük harfle OGC adı: POINT, MULTIPOLYGON …)", "data"))
     out.append(refused("boş tablo adı", {"operation": "add", "name": "Yollar", "data": {**ROADS, "table": "  "}}, "invalid_data",
-                       "veri katmanının tablosu boş", "data"))
+                       f"veri katmanının tablosu boş ya da {MAX_TEXT} karakterden uzun", "data"))
+    # A query's text counts its bytes as the contract does (UTF-8): “ı” and “ş” are two each.
+    long_query = "-- kentos: key=fid\nSELECT fid FROM kadastro.parseller WHERE " + " OR ".join(
+        f"mahalle = 'Işıklar {i}'" for i in range(90))
+    assert len(long_query.encode()) > MAX_TEXT
+    out.append(refused("2048 bayttan uzun sorgu", {"operation": "add", "name": "Sorgu", "data": {**QUERY, "table": long_query}},
+                       "invalid_data", f"veri katmanının tablosu boş ya da {MAX_TEXT} karakterden uzun", "data"))
     out.append(refused("veritabanının göreli yolu", {"operation": "add", "name": "Yollar", "data": {**ROADS, "relative": "a/b"}}, "invalid_data",
                        "veritabanının göreli yolu olmaz", "data"))
     out.append(refused("aynı adlı iki alan", {"operation": "add", "name": "Yollar", "data": ROADS, "fields": [{"name": "ad", "kind": "text"}, {"name": "AD", "kind": "text"}]},

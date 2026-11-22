@@ -12,6 +12,7 @@
 mod catalog;
 mod connect;
 mod projects;
+mod query;
 mod read;
 mod sql;
 mod write;

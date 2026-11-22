@@ -207,8 +207,15 @@ ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, AD
   - Koordinat sistemi aranabilir listeden seçilir; Yeni katman da aynı listeyi kullanır.
   - KML'ye semboller: katmanın stili (her sınıf kendi stili), katmanın rengi ya da sembolsüz. Başka bir CBS'nin
     kitaplığı dosyayı aynı renklerde çizdi.
-- [ ] **VY-16 — SQL sorgusu katmanı canlı.** Bir SQL sorgusundan yapılan katman bağlı kopya değil, sorguyu kaynağında
-  okuyan veri katmanıdır (benzersiz anahtar sütunu ve geometri sütunu seçilir); salt okunur.
+- [x] **VY-16 — SQL sorgusu katmanı canlı.** ([ADR 9113](../docs/adr/9113-query-layers.md))
+  - PostGIS'e bağlan'da yazılan sorgu bağlı kopya değil, sorguyu kaynağında okuyan veri katmanıdır.
+  - Sütunları oku sorguyu çalıştırmadan sütunlarını getirir. Anahtar tam sayı sütunlardan, geometri geometri
+    sütunlarından seçilir; ad verilir.
+  - Ekle anahtarın satırları ayırdığını kaynakta denetler (1 000 000 satıra kadar).
+  - Katman salt okunurdur: sorgu her yerde salt okunur bir işlemde ya da salt okunur açılmış dosyada çalışır.
+  - Sorgu, katmanın tablo metnidir (`-- kentos: key=… geometry=…` satırıyla). Proje dosyası ve komut değişmedi.
+  - Gerçek pencerede bir milyon parselden 5 000 park: tablo “5.000 satır · süzgeç ve sıra kaynakta”.
+  - Bulunup kapatılan hata: SQL kutusu ilk harften sonra klavyeyi kaybediyordu.
 - [ ] **VY-17 — Taşımada yazılar.** Tabloya yazılamayan yazılar taşıma sırasında aynı kaynakta ayrı bir yazı tablosuna
   (nokta, metin, yükseklik, açı) yazılır ve etiketleriyle çizilir; taşıma reddedilmez.
 - [ ] **VY-18 — Küçük ölçekte ince çizgiler.** Veri katmanının çizgileri küçük ölçekte de görünür kalınlıkta çizilir

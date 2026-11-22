@@ -174,27 +174,28 @@ class Desc:
         return self.k == o.k
 
 
-def contains(r, words):
+def contains(r, words, fields=FIELDS):
     w = fold(words)
-    return any(t is not None and w in fold(t) for t in (text_of(r, f) for f in FIELDS))
+    return any(t is not None and w in fold(t) for t in (text_of(r, f) for f in fields))
 
 
 def meets(r, b):
     return not (r["x"] + r["side"] < b[0] or r["x"] > b[2] or r["y"] + r["side"] < b[1] or r["y"] > b[3])
 
 
-def answer(inp, keep=lambda r: True, checked="source"):
-    """The answer the contract gives for `inp`, the filter's meaning being `keep`."""
+def answer(inp, keep=lambda r: True, checked="source", layer_fields=FIELDS):
+    """The answer the contract gives for `inp`, the filter's meaning being `keep`, the layer's fields `layer_fields`
+    (a query layer's are its query's columns)."""
     rs = [r for r in ROWS if keep(r)]
     if "bbox" in inp:
         rs = [r for r in rs if meets(r, inp["bbox"])]
     if "keys" in inp:
         rs = [r for r in rs if r["fid"] in inp["keys"]]
     if inp.get("search", "").strip():
-        rs = [r for r in rs if contains(r, inp["search"].strip())]
+        rs = [r for r in rs if contains(r, inp["search"].strip(), layer_fields)]
     rs = ordered(rs, [(o["field"], o.get("descending", False)) for o in inp.get("order", [])])
     offset, limit = inp.get("offset", 0), inp.get("limit", 100)
-    fields = inp.get("fields", FIELDS)
+    fields = inp.get("fields", layer_fields)
     page = []
     for r in rs[offset:offset + limit]:
         row = {"key": r["fid"], "attrs": {f: text_of(r, f) for f in fields if text_of(r, f) is not None}}
@@ -246,6 +247,50 @@ SETUP = {
 
 def case(name, inp, result):
     return {"name": name, "steps": [{"op": "execute", "input": inp, "result": result}]}
+
+
+# A query read as a data layer (docs/adr/9113 §1): the table's text is the query, its first line an SQL comment saying
+# the rows' key and their geometry. Its rows are the query's, read where they are; its fields are its columns.
+QUERY_SQL = "SELECT fid, ada, parsel, mahalle, kullanim, geom FROM parseller WHERE kullanim = 'Park'"
+QUERY_FIELDS = ["ada", "parsel", "mahalle", "kullanim"]
+
+
+def is_park(r):
+    return r["kullanim"] == "Park"
+
+
+def query_setup(sql=QUERY_SQL):
+    setup = json.loads(json.dumps(SETUP))
+    setup["layers"].append({
+        "id": "parklar", "name": "Parklar (sorgu)", "type": "layer", "visible": True, "locked": False,
+        "expanded": True, "style": STYLE, "children": [], "geometry": "area",
+        "data": {"driver": "gpkg", "address": ADDRESS, "table": f"-- kentos: key=fid geometry=geom\n{sql}",
+                 "key": "fid", "geometry": {"column": "geom", "typeName": "POLYGON", "srid": 5256}, "readOnly": True},
+        "fields": [{"name": "ada", "kind": "integer"}, {"name": "parsel", "kind": "integer"},
+                   {"name": "mahalle", "kind": "text"}, {"name": "kullanim", "kind": "text"}]})
+    return setup
+
+
+def query_case(name, inp, keep=lambda r: True, setup=None, result=None):
+    q = {"layer": "parklar", **inp}
+    expected = result or answer(q, lambda r: is_park(r) and keep(r), layer_fields=QUERY_FIELDS)
+    return {"name": name, "setup": setup or query_setup(), "steps": [{"op": "execute", "input": q, "result": expected}]}
+
+
+def query_cases():
+    box = [600040.0, 4410040.0, 600260.0, 4410210.0]
+    return [
+        query_case("Sorgu katmanı: sorgunun satırları ve sayısı, tablonunki değil", {"count": True}),
+        query_case("Sorgu katmanı: arama ve Türk alfabesiyle sıra kaynakta",
+                   {"search": "e", "order": [{"field": "mahalle"}], "count": True}),
+        query_case("Sorgu katmanı: kutuya değenler, geometri WKT", {"bbox": box, "count": True, "geometry": True,
+                                                                     "fields": ["parsel"]}),
+        query_case("Sorgu katmanı: süzgeç sorgunun üstünde kaynakta",
+                   {"filter": "mahalle = 'Şehitler'", "count": True, "allKeys": True},
+                   lambda r: r["mahalle"] == "Şehitler"),
+        query_case("Ret: yazan deyim sorgu değildir", {}, setup=query_setup("DELETE FROM parseller"),
+                   result=refused("source_unreachable", "$any", None)),
+    ]
 
 
 def area(r):
@@ -348,7 +393,7 @@ def cases():
     gone["layers"][1]["data"]["address"] = "$fixture:data/v1/yok.gpkg"
     out.append({"name": "Ret: kaynak okunamıyor (dosya yok)", "setup": gone,
                 "steps": [{"op": "execute", "input": {**p}, "result": refused("source_unreachable", "$any", None)}]})
-    return out
+    return out + query_cases()
 
 
 def document():
@@ -357,7 +402,8 @@ def document():
         "version": 1,
         "command": "cad.layers.rows",
         "commandVersion": 1,
-        "title": "Veri katmanının satırları: sıra, sayfa, arama, süzgeç, kutu, seçili anahtarlar (ADR 9102 §4)",
+        "title": "Veri katmanının satırları: sıra, sayfa, arama, süzgeç, kutu, seçili anahtarlar, sorgu katmanı "
+                 "(ADR 9102 §4, ADR 9113)",
         "note": "ADR 9102. GeoPackage'ı bu betik sqlite3 ile yazar (fixtures/data/v1/satirlar.gpkg); beklentiler "
                 "sözleşmenin kurallarıyla burada hesaplanır: Türk alfabesinin sırası, Türkçe katlanan arama, süzgecin "
                 "anlamı, sayfa, sayı, retler.",

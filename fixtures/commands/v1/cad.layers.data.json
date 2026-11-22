@@ -941,6 +941,179 @@
       ]
     },
     {
+      "name": "Ekle: SQL sorgusu tablonun metni olarak (ADR 9113); salt okunur alan katmanı, metni olduğu gibi saklanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Sorgu: parseller",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "-- kentos: key=fid geometry=geom\nSELECT fid, ada, geom FROM kadastro.parseller WHERE ada = 105",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTIPOLYGON",
+                "srid": 5256
+              },
+              "readOnly": true
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "$layer",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "$layer",
+                "name": "Sorgu: parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "-- kentos: key=fid geometry=geom\nSELECT fid, ada, geom FROM kadastro.parseller WHERE ada = 105",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  },
+                  "readOnly": true
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  }
+                ],
+                "geometry": "area"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "Ekle: geometrisiz tablo; türsüz katman, alansız",
       "steps": [
         {
@@ -3982,7 +4155,148 @@
             "status": "failed",
             "error": {
               "code": "invalid_data",
-              "message": "veri katmanının tablosu boş",
+              "message": "veri katmanının tablosu boş ya da 2048 karakterden uzun",
+              "path": "data"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parseller",
+                "name": "Parseller",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "data": {
+                  "driver": "postgis",
+                  "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                  "table": "kadastro.parseller",
+                  "key": "fid",
+                  "geometry": {
+                    "column": "geom",
+                    "typeName": "MULTIPOLYGON",
+                    "srid": 5256
+                  }
+                },
+                "fields": [
+                  {
+                    "name": "ada",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "parsel",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "mahalle",
+                    "kind": "text"
+                  }
+                ],
+                "geometry": "area"
+              },
+              {
+                "id": "veri",
+                "name": "Veri",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "direkler",
+                    "name": "Direkler",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "ink",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": [],
+                    "data": {
+                      "driver": "gpkg",
+                      "address": "/veri/altyapi.gpkg",
+                      "relative": "veri/altyapi.gpkg",
+                      "table": "direkler",
+                      "key": "fid",
+                      "geometry": {
+                        "column": "geom",
+                        "typeName": "POINT",
+                        "srid": 5256,
+                        "z": true
+                      },
+                      "readOnly": true
+                    },
+                    "geometry": "point"
+                  }
+                ]
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2048 bayttan uzun sorgu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "add",
+            "name": "Sorgu",
+            "data": {
+              "driver": "postgis",
+              "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+              "table": "-- kentos: key=fid\nSELECT fid FROM kadastro.parseller WHERE mahalle = 'Işıklar 0' OR mahalle = 'Işıklar 1' OR mahalle = 'Işıklar 2' OR mahalle = 'Işıklar 3' OR mahalle = 'Işıklar 4' OR mahalle = 'Işıklar 5' OR mahalle = 'Işıklar 6' OR mahalle = 'Işıklar 7' OR mahalle = 'Işıklar 8' OR mahalle = 'Işıklar 9' OR mahalle = 'Işıklar 10' OR mahalle = 'Işıklar 11' OR mahalle = 'Işıklar 12' OR mahalle = 'Işıklar 13' OR mahalle = 'Işıklar 14' OR mahalle = 'Işıklar 15' OR mahalle = 'Işıklar 16' OR mahalle = 'Işıklar 17' OR mahalle = 'Işıklar 18' OR mahalle = 'Işıklar 19' OR mahalle = 'Işıklar 20' OR mahalle = 'Işıklar 21' OR mahalle = 'Işıklar 22' OR mahalle = 'Işıklar 23' OR mahalle = 'Işıklar 24' OR mahalle = 'Işıklar 25' OR mahalle = 'Işıklar 26' OR mahalle = 'Işıklar 27' OR mahalle = 'Işıklar 28' OR mahalle = 'Işıklar 29' OR mahalle = 'Işıklar 30' OR mahalle = 'Işıklar 31' OR mahalle = 'Işıklar 32' OR mahalle = 'Işıklar 33' OR mahalle = 'Işıklar 34' OR mahalle = 'Işıklar 35' OR mahalle = 'Işıklar 36' OR mahalle = 'Işıklar 37' OR mahalle = 'Işıklar 38' OR mahalle = 'Işıklar 39' OR mahalle = 'Işıklar 40' OR mahalle = 'Işıklar 41' OR mahalle = 'Işıklar 42' OR mahalle = 'Işıklar 43' OR mahalle = 'Işıklar 44' OR mahalle = 'Işıklar 45' OR mahalle = 'Işıklar 46' OR mahalle = 'Işıklar 47' OR mahalle = 'Işıklar 48' OR mahalle = 'Işıklar 49' OR mahalle = 'Işıklar 50' OR mahalle = 'Işıklar 51' OR mahalle = 'Işıklar 52' OR mahalle = 'Işıklar 53' OR mahalle = 'Işıklar 54' OR mahalle = 'Işıklar 55' OR mahalle = 'Işıklar 56' OR mahalle = 'Işıklar 57' OR mahalle = 'Işıklar 58' OR mahalle = 'Işıklar 59' OR mahalle = 'Işıklar 60' OR mahalle = 'Işıklar 61' OR mahalle = 'Işıklar 62' OR mahalle = 'Işıklar 63' OR mahalle = 'Işıklar 64' OR mahalle = 'Işıklar 65' OR mahalle = 'Işıklar 66' OR mahalle = 'Işıklar 67' OR mahalle = 'Işıklar 68' OR mahalle = 'Işıklar 69' OR mahalle = 'Işıklar 70' OR mahalle = 'Işıklar 71' OR mahalle = 'Işıklar 72' OR mahalle = 'Işıklar 73' OR mahalle = 'Işıklar 74' OR mahalle = 'Işıklar 75' OR mahalle = 'Işıklar 76' OR mahalle = 'Işıklar 77' OR mahalle = 'Işıklar 78' OR mahalle = 'Işıklar 79' OR mahalle = 'Işıklar 80' OR mahalle = 'Işıklar 81' OR mahalle = 'Işıklar 82' OR mahalle = 'Işıklar 83' OR mahalle = 'Işıklar 84' OR mahalle = 'Işıklar 85' OR mahalle = 'Işıklar 86' OR mahalle = 'Işıklar 87' OR mahalle = 'Işıklar 88' OR mahalle = 'Işıklar 89'",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "MULTIPOLYGON",
+                "srid": 5256
+              },
+              "readOnly": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_data",
+              "message": "veri katmanının tablosu boş ya da 2048 karakterden uzun",
               "path": "data"
             }
           },

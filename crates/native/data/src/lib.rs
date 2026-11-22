@@ -33,6 +33,7 @@ pub mod feature;
 pub mod fit;
 pub mod geom;
 pub mod projects;
+pub mod query;
 pub mod registry;
 pub mod request;
 pub mod schema;
@@ -53,6 +54,7 @@ pub use geom::{
     Blob, BlobError, Coord, Curve, Geometry, read_blob, read_wkb, write_blob, write_wkb,
 };
 pub use projects::{ProjectStore, StoredProject};
+pub use query::{QueryColumn, QueryTable};
 pub use registry::{Registry, registry};
 pub use request::{Order, Request};
 pub use schema::{Family, Field, FieldKind, GeometryField, Schema, family_of};
