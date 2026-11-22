@@ -264,6 +264,6 @@ açarken çok ciddi ölçek problemleri var, … zoom yapılamıyor ve ekranda n
   - Derece projesinde (WGS 84) yakınlaşma artık metre projesindeki kadar derin: kameranın sınırı birimin metresiyle
     çarpılır. Önce 11 m/pikselde duruyordu, küçük alanlar nokta gibi kalıyordu.
   - 13 bağımsız durum. Native, kamera, masaüstü, Python, MCP sınamaları. QGIS 4.2.2 ile karşılaştırma. Sahibin indirdiği
-    Boston ve NGA dosyalarının kopyalarıyla resimler.
-  - Kalan (ADR 9117 §7): noktadan ibaret kutulu döşeme tablosu, başka sistemdeki döşemenin çevrilmesi, görünüşün gerçek
-    pencerede değiştirilip kaydedilmesi, web.
+    Boston ve NGA dosyalarının kopyalarıyla resimler. Gerçek pencerede raster ve görünüş: Katman stili'nde kapatılan
+    sınıf Kaydet'le tabloya yazıldı, QGIS onu çizmedi.
+  - Kalan (ADR 9117 §7): noktadan ibaret kutulu döşeme tablosu, başka sistemdeki döşemenin çevrilmesi, web.

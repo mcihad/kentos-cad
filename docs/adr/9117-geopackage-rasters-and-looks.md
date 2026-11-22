@@ -149,12 +149,18 @@
     kat 1 `#fdae61`, kat 2 `#d7191c`, kat 3 ve 4 `#abd9e9`.
   - Gerçek pencerede KentOS projesini yazdıktan sonra dosyayı QGIS okudu: `parseller` 2 nesne, `ortofoto` 512 × 512
     raster, EPSG:5256.
-- **Gerçek pencere** (`.run/gui-evidence/gpkg-raster-9117`):
-  - `ortofotolu.gpkg`'nin bir kopyası program açılırken verildi. Raster parsellerin altında çizildi, dört karo dikişsiz
-    birleşti. İleti “(1 veri katmanı, döşeme tablolarından 1 raster)” dedi.
-  - Görünüşün pencereden değiştirilip kaydedilmesi gerçek pencerede yapılmadı: sahip o sırada bilgisayarı kullanıyordu
-    ve onun ekranına fare ve klavye olayı gönderilmedi. Bu adım masaüstü, Python ve MCP sınamalarıyla doğrulandı;
-    pencerede yapılması §7'de.
+- **Gerçek pencere, raster** (`.run/gui-evidence/gpkg-raster-9117`): `ortofotolu.gpkg`'nin bir kopyası program
+  açılırken verildi. Raster parsellerin altında çizildi, dört karo dikişsiz birleşti. İleti “(1 veri katmanı, döşeme
+  tablolarından 1 raster)” dedi.
+- **Gerçek pencere, görünüş** (`.run/gui-evidence/gpkg-gorunus-9117`). İlk denemede sahip bilgisayarı kullanıyordu;
+  onun ekranına olay gönderilmedi. Aynı gün, sahibin izniyle, bilgisayar boşken yapıldı:
+  - `katmanlar.gpkg`'nin kopyası açıldı. `binalar`'ın sağ tık menüsünden Görünüş › Katman stili… (özel) açıldı. D sınıfı
+    kapatıldı, Tamam'a basıldı. D binası çizilmedi.
+  - ⌘S: “Kaydedildi …” ve ardından “Görünüşler GeoPackage'ın stil tablosuna varsayılan stil olarak yazıldı: binalar …”.
+    sqlite3: 4. satır `binalar`'ın varsayılanı, açıklaması KentOS. Dosyanın eski iki satırı durdu, artık varsayılan değil.
+    Yazılan QML'de D `render="false"`.
+  - İkinci ⌘S yalnız “Kaydedildi” dedi; satır eklenmedi.
+  - QGIS dosyayı açtı: `categorizedSymbol`, alan `ada`. A `#e41a1c`, B `#377eb8`, C `#4daf4a` çizildi, D çizilmedi.
 - **Sahibin dosyaları** (kopyaları; ekran dışı resimler `.run/gui-evidence/gpkg-*-9117`, sınamanın `KENTOS_GPKG`'si):
   - NextGIS Boston kesitlerinden `aerialway-line.gpkg` alanı doldurdu (50 m'lik ölçek çubuğu, 1:1 334).
   - `highway-line.gpkg` (15 MB) bütün kenti 1:92 538'de, üç adım yakında 1:27 419'da gösterdi. On bir adım yakında
@@ -167,7 +173,6 @@
 - **Noktadan ibaret kutu:** `gpkg_contents`'in kutusu karoları kapsamıyorsa (NGA'nın `point2_tiles`'ı), en ayrıntılı
   düzeyde dosyada duran karoların kutusu alınmalı.
 - **Başka sistemdeki döşeme tablosu** rasterin çevrilmesini bekler.
-- **Gerçek pencerede görünüş:** Katman stili'nden değiştirip Kaydet'le yazmak, bilgisayar boşken.
 - **Web** (TODOS.md §0.2): web kamerasının sınırı (`apps/web/src/viewport/Camera.ts`, `MAX_SCALE = 1e4`) de dünya
   birimi başınadır ve derece projesinde aynı hatayı verir. Kategori değerinin kuralı WASM'dan gelir; yeni ortak durum
   web'in WASM'ı yenilenince geçer.
