@@ -1,8 +1,9 @@
 //! A GeoPackage opened (docs/adr/9116): from Dosya › Aç, a recent file, a file dropped on a window with no drawing, or
 //! Veri kaynağından aç on a file that keeps no project. The native opening runs off the interface's thread: a file's
 //! only project opens as a project kept there; a file of several projects opens Veri kaynağından aç on it to pick one;
-//! a file of none opens as a new project of its tables, written into the file so Kaydet writes there again. What the
-//! opening found is said: the system chosen, what was not taken, a file that could not be written.
+//! a file of none opens as a new project of its tables, in memory: not a byte of the file changes (docs/adr/9122), and
+//! Kaydet offers to keep the project in that file, showing the file and the name before it writes. What the opening
+//! found is said: the system chosen, what was not taken.
 
 use std::path::PathBuf;
 
@@ -28,8 +29,8 @@ pub enum Read {
     Kept(Box<Document>),
     /// More than one project: their names.
     Several(Vec<String>),
-    /// A new project of its tables: written into the file (or why not), what the opening found.
-    Built { doc: Box<Document>, name: String, written: Result<(), String>, notes: Vec<gpkg_open::Note> },
+    /// A new project of its tables, kept nowhere yet; what the opening found.
+    Built { doc: Box<Document>, name: String, notes: Vec<gpkg_open::Note> },
 }
 
 fn message(e: Event) -> Message {
@@ -54,12 +55,10 @@ fn read(path: &std::path::Path, name: Option<&str>) -> Result<Read, String> {
         }
         Opened::Several(kept) => Ok(Read::Several(kept.into_iter().map(|p| p.name).collect())),
         Opened::Built(built) => {
-            let gpkg_open::Built { document, name, written, notes } = *built;
+            let gpkg_open::Built { document, name, notes } = *built;
             let mut doc = Document::of_model(document);
-            if written.is_ok() {
-                doc.source = Source::Stored(Box::new(StoredSource { address, schema: None, name: name.clone() }));
-            }
-            Ok(Read::Built { doc: Box::new(doc), name, written, notes })
+            doc.source = Source::Offered(Box::new(StoredSource { address, schema: None, name: name.clone() }));
+            Ok(Read::Built { doc: Box::new(doc), name, notes })
         }
     }
 }
@@ -102,7 +101,7 @@ impl App {
                 self.open_project_store_at(path)
             }
             Ok(Read::Kept(doc)) => self.place_geopackage(path, purpose, doc, Vec::new()),
-            Ok(Read::Built { doc, name, written, notes }) => {
+            Ok(Read::Built { doc, name, notes }) => {
                 let layers = doc.model.layers().leaves().iter().filter(|n| n.data.is_some()).count();
                 // The tile tables' rasters (docs/adr/9117 §1), said beside the data layers.
                 let rasters = doc
@@ -111,15 +110,12 @@ impl App {
                     .filter(|e| matches!(e, kentos_commands::Entity::Raster(r) if r.raster.tiles.is_some()))
                     .count();
                 let rasters = if rasters > 0 { format!(", döşeme tablolarından {rasters} raster") } else { String::new() };
-                let mut said = vec![match &written {
-                    Ok(()) => (
-                        Level::Success,
-                        format!(
-                            "“{file}” içinde KentOS projesi yoktu: tablolarından “{name}” projesi kuruldu ve dosyanın içine yazıldı ({layers} veri katmanı{rasters}). Kaydet bu dosyaya yazar."
-                        ),
+                let mut said = vec![(
+                    Level::Success,
+                    format!(
+                        "“{file}” içinde KentOS projesi yok: tabloları “{name}” adıyla bir harita olarak açıldı ({layers} veri katmanı{rasters}). Dosyaya bir şey yazılmadı; Kaydet, projeyi bu dosyada saklamayı önerir."
                     ),
-                    Err(why) => (Level::Warn, why.clone()),
-                }];
+                )];
                 said.extend(notes.into_iter().map(|n| {
                     let level = match n.code {
                         "mixed_systems" => Level::Info,
@@ -148,9 +144,11 @@ impl App {
             self.gis.project_store = None;
             self.dialog = None;
         }
+        let kept = doc.offered_source().is_none();
         let task = self.update(Message::Opened(Some(Ok(doc))));
         let module = self.document_module();
-        self.recent.add_in(&path, "GeoPackage — proje dosyanın içinde".into(), module);
+        let what = if kept { "GeoPackage — proje dosyanın içinde" } else { "GeoPackage — tabloları harita olarak" };
+        self.recent.add_in(&path, what.into(), module);
         for (level, words) in said {
             self.say(level, words);
         }

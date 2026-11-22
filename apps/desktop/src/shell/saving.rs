@@ -709,6 +709,18 @@ impl App {
                                         |looks| Message::Saving(Event::Looks(looks)),
                                     );
                                 }
+                                // UR-001: “Kaydet ve kapat” of a project kept in a source goes on once it is written
+                                // whole, as a file's does (docs/adr/9122 §3).
+                                if let Some((session, leave)) = self.save_then
+                                    && session == s.session
+                                {
+                                    self.save_then = None;
+                                    if self.document.as_ref().is_some_and(|d| !d.dirty()) {
+                                        then = Task::batch([then, self.proceed(leave)]);
+                                    } else {
+                                        self.warn("Kayıt sürerken yapılan değişiklikler kaydedilmedi; çizim açık kaldı.");
+                                    }
+                                }
                             }
                             then
                         }

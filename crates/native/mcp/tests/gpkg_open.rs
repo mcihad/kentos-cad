@@ -1,5 +1,6 @@
 //! Real MCP host, a GeoPackage opened as a project (docs/adr/9116): an agent opens a file of no project, which becomes
-//! a new project of its tables written into the file; drawing.save without a path writes there again; a file of
+//! a new project of its tables made in memory, the file unchanged (docs/adr/9122); drawing.save without a path keeps
+//! it in the file; a file of
 //! several projects is refused with their names until `project` names one. Its tile tables open as a raster layer under
 //! the tables, and drawing.save gives a changed look to its table's default style, once (docs/adr/9117). The files are
 //! fixtures/data/v1/gpkg-open's.
@@ -32,19 +33,22 @@ fn copy(file: &str, tag: &str) -> std::path::PathBuf {
 #[test]
 fn an_agent_opens_a_geopackage_of_no_project_and_saves_into_it() {
     let path = copy("katmanlar.gpkg", "made");
+    let before = std::fs::read(&path).expect("the file");
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
     let out = &opened["structuredContent"];
     let said = &out["summary"]["openedGeoPackage"];
     assert_eq!(said["made"], true, "{opened}");
-    assert_eq!(said["written"], true, "{opened}");
+    assert_eq!(said["kept"], false, "{opened}");
+    assert_eq!(out["summary"]["project"]["kept"], false, "{opened}");
+    assert!(std::fs::read(&path).expect("the file") == before, "opening wrote nothing into the file");
     assert_eq!(said["project"], "katmanlar");
     assert_eq!(out["summary"]["project"]["name"], "katmanlar", "{opened}");
     assert_eq!(out["summary"]["settings"]["srid"], 5256);
     let drawing = out["drawing"].clone();
 
-    // drawing.save without a path: into the file again.
+    // drawing.save without a path: the project kept in the file now.
     let saved = call(&mut server, "drawing.save", json!({"drawing": drawing}));
     assert_eq!(saved["isError"], false, "{saved}");
     assert_eq!(saved["structuredContent"]["name"], "katmanlar", "{saved}");

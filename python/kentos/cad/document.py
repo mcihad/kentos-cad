@@ -511,11 +511,12 @@ class DocumentInfo:
     opened_cad: Mapping[str, Any] | None = None
     """External CAD source path, unit decision and read report. Its source is never the save target."""
     project: Mapping[str, Any] | None = None
-    """The data source project it is (docs/adr/9107, 9116): ``address``, ``schema``, ``name``; ``save()`` without a
-    path writes there."""
+    """The data source project it is (docs/adr/9107, 9116): ``address``, ``schema``, ``name`` and ``kept`` (False: made
+    of a GeoPackage's tables and kept nowhere yet, docs/adr/9122); ``save()`` without a path writes there."""
     opened_geopackage: Mapping[str, Any] | None = None
     """What opening a GeoPackage found (docs/adr/9116): ``geoPackage``, ``project``, ``made`` (a new project of its
-    tables), ``written``, ``notes`` (``code``, ``text``) and why it was not written (``unwritten``)."""
+    tables), ``kept`` (the project is in the file; opening never writes it there, docs/adr/9122) and ``notes``
+    (``code``, ``text``)."""
 
 
 def _stored_saved(raw: Mapping[str, Any]) -> StoredSaved:
@@ -620,9 +621,10 @@ class Document:
 
         A GeoPackage (``.gpkg``, docs/adr/9116) opens as a project: the one it keeps; with several, ``HostError``
         ``several_projects`` names them (open one with ``open_from``). A file that keeps none opens as a new CBS
-        project of its tables, written into that file: its tables are data layers whose rows stay in the file, its
-        system the one most of its tables are in, each table's default style its layer's look. ``info()``'s
-        ``opened_geopackage`` says what was found; ``save()`` without a path writes into the file again.
+        project of its tables, made in memory: opening writes nothing into the file (docs/adr/9122). Its tables are
+        data layers whose rows stay in the file, its system the one most of its tables are in, each table's default
+        style its layer's look. ``info()``'s ``opened_geopackage`` says what was found; ``save()`` without a path keeps
+        the project in the file, under the file's name.
 
         ``file_unit`` explicitly interprets the external source's numbers, overriding
         its declaration once. Unitless sources raise ``HostError`` with code

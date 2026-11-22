@@ -4,6 +4,10 @@
 //! the save pipeline (`saving::Target::Source`: read back before it counts) and the drawing becomes that project, which
 //! Kaydet writes again; Aç reads one off the interface's thread and opens it in a tab of its own. Saving to a file
 //! stays as it was: keeping a project in a source is a choice, never required.
+//!
+//! A project made of a GeoPackage's tables (docs/adr/9122) is kept nowhere until its first Kaydet opens this window on
+//! that file and the name offered: the owner sees where and under what name before anything is written; Vazgeç writes
+//! nothing and stops a “Kaydet ve …” that waited for it.
 
 use std::path::PathBuf;
 
@@ -49,6 +53,9 @@ pub(crate) struct StoreWindow {
     said: Option<String>,
     /// Projeyi sil… pressed: the selected project's removal waits for Sil.
     deleting: bool,
+    /// Opened by the first Kaydet of a project made of this GeoPackage's tables (docs/adr/9122): its lead says that
+    /// keeping it here adds the project to the file and leaves the tables' rows as they are.
+    offered: bool,
 }
 
 /// What the window says.
@@ -115,6 +122,12 @@ impl StoreWindow {
     #[cfg(test)]
     pub(crate) fn name_for_test(&self) -> String {
         self.name.clone()
+    }
+
+    /// Whether the first Kaydet of a project made of this file's tables opened the window.
+    #[cfg(test)]
+    pub(crate) fn offered_for_test(&self) -> bool {
+        self.offered
     }
 
     /// The projects' names listed, none before a read.
@@ -186,6 +199,7 @@ impl App {
             busy: false,
             said: None,
             deleting: false,
+            offered: false,
         };
         // Where the drawing is kept, or the GeoPackage of its first data layer: the likely place.
         if let Some(s) = stored {
@@ -204,6 +218,21 @@ impl App {
         self.gis.project_store = Some(w);
         self.dialog = Some(crate::app::Dialog::Gis(crate::gis::GisDialogKind::ProjectStore));
         if list { self.list_projects() } else { Task::none() }
+    }
+
+    /// The first Kaydet of a project made of a GeoPackage's tables (docs/adr/9122): the window on that file, the name
+    /// offered, its projects read; nothing is written before the owner presses Kaydet.
+    pub(crate) fn offer_project_store(&mut self, at: StoredSource) -> Task<Message> {
+        let _ = self.open_project_store(true);
+        if let Some(w) = self.gis.project_store.as_mut() {
+            w.kind = Kind::File;
+            w.path = at.file().map_or_else(|| at.address.clone(), |f| f.display().to_string());
+            w.name = at.name.clone();
+            w.listed = None;
+            w.selected = None;
+            w.offered = true;
+        }
+        self.list_projects()
     }
 
     /// Veri kaynağından aç on a GeoPackage (a file of several projects opened, docs/adr/9116): its projects read.
@@ -357,8 +386,13 @@ impl App {
             }
             Event::Run => return self.run_project_store(),
             Event::Close => {
+                let save = w.save;
                 self.gis.project_store = None;
                 self.dialog = None;
+                // A “Kaydet ve …” that waited for this window goes no further: nothing was written.
+                if save {
+                    self.save_then_dropped();
+                }
             }
             Event::Read(_) => {}
         }
@@ -517,7 +551,7 @@ impl App {
             Some(Ok(list)) if list.is_empty() => label::muted(if w.save {
                 "Burada saklanan proje yok; Kaydet ilkini yazar."
             } else if w.kind == Kind::File {
-                "Bu dosyada proje yok. Aç, tablolarından yeni bir proje kurar ve onu bu dosyaya yazar."
+                "Bu dosyada proje yok. Aç, tablolarını bir harita olarak açar; dosyaya bir şey yazılmaz. Kaydet, projeyi bu dosyada saklamayı önerir."
             } else {
                 "Burada saklanan proje yok."
             })
@@ -557,7 +591,21 @@ impl App {
             form = form.help("Bu adla saklanan bir proje var; Kaydet onun üstüne yazar.");
         }
         let title = if w.save { "Veri kaynağına kaydet" } else { "Veri kaynağından aç" };
-        let mut dialog = Dialog::new(title).scroll(form);
+        let mut dialog = Dialog::new(title);
+        // The first Kaydet of a project made of this file's tables (docs/adr/9122): what keeping it here does.
+        if w.offered {
+            dialog = dialog.push(
+                container(words::text_line(
+                    words::Kind::Info,
+                    format!(
+                        "Bu proje {} tablolarından açıldı ve henüz saklanmadı. Kaydet, projeyi bu dosyanın içine yazar; tablolardaki veri değişmez. Ayrı bir .kcad dosyası için Vazgeç, sonra Farklı kaydet.",
+                        w.place_words()
+                    ),
+                ))
+                .padding([0, 16]),
+            );
+        }
+        let mut dialog = dialog.scroll(form);
         let chosen = w.selected.and_then(|i| w.there().get(i));
         // Projeyi sil… asks first: the project goes from the source and cannot be taken back.
         if w.deleting

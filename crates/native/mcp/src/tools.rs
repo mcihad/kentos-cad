@@ -63,7 +63,7 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         tool(
             "drawing.open",
             "Çizim aç",
-            "KCAD (v2/v1), DWG, DXF, NCZ çizimini ya da GeoPackage'ı (.gpkg) açar; tutamacını ve özetini verir. Dış CAD dosyası yeni bir CAD çizimidir; kaynak üzerine yazılmaz, kaydetmek için .kcad yolu gerekir. GeoPackage'ın tek projesi açılır; birden çok projesi varsa project ile adı verilir. Projesi yoksa tablolarından yeni bir CBS projesi kurulur ve dosyanın içine yazılır: tablolar veri katmanıdır, satırları dosyada kalır; drawing.save yolsuz oraya yazar. Özetteki openedGeoPackage neyin açıldığını ve notları söyler.",
+            "KCAD (v2/v1), DWG, DXF, NCZ çizimini ya da GeoPackage'ı (.gpkg) açar; tutamacını ve özetini verir. Dış CAD dosyası yeni bir CAD çizimidir; kaynak üzerine yazılmaz, kaydetmek için .kcad yolu gerekir. GeoPackage'ın tek projesi açılır; birden çok projesi varsa project ile adı verilir. Projesi yoksa tablolarından bellekte yeni bir CBS projesi kurulur; açmak dosyaya hiçbir şey yazmaz: tablolar veri katmanıdır, satırları dosyada kalır. drawing.save yolsuz çağrılınca proje dosyanın içinde saklanır. Özetteki openedGeoPackage neyin açıldığını (made, kept) ve notları söyler.",
             object(
                 json!({ "path": { "type": "string", "description": "Dosyanın yolu." },
                     "project": { "type": "string", "description": "GeoPackage'ta açılacak projenin adı; dosyada proje yoksa yeni projenin adı (verilmezse dosyanın adı)." },

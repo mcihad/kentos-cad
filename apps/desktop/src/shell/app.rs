@@ -1290,6 +1290,11 @@ impl App {
         if !choose && let Some(at) = doc.stored_source().cloned() {
             return self.start_save(saving::Target::Source(at));
         }
+        // Made of a GeoPackage's tables and kept nowhere (docs/adr/9122): the first Kaydet shows the file and the name it
+        // would keep the project under there, and writes only when the owner says so; Farklı kaydet asks for a file.
+        if !choose && doc.path.is_none() && let Some(at) = doc.offered_source().cloned() {
+            return self.offer_project_store(at);
+        }
         let title = if doc.legacy && !choose {
             "Yeni biçimde kaydet (KCAD v2)"
         } else {

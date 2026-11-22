@@ -267,3 +267,18 @@ açarken çok ciddi ölçek problemleri var, … zoom yapılamıyor ve ekranda n
     Boston ve NGA dosyalarının kopyalarıyla resimler. Gerçek pencerede raster ve görünüş: Katman stili'nde kapatılan
     sınıf Kaydet'le tabloya yazıldı, QGIS onu çizmedi.
   - Kalan (ADR 9117 §7): noktadan ibaret kutulu döşeme tablosu, başka sistemdeki döşemenin çevrilmesi, web.
+
+## Üçüncü tur: belediye kullanım değerlendirmesi (22 Kasım 2026)
+
+Sahibin sözü (22 Kasım 2026): “gis-finish dosyasındaki maddeleri yap”. Kaynak, release ikilisiyle gerçek pencerede
+yapılan belediye kent bilgi sistemi değerlendirmesidir (32 madde ve 9 işletme kabulü; P0 veri bütünlüğü, P1 günlük iş,
+P2 kullanılabilirlik). Raporun sırası izlenir: önce P0'lar (1, 2, 16, 25, 30), sonra 4, 5, 12 ve 17–24. Madde
+numaraları raporunkidir.
+
+- [x] **VY-21 — Bakmak dosyayı değiştirmez (rapor 1, P0).** ([ADR 9122](../docs/adr/9122-geopackage-looked-at-unchanged.md))
+  - Projesi olmayan GeoPackage bellekte açılır; dosyanın baytları, tabloları ve indeksleri aynı kalır. Salt okunur dosya
+    da açılır.
+  - İlk Kaydet, Veri kaynağına kaydet penceresinde dosyayı ve adı gösterir; Vazgeç hiçbir şey yazmaz. Python ve MCP'de
+    yolsuz kayıt saklar (`kept`).
+  - “Kaydet ve kapat” veri kaynağında saklanan projede de kayıttan sonra kapatır.
+  - Kalan: gerçek pencerede deneme, web.

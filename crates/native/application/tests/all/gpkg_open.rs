@@ -1,6 +1,7 @@
 //! A GeoPackage opened as a project (docs/adr/9116): every case of fixtures/data/v1/gpkg-open (written with sqlite3 by
-//! scripts/fixtures/gpkg_open_cases.py, which works the expectations out from the ADR's rules) opened from a copy, as
-//! opening writes the new project into the file; then the copy opened again gives that project.
+//! scripts/fixtures/gpkg_open_cases.py, which works the expectations out from the ADR's rules) opened from a copy.
+//! Opening and looking at the tables leave the file byte for byte as it was, its tables and indexes too (docs/adr/9122);
+//! the project goes into the file only by `keep`, the owner's save, and the copy opened again gives that project.
 
 use std::path::{Path, PathBuf};
 
@@ -25,6 +26,37 @@ fn cases() -> Vec<Value> {
     let text = std::fs::read_to_string(fixtures().join("expected.json")).expect("expected.json");
     let doc: Value = serde_json::from_str(&text).expect("JSON");
     doc["cases"].as_array().expect("cases").clone()
+}
+
+/// The file's SHA-256 and its tables, indexes, triggers and views (`sqlite_master`), read by a connection of its own.
+fn state(path: &Path) -> (String, Vec<(String, String)>) {
+    use sha2::Digest;
+    let digest = sha2::Sha256::digest(std::fs::read(path).expect("the file"));
+    let hex = digest.iter().map(|b| format!("{b:02x}")).collect::<String>();
+    // A file that is not a GeoPackage (a refused case) has no catalog to compare: its bytes are enough.
+    let Ok(gp) = kentos_geopackage::GeoPackage::open(path, false) else {
+        return (hex, Vec::new());
+    };
+    let mut st = gp.connection().prepare("SELECT type, name FROM sqlite_master ORDER BY type, name").expect("the catalog");
+    let rows = st.query_map([], |r| Ok((r.get(0)?, r.get(1)?))).expect("rows").map(|r| r.expect("a row")).collect();
+    (hex, rows)
+}
+
+/// Every data layer's rows read through its source, as a look at the map and the table reads them.
+fn look_at(built: &gpkg_open::Built) -> usize {
+    let mut rows = 0;
+    for node in built.document.layers().leaves() {
+        let Some(data) = &node.data else { continue };
+        let source = kentos_data::registry().source(&data.address).expect("the source");
+        let request = kentos_data::Request { limit: Some(50), ..kentos_data::Request::all() };
+        source
+            .features(&data.table, &request, &kentos_data::Cancel::new(), &mut |part| {
+                rows += part.len();
+                true
+            })
+            .expect("its rows");
+    }
+    rows
 }
 
 fn codes(built: &gpkg_open::Built) -> Vec<&'static str> {
@@ -117,6 +149,7 @@ fn every_case_opens_as_its_file_says() {
     for case in &all {
         let file = case["file"].as_str().expect("file");
         let path = copy(file, "case");
+        let before = state(&path);
         let opened = gpkg_open::open(&path, None);
         match case["opens"].as_str() {
             Some("built") => {
@@ -124,9 +157,14 @@ fn every_case_opens_as_its_file_says() {
                     panic!("{file}: not built");
                 };
                 check_built(case, &built);
-                built.written.as_ref().unwrap_or_else(|why| panic!("{file}: not written: {why}"));
-                assert!(!built.document.is_dirty(), "{file}: the project is its file's, saved");
-                // Opened again, the file gives the project it now keeps.
+                assert!(!built.document.is_dirty(), "{file}: nothing the owner did waits to be saved");
+                // Opened, its rows looked at, closed: not a byte of the file changed, no table or index added.
+                let _ = look_at(&built);
+                assert_eq!(state(&path), before, "{file}: opening and looking wrote into the file");
+                let address = gpkg_open::address_of(&path);
+                assert!(kentos_native_application::project_store::list(&address, None).expect("listed").is_empty());
+                // The owner keeps it there: opened again, the file gives that project.
+                gpkg_open::keep(&built.document, &path, &built.name).unwrap_or_else(|why| panic!("{file}: not kept: {why}"));
                 match gpkg_open::open(&path, None) {
                     Ok(Opened::Kept { name, bytes }) => {
                         assert_eq!(name, built.name, "{file}");
@@ -148,6 +186,7 @@ fn every_case_opens_as_its_file_says() {
                 let address = gpkg_open::address_of(&path);
                 let kept = kentos_native_application::project_store::list(&address, None).expect("listed");
                 assert_eq!(kept.len(), 1, "{file}: no project is added");
+                assert_eq!(state(&path), before, "{file}: opening its project wrote into the file");
             }
             Some("several") => {
                 let Ok(Opened::Several(kept)) = opened else {
@@ -182,29 +221,33 @@ fn a_name_asked_for_opens_that_project_or_makes_it_in_a_file_without_one() {
     match gpkg_open::open(&empty, Some("Sivas kuyuları")) {
         Ok(Opened::Built(built)) => {
             assert_eq!(built.name, "Sivas kuyuları");
-            assert!(built.written.is_ok());
+            let address = gpkg_open::address_of(&empty);
+            assert!(kentos_native_application::project_store::list(&address, None).expect("listed").is_empty(), "kept nowhere yet");
         }
         _ => panic!("built under the name asked for"),
     }
 }
 
 #[test]
-fn a_file_that_cannot_be_written_opens_unsaved_and_says_why() {
+fn a_file_that_cannot_be_written_opens_as_any_other_and_keeping_it_there_says_why_not() {
     use std::os::unix::fs::PermissionsExt;
     kentos_data_gpkg::register();
     let path = copy("katmanlar.gpkg", "readonly");
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o444)).expect("read only");
+    let before = state(&path);
     let opened = gpkg_open::open(&path, None);
-    let _ = std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644));
     let Ok(Opened::Built(built)) = opened else {
-        panic!("a read-only file still opens");
+        let _ = std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644));
+        panic!("a read-only file opens");
     };
-    let why = built.written.as_ref().expect_err("not written");
-    assert!(why.contains("Proje dosyanın içine yazılamadı"), "{why}");
-    assert!(built.document.is_dirty(), "the project is not the file's");
-    assert_eq!(built.document.layers().nodes().len(), 6, "its tables are its layers all the same");
-    let address = gpkg_open::address_of(&path);
-    assert!(kentos_native_application::project_store::list(&address, None).expect("listed").is_empty());
+    assert!(!built.document.is_dirty(), "opened as any file is: nothing waits to be saved");
+    assert_eq!(built.document.layers().nodes().len(), 6, "its tables are its layers");
+    assert!(look_at(&built) > 0, "its rows read");
+    let kept = gpkg_open::keep(&built.document, &path, &built.name);
+    let _ = std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644));
+    let why = kept.expect_err("a read-only file keeps no project");
+    assert!(why.contains("salt okunur"), "{why}");
+    assert_eq!(state(&path), before, "the file as it was");
 }
 
 #[test]
@@ -214,7 +257,7 @@ fn a_raster_of_the_file_is_kept_by_its_name_and_found_where_the_file_moved() {
     let Ok(Opened::Built(built)) = gpkg_open::open(&path, None) else {
         panic!("built");
     };
-    assert!(built.written.is_ok());
+    gpkg_open::keep(&built.document, &path, &built.name).expect("kept by the owner's save");
     let address = gpkg_open::address_of(&path);
     let bytes = kentos_native_application::project_store::read(&address, None, "ortofotolu").expect("kept");
     let file_of = |snapshot: &kentos_commands::DocumentSnapshotV2| {

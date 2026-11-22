@@ -41,7 +41,7 @@ const DESKTOP_ICONS: &[(&str, &str)] = &[("tool.point", "pointDot")];
 const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
     (
         "file.open",
-        "KCAD, DWG, DXF, NCZ çizimini ya da GeoPackage'ı doğrudan açar; önce yeni proje oluşturmak gerekmez. Dış CAD dosyası ayrı bir CAD çizimidir; Kaydet yeni bir .kcad dosyası ister, kaynak dosyaya dokunmaz. GeoPackage'ın içindeki proje açılır; projesi yoksa tablolarından yeni bir CBS projesi kurulur ve dosyanın içine yazılır, Kaydet oraya yazar. Mevcut projeye eklemek için İçe aktar kullanın.",
+        "KCAD, DWG, DXF, NCZ çizimini ya da GeoPackage'ı doğrudan açar; önce yeni proje oluşturmak gerekmez. Dış CAD dosyası ayrı bir CAD çizimidir; Kaydet yeni bir .kcad dosyası ister, kaynak dosyaya dokunmaz. GeoPackage'ın içindeki proje açılır; projesi yoksa tabloları bellekte bir CBS projesi olarak açılır ve dosyaya bir şey yazılmaz, ilk Kaydet projeyi dosyanın içinde saklamayı önerir. Mevcut projeye eklemek için İçe aktar kullanın.",
     ),
     (
         "file.import.shp",

@@ -29,6 +29,9 @@ pub enum Source {
     Cloud(Box<CloudSource>),
     /// A project kept in a data source with its data (docs/adr/9107); saving writes it there again.
     Stored(Box<StoredSource>),
+    /// A project made of a GeoPackage's tables and kept nowhere yet (docs/adr/9122): opening wrote nothing into the
+    /// file. Kaydet offers to keep it there, under this name, and shows where before it writes.
+    Offered(Box<StoredSource>),
 }
 
 /// A project kept in a GeoPackage file or a PostgreSQL schema (docs/adr/9107).
@@ -226,6 +229,15 @@ impl Document {
         }
     }
 
+    /// The GeoPackage it was made of and the name Kaydet offers to keep it under there (docs/adr/9122); none once it
+    /// is kept somewhere.
+    pub fn offered_source(&self) -> Option<&StoredSource> {
+        match &self.source {
+            Source::Offered(s) => Some(s),
+            _ => None,
+        }
+    }
+
     /// Why saving over its own file would lose another's work: the file changed since this drawing read or wrote it.
     pub fn changed_on_disk(&self) -> Option<String> {
         let path = self.path.as_ref()?;
@@ -244,14 +256,14 @@ impl Document {
     pub fn cloud_source(&self) -> Option<&CloudSource> {
         match &self.source {
             Source::Cloud(c) => Some(c),
-            Source::Local | Source::Stored(_) => None,
+            Source::Local | Source::Stored(_) | Source::Offered(_) => None,
         }
     }
 
     pub fn cloud_source_mut(&mut self) -> Option<&mut CloudSource> {
         match &mut self.source {
             Source::Cloud(c) => Some(c),
-            Source::Local | Source::Stored(_) => None,
+            Source::Local | Source::Stored(_) | Source::Offered(_) => None,
         }
     }
 

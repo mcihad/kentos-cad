@@ -58,13 +58,18 @@
     katmanında kapalı sınıfın nesnesi etiketlenmez; değeri boş alan etikette boş.
   - **GeoPackage proje olarak açılır** (22 Kasım, sahibin isteği; [ADR 9116](../adr/9116-geopackage-opened-as-a-project.md),
     VY-19): Dosya › Aç, son açılanlar, boş pencereye bırakılan dosya, Python ve MCP `.gpkg`'yi açar. Tek projesi açılır,
-    birden çoksa biri seçilir. Projesi yoksa tablolarından CBS projesi kurulur ve dosyanın içine yazılır (sistem
-    tabloların çoğununki, varsayılan stiller `layer_styles`'tan); Kaydet oraya yazar. QGIS'le kalan fark ADR 9116 §5'te.
+    birden çoksa biri seçilir. Projesi yoksa tablolarından CBS projesi kurulur, ilk Kaydet'te dosyanın içinde saklanır
+    (ADR 9122; sistem tabloların çoğununki, varsayılan stiller `layer_styles`'tan); Kaydet oraya yazar. QGIS'le kalan
+    fark ADR 9116 §5'te.
   - **GeoPackage'ın döşemeleri, görünüşleri, derece** (22 Kasım, sahibin seçimi ve bildirdiği hata;
     [ADR 9117](../adr/9117-geopackage-rasters-and-looks.md), VY-20): döşeme tabloları bağlı raster açılır, yolu
     GeoPackage'a göre yazılır. Kaydet değişen görünüşü tablonun varsayılan stili yapar. Kategori değeri metindir.
     Kameranın yakınlaşma sınırı birimin metresiyle çarpılır (`Camera::metres_per_unit`); derece projesi metre projesi
     kadar yakınlaşır.
+  - **GeoPackage'a bakmak dosyayı değiştirmez** (22 Kasım, belediye değerlendirmesinin 1. maddesi;
+    [ADR 9122](../adr/9122-geopackage-looked-at-unchanged.md), VY-21): projesi olmayan dosya bellekte açılır
+    (`Source::Offered`). İlk Kaydet dosyayı ve adı gösterip projeyi dosyanın içinde saklar. Headless'ta yolsuz kayıt
+    saklar. Veri kaynağındaki projede “Kaydet ve kapat” kayıttan sonra kapatır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

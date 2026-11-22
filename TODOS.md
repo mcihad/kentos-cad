@@ -2479,6 +2479,9 @@ Liste:
   (`apps/web/src/viewport/Camera.ts`, `MIN_SCALE`/`MAX_SCALE`) birimin metresiyle çarpılsın (coğrafi projede elipsoidin
   ekvatorunda bir derece, a·π/180); yoksa WGS 84 projesi 11 m/pikselde durur. Web'in WASM'ı yenilenince
   `cad.layers.renderer`'ın “kategorinin değeri sayı” ortak durumu geçsin.
+- [ ] GeoPackage'a bakmak dosyayı değiştirmez (ADR 9122, 22 Kasım 2026): web GeoPackage'ı proje olarak açtığında
+  (TODOS `CBS-03`) projesi olmayan dosyaya açılışta yazmasın; ilk Kaydet dosyayı ve adı gösterip saklasın, Vazgeç
+  yazmasın. Veri kaynağındaki projede “Kaydet ve kapat” kayıttan sonra kapatsın.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

@@ -43,8 +43,11 @@ alınacağı QGIS'in davranışından alındı.
   kaynağından aç penceresi bu dosyayla açılır ve liste okunmuş gelir. Headless'ta ret `several_projects`'tir.
 - **Proje yoksa** dosyanın tablolarından yeni bir proje kurulur, dosyanın adıyla ya da `project` adıyla dosyanın
   içine yazılır (ADR 9107 §2'deki gibi geri okunup karşılaştırılır). Çizim o proje olur, Kaydet oraya yazar.
+  **22 Kasım 2026'da değişti ([ADR 9122](9122-geopackage-looked-at-unchanged.md)):** açılış artık hiçbir şey yazmaz;
+  proje bellekte kurulur ve ilk Kaydet, dosyayı ve adı gösterdikten sonra onu dosyanın içinde saklar.
   - **Dosya yazılamazsa** (salt okunur, kilitli) proje yine açılır. Kaydedilmemiş sayılır, neden yazılamadığı söylenir
-    ve Kaydet bir yer sorar.
+    ve Kaydet bir yer sorar. (ADR 9122'den beri açılış yazmadığı için salt okunur dosya öbürleri gibi açılır; yazılamadığı
+    ilk Kaydet'te söylenir.)
 - **GeoPackage değilse** (SQLite imzası yoksa) reddedilir: “… bir GeoPackage değil: dosyanın başında SQLite veritabanı
   imzası yok.”
 - Açılış satır okumaz ve satır yazmaz. Tablonun kataloğu okunur; satırlar ADR 9101'deki gibi görünüm gerektikçe okunur.

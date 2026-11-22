@@ -1,6 +1,7 @@
 //! A GeoPackage opened as a project (docs/adr/9116). A file that keeps one KentOS project opens it; one that keeps
 //! more says their names and opens none until one is named. A file that keeps none opens as a new project of its
-//! tables, written into that file under the file's name (or the one asked for), so the next save goes back into it:
+//! tables, made in memory under the file's name (or the one asked for) and written nowhere (docs/adr/9122): looking at
+//! a file changes no byte of it, and a project goes into the file only when the owner saves it there ([`keep`]):
 //!
 //! - its system is the one most of its geometry tables are in, of the systems a project can have, the first in the
 //!   file's order on a tie; none of them, no system ("Yerel"), said;
@@ -13,8 +14,9 @@
 //!   under the tables' layers (docs/adr/9117 §2); they vote on the system as the geometry tables do;
 //! - its first view frames the tables in its system.
 //!
-//! Opening reads and writes no row. The desktop's Aç and a GeoPackage dropped on an empty window, the headless host's
-//! open (Python, MCP) come here.
+//! Opening reads no row and writes nothing: the file's connections are read-only, so a file without write permission
+//! opens as well. The desktop's Aç and a GeoPackage dropped on an empty window, the headless host's open (Python,
+//! MCP) come here.
 
 use std::path::Path;
 
@@ -39,19 +41,16 @@ pub enum Opened {
     Kept { name: String, bytes: Vec<u8> },
     /// More than one project and none asked for: each one, in the Turkish alphabet's order.
     Several(Vec<StoredProject>),
-    /// A project of its tables, made here.
+    /// A project of its tables, made here in memory: the file is as it was.
     Built(Box<Built>),
 }
 
-/// A project made of a GeoPackage's tables.
+/// A project made of a GeoPackage's tables, kept nowhere yet.
 pub struct Built {
-    /// The project, its undo history empty.
+    /// The project, its undo history empty and nothing in it changed: closed as it is, nothing is lost.
     pub document: Document,
-    /// Its name in the file.
+    /// The name it would be kept under in the file (the file's, or the one asked for).
     pub name: String,
-    /// Written into the file under `name`: the next save goes there. Why not (a file that cannot be written): the
-    /// project is open, unsaved.
-    pub written: Result<(), String>,
     /// What the owner should know: the system chosen and why, what was not taken.
     pub notes: Vec<Note>,
 }
@@ -222,7 +221,7 @@ fn home_of(tables: &[Described], tiles: &[GpkgTileSet], settings: &kentos_comman
     out.map(|b| Bounds { min_x: b[0], min_y: b[1], max_x: b[2], max_y: b[3] })
 }
 
-/// A project of the file's tables, written into it under `name`.
+/// A project of the file's tables, named `name`, in memory.
 fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
     let source = kentos_data::registry().source(address).map_err(|e| e.to_string())?;
     let mut notes = Vec::new();
@@ -293,19 +292,20 @@ fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
     looks(&mut doc, path, &layers, &mut notes);
     rasters(&mut doc, path, &tiles, &mut notes);
 
-    // Built through commands, opened as read: no undo step stays.
-    let mut snapshot: DocumentSnapshotV2 = doc.to_snapshot_v2();
-    let mut doc = Document::from_snapshot_v2(snapshot.clone())?;
-    crate::project_store::with_relative(&mut snapshot, address);
-    let written = kentos_kcad::encode_verified(&snapshot)
-        .map_err(|e| format!("proje KCAD v2'ye yazılamadı: {e}"))
-        .and_then(|bytes| crate::project_store::write(address, None, name, &bytes))
-        .map_err(|why| format!("Proje dosyanın içine yazılamadı: {why}. Proje açık; Kaydet bir yer sorar."));
-    // Read from its snapshot, the project is clean: written into the file it is, otherwise it waits for a save.
-    if written.is_err() {
-        doc.mark_unsaved();
-    }
-    Ok(Built { document: doc, name: name.to_owned(), written, notes })
+    // Built through commands, opened as read: no undo step stays, and nothing the owner did waits to be saved.
+    let snapshot: DocumentSnapshotV2 = doc.to_snapshot_v2();
+    let doc = Document::from_snapshot_v2(snapshot)?;
+    Ok(Built { document: doc, name: name.to_owned(), notes })
+}
+
+/// Keeps `document` in the GeoPackage at `path` under `name` (docs/adr/9122): the owner's own save, never opening's.
+/// Its data layers' and rasters' paths are written relative to the file, the bytes read back before they count.
+pub fn keep(document: &Document, path: &Path, name: &str) -> Result<(), String> {
+    let address = address_of(path);
+    let mut snapshot = document.to_snapshot_v2();
+    crate::project_store::with_relative(&mut snapshot, &address);
+    let bytes = kentos_kcad::encode_verified(&snapshot).map_err(|e| format!("proje KCAD v2'ye yazılamadı: {e}"))?;
+    crate::project_store::write(&address, None, name, &bytes)
 }
 
 /// The file's tile tables (none when it keeps no tile matrix set); why they could not be read, said.

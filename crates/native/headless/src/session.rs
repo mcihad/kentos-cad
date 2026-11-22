@@ -42,7 +42,10 @@ pub struct Session {
     grids: Vec<kentos_native_application::project_grids::GridFound>,
     /// The data source project it is (docs/adr/9107, 9116): a save without a path writes there.
     stored: Option<Stored>,
-    /// What opening a GeoPackage found (docs/adr/9116): the project kept or made, written or not, the notes.
+    /// A project made of a GeoPackage's tables and kept nowhere yet (docs/adr/9122): a save without a path keeps it in
+    /// that file, under that name; opening wrote nothing.
+    offered: Option<Stored>,
+    /// What opening a GeoPackage found (docs/adr/9116): the project kept or made, kept in the file or not, the notes.
     opened_gpkg: Option<Value>,
 }
 
@@ -72,8 +75,9 @@ impl Session {
     }
 
     /// A GeoPackage opened as a project (docs/adr/9116): the project named `project`, or its only one; a file of none
-    /// opens as a new project of its tables, written into the file (a save without a path writes there again). A file
-    /// of several projects and none named is refused with their names (`several_projects`).
+    /// opens as a new project of its tables, made in memory: the file is not written (docs/adr/9122), and a save
+    /// without a path keeps the project in it. A file of several projects and none named is refused with their names
+    /// (`several_projects`).
     #[cfg(feature = "mod-gis")]
     pub fn open_geopackage(path: &Path, project: Option<&str>) -> Result<Self, HeadlessError> {
         use kentos_native_application::gpkg_open::{self, Opened};
@@ -82,7 +86,7 @@ impl Session {
         match gpkg_open::open(path, project).map_err(|e| HeadlessError::new("source_unreadable", e))? {
             Opened::Kept { name, .. } => {
                 let mut session = Self::open_from_source(&address, None, &name)?;
-                session.opened_gpkg = Some(json!({"geoPackage": address, "project": name, "made": false}));
+                session.opened_gpkg = Some(json!({"geoPackage": address, "project": name, "made": false, "kept": true}));
                 Ok(session)
             }
             Opened::Several(kept) => Err(HeadlessError::new(
@@ -93,15 +97,12 @@ impl Session {
                 ),
             )),
             Opened::Built(built) => {
-                let gpkg_open::Built { document, name, written, notes } = *built;
+                let gpkg_open::Built { document, name, notes } = *built;
                 let mut session = Self::of(document, None, false);
                 let notes: Vec<Value> = notes.iter().map(|n| json!({"code": n.code, "text": n.text})).collect();
-                let mut said = json!({"geoPackage": address, "project": name, "made": true, "written": written.is_ok(), "notes": notes});
-                match written {
-                    Ok(()) => session.stored = Some(Stored { address, schema: None, name }),
-                    Err(why) => said["unwritten"] = json!(why),
-                }
-                session.opened_gpkg = Some(said);
+                session.opened_gpkg =
+                    Some(json!({"geoPackage": address, "project": name, "made": true, "kept": false, "notes": notes}));
+                session.offered = Some(Stored { address, schema: None, name });
                 Ok(session)
             }
         }
@@ -181,6 +182,7 @@ impl Session {
             located: Default::default(),
             grids: Vec::new(),
             stored: None,
+            offered: None,
             opened_gpkg: None,
         }
     }
@@ -224,6 +226,7 @@ impl Session {
             .map_err(|e| HeadlessError::new("source_unwritable", e))?;
         self.doc.mark_saved(revision);
         self.stored = Some(Stored { address: address.to_owned(), schema: schema.map(str::to_owned), name: name.trim().to_owned() });
+        self.offered = None;
         self.path = None;
         let mut saved = json!({
             "address": address,
@@ -289,10 +292,11 @@ impl Session {
         if path.is_some_and(|p| kentos_native_application::cad_open::Format::of(p).is_some()) {
             return Err(HeadlessError::new("invalid_file_path", "Kaydet yalnız KentOS (.kcad) biçimindedir. DWG/DXF/NCZ kaynağı üzerine yazılmaz; yeni bir .kcad yolu verin."));
         }
-        // A data source project is written there again (docs/adr/9107, 9116).
+        // A data source project is written there again (docs/adr/9107, 9116); one made of a GeoPackage's tables is kept
+        // in that file now, by this save (docs/adr/9122).
         if path.is_none()
             && self.path.is_none()
-            && let Some(at) = self.stored.clone()
+            && let Some(at) = self.stored.clone().or_else(|| self.offered.clone())
         {
             return self.save_to_source(&at.address, at.schema.as_deref(), &at.name);
         }
@@ -322,6 +326,7 @@ impl Session {
         self.legacy = false;
         // Saved to a file, the drawing is that file's from now on.
         self.stored = None;
+        self.offered = None;
         Ok(json!({
             "path": target.display().to_string(),
             "bytes": bytes,
@@ -492,7 +497,10 @@ impl Session {
             fields.insert("legacy".into(), json!(self.legacy));
             if let Some(source) = &self.opened_cad { fields.insert("openedCad".into(), source.clone()); }
             if let Some(at) = &self.stored {
-                fields.insert("project".into(), json!({"address": at.address, "schema": at.schema, "name": at.name}));
+                fields.insert("project".into(), json!({"address": at.address, "schema": at.schema, "name": at.name, "kept": true}));
+            } else if let Some(at) = &self.offered {
+                // Made of the file's tables, kept nowhere yet: a save without a path keeps it there (docs/adr/9122).
+                fields.insert("project".into(), json!({"address": at.address, "schema": at.schema, "name": at.name, "kept": false}));
             }
             if let Some(opened) = &self.opened_gpkg {
                 fields.insert("openedGeoPackage".into(), opened.clone());

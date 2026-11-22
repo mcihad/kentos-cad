@@ -1,5 +1,6 @@
 """A GeoPackage opened as a project from Python (docs/adr/9116): a file of no project opens as a new project of its
-tables, written into the file, and ``save()`` writes there again; opened again it gives that project; a file of
+tables, made in memory with not a byte of the file changed (docs/adr/9122), and ``save()`` keeps it in the file;
+opened again it gives that project; a file of
 several projects names them; ``open_from`` opens one by name. Its tile tables open as rasters linked to the file,
 found again where the file is carried, and ``save()`` gives a changed look to its table's default style
 (docs/adr/9117). The files are fixtures/data/v1/gpkg-open's, written by scripts/fixtures/gpkg_open_cases.py with
@@ -7,6 +8,7 @@ sqlite3."""
 
 from __future__ import annotations
 
+import hashlib
 import shutil
 import sqlite3
 import tempfile
@@ -25,22 +27,26 @@ def copy(name: str, folder: str) -> Path:
 
 
 class GeoPackageOpened(unittest.TestCase):
-    def test_a_file_of_no_project_opens_as_one_written_into_it(self) -> None:
+    def test_a_file_of_no_project_opens_unchanged_and_save_keeps_it_there(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             gpkg = copy("katmanlar.gpkg", tmp)
+            before = hashlib.sha256(gpkg.read_bytes()).hexdigest()
             doc = cad.Document.open(gpkg)
             info = doc.info()
             self.assertEqual(info.settings.srid, 5256)
             self.assertEqual((info.project["name"], info.project["schema"]), ("katmanlar", None))
             self.assertEqual(Path(info.project["address"]).resolve(), gpkg.resolve())
             opened = info.opened_geopackage
-            self.assertTrue(opened and opened["made"] and opened["written"], opened)
+            self.assertTrue(opened and opened["made"] and not opened["kept"], opened)
+            self.assertFalse(info.project["kept"], info.project)
             self.assertEqual(opened["notes"], [])
             self.assertEqual(
                 [layer.name for layer in doc.all_layers()], ["Taslak", "kuyular", "yollar", "binalar", "bos", "malikler"]
             )
-            self.assertEqual([p.name for p in cad.projects(gpkg)], ["katmanlar"])
-            # save() without a path goes into the file again.
+            # Opening and looking write nothing: the file is byte for byte what it was, no project in it.
+            self.assertEqual(hashlib.sha256(gpkg.read_bytes()).hexdigest(), before)
+            self.assertEqual(list(cad.projects(gpkg)), [])
+            # save() without a path keeps the project in the file, under the file's name.
             saved = doc.save()
             self.assertIsInstance(saved, cad.StoredSaved)
             self.assertEqual((saved.name, saved.schema), ("katmanlar", None))

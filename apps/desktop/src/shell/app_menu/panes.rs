@@ -157,6 +157,10 @@ impl App {
         if let Some(s) = doc.stored_source() {
             return format!("“{}” · {}", s.name, s.place());
         }
+        // Made of a GeoPackage's tables (docs/adr/9122): Kaydet asks before it keeps the project there.
+        if let Some(s) = doc.offered_source() {
+            return format!("Kaydedilmedi · Kaydet “{}” içinde saklamayı önerir", s.place());
+        }
         match (doc.cloud_source(), &doc.path) {
             (Some(_), _) if doc.is_database() => {
                 "Bulut projesi: kendiliğinden kaydediliyor".to_owned()
@@ -408,6 +412,12 @@ impl App {
         .spacing(12);
         if let Some(s) = self.document.as_ref().and_then(|d| d.stored_source()) {
             c = c.push(label::caption(format!("Bu proje: “{}”, {} içinde. Kaydet oraya yazar.", s.name, s.place())));
+        } else if let Some(s) = self.document.as_ref().and_then(|d| d.offered_source()) {
+            c = c.push(label::caption(format!(
+                "Bu proje {} tablolarından açıldı ve henüz hiçbir yerde saklanmıyor; dosyaya bir şey yazılmadı. Kaydet, “{}” adıyla o dosyada saklamayı önerir.",
+                s.place(),
+                s.name
+            )));
         }
         c.into()
     }
