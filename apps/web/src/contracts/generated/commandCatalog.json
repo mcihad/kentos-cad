@@ -79140,7 +79140,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.layers.migrate` v1.\n\n`layer`'s objects written to `table` (none: the layer's name made a table name) in `path` (`gpkg`) or `address` and\n`schema` (`postgis`), in the project's system, every field of the layer a column, every object of the layer (those\nits layer filter hides too: the layer goes, so none may stay behind).\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (`gpkg` without\n`path`, `postgis` without `address`), `invalid_name`, `layer_not_found`, `not_a_layer` (a group), `service_layer`,\n`data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table is there),\n`source_unreachable`, `nothing_to_export` (nothing a table holds: an empty layer, or one of texts only),\n`unwritable_objects` (texts, dimensions or anything a table cannot hold beside what it can: they would be lost with\nthe layer, so nothing is written; their count and the first's kind are said).",
+        "description": "Input of `cad.layers.migrate` v1.\n\n`layer`'s objects written to `table` (none: the layer's name made a table name) in `path` (`gpkg`) or `address` and\n`schema` (`postgis`), in the project's system, every field of the layer a column, every object of the layer (those\nits layer filter hides too: the layer goes, so none may stay behind).\n\nIts texts are written to a table of their own beside it, `<table>_yazilar` (a layer of texts only: to `table`): a\npoint and the columns `metin`, `yukseklik`, `aci`, `hiza` and `genislik` (docs/adr/9114 §2). A data layer reading\nit, its rows drawn as texts, goes above the layer's (a layer of texts only: in its place, with its name). A text's\nstyle, mask, curve, scales, link to an object or paragraph formats are not written: said as `text_details_left`.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (`gpkg` without\n`path`, `postgis` without `address`), `invalid_name`, `layer_not_found`, `not_a_layer` (a group), `service_layer`,\n`data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table, or the texts' table, is\nthere), `source_unreachable`, `nothing_to_export` (an empty layer), `unwritable_objects` (dimensions, blocks, hatches\nor anything else a table cannot hold, texts aside: they would be lost with the layer, so nothing is written; their\ncount and the first's kind are said).",
         "properties": {
           "address": {
             "description": "`postgis`: the database, `postgresql://user@host:port/db` (its password is never written).",
@@ -79211,6 +79211,17 @@
             "description": "The table: a GeoPackage's table name, PostGIS's `schema.table`.",
             "type": "string"
           },
+          "texts": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MigratedTexts"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The layer's texts' table beside it (docs/adr/9114 §2); none when it had no texts, or only texts (then the\ntable above is theirs)."
+          },
           "written": {
             "description": "The rows written: the layer's objects a table holds.",
             "format": "uint64",
@@ -79255,6 +79266,17 @@
             "description": "The table: a GeoPackage's table name, PostGIS's `schema.table`.",
             "type": "string"
           },
+          "texts": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MigratedTexts"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The layer's texts' table beside it (docs/adr/9114 §2); none when it had no texts, or only texts (then the\ntable above is theirs)."
+          },
           "written": {
             "description": "The rows written: the layer's objects a table holds.",
             "format": "uint64",
@@ -79287,6 +79309,9 @@
           "source_unreachable",
           "nothing_to_export",
           "unwritable_objects"
+        ],
+        "warnings": [
+          "text_details_left"
         ]
       },
       "examples": [
@@ -114432,6 +114457,12 @@
       "meaning": "Satırların anahtarları verilmedi."
     },
     {
+      "code": "text_details_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı yazıların stili, zemini, eğrisi, ölçekleri, nesne bağı ya da paragraf biçimi yazı tablosuna yazılmadı; metni, noktası, yüksekliği, açısı, hizası ve genişlik çarpanı yazıldı."
+    },
+    {
       "code": "data_save_failed",
       "kind": "failedOrWarning",
       "retryable": false,
@@ -142768,6 +142799,17 @@
         "table": {
           "description": "The table: its name in a file, `schema.table` in a database.",
           "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataText"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its rows are texts (docs/adr/9114 §1): which columns hold their words, height, angle, alignment and width\nfactor. Drawn as the drawing's texts are; absent: its rows are drawn by its style."
         }
       },
       "required": [
@@ -142855,6 +142897,48 @@
         "description",
         "basis",
         "classes"
+      ],
+      "type": "object"
+    },
+    "DataText": {
+      "additionalProperties": false,
+      "description": "Which columns of a data layer's rows make its texts.",
+      "properties": {
+        "align": {
+          "description": "The column of the alignment: Yazı's names (“sol alt”, “orta”, “sağ üst” …) or the contract's (`bottomLeft`);\nabsent, empty or another word: the left of the baseline.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "angle": {
+          "description": "The column of the angle, degrees counter-clockwise from east; absent or empty: 0.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "height": {
+          "description": "The column of the height, metres; absent, or empty or not over 0 in a row: the project's text height.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "description": "The column of the words.",
+          "type": "string"
+        },
+        "width": {
+          "description": "The column of the width factor; absent, empty or out of (0, 100]: 1.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "text"
       ],
       "type": "object"
     },
@@ -172772,6 +172856,32 @@
         "applied",
         "objects",
         "note"
+      ],
+      "type": "object"
+    },
+    "MigratedTexts": {
+      "description": "A migrated layer's texts: the data layer drawing them, their table, how many rows.",
+      "properties": {
+        "layer": {
+          "description": "The data layer (its id); empty in a plan.",
+          "type": "string"
+        },
+        "table": {
+          "description": "The table: a GeoPackage's table name, PostGIS's `schema.table`.",
+          "type": "string"
+        },
+        "written": {
+          "description": "The rows written: one a text.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "layer",
+        "table",
+        "written"
       ],
       "type": "object"
     },

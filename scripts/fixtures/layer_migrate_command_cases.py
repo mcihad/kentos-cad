@@ -1,9 +1,13 @@
-"""Writes fixtures/commands/v1/cad.layers.migrate.json: the shared cases of `cad.layers.migrate` v1 (docs/adr/9107 §8).
+"""Writes fixtures/commands/v1/cad.layers.migrate.json: the shared cases of `cad.layers.migrate` v1 (docs/adr/9107 §8,
+docs/adr/9114 §2).
 
 Every expectation is worked out here from the contract's rules (crates/shared/commands/src/gis/cad_layers_migrate.rs):
 the rows a drawing layer's objects make (their attributes as text, their geometry as WKT in the project's system),
 the table's name made from the layer's name when none is given, every object moved (those the layer filter hides
 too), the layer gone afterwards (a second migration of it is refused as not found), the refusals and their order.
+A layer's texts go into a table of their own beside its table (`<table>_yazilar`; a layer of texts only: its table):
+a point and `metin`, `yukseklik` (metres), `aci` (degrees), `hiza` (Yazı's names) and `genislik`, read back as a text
+data layer's rows; a text's details a table has no column for (here its mask) are said as `text_details_left`.
 No KentOS code is used. The desktop (crates/native/application/tests/all/fixtures) and Python
 (python/tests/test_command_cases.py) run them.
 
@@ -69,6 +73,20 @@ def entities():
     eid += 1
     out.append({"kind": "text", "id": eid, "layerId": "yazilar", "attrs": {}, "p": p(5, 5), "text": "Yalnız yazı",
                 "height": 2.5, "rotation": 0})
+    eid += 1
+    # Turned, aligned and narrowed: every part a text table keeps.
+    out.append({"kind": "text", "id": eid, "layerId": "yazilar", "attrs": {}, "p": p(20, 10), "text": "Ada 101",
+                "height": 1.8, "rotation": 33.5, "align": "middleCenter", "widthFactor": 0.8})
+    eid += 1
+    out.append({"kind": "point", "id": eid, "layerId": "olculu", "attrs": {}, "p": p(0, 0)})
+    eid += 1
+    out.append({"kind": "dimension", "id": eid, "layerId": "olculu", "attrs": {}, "a": p(0, 0), "b": p(4, 0),
+                "offset": 0.5, "height": 0.25})
+    eid += 1
+    out.append({"kind": "point", "id": eid, "layerId": "zeminli", "attrs": {}, "p": p(0, 0)})
+    eid += 1
+    out.append({"kind": "text", "id": eid, "layerId": "zeminli", "attrs": {}, "p": p(1, 1), "text": "Zeminli",
+                "height": 2, "rotation": 0, "mask": True})
     return out
 
 
@@ -89,6 +107,8 @@ SETUP = {
         layer("kilitli", "Kilitli", geometry="point", locked=True),
         layer("yazili", "Yazılı", fields=[{"name": "no", "kind": "integer"}]),
         layer("yazilar", "Yazılar"),
+        layer("olculu", "Ölçülü", geometry="point"),
+        layer("zeminli", "Zeminli", geometry="point"),
         layer("bos", "Boş", geometry="point"),
         layer("veri", "Parseller", geometry="area",
               data={"driver": "gpkg", "address": "$fixture:data/v1/satirlar.gpkg", "table": "parseller", "key": "fid",
@@ -119,9 +139,30 @@ def refused(code, message, path):
     return {"status": "failed", "error": error}
 
 
-def migrated(table, address, written, geometry, layer="layer-1"):
-    return completed({"layer": layer, "table": table, "address": address, "written": written, "geometry": geometry,
-                      "revision": "$current"})
+def migrated(table, address, written, geometry, layer="layer-1", texts=None, warnings=None):
+    out = {"layer": layer, "table": table, "address": address, "written": written, "geometry": geometry}
+    if texts is not None:
+        out["texts"] = texts
+    out["revision"] = "$current"
+    return completed(out, warnings)
+
+
+# The columns a text table is written with, and a text's row as the table gives it back (docs/adr/9114 §2): its
+# numbers as the source reads them, an integer without its point; its alignment as Yazı names it.
+TEXT_FIELDS = ["metin", "yukseklik", "aci", "hiza", "genislik"]
+ALIGN_WORDS = {None: "sol taban", "middleCenter": "orta"}
+
+
+def text_row(key, text, at, height, rotation, align=None, width=1.0):
+    attrs = {"metin": text, "yukseklik": num(height), "aci": num(rotation), "hiza": ALIGN_WORDS[align],
+             "genislik": num(width)}
+    return {"key": key, "attrs": attrs, "wkt": f"POINT ({coords([at])})"}
+
+
+def text_rows_step(layer, rows):
+    out = {"fields": TEXT_FIELDS, "rows": rows, "offset": 0, "total": len(rows), "checked": "source"}
+    return {"op": "execute", "command": "cad.layers.rows", "input": {"layer": layer, "count": True, "limit": 1000,
+                                                                      "geometry": True}, "result": completed(out)}
 
 
 def step(inp, result, op="execute"):
@@ -134,8 +175,8 @@ def gpkg(layer_id, file, **more):
     return inp
 
 
-def rows_step(layer, rows):
-    out = {"fields": ["no", "durum"], "rows": rows, "offset": 0, "total": len(rows), "checked": "source"}
+def rows_step(layer, rows, fields=("no", "durum")):
+    out = {"fields": list(fields), "rows": rows, "offset": 0, "total": len(rows), "checked": "source"}
     return {"op": "execute", "command": "cad.layers.rows", "input": {"layer": layer, "count": True, "limit": 1000,
                                                                       "geometry": True}, "result": completed(out)}
 
@@ -216,12 +257,40 @@ def cases():
                 "target_exists", "“ortak” tablosu kaynakta var; başka bir tablo adı verin (table).", "table"))]),
         case("Ret: boş katman", [step(gpkg("bos", "bos.gpkg"), refused(
             "nothing_to_export", "Yazılacak nesne kalmadı: seçim, kutu ve süzgeç hiçbir nesne bırakmadı.", "layer"))]),
-        case("Ret: yalnız yazı tutan katman", [step(gpkg("yazilar", "yazi.gpkg"), refused(
-            "nothing_to_export",
-            "Yazılacak nesne kalmadı: 1 nesne yazılamadı (yazı ya da ölçü bir geometri sütununa yazılmaz).", "layer"))]),
-        case("Ret: tabloya yazılamayan nesne kaybolurdu", [step(gpkg("yazili", "yazili.gpkg"), refused(
+        # docs/adr/9114 §2: a layer's texts in a table of their own.
+        case("Yalnız yazı tutan katman yazı tablosu olur, yerinde ve adıyla", [
+            step(gpkg("yazilar", "yazi.gpkg"), migrated("yazilar", tmp("yazi.gpkg"), 2, "POINT")),
+            text_rows_step("layer-1", [text_row(1, "Yalnız yazı", (5, 5), 2.5, 0),
+                                       text_row(2, "Ada 101", (20, 10), 1.8, 33.5, "middleCenter", 0.8)]),
+            gone("yazilar", "yazi2.gpkg")]),
+        # A layer without a declared geometry writes a column of any geometry, as the export does.
+        case("Nokta ve yazı: yazılar yanındaki tabloya, katmanı onun üstünde", [
+            step(gpkg("yazili", "yazili.gpkg"), migrated(
+                "yazili", tmp("yazili.gpkg"), 1, "GEOMETRY",
+                texts={"layer": "layer-2", "table": "yazili_yazilar", "written": 1})),
+            rows_step("layer-1", [{"key": 1, "attrs": {"no": "1"}, "wkt": f"POINT ({coords([(0, 0)])})"}], ("no",)),
+            text_rows_step("layer-2", [text_row(1, "Not", (5, 5), 2.5, 0)])]),
+        case("plan yazıları da sayar", [
+            step(gpkg("yazili", "yazili-plan.gpkg"), migrated(
+                "yazili", tmp("yazili-plan.gpkg"), 1, "GEOMETRY", layer="",
+                texts={"layer": "", "table": "yazili_yazilar", "written": 1}), op="plan")]),
+        case("Yazının tablonun tutmadığı ayrıntısı söylenir (zemin)", [
+            step(gpkg("zeminli", "zeminli.gpkg"), migrated(
+                "zeminli", tmp("zeminli.gpkg"), 1, "POINT",
+                texts={"layer": "layer-2", "table": "zeminli_yazilar", "written": 1},
+                warnings=[{"code": "text_details_left",
+                           "message": "1 yazının stili, zemini, eğrisi, ölçekleri, nesne bağı ya da paragraf biçimi yazı "
+                                      "tablosuna yazılmadı; metni, noktası, yüksekliği, açısı, hizası ve genişlik çarpanı "
+                                      "yazıldı.",
+                           "path": "layer"}]))]),
+        case("Ret: yazıların tablosu var", [
+            step(gpkg("yazilar", "yazivar.gpkg", table="yazili_yazilar"),
+                 migrated("yazili_yazilar", tmp("yazivar.gpkg"), 2, "POINT")),
+            step(gpkg("yazili", "yazivar.gpkg"), refused(
+                "target_exists", "“yazili_yazilar” tablosu kaynakta var; başka bir tablo adı verin (table).", "table"))]),
+        case("Ret: tabloya yazılamayan nesne kaybolurdu (ölçü)", [step(gpkg("olculu", "olculu.gpkg"), refused(
             "unwritable_objects",
-            "Katmanın 1 nesnesi bir tabloya yazılamaz (yazı ya da ölçü bir geometri sütununa yazılmaz); katman taşınırsa "
+            "Katmanın 1 nesnesi bir tabloya yazılamaz (ölçü bir geometri sütununa yazılmaz); katman taşınırsa "
             "kaybolurdu, hiçbir şey yazılmadı. Onları başka bir katmana alıp yeniden deneyin.", "layer"))]),
     ]
 
@@ -232,7 +301,8 @@ def document():
         "version": 1,
         "command": "cad.layers.migrate",
         "commandVersion": 1,
-        "title": "Katmanı kaynağa taşı: nokta, çizgi, alan katmanı bir GeoPackage tablosuna; süzgeçli katman; retler (ADR 9107 §8)",
+        "title": "Katmanı kaynağa taşı: nokta, çizgi, alan katmanı bir GeoPackage tablosuna; süzgeçli katman; yazılar "
+                 "kendi tablolarına; retler (ADR 9107 §8, ADR 9114 §2)",
         "note": "ADR 9107 §8. Beklentiler sözleşmenin kurallarıyla burada hesaplanır; taşınan katmanın tablosu "
                 "cad.layers.rows ile okunur, katmanın gittiği ikinci bir taşımanın reddiyle görülür.",
         "setup": SETUP,

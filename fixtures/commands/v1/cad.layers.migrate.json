@@ -3,7 +3,7 @@
  "version": 1,
  "command": "cad.layers.migrate",
  "commandVersion": 1,
- "title": "Katmanı kaynağa taşı: nokta, çizgi, alan katmanı bir GeoPackage tablosuna; süzgeçli katman; retler (ADR 9107 §8)",
+ "title": "Katmanı kaynağa taşı: nokta, çizgi, alan katmanı bir GeoPackage tablosuna; süzgeçli katman; yazılar kendi tablolarına; retler (ADR 9107 §8, ADR 9114 §2)",
  "note": "ADR 9107 §8. Beklentiler sözleşmenin kurallarıyla burada hesaplanır; taşınan katmanın tablosu cad.layers.rows ile okunur, katmanın gittiği ikinci bir taşımanın reddiyle görülür.",
  "setup": {
   "format": "kentos.document",
@@ -214,6 +214,36 @@
      "lineWeight": 0.25
     },
     "children": []
+   },
+   {
+    "id": "olculu",
+    "name": "Ölçülü",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "point"
+   },
+   {
+    "id": "zeminli",
+    "name": "Zeminli",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "point"
    },
    {
     "id": "bos",
@@ -623,6 +653,71 @@
     "text": "Yalnız yazı",
     "height": 2.5,
     "rotation": 0
+   },
+   {
+    "kind": "text",
+    "id": 21,
+    "layerId": "yazilar",
+    "attrs": {},
+    "p": {
+     "x": 600020.0,
+     "y": 4410010.0
+    },
+    "text": "Ada 101",
+    "height": 1.8,
+    "rotation": 33.5,
+    "align": "middleCenter",
+    "widthFactor": 0.8
+   },
+   {
+    "kind": "point",
+    "id": 22,
+    "layerId": "olculu",
+    "attrs": {},
+    "p": {
+     "x": 600000.0,
+     "y": 4410000.0
+    }
+   },
+   {
+    "kind": "dimension",
+    "id": 23,
+    "layerId": "olculu",
+    "attrs": {},
+    "a": {
+     "x": 600000.0,
+     "y": 4410000.0
+    },
+    "b": {
+     "x": 600004.0,
+     "y": 4410000.0
+    },
+    "offset": 0.5,
+    "height": 0.25
+   },
+   {
+    "kind": "point",
+    "id": 24,
+    "layerId": "zeminli",
+    "attrs": {},
+    "p": {
+     "x": 600000.0,
+     "y": 4410000.0
+    }
+   },
+   {
+    "kind": "text",
+    "id": 25,
+    "layerId": "zeminli",
+    "attrs": {},
+    "p": {
+     "x": 600001.0,
+     "y": 4410001.0
+    },
+    "text": "Zeminli",
+    "height": 2,
+    "rotation": 0,
+    "mask": true
    }
   ],
   "styles": {
@@ -1391,7 +1486,7 @@
    ]
   },
   {
-   "name": "Ret: yalnız yazı tutan katman",
+   "name": "Yalnız yazı tutan katman yazı tablosu olur, yerinde ve adıyla",
    "steps": [
     {
      "op": "execute",
@@ -1401,10 +1496,80 @@
       "path": "$tmp:tasi/yazi.gpkg"
      },
      "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "yazilar",
+       "address": "$tmp:tasi/yazi.gpkg",
+       "written": 2,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "metin",
+        "yukseklik",
+        "aci",
+        "hiza",
+        "genislik"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "metin": "Yalnız yazı",
+          "yukseklik": "2.5",
+          "aci": "0",
+          "hiza": "sol taban",
+          "genislik": "1"
+         },
+         "wkt": "POINT (600005 4410005)"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "metin": "Ada 101",
+          "yukseklik": "1.8",
+          "aci": "33.5",
+          "hiza": "orta",
+          "genislik": "0.8"
+         },
+         "wkt": "POINT (600020 4410010)"
+        }
+       ],
+       "offset": 0,
+       "total": 2,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yazilar",
+      "target": "gpkg",
+      "path": "$tmp:tasi/yazi2.gpkg"
+     },
+     "result": {
       "status": "failed",
       "error": {
-       "code": "nothing_to_export",
-       "message": "Yazılacak nesne kalmadı: 1 nesne yazılamadı (yazı ya da ölçü bir geometri sütununa yazılmaz).",
+       "code": "layer_not_found",
+       "message": "“yazilar” kimlikli katman çizimde yok.",
        "path": "layer"
       }
      }
@@ -1412,7 +1577,7 @@
    ]
   },
   {
-   "name": "Ret: tabloya yazılamayan nesne kaybolurdu",
+   "name": "Nokta ve yazı: yazılar yanındaki tabloya, katmanı onun üstünde",
    "steps": [
     {
      "op": "execute",
@@ -1422,10 +1587,218 @@
       "path": "$tmp:tasi/yazili.gpkg"
      },
      "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "yazili",
+       "address": "$tmp:tasi/yazili.gpkg",
+       "written": 1,
+       "geometry": "GEOMETRY",
+       "texts": {
+        "layer": "layer-2",
+        "table": "yazili_yazilar",
+        "written": 1
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "no": "1"
+         },
+         "wkt": "POINT (600000 4410000)"
+        }
+       ],
+       "offset": 0,
+       "total": 1,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-2",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "metin",
+        "yukseklik",
+        "aci",
+        "hiza",
+        "genislik"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "metin": "Not",
+          "yukseklik": "2.5",
+          "aci": "0",
+          "hiza": "sol taban",
+          "genislik": "1"
+         },
+         "wkt": "POINT (600005 4410005)"
+        }
+       ],
+       "offset": 0,
+       "total": 1,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan yazıları da sayar",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "yazili",
+      "target": "gpkg",
+      "path": "$tmp:tasi/yazili-plan.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "",
+       "table": "yazili",
+       "address": "$tmp:tasi/yazili-plan.gpkg",
+       "written": 1,
+       "geometry": "GEOMETRY",
+       "texts": {
+        "layer": "",
+        "table": "yazili_yazilar",
+        "written": 1
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazının tablonun tutmadığı ayrıntısı söylenir (zemin)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "zeminli",
+      "target": "gpkg",
+      "path": "$tmp:tasi/zeminli.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "zeminli",
+       "address": "$tmp:tasi/zeminli.gpkg",
+       "written": 1,
+       "geometry": "POINT",
+       "texts": {
+        "layer": "layer-2",
+        "table": "zeminli_yazilar",
+        "written": 1
+       },
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "text_details_left",
+        "message": "1 yazının stili, zemini, eğrisi, ölçekleri, nesne bağı ya da paragraf biçimi yazı tablosuna yazılmadı; metni, noktası, yüksekliği, açısı, hizası ve genişlik çarpanı yazıldı.",
+        "path": "layer"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yazıların tablosu var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yazilar",
+      "target": "gpkg",
+      "path": "$tmp:tasi/yazivar.gpkg",
+      "table": "yazili_yazilar"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "yazili_yazilar",
+       "address": "$tmp:tasi/yazivar.gpkg",
+       "written": 2,
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yazili",
+      "target": "gpkg",
+      "path": "$tmp:tasi/yazivar.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "target_exists",
+       "message": "“yazili_yazilar” tablosu kaynakta var; başka bir tablo adı verin (table).",
+       "path": "table"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tabloya yazılamayan nesne kaybolurdu (ölçü)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "olculu",
+      "target": "gpkg",
+      "path": "$tmp:tasi/olculu.gpkg"
+     },
+     "result": {
       "status": "failed",
       "error": {
        "code": "unwritable_objects",
-       "message": "Katmanın 1 nesnesi bir tabloya yazılamaz (yazı ya da ölçü bir geometri sütununa yazılmaz); katman taşınırsa kaybolurdu, hiçbir şey yazılmadı. Onları başka bir katmana alıp yeniden deneyin.",
+       "message": "Katmanın 1 nesnesi bir tabloya yazılamaz (ölçü bir geometri sütununa yazılmaz); katman taşınırsa kaybolurdu, hiçbir şey yazılmadı. Onları başka bir katmana alıp yeniden deneyin.",
        "path": "layer"
       }
      }

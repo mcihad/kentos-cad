@@ -15,6 +15,10 @@
 //! of their own ([`take_labels`](DataView::take_labels)): the label engine places them as it places the drawing's, and
 //! the drawing tools snap to them (data_labels.rs, docs/adr/9103 §5). A layer being edited is read whole, not
 //! simplified: a snap lands on the row's own vertices.
+//!
+//! A layer of texts (docs/adr/9114 §3) makes each row the text it says (its words, height, angle, alignment and width
+//! factor from its columns) and always keeps them: the drawing's texts are drawn from that document, as the drawing's
+//! own texts are, while the style engine draws no symbol for a text.
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -151,8 +155,12 @@ fn inside(view: &Bounds, cover: &[f64; 4]) -> bool {
     view.min_x >= cover[0] && view.min_y >= cover[1] && view.max_x <= cover[2] && view.max_y <= cover[3]
 }
 
-/// Whether a layer's labels are on: a single label or rules with a class (an absent style labels nothing of a table).
+/// Whether a layer's labels are on: a single label or rules with a class (an absent style labels nothing of a table). A
+/// layer of texts is: its texts are drawn from its labels' document (docs/adr/9114 §3).
 pub(crate) fn labelled(node: &LayerNode) -> bool {
+    if node.data.as_ref().is_some_and(|d| d.text.is_some()) {
+        return true;
+    }
     match &node.style.labels {
         Some(l) if l.mode == LabelsMode::Off => false,
         Some(l) if l.mode == LabelsMode::Rules => !l.classes.is_empty(),
@@ -175,6 +183,10 @@ fn columns_of(node: &LayerNode) -> Vec<String> {
     }
     if let Some(f) = &node.filter {
         text.push_str(&serde_json::to_string(f).unwrap_or_default());
+    }
+    // A layer of texts reads the columns its texts are made of.
+    if let Some(t) = node.data.as_ref().and_then(|d| d.text.as_ref()) {
+        text.push_str(&t.columns().join(" "));
     }
     node.fields
         .iter()
@@ -341,6 +353,8 @@ fn run(job: Job) {
     // The objects kept for the labels, while they are few enough.
     let mut kept: Option<Vec<Entity>> = job.labels.is_some().then(Vec::new);
     let mut next_id = 1u32;
+    // A layer of texts: a row without its height takes the project's text height.
+    let default_height = kentos_native_application::data_text::default_height(&job.settings);
     // Each part is said to the window as it comes: it is drawn while the rest is read.
     let flush = |entities: &mut Vec<Entity>| {
         if let Some(part) = build(&job, entities)
@@ -372,9 +386,13 @@ fn run(job: Job) {
                 .zip(&f.values)
                 .filter_map(|(c, v)| attribute(v).map(|a| (c.clone(), a)))
                 .collect();
-            if let Some(e) =
-                kentos_native_application::geopackage::object_of(&g, &job.layer, next_id, attrs)
-            {
+            let made = match &data.text {
+                Some(text) => kentos_native_application::data_text::point_of(&g).and_then(|at| {
+                    kentos_native_application::data_text::object(text, at, &job.layer, next_id, attrs, default_height)
+                }),
+                None => kentos_native_application::geopackage::object_of(&g, &job.layer, next_id, attrs),
+            };
+            if let Some(e) = made {
                 next_id = next_id.wrapping_add(1);
                 if kept.as_ref().is_some_and(|k| k.len() >= LABEL_ROWS) {
                     kept = None;

@@ -645,6 +645,9 @@ codes! {
     /// `take` or `delete` of `cad.layers.session` without keys (docs/adr/9103 §3).
     NO_KEYS = "no_keys", Failed, false, "Satırların anahtarları verilmedi.";
     /// A save the table refused (docs/adr/9103 §4): nothing of the layer was written, its changes wait in the drawing.
+    /// Texts moved into a table (docs/adr/9114 §2) whose style, mask, curve, scales, link or paragraph formats the
+    /// table has no column for: their words, point, height, angle, alignment and width factor are written.
+    TEXT_DETAILS_LEFT = "text_details_left", Warning, false, "Bazı yazıların stili, zemini, eğrisi, ölçekleri, nesne bağı ya da paragraf biçimi yazı tablosuna yazılmadı; metni, noktası, yüksekliği, açısı, hizası ve genişlik çarpanı yazıldı.";
     DATA_SAVE_FAILED = "data_save_failed", FailedOrWarning, false, "Değişiklikler tabloya yazılamadı; tabloya hiçbir şey yazılmadı, değişiklikler katmanda bekliyor. Söylenen nedeni düzeltip yeniden kaydedin.";
 
     // ── Networks and addresses (docs/adr/0209 §11, 0229 §14) ────────────

@@ -114,8 +114,15 @@ fn modules_of(doc: &DocumentSnapshotV2, objects: Objs<'_>) -> ModuleVersions {
     fn counted(nodes: &[kentos_contracts::LayerNode]) -> bool {
         nodes.iter().any(|n| n.class_counts.is_some() || counted(&n.children))
     }
+    // GIS 5 (docs/adr/9114 §1): a data layer whose rows are texts.
+    fn texts(nodes: &[kentos_contracts::LayerNode]) -> bool {
+        nodes.iter().any(|n| n.data.as_ref().is_some_and(|d| d.text.is_some()) || texts(&n.children))
+    }
     // GIS 3 (docs/adr/9104 §2): the data layers' edit grouping.
-    if counted(&doc.layers) {
+    if texts(&doc.layers) {
+        out.modules
+            .push(("gis".to_owned(), crate::GIS_WITH_TEXT_TABLES));
+    } else if counted(&doc.layers) {
         out.modules
             .push(("gis".to_owned(), crate::GIS_WITH_CLASS_COUNTS));
     } else if doc.settings.edit_grouping.is_some() {

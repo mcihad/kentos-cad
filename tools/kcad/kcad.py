@@ -703,13 +703,15 @@ GIS_WITH_DATA_LAYERS = 2
 GIS_WITH_EDIT_GROUPING = 3
 # GIS data 4 (docs/adr/9105 §4): a layer's `classCounts`, the tree saying how many objects it and its classes hold.
 GIS_WITH_CLASS_COUNTS = 4
+# GIS data 5 (docs/adr/9114 §1): a data layer whose rows are texts (`text` of a data layer).
+GIS_WITH_TEXT_TABLES = 5
 ARCH_WITH_BLOCK_ELEMENTS = 2
 ARCH_WITH_COVERINGS = 5
 ARCH_WITH_SLAB_EDGE_BINDINGS = 36
 ARCH_WITH_CEILING_RECIPE = 37
 ARCH_WITH_ELECTRIC_APPLIANCES = 38
 ARCH_WITH_CASEWORK_PLACEMENT = 39
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_CLASS_COUNTS), "map": ("harita", 0),
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_TEXT_TABLES), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -5578,9 +5580,14 @@ class _Schema:
                 self.fail("bad_value", "tablonun kutusu dört sonlu sayıdır, en küçükler en büyüklerden önce")
             return b
 
+        # GIS data 5 (docs/adr/9114 §1): which columns hold a text's words, height, angle, alignment and width factor.
+        text_map = self.fields({"text": (text_, True), "height": (text_, False), "angle": (text_, False),
+                                "align": (text_, False), "width": (text_, False)})
+        texts = {"text": (text_map, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_TEXT_TABLES else {}
         d = self.fields({"driver": (self.enum(("gpkg", "postgis")), True), "address": (text_, True),
                          "relative": (text_, False), "table": (text_, True), "key": (text_, True),
-                         "geometry": (geometry, False), "extent": (extent, False), "readOnly": (flag, False)})(v)
+                         "geometry": (geometry, False), "extent": (extent, False), "readOnly": (flag, False),
+                         **texts})(v)
         if "extent" in d and "geometry" not in d:
             self.fail("bad_value", "geometrisiz tablonun kutusu olmaz")
         if d["driver"] == "postgis":
@@ -5601,6 +5608,14 @@ class _Schema:
             self.fail("bad_value", "göreli yol / ile yazılır")
         if "geometry" in d and d["geometry"]["column"] == d["key"]:
             self.fail("bad_value", "geometri sütunu anahtar olamaz")
+        if "text" in d:
+            columns = [d["text"][k] for k in ("text", "height", "angle", "align", "width") if k in d["text"]]
+            if len(set(columns)) != len(columns):
+                self.fail("bad_value", "bir sütun yazının iki parçası olamaz")
+            if d.get("geometry", {}).get("typeName") not in ("POINT", "MULTIPOINT"):
+                self.fail("bad_value", "yazıların tablosunun geometrisi nokta olmalı (POINT ya da MULTIPOINT)")
+            if d["key"] in columns or d["geometry"]["column"] in columns:
+                self.fail("bad_value", "yazı sütunu anahtar ya da geometri olamaz")
         return d
 
     def derivation_(self, v):

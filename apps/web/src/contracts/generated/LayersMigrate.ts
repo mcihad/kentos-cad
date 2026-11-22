@@ -8,12 +8,17 @@ import type { CreateTarget } from "./CreateTarget";
  * `schema` (`postgis`), in the project's system, every field of the layer a column, every object of the layer (those
  * its layer filter hides too: the layer goes, so none may stay behind).
  *
+ * Its texts are written to a table of their own beside it, `<table>_yazilar` (a layer of texts only: to `table`): a
+ * point and the columns `metin`, `yukseklik`, `aci`, `hiza` and `genislik` (docs/adr/9114 §2). A data layer reading
+ * it, its rows drawn as texts, goes above the layer's (a layer of texts only: in its place, with its name). A text's
+ * style, mask, curve, scales, link to an object or paragraph formats are not written: said as `text_details_left`.
+ *
  * Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (`gpkg` without
  * `path`, `postgis` without `address`), `invalid_name`, `layer_not_found`, `not_a_layer` (a group), `service_layer`,
- * `data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table is there),
- * `source_unreachable`, `nothing_to_export` (nothing a table holds: an empty layer, or one of texts only),
- * `unwritable_objects` (texts, dimensions or anything a table cannot hold beside what it can: they would be lost with
- * the layer, so nothing is written; their count and the first's kind are said).
+ * `data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table, or the texts' table, is
+ * there), `source_unreachable`, `nothing_to_export` (an empty layer), `unwritable_objects` (dimensions, blocks, hatches
+ * or anything else a table cannot hold, texts aside: they would be lost with the layer, so nothing is written; their
+ * count and the first's kind are said).
  */
 export type LayersMigrate = { 
 /**

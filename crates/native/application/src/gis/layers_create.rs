@@ -283,6 +283,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersCreate) -> CommandR
         }),
         extent: None,
         read_only: false,
+        text: None,
     };
     let added = crate::layers_data::write_execute(
         cx,

@@ -310,6 +310,7 @@ pub(crate) fn data_layer_of(plan: &Plan<'_>) -> Option<(kentos_commands::DataLay
         geometry,
         extent: None,
         read_only: false,
+        text: None,
     };
     let fields = plan.fields.iter().map(|f| f.written()).collect();
     // The layer added is named as the table written (its bare name, without the schema).

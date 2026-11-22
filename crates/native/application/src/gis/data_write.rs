@@ -16,7 +16,7 @@
 
 use std::collections::BTreeSet;
 
-use kentos_commands::{DataLayer, EditGrouping, Entity, LayerNode, ProjectSettings};
+use kentos_commands::{DataLayer, DataText, EditGrouping, Entity, LayerNode, ProjectSettings, TextCell};
 use kentos_data::{
     Cancel, Capabilities, Change, Condition, Coord, Curve, DataError, Family, Feature, Geometry,
     GeometryField, NewFeature, Request, Schema, Value,
@@ -147,6 +147,31 @@ pub fn write(w: &LayerWrites, settings: &ProjectSettings) -> Result<Vec<i64>, Wr
 }
 
 /// One layer's rows as its table takes them, worked out before the transaction.
+/// A text of a layer of texts as its row (docs/adr/9114 §4): a point at its place, its words, height, angle, alignment
+/// and width factor written into their columns over its other values. The text is what is drawn, so its own parts win
+/// over the same columns' values. Any other object, or a layer's that is not of texts, as it is.
+fn as_row<'e>(text: Option<&DataText>, e: &'e Entity) -> std::borrow::Cow<'e, Entity> {
+    let (Some(text), Entity::Text(t)) = (text, e) else {
+        return std::borrow::Cow::Borrowed(e);
+    };
+    let mut attrs = t.base.attrs.clone();
+    for (column, cell) in text.cells(&crate::data_text::parts_of(t)) {
+        let value = match cell {
+            TextCell::Text(s) => s,
+            TextCell::Number(n) => n.to_string(),
+        };
+        attrs.insert(column, value);
+    }
+    let point = serde_json::json!({
+        "kind": "point",
+        "id": t.base.id,
+        "layerId": t.base.layer_id,
+        "attrs": attrs,
+        "p": { "x": t.p.x, "y": t.p.y },
+    });
+    serde_json::from_value(point).map_or(std::borrow::Cow::Borrowed(e), std::borrow::Cow::Owned)
+}
+
 struct Planned<'a> {
     w: &'a LayerWrites,
     schema: Schema,
@@ -185,6 +210,7 @@ pub fn write_group(
                 schema: &schema,
                 curves: caps.curves,
                 system: system.as_ref(),
+                text: w.data.text.as_ref(),
             };
             let mut inserts = Vec::with_capacity(w.changes.added.len());
             for (uid, e) in &w.changes.added {
@@ -216,7 +242,7 @@ pub fn write_group(
     }
     let mut tx = source.begin().map_err(|e| unreachable(first, e))?;
     if !force {
-        match conflicts(tx.as_mut(), &planned) {
+        match conflicts(tx.as_mut(), &planned, crate::data_text::default_height(settings)) {
             Ok(None) => {}
             Ok(Some(failure)) => {
                 let _ = tx.rollback();
@@ -263,6 +289,7 @@ pub fn write_group(
 fn conflicts<'a>(
     tx: &mut dyn kentos_data::Transaction,
     planned: &[Planned<'a>],
+    height: f64,
 ) -> Result<Option<WriteFailure>, (&'a LayerWrites, DataError)> {
     let mut gone = Vec::new();
     let mut changed = Vec::new();
@@ -288,14 +315,16 @@ fn conflicts<'a>(
                     geometry: f.geometry.clone(),
                     values,
                 };
-                object_from(&read, &p.w.fields, &p.w.layer, p.system.as_ref())
+                let text = p.w.data.text.as_ref();
+                object_from(&read, &p.w.fields, &p.w.layer, p.system.as_ref(), text, height)
+                    .map(|e| (as_row(text, &e).into_owned(), as_row(text, row).into_owned()))
             });
             match now {
                 None => {
                     gone.push(*key);
                     uids.push(*uid);
                 }
-                Some(Ok(e)) if e.base().attrs == row.base().attrs && geometry_of(&e) == geometry_of(row) => {}
+                Some(Ok((e, row))) if e.base().attrs == row.base().attrs && geometry_of(&e) == geometry_of(&row) => {}
                 Some(_) => {
                     changed.push(*key);
                     uids.push(*uid);
@@ -355,8 +384,10 @@ fn refused(w: &LayerWrites, why: &str, uid: Option<Uuid>) -> WriteFailure {
 
 /// The table's rights against what the layer writes.
 fn allowed(w: &LayerWrites, caps: &Capabilities) -> Result<(), WriteFailure> {
-    let geometry_changed = w.changes.changed.iter().any(|c| geometry_of(&c.now) != geometry_of(&c.row));
-    let values_changed = w.changes.changed.iter().any(|c| c.now.base().attrs != c.row.base().attrs);
+    let text = w.data.text.as_ref();
+    let rows = |c: &kentos_domain::DataChange| (as_row(text, &c.now).into_owned(), as_row(text, &c.row).into_owned());
+    let geometry_changed = w.changes.changed.iter().map(rows).any(|(now, row)| geometry_of(&now) != geometry_of(&row));
+    let values_changed = w.changes.changed.iter().map(rows).any(|(now, row)| now.base().attrs != row.base().attrs);
     let missing = [
         (!w.changes.added.is_empty() && !caps.insert, "yeni satır eklemeye"),
         (geometry_changed && !caps.update_geometry, "geometri değiştirmeye"),
@@ -381,17 +412,20 @@ pub(crate) struct Rows<'a> {
     /// The source keeps arcs.
     curves: bool,
     system: Option<&'a TableSystem>,
+    /// A layer of texts' mapping: its texts written as rows (docs/adr/9114 §4).
+    text: Option<&'a DataText>,
 }
 
 impl<'a> Rows<'a> {
     /// Rows of the table `schema` describes; `curves` when it keeps arcs; `system` the move into its system.
     pub(crate) fn new(schema: &'a Schema, curves: bool, system: Option<&'a TableSystem>) -> Rows<'a> {
-        Rows { schema, curves, system }
+        Rows { schema, curves, system, text: None }
     }
 }
 
 impl Rows<'_> {
     pub(crate) fn new_row(&self, e: &Entity) -> Result<NewFeature, String> {
+        let e = &*as_row(self.text, e);
         let attrs = &e.base().attrs;
         let mut values = Vec::new();
         for field in self.writable() {
@@ -413,6 +447,8 @@ impl Rows<'_> {
 
     /// A taken row's change; none when what the table holds did not change (a value of no field, say).
     fn change(&self, key: i64, now: &Entity, row: &Entity) -> Result<Option<Change>, String> {
+        let (now, row) = (as_row(self.text, now), as_row(self.text, row));
+        let (now, row) = (&*now, &*row);
         let (a, b) = (&now.base().attrs, &row.base().attrs);
         let names: BTreeSet<&String> = a.keys().chain(b.keys()).filter(|n| a.get(*n) != b.get(*n)).collect();
         let mut values = Vec::new();
@@ -646,6 +682,7 @@ pub fn rows_to_take(
     let srid = data.geometry.as_ref().and_then(|g| g.srid);
     let system = TableSystem::of(settings, srid)?;
     let fields: Vec<String> = node.fields.iter().map(|f| f.name.clone()).collect();
+    let height = crate::data_text::default_height(settings);
     let request = Request {
         condition: Some(Condition::Fids(keys.to_vec())),
         columns: Some(fields.clone()),
@@ -658,7 +695,7 @@ pub fn rows_to_take(
     source
         .features(&data.table, &request, &Cancel::new(), &mut |part: Vec<Feature>| {
             for f in &part {
-                match object_from(f, &fields, &node.id, system.as_ref()) {
+                match object_from(f, &fields, &node.id, system.as_ref(), data.text.as_ref(), height) {
                     Ok(e) => out.push((f.fid, e)),
                     Err(m) => failed = Some(m),
                 }
@@ -673,12 +710,15 @@ pub fn rows_to_take(
 }
 
 /// A row as an object of the layer `layer`: its values (`fields` in order) as attributes, its geometry moved into the
-/// project's system; a row without geometry a record.
+/// project's system; a row without geometry a record. A layer of texts' row is the text it says (docs/adr/9114 §4;
+/// one without words its point).
 fn object_from(
     f: &Feature,
     fields: &[String],
     layer: &str,
     system: Option<&TableSystem>,
+    text: Option<&DataText>,
+    height: f64,
 ) -> Result<Entity, String> {
     let attrs: serde_json::Map<String, serde_json::Value> = fields
         .iter()
@@ -693,6 +733,11 @@ fn object_from(
         (Some(g), None) => Some(g.clone()),
         (None, _) => None,
     };
+    if let (Some(text), Some(at)) = (text, shape.as_ref().and_then(crate::data_text::point_of))
+        && let Some(e) = crate::data_text::object(text, at, layer, 1, attrs.clone(), height)
+    {
+        return Ok(e);
+    }
     if let Some(g) = shape.filter(|g| !g.is_empty())
         && let Some(e) = object_of(&g, layer, 1, attrs.clone())
     {

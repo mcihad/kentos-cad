@@ -187,7 +187,8 @@ pub(super) const ENTRIES: &[Entry] = &[
             &["not_a_layer", "service_layer", "data_layer", "layer_locked"],
             &["target_exists", "source_unreachable", "nothing_to_export", "unwritable_objects"],
         ],
-        warnings: &[],
+        // docs/adr/9114 §2: a text's details its table has no column for.
+        warnings: &["text_details_left"],
         targets: none,
     },
     // docs/adr/9107 §7: a new layer made as a new table of a data source.

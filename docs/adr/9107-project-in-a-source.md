@@ -198,6 +198,6 @@ tür, uzunluk) sorar (kurulu programın ekranı `.run/gui-evidence/veri/qgis/14`
 - Projeyi veritabanında saklamak masaüstünde PostgreSQL için kayıtlı bir bağlantı ya da adres ister; parola
   sistemin parola deposundan ya da ortamdan gelir (adreste yazılmaz).
 - Yeni katman ve taşıma tabloyu kendi işleminde yapar; geri alma katmanı geri alır, tabloyu silmez (QGIS'teki gibi).
-- Taşıma tabloya yazılamayan nesneleri (yazı, ölçü) ayrı bir katmana kendisi almaz; kullanıcı onları önce başka bir
-  katmana taşır.
+- Taşıma ölçüleri ayrı bir katmana kendisi almaz; kullanıcı onları önce başka bir katmana taşır. Yazılar VY-17'den
+  beri kendi tablolarına gider ve tablodan yazı olarak çizilir ([ADR 9114](9114-text-tables.md)).
 - Web (ADR 0228).

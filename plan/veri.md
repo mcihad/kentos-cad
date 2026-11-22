@@ -216,7 +216,14 @@ ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, AD
   - Sorgu, katmanın tablo metnidir (`-- kentos: key=… geometry=…` satırıyla). Proje dosyası ve komut değişmedi.
   - Gerçek pencerede bir milyon parselden 5 000 park: tablo “5.000 satır · süzgeç ve sıra kaynakta”.
   - Bulunup kapatılan hata: SQL kutusu ilk harften sonra klavyeyi kaybediyordu.
-- [ ] **VY-17 — Taşımada yazılar.** Tabloya yazılamayan yazılar taşıma sırasında aynı kaynakta ayrı bir yazı tablosuna
-  (nokta, metin, yükseklik, açı) yazılır ve etiketleriyle çizilir; taşıma reddedilmez.
+- [x] **VY-17 — Taşımada yazılar.** ([ADR 9114](../docs/adr/9114-text-tables.md))
+  - Taşıma yazı tutan katmanı artık reddetmiyor. Yazılar aynı kaynakta `<tablo>_yazilar` tablosuna yazılır: nokta,
+    `metin`, `yukseklik` (m), `aci` (derece), `hiza` (Yazı'nın adları), `genislik`. Yalnız yazı tutan katman kendi
+    tablosuna yazılır.
+  - Yazı katmanı ana katmanın üstünde, “<ad> (yazılar)” adıyla gelir. Satırları CAD yazısıyla aynı yoldan yazı olarak
+    çizilir.
+  - Düzenlemede yazı olarak alınır, kaydedilince satırına döner. Yazı aracıyla yeni yazı eklenir.
+  - Ölçü hâlâ reddedilir. Yazının stili, zemini, eğrisi gibi tablonun tutmadıkları uyarıyla söylenir.
+  - Gerçek pencerede 20 direk ve 22 yazı: harita taşımadan sonra aynı; dosyayı başka bir CBS'nin kitaplığı da okudu.
 - [ ] **VY-18 — Küçük ölçekte ince çizgiler.** Veri katmanının çizgileri küçük ölçekte de görünür kalınlıkta çizilir
   (ölçeğe bağlı kalınlık).

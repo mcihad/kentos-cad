@@ -140,6 +140,7 @@ pub fn describe(address: &str, table: &str) -> Result<Described, String> {
         }),
         extent: None,
         read_only: !source.capabilities(table).is_ok_and(|c| c.writable()),
+        text: None,
     };
     let extent = source.extent(table, true).ok().flatten();
     let data = DataLayer {

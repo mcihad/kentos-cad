@@ -123,6 +123,8 @@ impl Document {
                 && let Some(node) = self.layers.get(&base.layer_id)
                 && let Some(holds) = node.geometry
                 && !holds.admits(after.kind())
+                // A layer of texts holds texts: its rows are drawn and edited as the texts they say (docs/adr/9114 §4).
+                && !(after.kind() == "text" && node.data.as_ref().is_some_and(|d| d.text.is_some()))
             {
                 out.push(Fault {
                     uid: change.uid,

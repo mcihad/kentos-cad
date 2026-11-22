@@ -139,6 +139,8 @@ pub mod dataset;
 pub mod join_view;
 #[path = "gis/data_layer.rs"]
 pub mod data_layer;
+#[path = "gis/data_text.rs"]
+pub mod data_text;
 #[path = "gis/layer_crs.rs"]
 pub mod layer_crs;
 #[path = "map/linear_events.rs"]
@@ -419,6 +421,7 @@ pub use cad_views::*;
 pub use dataset::*;
 pub use join_view::*;
 pub use data_layer::*;
+pub use data_text::*;
 pub use layer_crs::*;
 pub use linear_events::*;
 pub use lineage::*;

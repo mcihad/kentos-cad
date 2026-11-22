@@ -3014,8 +3014,11 @@ def document(d):
     # GIS data 4 (docs/adr/9105 §4): a layer's class counts shown.
     def counted(nodes):
         return any(n.get("classCounts") is not None or counted(n.get("children", [])) for n in nodes)
+    # GIS data 5 (docs/adr/9114 §1): a data layer whose rows are texts.
+    def text_tables(nodes):
+        return any("text" in n.get("data", {}) or text_tables(n.get("children", [])) for n in nodes)
     # GIS data 3 (docs/adr/9104 §2): the data layers' edit grouping.
-    gis = (4 if counted(d["layers"]) else 3 if "editGrouping" in d.get("settings", {})
+    gis = (5 if text_tables(d["layers"]) else 4 if counted(d["layers"]) else 3 if "editGrouping" in d.get("settings", {})
            else 2 if data_layers(d["layers"]) else 1 if extended(d["layers"]) else 0)
     # Architecture data 18 (docs/adr/8101 §2): the underlay models (`settings.arch.underlays`), the one version-gated
     # architecture data the shared cases' v2 setups hold; a reader refuses them in an older version.
@@ -5817,6 +5820,22 @@ def build():
     on_group = copy.deepcopy(load("data-layers.json"))
     on_group["layers"][2]["classCounts"] = True
     out["broken/class-counts-on-group.kcad"] = container(document(on_group))
+    # Text tables (docs/adr/9114 §1): GIS data 5; under GIS data 4 an unknown field; a mapping on a table of areas, or
+    # one column for two parts, a bad value.
+    out["text-tables.kcad"] = container(document(load("text-tables.json")))
+    texts_payload = document(load("text-tables.json"))
+    with_gis5 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(5)})
+    assert texts_payload.startswith(with_gis5), "a table of texts raises the GIS data's version to 5"
+    out["broken/text-table-in-gis-4.kcad"] = container(with_gis4 + texts_payload[len(with_gis5):])
+
+    def texts_broken(change):
+        d = copy.deepcopy(load("text-tables.json"))
+        change(next(n for n in d["layers"] if n["id"] == "yazilar")["data"])
+        return container(document(d))
+
+    out["broken/text-table-of-areas.kcad"] = texts_broken(
+        lambda data: data["geometry"].update(typeName="MULTIPOLYGON"))
+    out["broken/text-table-column-twice.kcad"] = texts_broken(lambda data: data["text"].update(angle="metin"))
     # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
     # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
     # two columns of one name, an unknown way, an empty list of columns.

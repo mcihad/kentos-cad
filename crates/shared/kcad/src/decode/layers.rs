@@ -261,6 +261,14 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
                         "veri katmanının tablosu yazıcının biçiminde değil (boş ya da yanlış bir alan yazılmış)",
                     ));
                 }
+                // GIS data 5 (docs/adr/9114 §1): a table of texts; before it an unknown field.
+                if read.text.is_some() && has.gis < crate::GIS_WITH_TEXT_TABLES {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "veri katmanının yazı eşlemesi (text) CBS verisi 5'ten önce yazılmaz",
+                    ));
+                }
                 if let Some(problem) = read.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }

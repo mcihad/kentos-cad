@@ -22,6 +22,8 @@ pub(crate) struct MigrateWindow {
     layer: String,
     title: String,
     objects: usize,
+    /// Its texts, written into a table of their own beside its table (docs/adr/9114 §2).
+    texts: usize,
     target: CreateTarget,
     path: String,
     connection: Option<usize>,
@@ -70,8 +72,15 @@ impl App {
             let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(&layer)).cloned() else {
                 return Task::none();
             };
+            let texts = self.document.as_ref().map_or(0, |d| {
+                d.model
+                    .by_layer_with_uids(&node.id)
+                    .filter(|(_, e)| matches!(e, kentos_commands::Entity::Text(_)))
+                    .count()
+            });
             self.gis.layer_migrate = Some(MigrateWindow {
                 objects: self.objects_below(&node),
+                texts,
                 layer: node.id.clone(),
                 table: kentos_native_application::layer_export::table_name_of(&node.name),
                 title: node.name.clone(),
@@ -151,15 +160,24 @@ impl App {
             table: Some(w.table.trim().to_owned()).filter(|t| !t.is_empty()),
         };
         match kentos_native_application::layers_migrate::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-            CommandResult::Completed { output, .. } => {
+            CommandResult::Completed { output, warnings } => {
                 self.gis.layer_migrate = None;
                 self.dialog = None;
                 self.selected_layer = Some(output.layer.clone());
                 let place = std::path::Path::new(&output.address)
                     .file_name()
                     .map_or_else(|| output.address.clone(), |n| n.to_string_lossy().into_owned());
+                // Its texts in a table of their own beside it (docs/adr/9114 §2): said with the table they went into.
+                let texts = output.texts.as_ref().map_or_else(String::new, |t| {
+                    format!(
+                        " Yazıları ({}) “{}” tablosunda; üstündeki “{} (yazılar)” katmanı onları yazı olarak çizer.",
+                        crate::view::thousands(t.written as f64),
+                        t.table,
+                        w.title
+                    )
+                });
                 let words = format!(
-                    "“{}” veri kaynağına taşındı: {} nesne {} içinde “{}” tablosunun satırları oldu. Katman artık tabloyu okuyor; geri al (Ctrl+Z) çizimdeki hâline döndürür.",
+                    "“{}” veri kaynağına taşındı: {} nesne {} içinde “{}” tablosunun satırları oldu.{texts} Katman artık tabloyu okuyor; geri al (Ctrl+Z) çizimdeki hâline döndürür.",
                     w.title,
                     crate::view::thousands(output.written as f64),
                     place,
@@ -167,6 +185,9 @@ impl App {
                 );
                 self.say(kentos_interaction::Level::Success, words.clone());
                 self.toast_saved("Kaynağa taşındı", words);
+                for warning in warnings {
+                    self.warn(warning.message);
+                }
             }
             CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
                 if let Some(w) = self.gis.layer_migrate.as_mut() {
@@ -234,10 +255,7 @@ impl App {
         let mut dialog = Dialog::new(format!("Veri kaynağına taşı — {}", w.title)).scroll(form);
         dialog = match &w.said {
             Some(said) => dialog.status(words::text_line(words::Kind::Error, said.clone())),
-            None => dialog.status(label::caption(format!(
-                "{} nesne tablonun satırları olur; katman yerinde kalır, adı ve stiliyle tabloyu okur.",
-                crate::view::thousands(w.objects as f64)
-            ))),
+            None => dialog.status(label::caption(migrate_words(w))),
         };
         overlay::blocking(
             dialog
@@ -247,5 +265,26 @@ impl App {
                 .max_height(560.0)
                 .on_close(Some(message(Event::Close))),
         )
+    }
+}
+
+/// What Taşı will write, said under the window: the layer's objects as its table's rows, its texts into a table of their
+/// own beside it (docs/adr/9114 §2), or a layer of texts only as its table.
+fn migrate_words(w: &MigrateWindow) -> String {
+    let others = w.objects.saturating_sub(w.texts);
+    let n = |v: usize| crate::view::thousands(v as f64);
+    let table = if w.table.trim().is_empty() {
+        kentos_native_application::layer_export::table_name_of(&w.title)
+    } else {
+        w.table.trim().to_owned()
+    };
+    match (others, w.texts) {
+        (_, 0) => format!("{} nesne tablonun satırları olur; katman yerinde kalır, adı ve stiliyle tabloyu okur.", n(others)),
+        (0, texts) => format!("{} yazı tablonun satırları olur; katman yerinde kalır ve yazılarını tablodan çizer.", n(texts)),
+        (others, texts) => format!(
+            "{} nesne tablonun satırları olur; {} yazı yanındaki “{table}_yazilar” tablosuna. Katman yerinde kalır, yazıları üstündeki katmandan çizilir.",
+            n(others),
+            n(texts)
+        ),
     }
 }

@@ -31301,6 +31301,8 @@ class DataLayer(_Model):
         read_only: The layer is not edited even where the source allows it (the user's choice); only `true` is written.
         relative: A GeoPackage's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving
             when the file lies on the same disk; read when `address` is not there.
+        text: Its rows are texts (docs/adr/9114 §1): which columns hold their words, height, angle, alignment and width
+            factor. Drawn as the drawing's texts are; absent: its rows are drawn by its style.
     """
     driver: str
     address: str
@@ -31310,6 +31312,7 @@ class DataLayer(_Model):
     geometry: DataGeometry | None | Unset = UNSET
     read_only: bool | Unset = UNSET
     relative: str | None | Unset = UNSET
+    text: DataText | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -31325,6 +31328,8 @@ class DataLayer(_Model):
             out["readOnly"] = self.read_only
         if self.relative is not UNSET:
             out["relative"] = self.relative
+        if self.text is not UNSET:
+            out["text"] = None if self.text is None else self.text.to_json()
         return out
 
     @classmethod
@@ -31338,6 +31343,7 @@ class DataLayer(_Model):
             geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else DataGeometry.from_json(data["geometry"]),
             read_only=data.get("readOnly", UNSET),
             relative=data.get("relative", UNSET),
+            text=UNSET if "text" not in data else None if data["text"] is None else DataText.from_json(data["text"]),
         )
 
 
@@ -31400,6 +31406,47 @@ class DataProfile(_Model):
             migrations=[ProfileMigration.from_json(e0) for e0 in data["migrations"]] if "migrations" in data else UNSET,
             relations=[ProfileRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             release=data.get("release", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DataText(_Model):
+    """Which columns of a data layer's rows make its texts.
+    Attributes:
+        text: The column of the words.
+        align: The column of the alignment: Yazı's names (“sol alt”, “orta”, “sağ üst” …) or the contract's (`bottomLeft`);
+            absent, empty or another word: the left of the baseline.
+        angle: The column of the angle, degrees counter-clockwise from east; absent or empty: 0.
+        height: The column of the height, metres; absent, or empty or not over 0 in a row: the project's text height.
+        width: The column of the width factor; absent, empty or out of (0, 100]: 1.
+    """
+    text: str
+    align: str | None | Unset = UNSET
+    angle: str | None | Unset = UNSET
+    height: str | None | Unset = UNSET
+    width: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["text"] = self.text
+        if self.align is not UNSET:
+            out["align"] = self.align
+        if self.angle is not UNSET:
+            out["angle"] = self.angle
+        if self.height is not UNSET:
+            out["height"] = self.height
+        if self.width is not UNSET:
+            out["width"] = self.width
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DataText:
+        return cls(
+            text=data["text"],
+            align=data.get("align", UNSET),
+            angle=data.get("angle", UNSET),
+            height=data.get("height", UNSET),
+            width=data.get("width", UNSET),
         )
 
 
@@ -58798,12 +58845,17 @@ class LayersMigrate(_Model):
     `schema` (`postgis`), in the project's system, every field of the layer a column, every object of the layer (those
     its layer filter hides too: the layer goes, so none may stay behind).
 
+    Its texts are written to a table of their own beside it, `<table>_yazilar` (a layer of texts only: to `table`): a
+    point and the columns `metin`, `yukseklik`, `aci`, `hiza` and `genislik` (docs/adr/9114 §2). A data layer reading
+    it, its rows drawn as texts, goes above the layer's (a layer of texts only: in its place, with its name). A text's
+    style, mask, curve, scales, link to an object or paragraph formats are not written: said as `text_details_left`.
+
     Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (`gpkg` without
     `path`, `postgis` without `address`), `invalid_name`, `layer_not_found`, `not_a_layer` (a group), `service_layer`,
-    `data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table is there),
-    `source_unreachable`, `nothing_to_export` (nothing a table holds: an empty layer, or one of texts only),
-    `unwritable_objects` (texts, dimensions or anything a table cannot hold beside what it can: they would be lost with
-    the layer, so nothing is written; their count and the first's kind are said).
+    `data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table, or the texts' table, is
+    there), `source_unreachable`, `nothing_to_export` (an empty layer), `unwritable_objects` (dimensions, blocks, hatches
+    or anything else a table cannot hold, texts aside: they would be lost with the layer, so nothing is written; their
+    count and the first's kind are said).
     Attributes:
         layer: The drawing layer (its id).
         address: `postgis`: the database, `postgresql://user@host:port/db` (its password is never written).
@@ -58853,6 +58905,8 @@ class LayersMigrated(_Model):
         address: The source: the GeoPackage's path, the database's address.
         written: The rows written: the layer's objects a table holds. Unit: count.
         geometry: OGC's name of the geometry type written; none for a table of records.
+        texts: The layer's texts' table beside it (docs/adr/9114 §2); none when it had no texts, or only texts (then the
+            table above is theirs).
     """
     layer: str
     table: str
@@ -58860,6 +58914,7 @@ class LayersMigrated(_Model):
     written: int
     revision: str
     geometry: str | None | Unset = UNSET
+    texts: MigratedTexts | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -58870,6 +58925,8 @@ class LayersMigrated(_Model):
         out["revision"] = self.revision
         if self.geometry is not UNSET:
             out["geometry"] = self.geometry
+        if self.texts is not UNSET:
+            out["texts"] = None if self.texts is None else self.texts.to_json()
         return out
 
     @classmethod
@@ -58881,6 +58938,7 @@ class LayersMigrated(_Model):
             written=data["written"],
             revision=data["revision"],
             geometry=data.get("geometry", UNSET),
+            texts=UNSET if "texts" not in data else None if data["texts"] is None else MigratedTexts.from_json(data["texts"]),
         )
 
 
@@ -63846,6 +63904,34 @@ class MigratedStep(_Model):
             objects=data["objects"],
             note=data["note"],
             layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MigratedTexts(_Model):
+    """A migrated layer's texts: the data layer drawing them, their table, how many rows.
+    Attributes:
+        layer: The data layer (its id); empty in a plan.
+        table: The table: a GeoPackage's table name, PostGIS's `schema.table`.
+        written: The rows written: one a text. Unit: count.
+    """
+    layer: str
+    table: str
+    written: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["table"] = self.table
+        out["written"] = self.written
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MigratedTexts:
+        return cls(
+            layer=data["layer"],
+            table=data["table"],
+            written=data["written"],
         )
 
 
@@ -148410,6 +148496,7 @@ __all__ = [
     "DataGeometry",
     "DataLayer",
     "DataProfile",
+    "DataText",
     "DatasetDescription",
     "DatasetDim",
     "DatasetInfo",
@@ -149731,6 +149818,7 @@ __all__ = [
     "MidPointConstruction",
     "MidSubPlace",
     "MigratedStep",
+    "MigratedTexts",
     "MigrationLoss",
     "MigrationStep",
     "MirrorText",

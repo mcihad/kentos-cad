@@ -65,6 +65,9 @@ pub(crate) struct Plan<'d> {
     /// Every object of a drawing layer, those its layer filter hides too: a layer moved into a source
     /// (`cad.layers.migrate`) leaves none behind (docs/adr/9107 §8).
     pub all_objects: bool,
+    /// A drawing layer's texts left to a table of their own (`cad.layers.migrate`, docs/adr/9114 §2): neither written
+    /// nor counted as left out.
+    pub texts_apart: bool,
 }
 
 /// The table name a layer's name makes: its letters and digits, others `_`, Turkish letters kept as their bare ones.
@@ -379,6 +382,7 @@ pub(crate) fn planned<'d>(doc: &'d Document, input: &'d LayersExport) -> Result<
         srid,
         filter,
         all_objects: false,
+        texts_apart: false,
     })
 }
 
@@ -482,6 +486,9 @@ fn drawing_objects(doc: &Document, plan: &Plan<'_>) -> Result<Vec<Entity>, Stop>
     let mut list: Vec<Entity> = Vec::new();
     for (uid, e) in doc.by_layer_with_uids(&plan.node.id) {
         if hidden.as_ref().is_some_and(|h| h.contains(&kentos_domain::Slot(e.base().id))) {
+            continue;
+        }
+        if plan.texts_apart && matches!(e, Entity::Text(_)) {
             continue;
         }
         if wanted.as_ref().is_some_and(|w| !w.contains(uid.to_string().as_str())) {

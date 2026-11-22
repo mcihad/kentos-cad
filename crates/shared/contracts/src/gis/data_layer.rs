@@ -102,6 +102,11 @@ pub struct DataLayer {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub read_only: bool,
+    /// Its rows are texts (docs/adr/9114 §1): which columns hold their words, height, angle, alignment and width
+    /// factor. Drawn as the drawing's texts are; absent: its rows are drawn by its style.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text: Option<crate::DataText>,
 }
 
 fn blank_or_long(s: &str) -> bool {
@@ -188,6 +193,18 @@ impl DataLayer {
                 return Some("geometri sütunu anahtar olamaz".into());
             }
         }
+        if let Some(t) = &self.text {
+            if let Some(p) = t.problem() {
+                return Some(p);
+            }
+            if self.family() != Some(crate::LayerGeometry::Point) {
+                return Some("yazıların tablosunun geometrisi nokta olmalı (POINT ya da MULTIPOINT)".into());
+            }
+            let geometry = self.geometry.as_ref().map(|g| g.column.as_str());
+            if let Some(c) = t.columns().into_iter().find(|c| *c == self.key || Some(*c) == geometry) {
+                return Some(format!("“{c}” sütunu hem yazının parçası hem anahtar ya da geometri olamaz"));
+            }
+        }
         None
     }
 
@@ -208,6 +225,9 @@ impl DataLayer {
 
     /// The kind's name in the interface: “Veri katmanı (alan)”, “Tablo” …
     pub fn kind_words(&self) -> &'static str {
+        if self.text.is_some() {
+            return "Veri katmanı (yazı)";
+        }
         match (self.geometry.is_some(), self.family()) {
             (false, _) => "Tablo",
             (true, Some(crate::LayerGeometry::Point)) => "Veri katmanı (nokta)",
@@ -261,6 +281,7 @@ mod tests {
             }),
             extent: Some([587000.0, 4400000.0, 617000.0, 4430000.0]),
             read_only: false,
+            text: None,
         }
     }
 
@@ -299,5 +320,23 @@ mod tests {
         assert_eq!(file.problem(), None);
         assert_eq!(file.kind_words(), "Tablo");
         assert_eq!(file.place_words(), "kadastro.gpkg › public.parseller");
+    }
+
+    #[test]
+    fn a_text_table_is_a_table_of_points() {
+        let point = DataGeometry { column: "geom".into(), type_name: "POINT".into(), srid: Some(5256), z: false, m: false };
+        let texts = DataLayer { geometry: Some(point.clone()), text: Some(crate::DataText::written()), ..parcels() };
+        assert_eq!(texts.problem(), None);
+        assert_eq!(texts.kind_words(), "Veri katmanı (yazı)");
+        let areas = DataLayer { text: Some(crate::DataText::written()), ..parcels() };
+        assert_eq!(areas.problem().as_deref(), Some("yazıların tablosunun geometrisi nokta olmalı (POINT ya da MULTIPOINT)"));
+        let none = DataLayer { geometry: None, text: Some(crate::DataText::written()), ..parcels() };
+        assert!(none.problem().is_some(), "a text needs its point");
+        let keyed = DataLayer { text: Some(crate::DataText { text: "fid".into(), ..crate::DataText::written() }), ..texts.clone() };
+        assert_eq!(keyed.problem().as_deref(), Some("“fid” sütunu hem yazının parçası hem anahtar ya da geometri olamaz"));
+        // Read from the file as written, the mapping kept.
+        let json = serde_json::to_value(&texts).expect("json");
+        assert_eq!(json["text"]["text"], "metin");
+        assert_eq!(serde_json::from_value::<DataLayer>(json).expect("read"), texts);
     }
 }

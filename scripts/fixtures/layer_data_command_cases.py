@@ -33,6 +33,13 @@ ANY = {"driver": "gpkg", "address": "/veri/altyapi.gpkg", "table": "karisik", "k
 QUERY = {"driver": "postgis", "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
          "table": "-- kentos: key=fid geometry=geom\nSELECT fid, ada, geom FROM kadastro.parseller WHERE ada = 105",
          "key": "fid", "geometry": {"column": "geom", "typeName": "MULTIPOLYGON", "srid": 5256}, "readOnly": True}
+# A table of texts (docs/adr/9114 §1): its rows drawn as texts, the mapping naming which column holds what.
+TEXTS = {"driver": "gpkg", "address": "/veri/altyapi.gpkg", "table": "eski_direkler_yazilar", "key": "fid",
+         "geometry": {"column": "geom", "typeName": "POINT", "srid": 5256},
+         "text": {"text": "metin", "height": "yukseklik", "angle": "aci", "align": "hiza", "width": "genislik"}}
+TEXT_FIELDS = [{"name": "metin", "kind": "text"}, {"name": "yukseklik", "kind": "decimal"},
+               {"name": "aci", "kind": "decimal"}, {"name": "hiza", "kind": "text"},
+               {"name": "genislik", "kind": "decimal"}]
 # The longest text a data layer keeps in a field (contracts' MAX_DATA_TEXT), in bytes.
 MAX_TEXT = 2048
 PARCEL_FIELDS = [{"name": "ada", "kind": "integer"}, {"name": "parsel", "kind": "integer"}, {"name": "mahalle", "kind": "text"}]
@@ -230,6 +237,12 @@ def cases():
                        WRITTEN, {"layers": inserted(tree(), new_layer("Sorgu: parseller", QUERY, [{"name": "ada", "kind": "integer"}]))})],
     })
     out.append({
+        "name": "Ekle: yazı tablosu (ADR 9114); nokta katmanı, satırları yazı olarak çizilir, eşlemesi saklanır",
+        "steps": [step("execute", {"operation": "add", "name": "Eski direkler (yazılar)", "data": TEXTS,
+                                   "fields": TEXT_FIELDS},
+                       WRITTEN, {"layers": inserted(tree(), new_layer("Eski direkler (yazılar)", TEXTS, TEXT_FIELDS))})],
+    })
+    out.append({
         "name": "Ekle: geometrisiz tablo; türsüz katman, alansız",
         "steps": [step("execute", {"operation": "add", "name": "Malikler", "data": OWNERS}, WRITTEN,
                        {"layers": inserted(tree(), new_layer("Malikler", OWNERS))})],
@@ -333,6 +346,11 @@ def cases():
                        "invalid_data", f"veri katmanının tablosu boş ya da {MAX_TEXT} karakterden uzun", "data"))
     out.append(refused("veritabanının göreli yolu", {"operation": "add", "name": "Yollar", "data": {**ROADS, "relative": "a/b"}}, "invalid_data",
                        "veritabanının göreli yolu olmaz", "data"))
+    out.append(refused("alan tablosunun yazısı", {"operation": "add", "name": "Parseller", "data": {**PARCELS, "text": TEXTS["text"]}},
+                       "invalid_data", "yazıların tablosunun geometrisi nokta olmalı (POINT ya da MULTIPOINT)", "data"))
+    out.append(refused("yazının iki parçası aynı sütun", {"operation": "add", "name": "Yazılar",
+                                                          "data": {**TEXTS, "text": {**TEXTS["text"], "angle": "metin"}}},
+                       "invalid_data", "“metin” sütunu yazının iki parçası olamaz", "data"))
     out.append(refused("aynı adlı iki alan", {"operation": "add", "name": "Yollar", "data": ROADS, "fields": [{"name": "ad", "kind": "text"}, {"name": "AD", "kind": "text"}]},
                        "invalid_fields", "“AD” adlı iki alan var; alan adları bir kez kullanılır.", "fields"))
     out.append(refused("geçersiz beklenen sürüm", {"operation": "add", "name": "Yollar", "data": ROADS, "expectedRevision": "on iki"}, "invalid_revision",
