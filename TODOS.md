@@ -2482,6 +2482,9 @@ Liste:
 - [ ] GeoPackage'a bakmak dosyayı değiştirmez (ADR 9122, 22 Kasım 2026): web GeoPackage'ı proje olarak açtığında
   (TODOS `CBS-03`) projesi olmayan dosyaya açılışta yazmasın; ilk Kaydet dosyayı ve adı gösterip saklasın, Vazgeç
   yazmasın. Veri kaynağındaki projede “Kaydet ve kapat” kayıttan sonra kapatsın.
+- [ ] Proje kaydı ile kaynağa yazım ayrı (ADR 9123, 22 Kasım 2026): web'in veri katmanı düzenlemesi geldiğinde
+  kaynağa yazılmayan satırlar adın yanında rozet ve durum çubuğunda hücre olsun; Katman değişiklikleri penceresi,
+  kapatma sorusunun dört seçeneği ve formun “bekliyor” iletisi masaüstündeki gibi.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

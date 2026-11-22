@@ -383,6 +383,10 @@ impl App {
                     .push(ContextMenu::new(cell, move |_| self.crs_cell_menu()));
             }
         }
+        // Katman değişiklikleri (docs/adr/9123): while a data layer holds rows its source does not have yet.
+        if let Some(cell) = self.data_pending_cell(fit) {
+            bar = bar.separator().push(cell);
+        }
         // Çalışan işler (works/, docs/adr/8057 §102): while something runs in the background, whoever started it.
         if let Some(cell) = self.works_cell(fit >= 4) {
             bar = bar.separator().push(cell);
@@ -598,6 +602,10 @@ impl App {
             if fit < 2 {
                 width += SEPARATOR + cell(&crate::crs::project_name(doc.settings()), true);
             }
+        }
+        // Katman değişiklikleri: its icon and its words, the count alone from the same step.
+        if let Some((words, _)) = self.data_pending_words(fit) {
+            width += SEPARATOR + cell(&words, true);
         }
         // Çalışan işler: its icon and its words, the count alone from the step the cloud cells lose theirs.
         if let Some(words) = self.works_words(fit >= 4) {

@@ -713,32 +713,54 @@ pub(crate) fn thousands(value: f64) -> String {
     if value < 0.0 { format!("-{out}") } else { out }
 }
 
-/// The drawing's name in the tab row (the web's `ribbon__doc`), on one line;
-/// an accent dot before it while unsaved.
-fn document_title(name: &str, dirty: bool) -> Element<'static, Message> {
-    let name = label::caption(name.to_owned()).wrapping(iced::widget::text::Wrapping::None);
-    if !dirty {
-        return name.into();
-    }
-    let dot = container(iced::widget::space::horizontal())
-        .width(6)
-        .height(6)
-        .style(|theme: &iced::Theme| container::Style {
-            background: Some(kentos_ui::theme::Tokens::of(theme).accent.into()),
-            border: iced::border::rounded(kentos_ui::theme::shape::radius(3.0)),
-            ..container::Style::default()
-        });
-    row![
-        kentos_ui::widget::tip(
+/// The drawing's name in the tab row (the web's `ribbon__doc`), on one line; an accent dot before it while the project
+/// is unsaved, and after it the count of its data layers' rows their sources do not have yet, in amber, a click opening
+/// Katman değişiklikleri (docs/adr/9123): the project saved, its rows may still wait.
+fn document_title(name: &str, dirty: bool, waiting: usize) -> Element<'static, Message> {
+    let mut title = row![].spacing(6).align_y(iced::Center);
+    if dirty {
+        let dot = container(iced::widget::space::horizontal())
+            .width(6)
+            .height(6)
+            .style(|theme: &iced::Theme| container::Style {
+                background: Some(kentos_ui::theme::Tokens::of(theme).accent.into()),
+                border: iced::border::rounded(kentos_ui::theme::shape::radius(3.0)),
+                ..container::Style::default()
+            });
+        title = title.push(kentos_ui::widget::tip(
             dot,
-            Tip::new("Kaydedilmemiş değişiklikler var"),
+            Tip::new("Proje kaydedilmedi").body("Projede (katmanlar, görünüşler, ayarlar) kaydedilmemiş değişiklikler var."),
             iced::widget::tooltip::Position::Bottom,
-        ),
-        name
-    ]
-    .spacing(6)
-    .align_y(iced::Center)
-    .into()
+        ));
+    }
+    title = title.push(label::caption(name.to_owned()).wrapping(iced::widget::text::Wrapping::None));
+    if waiting > 0 {
+        // The tabs' count badge (kentos-ui's `warning_count` pill), 16 pixels high.
+        let badge = button(
+            container(
+                iced::widget::text(waiting.to_string())
+                    .font(kentos_ui::theme::typography::ui_strong())
+                    .size(kentos_ui::theme::typography::caption() - 1.0)
+                    .line_height(1.0),
+            )
+            .height(16)
+            .padding([0, 4])
+            .align_y(iced::Center)
+            .style(style::container::warning_count),
+        )
+        .padding(0)
+        .style(style::button::flat)
+        .on_press(crate::data_pending::open());
+        title = title.push(kentos_ui::widget::tip(
+            badge,
+            Tip::new("Kaynağa yazılmadı").body(format!(
+                "Katmanlardaki {waiting} satır kaynağına yazılmadı. Kaydet projeyi yazar; satırlar kaynağa Kaynağa yaz ile \
+                 gider. Tıklayın: Katman değişiklikleri."
+            )),
+            iced::widget::tooltip::Position::Bottom,
+        ));
+    }
+    title.into()
 }
 
 /// The project's coordinate system in the tab row (the web's `ribbon__crs`):

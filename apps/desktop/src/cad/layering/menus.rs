@@ -45,7 +45,10 @@ impl App {
                     "Değişiklikleri geri al",
                     modified.then(|| edit(Edit::Rollback(vec![id.clone()]))),
                 )
-                .icon(icon("undo"));
+                .icon(icon("undo"))
+                // Katman değişiklikleri on this layer (docs/adr/9123): its rows the source does not have, one by one.
+                .item("Değişiklikleri incele…", modified.then(|| crate::data_pending::open_at(id.clone())))
+                .icon(icon("table"));
             // Every layer being edited, when another than this one is too (the session's own Kaydet and Geri al).
             let others = model.map_or(0, |m| m.edited_layers().iter().filter(|l| **l != id).count());
             if others > 0 {

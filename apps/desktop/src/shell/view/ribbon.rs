@@ -151,6 +151,8 @@ impl App {
                 ),
             )
         });
+        // The rows the data layers' sources do not have yet, beside the name (docs/adr/9123): the project's dot is not theirs.
+        let waiting: usize = self.data_waiting().iter().map(crate::data_pending::Waiting::rows).sum();
         // Built now, as the ribbon's elements own what they show.
         let help = catalog()
             .menu("help")
@@ -227,7 +229,7 @@ impl App {
             // A text field keeps the ribbon's menu away (docs/specs/ribbon.md §3).
             let search = iced::widget::mouse_area(search).on_right_press(Message::Swallowed);
             let mut row = row![
-                container(document_title(&name, title.as_ref().is_some_and(|t| t.1)))
+                container(document_title(&name, title.as_ref().is_some_and(|t| t.1), waiting))
                     .width(Fill)
                     .align_x(iced::alignment::Horizontal::Right)
                     .clip(true),

@@ -14,6 +14,8 @@ pub(crate) struct GisUiState {
     pub(crate) data_edits: crate::data_edits::DataEdits,
     /// Where the projects' pending data edits are kept on this device (data_journal.rs, docs/adr/9111 §3).
     pub(crate) data_journal: crate::data_journal::Journals,
+    /// Katman değişiklikleri: the rows the data layers' sources do not have yet (data_pending.rs, docs/adr/9123).
+    pub(crate) data_pending: Option<crate::data_pending::PendingWindow>,
     /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
     pub(crate) data_pick: crate::data_pick::DataPick,
     /// The counted layers' class counts (docs/adr/9105 §4).
@@ -147,6 +149,7 @@ pub(crate) enum Event {
     DataSelection(crate::data_selection::Event),
     /// A data layer's edit session: opened, saved, let go, closed (data_edits.rs, docs/adr/9103 §5).
     DataEdits(crate::data_edits::Event),
+    DataPending(crate::data_pending::Event),
     /// A layer's style classes in Katmanlar (docs/adr/9105).
     LayerClasses(crate::layer_classes::Event),
     /// Farklı kaydet… (docs/adr/9106).
@@ -258,6 +261,8 @@ pub(crate) enum GisDialogKind {
     DataEdits,
     /// A save that met rows others changed: Üstüne yaz, Vazgeç (data_edits.rs, docs/adr/9104 §3).
     DataConflict,
+    /// Katman değişiklikleri (data_pending.rs, docs/adr/9123); the window is `GisUiState::data_pending`.
+    DataPending,
     /// Farklı kaydet… (layer_export.rs, docs/adr/9106); the window is `GisUiState::layer_export`.
     LayerExport,
     /// Veri kaynağına kaydet / aç (project_store.rs, docs/adr/9107); the window is `GisUiState::project_store`.
@@ -389,6 +394,7 @@ impl App {
             Event::DataInfo(event) => return self.data_info_event(event),
             Event::DataSelection(event) => return self.data_selection_event(event),
             Event::DataEdits(event) => return self.data_edits_event(event),
+            Event::DataPending(event) => return self.data_pending_event(event),
             Event::LayerClasses(event) => return self.layer_classes_event(event),
             Event::LayerExport(event) => return self.layer_export_event(event),
             Event::ProjectStore(event) => return self.project_store_event(event),
@@ -444,6 +450,7 @@ impl App {
         match kind {
             GisDialogKind::DataEdits => self.data_edits_question(),
             GisDialogKind::DataConflict => self.data_conflict_question(),
+            GisDialogKind::DataPending => self.data_pending_view(),
             GisDialogKind::LayerExport => self.layer_export_view(),
             GisDialogKind::ProjectStore => self.project_store_view(),
             GisDialogKind::LayerCreate => self.layer_create_view(),

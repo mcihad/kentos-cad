@@ -282,3 +282,13 @@ numaraları raporunkidir.
     yolsuz kayıt saklar (`kept`).
   - “Kaydet ve kapat” veri kaynağında saklanan projede de kayıttan sonra kapatır.
   - Kalan: gerçek pencerede deneme, web.
+- [x] **VY-22 — Proje kaydı ile kaynağa yazım ayrı (rapor 2, P0).**
+  ([ADR 9123](../docs/adr/9123-project-save-and-source-writes-told-apart.md))
+  - Kaynağa yazılmayan satırlar adın yanında amber rozet ve durum çubuğunda “Kaynağa yazılmadı: n katmanda m satır”
+    hücresidir; projenin noktası yalnız projeyi söyler. Yazım reddedilince hücre tehlike renginde, neden yanında.
+  - Katman değişiklikleri penceresi: katmanlar kaynaklarıyla, satırlar alan alan (kaynakta / bu cihazda); Kaynağa yaz,
+    ikinci basışta Değişiklikleri geri al, Hepsini kaynağa yaz; bekleyenlerin nerede durduğu.
+  - Kapatma sorusu: Kaynağa yaz, Taslak olarak tut, Değişiklikleri geri al, Vazgeç; her birinin etkisi yazılı. Formun
+    Kaydet'i veri katmanında “bekliyor” der.
+  - Günlüğün yeri ilk kayıtta da çözülmüş klasörle hesaplanır (bağlantılı klasörde bekleyenler açılışta geliyor).
+  - Kalan: CBS durum çubuğunun dar penceredeki taşması (rapor 12), çevrimdışı tabloda bekleyenler (rapor 31), web.

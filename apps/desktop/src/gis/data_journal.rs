@@ -128,9 +128,16 @@ pub(crate) struct Kept {
     pub written: u64,
 }
 
-/// A `.kcad` file's place.
+/// A `.kcad` file's place: its path with the links in it resolved. A file not written yet (a project's first save) is
+/// placed by its folder, resolved, and its name: the same place once it is there, so a project saved in a folder reached
+/// through a link (macOS's `/var` is one) finds its journal again when it is opened (docs/adr/9123 §4).
 pub(crate) fn file_place(path: &Path) -> String {
-    std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf()).display().to_string()
+    let resolved = std::fs::canonicalize(path).ok().or_else(|| {
+        let name = path.file_name()?;
+        let folder = path.parent().filter(|f| !f.as_os_str().is_empty()).unwrap_or(Path::new("."));
+        Some(std::fs::canonicalize(folder).ok()?.join(name))
+    });
+    resolved.unwrap_or_else(|| path.to_path_buf()).display().to_string()
 }
 
 /// A project's place in a data source.
@@ -253,13 +260,26 @@ impl App {
         }?;
         let project = doc.model.project_id();
         let result = journals.write(&kept, project);
-        let waiting = kept.layers.iter().map(|p| p.taken.len() + p.deleted.len()).sum::<usize>();
+        // Every row its source does not have yet: the new ones go in the project's file, the taken and deleted ones in
+        // the journal; the project's save writes none of them to their sources (docs/adr/9123).
+        let model = &doc.model;
+        let edited = model.edited_layers();
+        let waiting: Vec<(String, usize)> = model
+            .layers()
+            .leaves()
+            .iter()
+            .filter(|n| edited.contains(&n.id))
+            .map(|n| (n.name.clone(), model.data_changes(&n.id).count()))
+            .filter(|(_, n)| *n > 0)
+            .collect();
+        let rows: usize = waiting.iter().map(|(_, n)| n).sum();
         doc.kept = Some(kept);
         match result {
-            Ok(()) if waiting > 0 => Some((
+            Ok(()) if rows > 0 => Some((
                 kentos_interaction::Level::Info,
                 format!(
-                    "Tabloya yazılmamış {waiting} satır değişikliği projeyle bu cihazda saklandı; proje açılınca geri gelir."
+                    "Proje kaydedildi; katmanlardaki {rows} satır kaynağa yazılmadı ({}). Bu satırlar bu cihazda taslak olarak saklandı, proje burada açılınca geri gelir. Kaynağa yazmak için durum çubuğundaki “Kaynağa yazılmadı”ya tıklayın.",
+                    waiting.iter().map(|(name, n)| format!("{name}: {n}")).collect::<Vec<_>>().join(", ")
                 ),
             )),
             Ok(()) => None,
@@ -322,7 +342,7 @@ impl App {
             self.say(
                 kentos_interaction::Level::Info,
                 format!(
-                    "Bekleyen veri düzenlemeleri geri geldi ({}). Tabloya yazmak için Katmanlar'da katmanın sağ tuşundan Değişiklikleri kaydet'i seçin; başkasının o arada değiştirdiği satırlar kaydederken sorulur.",
+                    "Bekleyen veri düzenlemeleri geri geldi ({}). Kaynağa yazmak için durum çubuğundaki “Kaynağa yazılmadı”ya ya da Katmanlar'da katmanın sağ tuşundan Değişiklikleri kaydet'e tıklayın; başkasının o arada değiştirdiği satırlar kaydederken sorulur.",
                     back.join("; ")
                 ),
             );

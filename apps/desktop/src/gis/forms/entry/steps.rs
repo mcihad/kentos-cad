@@ -772,7 +772,14 @@ impl App {
                     said.push(' ');
                     said.push_str(&self.together_words(committed, &path));
                 }
-                self.say(Level::Success, said);
+                // On a data layer the record waits in the layer until it is written to its source (docs/adr/9123): the
+                // form's Kaydet is not the source's.
+                match self.waiting_words_of(&written_uid) {
+                    Some(waiting) if done.committed.is_none() && !done.changes.is_empty() => {
+                        self.say(Level::Info, format!("{said} {waiting}"));
+                    }
+                    _ => self.say(Level::Success, said),
+                }
                 // A value its layer's style draws nothing for: the object leaves the map, said (not taken for deleted).
                 if let Some(note) = self.unstyled_note(&[written_uid]) {
                     self.say(Level::Warn, note);

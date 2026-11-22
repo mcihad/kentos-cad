@@ -1513,6 +1513,9 @@ mod data_edits_tests;
 #[path = "gis/data_journal_tests.rs"]
 mod data_journal_tests;
 #[cfg(test)]
+#[path = "gis/data_pending_tests.rs"]
+mod data_pending_tests;
+#[cfg(test)]
 #[path = "gis/layer_export_memory_tests.rs"]
 mod layer_export_memory_tests;
 #[cfg(test)]
@@ -1528,6 +1531,8 @@ mod data_labels;
 mod data_selection;
 #[path = "gis/data_edits.rs"]
 mod data_edits;
+#[path = "gis/data_pending.rs"]
+mod data_pending;
 #[path = "gis/data_journal.rs"]
 mod data_journal;
 #[path = "gis/data_pick.rs"]

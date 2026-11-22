@@ -1,13 +1,13 @@
 //! A data layer's edit session in the window (docs/adr/9103 §5, plan/veri.md VY-05): Katmanlar's Düzenlemeyi başlat and
 //! Düzenlemeyi bitir on a data layer, Değişiklikleri kaydet and Değişiklikleri geri al on it or on every edited layer,
-//! the question when a layer with changes stops being edited or the drawing is left (Kaydet, Kaydetme, Vazgeç; leaving, also
-//! Projede tut: the changes wait with the project, docs/adr/9111 §3), and the
-//! save off the interface's thread: the layer's changes read off the drawing (`data_write::writes_of`), written to its
+//! the question when a layer with changes stops being edited or the drawing is left (Kaynağa yaz, Değişiklikleri geri al,
+//! Vazgeç; leaving, also Taslak olarak tut: the changes wait with the project on this device, docs/adr/9111 §3, 9123),
+//! and the save off the interface's thread: the layer's changes read off the drawing (`data_write::writes_of`), written to its
 //! table on a thread of its own in one transaction (`data_write::write`), taken out of the drawing once written
 //! (`Document::data_saved`). A save the table refuses leaves the changes as they were and says why, selecting the
 //! object at fault when one was. Opening, letting go and closing go through `cad.layers.session`.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 
 use iced::{Element, Task};
 use kentos_commands::{CommandResult, LayersSession, LayersSessionDone, SessionAction};
@@ -30,9 +30,19 @@ pub(crate) struct DataEdits {
     pending: Option<(u64, crate::approved_layer::Approved)>,
     /// A save that met rows others changed (docs/adr/9104 §3): its layers and the words; Üstüne yaz writes over them.
     pub(crate) conflict: Option<(Vec<String>, String)>,
-    /// Projede tut answered for this leaving: the drawing is left without its changes being asked about again; they wait
+    /// Taslak olarak tut answered for this leaving: the drawing is left without its changes being asked about again; they wait
     /// with the project (docs/adr/9111 §3).
     kept_for: Option<Then>,
+    /// Why the last write of a layer's changes to its source did not go, by layer, while they wait (docs/adr/9123):
+    /// the status bar's cell and Katman değişiklikleri say it; a write that goes, or the changes let go, clear it.
+    failed: BTreeMap<String, String>,
+}
+
+impl DataEdits {
+    /// Why the last write of `layer`'s changes did not go, while they wait.
+    pub(crate) fn failed_of(&self, layer: &str) -> Option<&str> {
+        self.failed.get(layer).map(String::as_str)
+    }
 }
 
 /// The question: these layers have changes; what comes after the answer.
@@ -57,7 +67,7 @@ pub enum Answer {
     Save,
     Discard,
     Cancel,
-    /// Projede tut (leaving only): the changes are not written; saved with the project, they come back when it is opened
+    /// Taslak olarak tut (leaving only): the changes are not written; saved with the project, they come back when it is opened
     /// (docs/adr/9111 §3).
     Keep,
 }
@@ -233,11 +243,16 @@ impl App {
                     return Task::none();
                 }
                 let names: Vec<String> = modified.iter().map(|l| self.data_layer_name(l)).collect();
-                match self.data_session(SessionAction::Rollback, modified) {
-                    Ok(_) => self.output(format!(
-                        "Katman değişiklikleri geri alındı ({}): tablo olduğu gibi kaldı.",
-                        names.join(", ")
-                    )),
+                match self.data_session(SessionAction::Rollback, modified.clone()) {
+                    Ok(_) => {
+                        for l in &modified {
+                            self.gis.data_edits.failed.remove(l);
+                        }
+                        self.output(format!(
+                            "Katman değişiklikleri geri alındı ({}): kaynak olduğu gibi kaldı.",
+                            names.join(", ")
+                        ))
+                    }
                     Err(why) => self.warn(why),
                 }
                 Task::none()
@@ -250,6 +265,9 @@ impl App {
     /// Closes the layers' sessions (their changes saved or let go).
     fn stop_data_layers(&mut self, layers: Vec<String>) {
         let names: Vec<String> = layers.iter().map(|l| self.data_layer_name(l)).collect();
+        for l in &layers {
+            self.gis.data_edits.failed.remove(l);
+        }
         match self.data_session(SessionAction::Stop, layers) {
             Ok(_) => self.output(format!("Düzenleme bitti: {}.", names.join(", "))),
             Err(why) => self.warn(why),
@@ -274,7 +292,7 @@ impl App {
                 };
                 self.gis.data_edits.kept_for = Some(then);
                 self.output(
-                    "Katman değişiklikleri tabloya yazılmadı; proje kaydedilince bu cihazda projeyle saklanır, proje açılınca geri gelir.",
+                    "Katman değişiklikleri kaynağa yazılmadı; proje kaydedilince bu cihazda taslak olarak saklanır, proje bu bilgisayarda açılınca geri gelir.",
                 );
                 self.leave(then)
             }
@@ -297,7 +315,10 @@ impl App {
                     self.warn(why);
                     return Task::none();
                 }
-                self.output(format!("Katman değişiklikleri kaydedilmedi ({}).", names.join(", ")));
+                for l in &ask.layers {
+                    self.gis.data_edits.failed.remove(l);
+                }
+                self.output(format!("Katman değişiklikleri geri alındı ({}): kaynak olduğu gibi kaldı.", names.join(", ")));
                 match ask.after {
                     After::Stop => Task::none(),
                     After::Leave(then) => self.leave(then),
@@ -377,20 +398,27 @@ impl App {
                         .map(|d| d.model.data_saved(&w.layer, written))
                         .unwrap_or(Ok(()));
                     match taken {
-                        Ok(()) => said.push(format!("“{}”: {words}", w.name)),
+                        Ok(()) => {
+                            self.gis.data_edits.failed.remove(&w.layer);
+                            said.push(format!("“{}”: {words}", w.name));
+                        }
                         Err(why) => self.warn(why),
                     }
                 }
                 if !said.is_empty() {
                     let names: Vec<String> = group.iter().map(|w| format!("“{}”", w.name)).collect();
                     let title = format!("{} kaydedildi", names.join(", "));
-                    let body = format!("{} tabloya yazıldı.", said.join("; "));
+                    let body = format!("{} kaynağa yazıldı.", said.join("; "));
                     self.say(kentos_interaction::Level::Success, format!("{title}: {body}"));
                     self.toast_saved(title, body);
                 }
             }
             Err(failure) => {
                 self.gis.data_edits.after = None;
+                // The changes wait as they were; the status bar and Katman değişiklikleri say why (docs/adr/9123).
+                for id in &ids {
+                    self.gis.data_edits.failed.insert(id.clone(), failure.message().to_owned());
+                }
                 match &failure {
                     WriteFailure::Conflict(words, uids) => {
                         self.select_data_objects(uids);
@@ -496,27 +524,31 @@ impl App {
             .collect();
         let title = match ask.after {
             After::Stop => "Düzenlemeyi bitir",
-            After::Leave(_) => "Kaydedilmemiş katman değişiklikleri",
+            After::Leave(_) => "Kaynağa yazılmamış katman değişiklikleri",
         };
-        // Leaving a project kept on this computer, the changes may wait with it (docs/adr/9111 §3).
+        // Leaving a project kept on this computer, the changes may wait with it (docs/adr/9111 §3); each answer says
+        // what it does to the source and to this device (docs/adr/9123).
         let can_keep = matches!(ask.after, After::Leave(_))
             && self.document.as_ref().is_some_and(|d| d.cloud_source().is_none());
         let keeps = if can_keep {
-            " Projede tut, tabloya yazmadan projeyle saklar: proje açılınca geri gelir."
+            " Taslak olarak tut kaynağa yazmaz: proje kaydedilince değişiklikler bu bilgisayarda saklanır, proje burada \
+             açılınca geri gelir; proje dosyasını başka bir bilgisayara kopyalamak onları taşımaz."
         } else {
             ""
         };
         let question =
             kentos_ui::widget::Confirm::new(title, message(Event::Answer(Answer::Discard)), message(Event::Answer(Answer::Cancel)))
-                .message(format!("{whose} değişiklikler tablosuna kaydedilsin mi?"))
+                .message(format!("{whose} değişiklikler kaynağa yazılsın mı?"))
                 .detail(format!(
-                    "{} Kaydetmezseniz bu değişiklikler bırakılır; tablo olduğu gibi kalır.{keeps}",
+                    "{} Kaynağa yaz satırları yazar; başka kullanıcılar ve programlar onları o zaman görür. Değişiklikleri \
+                     geri al onları bırakır; kaynak olduğu gibi kalır.{keeps}",
                     detail.join(" ")
                 ))
-                .confirm("Kaydetme")
+                .confirm("Değişiklikleri geri al")
                 .destructive()
-                .keep("Kaydet", message(Event::Answer(Answer::Save)));
-        let question = if can_keep { question.also("Projede tut", message(Event::Answer(Answer::Keep))) } else { question };
+                .keep("Kaynağa yaz", message(Event::Answer(Answer::Save)));
+        let question =
+            if can_keep { question.also("Taslak olarak tut", message(Event::Answer(Answer::Keep))) } else { question };
         kentos_ui::widget::overlay::modal(question, message(Event::Answer(Answer::Cancel)))
     }
 }

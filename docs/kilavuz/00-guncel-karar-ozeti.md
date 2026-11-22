@@ -70,6 +70,10 @@
     [ADR 9122](../adr/9122-geopackage-looked-at-unchanged.md), VY-21): projesi olmayan dosya bellekte açılır
     (`Source::Offered`). İlk Kaydet dosyayı ve adı gösterip projeyi dosyanın içinde saklar. Headless'ta yolsuz kayıt
     saklar. Veri kaynağındaki projede “Kaydet ve kapat” kayıttan sonra kapatır.
+  - **Proje kaydı ile kaynağa yazım ayrı** (22 Kasım, değerlendirmenin 2. maddesi;
+    [ADR 9123](../adr/9123-project-save-and-source-writes-told-apart.md), VY-22): kaynağa yazılmayan satırlar adın
+    yanında rozet ve durum çubuğunda hücredir; Katman değişiklikleri penceresi satırları alan alan gösterir, kaynağa
+    yazar ya da geri alır. Kapatma sorusunun seçenekleri Kaynağa yaz, Taslak olarak tut, Değişiklikleri geri al'dır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
