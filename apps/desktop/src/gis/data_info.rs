@@ -44,6 +44,8 @@ pub struct State {
     pub cells: Vec<crate::rasters::cell_info::Cell>,
     /// The card shows the first cell, not the object or the row.
     pub showing_raster: bool,
+    /// The objects under the last click on an object, the first the click's (docs/adr/9145).
+    pub hits: Vec<kentos_domain::Slot>,
 }
 
 /// What the tables said.
@@ -261,8 +263,9 @@ impl App {
                 .map(|f| (f.name.clone(), attrs.get(&f.name).cloned().unwrap_or_default()))
                 .collect();
         }
+        // The layer too: a card template's title may not name it (docs/adr/9145).
         card.source = Some((
-            format!("{} · {} {}", data.place_words(), data.key, found.key),
+            format!("{} katmanı · {} · {} {}", node.name, data.place_words(), data.key, found.key),
             false,
         ));
         let actions = if card.actions {

@@ -1950,6 +1950,14 @@ impl Session {
         self.settle(cx);
     }
 
+    /// The object Bilgi's card went to among the click's hits (docs/adr/9145): the tool rings it.
+    pub fn info_shown(&mut self, slot: kentos_domain::Slot, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.info_shown(slot, cx);
+        }
+        self.settle(cx);
+    }
+
     /// A network's answer goes to the running tool (Ağ analizi, docs/adr/0209 §12).
     pub fn network_answered(&mut self, reply: crate::network::NetworkReply, cx: &mut Context<'_>) {
         if let Some(tool) = self.tool.as_mut() {

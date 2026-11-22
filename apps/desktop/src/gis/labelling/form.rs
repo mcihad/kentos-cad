@@ -126,6 +126,8 @@ pub struct Host<'a> {
     pub dictionary: &'a text_editor::Content,
     /// The view's scale now, 1:N (Şimdiki).
     pub view_scale: f64,
+    /// The fields the template's picker offers (docs/adr/9145).
+    pub fields: &'a [String],
 }
 
 /// A change of a control applied to the style (the web's patches, field for field).
@@ -254,7 +256,7 @@ pub fn apply(s: &mut LabelStyle, edit: Edit) {
 }
 
 /// A number as the field shows it.
-fn shown(v: f64) -> String {
+pub(super) fn shown(v: f64) -> String {
     format!("{v}")
 }
 
@@ -311,7 +313,7 @@ pub fn value_text(s: &LabelStyle, key: Key) -> String {
 
 /// A range's end held in pixels a metre, as the window shows it: the N of 1:N, its thousands with dots (the status
 /// bar's way); empty for none.
-fn denominator_text(px: Option<f64>) -> String {
+pub(super) fn denominator_text(px: Option<f64>) -> String {
     px.filter(|p| p.is_finite() && *p > 0.0)
         .map(|p| {
             let n = kentos_geometry_core::scale::denominator(p).round() as u64;
@@ -675,10 +677,28 @@ fn text_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
             Some("İfadeyle seç’in dili; $etiket nesnenin etiketi. $sıra ve $ölçek kullanılamaz."),
         )
     } else {
+        // Alan ekle: the layer's fields, each written into the template as {name} (docs/adr/9145).
+        let template: Element<'a, Message> = if h.fields.is_empty() {
+            h.input(Key::Template, "{label}", None)
+        } else {
+            let picker = Select::new(
+                h.fields.iter().map(|f| Choice::new(f.clone())),
+                None,
+                |i| msg(Event::Field(i)),
+            )
+            .placeholder(super::ADD_FIELD);
+            row![
+                h.input(Key::Template, "{label}", None),
+                container(picker).width(typography::scaled(150.0))
+            ]
+            .spacing(4)
+            .align_y(Center)
+            .into()
+        };
         row_of(
             "Şablon",
-            h.input(Key::Template, "{label}", None),
-            Some("{label}: nesnenin etiketi; {Ad} gibi öznitelikler de yazılır."),
+            template,
+            Some("{label}: nesnenin etiketi; {Ad} gibi öznitelikler de yazılır. Alan ekle şablona alanı yazar."),
         )
     };
     let align = match s.align.unwrap_or(LabelAlign::Center) {

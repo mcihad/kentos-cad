@@ -6,7 +6,8 @@
 //! leaves. The object is the click's first candidate (docs/adr/0187 §1).
 //! A click on no object of the drawing asks the host for the shown data
 //! layers' row under it (docs/adr/9101 §6): its card is the host's, its ring
-//! the tool's.
+//! the tool's. The click's other objects go to the host too: its card says
+//! how many are under the click and goes to the next (docs/adr/9145).
 
 use kentos_domain::Slot;
 use kentos_native_application::geometry::shape;
@@ -86,6 +87,12 @@ impl Tool for IdentifyTool {
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let reach = cx.pick_tolerance();
         let hit = cx.spatial.pick(p.raw, reach);
+        if let Some(first) = hit {
+            // The click's objects, the card's first: the pick's own first, then the others in the hits' order.
+            let mut hits = vec![first];
+            hits.extend(cx.spatial.hits(p.raw, reach).into_iter().filter(|s| *s != first));
+            cx.view_changes.push(ViewChange::InfoHits(hits));
+        }
         self.show(hit.map(|s| (s, p.raw)), cx);
         if hit.is_none() {
             cx.view_changes.push(ViewChange::DataInfo { at: p.raw, reach });
@@ -95,6 +102,12 @@ impl Tool for IdentifyTool {
     fn data_found(&mut self, found: Option<&kentos_commands::Entity>, _cx: &mut Context<'_>) {
         self.row = found.is_some();
         self.drawn = found.map(ring).unwrap_or_default();
+    }
+
+    fn info_shown(&mut self, slot: Slot, cx: &mut Context<'_>) {
+        self.shown = Some(slot);
+        self.row = false;
+        self.drawn = cx.doc.get(slot).map(ring).unwrap_or_default();
     }
 
     fn input(&mut self, _text: &str, _cx: &mut Context<'_>) -> bool {

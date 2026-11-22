@@ -415,3 +415,8 @@ numaraları raporunkidir.
   ([ADR 9144](../docs/adr/9144-processing-inputs-follow-the-drawing.md))
   - Son değerlerden nesne girdileri ve sonuç adı çıkar; seçim ya da aracın varsayılanı; `input_empty` Çalıştır'ı kapatır.
   - Kalan: türetilmiş ad, seçim satırı, iş kaydı, sınamalar, web.
+- [~] **VY-44 — Etiket denetimi adayları ve nedenleri söyler; Bilgi örtüşen nesneleri sayar (rapor 13, P1).**
+  ([ADR 9145](../docs/adr/9145-label-candidates-and-overlapping-hits.md))
+  - `labelling/candidates.rs`: adaylar, örnek metin, ayrı nedenler, katmanda olmayan şablon alanı; Alan ekle.
+  - Kartın altında katman ve kimlik; `ViewChange::InfoHits` ile “Bu noktada N nesne · i/N” ve Sonraki.
+  - Kalan: görüntüleme alanı, nesne ile veri satırının birlikte sayılması, etiket önizlemesi, veri katmanında etiket, web.

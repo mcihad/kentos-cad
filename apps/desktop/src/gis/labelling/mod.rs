@@ -14,7 +14,8 @@
 //!   (`graphics.pinnedLabels`, `graphics.unplacedLabels`); the drawing does
 //!   not change (app.rs).
 
-mod form;
+mod candidates;
+pub(crate) mod form;
 
 use crate::gis;
 use std::collections::{HashMap, HashSet};
@@ -53,6 +54,8 @@ const CANCEL: &str = "Vazgeç";
 const SAVE: &str = "Kaydet";
 const REPORT: &str = "Denetle";
 const REPORT_AT: &str = "Denetle ölçeği";
+/// The template's field picker (docs/adr/9145).
+const ADD_FIELD: &str = "Alan ekle";
 /// The most classes a layer's labelling has (`LABEL_CLASSES_MAX`).
 const CLASSES_MAX: usize = 64;
 /// Why a command has no layer to label.
@@ -110,6 +113,8 @@ pub struct Window {
     ready: bool,
     /// Where Denetle counts (docs/adr/0636 §7): its place in [`App::report_scopes`]; 0, the view at its scale.
     report_at: usize,
+    /// The fields the template's picker offers (docs/adr/9145): the layer's declared ones, then its objects' attributes.
+    fields: Vec<String>,
 }
 
 /// A scale and ground Denetle counts at: its words, the paper scale (none: the view's) and the ground (none: the view).
@@ -144,6 +149,8 @@ pub enum Event {
     Report,
     /// Denetle ölçeği: where Denetle counts (docs/adr/0636 §7).
     ReportAt(usize),
+    /// Alan ekle: the picker's field at this place written into the template (docs/adr/9145).
+    Field(usize),
     Cancel,
 }
 
@@ -298,6 +305,11 @@ impl App {
                 style: single.clone(),
             }];
         }
+        let fields = self
+            .document
+            .as_ref()
+            .map(|d| candidates::picker_fields(&d.model, &layer))
+            .unwrap_or_default();
         let mut w = Window {
             layer,
             mode: labels.as_ref().map_or(LabelsMode::Single, |l| l.mode),
@@ -312,6 +324,7 @@ impl App {
             lines: Vec::new(),
             ready: false,
             report_at: self.gis.labelling_report_at,
+            fields,
         };
         w.rebuild(false);
         self.labelling_check(&mut w);
@@ -384,7 +397,44 @@ impl App {
             .layers()
             .get(&w.layer)
             .map_or_else(|| w.layer.clone(), |n| n.name.clone());
-        w.lines = vec![(Kind::Ok, format!("{name}: {n} nesne, {what}{obstacle}."))];
+        let mut lines = vec![(Kind::Ok, format!("{name}: {n} nesne, {what}{obstacle}."))];
+        // The text the layer's first objects take as typed, and a template's field the layer does not have
+        // (docs/adr/9145).
+        if w.mode != LabelsMode::Off
+            && let Some(node) = self.draft_layer(w)
+        {
+            match candidates::sample(&doc.model, &node) {
+                Some((text, 0)) => lines.push((Kind::Info, format!("Örnek metin (ilk nesne): “{text}”."))),
+                Some((text, before)) => lines.push((
+                    Kind::Info,
+                    format!("Örnek metin: “{text}”; ilk {before} nesnenin metni boş."),
+                )),
+                None if n > 0 => lines.push((
+                    Kind::Warn,
+                    format!("İlk {} nesnenin etiket metni boş.", n.min(candidates::SAMPLE_OBJECTS)),
+                )),
+                None => {}
+            }
+            let unknown = candidates::unknown_fields(&doc.model, &node);
+            if !unknown.is_empty() {
+                lines.push((Kind::Warn, candidates::unknown_words(&unknown, &w.fields)));
+            }
+        }
+        w.lines = lines;
+    }
+
+    /// The layer as the window would write it: the drawing's node with the window's labelling.
+    fn draft_layer(&self, w: &Window) -> Option<kentos_commands::LayerNode> {
+        let doc = self.document.as_ref()?;
+        let mut node = doc.model.layers().get(&w.layer)?.clone();
+        let given = w.input();
+        if let Some(label) = given.label {
+            node.style.label = label;
+        }
+        if let Some(labels) = given.labels {
+            node.style.labels = labels;
+        }
+        Some(node)
     }
 
     pub(crate) fn labelling_event(&mut self, event: Event) -> Task<Message> {
@@ -537,6 +587,23 @@ impl App {
                 self.gis.labelling = Some(w);
                 return Task::none();
             }
+            Event::Field(i) => {
+                if let Some(name) = w.fields.get(i).cloned() {
+                    let now = w
+                        .typed
+                        .get(&Key::Template)
+                        .cloned()
+                        .unwrap_or_else(|| form::value_text(w.current(), Key::Template));
+                    let typed = if now.trim().is_empty() {
+                        format!("{{{name}}}")
+                    } else {
+                        format!("{now} {{{name}}}")
+                    };
+                    form::typed(w.current_mut(), Key::Template, &typed);
+                    w.typed.insert(Key::Template, typed);
+                    w.invalid.remove(&Key::Template);
+                }
+            }
             Event::Cancel => {
                 self.dialog = None;
                 return Task::none();
@@ -584,7 +651,7 @@ impl App {
             window: Some(window),
             layers: Some(vec![w.layer.clone()]),
         };
-        let draft = match layers_labels::plan(&ExecutionContext::new(&mut doc.model), &w.input()) {
+        let draft_node = match layers_labels::plan(&ExecutionContext::new(&mut doc.model), &w.input()) {
             CommandResult::Completed { output, .. } => output.node,
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
@@ -594,7 +661,7 @@ impl App {
         // The bands round the parts are the ones the drawing is drawn with: no file is read on this thread.
         let bands = self.bands.given(&doc.model);
         let draft = labels_report::Draft {
-            layer: Some(&draft),
+            layer: Some(&draft_node),
             texts: Some(texts),
         };
         let mut lines = match labels_report::execute_with(
@@ -605,8 +672,11 @@ impl App {
         ) {
             CommandResult::Completed { output, .. } => {
                 let t = &output.totals;
+                // Nothing counted is no success: the candidates' lines below say why (docs/adr/9145).
                 let mut lines = vec![(
-                    if t.collisions == 0 && t.unplaced == 0 {
+                    if t.placed + t.unplaced + t.hidden == 0 {
+                        Kind::Info
+                    } else if t.collisions == 0 && t.unplaced == 0 {
                         Kind::Ok
                     } else {
                         Kind::Warn
@@ -626,6 +696,14 @@ impl App {
                         "{} etiket çifti gerçekten örtüşüyor, {} etiket yineleniyor.",
                         t.collisions, t.repeats
                     ),
+                ));
+                // The candidates before the engine, a sample of their text and each reason apart (docs/adr/9145).
+                let found = candidates::count(&doc.model, &draft_node, window, scale);
+                lines.extend(candidates::lines(
+                    &found,
+                    scale,
+                    t.placed + t.unplaced + t.hidden == 0,
+                    t.unplaced,
                 ));
                 if output.layers.iter().any(|l| l.partial) {
                     lines.push((
@@ -799,6 +877,7 @@ impl App {
             invalid: &w.invalid,
             dictionary: &w.dictionary,
             view_scale: self.viewport.camera.screen_scale(),
+            fields: &w.fields,
         };
         let tabs = Tabs::new(
             form::TABS.map(|(_, words)| TabFace::new(words).closable(false)),
@@ -946,7 +1025,7 @@ impl App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step): Katman by its path,
-    /// Etiketleme's modes, Uygula, Kaydet, Vazgeç.
+    /// Etiketleme's modes, Alan ekle by the field's name, Uygula, Kaydet, Vazgeç.
     pub(crate) fn labelling_control(
         &self,
         control: Control<'_>,
@@ -967,6 +1046,14 @@ impl App {
                 .iter()
                 .find(|(_, m, _)| *m == words)
                 .map(|(mode, _, _)| msg(Event::Mode(*mode))),
+            Control::Fill(ADD_FIELD, words) => {
+                let i = w
+                    .fields
+                    .iter()
+                    .position(|f| f == words)
+                    .ok_or_else(|| format!("“{TITLE}” penceresinde “{words}” alanı yok"))?;
+                Some(msg(Event::Field(i)))
+            }
             Control::Press(APPLY) => w.ready.then(|| msg(Event::Apply)),
             Control::Press(REPORT) => Some(msg(Event::Report)),
             Control::Press(SAVE) => w.ready.then(|| msg(Event::Save)),
@@ -1026,3 +1113,7 @@ fn labelling_obstacle(w: &Window) -> Element<'_, Message> {
         .spacing(10)
         .into()
 }
+
+#[cfg(test)]
+#[path = "no_label_tests.rs"]
+mod no_label_tests;

@@ -270,7 +270,14 @@ impl App {
             .get(&e.base().layer_id)
             .and_then(|n| n.card.as_ref());
         let mut out = self.object_card(e, card);
-        out.source = source_line(&doc.model, slot);
+        // Under the title, which layer and which record it is (docs/adr/9145): the bound table's line when it has one,
+        // else the layer and the object's lasting id, so two layers' objects under one click are told apart. The id's
+        // last eight digits: its first are the time it was made, the same for objects made together.
+        out.source = source_line(&doc.model, slot).or_else(|| {
+            let uid = doc.model.uid(slot)?.to_string();
+            let tail = &uid[uid.len().saturating_sub(8)..];
+            Some((format!("{} katmanı · kimlik …{tail}", self.layer_name(&e.base().layer_id)), false))
+        });
         Some(out)
     }
 }

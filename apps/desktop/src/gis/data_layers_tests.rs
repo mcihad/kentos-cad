@@ -232,7 +232,9 @@ fn bilgi_on_no_object_asks_the_data_layers_and_shows_the_row_read_from_its_table
     assert_eq!(card.rows[0].1, "101");
     assert_eq!(card.rows[1].1, "Park");
     assert!(
-        card.source.as_ref().is_some_and(|(line, _)| line.ends_with("› parseller · fid 22")),
+        card.source
+            .as_ref()
+            .is_some_and(|(line, _)| line.starts_with("parseller katmanı · ") && line.ends_with("› parseller · fid 22")),
         "{:?}",
         card.source
     );

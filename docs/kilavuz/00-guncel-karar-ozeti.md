@@ -138,6 +138,10 @@
   - **İşlemin girdisi çizimi izler** (22 Kasım, değerlendirmenin 11. maddesi;
     [ADR 9144](../adr/9144-processing-inputs-follow-the-drawing.md), VY-43): son çalıştırmanın girdisi ve sonuç adı geri
     gelmez; seçim ya da aracın varsayılanı; boş girdide Çalıştır kapalı.
+  - **Etiket adayları ve örtüşen nesneler** (22 Kasım, değerlendirmenin 13. maddesi;
+    [ADR 9145](../adr/9145-label-candidates-and-overlapping-hits.md), VY-44): Denetle adayları, örnek metni ve her
+    nedeni ayrı söyler; şablona Alan ekle; Bilgi kartı katmanı ve kimliği yazar, tıklamanın altındaki nesneleri sayıp
+    Sonraki ile gezer.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

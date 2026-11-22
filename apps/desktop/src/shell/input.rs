@@ -358,10 +358,13 @@ impl App {
                     } else {
                         self.gis.data_info.cells.clear();
                         self.gis.data_info.showing_raster = false;
+                        self.gis.data_info.hits.clear();
                     }
                     self.info_card = card;
                     self.gis.data_info.card = None;
                 }
+                // The objects under Bilgi's click: the card counts them and goes to the next (docs/adr/9145).
+                ViewChange::InfoHits(hits) => self.gis.data_info.hits = hits,
                 // Bilgi's click on no object of the drawing: the data layers asked after the update (data_info.rs).
                 ViewChange::DataInfo { at, reach } => self.gis.data_info.wanted.push((at, reach)),
                 // Seç's click on no object, or its box: the data layers asked after the update (data_pick.rs).

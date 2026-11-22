@@ -41,6 +41,13 @@ pub enum Event {
     Copy(String),
     /// The raster's value under the click shown (true), or the object or the row again (docs/adr/9137).
     Raster(bool),
+    /// Sonraki: the next of the objects under the click (docs/adr/9145).
+    Next,
+}
+
+/// The words of the hits under a click: how many, and which is shown.
+pub(crate) fn hits_words(shown: usize, count: usize) -> String {
+    format!("Bu noktada {count} nesne · {shown}/{count}")
 }
 
 fn msg(e: Event) -> Message {
@@ -251,7 +258,27 @@ impl App {
                 };
                 let views = self.attachment_views(slot);
                 let count = views.len();
-                (card_body(self, &card, Shown::Object(slot, views), &actions, count), at)
+                let body = card_body(self, &card, Shown::Object(slot, views), &actions, count);
+                // Overlapping objects under the click: how many, which, and the next (docs/adr/9145).
+                let hits = &self.gis.data_info.hits;
+                let body: Element<'_, Message> = match hits.iter().position(|s| *s == slot) {
+                    Some(i) if hits.len() > 1 => column![
+                        body,
+                        row![
+                            container(label::caption(hits_words(i + 1, hits.len()))).width(Fill),
+                            button(label::caption("Sonraki"))
+                                .on_press(msg(Event::Next))
+                                .padding(kentos_ui::theme::metrics::action_small())
+                                .style(style::button::secondary),
+                        ]
+                        .spacing(8)
+                        .align_y(Center),
+                    ]
+                    .spacing(8)
+                    .into(),
+                    _ => body,
+                };
+                (body, at)
             }
             (None, None) => {
                 let (card, actions, at) = self.data_card()?;
@@ -280,12 +307,29 @@ impl App {
     pub(crate) fn info_card_event(&mut self, e: Event) -> iced::Task<Message> {
         match e {
             Event::Raster(to) => self.gis.data_info.showing_raster = to && !self.gis.data_info.cells.is_empty(),
+            Event::Next => {
+                // The next hit that is still in the drawing, round to the first.
+                let next = self.info_card.and_then(|(slot, at)| {
+                    let hits = &self.gis.data_info.hits;
+                    let i = hits.iter().position(|s| *s == slot)?;
+                    let doc = self.document.as_ref()?;
+                    (1..hits.len())
+                        .map(|k| hits[(i + k) % hits.len()])
+                        .find(|s| doc.model.get(*s).is_some())
+                        .map(|s| (s, at))
+                });
+                if let Some((slot, at)) = next {
+                    self.info_card = Some((slot, at));
+                    self.with_tool(|s, cx| s.info_shown(slot, cx));
+                }
+            }
             Event::Close => {
                 let row = self.info_card.is_none() && self.gis.data_info.card.is_some();
                 self.info_card = None;
                 self.gis.data_info.card = None;
                 self.gis.data_info.cells.clear();
                 self.gis.data_info.showing_raster = false;
+                self.gis.data_info.hits.clear();
                 if row {
                     self.with_tool(|s, cx| s.data_found(None, cx));
                 }
@@ -348,3 +392,7 @@ impl App {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "info_card_tests.rs"]
+mod info_card_tests;

@@ -157,6 +157,9 @@ pub enum ViewChange {
     /// Bilgi's card (docs/adr/0225 §5): the object it shows and the drawing's
     /// point it was clicked at, or none (closed).
     InfoCard(Option<(kentos_domain::Slot, Vec2)>),
+    /// The objects under Bilgi's click, the card's first (docs/adr/9145): the card says how many and goes to the next
+    /// with [`Tool::info_shown`]. Pushed before the click's [`ViewChange::InfoCard`].
+    InfoHits(Vec<kentos_domain::Slot>),
     /// Bilgi's click on no object of the drawing (docs/adr/9101 §6): the host
     /// asks the shown data layers' tables for the row under `at` within
     /// `reach` (world units), shows its card and gives the row back with
@@ -1984,6 +1987,8 @@ pub trait Tool {
     fn cloud_found(&mut self, _found: Option<[f64; 3]>, _cx: &mut Context<'_>) {}
     /// The data layer's row found under Bilgi's click ([`ViewChange::DataInfo`]), as an object of no drawing, or none.
     fn data_found(&mut self, _found: Option<&kentos_commands::Entity>, _cx: &mut Context<'_>) {}
+    /// The object Bilgi's card went to among the click's hits ([`ViewChange::InfoHits`], docs/adr/9145).
+    fn info_shown(&mut self, _slot: kentos_domain::Slot, _cx: &mut Context<'_>) {}
     /// A network's answer to a question the tool asked ([`ViewChange::Network`]).
     fn network_answered(&mut self, _reply: crate::network::NetworkReply, _cx: &mut Context<'_>) {}
     /// The answer of the values it asked for ([`ViewChange::AttributeValues`]):
