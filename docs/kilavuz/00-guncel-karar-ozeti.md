@@ -135,6 +135,9 @@
   - **Uyan işleyiciler önce** (22 Kasım, değerlendirmenin 10. maddesi;
     [ADR 9143](../adr/9143-renderers-by-geometry-and-unclassed-values.md), VY-42): katman stili geometriye uyanları
     önce sunar; kategoriye girmeyen nesneler sayısı ve iki çaresiyle söylenir.
+  - **İşlemin girdisi çizimi izler** (22 Kasım, değerlendirmenin 11. maddesi;
+    [ADR 9144](../adr/9144-processing-inputs-follow-the-drawing.md), VY-43): son çalıştırmanın girdisi ve sonuç adı geri
+    gelmez; seçim ya da aracın varsayılanı; boş girdide Çalıştır kapalı.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

@@ -2530,6 +2530,8 @@ Liste:
   Düzenlemeyi başlat sunsun; yüklenen satırı toplamdan ayırsın.
 - [ ] Uyan işleyiciler önce (ADR 9143, 22 Kasım 2026): web'in katman stili geometriye uyan işleyicileri önce sunsun;
   kategoriye girmeyen nesneleri sayısıyla söylesin.
+- [ ] İşlemin girdisi çizimi izler (ADR 9144, 22 Kasım 2026): web'in araç penceresi son çalıştırmanın girdisini ve sonuç
+  adını getirmesin; girdi boşken Çalıştır kapalı olsun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

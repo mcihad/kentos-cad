@@ -434,10 +434,13 @@ impl App {
         // 2026). Values given (a model's step, a batch row) stay as they are.
         let stored = values.or_else(|| {
             let last = self.gis.processing.memory.last_values(&tool.id).cloned();
-            last.map(without_kind_narrowing)
+            // What the run reads follows the drawing now, not the last run (docs/adr/9144): the selection when there
+            // is one, else the active layer; the last run's result name does not come back.
+            Some(self.inputs_now(&tool, last.map(without_kind_narrowing).unwrap_or_default()))
         });
         let mut window =
             ToolDialog::new(tool, stored.as_ref(), explicit, &Defaults::of(&doc.model));
+
         window.propose_layers(&doc.model, stored.as_ref());
         window.reread_files();
         window.environment = self.gis.processing.environment.clone();
@@ -1311,6 +1314,36 @@ impl App {
 }
 
 /// Values without the kind narrowing of their features fields (a scope's `kinds`), the rest as it was.
+impl App {
+    /// The last values with each features input following the drawing now (docs/adr/9144): the selection when there is
+    /// one and the input takes it, else the tool's own default; a result layer's remembered name goes (the tool's own
+    /// comes back).
+    fn inputs_now(&self, tool: &kentos_processing::Tool, mut values: Values) -> Values {
+        let selected = !self.selection.is_empty();
+        for p in &tool.parameters {
+            match &p.kind {
+                kentos_processing::ParamKind::Features { scopes, .. } => {
+                    let offers = |k: kentos_processing::ScopeKind| scopes.as_ref().is_none_or(|s| s.contains(&k));
+                    if selected && offers(kentos_processing::ScopeKind::Selection) {
+                        values.insert(p.name.clone(), json!({ "scope": "selection" }));
+                    } else {
+                        // The tool's own default (the active layer, or a layer holding what it takes): not the last
+                        // run's layer.
+                        values.remove(&p.name);
+                    }
+                }
+                kentos_processing::ParamKind::Layer { .. }
+                    if values.get(&p.name).and_then(|v| v.get("newName")).is_some() =>
+                {
+                    values.remove(&p.name);
+                }
+                _ => {}
+            }
+        }
+        values
+    }
+}
+
 fn without_kind_narrowing(mut values: Values) -> Values {
     for value in values.values_mut() {
         if let Some(o) = value.as_object_mut()
@@ -1321,3 +1354,7 @@ fn without_kind_narrowing(mut values: Values) -> Values {
     }
     values
 }
+
+#[cfg(test)]
+#[path = "result_name_tests.rs"]
+mod result_name_tests;

@@ -557,12 +557,10 @@ fn a_remembered_kind_narrowing_does_not_come_back() {
         .remember("annotation.edgeLengths", &last);
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
     let window = app.gis.processing.dialog.as_ref().expect("open");
-    assert_eq!(
-        window.values.get("input"),
-        Some(&json!({ "scope": "layer", "layerId": "parsel" }))
-    );
+    // The input is the drawing's now, the tool's own default (docs/adr/9144): neither the last layer nor its narrowing.
+    assert!(window.values.get("input").is_some_and(|v| v.get("kinds").is_none()), "{:?}", window.values.get("input"));
+    assert_ne!(window.values.get("input"), Some(&json!({ "scope": "layer", "layerId": "parsel", "kinds": ["line"] })));
     assert_eq!(window.values.get("decimals"), Some(&json!(2.0)), "the rest comes back");
-    assert_eq!(window.inputs.get("input").map(|f| f.count), Some(1), "the parcel");
 }
 
 #[test]

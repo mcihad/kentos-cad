@@ -411,3 +411,7 @@ numaraları raporunkidir.
   ([ADR 9143](../docs/adr/9143-renderers-by-geometry-and-unclassed-values.md))
   - `fits`/`kinds`: geometriye göre sıra ve “uymayan” başlığı; kategorili tablonun altında uyarı ve iki düğme.
   - Kalan: etiket önizlemesi, stil/QML kayıp bildirimi, değer değişiminde uçtan uca sınama, web.
+- [~] **VY-43 — İşlemin girdisi çizimi izler; boş girdide Çalıştır kapalı (rapor 11, P1).**
+  ([ADR 9144](../docs/adr/9144-processing-inputs-follow-the-drawing.md))
+  - Son değerlerden nesne girdileri ve sonuç adı çıkar; seçim ya da aracın varsayılanı; `input_empty` Çalıştır'ı kapatır.
+  - Kalan: türetilmiş ad, seçim satırı, iş kaydı, sınamalar, web.

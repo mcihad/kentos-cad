@@ -689,7 +689,9 @@ fn footer<'a>(window: &'a ToolDialog, at_server: bool) -> Element<'a, Message> {
     )
     .padding(kentos_ui::theme::metrics::action())
     .style(style::button::primary)
-    .on_press_maybe((!buttons.run_disabled).then(|| ev(Event::Run)));
+    // An input that reads nothing where something must be read leaves Çalıştır off: its line under the field says why
+    // (docs/adr/9144).
+    .on_press_maybe((!buttons.run_disabled && !window.input_empty()).then(|| ev(Event::Run)));
     row![reset, batch, status, close, run]
         .spacing(10)
         .align_y(Center)

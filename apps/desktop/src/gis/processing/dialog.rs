@@ -381,6 +381,17 @@ impl ToolDialog {
         }
     }
 
+    /// Whether a features input that must read something reads nothing now (docs/adr/9144): Çalıştır waits for it.
+    pub fn input_empty(&self) -> bool {
+        self.tool.parameters.iter().any(|p| {
+            matches!(p.kind, ParamKind::Features { .. })
+                && !p.allow_empty
+                && !p.optional
+                && kentos_processing::parameters::is_visible(p, &self.values)
+                && self.inputs.get(&p.name).is_some_and(|i| i.count == 0)
+        })
+    }
+
     /// Whether a run is going.
     pub fn running(&self) -> bool {
         matches!(self.status, RunStatus::Running { .. })
