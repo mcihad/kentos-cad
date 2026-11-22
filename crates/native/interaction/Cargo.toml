@@ -6,11 +6,17 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
+# The macOS linker's note that this package's programs' __eh_frame passes 16 MB (docs/adr/1136): their unwind
+# tables in DWARF mode, past what the compact table points to; unwinding still works. The note alone is quiet.
+[lints.rust]
+linker_messages = "allow"
+
 # Pure Rust, native only (TODOS.md §2.1 `native/interaction`): no Iced, no GPU,
 # no runtime (scripts/arch/deps.mjs, group `interaction`). The web keeps its
 # own TypeScript session (apps/web/src/tools). The geometry comes from the
 # shared core; a finished object is written through a product command
 # (native/application, docs/adr/0022) over the native document.
+
 [dependencies]
 # The read-only viewer core (docs/adr/8054 §8); its modules are re-exported here under their old paths.
 kentos-scene-query = { path = "../scene-query" }

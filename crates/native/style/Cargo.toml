@@ -6,11 +6,17 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
+# The macOS linker's note that this package's programs' __eh_frame passes 16 MB (docs/adr/1136): their unwind
+# tables in DWARF mode, past what the compact table points to; unwinding still works. The note alone is quiet.
+[lints.rust]
+linker_messages = "allow"
+
 # Pure Rust, native only (scripts/arch/deps.mjs, group `style`): no Iced, no
 # GPU, no runtime. The web keeps its own TypeScript page (apps/web/src/render/
 # styledLayer.ts, styledBatches.ts, apps/web/src/style/library.ts); both are
 # held to fixtures/style/v1. The drawing comes from the shared style core; the
 # desktop's wgpu renderer draws what this crate hands it.
+
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }

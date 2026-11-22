@@ -1338,6 +1338,7 @@ fn the_catalog_and_the_open_drawings_are_resources() {
             "kentos://catalog/categories".to_owned(),
             "kentos://extensions/installed".to_owned(),
             "kentos://sdk/ai-kek-pack".to_owned(),
+            "kentos://sdk/llms.txt".to_owned(),
             "kentos://catalog".to_owned(),
             format!("kentos://drawing/{drawing}")
         ]

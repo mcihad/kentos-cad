@@ -491,38 +491,52 @@ pub mod layers_renderer;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_service.rs"]
 pub mod layers_service;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layers_data.rs"]
 pub mod layers_data;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layers_rows.rs"]
 pub mod layers_rows;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layers_session.rs"]
 pub mod layers_session;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layer_classes.rs"]
 pub mod layer_classes;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layer_export.rs"]
 pub mod layer_export;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layer_export_sinks.rs"]
 mod layer_export_sinks;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layer_export_streams.rs"]
 mod layer_export_streams;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layer_export_kml.rs"]
 mod layer_export_kml;
 // A project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107).
 #[path = "gis/project_store.rs"]
 pub mod project_store;
 // A new layer made as a new table of a data source (docs/adr/9107 §7).
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layers_create.rs"]
 pub mod layers_create;
 // A drawing layer moved into a data source (docs/adr/9107 §8).
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layers_migrate.rs"]
 pub mod layers_migrate;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/layers_migrate_texts.rs"]
 mod layers_migrate_texts;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/data_text.rs"]
 pub mod data_text;
 // An İfadeyle seç expression's part a data source answers itself (docs/adr/9109).
+#[cfg(feature = "mod-gis")]
 #[path = "gis/data_condition.rs"]
 pub mod data_condition;
+#[cfg(feature = "mod-gis")]
 #[path = "gis/data_write.rs"]
 pub mod data_write;
 #[cfg(feature = "mod-gis")]

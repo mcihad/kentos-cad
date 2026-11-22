@@ -80,8 +80,12 @@ Kullanıcının isteğiyle derleme uyarısız bırakıldı:
 - macOS bağlayıcısının notu “`__eh_frame` 16 MB'ı aşıyor”: masaüstü ikilisinde 253 108 FDE (20,9 MB) var, yaklaşık
   205 000 işlev derleyicinin DWARF kipinde yazılıyor ve sıkıştırılmış tablo 16 MB'tan öteye işaret edemez.
   `-no_keep_dwarf_unwind` artık geçersiz, `-no_compact_unwind` tabloyu bütünüyle kaldırıp durumu kötüleştirir.
-  Geri sarma çalışır, yalnız aranması yavaştır. Bu yüzden yalnız bu not, masaüstü crate'inin (lib ve bin) ve
-  Python modülünün kökünde `#![allow(linker_messages)]` ile susturuldu.
+  Geri sarma çalışır, yalnız aranması yavaştır. Bu yüzden yalnız bu not susturuldu: büyük programları ve test
+  programları bağlanan 11 paketin `Cargo.toml`'unda `[lints.rust] linker_messages = "allow"` var (commands,
+  extension-tools, interaction, native-style, plot, processing, headless, mcp, native-application, python, desktop).
+  Not, bu paketlerin 165 MCP test programında, başsız ve uygulama testlerinde de çıkıyordu. Çalışma alanı düzeyindeki
+  `[workspace.lints]` seçilmedi: Cargo 1.100, onu almayan her üye için `missing_lints_inheritance` uyarısı veriyor
+  (83 paket). Kök özniteliği de seçilmedi, çünkü bağlanmayan kitaplıkta “kullanılmayan öznitelik” uyarısı veriyor.
 
 Aynı işte ilgisiz iki bozukluk da giderildi: `ui-showcase`'in model görüntüleyicisi yeni `quality`/`measure`
 alanlarını almamıştı; eklenti SDK'sının simge listesi (`sdk/icons.txt`) son BIM simgelerini içermiyordu.
@@ -123,3 +127,22 @@ Bu işten önce de kırık olanlar: 17 MCP testi (araçların `destructiveHint`'
 koşturuldu, aynı sonuç) ve `module_features` (VY işlerinin yeni GIS modülleri `ALWAYS` listesinde yok; bu işin
 dokunmadığı modüller, temiz `main`'de ayrıca koşturulmadı). `commandCatalog.json` gelen
 bir açıklama değişikliğiyle yeniden üretildi.
+
+### Kırık testlerin onarımı (22 Kasım 2026)
+
+- **MCP araçlarının `destructiveHint`'i:** ADIM 14'te (13 Kasım, `1e4551bb3`) MCP'nin yıkıcı komut listesi
+  `kentos_headless::agent_tools::DESTRUCTIVE`'e taşınırken 199 kimliğin yalnız 33'ü geçmişti; yol, imar, alan, şekil,
+  katman, dışa/içe aktarma komutları dokuz gündür yıkıcı değil, bir kısmı da salt okunur görünüyordu. Liste eski
+  biçimiyle, yorumlarıyla geri kondu; sonradan eklenen dördü (`cad.layers.session`, `cad.form.answer`,
+  `cad.delivery.edit`, `cad.underlay.edit`) korundu (203 kimlik). 15 MCP testi bununla geçer.
+- **MCP kaynak listesi:** `kentos://sdk/llms.txt` (`8f00ba19f`) testin beklediği listeye eklendi.
+- **MCP BIM paketi:** B7 (ADR 8124) mimarın soyadını tahmin etmeyi bıraktı, künyenin `mimar_soyadi` alanını ister;
+  `kesit-binasi-tam.kcad`'da bu alan yok. Künyeyi yazan bir komut olmadığı için test kopyaya alanı kendisi ekler
+  (başsız testteki gibi); örnek dosya değişmedi.
+- **`module_features`:** VY işlerinin 17 GIS modülünden 14'ü `mod-gis` özelliğinin arkasına alındı; çekirdeğin
+  eriştiği üçü `ALWAYS` listesine yazıldı: `address_define` (komut kaydı), `gpkg_fields` (`geopackage`) ve
+  `project_store` (başsız oturumun projeyi veri kaynağına kaydetmesi, ADR 9107).
+
+Ayrı bir açık: yalnız `mod-gis`, `mod-map` ya da `mod-road` ile derleme bu işten önce de kırıktı (`sheets_set`
+mimarinin kesit ve görünüş modüllerini, `ifc_system` `kentos_ifc`'yi koşulsuz kullanıyor); yalnız `mod-arch` ve
+`mod-gis`'siz derleme temiz.

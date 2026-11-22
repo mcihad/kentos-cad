@@ -8,9 +8,15 @@ publish.workspace = true
 # `cargo run -p kentos-desktop` is kentos-cad; the module programs are built beside it.
 default-run = "kentos-cad"
 
+# The macOS linker's note that this package's programs' __eh_frame passes 16 MB (docs/adr/1136): their unwind
+# tables in DWARF mode, past what the compact table points to; unwinding still works. The note alone is quiet.
+[lints.rust]
+linker_messages = "allow"
+
 # The desktop is a library and its programs (docs/adr/0801): `kentos-cad`, every module at once (`--modul <id>` one of
 # them), and each module's own program. The unit tests live in the library; no program has tests of its own, so a
 # test run links one binary. Doc comments are not tests.
+
 [lib]
 name = "kentos_desktop"
 path = "src/lib.rs"

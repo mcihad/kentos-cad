@@ -6,9 +6,11 @@
 
 use std::collections::BTreeSet;
 
-/// The discipline-folder modules every build compiles, 72 as of ADIM 11 (13 November 2026): the core reaches each
-/// through a helper, a type or a check of its own (GIS's sources, fields, layers and file tables; arch's walls,
-/// spaces and openings; map's survey, work and zoning). Their commands still answer only in their module's build.
+/// The discipline-folder modules every build compiles, 72 as of ADIM 11 (13 November 2026), 75 since the data layers
+/// (22 November 2026: the registry's address definitions, GeoPackage's field types, a project kept in a data source):
+/// the core reaches each through a helper, a type or a check of its own (GIS's sources, fields, layers and file tables;
+/// arch's walls, spaces and openings; map's survey, work and zoning). Their commands still answer only in their
+/// module's build.
 const ALWAYS: &[(&str, &[&str])] = &[
     (
         "arch",
@@ -29,13 +31,13 @@ const ALWAYS: &[(&str, &[&str])] = &[
     (
         "gis",
         &[
-            "csv_table", "datasets_edit", "event_follow", "fgb_table", "fields_edit", "fields_usage", "fields_write",
-            "forms", "geopackage", "gis_derive", "gis_set", "gml_read", "gml_table", "gml_write", "gpkg_profile",
-            "gpkg_tiles", "layers_indexes", "layers_labels", "layers_renderer", "layers_translate", "links", "lrs_events",
-            "multidim_source", "network_ellipses", "parquet_table", "processing_host", "qml", "raster_files",
-            "rasters_georef", "relations_edit", "remote_host", "shapefile", "sld", "source_bytes", "source_places",
-            "sources", "subnetwork_follow", "subnetworks", "subnetworks_update", "time_export", "time_filter",
-            "topology_follow",
+            "address_define", "csv_table", "datasets_edit", "event_follow", "fgb_table", "fields_edit", "fields_usage",
+            "fields_write", "forms", "geopackage", "gis_derive", "gis_set", "gml_read", "gml_table", "gml_write",
+            "gpkg_fields", "gpkg_profile", "gpkg_tiles", "layers_indexes", "layers_labels", "layers_renderer",
+            "layers_translate", "links", "lrs_events", "multidim_source", "network_ellipses", "parquet_table",
+            "processing_host", "project_store", "qml", "raster_files", "rasters_georef", "relations_edit",
+            "remote_host", "shapefile", "sld", "source_bytes", "source_places", "sources", "subnetwork_follow",
+            "subnetworks", "subnetworks_update", "time_export", "time_filter", "topology_follow",
         ],
     ),
 ];

@@ -6,9 +6,15 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
+# The macOS linker's note that this package's programs' __eh_frame passes 16 MB (docs/adr/1136): their unwind
+# tables in DWARF mode, past what the compact table points to; unwinding still works. The note alone is quiet.
+[lints.rust]
+linker_messages = "allow"
+
 # Rust over stdin and stdout (scripts/arch/deps.mjs, group `mcp`): no UI or database. The
 # drawing tools are pure; the server's go through the desktop's cloud client (its own runtime,
 # docs/adr/0134). JSON-RPC and MCP are written here from the specification (docs/adr/0133).
+
 [[bin]]
 name = "kentos-mcp"
 path = "src/main.rs"

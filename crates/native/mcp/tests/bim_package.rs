@@ -24,8 +24,18 @@ fn an_agent_answers_the_form_and_publishes_the_bim_package() {
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let source = dir.join("kesit-binasi-tam.kcad");
-    std::fs::copy(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/arch/v1/kesit-binasi-tam.kcad"), &source)
+    // The künye's family name of the architect, which the IFC model's person takes apart from the whole name
+    // (docs/adr/8124: no guess is written); no command writes the künye, so the copy is given it here.
+    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/arch/v1/kesit-binasi-tam.kcad"))
         .expect("the declared drawing");
+    let mut snap = kentos_kcad::decode(&bytes).expect("it reads");
+    snap.settings.variables.push(kentos_commands::ProjectVariable {
+        name: "mimar_soyadi".into(),
+        label: "Mimarın soyadı (IFC modelinde)".into(),
+        kind: kentos_commands::VariableKind::Text,
+        value: kentos_commands::VariableValue::Text("Yılmaz".into()),
+    });
+    std::fs::write(&source, kentos_kcad::encode(&snap).expect("it writes")).expect("the copy");
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": source}));
     assert_eq!(opened["isError"], false, "{opened}");
