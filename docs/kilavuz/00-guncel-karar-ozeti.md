@@ -177,6 +177,8 @@
   - **Girdide seçimin katmanı** (23 Kasım, rapor 11'in kalanı;
     [ADR 9157](../adr/9157-processing-selection-names-its-layer.md), VY-56): seçim girdisi katmanını ve katmanın sayısını
     söyler.
+  - **Özet istatistik dosyada sayı** (23 Kasım, rapor 23'ün kalanı;
+    [ADR 9158](../adr/9158-typed-summary-statistics-table.md), VY-57): sayılar INTEGER, ölçüler REAL, boş hücre NULL.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

@@ -2558,6 +2558,8 @@ Liste:
   tablo seçimini ve görünümdeki satırlarını saysın.
 - [ ] Girdide seçimin katmanı (ADR 9157, 23 Kasım 2026): web'in işlem penceresi seçim girdisinin katmanını ve katmanın
   sayısını söylesin.
+- [ ] Özet istatistik dosyada sayı (ADR 9158, 23 Kasım 2026): web'in işlem sonucu yazıcısı `statistics.summary`
+  tablosunun `kinds` ve `values`'unu kullansın.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

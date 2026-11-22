@@ -955,12 +955,29 @@ def case_summary(cid, title, values, objects, field, group):
     lines = []
     if s["skipped"]:
         lines.append({"level": "warn", "text": f"{s['skipped']} değer sayı olarak okunamadığı için atlandı."})
+    # The columns' kinds and the cells' plain values (docs/adr/9158): the counts whole numbers, the figures real, an
+    # empty figure NULL, the group its text.
+    kinds = (["text"] if group else []) + ["integer", "integer", "real", "real", "real", "real", "real"]
+
+    def plain(cell, kind):
+        if cell.strip(JS_SPACE) == "":
+            return None
+        if kind == "integer":
+            return int(cell)
+        if kind == "real":
+            return float(cell)
+        return cell
+
+    plain_rows = [[plain(c, k) for c, k in zip(r, kinds)] for r in s["rows"]]
     expect = {
         "status": "ok",
         "summary": summary,
         **({"log": lines} if lines else {}),
         "undo": None,
-        "outputs": {"count": len(objects), "table": {"columns": s["columns"], "rows": s["rows"]}},
+        "outputs": {
+            "count": len(objects),
+            "table": {"columns": s["columns"], "rows": s["rows"], "kinds": kinds, "values": plain_rows},
+        },
     }
     return {"id": cid, "title": title, "document": "queries.kcad", "run": {"tool": "statistics.summary"}, "values": values, "expect": expect}
 

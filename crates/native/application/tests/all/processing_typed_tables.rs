@@ -111,3 +111,42 @@ fn a_histogram_goes_to_postgis_with_the_same_kinds() {
     assert!(matches!(kind("Alt sınır"), Some(kentos_data::FieldKind::Real)), "{:?}", kind("Alt sınır"));
     // The schema is the test's own; it is left for the database's owner to drop with the others of `kentos_tur_`.
 }
+
+/// Özet istatistik's table goes to a GeoPackage typed too (docs/adr/9158): the group text, the counts INTEGER, the
+/// figures REAL, an empty standard deviation NULL; the shared query drawing's buildings by their storeys.
+#[test]
+fn a_summary_goes_to_a_geopackage_as_numbers() {
+    let dir = std::env::temp_dir().join(format!("kentos-typed-summary-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let path = dir.join("ozet.gpkg");
+    let text = std::fs::read_to_string(fixtures().join("processing/v1/queries.kcad")).expect("reads");
+    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&text).expect("a drawing")).expect("opens");
+    let got = run(
+        &mut doc,
+        json!({
+            "tool": "statistics.summary",
+            "parameters": { "input": { "scope": "layer", "layerId": "yapi" }, "field": "Taban alanı", "group": "Kat" },
+            "sink": { "path": path.display().to_string(), "mode": "new", "tables": true },
+        }),
+    );
+    assert_eq!(got["status"], "completed", "{got}");
+    let table = got["output"]["sinkReport"]["tables"][0]["table"].as_str().expect("a table").to_owned();
+    let gp = kentos_geopackage::GeoPackage::open(&path, false).expect("opens");
+    let db = gp.connection();
+    let kind_of = |column: &str, row: &str| -> String {
+        db.query_row(&format!(r#"SELECT typeof("{column}") FROM "{table}" WHERE "Grup" = ?1"#), [row], |r| r.get(0))
+            .expect("a cell")
+    };
+    assert_eq!(kind_of("Grup", "Toplam"), "text");
+    assert_eq!(kind_of("Nesne", "Toplam"), "integer");
+    assert_eq!(kind_of("Toplam", "Toplam"), "real");
+    // Group 1 has one value: no standard deviation, NULL rather than an empty text.
+    assert_eq!(kind_of("Std. sapma", "1"), "null");
+    let total: f64 = db
+        .query_row(&format!(r#"SELECT "Toplam" FROM "{table}" WHERE "Grup" = 'Toplam'"#), [], |r| r.get(0))
+        .expect("a number");
+    assert!((total - 231.5).abs() < 1e-9, "{total}");
+    drop(gp);
+    let _ = std::fs::remove_dir_all(&dir);
+}

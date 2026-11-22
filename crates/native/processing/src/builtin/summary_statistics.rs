@@ -117,11 +117,35 @@ fn run(v: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> 
             table.rows.len().saturating_sub(1)
         )
     };
+    // The cells as shown, and their kinds and plain values: a file gets numbers, not their text (docs/adr/9136, 9158).
+    let grouped = !group.is_empty();
+    let mut kinds: Vec<&str> = Vec::new();
+    if grouped {
+        kinds.push("text");
+    }
+    kinds.extend(["integer", "integer", "real", "real", "real", "real", "real"]);
+    let values: Vec<serde_json::Value> = table
+        .rows
+        .iter()
+        .map(|row| {
+            let cells: Vec<serde_json::Value> = row
+                .iter()
+                .zip(&kinds)
+                .map(|(cell, kind)| match *kind {
+                    _ if js_trim(cell).is_empty() => serde_json::Value::Null,
+                    "integer" => cell.parse::<i64>().map_or(serde_json::Value::Null, |n| json!(n)),
+                    "real" => cell.parse::<f64>().ok().filter(|v| v.is_finite()).map_or(serde_json::Value::Null, |v| json!(v)),
+                    _ => json!(cell),
+                })
+                .collect();
+            serde_json::Value::Array(cells)
+        })
+        .collect();
     RunResult {
         outputs: [
             (
                 "table".to_owned(),
-                json!({ "columns": table.columns, "rows": table.rows }),
+                json!({ "columns": table.columns, "rows": table.rows, "kinds": kinds, "values": values }),
             ),
             ("count".to_owned(), json!(list.len())),
         ]

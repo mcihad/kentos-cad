@@ -472,3 +472,7 @@ numaraları raporunkidir.
   ([ADR 9157](../docs/adr/9157-processing-selection-names-its-layer.md))
   - “seçili, “Parsel” katmanından (katmanda 1 nesne)”; birden çok katmanda kaç katmandan.
   - Kalan: türetilmiş ad, iş kaydının alanları, sınamalar, web.
+- [~] **VY-57 — Özet istatistik tablosu dosyaya sayı olarak yazılır (rapor 23'ün kalanı).**
+  ([ADR 9158](../docs/adr/9158-typed-summary-statistics-table.md))
+  - Nesne/Değer INTEGER, toplam ve ölçüler REAL, boş hücre NULL; kesin metin pencerede kalır.
+  - Kalan: öbür tablo veren araçlar, Kaydet ▾ biçimleri, PostGIS sınaması, web.
