@@ -412,6 +412,9 @@ pub struct LayerStyleWindow {
     pub thematic: bool,
     /// The kind the layer was drawn with as the window opened: listed whatever it is.
     own: Kind,
+    /// The layer's geometry, declared or its data table's (none: mixed or unknown): the kinds that fit it are listed
+    /// first (docs/adr/9143).
+    pub geometry: Option<kentos_commands::LayerGeometry>,
     /// The last thing the window said, and whether it warns.
     said: Option<(String, bool)>,
     /// Closing asked about the changes not applied (the web's `askUnsaved`).
@@ -491,6 +494,12 @@ impl LayerStyleWindow {
             applied_compose: compose,
             thematic: true,
             own: kind,
+            geometry: node.geometry.or_else(|| {
+                node.data
+                    .as_ref()
+                    .and_then(|d| d.geometry.as_ref())
+                    .and_then(|g| kentos_native_application::geopackage::layer_geometry_of(&g.type_name))
+            }),
             said: None,
             asking: false,
             typed: HashMap::new(),
@@ -567,10 +576,26 @@ impl LayerStyleWindow {
     /// The kinds the list offers, in its order: the classic ones everywhere, the thematic ones where the program
     /// has them, and the one the layer is drawn with whatever it is (docs/adr/0802).
     pub fn kinds(&self) -> Vec<Kind> {
-        KINDS
-            .into_iter()
-            .filter(|k| self.thematic || !k.thematic() || *k == self.own)
-            .collect()
+        // Those that fit the layer's geometry first, in the list's order, then the others (docs/adr/9143).
+        let offered: Vec<Kind> =
+            KINDS.into_iter().filter(|k| self.thematic || !k.thematic() || *k == self.own).collect();
+        let (fit, misfit): (Vec<Kind>, Vec<Kind>) = offered.into_iter().partition(|k| self.fits(*k));
+        fit.into_iter().chain(misfit).collect()
+    }
+
+    /// Whether `kind` draws the layer's geometry (docs/adr/9143): a point's kinds (heat map, clusters, spreading) draw
+    /// no line or area, an area's (dot density, inverted fill) no point or line; a line takes the value kinds, the rules
+    /// and the simple ones. Every kind fits a layer of mixed or unknown geometry.
+    pub fn fits(&self, kind: Kind) -> bool {
+        use kentos_commands::LayerGeometry as G;
+        !matches!(
+            (self.geometry, kind),
+            (
+                Some(G::Line),
+                Kind::DotDensity | Kind::Chart | Kind::Heatmap | Kind::Cluster | Kind::Displacement | Kind::Inverted
+            ) | (Some(G::Point), Kind::DotDensity | Kind::Inverted)
+                | (Some(G::Area), Kind::Heatmap | Kind::Cluster | Kind::Displacement)
+        )
     }
 
     /// A kind's draft as the renderer it writes.

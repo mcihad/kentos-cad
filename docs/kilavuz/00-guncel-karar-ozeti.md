@@ -132,6 +132,9 @@
   - **Kapalı oturumda hücre** (22 Kasım, değerlendirmenin 9. maddesi;
     [ADR 9142](../adr/9142-data-table-closed-cell-and-loaded-rows.md), VY-41): bildirim ve Düzenlemeyi başlat; tablo
     yüklenen satırı toplamdan ayırır.
+  - **Uyan işleyiciler önce** (22 Kasım, değerlendirmenin 10. maddesi;
+    [ADR 9143](../adr/9143-renderers-by-geometry-and-unclassed-values.md), VY-42): katman stili geometriye uyanları
+    önce sunar; kategoriye girmeyen nesneler sayısı ve iki çaresiyle söylenir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

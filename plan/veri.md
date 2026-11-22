@@ -407,3 +407,7 @@ numaraları raporunkidir.
   ([ADR 9142](../docs/adr/9142-data-table-closed-cell-and-loaded-rows.md))
   - Çift tıklamada bildirim ve Düzenlemeyi başlat; satırda “(N yüklendi)”.
   - Kalan: iki sağlayıcıda aynı araç düzeni, uçtan uca zincir ve değer örnekleri, web.
+- [~] **VY-42 — Katman stili uyan işleyicileri önce sunar; kategoriye girmeyenleri söyler (rapor 10, P1).**
+  ([ADR 9143](../docs/adr/9143-renderers-by-geometry-and-unclassed-values.md))
+  - `fits`/`kinds`: geometriye göre sıra ve “uymayan” başlığı; kategorili tablonun altında uyarı ve iki düğme.
+  - Kalan: etiket önizlemesi, stil/QML kayıp bildirimi, değer değişiminde uçtan uca sınama, web.

@@ -72,7 +72,7 @@ impl App {
         };
         let fields = window.fields(model);
         let top = row![
-            kind_picker(window.kind, window.kinds()),
+            kind_picker(window.kind, window.kinds(), window.kinds().into_iter().filter(|k| !window.fits(*k)).collect()),
             label::caption(objects_text(model.count(&window.layer), window))
                 .style(style::text::muted),
         ]
@@ -141,7 +141,10 @@ impl App {
 
 /// The renderer kinds `kinds` in a list by group, each with its icon and what it does (the web's
 /// `Dropdown`, docs/adr/0213 §4); the field shows the chosen one.
-fn kind_picker<'a>(kind: Kind, kinds: Vec<Kind>) -> Element<'a, Message> {
+/// The header of the kinds that do not draw the layer's geometry (docs/adr/9143).
+pub(crate) const MISFIT: &str = "Bu katmanın geometrisine uymayan";
+
+fn kind_picker<'a>(kind: Kind, kinds: Vec<Kind>, misfits: Vec<Kind>) -> Element<'a, Message> {
     let face = container(
         row![
             icon(crate::icons::from_web(Some(kind.icon()))).size(16.0),
@@ -157,18 +160,23 @@ fn kind_picker<'a>(kind: Kind, kinds: Vec<Kind>) -> Element<'a, Message> {
     let menu = move || {
         let mut m = Menu::new();
         let mut group = None;
+        let mut apart = false;
         for &k in &kinds {
-            // A group's header over its first kind listed.
-            if k.group() != group {
+            let misfit = misfits.contains(&k);
+            // The kinds that do not draw the layer's geometry after the others, under a header of their own
+            // (docs/adr/9143).
+            if misfit && !apart {
+                apart = true;
+                group = None;
+                m = m.header(MISFIT);
+            } else if !misfit && k.group() != group {
+                // A group's header over its first kind listed.
                 group = k.group();
                 if let Some(g) = group {
                     m = m.header(g);
                 }
             }
-            m = m
-                .radio(k.to_string(), k == kind, ev(Event::Kind(k)))
-                .icon(crate::icons::from_web(Some(k.icon())))
-                .detail(k.detail());
+            m = m.radio(k.to_string(), k == kind, ev(Event::Kind(k))).icon(crate::icons::from_web(Some(k.icon()))).detail(k.detail());
         }
         m
     };
@@ -533,6 +541,28 @@ fn categorized_panel<'a>(
         .align_y(Center),
     );
     out = out.push(table);
+    // Objects no category takes and Diğer değerler off: how many are not drawn, and the two ways to draw them
+    // (docs/adr/9143).
+    if rest > 0 && !other_on {
+        out = out.push(
+            row![
+                icon(Icon::Warning).size(14.0).tone(Tone::Warning),
+                container(
+                    label::body(format!(
+                        "{rest} nesne hiçbir kategoriye girmiyor ve çizilmez: Diğer değerleri açın ya da değerlerden \
+                         yeniden sınıflayın."
+                    ))
+                    .style(style::text::warning)
+                )
+                .width(Fill),
+                small_button(None, "Diğer değerleri aç", Some(ev(Event::Other(true)))),
+                // The same step as the button by Değer, by the same name.
+                small_button(None, "Değerlerden sınıfla", Some(ev(Event::Classify))),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
+    }
     if c.categories.is_empty() {
         out = out.push(help(texts::CATEGORIES_HELP));
     }

@@ -416,3 +416,39 @@ fn an_object_its_categorized_style_no_longer_draws_is_said() {
     set(doc, style("Parsel"));
     assert_eq!(app.unstyled_note(&[uid]), None);
 }
+
+/// docs/adr/9143, the municipal report's 10th item: a line layer's style lists the kinds that draw lines first; heat
+/// map, clusters, spreading, dot density, charts and the inverted fill come after, under their own header. A point
+/// layer keeps its point kinds and moves the area ones; a layer of no declared geometry fits them all.
+#[test]
+fn a_line_layer_lists_the_kinds_that_draw_lines_first() {
+    let mut app = app_with_drawing();
+    ls(&mut app, Event::Open(Some("parsel".into())));
+    let w = app.styles.layer_style.as_mut().expect("the window is open");
+    w.geometry = Some(kentos_commands::LayerGeometry::Line);
+    let kinds = w.kinds();
+    let first_misfit = kinds.iter().position(|k| !w.fits(*k)).expect("some do not fit");
+    assert!(kinds[..first_misfit].iter().all(|k| w.fits(*k)), "{kinds:?}");
+    for k in [Kind::Heatmap, Kind::Cluster, Kind::Displacement, Kind::DotDensity, Kind::Chart, Kind::Inverted] {
+        assert!(!w.fits(k), "{k:?}");
+        assert!(kinds.iter().position(|x| *x == k) >= Some(first_misfit), "{k:?} after the fitting ones");
+    }
+    assert_eq!(&kinds[..4], [Kind::Simple, Kind::Single, Kind::Categorized, Kind::Graduated]);
+    w.geometry = Some(kentos_commands::LayerGeometry::Point);
+    assert!(w.fits(Kind::Heatmap) && w.fits(Kind::Cluster) && !w.fits(Kind::Inverted) && !w.fits(Kind::DotDensity));
+    w.geometry = None;
+    assert!(super::KINDS.iter().all(|k| w.fits(*k)));
+}
+
+/// Pictures (docs/adr/9143), light at 1440×900 and dark at 1100×760: Kategorili before Sınıflandır, the objects no
+/// category takes said with Diğer değerleri aç and Yeniden sınıflandır.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib layer_style::tests::unclassed_screens -- --ignored --nocapture"]
+fn unclassed_screens() {
+    crate::files_testing::usage_shots("9143", "01-siniflanmayan", || {
+        let mut app = app_with_drawing();
+        ls(&mut app, Event::Open(Some("parsel".into())));
+        ls(&mut app, Event::Kind(Kind::Categorized));
+        app
+    });
+}
