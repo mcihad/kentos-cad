@@ -302,3 +302,10 @@ numaraları raporunkidir.
     aynı sonuç).
   - Kalan: PostGIS durumu gerçek veritabanında koşturulmadı (Docker yanıt vermedi); kaynaktaki satırı kendiliğinden
     alarak düzeltme; web.
+- [~] **VY-24 — Formla kayıt yazmak rolün kayıt iznine bağlı (rapor 25, P0).**
+  ([ADR 9125](../docs/adr/9125-records-written-by-role-not-by-design-right.md))
+  - `records_locked`: bulut projesinde `forms.use` ya da `feature.write`; arşiv ve izinsiz rol nedenini rolün adıyla
+    söyler. Tasarım ve yayın `forms_locked`'ta (project.edit) kaldı.
+  - Salt okunur form nedenini söyler (rol, arşiv, katman kilidi). Kaydet, iş akışı adımı, çoklu kayıt, alt kayıtlar
+    aynı karardan geçer.
+  - Kalan: iki gerçek hesapla bulut sunucusunda kabul (sunucu sınamaları veritabanı ister, Docker yanıt vermedi); web.

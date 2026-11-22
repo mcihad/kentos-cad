@@ -125,9 +125,29 @@ impl App {
             .map_or_else(|| layer.to_owned(), |n| n.name.clone())
     }
 
-    /// Why the forms may not change in the open drawing, or none.
+    /// Why the forms may not change in the open drawing (their design and publishing), or none.
     pub(crate) fn forms_locked(&self) -> Option<&'static str> {
         self.tree_locked().map(|_| FORMS_LOCKED)
+    }
+
+    /// Why the open drawing's records may not be written through a published form (docs/adr/9125), or none. Writing a
+    /// record is not designing a form: a cloud project's Veri girişi writes records (`forms.use`, `feature.write`)
+    /// though it may not change the project (`project.edit`). An archived project and a role that may only read say
+    /// so, with the role's name; the form still opens for reading. A layer's lock is the entry's own check.
+    pub(crate) fn records_locked(&self) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let source = doc.cloud_source()?;
+        if source.archived() {
+            return Some("Proje arşivde: kayıtlar yalnız görüntülenir. Arşivden çıkarılıp yeniden açılınca yazılabilir.".into());
+        }
+        let may = |p| source.info.access.permissions.contains(&p);
+        if may(kentos_commands::ProjectPermission::FormsUse) || may(kentos_commands::ProjectPermission::FeatureWrite) {
+            return None;
+        }
+        Some(format!(
+            "Bu projedeki rolünüz ({}) kayıt yazmaz; form yalnız görüntülenir. Veri girmek için proje sahibinden Veri girişi rolünü isteyin.",
+            crate::cloud::words::role(source.info.access.role)
+        ))
     }
 
     /// The one chosen object, when it is on a layer with a form: its slot and its layer.

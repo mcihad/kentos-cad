@@ -1125,6 +1125,9 @@ mod arch_ifc_tests;
 #[cfg(test)]
 #[path = "tests/quality_form_tests.rs"]
 mod quality_form_tests;
+#[cfg(test)]
+#[path = "tests/form_roles_tests.rs"]
+mod form_roles_tests;
 #[path = "road/terrain_layer.rs"]
 mod terrain_layer;
 #[path = "road/terrain_edits.rs"]

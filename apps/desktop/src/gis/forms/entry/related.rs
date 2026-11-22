@@ -534,8 +534,8 @@ impl App {
         };
         let record_locked = if e.read_only {
             Some("Kayıt yalnız okumaya açıldı; alt kayıtları da yazılamaz.".to_owned())
-        } else if let Some(why) = self.forms_locked() {
-            Some(why.to_owned())
+        } else if let Some(why) = self.records_locked() {
+            Some(why)
         } else if doc.is_some_and(|d| d.model.layers().is_locked(&e.screen.layer)) {
             Some(format!(
                 "“{}” katmanı kilitli; kayıt da alt kayıtları da yazılamaz.",

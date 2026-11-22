@@ -543,7 +543,7 @@ impl App {
                 .and_then(|v| v.iter().find(|c| c.code == code))
                 .map_or_else(|| code.to_owned(), |c| c.label.clone())
         };
-        if let Some(locked) = self.forms_locked() {
+        if let Some(locked) = self.records_locked() {
             self.warn(locked);
             return Task::none();
         }
@@ -699,7 +699,7 @@ impl App {
                 Some(((*k).to_owned(), v.clone()))
             })
             .collect();
-        if let Some(locked) = self.forms_locked() {
+        if let Some(locked) = self.records_locked() {
             self.warn(locked);
             return Task::none();
         }
@@ -805,7 +805,7 @@ impl App {
             expected_revision: Some(e.revision.clone()),
         };
         let (name, count) = (e.name.clone(), e.members.len());
-        if let Some(locked) = self.forms_locked() {
+        if let Some(locked) = self.records_locked() {
             self.warn(locked);
             return Task::none();
         }
@@ -904,7 +904,10 @@ impl App {
             )
         });
         if locked {
-            lines.push("Salt okunur: katman kilitli.".into());
+            lines.push(format!(
+                "Salt okunur: {}",
+                self.entry_lock_words(e).unwrap_or_else(|| "kayıt yazılamaz.".into())
+            ));
         } else if e.screen.prepared.locked_by_state(&e.before) {
             lines.push("Salt okunur: kaydın iş akışı durumu kilitli.".into());
         } else {

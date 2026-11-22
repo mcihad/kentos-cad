@@ -196,11 +196,9 @@ impl App {
                 Kind::Info,
                 "İlişkili kayıtlar öğesi bu alt kaydı yalnız okumaya açıyor: kayıt görüntülenir, değiştirilmez.",
             )]));
-        } else if locked {
-            body = body.push(words::summary(vec![words::text_line(
-                Kind::Warn,
-                "Katman kilitli ya da yetkiniz yok: kayıt yalnız görüntülenir.",
-            )]));
+        } else if let Some(why) = self.entry_lock_words(e).filter(|_| locked) {
+            // Which of them it is (docs/adr/9125): the role, the archive, the layer's lock.
+            body = body.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
         }
         // The record's topology findings of the Topoloji tab's last check (docs/adr/3800), one record's alone.
         if e.members.is_empty() && !e.preview && self.shows_property_rows(crate::module_surfaces::PropertyRows::Topology) {
@@ -443,12 +441,25 @@ impl App {
     }
 
     pub(super) fn entry_locked(&self, e: &Entry) -> bool {
-        e.read_only
-            || self.forms_locked().is_some()
-            || self
-                .document
-                .as_ref()
-                .is_some_and(|d| d.model.layers().is_locked(&e.screen.layer))
+        self.entry_lock_words(e).is_some()
+    }
+
+    /// Why the record may not be written, in the form's own words (docs/adr/9125): opened for reading, the role, the
+    /// project's archive, the layer's lock; none when it may.
+    pub(super) fn entry_lock_words(&self, e: &Entry) -> Option<String> {
+        if e.read_only {
+            return Some("Kayıt yalnız okumaya açıldı.".into());
+        }
+        if let Some(why) = self.records_locked() {
+            return Some(why);
+        }
+        let doc = self.document.as_ref()?;
+        doc.model.layers().is_locked(&e.screen.layer).then(|| {
+            format!(
+                "“{}” katmanı kilitli; kayıt yalnız görüntülenir. Yazmak için katmanın kilidini açın.",
+                self.form_layer_name(&e.screen.layer)
+            )
+        })
     }
 
     /// The form's pages under `body`: its tabs and the chosen one's items, or its items; scrolled

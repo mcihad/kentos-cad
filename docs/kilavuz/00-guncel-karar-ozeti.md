@@ -77,6 +77,10 @@
   - **Topoloji veri katmanının bütün tablosunu denetler** (22 Kasım, değerlendirmenin 16. maddesi;
     [ADR 9124](../adr/9124-topology-over-a-data-layers-table.md), VY-23): satırlar kaynaktan bütün geometrisiyle
     okunur, katman ve anahtarla adlanır; okunamayan kaynak “denetlenemedi”dir, hiçbir zaman temiz değildir.
+  - **Formla kayıt yazmak rolün izniyle** (22 Kasım, değerlendirmenin 25. maddesi;
+    [ADR 9125](../adr/9125-records-written-by-role-not-by-design-right.md), VY-24): `records_locked` `forms.use` ya da
+    `feature.write` arar; Veri girişi yazar, Görüntüleyici formu rolü söylenerek salt okunur açar. Tasarım ve yayın
+    `forms_locked`'tadır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

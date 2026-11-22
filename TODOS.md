@@ -2488,6 +2488,9 @@ Liste:
 - [ ] Topoloji veri katmanının bütün tablosunu denetler (ADR 9124, 22 Kasım 2026): web'in Topoloji sekmesi WASM'ın
   `cad.topology.check`'ini çağırırken veri katmanının satırlarını kaynaktan okuyamaz; web'in veri katmanı geldiğinde
   satırlar sunucunun vekiliyle okunsun, bulgular “satır n” diye görünsün, okunamayan kaynak “denetlenemedi” olsun.
+- [ ] Formla kayıt yazmak rolün izniyle (ADR 9125, 22 Kasım 2026): web'in giriş formu kaydı `forms.use` ya da
+  `feature.write` ile yazsın; `project.edit` yalnız tasarım ve yayın için; salt okunur form nedenini rolün adıyla
+  söylesin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de
