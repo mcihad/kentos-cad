@@ -403,3 +403,7 @@ numaraları raporunkidir.
   ([ADR 9141](../docs/adr/9141-form-designer-new-field.md))
   - Paletin ve ağacın sözleri; Yeni alan `cad.layers.edit` ile katmana yazar ve forma koyar.
   - Kalan: yayımlama denetiminin ayrı sözleri, yayımlama rolü, yol formunda bütün sınama, web.
+- [~] **VY-41 — Kapalı oturumda hücre yolunu söyler; tablo yüklenen satırı ayırır (rapor 9, P1).**
+  ([ADR 9142](../docs/adr/9142-data-table-closed-cell-and-loaded-rows.md))
+  - Çift tıklamada bildirim ve Düzenlemeyi başlat; satırda “(N yüklendi)”.
+  - Kalan: iki sağlayıcıda aynı araç düzeni, uçtan uca zincir ve değer örnekleri, web.

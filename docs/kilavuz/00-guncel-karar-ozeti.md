@@ -129,6 +129,9 @@
   - **Tasarımcıda Yeni alan** (22 Kasım, değerlendirmenin 8. maddesi;
     [ADR 9141](../adr/9141-form-designer-new-field.md), VY-40): alanı olmayan katman söylenir; alan paletten oluşturulup
     forma konur.
+  - **Kapalı oturumda hücre** (22 Kasım, değerlendirmenin 9. maddesi;
+    [ADR 9142](../adr/9142-data-table-closed-cell-and-loaded-rows.md), VY-41): bildirim ve Düzenlemeyi başlat; tablo
+    yüklenen satırı toplamdan ayırır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

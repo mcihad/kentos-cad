@@ -502,10 +502,19 @@ impl App {
             DataEvent::Edit(key, field) => {
                 let editing = self.document.as_ref().is_some_and(|d| d.model.editing(&node.id));
                 if !editing {
-                    self.warn(format!(
-                        "“{}” düzenlemeye açık değil; bir değeri değiştirmek için Katmanlar'da katmanın sağ tuşundan Düzenlemeyi başlat'ı seçin.",
+                    // Why, and the way to open it one press away, in a notice that is read whole (docs/adr/9142), as
+                    // a drawing tool says it (docs/adr/9128).
+                    let why = format!(
+                        "“{}” düzenlemeye açık değil; bir değeri değiştirmek için önce katmanın düzenleme oturumunu \
+                         başlatın.",
                         node.name
-                    ));
+                    );
+                    self.warn(why.clone());
+                    self.toast(
+                        kentos_ui::widget::Toast::info("Katman düzenlemeye kapalı")
+                            .body(why)
+                            .action("Düzenlemeyi başlat", crate::data_edits::event(crate::data_edits::Event::Start(node.id.clone()))),
+                    );
                     return Task::none();
                 }
                 let shown = self.data_cell_value(&node, key, &field).unwrap_or_default();
@@ -612,6 +621,23 @@ impl App {
             .flat_map(|p| p.iter())
             .find(|r| r.key == key)
             .and_then(|r| r.attrs.get(field).cloned())
+    }
+
+    /// The table's line as it reads with no session and no selection (a test's question).
+    #[cfg(test)]
+    pub(crate) fn data_table_line(&self) -> Option<String> {
+        let data = &self.gis.features.data;
+        let n = data.total?;
+        let loaded: usize = data.pages.values().map(Vec::len).sum();
+        let read = if (loaded as u64) < n { format!(" ({} yüklendi)", crate::view::thousands(loaded as f64)) } else { String::new() };
+        Some(format!(
+            "{}{read} · {}",
+            words::count(n),
+            match data.checked {
+                Some(RowsChecked::Here) => words::HERE,
+                _ => words::SOURCE,
+            }
+        ))
     }
 
     /// The table's rows: a page's cells when it is read, else a row waiting for it.
@@ -746,8 +772,17 @@ impl App {
             (Some(why), _) => label::caption(why.clone()).style(kentos_ui::style::text::warning),
             (None, None) => label::caption(words::READING),
             (None, Some(n)) => label::caption(format!(
-                "{} · {}{}{}",
+                "{}{} · {}{}{}",
                 words::count(n),
+                // The rows read so far beside the table's count, while they are fewer (docs/adr/9142).
+                {
+                    let loaded: usize = pages.values().map(Vec::len).sum();
+                    if (loaded as u64) < n {
+                        format!(" ({} yüklendi)", crate::view::thousands(loaded as f64))
+                    } else {
+                        String::new()
+                    }
+                },
                 match data.checked {
                     Some(RowsChecked::Here) => words::HERE,
                     _ => words::SOURCE,
@@ -769,3 +804,7 @@ impl App {
         .into()
     }
 }
+
+#[cfg(test)]
+#[path = "closed_cell_tests.rs"]
+mod closed_cell_tests;
