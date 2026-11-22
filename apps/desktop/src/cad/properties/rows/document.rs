@@ -10,7 +10,8 @@ pub(super) fn document_section(doc: &Document, crs: bool) -> Section {
     let active = layers
         .get(layers.active())
         .map_or_else(|| "—".to_owned(), |n| layer_path(layers, &n.id));
-    let mut rows = vec![Row::text("Proje adı", doc.name())];
+    // The name the title and the opening's words say too (docs/adr/9138).
+    let mut rows = vec![Row::text("Proje adı", doc.shown_name().into_owned())];
     if let Some(name) = doc.file_name() {
         rows.push(Row::text("Dosya", name.into_owned()));
     }

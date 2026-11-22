@@ -281,6 +281,16 @@ impl Document {
         self.path.as_deref()?.file_name().map(|name| name.to_string_lossy())
     }
 
+    /// The project's name as the inspector and the opening's words say it: its own, but a file of an older KentOS
+    /// whose project kept a new project's name is called by its file (docs/adr/9138).
+    pub(crate) fn shown_name(&self) -> std::borrow::Cow<'_, str> {
+        let stem = self.path.as_deref().and_then(std::path::Path::file_stem).map(|s| s.to_string_lossy());
+        match stem {
+            Some(stem) if self.name() == kentos_project::new_project::NEW_PROJECT_NAME && !stem.trim().is_empty() => stem,
+            _ => std::borrow::Cow::Borrowed(self.name()),
+        }
+    }
+
     pub(crate) fn display_name(&self) -> std::borrow::Cow<'_, str> {
         self.file_name().unwrap_or_else(|| std::borrow::Cow::Borrowed(self.name()))
     }

@@ -506,6 +506,20 @@ impl App {
             self.warn(why);
             return Task::none();
         }
+        // A project still called by a new project's name takes its file's (docs/adr/9138): the title, the inspector,
+        // the recent projects and the opening's words then say one name.
+        if let Target::File(path) = &target
+            && doc.name() == kentos_project::new_project::NEW_PROJECT_NAME
+            && let Some(stem) = path.file_stem().and_then(|s| s.to_str()).map(str::trim).filter(|s| !s.is_empty())
+        {
+            let stem = stem.to_owned();
+            if let Some(doc) = self.document.as_mut() {
+                doc.model.set_name(&stem);
+            }
+        }
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
         let model = doc.model.clone();
         let (id, session, revision) = (next_id(), doc.session, doc.model.revision());
         let mut kept = match &target {
@@ -1074,3 +1088,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
+
+#[cfg(test)]
+#[path = "project_name_tests.rs"]
+mod project_name_tests;

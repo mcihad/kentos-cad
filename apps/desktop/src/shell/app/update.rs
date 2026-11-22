@@ -784,7 +784,7 @@ impl App {
                         )),
                         None => self.output(format!(
                             "{} açıldı: {} nesne, {} katman.",
-                            doc.name(),
+                            doc.shown_name(),
                             doc.entity_count(),
                             doc.layer_count()
                         )),

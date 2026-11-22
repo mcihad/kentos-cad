@@ -384,3 +384,8 @@ numaraları raporunkidir.
   - Bilgi'nin tıklamasında gösterilen rasterler arka planda sorulur; kart katman, bant değerleri (NoData ayrı), hücre ve
     Y, X söyler; kapsam dışı söylenir; nesne ile raster değeri arasında geçiş.
   - Kalan: üst üste rasterlerin listesi, uzak rasterler, web.
+- [~] **VY-37 — Proje tek adla görünür; yeni proje adını dosyasından alır (rapor 3, P1).**
+  ([ADR 9138](../docs/adr/9138-one-project-name.md))
+  - “Yeni proje” adlı proje kaydında dosyanın adını alır; `shown_name` denetçide ve açılış iletisinde; eski dosyalar dosya
+    adıyla.
+  - Kalan: sihirbazın ad, amaç, CRS ve saklamayı bir arada sunan ilk sayfası, boş kent haritası, son projeler, web.

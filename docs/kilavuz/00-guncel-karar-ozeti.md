@@ -118,6 +118,9 @@
   - **Bilgi yerel rasterde hücre söyler** (22 Kasım, değerlendirmenin 24. maddesi;
     [ADR 9137](../adr/9137-identify-on-local-rasters.md), VY-36): `rasters/cell_info.rs` hücreyi arka planda okur; NoData
     ve kapsam dışı ayrı söylenir; nesneyle raster değeri arasında geçilir.
+  - **Proje tek adla görünür** (22 Kasım, değerlendirmenin 3. maddesi;
+    [ADR 9138](../adr/9138-one-project-name.md), VY-37): “Yeni proje” adlı proje kaydında dosyasının adını alır; denetçi
+    ve açılış iletisi başlıkla aynı adı söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
