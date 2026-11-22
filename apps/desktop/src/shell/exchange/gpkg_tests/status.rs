@@ -426,7 +426,7 @@ fn the_status_and_the_card_say_the_source() {
         "{line}"
     );
     assert!(waits);
-    // An object of a layer no table is bound to has no line.
+    // An object of a layer no table is bound to has no source line: its layer and lasting id instead (docs/adr/9145).
     let free = app
         .document
         .as_ref()
@@ -436,7 +436,8 @@ fn the_status_and_the_card_say_the_source() {
         .next()
         .map(|(_, e)| kentos_domain::Slot(e.base().id));
     if let Some(slot) = free {
-        assert!(app.slot_card(slot).expect("a card").source.is_none());
+        let (line, waits) = app.slot_card(slot).expect("a card").source.expect("its layer's line");
+        assert!(line.starts_with("Çizim katmanı · kimlik …") && !waits, "{line}");
     }
 }
 

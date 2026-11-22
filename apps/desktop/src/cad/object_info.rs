@@ -230,20 +230,28 @@ impl App {
         };
         let base = e.base();
         let kind = kind_label(e);
+        // A field the caller's role does not read is no empty row: it is left out and named (docs/adr/9150).
+        let withheld = self.withheld_fields(&base.layer_id);
         let title =
             text(card.and_then(|c| c.title.as_ref()), "Kartın başlığı").unwrap_or_else(|| {
-                match &base.label {
+                let mut title = match &base.label {
                     Some(label) => format!("{kind} {label}"),
                     None => kind.to_owned(),
+                };
+                // The record's name after its kind (docs/adr/9160): the layer's display field's value.
+                if let Some((_, name)) = self.display_value(e, &withheld)
+                    && base.label.as_deref() != Some(name.as_str())
+                {
+                    title.push_str(" · ");
+                    title.push_str(&name);
                 }
+                title
             });
         let body = text(card.and_then(|c| c.text.as_ref()), "Kartın metni");
         let fields: Vec<String> = match card.map(|c| &c.fields) {
             Some(f) if !f.is_empty() => f.clone(),
             _ => base.attrs.keys().cloned().collect(),
         };
-        // A field the caller's role does not read is no empty row: it is left out and named (docs/adr/9150).
-        let withheld = self.withheld_fields(&base.layer_id);
         let mut rows: Vec<(String, String)> = fields
             .into_iter()
             .filter(|f| !withheld.contains(f))
@@ -264,6 +272,29 @@ impl App {
             error,
             source: None,
         }
+    }
+
+    /// The display field of `layer` (docs/adr/9160): among its fields, else among the attributes `attrs` has when it
+    /// declares none; never a field the caller's role does not read.
+    pub(crate) fn display_field_of(
+        &self,
+        layer: &str,
+        attrs: &kentos_forms::Attrs,
+        withheld: &[String],
+    ) -> Option<String> {
+        let node = self.document.as_ref()?.model.layers().get(layer);
+        let declared: Vec<&str> = node.map(|n| n.fields.iter().map(|f| f.name.as_str()).collect()).unwrap_or_default();
+        let names: Vec<&str> = if declared.is_empty() { attrs.keys().map(String::as_str).collect() } else { declared };
+        kentos_commands::display_field(names.into_iter().filter(|n| !withheld.iter().any(|w| w == n))).map(str::to_owned)
+    }
+
+    /// The record's name (docs/adr/9160): its layer's display field and the record's value of it; none when the layer
+    /// has no field with a name in it or the record's value is empty.
+    pub(crate) fn display_value(&self, e: &Entity, withheld: &[String]) -> Option<(String, String)> {
+        let base = e.base();
+        let field = self.display_field_of(&base.layer_id, &base.attrs, withheld)?;
+        let value = base.attrs.get(&field)?.trim();
+        (!value.is_empty()).then(|| (field.clone(), value.to_owned()))
     }
 
     /// The card of the object in `slot`, by its layer's card, with its source line when its layer is bound.

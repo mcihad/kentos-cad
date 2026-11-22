@@ -193,6 +193,43 @@ pub fn infos_problem(tree: &[LayerNode]) -> Option<String> {
     None
 }
 
+/// The words a field's name has to be a record's name (docs/adr/9160), folded: Turkish letters to their plain Latin ones,
+/// lower case.
+const NAME_WORDS: [&str; 9] = ["ad", "adi", "isim", "ismi", "name", "unvan", "unvani", "baslik", "title"];
+
+/// A field's name folded for [`NAME_WORDS`]: ı, i, İ and I alike; ş, ğ, ü, ö, ç as s, g, u, o, c; lower case.
+fn folded(name: &str) -> String {
+    name.chars()
+        .map(|c| match c {
+            'ı' | 'İ' | 'I' => 'i',
+            'ş' | 'Ş' => 's',
+            'ğ' | 'Ğ' => 'g',
+            'ü' | 'Ü' => 'u',
+            'ö' | 'Ö' => 'o',
+            'ç' | 'Ç' => 'c',
+            c => c.to_ascii_lowercase(),
+        })
+        .collect()
+}
+
+/// The display field among a layer's field names, in their order (docs/adr/9160): the record's name the Bilgi card's
+/// title shows when the layer's card has no title of its own. A field named a name word itself first (“ad”, “Adı”,
+/// “isim”, “name”), else the first with one among its words (“yol_adi”, “Mahalle adı”); a word in a longer one is not
+/// (“ada”, “adres”). None when no field has a name in it.
+pub fn display_field<'a>(names: impl IntoIterator<Item = &'a str>) -> Option<&'a str> {
+    let mut compound = None;
+    for name in names {
+        let f = folded(name.trim());
+        if NAME_WORDS.contains(&f.as_str()) {
+            return Some(name);
+        }
+        if compound.is_none() && f.split(|c: char| !c.is_alphanumeric()).any(|w| NAME_WORDS.contains(&w)) {
+            compound = Some(name);
+        }
+    }
+    compound
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -202,6 +239,17 @@ mod tests {
             name: name.into(),
             target: target.into(),
         }
+    }
+
+    #[test]
+    fn the_display_field_is_a_name_and_not_a_word_inside_another() {
+        assert_eq!(display_field(["ada", "yol_adi", "ad"]), Some("ad"), "a name word itself first");
+        assert_eq!(display_field(["ada", "adres", "Mahalle adı", "yol_adi"]), Some("Mahalle adı"), "else the first compound");
+        assert_eq!(display_field(["fid", "ADI"]), Some("ADI"));
+        assert_eq!(display_field(["İSİM"]), Some("İSİM"));
+        assert_eq!(display_field(["Unvanı", "name"]), Some("Unvanı"));
+        assert_eq!(display_field(["ada", "parsel", "adres", "kullanim"]), None);
+        assert_eq!(display_field(["adana_kodu", "adim"]), None);
     }
 
     #[test]

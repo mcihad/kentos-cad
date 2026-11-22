@@ -182,6 +182,8 @@
   - **Salt okunur satır formda** (23 Kasım, rapor 27 ve 28'in kalanı;
     [ADR 9159](../adr/9159-read-only-row-in-its-form.md), VY-58): satır kaynağından okunup yalnız görüntülenir;
     başlık “salt okunur” der.
+  - **Kartın başlığında görüntüleme alanı** (23 Kasım, rapor 13'ün kalanı;
+    [ADR 9160](../adr/9160-display-field-in-the-card-title.md), VY-59): şablonsuz kart “Çoklu çizgi · Gül Sokak” der.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

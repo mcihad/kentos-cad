@@ -1,6 +1,7 @@
 //! Bilgi's card on the municipal report's 13th item (docs/adr/9145): the card names the object's layer and its key
 //! under the title; a click over overlapping objects says how many are under it and goes from one to the next, round to
-//! the first; a click on nothing closes the card and forgets them.
+//! the first; a click on nothing closes the card and forgets them. The title names the record by its layer's display
+//! field (docs/adr/9160).
 
 use crate::app::{App, Message};
 use crate::files_testing::app_with_drawing;
@@ -60,6 +61,68 @@ fn a_click_over_overlapping_objects_counts_them_and_goes_to_the_next() {
     assert!(app.gis.data_info.hits.is_empty());
 }
 
+/// `slot` named “Kent Kitaplığı” with its storeys.
+fn name(app: &mut App, slot: kentos_domain::Slot) {
+    let doc = app.document.as_mut().expect("open");
+    let mut e = doc.model.get(slot).cloned().expect("it");
+    e.base_mut().attrs = [("Kat".to_owned(), "3".to_owned()), ("Ad".to_owned(), "Kent Kitaplığı".to_owned())].into();
+    assert!(doc.model.update(slot, e));
+}
+
+/// The first building of the sample drawing, named.
+fn named_building(app: &mut App) -> kentos_domain::Slot {
+    let doc = app.document.as_ref().expect("open");
+    let slot = doc.model.by_layer("bina").next().map(|e| kentos_domain::Slot(e.base().id)).expect("a building");
+    name(app, slot);
+    slot
+}
+
+/// The 13th item's display field (docs/adr/9160): the record's name follows its kind in the card's title, from the
+/// layer's field with a name in it; a label saying the same is not said twice; a field the role does not read never
+/// names it.
+#[test]
+fn the_cards_title_names_the_record_by_its_display_field() {
+    let mut app = app_with_drawing();
+    let slot = named_building(&mut app);
+    let card = app.slot_card(slot).expect("its card");
+    assert!(card.title.ends_with(" · Kent Kitaplığı"), "{}", card.title);
+    // P1's label is its name already.
+    let doc = app.document.as_ref().expect("open");
+    let p1 = doc
+        .model
+        .by_layer("cizim")
+        .find(|e| e.base().label.as_deref() == Some("P1"))
+        .map(|e| kentos_domain::Slot(e.base().id))
+        .expect("P1");
+    let title = app.slot_card(p1).expect("its card").title;
+    assert!(title.ends_with("P1") && !title.contains(" · P1"), "{title}");
+    // A field the role does not read never names it.
+    let e = doc.model.get(slot).expect("it");
+    assert_eq!(app.display_value(e, &["Ad".to_owned()]), None);
+    assert_eq!(app.display_value(e, &[]), Some(("Ad".to_owned(), "Kent Kitaplığı".to_owned())));
+}
+
+/// A data row's card without a title of its own (docs/adr/9160): the layer's name and the row's, from the table's
+/// field with a name in it (the neighbourhoods' “ad”).
+#[test]
+fn a_data_rows_card_is_titled_with_its_layers_name_and_its_own() {
+    crate::data_layers::register();
+    let address = crate::data_layers_tests::municipal("kart-gorunen-ad").display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "mahalleler").expect("described")])
+        .expect("added");
+    let id = crate::data_layers_tests::node(&app, "mahalleler").expect("the layer").id.clone();
+    let doc = app.document.as_ref().expect("open");
+    let mut object = doc.model.by_layer("cizim").next().cloned().expect("a point");
+    object.base_mut().layer_id = id.clone();
+    object.base_mut().label = None;
+    object.base_mut().attrs = [("mahalle".to_owned(), "M1".to_owned()), ("ad".to_owned(), "Çınar".to_owned())].into();
+    app.gis.data_info.card =
+        Some(crate::data_info::Found { layer: id, key: 1, object, at: kentos_interaction::Vec2 { x: 0.0, y: 0.0 } });
+    let (card, _, _) = app.data_card().expect("the row's card");
+    assert_eq!(card.title, "mahalleler · Çınar");
+}
+
 /// Bilgi's card over the circle and the arc (`.run/gui-evidence/kullanim-9145/`): the layer and key line, how many
 /// objects are under the click and Sonraki.
 #[test]
@@ -68,6 +131,32 @@ fn screens() {
     crate::files_testing::usage_shots("9145", "03-bilgi-ortusen", || {
         let mut app = identifying();
         click(&mut app, between());
+        app
+    });
+}
+
+/// Bilgi's card on a named building object (`.run/gui-evidence/kullanim-9160/`): its name after its kind in the title.
+#[test]
+#[ignore = "pictures for the owner"]
+fn named_screens() {
+    crate::files_testing::usage_shots("9160", "01-bilgi-gorunen-ad", || {
+        let mut app = identifying();
+        click(&mut app, between());
+        let first = shown(&app).expect("the click's first");
+        name(&mut app, first);
+        app
+    });
+}
+
+/// Bilgi kartı's window on the buildings (`.run/gui-evidence/kullanim-9160/`): under Başlık, which field an empty title
+/// names the record by.
+#[test]
+#[ignore = "pictures for the owner"]
+fn layer_info_screens() {
+    crate::files_testing::usage_shots("9160", "02-kart-ayari-gorunen-alan", || {
+        let mut app = app_with_drawing();
+        named_building(&mut app);
+        let _ = app.open_layer_info(Some("bina".to_owned()));
         app
     });
 }

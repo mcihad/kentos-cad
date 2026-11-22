@@ -480,3 +480,7 @@ numaraları raporunkidir.
   ([ADR 9159](../docs/adr/9159-read-only-row-in-its-form.md))
   - Satır kaynağından okunur, çizime alınmaz; başlık “fid 22 · salt okunur”, Kaydet yazmaz; on geçişlik yazım sınaması.
   - Kalan: iki PostGIS bağlantısıyla on geçiş, salt okunur formda ilişkili kayıtlar, web.
+- [~] **VY-59 — Bilgi kartının başlığı kaydı görüntüleme alanıyla adlandırır (rapor 13'ün kalanı).**
+  ([ADR 9160](../docs/adr/9160-display-field-in-the-card-title.md))
+  - Adı ad sözü olan alan, yoksa sözcüklerinde ad sözü olan; “ada/adres” değil; rolün okumadığı alan değil.
+  - Kalan: aynı tıklamada nesne ile veri satırı, etiket önizlemesi, veri katmanında etiket, yer bulucu, web.

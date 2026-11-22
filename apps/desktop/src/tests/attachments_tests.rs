@@ -207,9 +207,9 @@ fn the_card_and_the_actions_are_filled_for_the_object() {
         card.text.as_deref(),
         Some("Hesaplanan alan: 320 m²\nÇevre: 72 m")
     );
-    // The layer without a card: the kind and the label, every attribute by name.
+    // The layer without a card: the kind, the label and the record's name (docs/adr/9160), every attribute by name.
     let road = app.slot_card(Slot(8)).expect("a card");
-    assert_eq!(road.title, "Çoklu çizgi");
+    assert_eq!(road.title, "Çoklu çizgi · Gül Sokak");
     assert_eq!(road.rows, vec![("Ad".to_owned(), "Gül Sokak".to_owned())]);
     // The place is WGS 84's: the address encodes nothing it does not have to.
     let actions = app.slot_actions(Slot(1));

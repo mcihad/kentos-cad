@@ -370,12 +370,20 @@ impl App {
         .on_press(msg(Event::Add))
         .padding(kentos_ui::theme::metrics::action_small())
         .style(style::button::secondary);
-        let form = column![
-            words::field(
-                TITLE_FIELD,
-                title,
-                Some("Şablon: {…} arası bir ifadedir. Boşsa nesnenin türü ve etiketi.".to_owned())
+        // An empty title shows the record's name too (docs/adr/9160): which field that is, or that the layer has none.
+        let first = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.by_layer(&w.layer).next().map(|e| e.base().attrs.clone()))
+            .unwrap_or_default();
+        let empty_title = match self.display_field_of(&w.layer, &first, &[]) {
+            Some(field) => format!(
+                "Şablon: {{…}} arası bir ifadedir. Boşsa nesnenin türü, etiketi ve görüntüleme alanı “{field}”."
             ),
+            None => "Şablon: {…} arası bir ifadedir. Boşsa nesnenin türü ve etiketi; adında ad, adı, isim ya da name geçen alan yok.".to_owned(),
+        };
+        let form = column![
+            words::field(TITLE_FIELD, title, Some(empty_title)),
             words::field(
                 FIELDS,
                 input("Malik, Nitelik", &w.fields, Event::Fields),

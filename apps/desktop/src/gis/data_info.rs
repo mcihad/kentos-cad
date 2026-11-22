@@ -237,7 +237,7 @@ impl App {
     }
 
     /// The shown row's card: its layer's card template filled with every column; without a template, the layer's name
-    /// and the columns in the table's order. Under the title, where the row is: the table and its key. None when the
+    /// and the row's name (docs/adr/9160), and the columns in the table's order. Under the title, where the row is: the table and its key. None when the
     /// layer is gone.
     pub(crate) fn data_card(
         &self,
@@ -253,7 +253,11 @@ impl App {
         let template = node.card.as_ref();
         let mut card = self.object_card(&found.object, template);
         if template.and_then(|c| c.title.as_ref()).is_none() {
-            card.title = node.name.clone();
+            // The layer's name and the row's name (docs/adr/9160): its display field's value.
+            card.title = match self.display_value(&found.object, &self.withheld_fields(&node.id)) {
+                Some((_, name)) => format!("{} · {name}", node.name),
+                None => node.name.clone(),
+            };
         }
         if template.is_none_or(|c| c.fields.is_empty()) {
             let attrs = &found.object.base().attrs;
