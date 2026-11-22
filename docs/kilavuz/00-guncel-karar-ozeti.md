@@ -160,6 +160,9 @@
   - **Okunamayan kaynakta bekleyenler** (23 Kasım, değerlendirmenin 31. maddesi;
     [ADR 9151](../adr/9151-pending-rows-when-the-source-is-unread.md), VY-50): tablo yeni, değişen (“Okul (önce:
     Park)”) ve silinen satırları listeler, doğrulanmadığını söyler.
+  - **Kaynakta silinen satır** (23 Kasım, değerlendirmenin 32. maddesi;
+    [ADR 9152](../adr/9152-a-row-gone-in-the-source.md), VY-51): pencere yazılacak ve bırakılacak satır sayısını söyler;
+    tablo silinen satırı listeler; değişmeyen alan kaynağın değerini gösterir; geri alma bıraktığını sayar.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

@@ -32,6 +32,9 @@ pub(crate) struct DataEdits {
     /// A save that met rows others changed (docs/adr/9104 §3): its layers, the words and each row's clash with what is
     /// chosen for it (docs/adr/9148, data_conflict.rs).
     pub(crate) conflict: Option<crate::data_conflict::Conflict>,
+    /// The taken rows a save found deleted in their source, by layer (docs/adr/9152): the table lists them among its
+    /// rows until the layer is saved, let go or the row's draft is let go.
+    pub(crate) gone: BTreeMap<String, std::collections::BTreeSet<i64>>,
     /// Taslak olarak tut answered for this leaving: the drawing is left without its changes being asked about again; they wait
     /// with the project (docs/adr/9111 §3).
     kept_for: Option<Then>,
@@ -340,17 +343,29 @@ impl App {
                 if modified.is_empty() {
                     return Task::none();
                 }
-                let names: Vec<String> = modified.iter().map(|l| self.data_layer_name(l)).collect();
+                // Each layer with what it lets go, said (docs/adr/9152): the whole group's rows, not one.
+                let names: Vec<String> = modified
+                    .iter()
+                    .map(|l| {
+                        let c = self.document.as_ref().map(|d| d.model.data_changes(l)).unwrap_or_default();
+                        format!(
+                            "{}: {}",
+                            self.data_layer_name(l),
+                            counts_words(c.added.len(), c.changed.len(), c.deleted.len())
+                        )
+                    })
+                    .collect();
                 match self.data_session(SessionAction::Rollback, modified.clone()) {
                     Ok(_) => {
                         for l in &modified {
                             self.gis.data_edits.failed.remove(l);
                             self.gis.data_edits.uncertain.remove(l);
+                            self.gis.data_edits.gone.remove(l);
                         }
                         self.journal_uncertain();
                         self.output(format!(
-                            "Katman değişiklikleri geri alındı ({}): kaynak olduğu gibi kaldı.",
-                            names.join(", ")
+                            "Katman değişiklikleri geri alındı ({}): bunlar bırakıldı, kaynak olduğu gibi kaldı.",
+                            names.join("; ")
                         ))
                     }
                     Err(why) => self.warn(why),
@@ -627,6 +642,7 @@ impl App {
                     match taken {
                         Ok(()) => {
                             self.gis.data_edits.failed.remove(&w.layer);
+                            self.gis.data_edits.gone.remove(&w.layer);
                             said.push(format!("“{}”: {words}", w.name));
                         }
                         Err(why) => self.warn(why),
@@ -649,6 +665,10 @@ impl App {
                 match &failure {
                     WriteFailure::Conflict(_, uids, rows) => {
                         self.select_data_objects(uids);
+                        // The rows the source no longer has stay listed in the table (docs/adr/9152).
+                        for r in rows.iter().filter(|r| r.gone() && r.mine.is_some()) {
+                            self.gis.data_edits.gone.entry(r.layer.clone()).or_default().insert(r.key);
+                        }
                         self.gis.data_edits.conflict = Some(crate::data_conflict::Conflict::of(ids.clone(), rows.clone()));
                         self.dialog = Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict));
                     }

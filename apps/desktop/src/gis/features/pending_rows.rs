@@ -55,6 +55,21 @@ pub(crate) fn pending_lines(changes: &DataChanges, fields: &[String]) -> Vec<Pen
     out
 }
 
+/// A table cell of a row read from the source (docs/adr/9152): the draft's value where the row is changed here in that
+/// field (`local`: the object now and the row as taken), else the source's value now.
+pub(crate) fn cell_value(
+    local: Option<(&kentos_commands::Entity, &kentos_commands::Entity)>,
+    page: &std::collections::BTreeMap<String, String>,
+    field: &str,
+) -> String {
+    match local {
+        Some((now, row)) if now.base().attrs.get(field) != row.base().attrs.get(field) => {
+            now.base().attrs.get(field).cloned().unwrap_or_default()
+        }
+        _ => page.get(field).cloned().unwrap_or_default(),
+    }
+}
+
 /// The status line's words for the pending rows shown while the source cannot be read.
 pub(crate) fn pending_words(added: usize, changed: usize, deleted: usize) -> String {
     format!(

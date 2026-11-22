@@ -43,6 +43,8 @@ pub mod words {
     /// A pending changed or deleted row's mark beside its key while the source is unread (docs/adr/9151).
     pub const CHANGED: &str = "değişen";
     pub const DELETED: &str = "silinen";
+    /// A taken row its source no longer has (docs/adr/9152).
+    pub const GONE: &str = "kaynakta silinmiş";
     pub fn count(n: u64) -> String {
         format!("{} satır", crate::view::thousands(n as f64))
     }
@@ -656,7 +658,10 @@ impl App {
         } else {
             data.fields.clone()
         };
-        let mut columns = vec![TableColumn::new("Anahtar").width(Length::Fixed(80.0)).align_right()];
+        // Wide enough for a key with its mark (“22 kaynakta silinmiş”) when the source lost a taken row (docs/adr/9152).
+        let marked = self.gis.data_edits.gone.get(&node.id).is_some_and(|k| !k.is_empty());
+        let key_width = if marked { 160.0 } else { 80.0 };
+        let mut columns = vec![TableColumn::new("Anahtar").width(Length::Fixed(key_width)).align_right()];
         for f in &fields {
             let order = data.order.first().filter(|(o, _)| o == f).map(|(_, d)| {
                 if *d {
@@ -698,11 +703,31 @@ impl App {
             _ => Vec::new(),
         };
         let offline = data.error.is_some();
+        // The taken rows a save found deleted in the source come after the new ones, with their local values, so their
+        // drafts can be looked at (docs/adr/9152); the source's pages hold them no longer.
+        let gone_rows: Vec<(i64, std::sync::Arc<kentos_commands::Entity>)> = if offline {
+            Vec::new()
+        } else {
+            self.gis
+                .data_edits
+                .gone
+                .get(&node.id)
+                .map(|keys| keys.iter().filter_map(|k| taken.get(k).map(|e| (*k, e.clone()))).collect())
+                .unwrap_or_default()
+        };
+        let before = new_rows + gone_rows.len();
         let count = if offline {
             new_rows + pending.len()
         } else {
-            new_rows + data.total.unwrap_or(0) as usize
+            before + data.total.unwrap_or(0) as usize
         };
+        // A taken row's fields not changed here show the source's value now, not the one it was taken with
+        // (docs/adr/9152): only what is changed here is the draft's.
+        let changed_by_key: HashMap<i64, (std::sync::Arc<kentos_commands::Entity>, std::sync::Arc<kentos_commands::Entity>)> =
+            changes
+                .as_ref()
+                .map(|c| c.changed.iter().map(|d| (d.key, (d.now.clone(), d.row.clone()))).collect())
+                .unwrap_or_default();
         let editing = data.editing.clone();
         let edit_text = data.edit_text.clone();
         let field_count = fields.len() + 1;
@@ -720,7 +745,19 @@ impl App {
                         .selected(chosen.contains(uid))
                         .on_press(msg(DataEvent::PressNew(*uid)));
                 }
-                let i = i - new_rows;
+                if !offline && i < before {
+                    let (key, e) = &gone_rows[i - new_rows];
+                    let mut cells: Vec<Element<'_, Message>> = vec![
+                        kentos_ui::widget::table::text(format!("{key} {}", words::GONE))
+                            .style(kentos_ui::style::text::warning)
+                            .into(),
+                    ];
+                    cells.extend(shown.iter().map(|f| {
+                        kentos_ui::widget::table::text(e.base().attrs.get(f).cloned().unwrap_or_default()).into()
+                    }));
+                    return TableLine::new(cells);
+                }
+                let i = if offline { i - new_rows } else { i - before };
                 if offline {
                     let Some(p) = pending.get(i) else {
                         return TableLine::new(std::iter::once(text("").into()).chain(shown.iter().map(|_| text("").into())));
@@ -757,10 +794,11 @@ impl App {
                                 ));
                                 continue;
                             }
-                            let value = match taken.get(&key) {
-                                Some(e) => e.base().attrs.get(f).cloned().unwrap_or_default(),
-                                None => r.attrs.get(f).cloned().unwrap_or_default(),
-                            };
+                            let value = super::pending_rows::cell_value(
+                                changed_by_key.get(&key).map(|(now, row)| (&**now, &**row)),
+                                &r.attrs,
+                                f,
+                            );
                             let face = kentos_ui::widget::table::text(value);
                             let face: Element<'_, Message> = if gone {
                                 face.style(kentos_ui::style::text::muted).into()
@@ -786,7 +824,7 @@ impl App {
                     ),
                 }
             })
-            .on_range(move |a, b| msg(DataEvent::Range(a.saturating_sub(new_rows), b.saturating_sub(new_rows))))
+            .on_range(move |a, b| msg(DataEvent::Range(a.saturating_sub(before), b.saturating_sub(before))))
             // A refused question says why where the rows would be, not that it reads: a field the layer lacks is no
             // empty answer (docs/adr/9132).
             .empty(match (&data.error, data.total) {

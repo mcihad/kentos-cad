@@ -1528,6 +1528,9 @@ mod data_labels;
 mod data_selection;
 #[path = "gis/data_conflict.rs"]
 mod data_conflict;
+#[cfg(test)]
+#[path = "gis/data_gone_tests.rs"]
+mod data_gone_tests;
 #[path = "gis/data_edits.rs"]
 mod data_edits;
 #[path = "gis/data_pending.rs"]

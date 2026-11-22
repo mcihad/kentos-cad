@@ -2547,6 +2547,8 @@ Liste:
   alanı boş sütun olarak göstermesin, adıyla söylesin.
 - [ ] Okunamayan kaynakta bekleyenler (ADR 9151, 23 Kasım 2026): web'in veri tablosu kaynak okunamazken oturumun yeni,
   değişen ve silinen satırlarını listelesin.
+- [ ] Kaynakta silinen satır (ADR 9152, 23 Kasım 2026): web'in çakışma penceresi yazılacak/bırakılacak sayıyı söylesin,
+  tablo silinen satırı listelesin, değişmeyen alan kaynağın değerini göstersin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

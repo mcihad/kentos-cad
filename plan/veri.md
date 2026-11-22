@@ -448,3 +448,7 @@ numaraları raporunkidir.
   ([ADR 9151](../docs/adr/9151-pending-rows-when-the-source-is-unread.md))
   - `features/pending_rows.rs`: değişen satır yerel ve önceki değerle, silinen anahtarıyla; “doğrulanmadı” sözü.
   - Kalan: son doğrulama zamanı, gerçek PostgreSQL kesintisi, web.
+- [~] **VY-51 — Kaynakta silinen satırın taslağı bırakılınca sağlam satırlar yazılır (rapor 32, P1).**
+  ([ADR 9152](../docs/adr/9152-a-row-gone-in-the-source.md))
+  - Pencerede yazılacak/bırakılacak sayı; tabloda “kaynakta silinmiş” satırlar; değişmeyen alan kaynağın değeri; geri almanın sayısı.
+  - Kalan: gerçek PostgreSQL'de deneme, yeni kayıt yetkisinin sorulması, web.

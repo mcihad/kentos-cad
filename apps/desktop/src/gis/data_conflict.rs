@@ -158,6 +158,8 @@ impl App {
             }
             body = body.push(block);
         }
+        // How many rows the choice writes in one go, the sound ones with the settled (docs/adr/9152).
+        body = body.push(label::muted(self.data_conflict_count(c)));
         Frame::new(TITLE)
             .push(body)
             .action(words::secondary(KEEP, Some(event(Event::KeepConflict))))
@@ -165,6 +167,30 @@ impl App {
             .action(words::primary(SETTLE, c.ready().then(|| event(Event::Settle))))
             .width(860.0)
             .modal(event(Event::KeepConflict))
+    }
+
+    /// What Seçilenleri kaydet writes: the layers' rows waiting, less those whose draft the choices let go.
+    pub(crate) fn data_conflict_count(&self, c: &Conflict) -> String {
+        let waiting: usize = c
+            .layers
+            .iter()
+            .map(|l| {
+                let ch = self.document.as_ref().map(|d| d.model.data_changes(l)).unwrap_or_default();
+                ch.added.len() + ch.changed.len() + ch.deleted.len()
+            })
+            .sum();
+        let dropped = c
+            .rows
+            .iter()
+            .zip(&c.chosen)
+            .filter(|(r, p)| (r.gone() || r.deleted_here()) && p.first().copied().flatten() == Some(false))
+            .count();
+        let written = waiting.saturating_sub(dropped);
+        if dropped == 0 {
+            format!("Seçilenleri kaydet {written} satırı tek işlemde yazar.")
+        } else {
+            format!("Seçilenleri kaydet {written} satırı tek işlemde yazar; {dropped} satırın taslağı bırakılır.")
+        }
     }
 
     /// A choice made.
@@ -248,9 +274,22 @@ impl App {
         for (layer, uid) in untake {
             doc.model.data_untake(&layer, uid);
         }
+        let mut dropped_keys: Vec<(String, i64)> = Vec::new();
         for (layer, uid) in let_go {
+            if let Some(key) = doc.model.taken_key(&layer, uid) {
+                dropped_keys.push((layer.clone(), key));
+            }
             if let Err(why) = doc.model.data_let_go(&layer, uid) {
                 problems.push(why);
+            }
+        }
+        // A row let go or written again as a new one is no longer the source's gone row.
+        for r in c.rows.iter().filter(|r| r.gone()) {
+            dropped_keys.push((r.layer.clone(), r.key));
+        }
+        for (layer, key) in dropped_keys {
+            if let Some(keys) = self.gis.data_edits.gone.get_mut(&layer) {
+                keys.remove(&key);
             }
         }
         for why in problems {
