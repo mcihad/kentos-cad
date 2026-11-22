@@ -16,6 +16,8 @@ pub(crate) struct GisUiState {
     pub(crate) data_journal: crate::data_journal::Journals,
     /// Katman değişiklikleri: the rows the data layers' sources do not have yet (data_pending.rs, docs/adr/9123).
     pub(crate) data_pending: Option<crate::data_pending::PendingWindow>,
+    /// The data layers' rows the counting tabs asked for, read from their sources (data_rows.rs, docs/adr/9130).
+    pub(crate) data_rows: crate::data_rows::DataRows,
     /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
     pub(crate) data_pick: crate::data_pick::DataPick,
     /// The counted layers' class counts (docs/adr/9105 §4).
@@ -150,6 +152,7 @@ pub(crate) enum Event {
     /// A data layer's edit session: opened, saved, let go, closed (data_edits.rs, docs/adr/9103 §5).
     DataEdits(crate::data_edits::Event),
     DataPending(crate::data_pending::Event),
+    DataRows(crate::data_rows::Event),
     /// A layer's style classes in Katmanlar (docs/adr/9105).
     LayerClasses(crate::layer_classes::Event),
     /// Farklı kaydet… (docs/adr/9106).
@@ -395,6 +398,7 @@ impl App {
             Event::DataSelection(event) => return self.data_selection_event(event),
             Event::DataEdits(event) => return self.data_edits_event(event),
             Event::DataPending(event) => return self.data_pending_event(event),
+            Event::DataRows(event) => return self.data_rows_event(event),
             Event::LayerClasses(event) => return self.layer_classes_event(event),
             Event::LayerExport(event) => return self.layer_export_event(event),
             Event::ProjectStore(event) => return self.project_store_event(event),

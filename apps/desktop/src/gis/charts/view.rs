@@ -234,7 +234,13 @@ impl App {
         // The list counts each layer's objects; the closed box names the layer (the web's).
         let mut choices: Vec<Choice> = layers
             .iter()
-            .map(|(_, path, n)| Choice::new(format!("{path} ({n})")).shown(path.clone()))
+            .map(|(id, path, n)| {
+                let label = self
+                    .document
+                    .as_ref()
+                    .map_or_else(|| format!("{path} ({n})"), |d| super::data::layer_label(d, id, path, *n));
+                Choice::new(label).shown(path.clone())
+            })
             .collect();
         if let Some(t) = &self.gis.charts.table {
             ids.push(None);

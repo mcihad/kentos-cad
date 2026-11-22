@@ -1530,6 +1530,8 @@ mod data_selection;
 mod data_edits;
 #[path = "gis/data_pending.rs"]
 mod data_pending;
+#[path = "gis/data_rows.rs"]
+mod data_rows;
 #[path = "gis/data_journal.rs"]
 mod data_journal;
 #[path = "gis/data_pick.rs"]

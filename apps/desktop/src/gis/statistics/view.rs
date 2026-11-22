@@ -95,9 +95,13 @@ impl App {
         let ids: Vec<String> = layers.iter().map(|(id, _, _)| id.clone()).collect();
         let chosen = current.and_then(|l| ids.iter().position(|id| *id == l));
         let layer = Select::new(
-            layers
-                .iter()
-                .map(|(_, path, n)| Choice::new(format!("{path} ({n})")).shown(path.clone())),
+            layers.iter().map(|(id, path, n)| {
+                let label = self
+                    .document
+                    .as_ref()
+                    .map_or_else(|| format!("{path} ({n})"), |d| crate::charts::data::layer_label(d, id, path, *n));
+                Choice::new(label).shown(path.clone())
+            }),
             chosen,
             move |i| msg(Event::Layer(ids[i].clone())),
         )
@@ -114,7 +118,19 @@ impl App {
             container(layer).width(Length::Fixed(180.0)),
             container(label::muted(texts::SHOW)).padding([0, 2]),
             container(show).width(Length::Fixed(140.0)),
-            label::muted(texts::objects(now.rows.len())),
+            label::muted(match self.layer_rows_from() {
+                // A data layer's rows are its source's (docs/adr/9130).
+                Some(crate::charts::data::From::Source) => {
+                    // Changes not yet written are counted as this device has them (docs/adr/9130), said so.
+                    let pending = self.chart_layer().is_some_and(|l| self.data_waiting().iter().any(|w| w.layer == l));
+                    if pending {
+                        format!("{} satır, kaynaktan; kaynağa yazılmamış değişiklikler bu cihazdaki hâliyle", now.rows.len())
+                    } else {
+                        format!("{} satır, kaynaktan", now.rows.len())
+                    }
+                }
+                _ => texts::objects(now.rows.len()),
+            }),
         ]
         .spacing(8)
         .align_y(Center);
@@ -178,10 +194,15 @@ impl App {
         let keys = now.keys.clone();
         let chosen = self.gis.charts.field.clone();
         let count = lines.len();
-        let empty = if self.chart_layer().is_none() {
-            texts::NO_LAYERS
+        let empty: String = if self.chart_layer().is_none() {
+            texts::NO_LAYERS.to_owned()
         } else {
-            texts::NONE
+            match self.layer_rows_from() {
+                Some(crate::charts::data::From::Reading) => "Kaynak okunuyor…".to_owned(),
+                Some(crate::charts::data::From::Failed(why)) => format!("Kaynak okunamadı: {why}"),
+                Some(crate::charts::data::From::Source) => "Kaynakta satır yok.".to_owned(),
+                _ => texts::NONE.to_owned(),
+            }
         };
         Table::new(columns)
             .horizontal()

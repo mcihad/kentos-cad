@@ -78,6 +78,12 @@ impl App {
         key
     }
 
+    /// Where the shown layer's rows come from (docs/adr/9130): the drawing, or a data layer's source (read, being read,
+    /// unread); none before the layer is read.
+    pub(crate) fn layer_rows_from(&self) -> Option<super::data::From> {
+        self.gis.charts.layer_data.borrow().as_ref().map(|(_, d)| d.from.clone())
+    }
+
     /// The İşlemler table's data, read once a table.
     fn table_data_now(&self) -> Option<u64> {
         let table = self.gis.charts.table.as_ref()?;

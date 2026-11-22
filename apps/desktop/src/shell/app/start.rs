@@ -347,6 +347,7 @@ impl App {
                 data_edits: Default::default(),
                 data_journal: Default::default(),
                 data_pending: None,
+                data_rows: Default::default(),
                 data_pick: Default::default(),
                 layer_classes: Default::default(),
                 layer_export: None,

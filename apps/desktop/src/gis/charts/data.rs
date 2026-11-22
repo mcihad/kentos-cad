@@ -16,6 +16,19 @@ use crate::app::App;
 use crate::document::Document;
 use crate::features::Show;
 
+/// Where a layer's rows come from (docs/adr/9130).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum From {
+    /// The drawing's objects.
+    Drawing,
+    /// A data layer's source, its rows read.
+    Source,
+    /// A data layer's source, its rows being read.
+    Reading,
+    /// A data layer's source that could not be read: why.
+    Failed(String),
+}
+
 /// A layer's data in the core.
 pub(crate) struct LayerData {
     /// The layer the data is of.
@@ -23,10 +36,16 @@ pub(crate) struct LayerData {
     pub slots: Vec<Slot>,
     pub work: Work,
     at: HashMap<Slot, u32>,
+    /// Where its rows come from.
+    pub from: From,
 }
 
 impl LayerData {
     pub fn of(app: &App, doc: &Document, layer: &str) -> LayerData {
+        // A data layer's rows are its source's (docs/adr/9130), the rows the drawing holds as it has them.
+        if let Some(read) = app.data_layer_rows(layer) {
+            return Self::of_source(app, doc, layer, read);
+        }
         let model = &doc.model;
         let entities: Vec<&Entity> = model
             .by_layer(layer)
@@ -59,6 +78,35 @@ impl LayerData {
             }),
             slots,
             at,
+            from: From::Drawing,
+        }
+    }
+
+    /// A data layer's data: its rows as the source and the drawing have them; none while they are read or when they
+    /// could not be (`from` says which). The source's rows have no place in the drawing: their slots are none of its,
+    /// so Seçililer and Görünümdekiler leave them out, and their measures (Alan, Uzunluk) are not the drawing's.
+    fn of_source(app: &App, doc: &Document, layer: &str, read: Result<Option<Vec<Entity>>, String>) -> LayerData {
+        let (entities, from) = match read {
+            Ok(Some(rows)) => (rows, From::Source),
+            Ok(None) => (Vec::new(), From::Reading),
+            Err(why) => (Vec::new(), From::Failed(why)),
+        };
+        let model = &doc.model;
+        let fields = model.layers().get(layer).map(|n| n.fields.clone()).unwrap_or_default();
+        let per_metre = model.settings().unit().per_metre();
+        let refs: Vec<&Entity> = entities.iter().collect();
+        let mut columns = layer_columns(&fields, &refs, None, per_metre);
+        let redacted = app.redacted_fields();
+        columns.retain(|c| !redacted.contains(&c.key) && !redacted.contains(&c.label));
+        // Slots past the drawing's: never a drawing's object, each its own.
+        let slots: Vec<Slot> = (0..entities.len()).map(|i| Slot(u32::MAX - i as u32)).collect();
+        let at = slots.iter().enumerate().map(|(i, s)| (*s, i as u32)).collect();
+        LayerData {
+            layer: layer.to_owned(),
+            work: Work::new(DataSet { rows: slots.len(), columns }),
+            slots,
+            at,
+            from,
         }
     }
 
@@ -141,6 +189,16 @@ pub(crate) fn layer_at_hand(app: &App, doc: &Document, kept: Option<&str>) -> Op
         .filter(|l| is_layer(l))
         .or_else(|| Some(layers.active().to_owned()).filter(|l| is_layer(l)))
         .or_else(|| layers.leaves().first().map(|n| n.id.clone()))
+}
+
+/// A layer as Katman ▾ names it: its path and object count; a data layer “(veri)”, its rows being its source's
+/// (docs/adr/9130).
+pub(crate) fn layer_label(doc: &Document, id: &str, path: &str, n: usize) -> String {
+    if doc.model.layers().get(id).is_some_and(|l| l.data.is_some()) {
+        format!("{path} (veri)")
+    } else {
+        format!("{path} ({n})")
+    }
 }
 
 /// The drawing's layers for Katman ▾: id, path and object count (a filtered

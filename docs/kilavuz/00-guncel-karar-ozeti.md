@@ -94,6 +94,9 @@
   - **Kaynak durumu veri katmanlarını sayar** (22 Kasım, değerlendirmenin 5. ve 28. maddeleri;
     [ADR 9129](../adr/9129-data-layers-in-source-status-and-table-picker.md), VY-28): veri katmanları kaynağın gerçek
     satır sayısıyla (“hesaplanmadı” sorulana kadar); tablo seçicisi aynı adlıları kaynakla ayırır, çizim hedefini söyler.
+  - **İstatistik ve Grafik veri katmanını kaynağından sayar** (22 Kasım, değerlendirmenin 17. maddesi;
+    [ADR 9130](../adr/9130-statistics-and-charts-over-data-layers.md), VY-29): satırlar `data_rows`'ta arka planda okunur,
+    çizimin tuttukları o anki hâlleriyle; okunurken ve okunamazken ayrı söylenir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

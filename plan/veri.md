@@ -337,3 +337,9 @@ numaraları raporunkidir.
   - Denetçide “Veri katmanları” satırı; tablo başka katmandayken “Çizim hedefi”; Katman ▾'da aynı adlılar kaynakla,
     salt okunur işaretli.
   - Kalan: alınmış kopya ve bağlı katmanla tek katalog, form başlığında salt okunur, on geçişlik yazım sınaması, web.
+- [~] **VY-29 — İstatistik ve Grafik veri katmanını kaynağından sayar (rapor 17, P1).**
+  ([ADR 9130](../docs/adr/9130-statistics-and-charts-over-data-layers.md))
+  - Veri katmanının satırları kaynaktan arka planda okunup saklanır (çizimin tuttukları o anki hâlleriyle); ortak
+    okuyucu onları kullanır. Okunurken, okunamazken ve boşken ayrı sözler; bekleyen değişiklik söylenir.
+  - Raporun bakım verisiyle sınama (5 dolu, 1 boş, toplam 500, ortalama 100, en az 0; durum 3 değer).
+  - Kalan: veri katmanında Seçililer ve Görünümdekiler, grafikten seçim, sağlayıcının toplamıyla sayım, web.
