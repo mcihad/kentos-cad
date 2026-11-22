@@ -89,6 +89,11 @@ impl App {
         Task::none()
     }
 
+    /// Whether a data layer's selected rows are outlined on the map (Seçime yakınlaştır frames them).
+    pub(crate) fn data_rows_outlined(&self) -> bool {
+        self.gis.data_selection.outlines.as_ref().is_some_and(|o| o.objects > 0)
+    }
+
     /// Seçime yakınlaş on a data layer's table: the selected rows framed.
     pub(crate) fn zoom_to_data_selection(&mut self) {
         let Some(o) = self.gis.data_selection.outlines.as_ref() else {

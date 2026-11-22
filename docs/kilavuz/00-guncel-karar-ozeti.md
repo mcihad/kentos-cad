@@ -103,6 +103,9 @@
   - **Tablonun koşulları katmanındır** (22 Kasım, değerlendirmenin 20. maddesi;
     [ADR 9132](../adr/9132-table-conditions-by-layer.md), VY-31): Ara, ifade ve sıra katmanın kimliği ve kaynağıyla
     saklanır; `cad.layers.rows` katmanda olmayan alanı `field_not_found` ile söyler, reddedilen soru yinelenmez.
+  - **İfadeyle seç veri katmanında kaynağa sorar** (22 Kasım, değerlendirmenin 18. maddesi;
+    [ADR 9133](../adr/9133-select-by-expression-on-data-layers.md), VY-32): seçim satır anahtarlarıyla, dört seçim
+    biçimiyle; tablo ve harita gösterir, Seçime yakınlaştır çerçeveler, Durdur seçimi korur.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

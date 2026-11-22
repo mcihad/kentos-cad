@@ -26,6 +26,7 @@ pub(crate) mod apart;
 mod apart_tests;
 pub(crate) mod background;
 pub(crate) mod batch;
+pub(crate) mod data_select;
 pub(crate) mod designer;
 pub mod dialog;
 mod fields;
@@ -172,6 +173,8 @@ pub struct Processing {
     pub(crate) server_asked: Option<u64>,
     /// The raster tools' analysis environment for the session (environment.rs, docs/adr/0643 §5).
     pub(crate) environment: environment::LocalEnvironment,
+    /// İfadeyle seç asking a data layer's source (data_select.rs, docs/adr/9133).
+    pub(crate) data_select: data_select::DataSelect,
 }
 
 impl Default for Processing {
@@ -190,6 +193,7 @@ impl Default for Processing {
             server_request: None,
             server_asked: None,
             environment: environment::LocalEnvironment::default(),
+            data_select: data_select::DataSelect::default(),
         }
     }
 }
@@ -228,6 +232,8 @@ pub enum Event {
     Run,
     /// Durdur: the window's background run stops.
     Stop,
+    /// İfadeyle seç's answer from a data layer's source (data_select.rs).
+    DataSelect(data_select::SelectEvent),
     /// What background run `id` says.
     Background(u64, background::Reply),
     /// A parameter's value chosen: a choice, a switch, a scope, a layer, kinds.
@@ -460,6 +466,17 @@ impl App {
             .refresh(&doc.model, &window.tool, &window.values);
         let folder = doc.path.as_deref().and_then(std::path::Path::parent);
         window.overwrites = overwrite::overwrites(&doc.model, folder, &window.tool, &window.values);
+        // İfadeyle seç on a data layer: its input is the source's rows, its preview counts them (data_select.rs,
+        // docs/adr/9133).
+        let (input, line) = (self.data_select_input(), self.data_select_preview());
+        if let Some(window) = &mut self.gis.processing.dialog {
+            if let Some(input) = input {
+                window.inputs.insert("input".to_owned(), input);
+            }
+            if let Some(line) = line {
+                window.previews.insert("condition".to_owned(), line);
+            }
+        }
     }
 
     pub(crate) fn processing_event(&mut self, e: Event) -> Task<Message> {
@@ -504,6 +521,7 @@ impl App {
                 self.processing_stop();
                 return Task::none();
             }
+            Event::DataSelect(e) => return self.data_select_event(e),
             Event::Background(id, reply) => {
                 self.processing_background(id, reply);
                 return self.result_shown();
@@ -667,7 +685,15 @@ impl App {
         if window.running() {
             return Task::none();
         }
-        let (Some(doc), true) = (&mut self.document, window.attempt()) else {
+        let attempted = window.attempt();
+        // İfadeyle seç on a data layer asks its source, not the drawing (data_select.rs, docs/adr/9133).
+        if attempted && let Some(task) = self.processing_data_select_run() {
+            return task;
+        }
+        let Some(window) = &mut self.gis.processing.dialog else {
+            return Task::none();
+        };
+        let (Some(doc), true) = (&mut self.document, attempted) else {
             self.refresh_processing();
             return Task::none();
         };
@@ -976,7 +1002,7 @@ impl App {
     /// drawing stays as it is; the thread is asked to stop, and what it
     /// still says is not heard.
     fn processing_stop(&mut self) {
-        if self.processing_sink_stop() {
+        if self.processing_sink_stop() || self.processing_data_select_stop() {
             return;
         }
         let Some(id) = self.gis.processing.dialog.as_ref().and_then(|w| w.waiting) else {
@@ -1149,9 +1175,8 @@ impl App {
             };
             self.selection.set(exists);
         }
-        if !self.selection.is_empty() {
-            self.zoom_selection();
-        }
+        // The drawing's selection framed, else a data layer's rows İfadeyle seç selected (docs/adr/9133).
+        self.zoom_selection();
     }
 
     /// Sahneden seç: the window steps aside while a point is picked on the

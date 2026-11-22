@@ -354,3 +354,9 @@ numaraları raporunkidir.
   - `cad.layers.rows` katmanda olmayan alanı anan süzgeci `field_not_found` ile reddeder; çizim katmanının tablosu aynı
     sözü söyler. Reddedilen soru her iletide yeniden sorulmaz.
   - Kalan: koşulları proje dosyasında saklamak (sahibin kararı), web.
+- [x] **VY-32 — İfadeyle seç veri katmanında koşulu kaynağa sorar (rapor 18, P1).**
+  ([ADR 9133](../docs/adr/9133-select-by-expression-on-data-layers.md))
+  - Koşul `layers_rows` ile kaynakta sorulur; seçim biçimi tablonun anahtar seçimine uygulanır; tablo katmana gelir,
+    harita çerçeveler, Seçime yakınlaştır veri satırlarını da çerçeveler.
+  - Girdi satırı ve önizleme kaynağın satırlarını söyler; Durdur seçimi korur; CAD özellik süzgeci reddedilir.
+  - Kalan: Seçili kapsamı veri satırlarıyla, ölçülerde metre birimi, web.

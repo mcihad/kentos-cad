@@ -235,6 +235,12 @@ impl DataTable {
         self.selected_of.as_deref()
     }
 
+    /// The rows İfadeyle seç chose on a data layer (processing/data_select.rs): the table's selection, of that layer.
+    pub(crate) fn choose_rows(&mut self, layer: &str, keys: BTreeSet<i64>) {
+        self.selected_of = Some(layer.to_owned());
+        self.selected = keys;
+    }
+
     /// Seç's rows of a data layer that is not being edited (data_pick.rs): the table's selection, of that layer.
     pub(crate) fn select_rows(&mut self, layer: &str, keys: Vec<i64>) {
         if self.selected_of.as_deref() != Some(layer) {

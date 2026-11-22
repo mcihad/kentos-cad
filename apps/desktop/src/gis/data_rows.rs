@@ -130,6 +130,10 @@ impl App {
         *self.gis.charts.layer_data.borrow_mut() = None;
         *self.gis.charts.stats.borrow_mut() = Default::default();
         *self.gis.charts.chart.borrow_mut() = Default::default();
+        // İfadeyle seç's preview on the layer counts them (processing/data_select.rs).
+        if self.gis.processing.dialog.is_some() {
+            self.refresh_processing();
+        }
         Task::none()
     }
 }

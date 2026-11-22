@@ -3,81 +3,13 @@
 //! its three rows. A condition naming a field the layer lacks says so instead of “no row”, on a data layer and on a
 //! layer of the drawing's own.
 
-use kentos_data::{Coord, Driver as _, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value};
-
 use crate::features::Event;
 use crate::features::data::DataEvent;
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
-use crate::data_layers_tests::{answer_pages, node};
-use crate::files_testing::{app_with_drawing, scratch};
+use crate::data_layers_tests::{answer_pages, municipal, node};
+use crate::files_testing::app_with_drawing;
 use crate::gis;
-
-/// A table of points, its rows' values in the order of `fields`.
-fn table(source: &dyn kentos_data::Source, name: &str, fields: &[(&str, FieldKind)], rows: &[Vec<Value>]) {
-    let mut tx = source.begin().expect("begin");
-    tx.create_table(
-        &NewTable {
-            name: name.into(),
-            title: None,
-            description: None,
-            key: "fid".into(),
-            fields: fields.iter().map(|(n, k)| Field::new(n, k.clone())).collect(),
-            geometry: Some(GeometryField {
-                name: "geom".into(),
-                type_name: "POINT".into(),
-                z: false,
-                m: false,
-                srid: Some(5255),
-            }),
-            spatial_index: true,
-            system: None,
-        },
-        false,
-    )
-    .expect("table");
-    let features: Vec<NewFeature> = rows
-        .iter()
-        .enumerate()
-        .map(|(i, values)| NewFeature {
-            fid: None,
-            geometry: Some(Geometry::Point(Some(Coord::xy(484_000.0 + i as f64 * 10.0, 4_420_000.0)))),
-            values: fields.iter().map(|(n, _)| n.to_string()).zip(values.iter().cloned()).collect(),
-        })
-        .collect();
-    tx.insert(name, &features).expect("rows");
-    tx.commit().expect("commit");
-}
-
-/// The report's GeoPackage: `bakim` (kod, bedel, mahalle; bedel 0, 100, 250, NULL, 50, 100) and `mahalleler` (mahalle,
-/// ad: M1 Çınar, M2 İstasyon, M3 Kale).
-fn municipal(tag: &str) -> std::path::PathBuf {
-    let path = scratch(tag).join("Mahalle-Verileri.gpkg");
-    kentos_geopackage::GeoPackage::create(&path).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
-    let text = |t: &str| Value::Text(t.into());
-    let bedel = [Some(0.0), Some(100.0), Some(250.0), None, Some(50.0), Some(100.0)];
-    let mahalle = ["M1", "M1", "M2", "M2", "M9", "M1"];
-    table(
-        &*source,
-        "bakim",
-        &[
-            ("kod", FieldKind::Text { max: Some(8) }),
-            ("bedel", FieldKind::Real),
-            ("mahalle", FieldKind::Text { max: Some(4) }),
-        ],
-        &(0..6)
-            .map(|i| vec![text(&format!("B0{}", i + 1)), bedel[i].map_or(Value::Null, Value::Real), text(mahalle[i])])
-            .collect::<Vec<_>>(),
-    );
-    table(
-        &*source,
-        "mahalleler",
-        &[("mahalle", FieldKind::Text { max: Some(4) }), ("ad", FieldKind::Text { max: Some(32) })],
-        &[vec![text("M1"), text("Çınar")], vec![text("M2"), text("İstasyon")], vec![text("M3"), text("Kale")]],
-    );
-    path
-}
 
 fn ev(app: &mut App, e: Event) {
     let task = app.update(Message::Gis(gis::Event::Features(e)));

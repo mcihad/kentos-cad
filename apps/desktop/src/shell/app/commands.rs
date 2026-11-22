@@ -986,7 +986,9 @@ impl App {
             "draft.lock.clear" => self.session.lock_reference().is_some() && self.locks.any(),
             "view.isolateObjects" => doc.is_some() && !self.selection.is_empty() && !self.session.is_running(),
             "view.endObjectIsolation" => doc.is_some_and(kentos_domain::Document::objects_isolated) && !self.session.is_running(),
-            "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
+            "edit.deselect" => !self.selection.is_empty(),
+            // A data layer's selected rows are framed too (docs/adr/9133).
+            "view.zoomSelection" => !self.selection.is_empty() || self.data_rows_outlined(),
             "map.workSource" | "map.workRelease" => self.map_work_available(id),
             // An attachment goes on one object (attachments.rs, docs/adr/0225 §2), as the web's.
             "attachment.add" | "attachment.addLink" => doc.is_some() && self.selection.len() == 1,
