@@ -129,6 +129,9 @@ pub struct Context {
     /// The drawing's layers (id, name), for a coordinate list's source
     /// (docs/adr/0206 §2).
     pub layers: Vec<(String, String)>,
+    /// The boxes of the layers that hold objects (id, box in canonical metres), for Yeni pafta's Katman extent
+    /// (docs/adr/9147); the host gives them when a new sheet is asked for.
+    pub layer_bounds: Vec<(String, [f64; 4])>,
     pub named_views:Vec<kentos_sheet::viewport::NamedModelView>,
     pub annotation_scales:Vec<f64>,
     /// The project's layer states by name and its line types with patterns, for a map's own layers
@@ -511,6 +514,11 @@ impl Designer {
     pub fn set_data(&mut self, data: RenderInputs) {
         self.data = data;
         self.refresh();
+    }
+
+    /// The host's data for the open sheet's tables, coordinate lists and legends, as last given.
+    pub fn data(&self) -> &RenderInputs {
+        &self.data
     }
 
     /// A book read from elsewhere (a `.kpafta`, the store): the undo stack starts again.

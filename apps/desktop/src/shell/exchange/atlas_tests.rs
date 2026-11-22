@@ -496,3 +496,21 @@ fn the_preflight_reads_an_atlas_page_by_page() {
     let missing = checked.issues.iter().find(|i| i.code == "value_missing").expect("the fixture's missing @kaynak");
     assert!(missing.error && missing.message.contains("(sayfa “"), "{}", missing.message);
 }
+
+/// The municipal report's 15th item (docs/adr/9147): a coverage that gives no page is said by the plan and nothing is
+/// written.
+#[test]
+fn an_atlas_whose_coverage_gives_no_page_is_said_and_not_written() {
+    let mut app = app_with_atlas();
+    run(&mut app, "file.export.atlas");
+    send(&mut app, Event::Atlas(A::Sheet(1)));
+    let layer = window(&app).layers.iter().position(|(id, _)| id == "parsel").expect("the parcel layer") + 1;
+    send(&mut app, Event::Atlas(A::Layer(layer)));
+    send(&mut app, Event::Atlas(A::Filter("Parsel > 100000".into())));
+    send(&mut app, Event::Atlas(A::Apply));
+    let why = window(&app).plan.as_ref().expect_err("no page, no plan").clone();
+    assert!(why.ends_with("süzgeçlerden geçen nesne kalmadı: atlasın sayfası yok."), "{why}");
+    let path = scratch("atlas-bos").join("atlas.pdf");
+    send(&mut app, Event::Atlas(A::SavePicked(Some(path.clone()))));
+    assert!(!path.exists(), "an atlas of no page is not written");
+}

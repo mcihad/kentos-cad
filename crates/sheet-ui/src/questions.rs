@@ -35,6 +35,9 @@ pub mod texts {
     pub const CANCEL: &str = "Vazgeç";
     pub const EMPTY: &str = "boş";
     pub const DATE: &str = "yyyy-aa-gg";
+    /// Where the main map looks (docs/adr/9147).
+    pub const EXTENT: &str = "Kapsam";
+    pub const LAYER: &str = "Katman seçin";
 }
 
 /// The window: the template, where its sheet goes, and what is typed for each question.
@@ -52,6 +55,11 @@ pub struct QuestionsDialog {
     pub problem: Option<String>,
     /// The answers make a sheet per level (Kat planı paftaları, docs/adr/0718), not one sheet.
     pub(crate) levels: bool,
+    /// Where the main map looks (docs/adr/9147): the choice, the layer of a Katman choice (its place in the context's
+    /// layer boxes), and what the choice gives with its sentence. None of it without a main map to place.
+    pub extent: Option<crate::new_extent::Extent>,
+    pub layer: Option<usize>,
+    pub placed: (crate::new_extent::Placement, String),
 }
 
 #[derive(Clone, Debug)]
@@ -60,6 +68,10 @@ pub enum QuestionsMessage {
     /// A question of several lines edited.
     Edit(usize, text_editor::Action),
     Bool(usize, bool),
+    /// Kapsam: where the main map looks (docs/adr/9147).
+    Extent(crate::new_extent::Extent),
+    /// Kapsam's layer, by its place in the context's layer boxes.
+    Layer(usize),
     /// Paftayı oluştur.
     Make,
 }
@@ -134,8 +146,23 @@ impl Designer {
                 .collect(),
             problem: None,
             levels: false,
+            extent: crate::new_extent::has_main_map(t).then_some(crate::new_extent::Extent::Fixed),
+            layer: None,
+            placed: (crate::new_extent::Placement::default(), String::new()),
         })));
+        self.questions_place();
         Vec::new()
+    }
+
+    /// The questions' extent worked out again: the placement and its sentence (docs/adr/9147).
+    fn questions_place(&mut self) {
+        let ctx = self.ctx.clone();
+        let Some(Window::Questions(d)) = &mut self.dialog else {
+            return;
+        };
+        if let Some(extent) = d.extent {
+            d.placed = crate::new_extent::place(&d.template, d.paper, &ctx, extent, d.layer);
+        }
     }
 
     /// Kat planı paftaları's questions: the template's, asked once for every level's sheet (docs/adr/0718).
@@ -144,6 +171,8 @@ impl Designer {
         let effects = self.ask_then_use(t, None, label);
         if let Some(Window::Questions(d)) = &mut self.dialog {
             d.levels = true;
+            // Every level's sheet fits the levels' ground (docs/adr/0718): no extent of its own.
+            d.extent = None;
         }
         effects
     }
@@ -174,6 +203,22 @@ impl Designer {
                     *b = on;
                 }
             }
+            QuestionsMessage::Extent(extent) => {
+                if d.extent.is_some() {
+                    d.extent = Some(extent);
+                    // A Katman choice starts on the first layer that holds objects.
+                    if extent == crate::new_extent::Extent::Layer && d.layer.is_none() && !self.ctx.layer_bounds.is_empty() {
+                        d.layer = Some(0);
+                    }
+                    self.questions_place();
+                }
+            }
+            QuestionsMessage::Layer(i) => {
+                if i < self.ctx.layer_bounds.len() {
+                    d.layer = Some(i);
+                    self.questions_place();
+                }
+            }
             QuestionsMessage::Make => {
                 let mut values = Vec::with_capacity(d.template.variables.len());
                 for (i, v) in d.template.variables.iter().enumerate() {
@@ -201,6 +246,7 @@ impl Designer {
                     });
                 }
                 let (t, paper, label) = (d.template.clone(), d.paper, d.label.clone());
+                let place = d.extent.map(|_| d.placed.0);
                 if d.levels {
                     let effects = self.make_level_sheets(&t, values);
                     if effects.contains(&Effect::ShowSheet) {
@@ -208,7 +254,7 @@ impl Designer {
                     }
                     return effects;
                 }
-                if self.use_template_with(&t, paper, &label, values) {
+                if self.use_template_placed(&t, paper, &label, values, place) {
                     self.dialog = None;
                     self.gallery = None;
                     return vec![Effect::ShowSheet];
@@ -216,6 +262,42 @@ impl Designer {
             }
         }
         Vec::new()
+    }
+
+    /// Kapsam: the four choices, a Katman choice's layer, and the sentence of what the choice gives.
+    fn extent_view<'a>(&'a self, d: &'a QuestionsDialog, extent: crate::new_extent::Extent) -> Element<'a, Message> {
+        use crate::new_extent::{EXTENTS, Extent};
+        use kentos_ui::widget::segmented::Segmented;
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        struct Choice(Extent, &'static str);
+        impl std::fmt::Display for Choice {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str(self.1)
+            }
+        }
+        let all: Vec<Choice> = EXTENTS.iter().map(|(e, w)| Choice(*e, w)).collect();
+        let chosen = all.iter().copied().find(|c| c.0 == extent).unwrap_or(all[3]);
+        // A choice with nothing to fit is dimmed: no view, no layer with objects, no drawing.
+        let ctx = &self.ctx;
+        let can = |c: Choice| match c.0 {
+            Extent::View => ctx.center.is_some() && ctx.view_size.is_some(),
+            Extent::Layer => !ctx.layer_bounds.is_empty(),
+            Extent::Drawing => ctx.drawing_bounds.is_some(),
+            Extent::Fixed => true,
+        };
+        let choices = Segmented::new_with(all, chosen, |c: Choice| Message::Questions(QuestionsMessage::Extent(c.0)), can)
+            .width(Fill);
+        let mut col = column![label::caption(texts::EXTENT).style(style::text::muted), choices].spacing(4);
+        if extent == Extent::Layer {
+            let names: Vec<kentos_ui::widget::select::Choice> = (0..self.ctx.layer_bounds.len())
+                .map(|i| kentos_ui::widget::select::Choice::new(crate::new_extent::layer_name(&self.ctx, i)))
+                .collect();
+            col = col.push(
+                kentos_ui::widget::select::Select::new(names, d.layer, |i| Message::Questions(QuestionsMessage::Layer(i)))
+                    .placeholder(texts::LAYER),
+            );
+        }
+        col.push(label::body(d.placed.1.as_str())).into()
     }
 
     pub(crate) fn questions_view<'a>(&'a self, d: &'a QuestionsDialog) -> Element<'a, Message> {
@@ -262,11 +344,12 @@ impl Designer {
             list = list
                 .push(column![label::caption(title).style(style::text::muted), input].spacing(2));
         }
-        let mut body = column![
-            label::body(texts::intro(&d.template.meta.name)).style(style::text::muted),
-            scrollable(container(list).padding([0, 8])).height(Length::Shrink),
-        ]
-        .spacing(12);
+        let mut body = column![label::body(texts::intro(&d.template.meta.name)).style(style::text::muted)].spacing(12);
+        // Kapsam: where the main map looks, with what it gives (docs/adr/9147).
+        if let Some(extent) = d.extent {
+            body = body.push(self.extent_view(d, extent));
+        }
+        let mut body = body.push(scrollable(container(list).padding([0, 8])).height(Length::Shrink));
         if let Some(p) = &d.problem {
             body = body.push(label::body(p.as_str()).style(style::text::danger));
         }

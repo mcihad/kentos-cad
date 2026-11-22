@@ -1393,6 +1393,9 @@ fn crosses(a: [f64; 2], b: [f64; 2], e: [f64; 4]) -> bool {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+#[path = "print_check_tests.rs"]
+mod print_check_tests;
 
 /// Each map's own survey quality in the sheet mode (docs/adr/2800).
 #[cfg(test)]

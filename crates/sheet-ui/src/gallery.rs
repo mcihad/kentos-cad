@@ -1150,6 +1150,19 @@ impl Designer {
         label: &str,
         values: Vec<kentos_sheet::template::VariableValue>,
     ) -> bool {
+        self.use_template_placed(t, paper, label, values, None)
+    }
+
+    /// The same, the maps placed as Yeni pafta's extent chose (docs/adr/9147); none: at the drawing area's centre,
+    /// at the project's plot scale.
+    pub(crate) fn use_template_placed(
+        &mut self,
+        t: &Template,
+        paper: Option<PaperChoice>,
+        label: &str,
+        values: Vec<kentos_sheet::template::VariableValue>,
+        place: Option<crate::new_extent::Placement>,
+    ) -> bool {
         let ids = InstanceIds {
             sheet: self.new_id("pafta"),
             master: t.master.as_ref().map(|_| self.new_id("ana")),
@@ -1173,8 +1186,8 @@ impl Designer {
         let options = InstanceOptions {
             paper,
             name,
-            center: self.ctx.center,
-            scale: self.ctx.capabilities.plot_scale,
+            center: place.map_or(self.ctx.center, |p| p.center),
+            scale: place.map_or(self.ctx.capabilities.plot_scale, |p| p.scale),
             values,
         };
         let made = match kentos_sheet::create::from_template(t, &ids, &options, None) {

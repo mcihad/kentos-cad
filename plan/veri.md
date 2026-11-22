@@ -425,3 +425,8 @@ numaraları raporunkidir.
   - `Checked.mark` ve `inputs_changed`: kural özeti, bağlı kaynak sürümü, kuralların katmanlarındaki şekil/katman.
   - `tolerance_words`: değerlerle karşılaştırma; sekmede “Kapsam: … · çizim sürümü N (şimdi M) · tolerans …”.
   - Kalan: veri katmanı kaynağının dışarıdan değişimi, PostGIS sınaması, kurumun gerçek eşikleri, web.
+- [~] **VY-46 — Yeni pafta kapsamı önce seçilir, ölçeği söylenir; baskı denetimine belediye senaryoları (rapor 15, P1).**
+  ([ADR 9147](../docs/adr/9147-new-sheet-extent-and-print-checks.md))
+  - `sheet-ui/new_extent.rs`: Görünüm, Katman, Çizimin tamamı, Sabit ölçek; `fit::map` ile ölçek ve söz.
+  - Masaüstü katman kutuları; iki pafta/Türkçe harf, boş atlas ve lejant senaryoları.
+  - Kalan: resimli önizleme, sorusuz şablon, çevrimdışı servis ve dış kaynakla yeniden basım, çok sayfalı atlas kabulü, web.

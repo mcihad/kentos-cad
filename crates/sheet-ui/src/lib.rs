@@ -36,6 +36,7 @@ mod interact;
 pub mod library;
 mod level_sheets;
 pub mod message;
+pub mod new_extent;
 mod print_preview;
 pub mod paint;
 pub mod painter;

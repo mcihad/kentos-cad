@@ -145,6 +145,9 @@
   - **Topoloji okuduğu değişince eskir** (22 Kasım, değerlendirmenin 14. maddesi;
     [ADR 9146](../adr/9146-topology-staleness-by-inputs-and-scope.md), VY-45): stil ve etiket değişimi sonucu eskitmez;
     kural penceresi toleransı karşılaştırmasıyla anlatır; sekme denetimin kapsamını ve çizim sürümünü yazar.
+  - **Yeni pafta kapsamı** (23 Kasım, değerlendirmenin 15. maddesi;
+    [ADR 9147](../adr/9147-new-sheet-extent-and-print-checks.md), VY-46): “Paftanın bilgileri” Kapsam'ı sorar (Görünüm,
+    Katman, Çizimin tamamı, Sabit ölçek) ve vereceği ölçeği söyler; sabit ölçekte kırpma bilerek korunur.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

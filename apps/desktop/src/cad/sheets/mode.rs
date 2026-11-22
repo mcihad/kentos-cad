@@ -222,6 +222,8 @@ impl App {
                     .map(|l| (l.id.clone(), crate::properties::layer_path(d.model.layers(), &l.id)))
                     .collect()
             }),
+            // Worked out when a new sheet is asked for (`sheet_layer_bounds`, docs/adr/9147).
+            layer_bounds: self.sheets.context().layer_bounds.clone(),
             // How much ground the drawing area shows (Görünüme sığdır, docs/adr/0206 §1).
             view_size: doc
                 .map(|_| &self.viewport.camera)
@@ -392,6 +394,22 @@ impl App {
         self.sheets.set_data(inputs);
     }
 
+    /// The boxes of the drawing's layers that hold objects, in the layer tree's order, as the paper fits them
+    /// (docs/adr/9147).
+    fn sheet_layer_bounds(&self) -> Vec<(String, [f64; 4])> {
+        let Some(d) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        d.model
+            .layers()
+            .leaves()
+            .into_iter()
+            .filter_map(|l| {
+                kentos_native_application::sheets_fit::extent_of(&d.model, d.model.by_layer(&l.id)).map(|b| (l.id.clone(), b))
+            })
+            .collect()
+    }
+
     /// A message of the sheet mode, and what it asks of the desktop.
     /// The drawing's and its levels' boxes, as the paper fits them (docs/adr/0718).
     pub(super) fn refresh_sheet_extents(&self) {
@@ -433,6 +451,23 @@ impl App {
                 || ctx.drawing_bounds != now.drawing_bounds
                 || ctx.selection_bounds != now.selection_bounds
             {
+                self.sheets.set_context(ctx);
+            }
+        }
+        // Yeni pafta's Katman extent (docs/adr/9147): the boxes of the layers that hold objects, worked out when a new
+        // sheet is asked for, not on every message.
+        if matches!(
+            &m,
+            kentos_sheet_ui::Message::NewSheet
+                | kentos_sheet_ui::Message::Gallery(
+                    kentos_sheet_ui::gallery::GalleryMessage::Open | kentos_sheet_ui::gallery::GalleryMessage::Use
+                )
+        ) {
+            // The drawing's box too: the window says what the fixed scale leaves out.
+            self.refresh_sheet_extents();
+            let mut ctx = self.sheet_context();
+            ctx.layer_bounds = self.sheet_layer_bounds();
+            if ctx != *self.sheets.context() {
                 self.sheets.set_context(ctx);
             }
         }
