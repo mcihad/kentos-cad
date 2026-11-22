@@ -96,6 +96,14 @@ fn msg(event: Event) -> Message {
 }
 
 impl Window {
+    /// What the summary says.
+    #[cfg(test)]
+    pub(crate) fn lines_for_test(&self) -> Vec<String> {
+        self.lines.iter().map(|(_, l)| l.clone()).collect()
+    }
+}
+
+impl Window {
     /// The filter as chosen; none when it keeps nothing (no condition, no list).
     fn chosen(&self) -> Option<LayerFilter> {
         let e = self.expression.trim();
@@ -199,6 +207,16 @@ impl App {
         }
     }
 
+    /// A data layer's rows read from its source (docs/adr/9130): the window on that layer counts again over them.
+    pub(crate) fn layer_filter_rows_read(&mut self, layer: &str) {
+        if let Some(mut w) = self.gis.layer_filter.take() {
+            if w.layer == layer {
+                self.layer_filter_check(&mut w, true);
+            }
+            self.gis.layer_filter = Some(w);
+        }
+    }
+
     /// The filter checked at once (Kaydet follows it as it is typed); with `count`, how many of the
     /// layer's objects pass counted too.
     fn layer_filter_check(&self, w: &mut Window, count: bool) {
@@ -233,18 +251,27 @@ impl App {
         let Some(doc) = &self.document else {
             return;
         };
-        let (passed, total) = layers_filter::count(&doc.model, &w.layer, Some(&compiled));
-        let mut lines = vec![(
-            if passed > 0 { Kind::Ok } else { Kind::Warn },
-            format!(
-                "{passed} / {total} nesne süzgeçten geçiyor{}.",
-                if passed > 0 {
-                    ""
-                } else {
-                    "; katmanda hiçbir nesne görünmeyecek"
-                }
-            ),
-        )];
+        // A data layer's rows are its source's (docs/adr/9130): counted over them, said while they are read.
+        let counted = match self.data_layer_rows(&w.layer) {
+            Some(Ok(Some(rows))) => Ok(layers_filter::count_rows(&doc.model, &rows, Some(&compiled))),
+            Some(Ok(None)) => Err((Kind::Info, "Kaynağın satırları okunuyor; sayı birazdan.".to_owned())),
+            Some(Err(why)) => Err((Kind::Warn, format!("Kaynağın satırları okunamadı, sayılamadı: {why}"))),
+            None => Ok(layers_filter::count(&doc.model, &w.layer, Some(&compiled))),
+        };
+        let mut lines = match counted {
+            Ok((passed, total)) => vec![(
+                if passed > 0 { Kind::Ok } else { Kind::Warn },
+                format!(
+                    "{passed} / {total} nesne süzgeçten geçiyor{}.",
+                    if passed > 0 {
+                        ""
+                    } else {
+                        "; katmanda hiçbir nesne görünmeyecek"
+                    }
+                ),
+            )],
+            Err(line) => vec![line],
+        };
         let known = w
             .objects
             .iter()
@@ -358,14 +385,41 @@ impl App {
             expected_revision: None,
         };
         match layers_filter::execute(&mut ExecutionContext::new(model), input) {
-            CommandResult::Completed { output, .. } => {
+            CommandResult::Completed { mut output, .. } => {
+                // A data layer's rows are its source's (docs/adr/9130): its counts are theirs, said by rows.
+                let mut what = "nesne";
+                if let Some(read) = self.data_layer_rows(layer) {
+                    what = "satır";
+                    match read {
+                        Ok(Some(rows)) => {
+                            let compiled = self
+                                .document
+                                .as_ref()
+                                .and_then(|d| d.model.layers().get(layer).and_then(|n| n.filter.clone()))
+                                .and_then(|f| compile_filter(&f, self.reading_unit()).ok());
+                            if let Some(doc) = self.document.as_ref() {
+                                let (passed, total) = layers_filter::count_rows(&doc.model, &rows, compiled.as_ref());
+                                output.passed = passed;
+                                output.total = total;
+                            }
+                        }
+                        _ => {
+                            self.announce(
+                                Level::Success,
+                                format!("“{name}” katmanının süzgeci yazıldı; satırlar kaynaktan okununca sayılır."),
+                            );
+                            return true;
+                        }
+                    }
+                }
                 let (level, said) = match (removing, output.changed) {
                     (true, _) if !had => (Level::Info, format!("“{name}” katmanının süzgeci yok.")),
                     (true, _) => (
                         Level::Success,
                         format!(
-                            "“{name}” katmanının süzgeci kaldırıldı; {} nesnesinin hepsi görünür.",
-                            output.total
+                            "“{name}” katmanının süzgeci kaldırıldı; {} {} hepsi görünür.",
+                            output.total,
+                            if what == "satır" { "satırın" } else { "nesnesinin" }
                         ),
                     ),
                     (false, false) => (
@@ -375,7 +429,7 @@ impl App {
                     (false, true) => (
                         Level::Success,
                         format!(
-                            "“{name}” katmanının süzgeci yazıldı: {} / {} nesne görünür.",
+                            "“{name}” katmanının süzgeci yazıldı: {} / {} {what} görünür.",
                             output.passed, output.total
                         ),
                     ),

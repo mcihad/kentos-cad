@@ -123,7 +123,9 @@ impl App {
             Ok(rows) => Rows::Ready(Arc::new(rows)),
             Err(why) => Rows::Failed(why),
         };
-        self.gis.data_rows.kept.borrow_mut().insert(layer, (stamp, rows));
+        self.gis.data_rows.kept.borrow_mut().insert(layer.clone(), (stamp, rows));
+        // Katman süzgeci on the layer counts again over them.
+        self.layer_filter_rows_read(&layer);
         // The tabs that count the layer read it again: its data, the summaries and the chart worked out from it.
         *self.gis.charts.layer_data.borrow_mut() = None;
         *self.gis.charts.stats.borrow_mut() = Default::default();

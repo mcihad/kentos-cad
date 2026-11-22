@@ -343,3 +343,7 @@ numaraları raporunkidir.
     okuyucu onları kullanır. Okunurken, okunamazken ve boşken ayrı sözler; bekleyen değişiklik söylenir.
   - Raporun bakım verisiyle sınama (5 dolu, 1 boş, toplam 500, ortalama 100, en az 0; durum 3 değer).
   - Kalan: veri katmanında Seçililer ve Görünümdekiler, grafikten seçim, sağlayıcının toplamıyla sayım, web.
+- [x] **VY-30 — Katman süzgeci veri katmanında kaynağın satırlarını sayar (rapor 19, P1).**
+  ([ADR 9131](../docs/adr/9131-layer-filter-counts-a-data-layers-rows.md))
+  - Önizleme ve bildirim kaynağın satırlarını sayar (okunurken söyler, okununca yeniden sayar); “3 / 6 satır görünür”.
+  - Kalan: sıfır eşleşmenin ayrı sınaması, web.

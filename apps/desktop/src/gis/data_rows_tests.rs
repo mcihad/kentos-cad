@@ -99,3 +99,26 @@ fn istatistik_counts_a_data_layers_rows_from_its_source() {
     let durum = summary(&app, "durum");
     assert_eq!((durum[2].as_str(), durum[4].as_str()), ("6", "3"), "{durum:?}");
 }
+
+#[test]
+fn katman_suzgeci_counts_a_data_layers_rows_from_its_source() {
+    crate::data_layers::register();
+    let path = bakim("suzgec-veri");
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
+        .expect("added");
+    let layer = crate::data_layers_tests::node(&app, "bakim").expect("the layer").id.clone();
+    let task = app.open_layer_filter(Some(layer.clone()));
+    drive(&mut app, task);
+    let filter = |app: &mut App, e: crate::layer_filters::Event| {
+        let task = app.update(Message::Gis(gis::Event::LayerFilter(e)));
+        drive(app, task);
+    };
+    // Typed: the rows asked of the source (the count says it waits for them), read, and counted over again.
+    filter(&mut app, crate::layer_filters::Event::Expression("bedel >= 100".into()));
+    let lines = app.gis.layer_filter.as_ref().expect("the window").lines_for_test();
+    assert!(lines.iter().any(|l| l.starts_with("3 / 6 nesne süzgeçten geçiyor")), "{lines:?}");
+    filter(&mut app, crate::layer_filters::Event::Save);
+    let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(said.iter().any(|t| t.contains("süzgeci yazıldı: 3 / 6 satır görünür")), "{said:#?}");
+}

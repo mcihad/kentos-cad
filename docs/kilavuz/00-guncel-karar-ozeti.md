@@ -97,6 +97,9 @@
   - **İstatistik ve Grafik veri katmanını kaynağından sayar** (22 Kasım, değerlendirmenin 17. maddesi;
     [ADR 9130](../adr/9130-statistics-and-charts-over-data-layers.md), VY-29): satırlar `data_rows`'ta arka planda okunur,
     çizimin tuttukları o anki hâlleriyle; okunurken ve okunamazken ayrı söylenir.
+  - **Katman süzgeci veri katmanında satır sayar** (22 Kasım, değerlendirmenin 19. maddesi;
+    [ADR 9131](../adr/9131-layer-filter-counts-a-data-layers-rows.md), VY-30): önizleme ve bildirim `count_rows` ile
+    kaynağın satırlarını sayar.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
