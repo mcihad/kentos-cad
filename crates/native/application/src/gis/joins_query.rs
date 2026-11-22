@@ -12,8 +12,16 @@
 //! is (`sources_query::stage`, at most a million records), with their lasting ids; their cells are read only, and a
 //! table that cannot be read breaks the view: no copy of a former reading. Summing columns (§2) give each record the
 //! count, exact sum, least, greatest and mean of its joined records' values, after the joined fields.
+//!
+//! Either side may be a data layer (docs/adr/9134): its records are its source's rows, not the drawing's objects
+//! (docs/adr/9101). Every row the drawing does not hold is read whole with a lasting id of its source, table and key,
+//! then the rows the drawing holds as it has them; their cells are read only from the view. [`read_with`] takes them
+//! from a reader of the caller's (the desktop's, read off its interface's thread: none yet while they are read), [`read`]
+//! reads them now. A source that cannot be read breaks the view, said why.
 
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 use kentos_commands::{
     CommandResult, Entity, JOIN_ROWS, JoinColumn, JoinHow, JoinKeep, JoinReport, JoinRow, JoinSide,
@@ -130,6 +138,8 @@ fn columns_of<'d>(
 /// A view read whole: its columns, every row, how the records met and the sums; or why it is broken.
 pub struct JoinRead {
     pub broken: Option<String>,
+    /// A data layer's rows not read yet (docs/adr/9134): what is waited for; no rows until they come.
+    pub waiting: Option<String>,
     /// The code of the refusal of a source's table that could not be read (docs/adr/0740 §1: what helps it is
     /// `sources::trouble::Trouble::of`'s); none when the view is read or broken for another reason.
     pub refused: Option<String>,
@@ -142,6 +152,7 @@ pub struct JoinRead {
 fn broken(why: String) -> JoinRead {
     JoinRead {
         broken: Some(why),
+        waiting: None,
         refused: None,
         columns: Vec::new(),
         rows: Vec::new(),
@@ -207,6 +218,79 @@ fn stage_source(
     }
 }
 
+/// A data layer's rows as a view takes them (docs/adr/9134): every row of its source with its key, or none yet while
+/// they are read, or why they cannot be.
+#[derive(Clone, Debug)]
+pub enum SourceRows {
+    Reading,
+    Ready(Arc<Vec<(i64, Entity)>>),
+    Failed(String),
+}
+
+/// Why a data layer's cells are not written from a view.
+fn data_fixed(node: &LayerNode) -> String {
+    format!(
+        "“{}” veri katmanının satırı: görünümden yazılmaz; katmanın tablosunda, düzenleme oturumunda düzenleyin.",
+        node.name
+    )
+}
+
+/// A side's records by their lasting ids, the drawing's borrowed, a source's owned.
+type Records<'d> = Vec<(Uuid, Cow<'d, Entity>)>;
+
+/// A side's records: a data layer's every row the drawing does not hold, read from its source with a lasting id, then
+/// the rows it holds as it has them; another layer's objects. None while the source's rows are read; why when they
+/// cannot be.
+fn side_records<'d>(
+    doc: &'d Document,
+    node: &LayerNode,
+    rows: &dyn Fn(&LayerNode) -> SourceRows,
+) -> Result<Option<Records<'d>>, String> {
+    let held = doc.by_layer_with_uids(&node.id).map(|(u, e)| (u, Cow::Borrowed(e)));
+    let Some(data) = &node.data else {
+        return Ok(Some(held.collect()));
+    };
+    let read = match rows(node) {
+        SourceRows::Reading => return Ok(None),
+        SourceRows::Failed(why) => {
+            return Err(format!(
+                "Görünümün “{}” veri katmanının kaynağı okunamadı: {why}. Görünüm satır vermez; eski bir okuma gösterilmez.",
+                node.name
+            ));
+        }
+        SourceRows::Ready(read) => read,
+    };
+    let hidden = doc.data_hidden(&node.id);
+    let mut out: Records<'d> = read
+        .iter()
+        .filter(|(k, _)| !hidden.contains(k))
+        .map(|(k, e)| (crate::geopackage::data_row_uid(&data.address, &data.table, *k), Cow::Owned(e.clone())))
+        .collect();
+    out.extend(held);
+    Ok(Some(out))
+}
+
+/// A data layer's rows read from its source now (`cad.joins.query`'s reading); another layer's are the drawing's.
+fn rows_now(doc: &Document, node: &LayerNode) -> SourceRows {
+    match crate::data_write::all_records(node, doc.settings(), &doc.data_hidden(&node.id), &|| false) {
+        Ok(read) => SourceRows::Ready(Arc::new(read.rows)),
+        Err(why) => SourceRows::Failed(why),
+    }
+}
+
+/// The view waiting for a data layer's rows.
+fn waiting(node: &LayerNode) -> JoinRead {
+    JoinRead {
+        broken: None,
+        waiting: Some(format!("“{}” veri katmanının satırları kaynaktan okunuyor…", node.name)),
+        refused: None,
+        columns: Vec::new(),
+        rows: Vec::new(),
+        report: JoinReport::default(),
+        totals: Vec::new(),
+    }
+}
+
 /// The joined side read: its name, key, columns, records, why its cells are not written, its layer.
 struct Side<'d> {
     name: String,
@@ -217,8 +301,13 @@ struct Side<'d> {
     node: Option<&'d LayerNode>,
 }
 
-/// The view `v` read from `doc` as it is now.
+/// The view `v` read from `doc` as it is now, a data layer's rows read from its source now.
 pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
+    read_with(doc, v, &|node| rows_now(doc, node))
+}
+
+/// The view `v` read from `doc` as it is now, a data layer's rows as `rows` gives them (docs/adr/9134).
+pub fn read_with(doc: &Document, v: &JoinView, rows: &dyn Fn(&LayerNode) -> SourceRows) -> JoinRead {
     if let Some(why) = broken_reason(doc, v) {
         return broken(why);
     }
@@ -228,6 +317,25 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
     let Some(lk) = key_on(left, &v.key) else {
         return broken("Görünümün anahtarı yok.".into());
     };
+    // Both sides asked before either is waited for: a reader off the caller's thread reads them together.
+    let left_read = side_records(doc, left, rows);
+    // The joined layer's records when it is a data layer (a layer of the drawing's are borrowed below).
+    let right_read = match (&v.source, layer(doc, &v.with)) {
+        (None, Some(right)) if right.data.is_some() => Some((right, side_records(doc, right, rows))),
+        _ => None,
+    };
+    let lefts = match left_read {
+        Ok(Some(records)) => records,
+        Ok(None) => return waiting(left),
+        Err(why) => return broken(why),
+    };
+    let right_data = match right_read {
+        Some((_, Ok(Some(records)))) => Some(records),
+        Some((right, Ok(None))) => return waiting(right),
+        Some((_, Err(why))) => return broken(why),
+        None => None,
+    };
+    let left_fixed = left.data.as_ref().map(|_| data_fixed(left));
     let staged = match &v.source {
         Some(src) => match stage_source(doc, src) {
             Ok(s) => Some(s),
@@ -298,8 +406,11 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
                 name: right.name.clone(),
                 key: rk,
                 columns: columns_of(doc, right, &v.fields),
-                records: doc.by_layer_with_uids(&right.id).collect(),
-                fixed: None,
+                records: match &right_data {
+                    Some(records) => records.iter().map(|(u, e)| (*u, e.as_ref())).collect(),
+                    None => doc.by_layer_with_uids(&right.id).collect(),
+                },
+                fixed: right.data.as_ref().map(|_| data_fixed(right)),
                 node: Some(right),
             }
         }
@@ -343,7 +454,7 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
                 f.clone(),
                 &lkey,
                 Some(left),
-                &None,
+                &left_fixed,
             )
         })
         .collect();
@@ -458,7 +569,7 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
     let mut used: Vec<u32> = vec![0; rights.len()];
     let mut fan = false;
     let mut lefts_in: Vec<&Entity> = Vec::new();
-    for (uid, e) in doc.by_layer_with_uids(&left.id) {
+    for (uid, e) in lefts.iter().map(|(u, e)| (*u, e.as_ref())) {
         report.records += 1;
         let keys = keys_of(&lk, uid, e);
         if keys.is_empty() {
@@ -561,6 +672,7 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
     }
     JoinRead {
         broken: None,
+        waiting: None,
         refused: None,
         columns,
         rows,

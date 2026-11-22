@@ -105,7 +105,8 @@ impl App {
             let settings = settings.clone();
             tasks.push(crate::db_connections::off_thread(
                 move || {
-                    kentos_native_application::data_write::all_rows(&node, &settings, &Default::default(), &|| false)
+                    // A row without geometry is a row of the table too (docs/adr/9134).
+                    kentos_native_application::data_write::all_records(&node, &settings, &Default::default(), &|| false)
                         .map(|read| read.rows)
                 },
                 move |read| message(Event::Read(layer, stamp, read)),
@@ -130,6 +131,8 @@ impl App {
         *self.gis.charts.layer_data.borrow_mut() = None;
         *self.gis.charts.stats.borrow_mut() = Default::default();
         *self.gis.charts.chart.borrow_mut() = Default::default();
+        // A join view over the layer reads them (features/joins.rs, docs/adr/9134).
+        self.gis.features.changed();
         // İfadeyle seç's preview on the layer counts them (processing/data_select.rs).
         if self.gis.processing.dialog.is_some() {
             self.refresh_processing();

@@ -106,6 +106,9 @@
   - **İfadeyle seç veri katmanında kaynağa sorar** (22 Kasım, değerlendirmenin 18. maddesi;
     [ADR 9133](../adr/9133-select-by-expression-on-data-layers.md), VY-32): seçim satır anahtarlarıyla, dört seçim
     biçimiyle; tablo ve harita gösterir, Seçime yakınlaştır çerçeveler, Durdur seçimi korur.
+  - **Birleşik görünüm veri katmanını kaynağından okur** (22 Kasım, değerlendirmenin 21. maddesi;
+    [ADR 9134](../adr/9134-join-views-over-data-layers.md), VY-33): `read_with` veri katmanı tarafını kaynağın
+    satırlarıyla kurar; okuma hatası, boş katman ve eşleşme yok ayrı söylenir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

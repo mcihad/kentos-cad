@@ -21,7 +21,7 @@ use iced::widget::{button, column, container, mouse_area, row, space};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{EntitiesSetProperties, JoinSide, JoinView, PropertiesOperation, js_trim};
 use kentos_domain::{Slot, Uuid};
-use kentos_native_application::joins_query::{JoinRead, read};
+use kentos_native_application::joins_query::{JoinRead, SourceRows, read_with};
 use kentos_ui::icon::icon;
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, Table};
 use kentos_ui::widget::{Tip, tip};
@@ -101,9 +101,35 @@ impl App {
         {
             return read.clone();
         }
-        let r = Rc::new(read(&doc.model, v));
+        // A data layer's rows from those read off the interface's thread (data_rows.rs, docs/adr/9134): the view
+        // waits for them, read again when they come.
+        let rows = |node: &kentos_commands::LayerNode| match self.data_rows_of(&node.id) {
+            Some(crate::data_rows::Rows::Ready(read)) => SourceRows::Ready(read),
+            Some(crate::data_rows::Rows::Failed(why)) => SourceRows::Failed(why),
+            _ => SourceRows::Reading,
+        };
+        let r = Rc::new(read_with(&doc.model, v, &rows));
         *self.gis.features.join.cache.borrow_mut() = Some((key, r.clone()));
         r
+    }
+
+    /// Why a view read whole has no row: its layer has no record, or no record met one of the joined layer's.
+    pub(super) fn join_empty(r: &JoinRead, v: &JoinView, doc: &Document, with: &str) -> String {
+        let name = |id: &str| doc.model.layers().get(id).map_or_else(|| id.to_owned(), |n| n.name.clone());
+        if r.report.records == 0 {
+            return format!("“{}” katmanında kayıt yok; görünümde satır yok.", name(&v.layer));
+        }
+        if r.report.with_records == 0 {
+            return format!("“{with}” içinde kayıt yok; yalnız eşleşenler gösterildiği için satır yok.");
+        }
+        if r.report.matched == 0 {
+            return format!(
+                "Hiçbir kayıt eşleşmedi: “{}” anahtarları ile “{with}” anahtarlarında ortak değer yok; yalnız eşleşenler \
+                 gösteriliyor.",
+                name(&v.layer)
+            );
+        }
+        words::NO_ROWS.to_owned()
     }
 
     /// The report as one line.
@@ -179,6 +205,7 @@ impl App {
             })
             .collect();
         let info: Element<'_, Message> = match &r.broken {
+            None if r.waiting.is_some() => label::muted(r.waiting.clone().unwrap_or_default()).into(),
             // A source's table that could not be read says why, with Yeniden dene when asking again may help
             // (docs/adr/0740 §2; a table not where the view says is set in Birleşik görünümler…).
             Some(why) => {
@@ -230,7 +257,7 @@ impl App {
         )
         .padding([6, 10])
         .width(Fill);
-        if r.broken.is_some() {
+        if r.broken.is_some() || r.waiting.is_some() {
             return column![head, kentos_ui::widget::horizontal_divider()]
                 .width(Fill)
                 .height(Fill)
@@ -317,7 +344,7 @@ impl App {
                 }
                 TableLine::new(cells).on_press(msg(Event::JoinPress(i)))
             })
-            .empty(words::NO_ROWS);
+            .empty(Self::join_empty(&r, &v, doc, &with));
         column![head, kentos_ui::widget::horizontal_divider(), table]
             .width(Fill)
             .height(Fill)

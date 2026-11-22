@@ -360,3 +360,9 @@ numaraları raporunkidir.
     harita çerçeveler, Seçime yakınlaştır veri satırlarını da çerçeveler.
   - Girdi satırı ve önizleme kaynağın satırlarını söyler; Durdur seçimi korur; CAD özellik süzgeci reddedilir.
   - Kalan: Seçili kapsamı veri satırlarıyla, ölçülerde metre birimi, web.
+- [x] **VY-33 — Birleşik görünüm veri katmanlarının satırlarını kaynaklarından okur (rapor 21, P1).**
+  ([ADR 9134](../docs/adr/9134-join-views-over-data-layers.md))
+  - `joins_query::read_with`: veri katmanı tarafı kaynağın satırları (`data_row_uid`) ve çizimin tuttukları; masaüstü
+    `data_rows`'tan arka planda okur, görünüm beklerken söyler; hücreler yalnız okunur.
+  - Okunamayan kaynak, boş katman ve eşleşme yok ayrı sözler; `all_records` geometrisiz satırı tutar.
+  - Kalan: Kaynak tablosu seçeneğini veri sürücüsüne taşımak, kaynakta birleştirme ölçümü, web.

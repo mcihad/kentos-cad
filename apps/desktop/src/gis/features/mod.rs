@@ -40,6 +40,8 @@ pub(crate) mod data;
 pub(crate) mod joins;
 #[cfg(test)]
 mod joins_tests;
+#[cfg(test)]
+mod joins_data_tests;
 pub(crate) mod outgoing;
 mod records;
 pub(crate) mod source;

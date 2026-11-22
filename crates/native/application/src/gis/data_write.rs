@@ -860,6 +860,28 @@ pub fn all_rows(
     leave: &BTreeSet<i64>,
     stopped: &dyn Fn() -> bool,
 ) -> Result<AllRows, String> {
+    rows_read(node, settings, leave, stopped, false)
+}
+
+/// Every row of `node`'s table as [`all_rows`] reads them, a row without geometry kept as a record: a table's rows
+/// whatever their geometry, as İstatistik and a join view count them (docs/adr/9134).
+pub fn all_records(
+    node: &LayerNode,
+    settings: &ProjectSettings,
+    leave: &BTreeSet<i64>,
+    stopped: &dyn Fn() -> bool,
+) -> Result<AllRows, String> {
+    rows_read(node, settings, leave, stopped, true)
+}
+
+/// The table's rows read whole; `records`: one without geometry kept as a record, else left out.
+fn rows_read(
+    node: &LayerNode,
+    settings: &ProjectSettings,
+    leave: &BTreeSet<i64>,
+    stopped: &dyn Fn() -> bool,
+    records: bool,
+) -> Result<AllRows, String> {
     let Some(data) = &node.data else {
         return Err(format!("“{}” bir veri katmanı değil.", node.name));
     };
@@ -885,7 +907,7 @@ pub fn all_rows(
                 if leave.contains(&f.fid) {
                     continue;
                 }
-                if f.shape().is_none_or(|g| g.is_empty()) {
+                if !records && f.shape().is_none_or(|g| g.is_empty()) {
                     out.skipped += 1;
                     continue;
                 }

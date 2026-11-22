@@ -44,15 +44,16 @@ pub(crate) fn point_table(source: &dyn kentos_data::Source, name: &str, fields: 
     tx.commit().expect("commit");
 }
 
-/// The report's GeoPackage: `bakim` (kod, bedel, mahalle; bedel 0, 100, 250, NULL, 50, 100) and `mahalleler` (mahalle,
-/// ad: M1 Çınar, M2 İstasyon, M3 Kale).
+/// The municipal report's GeoPackage: `bakim` (kod, bedel, mahalle; bedel 0, 100, 250, NULL, 50, 100; mahalle M1, M1,
+/// M2, M2, M9, NULL) and `mahalleler` (mahalle, ad: M1 Çınar, M2 İstasyon, M3 Kale).
 pub(crate) fn municipal(tag: &str) -> std::path::PathBuf {
     let path = crate::files_testing::scratch(tag).join("Mahalle-Verileri.gpkg");
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
     let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
     let text = |t: &str| Value::Text(t.into());
     let bedel = [Some(0.0), Some(100.0), Some(250.0), None, Some(50.0), Some(100.0)];
-    let mahalle = ["M1", "M1", "M2", "M2", "M9", "M1"];
+    // M1 and M2 have two each, M3 none; B05's M9 meets no neighbourhood, B06 has none.
+    let mahalle = [Some("M1"), Some("M1"), Some("M2"), Some("M2"), Some("M9"), None];
     point_table(
         &*source,
         "bakim",
@@ -62,7 +63,13 @@ pub(crate) fn municipal(tag: &str) -> std::path::PathBuf {
             ("mahalle", FieldKind::Text { max: Some(4) }),
         ],
         &(0..6)
-            .map(|i| vec![text(&format!("B0{}", i + 1)), bedel[i].map_or(Value::Null, Value::Real), text(mahalle[i])])
+            .map(|i| {
+                vec![
+                    text(&format!("B0{}", i + 1)),
+                    bedel[i].map_or(Value::Null, Value::Real),
+                    mahalle[i].map_or(Value::Null, text),
+                ]
+            })
             .collect::<Vec<_>>(),
     );
     point_table(
