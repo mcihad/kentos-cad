@@ -2543,6 +2543,8 @@ Liste:
   alanı ilk/benim/tablodaki değerleriyle sorup seçtirsin.
 - [ ] Tablodan Formla düzenle (ADR 9149, 23 Kasım 2026): web'in Formla düzenle'si tabloda seçilen veri satırını açsın,
   alınmışsa aynı nesneyi kullansın; işlem aracında seçimi yalnız ilk nesne girdisi alsın.
+- [ ] Rolün okumadığı alan (ADR 9150, 23 Kasım 2026): web'in öznitelik tablosu ve kartı Veri girişine formun göstermediği
+  alanı boş sütun olarak göstermesin, adıyla söylesin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

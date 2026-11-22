@@ -440,3 +440,7 @@ numaraları raporunkidir.
   - `forms/row_target.rs`: alınmışsa o nesne, düzenleniyorsa okunup alınır, kapalıysa Düzenlemeyi başlat, salt okunur söylenir.
   - Form başlığında anahtar; işlem aracında seçim yalnız ilk nesne girdisinin (ADR 9144 daraltıldı).
   - Kalan: salt okunur satırın formda gösterilmesi, PostGIS sınaması, web.
+- [~] **VY-49 — Rolün okumadığı alan boş gösterilmez, adıyla söylenir (rapor 29, P2).**
+  ([ADR 9150](../docs/adr/9150-fields-the-role-does-not-read.md))
+  - `features/role_fields.rs`: `withheld_fields` ortak çözümleyiciden; tabloda sütun yok, alt satır adını söylüyor; kartta satır yok.
+  - Kalan: NULL ile boş metnin ayrı görünmesi, veri katmanı tablosunda rol süzgeci, bulutta üç hesapla kabul, web.

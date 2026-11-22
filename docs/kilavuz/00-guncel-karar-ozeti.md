@@ -154,6 +154,9 @@
   - **Tablodan Formla düzenle** (23 Kasım, değerlendirmenin 27. maddesi;
     [ADR 9149](../adr/9149-form-edit-from-a-table-row.md), VY-48): tabloda seçilen veri satırı formun kaydıdır; alınmış
     satır ikinci kez alınmaz; işlem aracında seçimi yalnız ilk nesne girdisi alır.
+  - **Rolün okumadığı alan** (23 Kasım, değerlendirmenin 29. maddesi;
+    [ADR 9150](../adr/9150-fields-the-role-does-not-read.md), VY-49): Veri girişinin tablosunda ve kartında formun
+    göstermediği alan sütun ya da satır değildir; adıyla söylenir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

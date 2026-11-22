@@ -43,6 +43,7 @@ mod joins_tests;
 #[cfg(test)]
 mod joins_data_tests;
 pub(crate) mod outgoing;
+pub(crate) mod role_fields;
 mod records;
 pub(crate) mod source;
 #[cfg(test)]
@@ -243,6 +244,8 @@ pub(crate) struct Rows {
     /// for each object (by its index in `slots`); a rule that cannot be read holds for none.
     pub styles: Vec<kentos_commands::TableStyle>,
     pub holds: Vec<Vec<bool>>,
+    /// The layer's fields the caller does not read, left out (docs/adr/9150).
+    pub withheld: Vec<String>,
 }
 
 impl Rows {
@@ -501,11 +504,16 @@ impl App {
         let (passes, filter_error) = filter_passes(&panel.filter, &entities, node, model, &|| {
             self.expression_variables()
         });
-        let fields = layer
+        // The fields a caller through forms does not read are no columns of its table (docs/adr/9150).
+        let withheld = layer.as_deref().map(|l| self.withheld_fields(l)).unwrap_or_default();
+        let fields: Vec<kentos_commands::LayerField> = layer
             .as_deref()
             .and_then(|l| model.layers().get(l))
             .map(|n| n.fields.clone())
-            .unwrap_or_default();
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|f| !withheld.contains(&f.name))
+            .collect();
         let mut table = feature_table_of(
             &fields,
             &entities,
@@ -513,6 +521,33 @@ impl App {
             &|e| in_view.contains(&Slot(e.base().id)),
             passes.as_deref(),
         );
+        // An attribute of the objects the caller does not read is no column either (a copy read before the role
+        // changed, say): its cells go with it, the problems' places follow (docs/adr/9150).
+        if !withheld.is_empty() {
+            let gone: Vec<usize> = table
+                .columns
+                .iter()
+                .enumerate()
+                .filter(|(_, c)| c.key.as_ref().is_some_and(|k| withheld.contains(k)))
+                .map(|(j, _)| j)
+                .collect();
+            for &j in gone.iter().rev() {
+                table.columns.remove(j);
+                for r in &mut table.rows {
+                    if j < r.cells.len() {
+                        r.cells.remove(j);
+                    }
+                }
+            }
+            if !gone.is_empty() {
+                let moved = |j: usize| j - gone.iter().filter(|&&g| g < j).count();
+                table.problems = std::mem::take(&mut table.problems)
+                    .into_iter()
+                    .filter(|((_, j), _)| !gone.contains(j))
+                    .map(|((i, j), why)| ((i, moved(j)), why))
+                    .collect();
+            }
+        }
         // A form's lists from other layers: their codes shown by their labels (docs/adr/0410 §4).
         if let Some(l) = layer.as_deref() {
             let labels = self.lookup_labels(doc, l, &fields);
@@ -581,6 +616,7 @@ impl App {
             sorted,
             styles,
             holds,
+            withheld,
         };
         *panel.cache.borrow_mut() = Some((key, rows.clone()));
         rows

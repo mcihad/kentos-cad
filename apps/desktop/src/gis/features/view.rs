@@ -772,6 +772,10 @@ impl App {
         if let Some(why) = &rows.filter_error {
             words.push_str(&format!(" · {why}"));
         }
+        // A field the role does not read is said, not shown empty (docs/adr/9150).
+        if !rows.withheld.is_empty() {
+            words.push_str(&format!(" · {}", super::role_fields::withheld_words(&rows.withheld)));
+        }
         foot_line(label::caption(words).style(style::text::muted).into(), None)
     }
 }

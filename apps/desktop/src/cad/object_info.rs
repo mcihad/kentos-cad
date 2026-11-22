@@ -242,13 +242,19 @@ impl App {
             Some(f) if !f.is_empty() => f.clone(),
             _ => base.attrs.keys().cloned().collect(),
         };
-        let rows = fields
+        // A field the caller's role does not read is no empty row: it is left out and named (docs/adr/9150).
+        let withheld = self.withheld_fields(&base.layer_id);
+        let mut rows: Vec<(String, String)> = fields
             .into_iter()
+            .filter(|f| !withheld.contains(f))
             .map(|f| {
                 let v = base.attrs.get(&f).cloned().unwrap_or_default();
                 (f, v)
             })
             .collect();
+        if !withheld.is_empty() {
+            rows.push(("Rolünüz okumuyor".to_owned(), withheld.join(", ")));
+        }
         ObjectCard {
             title,
             rows,
