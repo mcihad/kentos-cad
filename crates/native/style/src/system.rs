@@ -2,7 +2,8 @@
 //! - the basic symbols and MPYY's 695 symbols and 81 drawings (docs/STYLE.md §8), whose source is the web's
 //!   TypeScript (`apps/web/src/style/system`), written as a `.kstil` file by
 //!   `apps/web/scripts/style/system-library.test.ts` (which also fails when the file falls behind the TypeScript);
-//! - the general library (docs/adr/9118): point, line and area symbols for every kind of map by theme, written by
+//! - the general library: Genel, point, line and area symbols for every kind of map by theme (docs/adr/9118), and
+//!   Kent, a city's trees, plants, furniture, signs, markings, paving and utility details (docs/adr/9119), written by
 //!   `scripts/style/general_library.py` (`--check` fails when the file falls behind the script).
 //!
 //! Read once, on first use.
@@ -59,9 +60,10 @@ mod tests {
             .filter(|(i, _)| i.kind() == ItemKind::Symbol)
             .count();
         let assets = items.len() - symbols;
-        assert!(symbols >= 695 + 197, "symbols: {symbols}");
-        assert!(assets >= 81 + 56, "assets: {assets}");
+        assert!(symbols >= 695 + 340, "symbols: {symbols}");
+        assert!(assets >= 81 + 120, "assets: {assets}");
         assert!(lib.symbol("temel.cizgi.surekli").is_some());
         assert!(lib.symbol("genel.nokta.ulasim.otobus-duragi").is_some());
+        assert!(lib.symbol("kent.nokta.agac.yaprakli").is_some());
     }
 }

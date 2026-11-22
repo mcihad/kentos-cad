@@ -250,6 +250,177 @@ PICTOGRAMS: dict[str, str] = {
 }
 
 
+# City pictograms (docs/adr/9119). The plan views of plants (crowns, shrubs) fill their box: drawn at a size of N
+# metres they are N metres across, as a landscape plan draws them.
+
+def scallops(r: float, n: int, bulge: float = 1.25, cx: float = 50, cy: float = 50, turn: float = 0.0) -> str:
+    """A crown's edge: n arcs bulging outward between n points on a circle of radius r."""
+    pts = [(cx + r * math.cos(math.radians(turn + k * 360 / n)), cy + r * math.sin(math.radians(turn + k * 360 / n)))
+           for k in range(n)]
+    chord = 2 * r * math.sin(math.pi / n)
+    a = chord / 2 * bulge
+    d = f"M{pts[0][0]:.1f} {pts[0][1]:.1f}"
+    for k in range(1, n + 1):
+        x, y = pts[k % n]
+        d += f"A{a:.1f} {a:.1f} 0 0 1 {x:.1f} {y:.1f}"
+    return d + "Z"
+
+
+def lobes(radii: list[float], cx: float = 50, cy: float = 50) -> str:
+    """An irregular shrub: arcs between points at the given radii, evenly turned."""
+    n = len(radii)
+    pts = [(cx + r * math.cos(math.radians(-90 + k * 360 / n)), cy + r * math.sin(math.radians(-90 + k * 360 / n)))
+           for k, r in enumerate(radii)]
+    d = f"M{pts[0][0]:.1f} {pts[0][1]:.1f}"
+    for k in range(1, n + 1):
+        (x0, y0), (x1, y1) = pts[k - 1], pts[k % n]
+        a = math.hypot(x1 - x0, y1 - y0) / 2 * 1.15
+        d += f"A{a:.1f} {a:.1f} 0 0 1 {x1:.1f} {y1:.1f}"
+    return d + "Z"
+
+
+def outline(d: str, width: float, dash: str | None = None) -> str:
+    extra = f' stroke-dasharray="{dash}"' if dash else ""
+    return (f'<path fill="none" stroke="currentColor" stroke-width="{width:g}" stroke-linejoin="round"{extra} '
+            f'd="{d}"/>')
+
+
+def fronds(n: int = 8) -> str:
+    """A palm from above: n pointed leaves from the middle."""
+    d = ""
+    for k in range(n):
+        a = math.radians(-90 + k * 360 / n)
+        tip = (50 + 47 * math.cos(a), 50 + 47 * math.sin(a))
+        l = (50 + 22 * math.cos(a - 0.32), 50 + 22 * math.sin(a - 0.32))
+        r = (50 + 22 * math.cos(a + 0.32), 50 + 22 * math.sin(a + 0.32))
+        d += (f"M50 50Q{l[0]:.1f} {l[1]:.1f} {tip[0]:.1f} {tip[1]:.1f}Q{r[0]:.1f} {r[1]:.1f} 50 50Z")
+    return path(d)
+
+
+def fruits() -> str:
+    return "".join(circle(50 + 26 * math.cos(math.radians(a)), 50 + 26 * math.sin(math.radians(a)), 5.5)
+                   for a in (-60, 20, 100, 170, 250))
+
+
+def flower() -> str:
+    petals = "".join(ellipse(50 + 22 * math.cos(math.radians(a)), 50 + 22 * math.sin(math.radians(a)), 18, 13, a)
+                     for a in range(-90, 270, 72))
+    return f'<g>{petals}</g>' + '<circle cx="50" cy="50" r="11" fill="#F2B705"/>'
+
+
+def spokes_ring() -> str:
+    """A merry-go-round from above: the rim, four spokes, four seats."""
+    seats = "".join(circle(50 + 30 * math.cos(math.radians(a)), 50 + 30 * math.sin(math.radians(a)), 8)
+                    for a in (45, 135, 225, 315))
+    return ring(50, 50, 42, 6) + stroke("M50 8V92M8 50H92", 5) + seats + circle(50, 50, 8)
+
+
+def arrow_plan(kind: str) -> str:
+    """A road arrow as painted on the lane, pointing up the box (its 100 units are its length)."""
+    shaft = "M44 96V44"
+    head = "M50 4L66 34H54V44H46V34H34Z"
+    if kind == "ileri":
+        return path("M50 4L66 34H55V96H45V34H34Z")
+    if kind == "sag":
+        return path("M45 96V52C45 40 52 34 62 34H66V22L86 40L66 58V46H62C58 46 55 49 55 54V96Z")
+    if kind == "sol":
+        return path("M55 96V52C55 40 48 34 38 34H34V22L14 40L34 58V46H38C42 46 45 49 45 54V96Z")
+    # ileri ve sağa
+    return path("M45 96V20H38L50 2L62 20H55V54C58 50 62 48 66 48V38L84 54L66 70V60C60 60 55 64 55 70V96Z") + (shaft and "")
+
+
+PICTOGRAMS.update({
+    # Trees and plants, plan view
+    "tac": svg(path(scallops(41, 12))),
+    "tac-cizgi": svg(outline(scallops(41, 12), 3.5)),
+    "tac-kesikli": svg(outline(scallops(41, 12), 3.5, "6 5")),
+    "tac-igne": svg(path(star_points(50, 50, 48, 34, 16))),
+    "tac-igne-cizgi": svg(outline(star_points(50, 50, 48, 34, 16), 3.5)),
+    "palmiye": svg(fronds(9) + circle(50, 50, 6)),
+    "meyveler": svg(fruits()),
+    "cift-halka": svg(ring(50, 50, 46, 3.5) + ring(50, 50, 40, 3.5)),
+    "carpi": svg(stroke("M18 18L82 82M82 18L18 82", 9)),
+    "ok-sag": svg(path("M14 42H62V26L90 50L62 74V58H14Z")),
+    "servi": svg(ring(50, 50, 44, 5) + stroke("M22 30L70 78M30 22L78 70M18 46L54 82M46 18L82 54", 4)),
+    "cali-plan": svg(path(lobes([44, 36, 46, 38, 44, 34, 42]))),
+    "cali-plan-cizgi": svg(outline(lobes([44, 36, 46, 38, 44, 34, 42]), 4)),
+    "ardic": svg(path(star_points(50, 50, 46, 26, 9))),
+    "cicek": svg(flower()),
+    "sarilgan": svg(stroke("M46 94C40 78 58 68 50 52C44 40 56 28 64 20", 6)
+                    + ellipse(36, 74, 11, 6, -30) + ellipse(62, 60, 11, 6, 30) + ellipse(38, 44, 11, 6, -35)
+                    + ellipse(66, 30, 10, 6, 25) + circle(66, 16, 5)),
+    "bambu": svg(circle(30, 34, 9) + circle(56, 26, 8) + circle(72, 48, 9) + circle(44, 54, 10) + circle(28, 72, 8)
+                 + circle(62, 74, 9)),
+    "saksi": svg(path("M24 52H76L70 92H30Z") + ellipse(50, 30, 22, 18) + path("M47 44H53V52H47Z")),
+    # Park, garden and street furniture
+    "bank": svg(path("M8 46H92V56H8ZM8 24H92V34H8Z") + stroke("M16 56V82M84 56V82M16 34V46M84 34V46", 7, cap="butt")),
+    "cop-kutusu": svg(path("M27 28H73L67 92H33ZM20 16H80V24H20ZM42 7H58V16H42Z")
+                      + '<path fill="none" stroke="#FFFFFF" stroke-width="0" d="M0 0"/>'),
+    "geri-donusum": svg(path("M27 28H73L67 92H33ZM20 16H80V24H20ZM42 7H58V16H42Z"
+                             "M50 42L61 60H55L58 66H42L45 60H39Z", "evenodd")),
+    "konteyner": svg(path("M10 30H90L84 76H16ZM6 20H94V28H6Z") + circle(28, 84, 7) + circle(72, 84, 7)),
+    "fiskiye": svg(path("M8 78A42 12 0 0 0 92 78V84A42 12 0 0 1 8 84Z") + stroke("M50 72V18", 6)
+                   + stroke("M50 22C38 22 28 34 26 52M50 22C62 22 72 34 74 52M50 34C42 36 38 44 37 56M50 34C58 36 62 44 63 56", 5)),
+    "cesme": svg(path("M40 30H60V92H40ZM34 86H66V94H34Z") + stroke("M60 38H76V48", 7, cap="butt")
+                 + path("M76 56C80 62 82 66 82 69A6 6 0 0 1 70 69C70 66 72 62 76 56Z")),
+    "pergola": svg(stroke("M12 12H88V88H12ZM12 30H88M12 50H88M12 70H88", 6, cap="butt")),
+    "kamelya": svg(path("M50 8L94 40H6Z") + stroke("M16 40V90M84 40V90M38 40V90M62 40V90", 6, cap="butt")
+                   + path("M10 86H90V92H10Z")),
+    "heykel": svg(circle(50, 14, 9) + path("M38 26H62L58 58H42Z") + path("M24 64H76V72H24ZM30 72H70V92H30Z")),
+    "fener": svg(path("M38 10H62L66 16H34ZM38 18H62L58 40H42Z") + path("M46 40H54V86H46ZM34 86H66V94H34Z")),
+    "pano": svg(path("M12 14H88V58H12Z") + stroke("M26 58V92M74 58V92", 7, cap="butt")),
+    "bisiklet-park": svg(stroke("M22 88V40A14 14 0 0 1 50 40V88M50 88V40A14 14 0 0 1 78 40V88M8 90H92", 7)),
+    "kaydirak": svg(stroke("M18 92V22M34 92V22M18 40H34M18 58H34M18 76H34M34 22L88 88", 6)),
+    "tahterevalli": svg(path("M40 92L50 66L60 92Z") + stroke("M8 58L92 74", 7) + circle(16, 48, 7) + circle(84, 64, 7)),
+    "kum-havuzu": svg(stroke("M10 14H90V86H10Z", 7)
+                      + "".join(circle(x, y, 3.2) for x, y in [(26, 30), (42, 26), (58, 32), (74, 28), (30, 46), (48, 44),
+                                                               (66, 48), (24, 62), (40, 64), (56, 60), (74, 66), (34, 76),
+                                                               (52, 76), (68, 78)])),
+    "tirmanma": svg(stroke("M10 90A40 70 0 0 1 90 90M26 90A24 50 0 0 1 74 90M42 90A8 30 0 0 1 58 90M14 66H86M24 46H76M38 30H62", 5)),
+    "donence": svg(spokes_ring()),
+    "pota": svg(path("M18 8H82V48H18ZM28 16V40H72V16Z", "evenodd") + stroke("M36 48H64M38 50L44 80M62 50L56 80M44 80H56M50 50V80", 4)),
+    "futbol-kalesi": svg(stroke("M10 84V20H90V84M10 20L22 36H78L90 20M22 36V84M78 36V84M36 36V84M50 36V84M64 36V84M22 52H78M22 68H78", 4)),
+    "masa-tenisi": svg(path("M8 34H92V66H8Z") + stroke("M50 26V74", 6) + path("M76 72A9 9 0 1 1 76 90A9 9 0 1 1 76 72Z")),
+    "sokak-lambasi": svg(path("M44 22H52V92H44ZM32 88H64V94H32Z") + stroke("M48 24C48 14 58 10 70 10H78", 6)
+                         + path("M70 10H90L86 18H74Z")),
+    "sokak-lambasi-cift": svg(path("M46 22H54V92H46ZM34 88H66V94H34Z") + stroke("M50 24C50 14 40 10 28 10H22M50 24C50 14 60 10 72 10H78", 6)
+                              + path("M8 10H28L24 18H12ZM72 10H92L88 18H76Z")),
+    "projektor": svg(path("M46 50H54V92H46ZM32 88H68V94H32Z") + path("M22 18L60 8L66 38L28 48Z") + stroke("M50 50L46 44", 6)),
+    "baba": svg(path("M38 24A12 8 0 0 1 62 24V88H38ZM30 88H70V94H30Z") + path("M38 38H62V44H38Z")),
+    "durak-siginagi": svg(path("M4 14H96V24H4ZM10 24H18V92H10ZM82 24H90V92H82Z") + path("M24 30H76V62H24Z")
+                          + path("M26 68H74V74H26Z")),
+    "bufe": svg(path("M12 30H88V92H12ZM24 42V64H76V42Z", "evenodd") + path("M6 14H94L88 30H12Z")),
+    "posta-kutusu": svg(path("M24 18H76A6 6 0 0 1 82 24V62H18V24A6 6 0 0 1 24 18ZM34 30V36H66V30Z", "evenodd")
+                        + path("M46 62H54V94H46Z")),
+    "atm": svg(path("M8 24H92V76H8ZM8 34V44H92V34Z", "evenodd") + path("M16 60H44V66H16Z")),
+    "reklam-panosu": svg(path("M6 14H94V58H6Z") + path("M46 58H54V94H46Z")),
+    "yonlendirme": svg(path("M46 8H54V94H46Z") + path("M54 16H82L92 26L82 36H54ZM46 42H18L8 52L18 62H46Z")),
+    "saat": svg(ring(50, 50, 40, 8) + stroke("M50 50V24M50 50H68", 7)),
+    "kamera": svg(path("M10 30L66 18L72 46L16 58Z") + path("M72 30L90 24V48L76 44Z") + stroke("M40 52L46 86M30 88H62", 6)),
+    "parkmetre": svg(path("M30 8H70A6 6 0 0 1 76 14V52H24V14A6 6 0 0 1 30 8ZM36 18V34H64V18Z", "evenodd")
+                     + path("M45 52H55V94H45Z")),
+    "engelli": svg(circle(46, 12, 8) + stroke("M44 24V52H66L76 76M44 36H62", 8)
+                   + '<path fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" d="M34 46A22 22 0 1 0 64 74"/>'),
+    "wifi": svg(stroke("M14 40A50 50 0 0 1 86 40M26 54A33 33 0 0 1 74 54M38 68A16 16 0 0 1 62 68", 8) + circle(50, 82, 7)),
+    # Traffic
+    "trafik-isigi": svg(path("M34 4H66A6 6 0 0 1 72 10V90A6 6 0 0 1 66 96H34A6 6 0 0 1 28 90V10A6 6 0 0 1 34 4Z"
+                             + disc(50, 22, 10) + disc(50, 50, 10) + disc(50, 78, 10), "evenodd")),
+    "yaya": svg(circle(54, 12, 9) + stroke("M50 26L40 56L26 92M50 26L58 58L74 92M46 36L28 48M50 34L70 46", 9)),
+    "ok-yukari": svg(path("M50 8L80 44H60V92H40V44H20Z")),
+    "zebra": svg(path("M12 10H24V90H12ZM32 10H44V90H32ZM52 10H64V90H52ZM72 10H84V90H72Z")),
+    # Road arrows painted on lanes
+    "yol-oku-ileri": svg(arrow_plan("ileri")),
+    "yol-oku-sag": svg(arrow_plan("sag")),
+    "yol-oku-sol": svg(arrow_plan("sol")),
+    "yol-oku-ileri-sag": svg(arrow_plan("ileri-sag")),
+    # Utility details
+    "yagmurlama": svg(path("M44 62H56V92H44ZM36 88H64V94H36Z") + circle(50, 56, 9)
+                      + stroke("M36 44C28 36 24 26 24 14M64 44C72 36 76 26 76 14M50 40V8", 5)),
+    "sayac": svg(ring(50, 50, 40, 8) + stroke("M50 50L68 30", 7) + circle(50, 50, 7)),
+    "pompa": svg(ring(50, 50, 40, 8) + path("M34 28L74 50L34 72Z")),
+})
+
+
 # ── Library items ───────────────────────────────────────────────────────────────────────────────────────────────────
 
 CATEGORIES: list[dict] = []
@@ -275,9 +446,9 @@ def numbered(layers: list[dict]) -> list[dict]:
 
 
 def symbol(kind: str, group: str, slug: str, name: str, path_: list[str], layers: list[dict],
-           tags: list[str]) -> None:
+           tags: list[str], root: str = "genel") -> None:
     short = {"marker": "nokta", "line": "cizgi", "fill": "alan"}[kind]
-    ITEMS.append({"kind": "symbol", "id": f"genel.{short}.{group}.{slug}", "name": name, "path": path_,
+    ITEMS.append({"kind": "symbol", "id": f"{root}.{short}.{group}.{slug}", "name": name, "path": path_,
                   "symbol": {"type": kind, "layers": numbered(layers)}, "tags": tags})
 
 
@@ -843,6 +1014,397 @@ def areas() -> None:
            ["kısıt", "tampon", "etki alanı"])
 
 
+# ── City ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+CITY = "Kent"
+PARK, FURNITURE, PLAY = "#2E6B30", "#37474F", "#283593"
+SIGN_RED, SIGN_BLUE, SIGN_YELLOW = "#D32F2F", "#1565C0", "#F2B705"
+MARKING_EDGE = "#5F6368"
+
+
+def by_field(field: str, default: float, times: float = 1.0) -> dict:
+    """A size read from the object's field, in its unit, else `default` (and times a factor)."""
+    k = f" * {times:g}" if times != 1.0 else ""
+    return {"expr": f"varsayılan(sayı([{field}]), {default:g}){k}"}
+
+
+TURN = {"expr": "varsayılan(sayı([Açı]), 0)"}
+
+
+def city() -> None:
+    root = [CITY]
+    category(root, 4, "Kentin ağaçları, bitkileri, park ve sokak donatıları, trafik işaretleri, yol çizgileri, "
+                      "kaplamalar ve altyapı ayrıntıları; MPYY gösterimlerinden ayrı")
+    order = iter(range(1, 100))
+
+    def group(name: str, description: str) -> list[str]:
+        p = root + [name]
+        category(p, next(order), description)
+        return p
+
+    def sym(kind: str, grp: str, slug: str, name: str, p: list[str], layers: list[dict], tags: list[str]) -> None:
+        symbol(kind, grp, slug, name, p, layers, tags, root="kent")
+
+    def crown(fill_asset: str, line_asset: str | None, fill: str, line: str, default: float) -> list[dict]:
+        size = by_field("Taç", default)
+        out = [pic(fill_asset, size, fill, unit="m")]
+        if line_asset:
+            out.append(pic(line_asset, size, line, unit="m"))
+        return out
+
+    trunk = shape("circle", 0.45, fill="#5D4037", unit="m")
+
+    # Trees, plan view, at their real size.
+    p = group("Ağaçlar", "Plan görünüşünde gerçek boyunda; taç çapı nesnenin Taç alanından (metre), yoksa varsayılan")
+    sym("marker", "agac", "yaprakli", "Yapraklı ağaç", p, crown("tac", "tac-cizgi", "#B5DCA0", "#2E7D32", 6) + [trunk],
+        ["ağaç", "yapraklı", "peyzaj"])
+    sym("marker", "agac", "igne-yaprakli", "İğne yapraklı ağaç", p,
+        crown("tac-igne", "tac-igne-cizgi", "#A3CBA8", "#1B5E20", 5) + [trunk], ["ağaç", "iğne yapraklı", "çam"])
+    sym("marker", "agac", "palmiye", "Palmiye", p, [pic("palmiye", by_field("Taç", 5), "#3E8E41", unit="m")],
+        ["ağaç", "palmiye"])
+    sym("marker", "agac", "meyve", "Meyve ağacı", p, crown("tac", "tac-cizgi", "#CFE8A9", "#558B2F", 5)
+        + [pic("meyveler", by_field("Taç", 5), "#D84315", unit="m"), trunk], ["ağaç", "meyve", "bahçe"])
+    sym("marker", "agac", "servi", "Servi, sütun formlu ağaç", p, [pic("servi", by_field("Taç", 2), "#1B5E20", unit="m")],
+        ["ağaç", "servi", "sütun"])
+    sym("marker", "agac", "korunacak", "Mevcut ağaç (korunacak)", p, crown("tac", "tac-cizgi", "#B5DCA0", "#2E7D32", 6)
+        + [pic("cift-halka", by_field("Taç", 6, 1.15), "#2E7D32", unit="m"), trunk], ["ağaç", "mevcut", "korunacak"])
+    sym("marker", "agac", "anit", "Anıt ağaç", p, crown("tac", "tac-cizgi", "#B5DCA0", "#2E7D32", 10)
+        + [pic("cift-halka", by_field("Taç", 10, 1.15), "#B71C1C", unit="m"),
+           shape("star", 1.6, fill="#F2B705", stroke_="#7A5C00", width=0.08, unit="m")], ["ağaç", "anıt", "tescilli"])
+    sym("marker", "agac", "kesilecek", "Kesilecek ağaç", p, [pic("tac-cizgi", by_field("Taç", 6), "#6D4C41", unit="m"),
+                                                            pic("carpi", by_field("Taç", 6, 0.8), "#D32F2F", unit="m")],
+        ["ağaç", "kesilecek", "sökülecek"])
+    sym("marker", "agac", "tasinacak", "Taşınacak ağaç", p, [pic("tac-cizgi", by_field("Taç", 6), "#2E7D32", unit="m"),
+                                                            pic("ok-sag", by_field("Taç", 6, 0.6), "#EF6C00", unit="m")],
+        ["ağaç", "taşınacak", "nakil"])
+    sym("marker", "agac", "dikilecek", "Dikilecek ağaç", p, [pic("tac-kesikli", by_field("Taç", 5), "#2E7D32", unit="m"),
+                                                            shape("cross", 1.2, stroke_="#2E7D32", width=0.08, unit="m")],
+        ["ağaç", "dikilecek", "yeni"])
+    sym("marker", "agac", "fidan", "Fidan", p, crown("tac", "tac-cizgi", "#CFE8A9", "#558B2F", 1.5)
+        + [shape("x", 1.6, stroke_="#5D4037", width=0.08, unit="m")], ["ağaç", "fidan"])
+    sym("line", "agac", "agac-sirasi", "Ağaç sırası (yol ağacı)", p, [
+        mline([pic("tac", 6, "#B5DCA0", unit="m"), pic("tac-cizgi", 6, "#2E7D32", unit="m"), trunk],
+              interval=8, offsetAlong=4, unit="m", rotate=False)], ["ağaç", "sıra", "yol ağacı"])
+    sym("fill", "agac", "agaclik", "Ağaçlık, koru", p, [
+        sfill("#DCEFD2"), pattern([pic("tac", 5, "#A8D594", unit="m"), pic("tac-cizgi", 5, "#4C8C3F", unit="m")],
+                                  6, 6, unit="m", stagger=True, jitter=0.3, seed=41), sline("#4C8C3F", 0.25)],
+        ["ağaç", "koru", "ağaçlık"])
+    sym("fill", "agac", "fidanlik", "Fidanlık", p, [
+        sfill("#EEF6E2"), pattern([shape("circle", 1.0, fill=None, stroke_="#558B2F", width=0.08, unit="m")],
+                                  2.5, 2.5, unit="m"), sline("#558B2F", 0.25)], ["ağaç", "fidanlık"])
+
+    # Shrubs and plants.
+    p = group("Çalı ve bitkiler", "Çalılar, çitler, çiçek tarhları, çim ve yer örtücüler; çalılar gerçek boyunda")
+    sym("marker", "bitki", "cali", "Çalı", p, crown("cali-plan", "cali-plan-cizgi", "#C5E1A5", "#558B2F", 1.6),
+        ["bitki", "çalı"])
+    sym("marker", "bitki", "ardic", "İğne yapraklı çalı, ardıç", p, [pic("ardic", by_field("Taç", 1.4), "#4E7D4F", unit="m")],
+        ["bitki", "çalı", "ardıç"])
+    sym("marker", "bitki", "cicek", "Süs bitkisi, çiçek", p, [pic("cicek", by_field("Taç", 0.8), "#E91E63", unit="m")],
+        ["bitki", "çiçek"])
+    sym("marker", "bitki", "sarilgan", "Sarılıcı bitki", p, [pic("sarilgan", 3.2, "#558B2F")], ["bitki", "sarmaşık"])
+    sym("marker", "bitki", "bambu", "Bambu", p, [pic("bambu", by_field("Taç", 2), "#7CB342", unit="m")], ["bitki", "bambu"])
+    sym("line", "bitki", "cit-bitkisi", "Budanmış çit", p, [
+        sline("#33691E", 1.1, unit="m", cap="round", join="round"), sline("#8BC34A", 0.85, unit="m", cap="round",
+                                                                             join="round")],
+        ["bitki", "çit", "hedge"])
+    sym("line", "bitki", "dogal-cit", "Doğal çit", p, [
+        sline("#7CB342", 0.9, unit="m", wave={"shape": "sine", "length": 1.6, "amplitude": 0.25, "connect": True})],
+        ["bitki", "çit"])
+    sym("line", "bitki", "bordur-bitkisi", "Bordür bitkisi", p, [
+        mline([shape("circle", 0.5, fill="#8BC34A", stroke_="#558B2F", width=0.05, unit="m")], interval=0.7, unit="m")],
+        ["bitki", "bordür"])
+    sym("fill", "bitki", "cim", "Çim alan", p, [
+        sfill("#CDE8B0"), pattern([pic("ot", 1.2, "#7CB342")], 4, 4, stagger=True, jitter=0.35, seed=43),
+        sline("#7CB342", 0.18)], ["bitki", "çim"])
+    sym("fill", "bitki", "spor-cimi", "Biçilmiş çim", p, [
+        sfill("#A9D88D"), hatch(0, 4, 2, "#98CF79"), sline("#5E9C3F", 0.18)], ["bitki", "çim", "spor"])
+    sym("fill", "bitki", "cicek-tarhi", "Çiçek tarhı", p, [
+        sfill("#F8D7E3"), pattern([pic("cicek", 1.6, "#D81B60")], 3, 3, stagger=True), sline("#C2185B", 0.2)],
+        ["bitki", "çiçek", "tarh"])
+    sym("fill", "bitki", "mevsimlik", "Mevsimlik çiçek", p, [
+        sfill("#FBE7EE"), pattern([shape("circle", 0.9, fill="#E53935")], 2.4, 2.4, stagger=True),
+        pattern([shape("circle", 0.9, fill="#FDD835")], 2.4, 2.4, stagger=True, offset=[1.2, 0]),
+        pattern([shape("circle", 0.9, fill="#8E24AA")], 2.4, 2.4, stagger=True, offset=[0.6, 1.2]), sline("#C2185B", 0.2)],
+        ["bitki", "çiçek", "mevsimlik"])
+    sym("fill", "bitki", "cali-grubu", "Çalı grubu", p, [
+        sfill("#D7EBC1"), pattern([pic("cali-plan", 1.6, "#A5CF7E", unit="m"), pic("cali-plan-cizgi", 1.6, "#5B8C2A",
+                                                                                   unit="m")],
+                                  1.9, 1.9, unit="m", stagger=True, jitter=0.35, seed=47), sline("#5B8C2A", 0.2)],
+        ["bitki", "çalı", "kitle"])
+    sym("fill", "bitki", "yer-ortucu", "Yer örtücü bitki", p, [
+        sfill("#E2F0CF"), pattern([shape("circle", 0.5, fill="#7CB342")], 1.2, 1.2, jitter=0.45, seed=53),
+        sline("#7CB342", 0.18)], ["bitki", "yer örtücü"])
+    sym("fill", "bitki", "otsu", "Süs çimi, otsu bitkiler", p, [
+        sfill("#E6F2D4"), pattern([pic("ot", 1.6, "#6E9F3F")], 2.6, 2.6, stagger=True, jitter=0.3, seed=59),
+        sline("#6E9F3F", 0.18)], ["bitki", "süs çimi"])
+    sym("fill", "bitki", "kaya-bahcesi", "Kaya bahçesi", p, [
+        sfill("#ECE8DF"), pattern([pic("kaya", 1.8, "#8D8578")], 3.2, 3.0, stagger=True, jitter=0.3, seed=61),
+        pattern([pic("cicek", 1.2, "#EC407A")], 5, 5, offset=[2, 1]), sline("#8D8578", 0.2)], ["bitki", "kaya bahçesi"])
+
+    # Park and garden.
+    p = group("Park ve bahçe donatıları", "Fıskiye, çeşme, pergola, çardak, heykel ve park zeminleri")
+    for slug, name, asset, color, size, tags in [
+        ("fiskiye", "Süs havuzu, fıskiye", "fiskiye", "#0277BD", 3.4, ["park", "havuz", "fıskiye"]),
+        ("cesme", "İçme suyu çeşmesi", "cesme", "#0277BD", 3.2, ["park", "çeşme", "su"]),
+        ("pergola", "Pergola", "pergola", "#6D4C41", 3.2, ["park", "pergola"]),
+        ("kamelya", "Çardak, kamelya", "kamelya", "#6D4C41", 3.4, ["park", "çardak", "kamelya"]),
+        ("heykel", "Heykel", "heykel", "#5D6B76", 3.4, ["park", "heykel", "anıt"]),
+        ("piknik", "Piknik masası", "piknik", PARK, 3.2, ["park", "piknik", "masa"]),
+        ("bayrak", "Bayrak direği", "bayrak", "#5D6B76", 3.4, ["park", "bayrak"]),
+        ("park-lambasi", "Park lambası", "fener", "#455A64", 3.4, ["park", "aydınlatma", "lamba"]),
+        ("pano", "Bilgi panosu", "pano", PARK, 3.0, ["park", "pano", "bilgi"]),
+        ("kopek-parki", "Köpek parkı", "pati", PARK, 3.0, ["park", "köpek", "evcil hayvan"]),
+    ]:
+        sym("marker", "park", slug, name, p, [pic(asset, size, color)], tags)
+    sym("marker", "park", "wc", "Tuvalet (WC)", p, [shape("square", 3.4, fill="#455A64", stroke_=WHITE, width=0.25),
+                                                   text("WC", 1.7, WHITE)], ["park", "tuvalet", "wc"])
+    sym("fill", "park", "sus-havuzu", "Süs havuzu", p, [sfill("#B3E5FC"), sline("#0277BD", 0.3), sline("#81D4FA", 0.15,
+                                                                                                    offset=0.5)],
+        ["park", "havuz", "su"])
+    sym("fill", "park", "cakil", "Çakıl", p, [
+        sfill("#E8E2D6"), pattern([shape("circle", 0.6, fill=None, stroke_="#A39A8A", width=0.1)], 1.1, 1.1, jitter=0.4,
+                                  seed=67), sline("#A39A8A", 0.18)], ["park", "çakıl", "zemin"])
+    sym("fill", "park", "ahsap-deck", "Ahşap deck", p, [sfill("#D7B98E"), hatch(0, 1.2, 0.12, "#A1784C"),
+                                                        sline("#8D6E4A", 0.25)], ["park", "ahşap", "zemin"])
+    sym("fill", "park", "stabilize", "Stabilize park yolu", p, [
+        sfill("#EADFC6"), pattern([shape("circle", 0.25, fill="#B59E78")], 1.0, 1.0, jitter=0.45, seed=71),
+        sline("#B59E78", 0.2)], ["park", "yol", "stabilize"])
+
+    # Play and sport.
+    p = group("Oyun ve spor elemanları", "Çocuk oyun elemanları, açık hava spor aletleri ve zeminleri")
+    for slug, name, asset, tags in [
+        ("salincak", "Salıncak", "salincak", ["oyun", "salıncak"]),
+        ("kaydirak", "Kaydırak", "kaydirak", ["oyun", "kaydırak"]),
+        ("tahterevalli", "Tahterevalli", "tahterevalli", ["oyun", "tahterevalli"]),
+        ("kum-havuzu", "Kum havuzu", "kum-havuzu", ["oyun", "kum"]),
+        ("tirmanma", "Tırmanma elemanı", "tirmanma", ["oyun", "tırmanma"]),
+        ("donence", "Dönence", "donence", ["oyun", "dönence"]),
+        ("fitness", "Açık hava spor aleti", "dambil", ["spor", "fitness"]),
+        ("pota", "Basketbol potası", "pota", ["spor", "basketbol"]),
+        ("futbol-kalesi", "Futbol kalesi", "futbol-kalesi", ["spor", "futbol"]),
+        ("masa-tenisi", "Masa tenisi", "masa-tenisi", ["spor", "masa tenisi"]),
+    ]:
+        sym("marker", "oyun", slug, name, p, [pic(asset, 3.4, PLAY)], tags)
+    sym("fill", "oyun", "kaucuk-zemin", "Kauçuk zemin", p, [
+        sfill("#EBA8A0"), pattern([shape("circle", 0.3, fill="#B23A2E")], 1.0, 1.0, jitter=0.45, seed=73),
+        sline("#B23A2E", 0.25)], ["oyun", "zemin", "kauçuk"])
+    sym("fill", "oyun", "kum-zemin", "Kum zemin", p, [
+        sfill("#F3E3B5"), pattern([shape("circle", 0.28, fill="#C9A86A")], 0.9, 0.9, jitter=0.45, seed=79),
+        sline("#C9A86A", 0.25)], ["oyun", "zemin", "kum"])
+    sym("fill", "oyun", "tartan", "Tartan pist", p, [sfill("#C8553D"), sline("#8E3A28", 0.25)], ["spor", "pist", "tartan"])
+    sym("fill", "oyun", "sentetik-cim", "Sentetik çim saha", p, [sfill("#6DBE5A"), hatch(90, 5, 2.5, "#62B04F"),
+                                                                 sline("#3E8E41", 0.25)], ["spor", "saha", "çim"])
+
+    # Street furniture.
+    p = group("Kent mobilyaları", "Oturma, aydınlatma, atık, durak, büfe, yönlendirme ve erişim donatıları")
+    for slug, name, asset, color, tags in [
+        ("bank", "Bank", "bank", FURNITURE, ["mobilya", "bank", "oturma"]),
+        ("cop-kutusu", "Çöp kutusu", "cop-kutusu", FURNITURE, ["mobilya", "çöp", "atık"]),
+        ("geri-donusum", "Geri dönüşüm kutusu", "geri-donusum", "#2E7D32", ["mobilya", "geri dönüşüm", "atık"]),
+        ("konteyner", "Çöp konteyneri", "konteyner", FURNITURE, ["mobilya", "konteyner", "atık"]),
+        ("sokak-lambasi", "Sokak lambası", "sokak-lambasi", FURNITURE, ["mobilya", "aydınlatma", "lamba"]),
+        ("sokak-lambasi-cift", "Sokak lambası (çift kollu)", "sokak-lambasi-cift", FURNITURE,
+         ["mobilya", "aydınlatma", "lamba"]),
+        ("projektor", "Projektör", "projektor", FURNITURE, ["mobilya", "aydınlatma", "projektör"]),
+        ("baba", "Babası (bolard)", "baba", FURNITURE, ["mobilya", "babası", "bolard"]),
+        ("saksi", "Çiçeklik, saksı", "saksi", "#6D4C41", ["mobilya", "saksı", "çiçeklik"]),
+        ("durak", "Otobüs durağı (sığınak)", "durak-siginagi", TRANSPORT, ["mobilya", "durak", "otobüs"]),
+        ("bisiklet-park", "Bisiklet park yeri", "bisiklet-park", TRANSPORT, ["mobilya", "bisiklet"]),
+        ("bufe", "Büfe, kiosk", "bufe", COMMERCE, ["mobilya", "büfe", "kiosk"]),
+        ("posta-kutusu", "Posta kutusu", "posta-kutusu", "#C99700", ["mobilya", "posta"]),
+        ("atm", "ATM", "atm", COMMERCE, ["mobilya", "atm", "banka"]),
+        ("reklam-panosu", "Reklam panosu", "reklam-panosu", FURNITURE, ["mobilya", "reklam", "pano"]),
+        ("yonlendirme", "Yönlendirme tabelası", "yonlendirme", FURNITURE, ["mobilya", "tabela", "yönlendirme"]),
+        ("saat", "Meydan saati", "saat", FURNITURE, ["mobilya", "saat"]),
+        ("kamera", "Güvenlik kamerası", "kamera", FURNITURE, ["mobilya", "kamera", "güvenlik"]),
+        ("parkmetre", "Otopark ödeme makinesi", "parkmetre", TRANSPORT, ["mobilya", "otopark", "ödeme"]),
+        ("engelli", "Engelli erişimi, rampa", "engelli", SIGN_BLUE, ["mobilya", "engelli", "erişim", "rampa"]),
+        ("wifi", "Kablosuz internet", "wifi", FURNITURE, ["mobilya", "internet", "wifi"]),
+    ]:
+        sym("marker", "mobilya", slug, name, p, [pic(asset, 3.2, color)], tags)
+    sym("marker", "mobilya", "bilgi-ekrani", "Kent bilgi ekranı", p, letter("i", TOURISM, size=3.6, kind="square",
+                                                                           text_size=2.6, font="serif"),
+        ["mobilya", "bilgi", "totem"])
+    sym("line", "mobilya", "babalar", "Babası dizisi", p, [
+        mline([shape("circle", 0.3, fill=FURNITURE, unit="m")], interval=1.5, offsetAlong=0.75, unit="m")],
+        ["mobilya", "babası", "bolard"])
+    sym("line", "mobilya", "korkuluk", "Yaya korkuluğu", p, [
+        sline(FURNITURE, 0.15, offset=0.25), sline(FURNITURE, 0.15, offset=-0.25),
+        mline([shape("circle", 0.7, fill=FURNITURE)], interval=3, offsetAlong=1.5)], ["mobilya", "korkuluk"])
+    sym("line", "mobilya", "bariyer", "Bariyer", p, [sline(SIGN_RED, 0.6), sline(WHITE, 0.6, dash=[1.5, 1.5])],
+        ["mobilya", "bariyer"])
+
+    # Traffic signs and lights.
+    p = group("Trafik işaretleri ve ışıkları", "Uyarı, tanzim ve bilgi işaretleri, trafik ve yaya ışıkları")
+    light = lambda color, dy: shape("circle", 0.85, fill=color, offset=[0, dy])
+    sym("marker", "trafik", "trafik-isigi", "Trafik ışığı", p, [
+        pic("trafik-isigi", 4.2, "#263238"), light("#E53935", 1.18), light("#FDD835", 0), light("#43A047", -1.18)],
+        ["trafik", "ışık", "sinyalizasyon"])
+    sym("marker", "trafik", "yaya-isigi", "Yaya ışığı", p, [
+        shape("square", 3.2, fill="#263238", stroke_=WHITE, width=0.2), pic("yaya", 2.4, "#43A047")],
+        ["trafik", "ışık", "yaya"])
+    sym("marker", "trafik", "uyari", "Uyarı işareti", p, [
+        shape("triangle", 4.6, fill=WHITE, stroke_=SIGN_RED, width=0.55), text("!", 2.6, INK, offset=[0, -0.35])],
+        ["trafik", "işaret", "uyarı"])
+    sym("marker", "trafik", "yaya-gecidi-uyari", "Yaya geçidi uyarısı", p, [
+        shape("triangle", 4.6, fill=WHITE, stroke_=SIGN_RED, width=0.55), pic("zebra", 1.7, INK, offset=[0, -0.45])],
+        ["trafik", "işaret", "uyarı", "yaya"])
+    sym("marker", "trafik", "tanzim", "Tanzim işareti", p, [shape("circle", 4.2, fill=WHITE, stroke_=SIGN_RED, width=0.6)],
+        ["trafik", "işaret", "tanzim", "yasak"])
+    sym("marker", "trafik", "hiz-siniri", "Hız sınırı", p, [
+        shape("circle", 4.4, fill=WHITE, stroke_=SIGN_RED, width=0.65),
+        text({"expr": "varsayılan([Hız], '50')"}, 1.9, INK)], ["trafik", "işaret", "hız"])
+    sym("marker", "trafik", "dur", "Dur", p, [shape("octagon", 4.4, fill=SIGN_RED, stroke_=WHITE, width=0.3),
+                                             text("DUR", 1.4, WHITE)], ["trafik", "işaret", "dur"])
+    sym("marker", "trafik", "yol-ver", "Yol ver", p, [
+        shape("triangle", 4.6, fill=WHITE, stroke_=SIGN_RED, width=0.6, rotation=180)], ["trafik", "işaret", "yol ver"])
+    sym("marker", "trafik", "park-yapilmaz", "Park yapılmaz", p, [
+        shape("circle", 4.2, fill=SIGN_BLUE, stroke_=SIGN_RED, width=0.6),
+        shape("line", 3.6, stroke_=SIGN_RED, width=0.55, rotation=45)], ["trafik", "işaret", "park"])
+    sym("marker", "trafik", "mecburi-yon", "Mecburi yön", p, [
+        shape("circle", 4.2, fill=SIGN_BLUE, stroke_=WHITE, width=0.2), pic("ok-yukari", 2.6, WHITE)],
+        ["trafik", "işaret", "mecburiyet"])
+    sym("marker", "trafik", "bilgi", "Bilgi işareti", p, [
+        shape("square", 4.0, fill=SIGN_BLUE, stroke_=WHITE, width=0.2), text("i", 2.8, WHITE, font="serif")],
+        ["trafik", "işaret", "bilgi"])
+    sym("marker", "trafik", "yaya-gecidi", "Yaya geçidi işareti", p, [
+        shape("square", 4.0, fill=SIGN_BLUE, stroke_=WHITE, width=0.2),
+        shape("triangle", 3.0, fill=WHITE, offset=[0, -0.15]), pic("yaya", 1.6, INK, offset=[0, -0.3])],
+        ["trafik", "işaret", "yaya geçidi"])
+    sym("marker", "trafik", "ana-yol", "Ana yol", p, [
+        shape("diamond", 4.6, fill=WHITE, stroke_=INK, width=0.15), shape("diamond", 3.2, fill=SIGN_YELLOW)],
+        ["trafik", "işaret", "ana yol"])
+
+    # Road markings and edges, at their real size.
+    p = group("Yol çizgileri ve kenarları", "Şerit, durma ve yaya geçidi çizgileri, bordür, özel şeritler ve yol okları; "
+                                            "gerçek boyunda")
+    white = lambda width, **extra: [sline(MARKING_EDGE, width + 0.06, unit="m", **extra),
+                                    sline(WHITE, width, unit="m", **extra)]
+    sym("line", "yol", "serit-kesikli", "Şerit çizgisi (kesikli)", p, white(0.15, dash=[3, 5]),
+        ["yol çizgisi", "şerit"])
+    sym("line", "yol", "serit-surekli", "Şerit çizgisi (sürekli)", p, white(0.15), ["yol çizgisi", "şerit"])
+    sym("line", "yol", "cift-surekli", "Çift sürekli çizgi", p, white(0.12, offset=0.15) + white(0.12, offset=-0.15),
+        ["yol çizgisi", "orta çizgi"])
+    sym("line", "yol", "gecici-serit", "Geçici şerit çizgisi (sarı)", p, [
+        sline("#C79A00", 0.19, unit="m", dash=[3, 3]), sline("#FBC02D", 0.15, unit="m", dash=[3, 3])],
+        ["yol çizgisi", "geçici", "yol çalışması"])
+    sym("line", "yol", "durma-cizgisi", "Durma çizgisi", p, white(0.5), ["yol çizgisi", "durma"])
+    sym("line", "yol", "yaya-gecidi", "Yaya geçidi (çizgi boyunca)", p, [
+        mline([shape("rectangle", 0.5, fill=WHITE, stroke_=MARKING_EDGE, width=0.03, height=3.0, unit="m")],
+              interval=1.0, offsetAlong=0.5, unit="m")], ["yol çizgisi", "yaya geçidi", "zebra"])
+    sym("line", "yol", "bordur", "Bordür", p, [sline("#9E9E9E", 0.15, unit="m"), sline("#616161", 0.03, unit="m",
+                                                                                     offset=0.075),
+                                              sline("#616161", 0.03, unit="m", offset=-0.075)], ["yol", "bordür", "kaldırım"])
+    sym("line", "yol", "bisiklet-seridi", "Bisiklet şeridi", p, [
+        sline("#4CAF5066", 1.5, unit="m"), *white(0.1, offset=0.75), *white(0.1, offset=-0.75),
+        mline([pic("bisiklet", 1.0, "#2E7D32", unit="m")], interval=20, offsetAlong=10, unit="m", rotate=False)],
+        ["yol", "bisiklet", "şerit"])
+    sym("line", "yol", "otobus-seridi", "Otobüs şeridi", p, [
+        sline("#E5393559", 3.0, unit="m"),
+        mline([text("OTOBÜS", 0.9, "#B71C1C", unit="m")], interval=30, offsetAlong=15, unit="m")],
+        ["yol", "otobüs", "şerit"])
+    sym("line", "yol", "hiz-kesici", "Hız kesici", p, [sline("#212121", 0.6, unit="m"),
+                                                      sline("#FDD835", 0.6, unit="m", dash=[0.5, 0.5])],
+        ["yol", "hız kesici", "kasis"])
+    for slug, name, asset in [("ok-ileri", "Yol oku (ileri)", "yol-oku-ileri"), ("ok-sag", "Yol oku (sağa)", "yol-oku-sag"),
+                              ("ok-sol", "Yol oku (sola)", "yol-oku-sol"),
+                              ("ok-ileri-sag", "Yol oku (ileri ve sağa)", "yol-oku-ileri-sag")]:
+        sym("marker", "yol", slug, name, p, [pic(asset, 5.25, MARKING_EDGE, unit="m", rotation=TURN),
+                                            pic(asset, 5.0, WHITE, unit="m", rotation=TURN)], ["yol çizgisi", "ok"])
+
+    # Paving.
+    p = group("Yol ve zemin kaplamaları", "Asfalt, beton, parke, küp taş, kaldırım, refüj, park cebi ve çim taşı")
+    sym("fill", "kaplama", "asfalt", "Asfalt", p, [sfill("#7A7D80"), sline("#5F6265", 0.18)], ["kaplama", "asfalt", "yol"])
+    sym("fill", "kaplama", "beton", "Beton", p, [
+        sfill("#D5D5D2"), pattern([shape("circle", 0.22, fill="#A8A8A3")], 1.0, 1.0, jitter=0.45, seed=83),
+        sline("#9E9E9A", 0.18)], ["kaplama", "beton"])
+    sym("fill", "kaplama", "kilit-parke", "Kilit parke taşı", p, [
+        sfill("#C9B8A6"), hatch(0, 1.0, 0.08, "#9C8774"), hatch(90, 2.0, 0.08, "#9C8774", dash=[1, 1]),
+        hatch(90, 2.0, 0.08, "#9C8774", dash=[1, 1], dashOffset=1, offset=1), sline("#8C7764", 0.2)],
+        ["kaplama", "parke", "kilit taşı"])
+    sym("fill", "kaplama", "kup-tas", "Küp taş, Arnavut kaldırımı", p, [
+        sfill("#BDB8B0"), hatch(0, 0.8, 0.08, "#8E8A84"), hatch(90, 0.8, 0.08, "#8E8A84"), sline("#7E7A74", 0.2)],
+        ["kaplama", "küp taş"])
+    sym("fill", "kaplama", "kaldirim", "Kaldırım karosu", p, [
+        sfill("#E4DED3"), hatch(0, 1.6, 0.08, "#B8B0A3"), hatch(90, 1.6, 0.08, "#B8B0A3"), sline("#9E9E9E", 0.25)],
+        ["kaplama", "kaldırım", "yaya"])
+    sym("fill", "kaplama", "bisiklet-yolu", "Bisiklet yolu kaplaması", p, [sfill("#C86B5A"), sline("#8E3A28", 0.2)],
+        ["kaplama", "bisiklet"])
+    sym("fill", "kaplama", "refuj", "Refüj, kavşak adası", p, [sfill("#B7DFA0"), sline("#7A7A7A", 0.3)],
+        ["kaplama", "refüj", "ada"])
+    sym("fill", "kaplama", "park-cebi", "Park cebi", p, [
+        sfill("#B0B3B6"), hatch(90, 2.5, 0.12, WHITE, unit="m"), sline("#7A7D80", 0.2)], ["kaplama", "otopark", "park cebi"])
+    sym("fill", "kaplama", "engelli-park", "Engelli park yeri", p, [
+        sfill("#5C8FD6"), sline("#FFFFFF", 0.25), centroid([pic("engelli", 3.0, WHITE)])],
+        ["kaplama", "otopark", "engelli"])
+    sym("fill", "kaplama", "tarali", "Taralı alan (yol çizgisi)", p, [
+        hatch(45, 1.5, 0.36, MARKING_EDGE, unit="m"), hatch(45, 1.5, 0.3, WHITE, unit="m"),
+        sline(MARKING_EDGE, 0.19, unit="m"), sline(WHITE, 0.15, unit="m")], ["yol çizgisi", "taralı alan"])
+    sym("fill", "kaplama", "cim-tasi", "Çim taşı", p, [
+        sfill("#A5D68A"), hatch(0, 1.2, 0.18, "#A3A3A0"), hatch(90, 1.2, 0.18, "#A3A3A0"), sline("#7A7A77", 0.2)],
+        ["kaplama", "çim taşı", "otopark"])
+    sym("fill", "kaplama", "dogal-tas", "Doğal taş döşeme", p, [
+        sfill("#CFC6B8"), pattern([pic("kaya", 2.2, "#9C9284")], 2.6, 2.4, stagger=True, jitter=0.25, seed=89),
+        sline("#8C8274", 0.2)], ["kaplama", "doğal taş", "kayrak"])
+    sym("fill", "kaplama", "toprak", "Toprak, mıcır", p, [
+        sfill("#D9C7A5"), pattern([shape("circle", 0.3, fill="#A88C5E")], 1.6, 1.6, jitter=0.45, seed=97),
+        sline("#A88C5E", 0.2)], ["kaplama", "toprak", "mıcır"])
+
+    # Utility details.
+    p = group("Altyapı ayrıntıları", "Bacalar, vanalar, sayaçlar, panolar, sulama ve drenaj; altyapı renklerinde")
+    sym("marker", "altyapi", "yagmur-suyu-bacasi", "Yağmur suyu bacası", p, [
+        shape("circle", 2.2, fill=PAPER, stroke_=STORM, width=0.3), shape("circle", 0.7, fill=STORM)],
+        ["altyapı", "yağmur suyu", "baca"])
+    sym("marker", "altyapi", "muayene-bacasi", "Muayene bacası", p, [
+        shape("circle", 2.2, fill=PAPER, stroke_="#757575", width=0.3), shape("cross", 1.2, stroke_="#757575", width=0.2)],
+        ["altyapı", "baca", "menhol"])
+    sym("marker", "altyapi", "vana-odasi", "Vana odası", p, [
+        shape("square", 3.0, fill=PAPER, stroke_=DRINKING, width=0.3), pic("vana", 2.2, DRINKING)],
+        ["altyapı", "su", "vana"])
+    sym("marker", "altyapi", "su-sayaci", "Su sayacı", p, [pic("sayac", 2.8, DRINKING)], ["altyapı", "su", "sayaç"])
+    sym("marker", "altyapi", "sulama-vanasi", "Sulama vanası", p, [pic("vana", 2.8, "#2E7D32")],
+        ["altyapı", "sulama", "vana"])
+    sym("marker", "altyapi", "yagmurlama", "Yağmurlama başlığı", p, [pic("yagmurlama", 3.0, "#0288D1")],
+        ["altyapı", "sulama", "yağmurlama"])
+    sym("marker", "altyapi", "elektrik-panosu", "Elektrik dağıtım panosu", p, [
+        shape("rectangle", 3.0, fill=PAPER, stroke_=ELECTRIC, width=0.3, height=2.0), pic("simsek", 1.6, ELECTRIC)],
+        ["altyapı", "elektrik", "pano"])
+    sym("marker", "altyapi", "aydinlatma-panosu", "Aydınlatma panosu", p, [
+        shape("rectangle", 3.0, fill=PAPER, stroke_="#EF6C00", width=0.3, height=2.0), pic("simsek", 1.6, "#EF6C00")],
+        ["altyapı", "aydınlatma", "pano"])
+    sym("marker", "altyapi", "telekom-menholu", "Haberleşme menholü", p, [
+        shape("square", 2.6, fill=PAPER, stroke_=TELECOM, width=0.3), text("T", 1.6, TELECOM)],
+        ["altyapı", "haberleşme", "menhol"])
+    sym("marker", "altyapi", "fiber-kutusu", "Fiber dağıtım kutusu", p, [
+        shape("square", 2.2, fill=TELECOM, stroke_=WHITE, width=0.15), text("F", 1.4, WHITE)],
+        ["altyapı", "haberleşme", "fiber"])
+    sym("marker", "altyapi", "dogalgaz-vanasi", "Doğal gaz vanası", p, [pic("vana", 2.8, GAS)],
+        ["altyapı", "doğal gaz", "vana"])
+    sym("marker", "altyapi", "pompa-istasyonu", "Pompa istasyonu", p, [pic("pompa", 3.0, DRINKING)],
+        ["altyapı", "su", "pompa"])
+    sym("line", "altyapi", "drenaj", "Drenaj hattı", p, [
+        sline(STORM, 0.3, dash=[2, 1]), mline([shape("chevron", 1.0, stroke_=STORM, width=0.25)], interval=8, offsetAlong=4)],
+        ["altyapı", "drenaj"])
+    sym("line", "altyapi", "damlama", "Damla sulama hattı", p, [sline("#2E7D32", 0.25, dash=[0.01, 0.8], cap="round")],
+        ["altyapı", "sulama", "damlama"])
+    sym("line", "altyapi", "kablo-kanali", "Kablo kanalı", p, [
+        sline("#616161", 0.18, offset=0.35), sline("#616161", 0.18, offset=-0.35),
+        mline([shape("line", 0.7, stroke_="#616161", width=0.15, rotation=90)], interval=3)], ["altyapı", "kablo"])
+    sym("line", "altyapi", "menfez", "Menfez", p, [
+        sline(INK, 0.4), mline([shape("line", 2.4, stroke_=INK, width=0.4, rotation=90)], placement="first"),
+        mline([shape("line", 2.4, stroke_=INK, width=0.4, rotation=90)], placement="last")], ["altyapı", "menfez", "su"])
+    for slug, name, color, mark, tags in [
+        ("aydinlatma-kablosu", "Aydınlatma kablosu", "#F9A825", "A", ["altyapı", "aydınlatma", "kablo"]),
+        ("bolgesel-isitma", "Bölgesel ısıtma hattı", "#8E2424", "I", ["altyapı", "ısıtma"]),
+    ]:
+        sym("line", "altyapi", slug, name, p, [
+            sline(color, 0.4, dash=[5, 1.4]),
+            mline([text(mark, 1.8, color, halo={"color": PAPER, "width": 0.35})], interval=18, offsetAlong=9)], tags)
+    sym("line", "altyapi", "basincli-atik-su", "Basınçlı atık su hattı", p, [
+        sline(SEWER, 0.45, dash=[3, 1]), mline([shape("arrowhead", 1.1, fill=SEWER)], interval=12, offsetAlong=6)],
+        ["altyapı", "atık su", "basınçlı"])
+
+
 def library() -> dict:
     CATEGORIES.clear()
     ITEMS.clear()
@@ -850,7 +1412,8 @@ def library() -> dict:
     points()
     lines()
     areas()
-    category([GEN, "Piktogramlar"], 9, "Genel sembollerin piktogramları (SVG)")
+    city()
+    category([GEN, "Piktogramlar"], 9, "Genel ve Kent sembollerinin piktogramları (SVG)")
     used = {layer["asset"].removeprefix("genel.svg.") for item in ITEMS for layer in walk(item["symbol"]["layers"])
             if layer.get("type") == "svg"}
     assets = [{"kind": "asset", "id": f"genel.svg.{name}", "name": name, "path": [GEN, "Piktogramlar"], "format": "svg",

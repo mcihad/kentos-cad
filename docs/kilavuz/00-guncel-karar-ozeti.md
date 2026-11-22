@@ -71,6 +71,10 @@
   kategori ve 56 elle çizilmiş piktogram. Yer sembolleri temasının renkli dairesinde beyaz piktogramdır. Kaynak
   `scripts/style/general_library.py`'dir ve `--check` ile denetlenir. Masaüstü iki sistem dosyasını birlikte okur.
   Dayanak noktalı işaretin önizlemesi bütün sığar.
+  - **Kent dalı** (aynı gün, sahibin isteği; [ADR 9119](../adr/9119-city-symbol-library.md)): 143 sembol, dokuz alan:
+    ağaçlar, çalı ve bitkiler, park ve bahçe, oyun ve spor, kent mobilyaları, trafik işaretleri, yol çizgileri,
+    kaplamalar, altyapı ayrıntıları. MPYY'den ayrıdır. Bitkiler, yol çizgileri ve oklar gerçek boyundadır
+    (`unit: "m"`); Taç, Açı ve Hız alanları boyu, yönü ve yazıyı verir.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

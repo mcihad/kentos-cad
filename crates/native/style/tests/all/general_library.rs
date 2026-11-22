@@ -1,5 +1,5 @@
-//! The general symbol library (docs/adr/9118) as the engine reads it: every symbol's id says its kind and sits in a
-//! category that exists, every layer is one its kind draws, every shape, font and pictogram is known (an unknown
+//! The general symbol library as the engine reads it, its Genel (docs/adr/9118) and Kent (docs/adr/9119) branches:
+//! every symbol's id says its branch and kind and sits in a category that exists, every layer is one its kind draws, every shape, font and pictogram is known (an unknown
 //! shape would draw as a circle, an unknown font as the default), every pictogram is an SVG drawing the desktop reads,
 //! every symbol draws a preview, and every category holds symbols. The file is written by
 //! `scripts/style/general_library.py`.
@@ -65,9 +65,10 @@ fn every_general_symbol_is_one_the_engine_draws_in_a_category_that_exists() {
         .filter_map(|c| c["path"].as_array())
         .map(|p| p.iter().filter_map(Value::as_str).map(str::to_owned).collect())
         .collect();
-    let general: Vec<&Value> = items.iter().filter(|i| i["id"].as_str().is_some_and(|id| id.starts_with("genel."))).collect();
+    let ours = |id: &str| id.starts_with("genel.") || id.starts_with("kent.");
+    let general: Vec<&Value> = items.iter().filter(|i| i["id"].as_str().is_some_and(ours)).collect();
     let symbols: Vec<&Value> = general.iter().copied().filter(|i| i["kind"] == "symbol").collect();
-    assert!(symbols.len() >= 190, "{} general symbols", symbols.len());
+    assert!(symbols.len() >= 330, "{} general and city symbols", symbols.len());
     let palette = StylePalette::paper();
     let mut problems = Vec::new();
     let mut used: BTreeSet<Vec<String>> = BTreeSet::new();
@@ -75,18 +76,27 @@ fn every_general_symbol_is_one_the_engine_draws_in_a_category_that_exists() {
         let id = item["id"].as_str().unwrap_or("");
         let kind = item["symbol"]["type"].as_str().unwrap_or("");
         let short = match kind {
-            "marker" => "genel.nokta.",
-            "line" => "genel.cizgi.",
-            "fill" => "genel.alan.",
+            "marker" => "nokta.",
+            "line" => "cizgi.",
+            "fill" => "alan.",
             other => {
                 problems.push(format!("{id}: kind “{other}”"));
                 continue;
             }
         };
-        if !id.starts_with(short) {
-            problems.push(format!("{id}: a {kind} symbol's id starts with {short}"));
-        }
         let path: Vec<String> = item["path"].as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect();
+        // The id's branch is its category's top: genel.… under Genel, kent.… under Kent.
+        let branch = match path.first().map(String::as_str) {
+            Some("Genel") => "genel.",
+            Some("Kent") => "kent.",
+            other => {
+                problems.push(format!("{id}: under {other:?}, not Genel or Kent"));
+                continue;
+            }
+        };
+        if !id.starts_with(&format!("{branch}{short}")) {
+            problems.push(format!("{id}: a {kind} symbol under {:?} has an id starting with {branch}{short}", path[0]));
+        }
         // The category and each one above it are listed.
         for n in 1..=path.len() {
             if !paths.contains(&path[..n]) {
@@ -108,8 +118,8 @@ fn every_general_symbol_is_one_the_engine_draws_in_a_category_that_exists() {
             problems.push(format!("{id}: the preview draws nothing"));
         }
     }
-    // Every category under Genel but the pictograms' holds symbols, directly or below.
-    for path in paths.iter().filter(|p| p.first().is_some_and(|f| f == "Genel")) {
+    // Every category under Genel and Kent but the pictograms' holds symbols, directly or below.
+    for path in paths.iter().filter(|p| p.first().is_some_and(|f| f == "Genel" || f == "Kent")) {
         let pictograms = path.get(1).is_some_and(|s| s == "Piktogramlar");
         if !pictograms && !used.iter().any(|u| u.starts_with(path)) {
             problems.push(format!("category {path:?} holds no symbol"));
@@ -126,7 +136,7 @@ fn every_general_pictogram_is_an_svg_drawing_the_desktop_reads() {
         .into_iter()
         .filter(|(i, _)| i.kind() == ItemKind::Asset && i.id().starts_with("genel.svg."))
         .collect();
-    assert!(assets.len() >= 50, "{} pictograms", assets.len());
+    assert!(assets.len() >= 110, "{} pictograms", assets.len());
     let no_glyphs = |_: &str, _: Option<&str>, _: f64, _: bool| None;
     for (item, _) in assets {
         let data = item.value()["data"].as_str().unwrap_or("");

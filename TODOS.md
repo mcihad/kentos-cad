@@ -2479,8 +2479,10 @@ Liste:
   (`apps/web/src/viewport/Camera.ts`, `MIN_SCALE`/`MAX_SCALE`) birimin metresiyle çarpılsın (coğrafi projede elipsoidin
   ekvatorunda bir derece, a·π/180); yoksa WGS 84 projesi 11 m/pikselde durur. Web'in WASM'ı yenilenince
   `cad.layers.renderer`'ın “kategorinin değeri sayı” ortak durumu geçsin.
-- [ ] Genel sembol kitaplığı (ADR 9118, 22 Kasım 2026): web'in sistem kitaplığı
+- [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
+  Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de
+  sınansın.
   Web'in önizlemesi dayanak noktalı işareti bütün sığdırsın (`render/symbolPreview.ts`'in `markerReach`'i,
   masaüstündeki gibi).
 

@@ -55,7 +55,7 @@ fn manager_pictures() {
         .iter()
         .filter_map(|c| c["path"].as_array())
         .map(|p| p.iter().filter_map(Value::as_str).map(str::to_owned).collect::<Vec<_>>())
-        .filter(|p| p.len() == 3 && p[0] == "Genel")
+        .filter(|p| (p.len() == 3 && p[0] == "Genel") || (p.len() == 2 && p[0] == "Kent"))
         .collect();
     let dir = out();
     for (mode, suffix) in [("light", ""), ("dark", "-koyu")] {
@@ -70,11 +70,11 @@ fn manager_pictures() {
             let _ = app.update(Message::Opened(Some(Ok(Box::new(town())))));
             themed(&mut app, mode);
             let _ = app.update(Message::Run("style.manager"));
-            let _ = app.update(Message::StyleManager(Box::new(Event::Go(Source::System, path[..2].to_vec(), true))));
+            let _ = app.update(Message::StyleManager(Box::new(Event::Go(Source::System, path[..path.len() - 1].to_vec(), true))));
             let _ = app.update(Message::StyleManager(Box::new(Event::Go(Source::System, path.clone(), false))));
             let _ = app.update(Message::StyleManager(Box::new(Event::Press(first["id"].as_str().unwrap_or("").to_owned()))));
             let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
-            let name = slug(&format!("{}-{}", path[1], path[2]));
+            let name = slug(&path.join("-")).trim_start_matches("genel-").to_owned();
             picture(&mut snapshot, &mut app, dir.join(format!("yonetici-{name}{suffix}.png")));
         }
     }
@@ -100,6 +100,14 @@ fn town_pictures() {
         picture(&mut snapshot, &mut app, dir.join(format!("kasaba-orta{suffix}.png")));
         fit(&mut app, bounds(20.0, 140.0, 260.0, 320.0));
         picture(&mut snapshot, &mut app, dir.join(format!("kasaba-gol-orman{suffix}.png")));
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(neighbourhood())))));
+        snapshot.settle(&mut app, App::view, &mut update);
+        fit(&mut app, bounds(0.0, 0.0, 200.0, 140.0));
+        picture(&mut snapshot, &mut app, dir.join(format!("mahalle{suffix}.png")));
+        fit(&mut app, bounds(108.0, 78.0, 200.0, 140.0));
+        picture(&mut snapshot, &mut app, dir.join(format!("mahalle-park{suffix}.png")));
+        fit(&mut app, bounds(60.0, 34.0, 136.0, 100.0));
+        picture(&mut snapshot, &mut app, dir.join(format!("mahalle-kavsak{suffix}.png")));
     }
 }
 
@@ -113,14 +121,20 @@ fn catalog_pictures() {
     let dir = out();
     for c in &categories {
         let path: Vec<&str> = c["path"].as_array().into_iter().flatten().filter_map(Value::as_str).collect();
-        if path.len() != 3 || path[0] != "Genel" {
+        if !((path.len() == 3 && path[0] == "Genel") || (path.len() == 2 && path[0] == "Kent")) {
             continue;
         }
         let mut members: Vec<&Value> = items
             .iter()
             .filter(|i| i["kind"] == "symbol" && i["path"].as_array().is_some_and(|p| p.iter().filter_map(Value::as_str).eq(path.iter().copied())))
             .collect();
-        members.sort_by(|a, b| a["name"].as_str().cmp(&b["name"].as_str()));
+        // Points, then lines, then areas; each by name.
+        let rank = |v: &Value| match v["symbol"]["type"].as_str() {
+            Some("marker") => 0,
+            Some("line") => 1,
+            _ => 2,
+        };
+        members.sort_by(|a, b| rank(a).cmp(&rank(b)).then(a["name"].as_str().cmp(&b["name"].as_str())));
         if members.is_empty() {
             continue;
         }
@@ -135,14 +149,14 @@ fn catalog_pictures() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             app.viewport.camera.fit(&b, 24.0);
-            let name = slug(&format!("{}-{}", path[1], path[2]));
+            let name = slug(&path.join("-")).trim_start_matches("genel-").to_owned();
             picture(&mut snapshot, &mut app, dir.join(format!("katalog-{name}{suffix}.png")));
         }
     }
 }
 
-/// A sheet of one category's symbols at 1:1000, each on a sample object with its name: points in rows of five, lines
-/// one under another with a bend (to show the joins), areas in rows of four.
+/// A sheet of one category's symbols at 1:1000, each on a sample object with its name, kind by kind: points in rows
+/// of five, then lines one under another with a bend (to show the joins), then areas in rows of four.
 fn catalog(members: &[&Value]) -> (Document, kentos_render_wgpu::Bounds) {
     let mut entities: Vec<Value> = Vec::new();
     let mut add = |mut e: Value| {
@@ -154,52 +168,50 @@ fn catalog(members: &[&Value]) -> (Document, kentos_render_wgpu::Bounds) {
         json!({ "kind": "text", "layerId": "yazilar", "p": at(x, y), "text": t, "height": 2.2, "rotation": 0,
                 "align": align })
     };
-    let kind = members[0]["symbol"]["type"].as_str().unwrap_or("");
-    let (mut x1, mut y0) = (0.0_f64, 0.0_f64);
-    for (k, item) in members.iter().enumerate() {
-        let id = item["id"].as_str().unwrap_or("");
-        let label = item["name"].as_str().unwrap_or("");
-        match kind {
-            "marker" => {
-                let (col, row) = ((k % 5) as f64, (k / 5) as f64);
-                let (x, y) = (col * 28.0 + 14.0, -row * 17.0);
-                add(json!({ "kind": "point", "layerId": "ornek", "p": at(x, y), "symbol": id }));
-                add(name(label, x, y - 5.5, "middleCenter"));
-                x1 = x1.max(col * 28.0 + 28.0);
-                y0 = y0.min(y - 9.0);
-            }
-            "line" => {
-                let y = -(k as f64) * 10.0;
-                let pts = [(0.0, y), (40.0, y), (52.0, y + 5.0)];
-                add(json!({ "kind": "polyline", "layerId": "ornek", "pts": pts.iter().map(|&(x, y)| at(x, y)).collect::<Vec<_>>(),
-                            "bulges": [0, 0, 0], "symbol": id }));
-                add(name(label, 58.0, y, "middleLeft"));
-                x1 = x1.max(110.0);
-                y0 = y0.min(y - 6.0);
-            }
-            _ => {
-                let (col, row) = ((k % 4) as f64, (k / 4) as f64);
-                let (x, y) = (col * 48.0, -row * 38.0);
-                let pts = [(x, y), (x + 40.0, y), (x + 40.0, y + 24.0), (x, y + 24.0)];
-                add(json!({ "kind": "polygon", "layerId": "ornek", "pts": pts.iter().map(|&(x, y)| at(x, y)).collect::<Vec<_>>(),
-                            "bulges": [0, 0, 0, 0], "symbol": id }));
-                add(name(label, x + 20.0, y - 4.5, "middleCenter"));
-                x1 = x1.max(col * 48.0 + 40.0);
-                y0 = y0.min(y - 8.0);
-            }
-        }
+    let points: Vec<&&Value> = members.iter().filter(|m| m["symbol"]["type"] == "marker").collect();
+    let lines: Vec<&&Value> = members.iter().filter(|m| m["symbol"]["type"] == "line").collect();
+    let areas: Vec<&&Value> = members.iter().filter(|m| m["symbol"]["type"] == "fill").collect();
+    let (mut x1, mut y) = (0.0_f64, 0.0_f64);
+    let top = if points.is_empty() && lines.is_empty() { 28.0 } else { 10.0 };
+    for (k, item) in points.iter().enumerate() {
+        let (col, row) = ((k % 5) as f64, (k / 5) as f64);
+        let (x, py) = (col * 28.0 + 14.0, y - row * 17.0);
+        add(json!({ "kind": "point", "layerId": "ornek", "p": at(x, py), "symbol": item["id"] }));
+        add(name(item["name"].as_str().unwrap_or(""), x, py - 6.0, "middleCenter"));
+        x1 = x1.max(col * 28.0 + 28.0);
     }
-    let top = match kind {
-        "fill" => 28.0,
-        "marker" => 6.0,
-        _ => 10.0,
-    };
+    if !points.is_empty() {
+        y -= (points.len().div_ceil(5) as f64) * 17.0 + 2.0;
+    }
+    for (k, item) in lines.iter().enumerate() {
+        let ly = y - k as f64 * 10.0 - 4.0;
+        let pts = [(0.0, ly), (40.0, ly), (52.0, ly + 5.0)];
+        add(json!({ "kind": "polyline", "layerId": "ornek", "pts": pts.iter().map(|&(x, y)| at(x, y)).collect::<Vec<_>>(),
+                    "bulges": [0, 0, 0], "symbol": item["id"] }));
+        add(name(item["name"].as_str().unwrap_or(""), 58.0, ly, "middleLeft"));
+        x1 = x1.max(110.0);
+    }
+    if !lines.is_empty() {
+        y -= lines.len() as f64 * 10.0 + 4.0;
+    }
+    for (k, item) in areas.iter().enumerate() {
+        let (col, row) = ((k % 4) as f64, (k / 4) as f64);
+        let (x, ay) = (col * 48.0, y - 28.0 - row * 38.0);
+        let pts = [(x, ay), (x + 40.0, ay), (x + 40.0, ay + 24.0), (x, ay + 24.0)];
+        add(json!({ "kind": "polygon", "layerId": "ornek", "pts": pts.iter().map(|&(x, y)| at(x, y)).collect::<Vec<_>>(),
+                    "bulges": [0, 0, 0, 0], "symbol": item["id"] }));
+        add(name(item["name"].as_str().unwrap_or(""), x + 20.0, ay - 4.5, "middleCenter"));
+        x1 = x1.max(col * 48.0 + 40.0);
+    }
+    if !areas.is_empty() {
+        y -= 28.0 + (areas.len().div_ceil(4) as f64 - 1.0) * 38.0 + 10.0;
+    }
     let layer = |id: &str, name: &str| {
         json!({ "id": id, "name": name, "type": "layer", "visible": true, "locked": false, "expanded": true,
                 "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] })
     };
     let snapshot = json!({
-        "format": "kentos.document", "version": 1, "name": "Genel semboller kataloğu",
+        "format": "kentos.document", "version": 1, "name": "Sembol kataloğu",
         "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
                       "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow" },
         "origin": at(0.0, 0.0),
@@ -210,7 +222,7 @@ fn catalog(members: &[&Value]) -> (Document, kentos_render_wgpu::Bounds) {
     });
     let snapshot = DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("the sheet reads");
     let doc = Document::new(snapshot, None).expect("the sheet opens");
-    (doc, bounds(-6.0, y0, x1 + 6.0, top))
+    (doc, bounds(-6.0, y - 2.0, x1 + 6.0, top))
 }
 
 fn slug(s: &str) -> String {
@@ -386,4 +398,197 @@ pub(super) fn town() -> Document {
     });
     let snapshot = DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("the town reads");
     Document::new(snapshot, None).expect("the town opens")
+}
+
+/// A neighbourhood at 1:500 drawn with the Kent branch only (docs/adr/9119): a junction with its sidewalks, kerbs,
+/// lane markings, crossings, arrows, lights and signs; a park with its lawn, paths, fountain, beds, shrubs, hedges,
+/// trees and playground; a plaza with its street furniture; houses with front gardens; utilities along the streets.
+pub(super) fn neighbourhood() -> Document {
+    let mut entities: Vec<Value> = Vec::new();
+    let mut add = |mut e: Value| {
+        e["id"] = json!(entities.len() + 1);
+        if e.get("attrs").is_none() {
+            e["attrs"] = json!({});
+        }
+        entities.push(e);
+    };
+    let poly = |layer: &str, pts: &[(f64, f64)], symbol: &str| {
+        json!({ "kind": "polygon", "layerId": layer, "pts": pts.iter().map(|&(x, y)| at(x, y)).collect::<Vec<_>>(),
+                "bulges": vec![0; pts.len()], "symbol": symbol })
+    };
+    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| [(x0, y0), (x1, y0), (x1, y1), (x0, y1)];
+    let line = |pts: &[(f64, f64)], symbol: &str| {
+        json!({ "kind": "polyline", "layerId": "cizgiler", "pts": pts.iter().map(|&(x, y)| at(x, y)).collect::<Vec<_>>(),
+                "bulges": vec![0; pts.len()], "symbol": format!("kent.cizgi.{symbol}") })
+    };
+    let point = |x: f64, y: f64, symbol: &str| {
+        json!({ "kind": "point", "layerId": "noktalar", "p": at(x, y), "symbol": symbol })
+    };
+    let with = |mut e: Value, attrs: Value| {
+        e["attrs"] = attrs;
+        e
+    };
+    let circle_pts = |cx: f64, cy: f64, r: f64| -> Vec<(f64, f64)> {
+        (0..20).map(|k| {
+            let a = k as f64 / 20.0 * std::f64::consts::TAU;
+            (cx + r * a.cos(), cy + r * a.sin())
+        }).collect()
+    };
+    let k = |s: &str| format!("kent.alan.{s}");
+
+    // Paving: roads, sidewalks, the plaza, the parking bays.
+    add(poly("alanlar", &rect(0.0, 60.0, 200.0, 74.0), &k("kaplama.asfalt")));
+    add(poly("alanlar", &rect(92.0, 0.0, 104.0, 140.0), &k("kaplama.asfalt")));
+    for r in [rect(0.0, 56.0, 92.0, 60.0), rect(88.0, 0.0, 92.0, 56.0), rect(104.0, 56.0, 200.0, 60.0),
+              rect(104.0, 0.0, 108.0, 56.0), rect(0.0, 74.0, 92.0, 78.0), rect(88.0, 78.0, 92.0, 140.0),
+              rect(104.0, 74.0, 200.0, 78.0), rect(104.0, 78.0, 108.0, 140.0)] {
+        add(poly("alanlar", &r, &k("kaplama.kaldirim")));
+    }
+    add(poly("alanlar", &rect(110.0, 4.0, 198.0, 54.0), &k("kaplama.kilit-parke")));
+    add(poly("alanlar", &rect(10.0, 51.0, 70.0, 55.8), &k("kaplama.park-cebi")));
+    add(poly("alanlar", &rect(70.0, 51.0, 76.0, 55.8), &k("kaplama.engelli-park")));
+    add(poly("alanlar", &rect(4.0, 4.0, 84.0, 26.0), &k("kaplama.toprak")));
+    // The park.
+    add(poly("alanlar", &rect(110.0, 80.0, 198.0, 138.0), &k("bitki.cim")));
+    add(poly("alanlar", &rect(110.0, 105.0, 198.0, 109.0), &k("park.stabilize")));
+    add(poly("alanlar", &rect(150.0, 80.0, 154.0, 138.0), &k("park.stabilize")));
+    add(poly("alanlar", &circle_pts(152.0, 107.0, 7.0), &k("kaplama.dogal-tas")));
+    add(poly("alanlar", &circle_pts(152.0, 107.0, 4.5), &k("park.sus-havuzu")));
+    add(poly("alanlar", &rect(160.0, 114.0, 196.0, 136.0), &k("oyun.kaucuk-zemin")));
+    add(poly("alanlar", &rect(180.0, 116.0, 188.0, 124.0), &k("oyun.kum-zemin")));
+    add(poly("alanlar", &rect(116.0, 112.0, 146.0, 118.0), &k("bitki.cicek-tarhi")));
+    add(poly("alanlar", &rect(116.0, 124.0, 144.0, 134.0), &k("bitki.cali-grubu")));
+    add(poly("alanlar", &rect(158.0, 84.0, 170.0, 100.0), &k("bitki.otsu")));
+    add(poly("alanlar", &rect(186.0, 96.0, 196.0, 103.0), &k("park.ahsap-deck")));
+    // Front gardens.
+    add(poly("alanlar", &rect(4.0, 80.0, 86.0, 92.0), &k("bitki.cim")));
+    add(poly("alanlar", &rect(40.0, 82.0, 50.0, 90.0), &k("bitki.mevsimlik")));
+    // Buildings (the general branch's).
+    for r in [rect(10.0, 30.0, 40.0, 48.0), rect(48.0, 30.0, 80.0, 48.0), rect(10.0, 96.0, 40.0, 124.0),
+              rect(50.0, 96.0, 80.0, 124.0), rect(128.0, 14.0, 188.0, 38.0)] {
+        add(poly("binalar", &r, "genel.alan.yapi.bina"));
+    }
+    // Kerbs, markings, crossings, a speed hump, a drain along the kerb, hedges, a row of trees, bollards.
+    for (a, b) in [((0.0, 60.0), (92.0, 60.0)), ((104.0, 60.0), (200.0, 60.0)), ((0.0, 74.0), (92.0, 74.0)),
+                   ((104.0, 74.0), (200.0, 74.0)), ((92.0, 0.0), (92.0, 60.0)), ((104.0, 0.0), (104.0, 60.0)),
+                   ((92.0, 74.0), (92.0, 140.0)), ((104.0, 74.0), (104.0, 140.0))] {
+        add(line(&[a, b], "yol.bordur"));
+    }
+    add(line(&[(0.0, 67.0), (80.0, 67.0)], "yol.serit-kesikli"));
+    add(line(&[(116.0, 67.0), (200.0, 67.0)], "yol.serit-kesikli"));
+    add(line(&[(98.0, 0.0), (98.0, 46.0)], "yol.serit-kesikli"));
+    add(line(&[(98.0, 88.0), (98.0, 140.0)], "yol.serit-kesikli"));
+    add(line(&[(80.0, 67.0), (84.0, 67.0)], "yol.cift-surekli"));
+    add(line(&[(82.0, 60.0), (82.0, 67.0)], "yol.durma-cizgisi"));
+    add(line(&[(114.0, 67.0), (114.0, 74.0)], "yol.durma-cizgisi"));
+    add(line(&[(98.0, 48.0), (104.0, 48.0)], "yol.durma-cizgisi"));
+    add(line(&[(92.0, 86.0), (98.0, 86.0)], "yol.durma-cizgisi"));
+    add(line(&[(86.0, 60.0), (86.0, 74.0)], "yol.yaya-gecidi"));
+    add(line(&[(110.0, 60.0), (110.0, 74.0)], "yol.yaya-gecidi"));
+    add(line(&[(92.0, 52.0), (104.0, 52.0)], "yol.yaya-gecidi"));
+    add(line(&[(92.0, 82.0), (104.0, 82.0)], "yol.yaya-gecidi"));
+    add(line(&[(92.0, 18.0), (104.0, 18.0)], "yol.hiz-kesici"));
+    add(line(&[(120.0, 61.6), (200.0, 61.6)], "yol.otobus-seridi"));
+    add(line(&[(0.0, 60.8), (82.0, 60.8)], "altyapi.drenaj"));
+    add(line(&[(110.0, 80.0), (198.0, 80.0)], "bitki.cit-bitkisi"));
+    add(line(&[(110.0, 80.5), (110.0, 138.0)], "bitki.cit-bitkisi"));
+    add(line(&[(4.0, 92.5), (86.0, 92.5)], "bitki.dogal-cit"));
+    add(line(&[(6.0, 76.2), (86.0, 76.2)], "agac.agac-sirasi"));
+    add(line(&[(112.0, 55.0), (196.0, 55.0)], "mobilya.babalar"));
+    add(line(&[(116.0, 109.0), (146.0, 109.0)], "bitki.bordur-bitkisi"));
+    // Road arrows, turned by their Açı.
+    for (x, y, s, turn) in [(70.0, 63.5, "yol.ok-ileri", -90.0), (60.0, 63.5, "yol.ok-sag", -90.0),
+                            (128.0, 70.5, "yol.ok-ileri", 90.0), (101.0, 36.0, "yol.ok-ileri-sag", 0.0),
+                            (95.0, 100.0, "yol.ok-sol", 180.0)] {
+        add(with(point(x, y, &format!("kent.nokta.{s}")), json!({ "Açı": turn.to_string() })));
+    }
+    // Trees and shrubs, at their crowns' size.
+    for (x, y, s, crown) in [(120.0, 90.0, "agac.yaprakli", 8.0), (136.0, 92.0, "agac.yaprakli", 6.0),
+                             (126.0, 99.0, "agac.yaprakli", 5.0), (190.0, 90.0, "agac.igne-yaprakli", 5.0),
+                             (162.0, 128.0, "agac.yaprakli", 7.0), (174.0, 92.0, "agac.anit", 10.0),
+                             (140.0, 128.0, "agac.servi", 2.0), (146.0, 98.0, "agac.palmiye", 4.0),
+                             (20.0, 15.0, "agac.kesilecek", 6.0), (34.0, 15.0, "agac.tasinacak", 5.0),
+                             (48.0, 15.0, "agac.dikilecek", 5.0), (62.0, 15.0, "agac.dikilecek", 5.0),
+                             (76.0, 15.0, "agac.korunacak", 7.0), (30.0, 132.0, "agac.meyve", 5.0),
+                             (60.0, 132.0, "agac.meyve", 5.0), (196.0, 118.0, "bitki.cali", 1.6),
+                             (114.0, 120.0, "bitki.ardic", 1.4), (148.0, 88.0, "bitki.cali", 2.0),
+                             (8.0, 88.0, "agac.fidan", 1.5), (20.0, 88.0, "agac.fidan", 1.5)] {
+        add(with(point(x, y, &format!("kent.nokta.{s}")), json!({ "Taç": crown.to_string() })));
+    }
+    // Park and play.
+    for (x, y, s) in [(152.0, 107.0, "park.fiskiye"), (162.0, 99.0, "park.cesme"), (191.0, 99.5, "park.pergola"),
+                      (122.0, 106.0, "park.kamelya"), (152.0, 96.0, "park.heykel"), (196.0, 84.0, "park.wc"),
+                      (114.0, 84.0, "park.pano"), (130.0, 84.0, "park.kopek-parki"), (166.0, 131.0, "oyun.salincak"),
+                      (176.0, 131.0, "oyun.kaydirak"), (190.0, 131.0, "oyun.tahterevalli"), (170.0, 120.0, "oyun.donence"),
+                      (184.0, 120.0, "oyun.kum-havuzu"), (193.0, 120.0, "oyun.tirmanma"), (140.0, 103.0, "mobilya.bank"),
+                      (164.0, 103.0, "mobilya.bank"), (156.0, 90.0, "mobilya.bank"), (148.0, 122.0, "mobilya.bank"),
+                      (144.0, 111.0, "mobilya.cop-kutusu"), (160.0, 111.0, "mobilya.cop-kutusu"),
+                      (130.0, 103.0, "park.park-lambasi"), (172.0, 103.0, "park.park-lambasi"),
+                      (156.0, 84.0, "park.park-lambasi"), (156.0, 132.0, "park.park-lambasi")] {
+        add(point(x, y, &format!("kent.nokta.{s}")));
+    }
+    // The plaza's and the streets' furniture.
+    for (k, s) in ["bufe", "atm", "posta-kutusu", "bisiklet-park", "geri-donusum", "konteyner", "reklam-panosu", "saat",
+                   "kamera", "bilgi-ekrani"].iter().enumerate() {
+        add(point(116.0 + k as f64 * 8.5, 47.0, &format!("kent.nokta.mobilya.{s}")));
+    }
+    for (x, y) in [(116.0, 30.0), (116.0, 38.0), (194.0, 30.0), (194.0, 38.0)] {
+        add(point(x, y, "kent.nokta.mobilya.saksi"));
+    }
+    add(point(40.0, 58.0, "kent.nokta.mobilya.durak"));
+    add(point(52.0, 58.0, "kent.nokta.mobilya.parkmetre"));
+    add(point(78.0, 58.0, "kent.nokta.mobilya.engelli"));
+    for (x, y) in [(10.0, 58.0), (30.0, 58.0), (64.0, 58.0), (20.0, 76.0), (45.0, 76.0), (70.0, 76.0), (124.0, 76.0),
+                   (150.0, 76.0), (176.0, 76.0), (124.0, 58.0), (160.0, 58.0), (190.0, 58.0), (106.0, 20.0),
+                   (90.0, 30.0), (90.0, 110.0), (106.0, 120.0)] {
+        add(point(x, y, "kent.nokta.mobilya.sokak-lambasi"));
+    }
+    add(point(98.0, 67.0, "kent.nokta.mobilya.sokak-lambasi-cift"));
+    // Lights and signs.
+    for (x, y) in [(90.5, 58.5), (105.5, 58.5), (90.5, 75.5), (105.5, 75.5)] {
+        add(point(x, y, "kent.nokta.trafik.trafik-isigi"));
+    }
+    add(point(84.0, 57.5, "kent.nokta.trafik.yaya-isigi"));
+    add(point(112.0, 76.5, "kent.nokta.trafik.yaya-isigi"));
+    add(point(106.0, 46.0, "kent.nokta.trafik.dur"));
+    add(point(84.0, 77.0, "kent.nokta.trafik.yaya-gecidi"));
+    add(with(point(90.0, 20.0, "kent.nokta.trafik.hiz-siniri"), json!({ "Hız": "30" })));
+    add(point(90.0, 96.0, "kent.nokta.trafik.park-yapilmaz"));
+    add(point(106.0, 92.0, "kent.nokta.trafik.yaya-gecidi-uyari"));
+    // Utilities.
+    for (x, y, s) in [(40.0, 67.0, "altyapi.muayene-bacasi"), (150.0, 67.0, "altyapi.muayene-bacasi"),
+                      (98.0, 30.0, "altyapi.muayene-bacasi"), (98.0, 110.0, "altyapi.muayene-bacasi"),
+                      (80.0, 60.7, "altyapi.yagmur-suyu-bacasi"), (116.0, 73.3, "altyapi.yagmur-suyu-bacasi"),
+                      (92.7, 40.0, "altyapi.yagmur-suyu-bacasi"), (103.3, 100.0, "altyapi.yagmur-suyu-bacasi"),
+                      (106.0, 58.0, "altyapi.vana-odasi"), (90.0, 79.5, "altyapi.elektrik-panosu"),
+                      (106.0, 79.5, "altyapi.fiber-kutusu"), (60.0, 58.0, "altyapi.telekom-menholu"),
+                      (186.0, 112.0, "altyapi.yagmurlama"), (126.0, 114.0, "altyapi.yagmurlama"),
+                      (112.0, 92.0, "altyapi.sulama-vanasi"), (20.0, 58.0, "altyapi.su-sayaci")] {
+        add(point(x, y, &format!("kent.nokta.{s}")));
+    }
+    add(point(91.0, 62.0, "genel.nokta.altyapi.hidrant"));
+    // Names.
+    for (x, y, t, h, turn) in [(14.0, 63.7, "Cumhuriyet Caddesi", 1.8, 0.0), (101.2, 112.0, "Atatürk Bulvarı", 1.8, 90.0),
+                               (124.0, 94.0, "Kent Parkı", 2.4, 0.0), (140.0, 26.0, "Çarşı Meydanı", 2.4, 0.0)] {
+        add(json!({ "kind": "text", "layerId": "yazilar", "p": at(x, y), "text": t, "height": h, "rotation": turn }));
+    }
+
+    let layer = |id: &str, name: &str| {
+        json!({ "id": id, "name": name, "type": "layer", "visible": true, "locked": false, "expanded": true,
+                "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] })
+    };
+    let snapshot = json!({
+        "format": "kentos.document", "version": 1, "name": "Kent sembolleri mahallesi",
+        "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                      "plotScale": 500, "workspace": "gis", "drawingFont": "barlow" },
+        "origin": at(0.0, 0.0),
+        "layers": [layer("yazilar", "Yazılar"), layer("noktalar", "Noktalar"), layer("cizgiler", "Çizgiler"),
+                   layer("binalar", "Binalar"), layer("alanlar", "Alanlar")],
+        "activeLayer": "noktalar",
+        "entities": entities,
+        "styles": { "items": [], "categories": [] },
+        "homeView": { "minX": O.0, "minY": O.1, "maxX": O.0 + 200.0, "maxY": O.1 + 140.0 },
+    });
+    let snapshot = DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("the neighbourhood reads");
+    Document::new(snapshot, None).expect("the neighbourhood opens")
 }

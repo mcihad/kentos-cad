@@ -320,7 +320,12 @@ Pencereler ilk açılışta yüklenir (`ui/style/`); komutlar Araçlar menüsün
    56 piktogram. Noktalar 87, çizgiler 59, alanlar 51; 25 tematik kategoride, Türkçe etiketlerle. Kaynağı
    `scripts/style/general_library.py`, dosyası `crates/native/style/assets/general-library.kstil`. Masaüstü iki sistem
    dosyasını birlikte okur; web'e eklenmesi TODOS.md §0.2'de.
-7. **Paylaşma:** sunucu ile kitaplık paylaşımı ve kurum kitaplıkları.
+7. **Kent sembolleri (yapıldı, [ADR 9119](adr/9119-city-symbol-library.md)):** Genel'in yanında Kent dalı, 143 sembol ve
+   64 piktogram. Ağaçlar, çalı ve bitkiler, park ve bahçe donatıları, oyun ve spor elemanları, kent mobilyaları, trafik
+   işaretleri ve ışıkları, yol çizgileri ve kenarları, kaplamalar ve altyapı ayrıntıları vardır. Ağaç ve çalılar,
+   yol çizgileri ve okları gerçek boyundadır. Taç çapı Taç alanından, okun yönü Açı'dan, hız sınırı Hız'dan okunur.
+   Kaynak ve dosya Genel'inkiyle aynıdır.
+8. **Paylaşma:** sunucu ile kitaplık paylaşımı ve kurum kitaplıkları.
 
 ## SHX çizgi tipi kaynakları
 
