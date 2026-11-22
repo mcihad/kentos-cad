@@ -75,6 +75,20 @@ impl Geometry {
         c.is_empty()
     }
 
+    /// The geometry type it is written as when that is a non-linear one (a GeoPackage registers each one used as
+    /// `gpkg_geom_<type>`): CIRCULARSTRING, COMPOUNDCURVE, CURVEPOLYGON, MULTICURVE or MULTISURFACE; none for a linear
+    /// geometry or a collection.
+    pub fn curved_type(&self) -> Option<&'static str> {
+        match self {
+            Geometry::Curve(Curve::Arc(_)) => Some("CIRCULARSTRING"),
+            Geometry::Curve(c @ Curve::Compound(_)) if c.is_curved() => Some("COMPOUNDCURVE"),
+            Geometry::Polygon(rings) if rings.iter().any(Curve::is_curved) => Some("CURVEPOLYGON"),
+            Geometry::MultiCurve(curves) if curves.iter().any(Curve::is_curved) => Some("MULTICURVE"),
+            Geometry::MultiPolygon(polys) if polys.iter().flatten().any(Curve::is_curved) => Some("MULTISURFACE"),
+            _ => None,
+        }
+    }
+
     /// Whether any curve of it has an arc (it needs the non-linear geometry extension).
     pub fn is_curved(&self) -> bool {
         match self {

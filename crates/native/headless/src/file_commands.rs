@@ -80,6 +80,15 @@ pub(crate) fn target(path: &str, overwrite: bool) -> Result<(PathBuf, bool), Ref
             "path",
         ));
     }
+    // A file marked read only is not replaced (docs/adr/9139): the write goes through a finished copy renamed over it,
+    // which the folder would allow.
+    if exists && std::fs::metadata(p).is_ok_and(|m| m.permissions().readonly()) {
+        return Err(refuse(
+            codes::FILE_UNWRITABLE,
+            format!("{path} salt okunur; üzerine yazılmadı. Dosyanın yazma iznini açın ya da başka bir ad verin."),
+            "path",
+        ));
+    }
     Ok((p.to_path_buf(), exists))
 }
 

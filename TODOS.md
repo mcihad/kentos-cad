@@ -2520,6 +2520,8 @@ Liste:
   hücresini (bantlar, NoData, hücre, Y, X) göstersin, kapsam dışını söylesin.
 - [ ] Proje tek adla görünür (ADR 9138, 22 Kasım 2026): web'de “Yeni proje” adlı proje kaydında dosyasının adını alsın;
   başlık, denetçi ve açılış iletisi aynı adı söylesin.
+- [ ] GeoPackage teslimi (ADR 9139, 22 Kasım 2026): web'in GeoPackage dışa aktarması gideni ve gitmeyeni söylesin; web'in
+  GeoPackage yazıcısı eğri türlerini kendi adlarıyla kaydetsin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

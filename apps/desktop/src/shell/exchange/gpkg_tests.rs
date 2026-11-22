@@ -11,6 +11,7 @@ use super::{Event, Window};
 use crate::app::{App, Message, Picker};
 use crate::files_testing::{app_with_drawing, scratch};
 
+mod delivery;
 mod neighbours;
 mod reconcile;
 mod status;

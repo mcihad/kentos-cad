@@ -1565,7 +1565,8 @@ fn index(conn: &Connection, table: &str, column: &str) -> Result<()> {
 pub struct TableWrite {
     def: TableDef,
     bounds: Option<[f64; 4]>,
-    curved: bool,
+    /// The non-linear geometry types its rows were written as, each registered once the rows are in.
+    curved: std::collections::BTreeSet<&'static str>,
     rows: u64,
 }
 
@@ -1875,7 +1876,7 @@ fn start_in(conn: &Connection, def: &TableDef) -> Result<TableWrite> {
     Ok(TableWrite {
         def: def.clone(),
         bounds: None,
-        curved: false,
+        curved: Default::default(),
         rows: 0,
     })
 }
@@ -1896,7 +1897,7 @@ fn append_in(
     names.extend(def.columns.iter().map(|c| quote(&c.name)));
     let marks = vec!["?"; names.len()].join(", ");
     let mut fids = Vec::with_capacity(rows.len());
-    let (mut bounds, mut curved) = (w.bounds, w.curved);
+    let (mut bounds, mut curved) = (w.bounds, std::mem::take(&mut w.curved));
     {
         let mut st = conn.prepare_cached(&format!(
             "INSERT INTO {t} ({}) VALUES ({marks})",
@@ -1915,7 +1916,7 @@ fn append_in(
             if def.geometry.is_some() {
                 args.push(match &row.geometry {
                     Some(g) => {
-                        curved |= g.is_curved();
+                        curved.extend(g.curved_type());
                         if let Some(b) = g.bounds() {
                             bounds = Some(match bounds {
                                 None => b,
@@ -1965,11 +1966,15 @@ fn finish_in(conn: &Connection, w: TableWrite) -> Result<()> {
     }
     if let Some(g) = &def.geometry {
         index(conn, &def.name, &g.name)?;
-        if w.curved {
+        // Each non-linear type written, by its own name (GeoPackage Annex F.1): a GEOMETRY column of arcs registers
+        // gpkg_geom_CIRCULARSTRING and its kin, never gpkg_geom_GEOMETRY, which no reader knows.
+        if !w.curved.is_empty() {
             ensure_extensions(conn)?;
+        }
+        for t in &w.curved {
             conn.execute(
                 "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, ?2, ?3, 'http://www.geopackage.org/spec/#extension_geometry_types', 'read-write')",
-                params![def.name, g.name, format!("gpkg_geom_{}", g.type_name)],
+                params![def.name, g.name, format!("gpkg_geom_{t}")],
             )?;
         }
     }

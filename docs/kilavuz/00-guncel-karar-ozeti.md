@@ -121,6 +121,9 @@
   - **Proje tek adla görünür** (22 Kasım, değerlendirmenin 3. maddesi;
     [ADR 9138](../adr/9138-one-project-name.md), VY-37): “Yeni proje” adlı proje kaydında dosyasının adını alır; denetçi
     ve açılış iletisi başlıkla aynı adı söyler.
+  - **GeoPackage teslimi** (22 Kasım, değerlendirmenin 6. maddesi; [ADR 9139](../adr/9139-geopackage-delivery.md),
+    VY-38): özet gideni ve gitmeyeni söyler; salt okunur dosya ezilmez; eğri türleri kendi adlarıyla kaydedilir
+    (`gpkg_geom_GEOMETRY` yazılmaz).
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

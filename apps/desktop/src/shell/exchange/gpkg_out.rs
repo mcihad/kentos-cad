@@ -59,23 +59,48 @@ fn event(e: Event) -> Message {
     message(Exchange::GpkgOut(e))
 }
 
-/// A scope's objects and the layers they are on.
+/// A scope's objects and the layers they are on, with each layer's objects.
 struct Reach {
     objects: usize,
     layers: BTreeSet<String>,
+    per_layer: std::collections::BTreeMap<String, usize>,
+    /// The objects a table has no geometry for (texts, dimensions, blocks…), by their kinds' words: counted, not written.
+    left: std::collections::BTreeMap<&'static str, usize>,
+}
+
+/// The words of what the file takes and what it does not (docs/adr/9139).
+pub(crate) mod words_of {
+    pub const LEFT: &str = "Dosyaya gitmeyen: formlar, birleşik görünümler, çalışma alanı (görünüm, paftalar) ve yazı, \
+                            ölçü, blok gibi geometrisi olmayan nesneler; bunları proje dosyası (.kcad) tutar.";
+    pub const COPY: &str = "Bu, verinin bir kopyasıdır: proje bu dosyaya bağlanmaz. Projeyi verisiyle bir GeoPackage'ta \
+                            saklamak için Dosya › Veri kaynağı; bir pakete kalıcı yeni bir tablo için Veri › Yeni katman › \
+                            Türüyle.";
+    pub fn taken(relations: usize) -> String {
+        format!(
+            "Dosyaya giden: her katman bir tablo (alanları türleriyle), katmanın stili{}.",
+            if relations == 0 { String::new() } else { format!(" ve iki ucu da yazılan {relations} ilişki") }
+        )
+    }
 }
 
 impl App {
     /// The objects and layers a scope writes.
     fn gpkg_reach(&self, scope: Scope) -> Reach {
-        let mut reach = Reach { objects: 0, layers: BTreeSet::new() };
+        let mut reach =
+            Reach { objects: 0, layers: BTreeSet::new(), per_layer: Default::default(), left: Default::default() };
         let Some(doc) = &self.document else {
             return reach;
         };
         let doc = &doc.model;
         let mut take = |e: &kentos_commands::Entity| {
+            // What the file takes as the writer does: an object a table has no geometry for is counted apart.
+            if let Err(word) = kentos_native_application::geopackage::geometry_of(e) {
+                *reach.left.entry(word).or_default() += 1;
+                return;
+            }
             reach.objects += 1;
             reach.layers.insert(e.base().layer_id.clone());
+            *reach.per_layer.entry(e.base().layer_id.clone()).or_default() += 1;
         };
         match scope {
             Scope::Selection => self.selection.ids().iter().filter_map(|s| doc.get(*s)).for_each(&mut take),
@@ -202,6 +227,55 @@ impl App {
         }
     }
 
+    /// The summary's lines: what is written (each layer with its objects), what goes into the file with it and what
+    /// does not, and that it is a copy (docs/adr/9139). A warning first when the scope writes nothing.
+    fn gpkg_out_lines(&self, reach: &Reach) -> Vec<(bool, String)> {
+        if reach.objects == 0 && reach.layers.is_empty() {
+            return vec![(true, "Bu kapsamda yazılacak nesne yok.".to_owned())];
+        }
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        let layers = doc.model.layers();
+        let names: Vec<String> = reach
+            .layers
+            .iter()
+            .filter_map(|id| {
+                let n = layers.get(id)?;
+                Some(match reach.per_layer.get(id) {
+                    Some(count) => format!("{} ({count})", n.name),
+                    None => format!("{} (boş tablo)", n.name),
+                })
+            })
+            .collect();
+        // The project's relations whose two layers both go: the file's relation profile takes them.
+        let relations = doc
+            .model
+            .settings()
+            .relations
+            .iter()
+            .filter(|r| reach.layers.contains(&r.parent) && reach.layers.contains(&r.child))
+            .count();
+        let mut lines = vec![
+            (false, format!("{} nesne, {} katman yazılır: {}.", reach.objects, reach.layers.len(), names.join(", "))),
+            (false, words_of::taken(relations)),
+        ];
+        // The objects of the scope a table has no geometry for: how many of each kind stay out.
+        if !reach.left.is_empty() {
+            let kinds: Vec<String> = reach.left.iter().map(|(word, n)| format!("{n} {word}")).collect();
+            lines.push((true, format!("Geometrisi olmadığı için yazılmayan: {}.", kinds.join(", "))));
+        }
+        lines.push((false, words_of::LEFT.to_owned()));
+        lines.push((false, words_of::COPY.to_owned()));
+        lines
+    }
+
+    /// The summary's lines for the scope chosen (a test's question).
+    #[cfg(test)]
+    pub(crate) fn gpkg_out_summary(&self, scope: Scope) -> Vec<String> {
+        self.gpkg_out_lines(&self.gpkg_reach(scope)).into_iter().map(|(_, t)| t).collect()
+    }
+
     pub(super) fn gpkg_out_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let counted = |scope| Counted(scope, self.gpkg_reach(scope).objects);
         let selected = !self.selection.ids().is_empty();
@@ -237,24 +311,10 @@ impl App {
         if s.scope == Scope::All && s.empty {
             reach.layers.extend(self.gpkg_template_ids());
         }
-        let names: Vec<String> = reach
-            .layers
-            .iter()
-            .filter_map(|id| self.document.as_ref()?.model.layers().get(id).map(|n| n.name.clone()))
-            .collect();
-        let lines = vec![if reach.objects == 0 && reach.layers.is_empty() {
-            words::text_line(Line::Warn, "Bu kapsamda yazılacak nesne yok.")
-        } else {
-            words::text_line(
-                Line::Info,
-                format!(
-                    "{} nesne, {} katman yazılır: {}.",
-                    reach.objects,
-                    reach.layers.len(),
-                    names.join(", ")
-                ),
-            )
-        }];
+        let lines = self.gpkg_out_lines(&reach)
+            .into_iter()
+            .map(|(warn, text)| words::text_line(if warn { Line::Warn } else { Line::Info }, text))
+            .collect::<Vec<_>>();
         body = body.push(words::summary(lines));
         if let Some((error, text)) = &s.status {
             body = body.push(words::text_line(if *error { Line::Error } else { Line::Info }, text.clone()));

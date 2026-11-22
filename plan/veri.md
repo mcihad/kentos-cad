@@ -389,3 +389,8 @@ numaraları raporunkidir.
   - “Yeni proje” adlı proje kaydında dosyanın adını alır; `shown_name` denetçide ve açılış iletisinde; eski dosyalar dosya
     adıyla.
   - Kalan: sihirbazın ad, amaç, CRS ve saklamayı bir arada sunan ilk sayfası, boş kent haritası, son projeler, web.
+- [~] **VY-38 — GeoPackage teslimi ne gittiğini söyler (rapor 6, P1).**
+  ([ADR 9139](../docs/adr/9139-geopackage-delivery.md))
+  - Özet: katmanlar sayılarıyla, giden tablo/stil/ilişki, geometrisiz kalanlar, gitmeyen form/görünüm/çalışma alanı,
+    kopya oluşu; salt okunur hedef `file_unwritable`; eğri türleri `gpkg_geom_<tür>` ile.
+  - Kalan: dosya seçildikten sonra onay, yarıda kesme sınaması, web.
