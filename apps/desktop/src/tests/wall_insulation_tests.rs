@@ -68,6 +68,7 @@ fn scene() -> (App, Vec<String>) {
 }
 
 /// 20/3's row and its inner insulation findings (state, message, objects).
+#[allow(clippy::type_complexity)]
 fn said(app: &App) -> (Option<O>, Vec<(Option<S>, String, usize)>) {
     let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
     let row = set.rules.iter().find(|r| r.rule == "BYKHY 20/3").map(|r| r.state);

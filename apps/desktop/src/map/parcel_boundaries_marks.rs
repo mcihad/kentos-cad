@@ -42,6 +42,7 @@ pub struct Shown {
     pub tolerance: Option<f64>,
     /// The row chosen when Çizimde göster was pressed (docs/adr/3020).
     pub focus: Option<Focus>,
+    #[allow(clippy::type_complexity)]
     made: RefCell<Option<(u64, u64, Option<Arc<GraphMarks>>)>>,
 }
 

@@ -1442,7 +1442,7 @@ fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent
     };
     let curve = Curve {
         pts: vec![Vec2::new(10., 10.)],
-        bulges: Some(vec![(std::f64::consts::PI / 8.).tan()]),
+        bulges: Some(vec![kentos_geometry_core::jsmath::tan(std::f64::consts::PI / 8.)]),
     };
     let runs = [Run {
         start: 3,
@@ -1484,18 +1484,18 @@ fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent
         let left = group
             .iter()
             .map(|g| g.glyph.pen)
-            .fold(f64::INFINITY, f64::min);
+            .fold(f64::INFINITY, kentos_geometry_core::jsmath::js_min);
         let right = group
             .iter()
             .map(|g| g.glyph.pen + g.glyph.advance)
-            .fold(f64::NEG_INFINITY, f64::max);
+            .fold(f64::NEG_INFINITY, kentos_geometry_core::jsmath::js_max);
         let middle = (left + right) / 2.;
         let theta = middle / 10.;
         let m = group[0].transform;
-        assert!((m[0] - theta.cos()).abs() < 1e-12);
-        assert!((m[1] - theta.sin()).abs() < 1e-12);
-        assert!((m[4] - (10. * theta.sin() - middle * theta.cos())).abs() < 1e-12);
-        assert!((m[5] - (10. - 10. * theta.cos() - middle * theta.sin())).abs() < 1e-12);
+        assert!((m[0] - kentos_geometry_core::jsmath::cos(theta)).abs() < 1e-12);
+        assert!((m[1] - kentos_geometry_core::jsmath::sin(theta)).abs() < 1e-12);
+        assert!((m[4] - (10. * kentos_geometry_core::jsmath::sin(theta) - middle * kentos_geometry_core::jsmath::cos(theta))).abs() < 1e-12);
+        assert!((m[5] - (10. - 10. * kentos_geometry_core::jsmath::cos(theta) - middle * kentos_geometry_core::jsmath::sin(theta))).abs() < 1e-12);
     }
     assert_eq!(
         plan.rules.len(),

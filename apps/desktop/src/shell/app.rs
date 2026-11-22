@@ -353,6 +353,7 @@ pub enum Picker {
 }
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum Message {
     #[cfg(target_os = "macos")]
     Accessibility(crate::accessibility::Event),
@@ -727,6 +728,7 @@ pub struct Written {
     pub revision: u64,
 }
 
+#[allow(clippy::type_complexity)]
 pub struct App {
     #[cfg(target_os = "macos")]
     pub(crate) accessibility: crate::accessibility::State,

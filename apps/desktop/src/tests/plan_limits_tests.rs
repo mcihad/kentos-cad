@@ -52,6 +52,7 @@ fn checked(app: &mut App) {
 }
 
 /// The plan limits' findings (code, message) and rows (rule, outcome).
+#[allow(clippy::type_complexity)]
 fn limits(app: &App) -> (Vec<(String, String)>, Vec<(String, O)>) {
     let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
     let found = audited

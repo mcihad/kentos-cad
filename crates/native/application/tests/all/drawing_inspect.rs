@@ -709,7 +709,7 @@ fn nested_field_block_drawing() -> kentos_commands::DocumentSnapshotV2 {
     let inner = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4012";
     snapshot.blocks = serde_json::from_value(json!([
         {"id":outer,"name":"Dış","base":{"x":0.,"y":0.},"units":"m","entities":[
-            {"kind":"insert","id":7,"layerId":"a","attrs":{},"block":inner,"p":{"x":2.,"y":2.},"scale":2.,"rotation":1.5707963267948966}]},
+            {"kind":"insert","id":7,"layerId":"a","attrs":{},"block":inner,"p":{"x":2.,"y":2.},"scale":2.,"rotation":std::f64::consts::FRAC_PI_2}]},
         {"id":inner,"name":"Alanlı iç","base":{"x":0.,"y":0.},"units":"m","entities":[
             {"kind":"text","id":17,"layerId":"a","attrs":{},"p":{"x":1.,"y":0.},"height":0.125,"rotation":0.,"text":"Eski",
              "fields":[{"start":0,"end":4,"source":{"kind":"project","value":"name"}}]}]}

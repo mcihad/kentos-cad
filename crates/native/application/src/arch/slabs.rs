@@ -191,7 +191,7 @@ pub fn slope_across(parts: &[kentos_commands::SpacePart], dir: f64, grade: f64) 
     let along = |p: &kentos_commands::Vec2| p.x * u.0 + p.y * u.1;
     let low = pts.iter().min_by(|a, b| along(a).total_cmp(&along(b)))?;
     let run = pts.iter().map(along).fold(f64::MIN, f64::max) - along(low);
-    (run >= 0.001).then(|| kentos_commands::SlabSlope {
+    (run >= 0.001).then_some(kentos_commands::SlabSlope {
         from: *low,
         to: kentos_commands::Vec2 { x: low.x + u.0 * run, y: low.y + u.1 * run },
         rise: grade * run,

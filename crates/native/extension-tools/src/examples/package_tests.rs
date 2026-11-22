@@ -169,34 +169,6 @@ pub fn read_result(output: &str, code: Option<i32>, timed_out: bool, ms: u64) ->
     })
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// unittest's own words read: passed, failed with failures and errors, nothing to run, stopped.
-    #[test]
-    fn unittests_words_are_read() {
-        let ok = "test_a (tests.test_x.T.test_a) ... ok\n\n------\nRan 3 tests in 0.004s\n\nOK\n";
-        let r = read_result(ok, Some(0), false, 12);
-        assert_eq!(
-            (r["status"].as_str(), r["ran"].as_u64()),
-            (Some("passed"), Some(3))
-        );
-        assert_eq!(r["summary"], "3 sınamanın hepsi geçti.");
-        let bad = "Ran 4 tests in 0.01s\n\nFAILED (failures=1, errors=2)\n";
-        let r = read_result(bad, Some(1), false, 12);
-        assert_eq!(
-            r["summary"],
-            "4 sınamadan 3 tanesi kaldı (1 başarısız, 2 hata)."
-        );
-        let none = "\n----------------------------------------------------------------------\nRan 0 tests in 0.000s\n\nNO TESTS RAN\n";
-        let r = read_result(none, Some(5), false, 1);
-        assert_eq!(r["status"], "failed");
-        assert!(r["summary"].as_str().unwrap().contains("unittest.TestCase"));
-        assert_eq!(read_result("", None, true, 1)["status"], "failed");
-    }
-}
-
 /// The Python of `ext`'s environment as its installed version has it prepared under `python`'s folder: what its tests
 /// run with on the desktop.
 pub fn environment_python(
@@ -228,4 +200,32 @@ pub fn environment_python(
     .ok_or_else(|| {
         "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › Python ortamı.".to_owned()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// unittest's own words read: passed, failed with failures and errors, nothing to run, stopped.
+    #[test]
+    fn unittests_words_are_read() {
+        let ok = "test_a (tests.test_x.T.test_a) ... ok\n\n------\nRan 3 tests in 0.004s\n\nOK\n";
+        let r = read_result(ok, Some(0), false, 12);
+        assert_eq!(
+            (r["status"].as_str(), r["ran"].as_u64()),
+            (Some("passed"), Some(3))
+        );
+        assert_eq!(r["summary"], "3 sınamanın hepsi geçti.");
+        let bad = "Ran 4 tests in 0.01s\n\nFAILED (failures=1, errors=2)\n";
+        let r = read_result(bad, Some(1), false, 12);
+        assert_eq!(
+            r["summary"],
+            "4 sınamadan 3 tanesi kaldı (1 başarısız, 2 hata)."
+        );
+        let none = "\n----------------------------------------------------------------------\nRan 0 tests in 0.000s\n\nNO TESTS RAN\n";
+        let r = read_result(none, Some(5), false, 1);
+        assert_eq!(r["status"], "failed");
+        assert!(r["summary"].as_str().unwrap().contains("unittest.TestCase"));
+        assert_eq!(read_result("", None, true, 1)["status"], "failed");
+    }
 }

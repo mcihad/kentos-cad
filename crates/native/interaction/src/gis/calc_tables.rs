@@ -306,6 +306,7 @@ fn live(doc: &mut Document, source: TableSource, at: [f64; 2]) -> Result<(), Str
 /// drawn, one under another); a table the drawing cannot fill (no İmar durumu, no independent unit, no room) is left
 /// out. `form` gives the model quality control form's rows for the drawing as it is (the standards package's rule,
 /// which this crate does not run: docs/adr/8074); it is asked only when the drawing has the form.
+#[allow(clippy::type_complexity)]
 pub fn ensure(
     doc: &mut Document,
     form_rows: &dyn Fn(&Document) -> Result<Vec<Vec<String>>, String>,

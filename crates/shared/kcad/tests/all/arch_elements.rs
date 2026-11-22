@@ -297,10 +297,9 @@ fn a_sloped_slab_round_trips_under_arch_data_7() {
     let mut steep = doc.clone();
     if let Some(kentos_contracts::Entity::Slab(s)) =
         steep.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.slope.is_some()))
+        && let Some(sl) = s.slab.slope.as_mut()
     {
-        if let Some(sl) = s.slab.slope.as_mut() {
-            sl.rise = 5.0;
-        }
+        sl.rise = 5.0;
     }
     let refused = kentos_kcad::encode(&steep).expect_err("steeper than 100 %");
     assert!(refused.message.contains("en çok %100"), "{}", refused.message);

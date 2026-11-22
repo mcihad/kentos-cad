@@ -124,6 +124,7 @@ fn extension(name: &str) -> Option<String> {
 pub fn files(old: &[PackageFile], new: &[PackageFile]) -> Vec<FileCompared> {
     let mut pair: Vec<Option<usize>> = vec![None; new.len()];
     let mut used = vec![false; old.len()];
+    #[allow(clippy::type_complexity)]
     let passes: [&dyn Fn(&PackageFile, &PackageFile) -> bool; 3] = [
         &|o, n| !n.sheets.is_empty() && o.sheets == n.sheets,
         &|o, n| o.name == n.name,

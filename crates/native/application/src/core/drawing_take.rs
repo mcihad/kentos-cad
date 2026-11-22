@@ -39,7 +39,7 @@ struct Checked {
     warnings: Vec<CommandWarning>,
 }
 
-fn object<'a>(doc: &'a Document, uid: Uuid) -> Option<(Slot, &'a Entity)> {
+fn object(doc: &Document, uid: Uuid) -> Option<(Slot, &Entity)> {
     let slot = doc.slot_of(uid)?;
     Some((slot, doc.get(slot)?))
 }

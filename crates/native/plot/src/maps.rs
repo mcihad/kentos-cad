@@ -305,6 +305,7 @@ pub(crate) fn project_box(
 }
 
 /// Styled layers shared by vector PDF and the headless/desktop CPU painter.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn built_layers_profile(
     src: &MapSource<'_>,
     layers: &MapLayers,

@@ -218,7 +218,7 @@ impl Section {
                 *depth = range.map_or(v, |(lo, hi)| v.clamp(lo, hi));
             }
             Section::Box(b) => {
-                let (k, low) = (handle / 2, handle % 2 == 0);
+                let (k, low) = (handle / 2, handle.is_multiple_of(2));
                 if k > 2 {
                     return;
                 }

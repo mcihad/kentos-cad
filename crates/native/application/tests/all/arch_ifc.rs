@@ -138,7 +138,7 @@ fn a_wall_two_storeys_tall_spans_the_storey_over_its_own() {
     let walls_and_columns: Vec<String> = text
         .lines()
         .filter(|l| (l.contains("IFCWALL(") || l.contains("IFCCOLUMN(")) && !l.contains(&uid))
-        .map(|l| id(l))
+        .map(id)
         .collect();
     assert!(!walls_and_columns.is_empty());
     for r in &refs {
@@ -1333,8 +1333,8 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
     }
 }
 
-/// Döşemede boşluk ve şaft (docs/adr/8071 §5): on the section building a 1 × 1 m shaft (a void, docs/adr/0708) on the
-/// 1. kat, clear of the stair's hole. Worked out here, as the quantities read voids (docs/adr/0722 §5: the slabs of the
+/// Döşemede boşluk ve şaft (docs/adr/8071 §5): on the section building a 1 × 1 m shaft (a void, docs/adr/0708) on
+/// the 1. kat, clear of the stair's hole. Worked out here, as the quantities read voids (docs/adr/0722 §5: the slabs of the
 /// void's storey): the 1. kat's floor slab (12.25 × 9.25 m less the stair's 2.85 × 3.94 m hole) and the terrace over
 /// it (12.25 × 9.25 m) lose the shaft's square; the ground's slab does not. In the IFC model each slab's body is its own
 /// outline and the hole and the shaft are its openings; their net areas and volumes take them out, in either view;

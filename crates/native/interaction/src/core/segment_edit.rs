@@ -210,10 +210,7 @@ impl Tool for SegmentEdit {
     }
 
     fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
-        if self.start.take().is_some() {
-            return true;
-        }
-        false
+        self.start.take().is_some()
     }
 
     fn finished(&self) -> bool {

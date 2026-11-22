@@ -56,15 +56,18 @@ fn decode(bytes: &[u8]) -> Option<Picture> {
     let source = &buffer[..info.buffer_size()];
     let rgba: Vec<u8> = match info.color_type {
         png::ColorType::Rgba => source.to_vec(),
-        png::ColorType::Rgb => source.chunks_exact(3).flat_map(|p| [p[0], p[1], p[2], 255]).collect(),
+        png::ColorType::Rgb => source.as_chunks::<3>().0.iter().flat_map(|p| [p[0], p[1], p[2], 255]).collect(),
         _ => return None,
     };
     let (width, height) = (info.width, info.height);
     Some(Picture { width, height, handle: Handle::from_rgba(width, height, rgba) })
 }
 
+/// A picture's sizes (each width with its bytes) and the pictures made of them, one per size.
+type Sizes = (&'static [(u32, &'static [u8])], &'static [OnceLock<Option<Picture>>]);
+
 /// The sizes of a picture: the mark's, or the wordmark's for the theme.
-fn sizes(logo: bool, dark: bool) -> (&'static [(u32, &'static [u8])], &'static [OnceLock<Option<Picture>>]) {
+fn sizes(logo: bool, dark: bool) -> Sizes {
     static LIGHT_PICTURES: [OnceLock<Option<Picture>>; 8] = [const { OnceLock::new() }; 8];
     static DARK_PICTURES: [OnceLock<Option<Picture>>; 8] = [const { OnceLock::new() }; 8];
     static MARK_PICTURES: [OnceLock<Option<Picture>>; 4] = [const { OnceLock::new() }; 4];

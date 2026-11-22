@@ -64,7 +64,7 @@ pub fn audit(shown: &Shown, scale: f64, layer_of: &dyn Fn(f64) -> u32) -> Vec<Au
         text: String,
     }
     let mut frames: Vec<Frame> = Vec::new();
-    for r in shown.records.chunks_exact(LABEL_STRIDE) {
+    for r in shown.records.as_chunks::<LABEL_STRIDE>().0.iter() {
         if r[1] == LABEL_PLACED {
             let state = r[8] as u32;
             // Boxes in pixels (the ground's metres times the scale); a curved label has none.

@@ -276,7 +276,7 @@ pub fn counts(labels: &[AuditedLabel]) -> Counts {
 fn middles(shown: &Shown) -> Vec<(f64, u16, [f64; 2])> {
     shown
         .records
-        .chunks_exact(LABEL_STRIDE)
+        .as_chunks::<LABEL_STRIDE>().0.iter()
         .filter(|r| r[1] == LABEL_PLACED && (r[8] as u32 & 6) == 0)
         .map(|r| (r[0], r[7] as u16, [r[2], r[3]]))
         .collect()

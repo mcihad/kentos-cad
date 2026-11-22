@@ -73,7 +73,7 @@ fn order_mask_transparency_and_hairline_print_the_same_through_two_viewports() {
         let (doc, b) = drawing(scale);
         let before = doc.to_snapshot_v2();
         let got = paths(&doc, &b, f64::from(scale));
-        let first = |f: &dyn Fn(&MapPath) -> bool| got.iter().position(|p| f(p)).unwrap_or_else(|| panic!("1:{scale}: {got:#?}"));
+        let first = |f: &dyn Fn(&MapPath) -> bool| got.iter().position(f).unwrap_or_else(|| panic!("1:{scale}: {got:#?}"));
         let a = first(&|p| stroke_color(p) == Some("#ff0000"));
         let mask = first(&|p| p.closed && p.fill.is_some());
         let hair = first(&|p| p.stroke.as_ref().is_some_and(|s| s.width == 0.0));

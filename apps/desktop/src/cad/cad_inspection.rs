@@ -664,52 +664,6 @@ fn finding_title(code: &str) -> &'static str {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn inspected() -> App {
-        let mut app = crate::files_testing::app_with_drawing();
-        crate::files_testing::make_cad(&mut app);
-        let doc = app.document.as_ref().unwrap();
-        app.cad_inspection.session = doc.session;
-        app.cad_inspection.generation = doc.model.generation();
-        app.cad_inspection.output = Some(serde_json::from_value(serde_json::json!({
-            "findings":[{"group":"boundaries","severity":"warning","code":"boundary_open_end",
-                "uids":[],"points":[{"x":2.,"y":3.}],"message":"Long explanation","repair":"Inspect source"}],
-            "hatches":[],"unsupported":[],"examined":1,"comparisons":1,"truncated":false,
-            "revision":doc.model.revision().to_string()
-        })).unwrap());
-        app.cad_inspection.selected = Some(0);
-        app.command_expanded = true;
-        app.bottom_tab = BottomTab::CadInspection;
-        app
-    }
-
-    #[test]
-    fn diagnosis_reaches_the_main_scene_but_never_replaces_an_active_tool() {
-        let mut app = inspected();
-        let preview = app.drawing_preview(&app.format()).expect("main scene diagnosis");
-        assert_eq!(preview.markers.len(), 1);
-        assert_eq!(preview.tag.unwrap().lines, vec!["Açık uç"]);
-        assert!(app.session.start("line"));
-        assert!(app.drawing_preview(&app.format()).is_none_or(|p| p.tag.is_none()));
-    }
-
-    #[test]
-    fn stale_diagnosis_is_hidden_and_cannot_change_selection() {
-        let mut app = inspected();
-        app.cad_inspection.generation = app.cad_inspection.generation.wrapping_add(1);
-        let selected = app.selection.ids().to_vec();
-        let _ = app.cad_inspection_event(Event::Show(0));
-        assert_eq!(app.selection.ids(), selected);
-        assert!(app.cad_inspection_preview().is_none());
-        app.cad_inspection.generation = app.document.as_ref().unwrap().model.generation();
-        app.command_expanded = false;
-        assert!(app.cad_inspection_preview().is_none());
-    }
-}
-
 impl App {
     /// Onar (docs/adr/1005 §2): the finding's line end brought onto its target's edge by `cad.drawing.repair`, by at
     /// most the inspection's own gap; a measured or locked line is refused by the command and said.
@@ -803,5 +757,51 @@ impl App {
             return self.cad_inspection_event(Event::Run);
         }
         Task::none()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn inspected() -> App {
+        let mut app = crate::files_testing::app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        let doc = app.document.as_ref().unwrap();
+        app.cad_inspection.session = doc.session;
+        app.cad_inspection.generation = doc.model.generation();
+        app.cad_inspection.output = Some(serde_json::from_value(serde_json::json!({
+            "findings":[{"group":"boundaries","severity":"warning","code":"boundary_open_end",
+                "uids":[],"points":[{"x":2.,"y":3.}],"message":"Long explanation","repair":"Inspect source"}],
+            "hatches":[],"unsupported":[],"examined":1,"comparisons":1,"truncated":false,
+            "revision":doc.model.revision().to_string()
+        })).unwrap());
+        app.cad_inspection.selected = Some(0);
+        app.command_expanded = true;
+        app.bottom_tab = BottomTab::CadInspection;
+        app
+    }
+
+    #[test]
+    fn diagnosis_reaches_the_main_scene_but_never_replaces_an_active_tool() {
+        let mut app = inspected();
+        let preview = app.drawing_preview(&app.format()).expect("main scene diagnosis");
+        assert_eq!(preview.markers.len(), 1);
+        assert_eq!(preview.tag.unwrap().lines, vec!["Açık uç"]);
+        assert!(app.session.start("line"));
+        assert!(app.drawing_preview(&app.format()).is_none_or(|p| p.tag.is_none()));
+    }
+
+    #[test]
+    fn stale_diagnosis_is_hidden_and_cannot_change_selection() {
+        let mut app = inspected();
+        app.cad_inspection.generation = app.cad_inspection.generation.wrapping_add(1);
+        let selected = app.selection.ids().to_vec();
+        let _ = app.cad_inspection_event(Event::Show(0));
+        assert_eq!(app.selection.ids(), selected);
+        assert!(app.cad_inspection_preview().is_none());
+        app.cad_inspection.generation = app.document.as_ref().unwrap().model.generation();
+        app.command_expanded = false;
+        assert!(app.cad_inspection_preview().is_none());
     }
 }

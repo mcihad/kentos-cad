@@ -50,7 +50,7 @@ impl Operation for Find {
 
     fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
         let saved = self.offset;
-        self.offset = self.offset + std::mem::take(&mut self.pending);
+        self.offset += std::mem::take(&mut self.pending);
         operate(self);
         self.offset = saved;
     }
@@ -88,7 +88,8 @@ fn find(snapshot: &mut Snapshot, app: &App, caption: &str) -> (Vec<Rectangle>, V
             let saved = {
                 let mut f = self.0.lock().expect("the finder");
                 let saved = f.offset;
-                f.offset = f.offset + std::mem::take(&mut f.pending);
+                let pending = std::mem::take(&mut f.pending);
+                f.offset += pending;
                 saved
             };
             operate(self);

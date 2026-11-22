@@ -577,7 +577,9 @@ mod tests {
         w.derivations[0].uids.push(uid(1));
         assert_eq!(w.problem().map(|p| p.0), Some("derivations[0].uids".into()));
         let mut w = work();
-        w.items[0].file.as_mut().map(|f| f.revision = "A".repeat(64));
+        if let Some(f) = w.items[0].file.as_mut() {
+            f.revision = "A".repeat(64);
+        }
         assert_eq!(w.problem().map(|p| p.0), Some("items[0].file.revision".into()));
         let mut w = work();
         w.items[0].name = " GNSS".into();

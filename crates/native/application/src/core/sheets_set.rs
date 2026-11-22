@@ -390,9 +390,12 @@ fn dependencies(doc: &Document, sheets: &[SetSheet], book: Option<&kentos_sheet:
             objects.iter().any(|(u, x)| meets(x, b) && draws(u, x))
         })).map(|s| s.id.clone()).collect()
     };
-    let placements = |block| doc.entities_with_uids().filter_map(|(uid, e)| {
-        matches!(e, Entity::Insert(i) if i.block == block).then(|| uid.to_string())
-    }).collect::<Vec<_>>();
+    let placements = |block| {
+        doc.entities_with_uids()
+            .filter(|(_, e)| matches!(e, Entity::Insert(i) if i.block == block))
+            .map(|(uid, _)| uid.to_string())
+            .collect::<Vec<_>>()
+    };
 
     let mut out: Vec<_> = crate::sections_query::rows(doc).into_iter().map(|section| {
         let block = section.block.as_deref().and_then(kentos_commands::BlockId::parse).and_then(|id| doc.block(id));

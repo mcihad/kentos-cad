@@ -119,7 +119,7 @@ impl canvas::Program<Message> for &Page {
             Mouse(mouse::Event::CursorMoved { .. }) => {
                 let from = look.grab?;
                 let at = cursor.position_in(bounds).unwrap_or(from);
-                look.offset = look.offset + (at - from);
+                look.offset += at - from;
                 look.grab = Some(at);
                 Some(canvas::Action::request_redraw().and_capture())
             }
@@ -177,7 +177,7 @@ mod tests {
         let shot = snapshot.render(super::view(&page), &iced::Theme::Dark);
         let white = shot
             .rgba
-            .chunks_exact(4)
+            .as_chunks::<4>().0.iter()
             .filter(|p| p[0] > 248 && p[1] > 248 && p[2] > 248)
             .count();
         assert!(white > 70_000, "{white}");
@@ -199,7 +199,7 @@ mod tests {
         );
         let white = shot
             .rgba
-            .chunks_exact(4)
+            .as_chunks::<4>().0.iter()
             .filter(|p| p[0] > 248 && p[1] > 248 && p[2] > 248)
             .count();
         assert!(white > 70_000, "{white}");

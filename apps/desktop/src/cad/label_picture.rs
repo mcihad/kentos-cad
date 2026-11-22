@@ -375,7 +375,7 @@ fn paint(
             &coverages[at].1
         };
         let Color { r, g, b, a } = op.color;
-        for (px, &c) in out.chunks_exact_mut(4).zip(coverage) {
+        for (px, &c) in out.as_chunks_mut::<4>().0.iter_mut().zip(coverage) {
             if c == 0 {
                 continue;
             }
@@ -467,7 +467,7 @@ fn straight(premultiplied: &[f32], ground: Option<Color>) -> Vec<u8> {
     let byte = |v: f32| (v.clamp(0.0, 1.0) * 255.0).round() as u8;
     let ground = ground.map_or([0, 0, 0], |c| [byte(c.r), byte(c.g), byte(c.b)]);
     let mut data = Vec::with_capacity(premultiplied.len());
-    for px in premultiplied.chunks_exact(4) {
+    for px in premultiplied.as_chunks::<4>().0.iter() {
         let a = px[3];
         if a <= 0.0 {
             data.extend_from_slice(&ground);

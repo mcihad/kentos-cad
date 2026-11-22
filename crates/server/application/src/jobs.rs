@@ -1023,6 +1023,7 @@ async fn actor_access(db: &kentos_postgres::Db, claim: &Claim) -> AppResult<Proj
 }
 
 /// `project.export`: the project as one `.kcad`, written to the object store as the job's artifact.
+#[allow(clippy::result_large_err)]
 async fn export(
     db: &kentos_postgres::Db,
     blobs: &Blobs,
@@ -1096,6 +1097,7 @@ async fn export(
 /// Writes `bytes` to the object store as the job's artifact (docs/adr/0547 §2): past the server's limit the job fails
 /// with `too_large`, a file that cannot be written fails it with `storage` and leaves no object. `what` names the file
 /// in the message.
+#[allow(clippy::result_large_err)]
 async fn stage(
     blobs: &Blobs,
     claim: &Claim,
@@ -1162,6 +1164,7 @@ struct External {
 }
 
 /// The job's request, with the staged file an import names read as the user who asked.
+#[allow(clippy::result_large_err)]
 async fn external_of(
     db: &kentos_postgres::Db,
     claim: &Claim,

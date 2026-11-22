@@ -883,7 +883,7 @@ fn grown(view: Camera, g: Grow) -> Camera {
 /// number each frame, so its picture is found again; never below the view's scale when `clamp` (Kaybolmasın grows a
 /// text, never shrinks it). A text its placing drew at its true size stays as the view has it.
 fn held_grown(view: Camera, g: Grow, (placed, clamp): (f64, bool)) -> Camera {
-    if g.k == 1.0 || !g.k.is_finite() || g.k <= 0.0 || !(view.scale > 0.0) {
+    if g.k == 1.0 || !g.k.is_finite() || g.k <= 0.0 || view.scale.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
         return view;
     }
     // A pan: the scale is the placing's, the growth as it was, to the bit.
@@ -1309,12 +1309,11 @@ impl std::hash::Hasher for Fx {
     }
 
     fn write(&mut self, bytes: &[u8]) {
-        let mut chunks = bytes.chunks_exact(8);
-        for c in &mut chunks {
-            self.write_u64(u64::from_le_bytes([c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]]));
+        let (words, rest) = bytes.as_chunks::<8>();
+        for &word in words {
+            self.write_u64(u64::from_le_bytes(word));
         }
         let mut last = [0u8; 8];
-        let rest = chunks.remainder();
         last[..rest.len()].copy_from_slice(rest);
         self.write_u64(u64::from_le_bytes(last) ^ rest.len() as u64);
     }

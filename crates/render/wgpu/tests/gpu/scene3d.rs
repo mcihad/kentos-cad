@@ -152,7 +152,7 @@ fn draw_lit(
 /// The box of the pixels not white: (x0, y0, x1, y1), x1 and y1 past the last.
 fn covered(px: &[u8], width: u32) -> Option<(u32, u32, u32, u32)> {
     let mut b: Option<(u32, u32, u32, u32)> = None;
-    for (i, p) in px.chunks_exact(4).enumerate() {
+    for (i, p) in px.as_chunks::<4>().0.iter().enumerate() {
         if p[0] < 250 || p[1] < 250 || p[2] < 250 {
             let (x, y) = (i as u32 % width, i as u32 / width);
             b = Some(match b {
@@ -211,7 +211,7 @@ pub(crate) fn the_3d_scene_draws_precisely(gpu: &mut Gpu) {
     let far = Camera::orbit([E, N, 1000.0], 60.0, 45.0, 1500.0, Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.5 });
     let (px, _) = draw(gpu, &mut r, &far, Exaggeration::NONE, &draws, size);
     let (mut green, mut red) = (0, 0);
-    for p in px.chunks_exact(4) {
+    for p in px.as_chunks::<4>().0.iter() {
         if p[1] > 150 && p[0] < 80 {
             green += 1;
         } else if p[0] > 150 && p[1] < 80 {
@@ -396,7 +396,7 @@ pub(crate) fn the_qualities_draw_edges_smooth_outlines_and_occlusion(gpu: &mut G
     // How many pixels are darker than either grey (an edge), and how many lie between the greys and the white.
     let count = |px: &[u8]| {
         let (mut dark, mut between) = (0, 0);
-        for p in px.chunks_exact(4) {
+        for p in px.as_chunks::<4>().0.iter() {
             let v = p[0];
             if v < slab_grey.saturating_sub(25) {
                 dark += 1;

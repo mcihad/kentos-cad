@@ -342,8 +342,10 @@ fn refresh_interior(doc: &mut Document, scope: &str, fresh: Vec<Entity>) -> Resu
         .add_many(additions, LABEL)
         .map_err(|e| Refusal(e.to_string()))?;
     for slot in slots {
-        let mut entity = doc.get(slot).expect("new plan dimension").clone();
-        let uid = doc.uid(slot).expect("new dimension identity");
+        // A slot just added holds its object and its identity.
+        let (Some(mut entity), Some(uid)) = (doc.get(slot).cloned(), doc.uid(slot)) else {
+            continue;
+        };
         entity
             .base_mut()
             .attrs

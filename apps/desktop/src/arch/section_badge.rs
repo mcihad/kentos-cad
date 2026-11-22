@@ -37,6 +37,7 @@ pub struct Info {
 
 thread_local! {
     /// The last reading: the opened drawing (its session) and its generation, and its sections.
+    #[allow(clippy::type_complexity)]
     static LAST: RefCell<Option<((u64, u64), Vec<Info>)>> = const { RefCell::new(None) };
 }
 

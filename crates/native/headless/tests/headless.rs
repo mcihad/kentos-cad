@@ -2989,6 +2989,10 @@ fn gis_files_are_taken_in_by_their_commands() {
 #[path = "headless/sheet_transactions.rs"]
 mod sheet_transactions;
 
+// The plot tests' reader of DXF and PDF files, shared by the sheet tests below.
+#[path = "../../plot/tests/support/files.rs"]
+mod files;
+
 #[path = "headless/sheet_publish.rs"]
 mod sheet_publish;
 

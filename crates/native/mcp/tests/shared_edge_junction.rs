@@ -28,9 +28,7 @@ fn the_vertices_inside_a_shared_edge_go_with_it_over_mcp() {
     // The T junction: one place carried, B1 and B2 changed with A.
     let junction = case("Üçlü birleşim:");
     let mut args = junction["steps"][0]["input"].clone();
-    for (k, v) in [("id", uid(1))] {
-        args["work"][k] = json!(v);
-    }
+    args["work"]["id"] = json!(uid(1));
     args["drawing"] = drawing.clone();
     let done = call(&mut server, "cad.shapes.edit", args);
     assert_eq!(done["isError"], false, "{done}");

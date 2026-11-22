@@ -1,7 +1,7 @@
 //! Plan notları (docs/adr/8084): the parcel's plan notes typed in Proje ayarları › Mimari, kept in the project, carried
 //! in the audit facts and read by the standards package over the municipality's and the national regulation (PAİY
-//! 69/3; 28/1 leaves the storey heights to the plan). On the two-storey house of `dated_sizes_tests` (Zemin kat and
-//! 1. kat, 3.80 m each, one flat) applied for on 1.8.2023, when 28/1-c asked 3.60 m: a note of 3.50 m for the ground
+//! 69/3; 28/1 leaves the storey heights to the plan). On the two-storey house of `dated_sizes_tests` (Zemin kat
+//! and 1. kat, 3.80 m each, one flat) applied for on 1.8.2023, when 28/1-c asked 3.60 m: a note of 3.50 m for the ground
 //! storey binds it (3.80 m over it, 1.10.2017's 3.60 m said beside), a note of 4.00 m for the storeys lets the 1. kat
 //! pass; with the notes taken away 28/1-c's 3.60 m holds both storeys again.
 //!
@@ -50,6 +50,7 @@ fn checked(app: &mut App) {
 }
 
 /// The storeys' findings and the storey rows of the rule set.
+#[allow(clippy::type_complexity)]
 fn storeys(app: &App) -> (Vec<String>, Vec<(String, Option<String>, O)>) {
     let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
     let found = audited

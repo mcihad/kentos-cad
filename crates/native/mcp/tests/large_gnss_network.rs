@@ -21,7 +21,7 @@ fn network() -> (Vec<Value>, Vec<Value>) {
             let i = r * W + c;
             stations.push(match i {
                 0 => json!({"name": format!("S{i}"), "xyz": at(r, c), "fixed": true}),
-                _ if i % 13 == 0 => json!({"name": format!("S{i}"), "xyz": at(r, c), "sigma": [0.02, 0.02, 0.02]}),
+                _ if i.is_multiple_of(13) => json!({"name": format!("S{i}"), "xyz": at(r, c), "sigma": [0.02, 0.02, 0.02]}),
                 _ => json!({"name": format!("S{i}")}),
             });
         }

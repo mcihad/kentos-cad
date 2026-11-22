@@ -1262,6 +1262,7 @@ impl AtlasPlanned {
     /// Each page's maps and their grounds (docs/adr/3600), in the plan's order, as the PDF lays the pages out but without
     /// drawing them: every map a page draws (its atlas maps where the page puts them, an overview where it follows them,
     /// the maps that stand still) and the box it shows on the project's ground; a map a page does not draw is not there.
+    #[allow(clippy::type_complexity)]
     pub fn page_grounds(&self, doc: &Document) -> Result<Vec<Vec<(String, [f64; 4])>>, AtlasError> {
         let base: RenderInputs = base_inputs(doc, &self.user, &self.date);
         self.plan

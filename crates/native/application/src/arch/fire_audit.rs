@@ -251,6 +251,7 @@ pub fn room_people(doc: &Document) -> Vec<(Slot, Option<String>, String, f64)> {
     out
 }
 
+#[allow(clippy::type_complexity)]
 fn assess(
     doc: &Document,
     push: &mut dyn FnMut(Said, Vec<Slot>, V),

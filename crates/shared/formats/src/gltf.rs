@@ -206,9 +206,9 @@ pub fn read(bytes: &[u8]) -> Result<([f64; 3], Vec<ReadMesh>), String> {
         let pa = &doc["accessors"][p["attributes"]["POSITION"].as_u64().ok_or("konum yok")? as usize];
         let ia = &doc["accessors"][p["indices"].as_u64().ok_or("dizin yok")? as usize];
         let f = |c: &[u8]| f32::from_le_bytes([c[0], c[1], c[2], c[3]]);
-        let positions = view(pa)?.chunks_exact(12).map(|c| from_gltf([f(&c[0..4]), f(&c[4..8]), f(&c[8..12])])).collect();
-        let idx: Vec<u32> = view(ia)?.chunks_exact(4).map(|c| u32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect();
-        let triangles = idx.chunks_exact(3).map(|t| [t[0], t[1], t[2]]).collect();
+        let positions = view(pa)?.as_chunks::<12>().0.iter().map(|c| from_gltf([f(&c[0..4]), f(&c[4..8]), f(&c[8..12])])).collect();
+        let idx: Vec<u32> = view(ia)?.as_chunks::<4>().0.iter().map(|c| u32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect();
+        let triangles = idx.as_chunks::<3>().0.iter().map(|t| [t[0], t[1], t[2]]).collect();
         out.push(ReadMesh { name: m["name"].as_str().unwrap_or_default().to_owned(), positions, triangles });
     }
     Ok((origin, out))

@@ -407,7 +407,7 @@ impl ParcelTool {
             .and_then(|u| cx.doc.slot_of(u))
             .is_some();
         if !standing {
-            let Some(pts) = cx.doc.site_envelope_ring(&site) else {
+            let Some(pts) = cx.doc.site_envelope_ring(site) else {
                 cx.say(Level::Warn, "Bahçe mesafeleri parselde yapılacak yer bırakmıyor: yaklaşma sınırı çizilmedi.");
                 return false;
             };

@@ -325,8 +325,8 @@ fn a_known_point_s_row_says_its_own_place() {
     let moved = SurveyKnownPlace {
         id: "bn-3".into(),
         mark: "N1".into(),
-        x: Some(544_604.5248),
-        y: Some(4_404_866.5063),
+        x: Some(544_604.524_8),
+        y: Some(4_404_866.506_3),
         z: Some(845.246),
         chain: Some("limited".into()),
         epoch: Some(2005.0),

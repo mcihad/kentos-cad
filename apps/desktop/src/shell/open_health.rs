@@ -164,6 +164,83 @@ impl App {
     }
 }
 
+/// The pictures of docs/adr/1009: a drawing opened with the check on (Komut geçmişi's line, CAD denetimi's candidates
+/// on the drawing) and the switch in Ayarlar. `KENTOS_SHOTS_ONLY=acilis-saglik,acilis-saglik-ayar cargo test -p
+/// kentos-desktop --lib tools_screens::screens -- --ignored --nocapture`.
+#[cfg(test)]
+pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
+    vec![("acilis-saglik", opened_scene)]
+}
+
+/// Ayarlar → Görünüş scrolled to its end, where Açılış is.
+#[cfg(test)]
+pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
+    vec![(
+        "acilis-saglik-ayar",
+        |app| app.open_settings_at(crate::settings_sections::Section::Appearance),
+        |snapshot, app| {
+            struct End;
+            impl iced::advanced::widget::Operation for End {
+                fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation)) {
+                    operate(self);
+                }
+                fn scrollable(
+                    &mut self,
+                    _: Option<&iced::advanced::widget::Id>,
+                    bounds: iced::Rectangle,
+                    _: iced::Rectangle,
+                    _: iced::Vector,
+                    state: &mut dyn iced::advanced::widget::operation::Scrollable,
+                ) {
+                    // The dialog's page: right of its section list, tall.
+                    if bounds.x > 400.0 && bounds.x < 900.0 && bounds.height > 300.0 {
+                        state.snap_to(iced::widget::scrollable::RelativeOffset::END.into());
+                    }
+                }
+            }
+            snapshot.operate(app.view(), Box::new(End));
+        },
+    )]
+}
+
+#[cfg(test)]
+fn opened_scene(app: &mut App) {
+    use crate::tools_scenes::{E, N, Objects};
+    use serde_json::{Value, json};
+    assert!(app.settings.choose(&[("appearance.openHealthCheck", Value::Bool(true))]).is_empty());
+    // A frame of four walls' lines, two inner lines stopping short of it and one passing over, a slightly turned edge.
+    let mut o = Objects::new();
+    o.line("cizim", [0.0, 0.0], [20.0, 0.0]);
+    o.line("cizim", [20.0, 0.0], [20.0, 12.0]);
+    o.line("cizim", [20.0, 12.0], [0.0, 12.0]);
+    o.line("cizim", [0.0, 12.0], [0.0, 0.0]);
+    o.line("cizim", [8.0, 0.006], [8.0, 12.0]);
+    o.line("cizim", [8.0, 6.0], [20.008, 6.0]);
+    o.line("cizim", [0.004, 9.0], [8.0, 9.0]);
+    o.line("cizim", [2.0, 2.0], [6.0, 2.03]);
+    let mut d: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/empty.kcad")).expect("reads");
+    d["layers"] = json!([crate::tools_scenes::layer("cizim", "Çizim", "fg", 0.35)]);
+    d["activeLayer"] = json!("cizim");
+    d["entities"] = Value::Array(o.0);
+    d["settings"]["workspace"] = json!("cad");
+    let dir = crate::files_testing::scratch("acilis-saglik-resim");
+    let path = dir.join("kat-plani.kcad");
+    std::fs::write(&path, d.to_string()).expect("the file");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&d.to_string()).expect("reads");
+    let doc = crate::document::Document::new(snapshot, Some(path)).expect("opens");
+    let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::files_testing::drive(app, task);
+    app.show_bottom(crate::bottom::BottomTab::CadInspection);
+    let bar = f64::from(kentos_ui::widget::tabs::height());
+    app.bottom_dragged(Some((crate::search::PANEL_HEIGHT - bar) as f32), std::time::Instant::now());
+    let _ = app.cad_inspection_event(Event::Show(0));
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: E - 2.0, min_y: N - 2.0, max_x: E + 22.0, max_y: N + 14.0 },
+        24.0,
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -281,81 +358,4 @@ mod tests {
         assert_eq!(warnings[0].code, "inspection_truncated");
         assert!(words(&output, false).contains("Süre ya da iş sınırına ulaşıldı: sonuç kısmi"));
     }
-}
-
-/// The pictures of docs/adr/1009: a drawing opened with the check on (Komut geçmişi's line, CAD denetimi's candidates
-/// on the drawing) and the switch in Ayarlar. `KENTOS_SHOTS_ONLY=acilis-saglik,acilis-saglik-ayar cargo test -p
-/// kentos-desktop --lib tools_screens::screens -- --ignored --nocapture`.
-#[cfg(test)]
-pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
-    vec![("acilis-saglik", opened_scene)]
-}
-
-/// Ayarlar → Görünüş scrolled to its end, where Açılış is.
-#[cfg(test)]
-pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
-    vec![(
-        "acilis-saglik-ayar",
-        |app| app.open_settings_at(crate::settings_sections::Section::Appearance),
-        |snapshot, app| {
-            struct End;
-            impl iced::advanced::widget::Operation for End {
-                fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation)) {
-                    operate(self);
-                }
-                fn scrollable(
-                    &mut self,
-                    _: Option<&iced::advanced::widget::Id>,
-                    bounds: iced::Rectangle,
-                    _: iced::Rectangle,
-                    _: iced::Vector,
-                    state: &mut dyn iced::advanced::widget::operation::Scrollable,
-                ) {
-                    // The dialog's page: right of its section list, tall.
-                    if bounds.x > 400.0 && bounds.x < 900.0 && bounds.height > 300.0 {
-                        state.snap_to(iced::widget::scrollable::RelativeOffset::END.into());
-                    }
-                }
-            }
-            snapshot.operate(app.view(), Box::new(End));
-        },
-    )]
-}
-
-#[cfg(test)]
-fn opened_scene(app: &mut App) {
-    use crate::tools_scenes::{E, N, Objects};
-    use serde_json::{Value, json};
-    assert!(app.settings.choose(&[("appearance.openHealthCheck", Value::Bool(true))]).is_empty());
-    // A frame of four walls' lines, two inner lines stopping short of it and one passing over, a slightly turned edge.
-    let mut o = Objects::new();
-    o.line("cizim", [0.0, 0.0], [20.0, 0.0]);
-    o.line("cizim", [20.0, 0.0], [20.0, 12.0]);
-    o.line("cizim", [20.0, 12.0], [0.0, 12.0]);
-    o.line("cizim", [0.0, 12.0], [0.0, 0.0]);
-    o.line("cizim", [8.0, 0.006], [8.0, 12.0]);
-    o.line("cizim", [8.0, 6.0], [20.008, 6.0]);
-    o.line("cizim", [0.004, 9.0], [8.0, 9.0]);
-    o.line("cizim", [2.0, 2.0], [6.0, 2.03]);
-    let mut d: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/empty.kcad")).expect("reads");
-    d["layers"] = json!([crate::tools_scenes::layer("cizim", "Çizim", "fg", 0.35)]);
-    d["activeLayer"] = json!("cizim");
-    d["entities"] = Value::Array(o.0);
-    d["settings"]["workspace"] = json!("cad");
-    let dir = crate::files_testing::scratch("acilis-saglik-resim");
-    let path = dir.join("kat-plani.kcad");
-    std::fs::write(&path, d.to_string()).expect("the file");
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&d.to_string()).expect("reads");
-    let doc = crate::document::Document::new(snapshot, Some(path)).expect("opens");
-    let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    crate::files_testing::drive(app, task);
-    app.show_bottom(crate::bottom::BottomTab::CadInspection);
-    let bar = f64::from(kentos_ui::widget::tabs::height());
-    app.bottom_dragged(Some((crate::search::PANEL_HEIGHT - bar) as f32), std::time::Instant::now());
-    let _ = app.cad_inspection_event(Event::Show(0));
-    app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds { min_x: E - 2.0, min_y: N - 2.0, max_x: E + 22.0, max_y: N + 14.0 },
-        24.0,
-    );
 }

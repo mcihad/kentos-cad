@@ -40,6 +40,9 @@ use crate::measuring::{Measured, Tool, Value};
 use crate::scene::{self, SceneView};
 use crate::viewer::{Message, Panel, Side, Stage, Viewer};
 
+/// How a length is written, with its unit's name when it has one.
+pub type MeasureText<'a> = Box<dyn Fn(f64, Option<&str>) -> String + 'a>;
+
 /// What the host decides of the viewer's look: how its messages reach it, what it puts at the strip's end, the sky
 /// the scene stands on, how a coordinate is written, how a measured value is written by its unit (`m`, `m²`, `m³`,
 /// none), and what the east and north axes are called.
@@ -50,7 +53,7 @@ pub struct Host<'a, M> {
     /// The quality the scene is drawn at (the application's setting, docs/adr/8120).
     pub quality: scene::Quality,
     pub coordinate: Box<dyn Fn(f64) -> String + 'a>,
-    pub measure: Box<dyn Fn(f64, Option<&str>) -> String + 'a>,
+    pub measure: MeasureText<'a>,
     pub east: &'a str,
     pub north: &'a str,
 }

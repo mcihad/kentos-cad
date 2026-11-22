@@ -1668,11 +1668,11 @@ impl Spatial {
             out.push(GripSet::new(
                 slot,
                 records
-                    .chunks_exact(3)
+                    .as_chunks::<3>().0.iter()
                     .map(|r| Vec2::new(r[0], r[1]))
                     .collect(),
                 records
-                    .chunks_exact(3)
+                    .as_chunks::<3>().0.iter()
                     .map(|r| (r[2] >= 0.0).then_some(r[2] as usize))
                     .collect(),
                 vertices,
@@ -1744,7 +1744,7 @@ impl Spatial {
         let shown = self.store.labels(&view, scale, None, options);
         shown
             .records
-            .chunks_exact(LABEL_STRIDE)
+            .as_chunks::<LABEL_STRIDE>().0.iter()
             .filter_map(|r| self.spot(r, &shown.texts))
             .collect()
     }
@@ -1767,7 +1767,7 @@ impl Spatial {
         let labels = self.store.labels_print(&view, scale, options, Some(shown));
         labels
             .records
-            .chunks_exact(LABEL_STRIDE)
+            .as_chunks::<LABEL_STRIDE>().0.iter()
             .filter_map(|r| self.spot(r, &labels.texts))
             .collect()
     }
@@ -1866,7 +1866,7 @@ impl Spatial {
         }
         let typed = |records: &[f64], texts: &[String]| -> Vec<(LabelSpot, Grow)> {
             records
-                .chunks_exact(LABEL_SHOWN_STRIDE)
+                .as_chunks::<LABEL_SHOWN_STRIDE>().0.iter()
                 .filter_map(|r| {
                     let grow = Grow {
                         k: r[LABEL_STRIDE],
@@ -1913,7 +1913,7 @@ impl Spatial {
             k.typed.retain(|id, _| met.contains(id));
         }
         let mut placed = Vec::with_capacity(shown.placed.records.len() / LABEL_STRIDE);
-        for r in shown.placed.records.chunks_exact(LABEL_STRIDE) {
+        for r in shown.placed.records.as_chunks::<LABEL_STRIDE>().0.iter() {
             if let Some(spot) = self.spot(r, &shown.placed.texts) {
                 placed.push((
                     spot,

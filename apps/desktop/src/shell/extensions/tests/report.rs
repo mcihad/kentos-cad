@@ -66,7 +66,7 @@ fn the_report_says_the_environment_and_hides_the_keys() {
     );
     assert_eq!(
         unknown.err().map(|e| e.code),
-        Some("unknown_extension".into())
+        Some("unknown_extension")
     );
     let _ = std::fs::remove_dir_all(&root);
 }

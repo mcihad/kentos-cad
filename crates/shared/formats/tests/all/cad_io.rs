@@ -284,7 +284,7 @@ fn planar_widths_bulges_closure_and_elevation_are_standard_dxf_without_metadata(
         // assertion proves standard 38/40/41/42/70 behavior without a private payload.
         let text = String::from_utf8(bytes).unwrap();
         let lines: Vec<_> = text.lines().collect();
-        let bytes = lines.chunks_exact(2).filter(|p| p[0].trim().parse::<i32>().unwrap() < 1000)
+        let bytes = lines.as_chunks::<2>().0.iter().filter(|p| p[0].trim().parse::<i32>().unwrap() < 1000)
             .map(|p| format!("{}\n{}\n",p[0],p[1])).collect::<String>().into_bytes();
         let back = dxf::read(&bytes, &options).expect("back");
         let Entity::Polyline(b) = &back.entities[0] else {

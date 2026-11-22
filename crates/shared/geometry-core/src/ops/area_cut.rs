@@ -153,7 +153,7 @@ pub fn cut_for_area(ring: &[Vec2], edge: usize, target: f64) -> Result<Cut, &'st
         let k = (w2 - w1) * 3.0 / span;
         let w0 = w1 - k * span / 3.0;
         let c = target - a_lo;
-        let root = (w0 * w0 + 2.0 * k * c).max(0.0).sqrt();
+        let root = crate::jsmath::js_max(w0 * w0 + 2.0 * k * c, 0.0).sqrt();
         let x = if w0 + root > 0.0 { 2.0 * c / (w0 + root) } else { 0.0 };
         d = Some(lo + x.clamp(0.0, span));
         break;

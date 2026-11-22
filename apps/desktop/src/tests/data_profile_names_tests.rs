@@ -104,8 +104,7 @@ fn the_names_page_spells_the_fields_and_writes_the_form_into_the_mapping() {
     let carried = app
         .document
         .as_ref()
-        .map(|d| d.model.settings().profile_files.iter().find(|f| f.name == "sivas-bel").map(|f| f.text.clone()))
-        .flatten()
+        .and_then(|d| d.model.settings().profile_files.iter().find(|f| f.name == "sivas-bel").map(|f| f.text.clone()))
         .expect("the drawing's mapping");
     assert!(carried.contains("upperSnakeCase"), "{carried}");
     // Uygula reads the institution's names by it: the layers it adds carry the form's names, and Bulgular finds them.

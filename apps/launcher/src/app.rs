@@ -852,6 +852,14 @@ fn ticks() -> impl Stream<Item = Message> {
     ticks
 }
 
+/// The window's device pixels per logical pixel when it changes (moved to another screen), for the brand's sizes.
+fn device_scale(event: iced::Event, _: iced::event::Status, _: iced::window::Id) -> Option<Message> {
+    match event {
+        iced::Event::Window(iced::window::Event::Rescaled(scale)) => Some(Message::DeviceScale(scale)),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1035,13 +1043,5 @@ mod tests {
             1,
             "a soon app starts nothing and says nothing"
         );
-    }
-}
-
-/// The window's device pixels per logical pixel when it changes (moved to another screen), for the brand's sizes.
-fn device_scale(event: iced::Event, _: iced::event::Status, _: iced::window::Id) -> Option<Message> {
-    match event {
-        iced::Event::Window(iced::window::Event::Rescaled(scale)) => Some(Message::DeviceScale(scale)),
-        _ => None,
     }
 }

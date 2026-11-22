@@ -23,7 +23,7 @@ fn network_file() -> std::path::PathBuf {
             let p = at(r, c);
             if i == 0 {
                 text += &format!("K;S{i};{:.4};{:.4};{:.4}\n", p[0], p[1], p[2]);
-            } else if i % 13 == 0 {
+            } else if i.is_multiple_of(13) {
                 text += &format!("K;S{i};{:.4};{:.4};{:.4};0.02;0.02;0.02\n", p[0], p[1], p[2]);
             } else {
                 text += &format!("N;S{i}\n");

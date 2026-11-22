@@ -246,7 +246,9 @@ pub fn face(vertices: &[V3], triangles: &[[u32; 3]], triangle: usize) -> Option<
         }
     }
     // The outline: the members' edges no other member has.
-    let mut count: HashMap<([u64; 3], [u64; 3]), (u32, V3, V3)> = HashMap::new();
+    /// How many members have the edge, and its two corners.
+    type Seen = (u32, V3, V3);
+    let mut count: HashMap<([u64; 3], [u64; 3]), Seen> = HashMap::new();
     for &i in &members {
         let t = triangles[i];
         for (u, v) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {

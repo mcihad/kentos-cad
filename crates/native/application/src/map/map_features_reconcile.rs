@@ -462,7 +462,7 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
         };
         let (areas, area) = if kind == Kind::Area { regions(e) } else { (Vec::new(), 0.0) };
         if kind == Kind::Area {
-            if !(area > 0.0) {
+            if area.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
                 continue;
             }
             pts.push(pts[0]);
@@ -549,6 +549,7 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
     let candidate_uids: std::collections::HashSet<String> = candidates.iter().map(|c| c.uid.clone()).collect();
     // Each class layer's objects that may be assets there already, in the drawing's order, and their grid, made once
     // (docs/adr/2940).
+    #[allow(clippy::type_complexity)]
     let mut assets: BTreeMap<String, (Vec<(String, &Entity)>, BoxGrid)> = BTreeMap::new();
     let mut groups: Vec<Group> = Vec::new();
     for r in order {

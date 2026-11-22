@@ -494,7 +494,7 @@ pub(super) fn geometry(
                 if flat.len() % 2 != 0 {
                     return Err(broken("genişlik listesinin sayısı tek"));
                 }
-                Some(flat.chunks_exact(2).map(|w| [w[0], w[1]]).collect())
+                Some(flat.as_chunks::<2>().0.iter().map(|w| [w[0], w[1]]).collect())
             } else {
                 None
             };

@@ -974,6 +974,7 @@ fn people_and_doors(
         .collect();
     let program = doc.program();
     // The rooms each storey's points are found in: id, storey, outline, an escape stair's, a fire safety lobby.
+    #[allow(clippy::type_complexity)]
     let mut rooms: Vec<(
         String,
         Option<String>,

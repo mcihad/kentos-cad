@@ -606,8 +606,8 @@ impl StyledGpu {
         if self.srgb_target {
             // Only on a gamma-correct surface (Iced picks a plain one, as the web's canvas is).
             for c in [0usize, 4] {
-                for i in c..c + 3 {
-                    block.f[i] = srgb_to_linear(block.f[i]);
+                for v in &mut block.f[c..c + 3] {
+                    *v = srgb_to_linear(*v);
                 }
             }
         }
@@ -823,7 +823,7 @@ impl StyledGpu {
             instances.extend([x[0], x[1], x[2], x[3], x[4], x[5], low(n * per + 4), low(n * per + 5), x[6], 0.0]);
         }
         let mesh: Vec<f32> = if stroke {
-            mesh.chunks_exact(STROKE_FLOATS)
+            mesh.as_chunks::<STROKE_FLOATS>().0.iter()
                 .flat_map(|seg| std::iter::repeat_n(seg, 6).flatten().copied())
                 .collect()
         } else {
@@ -2049,7 +2049,7 @@ impl ViewStyled {
                     MarkerLook::Shape { .. } => (0, 1.0),
                 };
                 let tile = [centre[0] - b.origin[0], centre[1] - b.origin[1]];
-                for (at, m) in data.get(b.range.clone()).unwrap_or(&[]).chunks_exact(5).enumerate() {
+                for (at, m) in data.get(b.range.clone()).unwrap_or(&[]).as_chunks::<5>().0.iter().enumerate() {
                     let mut w = f64::from(m[3]) * k;
                     let mut h = f64::from(m[4]) * k;
                     match fit {

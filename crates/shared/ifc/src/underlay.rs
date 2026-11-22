@@ -235,7 +235,9 @@ pub fn plan(meshes: &[Mesh<'_>], cut: f64, bottom: f64) -> Vec<PlanLine> {
             }
         }
         // Under the cut: every edge with its triangles' normals, by its corners on the join grid.
-        let mut edges: std::collections::HashMap<([i64; 3], [i64; 3]), (usize, Option<[f64; 3]>, bool, [f64; 3], [f64; 3])> =
+        /// An edge's count, its first triangle's normal, whether it is cut, and its two corners.
+        type Edge = (usize, Option<[f64; 3]>, bool, [f64; 3], [f64; 3]);
+        let mut edges: std::collections::HashMap<([i64; 3], [i64; 3]), Edge> =
             std::collections::HashMap::new();
         for t in mesh.triangles {
             let (Some(p0), Some(p1), Some(p2)) = (at(t[0]), at(t[1]), at(t[2])) else {

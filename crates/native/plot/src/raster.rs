@@ -201,7 +201,7 @@ pub(crate) fn png_with_source(rgba:&[u8],w:u32,h:u32,dpi:Option<u16>,source:Opti
 
 pub(crate) fn tiny(rgba: &[u8], w: u32, h: u32) -> Option<resvg::tiny_skia::Pixmap> {
     let mut pixmap = resvg::tiny_skia::Pixmap::new(w, h)?;
-    for (dst, src) in pixmap.pixels_mut().iter_mut().zip(rgba.chunks_exact(4)) {
+    for (dst, src) in pixmap.pixels_mut().iter_mut().zip(rgba.as_chunks::<4>().0.iter()) {
         *dst = resvg::tiny_skia::ColorU8::from_rgba(src[0], src[1], src[2], src[3]).premultiply();
     }
     Some(pixmap)

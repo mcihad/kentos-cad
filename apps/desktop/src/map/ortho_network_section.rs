@@ -189,6 +189,7 @@ impl App {
         let s = &self.map.ortho_seamlines;
         let mut lines = Vec::new();
         let mut form = Form::new().label_width(150.0);
+        #[allow(clippy::type_complexity)]
         let (ready, button, rows, parts, junctions): (bool, &str, Vec<Vec<String>>, Vec<Vec<OrthoNetworkPart>>, Vec<[f64; 2]>) =
             match s.net.mode {
                 Mode::Network => {

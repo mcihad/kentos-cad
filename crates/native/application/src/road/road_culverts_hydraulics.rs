@@ -129,7 +129,7 @@ pub(crate) fn model(doc: &Document, def: &kentos_commands::CulvertDef, asked: &A
         length: r.length,
         slope,
         n,
-        inlet: inlet(inlet_name(asked.inlet)).expect("every named inlet is kept"),
+        inlet: inlet(inlet_name(asked.inlet)).ok_or_else(|| bad("inlet", "Bu giriş türü bilinmiyor."))?,
         ke: asked.entrance_loss,
     };
     let crest = asked.weir.map(|w| w.crest.unwrap_or(read.crest));

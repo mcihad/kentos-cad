@@ -331,6 +331,7 @@ pub struct Viewport {
     /// The underlay models' plan at the active level (docs/adr/8101), by its version, and its part as last built for
     /// an origin and two colours (the cut lines, the edges under the cut).
     underlay: Option<(u64, Arc<Vec<kentos_ifc::underlay::PlanLine>>)>,
+    #[allow(clippy::type_complexity)]
     underlay_part: RefCell<Option<(u64, Vec2, [Rgba8; 2], Option<&'static kentos_geometry_core::crs::map::MapProjection>, Arc<ScenePart>)>>,
     status: Arc<Mutex<Status>>,
     /// The drawing's layers through the style engine, as last built (docs/adr/0090).

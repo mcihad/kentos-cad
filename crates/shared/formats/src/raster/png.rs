@@ -141,7 +141,7 @@ pub fn decode(bytes: &[u8]) -> Result<Png, RasterError> {
                     data[12],
                 ));
             }
-            b"PLTE" => palette = data.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect(),
+            b"PLTE" => palette = data.as_chunks::<3>().0.iter().map(|c| [c[0], c[1], c[2]]).collect(),
             b"tRNS" => trns = data.to_vec(),
             b"IDAT" => idat.extend_from_slice(data),
             b"IEND" => break,
@@ -299,7 +299,7 @@ pub fn decode(bytes: &[u8]) -> Result<Png, RasterError> {
         }
         (4, 8) => {
             let mut out = Vec::with_capacity(n * 4);
-            for px in values.chunks_exact(2) {
+            for px in values.as_chunks::<2>().0.iter() {
                 let g = px[0] as u8;
                 out.extend_from_slice(&[g, g, g, px[1] as u8]);
             }
@@ -308,7 +308,7 @@ pub fn decode(bytes: &[u8]) -> Result<Png, RasterError> {
         (4, _) => {
             // 16-bit grey with alpha: the grey band; a transparent pixel nodata (0).
             let out: Vec<u16> = values
-                .chunks_exact(2)
+                .as_chunks::<2>().0.iter()
                 .map(|px| if px[1] == 0 { 0 } else { px[0] })
                 .collect();
             Ok(png(1, Samples::U16(out), Some(0.0)))
@@ -320,9 +320,9 @@ pub fn decode(bytes: &[u8]) -> Result<Png, RasterError> {
                 u16::from_be_bytes([trns[4], trns[5]]),
             ];
             let mut out = Vec::with_capacity(n * 4);
-            for px in values.chunks_exact(3) {
+            for px in values.as_chunks::<3>().0.iter() {
                 out.extend_from_slice(&[px[0] as u8, px[1] as u8, px[2] as u8]);
-                out.push(if px == key { 0 } else { 255 });
+                out.push(if *px == key { 0 } else { 255 });
             }
             Ok(png(4, Samples::U8(out), None))
         }

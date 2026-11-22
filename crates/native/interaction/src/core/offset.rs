@@ -401,9 +401,7 @@ impl Tool for Offset {
             && !matches!(upper_tr(js_trim(text)).as_str(), "Y" | "T" | "N" | "I" | "S")
             && let Some(p) = cx.typed_point(text, None, None)
         {
-            if cx.doc.get(slot).is_none() {
-                self.drop_target();
-            } else if self.write(slot, p, cx) {
+            if cx.doc.get(slot).is_none() || self.write(slot, p, cx) {
                 self.drop_target();
             }
             self.see(cx);

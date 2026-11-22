@@ -181,7 +181,7 @@ pub fn seed_of(a: &Area) -> Option<Vec2> {
         }
     }
     xs.sort_by(f64::total_cmp);
-    xs.chunks_exact(2)
+    xs.as_chunks::<2>().0.iter()
         .max_by(|a, b| (a[1] - a[0]).total_cmp(&(b[1] - b[0])))
         .filter(|w| w[1] > w[0])
         .map(|w| Vec2::new((w[0] + w[1]) / 2.0, y))

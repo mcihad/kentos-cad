@@ -77,18 +77,18 @@ pub(super) fn many_sections(
         // its bits' (docs/adr/1066 §3: a million objects were each written out three times).
         let looks: Vec<_> = lined.iter().map(|e| &e.base().look).collect();
         let first = looks[0];
-        let line_type = looks.iter().all(|l| l.line_type == first.line_type).then(|| first.line_type);
+        let line_type = looks.iter().all(|l| l.line_type == first.line_type).then_some(first.line_type);
         let scale = looks
             .iter()
             .all(|l| {
                 l.line_type_scale.map(f64::to_bits) == first.line_type_scale.map(f64::to_bits)
                     || format!("{:?}", l.line_type_scale) == format!("{:?}", first.line_type_scale)
             })
-            .then(|| first.line_type_scale);
+            .then_some(first.line_type_scale);
         let pattern = looks
             .iter()
             .all(|l| l.line_pattern == first.line_pattern)
-            .then(|| first.line_pattern.as_deref());
+            .then_some(first.line_pattern.as_deref());
         rows.push(line_type_row(doc, &lined_ids, line_type, pattern).editor_if(!any_locked));
         rows.push(line_type_scale_row(&lined_ids, scale).editor_if(!any_locked));
     }

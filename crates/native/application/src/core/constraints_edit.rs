@@ -949,7 +949,7 @@ pub(crate) fn settle(
         .filter_map(|(slot, _)| doc.uid(*slot).map(|u| u.to_string()))
         .collect();
     if !collapsed.is_empty() {
-        let mut named = ids(&added);
+        let mut named = ids(added);
         named.extend(collapsed);
         return Err(refuse_ids(
             codes::CONSTRAINT_CONFLICT,

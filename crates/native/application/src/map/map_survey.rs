@@ -285,6 +285,7 @@ pub(crate) fn solution_row(survey: &MapSurvey, s: &SurveySolution, latest: Optio
 
 /// The last measured solution of each mark.
 fn latest_of(survey: &MapSurvey) -> HashMap<String, String> {
+    #[allow(clippy::type_complexity)]
     let mut best: HashMap<String, (&SurveySolution, (u32, u32, u32, u32, u32, u32, String))> = HashMap::new();
     for s in &survey.solutions {
         let (Some(mark), Some(when)) = (survey.mark_of(s), measured(survey, s)) else { continue };

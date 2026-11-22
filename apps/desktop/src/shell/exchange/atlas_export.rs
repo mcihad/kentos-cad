@@ -347,6 +347,7 @@ impl App {
                 .map(|mut planned| {
                     // Docs/adr/3600: each page's sources on its own ground, as the command's answer gives them.
                     if let Ok(grounds) = planned.page_grounds(&doc.model) {
+                        #[allow(clippy::type_complexity)]
                         let asked: Vec<(Vec<(String, [f64; 4])>, String)> =
                             grounds.into_iter().zip(&planned.pages).map(|(g, p)| (g, p.feature.clone())).collect();
                         if let Ok(listed) = kentos_native_application::sheets_sources::atlas_page_sources(&doc.model, &row.id, &asked) {

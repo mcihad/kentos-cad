@@ -130,7 +130,7 @@ fn a_gis_project_has_no_role_panels() {
         let mut s = doc.model.settings().clone();
         s.workspace = Some(kentos_commands::Workspace::Gis);
         s.cad_work = None;
-        let _ = doc.model.set_settings(s);
+        doc.model.set_settings(s);
     }
     select(&mut app, &[("su", 1)]);
     let (_, panels) = shown(&app);

@@ -238,6 +238,7 @@ fn check(doc: &Document, input: &UnderlayCheck) -> Result<(UnderlayChecked, Vec<
     let own_boxes: Vec<Option<[f64; 6]>> = own_bodies.iter().map(clash::bounds).collect();
 
     // The file's bodies placed in the drawing.
+    #[allow(clippy::type_complexity)]
     let placed: Vec<(usize, Vec<[f64; 3]>, Vec<[u32; 3]>)> = bodies
         .bodies
         .iter()

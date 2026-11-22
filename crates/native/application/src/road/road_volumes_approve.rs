@@ -26,15 +26,14 @@ fn check(doc: &kentos_domain::Document, input: &VolumesApprove) -> Result<Checke
     let (at, old) = common::find(own, &input.volume, "volume")?;
     let mut list = own.to_vec();
     if input.revoke {
-        if old.approved.is_none() {
+        let Some(mut ended) = old.approved.clone() else {
             return Err(fail(
                 codes::VOLUME_NOT_APPROVED,
                 format!("“{}” kübajı onaylı değil; kaldırılacak onay yok.", old.name),
                 "volume",
             ));
-        }
+        };
         // Revoked, the approval goes to the history with the day and why: it is never removed (docs/adr/0950).
-        let mut ended = old.approved.clone().expect("checked above");
         ended.ended = Some(VolumeApprovalEnd { at: input.at.clone(), revoked: true, note: input.note.clone() });
         list[at].history.push(ended);
         list[at].approved = None;

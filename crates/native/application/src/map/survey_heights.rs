@@ -89,6 +89,7 @@ pub fn undulations(settings: &ProjectSettings, points: &[Vec2]) -> Result<(Vec<O
 /// (no grid, no station height, no shot with a zenith angle); else the undulations at the station and at each shot's
 /// point (the points found first by the grid's mean height: a few millimetres from the last, where N is the same to
 /// far below a micrometre) with the geoid model's name, or why not, said in the window.
+#[allow(clippy::type_complexity)]
 pub fn polar_undulations(settings: &ProjectSettings, input: &PolarInput) -> Option<Result<(Vec<f64>, Option<String>), String>> {
     if input.grid.is_none() || input.station_z.is_none() || input.shots.iter().all(|s| s.zenith.is_none()) {
         return None;
@@ -110,6 +111,7 @@ pub fn polar_undulations(settings: &ProjectSettings, input: &PolarInput) -> Opti
 /// What Poligon hesabı takes its legs with (docs/adr/4100): none where no leg is taken at its own height (no grid, no
 /// heights); else the undulations at the start, at each point after it and at the end (the points where a first
 /// computation without them puts them), with the geoid model's name, or why not, said in the window.
+#[allow(clippy::type_complexity)]
 pub fn traverse_undulations(
     settings: &ProjectSettings,
     input: &kentos_geometry_core::survey::traverse::TraverseInput,
@@ -141,6 +143,7 @@ pub fn traverse_undulations(
 /// What Aplikasyon takes its lines with (docs/adr/3300): none where no line is taken at its own height (no grid, no
 /// station height, no target with a height); else the undulations at the station and at each target, with the geoid
 /// model's name, or why not, said in the window. The targets are known points: no first pass is needed.
+#[allow(clippy::type_complexity)]
 pub fn stakeout_undulations(settings: &ProjectSettings, input: &StakeoutInput) -> Option<Result<(Vec<f64>, Option<String>), String>> {
     let any_target = input.target_zs.as_ref().is_some_and(|zs| zs.iter().any(Option::is_some));
     if input.grid.is_none() || input.station_z.is_none() || !any_target {

@@ -154,7 +154,7 @@ fn plan_in(
                 .collect(),
         });
         // Applied to what the next step checks: deletions from the last place first, so the places before stay.
-        changes.sort_by(|a, b| b.object.cmp(&a.object));
+        changes.sort_by_key(|c| std::cmp::Reverse(c.object));
         for c in changes {
             let Some(uid) = g.uids.get(c.object).cloned() else {
                 continue;

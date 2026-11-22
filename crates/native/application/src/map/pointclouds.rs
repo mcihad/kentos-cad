@@ -218,7 +218,7 @@ fn extras(cloud: &Cloud) -> Vec<CloudExtra> {
         })
     };
     v.data
-        .chunks_exact(192)
+        .as_chunks::<192>().0.iter()
         .map(|d| {
             let (t, options) = (d[2], d[3]);
             let name = String::from_utf8_lossy(&d[4..36])
@@ -252,7 +252,7 @@ pub(crate) fn vertical(cloud: &Cloud) -> Option<String> {
     let dir: &Vlr = cloud.crs.geokeys.iter().find(|v| v.record == 34735)?;
     let words: Vec<u16> = dir
         .data
-        .chunks_exact(2)
+        .as_chunks::<2>().0.iter()
         .map(|b| u16::from_le_bytes([b[0], b[1]]))
         .collect();
     let keys = usize::from(*words.get(3)?);

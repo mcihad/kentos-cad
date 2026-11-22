@@ -120,7 +120,7 @@ impl canvas::Program<Message> for Layer<'_> {
                         }
                     }
                 });
-                frame.stroke(&path, dashed.clone());
+                frame.stroke(&path, dashed);
             }
             for p in &self.approved.points {
                 let ring = Path::circle(screen(*p), 6.0);

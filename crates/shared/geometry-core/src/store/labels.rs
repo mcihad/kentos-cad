@@ -124,7 +124,7 @@ impl Store {
         );
         let mut records =
             Vec::with_capacity(shown.records.len() / LABEL_SHOWN_STRIDE * LABEL_STRIDE);
-        for r in shown.records.chunks_exact(LABEL_SHOWN_STRIDE) {
+        for r in shown.records.as_chunks::<LABEL_SHOWN_STRIDE>().0.iter() {
             records.extend_from_slice(&r[..LABEL_STRIDE]);
         }
         Shown {
@@ -151,7 +151,7 @@ impl Store {
         );
         let mut records =
             Vec::with_capacity(labels.records.len() / LABEL_SHOWN_STRIDE * LABEL_STRIDE);
-        for r in labels.records.chunks_exact(LABEL_SHOWN_STRIDE) {
+        for r in labels.records.as_chunks::<LABEL_SHOWN_STRIDE>().0.iter() {
             records.extend_from_slice(&r[..LABEL_STRIDE]);
         }
         Shown {
@@ -585,7 +585,7 @@ mod tests {
     /// The label records of a window (docs/adr/0212 §3.8): each label's frame, then its lines.
     fn frames(shown: &Shown) -> Vec<(f64, String)> {
         let mut out = Vec::new();
-        for r in shown.records.chunks_exact(LABEL_STRIDE) {
+        for r in shown.records.as_chunks::<LABEL_STRIDE>().0.iter() {
             if r[1] == LABEL_PLACED_LINE {
                 out.push((r[0], shown.texts[r[6] as usize].clone()));
             }
@@ -630,7 +630,7 @@ mod tests {
         // The corner: the line's left middle 8 px right of and 14 px under the box's top left.
         let corner = shown
             .records
-            .chunks_exact(LABEL_STRIDE)
+            .as_chunks::<LABEL_STRIDE>().0.iter()
             .find(|r| r[0] == 1.0 && r[1] == LABEL_PLACED)
             .unwrap();
         let w = corner[5];
@@ -639,7 +639,7 @@ mod tests {
         // The street lies along its line: level, on it.
         let street = shown
             .records
-            .chunks_exact(LABEL_STRIDE)
+            .as_chunks::<LABEL_STRIDE>().0.iter()
             .find(|r| r[0] == 2.0 && r[1] == LABEL_PLACED)
             .unwrap();
         assert_eq!((street[3], street[4]), (20.0, 0.0));
@@ -714,7 +714,7 @@ mod tests {
         let shown = s.labels(&view, 3.0, None, PlaceOptions::default());
         let frame = shown
             .records
-            .chunks_exact(LABEL_STRIDE)
+            .as_chunks::<LABEL_STRIDE>().0.iter()
             .find(|r| r[1] == LABEL_PLACED)
             .unwrap();
         // On the long part's middle, level.

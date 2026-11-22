@@ -36,13 +36,10 @@ use crate::watchdog::{Bisection, CRASHES_TO_FAIL, Finding};
 /// the id; a tool the host would not make was found out when it was first listed, in a log line, after the install
 /// had said "kuruldu" (plan/eklenti.md ADIM 19: "tanımın kurulumda tam denetimi").
 #[derive(Clone)]
-pub struct ToolCheck(
-    pub  std::sync::Arc<
-        dyn Fn(&kentos_extensions::Manifest, &str, &serde_json::Value) -> Result<(), String>
-            + Send
-            + Sync,
-    >,
-);
+pub struct ToolCheck(pub std::sync::Arc<ToolCheckFn>);
+
+/// What a tool check calls: the manifest, the tool's id and its definition; why it would not be made, or nothing.
+pub type ToolCheckFn = dyn Fn(&kentos_extensions::Manifest, &str, &serde_json::Value) -> Result<(), String> + Send + Sync;
 
 impl std::fmt::Debug for ToolCheck {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

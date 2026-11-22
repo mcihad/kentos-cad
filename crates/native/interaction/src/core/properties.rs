@@ -326,7 +326,7 @@ pub fn take_opening_type(doc: &mut Document, slot: Slot, preset: &str) -> Vec<St
     let name = std::iter::once(ready.name.clone())
         .chain((2..).map(|i| format!("{} {i}", ready.name)))
         .find(|name| !doc.opening_types().iter().any(|kind| kind.name.to_lowercase() == name.to_lowercase()))
-        .expect("a free opening type name");
+        .unwrap_or_else(|| ready.name.clone());
     let group = doc.begin_group("Proje tipi ata");
     let made = kentos_native_application::opening_types_edit::execute(
         &mut ExecutionContext::new(doc), OpeningTypesEdit {

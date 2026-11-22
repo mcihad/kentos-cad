@@ -29,6 +29,7 @@ const FAILS: [&str; 3] = ["clash", "closeCrossing", "wrongSide"];
 pub struct Shown {
     pub session: u64,
     pub input: PipesCheck,
+    #[allow(clippy::type_complexity)]
     made: RefCell<Option<(u64, u64, Option<Arc<PipesMarks>>)>>,
 }
 

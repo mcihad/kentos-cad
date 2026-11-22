@@ -18,7 +18,7 @@ use crate::tools_scenes::{E, N, Objects, click, open_edited, run};
 use crate::viewport::Event;
 
 /// The parcel's south-west corner and the square's, as offsets from the scenes' (E, N).
-const PARCEL: [f64; 2] = [13_000.0005, -19_999.9995];
+const PARCEL: [f64; 2] = [13_000.000_5, -19_999.999_5];
 const SQUARE: [f64; 2] = [13_004.0, -19_998.0];
 
 fn ground() -> Objects {

@@ -101,7 +101,7 @@ pub(crate) fn read_told(doc: &Document, def: &RetainingWallDef, tick: &dyn Fn(u6
             ));
         }
     }
-    let first = |done: u64, all: u64| tick(if all == 0 { 0 } else { done * corridors::TICKS / all }, whole);
+    let first = |done: u64, all: u64| tick((done * corridors::TICKS).checked_div(all).unwrap_or(0), whole);
     let made = corridors::make_ticked(doc, corridor, false, &first).map_err(|stop| match stop {
         Stop::Cancelled => Stop::Cancelled,
         stop => {

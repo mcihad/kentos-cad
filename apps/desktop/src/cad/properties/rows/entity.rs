@@ -554,15 +554,12 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                 "Saçak kotu",
                 kentos_geometry_core::geom::roof::level_words(eaves),
             ));
-            match kentos_geometry_core::geom::roof::ridge_rise(&core, &spec) {
-                Ok(rise) => {
-                    geo.push(Row::text(
-                        "Mahya kotu",
-                        kentos_geometry_core::geom::roof::level_words(eaves + rise),
-                    ));
-                    geo.push(metres("Mahya yüksekliği", rise));
-                }
-                Err(_) => {}
+            if let Ok(rise) = kentos_geometry_core::geom::roof::ridge_rise(&core, &spec) {
+                geo.push(Row::text(
+                    "Mahya kotu",
+                    kentos_geometry_core::geom::roof::level_words(eaves + rise),
+                ));
+                geo.push(metres("Mahya yüksekliği", rise));
             }
             geo.push(roof_length("Saçak", x.overhang, ArchField::Overhang));
             geo.push(

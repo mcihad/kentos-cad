@@ -188,7 +188,7 @@ fn stroke_paths(layer: &StyledLayer, b: &StyledBatch, o: &VectorScale) -> Option
     let s = layer.values(b.range.clone())?;
     let mut parts: Vec<Part> = Vec::new();
     let mut open = false;
-    for seg in s.chunks_exact(6) {
+    for seg in s.as_chunks::<6>().0.iter() {
         let (ax, ay) = (seg[0] + bx, seg[1] + by);
         let (ex, ey) = (seg[2] + bx, seg[3] + by);
         let flags = seg[5] as u32;
@@ -265,7 +265,7 @@ fn triangle_rings(t: &[f64], dx: f64, dy: f64) -> Vec<Part> {
         }
         edges.entry(ka).or_default().push(kb);
     };
-    for tri in t.chunks_exact(6) {
+    for tri in t.as_chunks::<6>().0.iter() {
         let a = (tri[0], tri[1]);
         let mut b = (tri[2], tri[3]);
         let mut c = (tri[4], tri[5]);
@@ -314,7 +314,7 @@ fn triangle_rings(t: &[f64], dx: f64, dy: f64) -> Vec<Part> {
 /// The parts of a line `n·p = c` inside the triangles, as parameter intervals along `d` (merged).
 fn line_in_triangles(t: &[f64], n: [f64; 2], d: [f64; 2], c: f64) -> Vec<[f64; 2]> {
     let mut spans: Vec<[f64; 2]> = Vec::new();
-    for tri in t.chunks_exact(6) {
+    for tri in t.as_chunks::<6>().0.iter() {
         let mut pts: Vec<f64> = Vec::new();
         for k in 0..3 {
             let (ax, ay) = (tri[2 * k], tri[2 * k + 1]);
@@ -430,7 +430,7 @@ fn fill_paths(
             let d = [a.cos(), a.sin()];
             let n = [-d[1], d[0]];
             let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
-            for p in t.chunks_exact(2) {
+            for p in t.as_chunks::<2>().0.iter() {
                 let v = n[0] * p[0] + n[1] * p[1];
                 lo = lo.min(v);
                 hi = hi.max(v);
@@ -594,7 +594,7 @@ fn marker_paths(
     };
     let (mut fills, mut strokes, mut dots) = (Vec::new(), Vec::new(), Vec::new());
     let v = layer.values(b.range.clone()).unwrap_or_default();
-    for m in v.chunks_exact(5) {
+    for m in v.as_chunks::<5>().0.iter() {
         let w = m[3];
         let h = if m[4] > 0.0 { m[4] } else { w };
         let (sa, ca) = m[2].sin_cos();
@@ -693,7 +693,7 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
                 let n = [-a.sin(), a.cos()];
                 let t = layer.values(b.range.clone()).unwrap_or_default();
                 let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
-                for p in t.chunks_exact(2) {
+                for p in t.as_chunks::<2>().0.iter() {
                     let v = n[0] * p[0] + n[1] * p[1];
                     lo = lo.min(v);
                     hi = hi.max(v);

@@ -661,7 +661,7 @@ fn a_map_keeps_inside_its_frame_and_writes_the_drawing_s_text() {
     };
     let ink = |image: &kentos_ui::snapshot::Image| {
         let (mut inside, mut outside) = (0, 0);
-        for (i, p) in image.rgba.chunks_exact(4).enumerate() {
+        for (i, p) in image.rgba.as_chunks::<4>().0.iter().enumerate() {
             let (x, y) = ((i % 800) as f32, (i / 800) as f32);
             if p[0] < 245 || p[1] < 245 || p[2] < 245 {
                 if x <= 641.0 && y <= 481.0 {
@@ -822,7 +822,7 @@ fn a_map_shows_the_drawing_from_the_drawing_pipeline_s_scene() {
         .render(view, &app.theme());
     let inked = image
         .rgba
-        .chunks_exact(4)
+        .as_chunks::<4>().0.iter()
         .filter(|p| p[0] < 200 || p[1] < 200 || p[2] < 200)
         .count();
     assert!(

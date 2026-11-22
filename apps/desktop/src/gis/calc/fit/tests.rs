@@ -881,7 +881,7 @@ fn the_default_fit_moves_the_source_and_never_the_targets() {
     let form = &app.gis.calc.fit;
     assert_eq!((form.scope, form.layer.as_deref()), (Scope::Layer, Some("yerel")));
     let model = &app.document.as_ref().expect("open").model;
-    let (reach, target) = form.reach(&model, &[]);
+    let (reach, target) = form.reach(model, &[]);
     assert_eq!(reach, [("yerel".to_owned(), 10)]);
     assert!(!target);
     // Tümü: every layer but the target's.

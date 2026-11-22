@@ -92,6 +92,7 @@ fn sheet_facts(name: &str, bytes: &[u8]) -> Value {
 }
 
 /// The facts the rule reads, the files as the review read them, the model's name.
+#[allow(clippy::result_large_err)]
 fn facts(input: &ReviewPackage) -> Result<(Value, Vec<ReviewFile>, Option<String>), CommandResult<Value>> {
     let text = input.path.trim();
     let path = Path::new(text);
@@ -212,6 +213,7 @@ fn facts(input: &ReviewPackage) -> Result<(Value, Vec<ReviewFile>, Option<String
     Ok((facts, files, model_name))
 }
 
+#[allow(clippy::result_large_err)]
 fn reviewed(input: &ReviewPackage) -> Result<PackageReviewed, CommandResult<Value>> {
     let (facts, files, model) = facts(input)?;
     let decided = kentos_standards::call(PACKAGE, MODULE, "denetle", vec![facts]).map_err(|why| {

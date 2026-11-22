@@ -385,7 +385,7 @@ impl Areas {
                 e += 1;
             }
             // Pairs: inside from the first crossing to the second, and so on.
-            for pair in cuts[at..e].chunks_exact(2) {
+            for pair in cuts[at..e].as_chunks::<2>().0.iter() {
                 let (i0, i1) = (pair[0].1, pair[1].1);
                 if i0 < i1 {
                     out.push(Span {

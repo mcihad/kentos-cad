@@ -39,6 +39,7 @@ pub struct Shown {
     pub near: bool,
     /// The slope map, not the access (docs/adr/5060).
     pub slope: bool,
+    #[allow(clippy::type_complexity)]
     made: RefCell<Option<(u64, u64, Option<Arc<ReachMarks>>)>>,
 }
 

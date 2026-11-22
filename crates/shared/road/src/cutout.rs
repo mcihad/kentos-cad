@@ -228,7 +228,7 @@ impl Job<'_> {
                         }
                     })
                     .collect();
-                for c in idx.chunks_exact(3) {
+                for c in idx.as_chunks::<3>().0.iter() {
                     out.triangles.push([ids[c[0] as usize], ids[c[1] as usize], ids[c[2] as usize]]);
                 }
             }

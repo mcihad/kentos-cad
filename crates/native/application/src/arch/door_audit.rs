@@ -435,12 +435,13 @@ fn straight_clearance(rect: [V; 4], obstacles: &[&Obstacle]) -> f64 {
         let x = (span[0] + span[1]) / 2.0;
         let occupied = bodies.iter().any(|body| {
             let mut cuts: Vec<f64> = body.iter().flat_map(|ring| {
-                ring.iter().zip(ring.iter().cycle().skip(1)).filter_map(|(p, q)| {
-                    ((p.x > x) != (q.x > x)).then(|| p.y + (q.y - p.y) * (x - p.x) / (q.x - p.x))
-                })
+                ring.iter()
+                    .zip(ring.iter().cycle().skip(1))
+                    .filter(|(p, q)| (p.x > x) != (q.x > x))
+                    .map(|(p, q)| p.y + (q.y - p.y) * (x - p.x) / (q.x - p.x))
             }).collect();
             cuts.sort_by(f64::total_cmp);
-            cuts.chunks_exact(2).any(|pair| pair[1].min(depth) - pair[0].max(0.0) > SLACK)
+            cuts.as_chunks::<2>().0.iter().any(|pair| pair[1].min(depth) - pair[0].max(0.0) > SLACK)
         });
         if occupied {
             largest = largest.max(span[0] - start);

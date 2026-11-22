@@ -234,7 +234,7 @@ fn every_file_reads_and_draws_as_the_reference_says() {
             }
             let got = fnv(&rgba);
             if got != t["fnv"].as_str().unwrap_or("") {
-                let opaque = rgba.chunks_exact(4).filter(|p| p[3] != 0).count();
+                let opaque = rgba.as_chunks::<4>().0.iter().filter(|p| p[3] != 0).count();
                 off.push(format!(
                     "{name}: karo ({level}, {tx}, {ty}) {} farklı: {got} ({opaque} dolu) ≠ {} ({} dolu)",
                     t["style"], t["fnv"], t["opaque"]

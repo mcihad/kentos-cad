@@ -63,7 +63,7 @@ pub fn time_layer(
     let values = split(texts, lens)?;
     let (times, sum) = time::layer_times(
         Rule { ranged, cumulative },
-        values.chunks_exact(2).map(|c| (c[0], c[1])),
+        values.as_chunks::<2>().0.iter().map(|c| (c[0], c[1])),
     );
     let mut out = Vec::with_capacity(times.len() * 3 + 5);
     for t in &times {
@@ -108,7 +108,7 @@ pub fn time_layer_mask(
     let values = split(texts, lens)?;
     let (times, _) = time::layer_times(
         Rule { ranged, cumulative },
-        values.chunks_exact(2).map(|c| (c[0], c[1])),
+        values.as_chunks::<2>().0.iter().map(|c| (c[0], c[1])),
     );
     Ok(times
         .iter()
@@ -122,7 +122,7 @@ impl GeometryStore {
     /// mode −1 (or one not known) takes the object's time away.
     #[wasm_bindgen(js_name = setTimes)]
     pub fn set_times(&mut self, ids: &[f64], times: &[f64]) {
-        let entries = ids.iter().zip(times.chunks_exact(3)).map(|(&id, t)| {
+        let entries = ids.iter().zip(times.as_chunks::<3>().0.iter()).map(|(&id, t)| {
             let mode = (t[2] >= 0.0).then(|| Mode::from_code(t[2] as u8)).flatten();
             (
                 id,
@@ -154,7 +154,7 @@ impl GeometryStore {
         let values = split(texts, lens)?;
         let (times, _) = time::layer_times(
             Rule { ranged, cumulative },
-            values.chunks_exact(2).map(|c| (c[0], c[1])),
+            values.as_chunks::<2>().0.iter().map(|c| (c[0], c[1])),
         );
         self.store_mut().set_times(ids.iter().copied().zip(times));
         Ok(())

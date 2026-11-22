@@ -161,7 +161,7 @@ pub fn target_length(pts: &[Vec2], d: &Delaunay, ratio: f64) -> f64 {
         return 0.0;
     }
     let (mut lo, mut hi) = (-1.0f64, -1.0f64);
-    for t in d.triangles.chunks_exact(3) {
+    for t in d.triangles.as_chunks::<3>().0.iter() {
         for i in 0..3 {
             let l = length(pts[t[i] as usize], pts[t[(i + 1) % 3] as usize]);
             if l > hi {

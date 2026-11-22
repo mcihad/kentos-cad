@@ -317,17 +317,18 @@ pub fn diagnostics(layouts: &[CadLayout]) -> Vec<ReportItem> {
             _ => None,
         })
         .collect();
-    for (property, reason, affected) in [(
-        "paper_elevation",
-        "Pafta kitabının çizgi öğesi köşe kotlarını taşımaz.",
-        paths
-            .iter()
-            .filter(|p| {
-                p.zs.as_ref()
-                    .is_some_and(|z| z.iter().any(|v| v.is_some_and(|v| v != 0.)))
-            })
-            .collect::<Vec<_>>(),
-    )] {
+    {
+        let (property, reason, affected) = (
+            "paper_elevation",
+            "Pafta kitabının çizgi öğesi köşe kotlarını taşımaz.",
+            paths
+                .iter()
+                .filter(|p| {
+                    p.zs.as_ref()
+                        .is_some_and(|z| z.iter().any(|v| v.is_some_and(|v| v != 0.)))
+                })
+                .collect::<Vec<_>>(),
+        );
         if !affected.is_empty() {
             out.push(ReportItem {
                 severity: Some(ReportSeverity::Warning),

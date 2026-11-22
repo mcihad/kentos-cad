@@ -344,7 +344,7 @@ fn parse_arg(v: &Json, notes: &mut Notes) -> Expr {
 }
 
 fn stops(list: &[Json], notes: &mut Notes) -> Vec<(f64, Expr)> {
-    list.chunks_exact(2)
+    list.as_chunks::<2>().0.iter()
         .filter_map(|p| Some((p[0].as_f64()?, parse_arg(&p[1], notes))))
         .collect()
 }
@@ -387,7 +387,7 @@ fn expression(v: &Json, notes: &mut Notes) -> Expr {
             let rest = &args[1..];
             let (pairs, fallback) = rest.split_at(rest.len() - 1);
             let cases = pairs
-                .chunks_exact(2)
+                .as_chunks::<2>().0.iter()
                 .map(|p| {
                     let labels = match &p[0] {
                         Json::Array(l) => l.iter().map(Val::from_json).collect(),
@@ -401,7 +401,7 @@ fn expression(v: &Json, notes: &mut Notes) -> Expr {
         "case" if !args.is_empty() => {
             let (pairs, fallback) = args.split_at(args.len() - 1);
             let branches = pairs
-                .chunks_exact(2)
+                .as_chunks::<2>().0.iter()
                 .map(|p| (parse_arg(&p[0], notes), parse_arg(&p[1], notes)))
                 .collect();
             Expr::Case(branches, boxed(&fallback[0], notes))
@@ -481,7 +481,7 @@ fn expression(v: &Json, notes: &mut Notes) -> Expr {
         "let" if args.len() >= 3 && args.len() % 2 == 1 => {
             let (pairs, body) = args.split_at(args.len() - 1);
             let binds = pairs
-                .chunks_exact(2)
+                .as_chunks::<2>().0.iter()
                 .filter_map(|p| Some((p[0].as_str()?.to_owned(), parse_arg(&p[1], notes))))
                 .collect();
             Expr::Let(binds, boxed(&body[0], notes))

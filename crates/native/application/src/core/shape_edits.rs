@@ -408,7 +408,7 @@ fn follow(
         return Ok(());
     };
     if t.stop_on_locked && n.locked > 0 {
-        return Err(refuse(codes::SHARED_BOUNDARY_LOCKED, &crate::stretch::shared_locked(n.locked), "work.topology"));
+        return Err(refuse(codes::SHARED_BOUNDARY_LOCKED, crate::stretch::shared_locked(n.locked), "work.topology"));
     }
     for (change, now) in n.changes.iter().zip(&n.shapes) {
         let EntityEdit::Update { uid, .. } = change else { continue };

@@ -958,10 +958,10 @@ fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64
     let glass = line_at(pts, None, spec.closed, middle).ok();
     // Its doors and windows (docs/adr/8129): the glass stops at their jambs, the mullions inside them are not there.
     let inside = |s: f64| d.openings.iter().any(|&(s0, s1)| s > s0 + 1e-9 && s < s1 - 1e-9);
-    if d.openings.is_empty() {
-        if let Some(glass) = &glass {
-            out.push(piece(glass.shape(spec.closed), None, None));
-        }
+    if d.openings.is_empty()
+        && let Some(glass) = &glass
+    {
+        out.push(piece(glass.shape(spec.closed), None, None));
     }
     let n = pts.len();
     let stretches = if spec.closed { n } else { n.saturating_sub(1) };
@@ -1009,7 +1009,7 @@ fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64
             if inside(start + lines[k]) {
                 continue;
             }
-            let (s0, s1) = crate::geom::curtain::frame_span(&lines, k, face.min(length / 2.0));
+            let (s0, s1) = crate::geom::curtain::frame_span(&lines, k, crate::jsmath::js_min(face, length / 2.0));
             out.push(piece(
                 Shape::Polygon {
                     pts: vec![at(s0, left), at(s1, left), at(s1, right), at(s0, right)],
@@ -1180,8 +1180,8 @@ mod tests {
                 Shape::Polygon { pts, .. } => {
                     let xs: Vec<f64> = pts.iter().map(|q| q.x).collect();
                     let ys: Vec<f64> = pts.iter().map(|q| q.y).collect();
-                    let lo = |v: &[f64]| v.iter().cloned().fold(f64::INFINITY, f64::min);
-                    let hi = |v: &[f64]| v.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+                    let lo = |v: &[f64]| v.iter().cloned().fold(f64::INFINITY, crate::jsmath::js_min);
+                    let hi = |v: &[f64]| v.iter().cloned().fold(f64::NEG_INFINITY, crate::jsmath::js_max);
                     assert!((lo(&ys) + 0.075).abs() < 1e-12 && (hi(&ys) - 0.075).abs() < 1e-12, "{pts:?}");
                     Some((lo(&xs), hi(&xs)))
                 }
@@ -1222,7 +1222,7 @@ mod tests {
         let mullions: Vec<f64> = pieces
             .iter()
             .filter_map(|p| match &p.shape {
-                Shape::Polygon { pts, .. } => Some(pts.iter().map(|q| q.x).fold(f64::INFINITY, f64::min)),
+                Shape::Polygon { pts, .. } => Some(pts.iter().map(|q| q.x).fold(f64::INFINITY, crate::jsmath::js_min)),
                 _ => None,
             })
             .collect();
@@ -1241,7 +1241,7 @@ mod tests {
         // Its faces open between the jambs: no face line crosses x 3.
         let crosses = pieces.iter().any(|p| match &p.shape {
             Shape::Polyline { pts, .. } => {
-                pts.windows(2).any(|w| (w[0].y - w[1].y).abs() < 1e-12 && w[0].y.abs() > 0.07 && w[0].x.min(w[1].x) < 3.0 && w[0].x.max(w[1].x) > 3.0)
+                pts.windows(2).any(|w| (w[0].y - w[1].y).abs() < 1e-12 && w[0].y.abs() > 0.07 && crate::jsmath::js_min(w[0].x, w[1].x) < 3.0 && crate::jsmath::js_max(w[0].x, w[1].x) > 3.0)
             }
             _ => false,
         });

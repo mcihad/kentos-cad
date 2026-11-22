@@ -1532,9 +1532,8 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             Ok(Change { id: session.clone(), ..Change::new(next, "Bağımsız bazlar") })
         }
         Op::Remove { id } => {
-            let removed: usize;
             let at = "operation.id";
-            if now.campaign(id).is_some() {
+            let removed = if now.campaign(id).is_some() {
                 let sessions: Vec<&str> =
                     now.sessions.iter().filter(|s| s.campaign == *id).map(|s| s.id.as_str()).collect();
                 if let Some((s, p)) = used_by(&now, &sessions) {
@@ -1565,7 +1564,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 next.baselines.retain(|b| b.campaign != *id);
                 next.baseline_sessions.retain(|s| s.campaign != *id);
                 next.campaigns.retain(|c| c.id != *id);
-                removed = before - count(&next);
+                before - count(&next)
             } else if now.session(id).is_some() {
                 if let Some((s, p)) = used_by(&now, &[id.as_str()]) {
                     return Err(fail(
@@ -1577,7 +1576,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 let before = now.sessions.len() + now.solutions.len();
                 next.solutions.retain(|s| s.session != *id);
                 next.sessions.retain(|s| s.id != *id);
-                removed = before - (next.sessions.len() + next.solutions.len());
+                before - (next.sessions.len() + next.solutions.len())
             } else if now.solution(id).is_some() {
                 if let Some(p) = now.point_using(id) {
                     return Err(fail(
@@ -1587,7 +1586,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                     ));
                 }
                 next.solutions.retain(|s| s.id != *id);
-                removed = 1;
+                1
             } else if now.point(id).is_some() {
                 if let Some(u) = now.uses.iter().find(|u| u.points.iter().any(|p| p.point == *id)) {
                     return Err(fail(
@@ -1597,10 +1596,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                     ));
                 }
                 next.points.retain(|p| p.id != *id);
-                removed = 1;
+                1
             } else if now.uses.iter().any(|u| u.id == *id) {
                 next.uses.retain(|u| u.id != *id);
-                removed = 1;
+                1
             } else if now.baseline(id).is_some() || now.known_point(id).is_some() {
                 if let Some(a) = now.adjustments.iter().find(|a| a.baselines.contains(id) || a.known.contains(id)) {
                     return Err(fail(
@@ -1618,7 +1617,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 }
                 next.baselines.retain(|b| b.id != *id);
                 next.known.retain(|k| k.id != *id);
-                removed = 1;
+                1
             } else if now.baseline_session(id).is_some() {
                 if let Some(a) = now.adjustments.iter().find(|a| a.sessions.contains(id)) {
                     return Err(fail(
@@ -1628,7 +1627,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                     ));
                 }
                 next.baseline_sessions.retain(|s| s.id != *id);
-                removed = 1;
+                1
             } else if now.adjustment(id).is_some() {
                 if let Some(p) = now.point_by(id) {
                     return Err(fail(
@@ -1638,10 +1637,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                     ));
                 }
                 next.adjustments.retain(|a| a.id != *id);
-                removed = 1;
+                1
             } else {
                 return Err(unknown("kayıt", id, at));
-            }
+            };
             Ok(Change {
                 id: Some(id.clone()),
                 removed: u32::try_from(removed).unwrap_or(u32::MAX),

@@ -143,16 +143,6 @@ pub(crate) fn cells_said(valid: u64, cells: u64) -> String {
     }
 }
 
-#[cfg(test)]
-mod cells_tests {
-    #[test]
-    fn full_partly_empty_and_empty_results_are_said_apart() {
-        assert_eq!(super::cells_said(30, 30), "");
-        assert_eq!(super::cells_said(26, 30), " 26/30 hücrede değer var.");
-        assert!(super::cells_said(0, 30).starts_with(" Hiçbir hücrede değer yok (0/30)"));
-    }
-}
-
 /// The weights' sensitivity as the summary says it (docs/adr/0643 §4): how far a cell can move with each weight a
 /// tenth more or less; in classes for Ağırlıklı çakıştırma.
 pub fn sensitivity_said(s: Option<&kentos_raster::ops::Sensitivity>, classes: bool) -> String {
@@ -441,4 +431,14 @@ pub fn run_roc(r: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedba
         Ok(result)
     };
     go().unwrap_or_else(broke)
+}
+
+#[cfg(test)]
+mod cells_tests {
+    #[test]
+    fn full_partly_empty_and_empty_results_are_said_apart() {
+        assert_eq!(super::cells_said(30, 30), "");
+        assert_eq!(super::cells_said(26, 30), " 26/30 hücrede değer var.");
+        assert!(super::cells_said(0, 30).starts_with(" Hiçbir hücrede değer yok (0/30)"));
+    }
 }

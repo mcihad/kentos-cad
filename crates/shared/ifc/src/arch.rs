@@ -34,6 +34,12 @@ pub struct Gap {
     pub owner: Option<String>,
 }
 
+/// A solid's footprint with its arcs: each ring's points and its edges' bulges.
+pub type ExactShapes = Vec<(Vec<P>, Vec<f64>)>;
+
+/// A room's floor, ceiling and wall covering thicknesses; a side none has none.
+pub type CoveringFigures = (Option<f64>, Option<f64>, Option<f64>);
+
 /// What the application gives: the drawing's title, the file's time and the application's name; the section model's
 /// storeys (id, name, floor over ±0.00, height), solids with their objects' persistent ids, and openings; the drawing's
 /// objects with their ids (the UUID's bits and its text); a wall style's name by its id; a room's net area as the plan
@@ -49,7 +55,7 @@ pub struct Input<'a> {
     pub parts: &'a [Option<Part>],
     /// Each solid's footprint with its arcs (docs/adr/8071 §1), for a solid that has any: its rings' points and their
     /// edges' bulges, written as arcs in place of its flattened rings; none, or a short list: straight.
-    pub exact: &'a [Option<Vec<(Vec<P>, Vec<f64>)>>],
+    pub exact: &'a [Option<ExactShapes>],
     pub gaps: Vec<Gap>,
     /// The voids' parts over their storeys' floor slabs (docs/adr/8071 §5): each an opening of its slab.
     pub slab_cuts: Vec<SlabCut>,
@@ -71,7 +77,7 @@ pub struct Input<'a> {
     pub fixtures: Vec<Fixture>,
     /// A room's floor, ceiling and wall covering thicknesses as the vertical model and its walls' faces hold them
     /// (docs/adr/8070 §6, 8076 §7), by its persistent id; a room not here, or a side none, has none.
-    pub coverings: BTreeMap<String, (Option<f64>, Option<f64>, Option<f64>)>,
+    pub coverings: BTreeMap<String, CoveringFigures>,
     /// A room's floor and ceiling as the vertical model finds them (docs/adr/8040 §3, 8071 §7), by its persistent id;
     /// a room not here stands on its own offset up its own height or its storey's.
     pub rooms: BTreeMap<String, RoomLevels>,
@@ -380,9 +386,7 @@ impl Particulars {
     /// office, when it has a name.
     pub fn architect(&self) -> Option<Actor> {
         let whole = self.architect.as_deref()?;
-        if whole.split_whitespace().next().is_none() {
-            return None;
-        }
+        whole.split_whitespace().next()?;
         let (given, family) = self.names().unwrap_or((None, None));
         let organization = self.office.as_ref().map(|name| Organization {
             identification: self.office_tax_number.clone(),
@@ -657,7 +661,7 @@ fn chimney_groups(pieces: &[Piece]) -> Vec<Vec<usize>> {
 
 /// A model solid's shapes over its storey's floor: a prism with its arcs where the model holds them (docs/adr/8071
 /// §1), a flight's treads, a roof face's faces.
-fn shapes(solid: &Solid, exact: Option<&Option<Vec<(Vec<P>, Vec<f64>)>>>, floor: f64) -> Vec<Shape> {
+fn shapes(solid: &Solid, exact: Option<&Option<ExactShapes>>, floor: f64) -> Vec<Shape> {
     let rings: Vec<Vec<P>> = solid
         .rings
         .iter()

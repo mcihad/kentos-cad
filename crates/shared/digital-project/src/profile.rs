@@ -124,8 +124,11 @@ impl Refusal {
     }
 }
 
+/// A code's test and the words that say what it must be.
+type CodeForm = (fn(&str) -> bool, &'static str);
+
 /// The form a list's new code must have, and its words.
-fn code_form(list: &str) -> Option<(fn(&str) -> bool, &'static str)> {
+fn code_form(list: &str) -> Option<CodeForm> {
     fn letters(n: usize) -> impl Fn(&str) -> bool {
         move |c: &str| c.len() == n && c.bytes().all(|b| b.is_ascii_uppercase())
     }

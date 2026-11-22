@@ -530,7 +530,7 @@ impl ShownParts {
         for (_, p) in &self.parts {
             out.extend_from_slice(&p.records);
         }
-        for r in self.placed.records.chunks_exact(LABEL_STRIDE) {
+        for r in self.placed.records.as_chunks::<LABEL_STRIDE>().0.iter() {
             out.extend_from_slice(r);
             out.extend([1.0, r[2], r[3]]);
         }
@@ -592,7 +592,7 @@ pub const BLOCK_ROWS: usize = 64;
 /// itself for any other object's.
 fn blocks(p: Part) -> Vec<Part> {
     let block = |r: &[f64]| (r[1] == LABEL_CELL).then(|| r[5] as usize / BLOCK_ROWS);
-    let records: Vec<&[f64]> = p.records.chunks_exact(LABEL_SHOWN_STRIDE).collect();
+    let records: Vec<&[f64]> = p.records.as_chunks::<LABEL_SHOWN_STRIDE>().0.iter().map(|r| r.as_slice()).collect();
     let first = records.first().map(|r| block(r));
     if records.iter().all(|r| block(r) == first.flatten()) {
         return vec![p];
@@ -741,7 +741,7 @@ mod tests {
     fn shown(s: &Store, scale: f64, size: LabelSize) -> Vec<(f64, f64, f64, f64, f64)> {
         s.labels_shown(&view(), scale, None, size, PlaceOptions::default())
             .records
-            .chunks_exact(LABEL_SHOWN_STRIDE)
+            .as_chunks::<LABEL_SHOWN_STRIDE>().0.iter()
             .map(|r| (r[0], r[1], r[9], r[10], r[11]))
             .collect()
     }
@@ -797,7 +797,7 @@ mod tests {
         let (placed, _) =
             s.place_labels_after_in(view, scale, &fixed, PlaceOptions::default(), None, None);
         let mut out: Vec<f64> = p.records.to_vec();
-        for r in placed.records.chunks_exact(LABEL_STRIDE) {
+        for r in placed.records.as_chunks::<LABEL_STRIDE>().0.iter() {
             out.extend_from_slice(r);
             out.extend([1.0, r[2], r[3]]);
         }
@@ -1031,7 +1031,7 @@ mod tests {
             let mut ids: Vec<u64> = s
                 .labels_shown(&view, scale, None, LabelSize::Legible, PlaceOptions::default())
                 .records
-                .chunks_exact(LABEL_SHOWN_STRIDE)
+                .as_chunks::<LABEL_SHOWN_STRIDE>().0.iter()
                 .map(|r| r[0] as u64)
                 .collect();
             ids.sort_unstable();

@@ -9,8 +9,7 @@ use kentos_sheet::{SheetBook, project::project_sheets};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-#[path = "../../../plot/tests/support/files.rs"]
-mod files;
+use crate::files;
 
 const CASES: &str =
     include_str!("../../../../../fixtures/commands/v1/file.publish.sheets.update.json");
@@ -349,6 +348,7 @@ fn independent_update_cases_carry_unchanged_pages_and_make_the_changed_again() {
 }
 
 /// GDAL's page georeference: X, Y of a page point given in mm from the page's top left.
+#[allow(clippy::type_complexity)]
 fn gdal_ground(pdf: &Path) -> Option<(impl Fn(f64, f64) -> (f64, f64), String)> {
     let out = std::process::Command::new("gdalinfo")
         .arg("-json")

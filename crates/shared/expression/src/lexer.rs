@@ -240,7 +240,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>, CompileError> {
         let n = word(&u, i);
         if n > 0 {
             // `ext.<eklenti>.<işlev>` (external.rs): after `ext.` a dot and a hyphen are the name's.
-            let n = if &u[i..i + n] == [u16::from(b'e'), u16::from(b'x'), u16::from(b't')] {
+            let n = if u[i..i + n] == [u16::from(b'e'), u16::from(b'x'), u16::from(b't')] {
                 n + dotted(&u, i + n)
             } else {
                 n

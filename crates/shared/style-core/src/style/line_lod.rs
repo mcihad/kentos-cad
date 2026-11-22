@@ -103,7 +103,7 @@ mod tests {
         let mut most: f64 = 0.0;
         for w in kept.windows(2) {
             for p in &pts[w[0]..=w[1]] {
-                most = most.max(segment_distance2(*p, pts[w[0]], pts[w[1]]).sqrt());
+                most = kentos_geometry_core::jsmath::js_max(most, segment_distance2(*p, pts[w[0]], pts[w[1]]).sqrt());
             }
         }
         most

@@ -81,7 +81,9 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
     let (name, columns, rows) = match &t.source {
         Some(TableSource::Blocks { names, by, columns }) => {
             let written = doc.blocks_schedule(names, by.as_deref(), columns);
-            let (head, rest) = written.split_first().expect("block schedule has a heading");
+            let Some((head, rest)) = written.split_first() else {
+                return Err(refuse(codes::NOT_A_TABLE, "Tablonun başlık satırı yok; tabloyu yeniden üretin.", "uid"));
+            };
             let last = head.len().saturating_sub(1);
             let columns = head.iter().enumerate().map(|(j, name)| WorkbookColumn {
                 name: name.clone(),
@@ -162,10 +164,9 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
                 Some(TableSource::Shelter {}) => doc.shelter_table(),
                 _ => doc.zoning_table(),
             };
-            let (head, rest) = written
-                .rows
-                .split_first()
-                .expect("an Emsal ve TAKS table has a heading");
+            let Some((head, rest)) = written.rows.split_first() else {
+                return Err(refuse(codes::NOT_A_TABLE, "Tablonun başlık satırı yok; tabloyu yeniden üretin.", "uid"));
+            };
             let heads = head
                 .iter()
                 .enumerate()

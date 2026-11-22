@@ -977,7 +977,7 @@ pub fn findings(
         let mid = walk.point(walk.length() / 2.0).0;
         let room_on_level = places.iter().any(|p| p.level == level && !p.void);
         let place = match place_at(&level, mid) {
-            Some(p) => match p.unit.as_deref().and_then(|u| owner(u)) {
+            Some(p) => match p.unit.as_deref().and_then(&owner) {
                 Some(u) if u.kind == UnitKind::Unit && dwelling(u.nature.as_deref()) => {
                     StairIn::Unit
                 }

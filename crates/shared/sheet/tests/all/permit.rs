@@ -317,7 +317,7 @@ fn a_list_is_a_sheet_of_its_own_paper_without_a_caption_or_a_scale() {
             "MHL",
             vec![("Mahal listesi".into(), [30.0, -10.0, 45.0, 0.0])],
             100,
-            a3.clone(),
+            a3,
             false,
         ),
     ];
@@ -325,7 +325,7 @@ fn a_list_is_a_sheet_of_its_own_paper_without_a_caption_or_a_scale() {
         &SheetBook::default(),
         template,
         Phase::Permit,
-        a2.clone(),
+        a2,
         &pages,
         true,
         |s| create::ids_for(template, s),

@@ -421,7 +421,7 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
         bands: d.bands.iter().map(|b| TerrainDifferenceBand { from: b.0, to: b.1, area: b.2 }).collect(),
         outside_area: input.ranges.as_ref().map(|_| d.outside),
         cell: measured.as_ref().and(input.cell),
-        exact: (measured.is_some() || by_sections.is_some()).then(|| TerrainVolumes {
+        exact: (measured.is_some() || by_sections.is_some()).then_some(TerrainVolumes {
             cut: d.volumes.cut,
             fill: d.volumes.fill,
             net: d.volumes.fill - d.volumes.cut,

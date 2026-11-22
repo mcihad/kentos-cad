@@ -33,6 +33,8 @@ pub struct NewSpaceSeparator {
 #[cfg_attr(feature="schema",derive(schemars::JsonSchema))]
 #[cfg_attr(feature="ts",ts(export))]
 #[serde(tag="kind",rename_all="camelCase",deny_unknown_fields)]
+// An operation is read once per call: boxing its largest variant would save nothing worth the indirection.
+#[allow(clippy::large_enum_variant)]
 pub enum SpaceSeparatorOperation {
     #[serde(rename_all="camelCase")]
     Create {

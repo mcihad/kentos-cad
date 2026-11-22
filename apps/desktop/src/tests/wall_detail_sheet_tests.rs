@@ -324,7 +324,8 @@ fn each_maps_walls_are_drawn_at_its_own_scales_detail_on_paper() {
         "Ayrıntılı: {} → {got:?}",
         detailed.display()
     );
-    for page in [3] {
+    {
+        let page = 3;
         let ((_, a), (_, s)) = (&got[page], &three[page]);
         let ink = |x: &Across| x.lines.iter().sum::<usize>();
         assert!(

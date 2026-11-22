@@ -401,6 +401,8 @@ pub struct SpaceChange {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
+// An operation is read once per call: boxing its largest variant would save nothing worth the indirection.
+#[allow(clippy::large_enum_variant)]
 pub enum SpacesOperation {
     /// Değiştir: the fields given, on every space named.
     Set(SpaceChange),

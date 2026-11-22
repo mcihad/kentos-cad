@@ -132,6 +132,7 @@ impl std::fmt::Display for Mode {
 
 /// What was read last.
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum Read {
     Analysis(TerrainsAnalysed),
     Compare(TerrainsCompared),
@@ -1106,6 +1107,7 @@ fn said<'a>(table: Element<'a, Message>, words: String) -> Element<'a, Message> 
 }
 
 /// The content tab: at most four figures read at a glance, then the reading's tables by name, one shown at a time.
+#[allow(clippy::type_complexity)]
 fn content<'a>(w: &'a Window, read: &'a Read) -> (Vec<(String, String)>, Vec<(&'static str, Element<'a, Message>)>) {
     use crate::road_dialog::{col, grouped, num};
     let m3 = |v: f64| format!("{} m³", grouped(v, 2));

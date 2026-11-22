@@ -747,11 +747,7 @@ impl DistanceWork {
                 }
                 self.values = values;
             }
-            DistanceTool::Path {
-                simplify,
-                surface_length: _,
-                ..
-            } => {
+            DistanceTool::Path { simplify, .. } => {
                 self.features = Some(self.paths(simplify));
                 self.stage = Stage::Done;
                 return Ok(());

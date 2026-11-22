@@ -421,7 +421,7 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
     };
     let dashes = st.dashes();
     let (w, h) = (pixmap.width(), pixmap.height());
-    for seg in data.chunks_exact(6) {
+    for seg in data.as_chunks::<6>().0.iter() {
         let a = view.px(
             seg[0] + b.origin[0],
             seg[1] + b.origin[1],
@@ -503,7 +503,7 @@ fn coverage(
     h: u32,
 ) -> Option<(Mask, [u32; 4])> {
     let mut pb = PathBuilder::new();
-    for t in data.chunks_exact(6) {
+    for t in data.as_chunks::<6>().0.iter() {
         let p = |i: usize| {
             let q = view.px(
                 t[i] + b.origin[0],
@@ -793,7 +793,7 @@ fn warped_picture(
     let o = st.b[2];
     let bitmap = bitmap.filter(|b| b.width > 0 && b.height > 0);
     let (w, h) = (f64::from(pixmap.width()), f64::from(pixmap.height()));
-    for t in data.chunks_exact(12) {
+    for t in data.as_chunks::<12>().0.iter() {
         let corner = |k: usize| {
             let q = view.px(
                 t[k * 4] + b.origin[0],
@@ -1146,7 +1146,7 @@ fn markers(
     let k = st.unit_k(view);
     let fit = st.flags[3];
     let (w, h) = (pixmap.width(), pixmap.height());
-    for m in data.chunks_exact(5) {
+    for m in data.as_chunks::<5>().0.iter() {
         let mut mw = m[3] * k;
         let mut mh = m[4] * k;
         if fit == 1 {

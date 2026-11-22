@@ -33,6 +33,7 @@ pub struct State {
     /// The profiles to choose from: name and title.
     pub profiles: Vec<(String, String)>,
     /// The command's plan and its warnings, or its refusal (code, words).
+    #[allow(clippy::type_complexity)]
     pub plan: Option<Result<(FeaturesCoded, Vec<String>), (String, String)>>,
 }
 
@@ -101,7 +102,7 @@ impl App {
         let drawing = doc.path.as_ref().filter(|p| p.is_absolute()).map(|p| p.display().to_string());
         let listed = match profile_files::list::plan(
             &ExecutionContext::new(&mut doc.model),
-            &ProfilesList { drawing, ..Default::default() },
+            &ProfilesList { drawing },
         ) {
             CommandResult::Completed { output, .. } => output.items,
             _ => Vec::new(),

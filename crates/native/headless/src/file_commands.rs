@@ -1288,6 +1288,7 @@ fn atlas(
     let mut pages = planned.pages.clone();
     let reaches = if made_pages { planned.page_grounds(doc).map_err(at)? } else { Vec::new() };
     if made_pages && reaches.len() == pages.len() {
+        #[allow(clippy::type_complexity)]
         let asked: Vec<(Vec<(String, [f64; 4])>, String)> = reaches.into_iter().zip(&pages).map(|(r, p)| (r, p.feature.clone())).collect();
         if let Ok(listed) = kentos_native_application::sheets_sources::atlas_page_sources(doc, planned.sheet(), &asked) {
             for (page, sources) in pages.iter_mut().zip(listed) {

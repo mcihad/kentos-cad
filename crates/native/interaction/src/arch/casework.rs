@@ -152,8 +152,10 @@ impl Casework {
     fn path(&self) -> Vec<Vec2> {
         let mut out = self.pts.clone();
         if let Some(h) = self.hover {
-            if self.correcting_end() {
-                *out.last_mut().unwrap() = h;
+            if self.correcting_end()
+                && let Some(end) = out.last_mut()
+            {
+                *end = h;
             } else if out.len() < self.needed() {
                 out.push(h);
             }

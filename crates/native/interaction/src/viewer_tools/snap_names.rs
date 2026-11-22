@@ -38,7 +38,7 @@ fn wall_line(
     let lines = wall::lines(pts, bulges, spec).ok()?;
     let on = |line: &wall::Line| near_path(&line.outline(spec.closed), spec.closed, at) <= ON;
     let last = lines.len().checked_sub(1)?;
-    if let Some(i) = lines.iter().position(|l| on(l)) {
+    if let Some(i) = lines.iter().position(&on) {
         if i == 0 || i == last {
             return Some("Duvar yüzü");
         }

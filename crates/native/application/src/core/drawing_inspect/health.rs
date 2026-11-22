@@ -90,7 +90,7 @@ fn meet(e: Vec2, d: Vec2, s: &Straight) -> Option<(f64, Vec2)> {
     let t = (wx * uy - wy * ux) / den;
     let u = (wx * d.y - wy * d.x) / den;
     let inside = NEAR / len(s.a, s.b).max(NEAR);
-    (u > inside && u < 1.0 - inside).then(|| (t, Vec2 { x: e.x + t * d.x, y: e.y + t * d.y }))
+    (u > inside && u < 1.0 - inside).then_some((t, Vec2 { x: e.x + t * d.x, y: e.y + t * d.y }))
 }
 
 /// A free end of line `l`: no other straight edge's end at it.
@@ -126,6 +126,7 @@ pub fn duplicate_blocks(doc: &Document) -> Vec<Vec<String>> {
     seen.into_values().filter(|n| n.len() > 1).collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn inspect(
     doc: &Document,
     h: &Health,

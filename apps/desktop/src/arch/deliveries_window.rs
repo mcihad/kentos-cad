@@ -834,7 +834,7 @@ pub(crate) fn renamed(old: &str, new: &str) -> String {
         return old.to_owned();
     }
     let head: String = old.chars().take(same).collect();
-    let from = head.rfind(['_', '-', ' ', '.']).map_or(head.len(), |i| i);
+    let from = head.rfind(['_', '-', ' ', '.']).unwrap_or(head.len());
     format!("…{}", &old[from..])
 }
 

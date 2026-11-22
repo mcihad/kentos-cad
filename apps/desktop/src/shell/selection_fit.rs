@@ -29,6 +29,7 @@ fn curved_title(e: &Entity) -> Option<&'static str> {
 }
 
 /// The selection tools that take only some kinds: their id, whether an object is one, what they take.
+#[allow(clippy::type_complexity)]
 const PICKY: [(&str, fn(&Entity) -> bool, &str); 2] = [
     (
         "tool.vertex",

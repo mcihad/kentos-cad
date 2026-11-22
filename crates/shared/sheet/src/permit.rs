@@ -661,9 +661,9 @@ pub fn permit_sheets(
         *n += 1;
         let text = |v: &str| VarValue::Text(v.to_owned());
         // A list's own paper (docs/adr/8038), else the set's.
-        let paper = page.paper.clone().unwrap_or_else(|| paper.clone());
+        let paper = page.paper.unwrap_or(paper);
         let options = InstanceOptions {
-            paper: Some(paper.clone()),
+            paper: Some(paper),
             name: Some(format!("{number} {}", page.title)),
             center: page.center,
             scale: page.scale,

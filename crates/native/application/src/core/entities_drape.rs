@@ -52,7 +52,7 @@ fn edges_of(s: &Surface) -> Vec<([f64; 2], [f64; 2])> {
 fn crossings(p: Vec2, q: Vec2, edges: &[([f64; 2], [f64; 2])]) -> Vec<f64> {
     let (rx, ry) = (q.x - p.x, q.y - p.y);
     let len = rx.hypot(ry);
-    if !(len > 0.0) {
+    if len.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
         return Vec::new();
     }
     let (lo_x, hi_x, lo_y, hi_y) = (p.x.min(q.x), p.x.max(q.x), p.y.min(q.y), p.y.max(q.y));

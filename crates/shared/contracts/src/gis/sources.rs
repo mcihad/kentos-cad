@@ -635,7 +635,7 @@ pub fn base_rows(rows: &str) -> Option<Vec<BaseRow>> {
         return None;
     }
     let mut out: Vec<BaseRow> = Vec::with_capacity(bytes.len() / BASE_ROW);
-    for row in bytes.chunks_exact(BASE_ROW) {
+    for row in bytes.as_chunks::<BASE_ROW>().0.iter() {
         let mut uid = [0u8; 16];
         uid.copy_from_slice(&row[..16]);
         let mut a = [0u8; 8];

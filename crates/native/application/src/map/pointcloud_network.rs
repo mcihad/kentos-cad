@@ -107,7 +107,7 @@ fn run(doc: &Document, input: &PointCloudsNetwork) -> Result<(PointCloudsNetwork
                 // By its file's name, as the scans are seen (UR2-031: a 36-character id was all it said).
                 format!(
                     "“{}” taraması bağlarla hiçbir sabit taramaya bağlanmıyor; bir bağ ekleyin ya da onu da sabit yapın.",
-                    scan_name(&scans[k].1, &uids[k])
+                    scan_name(scans[k].1, &uids[k])
                 ),
                 "links",
             ),

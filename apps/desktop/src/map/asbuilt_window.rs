@@ -254,6 +254,7 @@ fn opt(v: &str) -> Option<String> {
 /// The table as CSV (metres as computed).
 pub fn csv(r: &AsbuiltChecked) -> String {
     let watch = watched(r);
+    #[allow(clippy::type_complexity)]
     let (status, flag): (fn(&str) -> &'static str, fn(&str) -> &'static str) =
         if watch { (watch_status_word, watch_flag_word) } else { (status_word, flag_word) };
     let mut out = format!(

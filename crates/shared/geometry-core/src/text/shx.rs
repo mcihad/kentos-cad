@@ -859,7 +859,7 @@ mod tests {
         let circle = draw(&[10, 2, 0, 0]).unwrap();
         assert!(circle[0].len() > 100);
         for p in &circle[0] {
-            assert!(((p.x + 2.).hypot(p.y) - 2.).abs() < 1e-12);
+            assert!((crate::jsmath::js_hypot(p.x + 2., p.y) - 2.).abs() < 1e-12);
         }
         let positive = draw(&[13, 4, 0, 127, 4, 0, 129, 0, 0, 0]).unwrap();
         assert!(positive[0].iter().any(|p| p.y < -1.9));

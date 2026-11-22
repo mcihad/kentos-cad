@@ -107,6 +107,7 @@ pub(super) fn basement_levels(arch: &ArchSettings) -> Vec<String> {
 ///
 /// A room is under the first bent that reads it, in the order d, b, ç, e, a; a capped bent's part is shared among its
 /// rooms by their areas. The car parks d takes apart count against a's twice (docs/adr/8148 K380).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     rooms: &[Room],
     within: &[f64],

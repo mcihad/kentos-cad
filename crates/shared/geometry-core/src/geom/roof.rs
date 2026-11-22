@@ -393,7 +393,7 @@ fn crosses(ring: &[Vec2]) -> bool {
         if o > 0.0 { 1 } else if o < 0.0 { -1 } else { 0 }
     };
     let on = |a: Vec2, b: Vec2, c: Vec2| {
-        c.x >= a.x.min(b.x) && c.x <= a.x.max(b.x) && c.y >= a.y.min(b.y) && c.y <= a.y.max(b.y)
+        c.x >= crate::jsmath::js_min(a.x, b.x) && c.x <= crate::jsmath::js_max(a.x, b.x) && c.y >= crate::jsmath::js_min(a.y, b.y) && c.y <= crate::jsmath::js_max(a.y, b.y)
     };
     let meet = |a: Vec2, b: Vec2, c: Vec2, d: Vec2| {
         let (d1, d2, d3, d4) = (side(c, d, a), side(c, d, b), side(a, b, c), side(a, b, d));

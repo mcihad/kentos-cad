@@ -67,7 +67,7 @@ fn yuzeyden_previews_and_writes_the_shared_case() {
     let got = serde_json::to_value(p).expect("json");
     for key in ["pts", "zs", "holes"] {
         let (a, b) = (&got[key], &want[key]);
-        assert_eq!(a.to_string().len() > 2, true, "{key}");
+        assert!(a.to_string().len() > 2, "{key}");
         let near = |a: &Value, b: &Value| -> bool {
             match (a, b) {
                 (Value::Number(x), Value::Number(y)) => (x.as_f64().unwrap() - y.as_f64().unwrap()).abs() < 1e-6,

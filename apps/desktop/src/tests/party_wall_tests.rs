@@ -104,6 +104,7 @@ fn a_party_edge_s_wall_is_a_fire_wall_without_windows() {
     assert!(crate::zoning_badge::short_edges(app.document.as_ref().expect("a drawing")).iter().all(|s| !s.starts_with("4.")));
     // The facts: the west wall on each storey, the window on 1. kat.
     let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
+    #[allow(clippy::type_complexity)]
     let party: Vec<(usize, Option<&str>, Vec<&str>, Vec<&str>)> = facts
         .party
         .iter()

@@ -478,21 +478,21 @@ impl Labels<'_> {
                             .and_then(|g| g.style_at(*row, *col).height)
                             .unwrap_or(t.height);
                         // Its cells' fills (docs/adr/0327 §1), a pixel in from their lines.
-                        if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot) {
-                            if let Some(g) = &geom {
-                                for f in g.fills() {
-                                    let q = f.corners.map(|p| self.screen(p));
-                                    let (cx, cy) = (
-                                        q.iter().map(|p| p.x).sum::<f32>() / 4.0,
-                                        q.iter().map(|p| p.y).sum::<f32>() / 4.0,
-                                    );
-                                    let inset = q.map(|p| {
-                                        let (dx, dy) = (cx - p.x, cy - p.y);
-                                        let l = (dx * dx + dy * dy).sqrt().max(1.0);
-                                        Point::new(p.x + dx / l * 1.0, p.y + dy / l * 1.0)
-                                    });
-                                    self.fill_cell(frame, inset, &f.fill, Some(slot));
-                                }
+                        if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot)
+                            && let Some(g) = &geom
+                        {
+                            for f in g.fills() {
+                                let q = f.corners.map(|p| self.screen(p));
+                                let (cx, cy) = (
+                                    q.iter().map(|p| p.x).sum::<f32>() / 4.0,
+                                    q.iter().map(|p| p.y).sum::<f32>() / 4.0,
+                                );
+                                let inset = q.map(|p| {
+                                    let (dx, dy) = (cx - p.x, cy - p.y);
+                                    let l = (dx * dx + dy * dy).sqrt().max(1.0);
+                                    Point::new(p.x + dx / l * 1.0, p.y + dy / l * 1.0)
+                                });
+                                self.fill_cell(frame, inset, &f.fill, Some(slot));
                             }
                         }
                         let heading = Run {
@@ -624,7 +624,7 @@ impl Labels<'_> {
                         // A block's text in its style's embedded SHX font (docs/adr/1020), as a text object is.
                         if let Some(t) = placed
                             .as_deref()
-                            .and_then(|s| kentos_native_application::shx_text::piece_text(s, &shown))
+                            .and_then(|s| kentos_native_application::shx_text::piece_text(s, shown))
                         {
                             let ink = self.piece_ink(ink, base, layer);
                             if self.shx_text(frame, slot, &t, ink) {
@@ -938,13 +938,13 @@ impl Labels<'_> {
         // The multi-line text being written or edited, over the rest (docs/adr/0182 §4).
         if let Some(p) = &self.preview {
             if let Some(text)=&p.unicode {
-                if let Some(r)=p.records.chunks_exact(kentos_geometry_core::store::labels::LABEL_STRIDE).next() {
+                if let Some(r)=p.records.as_chunks::<{ kentos_geometry_core::store::labels::LABEL_STRIDE }>().0.iter().next() {
                     self.draw_unicode(frame,text,Vec2::new(r[2],r[3]),self.colors.label);
                 }
             } else {
             for r in p
                 .records
-                .chunks_exact(kentos_geometry_core::store::labels::LABEL_STRIDE)
+                .as_chunks::<{ kentos_geometry_core::store::labels::LABEL_STRIDE }>().0.iter()
             {
                 let at = Vec2::new(r[2], r[3]);
                 if r[1] == kentos_geometry_core::store::labels::LABEL_PARAGRAPH_MASK {

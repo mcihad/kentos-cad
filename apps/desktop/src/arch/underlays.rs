@@ -99,6 +99,7 @@ pub(crate) struct Key {
 pub(crate) struct Underlays {
     pub states: HashMap<String, (Key, State)>,
     /// The plan's key (the underlays drawn, by id and digest, and the cut and floor heights' bits) and its lines.
+    #[allow(clippy::type_complexity)]
     plan: Option<(Vec<(String, String, u64, u64)>, Arc<Vec<PlanLine>>)>,
     /// One more each time the plan changes.
     pub version: u64,

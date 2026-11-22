@@ -377,7 +377,7 @@ impl App {
                 let (a, b) = (path.pts[k], path.pts[(k + 1) % n]);
                 let (dx, dy) = (b.x - a.x, b.y - a.y);
                 let len = dx.hypot(dy);
-                if !(len > 0.0) {
+                if len.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
                     continue;
                 }
                 let mid = segment_mid(a, b, bulge_at(path.bulges.as_deref(), k));

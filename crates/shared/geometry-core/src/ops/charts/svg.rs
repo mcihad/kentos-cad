@@ -199,7 +199,7 @@ pub fn svg(layout: &Layout, palette: &Palette) -> String {
                 alpha,
             } => {
                 let points: Vec<String> = pts
-                    .chunks_exact(2)
+                    .as_chunks::<2>().0.iter()
                     .map(|c| format!("{},{}", n(c[0]), n(c[1])))
                     .collect();
                 let _ = write!(
@@ -323,7 +323,7 @@ pub fn svg(layout: &Layout, palette: &Palette) -> String {
                 };
                 let _ = write!(out, r#"<g fill="{colour}"{stroke}{}>"#, opacity(*alpha));
                 let (a, b) = (*start as usize, (*start + *count) as usize);
-                for xy in layout.points[a * 2..b * 2].chunks_exact(2) {
+                for xy in layout.points[a * 2..b * 2].as_chunks::<2>().0.iter() {
                     let _ = write!(
                         out,
                         r#"<circle cx="{}" cy="{}" r="{}"/>"#,

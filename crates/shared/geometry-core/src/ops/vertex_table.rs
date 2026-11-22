@@ -516,16 +516,16 @@ mod tests {
         // Radius 25 about (20, 0), from 0° to 180° in three arcs of 60°: bulge tan 15° each.
         let at = |deg: f64| {
             let a = deg.to_radians();
-            Vec2::new(20.0 + 25.0 * a.cos(), 25.0 * a.sin())
+            Vec2::new(20.0 + 25.0 * crate::jsmath::cos(a), 25.0 * crate::jsmath::sin(a))
         };
-        let b = (15f64).to_radians().tan();
+        let b = crate::jsmath::tan(15f64.to_radians());
         let path = Elevated {
             pts: vec![at(0.0), at(60.0), at(120.0), at(180.0)],
             bulges: Some(vec![b, b, b, 0.0]),
             closed: false,
             zs: vec![None; 4],
         };
-        let out = removed_joining(Kind::Polyline, &[path.clone()], &[[0, 1], [0, 2]], Some(1e-6)).expect("removed");
+        let out = removed_joining(Kind::Polyline, std::slice::from_ref(&path), &[[0, 1], [0, 2]], Some(1e-6)).expect("removed");
         assert_eq!(out[0].pts.len(), 2);
         let joined = out[0].bulges.as_ref().expect("an arc")[0];
         assert!((joined - 1.0).abs() < 1e-12, "{joined}");

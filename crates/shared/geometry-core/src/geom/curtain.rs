@@ -7,10 +7,10 @@
 /// two ends among them; one bay for a stretch not longer than `most`. `[0, length]` when either is not above 0.
 pub fn divisions(length: f64, most: f64) -> Vec<f64> {
     if !(length > 0.0 && length.is_finite() && most > 0.0 && most.is_finite()) {
-        return vec![0.0, length.max(0.0)];
+        return vec![0.0, crate::jsmath::js_max(length, 0.0)];
     }
     // A stretch that is a whole number of spacings is that many bays: the ratio's last bit does not add one.
-    let n = libm::ceil(length / most - 1e-9).max(1.0) as usize;
+    let n = crate::jsmath::js_max(libm::ceil(length / most - 1e-9), 1.0) as usize;
     (0..=n).map(|k| length * k as f64 / n as f64).collect()
 }
 
@@ -85,7 +85,7 @@ pub fn fill(
     let chosen = |lines: &[f64], lo: f64, hi: f64, at: f64, from_first: bool| -> Option<(usize, usize)> {
         let cells = lines.len().checked_sub(1)?;
         if from_first {
-            return Some((0, (0..cells).filter(|&k| lines[k] < hi - EPS).last().unwrap_or(0)));
+            return Some((0, (0..cells).rfind(|&k| lines[k] < hi - EPS).unwrap_or(0)));
         }
         let mid = |k: usize| {
             let (a, b) = cell_span(lines, k, face);

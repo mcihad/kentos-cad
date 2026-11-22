@@ -693,6 +693,12 @@ impl Viewer {
     }
 }
 
+/// `s` as the search compares it: lower case, a dotted capital I's dot dropped and the dotless i a dotted one, so “iç”
+/// finds “İç_duvar” and “IFCWALL” finds “IfcWall”.
+fn fold(s: &str) -> String {
+    s.to_lowercase().replace('\u{0307}', "").replace('ı', "i")
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -932,10 +938,4 @@ mod tests {
         assert!(capped(&v).is_empty());
         assert!(!v.swatches().iter().any(|(name, _)| *name == cap));
     }
-}
-
-/// `s` as the search compares it: lower case, a dotted capital I's dot dropped and the dotless i a dotted one, so “iç”
-/// finds “İç_duvar” and “IFCWALL” finds “IfcWall”.
-fn fold(s: &str) -> String {
-    s.to_lowercase().replace('\u{0307}', "").replace('ı', "i")
 }

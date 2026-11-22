@@ -445,6 +445,6 @@ mod tests {
             assert!((top - bottom - 0.15).abs() < 1e-9 && *bottom < 1.80);
         }
         let low = low_under(&parts, 0.0, UNDER_STAIR_CLEAR, true);
-        assert!(low.iter().filter(|(_, open)| *open).count() >= landings.len() + 1, "{low:?}");
+        assert!(low.iter().filter(|(_, open)| *open).count() > landings.len(), "{low:?}");
     }
 }

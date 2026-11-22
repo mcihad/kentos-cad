@@ -593,6 +593,33 @@ pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
     ]
 }
 
+/// A colour field: its swatch opening the kit's colour picker (the colour now, an empty box while the field is empty
+/// and the table's own is used), then the code typed (UR-033).
+fn colour_field<'a>(
+    field: impl Into<Element<'a, Message>>,
+    typed: &str,
+    f: Field,
+) -> Element<'a, Message> {
+    use kentos_ui::widget::color::{ColorPicker, parse_hex, to_hex};
+    let shown = parse_hex(typed.trim());
+    let size = kentos_ui::theme::typography::scaled(22.0);
+    let face = iced::widget::container(iced::widget::Space::new())
+        .width(size * 1.6)
+        .height(size)
+        .style(move |t: &Theme| iced::widget::container::Style {
+            background: Some(iced::Background::Color(shown.unwrap_or(Color::TRANSPARENT))),
+            border: iced::Border {
+                color: kentos_ui::theme::Tokens::of(t).muted,
+                width: 1.0,
+                radius: kentos_ui::theme::shape::radius(3.0).into(),
+            },
+            ..iced::widget::container::Style::default()
+        });
+    let picker = ColorPicker::new(shown.unwrap_or(Color::BLACK), move |c| msg(Event::Field(f, to_hex(c)))).anchor(face);
+    let field: Element<'a, Message> = field.into();
+    iced::widget::row![picker, field].spacing(8).align_y(iced::Center).into()
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
@@ -686,31 +713,3 @@ pub(crate) mod tests {
         assert_eq!(doc.model.settings().table_styles.len(), 2);
     }
 }
-
-/// A colour field: its swatch opening the kit's colour picker (the colour now, an empty box while the field is empty
-/// and the table's own is used), then the code typed (UR-033).
-fn colour_field<'a>(
-    field: impl Into<Element<'a, Message>>,
-    typed: &str,
-    f: Field,
-) -> Element<'a, Message> {
-    use kentos_ui::widget::color::{ColorPicker, parse_hex, to_hex};
-    let shown = parse_hex(typed.trim());
-    let size = kentos_ui::theme::typography::scaled(22.0);
-    let face = iced::widget::container(iced::widget::Space::new())
-        .width(size * 1.6)
-        .height(size)
-        .style(move |t: &Theme| iced::widget::container::Style {
-            background: Some(iced::Background::Color(shown.unwrap_or(Color::TRANSPARENT))),
-            border: iced::Border {
-                color: kentos_ui::theme::Tokens::of(t).muted,
-                width: 1.0,
-                radius: kentos_ui::theme::shape::radius(3.0).into(),
-            },
-            ..iced::widget::container::Style::default()
-        });
-    let picker = ColorPicker::new(shown.unwrap_or(Color::BLACK), move |c| msg(Event::Field(f, to_hex(c)))).anchor(face);
-    let field: Element<'a, Message> = field.into();
-    iced::widget::row![picker, field].spacing(8).align_y(iced::Center).into()
-}
-

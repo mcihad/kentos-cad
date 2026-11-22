@@ -171,7 +171,7 @@ fn object(rng: &mut Rng, cell: usize, k: usize, side: usize) -> Value {
                 "text": format!("{} {}/{}", words[(cell + k) % words.len()], 100 + cell / 50, cell % 50 + k),
                 "height": rng.mm(0.3, 2.0), "rotation": rng.mm(0.0, std::f64::consts::TAU) })
         }
-        6 if cell % 2 == 0 => {
+        6 if cell.is_multiple_of(2) => {
             json!({ "kind": "circle", "layerId": "daire", "attrs": {}, "c": at(rng), "r": rng.mm(0.2, 6.0) })
         }
         6 => {
@@ -182,10 +182,10 @@ fn object(rng: &mut Rng, cell: usize, k: usize, side: usize) -> Value {
         7 => json!({ "kind": "insert", "layerId": "blok", "attrs": {}, "block": BLOCK_1,
             "p": p(x0 + rng.mm(2.0, 14.0), y0 + rng.mm(2.0, 18.0)), "scale": rng.mm(0.5, 1.5),
             "rotation": rng.mm(0.0, std::f64::consts::TAU), "mirror": cell % 7 == 3 }),
-        8 if cell % 2 == 0 => {
+        8 if cell.is_multiple_of(2) => {
             let (x, y) = (x0 + rng.mm(1.0, 12.0), y0 + rng.mm(1.0, 12.0));
             let (w, h) = (rng.mm(4.0, 11.0), rng.mm(4.0, 11.0));
-            let pattern = if cell % 4 == 0 {
+            let pattern = if cell.is_multiple_of(4) {
                 json!({ "type": "cross", "angle": rng.mm(0.0, 90.0), "spacing": 0.2 })
             } else {
                 // A dashed family, as a brick or ANSI pattern draws.
@@ -204,7 +204,7 @@ fn object(rng: &mut Rng, cell: usize, k: usize, side: usize) -> Value {
             json!({ "kind": "dimension", "layerId": "olcu", "attrs": {}, "a": p(x, y), "b": p(x + rng.mm(2.0, 14.0), y),
                 "offset": rng.mm(0.8, 2.0), "height": 0.35 })
         }
-        _ if cell % 10 == 0 => {
+        _ if cell.is_multiple_of(10) => {
             // A long line: 400 vertices over ten cells, a contour or a road's edge.
             let (mut x, mut y) = (x0 + 1.0, y0 + rng.mm(2.0, CELL - 2.0));
             let pts: Vec<Value> = (0..LONG)

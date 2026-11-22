@@ -50,6 +50,7 @@ pub(crate) enum TipKey {
 
 /// What typing a key tip in full does.
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum TipAction {
     Run(Message),
     /// A tab opens and its controls get tips.

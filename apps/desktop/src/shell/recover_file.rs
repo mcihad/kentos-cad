@@ -76,6 +76,25 @@ impl App {
     }
 }
 
+/// The picture of docs/adr/1013: a drawing cut inside its ninth object recovered with Kurtar, the copy open and Komut
+/// geçmişi saying what came back. `KENTOS_SHOTS_ONLY=kurtar cargo test -p kentos-desktop --lib tools_screens::screens
+/// -- --ignored --nocapture`.
+#[cfg(test)]
+pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
+    vec![("kurtar", |app| {
+        let dir = crate::files_testing::scratch("kurtar-resim");
+        let source = dir.join("kadastro.kcad");
+        std::fs::copy(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/kcad/recover/v1/kesik-8.kcad"),
+            &source,
+        )
+        .expect("copied");
+        app.picker = Picker::File(source);
+        let task = app.run("file.recover");
+        crate::files_testing::drive(app, task);
+    })]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -117,23 +136,4 @@ mod tests {
         assert!(!dir.join("pafta-kurtarilan.kcad").exists());
         assert!(app.log.lines().any(|l| l.text.contains("sağlam açılıyor")));
     }
-}
-
-/// The picture of docs/adr/1013: a drawing cut inside its ninth object recovered with Kurtar, the copy open and Komut
-/// geçmişi saying what came back. `KENTOS_SHOTS_ONLY=kurtar cargo test -p kentos-desktop --lib tools_screens::screens
-/// -- --ignored --nocapture`.
-#[cfg(test)]
-pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
-    vec![("kurtar", |app| {
-        let dir = crate::files_testing::scratch("kurtar-resim");
-        let source = dir.join("kadastro.kcad");
-        std::fs::copy(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/kcad/recover/v1/kesik-8.kcad"),
-            &source,
-        )
-        .expect("copied");
-        app.picker = Picker::File(source);
-        let task = app.run("file.recover");
-        crate::files_testing::drive(app, task);
-    })]
 }

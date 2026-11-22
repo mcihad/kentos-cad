@@ -394,7 +394,7 @@ mod tests {
                 .expect("a renderer")
                 .render(view, &iced::Theme::Light);
             let (mut inside, mut outside) = (0, 0);
-            for (i, p) in image.rgba.chunks_exact(4).enumerate() {
+            for (i, p) in image.rgba.as_chunks::<4>().0.iter().enumerate() {
                 let (x, y) = ((i % 240) as f32, (i / 240) as f32);
                 if p[0] < 250 || p[1] < 250 || p[2] < 250 {
                     if x <= 161.0 && y <= 91.0 {

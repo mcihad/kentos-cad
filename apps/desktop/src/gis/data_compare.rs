@@ -1275,7 +1275,7 @@ impl App {
                 .push(summary)
                 .into()
         } else {
-            summary.into()
+            summary
         };
         let content = Column::new()
             .spacing(12)

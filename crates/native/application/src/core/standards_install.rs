@@ -432,7 +432,7 @@ fn write_rows(
         Kind::LineType,
         |t| t.name.as_str(),
         |t| t.name.as_str(),
-        |t, name, _| kentos_commands::LineTypeDef { name: name.map_or_else(|| named(&t.name), |n| n), ..t.clone() },
+        |t, name, _| kentos_commands::LineTypeDef { name: name.unwrap_or_else(|| named(&t.name)), ..t.clone() },
     );
     let hatch_patterns = styles(
         &s.hatch_patterns,
@@ -441,7 +441,7 @@ fn write_rows(
         Kind::HatchPattern,
         |t| t.name.as_str(),
         |t| t.name.as_str(),
-        |t, name, _| kentos_commands::HatchPatternDef { name: name.map_or_else(|| named(&t.name), |n| n), ..t.clone() },
+        |t, name, _| kentos_commands::HatchPatternDef { name: name.unwrap_or_else(|| named(&t.name)), ..t.clone() },
     );
     let text = styles(
         &s.text_styles,

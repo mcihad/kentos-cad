@@ -87,7 +87,7 @@ pub fn layer_geometry_of(declared: &str) -> Option<kentos_commands::LayerGeometr
     use kentos_commands::LayerGeometry as G;
     let t = declared.trim().to_ascii_uppercase();
     // A Z, M or ZM form is its plain type's (`POINTZ`, `POLYGON Z`).
-    let t = t.trim_end_matches(|c: char| c == 'Z' || c == 'M' || c == ' ');
+    let t = t.trim_end_matches(['Z', 'M', ' ']);
     match t {
         "POINT" | "MULTIPOINT" => Some(G::Point),
         "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVE" | "MULTICURVE" => {
@@ -130,7 +130,7 @@ fn arc_bulge(a: &Coord, m: &Coord, b: &Coord) -> Option<f64> {
     // Counter-clockwise a → m → b turns left: (m − a) × (b − a), which is v × u.
     let turn = vx * uy - vy * ux;
     let under = lu * lv - (ux * vx + uy * vy);
-    if lu == 0.0 || lv == 0.0 || !(under > 0.0) {
+    if lu == 0.0 || lv == 0.0 || under.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
         return None;
     }
     let bulge = turn / under;
@@ -160,7 +160,7 @@ impl Walk {
         match c {
             Curve::Line(p) => {
                 for q in p {
-                    self.push(*q, Some(0.0).filter(|_| !self.pts.is_empty()));
+                    self.push(*q, (!self.pts.is_empty()).then_some(0.0));
                 }
             }
             Curve::Arc(p) => {

@@ -164,7 +164,7 @@ fn widest(rings: &[Vec<Edge>]) -> Option<(f64, Vec2)> {
     }
     xs.sort_by(f64::total_cmp);
     let mut best: Option<(f64, Vec2)> = None;
-    for pair in xs.chunks_exact(2) {
+    for pair in xs.as_chunks::<2>().0.iter() {
         let width = pair[1] - pair[0];
         if width > best.map_or(0.0, |(w, _)| w) {
             best = Some((width, Vec2::new((pair[0] + pair[1]) / 2.0, scan)));

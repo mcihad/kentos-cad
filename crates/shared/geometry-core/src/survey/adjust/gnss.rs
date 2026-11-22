@@ -596,7 +596,7 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         let factor = n.cholesky().map_err(|bad| {
             // The station the dense factor in input order named (a floating part), else the one whose pivot failed here.
             let station = floating(input, &ends, &fixed)
-                .unwrap_or_else(|| slot.iter().position(|s| s.is_some_and(|t| bad >= t && bad < t + 3)).map_or(0, |i| i));
+                .unwrap_or_else(|| slot.iter().position(|s| s.is_some_and(|t| bad >= t && bad < t + 3)).unwrap_or(0));
             refuse(
                 "network_disconnected",
                 format!("“{}” istasyonu datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı.", input.stations[station].name.trim()),
@@ -784,7 +784,7 @@ mod tests {
         for r in 0..w {
             for c in 0..w {
                 let i = r * w + c;
-                let known = i == 0 || i % 10 == 0;
+                let known = i == 0 || i.is_multiple_of(10);
                 stations.push(GnssStation {
                     name: format!("S{i}"),
                     xyz: known.then(|| at(r, c)),
@@ -801,7 +801,7 @@ mod tests {
                     if r + dr < w && c + dc < w {
                         let (a, b) = (at(r, c), at(r + dr, c + dc));
                         let k = baselines.len() as f64;
-                        let noise = [0.003 * (k * 0.7).sin(), 0.003 * (k * 1.3).cos(), 0.006 * (k * 0.9).sin()];
+                        let noise = [0.003 * crate::jsmath::sin(k * 0.7), 0.003 * crate::jsmath::cos(k * 1.3), 0.006 * crate::jsmath::sin(k * 0.9)];
                         baselines.push(Baseline {
                             from: format!("S{}", r * w + c),
                             to: format!("S{}", (r + dr) * w + c + dc),

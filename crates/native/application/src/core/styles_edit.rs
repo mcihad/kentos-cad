@@ -29,6 +29,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 /// One table, text or dimension, as the command changes it.
+#[allow(clippy::enum_variant_names)] // `Table` is the styles of tables, beside those of texts and dimensions.
 enum Table {
     Text(Vec<TextStyleDef>),
     Dimension(Vec<DimensionStyleDef>),

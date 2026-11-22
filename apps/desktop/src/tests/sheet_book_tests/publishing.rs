@@ -408,7 +408,7 @@ fn sheet23_print_preview_screens() {
         let shot = snap.render(app.view(), &app.theme());
         let white = shot
             .rgba
-            .chunks_exact(4)
+            .as_chunks::<4>().0.iter()
             .filter(|p| p[0] > 248 && p[1] > 248 && p[2] > 248)
             .count();
         shot.save(out.join(format!("sheet23-preview-{theme}-{text}.png")))

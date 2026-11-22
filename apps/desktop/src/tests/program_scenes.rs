@@ -699,13 +699,13 @@ mod tests {
         let target = plan.space("203").to_owned();
         let source = plan.space("201").to_owned();
         let before = checked(&app);
-        assert_eq!(row(&before, "201").reach[0].by, [target.clone()]);
-        assert_eq!(row(&before, "201").adjacent[0].by, [target.clone()]);
+        assert_eq!(row(&before, "201").reach[0].by, std::slice::from_ref(&target));
+        assert_eq!(row(&before, "201").adjacent[0].by, std::slice::from_ref(&target));
 
         command(&mut app, "cad.entities.delete", json!({"uids": door}));
         let after = checked(&app);
         assert!(row(&after, "201").reach[0].by.is_empty());
-        assert_eq!(row(&after, "201").adjacent[0].by, [target.clone()]);
+        assert_eq!(row(&after, "201").adjacent[0].by, std::slice::from_ref(&target));
         let subjects = [source.clone(), target.clone()];
         let index = after.findings.iter().position(|finding| {
             finding.code == "program_reach_missing" && finding.uids == subjects

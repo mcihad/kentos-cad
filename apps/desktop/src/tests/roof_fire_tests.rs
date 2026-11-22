@@ -143,6 +143,7 @@ fn checked(app: &mut App) {
 }
 
 /// 28/2's and 28/3's rows and the roofs' findings (code, state, words).
+#[allow(clippy::type_complexity)]
 fn said(app: &App) -> (Option<O>, Option<O>, Vec<(String, Option<S>, String)>) {
     let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
     let row = |rule: &str| set.rules.iter().find(|r| r.rule == rule).map(|r| r.state);

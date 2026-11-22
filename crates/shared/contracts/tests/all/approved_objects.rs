@@ -93,7 +93,7 @@ fn the_parts_an_approval_kept_are_one_to_one_with_its_objects() {
     w.items[0].approved_parts = vec![four(), four()];
     assert_eq!(w.problem(), None);
     assert!(w.has_approved_parts());
-    let at = |w: &MapWork| w.problem().map(|(at, why)| (at, why));
+    let at = |w: &MapWork| w.problem();
     for parts in [vec![four()], vec![four(), four(), four()]] {
         let mut w = approved(pairs.clone(), Some(stamp.clone()));
         w.items[0].approved_parts = parts;

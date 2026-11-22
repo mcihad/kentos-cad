@@ -306,6 +306,7 @@ impl canvas::Program<Message> for Ramps<'_> {
         };
         // The chart is in percent, as its labels are; the schedule and the rows hold grades (docs/adr/0977).
         let n = 100.0 * self.normal.0.min(self.normal.1);
+        #[allow(clippy::type_complexity)]
         let ramps: Vec<(Vec<[f64; 2]>, Vec<[f64; 2]>)> = out
             .rows
             .iter()

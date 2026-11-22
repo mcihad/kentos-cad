@@ -569,7 +569,7 @@ pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, 
             content,
             approved: i.approved.clone(),
             changes,
-            profile: crate::map_work_profile::row(doc, &work, i, drawing),
+            profile: crate::map_work_profile::row(doc, work, i, drawing),
             suggested: if input.suggest && i.profile.is_none() {
                 crate::map_work_profile::suggested(doc, i.kind, drawing)
             } else {

@@ -280,7 +280,7 @@ mod tests {
     /// Sum of the triangle areas; every triangle must be counter-clockwise.
     fn covered(pts: &[Vec2], idx: &[u32]) -> f64 {
         assert_eq!(idx.len() % 3, 0);
-        idx.chunks_exact(3)
+        idx.as_chunks::<3>().0.iter()
             .map(|t| {
                 let a = cross(pts[t[0] as usize], pts[t[1] as usize], pts[t[2] as usize]) / 2.0;
                 assert!(a >= 0.0, "clockwise triangle {t:?}");
@@ -308,7 +308,7 @@ mod tests {
             .collect();
         let xy = triangulate(&outer, &[], o);
         assert_eq!(xy.len(), 2 * 3 * 2);
-        for c in xy.chunks_exact(2) {
+        for c in xy.as_chunks::<2>().0.iter() {
             assert!(outer.iter().any(|p| p.x - o.x == c[0] && p.y - o.y == c[1]));
         }
     }

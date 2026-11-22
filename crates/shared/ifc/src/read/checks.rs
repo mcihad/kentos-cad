@@ -54,7 +54,7 @@ pub(super) fn placement_cycles(
     }
     // Depths, each chain walked once (memoised); a chain in a cycle has been said already.
     let mut depth: Vec<Option<usize>> = vec![None; ids.len()];
-    for start in 0..ids.len() {
+    for (start, &s) in ids.iter().enumerate() {
         let mut path = Vec::new();
         let mut i = Some(start);
         while let Some(k) = i {
@@ -70,7 +70,6 @@ pub(super) fn placement_cycles(
             depth[k] = Some(d);
         }
         if d > limits.depth {
-            let s = ids[start];
             findings.push(Finding {
                 code: "placement_too_deep",
                 severity: Severity::Warning,

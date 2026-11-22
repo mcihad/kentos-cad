@@ -38,7 +38,7 @@ pub(super) fn upload_values(layer: &StyledLayer) -> (Cow<'_, [f32]>, Cow<'_, [f3
         let Some(values) = layer.data.get(batch.range.clone()) else {
             continue;
         };
-        for (i, segment) in values.chunks_exact(6).enumerate() {
+        for (i, segment) in values.as_chunks::<6>().0.iter().enumerate() {
             let at = batch.range.start + i * 6 + 4;
             let distance =
                 f64::from(segment[4]) + f64::from(layer.low.get(at).copied().unwrap_or(0.));

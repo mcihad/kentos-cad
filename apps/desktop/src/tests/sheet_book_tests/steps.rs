@@ -189,7 +189,7 @@ fn transaction_screens() {
         // when the book's three items and the UI tree are still present.
         let red = image
             .rgba
-            .chunks_exact(4)
+            .as_chunks::<4>().0.iter()
             .filter(|p| p[0] > 150 && p[1] < 70 && p[2] < 70 && p[3] > 200)
             .count();
         assert!(

@@ -135,6 +135,7 @@ struct ContextEdit {
 }
 
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)]
 enum ContextAction {
     Assign {
         slot: Slot,

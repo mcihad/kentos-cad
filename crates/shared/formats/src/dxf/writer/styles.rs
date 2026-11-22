@@ -472,6 +472,7 @@ fn dimension_vars(
 }
 
 /// The DIMSTYLE table: Standard (as before styles) and the project's styles.
+#[allow(clippy::too_many_arguments)]
 pub fn dimstyle_table(
     out: &mut Out,
     handles: &mut super::Handles,

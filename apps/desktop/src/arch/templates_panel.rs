@@ -409,10 +409,10 @@ impl App {
             Event::ToolFavorite(key) => self.toggle_tool_favorite(&key),
             Event::ToolFromLast => self.tool_from_last_call(),
             Event::Favorite(id) => {
-                if let Some(key) = self.personal_template_key(&id) {
-                    if let Err(error) = self.arch.templates_panel.personal.toggle(&key) {
-                        self.warn(format!("Şablon favorileri kaydedilemedi: {error}"));
-                    }
+                if let Some(key) = self.personal_template_key(&id)
+                    && let Err(error) = self.arch.templates_panel.personal.toggle(&key)
+                {
+                    self.warn(format!("Şablon favorileri kaydedilemedi: {error}"));
                 }
             }
         }

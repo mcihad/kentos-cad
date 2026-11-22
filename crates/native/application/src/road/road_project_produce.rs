@@ -60,6 +60,7 @@ struct Asked {
 }
 
 /// Where a recipe drawing's layer is here (docs/adr/3640).
+#[allow(clippy::large_enum_variant)]
 enum Place {
     Here(String, RoadLayerMatch),
     /// No layer of its name: one is added with the recipe's look.

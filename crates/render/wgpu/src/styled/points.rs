@@ -617,7 +617,7 @@ impl PointsGpu {
 /// tolerance, each point taken through its cell bilinearly; none when the map does not reach it.
 fn on_map(m: &MapProjection, node: Arc<CloudNode>) -> Option<Arc<CloudNode>> {
     let (mut x0, mut y0, mut x1, mut y1) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
-    for p in node.xyz.chunks_exact(3) {
+    for p in node.xyz.as_chunks::<3>().0.iter() {
         let (x, y) = (f64::from(p[0]), f64::from(p[1]));
         (x0, y0, x1, y1) = (x0.min(x), y0.min(y), x1.max(x), y1.max(y));
     }
@@ -635,7 +635,7 @@ fn on_map(m: &MapProjection, node: Arc<CloudNode>) -> Option<Arc<CloudNode>> {
     let centre = m.forward(Vec2::new(cx, cy))?;
     let k = n as f64;
     let mut xyz = Vec::with_capacity(node.xyz.len());
-    for p in node.xyz.chunks_exact(3) {
+    for p in node.xyz.as_chunks::<3>().0.iter() {
         let fu = ((f64::from(p[0]) - x0) / w * k).clamp(0.0, k);
         let fv = ((y1 - f64::from(p[1])) / h * k).clamp(0.0, k);
         let (i, j) = ((fu as usize).min(n - 1), (fv as usize).min(n - 1));

@@ -279,11 +279,11 @@ impl App {
                 if let Some(h) = &a.held {
                     lines.push(words::text_line(Kind::Info, format!("Minimal datum: “{h}” tutuldu.")));
                 }
-                if let Some(i) = a.worst {
-                    if let Some(b) = a.baselines.get(i as usize) {
-                        let kind = if b.flag == "blunder" { Kind::Error } else { Kind::Info };
-                        lines.push(words::text_line(kind, format!("En kötü baz: {} → {} (w {}).", b.from, b.to, b.w.map_or("—".to_owned(), |w| format!("{w:.2}")))));
-                    }
+                if let Some(i) = a.worst
+                    && let Some(b) = a.baselines.get(i as usize)
+                {
+                    let kind = if b.flag == "blunder" { Kind::Error } else { Kind::Info };
+                    lines.push(words::text_line(kind, format!("En kötü baz: {} → {} (w {}).", b.from, b.to, b.w.map_or("—".to_owned(), |w| format!("{w:.2}")))));
                 }
                 // The results in the kit's data table: its rows scroll inside it (the owner: data tables scroll).
                 table = Some(match s.view {

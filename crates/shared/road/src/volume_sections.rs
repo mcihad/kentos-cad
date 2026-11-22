@@ -91,7 +91,7 @@ impl Segment {
     fn of(a: [f64; 2], b: [f64; 2], bulge: f64) -> Option<Segment> {
         let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
         let chord = dx.hypot(dy);
-        if !(chord > 0.0) {
+        if chord.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
             return None;
         }
         if bulge == 0.0 {
@@ -193,10 +193,10 @@ pub struct Sections {
 /// The axis of an azimuth (degrees from north, clockwise) as an east, north unit vector; the quarters exact.
 pub fn axis(azimuth: f64) -> [f64; 2] {
     match azimuth {
-        a if a == 0.0 => [0.0, 1.0],
-        a if a == 90.0 => [1.0, 0.0],
-        a if a == 180.0 => [0.0, -1.0],
-        a if a == 270.0 => [-1.0, 0.0],
+        0.0 => [0.0, 1.0],
+        90.0 => [1.0, 0.0],
+        180.0 => [0.0, -1.0],
+        270.0 => [-1.0, 0.0],
         a => {
             let r = a.to_radians();
             [r.sin(), r.cos()]

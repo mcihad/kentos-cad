@@ -127,7 +127,7 @@ fn clear_snapshot<'a, M>(
         },
     );
     let mut img = s.render(view, &theme);
-    for px in img.rgba.chunks_exact_mut(4) {
+    for px in img.rgba.as_chunks_mut::<4>().0.iter_mut() {
         let a = u32::from(px[3]);
         if a > 0 && a < 255 {
             for c in &mut px[..3] {

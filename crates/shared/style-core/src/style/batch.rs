@@ -1107,7 +1107,7 @@ impl BatchSink {
         }
         let idx = triangulate_many(&pts, &sizes, &[rings.len()]);
         let tris: Vec<[Vec2; 3]> = idx
-            .chunks_exact(3)
+            .as_chunks::<3>().0.iter()
             .map(|t| [pts[t[0] as usize], pts[t[1] as usize], pts[t[2] as usize]])
             .collect();
         if tris.is_empty() {
@@ -1533,7 +1533,7 @@ mod tests {
         // A 6 km sheet in Web Mercator is halved (map_warp_cases.py: level 3, 128 triangles).
         assert_eq!(data.len() / 12, 128);
         // Each vertex: the picture's coordinates of its project point land on the map where PROJ puts it.
-        for v in data.chunks_exact(4) {
+        for v in data.as_chunks::<4>().0.iter() {
             let (u, t) = (f64::from(v[2]), 1.0 - f64::from(v[3]));
             assert!((-1e-6..=1.0 + 1e-6).contains(&u) && (-1e-6..=1.0 + 1e-6).contains(&t));
             let q = m

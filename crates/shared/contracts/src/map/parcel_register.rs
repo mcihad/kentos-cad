@@ -631,7 +631,7 @@ fn rings_problem(n: u32, rings: &[RecordedRing], by: &HashMap<u32, &RecordedBoun
             return Some(format!("{n}. parsel kaydının parçaları sırasız ya da bir parça dış halkasıyla açılmıyor"));
         }
         part = ring.part;
-        if ring.edges.len() < 3 || ring.edges.iter().any(|e| *e == 0) {
+        if ring.edges.len() < 3 || ring.edges.contains(&0) {
             return Some(format!("{n}. parsel kaydının bir halkası üç sınırdan az ya da sıfır numaralı sınır taşıyor"));
         }
         let Some((pts, _)) = ring_path_with(by, ring) else {

@@ -1115,13 +1115,13 @@ impl Reader {
         let samples = match (components, l.per_block) {
             (c, p) if c == p => pixels,
             (1, 3) => pixels.iter().flat_map(|&g| [g, g, g]).collect(),
-            (3, 1) => pixels.chunks_exact(3).map(|c| c[0]).collect(),
+            (3, 1) => pixels.as_chunks::<3>().0.iter().map(|c| c[0]).collect(),
             // A browser's decoder gives RGBA: its alpha (always opaque for a JPEG) goes.
             (4, 3) => pixels
-                .chunks_exact(4)
+                .as_chunks::<4>().0.iter()
                 .flat_map(|c| [c[0], c[1], c[2]])
                 .collect(),
-            (4, 1) => pixels.chunks_exact(4).map(|c| c[0]).collect(),
+            (4, 1) => pixels.as_chunks::<4>().0.iter().map(|c| c[0]).collect(),
             _ => {
                 return Err(RasterError::new(
                     "JPEG bloğunun bileşen sayısı rasterinkine uymuyor.",

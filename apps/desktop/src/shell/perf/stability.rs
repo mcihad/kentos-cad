@@ -301,7 +301,7 @@ fn stability() {
             h.frame(&mut app, &[]);
             let twice = app.viewport.status().stats.picture_zoomed;
             let from_wide = app.viewport.status().stats.picture_zoomed_wide;
-            let zoomed = h.picture(&mut app);
+            let zoomed = h.picture(&app);
             app.viewport.hold_moving(false);
             h.frame(&mut app, &[]);
             let stats = app.viewport.status().stats;

@@ -7,8 +7,7 @@
 use kentos_commands::{CallEnvelope, CallOp, CommandResult};
 use kentos_domain::{Document, Slot};
 use serde_json::{Value, json};
-#[path = "../../../plot/tests/support/files.rs"]
-mod files;
+use crate::files;
 
 const CASES: &str = include_str!("../../../../../fixtures/commands/v1/cad.sheets.details.json");
 

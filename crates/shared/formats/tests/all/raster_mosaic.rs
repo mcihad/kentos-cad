@@ -44,7 +44,7 @@ fn raw(name: &str, sample: RasterSample) -> Vec<f64> {
     let b = std::fs::read(folder().join(name)).unwrap();
     match sample {
         RasterSample::U8 => b.iter().map(|&v| f64::from(v)).collect(),
-        RasterSample::F32 => b.chunks_exact(4).map(|c| f64::from(f32::from_le_bytes([c[0], c[1], c[2], c[3]]))).collect(),
+        RasterSample::F32 => b.as_chunks::<4>().0.iter().map(|c| f64::from(f32::from_le_bytes([c[0], c[1], c[2], c[3]]))).collect(),
         other => panic!("{other:?}"),
     }
 }

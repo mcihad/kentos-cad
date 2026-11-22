@@ -303,8 +303,7 @@ fn screens() {
                 // label is under the menu; the menu is drawn last, so its row is the last match below.
                 let item = crate::files_testing::find_texts(&mut snapshot, &app, "Koordinat sistemi")
                     .into_iter()
-                    .filter(|r| r.y > row.y)
-                    .last()
+                    .rfind(|r| r.y > row.y)
                     .map_or(Point::new(1080.0, row.center().y + 318.0), |r| r.center());
                 snapshot.input(&mut app, App::view, &mut update, Input::Move(item));
                 save(&mut snapshot, &app, "katman-menu");

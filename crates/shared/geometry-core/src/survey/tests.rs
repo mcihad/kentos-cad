@@ -508,7 +508,7 @@ fn the_traverse_carries_its_heights_by_trigonometric_heighting() {
     let back = Vec2::new(TM.x - 50.0, TM.y);
     let (angles, distances) = measure(unit, &sq, back, Some(back));
     // z such that S·cot z = 1, 2, −1.5 and −1.6 m: the last 0.1 m off the closure.
-    let zenith = |d: f64| 90.0 - (d / 100.0).atan().to_degrees();
+    let zenith = |d: f64| 90.0 - crate::jsmath::atan(d / 100.0).to_degrees();
     let heights = TraverseHeights {
         start: 850.0,
         end: Some(850.0),
@@ -628,7 +628,7 @@ fn a_leg_sighted_back_takes_the_mean_of_its_two_differences_and_gives_its_refrac
     use super::traverse::TraverseBackSight;
     let r = super::fieldbook::EARTH_RADIUS;
     let c = (1.0 - 0.13) * 1000.0 * 1000.0 / (2.0 * r);
-    let zenith = |cot: f64| 90.0 - (cot / 1000.0).atan().to_degrees();
+    let zenith = |cot: f64| 90.0 - crate::jsmath::atan(cot / 1000.0).to_degrees();
     let back = Vec2::new(TM.x - 50.0, TM.y);
     let run = |k: f64, sighted_back: bool| {
         traverse(&TraverseInput {
@@ -743,8 +743,8 @@ fn a_leapfrog_setup_s_difference_is_fore_less_back() {
     let fore = Sight { slope: 50.0, zenith: 102.0, target: 1.5 };
     let (dh, length) = leapfrog(back, fore, Unit::GRAD, 0.13).expect("a setup");
     let a = 2.0 * std::f64::consts::PI / 400.0 * 2.0;
-    assert!((dh + 2.0 * 50.0 * a.sin()).abs() < 1e-12, "{dh}");
-    assert!((length - 100.0 * a.cos()).abs() < 1e-12, "{length}");
+    assert!((dh + 2.0 * 50.0 * crate::jsmath::sin(a)).abs() < 1e-12, "{dh}");
+    assert!((length - 100.0 * crate::jsmath::cos(a)).abs() < 1e-12, "{length}");
     let (dh0, _) = leapfrog(back, fore, Unit::GRAD, 0.0).expect("a setup");
     assert!((dh - dh0).abs() < 1e-12, "equal distances: k falls out");
     // Unequal: the curvature of the longer stays.

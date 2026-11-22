@@ -296,7 +296,7 @@ impl Place {
     /// is nothing, or uncovers the whole picture.
     pub fn shift_to(&self, now: &Place) -> Option<[i32; 2]> {
         let same = self.same_frame(now) && self.px_per_unit.to_bits() == now.px_per_unit.to_bits();
-        if !same || !(self.px_per_unit > 0.0) {
+        if !same || self.px_per_unit.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
             return None;
         }
         let dx = (self.center[0] - now.center[0]) * self.px_per_unit;

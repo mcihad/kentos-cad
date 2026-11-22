@@ -961,7 +961,7 @@ pub(super) fn commit(
                 let size = t.split('·').next().unwrap_or("").replace('Ø', "");
                 let pieces: Vec<Option<f64>> = size
                     .split(['×', 'x', 'X', '*'])
-                    .map(|p| kentos_interaction::js_trim(p))
+                    .map(kentos_interaction::js_trim)
                     .filter(|p| !p.is_empty())
                     .map(|p| length(p).filter(|v| v.is_finite() && *v > 0.0))
                     .collect();

@@ -366,13 +366,13 @@ fn unreadable(command: &str, e: &serde_json::Error) -> Unrun {
 // standards command must enforce the package's stricter resource contract
 // before serde drops unrecognized fields during typed deserialization.
 fn check_standard_resource_input(command: &str, input: &Value) -> Result<(), Unrun> {
-    if command == kentos_commands::CAD_STANDARDS_CHECK {
-        if let Some(resources) = input.get("resources").filter(|value| !value.is_null()) {
-            kentos_commands::check_resource_fields(resources).map_err(|message| Unrun {
-                code: codes::INVALID_INPUT,
-                message: format!("{command} girdisi okunamadı: {message}"),
-            })?;
-        }
+    if command == kentos_commands::CAD_STANDARDS_CHECK
+        && let Some(resources) = input.get("resources").filter(|value| !value.is_null())
+    {
+        kentos_commands::check_resource_fields(resources).map_err(|message| Unrun {
+            code: codes::INVALID_INPUT,
+            message: format!("{command} girdisi okunamadı: {message}"),
+        })?;
     }
     Ok(())
 }

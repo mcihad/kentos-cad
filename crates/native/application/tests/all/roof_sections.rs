@@ -957,8 +957,8 @@ fn a_saved_t_roof_keeps_its_two_valleys_and_is_cut_in_the_section() {
 /// the 1. kat (eaves 50 cm out of the walls at +6.00, 33 %, 25 cm upright). The 1. kat's rooms have no slab over them:
 /// each rises to the roof's underside. Worked out here another way than the IFC's pieces: the roof's lower envelope less
 /// its build-up integrated over each room on a fine grid. Each such room's GrossVolume is that (10⁻⁵), its NetVolume the
-/// same, no Height (it is not constant), its body closed pieces of that volume; the ground floor's rooms stay prisms. The
-/// 1. kat's emsal zones follow the same underside (docs/adr/8123). `KENTOS_WRITE_IFC_UNDER_ROOF=1` writes fixtures/arch/v1/ifc/cati-alti-mahal.ifc for
+/// same, no Height (it is not constant), its body closed pieces of that volume; the ground floor's rooms stay prisms.
+/// The 1. kat's emsal zones follow the same underside (docs/adr/8123). `KENTOS_WRITE_IFC_UNDER_ROOF=1` writes fixtures/arch/v1/ifc/cati-alti-mahal.ifc for
 /// scripts/fixtures/curved_ifc_check.py's part.
 #[test]
 fn a_room_with_no_slab_over_it_rises_to_the_roof() {

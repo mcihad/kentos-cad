@@ -88,6 +88,6 @@ mod tests {
         assert_eq!(h.factor(None), 1.0);
         let d = Robust { method: Method::Danish, c: 2.0 };
         assert_eq!(d.factor(Some(2.0)), 1.0);
-        assert!((d.factor(Some(4.0)) - (-1.0f64).exp()).abs() < 1e-15);
+        assert!((d.factor(Some(4.0)) - crate::jsmath::exp(-1.0)).abs() < 1e-15);
     }
 }

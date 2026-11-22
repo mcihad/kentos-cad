@@ -105,7 +105,7 @@ fn an_installed_extension_is_in_the_agents_catalog() {
     );
     assert_eq!(
         unknown.err().map(|e| e.code),
-        Some("unknown_extension".into())
+        Some("unknown_extension")
     );
     let _ = std::fs::remove_dir_all(&root);
 }

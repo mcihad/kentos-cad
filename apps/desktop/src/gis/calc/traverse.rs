@@ -138,6 +138,7 @@ pub struct Computed {
     pub targets: Vec<f64>,
     pub own_heights: Option<Result<Option<String>, String>>,
     /// The start's and the end's heights as taken, each with whether it is the known point's own.
+    #[allow(clippy::type_complexity)]
     pub ends_z: Option<((f64, bool), Option<(f64, bool)>)>,
     /// Docs/adr/4500: each leg's back sight (none: one way); none when no leg is sighted back.
     pub back: Option<Vec<Option<kentos_interaction::survey::traverse::TraverseBackSight>>>,

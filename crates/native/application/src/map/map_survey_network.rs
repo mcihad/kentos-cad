@@ -117,6 +117,7 @@ const ARCSEC: f64 = 180.0 * 3600.0 / std::f64::consts::PI;
 /// the rotations reported are R's antisymmetric part (position vector convention). σ0² = vᵀv/(3n − 7), the scale's σ
 /// from the linearised normals on the free points reduced to their mean; t = |λ − 1|/σ against Student's t at
 /// (1 + confidence)/2. `points` are (id, mark, given, free, given latitude and longitude).
+#[allow(clippy::type_complexity)]
 fn similarity(points: &[(String, String, [f64; 3], [f64; 3], f64, f64)], confidence: f64) -> Option<NetworkSimilarity> {
     let n = points.len();
     if n < 3 {
@@ -711,6 +712,7 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     let froms: Vec<usize> = used.iter().map(|b| mark_at.get(&b.from).copied().unwrap_or(0)).collect();
     let (free_stage, free_tests) = stage(&free, &ids, &froms, &known_ids, limit, vec![hold.mark.clone()]);
     // Madde 15(1)(c): the known points' given coordinates (at the measurement epoch) against the free stage's.
+    #[allow(clippy::type_complexity)]
     let common: Vec<(String, String, [f64; 3], [f64; 3], f64, f64)> = known
         .iter()
         .filter_map(|k| {

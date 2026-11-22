@@ -103,7 +103,7 @@ fn placed(e: &Entity, blocks: &[BlockDefinition]) -> Vec<Got> {
     match e {
         Entity::Insert(i) => {
             let b = blocks.iter().find(|b| b.id == i.block).unwrap();
-            let (s, c) = i.rotation.sin_cos(); // radians, as the contract keeps it
+            let (s, c) = (kentos_formats::math::sin(i.rotation), kentos_formats::math::cos(i.rotation)); // radians, as the contract keeps it
             let sy = i.y_scale.unwrap_or(i.scale);
             let place = |p: Vec2| {
                 let (x, y) = ((p.x - b.base.x) * i.scale, (p.y - b.base.y) * sy);

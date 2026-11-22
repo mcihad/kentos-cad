@@ -5,8 +5,7 @@ use kentos_commands::{
 use kentos_domain::Document;
 use kentos_sheet::{SheetBook, project::project_sheets};
 use serde_json::{Value, json};
-#[path = "../../../plot/tests/support/files.rs"]
-mod files;
+use crate::files;
 const CASES: &str = include_str!("../../../../../fixtures/commands/v1/file.publish.sheets.json");
 fn fixture() -> Value {
     serde_json::from_str(CASES).unwrap()

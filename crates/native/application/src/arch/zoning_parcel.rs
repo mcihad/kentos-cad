@@ -128,7 +128,7 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
         })?;
     let parcel = areas_of_entity(&shape(entity));
     let area: f64 = parcel.iter().map(net_area).sum();
-    if parcel.is_empty() || !(area > 0.0) {
+    if parcel.is_empty() || area.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
         return Err(fail(
             codes::NOT_A_PARCEL,
             "Parsel kapalı bir çizgi ya da alan değil; parselin sınırını kapalı çizin.".into(),

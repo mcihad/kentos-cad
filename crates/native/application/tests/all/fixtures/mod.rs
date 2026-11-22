@@ -767,13 +767,11 @@ fn roof_part_number<'a>(
 
 
 
-/// `at.x`, `north.angle`, `size` (docs/adr/0721 §3).
+// `at.x`, `north.angle`, `size` (docs/adr/0721 §3).
 
-/// `at.x`, `size`, `arc`, the frame's points (docs/adr/0721 §4).
+// `at.x`, `size`, `arc`, the frame's points (docs/adr/0721 §4).
 
-/// `at.x`, `height` (docs/adr/0721 §5).
-
-
+// `at.x`, `height` (docs/adr/0721 §5).
 
 
 
@@ -801,7 +799,9 @@ fn roof_part_number<'a>(
 
 
 
-/// No number of these is a NaN or ±∞ case (docs/adr/0210 §11).
+
+
+// No number of these is a NaN or ±∞ case (docs/adr/0210 §11).
 
 
 
@@ -923,8 +923,8 @@ fn measured_number<'a>(
 
 
 
-/// No style's number is a NaN or ±∞ case: the table's rule refuses them as
-/// any other value out of its bounds (docs/adr/0248 §4).
+// No style's number is a NaN or ±∞ case: the table's rule refuses them as
+// any other value out of its bounds (docs/adr/0248 §4).
 
 
 

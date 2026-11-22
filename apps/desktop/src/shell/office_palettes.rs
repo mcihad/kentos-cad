@@ -301,9 +301,7 @@ impl App {
                 body = body.push(label::strong(format!("{} · {} {}", p.name, p.standard, p.revision))).push(group);
             }
         }
-        if self.document.is_none() {
-            return None;
-        }
+        self.document.as_ref()?;
         body = body.push(
             button(label::body("Son komutu araç yap"))
                 .padding([3, 8])

@@ -407,7 +407,7 @@ pub fn delaunay_triangles(sites: &[Vec2]) -> Result<Vec<[usize; 3]>, String> {
     let d = triangulate(&places.places)?;
     let mut tris: Vec<[usize; 3]> = d
         .triangles
-        .chunks_exact(3)
+        .as_chunks::<3>().0.iter()
         .map(|t| {
             let s = [0, 1, 2].map(|i| places.site_of[t[i] as usize]);
             let k = (0..3).min_by_key(|&i| s[i]).unwrap_or(0);

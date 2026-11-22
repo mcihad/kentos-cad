@@ -9,7 +9,7 @@
 use crate::solve::Lu;
 
 /// Euler's constant.
-pub const EULER: f64 = 0.577_215_664_901_532_9;
+pub const EULER: f64 = std::f64::consts::EULER_GAMMA;
 
 /// e^x·√x·K₀(x) = Σ cₖ Tₖ(4/x − 1) for x ≥ 2 (scripts/fixtures/bessel_k0.py writes it).
 #[rustfmt::skip]

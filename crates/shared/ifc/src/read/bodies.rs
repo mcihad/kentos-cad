@@ -93,10 +93,10 @@ impl Model {
                         let [ox, oy, oz] = [mesh.origin[0] + anchor.0, mesh.origin[1] + anchor.1, mesh.origin[2] + anchor.2];
                         let positions = mesh
                             .positions
-                            .chunks_exact(3)
+                            .as_chunks::<3>().0.iter()
                             .map(|p| [ox + f64::from(p[0]), oy + f64::from(p[1]), oz + f64::from(p[2])])
                             .collect();
-                        let triangles = mesh.indices.chunks_exact(3).map(|t| [t[0], t[1], t[2]]).collect();
+                        let triangles = mesh.indices.as_chunks::<3>().0.iter().map(|t| [t[0], t[1], t[2]]).collect();
                         let rounding = rounding(&mesh, scale);
                         out.bodies.push(Body { object: i, positions, triangles, rounding });
                     }

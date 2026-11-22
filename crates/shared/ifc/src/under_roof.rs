@@ -27,7 +27,7 @@ fn height(p: Plane, at: Vec2) -> f64 {
 pub fn pieces(rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>], faces: &[UnderFace]) -> Option<Vec<(Area, Plane)>> {
     let room = crate::quantities::areas(rings, bulges);
     let whole: f64 = room.iter().map(net_area).sum();
-    if !(whole > 0.0) {
+    if whole.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
         return None;
     }
     let mut out = Vec::new();

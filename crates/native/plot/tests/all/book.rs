@@ -285,10 +285,10 @@ fn unicode_profile_preview_matches_pdf_ink_at_two_scales_and_large_coordinates()
         let info = reader.next_frame(&mut bytes).unwrap();
         assert_eq!([preview.width, preview.height], [info.width, info.height]);
         assert_eq!(info.color_type, png::ColorType::Rgb);
-        let a: Vec<_> = preview.rgba.chunks_exact(4).map(is_coloured).collect();
+        let a: Vec<_> = preview.rgba.as_chunks::<4>().0.iter().map(|p| is_coloured(p)).collect();
         let b: Vec<_> = bytes[..info.buffer_size()]
-            .chunks_exact(3)
-            .map(is_coloured)
+            .as_chunks::<3>().0.iter()
+            .map(|p| is_coloured(p))
             .collect();
         for (from, to) in [(&a, &b), (&b, &a)] {
             let mut ink = 0;

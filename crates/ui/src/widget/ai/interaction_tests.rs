@@ -327,8 +327,7 @@ fn an_approval_says_its_call_once_and_asks() {
                 count: count.clone(),
             }),
         );
-        let n = *count.lock().unwrap();
-        n
+        *count.lock().unwrap()
     };
     let open = call(true);
     assert_eq!(count(&mut snapshot, &open, detail), 1, "said once, above");
@@ -378,8 +377,7 @@ fn an_answer_says_its_tokens_and_the_conversations() {
                 count: count.clone(),
             }),
         );
-        let n = *count.lock().unwrap();
-        n
+        *count.lock().unwrap()
     };
     let limited = answered(Some(20_819), Some(200_000));
     assert_eq!(

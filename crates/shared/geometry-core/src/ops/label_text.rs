@@ -164,7 +164,7 @@ struct Placed<'r> {
 /// The label records of a window grouped by label (frames and their parts); other records left out.
 fn placed(records: &[f64]) -> Vec<Placed<'_>> {
     let mut out: Vec<Placed<'_>> = Vec::new();
-    for r in records.chunks_exact(LABEL_STRIDE) {
+    for r in records.as_chunks::<LABEL_STRIDE>().0.iter() {
         let what = r[1];
         if what == LABEL_PLACED {
             out.push(Placed {

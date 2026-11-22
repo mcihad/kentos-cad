@@ -166,7 +166,7 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64,
         None => None,
     };
     // The terrain's points in the range, walked once.
-    let first_half = |done: u64, all: u64| told(if all == 0 { 0 } else { done * TICKS / all }, 2 * TICKS);
+    let first_half = |done: u64, all: u64| told((done * TICKS).checked_div(all).unwrap_or(0), 2 * TICKS);
     let ground = match &surface {
         Some(s) => Some(terrain(&built, s, s0, s1, &first_half).ok_or(Stop::Cancelled)?),
         None => None,

@@ -345,7 +345,7 @@ fn the_picture_paints_the_surface_and_its_marks() {
     let pixels = super::paint::picture(&layout, &t, 800, 480, 2.0).expect("painted");
     assert_eq!(pixels.len(), 800 * 480 * 4);
     // Opaque everywhere, the corner the surface's colour.
-    assert!(pixels.chunks_exact(4).all(|p| p[3] == 255));
+    assert!(pixels.as_chunks::<4>().0.iter().all(|p| p[3] == 255));
     let ground = t.surface.into_rgba8();
     assert_eq!(pixels[..3], ground[..3]);
     // The first series' colour is somewhere: the bars.
@@ -353,7 +353,7 @@ fn the_picture_paints_the_surface_and_its_marks() {
     let (r, g, b) = ((blue >> 16) as u8, (blue >> 8) as u8, blue as u8);
     assert!(
         pixels
-            .chunks_exact(4)
+            .as_chunks::<4>().0.iter()
             .any(|p| p[0] == r && p[1] == g && p[2] == b)
     );
 }

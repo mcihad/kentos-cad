@@ -243,7 +243,7 @@ fn timing() {
     let found = store.neighbors(&areas, 0.001, true, true);
     let kinds = |kind: f64| {
         found
-            .chunks_exact(NEIGHBOR_STRIDE)
+            .as_chunks::<NEIGHBOR_STRIDE>().0.iter()
             .filter(|r| r[2] == kind)
             .count()
     };

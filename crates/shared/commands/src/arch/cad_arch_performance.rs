@@ -28,6 +28,8 @@ pub const CAD_ARCH_PERFORMANCE_VERSION: u32 = 1;
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
+// An operation is read once per call: boxing its largest variant would save nothing worth the indirection.
+#[allow(clippy::large_enum_variant)]
 pub enum PerformanceOperation {
     /// Nesneler: the objects' own fire resistance class (walls, slabs, columns, beams, roofs, railings, stairs, ramps,
     /// doors, windows), exit role (doors, stairs; a roof as an escape route, BYKHY Ek-3/B 4-a), load-bearing role

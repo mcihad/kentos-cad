@@ -327,6 +327,7 @@ pub fn run(doc: &Document, input: &ExchangeCheck, op: CallOp) -> CommandResult<V
 }
 
 /// The question's own refusals: the tolerance, then the layers.
+#[allow(clippy::result_large_err)]
 pub(crate) fn asked(doc: &Document, input: &ExchangeCheck) -> Result<(), CommandResult<Value>> {
     let tolerance = input.tolerance.unwrap_or(EXCHANGE_TOLERANCE);
     if !(tolerance.is_finite() && tolerance > 0.0 && tolerance <= 10.0) {
@@ -347,6 +348,7 @@ pub(crate) fn asked(doc: &Document, input: &ExchangeCheck) -> Result<(), Command
 /// The trip itself, the question asked: the drawing written by KentOS's writer to `file` (whose folder is there) and
 /// read back from it into an empty copy, compared. The delivery package keeps the file (docs/adr/2780); the check
 /// removes its folder.
+#[allow(clippy::result_large_err)]
 pub(crate) fn trip(doc: &Document, input: &ExchangeCheck, file: &std::path::Path) -> Result<ExchangeChecked, CommandResult<Value>> {
     let tolerance = input.tolerance.unwrap_or(EXCHANGE_TOLERANCE);
     let path = file.display().to_string();

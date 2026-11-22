@@ -24,7 +24,7 @@ pub mod time;
 pub mod trace;
 
 fn points(xy: &[f64]) -> Vec<Vec2> {
-    xy.chunks_exact(2).map(|c| Vec2::new(c[0], c[1])).collect()
+    xy.as_chunks::<2>().0.iter().map(|c| Vec2::new(c[0], c[1])).collect()
 }
 
 /// The id of a core operation by its TypeScript name (`apps/web/src/wasm/core.ts`
@@ -480,7 +480,7 @@ pub fn triangulate_many_js(xy: &[f64], ring_sizes: &[u32], poly_rings: &[u32]) -
 pub fn corner_texts_js(corners: &[f64], texts: Vec<String>, height: f64, font: &str) -> Vec<f64> {
     let font = kentos_geometry_core::text::Font::from_id(font);
     corners
-        .chunks_exact(4)
+        .as_chunks::<4>().0.iter()
         .zip(&texts)
         .flat_map(|(c, t)| {
             let at = corner_text_at(

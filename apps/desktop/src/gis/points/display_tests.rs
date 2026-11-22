@@ -119,7 +119,7 @@ fn a_labelled_point_layer_writes_the_name_and_the_code() {
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let (slot, name, code) = named_and_coded(&app);
-    assert_eq!(app.spatial.label_texts(slot), [name.clone()]);
+    assert_eq!(app.spatial.label_texts(slot), std::slice::from_ref(&name));
     let _ = app.update(Message::Run("view.pointCodes"));
     assert_eq!(app.spatial.label_texts(slot), [format!("{name}  {code}")]);
     let _ = app.update(Message::Run("view.pointNames"));

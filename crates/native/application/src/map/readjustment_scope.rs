@@ -166,6 +166,7 @@ fn object<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<&'d Entity, St
 }
 
 /// The basis and what the part outside keeps, or why there is none: the status first.
+#[allow(clippy::too_many_arguments)]
 fn basis_of(
     kind: &str,
     counted_in: usize,

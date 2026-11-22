@@ -49,7 +49,7 @@ struct Label {
 
 fn labels(shown: &Shown) -> Vec<Label> {
     let mut out: Vec<Label> = Vec::new();
-    for r in shown.records.chunks_exact(LABEL_STRIDE) {
+    for r in shown.records.as_chunks::<LABEL_STRIDE>().0.iter() {
         if r[1] == LABEL_PLACED {
             out.push(Label {
                 id: r[0],
@@ -318,7 +318,7 @@ fn timing() {
                 let ms = t.elapsed().as_secs_f64() * 1000.0;
                 placed = shown
                     .records
-                    .chunks_exact(LABEL_STRIDE)
+                    .as_chunks::<LABEL_STRIDE>().0.iter()
                     .filter(|r| r[1] == LABEL_PLACED)
                     .count();
                 ms

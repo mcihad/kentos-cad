@@ -206,7 +206,7 @@ fn synthetic(n: u64, path: &Path) -> Option<f64> {
     let mut i = 0;
     while i < n {
         let k = (n - i).min(1_000_000) as usize;
-        for (j, r) in batch[..k * RECORD].chunks_exact_mut(RECORD).enumerate() {
+        for (j, r) in batch[..k * RECORD].as_chunks_mut::<RECORD>().0.iter_mut().enumerate() {
             record(i + j as u64, &mut rng, r);
         }
         file.write_all(&w.put(&batch[..k * RECORD]).expect("compresses"))
@@ -559,7 +559,7 @@ fn clouds() {
     timed("Bulutu kırp (64 köşeli alanın içi)", &mut || {
         let index = region.index();
         let mut inside = 0u64;
-        for r in all.chunks_exact(RECORD) {
+        for r in all.as_chunks::<RECORD>().0.iter() {
             let p = kentos_geometry_core::vec2::Vec2::new(
                 f64::from(layout.x(r)) * scale[0] + offset[0],
                 f64::from(layout.y(r)) * scale[1] + offset[1],

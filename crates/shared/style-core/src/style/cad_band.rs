@@ -470,7 +470,7 @@ mod tests {
         assert_eq!(got.len(), 1);
         assert!((got[0].pts[1].x).abs() < 1e-12);
         assert!((got[0].pts[1].y - 1.).abs() < 1e-12);
-        assert!((got[0].bulges[0] - (std::f64::consts::PI / 8.).tan()).abs() < 1e-12);
+        assert!((got[0].bulges[0] - kentos_geometry_core::jsmath::tan(std::f64::consts::PI / 8.)).abs() < 1e-12);
         assert_eq!(got[0].widths, vec![[2., 3.]]);
     }
     #[test]

@@ -25,6 +25,7 @@ use crate::standard_libraries::{Found, Libraries};
 use crate::standards::style_differences;
 
 /// What a block or template row installs.
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum Incoming {
     Block {
         def: BlockDefinition,

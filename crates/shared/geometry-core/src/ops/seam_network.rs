@@ -107,8 +107,8 @@ pub fn tidy(ring: &[Pt], ccw: bool, tol: f64) -> Vec<Pt> {
             let (a, b, c) = (r[(k + n - 1) % n], r[k], r[(k + 1) % n]);
             let (u, v) = ([b[0] - a[0], b[1] - a[1]], [c[0] - b[0], c[1] - b[1]]);
             let cross = u[0] * v[1] - u[1] * v[0];
-            let len = (u[0].hypot(u[1])).max(v[0].hypot(v[1]));
-            cross.abs() <= tol * len || u[0].hypot(u[1]) <= tol
+            let len = crate::jsmath::js_max(crate::jsmath::js_hypot(u[0], u[1]), crate::jsmath::js_hypot(v[0], v[1]));
+            cross.abs() <= tol * len || crate::jsmath::js_hypot(u[0], u[1]) <= tol
         });
         match drop {
             Some(k) => {
@@ -239,7 +239,11 @@ pub fn outline(valid: &[bool], w: usize, h: usize) -> Vec<(Vec<[i64; 2]>, bool)>
             while cur != s {
                 ring.push(cur);
                 let d = [cur[0] - prev[0], cur[1] - prev[1]];
-                let choices = out_of.get_mut(&cur).expect("a boundary corner has a way on");
+                // Every corner a closed boundary enters has a way on; a trace that has none is left out.
+                let Some(choices) = out_of.get_mut(&cur) else {
+                    ring.clear();
+                    break;
+                };
                 // Two ways on (two valid pixels touching only at this corner): turn right, keeping the pixel just
                 // passed apart from its diagonal neighbour (4-connectivity). Right of (dx, dy) with rows down is
                 // (−dy, dx).
@@ -253,7 +257,9 @@ pub fn outline(valid: &[bool], w: usize, h: usize) -> Vec<(Vec<[i64; 2]>, bool)>
                 prev = cur;
                 cur = q;
             }
-            rings.push(ring);
+            if !ring.is_empty() {
+                rings.push(ring);
+            }
         }
     }
     rings

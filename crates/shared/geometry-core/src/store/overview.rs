@@ -255,7 +255,7 @@ impl Canvas {
         }
         for (j, xs) in rows.iter_mut().enumerate() {
             xs.sort_by(f64::total_cmp);
-            for pair in xs.chunks_exact(2) {
+            for pair in xs.as_chunks::<2>().0.iter() {
                 let from = js_max((pair[0] - 0.5).ceil(), 0.0) as i64;
                 let to = js_min((pair[1] - 0.5).ceil(), self.w as f64) as i64;
                 for i in from..to {

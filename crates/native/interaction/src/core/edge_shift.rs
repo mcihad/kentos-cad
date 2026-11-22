@@ -281,7 +281,7 @@ impl EdgeShift {
     }
 
     /// The point's distance from the reference on the edge's side (negative: past the reference); none without one.
-    fn from_reference(&self, p: Vec2) -> Option<f64> {
+    fn beyond_reference(&self, p: Vec2) -> Option<f64> {
         let (k, r) = (&self.edge.as_ref()?.picked, self.reference?);
         let side = if r.across(k.a) >= 0.0 { 1.0 } else { -1.0 };
         Some(side * r.across(p))
@@ -514,7 +514,7 @@ impl Tool for EdgeShift {
             self.pick_reference(p, cx);
             return;
         }
-        match (self.distance_at(p.world), self.from_reference(p.world)) {
+        match (self.distance_at(p.world), self.beyond_reference(p.world)) {
             (None, _) => self.pick(p, cx),
             // Past the reference the edge would leave its side: said, nothing written.
             (Some(_), Some(from)) if from < 0.0 => cx.say(
@@ -674,7 +674,7 @@ impl Tool for EdgeShift {
         let Some((at, d, moved, around, carried)) = &self.at else {
             return out;
         };
-        let mut lines = match self.from_reference(*at) {
+        let mut lines = match self.beyond_reference(*at) {
             Some(from) => {
                 let mut l = vec![format!("referanstan {}", format.length(from))];
                 if self.keep {
@@ -695,7 +695,7 @@ impl Tool for EdgeShift {
             });
         }
         match moved {
-            Ok(moved) if self.from_reference(*at).is_none_or(|f| f >= 0.0) => {
+            Ok(moved) if self.beyond_reference(*at).is_none_or(|f| f >= 0.0) => {
                 let outline = Outline::of(moved, Some([6.0, 4.0]), 1.0, Tone::Accent);
                 out.strokes.extend(outline.strokes);
                 if let (Some(before), Some(after)) = (picking.area, rules::area_of(moved)) {

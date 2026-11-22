@@ -128,7 +128,7 @@ pub(crate) fn suggested(
             let p = load(doc, &name, drawing, "suggest").ok()?;
             let classes: Vec<String> =
                 p.classes.iter().filter(|c| c.work.contains(&kind)).map(|c| c.id.clone()).collect();
-            (!classes.is_empty()).then(|| kentos_commands::WorkProfileSuggestion { name, title: p.title, classes })
+            (!classes.is_empty()).then_some(kentos_commands::WorkProfileSuggestion { name, title: p.title, classes })
         })
         .collect()
 }

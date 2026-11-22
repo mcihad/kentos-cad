@@ -413,7 +413,7 @@ pub fn call(f: Func, args: &[V], out: &mut String, s: &mut Scratch) -> R<'static
                 return R::V(V::Null);
             }
             let mut pairs: Vec<(String, Item)> = Vec::with_capacity(args.len() / 2);
-            for kv in args.chunks_exact(2) {
+            for kv in args.as_chunks::<2>().0.iter() {
                 let key = as_text(kv[0], &mut s.a).to_owned();
                 let it = Item::of(kv[1]);
                 match pairs.iter_mut().find(|(k, _)| *k == key) {

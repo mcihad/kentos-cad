@@ -156,6 +156,7 @@ impl SheetMaps {
 impl SheetMaps {
     /// The drawing as the maps at `scale` draw it (docs/adr/0323 §2), from the copies kept; none when
     /// that is the drawing itself (no annotative object draws otherwise there).
+    #[allow(clippy::too_many_arguments)]
     fn scaled(
         &self,
         drawing: &Document,
@@ -308,6 +309,7 @@ impl SheetMaps {
     /// ones kept when nothing they depend on changed. Construction lines are cut to the
     /// drawing's box and a margin (the maps cut them again to their frames).
     #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::type_complexity)]
     fn styled_at(
         &self,
         doc: &Document,
@@ -1240,7 +1242,7 @@ impl SheetMaps {
                 // Fills: the layer's triangles, one path a colour.
                 let mut by_color: Vec<([u8; 4], Vec<[iced::Point; 3]>)> = Vec::new();
                 let fills = &part.fills[layer.fills.start as usize..layer.fills.end as usize];
-                for t in fills.chunks_exact(3) {
+                for t in fills.as_chunks::<3>().0.iter() {
                     let pts = [
                         world(t[0].hi, t[0].lo),
                         world(t[1].hi, t[1].lo),

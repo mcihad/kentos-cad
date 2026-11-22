@@ -147,7 +147,9 @@ impl GeoPackage {
             "SELECT constraint_type, value, min, min_is_inclusive, max, max_is_inclusive, description
                FROM {CONSTRAINTS} WHERE constraint_name = ?1 ORDER BY rowid"
         ))?;
-        let rows: Vec<(String, Option<String>, Option<f64>, Option<bool>, Option<f64>, Option<bool>, Option<String>)> =
+        /// A constraint's row: its type, value, least and whether it is in, most and whether it is in, description.
+        type Row = (String, Option<String>, Option<f64>, Option<bool>, Option<f64>, Option<bool>, Option<String>);
+        let rows: Vec<Row> =
             st.query_map([name], |r| {
                 Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?))
             })?

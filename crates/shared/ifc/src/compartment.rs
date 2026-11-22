@@ -71,7 +71,8 @@ mod tests {
         // The second compartment's rooms are another building's: no zone, no number.
         let n = add(&mut b, &[vec![2, 1], vec![9], vec![3, 8], Vec::new()]);
         assert_eq!(n, 2);
-        let zones: Vec<(&str, Option<&str>, Option<&str>, &[usize])> = b
+        type Zone<'z> = (&'z str, Option<&'z str>, Option<&'z str>, &'z [usize]);
+        let zones: Vec<Zone> = b
             .groups
             .iter()
             .map(|g| (g.name.as_str(), g.long_name.as_deref(), g.object_type.as_deref(), g.spaces.as_slice()))

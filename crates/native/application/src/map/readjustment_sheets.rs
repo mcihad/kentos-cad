@@ -101,7 +101,7 @@ pub fn label_at(part: &ScopePart) -> Option<[f64; 2]> {
     let (lo, hi) = outer.pts.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| (lo.min(p[1]), hi.max(p[1])));
     let y = (lo + hi) / 2.0;
     let xs = crossings_at(part, y);
-    let best = xs.chunks_exact(2).max_by(|p, q| (p[1] - p[0]).total_cmp(&(q[1] - q[0])).then(std::cmp::Ordering::Greater))?;
+    let best = xs.as_chunks::<2>().0.iter().max_by(|p, q| (p[1] - p[0]).total_cmp(&(q[1] - q[0])).then(std::cmp::Ordering::Greater))?;
     Some([(best[0] + best[1]) / 2.0, y])
 }
 
@@ -300,6 +300,7 @@ fn fitted(part: &ScopePart, number: &str, height: f64, font: kentos_geometry_cor
 /// user's height (paper mm) at the sheet's scale, the number's fitted text (docs/adr/4280). Docs/adr/5080: with a
 /// leader, the numbers that fit inside first, then each one going outside in the parts' order, placed clear of the
 /// drawing the sheet's map shows (`drawing`), the texts inside and the leaders placed before it.
+#[allow(clippy::type_complexity)]
 fn labels_of(
     p: &ReadjustmentScopeParcel,
     given: Option<&[String]>,

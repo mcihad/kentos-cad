@@ -21,8 +21,10 @@ use crate::document::Document;
 
 thread_local! {
     /// The last report: the drawing it was read from (its session and generation, [`key`]) and the report.
+    #[allow(clippy::type_complexity)]
     static LAST: RefCell<Option<((u64, u64), Option<kentos_domain::zoning::ZoningReport>)>> = const { RefCell::new(None) };
     /// The last site plan read (docs/adr/8032), kept the same way.
+    #[allow(clippy::type_complexity)]
     static SITE: RefCell<Option<((u64, u64), Option<kentos_domain::site::SiteReport>)>> = const { RefCell::new(None) };
     /// The last plan decisions' lines and what each decision gives to take (docs/adr/8072 §5, 8140), kept the same way.
     static PLAN: RefCell<Option<((u64, u64), PlanRead)>> = const { RefCell::new(None) };
@@ -34,6 +36,7 @@ fn key(doc: &Document) -> (u64, u64) {
 }
 
 /// The reading of `doc` kept in `cache`, made by `read` when the drawing is another or changed.
+#[allow(clippy::type_complexity)]
 fn kept<T: Clone>(
     cache: &'static std::thread::LocalKey<RefCell<Option<((u64, u64), T)>>>,
     doc: &Document,

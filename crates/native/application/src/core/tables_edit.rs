@@ -1146,19 +1146,16 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                                         n.fields = fields;
                                                         n.formulas = formulas;
                                                     }
-                                                    if let (Some(column), Some(old)) = (key_column, copy.as_ref()) {
-                                                        if let Ok(old_keys) = row_keys(old, *column as usize) {
-                                                            for (new_row, fresh_row) in fresh.iter().enumerate().skip(1) {
-                                                                if let Some(old_row) = fresh_row
-                                                                    .get(*column as usize)
-                                                                    .and_then(|key| old_keys.get(key.as_str()))
-                                                                {
-                                                                    if let (Some(height), Some(target)) =
-                                                                        (t.rows.get(*old_row), n.rows.get_mut(new_row))
-                                                                    {
-                                                                        *target = *height;
-                                                                    }
-                                                                }
+                                                    if let (Some(column), Some(old)) = (key_column, copy.as_ref())
+                                                        && let Ok(old_keys) = row_keys(old, *column as usize)
+                                                    {
+                                                        for (new_row, fresh_row) in fresh.iter().enumerate().skip(1) {
+                                                            if let Some(old_row) = fresh_row
+                                                                .get(*column as usize)
+                                                                .and_then(|key| old_keys.get(key.as_str()))
+                                                                && let (Some(height), Some(target)) = (t.rows.get(*old_row), n.rows.get_mut(new_row))
+                                                            {
+                                                                *target = *height;
                                                             }
                                                         }
                                                     }

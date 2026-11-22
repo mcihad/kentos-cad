@@ -164,7 +164,7 @@ pub fn decode(bytes: &[u8], enc: Encoding) -> String {
     match enc {
         Encoding::Utf8 => String::from_utf8_lossy(bytes).into_owned(),
         Encoding::Utf16Le | Encoding::Utf16Be => {
-            let units = bytes.chunks_exact(2).map(|c| {
+            let units = bytes.as_chunks::<2>().0.iter().map(|c| {
                 if enc == Encoding::Utf16Le {
                     u16::from_le_bytes([c[0], c[1]])
                 } else {

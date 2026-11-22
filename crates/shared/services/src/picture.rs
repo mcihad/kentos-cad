@@ -44,7 +44,7 @@ pub fn slots(
     if width == 0 || height == 0 || rgba.len() != width * height * 4 {
         return None;
     }
-    if rgba.chunks_exact(4).all(|p| p[3] == 0) {
+    if rgba.as_chunks::<4>().0.iter().all(|p| p[3] == 0) {
         return None;
     }
     let (ww, wh) = want.unwrap_or((width as u32, height as u32));
@@ -57,7 +57,7 @@ pub fn slots(
         rgba = resample(&rgba, w, h, tw, th);
         (w, h) = (tw, th);
     }
-    for p in rgba.chunks_exact_mut(4) {
+    for p in rgba.as_chunks_mut::<4>().0.iter_mut() {
         let a = u16::from(p[3]);
         for c in &mut p[..3] {
             *c = ((u16::from(*c) * a + 127) / 255) as u8;

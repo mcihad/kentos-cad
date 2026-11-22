@@ -87,6 +87,7 @@ fn each_storey_says_its_rooms_by_group_and_its_elevators() {
         (facts.units, facts.dwellings, facts.local.as_deref()),
         (3, 3, None)
     );
+    #[allow(clippy::type_complexity)]
     let s: Vec<(&str, u32, u32, u32, u32, u32, u32, u32)> = facts
         .storeys
         .iter()
@@ -235,6 +236,7 @@ fn a_room_carries_its_people_and_a_door_says_its_rooms_and_where_it_swings() {
 #[test]
 fn the_storage_annexes_under_the_ground_are_the_emsal_s_limited_uses() {
     let facts = measure(&basement_with_annexes()).normalized();
+    #[allow(clippy::type_complexity)]
     let got: Vec<(&str, Option<&str>, usize, f64, f64, f64, bool)> = facts
         .limits
         .iter()

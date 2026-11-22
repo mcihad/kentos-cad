@@ -125,6 +125,7 @@ fn counted(
 /// categorized style over a field by one grouped count (a value goes to its first category, the rest to “Diğer
 /// değerler”); a graduated style's classes (when they do not overlap) or the rules (without “değilse”) each by its own
 /// condition, when every condition is sent exactly. None: the rows are read and counted here.
+#[allow(clippy::type_complexity)]
 fn source_counts(
     node: &kentos_commands::LayerNode,
     renderer: &serde_json::Value,

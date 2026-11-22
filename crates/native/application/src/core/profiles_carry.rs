@@ -22,6 +22,7 @@ const STEP: &str = "Kataloğa taşı";
 struct Plan {
     old: DataProfile,
     new: DataProfile,
+    #[allow(clippy::type_complexity)]
     classes: Vec<(CarriedClass, Vec<(Slot, Option<String>)>)>,
 }
 

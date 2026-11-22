@@ -149,7 +149,7 @@ fn path_on(paths: &[kentos_sheet::pdf::MapPath], a: [f64; 2], b: [f64; 2]) -> Ve
 
 /// Whether the picture has an opaque pixel within 40 of `rgb` in every channel.
 fn has_colour(image: &kentos_plot::MapImage, rgb: [u8; 3]) -> bool {
-    image.rgba.chunks_exact(4).any(|p| (0..3).all(|i| p[i].abs_diff(rgb[i]) <= 40) && p[3] > 200)
+    image.rgba.as_chunks::<4>().0.iter().any(|p| (0..3).all(|i| p[i].abs_diff(rgb[i]) <= 40) && p[3] > 200)
 }
 
 #[test]

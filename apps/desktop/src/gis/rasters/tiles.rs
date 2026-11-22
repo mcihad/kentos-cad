@@ -1371,10 +1371,10 @@ mod tests {
             }
             let tile = got.unwrap_or_else(|| panic!("{key}: the tile was not made"));
             assert_eq!(tile.len(), 258 * 258 * 4);
-            let opaque = tile.chunks_exact(4).filter(|p| p[3] == 255).count();
+            let opaque = tile.as_chunks::<4>().0.iter().filter(|p| p[3] == 255).count();
             assert!(opaque > 258 * 258 * 9 / 10, "{key}: {opaque} opaque pixels");
             let lit = tile
-                .chunks_exact(4)
+                .as_chunks::<4>().0.iter()
                 .filter(|p| p[0] > 0 || p[1] > 0 || p[2] > 0)
                 .count();
             assert!(lit > 258 * 258 * 9 / 10, "{key}: {lit} coloured pixels");

@@ -26,6 +26,9 @@ const JOIN: f64 = 1e-7;
 /// precision.
 const MEET: f64 = 1e-4;
 
+/// A mesh's vertices and triangles.
+type Mesh = (Vec<[f64; 3]>, Vec<[u32; 3]>);
+
 /// The caps of the bodies `sources` where `planes` (each keeping a·x + b·y + c·z + d ≥ 0, its normal of unit length)
 /// cut them, each its body's object and name, of part `part`; none for a see-through source (`through`) or one whose
 /// part is see-through (`opaque` says which are not). The caps on a plane meet without cracks: a loop's edge takes the
@@ -33,7 +36,7 @@ const MEET: f64 = 1e-4;
 /// neighbouring triangles share their edges' ends.
 pub fn caps(sources: &[Source], planes: &[[f64; 4]], part: u32, opaque: impl Fn(u32) -> bool) -> Vec<Source> {
     let kept: Vec<&Source> = sources.iter().filter(|s| !s.through && opaque(s.part)).collect();
-    let mut meshes: Vec<(Vec<[f64; 3]>, Vec<[u32; 3]>)> = vec![(Vec::new(), Vec::new()); kept.len()];
+    let mut meshes: Vec<Mesh> = vec![(Vec::new(), Vec::new()); kept.len()];
     for (i, p) in planes.iter().enumerate() {
         let others: Vec<[f64; 4]> = planes.iter().enumerate().filter(|(j, _)| *j != i).map(|(_, q)| *q).collect();
         let mut loops: Vec<(usize, Vec<[f64; 3]>)> = Vec::new();
@@ -271,13 +274,13 @@ fn fill(
         let n = r.len();
         (0..n).map(|k| r[k].x * r[(k + 1) % n].y - r[(k + 1) % n].x * r[k].y).sum::<f64>().abs() / 2.0
     };
-    for (o, outer) in rings.iter().enumerate().filter(|(i, _)| depth[*i] % 2 == 0) {
+    for (o, outer) in rings.iter().enumerate().filter(|(i, _)| depth[*i].is_multiple_of(2)) {
         let holes: Vec<usize> = (0..rings.len())
             .filter(|&h| depth[h] == depth[o] + 1 && inside(probes[h], outer))
             .filter(|&h| {
                 // The smallest outer loop that holds it is its.
                 !rings.iter().enumerate().any(|(k, r)| {
-                    k != o && depth[k] % 2 == 0 && depth[k] > depth[o] && inside(probes[h], r) && area(r) < area(outer)
+                    k != o && depth[k].is_multiple_of(2) && depth[k] > depth[o] && inside(probes[h], r) && area(r) < area(outer)
                 })
             })
             .collect();
@@ -351,7 +354,7 @@ fn fill(
             // Turned to the cut-away side.
             triangles.push(if facing <= 0.0 { tri } else { [tri[0], tri[2], tri[1]] });
         };
-        for t in idx.chunks_exact(3) {
+        for t in idx.as_chunks::<3>().0.iter() {
             let ids = [t[0] as usize, t[1] as usize, t[2] as usize];
             // Its edges' runs, either way round.
             let run_of = |u: usize, v: usize| -> Option<Vec<usize>> {
@@ -452,7 +455,7 @@ mod tests {
     fn a_level_cut_caps_a_block_and_a_box_clips_its_caps() {
         let block = cuboid([0.0, 0.0, 0.0], [4.0, 2.0, 3.0], 7);
         let below = [0.0, 0.0, -1.0, 1.25];
-        let level_caps = super::caps(&[block.clone()], &[below], 99, |_| true);
+        let level_caps = super::caps(std::slice::from_ref(&block), &[below], 99, |_| true);
         assert_eq!(level_caps.len(), 1);
         let c = &level_caps[0];
         assert_eq!((c.part, c.object), (99, 7));
@@ -507,11 +510,11 @@ mod tests {
         triangles.extend(inner.triangles.iter().map(|t| [t[0] + base, t[1] + base, t[2] + base]));
         let ring = Source { vertices: Arc::new(vertices), triangles, ..outer };
         let level = [0.0, 0.0, -1.0, 1.5];
-        let ring_caps = super::caps(&[ring.clone()], &[level], 99, |_| true);
+        let ring_caps = super::caps(std::slice::from_ref(&ring), &[level], 99, |_| true);
         assert!((area(&ring_caps[0]) - 5.0).abs() < 1e-9, "{}", area(&ring_caps[0]));
         let glass = Source { through: true, ..ring.clone() };
         assert!(super::caps(&[glass], &[level], 99, |_| true).is_empty());
-        assert!(super::caps(&[ring.clone()], &[level], 99, |_| false).is_empty(), "a see-through part");
+        assert!(super::caps(std::slice::from_ref(&ring), &[level], 99, |_| false).is_empty(), "a see-through part");
         // An open shell, the block without its east face: its cut does not close, so it has no cap.
         let mut open = cuboid([0.0, 0.0, 0.0], [4.0, 2.0, 3.0], 2);
         open.triangles.truncate(10);

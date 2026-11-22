@@ -18,7 +18,7 @@ pub type Circle = (Vec2, f64);
 pub const ON_CIRCLE: f64 = 1e-9;
 
 fn on(p: Vec2, c: &Circle) -> bool {
-    (js_hypot(p.x - c.0.x, p.y - c.0.y) - c.1).abs() <= ON_CIRCLE * c.1.max(1.0)
+    (js_hypot(p.x - c.0.x, p.y - c.0.y) - c.1).abs() <= ON_CIRCLE * crate::jsmath::js_max(c.1, 1.0)
 }
 
 /// The edge from `a` to `b` as a chord of one of `circles`: the circle and the way it turns (+1 counter-clockwise);
@@ -145,7 +145,7 @@ mod tests {
         // A 90° piece of a ring between radii 5.85 and 6.15 round the origin: its outer arc counter-clockwise from
         // (6.15, 0) to (0, 6.15), its inner arc back, the ends straight. Exact area π(6.15² − 5.85²)/4 = 0.9π.
         let (r1, r2) = (6.15, 5.85);
-        let b = (std::f64::consts::PI / 8.0).tan();
+        let b = crate::jsmath::tan(std::f64::consts::PI / 8.0);
         let pts = vec![
             Vec2::new(r1, 0.0),
             Vec2::new(0.0, r1),
@@ -170,7 +170,7 @@ mod tests {
         // straight; its area the ring's piece, (6.15² − 5.85²)/2 · 10°.
         let (r1, r2) = (6.15, 5.85);
         let at =
-            |r: f64, deg: f64| Vec2::new(r * deg.to_radians().cos(), r * deg.to_radians().sin());
+            |r: f64, deg: f64| Vec2::new(r * crate::jsmath::cos(deg.to_radians()), r * crate::jsmath::sin(deg.to_radians()));
         let ring = vec![at(r1, 30.0), at(r2, 30.0), at(r2, 40.0), at(r1, 40.0)];
         let circles = [(Vec2::new(0.0, 0.0), r1), (Vec2::new(0.0, 0.0), r2)];
         let b = along(&ring, &circles);

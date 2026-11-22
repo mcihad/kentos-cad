@@ -110,6 +110,7 @@ fn run(input: &ReadjustmentDistribute) -> Result<ReadjustmentDistributed, Stop> 
     // docs/adr/5080: each parcel's value, by value only.
     let mut values: Vec<(String, String)> = Vec::new();
     // The parcels in their first record's order: (parcel, area, [(record, holder, share)]).
+    #[allow(clippy::type_complexity)]
     let mut parcels: Vec<(String, String, Vec<(usize, String, Share)>)> = Vec::new();
     for (i, e) in input.entries.iter().enumerate() {
         let (parcel, holder, area) = (e.parcel.trim(), e.holder.trim(), e.area.trim());

@@ -24,13 +24,11 @@ impl Hasher for SlotHasher {
     }
 
     fn write(&mut self, bytes: &[u8]) {
-        let mut chunks = bytes.chunks_exact(8);
-        for chunk in &mut chunks {
-            let mut word = [0u8; 8];
-            word.copy_from_slice(chunk);
+        let (words, rest) = bytes.as_chunks::<8>();
+        for &word in words {
             self.write_u64(u64::from_le_bytes(word));
         }
-        for &b in chunks.remainder() {
+        for &b in rest {
             self.write_u64(u64::from(b));
         }
     }

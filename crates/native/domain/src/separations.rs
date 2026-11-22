@@ -202,6 +202,7 @@ impl Document {
     pub fn separations(&self) -> Vec<Separation> {
         let rooms = self.axis_rooms();
         let (walls, openings) = self.bodies();
+        #[allow(clippy::type_complexity)]
         let mut found: BTreeMap<(String, String), (Option<String>, BTreeMap<At, f64>)> = BTreeMap::new();
         for (uid, level, outline) in &rooms {
             for area in outline {

@@ -142,7 +142,7 @@ pub fn geometry_columns(records: &[f64], per_metre: f64) -> Vec<Column> {
     use crate::store::draw::{HAS_AREA, HAS_LENGTH, MEASURE_STRIDE};
     let mut area = Vec::new();
     let mut length = Vec::new();
-    for r in records.chunks_exact(MEASURE_STRIDE) {
+    for r in records.as_chunks::<MEASURE_STRIDE>().0.iter() {
         let flags = r[0] as u32;
         area.push(if flags & HAS_AREA != 0 {
             r[2] * (per_metre * per_metre)

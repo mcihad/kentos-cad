@@ -3,12 +3,11 @@ use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
 fn tool_result(server: &mut Server, name: &str, args: Value) -> Value {
-    let result = server.handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
+    server.handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
         "name":name,"arguments":args,"_meta":{
             "io.modelcontextprotocol/protocolVersion":MODERN,
             "io.modelcontextprotocol/clientInfo":{"name":"inspection-test","version":"1"},
-            "io.modelcontextprotocol/clientCapabilities":{}}}})).unwrap()["result"].clone();
-    result
+            "io.modelcontextprotocol/clientCapabilities":{}}}})).unwrap()["result"].clone()
 }
 
 fn tool(server: &mut Server, name: &str, args: Value) -> Value {

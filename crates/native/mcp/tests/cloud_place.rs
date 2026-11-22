@@ -47,7 +47,7 @@ fn placing_a_cloud_over_mcp_is_the_cases() {
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
-    let uid = snapshot.uids[0].clone();
+    let uid = snapshot.uids[0];
     let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with("Euler: üç açı")).unwrap().clone();
     let steps = case["steps"].as_array().unwrap();
     let mut args = steps[0]["input"].clone();

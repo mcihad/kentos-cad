@@ -29,6 +29,7 @@ pub const HATCHED: [&str; 2] = ["roadWidth", "roadParcel"];
 pub struct Shown {
     pub session: u64,
     pub input: ZoningCheck,
+    #[allow(clippy::type_complexity)]
     made: RefCell<Option<(u64, u64, Option<Arc<ZoningMarks>>)>>,
 }
 
@@ -111,7 +112,7 @@ fn hatch_line(rings: &[Vec<Point>], c: f32) -> Vec<(Point, Point)> {
         }
     }
     ts.sort_by(f32::total_cmp);
-    ts.chunks_exact(2).map(|p| (Point::new(p[0], p[0] - c), Point::new(p[1], p[1] - c))).collect()
+    ts.as_chunks::<2>().0.iter().map(|p| (Point::new(p[0], p[0] - c), Point::new(p[1], p[1] - c))).collect()
 }
 
 /// The overlaps on the screen: each region a light fill, hatched at 45° every 7 px, outlined on a halo, in the danger

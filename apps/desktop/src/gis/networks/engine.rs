@@ -259,7 +259,7 @@ fn way(nums: &[f64]) -> Option<(f64, Vec<Vec2>)> {
     let (&cost, rest) = nums.split_first()?;
     let n = *rest.first()? as usize;
     let xy = rest.get(1..1 + 2 * n)?;
-    let pts: Vec<Vec2> = xy.chunks_exact(2).map(|p| Vec2::new(p[0], p[1])).collect();
+    let pts: Vec<Vec2> = xy.as_chunks::<2>().0.iter().map(|p| Vec2::new(p[0], p[1])).collect();
     let bulges = &rest[1 + 2 * n..];
     let out = if bulges.iter().any(|b| *b != 0.0) {
         bulge_path_outline(&pts, Some(bulges), false, std::f64::consts::PI / 36.0)

@@ -113,11 +113,11 @@ fn rooms_of_one_storey_that_share_ground_are_paired_with_what_they_share() {
         s.space.name = Some(format!("Kare {n}"));
         snapshot.entities.push(e);
         snapshot.uids.push(kentos_commands::EntityId(
-            kentos_domain::Uuid::from_u128(0xC0FFEE_0000 + n).into_bytes(),
+            kentos_domain::Uuid::from_u128(0x00C0_FFEE_0000 + n).into_bytes(),
         ));
     }
     let (facts, _) = measure(&Document::from_snapshot_v2(snapshot).unwrap()).normalized();
-    let ground = kentos_domain::Uuid::from_u128(0xC0FFEE_0001).to_string();
+    let ground = kentos_domain::Uuid::from_u128(0x00C0_FFEE_0001).to_string();
     let pairs: Vec<_> = facts
         .room_overlaps
         .iter()
@@ -129,7 +129,7 @@ fn rooms_of_one_storey_that_share_ground_are_paired_with_what_they_share() {
         (salon.uid.as_str(), ground.as_str())
     };
     assert!(pairs.contains(&(a, b, 1.0)), "{pairs:?}");
-    let above = kentos_domain::Uuid::from_u128(0xC0FFEE_0002).to_string();
+    let above = kentos_domain::Uuid::from_u128(0x00C0_FFEE_0002).to_string();
     assert!(
         !pairs
             .iter()

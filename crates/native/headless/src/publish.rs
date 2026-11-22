@@ -377,6 +377,7 @@ pub(crate) fn page_of(a: &kentos_sheet::pdf::PageAudit, file: &str, digest: &str
 
 /// Each chosen sheet's content digest without the title context (docs/adr/1090 §4), by id; a sheet whose page cannot
 /// be made has none.
+#[allow(clippy::type_complexity)]
 pub(crate) fn digests(
     captured: &kentos_plot::provenance::Capture,
     chosen: &[String],

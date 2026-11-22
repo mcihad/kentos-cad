@@ -438,7 +438,7 @@ impl Tool for Circle {
         // the line could not read), the step kept for the right value.
         let asks_size = (self.mode == Mode::Ttr && self.tangents.len() == 2)
             || (self.mode == Mode::Center && self.d.last().is_some());
-        if asks_size && typed.is_some_and(|r| !(r > 0.0)) {
+        if asks_size && typed.is_some_and(|r| r.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater)) {
             let what = if self.mode == Mode::Center && self.diameter { "Çap" } else { "Yarıçap" };
             cx.say(
                 Level::Warn,

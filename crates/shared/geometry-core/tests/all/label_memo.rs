@@ -290,7 +290,7 @@ fn the_memos_records_are_a_fresh_reads() {
             let (whole, texts) = ask(&store, &view, scale, None, None);
             let mut seen = std::collections::HashSet::new();
             let mut want = Vec::new();
-            for r in whole.chunks_exact(LABEL_SHOWN_STRIDE) {
+            for r in whole.as_chunks::<LABEL_SHOWN_STRIDE>().0.iter() {
                 let f = |i: usize| f64::from_bits(r[i]);
                 if f(1) == LABEL_CELL {
                     let inside = f(2) >= near.min_x

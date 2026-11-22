@@ -785,6 +785,7 @@ fn curtain(
     };
     // Its doors, windows and bare openings in place of panels (docs/adr/8129): each along its base line and between
     // its sill and head (over the storey's floor), its jambs on the faces.
+    #[allow(clippy::type_complexity)]
     let filled: Vec<(&Uuid, &kentos_commands::OpeningFields, (f64, f64), (f64, f64), [Vec2; 4])> = openings
         .iter()
         .filter(|(_, o)| matches!(o.form, OpeningForm::Door | OpeningForm::Window | OpeningForm::Opening))
@@ -1433,6 +1434,7 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
     // Its layers top down (docs/adr/8071 §8), each a plate under the one over it: how far down from its top and how
     // thick, across its face (upright on a face sloping g: × √(1 + g²)), its look and its finish; none: one build-up of
     // its thickness, upright (docs/adr/8044 §1).
+    #[allow(clippy::type_complexity)]
     let (layered, plates): (bool, Vec<(f64, f64, Look, Option<String>)>) = if r.roof.layers.is_empty() {
         (false, vec![(0.0, thickness, look.clone(), finish.clone())])
     } else {
@@ -1925,7 +1927,7 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
     let Shape::Ramp { pts, ramp: spec } = kentos_formats::arch_elements::core_ramp(r) else {
         return;
     };
-    if pts.len() < 2 || !(spec.width > 0.0) {
+    if pts.len() < 2 || spec.width.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
         return;
     }
     let walk = Walk::of(&pts);

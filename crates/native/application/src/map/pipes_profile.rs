@@ -46,6 +46,7 @@ struct Checked {
     out: PipesProfiled,
     /// The inverts' points along the run (station, invert, crown, wall above zero): each pipe's ends, or its vertices
     /// when its vertices' heights are the inverts; a pipe without inverts a gap.
+    #[allow(clippy::type_complexity)]
     inverts: Vec<(f64, Option<f64>, Option<f64>, Option<f64>)>,
     /// Texts' paper height (mm).
     height: f64,
@@ -171,6 +172,7 @@ fn check(doc: &Document, input: &PipesProfile, told: &dyn Fn(u64, u64) -> bool) 
     let mut ground: Vec<PipeProfileGround> = Vec::new();
     // Each node's place and node (first the run's start), and the invert polylines' points.
     let mut nodes: Vec<([f64; 2], Option<u32>)> = Vec::new();
+    #[allow(clippy::type_complexity)]
     let mut inverts: Vec<(f64, Option<f64>, Option<f64>, Option<f64>)> = Vec::new();
     let mut s0 = 0.0;
     for (i, &k) in run.iter().enumerate() {

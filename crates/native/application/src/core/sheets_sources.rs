@@ -155,6 +155,7 @@ fn sheet_uses(
 /// tables it shows read (`table`), the view marks pointing at it (`marked`), and every object on a layer a paper
 /// attribute table lists. A box test lists more objects than a page draws, never fewer. None for a page with a
 /// viewport whose ground is not known (an atlas viewport, an unplaced one): its sources cannot be listed.
+#[allow(clippy::type_complexity)]
 pub fn page_sources(
     doc: &Document,
     chosen: &[String],
@@ -186,6 +187,7 @@ pub fn page_sources(
 /// own object (`feature`, first) and the maps it draws with the ground each shows on the project's ground (its atlas
 /// maps where it puts them, an overview where it follows them, the maps that stand still); the objects those grounds
 /// meet that the map prints, the tables and marks as on a sheet's page, in drawing order after the page's object.
+#[allow(clippy::type_complexity)]
 pub fn atlas_page_sources(
     doc: &Document,
     sheet: &str,

@@ -219,22 +219,24 @@ fn screens() {
         // lengths, the dimensions' measure apart from the override's words, a weight per metre.
         let mut app = themed(theme);
         let mut snapshot = Snapshot::new(size).expect("a renderer");
-        let mut metraj = crate::tables::extract::Extract::default();
-        metraj.name = "Metraj".into();
-        metraj.kinds = vec!["line", "dimension"];
-        metraj.layers = "Duvar, Ölçü".into();
-        metraj.columns = vec![
-            Col::Layer,
-            Col::Kind,
-            Col::Length,
-            Col::Measured,
-            Col::Shown,
-            Col::Overridden,
-            Col::Computed,
-        ];
-        metraj.factor = "7.5".into();
-        metraj.unit = "kg".into();
-        metraj.sort = false;
+        let metraj = crate::tables::extract::Extract {
+            name: "Metraj".into(),
+            kinds: vec!["line", "dimension"],
+            layers: "Duvar, Ölçü".into(),
+            columns: vec![
+                Col::Layer,
+                Col::Kind,
+                Col::Length,
+                Col::Measured,
+                Col::Shown,
+                Col::Overridden,
+                Col::Computed,
+            ],
+            factor: "7.5".into(),
+            unit: "kg".into(),
+            sort: false,
+            ..Default::default()
+        };
         app.extract = Some(metraj);
         let _ = app.update(Message::Run("table.extract"));
         shot(&mut snapshot, &mut app, "metraj");

@@ -389,7 +389,7 @@ mod tests {
         assert!(matches!(proxy[1], Json::Num(e) if (e - 5.75).abs() < 1e-12), "{proxy:?}");
         assert_eq!(len, 12 * 6 + 24 + 2 * super::super::super::batch::INSTANCE_FLOATS);
         // At the largest insert's scale (1.5) the proxy is drawn from 3 px over 5.75 · 1.5 on.
-        assert!(BLOCK_PROXY_PX / (5.75 * 1.5) > 0.3);
+        const { assert!(BLOCK_PROXY_PX / (5.75 * 1.5) > 0.3) };
         assert!(matches!(batch(11, true).0.get("inst").get("proxy"), Json::Null));
         assert!(matches!(batch(12, false).0.get("inst").get("proxy"), Json::Null));
     }

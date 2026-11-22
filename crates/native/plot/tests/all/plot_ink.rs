@@ -203,7 +203,7 @@ fn the_cpu_print_picture_has_the_same_stroke_ink_and_keeps_large_coordinate_came
         .unwrap();
         let want = rgba(c["expected"]["modelColor"].as_str().unwrap());
         let mut matched = 0;
-        for p in image.rgba.chunks_exact(4) {
+        for p in image.rgba.as_chunks::<4>().0.iter() {
             if p[3] > want[3] / 2 && p[..3].iter().zip(want).all(|(a, b)| a.abs_diff(b) <= 2) {
                 matched += 1;
             }

@@ -92,7 +92,7 @@ pub(crate) fn table_told(
     let whole = 2 * corridors::TICKS;
     corridors::road_project(doc)?;
     let (_, def) = corridors::find(doc.road_corridors(), &input.corridor, "corridor")?;
-    let first_half = |done: u64, all: u64| tick(if all == 0 { 0 } else { done * corridors::TICKS / all }, whole);
+    let first_half = |done: u64, all: u64| tick((done * corridors::TICKS).checked_div(all).unwrap_or(0), whole);
     let made = corridors::make_ticked(doc, def, false, &first_half).map_err(|stop| match stop {
         Stop::Cancelled => Stop::Cancelled,
         stop => bad("corridor", format!("“{}” koridoru kurulamıyor: {}", def.name, words(stop))),

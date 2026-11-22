@@ -631,6 +631,7 @@ impl<'l> Emitter<'l> {
     /// ATTDEF of the block has the name as its tag (KentOS's data edited by hand); a name taken by an earlier tag is
     /// not given twice. Upper-case tag → name; and the tags whose record no longer fits (tag, the record's tag, its
     /// name), to be said.
+    #[allow(clippy::type_complexity)]
     fn defined_names(&self, block: &str) -> (HashMap<String, String>, Vec<(String, String, String)>) {
         let mut names = HashMap::new();
         let mut stale = Vec::new();
@@ -2421,7 +2422,6 @@ impl<'l> Emitter<'l> {
         self.path(m, !ctx.deformed && ext[0] == 0.0 && ext[1] == 0.0, pts, bulges, closed, zs, widths, b, e);
     }
 
-    #[allow(clippy::too_many_arguments)]
     #[allow(clippy::too_many_arguments)]
     fn spline(
         &mut self,

@@ -884,8 +884,8 @@ mod tests {
                 );
                 for (i, p) in placed.iter().enumerate() {
                     let angle = sign * (first + i as f64 * 0.37) / 2.;
-                    assert!((p.at.x - 2. * angle.cos()).abs() < 1e-12);
-                    assert!((p.at.y - 2. * angle.sin()).abs() < 1e-12);
+                    assert!((p.at.x - 2. * kentos_geometry_core::jsmath::cos(angle)).abs() < 1e-12);
+                    assert!((p.at.y - 2. * kentos_geometry_core::jsmath::sin(angle)).abs() < 1e-12);
                     assert!(
                         (p.tangent - (angle + sign * std::f64::consts::FRAC_PI_2)).abs() < 1e-12
                     );
@@ -909,9 +909,9 @@ mod tests {
         let placed = m.placements_on(&route, 0., Unit::M, &env).unwrap();
         assert_eq!(placed.len(), 5);
         // At the vertex use the outgoing arc tangent, not the preceding line.
-        assert!((placed[1].tangent.sin() + 1.).abs() < 1e-12);
-        assert!((placed[2].at.x - (2. - 1f64.cos())).abs() < 1e-12);
-        assert!((placed[2].at.y + 1f64.sin()).abs() < 1e-12);
+        assert!((kentos_geometry_core::jsmath::sin(placed[1].tangent) + 1.).abs() < 1e-12);
+        assert!((placed[2].at.x - (2. - kentos_geometry_core::jsmath::cos(1f64))).abs() < 1e-12);
+        assert!((placed[2].at.y + kentos_geometry_core::jsmath::sin(1f64)).abs() < 1e-12);
         let circle = Route::of(&Shape::Circle {
             c: Vec2::new(0., 0.),
             r: 1.,
@@ -955,11 +955,11 @@ mod tests {
                 let angle = n as f64 * 0.5;
                 let p = &stroke["path"][0];
                 assert!(
-                    (p["x"].as_f64().unwrap() - angle.cos()).abs() < 1e-12,
+                    (p["x"].as_f64().unwrap() - kentos_geometry_core::jsmath::cos(angle)).abs() < 1e-12,
                     "{i}: {p}"
                 );
                 assert!(
-                    (p["y"].as_f64().unwrap() - angle.sin()).abs() < 1e-12,
+                    (p["y"].as_f64().unwrap() - kentos_geometry_core::jsmath::sin(angle)).abs() < 1e-12,
                     "{i}: {p}"
                 );
             }
@@ -1237,7 +1237,7 @@ mod tests {
                     let repeats =
                         if hide_strokes { 0. } else { 1. } + if hide_fills { 0. } else { 1. };
                     let mut area = 0.;
-                    for triangle in packed.data.chunks_exact(6) {
+                    for triangle in packed.data.as_chunks::<6>().0.iter() {
                         let t: Vec<_> = triangle.iter().map(|v| f64::from(*v)).collect();
                         area += ((t[2] - t[0]) * (t[5] - t[1]) - (t[3] - t[1]) * (t[4] - t[0]))
                             .abs()

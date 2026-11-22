@@ -137,7 +137,7 @@ pub fn cut_fill_told(
     let mut out = Zones::default();
     let mut kept: Vec<Vec<([f64; 2], f64)>> = Vec::new();
     let mut ground = Ground::new(base);
-    let first = |done: u64, all: u64| tick(if all == 0 { 0 } else { done * HALF / all }, whole);
+    let first = |done: u64, all: u64| tick((done * HALF).checked_div(all).unwrap_or(0), whole);
     let Some((covered, uncovered)) = ground.overlay_told(comparison, |raw| {
         let with: Vec<([f64; 2], f64)> = raw.iter().map(|(p, d)| (*p, if d.abs() <= ZERO { 0.0 } else { *d })).collect();
         if with.iter().all(|(_, d)| *d == 0.0) {
@@ -163,7 +163,7 @@ pub fn cut_fill_told(
     let (Some(least), Some(largest)) = (out.least, out.largest) else { return Ok(Some(out)) };
     if let Some(i) = interval {
         let count = band_count(least, largest, i);
-        if !(count <= most_bands as f64) {
+        if matches!(count.partial_cmp(&(most_bands as f64)), Some(std::cmp::Ordering::Greater) | None) {
             return Err(TooManyBands(if count.is_finite() { count as u64 } else { u64::MAX }));
         }
     }
@@ -465,7 +465,8 @@ mod tests {
         .expect("not stopped");
         assert_eq!(told, cut_fill(&comparison, &base, Some(1.0), 1000).expect("zones"));
         let seen = seen.into_inner();
-        let (overlay, bands): (Vec<(u64, u64)>, Vec<(u64, u64)>) = seen.iter().partition(|(done, _)| *done < HALF);
+        type Ticks = Vec<(u64, u64)>;
+    let (overlay, bands): (Ticks, Ticks) = seen.iter().partition(|(done, _)| *done < HALF);
         assert_eq!(overlay.len(), comparison.len());
         assert_eq!(bands.len(), 10, "bands from −5 to 4: {seen:?}");
         assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[1].1 == 2 * HALF && w[1].0 < 2 * HALF), "{seen:?}");

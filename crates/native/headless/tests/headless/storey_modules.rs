@@ -209,15 +209,13 @@ fn storey_modules_timing() {
             e["id"] = json!(all.len() + 1);
             let shift = 60.0 * f64::from(n);
             shift_x(&mut e, shift);
-            for key in ["level"] {
-                if let Some(a) = e.get_mut("arch").and_then(|a| a.get_mut(key)) {
-                    *a = json!(match a.as_str().unwrap() {
-                        "zemin" => "k0",
-                        "kat1" => "k1",
-                        "bodrum" | "kat2" => "k2",
-                        other => other,
-                    });
-                }
+            if let Some(a) = e.get_mut("arch").and_then(|a| a.get_mut("level")) {
+                *a = json!(match a.as_str().unwrap() {
+                    "zemin" => "k0",
+                    "kat1" => "k1",
+                    "bodrum" | "kat2" => "k2",
+                    other => other,
+                });
             }
             all.push(e);
         }

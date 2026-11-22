@@ -383,6 +383,7 @@ fn root(parent: &mut [u32], mut x: u32) -> u32 {
 }
 
 /// Each edge's part's root and length, and the longest part's root; the parts' count.
+#[allow(clippy::type_complexity)]
 fn parts(g: &Graph) -> (Vec<Option<(u32, f64)>>, Option<u32>, usize) {
     let mut parent: Vec<u32> = (0..g.nodes.len() as u32).collect();
     for p in &g.pieces {

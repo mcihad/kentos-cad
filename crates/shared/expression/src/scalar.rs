@@ -253,7 +253,7 @@ pub fn binary<'a>(op: BinOp, a: V<'a>, b: V<'a>, out: &mut String, s: &mut Scrat
 /// count: a condition after the one that holds, a value not chosen.
 pub fn case<'a>(parts: &[Option<V<'a>>], otherwise: bool) -> R<'a> {
     let (pairs, rest) = parts.split_at(parts.len() - usize::from(otherwise));
-    for pair in pairs.chunks_exact(2) {
+    for pair in pairs.as_chunks::<2>().0.iter() {
         match pair[0] {
             None => return R::Thrown,
             Some(c) if truthy(c) => return pair[1].map_or(R::Thrown, R::V),

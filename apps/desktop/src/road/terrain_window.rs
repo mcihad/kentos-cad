@@ -101,6 +101,7 @@ pub struct Window {
     pub(crate) error: Option<String>,
     /// A LandXML file of several surfaces (UR2-040): its path and each surface's name, points and triangles, and which
     /// are chosen to take.
+    #[allow(clippy::type_complexity)]
     pub(crate) landxml: Option<(std::path::PathBuf, Vec<(String, usize, usize)>, Vec<bool>)>,
 }
 

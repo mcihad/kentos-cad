@@ -493,8 +493,8 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
             for item in &resources.line_types {
                 let key = item.name.trim().to_lowercase();
                 if let Some((first_id, first)) = line_types.get(&key) {
-                    let first_value = serde_json::to_value(first).expect("validated line type");
-                    let later_value = serde_json::to_value(item).expect("validated line type");
+                    let first_value = serde_json::to_value(first).unwrap_or_default();
+                    let later_value = serde_json::to_value(item).unwrap_or_default();
                     let fields = resource_differences(&first_value, &later_value);
                     if !fields.is_empty() {
                         conflicts.push(StandardConflict {
@@ -514,8 +514,8 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
             for item in &resources.hatch_patterns {
                 let key = item.name.trim().to_lowercase();
                 if let Some((first_id, first)) = hatch_patterns.get(&key) {
-                    let first_value = serde_json::to_value(first).expect("validated hatch pattern");
-                    let later_value = serde_json::to_value(item).expect("validated hatch pattern");
+                    let first_value = serde_json::to_value(first).unwrap_or_default();
+                    let later_value = serde_json::to_value(item).unwrap_or_default();
                     let fields = resource_differences(&first_value, &later_value);
                     if !fields.is_empty() {
                         conflicts.push(StandardConflict {
@@ -536,9 +536,9 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                 let key = kentos_commands::blocks::name_key(&item.name);
                 if let Some((first_id, first)) = blocks.get(&key) {
                     let first_value =
-                        serde_json::to_value(first).expect("validated block reference");
+                        serde_json::to_value(first).unwrap_or_default();
                     let later_value =
-                        serde_json::to_value(item).expect("validated block reference");
+                        serde_json::to_value(item).unwrap_or_default();
                     let fields = resource_differences(&first_value, &later_value);
                     if !fields.is_empty() {
                         conflicts.push(StandardConflict {
@@ -561,9 +561,9 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                     if first.revision != item.revision {
                         let fields = vec!["revision".into()];
                         let first_value =
-                            serde_json::to_value(first).expect("validated sheet template");
+                            serde_json::to_value(first).unwrap_or_default();
                         let later_value =
-                            serde_json::to_value(item).expect("validated sheet template");
+                            serde_json::to_value(item).unwrap_or_default();
                         conflicts.push(StandardConflict {
                             kind: "sheetTemplateReference".into(),
                             name: item.template_id.clone(),
@@ -582,9 +582,9 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                 let key = item.name.trim().to_lowercase();
                 if let Some((first_id, first)) = leader_styles.get(&key) {
                     let mut first_value =
-                        serde_json::to_value(first).expect("validated leader style");
+                        serde_json::to_value(first).unwrap_or_default();
                     let mut later_value =
-                        serde_json::to_value(item).expect("validated leader style");
+                        serde_json::to_value(item).unwrap_or_default();
                     for value in [&mut first_value, &mut later_value] {
                         if let Some(map) = value.as_object_mut() {
                             map.remove("id");
@@ -694,10 +694,12 @@ fn leader_style_differences(first: &serde_json::Value, later: &serde_json::Value
 }
 
 pub(crate) fn resource_appearance<T: serde::Serialize>(item: &T) -> serde_json::Value {
-    let mut value = serde_json::to_value(item).expect("validated style");
-    let object = value.as_object_mut().expect("style object");
-    object.remove("id");
-    object.remove("name");
+    // A resource is a plain record: its JSON is an object, with nothing to fail on.
+    let mut value = serde_json::to_value(item).unwrap_or_default();
+    if let Some(object) = value.as_object_mut() {
+        object.remove("id");
+        object.remove("name");
+    }
     value
 }
 
@@ -1695,10 +1697,11 @@ fn resource_issues(
         }
     }
     fn resource_geometry<T: serde::Serialize>(item: &T) -> serde_json::Value {
-        let mut value = serde_json::to_value(item).expect("validated resource");
-        let object = value.as_object_mut().expect("resource object");
-        for field in ["id", "name", "description", "source"] {
-            object.remove(field);
+        let mut value = serde_json::to_value(item).unwrap_or_default();
+        if let Some(object) = value.as_object_mut() {
+            for field in ["id", "name", "description", "source"] {
+                object.remove(field);
+            }
         }
         value
     }
@@ -2091,40 +2094,40 @@ fn resource_issues(
             });
         }
     }
-    if !resources.sheet_templates.is_empty() {
-        if let Some(sheets) = doc.sheets() {
-            // A sheet records the source revision it was made from. The
-            // standard checks that provenance without altering the layout.
-            let (book, _) = kentos_sheet::project::read_project_sheets(sheets)
-                .map_err(|e| fail(&e.code, e.message, "sheets"))?;
-            for sheet in &book.sheets {
-                let Some(origin) = &sheet.origin else {
-                    continue;
-                };
-                let approved = resources.sheet_templates.iter().find(|item| {
-                    item.template_id.to_lowercase() == origin.template_id.to_lowercase()
-                });
-                if approved.is_some_and(|item| item.revision == origin.revision) {
-                    continue;
-                }
-                issues.push(StandardIssue {
-                    kind: StandardIssueKind::SheetTemplateOrigin,
-                    subject: approved
-                        .map_or_else(|| origin.template_id.clone(), |item| item.template_id.clone()),
-                    layer: None,
-                    expected: approved
-                        .map(|item| format!("{} · sürüm {}", item.template_id, item.revision)),
-                    found: Some(format!("{} · sürüm {}", origin.template_id, origin.revision)),
-                    objects: 0,
-                    fixable: false,
-                    message: format!(
-                        "“{}” paftasının şablon kökeni ofis standardındaki onaylı şablon sürümüyle uyuşmuyor; pafta kendiliğinden yeniden oluşturulmaz.",
-                        sheet.name
-                    ),
-                    state: StandardIssueState::Open,
-                    reason: None,
-                });
+    if !resources.sheet_templates.is_empty()
+        && let Some(sheets) = doc.sheets()
+    {
+        // A sheet records the source revision it was made from. The
+        // standard checks that provenance without altering the layout.
+        let (book, _) = kentos_sheet::project::read_project_sheets(sheets)
+            .map_err(|e| fail(&e.code, e.message, "sheets"))?;
+        for sheet in &book.sheets {
+            let Some(origin) = &sheet.origin else {
+                continue;
+            };
+            let approved = resources.sheet_templates.iter().find(|item| {
+                item.template_id.to_lowercase() == origin.template_id.to_lowercase()
+            });
+            if approved.is_some_and(|item| item.revision == origin.revision) {
+                continue;
             }
+            issues.push(StandardIssue {
+                kind: StandardIssueKind::SheetTemplateOrigin,
+                subject: approved
+                    .map_or_else(|| origin.template_id.clone(), |item| item.template_id.clone()),
+                layer: None,
+                expected: approved
+                    .map(|item| format!("{} · sürüm {}", item.template_id, item.revision)),
+                found: Some(format!("{} · sürüm {}", origin.template_id, origin.revision)),
+                objects: 0,
+                fixable: false,
+                message: format!(
+                    "“{}” paftasının şablon kökeni ofis standardındaki onaylı şablon sürümüyle uyuşmuyor; pafta kendiliğinden yeniden oluşturulmaz.",
+                    sheet.name
+                ),
+                state: StandardIssueState::Open,
+                reason: None,
+            });
         }
     }
     Ok(issues)

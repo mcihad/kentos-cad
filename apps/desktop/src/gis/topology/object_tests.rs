@@ -28,6 +28,7 @@ fn opened(module: Module) -> App {
 }
 
 /// The panel's Topoloji section: its title and its rows (label, value, a note).
+#[allow(clippy::type_complexity)]
 fn section(app: &App) -> Option<(String, Vec<(String, String, bool)>)> {
     let doc = app.document.as_ref()?;
     let panel = app.properties_panel(doc);

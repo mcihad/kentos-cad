@@ -72,10 +72,10 @@ fn eigen<const N: usize>(m: [[f64; N]; N]) -> ([f64; N], [[f64; N]; N]) {
                 let t = if theta == 0.0 { 1.0 } else { t };
                 let c = 1.0 / (t * t + 1.0).sqrt();
                 let s = t * c;
-                for k in 0..N {
-                    let (akp, akq) = (a[k][p], a[k][q]);
-                    a[k][p] = c * akp - s * akq;
-                    a[k][q] = s * akp + c * akq;
+                for row in a.iter_mut() {
+                    let (akp, akq) = (row[p], row[q]);
+                    row[p] = c * akp - s * akq;
+                    row[q] = s * akp + c * akq;
                 }
                 for k in 0..N {
                     let (apk, aqk) = (a[p][k], a[q][k]);
@@ -260,6 +260,7 @@ fn rotation(w: P) -> [[f64; 3]; 3] {
 }
 
 /// The voxel points: each voxel's points' mean, voxels in key order.
+#[allow(clippy::type_complexity)]
 fn voxels(sums: &BTreeMap<(i64, i64, i64), (f64, f64, f64, f64)>) -> Vec<P> {
     sums.values().map(|(x, y, z, n)| [x / n, y / n, z / n]).collect()
 }
@@ -280,6 +281,7 @@ struct Rule<'a> {
 }
 
 /// The pairs now, and how many the rejections left out: at an edge, by the normals' angle.
+#[allow(clippy::too_many_arguments)]
 fn pairs(
     moving: &[P],
     now: &Rigid,
@@ -605,6 +607,7 @@ pub(crate) fn registered_from(
     let b: Vec<[f64; 4]> = chosen.iter().map(|(_, c)| [c.cloud.bounds[0], c.cloud.bounds[1], c.cloud.bounds[3], c.cloud.bounds[4]]).collect();
     let meet = [b[0][0].max(b[1][0]) - reach, b[0][1].max(b[1][1]) - reach, b[0][2].min(b[1][2]) + reach, b[0][3].min(b[1][3]) + reach];
     let classes = input.classes.clone();
+    #[allow(clippy::type_complexity)]
     let mut sums: [BTreeMap<(i64, i64, i64), (f64, f64, f64, f64)>; 2] = [BTreeMap::new(), BTreeMap::new()];
     let mut warnings = Vec::new();
     let mut read = vec![0u64; 2];

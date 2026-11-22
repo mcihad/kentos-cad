@@ -134,7 +134,7 @@ fn pixels_reader(
         4 => (
             3,
             pixels
-                .chunks_exact(4)
+                .as_chunks::<4>().0.iter()
                 .flat_map(|c| [c[0], c[1], c[2]])
                 .collect(),
         ),

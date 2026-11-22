@@ -185,43 +185,6 @@ impl Desktop {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn every_program_has_a_link_of_its_own_beside_the_others() {
-        let folder = Path::new("/run/user/1000/kentos-cad");
-        let names: Vec<PathBuf> = [
-            None,
-            Some("mimari"),
-            Some("harita"),
-            Some("cbs"),
-            Some("yol"),
-        ]
-        .into_iter()
-        .map(|p| path_in(folder, p))
-        .collect();
-        assert_eq!(
-            names,
-            [
-                "masaustu.sock",
-                "masaustu-mimari.sock",
-                "masaustu-harita.sock",
-                "masaustu-cbs.sock",
-                "masaustu-yol.sock"
-            ]
-            .map(|n| folder.join(n))
-        );
-        // The programs an agent names are the modules', in the launcher's order.
-        assert_eq!(PROGRAMS, ["mimari", "harita", "cbs", "yol"]);
-        assert_eq!(in_program(Some("harita")), "KentOS Harita'da");
-        assert_eq!(in_program(Some("cbs")), "KentOS GIS'te");
-        assert_eq!(in_program(Some("yol")), "KentOS Yol'da");
-        assert_eq!(in_program(None), "KentOS masaüstünde");
-    }
-}
-
 /// A desktop's drawing as the agents' tools' host (docs/adr/8056 §2): each request goes over the link; the desktop
 /// answers it as an agent may see it and refuses what its program does not offer (docs/adr/8056 §1).
 impl kentos_headless::agent_tools::Host for Desktop {
@@ -263,3 +226,39 @@ fn stable(code: &str) -> &'static str {
         .unwrap_or("desktop_refused")
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_program_has_a_link_of_its_own_beside_the_others() {
+        let folder = Path::new("/run/user/1000/kentos-cad");
+        let names: Vec<PathBuf> = [
+            None,
+            Some("mimari"),
+            Some("harita"),
+            Some("cbs"),
+            Some("yol"),
+        ]
+        .into_iter()
+        .map(|p| path_in(folder, p))
+        .collect();
+        assert_eq!(
+            names,
+            [
+                "masaustu.sock",
+                "masaustu-mimari.sock",
+                "masaustu-harita.sock",
+                "masaustu-cbs.sock",
+                "masaustu-yol.sock"
+            ]
+            .map(|n| folder.join(n))
+        );
+        // The programs an agent names are the modules', in the launcher's order.
+        assert_eq!(PROGRAMS, ["mimari", "harita", "cbs", "yol"]);
+        assert_eq!(in_program(Some("harita")), "KentOS Harita'da");
+        assert_eq!(in_program(Some("cbs")), "KentOS GIS'te");
+        assert_eq!(in_program(Some("yol")), "KentOS Yol'da");
+        assert_eq!(in_program(None), "KentOS masaüstünde");
+    }
+}

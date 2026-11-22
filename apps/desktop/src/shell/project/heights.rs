@@ -348,7 +348,6 @@ fn chain<'a>(c: &CrsChain) -> Element<'a, Message> {
                 )),
             )),
     )
-    .into()
 }
 
 /// The section; `second`: the answer of the way to the second system, none without one.

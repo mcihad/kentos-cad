@@ -227,6 +227,7 @@ impl Portal {
 
 /// What the window and its requests tell the app.
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum Event {
     Loaded {
         id: u64,

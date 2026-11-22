@@ -298,10 +298,10 @@ fn rgba(pixels: &[u8], channels: usize) -> Vec<u8> {
             .iter()
             .for_each(|&g| out.extend_from_slice(&[g, g, g, 255])),
         2 => pixels
-            .chunks_exact(2)
+            .as_chunks::<2>().0.iter()
             .for_each(|c| out.extend_from_slice(&[c[0], c[0], c[0], c[1]])),
         3 => pixels
-            .chunks_exact(3)
+            .as_chunks::<3>().0.iter()
             .for_each(|c| out.extend_from_slice(&[c[0], c[1], c[2], 255])),
         _ => out.extend_from_slice(pixels),
     }
@@ -444,7 +444,7 @@ pub fn from_jpeg(
     let mut v = rgba(pixels, components as usize);
     if components == 4 {
         // A JPEG is opaque.
-        v.chunks_exact_mut(4).for_each(|p| p[3] = 255);
+        v.as_chunks_mut::<4>().0.iter_mut().for_each(|p| p[3] = 255);
     }
     Ok(Samples::U8(v))
 }

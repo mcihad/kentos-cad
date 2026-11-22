@@ -21,7 +21,7 @@ pub fn split(dash: &[f64], phase: f64) -> Option<Split> {
         d.extend_from_within(..);
     }
     let period: f64 = d.iter().sum();
-    if d.is_empty() || !(period > 0.0) || !phase.is_finite() {
+    if d.is_empty() || period.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) || !phase.is_finite() {
         return None;
     }
     let mut runs: Vec<(f64, f64)> = Vec::new();

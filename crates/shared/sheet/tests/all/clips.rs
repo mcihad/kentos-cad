@@ -53,7 +53,7 @@ fn viewport_boundaries_preserve_camera_and_match_the_independent_regions_and_cov
         let mut rgba = vec![255; 40 * 30 * 4];
         assert!(map.clip.mask_rgba(&mut rgba, 40, 30));
         let area = rgba
-            .chunks_exact(4)
+            .as_chunks::<4>().0.iter()
             .map(|p| f64::from(p[3]) / 255.)
             .sum::<f64>();
         assert!(

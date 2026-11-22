@@ -149,7 +149,7 @@ fn band_of(m: &mut Mesh, a: &Area, z0: f64, z1: f64) {
     // The top as triangulated (counterclockwise from over it), the bottom the other way round.
     let top: Vec<u32> = pts.iter().map(|p| m.vertex([p.x, p.y, z1])).collect();
     let bottom: Vec<u32> = pts.iter().map(|p| m.vertex([p.x, p.y, z0])).collect();
-    for t in tri.chunks_exact(3) {
+    for t in tri.as_chunks::<3>().0.iter() {
         let (i, j, k) = (t[0] as usize, t[1] as usize, t[2] as usize);
         let ccw = (pts[j].x - pts[i].x) * (pts[k].y - pts[i].y) - (pts[k].x - pts[i].x) * (pts[j].y - pts[i].y) > 0.0;
         let (j, k) = if ccw { (j, k) } else { (k, j) };
@@ -179,7 +179,7 @@ fn polyhedron(m: &mut Mesh, vertices: &[[f64; 3]], faces: &[Vec<usize>], floor: 
             let n = plan.len();
             triangulate_into(&plan, std::slice::from_ref(&(0..n)), &mut tri);
             let up = signed(&plan) > 0.0;
-            for t in tri.chunks_exact(3) {
+            for t in tri.as_chunks::<3>().0.iter() {
                 let (i, j, k) = (t[0] as usize, t[1] as usize, t[2] as usize);
                 let ccw = (plan[j].x - plan[i].x) * (plan[k].y - plan[i].y) - (plan[k].x - plan[i].x) * (plan[j].y - plan[i].y) > 0.0;
                 let (j, k) = if ccw == up { (j, k) } else { (k, j) };

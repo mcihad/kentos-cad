@@ -261,10 +261,10 @@ impl App {
             }
             return Task::none();
         };
-        if keys.is_empty() {
-            if let Some(w) = self.arch.review_window.as_mut() {
-                w.said = Some((Kind::Info, "Bu bulgu bir nesneyi anmıyor: model yalnız açılır.".into()));
-            }
+        if keys.is_empty()
+            && let Some(w) = self.arch.review_window.as_mut()
+        {
+            w.said = Some((Kind::Info, "Bu bulgu bir nesneyi anmıyor: model yalnız açılır.".into()));
         }
         self.dialog = None;
         self.open_ifc_model_showing(path, keys)

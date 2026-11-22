@@ -131,7 +131,7 @@ pub fn colors(values: &[f64], max: f64, table: &[Rgba]) -> Vec<u8> {
         return out;
     }
     let top = (table.len() - 1) as f64;
-    for (px, &v) in out.chunks_exact_mut(4).zip(values) {
+    for (px, &v) in out.as_chunks_mut::<4>().0.iter_mut().zip(values) {
         if !positive(v) {
             continue;
         }

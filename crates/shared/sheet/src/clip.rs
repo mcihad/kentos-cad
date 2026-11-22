@@ -220,7 +220,7 @@ impl Clip {
                     }
                 }
                 cuts.sort_by(f64::total_cmp);
-                for pair in cuts.chunks_exact(2) {
+                for pair in cuts.as_chunks::<2>().0.iter() {
                     let (lo, hi) = (pair[0].max(0.), pair[1].min(w as f64));
                     for (x, v) in coverage
                         .iter_mut()

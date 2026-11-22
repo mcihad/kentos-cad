@@ -22,6 +22,6 @@ angle?: string,
  */
 align?: string, 
 /**
- * The column of the width factor; absent, empty or out of (0, 100]: 1.
+ * The column of the width factor; absent, empty, 1 or out of (0, 100]: none (1).
  */
 width?: string, };

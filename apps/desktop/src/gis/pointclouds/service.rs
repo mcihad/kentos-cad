@@ -631,7 +631,7 @@ fn decoded(
 /// turned (a rigid map keeps the offsets as short as they were, so f32 holds them as well).
 fn placed(p: &mut nodes::NodePoints, m: &[f64; 16]) {
     p.center = kentos_commands::pose_apply(m, p.center);
-    for q in p.xyz.chunks_exact_mut(3) {
+    for q in p.xyz.as_chunks_mut::<3>().0.iter_mut() {
         let (x, y, z) = (f64::from(q[0]), f64::from(q[1]), f64::from(q[2]));
         q[0] = (m[0] * x + m[1] * y + m[2] * z) as f32;
         q[1] = (m[4] * x + m[5] * y + m[6] * z) as f32;

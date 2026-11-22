@@ -29,7 +29,7 @@ fn independent_baselines_over_mcp() {
         let marks: BTreeSet<&str> =
             members.iter().flat_map(|b| [b["from"].as_str().unwrap_or(""), b["to"].as_str().unwrap_or("")]).collect();
         let free = members.iter().filter(|b| b["independent"] == true).count();
-        assert!(free + 1 <= marks.len().max(1), "{s}");
+        assert!(free < marks.len().max(1), "{s}");
     }
     let r = call(&mut server, "map.survey.edit", json!({"drawing": drawing, "operation": {"op": "independent"}}));
     if r["isError"] == true {

@@ -221,6 +221,7 @@ impl App {
     /// The Kurum adları page.
     pub(crate) fn data_profile_names_part<'a>(&'a self, names: &'a Names) -> Element<'a, Message> {
         let msg = |e: Event| Message::Gis(gis::Event::DataProfile(e));
+        #[allow(clippy::type_complexity)]
         let (lines, rows, problems): (Vec<Element<'_, Message>>, Vec<Vec<String>>, Vec<Option<String>>) =
             match &names.answer {
                 Err(why) if why.is_empty() => (Vec::new(), Vec::new(), Vec::new()),

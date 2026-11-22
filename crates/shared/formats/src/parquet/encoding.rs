@@ -108,7 +108,7 @@ fn fixed<const N: usize>(
     let b = bytes
         .get(..size)
         .ok_or("Parquet sayfasının değerleri yarım")?;
-    Ok(b.chunks_exact(N).map(|c| {
+    Ok(b.as_chunks::<N>().0.iter().map(|c| {
         let mut a = [0u8; N];
         a.copy_from_slice(c);
         a

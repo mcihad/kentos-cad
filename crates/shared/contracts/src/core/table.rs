@@ -546,9 +546,9 @@ impl TableShape<'_> {
                     ),
                 ));
             }
-            for i in row..row + rows {
-                for j in col..col + cols {
-                    if (i, j) != (row, col) && !self.cells[i][j].is_empty() {
+            for (i, line) in self.cells.iter().enumerate().skip(row).take(rows) {
+                for (j, cell) in line.iter().enumerate().skip(col).take(cols) {
+                    if (i, j) != (row, col) && !cell.is_empty() {
                         return Some((
                             "merges",
                             format!(

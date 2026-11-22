@@ -448,7 +448,7 @@ impl ProjectSync {
             Changes::All => {
                 // More changed than the journal keeps: every object is looked at again.
                 self.slots.clear();
-                for (&id, _) in self.known.iter() {
+                for &id in self.known.keys() {
                     self.dirty.insert(id);
                 }
                 let mut seen = Vec::new();

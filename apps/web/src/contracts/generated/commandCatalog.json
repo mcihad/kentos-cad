@@ -142930,7 +142930,7 @@
           "type": "string"
         },
         "width": {
-          "description": "The column of the width factor; absent, empty or out of (0, 100]: 1.",
+          "description": "The column of the width factor; absent, empty, 1 or out of (0, 100]: none (1).",
           "type": [
             "string",
             "null"

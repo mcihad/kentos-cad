@@ -113,6 +113,8 @@ pub fn triangles_cross(t1: &[[f64; 3]; 3], t2: &[[f64; 3]; 3]) -> bool {
 /// Whether `p` is inside the closed mesh `b`: the crossings of a ray from it, odd. The ray leans off every axis so a
 /// grid of boxes' edges does not lie on it.
 fn inside(b: &Body<'_>, p: [f64; 3]) -> bool {
+    // An arbitrary direction no face of a model lies along; its first figure only looks like Euler's constant.
+    #[allow(clippy::approx_constant)]
     let dir = [0.577_215_664_9, 0.594_534_891_6, 0.559_729_867_8];
     let mut hits = 0usize;
     for t in b.triangles {

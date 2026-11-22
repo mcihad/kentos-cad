@@ -521,7 +521,7 @@ fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) ->
 /// three: the corners of a smooth outline's cloud.
 fn even_ring(dense: &[Vec2], arc: f64) -> Vec<Vec2> {
     let n = dense.len();
-    if n < 3 || !(arc > 0.0) {
+    if n < 3 || arc.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
         return dense.to_vec();
     }
     let side = |i: usize| {

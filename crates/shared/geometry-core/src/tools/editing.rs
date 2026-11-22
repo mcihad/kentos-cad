@@ -200,7 +200,7 @@ pub fn array_transforms(
         }
         // Maps made elsewhere (a path array, docs/adr/0140): six numbers each, as Affine holds them.
         ("affines", p) if !p.is_empty() && p.len() % 6 == 0 => Some(
-            p.chunks_exact(6)
+            p.as_chunks::<6>().0.iter()
                 .map(|m| [m[0], m[1], m[2], m[3], m[4], m[5]])
                 .collect(),
         ),

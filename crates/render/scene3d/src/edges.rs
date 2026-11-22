@@ -22,7 +22,7 @@ pub fn feature_edges(c: &Content, crease_degrees: f32) -> Vec<u32> {
     let mut index: HashMap<(u32, u32, u32), usize> = HashMap::new();
     let mut edges: Vec<(u32, u32, Vec<[f32; 3]>)> = Vec::new();
     let smooth = |i: u32| c.normals.get(i as usize).is_some_and(|n| n[0] != 0 || n[1] != 0 || n[2] != 0);
-    for (t, tri) in c.indices.chunks_exact(3).enumerate() {
+    for (t, tri) in c.indices.as_chunks::<3>().0.iter().enumerate() {
         if tri.iter().any(|&i| i as usize >= c.positions.len() || smooth(i)) {
             continue;
         }
@@ -89,7 +89,10 @@ mod tests {
         (v, t)
     }
 
-    fn edges_of(meshes: &[(Vec<[f64; 3]>, Vec<[u32; 3]>)], smooth: bool) -> usize {
+    /// A mesh's vertices and triangles.
+    type Mesh = (Vec<[f64; 3]>, Vec<[u32; 3]>);
+
+    fn edges_of(meshes: &[Mesh], smooth: bool) -> usize {
         let src: Vec<SourceMesh> =
             meshes.iter().map(|(v, t)| SourceMesh { part: 0, vertices: v, triangles: t, smooth }).collect();
         let chunked = chunk(&src, Limits::default(), 1);

@@ -19,6 +19,7 @@ fn door(release: u32) -> Value {
         "units": "m"})
 }
 
+#[allow(clippy::too_many_arguments)]
 fn office(
     id: &str,
     revision: &str,

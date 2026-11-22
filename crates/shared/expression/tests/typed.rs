@@ -238,11 +238,11 @@ fn typed_fields_are_read_as_their_type() {
     let n = d.kat.len();
     // Numbers straight from the number field.
     let c = run("Kat * 2 + 1", As::Value);
-    for i in 0..n {
-        let want = if d.kat[i].is_nan() {
+    for (i, &kat) in d.kat.iter().enumerate() {
+        let want = if kat.is_nan() {
             Value::Null
         } else {
-            Value::Num(d.kat[i] * 2.0 + 1.0)
+            Value::Num(kat * 2.0 + 1.0)
         };
         assert_eq!(value_at(&c, i), want, "Kat * 2 + 1, nesne {i}");
     }
@@ -265,8 +265,8 @@ fn typed_fields_are_read_as_their_type() {
     }
     // A date is ISO text: it compares as text, which is its order.
     let c = run("Tarih >= '2026-06-15'", As::Value);
-    for i in 0..n {
-        let want = d.tarih[i].as_deref().is_some_and(|t| t >= "2026-06-15");
+    for (i, tarih) in d.tarih.iter().enumerate().take(n) {
+        let want = tarih.as_deref().is_some_and(|t| t >= "2026-06-15");
         assert_eq!(value_at(&c, i), Value::Bool(want), "nesne {i}");
     }
     // A text attribute the schema lists reads as before.

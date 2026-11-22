@@ -262,6 +262,7 @@ pub fn at_table_row(message: &str, row_of: impl Fn(usize) -> Option<usize>) -> S
 
 /// Kutupsal alım's fields read and computed: the points and their names,
 /// or why not (the errors in order).
+#[allow(clippy::type_complexity)]
 pub fn read_polar(
     form: &super::polar::Form,
     resolve: impl Fn(&str) -> Known,
@@ -415,6 +416,8 @@ pub struct StakeoutRead {
 
 /// Aplikasyon's fields read and computed: the values and the targets'
 /// names, or why not. A target at the station has no bearing: its row says so.
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::type_complexity)]
 pub fn read_stakeout(
     station: &str,
     back: &str,

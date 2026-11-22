@@ -49,6 +49,7 @@ fn buffer_and_dissolve() -> Value {
     })
 }
 
+#[allow(clippy::result_large_err)]
 fn run(
     doc: &mut Document,
     model: Value,

@@ -74,7 +74,7 @@ fn velocity(a: &Edge, b: &Edge) -> Option<Vec2> {
         ));
     }
     let same = a.n.x * b.n.x + a.n.y * b.n.y > 0.0;
-    (same && (a.speed - b.speed).abs() <= 1e-12 * a.speed.abs().max(b.speed.abs()).max(1.0))
+    (same && (a.speed - b.speed).abs() <= 1e-12 * crate::jsmath::js_max(crate::jsmath::js_max(a.speed.abs(), b.speed.abs()), 1.0))
         .then(|| Vec2::new(a.n.x * a.speed, a.n.y * a.speed))
 }
 
@@ -95,12 +95,15 @@ enum Event {
     Split(usize, usize, Vec2),
 }
 
+/// A roof face's points, each with its rise.
+pub(crate) type Face = Vec<(Vec2, f64)>;
+
 /// The faces of a counter-clockwise simple `ring` whose edge `k` (from `ring[k]` to the next point) moves `speeds[k]`
 /// into the roof a unit of rise (0: a gable end): each edge's face counter-clockwise from its own edge, its points with
 /// their rise; none for a gable end.
-pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Vec<(Vec2, f64)>>>, Fail> {
+pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, Fail> {
     let n = ring.len();
-    let size = ring.iter().fold(0.0_f64, |m, q| m.max(q.x.abs()).max(q.y.abs())).max(1.0);
+    let size = crate::jsmath::js_max(ring.iter().fold(0.0_f64, |m, q| crate::jsmath::js_max(crate::jsmath::js_max(m, q.x.abs()), q.y.abs())), 1.0);
     // Lengths below this are a point; times below this an instant (a unit of time moves a corner about a unit).
     let tol = 1e-9 * size;
     let edges: Vec<Edge> = (0..n)
@@ -218,7 +221,7 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Vec<(Vec
                 if gap < -tol || rate >= -1e-15 {
                     continue;
                 }
-                let at = t + gap.max(0.0) / -rate;
+                let at = t + crate::jsmath::js_max(gap, 0.0) / -rate;
                 let p = cr.at(at);
                 let (a, b) = (cu.at(at), cv.at(at));
                 let (s, len) = (dot(e.d, sub(p, a)), dot(e.d, sub(b, a)));
@@ -234,7 +237,7 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Vec<(Vec
         if at > t + tol && live.iter().any(|&c| corners[c].held) {
             return Err(Fail::Collinear);
         }
-        t = at.max(t);
+        t = crate::jsmath::js_max(at, t);
         match event {
             Event::Collapse(u) => {
                 let v = corners[u].next;
@@ -295,9 +298,7 @@ fn chain(nodes: &[(Vec2, f64)], arcs: &[(usize, usize, usize, usize)], n: usize,
             let mut ring = vec![nodes[start], nodes[end]];
             let mut at = end;
             while at != start {
-                let Some(i) = (0..mine.len()).find(|&i| !used[i] && (mine[i].0 == at || mine[i].1 == at)) else {
-                    return None;
-                };
+                let i = (0..mine.len()).find(|&i| !used[i] && (mine[i].0 == at || mine[i].1 == at))?;
                 used[i] = true;
                 at = if mine[i].0 == at { mine[i].1 } else { mine[i].0 };
                 if at != start {
@@ -352,7 +353,7 @@ mod tests {
         for k in [0, 2] {
             let r = f[k].as_ref().unwrap();
             assert!((area(r) - 30.0).abs() < 1e-9, "{k}: {r:?}");
-            assert!(r.iter().all(|(q, z)| (z - q.y.min(6.0 - q.y)).abs() < 1e-9), "{k}: {r:?}");
+            assert!(r.iter().all(|(q, z)| (z - crate::jsmath::js_min(q.y, 6.0 - q.y)).abs() < 1e-9), "{k}: {r:?}");
         }
     }
 
@@ -382,7 +383,7 @@ mod tests {
         // North: (4,8) (0,8) (2,6): 4. West: (0,8) (0,0) (2,2) (2,6): (8 + 4) / 2 · 2 = 12.
         assert!((area(rings[4]) - 4.0).abs() < 1e-9, "{:?}", rings[4]);
         assert!((area(rings[5]) - 12.0).abs() < 1e-9, "{:?}", rings[5]);
-        let top = rings.iter().flat_map(|r| r.iter()).map(|(_, z)| *z).fold(0.0, f64::max);
+        let top = rings.iter().flat_map(|r| r.iter()).map(|(_, z)| *z).fold(0.0, crate::jsmath::js_max);
         assert!((top - 2.0).abs() < 1e-9);
     }
 
@@ -421,7 +422,7 @@ mod tests {
         for (got, want) in areas.iter().zip([17.0, 4.0, 8.0, 11.0, 9.0, 15.0]) {
             assert!((got - want).abs() < 1e-9, "{areas:?}");
         }
-        let top = f.iter().flatten().flat_map(|r| r.iter()).map(|(_, z)| *z).fold(0.0, f64::max);
+        let top = f.iter().flatten().flat_map(|r| r.iter()).map(|(_, z)| *z).fold(0.0, crate::jsmath::js_max);
         assert!((top - 3.0).abs() < 1e-9);
     }
 
@@ -434,7 +435,7 @@ mod tests {
         ];
         let f = faces(&ring, &[1.0; 8]).unwrap();
         planar(&ring, &[1.0; 8], &f, 72.0);
-        let top = f.iter().flatten().flat_map(|r| r.iter()).map(|(_, z)| *z).fold(0.0, f64::max);
+        let top = f.iter().flatten().flat_map(|r| r.iter()).map(|(_, z)| *z).fold(0.0, crate::jsmath::js_max);
         assert!((top - 2.0).abs() < 1e-9);
     }
 

@@ -1409,7 +1409,7 @@ fn an_agent_imports_a_ctb_and_publishes_with_its_pen() {
             .ink
             .iter()
             .find(|p| p.segment.iter().zip([80., 72., 180., 72.]).all(|(a, b)| (a - b).abs() < 0.002))
-            .map(|p| (p.width, p.color.clone()))
+            .map(|p| (p.width, p.color))
             .unwrap()
     };
     let (before, _) = pen_of(&mut server, "before.pdf");

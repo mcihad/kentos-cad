@@ -33,6 +33,7 @@ pub(crate) fn grids_of(
     storey_of: &dyn Fn(Option<&str>) -> usize,
     written: &mut Written,
 ) -> Vec<Grid> {
+    #[allow(clippy::type_complexity)]
     let mut by_level: Vec<(Option<String>, Vec<(u128, &String, &GridFields)>)> = Vec::new();
     for (bits, uid, e) in entities {
         let Entity::Grid(g) = e else { continue };

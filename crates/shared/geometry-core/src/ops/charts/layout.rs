@@ -832,7 +832,7 @@ fn cartesian(cx: &mut Ctx, model: &Model, looks: Looks, frame: &Frame, pad: f32,
                     });
                 }
                 let markers = s.points.len() <= 60;
-                for (p, xy) in s.points.iter().zip(pts.chunks_exact(2)) {
+                for (p, xy) in s.points.iter().zip(pts.as_chunks::<2>().0.iter()) {
                     cx.out.targets.push(Target::Point {
                         x: xy[0],
                         y: xy[1],
@@ -1284,7 +1284,7 @@ pub fn hit(layout: &Layout, x: f32, y: f32) -> Option<u32> {
             consider(*px, *py, *elem);
         }
     }
-    for (i, xy) in layout.points.chunks_exact(2).enumerate() {
+    for (i, xy) in layout.points.as_chunks::<2>().0.iter().enumerate() {
         consider(xy[0], xy[1], layout.point_elems[i]);
     }
     if let Some((_, e)) = best {
@@ -1339,7 +1339,7 @@ pub fn within(layout: &Layout, x0: f32, y0: f32, x1: f32, y1: f32) -> Vec<u32> {
     let inside = |x: f32, y: f32| x >= xa && x <= xb && y >= ya && y <= yb;
     let mut out: Vec<u32> = layout
         .points
-        .chunks_exact(2)
+        .as_chunks::<2>().0.iter()
         .enumerate()
         .filter(|(_, xy)| inside(xy[0], xy[1]))
         .map(|(i, _)| layout.point_elems[i])

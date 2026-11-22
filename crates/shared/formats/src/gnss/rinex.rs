@@ -96,7 +96,7 @@ pub fn read_header(bytes: &[u8]) -> Result<RinexHeader, String> {
                 });
             }
             "ANT # / TYPE" => {
-                let a = out.antenna.get_or_insert_with(|| SurveyAntenna {
+                let a = out.antenna.get_or_insert(SurveyAntenna {
                     kind: None,
                     serial: None,
                     height: 0.0,
@@ -113,7 +113,7 @@ pub fn read_header(bytes: &[u8]) -> Result<RinexHeader, String> {
                 let h = number(line, 0, 14, n, "anten yüksekliği")?;
                 let e = number(line, 14, 28, n, "doğu dış merkezliği")?;
                 let no = number(line, 28, 42, n, "kuzey dış merkezliği")?;
-                let a = out.antenna.get_or_insert_with(|| SurveyAntenna {
+                let a = out.antenna.get_or_insert(SurveyAntenna {
                     kind: None,
                     serial: None,
                     height: 0.0,

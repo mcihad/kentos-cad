@@ -295,7 +295,7 @@ fn points(node: roxmltree::Node<'_, '_>, closed: bool) -> Vec<Segment> {
         .filter_map(|s| s.parse().ok())
         .collect();
     let mut out = Vec::new();
-    for (i, xy) in v.chunks_exact(2).enumerate() {
+    for (i, xy) in v.as_chunks::<2>().0.iter().enumerate() {
         let p = [xy[0] as f32, xy[1] as f32];
         out.push(if i == 0 {
             Segment::Move(p)

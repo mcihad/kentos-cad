@@ -1671,7 +1671,7 @@ fn set_variant(b: &mut SheetBook, s: &SetVariant) -> Result<Vec<Op>> {
     if let Some(w) = &s.when {
         v.when = w.clone();
     }
-    let at = clamp_index(Some(s.index.map_or(i as u32, |x| x)), l.variants.len());
+    let at = clamp_index(Some(s.index.unwrap_or(i as u32)), l.variants.len());
     l.variants.insert(at, v);
     Ok(Vec::new())
 }

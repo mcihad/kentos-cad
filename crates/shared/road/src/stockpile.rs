@@ -158,7 +158,7 @@ fn fit(corners: &[[f64; 2]], heights: &[f64]) -> Result<Plane, BaseError> {
     }
     let det = suu * svv - suv * suv;
     let spread = suu + svv;
-    if !(det > 1e-12 * spread * spread) {
+    if det.partial_cmp(&(1e-12 * spread * spread)) != Some(std::cmp::Ordering::Greater) {
         return Err(BaseError::Collinear);
     }
     let a = (suz * svv - svz * suv) / det;

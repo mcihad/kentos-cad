@@ -97,6 +97,7 @@ fn the_facts_say_what_separates_each_two_rooms() {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
     let name = |uid: &str| facts.spaces.iter().find(|s| s.uid == uid).map(|s| s.name.clone()).unwrap_or_default();
+    #[allow(clippy::type_complexity)]
     let mut seps: Vec<(Vec<String>, Vec<(String, Option<String>, f64)>, f64)> = facts
         .separations
         .iter()

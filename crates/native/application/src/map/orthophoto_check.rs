@@ -158,7 +158,7 @@ pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoC
         gsd,
         gsd_ok: gsd_limit.map(|l| gsd <= l * (1.0 + rules.gsd_tolerance) + 1e-12),
         gsd_limit,
-        passed_xy: (check.n > 0).then(|| check.koh_xy <= limit_xy),
+        passed_xy: (check.n > 0).then_some(check.koh_xy <= limit_xy),
         passed_z: check.koh_z.map(|kz| kz <= limit_z),
         below_pixel: check.n > 0 && check.koh_xy < gsd / 2.0,
         points,

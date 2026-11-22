@@ -166,7 +166,7 @@ impl RasterFile {
             4 => (
                 3,
                 pixels
-                    .chunks_exact(4)
+                    .as_chunks::<4>().0.iter()
                     .flat_map(|c| [c[0], c[1], c[2]])
                     .collect(),
             ),
@@ -396,7 +396,7 @@ impl RasterFile {
         epsg: u32,
     ) -> Result<Vec<u8>, JsError> {
         let gcps: Vec<Gcp> = points
-            .chunks_exact(5)
+            .as_chunks::<5>().0.iter()
             .map(|p| Gcp {
                 pixel: Vec2::new(p[0], p[1]),
                 target: Vec2::new(p[2], p[3]),

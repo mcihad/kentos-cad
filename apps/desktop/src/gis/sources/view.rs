@@ -39,6 +39,7 @@ const ROW: f32 = 28.0;
 const INDENT: f32 = 14.0;
 
 /// A listed row.
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum Line {
     Section {
         key: &'static str,

@@ -5,6 +5,7 @@
 //!   by at most `maxAngle`;
 //! - duplicate block definitions: the inserts of the merged ones (in the drawing and in other definitions) take the
 //!   kept one, and the merged ones go; only definitions of one content (the health check's key) merge.
+//!
 //! A line that a constraint or an associative dimension reads is refused: measured geometry is not repaired by a
 //! general routine. All or nothing; one undo step “Onar”; what moved and the recipe applied are reported. The shared
 //! cases are `fixtures/commands/v1/cad.drawing.repair.json` (`scripts/fixtures/drawing_repair_cases.py`).
@@ -235,9 +236,9 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
                 })
         };
         // The order of the refusals is the contract's: both ids found, then what kind of object.
-        find(&f.uid, "uid")?;
+        let (_, own) = find(&f.uid, "uid")?;
         let (_, target) = find(&f.target, "target")?;
-        if !matches!(doc.slot_of(Uuid::parse_str(&f.uid).expect("checked")).and_then(|s| doc.get(s)), Some(Entity::Line(_))) {
+        if !matches!(own, Entity::Line(_)) {
             return Err(fail(
                 codes::REPAIR_UNSUPPORTED,
                 "Onarım yalnız çizgi ucunu taşır; bu nesne çizgi değil.".into(),

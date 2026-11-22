@@ -91,3 +91,35 @@ alanlarını almamıştı; eklenti SDK'sının simge listesi (`sdk/icons.txt`) s
 - Şifreleme crate'leri (rsa, p256/p384, ed25519-dalek, sha1/sha2) RustCrypto'nun yeni kuşağındadır; imza
   doğrulaması aynı kalır, testler bunu gösterir.
 - Gerçek imza kartıyla (PKCS#11) uçtan uca deneme bu işte yapılmadı.
+
+## Ek: clippy temizliği (22 Kasım 2026)
+
+`cargo clippy --workspace --all-targets` uyarısız ve hatasız. Rust 1.100'ün yeni lint'leri ve sıkı lint'leri
+denetlenmemiş kod birikmişti; ilk koşu bir crate'te durduğu için tamamı ancak katman katman göründü (yaklaşık 450
+bulgu, 13'ü derlemeyi durduran hata).
+
+- **Sabit adımlı parçalar:** `chunks_exact(N)` → `as_chunks::<N>()` (yaklaşık 150 yer). İki hash işlevi
+  (`kentos-domain` `SlotHasher`, masaüstü etiketlerinin `Fx`'i) aynı baytları aynı sırayla okur; kalan baytlar
+  `as_chunks`'ın ikinci parçasından gelir.
+- **Platformdan bağımsız sayı yolu (CLAUDE.md §23.4):** geometri çekirdeği, stil çekirdeği ve dosya biçimleri
+  `clippy.toml`'da std `f64` matematiğini yasaklar; yeni kodda bunu atlayan yaklaşık 85 çağrı `jsmath`'e
+  (`sin`/`cos`/`tan`/`atan`/`exp` libm'den, `js_min`/`js_max`/`js_hypot`/`js_sign`) ve `kentos_formats::math`'e
+  alındı. `js_max` NaN'ı korur; değişen yerlerde NaN'ın girmediği gösterildi (bölen `rate < −1e-15`, sıfır uzunluklu
+  yayda `s = 0`). Çekirdek testleri değişmeden geçer.
+- **Üretim kodunda `expect`/`unwrap` (crate'lerin `deny`'ı):** `seam_network` kapanmayan izi bırakır; `drawing_repair`,
+  `road_volumes_approve`, `table_export`, `road_culverts_hydraulics`, `plan_dimensions`, `casework`, `properties`
+  zaten bulunan değeri kullanır ya da adı konmuş bir ret döner; `standards`'ın kaynak karşılaştırması
+  `unwrap_or_default` kullanır (düz kayıtların JSON'u nesnedir).
+- **`!(x > 0.0)` biçimi:** NaN'ı da yakalayan anlam korunarak `partial_cmp` ile yazıldı.
+- **Yerel `allow`:** `type_complexity` (1.100'ün yeni puanlaması `Box<dyn Fn(f64) -> String>`'i de karmaşık sayar),
+  `too_many_arguments`, `large_enum_variant` (komut işlemleri çağrı başına bir kez okunur) ve `result_large_err`
+  depodaki alışkanlıkla (252 `too_many_arguments`) öğenin üstüne yazıldı; `approx_constant` iki yerde: kesişim
+  ışınının keyfi yönü ve Euler sabitinin kendisi (`EULER_GAMMA` sabitine bağlandı).
+- Gerisi küçük biçim düzeltmeleridir (birleşen `if`'ler, `is_multiple_of`, test modülünün dosya sonuna alınması,
+  üç başsız test modülünün aynı `files.rs`'i bir kez yüklemesi).
+
+Doğrulama: değişen 40'ı aşkın crate'in testleri geçti; masaüstünde 544 test (dokunulan alanlar ve çapraz süzgeçler).
+Bu işten önce de kırık olanlar: 17 MCP testi (araçların `destructiveHint`'i, kaynak listesi; ikisi temiz `main`'de
+koşturuldu, aynı sonuç) ve `module_features` (VY işlerinin yeni GIS modülleri `ALWAYS` listesinde yok; bu işin
+dokunmadığı modüller, temiz `main`'de ayrıca koşturulmadı). `commandCatalog.json` gelen
+bir açıklama değişikliğiyle yeniden üretildi.

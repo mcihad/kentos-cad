@@ -731,9 +731,9 @@ impl Writer {
             let mut pts: Vec<[f64; 2]> = Vec::new();
             let mut segments: Vec<String> = Vec::new();
             let mut straight: Vec<usize> = Vec::new(); // the run of line indices not yet written
-            for i in 0..n {
+            for (i, &corner) in ring.iter().enumerate().take(n) {
                 let start = pts.len() + 1;
-                pts.push(ring[i]);
+                pts.push(corner);
                 let bulge = arc(i);
                 let end = if i + 1 == n { 1 } else { start + 1 + usize::from(bulge.is_some()) };
                 match bulge {

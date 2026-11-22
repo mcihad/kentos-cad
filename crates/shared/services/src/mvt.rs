@@ -286,7 +286,7 @@ fn feature(b: &[u8]) -> Result<Feature, String> {
             (1, 0) => id = Some(p.varint()?),
             (2, 2) => {
                 let t = packed(p.bytes()?)?;
-                tags = t.chunks_exact(2).map(|c| (c[0], c[1])).collect();
+                tags = t.as_chunks::<2>().0.iter().map(|c| (c[0], c[1])).collect();
             }
             (3, 0) => {
                 kind = match p.varint()? {

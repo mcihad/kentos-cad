@@ -35,7 +35,7 @@ pub(crate) fn block_changed(doc: &Document, a: &InsertEntity, back: &Document, b
     }
     da.entities.len() != db.entities.len()
         || da.entities.iter().zip(&db.entities).any(|(o, n)| {
-            o.kind() != n.kind() || places(n).into_iter().any(|p| !(to_original(o, p) <= tolerance))
+            o.kind() != n.kind() || places(n).into_iter().any(|p| matches!(to_original(o, p).partial_cmp(&tolerance), Some(std::cmp::Ordering::Greater) | None))
         })
 }
 

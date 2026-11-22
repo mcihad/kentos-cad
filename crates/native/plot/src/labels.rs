@@ -214,6 +214,7 @@ pub fn moved(mut l: MapLabel, map: &kentos_geometry_core::crs::map::MapProjectio
 
 /// Text collector shared by the desktop PDF and headless map export.
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::type_complexity)]
 pub fn labels_in_view(
     doc: &Document,
     spatial: &Spatial,

@@ -54,7 +54,7 @@ pub(crate) fn asked(a: &OrthoSeamAsk) -> Result<(), Stop> {
     if !(a.step.is_finite() && a.step > 0.0) {
         return bad("Kayıklık ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).", "seam.step");
     }
-    if a.window % 2 == 0 || !(5..=255).contains(&a.window) {
+    if a.window.is_multiple_of(2) || !(5..=255).contains(&a.window) {
         return bad("Pencere tek sayıda piksel olmalı, 5 ile 255 arasında.", "seam.window");
     }
     if !(1..=64).contains(&a.search) {
@@ -408,7 +408,7 @@ pub(crate) fn measure(
         (Some(uid), None) => {
             let (pts, bulges) = seam_line(doc, uid)?;
             let length = line_length(&pts, &bulges);
-            if !(length > 0.0) {
+            if length.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
                 return Err(fail(codes::INVALID_INPUT, "Birleşme çizgisinin uzunluğu yok.".into(), "seam.line"));
             }
             let (mut total, mut outside) = (0u32, 0u32);
@@ -478,6 +478,7 @@ pub(crate) fn measure(
             // The second's block: its own pixels round the one whose centre is nearest the place, or (docs/adr/3660) its
             // pixels resampled at the first's pixel centres round the place. `base`: the block's middle pixel; `sample`:
             // the second's grey at a point of the block (whole numbers: the block's pixels), for the bicubic refinement.
+            #[allow(clippy::type_complexity)]
             let (block_grey, base, sample): (Vec<f64>, (i64, i64), Box<dyn Fn(f64, f64) -> f64>) = if resample {
                 let Some((rx, ry, rw, rh)) = block(ci, cj) else { continue };
                 let pb = read(&mut ib, rx, ry, rw, rh, "second")?;

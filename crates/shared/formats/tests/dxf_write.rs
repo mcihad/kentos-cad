@@ -3640,7 +3640,7 @@ fn complex_linetype_exports_its_actual_style_handle_fixed_height_and_degree_angl
     assert!(
         text.lines()
             .collect::<Vec<_>>()
-            .chunks_exact(2)
+            .as_chunks::<2>().0.iter()
             .any(|p| p[0].trim() == "50" && p[1].parse::<f64>().ok() == Some(90.)),
         "raw DXF angle must be degrees"
     );
@@ -4342,7 +4342,7 @@ fn a_hatch_written_with_its_boundary_is_not_said_untied() {
     let ring: Vec<serde_json::Value> = (0..32)
         .map(|k| {
             let a = std::f64::consts::TAU * f64::from(k) / 32.0;
-            serde_json::json!({"x": 20.0 + 2.0 * a.cos(), "y": 5.0 + 2.0 * a.sin()})
+            serde_json::json!({"x": 20.0 + 2.0 * kentos_formats::math::cos(a), "y": 5.0 + 2.0 * kentos_formats::math::sin(a)})
         })
         .collect();
     let hatch: Entity = serde_json::from_value(serde_json::json!({
@@ -4379,7 +4379,7 @@ fn an_island_over_the_seed_does_not_lose_the_tie() {
         (0..64)
             .map(|k| {
                 let a = std::f64::consts::TAU * f64::from(k) / 64.0;
-                serde_json::json!({"x": 20.0 + r * a.cos(), "y": 5.0 + r * a.sin()})
+                serde_json::json!({"x": 20.0 + r * kentos_formats::math::cos(a), "y": 5.0 + r * kentos_formats::math::sin(a)})
             })
             .collect()
     };

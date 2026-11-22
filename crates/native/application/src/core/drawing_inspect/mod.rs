@@ -33,7 +33,7 @@ impl Budget {
             return Err(Stop::Cancelled);
         }
         // The clock is read once every 1024 steps: a step is a comparison, far shorter than a reading's cost.
-        let late = self.work % 1024 == 0 && self.deadline.is_some_and(|d| std::time::Instant::now() >= d);
+        let late = self.work.is_multiple_of(1024) && self.deadline.is_some_and(|d| std::time::Instant::now() >= d);
         if self.work >= WORK_MAX || late || (self.cut && self.deadline.is_some()) {
             self.cut = true;
             return Ok(false);

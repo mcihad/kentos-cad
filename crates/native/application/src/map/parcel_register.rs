@@ -421,11 +421,11 @@ pub(crate) fn apply(
     }
     let earlier = reg.boundaries.len();
     let mut next_boundary = reg.boundaries.iter().map(|b| b.number).max().unwrap_or(0) + 1;
-    let mut next_parcel = reg.parcels.iter().map(|p| p.number).max().unwrap_or(0) + 1;
+    let next_parcel = reg.parcels.iter().map(|p| p.number).max().unwrap_or(0) + 1;
     let mut shared = BTreeSet::new();
     let mut created = Vec::new();
     let mut stated: Vec<(u32, String, String)> = Vec::new();
-    for m in made {
+    for (next_parcel, m) in (next_parcel..).zip(made) {
         let mut parcel = m.parcel;
         let mut ring_edges: Vec<Vec<i32>> = Vec::new();
         for (part, hole, pts, bulges) in m.rings {
@@ -484,7 +484,6 @@ pub(crate) fn apply(
         }
         parcel.number = next_parcel;
         parcel.created_by = number;
-        next_parcel += 1;
         created.push(parcel.number);
         reg.parcels.push(parcel);
     }
@@ -704,7 +703,7 @@ fn straight_pieces(
 ) -> Option<Vec<i32>> {
     let (dx, dy) = (b.to.x - b.from.x, b.to.y - b.from.y);
     let l = dx.hypot(dy);
-    if !(l > 0.0) {
+    if l.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
         return None;
     }
     let mut inside: Vec<(f64, Vec2)> = corners

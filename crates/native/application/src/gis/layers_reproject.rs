@@ -212,6 +212,7 @@ fn verdict(doc: &Document, from: u32, at: kentos_geometry_core::Vec2) -> Option<
 
 /// The layer's objects moved from `from` into the project's system, the way they go and the move's preview; the
 /// refusal when one of them does not move.
+#[allow(clippy::type_complexity)]
 pub(crate) fn preview(
     doc: &Document,
     layer: &str,

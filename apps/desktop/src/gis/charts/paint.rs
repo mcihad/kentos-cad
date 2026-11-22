@@ -264,7 +264,7 @@ pub(crate) fn picture(layout: &Layout, t: &Tokens, w: u32, h: u32, k: f32) -> Op
                 alpha,
             } => {
                 let mut steps: Vec<Step> = pts
-                    .chunks_exact(2)
+                    .as_chunks::<2>().0.iter()
                     .enumerate()
                     .map(|(i, q)| {
                         if i == 0 {
@@ -359,7 +359,7 @@ fn splat(pix: &mut Pixmap, pts: &[f32], r: f32, k: f32, c: iced::Color, alpha: f
     let a = (c.a * alpha).clamp(0.0, 1.0);
     let rgb = [c.r * 255.0, c.g * 255.0, c.b * 255.0];
     let data = pix.data_mut();
-    for q in pts.chunks_exact(2) {
+    for q in pts.as_chunks::<2>().0.iter() {
         let (cx, cy) = (q[0] * k, q[1] * k);
         let (x0, x1) = (
             ((cx - r - 1.0).floor() as i32).max(0),

@@ -114,6 +114,7 @@ fn checked(app: &mut App) {
 }
 
 /// The atriums' findings (state, message) and the rows of 24/5 and 24/6 (outcome, note).
+#[allow(clippy::type_complexity)]
 fn said(app: &App) -> (Vec<(Option<S>, String)>, Vec<(String, O, String)>) {
     let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
     let found = audited.findings.iter().filter(|f| f.code == "bykhy_atrium").map(|f| (f.state, f.message.clone())).collect();

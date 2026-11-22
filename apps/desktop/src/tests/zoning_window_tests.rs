@@ -283,7 +283,7 @@ fn a_parcel_in_two_roads_is_summed_and_the_parts_hatched() {
     let area: f64 = m
         .regions
         .iter()
-        .map(|a| kentos_geometry_core::geom::region::net_area(a))
+        .map(kentos_geometry_core::geom::region::net_area)
         .sum();
     assert!(
         area > 275.0,

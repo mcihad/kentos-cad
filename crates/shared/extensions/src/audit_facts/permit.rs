@@ -72,7 +72,7 @@ mod tests {
             .into_iter()
             .map(|(k, v)| (k.to_owned(), v.to_owned()))
             .collect(),
-            construction_area: Some(5000.000_049),
+            construction_area: Some(5_000.000_049),
             storeys: Some(StoreyCount { above: 3, below: 1 }),
         }
         .normalized();

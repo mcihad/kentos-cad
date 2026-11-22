@@ -14,12 +14,12 @@ fn translated(default: &str) -> Vec<u8> {
         m["contributions"]["dataSources"][0]["title"] = json!("Basemap");
         m["l10n"] = json!({ "default": default, "files": { "tr": "l10n/tr.json" } });
     });
-    if default == "tr" {
-        if let Some(m) = f.get_mut("manifest.json") {
-            let mut v: Value = serde_json::from_slice(m).unwrap();
-            v["l10n"] = json!({ "default": "tr", "files": { "en": "l10n/tr.json" } });
-            *m = serde_json::to_vec_pretty(&v).unwrap();
-        }
+    if default == "tr"
+        && let Some(m) = f.get_mut("manifest.json")
+    {
+        let mut v: Value = serde_json::from_slice(m).unwrap();
+        v["l10n"] = json!({ "default": "tr", "files": { "en": "l10n/tr.json" } });
+        *m = serde_json::to_vec_pretty(&v).unwrap();
     }
     f.insert(
         "l10n/tr.json".to_owned(),

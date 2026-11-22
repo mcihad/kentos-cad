@@ -660,8 +660,8 @@ pub fn escape(doc: &Document) -> Escape {
         }
         // Each room's nodes see each other.
         let mut room_nodes: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
-        for k in 0..g.at.len() {
-            room_nodes.entry(g.room[k]).or_default().push(k);
+        for (k, &room) in g.room.iter().enumerate().take(g.at.len()) {
+            room_nodes.entry(room).or_default().push(k);
         }
         for (&r, nodes) in &room_nodes {
             for (i, &a) in nodes.iter().enumerate() {
@@ -684,6 +684,7 @@ pub fn escape(doc: &Document) -> Escape {
             .map(|&i| rooms[i].owner.clone())
             .chain(std::iter::once(None))
             .collect();
+        #[allow(clippy::type_complexity)]
         let mut reached: BTreeMap<Option<String>, Vec<(Vec<f64>, Vec<Option<usize>>)>> =
             BTreeMap::new();
         for o in owners {
@@ -764,7 +765,7 @@ pub fn escape(doc: &Document) -> Escape {
             // To its own nearest passage, inside it (50/3).
             let door = own_doors
                 .get(&i)
-                .map(|mine| {
+                .and_then(|mine| {
                     let (d, next) = g.reach(mine, |r| r == i);
                     starts
                         .iter()
@@ -776,8 +777,7 @@ pub fn escape(doc: &Document) -> Escape {
                             })
                         })
                         .max_by(|a, b| a.length.total_cmp(&b.length))
-                })
-                .flatten();
+                });
             // From the outer side of each of its doors to the nearest exit, the nearest (50/4, 50/5): the walk goes on
             // in the room the door opens into, as that room's own walks do. A door into an escape stair's room, or the
             // building's final exit, is at its exit.

@@ -182,6 +182,7 @@ fn by_overlay(subject: &[[f64; 2]], clip: &Clip) -> Vec<Vec<[f64; 2]>> {
 
 /// A painted part cut by the clips: its pieces (each with whether it is closed) and whether it changed; `filled` parts
 /// stay areas.
+#[allow(clippy::type_complexity)]
 pub fn cut(pts: &[[f64; 2]], closed: bool, filled: bool, clips: &[Clip]) -> (Vec<(Vec<[f64; 2]>, bool)>, bool) {
     if clips.is_empty() || pts.is_empty() {
         return (vec![(pts.to_vec(), closed)], false);

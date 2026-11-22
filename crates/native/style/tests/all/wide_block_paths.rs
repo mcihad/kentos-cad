@@ -120,7 +120,7 @@ fn patterns(scale:f64) -> kentos_native_style::line_types::LineTypes {
     kentos_native_style::line_types::LineTypes::of(&settings)
 }
 fn fill_area(data:&[f32])->f64 {
-    data.chunks_exact(6).map(|t|{
+    data.as_chunks::<6>().0.iter().map(|t|{
         let v:Vec<f64>=t.iter().map(|x|*x as f64).collect();
         ((v[2]-v[0])*(v[5]-v[1])-(v[3]-v[1])*(v[4]-v[0])).abs()/2.
     }).sum()

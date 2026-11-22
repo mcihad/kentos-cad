@@ -216,7 +216,7 @@ impl Mesh {
                 pts.extend(ring.iter().map(|&k| p(k)));
                 idx.clear();
                 triangulate_into(&pts, &[Range { start: 0, end: m }], &mut idx);
-                for c in idx.chunks_exact(3) {
+                for c in idx.as_chunks::<3>().0.iter() {
                     let mut t = [
                         ring[c[0] as usize],
                         ring[c[1] as usize],
