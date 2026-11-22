@@ -460,3 +460,7 @@ numaraları raporunkidir.
   ([ADR 9154](../docs/adr/9154-address-ties-named-by-neighbourhood.md))
   - Belirsiz'de “2 aday aynı puanda (100): Cumhuriyet, Kızılay mahallelerinde; mahalleyi ekleyerek ayırın”.
   - Kalan: veri katmanında seçili/görünümdeki satırlarla istatistik, tablo/grafik/dışa aktarım toplamlarının uçtan uca sınaması, web.
+- [~] **VY-54 — Taşınan dosyanın veri katmanları bir kerede yeniden bağlanır (ek kabul: kurtarma ve taşınabilirlik).**
+  ([ADR 9155](../docs/adr/9155-relink-data-layers-of-a-moved-file.md))
+  - `data_relink.rs`: aynı adresteki bütün veri katmanları; anahtar/geometri/alan şeması denetimi; Kaynak durumunda düğme.
+  - Kalan: üç durumun tek pencerede bildirimi, kesinti/yedek sonrası sayım, kalıcı kimlikle denetim, web.

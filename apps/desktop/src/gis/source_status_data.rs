@@ -21,7 +21,13 @@ pub(crate) struct DataRow {
     pub place: String,
     pub access: &'static str,
     pub session: String,
+    /// Its rows are in a file (not a database): Yeniden bağla… points it at a new place.
+    pub file: bool,
 }
+
+/// The data layer's way to a moved file (docs/adr/9155), and its column's width.
+const RELINK: &str = "Yeniden bağla…";
+const ACT: f32 = 130.0;
 
 /// A table's row count as the source answered it, by layer; a layer not there yet is “hesaplanmadı”.
 pub(crate) type Counts = BTreeMap<String, Result<u64, String>>;
@@ -58,6 +64,7 @@ impl App {
                     place: data.place_words(),
                     access: if data.read_only { "salt okunur" } else { "yazılabilir" },
                     session,
+                    file: data.driver != "postgis",
                 })
             })
             .collect()
@@ -99,31 +106,40 @@ impl App {
         let head = kentos_ui::widget::table::band(
             row![
                 container(kentos_ui::widget::table::title("Katman")).width(typography::scaled(120.0)),
-                container(kentos_ui::widget::table::title("Kaynak (dosya ya da veritabanı › tablo)")).width(Fill),
+                // The cells say “file › table” or “database › schema.table”.
+                container(kentos_ui::widget::table::title("Kaynak")).width(Fill),
                 container(kentos_ui::widget::table::title("Erişim")).width(typography::scaled(90.0)),
                 container(kentos_ui::widget::table::title("Düzenleme")).width(typography::scaled(200.0)),
                 container(kentos_ui::widget::table::title("Satır")).width(typography::scaled(100.0)),
+                // The way out's column: Yeniden bağla… on a file not read (docs/adr/9155).
+                container(iced::widget::text("")).width(typography::scaled(ACT)),
             ]
             .spacing(8)
             .padding([0, 8]),
         );
         let lines = rows.into_iter().fold(column![head], |c, r| {
+            let unread = matches!(counts.get(&r.layer), Some(Err(_)));
             let count = match counts.get(&r.layer) {
                 Some(Ok(n)) => crate::view::thousands(*n as f64),
                 Some(Err(_)) => "okunamadı".to_owned(),
                 None => "hesaplanmadı".to_owned(),
             };
-            c.push(
-                row![
-                    container(cell(r.name)).width(typography::scaled(120.0)),
-                    cell(r.place),
-                    container(cell(r.access.to_owned())).width(typography::scaled(90.0)),
-                    container(cell(r.session)).width(typography::scaled(200.0)),
-                    container(cell(count)).width(typography::scaled(100.0)),
-                ]
-                .spacing(8)
-                .padding([4, 8]),
-            )
+            let line = row![
+                container(cell(r.name)).width(typography::scaled(120.0)),
+                cell(r.place),
+                container(cell(r.access.to_owned())).width(typography::scaled(90.0)),
+                container(cell(r.session)).width(typography::scaled(200.0)),
+                container(cell(count)).width(typography::scaled(100.0)),
+            ]
+            .spacing(8)
+            .padding([4, 8]);
+            // A file not read: pointed at its new place, every layer of the file with it (docs/adr/9155).
+            let act: Element<'_, Message> = if unread && r.file {
+                words::secondary(RELINK, Some(super::msg(super::Event::RelinkData(r.layer.clone())))).into()
+            } else {
+                iced::widget::text("").into()
+            };
+            c.push(line.push(container(act).width(typography::scaled(ACT))))
         });
         let failed: Vec<String> = counts.values().filter_map(|r| r.as_ref().err().cloned()).collect();
         let hint = if failed.is_empty() {

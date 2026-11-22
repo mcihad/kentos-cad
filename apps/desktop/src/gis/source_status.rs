@@ -46,6 +46,9 @@ pub enum Event {
     Refresh,
     /// A data layer's table counted by its source, or why not.
     Counted(String, Result<u64, String>),
+    /// Yeniden bağla… on a data layer whose file was not read (docs/adr/9155), and the file picked.
+    RelinkData(String),
+    RelinkDataPicked(String, Option<std::path::PathBuf>),
     Close,
 }
 
@@ -170,6 +173,47 @@ impl App {
             Event::Counted(layer, counted) => {
                 w.counts.insert(layer, counted);
                 Task::none()
+            }
+            Event::RelinkData(layer) => {
+                if let crate::app::Picker::File(path) = &self.picker {
+                    return Task::done(msg(Event::RelinkDataPicked(layer, Some(path.clone()))));
+                }
+                Task::perform(
+                    async move {
+                        let file = rfd::AsyncFileDialog::new()
+                            .set_title("Veri katmanını yeniden bağla")
+                            .add_filter("GeoPackage", &["gpkg"])
+                            .pick_file()
+                            .await?;
+                        Some(file.path().to_path_buf())
+                    },
+                    move |p| msg(Event::RelinkDataPicked(layer.clone(), p)),
+                )
+            }
+            Event::RelinkDataPicked(_, None) => Task::none(),
+            Event::RelinkDataPicked(layer, Some(path)) => {
+                match self.relink_data_layers(&layer, &path) {
+                    Ok(done) => {
+                        let file = path.file_name().map_or_else(|| path.display().to_string(), |f| f.to_string_lossy().into_owned());
+                        let name = self.data_layer_name(&layer);
+                        self.say(
+                            kentos_interaction::Level::Success,
+                            match done.len() {
+                                1 => format!("“{name}” veri katmanı {file} dosyasına yeniden bağlandı."),
+                                n => format!(
+                                    "“{name}” ve aynı dosyaya bağlı {} veri katmanı daha {file} dosyasına yeniden bağlandı.",
+                                    n - 1
+                                ),
+                            },
+                        );
+                    }
+                    Err(why) => self.warn(why),
+                }
+                if let Some(w) = self.gis.source_status.as_mut() {
+                    w.counts.clear();
+                }
+                self.refresh_source_status();
+                self.count_data_layers()
             }
             Event::Close => {
                 self.gis.source_status = None;

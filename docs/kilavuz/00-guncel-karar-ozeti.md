@@ -168,6 +168,9 @@
     ilişki kaldırılmadan etkisi söylenir.
   - **Adres eşitliği** (23 Kasım, ek kabul “adres”; [ADR 9154](../adr/9154-address-ties-named-by-neighbourhood.md),
     VY-53): eşit puanlı adaylar mahalleleriyle söylenir, aday yokluğundan ayrıdır.
+  - **Veri katmanını yeniden bağla** (23 Kasım, ek kabul “kurtarma”;
+    [ADR 9155](../adr/9155-relink-data-layers-of-a-moved-file.md), VY-54): taşınan dosyanın bütün veri katmanları bir
+    kerede bağlanır; şeması tutmayan aynı adlı tablo bağlanmaz.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
