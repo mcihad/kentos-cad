@@ -163,6 +163,9 @@
   - **Kaynakta silinen satır** (23 Kasım, değerlendirmenin 32. maddesi;
     [ADR 9152](../adr/9152-a-row-gone-in-the-source.md), VY-51): pencere yazılacak ve bırakılacak satır sayısını söyler;
     tablo silinen satırı listeler; değişmeyen alan kaynağın değerini gösterir; geri alma bıraktığını sayar.
+  - **Birleşik görünüm sayıları, ilişki kaldırma** (23 Kasım, ek kabul “ilişkiler”;
+    [ADR 9153](../adr/9153-join-counts-and-relation-removal-preview.md), VY-52): rapor çoklu ve yetim eşleşmeyi sayar;
+    ilişki kaldırılmadan etkisi söylenir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

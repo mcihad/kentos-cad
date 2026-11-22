@@ -452,3 +452,7 @@ numaraları raporunkidir.
   ([ADR 9152](../docs/adr/9152-a-row-gone-in-the-source.md))
   - Pencerede yazılacak/bırakılacak sayı; tabloda “kaynakta silinmiş” satırlar; değişmeyen alan kaynağın değeri; geri almanın sayısı.
   - Kalan: gerçek PostgreSQL'de deneme, yeni kayıt yetkisinin sorulması, web.
+- [~] **VY-52 — Birleşik görünüm çoklu ve yetim eşleşmeyi sayar; ilişki kaldırma etkisi önceden (ek kabul: ilişkiler).**
+  ([ADR 9153](../docs/adr/9153-join-counts-and-relation-removal-preview.md))
+  - Rapor satırında “birden çok kayıtla” ve “hiçbir kayıt bağlanmadı”; İlişkiler'de kaldırılacak ilişkinin etkisi.
+  - Kalan: yeniden adlandırma etkisi, alt kayıtların eski form sürümü, yol sınıfı kodlarıyla sınama, web.

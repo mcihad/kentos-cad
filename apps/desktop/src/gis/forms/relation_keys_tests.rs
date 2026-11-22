@@ -113,3 +113,35 @@ fn screens() {
         app
     });
 }
+
+/// A saved relation removed in the window says, before Kaydet, that the child records keep their values and which
+/// form's related list shows the link (docs/adr/9153).
+#[test]
+fn removing_a_relation_says_what_it_touches_before_saving() {
+    let (mut app, parent, child, path) = opened("iliski-kaldir");
+    ev(&mut app, Event::Save);
+    // A form on the neighbourhoods listing their works by the code.
+    let body = serde_json::json!({ "revision": 1, "items": [
+        { "type": "related", "id": "isler", "label": "Bakım işleri", "layer": child, "field": "mahalle" }
+    ]});
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let form = serde_json::json!({
+        "id": "mahalle-formu", "name": "Mahalle formu", "layer": parent, "draft": body.clone(),
+        "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body, "note": "İlk yayın" }]
+    });
+    let doc = app.document.as_mut().expect("open");
+    let mut settings = doc.model.settings().clone();
+    settings.forms.push(serde_json::from_value(form).expect("a form"));
+    doc.model.set_settings(settings);
+    let task = app.update(Message::Run("data.relations"));
+    drive(&mut app, task);
+    ev(&mut app, Event::Choose(0));
+    ev(&mut app, Event::Remove);
+    let w = app.gis.relations_window.clone().expect("the window");
+    let lines = app.relation_removals(&w);
+    assert_eq!(
+        lines,
+        ["“Mahalle bakımları” Kaydet'te kaldırılır: alt kayıtların “mahalle” değerleri olduğu gibi kalır. İlişkili listesi bu bağı gösteren form: “Mahalle formu”."]
+    );
+    let _ = std::fs::remove_file(&path);
+}

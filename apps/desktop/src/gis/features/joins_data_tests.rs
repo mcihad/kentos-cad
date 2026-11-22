@@ -100,6 +100,10 @@ fn a_view_of_two_data_layers_reads_their_sources_rows() {
     let report = read(&app).report.clone();
     assert_eq!((report.records, report.matched, report.unmatched), (3, 2, 1));
     assert_eq!((report.with_records, report.with_used), (6, 4));
+    // The line says the records that matched several and the joined ones nothing met (docs/adr/9153).
+    let line = App::join_report(&read(&app), "bakim");
+    assert!(line.contains("3 kayıt: 2 eşleşen (2 birden çok kayıtla), 1 eşleşmeyen"), "{line}");
+    assert!(line.contains("bakim: 6 kayıttan 4'i eşleşti, 2 kayda hiçbir kayıt bağlanmadı"), "{line}");
     // A data layer's cells are read only from the view, said why.
     let r = read(&app);
     let kod = r.columns.iter().find(|c| c.name == "kod").expect("kod");

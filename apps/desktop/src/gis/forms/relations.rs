@@ -425,10 +425,14 @@ impl App {
             .into(),
             Some(r) => self.relation_editor(r, &layers),
         };
-        let body = column![
+        let mut body = column![
             row![container(left).width(240), container(right).width(Fill)].spacing(16),
         ]
         .spacing(14);
+        // What Kaydet's removals touch, before they are written (docs/adr/9153).
+        for line in self.relation_removals(w) {
+            body = body.push(words::text_line(Kind::Warn, line));
+        }
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
         let footer = row![
                 words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
@@ -442,6 +446,42 @@ impl App {
             .scroll(body).footer(footer)
             .width(720.0)
             .modal(msg(Event::Cancel))
+    }
+
+    /// Each relation Kaydet would remove, with what it touches: the child records' values stay; the forms whose related
+    /// lists show the link (on the parent layer, listing the child layer by the relation's field) lose it.
+    pub(crate) fn relation_removals(&self, w: &Window) -> Vec<String> {
+        w.kept
+            .iter()
+            .filter(|r| !w.rows.iter().any(|x| x.id == r.id))
+            .map(|r| {
+                let forms: Vec<String> = self
+                    .project_forms()
+                    .iter()
+                    .filter(|f| f.layer == r.parent)
+                    .filter(|f| {
+                        let body = f.releases.last().map_or(&f.draft, |rel| &rel.body);
+                        body.walk().iter().any(|(_, item)| {
+                            matches!(item, kentos_commands::FormItem::Related { layer, field, .. }
+                                if *layer == r.child && *field == r.field)
+                        })
+                    })
+                    .map(|f| format!("“{}”", f.name))
+                    .collect();
+                let name = if r.name.trim().is_empty() { r.id.clone() } else { r.name.clone() };
+                let mut line = format!(
+                    "“{name}” Kaydet'te kaldırılır: alt kayıtların “{}” değerleri olduğu gibi kalır.",
+                    r.field
+                );
+                if !forms.is_empty() {
+                    line.push_str(&format!(
+                        " İlişkili listesi bu bağı gösteren form: {}.",
+                        forms.join(", ")
+                    ));
+                }
+                line
+            })
+            .collect()
     }
 
     fn relation_editor<'a>(

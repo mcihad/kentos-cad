@@ -132,13 +132,21 @@ impl App {
         words::NO_ROWS.to_owned()
     }
 
-    /// The report as one line.
-    fn join_report(r: &JoinRead, with: &str) -> String {
+    /// The report as one line: the records that matched (and of them those that matched several), those that did not
+    /// (and of them those without a key), and the joined records nothing met (docs/adr/9153).
+    pub(crate) fn join_report(r: &JoinRead, with: &str) -> String {
         let p = &r.report;
-        let mut out = format!(
-            "{} satır · {} kayıt: {} eşleşen, {} eşleşmeyen",
-            p.rows, p.records, p.matched, p.unmatched
-        );
+        // A record met by more than one joined record is more than one row.
+        let mut per_record: std::collections::HashMap<&str, u32> = std::collections::HashMap::new();
+        for row in r.rows.iter().filter(|row| row.right.is_some()) {
+            *per_record.entry(row.left.as_str()).or_default() += 1;
+        }
+        let several = per_record.values().filter(|n| **n > 1).count();
+        let mut out = format!("{} satır · {} kayıt: {} eşleşen", p.rows, p.records, p.matched);
+        if several > 0 {
+            out.push_str(&format!(" ({several} birden çok kayıtla)"));
+        }
+        out.push_str(&format!(", {} eşleşmeyen", p.unmatched));
         if p.null_keys > 0 {
             out.push_str(&format!(" ({} anahtarsız)", p.null_keys));
         }
@@ -146,6 +154,10 @@ impl App {
             " · {with}: {} kayıttan {}'i eşleşti",
             p.with_records, p.with_used
         ));
+        let orphans = p.with_records.saturating_sub(p.with_used);
+        if orphans > 0 {
+            out.push_str(&format!(", {orphans} kayda hiçbir kayıt bağlanmadı"));
+        }
         if !p.cardinality.is_empty() {
             out.push_str(&format!(" · {}", p.cardinality));
         }
