@@ -186,7 +186,17 @@ impl App {
             .is_some_and(|(last, at)| *last == id && now.duration_since(*at) <= DOUBLE_CLICK);
         self.last_layer_press = (!double).then(|| (id.clone(), now));
         self.row_chosen(&id);
-        if double {
+        // In a CBS project one press on a layer makes it the layer drawn on and edited (docs/adr/9128), as a map's
+        // programs do; a CAD drawing keeps the double click, its layers being chosen far more often than drawn on.
+        let gis_layer = self.document.as_ref().is_some_and(|d| {
+            d.settings().project_type() == Some(kentos_commands::Workspace::Gis)
+                && d.model
+                    .layers()
+                    .get(&id)
+                    .is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer && n.service.is_none())
+        });
+        let active = self.document.as_ref().is_some_and(|d| d.model.layers().active() == id);
+        if double || (gis_layer && !active) {
             self.activate_row(&id);
         }
     }

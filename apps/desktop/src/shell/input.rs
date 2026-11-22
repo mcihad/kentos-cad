@@ -424,7 +424,15 @@ impl App {
         }
         // The typed active layer does not hold what the tool draws (layer_types.rs, docs/adr/0622 §5).
         if let Some(why) = self.layer_misfit(&format!("tool.{id}")) {
-            self.warn(why);
+            self.warn(why.clone());
+            // A data layer whose edit session is closed (docs/adr/9128): the way to open it, one press away.
+            if let Some(layer) = self.closed_data_layer() {
+                self.toast(
+                    kentos_ui::widget::Toast::info("Katman düzenlemeye kapalı")
+                        .body(why)
+                        .action("Düzenlemeyi başlat", crate::data_edits::event(crate::data_edits::Event::Start(layer))),
+                );
+            }
             return Task::none();
         }
         self.field = None;

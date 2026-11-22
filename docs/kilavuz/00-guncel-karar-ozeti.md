@@ -88,6 +88,9 @@
   - **CBS projesi binanın komutlarını sunmaz** (22 Kasım, değerlendirmenin 12. maddesi;
     [ADR 9127](../adr/9127-cbs-project-offers-no-building-commands.md), VY-26): kentos-cad'de `building_only_here`
     yalnız Mimari'nin şeridindeki komutu CBS projesinde sunmaz; CBS şeridinde IFC, UCS ve Analiz'de nokta bulutu yok.
+  - **Katmana bir basış hedefi seçer** (22 Kasım, değerlendirmenin 4. maddesi;
+    [ADR 9128](../adr/9128-layer-target-and-data-layer-drawing.md), VY-27): CBS projesinde bir basış katmanı etkin yapar;
+    veri katmanına yalnız oturumunda ve tablonun geometrisiyle çizilir, araç nedenini ve Düzenlemeyi başlat'ı söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

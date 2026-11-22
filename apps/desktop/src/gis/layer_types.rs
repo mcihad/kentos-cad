@@ -61,6 +61,33 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
     let kinds = command_makes(id)?;
     let layers = doc.layers();
     let active = layers.get(layers.active())?;
+    // A data layer (docs/adr/9101, 9128): drawn on only in its edit session, of its table's geometry.
+    if let Some(data) = &active.data {
+        if data.read_only {
+            return Some(format!(
+                "Etkin katman “{}” salt okunur bir kaynakta; çizilen nesne ona yazılmaz. Yazılabilir bir katmanı etkin yapın.",
+                active.name
+            ));
+        }
+        if !doc.editing(&active.id) {
+            return Some(format!(
+                "Etkin katman “{}” düzenlemeye kapalı: çizmek için önce Düzenlemeyi başlat'ı seçin (Katmanlar'da katmanın \
+                 sağ tuşu ya da Düzenle sekmesi).",
+                active.name
+            ));
+        }
+        let Some(table) = data.geometry.as_ref().map(|g| data_geometry(&g.type_name)) else {
+            return Some(format!("Etkin katman “{}” geometrisiz bir tablo; nesne çizilmez, satır tablodan eklenir.", active.name));
+        };
+        let geometry = table?;
+        let kind = kinds.iter().find(|k| !geometry.admits(k))?;
+        return Some(format!(
+            "Etkin katman “{}” bir {}; {} bu katmana yazılmaz. Türüne uyan bir veri katmanını etkin yapın.",
+            active.name,
+            geometry.layer_words(),
+            kentos_commands::kind_words(kind)
+        ));
+    }
     let geometry = active.geometry?;
     let kind = kinds.iter().find(|k| !geometry.admits(k))?;
     let fits = |n: &kentos_commands::LayerNode| {
@@ -83,6 +110,18 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
         geometry.layer_words(),
         kentos_commands::kind_words(kind)
     ))
+}
+
+/// The layer type a data layer's table geometry holds (OGC's name); none for a geometry of every kind.
+fn data_geometry(type_name: &str) -> Option<LayerGeometry> {
+    match type_name {
+        "POINT" | "MULTIPOINT" => Some(LayerGeometry::Point),
+        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "MULTICURVE" | "CURVE" => {
+            Some(LayerGeometry::Line)
+        }
+        "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "MULTISURFACE" | "SURFACE" => Some(LayerGeometry::Area),
+        _ => None,
+    }
 }
 
 /// A layer type's glyph: the layer tree's row draws it in the layer's colour, the menus beside
@@ -220,6 +259,14 @@ impl App {
     /// Why a command that writes on the active layer is off now (`misfit`).
     pub(crate) fn layer_misfit(&self, id: &str) -> Option<String> {
         misfit(&self.document.as_ref()?.model, id)
+    }
+
+    /// The active layer, when it is a writable data layer whose edit session is closed (docs/adr/9128).
+    pub(crate) fn closed_data_layer(&self) -> Option<String> {
+        let doc = &self.document.as_ref()?.model;
+        let active = doc.layers().get(doc.layers().active())?;
+        let data = active.data.as_ref()?;
+        (!data.read_only && !doc.editing(&active.id)).then(|| active.id.clone())
     }
 
     /// `edit.autoSelect`: Otomatik seçim turned over (`cad.settings.set`'s `autoSelect`), said.
@@ -422,3 +469,7 @@ mod tests {
         assert!(app.available("tool.spot"), "spot elevations use their own layer");
     }
 }
+
+#[cfg(test)]
+#[path = "layer_target_tests.rs"]
+mod layer_target_tests;

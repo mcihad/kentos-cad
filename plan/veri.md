@@ -324,3 +324,9 @@ numaraları raporunkidir.
     reddedilir; Harita, CBS ve yolun komutları kalır.
   - CBS şeridinden bina IFC'si, UCS paneli ve Analiz'deki nokta bulutu araçları çıktı (bağlamsal sekmede ve aramada).
   - Kalan: görünürlük matrisi, CBS alt şeridindeki CAD terimleri, raster ve ağ için bağlamsal araçlar, web.
+- [~] **VY-27 — Katmana bir basış hedefi seçer; veri katmanına oturumunda çizilir (rapor 4, P1).**
+  ([ADR 9128](../docs/adr/9128-layer-target-and-data-layer-drawing.md))
+  - CBS projesinde Katmanlar'da bir basış katmanı etkin yapar (CAD'de çift tıklama sürer).
+  - Nesne yazan araç veri katmanında oturum kapalıyken, salt okunurken ya da geometri uymazken kapalı ve nedenli;
+    çağrılınca Düzenlemeyi başlat düğmeli bildirim.
+  - Kalan: Düzenle sekmesinde sürekli hedef ve oturum denetimi, yetki gerekçesi, iki oturumda yanlış yazım sınaması, web.

@@ -169,6 +169,21 @@ impl App {
         let active = layers.get(layers.active());
         let value = active.map_or_else(String::new, |n| n.name.clone());
         let swatch = active.map(|n| self.drawing_color(&n.style.color));
+        // A data layer's edit session beside the layer drawn on (docs/adr/9128): drawn on only while it is open.
+        let session = active.and_then(|n| {
+            let data = n.data.as_ref()?;
+            Some(if data.read_only {
+                " Veri katmanı, salt okunur: çizilmez.".to_owned()
+            } else if doc.model.editing(&n.id) {
+                " Veri katmanı düzenleniyor: çizilenler Kaynağa yaz'a kadar katmanda bekler.".to_owned()
+            } else {
+                " Veri katmanı düzenlemeye kapalı: çizmek için katmanın sağ tuşundan Düzenlemeyi başlat.".to_owned()
+            })
+        });
+        let tip_body = format!(
+            "Yeni nesnelerin çizildiği katman; CBS projesinde Katmanlar'da bir katmana bir kez basmak onu seçer. Kilitli katman seçilemez; kilidi Katmanlar panelinden açın.{}",
+            session.unwrap_or_default()
+        );
         let buttons: Vec<Button<'static, Message>> = [
             "layer.new",
             "layer.newGroup",
@@ -195,16 +210,14 @@ impl App {
                 + STACK_PAD * 2.0
         });
         let field_menu = menu.clone();
-        let (field_value, field_swatch) = (value.clone(), swatch);
+        let (field_value, field_swatch, field_tip) = (value.clone(), swatch, tip_body.clone());
         let view_buttons = buttons.clone();
         let view = move |level: Level| -> Element<'static, Message> {
             let menu = field_menu.clone();
             let field = Choice::new(field_value.clone(), move || layer_menu(&menu))
                 .swatch(field_swatch)
                 .width(field_width(level))
-                .tip(kentos_ui::widget::Tip::new("Etkin katman").body(
-                    "Yeni nesnelerin çizildiği katman. Kilitli katman seçilemez; kilidi Katmanlar panelinden açın.",
-                ));
+                .tip(kentos_ui::widget::Tip::new("Etkin katman").body(field_tip.clone()));
             let mut stack = column![field].spacing(3);
             for pair in view_buttons.chunks(2) {
                 stack = stack.push(pair.iter().fold(row![].spacing(ROW_GAP), |row, b| {

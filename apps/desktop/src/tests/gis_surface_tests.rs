@@ -67,6 +67,7 @@ fn the_cbs_ribbon_carries_no_building_export_ucs_or_point_cloud_analysis() {
 #[test]
 fn a_cad_project_finds_and_runs_duvar_as_before() {
     let mut app = app_with_drawing();
+    crate::files_testing::make_cad(&mut app);
     assert!(!app.building_only_here("tool.wall"), "a CAD project: every module");
     let ids = found(&mut app, "duvar");
     assert!(ids.contains(&"tool.wall"), "{ids:?}");
