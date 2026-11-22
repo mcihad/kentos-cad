@@ -1108,6 +1108,7 @@ impl SheetPainter<'_> {
         let camera = Camera {
             map: None,
             map_ratio: 1.0,
+            metres_per_unit: 1.0,
             center: Vec2::new(c.x, c.y),
             // CSS pixels per ground metre on the paper.
             scale: kentos_sheet::projection::Scale::for_rendering(scale)

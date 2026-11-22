@@ -405,7 +405,8 @@ impl App {
         crate::db_connections::off_thread(
             move || {
                 let bytes = kentos_native_application::project_store::read(&at.address, at.schema.as_deref(), &at.name)?;
-                let snapshot = kentos_kcad::decode(&bytes).map_err(|e| format!("“{}” projesi okunamadı: {}", at.name, e.message))?;
+                let snapshot = kentos_native_application::project_store::decode(&at.address, &bytes)
+                    .map_err(|e| format!("“{}” projesi okunamadı: {e}", at.name))?;
                 let mut doc = Document::from_v2(snapshot, None)?;
                 doc.source = Source::Stored(Box::new(at));
                 Ok(doc)

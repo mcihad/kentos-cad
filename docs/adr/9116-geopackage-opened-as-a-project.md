@@ -125,13 +125,12 @@ alınacağı QGIS'in davranışından alındı.
 
 Açılış dışında GeoPackage'ın tam kullanımı için sırada olanlar (sahip seçecek):
 
-- **Raster döşeme tabloları:** açılışta bağlı raster olarak gelmeli (`cad.rasters.gpkgread`, `link`). Önce raster
-  yolunun proje dosyasından göreli yazılması gerekir: bugün `with_relative` veri katmanlarını, bağlı GeoPackage'ları
-  ve dış başvuruları göreli yazıyor, rasteri yazmıyor.
+- ~~**Raster döşeme tabloları**~~ — yapıldı ([ADR 9117](9117-geopackage-rasters-and-looks.md) §2–§3): açılışta bağlı
+  raster olarak gelir, yolu GeoPackage'a göre yazılır.
 - **İlişkiler:** related tables uzantısındaki ilişkiler veri katmanları arasında projenin ilişkileri olmalı. Bugün
   yalnız İçe aktar (`file.import.gpkg`) çizim katmanlarına alıyor.
-- **Stilin geri yazılması:** veri katmanının stili `layer_styles`'a varsayılan olarak yazılmalı ki QGIS de aynı
-  görünüşle açsın. Bugün yalnız Dışa aktar yazıyor.
+- ~~**Stilin geri yazılması**~~ — yapıldı ([ADR 9117](9117-geopackage-rasters-and-looks.md) §4): Kaydet, değişen
+  görünüşü tablonun varsayılan stili olarak `layer_styles`'a yazar.
 - **Üst veri:** `gpkg_metadata` katmanın bilgisine okunup yazılmalı.
 - **Birden çok geometri sütunu**, eğri ve 3B türler, görünümlerin (view) katman olması.
 - **Açılırken tablo seçimi:** QGIS'in Select Items to Add'i gibi açılışta hangi tabloların katman olacağı seçilmeli;

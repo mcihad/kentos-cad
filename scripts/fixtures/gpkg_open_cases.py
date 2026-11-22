@@ -9,7 +9,9 @@ says it), and every expectation is worked out here from the ADR's rules, without
   (fixtures/crs/v1/registry.json), the first in the file's order on a tie; none of them: no system (0, "Yerel");
 - its layers: the tables as data layers, points first, then lines, areas, other geometry, then tables without
   geometry, each group in the file's order, under a Taslak drawing layer; the style table is not a layer;
-- a table's default style (`useAsDefault`, else the latest written) is its layer's look.
+- a table's default style (`useAsDefault`, else the latest written) is its layer's look;
+- its tile tables (docs/adr/9117) are rasters linked to the table at its finest zoom, each on a drawing layer of its
+  own named after it, under the other layers; they vote on the system after the geometry tables.
 
 The native tests (crates/native/application/tests/all/gpkg_open.rs) open copies of the files and compare.
 
@@ -20,6 +22,7 @@ import json
 import sqlite3
 import struct
 import sys
+import zlib
 from collections import Counter
 from pathlib import Path
 
@@ -84,6 +87,15 @@ def polygon(srs, x, y, s):
     return gp(srs, wkb, (x, y, x + s, y + s))
 
 
+def png(w, h, rgba):
+    """A PNG of one colour (8-bit RGBA), written here: signature, IHDR, the rows deflated in IDAT, IEND."""
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+    row = b"\x00" + bytes(rgba) * w
+    ihdr = struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(row * h)) + chunk(b"IEND", b"")
+
+
 def box_of(geoms):
     """The union of the rows' boxes: [minx, miny, maxx, maxy]."""
     xs, ys = [], []
@@ -106,6 +118,7 @@ class Gpkg:
             path.unlink()
         self.db = sqlite3.connect(path)
         self.tables = []
+        self.tiles_made = []
         self.db.executescript(
             """
             PRAGMA application_id = 1196444487;
@@ -170,6 +183,39 @@ class Gpkg:
         self.tables.append({"table": name, "type": None, "srid": None, "fields": [c for c, _ in columns],
                             "box": None})
 
+    def tiles(self, name, srs, min_x, max_y, levels):
+        """A tile pyramid of pictures (OGC 12-128r19 §2.2): the matrix set from (`min_x`, `max_y`), each level
+        (zoom, columns, rows, pixel size) of 256 × 256 PNG tiles of one colour each."""
+        self.system(srs)
+        self.db.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS gpkg_tile_matrix_set (table_name TEXT NOT NULL PRIMARY KEY, srs_id INTEGER NOT NULL,
+                min_x DOUBLE NOT NULL, min_y DOUBLE NOT NULL, max_x DOUBLE NOT NULL, max_y DOUBLE NOT NULL);
+            CREATE TABLE IF NOT EXISTS gpkg_tile_matrix (table_name TEXT NOT NULL, zoom_level INTEGER NOT NULL,
+                matrix_width INTEGER NOT NULL, matrix_height INTEGER NOT NULL, tile_width INTEGER NOT NULL,
+                tile_height INTEGER NOT NULL, pixel_x_size DOUBLE NOT NULL, pixel_y_size DOUBLE NOT NULL,
+                CONSTRAINT pk_ttm PRIMARY KEY (table_name, zoom_level));
+            """
+        )
+        zoom0, cols0, rows0, px0 = levels[0]
+        max_x, min_y = min_x + cols0 * 256 * px0, max_y - rows0 * 256 * px0
+        self.db.execute(f'CREATE TABLE "{name}" (id INTEGER PRIMARY KEY AUTOINCREMENT, zoom_level INTEGER NOT NULL, '
+                        'tile_column INTEGER NOT NULL, tile_row INTEGER NOT NULL, tile_data BLOB NOT NULL, '
+                        'UNIQUE (zoom_level, tile_column, tile_row))')
+        self.db.execute("INSERT INTO gpkg_tile_matrix_set VALUES (?, ?, ?, ?, ?, ?)", (name, srs, min_x, min_y, max_x, max_y))
+        for zoom, cols, rows, px in levels:
+            self.db.execute("INSERT INTO gpkg_tile_matrix VALUES (?, ?, ?, ?, 256, 256, ?, ?)", (name, zoom, cols, rows, px, px))
+            for c in range(cols):
+                for r in range(rows):
+                    colour = (40 + 50 * c, 120 + 40 * r, 90 + 30 * zoom, 255)
+                    self.db.execute(f'INSERT INTO "{name}" (zoom_level, tile_column, tile_row, tile_data) VALUES (?, ?, ?, ?)',
+                                    (zoom, c, r, png(256, 256, colour)))
+        self.db.execute("INSERT INTO gpkg_contents (table_name, data_type, identifier, last_change, min_x, min_y, max_x, max_y, srs_id) "
+                        "VALUES (?, 'tiles', ?, '2026-11-22T00:00:00.000Z', ?, ?, ?, ?, ?)",
+                        (name, name, min_x, min_y, max_x, max_y, srs))
+        self.tiles_made.append({"table": name, "srid": srs, "zoom": max(l[0] for l in levels),
+                                "box": [min_x, min_y, max_x, max_y]})
+
     def styles(self, rows):
         """Another program's style table, as it makes it (an attribute table of `gpkg_contents`): each row its table,
         style name, QML, whether it is the default and when it was written."""
@@ -215,12 +261,14 @@ def listed_systems():
     return {s["srid"] for s in json.loads(REGISTRY.read_text(encoding="utf-8"))["systems"]}
 
 
-def project_system(tables):
-    """The project's system and the notes it brings."""
+def project_system(tables, tiles=()):
+    """The project's system and the notes it brings: the geometry tables' systems in the file's order, then the tile
+    tables'."""
     layers = [t for t in tables if t["table"] != STYLE_TABLE]
-    if not layers:
+    if not layers and not tiles:
         return 0, ["no_tables"]
     systems = [t["srid"] for t in layers if t["type"] and t["srid"] and t["srid"] > 0]
+    systems += [t["srid"] for t in tiles if t["srid"] and t["srid"] > 0]
     notes = []
     if len(set(systems)) > 1:
         notes.append("mixed_systems")
@@ -246,9 +294,10 @@ def group(t):
     return 3
 
 
-def layers_of(tables, styled):
+def layers_of(tables, styled, tiles=()):
     order = sorted((t for t in tables if t["table"] != STYLE_TABLE), key=group)  # stable: the file's order in a group
     out = [{"name": "Taslak", "table": None}]
+    rasters = [{"name": t["table"], "table": None, "raster": {"table": t["table"], "zoom": t["zoom"]}} for t in tiles]
     for t in order:
         out.append({
             "name": t["table"],
@@ -259,15 +308,17 @@ def layers_of(tables, styled):
             "fields": t["fields"],
             "styled": styled.get(t["table"]),
         })
-    return out
+    return out + rasters
 
 
-def home_of(tables, srid):
-    """The project's first view: the union of the boxes of the tables in its system (other systems are moved by KentOS,
-    not here: such a case says none)."""
+def home_of(tables, srid, tiles=()):
+    """The project's first view: the union of the boxes of the tables and tile tables in its system (other systems are
+    moved by KentOS, not here: such a case says none)."""
     if any(t["type"] and t["srid"] != srid for t in tables if t["table"] != STYLE_TABLE):
         return None
-    boxes = [t["box"] for t in tables if t["box"]]
+    if any(t["srid"] != srid for t in tiles):
+        return None
+    boxes = [t["box"] for t in tables if t["box"]] + [t["box"] for t in tiles]
     if not boxes:
         return None
     return [min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes)]
@@ -299,11 +350,11 @@ X0, Y0 = 640000.0, 4400000.0
 
 
 def built(name, g, say, styles=None):
-    srid, notes = project_system(g.tables)
+    srid, notes = project_system(g.tables, g.tiles_made)
     styled = default_styles(styles or [], g.tables)
     return {
         "file": name, "say": say, "opens": "built", "project": Path(name).stem, "srid": srid, "notes": notes,
-        "layers": layers_of(g.tables, styled), "home": home_of(g.tables, srid),
+        "layers": layers_of(g.tables, styled, g.tiles_made), "home": home_of(g.tables, srid, g.tiles_made),
     }
 
 
@@ -377,9 +428,41 @@ def tanimsiz():
     return case
 
 
+def derece():
+    """A neighbourhood in WGS 84 degrees: a 270 m line and 20 m buildings, as a downloaded city extract is. The
+    project is in degrees; its home is a few thousandths of a degree across (docs/adr/9117 §5)."""
+    g = Gpkg(OUT / "derece.gpkg")
+    g.features("teleferik", "LINESTRING", 4326, [("ad", "TEXT")],
+               [(line(4326, [(32.8500, 39.9200), (32.8507, 39.9224)]), "Kale hattı")])
+    g.features("binalar", "POLYGON", 4326, [("kat", "INTEGER")],
+               [(polygon(4326, 32.8510 + 0.0004 * i, 39.9205, 0.0002), i + 1) for i in range(3)])
+    case = built("derece.gpkg", g, "WGS 84 derecesinde bir mahalle: proje derecede, ilk görünüm birkaç binde bir derece")
+    g.close()
+    return case
+
+
 def bos():
     g = Gpkg(OUT / "bos.gpkg")
     case = built("bos.gpkg", g, "Tablosuz GeoPackage: yalnız Taslak katmanıyla açılır")
+    g.close()
+    return case
+
+
+def ortofotolu():
+    """A table of parcels and an orthophoto's tile table in its system: the raster under the parcels."""
+    g = Gpkg(OUT / "ortofotolu.gpkg")
+    g.features("parseller", "POLYGON", 5256, [("no", "INTEGER")],
+               [(polygon(5256, X0 + 10, Y0 - 100, 40), 1), (polygon(5256, X0 + 60, Y0 - 100, 40), 2)])
+    g.tiles("ortofoto", 5256, X0, Y0, [(0, 1, 1, 0.5), (1, 2, 2, 0.25)])
+    case = built("ortofotolu.gpkg", g, "Parseller ve ortofotonun döşeme tablosu: raster en altta, tabloya bağlı")
+    g.close()
+    return case
+
+
+def yalniz_ortofoto():
+    g = Gpkg(OUT / "yalniz-ortofoto.gpkg")
+    g.tiles("hava", 5256, X0, Y0, [(0, 1, 1, 1.0)])
+    case = built("yalniz-ortofoto.gpkg", g, "Yalnız döşeme tablosu: sistemi onun, Taslak'ın altında raster")
     g.close()
     return case
 
@@ -409,8 +492,8 @@ def degil():
 
 def cases():
     OUT.mkdir(parents=True, exist_ok=True)
-    return [katmanlar(), karisik(), esitlik(), yabanci(), sistemsiz(), tanimsiz(), bos(), projeli(), iki_projeli(),
-            degil()]
+    return [katmanlar(), karisik(), esitlik(), yabanci(), sistemsiz(), tanimsiz(), bos(), ortofotolu(), yalniz_ortofoto(),
+            derece(), projeli(), iki_projeli(), degil()]
 
 
 def document(all_cases):

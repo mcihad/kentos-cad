@@ -1775,6 +1775,7 @@ mod tests {
         let camera = Camera {
             map: None,
             map_ratio: 1.0,
+            metres_per_unit: 1.0,
             center: Vec2::new(1234.5, -87.25),
             scale: 3.7,
             width: 400.0,

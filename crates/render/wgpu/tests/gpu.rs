@@ -568,6 +568,7 @@ fn a_kept_picture_is_composed_again_with_the_hover_over_it(gpu: &mut Gpu) {
     let mut camera = Camera {
         map: None,
         map_ratio: 1.0,
+        metres_per_unit: 1.0,
         center: Vec2::new(E, N),
         scale: 2.0,
         width: f64::from(width),
@@ -642,6 +643,7 @@ fn turned_square() -> (DocumentSnapshotV1, Camera) {
     let camera = Camera {
         map: None,
         map_ratio: 1.0,
+        metres_per_unit: 1.0,
         center: Vec2::new(E, N),
         scale: 2.0,
         width: 64.0,
@@ -802,6 +804,7 @@ fn sub_pixel_pans_at_tm_coordinates_move_the_line_by_exactly_the_pan(gpu: &mut G
                 let camera = Camera {
                     map: None,
                     map_ratio: 1.0,
+                    metres_per_unit: 1.0,
                     center: if vertical {
                         Vec2::new(shifted, N)
                     } else {

@@ -60,6 +60,11 @@
     VY-19): Dosya › Aç, son açılanlar, boş pencereye bırakılan dosya, Python ve MCP `.gpkg`'yi açar. Tek projesi açılır,
     birden çoksa biri seçilir. Projesi yoksa tablolarından CBS projesi kurulur ve dosyanın içine yazılır (sistem
     tabloların çoğununki, varsayılan stiller `layer_styles`'tan); Kaydet oraya yazar. QGIS'le kalan fark ADR 9116 §5'te.
+  - **GeoPackage'ın döşemeleri, görünüşleri, derece** (22 Kasım, sahibin seçimi ve bildirdiği hata;
+    [ADR 9117](../adr/9117-geopackage-rasters-and-looks.md), VY-20): döşeme tabloları bağlı raster açılır, yolu
+    GeoPackage'a göre yazılır. Kaydet değişen görünüşü tablonun varsayılan stili yapar. Kategori değeri metindir.
+    Kameranın yakınlaşma sınırı birimin metresiyle çarpılır (`Camera::metres_per_unit`); derece projesi metre projesi
+    kadar yakınlaşır.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

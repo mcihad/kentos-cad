@@ -5917,6 +5917,210 @@
       ]
     },
     {
+      "name": "bozuk işleyici: kategorinin değeri sayı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layer": "parsel",
+            "renderer": {
+              "type": "categorized",
+              "expr": "Tur",
+              "categories": [
+                {
+                  "value": "yol",
+                  "label": "Yol",
+                  "symbols": {}
+                },
+                {
+                  "value": 2,
+                  "label": "İki",
+                  "symbols": {}
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_renderer",
+              "message": "İşleyici: “categories[1].value” bir metin olmalı: nesnenin değeri yazısıyla karşılaştırılır; 2 yerine \"2\" yazın.",
+              "path": "renderer"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "durak",
+                "name": "Durak",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              },
+              {
+                "id": "temali",
+                "name": "Nitelik",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "Nitelik",
+                    "categories": [
+                      {
+                        "value": "Arsa",
+                        "label": "Arsa",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#9ECAE1"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "other": {
+                      "fill": {
+                        "type": "fill",
+                        "layers": [
+                          {
+                            "id": "f",
+                            "type": "simpleFill",
+                            "color": "#9ECAE1"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "kilitli",
+                    "name": "Sit alanı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "bozuk işleyici: tek renkli rampa",
       "steps": [
         {

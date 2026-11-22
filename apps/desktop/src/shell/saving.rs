@@ -356,6 +356,9 @@ pub enum Event {
     },
     /// Durdur in the save's panel.
     Stop,
+    /// A project saved into a GeoPackage: its data layers' looks written as their tables' default styles there
+    /// (docs/adr/9117 §4), or why not.
+    Looks(Result<kentos_native_application::gpkg_looks::Looks, String>),
 }
 
 /// Where a save goes.
@@ -646,6 +649,20 @@ impl App {
                     }
                 };
             }
+            Event::Looks(Ok(looks)) => {
+                if !looks.written.is_empty() {
+                    self.output(format!(
+                        "Görünüşler GeoPackage'ın stil tablosuna varsayılan stil olarak yazıldı: {}. Dosyayı açan başka bir CBS de tabloları böyle çizer; eski stiller tabloda durur.",
+                        looks.written.join(", ")
+                    ));
+                }
+                for left in looks.left {
+                    self.warn(left);
+                }
+            }
+            Event::Looks(Err(why)) => self.warn(format!(
+                "Proje kaydedildi ama katmanların görünüşü GeoPackage'ın stil tablosuna yazılamadı: {why}"
+            )),
             Event::Done { id, result } => {
                 let Some(s) = self.saving.take_if(|s| s.id == id) else {
                     return Task::none();
@@ -677,13 +694,23 @@ impl App {
                         }
                         Target::Cloud { .. } => Task::none(),
                         Target::Source(at) => {
+                            let mut then = Task::none();
                             if let Some(doc) = self.document.as_mut().filter(|d| d.session == s.session) {
                                 doc.stored(at.clone(), s.revision);
                                 let later = if doc.dirty() { " Kayıt sürerken yapılan değişiklikler kaydedilmedi." } else { "" };
+                                // The data layers of that GeoPackage give their looks to its style table, off the
+                                // interface's thread (docs/adr/9117 §4).
+                                let looks = at.file().map(|file| (doc.model.clone(), file));
                                 self.output(format!("Kaydedildi: “{}” projesi, {}.{later}", at.name, at.place()));
                                 self.recovery_saved();
+                                if let Some((model, file)) = looks {
+                                    then = crate::db_connections::off_thread(
+                                        move || kentos_native_application::gpkg_looks::write(&model, &file),
+                                        |looks| Message::Saving(Event::Looks(looks)),
+                                    );
+                                }
                             }
-                            Task::none()
+                            then
                         }
                     },
                     Err(SaveError::Stopped) => {

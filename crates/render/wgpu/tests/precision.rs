@@ -20,6 +20,7 @@ fn camera(center: Vec2, scale: f64) -> Camera {
     Camera {
         map: None,
         map_ratio: 1.0,
+        metres_per_unit: 1.0,
         center,
         scale,
         width: 1600.0,

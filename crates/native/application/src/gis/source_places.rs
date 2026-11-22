@@ -11,7 +11,7 @@
 use std::path::{Component, Path, PathBuf};
 
 use kentos_commands::encoding::sha256_hex;
-use kentos_commands::{LayerNode, ProjectSettings, SourceKind};
+use kentos_commands::{Entity, LayerNode, ProjectSettings, SourceKind};
 use kentos_domain::Document;
 
 /// `file`'s path from `folder`, `/` between its parts; none when the two are not on the same root (another drive)
@@ -104,6 +104,48 @@ pub fn with_relative_layers(layers: &mut [LayerNode], project_file: &Path) {
                 .flatten();
         }
         with_relative_layers(&mut node.children, project_file);
+    }
+}
+
+/// The file a linked raster or picture shows; none for an embedded one or another object.
+fn linked_file(e: &mut Entity) -> Option<&mut String> {
+    match e {
+        Entity::Raster(r) => r.raster.file.as_mut(),
+        Entity::Image(i) => i.image.file.as_mut(),
+        _ => None,
+    }
+}
+
+/// Linked rasters' and pictures' files as a project kept in a GeoPackage writes them (docs/adr/9117 §3): each one's
+/// path from that file's folder, `/` between its parts, so the project and the files beside it move together (a tile
+/// table of the same file is named by the file's name); a file on another drive stays absolute. Read back with
+/// [`with_absolute_files`].
+pub fn with_relative_files(entities: &mut [Entity], project_file: &Path) {
+    let Some(folder) = project_file.parent() else {
+        return;
+    };
+    for e in entities {
+        if let Some(file) = linked_file(e)
+            && let Some(rel) = relative_path(folder, Path::new(file.as_str()))
+        {
+            *file = rel;
+        }
+    }
+}
+
+/// The other way (docs/adr/9117 §3): a relative raster or picture file from the project file's folder, absolute again,
+/// so what reads the opened project finds it whatever its own folder is.
+pub fn with_absolute_files(entities: &mut [Entity], project_file: &Path) {
+    let Some(folder) = project_file.parent() else {
+        return;
+    };
+    for e in entities {
+        if let Some(file) = linked_file(e)
+            && !file.trim().is_empty()
+            && Path::new(file.as_str()).is_relative()
+        {
+            *file = resolve(folder, &file.replace('\\', "/")).display().to_string();
+        }
     }
 }
 

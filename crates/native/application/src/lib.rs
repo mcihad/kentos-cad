@@ -525,6 +525,10 @@ pub mod data_describe;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/gpkg_open.rs"]
 pub mod gpkg_open;
+// The data layers' looks written as their tables' default styles (docs/adr/9117 §4).
+#[cfg(feature = "mod-gis")]
+#[path = "gis/gpkg_looks.rs"]
+pub mod gpkg_looks;
 // A new layer made as a new table of a data source (docs/adr/9107 §7).
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_create.rs"]

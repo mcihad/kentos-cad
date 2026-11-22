@@ -1,6 +1,8 @@
 //! Real MCP host, a GeoPackage opened as a project (docs/adr/9116): an agent opens a file of no project, which becomes
 //! a new project of its tables written into the file; drawing.save without a path writes there again; a file of
-//! several projects is refused with their names until `project` names one. The files are fixtures/data/v1/gpkg-open's.
+//! several projects is refused with their names until `project` names one. Its tile tables open as a raster layer under
+//! the tables, and drawing.save gives a changed look to its table's default style, once (docs/adr/9117). The files are
+//! fixtures/data/v1/gpkg-open's.
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -64,4 +66,41 @@ fn a_file_of_several_projects_is_named_and_one_is_opened_by_project() {
     let opened = call(&mut server, "drawing.open", json!({"path": path, "project": "Çamlık"}));
     assert_eq!(opened["isError"], false, "{opened}");
     assert_eq!(opened["structuredContent"]["summary"]["project"]["name"], "Çamlık", "{opened}");
+}
+
+/// The drawing's layers by their names, in the tree's order.
+fn layers(server: &mut Server, drawing: &Value) -> Vec<(String, String)> {
+    let told = call(server, "drawing.layers", json!({"drawing": drawing}));
+    told["structuredContent"]["layers"]
+        .as_array()
+        .expect("the layers")
+        .iter()
+        .map(|n| (n["name"].as_str().unwrap_or("").to_owned(), n["id"].as_str().unwrap_or("").to_owned()))
+        .collect()
+}
+
+#[test]
+fn an_agent_sees_the_tiles_as_a_raster_and_its_save_writes_a_changed_look_once() {
+    let mut server = Server::new();
+    let path = copy("ortofotolu.gpkg", "tiles");
+    let opened = call(&mut server, "drawing.open", json!({"path": path}));
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let names: Vec<String> = layers(&mut server, &drawing).into_iter().map(|(n, _)| n).collect();
+    assert_eq!(names, ["Taslak", "parseller", "ortofoto"]);
+
+    let path = copy("katmanlar.gpkg", "looks");
+    let opened = call(&mut server, "drawing.open", json!({"path": path}));
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let binalar = layers(&mut server, &drawing).into_iter().find(|(n, _)| n == "binalar").map(|(_, id)| id).expect("binalar");
+    let renderer = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+        { "id": "f", "type": "simpleFill", "color": "#2a6fdb" },
+        { "id": "o", "type": "simpleLine", "color": "#123456", "width": 0.5 }
+    ] } } });
+    let done = call(&mut server, "cad.layers.renderer", json!({"drawing": drawing, "layer": binalar, "renderer": renderer}));
+    assert_eq!(done["isError"], false, "{done}");
+    let saved = call(&mut server, "drawing.save", json!({"drawing": drawing}));
+    assert_eq!(saved["structuredContent"]["looks"], json!(["binalar"]), "{saved}");
+    let again = call(&mut server, "drawing.save", json!({"drawing": drawing}));
+    assert_eq!(again["structuredContent"]["looks"], json!([]), "unchanged: {again}");
 }

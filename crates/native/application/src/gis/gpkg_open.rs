@@ -9,6 +9,8 @@
 //!   project starts on; another program's style table is not a layer;
 //! - a table's default style (`layer_styles`: the one marked default, else the latest written) is its layer's look,
 //!   and a table's KentOS dataset description its layer's;
+//! - its tile tables (pictures, gridded coverages) are rasters linked to the table, each on a drawing layer of its own
+//!   under the tables' layers (docs/adr/9117 §2); they vote on the system as the geometry tables do;
 //! - its first view frames the tables in its system.
 //!
 //! Opening reads and writes no row. The desktop's Aç and a GeoPackage dropped on an empty window, the headless host's
@@ -16,9 +18,12 @@
 
 use std::path::Path;
 
-use kentos_commands::{Bounds, CommandResult, DocumentSnapshotV2, DrawingFont, LayerDataOperation, LayersData, Workspace};
+use kentos_commands::{
+    Bounds, CommandResult, DocumentSnapshotV2, DrawingFont, GpkgTileSet, LayerDataOperation, LayersData, RastersGpkgRead,
+    Workspace,
+};
 use kentos_data::StoredProject;
-use kentos_domain::Document;
+use kentos_domain::{Document, NewLayer};
 
 use crate::ExecutionContext;
 use crate::data_describe::{self, Described};
@@ -137,8 +142,8 @@ fn bookkeeping(table: &str) -> bool {
 
 /// The project's system of its tables' systems (in the file's order): the one most of them are in, of those a project
 /// can have, the first on a tie; none of them: no system. The notes say a mix and a system left out.
-fn system_of(tables: &[Described]) -> (u32, Vec<Note>) {
-    if tables.is_empty() {
+fn system_of(tables: &[Described], tiles: &[GpkgTileSet]) -> (u32, Vec<Note>) {
+    if tables.is_empty() && tiles.is_empty() {
         return (
             0,
             vec![note(
@@ -147,7 +152,11 @@ fn system_of(tables: &[Described]) -> (u32, Vec<Note>) {
             )],
         );
     }
-    let systems: Vec<u32> = tables.iter().filter_map(|t| t.data.geometry.as_ref().and_then(|g| g.srid)).collect();
+    let systems: Vec<u32> = tables
+        .iter()
+        .filter_map(|t| t.data.geometry.as_ref().and_then(|g| g.srid))
+        .chain(tiles.iter().filter_map(|t| t.srid.filter(|s| *s > 0)))
+        .collect();
     let mut notes = Vec::new();
     let mut distinct: Vec<u32> = Vec::new();
     for s in &systems {
@@ -192,13 +201,14 @@ fn system_of(tables: &[Described]) -> (u32, Vec<Note>) {
 }
 
 /// The new project's first view: the tables' boxes in its system, framed together; none without one.
-fn home_of(tables: &[Described], settings: &kentos_commands::ProjectSettings) -> Option<Bounds> {
+fn home_of(tables: &[Described], tiles: &[GpkgTileSet], settings: &kentos_commands::ProjectSettings) -> Option<Bounds> {
     let mut out: Option<[f64; 4]> = None;
-    for t in tables {
-        let (Some(b), Some(g)) = (t.extent, &t.data.geometry) else {
-            continue;
-        };
-        let Ok(b) = crate::sources::extent_in_project(settings, g.srid, b) else {
+    let boxes = tables
+        .iter()
+        .filter_map(|t| Some((t.extent?, t.data.geometry.as_ref()?.srid)))
+        .chain(tiles.iter().map(|t| (t.data_bounds.unwrap_or(t.bounds), t.srid.filter(|s| *s > 0))));
+    for (b, srid) in boxes {
+        let Ok(b) = crate::sources::extent_in_project(settings, srid, b) else {
             continue;
         };
         if !(b.iter().all(|v| v.is_finite()) && b[2] >= b[0] && b[3] >= b[1]) {
@@ -234,8 +244,9 @@ fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
             Err(why) => notes.push(note("table_not_taken", format!("“{}” tablosu katman olarak alınmadı: {why}", t.name))),
         }
     }
+    let tiles = tile_tables(path, &mut notes);
     // The system of the file's order; then the layers' order, stable inside each group.
-    let (srid, said) = system_of(&tables);
+    let (srid, said) = system_of(&tables, &tiles);
     notes.splice(0..0, said);
     tables.sort_by_key(group);
 
@@ -254,7 +265,7 @@ fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
     // The tables are its layers: of a new project's tree only the layer it starts drawing on stays.
     snapshot.layers.retain(|n| n.id == DRAFT_LAYER);
     snapshot.active_layer = DRAFT_LAYER.to_owned();
-    if let Some(home) = home_of(&tables, &snapshot.settings) {
+    if let Some(home) = home_of(&tables, &tiles, &snapshot.settings) {
         snapshot.home_view = Some(home);
     }
     let mut doc = Document::from_snapshot(snapshot)?;
@@ -280,6 +291,7 @@ fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
         }
     }
     looks(&mut doc, path, &layers, &mut notes);
+    rasters(&mut doc, path, &tiles, &mut notes);
 
     // Built through commands, opened as read: no undo step stays.
     let mut snapshot: DocumentSnapshotV2 = doc.to_snapshot_v2();
@@ -294,6 +306,83 @@ fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
         doc.mark_unsaved();
     }
     Ok(Built { document: doc, name: name.to_owned(), written, notes })
+}
+
+/// The file's tile tables (none when it keeps no tile matrix set); why they could not be read, said.
+fn tile_tables(path: &Path, notes: &mut Vec<Note>) -> Vec<GpkgTileSet> {
+    let has = kentos_geopackage::GeoPackage::open(path, false)
+        .map_err(|e| e.0)
+        .and_then(|gp| {
+            gp.connection()
+                .query_row(
+                    "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'gpkg_tile_matrix_set'",
+                    [],
+                    |r| r.get::<_, i64>(0),
+                )
+                .map_err(|e| e.to_string())
+        });
+    match has {
+        Ok(0) => Vec::new(),
+        Ok(_) => crate::gpkg_tiles::tile_tables(path).unwrap_or_else(|why| {
+            notes.push(note("tiles_unread", format!("Dosyanın döşeme tabloları okunamadı: {why}")));
+            Vec::new()
+        }),
+        Err(why) => {
+            notes.push(note("tiles_unread", format!("Dosyanın döşeme tabloları okunamadı: {why}")));
+            Vec::new()
+        }
+    }
+}
+
+/// Each tile table as a raster linked to it (`cad.rasters.gpkgread`, `link`: its tiles read from the file as the view
+/// needs them, at the finest zoom), on a drawing layer of its own named after the table, under the other layers.
+fn rasters(doc: &mut Document, path: &Path, tiles: &[GpkgTileSet], notes: &mut Vec<Note>) {
+    let file = address_of(path);
+    for t in tiles {
+        let layer = match doc.add_layer_at(NewLayer::layer(t.table.clone()), None, None, None, false) {
+            Ok(id) => id,
+            Err(why) => {
+                notes.push(note("tiles_not_taken", format!("“{}” döşeme tablosu raster olarak alınmadı: {}", t.table, why.0)));
+                continue;
+            }
+        };
+        let input = RastersGpkgRead {
+            path: file.clone(),
+            table: Some(t.table.clone()),
+            zoom: None,
+            area: None,
+            output: None,
+            layer: Some(layer.clone()),
+            overwrite: None,
+            link: Some(true),
+            drawing: None,
+            expected_revision: None,
+        };
+        let why = match crate::gpkg_tiles::read::execute(&mut ExecutionContext::new(doc), input) {
+            CommandResult::Completed { .. } => continue,
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                // The reader's words are a command caller's (which input to change); opening says what the file is.
+                match error.code.as_str() {
+                    crate::codes::CRS_MISMATCH => format!(
+                        "karoları {}, proje {}; raster bir sistemden öbürüne çevrilmeden çizilmez.",
+                        t.srid.map_or_else(|| "tanımsız bir sistemde".to_owned(), |s| format!("EPSG:{s}'de")),
+                        match doc.settings().srid {
+                            0 => "sistemsiz".to_owned(),
+                            s => format!("EPSG:{s}'de"),
+                        }
+                    ),
+                    crate::codes::TILE_TABLE_EMPTY => {
+                        "tablonun verisinin kutusu en ayrıntılı düzeyde hiçbir karoyu kapsamıyor (kutu bir nokta ya da ızgaranın dışında)."
+                            .to_owned()
+                    }
+                    _ => error.message,
+                }
+            }
+            _ => String::new(),
+        };
+        let _ = doc.remove_layer(&layer);
+        notes.push(note("tiles_not_taken", format!("“{}” döşeme tablosu raster olarak alınmadı: {why}", t.table)));
+    }
 }
 
 /// The file's looks on its tables' layers: each table's default style (another program's `layer_styles`) as its

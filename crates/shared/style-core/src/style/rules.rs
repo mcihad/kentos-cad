@@ -198,6 +198,20 @@ fn stroke(v: &Json, name: &str) -> Check {
     in_range(v.get("width"), &format!("{name}.width"), 0.0, 10.0).map(|_| ())
 }
 
+/// A category's value is the text an object's value is compared with (`resolve.rs`): a number given as one would
+/// take no object, read as an empty value. None (`null`) is the empty value's category.
+fn category_value(v: &Json, k: usize) -> Check {
+    match v {
+        Json::Str(_) | Json::Null => Ok(()),
+        Json::Num(x) => Err(format!(
+            "“categories[{k}].value” bir metin olmalı: nesnenin değeri yazısıyla karşılaştırılır; {x} yerine \"{x}\" yazın."
+        )),
+        _ => Err(format!(
+            "“categories[{k}].value” bir metin olmalı: nesnenin değeri yazısıyla karşılaştırılır."
+        )),
+    }
+}
+
 fn value_range(v: &Json, lo: &str, hi: &str) -> Check {
     let (a, b) = (num(v.get(lo), lo)?, num(v.get(hi), hi)?);
     if a > b {
@@ -237,10 +251,13 @@ fn check(v: &Json, outer: bool) -> Check {
         "single" => object(v.get("symbols"), "symbols"),
         "categorized" => {
             expr(v.get("expr"), "expr")?;
-            match v.get("categories") {
-                Json::Arr(_) => Ok(()),
-                _ => Err("“categories” bir liste değil.".into()),
+            let Json::Arr(categories) = v.get("categories") else {
+                return Err("“categories” bir liste değil.".into());
+            };
+            for (k, c) in categories.iter().enumerate() {
+                category_value(c.get("value"), k)?;
             }
+            Ok(())
         }
         "graduated" => {
             expr(v.get("expr"), "expr")?;

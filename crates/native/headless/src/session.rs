@@ -225,13 +225,27 @@ impl Session {
         self.doc.mark_saved(revision);
         self.stored = Some(Stored { address: address.to_owned(), schema: schema.map(str::to_owned), name: name.trim().to_owned() });
         self.path = None;
-        Ok(json!({
+        let mut saved = json!({
             "address": address,
             "schema": schema,
             "name": name.trim(),
             "bytes": bytes.len(),
             "revision": revision.to_string(),
-        }))
+        });
+        // A GeoPackage's data layers give their looks to its style table (docs/adr/9117 §4).
+        #[cfg(feature = "mod-gis")]
+        if let Some(file) = kentos_native_application::project_store::file_of(address) {
+            match kentos_native_application::gpkg_looks::write(&self.doc, &file) {
+                Ok(looks) => {
+                    saved["looks"] = json!(looks.written);
+                    if !looks.left.is_empty() {
+                        saved["looksLeft"] = json!(looks.left);
+                    }
+                }
+                Err(why) => saved["looksUnwritten"] = json!(why),
+            }
+        }
+        Ok(saved)
     }
 
     /// A project kept in a data source (docs/adr/9107), opened: a GeoPackage's data layers and bound files found from
@@ -239,7 +253,11 @@ impl Session {
     pub fn open_from_source(address: &str, schema: Option<&str>, name: &str) -> Result<Self, HeadlessError> {
         let bytes = kentos_native_application::project_store::read(address, schema, name)
             .map_err(|e| HeadlessError::new("source_unreadable", e))?;
-        let (mut doc, legacy) = files::from_bytes(&bytes)?;
+        // A GeoPackage's linked rasters and pictures written relative to it come back absolute (docs/adr/9117 §3).
+        let snapshot = kentos_native_application::project_store::decode(address, &bytes)
+            .map_err(|e| HeadlessError::new("file_unreadable", format!("KCAD v2 dosyası okunamadı: {e}")))?;
+        let mut doc = Document::from_snapshot_v2(snapshot).map_err(|e| HeadlessError::new("file_unreadable", e))?;
+        let legacy = false;
         let located = match kentos_native_application::project_store::place_of(address) {
             Some(place) => kentos_native_application::source_places::relocate(&mut doc, &place),
             None => Default::default(),

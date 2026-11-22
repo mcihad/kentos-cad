@@ -352,9 +352,12 @@ impl App {
         if let Some(split) = self.split.as_mut() {
             for o in &mut split.others {
                 o.viewport.set_map(map);
+                o.viewport.follow_units(doc.model.settings());
             }
         }
         self.viewport.set_map(map);
+        // A project put into degrees or out of them zooms as deep as its units let it.
+        self.viewport.follow_units(doc.model.settings());
     }
 
     pub(super) fn handle(&mut self, message: Message) -> Task<Message> {

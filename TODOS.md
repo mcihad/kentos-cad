@@ -2475,6 +2475,10 @@ Liste:
     görünsün (ADR 0088 güncellemesi 2).
   - Otomatik seçim kapanınca ve başka katmandaki nesne seçilmeyince düğmeli bildirim çıksın (ADR 0622 §5).
   - Web'in `keymap.ts`'i macOS'ta Option ile yazılan simgeyi yazı saysın (ADR 0018 güncellemesi).
+- [ ] Derece projesinde yakınlaşma ve kategori değeri (ADR 9117 §4–§5, 22 Kasım 2026): web kamerasının sınırı
+  (`apps/web/src/viewport/Camera.ts`, `MIN_SCALE`/`MAX_SCALE`) birimin metresiyle çarpılsın (coğrafi projede elipsoidin
+  ekvatorunda bir derece, a·π/180); yoksa WGS 84 projesi 11 m/pikselde durur. Web'in WASM'ı yenilenince
+  `cad.layers.renderer`'ın “kategorinin değeri sayı” ortak durumu geçsin.
 
 ## 1. Koddan doğrulanan mevcut durum
 

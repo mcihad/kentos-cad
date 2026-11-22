@@ -115,6 +115,7 @@ fn a_map_takes_the_placed_labels_backgrounds_and_callouts() {
     let camera = Camera {
         map: None,
         map_ratio: 1.0,
+        metres_per_unit: 1.0,
         center: kentos_render_wgpu::Vec2::new(487_140.0, 4_420_085.0),
         scale: 1.0 / crate::sheet_pdf::PX_MM,
         width: 1400.0,
@@ -205,6 +206,7 @@ fn a_cad_drawings_texts_take_their_own_colours() {
         let camera = Camera {
             map: None,
             map_ratio: 1.0,
+            metres_per_unit: 1.0,
             center: kentos_render_wgpu::Vec2::new(3.0, 3.0),
             scale: 40.0,
             width: 800.0,

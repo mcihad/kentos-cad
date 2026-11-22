@@ -64,13 +64,23 @@ pub fn simple_renderer(style: &LayerStyle) -> Value {
     } })
 }
 
-/// The geometry the layer's objects have; all three when it has none.
+/// The geometry the layer's objects have; all three when it has none. A data layer's rows stay in their table: its
+/// geometry type says (docs/adr/9117 §4).
 pub fn kinds_of(doc: &Document, layer: &str) -> Kinds {
     let mut k = Kinds {
         point: false,
         line: false,
         area: false,
     };
+    if let Some(g) = doc.layers().get(layer).and_then(|n| n.data.as_ref()).and_then(|d| d.geometry.as_ref()) {
+        match g.type_name.as_str() {
+            "POINT" | "MULTIPOINT" => k.point = true,
+            "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "MULTICURVE" | "CURVE" => k.line = true,
+            "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "MULTISURFACE" | "SURFACE" => k.area = true,
+            _ => return Kinds::ALL,
+        }
+        return k;
+    }
     for e in doc.entities().filter(|e| e.base().layer_id == layer) {
         match e {
             Entity::Point(_) => k.point = true,

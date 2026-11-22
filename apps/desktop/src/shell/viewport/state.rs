@@ -123,6 +123,11 @@ impl Viewport {
         part
     }
 
+    /// The camera's zoom limits follow the project's units ([`unit_metres`]).
+    pub(crate) fn follow_units(&mut self, settings: &kentos_commands::ProjectSettings) {
+        self.camera.metres_per_unit = unit_metres(settings);
+    }
+
     /// What the view shows is another drawing now (docs/adr/0576 §3): its scene is built afresh, its camera stays.
     pub(crate) fn rebuild(&mut self) {
         self.generation += 1;
@@ -177,6 +182,8 @@ impl Viewport {
         // A drawing opens north up (UR2-046: the last drawing's turn went on in the next one): the start view it
         // keeps has no turn; a tab brought in front gets its own camera back after this (doc_tabs.rs).
         self.camera.twist = 0.0;
+        // Its zoom limits in its own units before the fit: a drawing in degrees fits as closely as one in metres.
+        self.follow_units(doc.model.settings());
         if self.sized {
             self.fit(doc);
         }
@@ -866,7 +873,7 @@ impl Viewport {
         let at = self.cursor.map(|c| self.camera.world_to_screen(c));
         self.camera.center_on(view.center);
         if view.scale.is_finite() && view.scale > 0.0 {
-            self.camera.scale = view.scale.clamp(MIN_SCALE, MAX_SCALE);
+            self.camera.scale = self.camera.clamp_scale(view.scale);
         }
         self.camera.twist = kentos_render_wgpu::normal_twist(view.twist);
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
@@ -952,5 +959,16 @@ impl Viewport {
     pub fn world(&self, at: Point) -> Vec2 {
         self.camera
             .screen_to_world(f64::from(at.x), f64::from(at.y))
+    }
+}
+
+/// Metres a drawing unit is for the view's zoom limits: in a project drawn in degrees (GIS-040) a degree along its
+/// ellipsoid's equator, a·π/180 (WGS 84: 111 319.49 m), so its deepest zoom is about the 0.1 mm a pixel a project of
+/// metres has; else 1. A limit, not a measure: the status bar's scale takes the degree's length where the view is
+/// (map_marks.rs).
+pub(crate) fn unit_metres(settings: &kentos_commands::ProjectSettings) -> f64 {
+    match kentos_interaction::ground::geographic_system(settings) {
+        Some(system) => system.datum().ellipsoid().0 * std::f64::consts::PI / 180.0,
+        None => 1.0,
     }
 }

@@ -436,6 +436,9 @@ class StoredSaved:
     name: str
     bytes: int
     revision: str
+    looks: tuple[str, ...] = ()
+    """A GeoPackage's tables whose default style is now the data layer's look (docs/adr/9117 §4): another GIS that
+    opens the file draws them so."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -513,6 +516,14 @@ class DocumentInfo:
     opened_geopackage: Mapping[str, Any] | None = None
     """What opening a GeoPackage found (docs/adr/9116): ``geoPackage``, ``project``, ``made`` (a new project of its
     tables), ``written``, ``notes`` (``code``, ``text``) and why it was not written (``unwritten``)."""
+
+
+def _stored_saved(raw: Mapping[str, Any]) -> StoredSaved:
+    """A save to a data source's answer."""
+    return StoredSaved(
+        str(raw["address"]), raw.get("schema"), str(raw["name"]), int(raw["bytes"]), str(raw["revision"]),
+        tuple(str(t) for t in raw.get("looks", [])),
+    )
 
 
 BoundsLike = Bounds | Sequence[float]
@@ -644,7 +655,7 @@ class Document:
         they were. Saved to a path, the drawing is that file's from then on."""
         raw = json.loads(_host(self._session.save, None if path is None else os.fspath(path)))
         if "path" not in raw:
-            return StoredSaved(str(raw["address"]), raw.get("schema"), str(raw["name"]), int(raw["bytes"]), str(raw["revision"]))
+            return _stored_saved(raw)
         return Saved(Path(raw["path"]), int(raw["bytes"]), str(raw["revision"]))
 
     def to_bytes(self) -> bytes:
@@ -656,7 +667,7 @@ class Document:
         file (made when it is not there) or a PostgreSQL schema. Written over a project of that name, read back
         before it counts. Saving to a file stays as it was; this is a choice, never required."""
         raw = json.loads(_host(self._session.save_to_source, os.fspath(address), project, schema))
-        return StoredSaved(str(raw["address"]), raw.get("schema"), str(raw["name"]), int(raw["bytes"]), str(raw["revision"]))
+        return _stored_saved(raw)
 
     def export_dxf(self, path: str | os.PathLike[str]) -> Exported:
         """The whole drawing as a DXF R2007 (AC1021) file, as the desktop's DXF

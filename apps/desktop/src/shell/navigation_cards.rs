@@ -389,6 +389,7 @@ impl App {
                     let mut camera = Camera {
                         map: self.viewport.camera.map,
                         map_ratio: self.viewport.camera.map_ratio,
+                        metres_per_unit: self.viewport.camera.metres_per_unit,
                         center: at,
                         scale: self.viewport.camera.scale * f64::from(zoom),
                         width: LENS.0,

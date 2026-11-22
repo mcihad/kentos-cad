@@ -11,9 +11,11 @@ use crate::settings::RenderSettings;
 use crate::{Bounds, Vec2};
 use kentos_geometry_core::crs::map::MapProjection;
 
-/// Farthest zoom out: logical pixels per metre (about a whole country on screen).
+/// Farthest zoom out: logical pixels per metre (about a whole country on screen). A camera's own limit is in pixels
+/// per world unit: this times its [`Camera::metres_per_unit`].
 pub const MIN_SCALE: f64 = 1e-4;
-/// Deepest zoom in: 0.1 mm per logical pixel, so a 2 mm CAD detail spans 20 pixels.
+/// Deepest zoom in: 0.1 mm per logical pixel, so a 2 mm CAD detail spans 20 pixels; a camera's own is this times its
+/// [`Camera::metres_per_unit`], so a drawing in degrees goes as deep.
 /// Float64 source coordinates and hi/lo GPU positions remain independent of this display limit.
 pub const MAX_SCALE: f64 = 1e4;
 /// Margin a fit leaves around the box, logical pixels.
@@ -41,6 +43,10 @@ pub struct Camera {
     /// World units a map unit is, where the map was taken up (1 without one): the screen's pixels per map unit are
     /// `scale` × it, so a pixel stays about as many world units as it was (a degree's 111 km too).
     pub map_ratio: f64,
+    /// Metres a world unit is, for the zoom limits only ([`MIN_SCALE`], [`MAX_SCALE`] are per metre): 1 in a drawing
+    /// of metres; in one of degrees a degree of its ellipsoid's equator (WGS 84: 111 319.49 m), else a whole
+    /// neighbourhood of degrees could not be zoomed into.
+    pub metres_per_unit: f64,
 }
 
 impl PartialEq for Camera {
@@ -51,6 +57,7 @@ impl PartialEq for Camera {
             && self.height == o.height
             && self.twist == o.twist
             && self.map_ratio == o.map_ratio
+            && self.metres_per_unit == o.metres_per_unit
             && match (self.map, o.map) {
                 (None, None) => true,
                 (Some(a), Some(b)) => std::ptr::eq(a, b),
@@ -69,6 +76,7 @@ impl Default for Camera {
             twist: 0.0,
             map: None,
             map_ratio: 1.0,
+            metres_per_unit: 1.0,
         }
     }
 }
@@ -186,13 +194,26 @@ impl Camera {
         }
     }
 
+    /// The farthest and the deepest scale, logical pixels per world unit: [`MIN_SCALE`] and [`MAX_SCALE`] by the
+    /// metres a world unit is (1 when that is not a positive number).
+    pub fn scale_limits(&self) -> (f64, f64) {
+        let unit = if self.metres_per_unit.is_finite() && self.metres_per_unit > 0.0 { self.metres_per_unit } else { 1.0 };
+        (MIN_SCALE * unit, MAX_SCALE * unit)
+    }
+
+    /// `scale` within [`Camera::scale_limits`].
+    pub fn clamp_scale(&self, scale: f64) -> f64 {
+        let (lo, hi) = self.scale_limits();
+        scale.clamp(lo, hi)
+    }
+
     /// Zooms by `factor` about a screen position: the world point there stays under it.
     pub fn zoom_at(&mut self, factor: f64, x: f64, y: f64) {
         if !(factor.is_finite() && factor > 0.0 && x.is_finite() && y.is_finite()) {
             return;
         }
         let anchor = self.screen_to_map(x, y);
-        self.scale = (self.scale * factor).clamp(MIN_SCALE, MAX_SCALE);
+        self.scale = self.clamp_scale(self.scale * factor);
         let px = self.map_px();
         let (dx, dy) = self.turned_out((x - self.width / 2.0) / px, -(y - self.height / 2.0) / px);
         self.center = Vec2::new(anchor.x - dx, anchor.y - dy);
@@ -293,9 +314,9 @@ impl Camera {
         // The map's pixels per unit, as the world's.
         let scale = sx.min(sy) / self.map_ratio;
         self.scale = if scale.is_finite() && scale > 0.0 {
-            scale.clamp(MIN_SCALE, MAX_SCALE)
+            self.clamp_scale(scale)
         } else {
-            MIN_SCALE
+            self.scale_limits().0
         };
         self.center = center;
     }
@@ -424,6 +445,7 @@ impl Camera {
             twist: 0.0,
             map: self.map,
             map_ratio: self.map_ratio,
+            metres_per_unit: self.metres_per_unit,
         }
     }
 
@@ -480,6 +502,7 @@ mod tests {
         Camera {
             map: None,
             map_ratio: 1.0,
+            metres_per_unit: 1.0,
             center: Vec2::new(487_000.0, 4_420_000.0),
             scale: 8.0,
             width: 800.0,
@@ -624,5 +647,24 @@ mod tests {
         assert_eq!(y, c.height / 2.0 - (p.y - c.center.y) * c.scale);
         assert_eq!(c.twist_uniform(), [0.0, 0.0]);
         assert_eq!(c.upright(), c);
+    }
+
+    /// A drawing in degrees (a WGS 84 city extract): its 0.002° × 0.0024° neighbourhood fills the area, and the view
+    /// zooms on to a metre camera's 0.1 mm a pixel, not stopping at 10 000 pixels a degree (11 m a pixel).
+    #[test]
+    fn a_camera_of_degrees_fits_a_neighbourhood_and_zooms_as_deep_as_one_of_metres() {
+        let degree = 6_378_137.0 * std::f64::consts::PI / 180.0;
+        let mut c = Camera { width: 800.0, height: 600.0, metres_per_unit: degree, ..Camera::default() };
+        c.fit(&Bounds { min_x: 32.85, min_y: 39.92, max_x: 32.852, max_y: 39.9224 }, FIT_PADDING);
+        // The height binds: 600 − 2 × 48 pixels for 0.0024°.
+        assert!((c.scale * 0.0024 - 504.0).abs() < 1e-6, "{}", c.scale);
+        c.zoom_at(1e12, 400.0, 300.0);
+        assert_eq!(c.scale, MAX_SCALE * degree);
+        assert_eq!(c.scale_limits(), (MIN_SCALE * degree, MAX_SCALE * degree));
+        // A camera of metres keeps its own limit; one whose unit is not a number takes metres.
+        let mut m = Camera { metres_per_unit: 1.0, ..c };
+        m.zoom_at(2.0, 400.0, 300.0);
+        assert_eq!(m.scale, MAX_SCALE);
+        assert_eq!(Camera { metres_per_unit: f64::NAN, ..c }.scale_limits(), (MIN_SCALE, MAX_SCALE));
     }
 }

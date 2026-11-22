@@ -240,6 +240,9 @@ def cases():
     out.append(bad("nesne değil", "unclassed", "“renderer” bir nesne değil."))
     out.append(bad("en küçük en büyükten büyük", {**UNCLASSED, "min": 300}, "“min” “max”'dan büyük olamaz."))
     out.append(bad("boş ifade", {**UNCLASSED, "expr": "  "}, "“expr” boş: bir alan adı ya da ifade yazın."))
+    out.append(bad("kategorinin değeri sayı", {"type": "categorized", "expr": "Tur", "categories": [
+        {"value": "yol", "label": "Yol", "symbols": {}}, {"value": 2, "label": "İki", "symbols": {}}]},
+                   "“categories[1].value” bir metin olmalı: nesnenin değeri yazısıyla karşılaştırılır; 2 yerine \"2\" yazın."))
     out.append(bad("tek renkli rampa", {**UNCLASSED, "ramp": ["#FFFFCC"]}, "Rampada 2 ile 16 arası renk olmalı (1 verildi)."))
     out.append(bad("rampada renk değil", {**UNCLASSED, "ramp": ["#FFFFCC", "kırmızı"]}, "“ramp[1]” bir renk değil: #RRGGBB ya da #RRGGBBAA yazın."))
     out.append(bad("orantılının birimi", {**PROPORTIONAL, "unit": "cm"}, "“unit” şunlardan biri olmalı: mm, px."))

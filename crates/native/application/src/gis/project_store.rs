@@ -30,7 +30,18 @@ pub fn with_relative(snapshot: &mut DocumentSnapshotV2, address: &str) {
         crate::source_places::with_relative(&mut snapshot.settings, &file);
         crate::source_places::with_relative_layers(&mut snapshot.layers, &file);
         crate::xrefs::with_relative(&mut snapshot.blocks, &file);
+        crate::source_places::with_relative_files(&mut snapshot.entities, &file);
     }
+}
+
+/// A project's bytes read from `address` as its snapshot: a GeoPackage's linked rasters and pictures written relative
+/// to that file absolute again (docs/adr/9117 §3).
+pub fn decode(address: &str, bytes: &[u8]) -> Result<DocumentSnapshotV2, String> {
+    let mut snapshot = kentos_kcad::decode(bytes).map_err(|e| e.message)?;
+    if let Some(file) = file_of(address) {
+        crate::source_places::with_absolute_files(&mut snapshot.entities, &file);
+    }
+    Ok(snapshot)
 }
 
 fn store_of(address: &str) -> Result<std::sync::Arc<dyn kentos_data::Source>, String> {

@@ -247,5 +247,23 @@ qgis kadar iyi kullanmalı.”
     - tablonun varsayılan stili (`layer_styles`) katmanın görünüşüdür.
   - Veri kaynağından aç'ta projesi olmayan dosya, yazılan adla proje olur.
   - 10 bağımsız durum (`scripts/fixtures/gpkg_open_cases.py`, sqlite3). Native, masaüstü, Python ve MCP sınamaları.
-  - Kalan, QGIS'le arada: raster döşemeleri, ilişkiler, stilin geri yazılması, üst veri, açılışta tablo seçimi, bakım
-    (ADR 9116 §5). Sırayı sahip seçecek.
+  - Kalan, QGIS'le arada: ilişkiler, üst veri, açılışta tablo seçimi, bakım (ADR 9116 §5). Raster döşemeleri ve
+    stilin geri yazılması VY-20'de yapıldı. Sırayı sahip seçecek.
+
+Sahibin seçimi (22 Kasım 2026): ADR 9116 §5'ten “Raster ve stil yazımı”. Aynı gün bildirdiği hata: “gpkg dosyalarını
+açarken çok ciddi ölçek problemleri var, … zoom yapılamıyor ve ekranda nokta gibi çizimler”.
+
+- [x] **VY-20 — GeoPackage'ın döşemeleri raster, görünüşler tabloya, derecede yakınlaşma.**
+  ([ADR 9117](../docs/adr/9117-geopackage-rasters-and-looks.md))
+  - Açılan dosyanın döşeme tabloları en altta bağlı raster olur. Sistem oyuna katılırlar, ilk görünüme girerler.
+    Alınamayan söylenir.
+  - GeoPackage'ta saklanan projede rasterin dosyası GeoPackage'a göre yazılır; taşınan dosyada raster bulunur.
+  - Kaydet, değişen görünüşü tablonun varsayılan stili olarak `layer_styles`'a yazar (QML ve SLD). Değişmeyen
+    yazılmaz, eski stiller durur. Python ve MCP'de kayıt cevabının `looks`'u.
+  - `cad.layers.renderer` metin olmayan kategori değerini reddeder (önce sessizce boş oluyordu).
+  - Derece projesinde (WGS 84) yakınlaşma artık metre projesindeki kadar derin: kameranın sınırı birimin metresiyle
+    çarpılır. Önce 11 m/pikselde duruyordu, küçük alanlar nokta gibi kalıyordu.
+  - 13 bağımsız durum. Native, kamera, masaüstü, Python, MCP sınamaları. QGIS 4.2.2 ile karşılaştırma. Sahibin indirdiği
+    Boston ve NGA dosyalarının kopyalarıyla resimler.
+  - Kalan (ADR 9117 §7): noktadan ibaret kutulu döşeme tablosu, başka sistemdeki döşemenin çevrilmesi, görünüşün gerçek
+    pencerede değiştirilip kaydedilmesi, web.

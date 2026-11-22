@@ -46,7 +46,8 @@ fn read(path: &std::path::Path, name: Option<&str>) -> Result<Read, String> {
     let address = gpkg_open::address_of(path);
     match gpkg_open::open(path, name)? {
         Opened::Kept { name, bytes } => {
-            let snapshot = kentos_kcad::decode(&bytes).map_err(|e| format!("“{name}” projesi okunamadı: {}", e.message))?;
+            let snapshot = kentos_native_application::project_store::decode(&address, &bytes)
+                .map_err(|e| format!("“{name}” projesi okunamadı: {e}"))?;
             let mut doc = Document::from_v2(snapshot, None)?;
             doc.source = Source::Stored(Box::new(StoredSource { address, schema: None, name }));
             Ok(Read::Kept(Box::new(doc)))
@@ -103,11 +104,18 @@ impl App {
             Ok(Read::Kept(doc)) => self.place_geopackage(path, purpose, doc, Vec::new()),
             Ok(Read::Built { doc, name, written, notes }) => {
                 let layers = doc.model.layers().leaves().iter().filter(|n| n.data.is_some()).count();
+                // The tile tables' rasters (docs/adr/9117 §1), said beside the data layers.
+                let rasters = doc
+                    .model
+                    .entities()
+                    .filter(|e| matches!(e, kentos_commands::Entity::Raster(r) if r.raster.tiles.is_some()))
+                    .count();
+                let rasters = if rasters > 0 { format!(", döşeme tablolarından {rasters} raster") } else { String::new() };
                 let mut said = vec![match &written {
                     Ok(()) => (
                         Level::Success,
                         format!(
-                            "“{file}” içinde KentOS projesi yoktu: tablolarından “{name}” projesi kuruldu ve dosyanın içine yazıldı ({layers} veri katmanı). Kaydet bu dosyaya yazar."
+                            "“{file}” içinde KentOS projesi yoktu: tablolarından “{name}” projesi kuruldu ve dosyanın içine yazıldı ({layers} veri katmanı{rasters}). Kaydet bu dosyaya yazar."
                         ),
                     ),
                     Err(why) => (Level::Warn, why.clone()),

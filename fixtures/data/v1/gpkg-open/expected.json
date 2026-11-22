@@ -293,6 +293,124 @@
    "home": null
   },
   {
+   "file": "ortofotolu.gpkg",
+   "say": "Parseller ve ortofotonun döşeme tablosu: raster en altta, tabloya bağlı",
+   "opens": "built",
+   "project": "ortofotolu",
+   "srid": 5256,
+   "notes": [],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    },
+    {
+     "name": "parseller",
+     "table": "parseller",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POLYGON",
+      "srid": 5256
+     },
+     "fields": [
+      "no"
+     ],
+     "styled": null
+    },
+    {
+     "name": "ortofoto",
+     "table": null,
+     "raster": {
+      "table": "ortofoto",
+      "zoom": 1
+     }
+    }
+   ],
+   "home": [
+    640000.0,
+    4399872.0,
+    640128.0,
+    4400000.0
+   ]
+  },
+  {
+   "file": "yalniz-ortofoto.gpkg",
+   "say": "Yalnız döşeme tablosu: sistemi onun, Taslak'ın altında raster",
+   "opens": "built",
+   "project": "yalniz-ortofoto",
+   "srid": 5256,
+   "notes": [],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    },
+    {
+     "name": "hava",
+     "table": null,
+     "raster": {
+      "table": "hava",
+      "zoom": 0
+     }
+    }
+   ],
+   "home": [
+    640000.0,
+    4399744.0,
+    640256.0,
+    4400000.0
+   ]
+  },
+  {
+   "file": "derece.gpkg",
+   "say": "WGS 84 derecesinde bir mahalle: proje derecede, ilk görünüm birkaç binde bir derece",
+   "opens": "built",
+   "project": "derece",
+   "srid": 4326,
+   "notes": [],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    },
+    {
+     "name": "teleferik",
+     "table": "teleferik",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "LINESTRING",
+      "srid": 4326
+     },
+     "fields": [
+      "ad"
+     ],
+     "styled": null
+    },
+    {
+     "name": "binalar",
+     "table": "binalar",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POLYGON",
+      "srid": 4326
+     },
+     "fields": [
+      "kat"
+     ],
+     "styled": null
+    }
+   ],
+   "home": [
+    32.85,
+    39.92,
+    32.852,
+    39.9224
+   ]
+  },
+  {
    "file": "projeli.gpkg",
    "say": "Bir projesi var: o açılır, yenisi kurulmaz",
    "opens": "kept",

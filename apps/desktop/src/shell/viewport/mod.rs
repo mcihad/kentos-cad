@@ -39,7 +39,7 @@ use iced::{Element, Fill, Point, Rectangle, Vector, mouse, wgpu};
 
 use kentos_commands::{DrawingFont, Entity, LayerNode};
 use kentos_interaction::{Cursor, Selection, ViewChange, Viewpoint};
-use kentos_render_wgpu::camera::{FIT_PADDING, MAX_SCALE, MIN_SCALE};
+use kentos_render_wgpu::camera::FIT_PADDING;
 use kentos_render_wgpu::scene::{self, lod};
 use kentos_render_wgpu::styled::StyledScene;
 use kentos_render_wgpu::{
@@ -458,7 +458,7 @@ pub enum Canvas {
     Paper,
     /// Very dark and dimmed, for a dark room (the night theme's).
     Night,
-    /// Pure black, bright lines (classic AutoCAD; the high-contrast theme's).
+    /// Pure black, bright lines (the classic CAD screen; the high-contrast theme's).
     Black,
 }
 
