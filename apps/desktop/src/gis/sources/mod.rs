@@ -761,6 +761,10 @@ impl App {
                     return self.drop_drawing(path);
                 }
                 if self.document.is_none() {
+                    // A GeoPackage on an empty window opens as a project (docs/adr/9116).
+                    if kentos_native_application::project_store::is_geopackage(&path) {
+                        return self.open_geopackage(path, crate::opening::Purpose::File, None);
+                    }
                     self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
                     return Task::none();
                 }

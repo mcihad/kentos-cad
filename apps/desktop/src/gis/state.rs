@@ -153,6 +153,8 @@ pub(crate) enum Event {
     LayerExport(crate::layer_export::Event),
     /// Dosya › Veri kaynağı (project_store.rs, docs/adr/9107).
     ProjectStore(crate::project_store::Event),
+    /// A GeoPackage opened as a project (gpkg_open.rs, docs/adr/9116).
+    GpkgOpen(crate::gpkg_open::Event),
     /// Yeni katman in a CBS project (layer_create.rs, docs/adr/9107 §7).
     LayerCreate(crate::layer_create::Event),
     /// Veri kaynağına taşı… (layer_migrate.rs, docs/adr/9107 §8).
@@ -390,6 +392,7 @@ impl App {
             Event::LayerClasses(event) => return self.layer_classes_event(event),
             Event::LayerExport(event) => return self.layer_export_event(event),
             Event::ProjectStore(event) => return self.project_store_event(event),
+            Event::GpkgOpen(event) => return self.gpkg_open_event(event),
             Event::LayerCreate(event) => return self.layer_create_event(event),
             Event::LayerMigrate(event) => return self.layer_migrate_event(event),
             Event::DataPick(event) => return self.data_pick_event(event),

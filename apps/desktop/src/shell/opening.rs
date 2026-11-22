@@ -391,6 +391,14 @@ impl App {
         if let Some(earlier) = self.opening.take() {
             earlier.stop.store(true, Ordering::Relaxed);
         }
+        // A GeoPackage opens as a project (docs/adr/9116): the one it keeps, or a new one of its tables.
+        if file_unit.is_none() && kentos_native_application::project_store::is_geopackage(&path) {
+            let purpose = match purpose {
+                Purpose::Recovery { .. } => Purpose::File,
+                other => other,
+            };
+            return self.open_geopackage(path, purpose, None);
+        }
         let id = next_id();
         let stop = Arc::new(AtomicBool::new(false));
         let name = match &purpose {

@@ -40,6 +40,18 @@ pub struct Session {
     located: kentos_native_application::source_places::Located,
     /// The grids the project names and where opening found them (docs/adr/3580): a package's `izgaralar/` read in.
     grids: Vec<kentos_native_application::project_grids::GridFound>,
+    /// The data source project it is (docs/adr/9107, 9116): a save without a path writes there.
+    stored: Option<Stored>,
+    /// What opening a GeoPackage found (docs/adr/9116): the project kept or made, written or not, the notes.
+    opened_gpkg: Option<Value>,
+}
+
+/// A project kept in a data source: its address, its schema in a database and its name.
+#[derive(Clone, Debug)]
+struct Stored {
+    address: String,
+    schema: Option<String>,
+    name: String,
 }
 
 impl Session {
@@ -53,14 +65,63 @@ impl Session {
         Ok(Self::of(doc, None, false))
     }
 
-    /// A `.kcad` file (v2/v1), or a DWG/DXF/NCZ opened as a new CAD drawing.
+    /// A `.kcad` file (v2/v1), a DWG/DXF/NCZ opened as a new CAD drawing, or a GeoPackage opened as a project
+    /// ([`Session::open_geopackage`]).
     pub fn open(path: &Path) -> Result<Self, HeadlessError> {
         Self::open_in(path, None)
+    }
+
+    /// A GeoPackage opened as a project (docs/adr/9116): the project named `project`, or its only one; a file of none
+    /// opens as a new project of its tables, written into the file (a save without a path writes there again). A file
+    /// of several projects and none named is refused with their names (`several_projects`).
+    #[cfg(feature = "mod-gis")]
+    pub fn open_geopackage(path: &Path, project: Option<&str>) -> Result<Self, HeadlessError> {
+        use kentos_native_application::gpkg_open::{self, Opened};
+        let address = gpkg_open::address_of(path);
+        let file = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
+        match gpkg_open::open(path, project).map_err(|e| HeadlessError::new("source_unreadable", e))? {
+            Opened::Kept { name, .. } => {
+                let mut session = Self::open_from_source(&address, None, &name)?;
+                session.opened_gpkg = Some(json!({"geoPackage": address, "project": name, "made": false}));
+                Ok(session)
+            }
+            Opened::Several(kept) => Err(HeadlessError::new(
+                "several_projects",
+                format!(
+                    "“{file}” içinde birden çok proje var: {}. Açılacak projenin adını verin.",
+                    kept.iter().map(|p| format!("“{}”", p.name)).collect::<Vec<_>>().join(", ")
+                ),
+            )),
+            Opened::Built(built) => {
+                let gpkg_open::Built { document, name, written, notes } = *built;
+                let mut session = Self::of(document, None, false);
+                let notes: Vec<Value> = notes.iter().map(|n| json!({"code": n.code, "text": n.text})).collect();
+                let mut said = json!({"geoPackage": address, "project": name, "made": true, "written": written.is_ok(), "notes": notes});
+                match written {
+                    Ok(()) => session.stored = Some(Stored { address, schema: None, name }),
+                    Err(why) => said["unwritten"] = json!(why),
+                }
+                session.opened_gpkg = Some(said);
+                Ok(session)
+            }
+        }
+    }
+
+    /// Without the CBS module a GeoPackage is not opened as a project (docs/adr/8054 §11).
+    #[cfg(not(feature = "mod-gis"))]
+    pub fn open_geopackage(path: &Path, _project: Option<&str>) -> Result<Self, HeadlessError> {
+        Err(HeadlessError::new(
+            "module_not_built",
+            format!("{}: GeoPackage'ı proje olarak açmak KentOS CBS modülüyle gelir; bu yapıda yok.", path.display()),
+        ))
     }
 
     /// Open with an explicit source unit. Unitless external sources require a decision,
     /// as in the desktop's opening preview; native KCAD already has physical model lengths.
     pub fn open_in(path: &Path, file_unit: Option<kentos_commands::FileUnit>) -> Result<Self, HeadlessError> {
+        if file_unit.is_none() && kentos_native_application::project_store::is_geopackage(path) {
+            return Self::open_geopackage(path, None);
+        }
         let native_content = (|| {
             use std::io::Read;
             let mut prefix = [0u8; 64];
@@ -119,6 +180,8 @@ impl Session {
             jobs: crate::rpc::Jobs::default(),
             located: Default::default(),
             grids: Vec::new(),
+            stored: None,
+            opened_gpkg: None,
         }
     }
 
@@ -160,6 +223,8 @@ impl Session {
         kentos_native_application::project_store::write(address, schema, name, &bytes)
             .map_err(|e| HeadlessError::new("source_unwritable", e))?;
         self.doc.mark_saved(revision);
+        self.stored = Some(Stored { address: address.to_owned(), schema: schema.map(str::to_owned), name: name.trim().to_owned() });
+        self.path = None;
         Ok(json!({
             "address": address,
             "schema": schema,
@@ -181,6 +246,7 @@ impl Session {
         };
         let mut session = Self::of(doc, None, legacy);
         session.located = located;
+        session.stored = Some(Stored { address: address.to_owned(), schema: schema.map(str::to_owned), name: name.trim().to_owned() });
         Ok(session)
     }
 
@@ -204,6 +270,13 @@ impl Session {
         }
         if path.is_some_and(|p| kentos_native_application::cad_open::Format::of(p).is_some()) {
             return Err(HeadlessError::new("invalid_file_path", "Kaydet yalnız KentOS (.kcad) biçimindedir. DWG/DXF/NCZ kaynağı üzerine yazılmaz; yeni bir .kcad yolu verin."));
+        }
+        // A data source project is written there again (docs/adr/9107, 9116).
+        if path.is_none()
+            && self.path.is_none()
+            && let Some(at) = self.stored.clone()
+        {
+            return self.save_to_source(&at.address, at.schema.as_deref(), &at.name);
         }
         let target = match (path, &self.path) {
             (Some(p), _) => p.to_path_buf(),
@@ -229,6 +302,8 @@ impl Session {
         self.doc.mark_saved(revision);
         self.path = Some(target.clone());
         self.legacy = false;
+        // Saved to a file, the drawing is that file's from now on.
+        self.stored = None;
         Ok(json!({
             "path": target.display().to_string(),
             "bytes": bytes,
@@ -236,7 +311,7 @@ impl Session {
         }))
     }
 
-    /// The whole drawing as an AutoCAD 2007 DXF file at `path` (docs/adr/0252),
+    /// The whole drawing as a DXF R2007 (AC1021) file at `path` (docs/adr/0252),
     /// the desktop's DXF dışa aktar with Tümü: `file.export.dxf` (docs/adr/0253
     /// §10), over a file that is there. An export is not a save: the drawing
     /// stays as dirty as it was. The answer is the command's output.
@@ -398,6 +473,12 @@ impl Session {
             }
             fields.insert("legacy".into(), json!(self.legacy));
             if let Some(source) = &self.opened_cad { fields.insert("openedCad".into(), source.clone()); }
+            if let Some(at) = &self.stored {
+                fields.insert("project".into(), json!({"address": at.address, "schema": at.schema, "name": at.name}));
+            }
+            if let Some(opened) = &self.opened_gpkg {
+                fields.insert("openedGeoPackage".into(), opened.clone());
+            }
             // Docs/adr/3580: the grids the project names and where opening found them.
             if !self.grids.is_empty() {
                 let grids: Vec<Value> = self

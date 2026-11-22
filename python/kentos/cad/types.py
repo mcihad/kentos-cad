@@ -31418,7 +31418,7 @@ class DataText(_Model):
             absent, empty or another word: the left of the baseline.
         angle: The column of the angle, degrees counter-clockwise from east; absent or empty: 0.
         height: The column of the height, metres; absent, or empty or not over 0 in a row: the project's text height.
-        width: The column of the width factor; absent, empty or out of (0, 100]: 1.
+        width: The column of the width factor; absent, empty, 1 or out of (0, 100]: none (1).
     """
     text: str
     align: str | None | Unset = UNSET

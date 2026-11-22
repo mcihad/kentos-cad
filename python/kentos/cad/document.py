@@ -507,6 +507,12 @@ class DocumentInfo:
     """Where the view opens, in the project's plane; None: every object."""
     opened_cad: Mapping[str, Any] | None = None
     """External CAD source path, unit decision and read report. Its source is never the save target."""
+    project: Mapping[str, Any] | None = None
+    """The data source project it is (docs/adr/9107, 9116): ``address``, ``schema``, ``name``; ``save()`` without a
+    path writes there."""
+    opened_geopackage: Mapping[str, Any] | None = None
+    """What opening a GeoPackage found (docs/adr/9116): ``geoPackage``, ``project``, ``made`` (a new project of its
+    tables), ``written``, ``notes`` (``code``, ``text``) and why it was not written (``unwritten``)."""
 
 
 BoundsLike = Bounds | Sequence[float]
@@ -598,8 +604,14 @@ class Document:
 
     @classmethod
     def open(cls, path: str | os.PathLike[str], *, file_unit: FileUnit | FileUnitName | None = None) -> Document:
-        """Open KCAD (v2/v1), DWG, DXF or NCZ. External CAD opens as its own
+        """Open KCAD (v2/v1), DWG, DXF, NCZ or a GeoPackage. External CAD opens as its own
         drawing; save to a new ``.kcad`` path to preserve the source file.
+
+        A GeoPackage (``.gpkg``, docs/adr/9116) opens as a project: the one it keeps; with several, ``HostError``
+        ``several_projects`` names them (open one with ``open_from``). A file that keeps none opens as a new CBS
+        project of its tables, written into that file: its tables are data layers whose rows stay in the file, its
+        system the one most of its tables are in, each table's default style its layer's look. ``info()``'s
+        ``opened_geopackage`` says what was found; ``save()`` without a path writes into the file again.
 
         ``file_unit`` explicitly interprets the external source's numbers, overriding
         its declaration once. Unitless sources raise ``HostError`` with code
@@ -625,11 +637,14 @@ class Document:
 
     # ------------------------------------------------------------ keeping
 
-    def save(self, path: str | os.PathLike[str] | None = None) -> Saved:
-        """Saves as ``.kcad`` v2 to ``path``, or where it was read from. The
-        bytes are read back before they replace the file; a failed save
-        leaves the old file as it was."""
+    def save(self, path: str | os.PathLike[str] | None = None) -> Saved | StoredSaved:
+        """Saves as ``.kcad`` v2 to ``path``, or where it was read from: its file, or the data source project it
+        is (opened with ``open_from``, from a GeoPackage, or saved with ``save_to``), which gives a
+        ``StoredSaved``. The bytes are read back before they replace the old ones; a failed save leaves them as
+        they were. Saved to a path, the drawing is that file's from then on."""
         raw = json.loads(_host(self._session.save, None if path is None else os.fspath(path)))
+        if "path" not in raw:
+            return StoredSaved(str(raw["address"]), raw.get("schema"), str(raw["name"]), int(raw["bytes"]), str(raw["revision"]))
         return Saved(Path(raw["path"]), int(raw["bytes"]), str(raw["revision"]))
 
     def to_bytes(self) -> bytes:
@@ -644,7 +659,7 @@ class Document:
         return StoredSaved(str(raw["address"]), raw.get("schema"), str(raw["name"]), int(raw["bytes"]), str(raw["revision"]))
 
     def export_dxf(self, path: str | os.PathLike[str]) -> Exported:
-        """The whole drawing as an AutoCAD 2007 DXF file, as the desktop's DXF
+        """The whole drawing as a DXF R2007 (AC1021) file, as the desktop's DXF
         dışa aktar writes it (the same writer): every object with its layers,
         what DXF cannot hold carried as KentOS data. An export is not a save."""
         raw = json.loads(_host(self._session.export_dxf, os.fspath(path)))
@@ -721,6 +736,8 @@ class Document:
             conventions=_conventions(s.get("conventions")),
             home_view=None if s.get("homeView") is None else decode(Bounds, s["homeView"], "Document.info"),
             opened_cad=s.get("openedCad"),
+            project=s.get("project"),
+            opened_geopackage=s.get("openedGeoPackage"),
         )
 
     def sheets(self) -> list[SheetInfo]:
@@ -889,7 +906,7 @@ class Document:
 
     @contextmanager
     def relaxed(self) -> Iterator[None]:
-        """The writes inside relax the constraints (docs/adr/0337 §1, AutoCAD's Shift while editing): no solve follows
+        """The writes inside relax the constraints (docs/adr/0337 §1, Shift held while editing): no solve follows
         them; the constraints a write leaves unmet go with it, the warning ``constraints_relaxed`` says how many.
         Outside, every write that changes constrained objects is followed by a solve that keeps them, or writes
         nothing (``constraint_conflict``)."""

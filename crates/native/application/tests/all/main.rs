@@ -262,3 +262,7 @@ mod arc_bonds;
 // Runs modules of walls and slabs through the registry by name (docs/adr/8054 §11).
 #[cfg(feature = "mod-arch")]
 mod module_kinds;
+
+// A GeoPackage opened as a project (docs/adr/9116).
+#[cfg(feature = "mod-gis")]
+mod gpkg_open;

@@ -1542,6 +1542,11 @@ mod layer_export_extent;
 mod system_select;
 #[path = "gis/project_store.rs"]
 mod project_store;
+#[path = "gis/gpkg_open.rs"]
+mod gpkg_open;
+#[cfg(test)]
+#[path = "gis/gpkg_open_tests.rs"]
+mod gpkg_open_tests;
 #[path = "gis/layer_create.rs"]
 mod layer_create;
 #[path = "gis/layer_migrate.rs"]

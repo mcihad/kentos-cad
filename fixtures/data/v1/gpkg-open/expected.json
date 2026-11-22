@@ -1,0 +1,316 @@
+{
+ "about": "Opening a GeoPackage as a project (docs/adr/9116), written by scripts/fixtures/gpkg_open_cases.py with sqlite3; the expectations follow the ADR's rules, worked out without KentOS code.",
+ "cases": [
+  {
+   "file": "katmanlar.gpkg",
+   "say": "Her türden tablo, boş bir tablo, geometrisiz tablo ve stil tablosu",
+   "opens": "built",
+   "project": "katmanlar",
+   "srid": 5256,
+   "notes": [],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    },
+    {
+     "name": "kuyular",
+     "table": "kuyular",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POINT",
+      "srid": 5256
+     },
+     "fields": [
+      "ad",
+      "derinlik"
+     ],
+     "styled": null
+    },
+    {
+     "name": "yollar",
+     "table": "yollar",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "LINESTRING",
+      "srid": 5256
+     },
+     "fields": [
+      "ad",
+      "genislik"
+     ],
+     "styled": null
+    },
+    {
+     "name": "binalar",
+     "table": "binalar",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POLYGON",
+      "srid": 5256
+     },
+     "fields": [
+      "ada",
+      "kat"
+     ],
+     "styled": "categorized"
+    },
+    {
+     "name": "bos",
+     "table": "bos",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "MULTIPOLYGON",
+      "srid": 5256
+     },
+     "fields": [
+      "ad"
+     ],
+     "styled": null
+    },
+    {
+     "name": "malikler",
+     "table": "malikler",
+     "key": "fid",
+     "geometry": null,
+     "fields": [
+      "ad",
+      "pay"
+     ],
+     "styled": null
+    }
+   ],
+   "home": [
+    640000.0,
+    4399970.0,
+    640120.0,
+    4400060.0
+   ]
+  },
+  {
+   "file": "karisik.gpkg",
+   "say": "Tabloların çoğu TM36'da, biri WGS 84'te: proje TM36",
+   "opens": "built",
+   "project": "karisik",
+   "srid": 5256,
+   "notes": [
+    "mixed_systems"
+   ],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    },
+    {
+     "name": "a",
+     "table": "a",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POINT",
+      "srid": 5256
+     },
+     "fields": [],
+     "styled": null
+    },
+    {
+     "name": "c",
+     "table": "c",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "LINESTRING",
+      "srid": 5256
+     },
+     "fields": [],
+     "styled": null
+    },
+    {
+     "name": "b",
+     "table": "b",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POLYGON",
+      "srid": 4326
+     },
+     "fields": [],
+     "styled": null
+    }
+   ],
+   "home": null
+  },
+  {
+   "file": "esitlik.gpkg",
+   "say": "İki sistem eşit sayıda: dosyada önce gelen",
+   "opens": "built",
+   "project": "esitlik",
+   "srid": 4326,
+   "notes": [
+    "mixed_systems"
+   ],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    },
+    {
+     "name": "d",
+     "table": "d",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POINT",
+      "srid": 4326
+     },
+     "fields": [],
+     "styled": null
+    },
+    {
+     "name": "e",
+     "table": "e",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POINT",
+      "srid": 5256
+     },
+     "fields": [],
+     "styled": null
+    }
+   ],
+   "home": null
+  },
+  {
+   "file": "yabanci-sistem.gpkg",
+   "say": "Projenin alamayacağı bir sistem: proje sistemsiz",
+   "opens": "built",
+   "project": "yabanci-sistem",
+   "srid": 0,
+   "notes": [
+    "system_not_listed"
+   ],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    },
+    {
+     "name": "parseller",
+     "table": "parseller",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POLYGON",
+      "srid": 2154
+     },
+     "fields": [
+      "no"
+     ],
+     "styled": null
+    }
+   ],
+   "home": null
+  },
+  {
+   "file": "sistemsiz.gpkg",
+   "say": "Yalnız geometrisiz tablo: proje sistemsiz",
+   "opens": "built",
+   "project": "sistemsiz",
+   "srid": 0,
+   "notes": [
+    "no_system"
+   ],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    },
+    {
+     "name": "defter",
+     "table": "defter",
+     "key": "fid",
+     "geometry": null,
+     "fields": [
+      "ad",
+      "tutar"
+     ],
+     "styled": null
+    }
+   ],
+   "home": null
+  },
+  {
+   "file": "tanimsiz.gpkg",
+   "say": "Tanımsız kartezyen sistem (-1): proje sistemsiz",
+   "opens": "built",
+   "project": "tanimsiz",
+   "srid": 0,
+   "notes": [
+    "no_system"
+   ],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    },
+    {
+     "name": "noktalar",
+     "table": "noktalar",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "type": "POINT",
+      "srid": null
+     },
+     "fields": [
+      "ad"
+     ],
+     "styled": null
+    }
+   ],
+   "home": null
+  },
+  {
+   "file": "bos.gpkg",
+   "say": "Tablosuz GeoPackage: yalnız Taslak katmanıyla açılır",
+   "opens": "built",
+   "project": "bos",
+   "srid": 0,
+   "notes": [
+    "no_tables"
+   ],
+   "layers": [
+    {
+     "name": "Taslak",
+     "table": null
+    }
+   ],
+   "home": null
+  },
+  {
+   "file": "projeli.gpkg",
+   "say": "Bir projesi var: o açılır, yenisi kurulmaz",
+   "opens": "kept",
+   "project": "Sivas altyapı"
+  },
+  {
+   "file": "iki-projeli.gpkg",
+   "say": "İki projesi var: adları söylenir, biri seçilir",
+   "opens": "several",
+   "projects": [
+    "Çamlık",
+    "Zeytinlik"
+   ]
+  },
+  {
+   "file": "gpkg-degil.gpkg",
+   "say": "Uzantısı .gpkg olan metin dosyası",
+   "opens": "refused"
+  }
+ ]
+}

@@ -56,6 +56,10 @@
   - **Sınıflar kaynaktan** (ADR 9110): veri katmanında stil penceresi değerleri ve Nesne sayılarını kaynaktan okur;
     katman ağacının sayımı kaynakta (`GROUP BY`, tam giden koşullar); sınıf satırına çift tık sembolü açar; çizim
     katmanında kapalı sınıfın nesnesi etiketlenmez; değeri boş alan etikette boş.
+  - **GeoPackage proje olarak açılır** (22 Kasım, sahibin isteği; [ADR 9116](../adr/9116-geopackage-opened-as-a-project.md),
+    VY-19): Dosya › Aç, son açılanlar, boş pencereye bırakılan dosya, Python ve MCP `.gpkg`'yi açar. Tek projesi açılır,
+    birden çoksa biri seçilir. Projesi yoksa tablolarından CBS projesi kurulur ve dosyanın içine yazılır (sistem
+    tabloların çoğununki, varsayılan stiller `layer_styles`'tan); Kaydet oraya yazar. QGIS'le kalan fark ADR 9116 §5'te.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

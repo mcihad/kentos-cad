@@ -111,6 +111,12 @@ impl StoreWindow {
         self.path.clone()
     }
 
+    /// The project's name as the window holds it.
+    #[cfg(test)]
+    pub(crate) fn name_for_test(&self) -> String {
+        self.name.clone()
+    }
+
     /// The projects' names listed, none before a read.
     #[cfg(test)]
     pub(crate) fn listed_for_test(&self) -> Option<Vec<String>> {
@@ -120,6 +126,17 @@ impl StoreWindow {
     /// The place in words: the file's name, the database and schema.
     fn place_words(&self) -> String {
         StoredSource { address: self.source(), schema: self.schema(), name: String::new() }.place()
+    }
+
+    /// An opening that did not go: the window waits again and says why.
+    pub(crate) fn failed(&mut self, why: String) {
+        self.busy = false;
+        self.said = Some(why);
+    }
+
+    /// A file of no project, listed (docs/adr/9116): Aç makes one of its tables.
+    fn empty_file(&self) -> bool {
+        self.kind == Kind::File && matches!(&self.listed, Some(Ok(list)) if list.is_empty())
     }
 
     /// The name typed is a project kept there already: Kaydet writes over it.
@@ -187,6 +204,19 @@ impl App {
         self.gis.project_store = Some(w);
         self.dialog = Some(crate::app::Dialog::Gis(crate::gis::GisDialogKind::ProjectStore));
         if list { self.list_projects() } else { Task::none() }
+    }
+
+    /// Veri kaynağından aç on a GeoPackage (a file of several projects opened, docs/adr/9116): its projects read.
+    pub(crate) fn open_project_store_at(&mut self, path: std::path::PathBuf) -> Task<Message> {
+        let _ = self.open_project_store(false);
+        if let Some(w) = self.gis.project_store.as_mut() {
+            w.kind = Kind::File;
+            w.path = path.display().to_string();
+            w.name = String::new();
+            w.listed = None;
+            w.selected = None;
+        }
+        self.list_projects()
     }
 
     /// The GeoPackage file of the drawing's first data layer read from one.
@@ -280,6 +310,9 @@ impl App {
                 if asked == w.asked {
                     w.listed = Some(answer);
                     w.selected = None;
+                    if !w.save && w.empty_file() && w.name.trim().is_empty() {
+                        w.name = kentos_native_application::gpkg_open::project_name(std::path::Path::new(w.path.trim()));
+                    }
                 }
             }
             Event::Select(i) => {
@@ -358,6 +391,10 @@ impl App {
         }
         w.busy = true;
         w.said = None;
+        // A file's project, or a project of its tables when it keeps none (docs/adr/9116).
+        if w.kind == Kind::File {
+            return self.open_geopackage(std::path::PathBuf::from(address), crate::opening::Purpose::File, Some(name));
+        }
         self.open_stored_project(at)
     }
 
@@ -478,6 +515,8 @@ impl App {
             Some(Err(why)) => words::text_line(words::Kind::Error, why.clone()),
             Some(Ok(list)) if list.is_empty() => label::muted(if w.save {
                 "Burada saklanan proje yok; Kaydet ilkini yazar."
+            } else if w.kind == Kind::File {
+                "Bu dosyada proje yok. Aç, tablolarından yeni bir proje kurar ve onu bu dosyaya yazar."
             } else {
                 "Burada saklanan proje yok."
             })

@@ -170,7 +170,7 @@ impl App {
             ),
             Some(Module::Map) => (
                 "Harita ya da imar planı, ilin koordinat sisteminde",
-                "KentOS Harita projesi, DWG, DXF veya NCZ çizimi",
+                "KentOS Harita projesi, DWG, DXF, NCZ çizimi ya da GeoPackage",
             ),
             Some(Module::Road) => (
                 "Yol projesi, ilin koordinat sisteminde",
@@ -178,11 +178,11 @@ impl App {
             ),
             Some(Module::Gis) => (
                 "Koordinat sistemi ve ölçekle CBS projesi",
-                "KentOS GIS projesi; CAD çizimleri kendi programında açılır",
+                "KentOS GIS projesi ya da GeoPackage; CAD çizimleri kendi programında açılır",
             ),
             None => (
                 "Proje türü, koordinat sistemi ve ölçekle boş çizim",
-                "KCAD, DWG, DXF veya NCZ çizimi",
+                "KCAD, DWG, DXF, NCZ çizimi ya da GeoPackage",
             ),
         };
         let mut actions = Column::new()

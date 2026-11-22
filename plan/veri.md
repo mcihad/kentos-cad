@@ -231,3 +231,21 @@ ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, AD
     ekranı onları zaten tutuyordu.
   - Çizim katmanları, işaretler, taramalar, pafta ve PDF değişmedi.
   - Gerçek pencerede bir milyon parsel: kent ve ilçe ölçeğinde yollar önce kayboluyordu, şimdi belirgin.
+
+Sahibin sözü (22 Kasım 2026): “gis içerisinde geopackage 1. sınıf destek sunulmasını istedim ama geopackage açarken
+içinde proje olup olmadığını arıyor, içinde kentos projesi yoksa bile açsın ama projeyi de oluştursun içine, geopackage
+qgis kadar iyi kullanmalı.”
+
+- [x] **VY-19 — GeoPackage proje olarak açılır.** ([ADR 9116](../docs/adr/9116-geopackage-opened-as-a-project.md))
+  - Dosya › Aç, son açılanlar ve boş pencereye sürüklenen dosya GeoPackage'ı açar. Python'da `Document.open`, MCP'de
+    `drawing.open` da açar.
+  - Dosyanın tek projesi açılır. Birden çok projesi varsa adları söylenir, biri seçilir.
+  - Projesi yoksa tablolarından yeni bir CBS projesi kurulur ve dosyanın içine yazılır; Kaydet oraya yazar:
+    - tablolar veri katmanıdır, satırları dosyada kalır;
+    - sistem, tabloların çoğunun projeye alınabilen sistemidir;
+    - katmanlar noktalar, çizgiler, alanlar, geometrisiz tablolar sırasıyla gelir;
+    - tablonun varsayılan stili (`layer_styles`) katmanın görünüşüdür.
+  - Veri kaynağından aç'ta projesi olmayan dosya, yazılan adla proje olur.
+  - 10 bağımsız durum (`scripts/fixtures/gpkg_open_cases.py`, sqlite3). Native, masaüstü, Python ve MCP sınamaları.
+  - Kalan, QGIS'le arada: raster döşemeleri, ilişkiler, stilin geri yazılması, üst veri, açılışta tablo seçimi, bakım
+    (ADR 9116 §5). Sırayı sahip seçecek.

@@ -518,6 +518,13 @@ mod layer_export_kml;
 // A project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107).
 #[path = "gis/project_store.rs"]
 pub mod project_store;
+// A table described for a data layer (docs/adr/9101 §4) and a GeoPackage opened as a project (docs/adr/9116).
+#[cfg(feature = "mod-gis")]
+#[path = "gis/data_describe.rs"]
+pub mod data_describe;
+#[cfg(feature = "mod-gis")]
+#[path = "gis/gpkg_open.rs"]
+pub mod gpkg_open;
 // A new layer made as a new table of a data source (docs/adr/9107 §7).
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_create.rs"]

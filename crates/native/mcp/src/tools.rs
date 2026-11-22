@@ -63,9 +63,10 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         tool(
             "drawing.open",
             "Çizim aç",
-            "KCAD (v2/v1), DWG, DXF veya NCZ çizimini açar; tutamacını ve özetini verir. Dış CAD dosyası yeni bir CAD çizimidir; kaynak üzerine yazılmaz, kaydetmek için .kcad yolu gerekir.",
+            "KCAD (v2/v1), DWG, DXF, NCZ çizimini ya da GeoPackage'ı (.gpkg) açar; tutamacını ve özetini verir. Dış CAD dosyası yeni bir CAD çizimidir; kaynak üzerine yazılmaz, kaydetmek için .kcad yolu gerekir. GeoPackage'ın tek projesi açılır; birden çok projesi varsa project ile adı verilir. Projesi yoksa tablolarından yeni bir CBS projesi kurulur ve dosyanın içine yazılır: tablolar veri katmanıdır, satırları dosyada kalır; drawing.save yolsuz oraya yazar. Özetteki openedGeoPackage neyin açıldığını ve notları söyler.",
             object(
                 json!({ "path": { "type": "string", "description": "Dosyanın yolu." },
+                    "project": { "type": "string", "description": "GeoPackage'ta açılacak projenin adı; dosyada proje yoksa yeni projenin adı (verilmezse dosyanın adı)." },
                     "fileUnit": { "type": "string", "enum": kentos_commands::FileUnit::ALL,
                         "description": "DWG/DXF kaynak sayılarının birimi; bildirilen birimi açıkça geçersiz kılar. Birimsiz dosyada zorunlu; KCAD için verilmez. Model uzunlukları metre, pafta ve zoom değişmez." } }),
                 &["path"],
@@ -119,10 +120,10 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         tool(
             "drawing.save",
             "Çizimi kaydet",
-            "KCAD v2 olarak kaydeder: verilen yola ya da açıldığı dosyaya. Baytlar geri okunmadan dosyanın \
-             yerine konmaz; eski v1 dosyasının üzerine yazılmaz.",
+            "KCAD v2 olarak kaydeder: verilen yola ya da açıldığı yere (bir dosya ya da bir GeoPackage'ın içindeki \
+             proje). Baytlar geri okunmadan yerine konmaz; eski v1 dosyasının üzerine yazılmaz.",
             object(
-                json!({ "drawing": drawing_arg(), "path": { "type": "string", "description": "Nereye; yoksa açıldığı dosya." } }),
+                json!({ "drawing": drawing_arg(), "path": { "type": "string", "description": "Nereye; yoksa açıldığı dosya ya da GeoPackage projesi." } }),
                 &["drawing"],
             ),
             annotations(false, true),
@@ -1209,7 +1210,10 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                 text(args, "path").ok_or_else(|| refused("invalid_input", "path gerekli."))?;
             let file_unit = args.get("fileUnit").map(|u| serde_json::from_value(u.clone()))
                 .transpose().map_err(|e| refused("invalid_input", format!("fileUnit: {e}")))?;
-            let session = Session::open_in(Path::new(path), file_unit).map_err(host)?;
+            let session = match text(args, "project") {
+                Some(project) => Session::open_geopackage(Path::new(path), Some(project)).map_err(host)?,
+                None => Session::open_in(Path::new(path), file_unit).map_err(host)?,
+            };
             opened(server, session)
         }
         "drawing.new" => {

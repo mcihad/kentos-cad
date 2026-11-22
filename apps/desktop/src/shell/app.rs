@@ -1248,16 +1248,25 @@ impl App {
             let path = path.clone();
             return self.start_opening(path, purpose);
         }
+        // A program with data layers opens a GeoPackage as a project too (docs/adr/9116).
+        let gpkg = self.shows_panel(Panel::Sources);
         Task::perform(
-            async {
-                let file = rfd::AsyncFileDialog::new()
-                    .set_title("Çizim aç")
-                    .add_filter("CAD çizimleri (.kcad, .dwg, .dxf, .ncz)", &["kcad", "dwg", "dxf", "ncz"])
+            async move {
+                let dialog = rfd::AsyncFileDialog::new().set_title("Çizim aç");
+                let dialog = if gpkg {
+                    dialog.add_filter(
+                        "Çizimler ve GeoPackage (.kcad, .dwg, .dxf, .ncz, .gpkg)",
+                        &["kcad", "dwg", "dxf", "ncz", "gpkg"],
+                    )
+                } else {
+                    dialog.add_filter("CAD çizimleri (.kcad, .dwg, .dxf, .ncz)", &["kcad", "dwg", "dxf", "ncz"])
+                };
+                let dialog = dialog
                     .add_filter("KentOS çizimi (.kcad)", &["kcad"])
                     .add_filter("DWG ve DXF çizimleri (.dwg, .dxf)", &["dwg", "dxf"])
-                    .add_filter("NCZ çizimi (.ncz)", &["ncz"])
-                    .pick_file()
-                    .await?;
+                    .add_filter("NCZ çizimi (.ncz)", &["ncz"]);
+                let dialog = if gpkg { dialog.add_filter("GeoPackage (.gpkg)", &["gpkg"]) } else { dialog };
+                let file = dialog.pick_file().await?;
                 Some(file.path().to_path_buf())
             },
             move |path| match &purpose {

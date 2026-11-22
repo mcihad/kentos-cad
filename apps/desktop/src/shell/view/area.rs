@@ -266,11 +266,16 @@ impl App {
             }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")
-                    .description(
+                    .description(if self.shows_panel(crate::app::Panel::Sources) {
+                        // A program with data layers opens a GeoPackage too (docs/adr/9116).
+                        "Web'de ya da burada kaydedilmiş bir KentOS çizimini (.kcad) ya da bir GeoPackage'ı açın. \
+                         Orta tuşla sürükleyerek kaydırın, tekerlekle imlecin olduğu yere yakınlaştırın; orta tuşa \
+                         çift tıklamak tümünü gösterir."
+                    } else {
                         "Web'de ya da burada kaydedilmiş bir KentOS çizimini (.kcad) açın. Orta tuşla \
                          sürükleyerek kaydırın, tekerlekle imlecin olduğu yere yakınlaştırın; orta tuşa \
-                         çift tıklamak tümünü gösterir.",
-                    )
+                         çift tıklamak tümünü gösterir."
+                    })
                     .primary("Çizim aç…", Message::Run("file.open")),
             )
             .center(Fill)
