@@ -87,6 +87,8 @@ pub(crate) struct GisUiState {
     /// Where Etiketler's Denetle counted last (its Denetle ölçeği's place): the next window starts there, not at the
     /// view again (14 November 2026).
     pub(crate) labelling_report_at: usize,
+    /// The last table's row read for Formla düzenle (forms/row_target.rs): an answer to an earlier one is stale.
+    pub(crate) form_row_asked: u64,
     /// Formlar's window (forms/designer.rs, docs/adr/0401).
     pub(crate) forms_window: Option<crate::forms::designer::Window>,
     /// The designer's copied item with its layer's fields (docs/adr/0437): pasted into this or another form.
@@ -231,6 +233,8 @@ pub(crate) enum Event {
     FormAudit(crate::forms::audit::Event),
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     FormEntry(crate::forms::entry::Event),
+    /// A table's row read for Formla düzenle (forms/row_target.rs, docs/adr/9149).
+    FormRow(Box<crate::forms::row_target::RowTaken>),
     /// An event of Formlar's preview (forms/entry.rs, docs/adr/0403 §3).
     FormPreview(crate::forms::entry::Event),
     Reproject(crate::reproject_window::Event),
@@ -433,6 +437,7 @@ impl App {
             Event::Domains(event) => return self.domains_event(event),
             Event::FormAudit(event) => return self.form_audit_event(event),
             Event::FormEntry(event) => return self.form_entry_event(event),
+            Event::FormRow(taken) => return self.form_row_taken(*taken),
             Event::FormPreview(event) => return self.form_preview_event(event),
             Event::Reproject(event) => return self.reproject_event(event),
             Event::FeaturesCode(event) => return self.features_code_event(event),

@@ -2541,6 +2541,8 @@ Liste:
   tamamı, Sabit ölçek) sorsun, `fit::map` ile vereceği ölçeği söylesin.
 - [ ] Alan alan yazma çakışması (ADR 9148, 23 Kasım 2026): web'in veri katmanı kaydı ayrı alanları birleştirsin, aynı
   alanı ilk/benim/tablodaki değerleriyle sorup seçtirsin.
+- [ ] Tablodan Formla düzenle (ADR 9149, 23 Kasım 2026): web'in Formla düzenle'si tabloda seçilen veri satırını açsın,
+  alınmışsa aynı nesneyi kullansın; işlem aracında seçimi yalnız ilk nesne girdisi alsın.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

@@ -953,9 +953,18 @@ fn record_input(
                 .is_some_and(|f| f.scope == kentos_processing::Scope::Layer(l.to_owned()))
         })
     };
+    // An input on the selection already is the record's (the window opens the first input on the selection when there
+    // is one, docs/adr/9144); else the one on the record's layer; else the first.
+    let on_selection = |p: &&&kentos_processing::ParamDef| {
+        values
+            .get(&p.name)
+            .and_then(kentos_processing::FeaturesValue::read)
+            .is_some_and(|f| f.scope == kentos_processing::Scope::Selection)
+    };
     inputs
         .iter()
-        .find(on_layer)
+        .find(on_selection)
+        .or_else(|| inputs.iter().find(on_layer))
         .or(inputs.first())
         .map(|p| p.name.clone())
 }

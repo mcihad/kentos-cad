@@ -28,6 +28,7 @@ mod related_actions_tests;
 mod form_roles_tests;
 pub mod package;
 pub mod relations;
+pub mod row_target;
 mod relation_checks;
 pub mod subtypes;
 pub mod table_styles;
@@ -308,6 +309,12 @@ impl App {
             };
         }
         let Some((slot, layer)) = self.form_target() else {
+            // A row chosen in a data layer's table is a record too (docs/adr/9149).
+            if self.selection.is_empty()
+                && let Some((layer, key)) = self.data_form_target()
+            {
+                return self.open_form_on_row(layer, key);
+            }
             let chosen = self.selection.len();
             let why = if chosen != 1 {
                 "Formla düzenlemek için bir nesne seçin."

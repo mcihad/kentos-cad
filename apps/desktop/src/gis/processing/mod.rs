@@ -1320,11 +1320,16 @@ impl App {
     /// comes back).
     fn inputs_now(&self, tool: &kentos_processing::Tool, mut values: Values) -> Values {
         let selected = !self.selection.is_empty();
+        // The selection is the tool's first input of objects; another (an overlay, a second layer) keeps its own
+        // default (docs/adr/9144 §2, 9149).
+        let mut first = true;
         for p in &tool.parameters {
             match &p.kind {
                 kentos_processing::ParamKind::Features { scopes, .. } => {
                     let offers = |k: kentos_processing::ScopeKind| scopes.as_ref().is_none_or(|s| s.contains(&k));
-                    if selected && offers(kentos_processing::ScopeKind::Selection) {
+                    let takes = first && selected && offers(kentos_processing::ScopeKind::Selection);
+                    first = false;
+                    if takes {
                         values.insert(p.name.clone(), json!({ "scope": "selection" }));
                     } else {
                         // The tool's own default (the active layer, or a layer holding what it takes): not the last

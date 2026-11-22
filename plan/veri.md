@@ -435,3 +435,8 @@ numaraları raporunkidir.
   - `data_clash`: ilk/benim/tablodaki karşılaştırması ve birleştirme; `WriteFailure::Conflict` satır çakışmalarını taşır.
   - `data_conflict.rs` penceresi; `data_rebase`, `data_untake`, `data_let_go`; seçimden sonra yeniden kayıt ve denetim.
   - Kalan: gerçek PostgreSQL'de iki oturum, Python/MCP'de alan alan seçim, uzun değerler, web.
+- [~] **VY-48 — Formla düzenle tablodan seçilen kaynak satırına ulaşır (rapor 27, P1).**
+  ([ADR 9149](../docs/adr/9149-form-edit-from-a-table-row.md))
+  - `forms/row_target.rs`: alınmışsa o nesne, düzenleniyorsa okunup alınır, kapalıysa Düzenlemeyi başlat, salt okunur söylenir.
+  - Form başlığında anahtar; işlem aracında seçim yalnız ilk nesne girdisinin (ADR 9144 daraltıldı).
+  - Kalan: salt okunur satırın formda gösterilmesi, PostGIS sınaması, web.

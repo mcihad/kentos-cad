@@ -224,6 +224,11 @@ impl DataTable {
         if self.any_selected_of(layer) { self.selected.iter().copied().collect() } else { Vec::new() }
     }
 
+    /// The layer the table's pressed rows are of, when rows are pressed.
+    pub(crate) fn selected_layer(&self) -> Option<&str> {
+        self.selected_of.as_deref().filter(|_| !self.selected.is_empty())
+    }
+
     /// Whether rows of this layer are pressed.
     pub(crate) fn any_selected_of(&self, layer: &str) -> bool {
         self.selected_of.as_deref() == Some(layer) && !self.selected.is_empty()

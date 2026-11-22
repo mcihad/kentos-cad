@@ -135,7 +135,16 @@ impl App {
     pub(super) fn entry_head<'a>(&'a self, e: &'a Entry, locked: bool) -> Column<'a, Message> {
         let mut body = Column::new().spacing(12);
         let mut head = if e.members.is_empty() {
-            format!("{} · {}", e.screen.object.kind, e.screen.object.layer)
+            // A data layer's row says its key too (docs/adr/9149): the record a table's row named.
+            let key = self.document.as_ref().and_then(|d| {
+                let slot = e.uid_slot(self)?;
+                let uid = d.model.uid(slot)?;
+                let layer = d.model.get(slot)?.base().layer_id.clone();
+                let key = d.model.taken_key(&layer, uid)?;
+                let field = d.model.layers().get(&layer)?.data.as_ref()?.key.clone();
+                Some(format!(" · {field} {key}"))
+            });
+            format!("{} · {}{}", e.screen.object.kind, e.screen.object.layer, key.unwrap_or_default())
         } else {
             format!(
                 "{} nesne · {} · değiştirdiğiniz alanlar hepsine yazılır",

@@ -25,7 +25,7 @@
 ## §2 Karar
 
 1. **Girdi çizimden.** Pencere son değerleri getirirken nesne girdilerini getirmez:
-   - seçim varsa ve girdi seçimi alıyorsa kapsam seçimdir;
+   - seçim varsa ve girdi seçimi alıyorsa kapsam seçimdir; yalnız aracın ilk nesne girdisi için (ADR 9149 §2.3);
    - yoksa aracın kendi varsayılanıdır: etkin katman, o katman aracın aldığı nesneyi tutmuyorsa tutan bir katman
      (`propose_layers`);
    - öbür ayarlar (uzaklık, ondalık, …) eskisi gibi geri gelir.

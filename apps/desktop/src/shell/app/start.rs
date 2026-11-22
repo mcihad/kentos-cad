@@ -382,6 +382,7 @@ impl App {
                 dataset_info: None,
                 labelling: None,
                 labelling_report_at: 0,
+                form_row_asked: 0,
                 forms_window: None,
                 form_files: crate::forms::library::FormFiles::default(),
                 form_entry: None,

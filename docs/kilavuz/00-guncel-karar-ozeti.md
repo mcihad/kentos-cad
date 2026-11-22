@@ -151,6 +151,9 @@
   - **Alan alan yazma çakışması** (23 Kasım, değerlendirmenin 26. maddesi;
     [ADR 9148](../adr/9148-field-level-write-conflicts.md), VY-47): ayrı alanlardaki değişiklikler tek kayıtta birleşir;
     aynı alan “İlk / Benim / Tablodaki” değerleriyle sorulur, seçilmeden yazılmaz.
+  - **Tablodan Formla düzenle** (23 Kasım, değerlendirmenin 27. maddesi;
+    [ADR 9149](../adr/9149-form-edit-from-a-table-row.md), VY-48): tabloda seçilen veri satırı formun kaydıdır; alınmış
+    satır ikinci kez alınmaz; işlem aracında seçimi yalnız ilk nesne girdisi alır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
