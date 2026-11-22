@@ -37,6 +37,7 @@ fn build_pattern(
         plot_scale: scale,
         screen: false,
         hairlines: false,
+        screen_widths: false,
         clip: None,
         library: &library,
         layer_name: &|_| "A".into(),

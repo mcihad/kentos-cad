@@ -81,6 +81,10 @@ pub struct Env<'a> {
     /// of drawn sizes (widths, dashes, marker and hatch sizes) become CSS px for the shader, so they stay
     /// the same while the view zooms; lengths that place geometry still follow `plot_scale` (the view's).
     pub screen: bool,
+    /// A data layer's line widths on the model screen (docs/adr/9115): a stroke's paper millimetres (its width, dashes
+    /// and blur) become CSS px, so its lines keep their paper width zoomed out too instead of thinning with the world
+    /// to a faint pixel; marker and hatch sizes stay on paper.
+    pub screen_widths: bool,
     /// The build's `View::cad_phase` (docs/adr/1122): a CAD line type's dash along the source curve.
     pub cad_phase: bool,
     /// The time slider's moment (ms since 1970) a raster following it shows (docs/adr/0243 §7): an
@@ -373,7 +377,12 @@ fn turned_text(st: &MarkerStyle) -> MarkerStyle {
 pub(super) fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Option<StrokeStyle> {
     let color = dd_color(&layer.color, t).filter(|c| !c.is_empty())?;
     let unit = layer.base.unit;
-    let (width, width_unit) = to_drawn(dd_number(&layer.width, t, 0.0), unit, env);
+    let width = dd_number(&layer.width, t, 0.0);
+    let (width, width_unit) = if env.screen_widths && unit == Unit::Mm {
+        (to_px(width, unit), PrimUnit::Px)
+    } else {
+        to_drawn(width, unit, env)
+    };
     let len = |v: f64| {
         if width_unit == PrimUnit::Px {
             to_px(v, unit)

@@ -229,8 +229,8 @@ Bütün kent, ilçe, mahalle ve sokak ölçeğinde ve bir kaydırmada katmanlar 
 - **Göreli yol:** `relative` sözleşmede ve dosyada var. Masaüstünün bunu yazması ve dosya taşınınca çözmesi VY-09'da.
 - **SQL sorgusundan yapılan katman** kaynağında canlı okunur ve salt okunurdur (VY-16,
   [ADR 9113](9113-query-layers.md)).
-- **Küçük ölçekte ince çizgiler:** kâğıt kalınlıkları yüzünden çizgiler soluk görünüyor; ölçeğe bağlı kalınlık stil
-  işi.
+- **Küçük ölçekte ince çizgiler:** veri katmanının çizgileri model ekranında kâğıt kalınlıklarını her ölçekte korur
+  (VY-18, [ADR 9115](9115-data-layer-line-widths.md)).
 
 ## Uygulama
 

@@ -225,5 +225,9 @@ ve donmuş web işi (ADR 0228) kapsam dışıdır. Akış aynı: araştırma, AD
   - Düzenlemede yazı olarak alınır, kaydedilince satırına döner. Yazı aracıyla yeni yazı eklenir.
   - Ölçü hâlâ reddedilir. Yazının stili, zemini, eğrisi gibi tablonun tutmadıkları uyarıyla söylenir.
   - Gerçek pencerede 20 direk ve 22 yazı: harita taşımadan sonra aynı; dosyayı başka bir CBS'nin kitaplığı da okudu.
-- [ ] **VY-18 — Küçük ölçekte ince çizgiler.** Veri katmanının çizgileri küçük ölçekte de görünür kalınlıkta çizilir
-  (ölçeğe bağlı kalınlık).
+- [x] **VY-18 — Küçük ölçekte ince çizgiler.** ([ADR 9115](../docs/adr/9115-data-layer-line-widths.md))
+  - Model ekranında veri katmanının çizgileri kâğıt kalınlıklarını her ölçekte korur. Stil çekirdeği kâğıt
+    milimetrelerini piksel olarak çizer; uzaklaşınca dünyayla incelip soluk bir piksele inmezler. Yakınlaşınca model
+    ekranı onları zaten tutuyordu.
+  - Çizim katmanları, işaretler, taramalar, pafta ve PDF değişmedi.
+  - Gerçek pencerede bir milyon parsel: kent ve ilçe ölçeğinde yollar önce kayboluyordu, şimdi belirgin.

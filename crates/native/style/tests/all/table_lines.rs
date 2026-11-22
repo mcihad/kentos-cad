@@ -44,6 +44,7 @@ fn batches(e: &Entity) -> (usize, usize) {
         plot_scale: 1000.0,
         screen: false,
         hairlines: false,
+        screen_widths: false,
         clip: None,
         library: &library,
         layer_name: &names,

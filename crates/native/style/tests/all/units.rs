@@ -126,6 +126,7 @@ fn build(renderer: &Value, list: &[&Entity], reading: ReadingUnit, view: bool) -
         plot_scale: 1000.0,
         screen: false,
         hairlines: false,
+        screen_widths: false,
         clip: view.then_some(Bounds {
             min_x: 0.0,
             min_y: 0.0,

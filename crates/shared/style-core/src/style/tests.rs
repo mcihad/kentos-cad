@@ -41,6 +41,7 @@ fn units_turn_paper_mm_into_metres_and_keep_px_for_drawn_sizes() {
         plot_scale,
         aspects: &aspects,
         screen: false,
+        screen_widths: false,
         cad_phase: false,
         moment: None,
     };
@@ -62,6 +63,7 @@ fn screen_sized_symbols_draw_paper_mm_as_px_and_keep_placement_in_metres() {
         plot_scale: 2000.0,
         aspects: &aspects,
         screen: true,
+        screen_widths: false,
         cad_phase: false,
         moment: None,
     };
@@ -72,6 +74,56 @@ fn screen_sized_symbols_draw_paper_mm_as_px_and_keep_placement_in_metres() {
     // Map units stay metres; placing lengths follow the view's scale.
     assert_eq!(to_drawn(3.0, Unit::M, &env), (3.0, PrimUnit::World));
     assert_eq!(to_world(1.0, Unit::Mm, &env), 2.0);
+}
+
+/// docs/adr/9115: a data layer's lines on the model screen keep their paper width at every scale: a stroke's paper mm
+/// (its width and dashes) go to the shader in px; a width in metres stays on the ground, and without the flag a paper
+/// width thins with the world as before.
+#[test]
+fn a_data_layers_line_widths_on_the_model_screen_are_drawn_in_px() {
+    use super::compile::{Values, stroke_style};
+    use super::model::{Base, Dd, SimpleLine};
+    struct Nothing;
+    impl Values for Nothing {
+        fn number(&self, _: usize) -> Option<f64> {
+            None
+        }
+        fn text(&self, _: usize) -> Option<String> {
+            None
+        }
+        fn truth(&self, _: usize) -> Option<bool> {
+            None
+        }
+    }
+    let line = |unit: Unit, width: f64| SimpleLine {
+        base: Base { enabled: None, opacity: None, unit, effects: None },
+        color: Some(Dd::Fixed("#C0392B".into())),
+        width: Some(Dd::Fixed(width)),
+        dash: Some(vec![2.0, 1.0]),
+        dash_offset: None,
+        line_type_loss: None,
+        cad_marks: None,
+        cap: None,
+        join: None,
+        offset: None,
+        rings: None,
+        wave: None,
+        blur: None,
+        shift: None,
+    };
+    let aspects = HashMap::new();
+    let env = |screen_widths| Env { plot_scale: 1000.0, aspects: &aspects, screen: false, screen_widths, cad_phase: false, moment: None };
+    // 0.7 mm: 2.65 px whatever the scale; its dashes too.
+    let st = stroke_style(&line(Unit::Mm, 0.7), 0.0, &Nothing, &env(true)).expect("a stroke");
+    assert!(close(st.width, 0.7 / super::compile::MM_PER_PX) && st.unit == PrimUnit::Px, "{} {:?}", st.width, st.unit);
+    let dash = st.dash.expect("dashes");
+    assert!(close(dash[0], 2.0 / super::compile::MM_PER_PX) && close(dash[1], 1.0 / super::compile::MM_PER_PX));
+    // A width on the ground stays in metres.
+    let st = stroke_style(&line(Unit::M, 0.7), 0.0, &Nothing, &env(true)).expect("a stroke");
+    assert!(close(st.width, 0.7) && st.unit == PrimUnit::World);
+    // Without the flag (a drawing layer, a sheet): paper mm in the world, 0.7 m at 1:1000.
+    let st = stroke_style(&line(Unit::Mm, 0.7), 0.0, &Nothing, &env(false)).expect("a stroke");
+    assert!(close(st.width, 0.7) && st.unit == PrimUnit::World);
 }
 
 #[test]

@@ -1075,6 +1075,7 @@ mod tests {
             plot_scale: 50.,
             aspects,
             screen: false,
+            screen_widths: false,
             cad_phase: false,
             moment: None,
         }

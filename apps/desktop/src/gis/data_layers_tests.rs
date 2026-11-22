@@ -189,6 +189,17 @@ pub(crate) fn read_whole_as(
     layer: &LayerNode,
     editing: bool,
 ) -> Option<(String, u64, Box<kentos_domain::Document>)> {
+    read_with(view, app, layer, editing, false)
+}
+
+/// The read drawn with the look of the model screen (`hold`: paper widths held, docs/adr/0793 §1) or of paper.
+fn read_with(
+    view: &crate::data_view::DataView,
+    app: &crate::app::App,
+    layer: &LayerNode,
+    editing: bool,
+    hold: bool,
+) -> Option<(String, u64, Box<kentos_domain::Document>)> {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let look = kentos_plot::layers::Look {
         line_types: Default::default(),
@@ -196,7 +207,7 @@ pub(crate) fn read_whole_as(
         symbol_scale: 1000.0,
         screen: false,
         hairlines: false,
-        hold_weights: false,
+        hold_weights: hold,
         origin: kentos_render_wgpu::scene::scene_origin(app.document.as_ref().expect("a drawing")),
         view_build: Default::default(),
         view_colors: Default::default(),
@@ -219,6 +230,43 @@ pub(crate) fn read_whole_as(
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
     labels.or_else(|| view.take_labels().into_iter().next())
+}
+
+/// docs/adr/9115: on the model screen a data layer's lines keep their paper width at every scale (drawn in px, not
+/// thinning with the world to a faint pixel); on paper (a sheet's map, the PDF) they stay in the world.
+#[test]
+fn a_data_layers_lines_keep_their_paper_width_on_the_model_screen() {
+    crate::data_layers::register();
+    let path = parcels("kalinlik", 40);
+    let address = path.display().to_string();
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
+        .expect("added");
+    let layer = node(&app, "parseller").expect("the layer").clone();
+    let units = |hold: bool| {
+        let view = crate::data_view::DataView::new();
+        let _ = read_with(&view, &app, &layer, false, hold);
+        let mut strokes = Vec::new();
+        for part in view.parts(&layer.id) {
+            for b in &part.layer.batches {
+                if let kentos_native_style::batches::BatchKind::Stroke { unit, width, .. } = &b.kind {
+                    strokes.push((*unit, *width));
+                }
+            }
+        }
+        strokes
+    };
+    let screen = units(true);
+    assert!(!screen.is_empty(), "the parcels' outlines are drawn");
+    // The layer's pen (a new data layer's 0.18 mm: 0.68 px) whatever the zoom.
+    let px = layer.style.line_weight / (25.4 / 96.0);
+    assert!(
+        screen.iter().all(|(u, w)| *u == kentos_native_style::batches::Unit::Px && (w - px).abs() < 1e-9),
+        "{screen:?}, want {px} px"
+    );
+    let paper = units(false);
+    assert!(paper.iter().all(|(u, _)| *u == kentos_native_style::batches::Unit::World), "{paper:?}");
+    let _ = std::fs::remove_file(&path);
 }
 
 #[test]

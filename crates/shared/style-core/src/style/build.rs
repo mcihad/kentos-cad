@@ -277,6 +277,8 @@ pub struct Program {
     /// Line weights hidden (Kalınlık off): every line one pixel, a
     /// dimension's own weights too (docs/adr/0205 §6).
     hairlines: bool,
+    /// A data layer's line widths on the model screen, in px (docs/adr/9115).
+    screen_widths: bool,
     /// The fields any expression reads, in order of first use.
     pub fields: Vec<String>,
     /// Each expression's fields as slots of `fields`.
@@ -352,6 +354,8 @@ impl Program {
         };
         let aspects = aspects_of(v.get("assets"));
         let hairlines = matches!(v.get("hairlines"), Json::Bool(true));
+        // A data layer's line widths on the model screen (docs/adr/9115).
+        let screen_widths = matches!(v.get("screenWidths"), Json::Bool(true));
         let mut fields: Vec<String> = Vec::new();
         let mut index: HashMap<String, usize> = HashMap::new();
         let mut needs = Needs::default();
@@ -379,6 +383,7 @@ impl Program {
             colors,
             aspects,
             hairlines,
+            screen_widths,
             fields,
             slots,
             needs,
@@ -693,6 +698,7 @@ pub fn build_layer_in(
         plot_scale,
         aspects: &program.aspects,
         screen,
+        screen_widths: program.screen_widths,
         cad_phase: view.cad_phase,
         moment: store.time_window().map(|w| match w {
             kentos_geometry_core::time::Window::Instant(a) => a,
@@ -2496,6 +2502,7 @@ pub fn compile_one(v: &Json) -> Result<String, String> {
         plot_scale: values.scale,
         aspects: &aspects,
         screen: false,
+        screen_widths: false,
         // A preview may ask for the drawing's CAD dash (`"cadPhase": true`, docs/adr/1122).
         cad_phase: matches!(v.get("cadPhase"), Json::Bool(true)),
         moment: None,

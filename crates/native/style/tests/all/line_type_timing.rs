@@ -50,6 +50,7 @@ fn build(
         plot_scale: 500.0,
         screen: false,
         hairlines: false,
+        screen_widths: false,
         clip: None,
         library: &library,
         layer_name: &names,

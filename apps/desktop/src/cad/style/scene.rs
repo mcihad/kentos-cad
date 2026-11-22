@@ -771,6 +771,9 @@ impl StyledCache {
                 plot_scale: look.symbol_scale,
                 screen: look.screen,
                 hairlines: look.hairlines,
+                // A data layer's rows taken into the drawing (its edit session) draw as its read rows do: their lines
+                // keep their paper width on the model screen at every scale (docs/adr/9115).
+                screen_widths: look.hold_weights && node.data.is_some(),
                 clip: Some(framed.map_or(clip, |f| f.0)),
                 library,
                 layer_name: &|id: &str| {

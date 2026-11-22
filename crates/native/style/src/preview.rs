@@ -218,6 +218,7 @@ pub fn preview(
         plot_scale: 1000.0,
         screen: false,
         hairlines: false,
+        screen_widths: false,
         clip: None,
         library,
         layer_name: &|_| "Önizleme".to_owned(),
