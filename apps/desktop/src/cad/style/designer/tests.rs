@@ -589,6 +589,38 @@ fn ctrl_z_and_ctrl_y_undo_and_redo_in_the_designer() {
     assert!(designer(&app).asking);
 }
 
+/// The chosen layer's own keys: Ctrl+↑ and Ctrl+↓ move it, Ctrl+D copies it, Delete removes it unless a field
+/// holds the keyboard (the key is then the field's).
+#[test]
+fn the_chosen_layer_moves_copies_and_goes_by_its_keys() {
+    use iced::keyboard::key::Named;
+    use iced::keyboard::{Key, Modifiers};
+    let (mut app, _dir) = with_manager("katman-tuslari");
+    sm(&mut app, ManagerEvent::NewSymbol("fill"));
+    de(&mut app, Event::Add("hatchFill", None));
+    assert_eq!(types(&app), ["simpleFill", "hatchFill"]);
+    press(&mut app, Key::Named(Named::ArrowUp), Modifiers::CTRL, None);
+    assert_eq!(types(&app), ["hatchFill", "simpleFill"], "Ctrl+↑ draws the hatch first");
+    press(&mut app, Key::Named(Named::ArrowUp), Modifiers::CTRL, None);
+    assert_eq!(types(&app), ["hatchFill", "simpleFill"], "already the first");
+    press(&mut app, Key::Named(Named::ArrowDown), Modifiers::CTRL, None);
+    assert_eq!(types(&app), ["simpleFill", "hatchFill"]);
+    press(&mut app, Key::Character("d".into()), Modifiers::CTRL, Some("\u{4}"));
+    assert_eq!(types(&app), ["simpleFill", "hatchFill", "hatchFill"]);
+    // Delete's focus check runs as the window's operation; its answer comes back as the event.
+    let busy = super::Focus { id: None, any: true };
+    de(&mut app, Event::DeleteKey(busy));
+    assert_eq!(types(&app).len(), 3, "a field holding the keyboard keeps its Delete");
+    let free = super::Focus { id: None, any: false };
+    de(&mut app, Event::DeleteKey(free.clone()));
+    assert_eq!(types(&app), ["simpleFill", "hatchFill"]);
+    de(&mut app, Event::DeleteKey(free.clone()));
+    de(&mut app, Event::DeleteKey(free));
+    assert_eq!(types(&app).len(), 1, "the last layer stays");
+    press(&mut app, Key::Character("z".into()), Modifiers::CTRL, Some("\u{1a}"));
+    assert_eq!(types(&app).len(), 2, "each key is one step of the history");
+}
+
 /// An ƒ value's expression: Ekle ▾ puts fields, variables and functions where the text ends; ε opens
 /// the İfade oluşturucu on it and Tamam writes the text back with the fallback kept.
 #[test]

@@ -10,7 +10,7 @@ use kentos_svg_core::model::shapes_box;
 use kentos_svg_core::shape::Obj;
 use kentos_ui::icon::Icon;
 
-use super::{Opt, act, act_sized, group, num, seg, spec};
+use super::{Opt, act, group, num, seg, spec};
 use crate::app::Message;
 use crate::style::fields;
 use crate::style::svgedit::change;
@@ -246,14 +246,7 @@ pub(super) fn box_fields<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Message
             },
         )
     };
-    let lock = ed.ui.box_lock;
-    let lock_btn = act_sized(
-        if lock { Icon::Lock } else { Icon::Unlock },
-        "Oranı koru",
-        Some(change(move |ed| ed.ui.box_lock = !lock)),
-        lock,
-        14.0,
-    );
+    // The ratio's switch under the sizes, as on Dönüştür: the four fields keep one grid.
     group(
         "Kutu",
         vec![
@@ -261,16 +254,11 @@ pub(super) fn box_fields<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Message
                 n("bx", "X", b.min_x, f64::NEG_INFINITY),
                 n("by", "Y", b.min_y, f64::NEG_INFINITY),
             ),
-            row![
-                container(n("bw", "Genişlik", b.max_x - b.min_x, 0.001)).width(Fill),
-                container(lock_btn).padding(iced::Padding {
-                    top: 18.0,
-                    ..iced::Padding::ZERO
-                }),
-                container(n("bh", "Yükseklik", b.max_y - b.min_y, 0.001)).width(Fill),
-            ]
-            .spacing(6)
-            .into(),
+            fields::pair(
+                n("bw", "Genişlik", b.max_x - b.min_x, 0.001),
+                n("bh", "Yükseklik", b.max_y - b.min_y, 0.001),
+            ),
+            super::check(ed.ui.box_lock, "Oranı koru", |ed, v| ed.ui.box_lock = v),
             fields::labelled(
                 "Döndür",
                 row![

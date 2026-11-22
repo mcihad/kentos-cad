@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use iced::widget::tooltip::Position;
 use iced::widget::{button, column, row};
-use iced::{Center, Element, Fill};
+use iced::Element;
 use kentos_expression::js::number;
 use kentos_native_style::designer::{Choice, LayerPath, Patch, js_value, set};
 use kentos_ui::label;
@@ -117,38 +117,37 @@ pub(super) fn number_row<'a>(env: &Env<'_>, key: &str) -> Element<'a, Message> {
 
 // ── Values that may come from each object's data ──────────────────────
 
-/// An expression field in place of a value, with its ƒ pressed (`dataDefined`
+/// An expression field in place of a value, and its ƒ pressed for the label line (`dataDefined`
 /// switched on): typing keeps the fallback; ƒ goes back to the fallback, or to
 /// `plain` when there is none.
-fn expression<'a>(env: &Env<'_>, key: &'static str, plain: Value) -> Element<'a, Message> {
+fn expression<'a>(
+    env: &Env<'_>,
+    key: &'static str,
+    plain: Value,
+) -> (Element<'a, Message>, Element<'a, Message>) {
     let (text, fallback) = expr_of(env.layer.get(key)).unwrap_or(("", None));
     let fallback = fallback.cloned();
     let at = env.at;
     let back = fallback.clone().unwrap_or(plain);
     let kept = fallback.clone();
-    expression_block(
-        env,
-        key,
-        text,
-        move |t| {
-            let mut v = json!({ "expr": t });
-            if let (Some(o), Some(f)) = (v.as_object_mut(), &kept) {
-                o.insert("fallback".into(), f.clone());
-            }
-            edit(at, key, None, Some(set(key, v)))
-        },
-        fields::fx(true, edit(at, key, None, Some(set(key, back)))),
-    )
+    let block = expression_block(env, key, text, move |t| {
+        let mut v = json!({ "expr": t });
+        if let (Some(o), Some(f)) = (v.as_object_mut(), &kept) {
+            o.insert("fallback".into(), f.clone());
+        }
+        edit(at, key, None, Some(set(key, v)))
+    });
+    (block, fields::fx_line(true, edit(at, key, None, Some(set(key, back)))))
 }
 
 /// An ƒ value's expression (`key`: the layer's key, or `step.i.field` of a generator's step): its
-/// line with the pressed ƒ beside it, Ekle ▾ and İfade oluşturucu… under it, and the fallback's note.
+/// line, Ekle ▾ and İfade oluşturucu… under it, and the fallback's note. The pressed ƒ is on the
+/// field's label line (`fields::labelled_with`).
 pub(super) fn expression_block<'a>(
     env: &Env<'_>,
     key: &str,
     text: &str,
     on_input: impl Fn(String) -> Message + 'a,
-    fx: Element<'a, Message>,
 ) -> Element<'a, Message> {
     let at = env.at;
     let (k1, k2) = (key.to_owned(), key.to_owned());
@@ -168,7 +167,7 @@ pub(super) fn expression_block<'a>(
         env.builder.then(|| ev(Event::OpenBuilder { at, key: k2 })),
     );
     column![
-        row![line, fx].spacing(6).align_y(Center),
+        line,
         aids,
         fields::hint("İfade boş sonuç verirse sabit değer kullanılır.")
     ]
@@ -176,10 +175,10 @@ pub(super) fn expression_block<'a>(
     .into()
 }
 
-/// The ƒ switch beside a plain value: pressed, the value becomes an
+/// The ƒ switch of a plain value, on its label line: pressed, the value becomes an
 /// expression whose fallback is the value; the expression field takes the keyboard.
 fn fx_on<'a>(env: &Env<'_>, key: &'static str, current: Value) -> Element<'a, Message> {
-    fields::fx(
+    fields::fx_line(
         false,
         ev(Event::Edit(Edit {
             at: env.at,
@@ -199,16 +198,13 @@ pub(super) fn dd_number<'a>(
 ) -> Element<'a, Message> {
     let label = numbers::spec_of(env.layer, key).map_or("", |s| s.label);
     let v = env.layer.get(key);
-    let control = if expr_of(v).is_some() {
+    let (control, fx) = if expr_of(v).is_some() {
         expression(env, key, js_value(fallback))
     } else {
         let current = v.cloned().unwrap_or_else(|| js_value(fallback));
-        row![number_control(env, key), fx_on(env, key, current)]
-            .spacing(6)
-            .align_y(Center)
-            .into()
+        (number_control(env, key), fx_on(env, key, current))
     };
-    fields::labelled(label, control, None)
+    fields::labelled_with(label, control, None, Some(fx))
 }
 
 /// A colour that is set as the text says: a valid one is taken (hex upper-cased),
@@ -270,27 +266,17 @@ pub(super) fn dd_color<'a>(
     } else {
         Value::from("ink")
     };
-    let control = if expr_of(v).is_some() {
+    let (control, fx) = if expr_of(v).is_some() {
         expression(env, key, plain)
     } else {
         let current = v.cloned().unwrap_or(Value::Null);
         let value = v.and_then(Value::as_str);
-        row![
-            color_control(
-                env,
-                key,
-                label,
-                none,
-                move |t| color_patch(key, t, none),
-                value
-            ),
-            fx_on(env, key, current)
-        ]
-        .spacing(6)
-        .align_y(Center)
-        .into()
+        (
+            color_control(env, key, label, none, move |t| color_patch(key, t, none), value),
+            fx_on(env, key, current),
+        )
     };
-    fields::labelled(label.to_owned(), control, None)
+    fields::labelled_with(label.to_owned(), control, None, Some(fx))
 }
 
 /// A text that may come from each object's data (Metin).
@@ -301,50 +287,44 @@ pub(super) fn dd_text<'a>(
     hint: &str,
 ) -> Element<'a, Message> {
     let v = env.layer.get(key);
-    let control = if expr_of(v).is_some() {
+    let (control, fx) = if expr_of(v).is_some() {
         expression(env, key, Value::from(""))
     } else {
         let at = env.at;
         let text = v.and_then(Value::as_str).unwrap_or("");
         let current = v.cloned().unwrap_or_else(|| Value::from(""));
-        row![
+        (
             fields::text(field_id(key), text, "", false, move |t| {
                 edit(at, key, None, Some(set(key, Value::from(t))))
             }),
-            fx_on(env, key, current)
-        ]
-        .spacing(6)
-        .align_y(Center)
-        .into()
+            fx_on(env, key, current),
+        )
     };
-    fields::labelled(label.to_owned(), control, Some(hint))
+    fields::labelled_with(label.to_owned(), control, Some(hint), Some(fx))
 }
 
 /// Görünür: drawn or not, or by a condition (`dataDefined` of `enabled`).
 pub(super) fn dd_enabled<'a>(env: &Env<'_>) -> Element<'a, Message> {
     const KEY: &str = "enabled";
     let v = env.layer.get(KEY);
-    let control = if expr_of(v).is_some() {
+    let (control, fx) = if expr_of(v).is_some() {
         expression(env, KEY, Value::Bool(true))
     } else {
         let on = v.and_then(Value::as_bool).unwrap_or(true);
-        row![
-            iced::widget::container(fields::check(
+        (
+            fields::check(
                 Check::from(on),
                 "Çizilsin",
                 Some(edit(env.at, KEY, None, Some(set(KEY, Value::Bool(!on))))),
-            ))
-            .width(Fill),
-            fx_on(env, KEY, Value::Bool(on))
-        ]
-        .spacing(6)
-        .align_y(Center)
-        .into()
+            ),
+            fx_on(env, KEY, Value::Bool(on)),
+        )
     };
-    fields::labelled(
+    fields::labelled_with(
         "Görünür",
         control,
         Some("ƒ ile koşula bağlanabilir: ör. [Nitelik] = 'Arsa'"),
+        Some(fx),
     )
 }
 

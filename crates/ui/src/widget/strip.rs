@@ -28,6 +28,30 @@ pub fn strip<'a, Message: Clone + 'a>(items: Vec<Element<'a, Message>>) -> Eleme
     )
 }
 
+/// A strip with two ends: the work's controls from the left (history, files, menus), the view's at the right (the
+/// aids and the zoom). On a narrow window the left end wraps group after group while the right end stays on the first
+/// line, so the view's controls are always where the eye expects them.
+pub fn ends<'a, Message: Clone + 'a>(
+    left: Vec<Element<'a, Message>>,
+    right: Vec<Element<'a, Message>>,
+) -> Element<'a, Message> {
+    surface(
+        row![
+            container(
+                Row::with_children(left)
+                    .spacing(1)
+                    .align_y(Center)
+                    .wrap()
+                    .vertical_spacing(4)
+            )
+            .width(Fill),
+            Row::with_children(right).spacing(1).align_y(Center),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Top),
+    )
+}
+
 /// A row laid out by its window (a chooser left, the zoom right) on the strip's surface: the panel
 /// headers' ground, so the strip reads apart from the canvas under it and the panels beside it.
 pub fn surface<'a, Message: Clone + 'a>(content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {

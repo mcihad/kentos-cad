@@ -122,37 +122,27 @@ pub(super) fn layer_list(d: &Designer) -> Element<'_, Message> {
     };
     let at = d.selected;
     let exists = model::layer_at(symbol, at).is_some();
+    // The chosen layer's own actions; the window's history is on the preview's bar.
     let tools = row![
         tool(
             "chevronUp",
-            "Yukarı taşı (önce çizilir)",
+            "Yukarı taşı: Önce çizilir (Ctrl+↑)",
             can_move(symbol, at, -1).then(|| ev(Event::Up))
         ),
         tool(
             "chevronDown",
-            "Aşağı taşı (sonra çizilir)",
+            "Aşağı taşı: Sonra çizilir (Ctrl+↓)",
             can_move(symbol, at, 1).then(|| ev(Event::Down))
         ),
-        tool("copy", "Çoğalt", exists.then(|| ev(Event::Duplicate))),
+        tool("copy", "Çoğalt: Katmanın kopyası altına eklenir (Ctrl+D)", exists.then(|| ev(Event::Duplicate))),
         tool(
             "trash",
             if can_remove(symbol, at) || !exists {
-                "Sil"
+                "Sil: Seçili katmanı siler (Delete)"
             } else {
-                "Sil: sembolün en az bir katmanı olmalı"
+                "Sil: Sembolün en az bir katmanı olmalı"
             },
             can_remove(symbol, at).then(|| ev(Event::Remove))
-        ),
-        space::horizontal(),
-        tool(
-            "undo",
-            "Geri al (Ctrl+Z)",
-            d.can_undo().then(|| ev(Event::Undo))
-        ),
-        tool(
-            "redo",
-            "Yinele (Ctrl+Y)",
-            d.can_redo().then(|| ev(Event::Redo))
         ),
     ]
     .spacing(2)

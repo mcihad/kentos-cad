@@ -268,24 +268,19 @@ fn dd<'a>(env: &Env<'_>, i: usize, field: &str, fallback: f64) -> Element<'a, Me
         set("steps", next.get("steps").cloned().unwrap_or(Value::Null))
     };
     let v = v.as_ref();
-    let control: Element<'a, Message> = if let Some((text, fb)) = expr_of(v) {
+    let (control, fx): (Element<'a, Message>, Element<'a, Message>) = if let Some((text, fb)) = expr_of(v) {
         let fallback_value = fb.cloned();
         let back = fallback_value.clone().unwrap_or_else(|| js_value(fallback));
         let with_line = with.clone();
         let line_key = key.clone();
-        expression_block(
-            env,
-            &key,
-            text,
-            move |t| {
-                let mut e = json!({ "expr": t });
-                if let (Some(o), Some(f)) = (e.as_object_mut(), &fallback_value) {
-                    o.insert("fallback".into(), f.clone());
-                }
-                edit(at, &line_key, None, Some(with_line(e)))
-            },
-            fields::fx(true, edit(at, &key, None, Some(with(back)))),
-        )
+        let block = expression_block(env, &key, text, move |t| {
+            let mut e = json!({ "expr": t });
+            if let (Some(o), Some(f)) = (e.as_object_mut(), &fallback_value) {
+                o.insert("fallback".into(), f.clone());
+            }
+            edit(at, &line_key, None, Some(with_line(e)))
+        });
+        (block, fields::fx_line(true, edit(at, &key, None, Some(with(back)))))
     } else {
         let current = v
             .cloned()
@@ -297,12 +292,9 @@ fn dd<'a>(env: &Env<'_>, i: usize, field: &str, fallback: f64) -> Element<'a, Me
             patch: Some(with(json!({ "expr": "", "fallback": current }))),
             focus: Some(format!("{key}:expr")),
         }));
-        row![number_control(env, &key), fields::fx(false, fx)]
-            .spacing(6)
-            .align_y(Center)
-            .into()
+        (number_control(env, &key), fields::fx_line(false, fx))
     };
-    fields::labelled(label.to_owned(), control, None)
+    fields::labelled_with(label.to_owned(), control, None, Some(fx))
 }
 
 /// A step's choice (Köşeler, Yan), written into the step.
@@ -403,10 +395,21 @@ fn step_fields<'a>(env: &Env<'_>, i: usize, st: &Value) -> Vec<Element<'a, Messa
     }
 }
 
-/// The layer's draw effects (`effectsForm`): each type's switch, its values when it is on.
+/// The layer's draw effects (`effectsForm`): each type's switch, its values when it is on. The switches of the
+/// effects that are off stand two to a row; an effect that is on takes its row and its values follow it.
 pub(super) fn effects<'a>(env: &Env<'_>) -> Element<'a, Message> {
     let l = env.layer;
     let mut rows: Vec<Element<'a, Message>> = vec![fields::group_title(texts::EFFECTS)];
+    let mut off: Vec<Element<'a, Message>> = Vec::new();
+    let flush = |off: &mut Vec<Element<'a, Message>>, rows: &mut Vec<Element<'a, Message>>| {
+        let mut it = std::mem::take(off).into_iter();
+        while let Some(a) = it.next() {
+            rows.push(match it.next() {
+                Some(b) => fields::pair(a, b),
+                None => fields::pair(a, iced::widget::space()),
+            });
+        }
+    };
     for kind in EFFECT_TYPES {
         let e = effect_of(l, kind);
         let on = e.is_some_and(|e| e.get("enabled") != Some(&Value::Bool(false)));
@@ -416,14 +419,13 @@ pub(super) fn effects<'a>(env: &Env<'_>) -> Element<'a, Message> {
             None,
             Some(numbers::effects_patch(&set_effect(l, kind, !on))),
         );
-        rows.push(fields::check(
-            Check::from(on),
-            effect_label(kind),
-            Some(toggle),
-        ));
+        let switch = fields::check(Check::from(on), effect_label(kind), Some(toggle));
         let Some(e) = e.filter(|_| on) else {
+            off.push(switch);
             continue;
         };
+        flush(&mut off, &mut rows);
+        rows.push(switch);
         let mut own: Vec<Element<'a, Message>> = Vec::new();
         let n = |field: &str| number_row(env, &format!("fx.{kind}.{field}"));
         let color = {
@@ -470,5 +472,6 @@ pub(super) fn effects<'a>(env: &Env<'_>) -> Element<'a, Message> {
                 .into(),
         );
     }
+    flush(&mut off, &mut rows);
     Column::with_children(rows).spacing(8).width(Fill).into()
 }

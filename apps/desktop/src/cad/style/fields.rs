@@ -26,6 +26,11 @@ pub type Choice = (&'static str, &'static str);
 
 /// A control's height at the default text size (the web's `--ctl-h`).
 const CONTROL: f32 = 26.0;
+/// A label line's height at the default text size: the label and, at its end, the ƒ switch. Every label line has it,
+/// so the controls of two fields side by side start on one line whether or not one of them has ƒ.
+const LABEL_LINE: f32 = 18.0;
+/// The room a unit takes after a number (mm, °, %, adet): numbers under one another line up whatever their unit.
+const UNIT_SLOT: f32 = 28.0;
 
 /// A labelled row: the label on top, the control below and a hint under it (`row`).
 pub fn labelled<'a, M: 'a>(
@@ -33,12 +38,27 @@ pub fn labelled<'a, M: 'a>(
     control: impl Into<Element<'a, M>>,
     hint: Option<&str>,
 ) -> Element<'a, M> {
-    let mut parts = column![
+    labelled_with(label, control, hint, None)
+}
+
+/// A labelled row with a switch at the end of its label line (the ƒ of a value that may come from each object's
+/// data): the control keeps the column's whole width, so the fields beside and under it line up.
+pub fn labelled_with<'a, M: 'a>(
+    label: impl Into<String>,
+    control: impl Into<Element<'a, M>>,
+    hint: Option<&str>,
+    tail: Option<Element<'a, M>>,
+) -> Element<'a, M> {
+    let mut head = row![
         label::caption(label.into()).style(style::text::muted),
-        control.into()
+        space::horizontal()
     ]
-    .spacing(4)
-    .width(Fill);
+    .align_y(Center)
+    .height(typography::scaled(LABEL_LINE));
+    if let Some(t) = tail {
+        head = head.push(t);
+    }
+    let mut parts = column![head, control.into()].spacing(4).width(Fill);
     if let Some(h) = hint {
         parts = parts.push(self::hint(h));
     }
@@ -118,7 +138,10 @@ pub fn number<'a, M: Clone + 'a>(
         .on_input(on_input)
         .on_submit(on_submit);
     match unit_text {
-        Some(u) => row![field, unit(u)].spacing(6).align_y(Center).into(),
+        Some(u) => row![field, container(unit(u)).width(typography::scaled(UNIT_SLOT))]
+            .spacing(6)
+            .align_y(Center)
+            .into(),
         None => field.into(),
     }
 }
@@ -189,11 +212,13 @@ pub fn check<'a, M: Clone + 'a>(
         .into()
 }
 
-/// The “ƒ” switch of a value that may come from each object's data: pressed,
-/// the value is an expression.
-pub fn fx<'a, M: Clone + 'a>(on: bool, press: M) -> Element<'a, M> {
+/// The “ƒ” switch of a value that may come from each object's data, at the end of the field's label line
+/// (`labelled_with`): pressed, the value is an expression.
+pub fn fx_line<'a, M: Clone + 'a>(on: bool, press: M) -> Element<'a, M> {
+    let side = LABEL_LINE;
     let face = container(
         label::body("ƒ")
+            .size(typography::caption())
             .font(typography::ui_strong())
             .style(move |t: &Theme| iced::widget::text::Style {
                 color: Some(if on {
@@ -203,8 +228,8 @@ pub fn fx<'a, M: Clone + 'a>(on: bool, press: M) -> Element<'a, M> {
                 }),
             }),
     )
-    .center_x(typography::scaled(CONTROL))
-    .center_y(typography::scaled(CONTROL));
+    .center_x(typography::scaled(side))
+    .center_y(typography::scaled(side));
     tip(
         button(face)
             .on_press(press)

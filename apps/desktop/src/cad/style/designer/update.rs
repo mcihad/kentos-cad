@@ -106,7 +106,8 @@ impl App {
         self.close_designer();
     }
 
-    /// Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) and ↑ ↓ while the designer is on top.
+    /// Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z) and ↑ ↓ while the designer is on top; the chosen layer's own keys:
+    /// Ctrl+↑ and Ctrl+↓ move it, Ctrl+D copies it, Delete removes it.
     pub(crate) fn designer_key(&mut self, press: &crate::keys::KeyPress) -> Option<Task<Message>> {
         use iced::keyboard::key::Named;
         let d = self.styles.designer.as_ref()?;
@@ -127,6 +128,16 @@ impl App {
         match crate::keys::chord(press).as_deref() {
             Some("Ctrl+Z") => Some(self.designer_event(Event::Undo)),
             Some("Ctrl+Y" | "Ctrl+Shift+Z") => Some(self.designer_event(Event::Redo)),
+            Some("Ctrl+Up") if model::can_move(&d.draft.symbol, d.selected, -1) => {
+                Some(self.designer_event(Event::Up))
+            }
+            Some("Ctrl+Down") if model::can_move(&d.draft.symbol, d.selected, 1) => {
+                Some(self.designer_event(Event::Down))
+            }
+            Some("Ctrl+D") if model::layer_at(&d.draft.symbol, d.selected).is_some() => {
+                Some(self.designer_event(Event::Duplicate))
+            }
+            Some("Delete") => Some(operate(focused()).map(|focus| ev(Event::DeleteKey(focus)))),
             _ => None,
         }
     }
@@ -254,6 +265,11 @@ impl App {
             Event::Settle(key) => {
                 d.typed.remove(&key);
                 d.last = None;
+            }
+            Event::DeleteKey(focus) => {
+                if !focus.any {
+                    return self.designer_event(Event::Remove);
+                }
             }
             Event::Arrow { up, shift, focus } => match focus.id {
                 Some(id) => d.arrow(up, shift, &id),

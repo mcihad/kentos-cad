@@ -1,9 +1,10 @@
 //! The SVG editor's bar above the canvas (the web's `svgMenus.ts` and the
-//! file buttons of `svgFile.ts`): Dosya, Altlık…, Bitmap izle…, Dışa
-//! aktar… and Kaynak; the Yol (path operations), Nesne (arranging, the
-//! tabs, the order) and Seç (selection helpers) menus; the snapping switch
-//! with its kinds, the rulers' switch, and the zoom. Every entry says its
-//! key; a menu that does not fit the window scrolls.
+//! file buttons of `svgFile.ts`): Geri al and Yinele; Dosya (with Altlık…,
+//! Bitmap izle… and Dışa aktar… in it) and Kaynak; the Yol (path
+//! operations), Nesne (arranging, the tabs, the order) and Seç (selection
+//! helpers) menus; at the bar's right end the snapping switch with its
+//! kinds, the rulers' switch and the zoom. Every entry says its key; a menu
+//! that does not fit the window scrolls.
 
 use iced::Element;
 use kentos_ui::icon::Icon;
@@ -289,36 +290,35 @@ fn snap_menu(ed: &SvgEditor) -> Menu<Message> {
     )
 }
 
-/// The bar over the canvas (style/strip.rs): the file's group, the drawing's menus, then history, the
-/// aids and the zoom; it wraps group after group on a narrow middle.
+/// The bar over the canvas (style/strip.rs), two ends: from the left the history, the file (Dosya ▾ holds Altlık,
+/// Bitmap izle and Dışa aktar with the rest of the file's work) and the source, then the drawing's menus; at the
+/// right the aids (Kenet, Cetvel) and the zoom. On a narrow middle the left end wraps; the right end stays.
 pub fn bar<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
     use crate::style::strip;
     let snap_on = ed.options.snap_objects;
     let rulers_on = ed.options.rulers;
-    let items: Vec<Element<'a, Message>> = vec![
+    let work: Vec<Element<'a, Message>> = vec![
+        strip::icon_button(
+            Icon::Undo,
+            "Geri al (Ctrl+Z)",
+            ed.can_undo().then(|| ev(Event::Undo)),
+        ),
+        strip::icon_button(
+            Icon::Redo,
+            "Yinele (Ctrl+Y)",
+            ed.can_redo().then(|| ev(Event::Redo)),
+        ),
+        strip::divider(),
         strip::menu(
             Icon::Folder,
             "Dosya",
-            "Dosya: Aç, kitaplıktan aç, panodan al, dışa aktar, farklı kaydet, belge özellikleri",
+            "Dosya: Yeni, aç, kitaplıktan aç, panodan al, izleme altlığı, bitmap izle, dışa aktar, farklı kaydet, \
+             belge özellikleri",
             move || files::file_menu(ed),
         ),
-        strip::icon_button(
-            crate::icons::from_web(Some("layers")),
-            "Altlık…: PNG, JPEG ya da SVG görüntüsünü kilitli, yarı saydam izleme altlığı olarak koyar",
-            Some(ev(Event::File(files::Event::Cmd(FileCmd::AddReference)))),
-        ),
-        strip::icon_button(
-            crate::icons::from_web(Some("spline")),
-            "Bitmap izle…: Bir görüntüyü (altlığı ya da dosyayı) delikli yollara çevirir",
-            Some(ev(Event::File(files::Event::Cmd(FileCmd::Trace)))),
-        ),
-        strip::icon_button(
-            Icon::Export,
-            "Dışa aktar…: SVG (sembol ya da düz renkli) ya da PNG olarak kaydet veya panoya kopyala (Ctrl+Shift+E)",
-            Some(ev(Event::File(files::Event::Cmd(FileCmd::Export)))),
-        ),
-        strip::icon_toggle(
-            Icon::Terminal,
+        strip::toggle(
+            Some(Icon::Terminal),
+            "Kaynak",
             "Kaynak: SVG kaynağı; seçilen şeklin öğesi vurgulanır, düzenleyip Uygula ile çizime aktarın (Ctrl+Shift+X)",
             ed.files.source.is_some(),
             ev(Event::File(files::Event::Cmd(FileCmd::ToggleSource))),
@@ -342,18 +342,8 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
             "Seç: Tümünü seç, ters çevir, benzerini seç",
             select_menu,
         ),
-        strip::divider(),
-        strip::icon_button(
-            Icon::Undo,
-            "Geri al (Ctrl+Z)",
-            ed.can_undo().then(|| ev(Event::Undo)),
-        ),
-        strip::icon_button(
-            Icon::Redo,
-            "Yinele (Ctrl+Y)",
-            ed.can_redo().then(|| ev(Event::Redo)),
-        ),
-        strip::divider(),
+    ];
+    let view: Vec<Element<'a, Message>> = vec![
         strip::split_toggle(
             Icon::Magnet,
             "Kenet: Şekillere, kılavuzlara ve tuvale kenetle (%)",
@@ -384,5 +374,5 @@ pub fn bar<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
         strip::icon_button(Icon::ZoomIn, "Yakınlaş (+)", Some(ev(Event::ZoomBy(1.25)))),
         strip::icon_button(Icon::ZoomExtents, "Tuvale sığdır (0)", Some(ev(Event::Fit))),
     ];
-    iced::widget::column![strip::strip(items), strip::rule()].into()
+    iced::widget::column![strip::ends(work, view), strip::rule()].into()
 }

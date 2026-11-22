@@ -9,7 +9,7 @@
 
 use iced::mouse::ScrollDelta;
 use iced::widget::{column, container, mouse_area, responsive, row, scrollable, space, stack};
-use iced::{Border, Center, Color, Element, Fill, Length, Theme};
+use iced::{Border, Color, Element, Fill, Length, Theme};
 use kentos_native_style::designer::{
     self as model, LayerPath, label as layer_label, texts, type_of,
 };
@@ -127,15 +127,15 @@ impl App {
             .into()
     }
 
-    /// The middle: the preview's bar over the picture of the symbol on its
-    /// sample. On a narrow middle (a small window, large text) the scale's
-    /// buttons go under the samples instead of over them.
+    /// The middle: the preview's bar over the picture of the symbol on its sample. The bar has two
+    /// ends (style/strip.rs): the draft's history and the sample objects from the left, the scale at
+    /// the right; on a narrow middle the samples take a line of their own under it.
     fn preview<'a>(&'a self, d: &'a Designer, width: f32) -> Element<'a, Message> {
         let samples: Vec<Sample> = model::geometries(d.kind())
             .iter()
             .map(|(g, l)| Sample(*g, l))
             .collect();
-        let fits = bar_width(&samples, d.px_per_mm) <= width;
+        let fits = bar_width(&samples) <= width;
         let chooser: Element<'a, Message> = if samples.len() > 1 {
             let chosen = samples
                 .iter()
@@ -144,13 +144,33 @@ impl App {
                 .unwrap_or(samples[0]);
             Segmented::new(samples, chosen, |s| ev(Event::Sample(s.0))).into()
         } else {
-            label::caption(texts::ONE_POINT)
-                .style(style::text::muted)
+            container(label::caption(texts::ONE_POINT).style(style::text::muted))
+                .center_y(kentos_ui::theme::metrics::inline())
+                .padding([0, 6])
                 .into()
         };
-        // The scale's controls on the strip (style/strip.rs): −, the scale, +, 1:1.
+        let mut history = vec![
+            strip::icon_button(
+                Icon::Undo,
+                "Geri al (Ctrl+Z)",
+                d.can_undo().then(|| ev(Event::Undo)),
+            ),
+            strip::icon_button(
+                Icon::Redo,
+                "Yinele (Ctrl+Y)",
+                d.can_redo().then(|| ev(Event::Redo)),
+            ),
+        ];
+        let below = if fits {
+            history.push(strip::divider());
+            history.push(chooser);
+            None
+        } else {
+            Some(chooser)
+        };
+        // The scale's controls: −, the scale, +, 1:1.
         let px = d.px_per_mm;
-        let zoom = row![
+        let zoom = vec![
             strip::icon_button(
                 Icon::ZoomOut,
                 "Uzaklaş (tekerlek aşağı)",
@@ -159,7 +179,7 @@ impl App {
             strip::readout(
                 model::zoom_text(px),
                 "Kâğıt milimetresinin ekrandaki boyu",
-                96.0
+                96.0,
             ),
             strip::icon_button(
                 Icon::ZoomIn,
@@ -168,19 +188,7 @@ impl App {
             ),
             strip::divider(),
             strip::text_button("1:1", "Gerçek boyut (96 dpi)", Some(ev(Event::RealSize))),
-        ]
-        .spacing(2)
-        .align_y(Center);
-        let bar: Element<'a, Message> = if fits {
-            row![chooser, space::horizontal(), zoom]
-                .spacing(6)
-                .align_y(Center)
-                .into()
-        } else {
-            column![chooser, row![space::horizontal(), zoom]]
-                .spacing(6)
-                .into()
-        };
+        ];
         let palette = self.style_palette();
         let images = self.styles.images.clone();
         let library = &self.styles.library;
@@ -214,7 +222,11 @@ impl App {
                 ev(Event::Wheel(dy))
             },
         );
-        container(column![strip::surface(bar), strip::rule(), stage])
+        let mut bar = column![strip::ends(history, zoom)];
+        if let Some(c) = below {
+            bar = bar.push(strip::surface(c));
+        }
+        container(column![bar, strip::rule(), stage])
             .width(Fill)
             .height(Fill)
             .style(style::container::field)
@@ -312,20 +324,21 @@ impl App {
     }
 }
 
-/// The width the preview's bar takes on one line: the samples' segmented
-/// control, the scale's buttons and text, their gaps and the bar's padding.
-fn bar_width(samples: &[Sample], _px_per_mm: f64) -> f32 {
+/// The width the preview's bar takes on one line: the history's two buttons and divider, the samples'
+/// segmented control, the scale's buttons and text, their gaps and the bar's padding.
+fn bar_width(samples: &[Sample]) -> f32 {
     let body = typography::body();
     let text = |s: &str| typography::text_width(s, body);
+    let square = kentos_ui::theme::metrics::inline() + 4.0;
     let segments: f32 = if samples.len() > 1 {
         samples.iter().map(|s| text(s.1) + 24.0 + 1.0).sum::<f32>() + 2.0
     } else {
-        typography::text_width(texts::ONE_POINT, typography::caption())
+        typography::text_width(texts::ONE_POINT, typography::caption()) + 12.0
     };
-    // The strip's −, + (square), the scale's box, a divider and 1:1 (style/strip.rs).
-    let buttons = 2.0 * (kentos_ui::theme::metrics::inline() + 4.0) + text("1:1") + 16.0 + 11.0;
-    let scale = typography::scaled(96.0);
-    segments + buttons + scale + 4.0 * 2.0 + 6.0 + 16.0
+    // The strip's ↶ ↷ and divider, −, + (square), the scale's box, a divider and 1:1 (style/strip.rs).
+    let history = 2.0 * square + 7.0;
+    let zoom = 2.0 * square + text("1:1") + 14.0 + 7.0 + typography::scaled(96.0);
+    history + segments + zoom + 2.0 * 6.0 + 8.0 + 16.0
 }
 
 /// The symbol's own colours, each once: offered under the colour picker.

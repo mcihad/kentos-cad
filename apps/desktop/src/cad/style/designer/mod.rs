@@ -136,6 +136,8 @@ pub enum Event {
         shift: bool,
         focus: Focus,
     },
+    /// Delete: the chosen layer goes, unless a field holds the keyboard (then the key is the field's).
+    DeleteKey(Focus),
     /// Dosya al… for an image field: an SVG, PNG or JPEG into Kitaplığım.
     ImportAsset(String),
     /// Yeni çizim… and Düzenle… for an image field: the SVG editor, whose Kaydet gives the field its drawing.

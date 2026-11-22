@@ -32,9 +32,14 @@ pub fn demo() -> Option<Document> {
     let path = std::env::var_os("KENTOS_DEMO_OUT")
         .map(PathBuf::from)
         .unwrap_or_else(|| root().join(".run/demo/demo.json"));
-    let text = std::fs::read_to_string(&path).ok()?;
-    let snapshot = DocumentSnapshotV1::from_json(&text).ok()?;
-    Document::new(snapshot, None).ok()
+    let read = || {
+        let text = std::fs::read_to_string(&path).ok()?;
+        let snapshot = DocumentSnapshotV1::from_json(&text).ok()?;
+        Document::new(snapshot, None).ok()
+    };
+    // Without the web's demo (the web is paused, docs/adr/0228) the general library's town stands in: the editors'
+    // pictures need a drawing under them, not that one.
+    read().or_else(|| Some(super::general_screens::town()))
 }
 
 /// The box of a layer's points (the showcase's areas, lines, points and texts).
