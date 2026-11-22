@@ -1231,6 +1231,17 @@ pub fn stats_of(key: &str, origin: Origin) -> Result<Stats, String> {
 }
 
 /// The bands' values at pixel (`i`, `j`) of raster `key` (Koordinat oku); none outside or unread.
+/// The band values at pixel (`i`, `j`) of level 0 and the file's no-data value (Bilgi's raster card, docs/adr/9137).
+pub fn cell_at(key: &str, origin: Origin, i: i64, j: i64) -> Option<(Vec<f64>, Option<f64>)> {
+    let s = service();
+    s.register(key, || Some(origin));
+    let opened = s.source(key)?.opened().ok()?;
+    opened.fill(0, i, j, 1, 1).ok()?;
+    let mut reader = opened.reader.lock().unwrap_or_else(PoisonError::into_inner);
+    let nodata = reader.nodata;
+    reader.sample(i, j).map(|v| (v, nodata))
+}
+
 pub fn values_at(key: &str, origin: Origin, i: i64, j: i64) -> Option<Vec<f64>> {
     let s = service();
     s.register(key, || Some(origin));

@@ -352,6 +352,13 @@ impl App {
                 ViewChange::PlaceTable(table, label) => self.place_table(*table, label),
                 // Bilgi's card moves to the object clicked, or closes (info_card.rs, docs/adr/0225 §5).
                 ViewChange::InfoCard(card) => {
+                    // The rasters under the object asked too, for the card to offer their value (docs/adr/9137).
+                    if let Some((_, at)) = card {
+                        self.gis.data_info.beside.push(at);
+                    } else {
+                        self.gis.data_info.cells.clear();
+                        self.gis.data_info.showing_raster = false;
+                    }
                     self.info_card = card;
                     self.gis.data_info.card = None;
                 }

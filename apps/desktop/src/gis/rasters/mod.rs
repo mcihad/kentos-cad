@@ -15,6 +15,7 @@ use kentos_domain::{Document as Model, Slot};
 use serde_json::{Value, json};
 
 pub mod add;
+pub mod cell_info;
 pub mod jobs;
 pub mod look;
 pub mod mosaic;

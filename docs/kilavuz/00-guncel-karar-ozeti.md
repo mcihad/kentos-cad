@@ -115,6 +115,9 @@
   - **İşlemin tablosu türleriyle yazılır** (22 Kasım, değerlendirmenin 23. maddesi;
     [ADR 9136](../adr/9136-typed-table-outputs.md), VY-35): tablo çıktısının `kinds`/`values`'u GeoPackage'ta INTEGER/REAL
     sütun olur; Histogram'dan başlandı, serbest metin raporları metin kalır.
+  - **Bilgi yerel rasterde hücre söyler** (22 Kasım, değerlendirmenin 24. maddesi;
+    [ADR 9137](../adr/9137-identify-on-local-rasters.md), VY-36): `rasters/cell_info.rs` hücreyi arka planda okur; NoData
+    ve kapsam dışı ayrı söylenir; nesneyle raster değeri arasında geçilir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

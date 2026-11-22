@@ -39,6 +39,8 @@ pub enum Event {
     RowAction(usize),
     /// An action's target to the system's clipboard (Öznitelikler's Kopyala).
     Copy(String),
+    /// The raster's value under the click shown (true), or the object or the row again (docs/adr/9137).
+    Raster(bool),
 }
 
 fn msg(e: Event) -> Message {
@@ -224,8 +226,23 @@ pub(crate) fn card_body<'a>(
 impl App {
     /// The card over the drawing, when the Bilgi tool shows one: an object's, or a data layer's row's.
     pub(crate) fn info_card_view(&self) -> Option<Element<'_, Message>> {
-        let (body, at) = match self.info_card {
-            Some((slot, at)) => {
+        // The switch between the object (or the row) and the raster's value under the same click (docs/adr/9137).
+        let switch = |words: String, to: bool| {
+            button(label::caption(words))
+                .on_press(msg(Event::Raster(to)))
+                .padding(kentos_ui::theme::metrics::action_small())
+                .style(style::button::secondary)
+        };
+        let raster = self.gis.data_info.showing_raster.then(|| self.raster_card()).flatten();
+        let (body, at): (Element<'_, Message>, _) = match (raster, self.info_card) {
+            (Some((card, at)), _) => {
+                let mut body = column![card_body(self, &card, Shown::Row, &[], 0)].spacing(8);
+                if self.info_card.is_some() || self.gis.data_info.card.is_some() {
+                    body = body.push(switch("Nesneye dön".to_owned(), false));
+                }
+                (body.into(), at)
+            }
+            (None, Some((slot, at))) => {
                 let card = self.slot_card(slot)?;
                 let actions = if card.actions {
                     self.slot_actions(slot)
@@ -236,10 +253,17 @@ impl App {
                 let count = views.len();
                 (card_body(self, &card, Shown::Object(slot, views), &actions, count), at)
             }
-            None => {
+            (None, None) => {
                 let (card, actions, at) = self.data_card()?;
                 (card_body(self, &card, Shown::Row, &actions, 0), at)
             }
+        };
+        // Beside an object or a row, a raster under the same click offers its value.
+        let body: Element<'_, Message> = match self.gis.data_info.cells.first() {
+            Some(cell) if !self.gis.data_info.showing_raster => {
+                column![body, switch(format!("Raster değeri: {}", cell.layer), true)].spacing(8).into()
+            }
+            _ => body,
         };
         let [x, y] = self.viewport.camera.world_to_screen(at);
         let framed = container(column![body])
@@ -255,10 +279,13 @@ impl App {
 
     pub(crate) fn info_card_event(&mut self, e: Event) -> iced::Task<Message> {
         match e {
+            Event::Raster(to) => self.gis.data_info.showing_raster = to && !self.gis.data_info.cells.is_empty(),
             Event::Close => {
                 let row = self.info_card.is_none() && self.gis.data_info.card.is_some();
                 self.info_card = None;
                 self.gis.data_info.card = None;
+                self.gis.data_info.cells.clear();
+                self.gis.data_info.showing_raster = false;
                 if row {
                     self.with_tool(|s, cx| s.data_found(None, cx));
                 }
@@ -289,6 +316,11 @@ impl App {
 
     /// After every message: the card goes with the Bilgi tool and with its object (a row's, with its layer).
     pub(crate) fn follow_info_card(&mut self) {
+        // The raster's cells go with the Bilgi tool.
+        if self.session.tool_id() != kentos_interaction::identify::ID {
+            self.gis.data_info.cells.clear();
+            self.gis.data_info.showing_raster = false;
+        }
         if self.gis.data_info.card.is_some() {
             let gone = self.document.as_ref().is_none_or(|d| {
                 self.gis.data_info

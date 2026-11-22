@@ -379,3 +379,8 @@ numaraları raporunkidir.
     türsüz rapor metin kalır; PostGIS aynı geçici dosyadan geçer.
   - Histogram türlerini söyler; SQLite ve GDAL ile doğrulandı.
   - Kalan: öbür tablo veren araçların türleri, Kaydet ▾'ın sayıları, PostGIS sınamasının koşturulması, web.
+- [x] **VY-36 — Bilgi yerel rasterin tıklanan hücresini söyler (rapor 24, P2).**
+  ([ADR 9137](../docs/adr/9137-identify-on-local-rasters.md))
+  - Bilgi'nin tıklamasında gösterilen rasterler arka planda sorulur; kart katman, bant değerleri (NoData ayrı), hücre ve
+    Y, X söyler; kapsam dışı söylenir; nesne ile raster değeri arasında geçiş.
+  - Kalan: üst üste rasterlerin listesi, uzak rasterler, web.

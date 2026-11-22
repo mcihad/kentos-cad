@@ -2516,6 +2516,8 @@ Liste:
   okuyucusu CBS verisi 6'yı tanısın.
 - [ ] İşlemin tablosu türleriyle yazılır (ADR 9136, 22 Kasım 2026): web'in işlem sonucunu dosyaya yazan yolu tablo
   çıktısının `kinds`/`values`'unu INTEGER/REAL sütun olarak yazsın.
+- [ ] Bilgi yerel rasterde hücre söyler (ADR 9137, 22 Kasım 2026): web'in Bilgi aracı gösterilen rasterin tıklanan
+  hücresini (bantlar, NoData, hücre, Y, X) göstersin, kapsam dışını söylesin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

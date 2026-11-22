@@ -2,7 +2,8 @@
 //! shown data layers' tables, the top one first, for the row under the point. The first row found opens the card with
 //! every column read from the source, through the layer's card template, and Bilgi rings it. The tables are asked off
 //! the interface's thread: a database may take a moment to answer. A click asked again before the answer came makes
-//! the earlier answer stale.
+//! the earlier answer stale. The shown rasters under the point are asked with them (rasters/cell_info.rs,
+//! docs/adr/9137): with no row their first cell is the card, beside a row or an object the card offers it.
 
 use std::collections::HashMap;
 
@@ -37,13 +38,22 @@ pub struct State {
     pub asked: u64,
     /// The row whose card is shown.
     pub card: Option<Found>,
+    /// Bilgi's clicks on an object: the rasters under it asked after the update (docs/adr/9137).
+    pub beside: Vec<Vec2>,
+    /// The shown rasters' cells under the last click, the top one first.
+    pub cells: Vec<crate::rasters::cell_info::Cell>,
+    /// The card shows the first cell, not the object or the row.
+    pub showing_raster: bool,
 }
 
 /// What the tables said.
 #[derive(Debug, Clone)]
 pub enum Event {
-    /// The answer to an ask: the row found, if any, and the tables that could not be asked.
-    Answered(u64, Option<Box<Found>>, Vec<String>),
+    /// The answer to an ask: the row found, if any, the tables that could not be asked, the rasters' cells under the
+    /// point and whether a shown raster was there at all.
+    Answered(u64, Option<Box<Found>>, Vec<String>, Vec<crate::rasters::cell_info::Cell>, bool),
+    /// The rasters' cells under a click on an object.
+    Cells(u64, Vec<crate::rasters::cell_info::Cell>),
 }
 
 fn message(event: Event) -> Message {
@@ -162,9 +172,15 @@ pub fn ask(
 impl App {
     /// Bilgi's last click on no object of the drawing: the shown data layers asked off the thread, the top one first.
     pub(crate) fn data_info_tasks(&mut self) -> Task<Message> {
+        // A click on an object: only the rasters under it, for the card to offer (docs/adr/9137).
+        let beside = self.gis.data_info.beside.drain(..).next_back();
+        if let Some(at) = beside {
+            return self.raster_cells_beside(at);
+        }
         let Some((at, reach)) = self.gis.data_info.wanted.drain(..).next_back() else {
             return Task::none();
         };
+        let (rasters, any_raster) = self.rasters_under(at);
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -173,7 +189,7 @@ impl App {
             .filter(|n| n.data.as_ref().is_some_and(|d| d.geometry.is_some()))
             .cloned()
             .collect();
-        if nodes.is_empty() {
+        if nodes.is_empty() && !any_raster {
             return Task::none();
         }
         nodes.reverse();
@@ -181,15 +197,18 @@ impl App {
         let asked = self.gis.data_info.asked;
         let settings = doc.model.settings().clone();
         let task = crate::db_connections::off_thread(
-            move || ask(&nodes, &settings, at, reach),
-            move |(found, said)| message(Event::Answered(asked, found.map(Box::new), said)),
+            move || {
+                let (found, said) = ask(&nodes, &settings, at, reach);
+                (found, said, crate::rasters::cell_info::read(rasters, at))
+            },
+            move |(found, said, cells)| message(Event::Answered(asked, found.map(Box::new), said, cells, any_raster)),
         );
         self.tool_reply(task)
     }
 
     pub(crate) fn data_info_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Answered(asked, found, said) => {
+            Event::Answered(asked, found, said, cells, any_raster) => {
                 if asked != self.gis.data_info.asked {
                     return Task::none();
                 }
@@ -197,8 +216,19 @@ impl App {
                     self.warn(why);
                 }
                 let object = found.as_ref().map(|f| f.object.clone());
+                // No row: the first raster's cell is the card; a click outside every shown raster is said.
+                self.gis.data_info.showing_raster = found.is_none() && !cells.is_empty();
+                if found.is_none() && cells.is_empty() && any_raster {
+                    self.say(kentos_interaction::Level::Info, "Tıklanan nokta gösterilen rasterlerin kapsamı dışında.");
+                }
+                self.gis.data_info.cells = cells;
                 self.gis.data_info.card = found.map(|f| *f);
                 self.with_tool(|s, cx| s.data_found(object.as_ref(), cx));
+            }
+            Event::Cells(asked, cells) => {
+                if asked == self.gis.data_info.asked {
+                    self.gis.data_info.cells = cells;
+                }
             }
         }
         Task::none()
