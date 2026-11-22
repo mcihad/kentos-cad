@@ -316,6 +316,10 @@ impl App {
             })
         });
         let mut out = Column::new().push(bar);
+        // What the last check covered (docs/adr/9146).
+        if let Some(scope) = self.topology_scope().filter(|_| self.gis.topology.running.is_none()) {
+            out = out.push(container(label::caption(scope)).padding([2, 10]).width(Fill));
+        }
         if let Some(running) = running {
             out = out.push(running);
         }
@@ -330,6 +334,34 @@ impl App {
             .width(Fill)
             .height(Fill)
             .into()
+    }
+
+    /// What the last check covered (docs/adr/9146): its layers by name, its rules, the objects, whole or what changed,
+    /// the drawing's version then and now, the tolerance.
+    pub(crate) fn topology_scope(&self) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let c = self.topology_checked()?;
+        let mut names: Vec<String> = Vec::new();
+        for r in &c.g.rules {
+            for l in std::iter::once(r.layer.as_str()).chain(r.other.as_deref()) {
+                let n = self.topology_layer_name(l);
+                if !names.contains(&n) {
+                    names.push(n);
+                }
+            }
+        }
+        Some(plan::scope_text(
+            &names,
+            c.g.rules.len(),
+            c.g.checked(),
+            c.incremental,
+            (c.revision, doc.model.revision()),
+            // The tolerance as typed in the rules window, not rounded to the drawing's digits.
+            &{
+                let f = self.format();
+                format!("{} {}", super::rules::shown(f.from_metres(c.g.tolerance)), f.length_unit_label())
+            },
+        ))
     }
 
     /// The tab's bar at `width`: Denetle, Kurallar…, Kural, the filter; the

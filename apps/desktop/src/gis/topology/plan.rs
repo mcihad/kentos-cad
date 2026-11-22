@@ -74,6 +74,28 @@ pub fn no_findings(rules: usize, objects: usize, sources: &[(String, usize)]) ->
     format!("Bulgu yok: {rules} kural, {objects} nesne denetlendi ({}).", read.join(", "))
 }
 
+/// What the last check covered (docs/adr/9146): the rules' layers, the rules, the objects, the whole drawing or what
+/// changed, the drawing's version it saw (and the version now, when the drawing changed since) and the tolerance.
+pub fn scope_text(
+    layers: &[String],
+    rules: usize,
+    objects: usize,
+    incremental: Option<usize>,
+    (seen, now): (u64, u64),
+    tolerance: &str,
+) -> String {
+    let over = match incremental {
+        Some(n) => format!("değişenler ({n} nesne)"),
+        None => "bütün çizim".to_owned(),
+    };
+    let version = if seen == now {
+        format!("çizim sürümü {seen}")
+    } else {
+        format!("çizim sürümü {seen} (şimdi {now})")
+    };
+    format!("Kapsam: {} · {rules} kural · {objects} nesne · {over} · {version} · tolerans {tolerance}", layers.join(", "))
+}
+
 /// No object at all in the rules' layers: nothing was checked, said so rather than clean.
 pub fn nothing_checked(rules: usize) -> String {
     format!("Denetlenecek nesne yok: {rules} kuralın katmanlarında nesne ya da kaynak satırı bulunmadı; katman temiz sayılmaz.")

@@ -137,10 +137,11 @@ pub(crate) fn compute(work: &Work, doc: &Document, watch: &dyn Watch) -> Option<
 /// A check going on its own thread.
 pub(crate) struct Running {
     pub id: u64,
-    /// The drawing (its session) and the state of it the check saw.
+    /// The drawing (its session) and the state of it the check saw, with its journal's mark (docs/adr/9146).
     pub session: u64,
     pub generation: u64,
     pub revision: u64,
+    pub mark: kentos_domain::ChangeMark,
     /// What follows the answer.
     pub then: Then,
     stop: Arc<AtomicBool>,
@@ -212,7 +213,7 @@ pub(crate) fn start<M: Send + 'static>(
     copy: Document,
     objects: usize,
     then: Then,
-    (session, generation, revision): (u64, u64, u64),
+    (session, generation, revision, mark): (u64, u64, u64, kentos_domain::ChangeMark),
     to: impl Fn(u64, Reply) -> M + Send + 'static,
 ) -> (Running, Task<M>) {
     let stop = Arc::new(AtomicBool::new(false));
@@ -256,6 +257,7 @@ pub(crate) fn start<M: Send + 'static>(
         session,
         generation,
         revision,
+        mark,
         then,
         stop,
         answer,

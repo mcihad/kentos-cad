@@ -142,6 +142,9 @@
     [ADR 9145](../adr/9145-label-candidates-and-overlapping-hits.md), VY-44): Denetle adayları, örnek metni ve her
     nedeni ayrı söyler; şablona Alan ekle; Bilgi kartı katmanı ve kimliği yazar, tıklamanın altındaki nesneleri sayıp
     Sonraki ile gezer.
+  - **Topoloji okuduğu değişince eskir** (22 Kasım, değerlendirmenin 14. maddesi;
+    [ADR 9146](../adr/9146-topology-staleness-by-inputs-and-scope.md), VY-45): stil ve etiket değişimi sonucu eskitmez;
+    kural penceresi toleransı karşılaştırmasıyla anlatır; sekme denetimin kapsamını ve çizim sürümünü yazar.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

@@ -26,6 +26,7 @@ mod plan;
 mod review;
 pub(crate) mod rules;
 mod running;
+mod tolerance_words;
 mod view;
 
 #[cfg(test)]
@@ -34,6 +35,8 @@ mod object_tests;
 mod tests;
 #[cfg(test)]
 mod source_tests;
+#[cfg(test)]
+mod municipal_tests;
 
 pub(crate) use plan::{Filter, texts};
 
@@ -79,6 +82,9 @@ pub(crate) struct Checked {
     pub session: u64,
     pub generation: u64,
     pub revision: u64,
+    /// Where the drawing's journal of changed objects stood then (docs/adr/9146): what changed since tells whether
+    /// the findings are old.
+    pub mark: kentos_domain::ChangeMark,
     /// Whether the last check went over what changed alone (docs/adr/0524), and how many objects it looked at.
     pub incremental: Option<usize>,
 }
@@ -102,6 +108,9 @@ impl Checked {
     }
 }
 
+/// The check's generation and revision and the drawing's now: what a staleness answer was worked out for.
+type StaleKey = (u64, u64, u64, u64);
+
 /// The tab's state for as long as the app lives.
 #[derive(Default)]
 pub(crate) struct TopologyPanel {
@@ -118,6 +127,9 @@ pub(crate) struct TopologyPanel {
     /// A check going on its own thread (docs/adr/0756), and the next one's id.
     pub running: Option<Running>,
     next: u64,
+    /// Whether the findings are old, worked out for the check's and the drawing's state (docs/adr/9146): the drawing
+    /// changes far more often than it is asked.
+    stale: std::cell::Cell<Option<(StaleKey, bool)>>,
     /// Gerekçe: the words a mark is written with (docs/adr/1260 §1).
     pub reason: String,
     /// The repair recipe planned and shown (docs/adr/1260 §4).
@@ -201,12 +213,25 @@ impl App {
             .filter(|c| c.session == doc.session)
     }
 
-    /// Whether the drawing changed since the check.
+    /// Whether what the check read changed since (docs/adr/9146): its rules, tolerance, exceptions or profile; an
+    /// object of the rules' layers added, removed, reshaped or moved to another layer; a bound layer's source. A
+    /// change of style, labels or attributes alone leaves the findings as they are.
     pub(crate) fn topology_stale(&self) -> bool {
         let (Some(doc), Some(c)) = (self.document.as_ref(), self.topology_checked()) else {
             return false;
         };
-        c.generation != doc.model.generation() || c.revision != doc.model.revision()
+        if c.generation == doc.model.generation() && c.revision == doc.model.revision() {
+            return false;
+        }
+        let key = (c.generation, c.revision, doc.model.generation(), doc.model.revision());
+        if let Some((k, old)) = self.gis.topology.stale.get()
+            && k == key
+        {
+            return old;
+        }
+        let old = inputs_changed(&doc.model, c);
+        self.gis.topology.stale.set(Some((key, old)));
+        old
     }
 
     /// Denetle: every rule over the objects of the layers the rules name and the rows round their bound parts
@@ -253,7 +278,7 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return Task::none();
         };
-        let state = (doc.session, doc.model.generation(), doc.model.revision());
+        let state = (doc.session, doc.model.generation(), doc.model.revision(), doc.model.change_mark());
         let mut layers: Vec<&str> = Vec::new();
         for r in self.topology_settings().map_or(&[][..], |t| &t.rules[..]) {
             for l in std::iter::once(r.layer.as_str()).chain(r.other.as_deref()) {
@@ -295,7 +320,7 @@ impl App {
                 };
                 let open = self.document.as_ref().map(|d| d.session);
                 if let Some(ran) = r.answer().filter(|_| open == Some(r.session)) {
-                    self.topology_found(ran, r.then, (r.session, r.generation, r.revision));
+                    self.topology_found(ran, r.then, (r.session, r.generation, r.revision, r.mark));
                 }
             }
             Reply::Failed(why) => {
@@ -313,12 +338,13 @@ impl App {
         }
     }
 
-    /// A check's answer kept, for the drawing's state it saw (`session`, `generation`, `revision`), and what follows.
+    /// A check's answer kept, for the drawing's state it saw (`session`, `generation`, `revision`, the journal's
+    /// `mark`), and what follows.
     fn topology_found(
         &mut self,
         ran: Ran,
         then: Then,
-        (session, generation, revision): (u64, u64, u64),
+        (session, generation, revision, mark): (u64, u64, u64, kentos_domain::ChangeMark),
     ) {
         let quiet = then.quiet();
         match ran {
@@ -335,6 +361,7 @@ impl App {
                     session,
                     generation,
                     revision,
+                    mark,
                     incremental: None,
                 };
                 let total = checked.findings.len();
@@ -385,6 +412,7 @@ impl App {
                     session,
                     generation,
                     revision,
+                    mark,
                     incremental: Some(changed),
                 };
                 let total = checked.findings.len();
@@ -900,4 +928,59 @@ impl App {
             .collect();
         Some((count, rows))
     }
+}
+
+/// Whether what check `c` read changed in `doc` since (docs/adr/9146). The rules are geometric: an object's style,
+/// label or attributes are no part of them.
+fn inputs_changed(doc: &kentos_domain::Document, c: &Checked) -> bool {
+    use kentos_domain::Changes;
+    if topology_check::rules_digest(doc, None) != c.g.stamp.rules {
+        return true;
+    }
+    // A bound layer's source read at another version.
+    let sources = &doc.settings().sources;
+    if c.g.stamp.sources.iter().any(|s| sources.iter().find(|l| l.layer == s.layer).is_none_or(|l| l.revision != s.revision)) {
+        return true;
+    }
+    let slots = match doc.changes_since(c.mark) {
+        Changes::Slots(slots) => slots,
+        Changes::All => return true,
+    };
+    if slots.is_empty() {
+        return false;
+    }
+    let layers: std::collections::HashSet<&str> = c
+        .g
+        .rules
+        .iter()
+        .flat_map(|r| std::iter::once(r.layer.as_str()).chain(r.other.as_deref()))
+        .collect();
+    let was: std::collections::HashMap<Slot, usize> = c
+        .g
+        .slots
+        .iter()
+        .take(c.g.drawn)
+        .enumerate()
+        .filter_map(|(k, s)| s.map(|s| (s, k)))
+        .collect();
+    let mut seen: std::collections::HashSet<Slot> = std::collections::HashSet::new();
+    for &slot in slots {
+        if !seen.insert(slot) {
+            continue;
+        }
+        let changed = match (doc.get(slot), was.get(&slot)) {
+            // Made and removed since, or never on the rules' layers.
+            (None, None) => false,
+            (None, Some(_)) => true,
+            (Some(e), None) => layers.contains(e.base().layer_id.as_str()),
+            (Some(e), Some(&k)) => {
+                c.g.layers.get(k).is_none_or(|l| *l != e.base().layer_id)
+                    || c.g.shapes.get(k).is_none_or(|s| *s != kentos_native_application::geometry::shape(e))
+            }
+        };
+        if changed {
+            return true;
+        }
+    }
+    false
 }

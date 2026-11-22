@@ -2535,6 +2535,8 @@ Liste:
 - [ ] Etiket adayları ve örtüşen nesneler (ADR 9145, 22 Kasım 2026): web'in etiket penceresi örnek metni, Alan ekle'yi
   ve Denetle'nin aday/neden satırlarını sunsun; Bilgi kartı katmanı ve kimliği yazsın, tıklamanın altındaki nesneleri
   sayıp Sonraki ile gezsin.
+- [ ] Topoloji okuduğu değişince eskir (ADR 9146, 22 Kasım 2026): web'in Topoloji sekmesi stil/etiket değişiminde
+  “sonuçlar eski olabilir” demesin; kural penceresi toleransı karşılaştırmasıyla anlatsın; kapsam satırı olsun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

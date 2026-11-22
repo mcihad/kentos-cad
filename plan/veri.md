@@ -420,3 +420,8 @@ numaraları raporunkidir.
   - `labelling/candidates.rs`: adaylar, örnek metin, ayrı nedenler, katmanda olmayan şablon alanı; Alan ekle.
   - Kartın altında katman ve kimlik; `ViewChange::InfoHits` ile “Bu noktada N nesne · i/N” ve Sonraki.
   - Kalan: görüntüleme alanı, nesne ile veri satırının birlikte sayılması, etiket önizlemesi, veri katmanında etiket, web.
+- [~] **VY-45 — Topoloji yalnız okuduğu değişince eskir; tolerans karşılaştırmasıyla, kapsamıyla söylenir (rapor 14, P1).**
+  ([ADR 9146](../docs/adr/9146-topology-staleness-by-inputs-and-scope.md))
+  - `Checked.mark` ve `inputs_changed`: kural özeti, bağlı kaynak sürümü, kuralların katmanlarındaki şekil/katman.
+  - `tolerance_words`: değerlerle karşılaştırma; sekmede “Kapsam: … · çizim sürümü N (şimdi M) · tolerans …”.
+  - Kalan: veri katmanı kaynağının dışarıdan değişimi, PostGIS sınaması, kurumun gerçek eşikleri, web.

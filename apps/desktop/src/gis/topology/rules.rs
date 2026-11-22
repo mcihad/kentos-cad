@@ -73,7 +73,7 @@ fn decimal(t: &str) -> Option<f64> {
 }
 
 /// A value as the window shows it: twelve significant digits (no noise of the unit's conversion).
-fn shown(v: f64) -> String {
+pub(super) fn shown(v: f64) -> String {
     let s = format!("{:.12e}", v);
     let n: f64 = s.parse().unwrap_or(v);
     kentos_project::new_project::js_number(n)
@@ -594,9 +594,12 @@ impl App {
                 .spacing(20)
                 .align_y(iced::alignment::Vertical::Bottom),
             )
-            .push(label::muted(
-                "Tolerans: bu uzaklıktaki iki yer aynı yerdir. Kalite profili: koordinatların saklandığı adım ve hiçbir onarımın kaynak köşeyi taşıyamayacağı uzaklık; profil varsa her işaret gerekçe ister.",
-            ));
+            // What each length is compared to, with the values typed (docs/adr/9146).
+            .push(label::muted(super::tolerance_words::explained(
+                &w.tolerance,
+                (!w.profile.trim().is_empty()).then_some((w.precision.as_str(), w.acceptance.as_str())),
+                unit,
+            )));
         let ready = problem.is_none() && self.rules_changed(w);
         Frame::new(RULES_TITLE)
             .push(
