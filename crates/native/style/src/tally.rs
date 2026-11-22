@@ -242,6 +242,7 @@ mod grouped_tests {
         let (each, rest) = class_tally(&rows, &vec![true; rows.len()], &classes);
         let (grouped, grouped_rest) = class_tally_grouped(&numbers, &classes);
         assert_eq!(grouped, each.iter().map(|&n| n as u64).collect::<Vec<_>>());
+        assert_eq!(grouped_rest, rest as u64);
         assert_eq!((grouped, grouped_rest), (vec![2, 6], 4), "the last class keeps its upper bound");
     }
 }
