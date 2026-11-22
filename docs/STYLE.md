@@ -316,7 +316,11 @@ Pencereler ilk açılışta yüklenir (`ui/style/`); komutlar Araçlar menüsün
      - Yay şekli yok; seyir terası kirişlerle çizilir.
      - Desendeki işaret kaydırması desenle dönmez, çizgi boyuncaki işaretinki döner.
    - Lejant penceresi kullanılan sembollerden lejant üretir.
-6. **Paylaşma:** sunucu ile kitaplık paylaşımı ve kurum kitaplıkları.
+6. **Genel kitaplık (yapıldı, [ADR 9118](adr/9118-general-symbol-library.md)):** her türden harita için 197 sembol ve
+   56 piktogram. Noktalar 87, çizgiler 59, alanlar 51; 25 tematik kategoride, Türkçe etiketlerle. Kaynağı
+   `scripts/style/general_library.py`, dosyası `crates/native/style/assets/general-library.kstil`. Masaüstü iki sistem
+   dosyasını birlikte okur; web'e eklenmesi TODOS.md §0.2'de.
+7. **Paylaşma:** sunucu ile kitaplık paylaşımı ve kurum kitaplıkları.
 
 ## SHX çizgi tipi kaynakları
 

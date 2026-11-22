@@ -123,7 +123,7 @@ fn filled_share(shape: &str) -> f64 {
 }
 
 /// Where the point sits in a marker's box: (0,0) centre, (0,0.5) top edge …
-fn anchor_of(anchor: &str) -> [f64; 2] {
+pub(crate) fn anchor_of(anchor: &str) -> [f64; 2] {
     match anchor {
         "top" => [0.0, 0.5],
         "bottom" => [0.0, -0.5],

@@ -161,7 +161,10 @@ fn marker_reach(symbol: &Value, sample: &Entity) -> f64 {
                 .and_then(Value::as_f64)
                 .unwrap_or(0.0)
         };
-        reach = reach.max(at(0).hypot(at(1)) + w.max(h) / 2.0);
+        // An anchored marker stands beside its point (a pin on its tip, a flag on its foot): its middle is that far
+        // from the point, so the whole of it is within the reach.
+        let [ax, ay] = crate::batches::anchor_of(common["anchor"].as_str().unwrap_or(""));
+        reach = reach.max((at(0) - ax * w).hypot(at(1) - ay * h) + w.max(h) / 2.0);
     }
     reach
 }
@@ -271,6 +274,17 @@ mod tests {
             p.px_per_mm
         );
         assert!(!p.layer.batches.is_empty());
+    }
+
+    #[test]
+    fn an_anchored_point_symbol_is_fitted_whole() {
+        let library = StyleLibrary::default();
+        // A 5 mm marker standing on its point: it reaches 5 mm above it, twice a centred one's 2.5 mm.
+        let pin = json!({ "type": "marker", "layers": [
+            { "id": "0", "type": "shape", "shape": "triangle", "size": 5.0, "fill": "ink", "anchor": "bottom" },
+        ] });
+        let p = preview(&pin, None, (64.0, 36.0), None, &palette(), &library).expect("builds");
+        assert!((p.px_per_mm - 36.0 * 0.4 / 5.0).abs() < 1e-9, "{}", p.px_per_mm);
     }
 
     #[test]

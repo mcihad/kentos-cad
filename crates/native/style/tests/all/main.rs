@@ -5,6 +5,7 @@
 mod bound_legend;
 mod classify;
 mod designer;
+mod general_library;
 mod generator_timing;
 mod phases;
 mod kstil;

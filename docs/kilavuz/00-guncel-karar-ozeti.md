@@ -66,6 +66,12 @@
     Kameranın yakınlaşma sınırı birimin metresiyle çarpılır (`Camera::metres_per_unit`); derece projesi metre projesi
     kadar yakınlaşır.
 
+- **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
+  Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
+  kategori ve 56 elle çizilmiş piktogram. Yer sembolleri temasının renkli dairesinde beyaz piktogramdır. Kaynak
+  `scripts/style/general_library.py`'dir ve `--check` ile denetlenir. Masaüstü iki sistem dosyasını birlikte okur.
+  Dayanak noktalı işaretin önizlemesi bütün sığar.
+
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.
   Gerçek fare/klavye ve ekran görüntüsüyle doğrulama sürer, ancak ham GUI

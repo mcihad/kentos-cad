@@ -1,9 +1,11 @@
-//! The system library: everything that ships with KentOS (the basic symbols
-//! and MPYY's 695 symbols and 81 drawings, docs/STYLE.md §8). Its source is the
-//! web's TypeScript (`apps/web/src/style/system`); the desktop embeds the
-//! same items as a `.kstil` file written from it
-//! (`apps/web/scripts/style/system-library.test.ts`, which also fails when
-//! the file falls behind the TypeScript). Read once, on first use.
+//! The system library: everything that ships with KentOS. Two files:
+//! - the basic symbols and MPYY's 695 symbols and 81 drawings (docs/STYLE.md §8), whose source is the web's
+//!   TypeScript (`apps/web/src/style/system`), written as a `.kstil` file by
+//!   `apps/web/scripts/style/system-library.test.ts` (which also fails when the file falls behind the TypeScript);
+//! - the general library (docs/adr/9118): point, line and area symbols for every kind of map by theme, written by
+//!   `scripts/style/general_library.py` (`--check` fails when the file falls behind the script).
+//!
+//! Read once, on first use.
 
 use std::sync::OnceLock;
 
@@ -11,8 +13,10 @@ use serde_json::Value;
 
 use crate::library::{Item, StyleLibrary};
 
-/// The file as the web writes it.
+/// The basic and MPYY items, as the web writes them.
 const FILE: &str = include_str!("../assets/system-library.kstil");
+/// The general library's items (`genel.*`).
+const GENERAL: &str = include_str!("../assets/general-library.kstil");
 
 struct System {
     items: Vec<Item>,
@@ -20,22 +24,15 @@ struct System {
 }
 
 fn read() -> System {
-    // The file ships with the program and a test reads it: it is well formed.
-    let value: Value = serde_json::from_str(FILE).unwrap_or(Value::Null);
-    let list = |k: &str| {
-        value
-            .get(k)
-            .and_then(Value::as_array)
-            .cloned()
-            .unwrap_or_default()
-    };
-    System {
-        items: list("items")
-            .into_iter()
-            .filter_map(Item::from_value)
-            .collect(),
-        categories: list("categories"),
+    let mut system = System { items: Vec::new(), categories: Vec::new() };
+    for file in [FILE, GENERAL] {
+        // The files ship with the program and a test reads them: they are well formed.
+        let value: Value = serde_json::from_str(file).unwrap_or(Value::Null);
+        let list = |k: &str| value.get(k).and_then(Value::as_array).cloned().unwrap_or_default();
+        system.items.extend(list("items").into_iter().filter_map(Item::from_value));
+        system.categories.extend(list("categories"));
     }
+    system
 }
 
 fn system() -> &'static System {
@@ -62,8 +59,9 @@ mod tests {
             .filter(|(i, _)| i.kind() == ItemKind::Symbol)
             .count();
         let assets = items.len() - symbols;
-        assert!(symbols >= 695, "symbols: {symbols}");
-        assert!(assets >= 81, "assets: {assets}");
+        assert!(symbols >= 695 + 197, "symbols: {symbols}");
+        assert!(assets >= 81 + 56, "assets: {assets}");
         assert!(lib.symbol("temel.cizgi.surekli").is_some());
+        assert!(lib.symbol("genel.nokta.ulasim.otobus-duragi").is_some());
     }
 }
