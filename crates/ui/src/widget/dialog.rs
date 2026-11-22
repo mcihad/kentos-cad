@@ -403,6 +403,8 @@ pub struct Confirm<'a, Message> {
     /// A third, safe answer beside the two (“Kaydet ve kapat”): it becomes the primary button and the confirm
     /// button, then a risky one, moves to the left.
     keep: Option<(Fragment<'a>, Message)>,
+    /// A fourth answer, neither risky nor the primary one (“Projede tut”): a secondary button beside Vazgeç.
+    also: Option<(Fragment<'a>, Message)>,
 }
 
 impl<'a, Message: Clone + 'a> Confirm<'a, Message> {
@@ -418,12 +420,19 @@ impl<'a, Message: Clone + 'a> Confirm<'a, Message> {
             on_cancel,
             destructive: false,
             keep: None,
+            also: None,
         }
     }
 
     /// A third, safe answer (“Kaydet ve kapat”): the primary button at the right; the confirm button goes to the left.
     pub fn keep(mut self, label: impl IntoFragment<'a>, on_keep: Message) -> Self {
         self.keep = Some((label.into_fragment(), on_keep));
+        self
+    }
+
+    /// A fourth answer, neither risky nor the primary one (“Projede tut”): a secondary button beside Vazgeç.
+    pub fn also(mut self, label: impl IntoFragment<'a>, on_also: Message) -> Self {
+        self.also = Some((label.into_fragment(), on_also));
         self
     }
 
@@ -516,20 +525,35 @@ impl<'a, Message: Clone + 'a> From<Confirm<'a, Message>> for Element<'a, Message
             } else {
                 style::button::primary
             });
-        let actions = match confirm.keep {
+        let also: Option<Element<'a, Message>> = confirm.also.map(|(also, on_also)| {
+            button(label::body(also))
+                .on_press(on_also)
+                .padding(crate::theme::metrics::action())
+                .style(style::button::secondary)
+                .into()
+        });
+        let mut buttons: Vec<Element<'a, Message>> = Vec::with_capacity(5);
+        match confirm.keep {
             // The safe answer at the right, the risky one apart at the left.
-            Some((keep, on_keep)) => row![
-                go,
-                space::horizontal(),
-                cancel,
-                button(label::body(keep))
-                    .on_press(on_keep)
-                    .padding(crate::theme::metrics::action())
-                    .style(style::button::primary),
-            ],
-            None => row![space::horizontal(), cancel, go],
+            Some((keep, on_keep)) => {
+                buttons.extend([go.into(), space::horizontal().into()]);
+                buttons.extend(also);
+                buttons.extend([
+                    cancel.into(),
+                    button(label::body(keep))
+                        .on_press(on_keep)
+                        .padding(crate::theme::metrics::action())
+                        .style(style::button::primary)
+                        .into(),
+                ]);
+            }
+            None => {
+                buttons.push(space::horizontal().into());
+                buttons.extend(also);
+                buttons.extend([cancel.into(), go.into()]);
+            }
         }
-        .spacing(6);
+        let actions = iced::widget::Row::with_children(buttons).spacing(6);
 
         container(column![row![symbol, text].spacing(14), actions].spacing(18))
             .width(typography::scaled(420.0))

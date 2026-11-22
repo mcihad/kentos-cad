@@ -910,13 +910,21 @@ impl Spatial {
             }
         }
         for (layer, list) in by_layer {
-            let t = layer_texts(doc.layers().get(&layer), unit);
+            let node = doc.layers().get(&layer);
+            let t = layer_texts(node, unit);
             let store = &self.store;
-            let texts = object_texts(&list, &t, &names, &|i| {
-                store.get(f64::from(list[i].base().id)).map(|it| &it.shape)
-            });
+            let shape_of = |i: usize| store.get(f64::from(list[i].base().id)).map(|it| &it.shape);
+            let texts = object_texts(&list, &t, &names, &shape_of);
+            // An object its style draws with a class switched off (or with no class) is not drawn, nor labelled, as a
+            // data layer's (docs/adr/9105 §3, docs/adr/9110 §4).
+            let drawn: Option<Vec<bool>> = node
+                .and_then(|n| n.style.renderer.as_ref())
+                .and_then(|r| crate::style_classes::ClassReader::new(r, unit))
+                .map(|reader| reader.drawn(&list, &names, &shape_of));
             let shown = !matches!(t, crate::label_texts::LayerTexts::Off);
-            for (e, (texts, z)) in list.iter().zip(texts) {
+            for (i, (e, (texts, z))) in list.iter().zip(texts).enumerate() {
+                let off = drawn.as_ref().is_some_and(|d| !d[i]) && crate::style_classes::drawn_by_style(e);
+                let texts = if off { Vec::new() } else { texts };
                 let texts = point_texts(e, texts, shown, !self.hide_point_names, self.point_codes);
                 self.store
                     .set_object_labels(f64::from(e.base().id), ObjectLabels { texts, z });

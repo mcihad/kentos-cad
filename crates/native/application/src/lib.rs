@@ -49,12 +49,11 @@
 
 // The read-only viewer core's modules, under their old paths (docs/adr/8054 §8).
 pub use kentos_scene_query::{
-    blocks, expression_unit, geometry, geometry_store, label_texts, layer_filter, shx_text,
+    blocks, expression_unit, geometry, geometry_store, label_texts, layer_filter, shx_text, style_classes,
     viewport_scope,
 };
 
 #[path = "gis/address_define.rs"]
-
 pub mod address_define;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/addresses.rs"]
@@ -492,6 +491,40 @@ pub mod layers_renderer;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_service.rs"]
 pub mod layers_service;
+#[path = "gis/layers_data.rs"]
+pub mod layers_data;
+#[path = "gis/layers_rows.rs"]
+pub mod layers_rows;
+#[path = "gis/layers_session.rs"]
+pub mod layers_session;
+#[path = "gis/layer_classes.rs"]
+pub mod layer_classes;
+#[path = "gis/layer_export.rs"]
+pub mod layer_export;
+#[path = "gis/layer_export_sinks.rs"]
+mod layer_export_sinks;
+#[path = "gis/layer_export_streams.rs"]
+mod layer_export_streams;
+#[path = "gis/layer_export_kml.rs"]
+mod layer_export_kml;
+// A project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107).
+#[path = "gis/project_store.rs"]
+pub mod project_store;
+// A new layer made as a new table of a data source (docs/adr/9107 §7).
+#[path = "gis/layers_create.rs"]
+pub mod layers_create;
+// A drawing layer moved into a data source (docs/adr/9107 §8).
+#[path = "gis/layers_migrate.rs"]
+pub mod layers_migrate;
+#[path = "gis/layers_migrate_texts.rs"]
+mod layers_migrate_texts;
+#[path = "gis/data_text.rs"]
+pub mod data_text;
+// An İfadeyle seç expression's part a data source answers itself (docs/adr/9109).
+#[path = "gis/data_condition.rs"]
+pub mod data_condition;
+#[path = "gis/data_write.rs"]
+pub mod data_write;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layers_set.rs"]
 pub mod layers_set;
@@ -3138,6 +3171,42 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_RECORDS_PAGE_VERSION,
     ),
     // A layer's source system and its objects moved from it ([`layers_crs`], docs/adr/0583).
+    // A data layer added, changed or removed: its rows stay in the source ([`layers_data`], docs/adr/9101 §4).
+    (
+        kentos_commands::CAD_LAYERS_DATA,
+        kentos_commands::CAD_LAYERS_DATA_VERSION,
+    ),
+    // A data layer's rows read from its source ([`layers_rows`], docs/adr/9102 §4).
+    (
+        kentos_commands::CAD_LAYERS_ROWS,
+        kentos_commands::CAD_LAYERS_ROWS_VERSION,
+    ),
+    // A layer written to a GeoPackage or PostGIS table or a GeoJSON, Shapefile, CSV or KML file ([`layer_export`],
+    // docs/adr/9106).
+    (
+        kentos_commands::CAD_LAYERS_EXPORT,
+        kentos_commands::CAD_LAYERS_EXPORT_VERSION,
+    ),
+    // A new layer made as a new table of a data source ([`layers_create`], docs/adr/9107 §7).
+    (
+        kentos_commands::CAD_LAYERS_CREATE,
+        kentos_commands::CAD_LAYERS_CREATE_VERSION,
+    ),
+    // A drawing layer moved into a data source ([`layers_migrate`], docs/adr/9107 §8).
+    (
+        kentos_commands::CAD_LAYERS_MIGRATE,
+        kentos_commands::CAD_LAYERS_MIGRATE_VERSION,
+    ),
+    // A layer's style classes, counted by the drawing's rule ([`layer_classes`], docs/adr/9105 §2).
+    (
+        kentos_commands::CAD_LAYERS_CLASSES,
+        kentos_commands::CAD_LAYERS_CLASSES_VERSION,
+    ),
+    // A data layer's edit session: opened, saved to its table, let go, closed ([`layers_session`], docs/adr/9103 §3).
+    (
+        kentos_commands::CAD_LAYERS_SESSION,
+        kentos_commands::CAD_LAYERS_SESSION_VERSION,
+    ),
     (
         kentos_commands::CAD_LAYERS_CRS,
         kentos_commands::CAD_LAYERS_CRS_VERSION,

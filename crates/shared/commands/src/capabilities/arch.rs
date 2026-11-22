@@ -759,6 +759,13 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &["exception_lapsed"],
         targets: none,
     },
+    // Dolaşım güzergâhı: a same-storey walking route, read only (scripts/fixtures/arch_walk_cases.py).
+    Entry {
+        id: "cad.arch.walk",
+        refusals: &[&["not_finite", "invalid_input", "level_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
     // İstisna yap, İstisnayı kaldır, İstisnaları temizle (docs/adr/0732 §3): the audit's refusals come under `audit.`.
     Entry {
         id: "cad.arch.exceptions",
@@ -810,6 +817,7 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "material_not_found",
                 "invalid_declared",
                 "invalid_strength",
+                "uid_in_both_lists",
             ],
             REVISION,
         ],

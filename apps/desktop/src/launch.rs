@@ -88,6 +88,8 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
     typography::load();
     // Bound layers on PostGIS (docs/adr/0505).
     kentos_postgis::register();
+    // The data drivers and the device's passwords for data layers (docs/adr/9101).
+    crate::data_layers::register();
     kentos_processing::command::register_as("desktop");
     // STAC searches (docs/adr/0528 §2): over the cloud client's HTTP.
     kentos_native_application::stac_host::register(Box::new(kentos_cloud::stac::HttpFetch));
@@ -130,6 +132,8 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             app.arch.grids.library = grids::Library::device();
             // The forms designer's section library and kept drafts (docs/adr/0441 §1, §5).
             app.gis.form_files = forms::library::FormFiles::device();
+            // The projects' pending data edits, readable by the user alone (docs/adr/9111 §3).
+            app.gis.data_journal = crate::data_journal::Journals::device();
             // The user's AI agents, in a file of their own readable by the user alone (docs/adr/8056 §4).
             app.assistant.store = kentos_agent::ProfileStore::device();
             app.assistant.ledger = kentos_agent::UsageLedger::device();

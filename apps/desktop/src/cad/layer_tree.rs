@@ -5,8 +5,8 @@
 //! - Katman ara keeps the nodes whose name holds the text (lower case, the
 //!   Turkish way) and the groups above them, every such group open while it
 //!   searches; with none left the tree says “Aramayla eşleşen katman yok.”.
-//!   Text with `*`, `?`, `#`, `@`, `[` or `~` is a name pattern, AutoCAD's
-//!   `wcmatch` (`A-*`, `duvar*,wall*`); Süzgeç ▾ beside it keeps the layers
+//!   Text with `*`, `?`, `#`, `@`, `[` or `~` is a name pattern, the CAD
+//!   layer filters' wildcards (`A-*`, `duvar*,wall*`); Süzgeç ▾ beside it keeps the layers
 //!   by their properties (shown, hidden, frozen, locked, not printed, empty)
 //!   through `cad.layers.find`'s rule (docs/adr/0311 §4).
 //! - A pressed row gives the tree the keyboard (the web's focused tree) until
@@ -42,6 +42,9 @@ pub(crate) struct OpenRow<'a> {
     pub depth: usize,
     pub node: &'a LayerNode,
     pub parent_visible: bool,
+    /// A class of the layer's style under it (docs/adr/9105 §2): its place in the renderer's classes; none, the node's
+    /// own row.
+    pub class: Option<usize>,
 }
 
 /// What the tree searches for: the text (as [`query`] makes it) and the
@@ -103,7 +106,7 @@ impl Search {
 }
 
 /// The tree's rows as shown, depth first: the nodes the search keeps (an
-/// empty one keeps every node) and the children of the open groups. The
+/// empty one keeps every node), the children of the open groups and the style classes of the open layers. The
 /// search keeps a match with everything under it (a matching group shows its
 /// layers) and the groups above it; while it searches every group it keeps
 /// is open (the web's `render`, since c63cd77).
@@ -126,7 +129,23 @@ pub(crate) fn open_rows<'a>(nodes: &'a [LayerNode], search: &Search) -> Vec<Open
                 depth,
                 node,
                 parent_visible: visible,
+                class: None,
             });
+            // An open layer's style classes under it, a rule's children deeper (docs/adr/9105 §2).
+            if node.kind == LayerNodeType::Layer && node.expanded {
+                let classes = node
+                    .style
+                    .renderer
+                    .as_ref()
+                    .map(kentos_native_application::style_classes::style_classes)
+                    .unwrap_or_default();
+                rows.extend(classes.iter().enumerate().map(|(i, c)| OpenRow {
+                    depth: depth + 1 + c.depth,
+                    node,
+                    parent_visible: visible && node.visible,
+                    class: Some(i),
+                }));
+            }
             if open(node, search.active()) {
                 let under = under || search.matches(node);
                 walk(
@@ -347,8 +366,10 @@ impl App {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
+        // A style class's row is not walked: the keys go from node to node.
         open_rows(doc.layers(), &self.layer_search_state())
             .into_iter()
+            .filter(|row| row.class.is_none())
             .map(|row| {
                 (
                     row.node.id.clone(),
@@ -509,6 +530,7 @@ mod tests {
         let doc = app.document.as_ref().expect("open");
         open_rows(doc.layers(), &app.layer_search_state())
             .iter()
+            .filter(|row| row.class.is_none())
             .map(|row| row.node.id.clone())
             .collect()
     }

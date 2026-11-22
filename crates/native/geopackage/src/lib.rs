@@ -12,13 +12,15 @@ pub mod constraints;
 pub mod indexes;
 pub mod fgb;
 pub mod foreign;
-pub mod geom;
 pub mod made;
 pub mod relations;
 pub mod schema;
 pub mod styles;
 pub mod tiles;
-pub mod wkt;
+
+/// The geometry model and its WKB, blob and WKT codecs live in `kentos-data` (docs/adr/9100 §3), shared by every
+/// driver; these paths stay.
+pub use kentos_data::{geom, wkt};
 
 use std::collections::HashMap;
 use std::fmt;
@@ -356,6 +358,19 @@ pub fn quote(name: &str) -> String {
     format!("\"{}\"", name.replace('"', "\"\""))
 }
 
+/// The lasting ids' extension row, added once. `INSERT OR IGNORE` added one at every write of ids: a NULL
+/// `column_name` never equals another in the table's UNIQUE constraint (docs/adr/9107 §4).
+fn register_uids(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    conn.execute(
+        "INSERT INTO gpkg_extensions
+         SELECT 'kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write'
+         WHERE NOT EXISTS (SELECT 1 FROM gpkg_extensions
+           WHERE table_name = 'kentos_uids' AND column_name IS NULL AND extension_name = ?1)",
+        [UIDS_EXTENSION],
+    )?;
+    Ok(())
+}
+
 /// The extensions table, made when a file another writer made has none yet: the table is optional until an
 /// extension is used (OGC 12-128r18 §2.3), and a GeoPackage made without a spatial index may lack it (docs/adr/0750).
 pub(crate) fn ensure_extensions(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
@@ -475,6 +490,11 @@ impl GeoPackage {
         ))?;
         register(&conn)?;
         Ok(GeoPackage { conn })
+    }
+
+    /// The open SQLite connection (docs/adr/9100 §5): the data driver writes its own statements and transactions over it.
+    pub fn connection(&self) -> &Connection {
+        &self.conn
     }
 
     /// The tables of `gpkg_contents`, in its order, with their columns.
@@ -1383,10 +1403,7 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
                  PRIMARY KEY (table_name, fid));",
             )?;
             ensure_extensions(tx)?;
-            tx.execute(
-                "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write')",
-                [UIDS_EXTENSION],
-            )?;
+            register_uids(tx)?;
             let mut put = tx.prepare("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
             for (row, (uid, _)) in inserted.iter().zip(&edits.insert) {
                 put.execute(params![layer.name, row.fid, uid])?;
@@ -1625,77 +1642,7 @@ impl Session<'_> {
     /// column rows, its extension rows, its spatial index and its triggers, its lasting ids, and the metadata
     /// documents only it referenced. Other tables, and tables other programs keep about it, are not touched.
     pub fn drop_table(&self, name: &str) -> Result<()> {
-        let exact = self.registered_name(name)?.unwrap_or_else(|| name.to_owned());
-        let geometry: Option<String> = self
-            .tx
-            .query_row(
-                "SELECT column_name FROM gpkg_geometry_columns WHERE table_name = ?1",
-                [&exact],
-                |r| r.get(0),
-            )
-            .ok();
-        let has = |t: &str| -> Result<bool> {
-            let n: i64 = self.tx.query_row(
-                "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
-                [t],
-                |r| r.get(0),
-            )?;
-            Ok(n > 0)
-        };
-        if let Some(column) = &geometry {
-            let r = format!("rtree_{exact}_{column}");
-            if has(&r)? {
-                self.tx
-                    .execute_batch(&format!("DROP TABLE {};", quote(&r)))?;
-            }
-            self.tx.execute(
-                "DELETE FROM gpkg_extensions WHERE table_name = ?1 AND column_name = ?2",
-                params![exact, column],
-            )?;
-        }
-        if has("gpkg_metadata_reference")? && has("gpkg_metadata")? {
-            let docs: Vec<i64> = {
-                let mut st = self.tx.prepare(
-                    "SELECT md_file_id FROM gpkg_metadata_reference WHERE table_name = ?1",
-                )?;
-                st.query_map([&exact], |r| r.get(0))?
-                    .collect::<rusqlite::Result<_>>()?
-            };
-            self.tx.execute(
-                "DELETE FROM gpkg_metadata_reference WHERE table_name = ?1",
-                [&exact],
-            )?;
-            for id in docs {
-                self.tx.execute(
-                    "DELETE FROM gpkg_metadata WHERE id = ?1
-                       AND NOT EXISTS (SELECT 1 FROM gpkg_metadata_reference WHERE md_file_id = ?1 OR md_parent_id = ?1)",
-                    [id],
-                )?;
-            }
-        }
-        if has("kentos_uids")? {
-            self.tx
-                .execute("DELETE FROM kentos_uids WHERE table_name = ?1", [&exact])?;
-        }
-        if has("gpkg_ogr_contents")? {
-            self.tx.execute(
-                "DELETE FROM gpkg_ogr_contents WHERE table_name = ?1",
-                [&exact],
-            )?;
-        }
-        self.tx
-            .execute("DELETE FROM gpkg_extensions WHERE table_name = ?1", [&exact])?;
-        self.tx.execute(
-            "DELETE FROM gpkg_geometry_columns WHERE table_name = ?1",
-            [&exact],
-        )?;
-        self.tx.execute(
-            "DELETE FROM gpkg_contents WHERE table_name = ?1",
-            [&exact],
-        )?;
-        self.tx
-            .execute_batch(&format!("DROP TABLE {};", quote(&exact)))?;
-        Ok(())
+        drop_table_in(&self.tx, name)
     }
 
     /// Starts a table: its SQL table, its contents and its geometry column rows. Rows follow with [`Session::append`].
@@ -1742,6 +1689,122 @@ impl Session<'_> {
         self.tx.rollback()?;
         Ok(())
     }
+}
+
+/// Takes a feature or attribute table out of the file, with everything of it (see [`Session::drop_table`]), inside the
+/// caller's transaction.
+pub fn drop_table_in(conn: &Connection, name: &str) -> Result<()> {
+    let exact = registered_name_in(conn, name)?.unwrap_or_else(|| name.to_owned());
+    let geometry: Option<String> = conn
+        .query_row(
+            "SELECT column_name FROM gpkg_geometry_columns WHERE table_name = ?1",
+            [&exact],
+            |r| r.get(0),
+        )
+        .ok();
+    let has = |t: &str| -> Result<bool> {
+        let n: i64 = conn.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
+            [t],
+            |r| r.get(0),
+        )?;
+        Ok(n > 0)
+    };
+    if let Some(column) = &geometry {
+        let r = format!("rtree_{exact}_{column}");
+        if has(&r)? {
+            conn.execute_batch(&format!("DROP TABLE {};", quote(&r)))?;
+        }
+        conn.execute(
+            "DELETE FROM gpkg_extensions WHERE table_name = ?1 AND column_name = ?2",
+            params![exact, column],
+        )?;
+    }
+    if has("gpkg_metadata_reference")? && has("gpkg_metadata")? {
+        let docs: Vec<i64> = {
+            let mut st = conn.prepare(
+                "SELECT md_file_id FROM gpkg_metadata_reference WHERE table_name = ?1",
+            )?;
+            st.query_map([&exact], |r| r.get(0))?
+                .collect::<rusqlite::Result<_>>()?
+        };
+        conn.execute(
+            "DELETE FROM gpkg_metadata_reference WHERE table_name = ?1",
+            [&exact],
+        )?;
+        for id in docs {
+            conn.execute(
+                "DELETE FROM gpkg_metadata WHERE id = ?1
+                   AND NOT EXISTS (SELECT 1 FROM gpkg_metadata_reference WHERE md_file_id = ?1 OR md_parent_id = ?1)",
+                [id],
+            )?;
+        }
+    }
+    if has("kentos_uids")? {
+        conn.execute("DELETE FROM kentos_uids WHERE table_name = ?1", [&exact])?;
+    }
+    if has("gpkg_ogr_contents")? {
+        conn.execute(
+            "DELETE FROM gpkg_ogr_contents WHERE table_name = ?1",
+            [&exact],
+        )?;
+    }
+    conn.execute("DELETE FROM gpkg_extensions WHERE table_name = ?1", [&exact])?;
+    conn.execute(
+        "DELETE FROM gpkg_geometry_columns WHERE table_name = ?1",
+        [&exact],
+    )?;
+    conn.execute(
+        "DELETE FROM gpkg_contents WHERE table_name = ?1",
+        [&exact],
+    )?;
+    conn.execute_batch(&format!("DROP TABLE {};", quote(&exact)))?;
+    Ok(())
+}
+
+/// The exact name `gpkg_contents` keeps a table under (the case it was written in).
+pub fn registered_name_in(conn: &Connection, name: &str) -> Result<Option<String>> {
+    Ok(conn
+        .query_row(
+            "SELECT table_name FROM gpkg_contents WHERE table_name = ?1 COLLATE NOCASE",
+            [name],
+            |r| r.get(0),
+        )
+        .ok())
+}
+
+/// Makes an empty table inside the caller's transaction (docs/adr/9100 §5): its SQL table, its contents and geometry
+/// column rows, its spatial index with its triggers; rows inserted later keep the index by those triggers.
+pub fn create_table_in(conn: &Connection, def: &TableDef) -> Result<()> {
+    let w = start_in(conn, def)?;
+    finish_in(conn, w)
+}
+
+/// Sets a feature table's box in `gpkg_contents` to its rows' (by the spatial index when it has one), none when it has
+/// no geometry; the table's time with it.
+pub fn refresh_extent_in(conn: &Connection, table: &str, column: &str) -> Result<()> {
+    let r = format!("rtree_{table}_{column}");
+    let indexed: i64 = conn.query_row(
+        "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
+        [&r],
+        |x| x.get(0),
+    )?;
+    let sql = if indexed > 0 {
+        format!("SELECT min(minx), min(miny), max(maxx), max(maxy) FROM {}", quote(&r))
+    } else {
+        let c = quote(column);
+        format!(
+            "SELECT min(ST_MinX({c})), min(ST_MinY({c})), max(ST_MaxX({c})), max(ST_MaxY({c})) FROM {}",
+            quote(table)
+        )
+    };
+    let b: [Option<f64>; 4] = conn.query_row(&sql, [], |x| Ok([x.get(0)?, x.get(1)?, x.get(2)?, x.get(3)?]))?;
+    conn.execute(
+        "UPDATE gpkg_contents SET min_x = ?2, min_y = ?3, max_x = ?4, max_y = ?5,
+           last_change = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE table_name = ?1",
+        params![table, b[0], b[1], b[2], b[3]],
+    )?;
+    Ok(())
 }
 
 fn start_in(conn: &Connection, def: &TableDef) -> Result<TableWrite> {
@@ -1880,10 +1943,7 @@ fn append_in(
              PRIMARY KEY (table_name, fid));",
         )?;
         ensure_extensions(conn)?;
-        conn.execute(
-            "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write')",
-            [UIDS_EXTENSION],
-        )?;
+        register_uids(conn)?;
         let mut st = conn.prepare_cached("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
         for (fid, uid) in fids.iter().zip(uids) {
             st.execute(params![def.name, fid, uid])?;

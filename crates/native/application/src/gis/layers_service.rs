@@ -217,6 +217,7 @@ fn updated(node: &LayerNode, input: &LayersService) -> ServedBy {
     ServedBy {
         service: input.service.clone().or_else(|| node.service.clone()),
         feed: input.feed.clone().or_else(|| node.feed.clone()),
+        data: node.data.clone(),
     }
 }
 

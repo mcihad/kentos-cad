@@ -1,0 +1,3176 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.layers.export",
+ "commandVersion": 1,
+ "title": "Katmanı dışa aktar: GeoPackage, GeoJSON, CSV, Shapefile, KML; seçim, kutu, süzgeç, alanlar, geometri (ADR 9106)",
+ "note": "ADR 9106. Beklentiler sözleşmenin kurallarıyla burada hesaplanır; GeoPackage'a yazılan tablo haritaya eklenip cad.layers.rows ile, CSV ve GeoJSON dosyası metin olarak geri okunur. Veri katmanı satirlar.gpkg'ı okur (scripts/fixtures/layer_rows_command_cases.py yazar).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Katmanı dışa aktar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 600000,
+   "y": 4410000
+  },
+  "layers": [
+   {
+    "id": "noktalar",
+    "name": "Noktalar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "point",
+    "fields": [
+     {
+      "name": "kullanim",
+      "kind": "text"
+     },
+     {
+      "name": "alan",
+      "kind": "decimal"
+     },
+     {
+      "name": "durum",
+      "kind": "text",
+      "values": [
+       {
+        "code": "1",
+        "label": "Sağlam"
+       },
+       {
+        "code": "2",
+        "label": "Bakımda"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "karisik",
+    "name": "Karışık",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "ad",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "parseller",
+    "name": "Parseller",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "geometry": "area",
+    "data": {
+     "driver": "gpkg",
+     "address": "$fixture:data/v1/satirlar.gpkg",
+     "table": "parseller",
+     "key": "fid",
+     "geometry": {
+      "column": "geom",
+      "typeName": "POLYGON",
+      "srid": 5256
+     }
+    },
+    "fields": [
+     {
+      "name": "ada",
+      "kind": "integer"
+     },
+     {
+      "name": "parsel",
+      "kind": "integer"
+     },
+     {
+      "name": "mahalle",
+      "kind": "text"
+     },
+     {
+      "name": "alan",
+      "kind": "decimal"
+     },
+     {
+      "name": "kullanim",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "noktalar",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "noktalar",
+    "attrs": {
+     "kullanim": "Konut",
+     "alan": "120",
+     "durum": "1"
+    },
+    "p": {
+     "x": 600000.0,
+     "y": 4410000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 2,
+    "layerId": "noktalar",
+    "attrs": {
+     "kullanim": "Park",
+     "alan": "480.5",
+     "durum": "2"
+    },
+    "p": {
+     "x": 600010.0,
+     "y": 4410005.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 3,
+    "layerId": "noktalar",
+    "attrs": {
+     "kullanim": "Konut",
+     "alan": "900",
+     "durum": "1"
+    },
+    "p": {
+     "x": 600020.0,
+     "y": 4410010.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 4,
+    "layerId": "noktalar",
+    "attrs": {
+     "kullanim": "Ticaret",
+     "alan": "1500"
+    },
+    "p": {
+     "x": 600030.0,
+     "y": 4410015.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "noktalar",
+    "attrs": {
+     "kullanim": "Eğitim",
+     "alan": "60",
+     "durum": "2"
+    },
+    "p": {
+     "x": 600040.0,
+     "y": 4410020.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 20,
+    "layerId": "karisik",
+    "attrs": {
+     "ad": "A"
+    },
+    "p": {
+     "x": 600100.0,
+     "y": 4410100.0
+    }
+   },
+   {
+    "kind": "text",
+    "id": 21,
+    "layerId": "karisik",
+    "attrs": {
+     "ad": "B"
+    },
+    "p": {
+     "x": 600110.0,
+     "y": 4410100.0
+    },
+    "text": "Yazı",
+    "height": 2.5,
+    "rotation": 0
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "GeoPackage: süzgecin tuttuğu satırlar yeni tabloya, haritaya eklenip geri okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/konut.gpkg",
+      "name": "konut",
+      "filter": "kullanim = 'Konut'",
+      "addToMap": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/konut.gpkg"
+       ],
+       "table": "konut",
+       "written": 7,
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "400",
+          "kullanim": "Konut"
+         },
+         "wkt": "POLYGON ((600000 4410000, 600020 4410000, 600020 4410020, 600000 4410020, 600000 4410000))"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "ada": "100",
+          "parsel": "6",
+          "mahalle": "Şehitler",
+          "alan": "625.25",
+          "kullanim": "Konut"
+         },
+         "wkt": "POLYGON ((600250 4410000, 600275 4410000, 600275 4410025, 600250 4410025, 600250 4410000))"
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "ada": "101",
+          "parsel": "1",
+          "mahalle": "Çınar",
+          "alan": "900.5",
+          "kullanim": "Konut"
+         },
+         "wkt": "POLYGON ((600200 4410050, 600230 4410050, 600230 4410080, 600200 4410080, 600200 4410050))"
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "ada": "101",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "841",
+          "kullanim": "Konut"
+         },
+         "wkt": "POLYGON ((600000 4410100, 600029 4410100, 600029 4410129, 600000 4410129, 600000 4410100))"
+        },
+        {
+         "key": 5,
+         "attrs": {
+          "ada": "102",
+          "parsel": "3",
+          "mahalle": "Selçuklu",
+          "alan": "576.5",
+          "kullanim": "Konut"
+         },
+         "wkt": "POLYGON ((600200 4410150, 600224 4410150, 600224 4410174, 600200 4410174, 600200 4410150))"
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "ada": "102",
+          "parsel": "5",
+          "mahalle": "İnönü",
+          "alan": "529",
+          "kullanim": "Konut"
+         },
+         "wkt": "POLYGON ((600000 4410200, 600023 4410200, 600023 4410223, 600000 4410223, 600000 4410200))"
+        },
+        {
+         "key": 7,
+         "attrs": {
+          "ada": "102",
+          "parsel": "10",
+          "mahalle": "Ümraniye",
+          "alan": "784.25",
+          "kullanim": "Konut"
+         },
+         "wkt": "POLYGON ((600250 4410200, 600278 4410200, 600278 4410228, 600250 4410228, 600250 4410200))"
+        }
+       ],
+       "offset": 0,
+       "total": 7,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage: alanlar seçilir, sırası ve adı verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/alanlar.gpkg",
+      "name": "secilen",
+      "fields": [
+       {
+        "name": "kullanim"
+       },
+       {
+        "name": "ada",
+        "to": "ada_no"
+       }
+      ],
+      "keys": [
+       1,
+       2,
+       3
+      ],
+      "addToMap": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/alanlar.gpkg"
+       ],
+       "table": "secilen",
+       "written": 3,
+       "fields": [
+        "kullanim",
+        "ada_no"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "kullanim",
+        "ada_no"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "kullanim": "Konut",
+          "ada_no": "100"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "kullanim": "Park",
+          "ada_no": "100"
+         }
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "kullanim": "Eğitim",
+          "ada_no": "100"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage: alanın çevresi çizgi olarak yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/geo-LINESTRING-False.gpkg",
+      "name": "geo",
+      "keys": [
+       4,
+       5
+      ],
+      "fields": [
+       {
+        "name": "parsel"
+       }
+      ],
+      "addToMap": true,
+      "geometry": "line"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/geo-LINESTRING-False.gpkg"
+       ],
+       "table": "geo",
+       "written": 2,
+       "fields": [
+        "parsel"
+       ],
+       "geometry": "LINESTRING",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "parsel"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "parsel": "4"
+         },
+         "wkt": "LINESTRING (600150 4410000, 600176 4410000, 600176 4410026, 600150 4410026, 600150 4410000)"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "parsel": "5"
+         },
+         "wkt": "LINESTRING (600200 4410000, 600233 4410000, 600233 4410033, 600200 4410033, 600200 4410000)"
+        }
+       ],
+       "offset": 0,
+       "total": 2,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage: çok parçalıya zorlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/geo-MULTIPOLYGON-False.gpkg",
+      "name": "geo",
+      "keys": [
+       4,
+       5
+      ],
+      "fields": [
+       {
+        "name": "parsel"
+       }
+      ],
+      "addToMap": true,
+      "multi": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/geo-MULTIPOLYGON-False.gpkg"
+       ],
+       "table": "geo",
+       "written": 2,
+       "fields": [
+        "parsel"
+       ],
+       "geometry": "MULTIPOLYGON",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "parsel"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "parsel": "4"
+         },
+         "wkt": "MULTIPOLYGON (((600150 4410000, 600176 4410000, 600176 4410026, 600150 4410026, 600150 4410000)))"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "parsel": "5"
+         },
+         "wkt": "MULTIPOLYGON (((600200 4410000, 600233 4410000, 600233 4410033, 600200 4410033, 600200 4410000)))"
+        }
+       ],
+       "offset": 0,
+       "total": 2,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage: Z boyutu eklenir (kotsuz nesne 0)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/geo-POLYGON-True.gpkg",
+      "name": "geo",
+      "keys": [
+       4,
+       5
+      ],
+      "fields": [
+       {
+        "name": "parsel"
+       }
+      ],
+      "addToMap": true,
+      "z": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/geo-POLYGON-True.gpkg"
+       ],
+       "table": "geo",
+       "written": 2,
+       "fields": [
+        "parsel"
+       ],
+       "geometry": "POLYGON Z",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000,
+      "geometry": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "parsel"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "parsel": "4"
+         },
+         "wkt": "POLYGON Z ((600150 4410000 0, 600176 4410000 0, 600176 4410026 0, 600150 4410026 0, 600150 4410000 0))"
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "parsel": "5"
+         },
+         "wkt": "POLYGON Z ((600200 4410000 0, 600233 4410000 0, 600233 4410033 0, 600200 4410033 0, 600200 4410000 0))"
+        }
+       ],
+       "offset": 0,
+       "total": 2,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage: kutuya değen satırlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/kutu.gpkg",
+      "name": "kutu",
+      "bbox": [
+       600040.0,
+       4410040.0,
+       600160.0,
+       4410110.0
+      ],
+      "fields": [
+       {
+        "name": "ada"
+       },
+       {
+        "name": "parsel"
+       }
+      ],
+      "addToMap": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/kutu.gpkg"
+       ],
+       "table": "kutu",
+       "written": 6,
+       "fields": [
+        "ada",
+        "parsel"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada",
+        "parsel"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100",
+          "parsel": "8"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "ada": "100",
+          "parsel": "9"
+         }
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "ada": "100",
+          "parsel": "10"
+         }
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "ada": "101",
+          "parsel": "4"
+         }
+        },
+        {
+         "key": 5,
+         "attrs": {
+          "ada": "101",
+          "parsel": "5"
+         }
+        },
+        {
+         "key": 6,
+         "attrs": {
+          "ada": "101",
+          "parsel": "6"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 6,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan tablo: verilmezse yazılmaz (target_exists)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/var1.gpkg",
+      "name": "var",
+      "keys": [
+       1,
+       2
+      ],
+      "fields": [
+       {
+        "name": "ada"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/var1.gpkg"
+       ],
+       "table": "var",
+       "written": 2,
+       "fields": [
+        "ada"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/var1.gpkg",
+      "name": "var",
+      "keys": [
+       1,
+       2
+      ],
+      "fields": [
+       {
+        "name": "ada"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "target_exists",
+       "message": "“var” tablosu GeoPackage kaynağında var. Üstüne yazmayı, katmanı değiştirmeyi ya da eklemeyi seçin (existing).",
+       "path": "existing"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan tablo: katmanı değiştir (tablo yeniden yapılır)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/var2.gpkg",
+      "name": "var",
+      "keys": [
+       1,
+       2
+      ],
+      "fields": [
+       {
+        "name": "ada"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/var2.gpkg"
+       ],
+       "table": "var",
+       "written": 2,
+       "fields": [
+        "ada"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/var2.gpkg",
+      "name": "var",
+      "keys": [
+       7
+      ],
+      "fields": [
+       {
+        "name": "ada"
+       }
+      ],
+      "existing": "replaceLayer",
+      "addToMap": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/var2.gpkg"
+       ],
+       "table": "var",
+       "written": 1,
+       "fields": [
+        "ada"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 1,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan tablo: ekle; tabloda olmayan alan bırakılır (field_left_out)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/var3.gpkg",
+      "name": "var",
+      "keys": [
+       1,
+       2
+      ],
+      "fields": [
+       {
+        "name": "ada"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/var3.gpkg"
+       ],
+       "table": "var",
+       "written": 2,
+       "fields": [
+        "ada"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/var3.gpkg",
+      "name": "var",
+      "keys": [
+       9
+      ],
+      "fields": [
+       {
+        "name": "ada"
+       },
+       {
+        "name": "mahalle"
+       }
+      ],
+      "existing": "append",
+      "addToMap": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/var3.gpkg"
+       ],
+       "table": "var",
+       "written": 1,
+       "fields": [
+        "ada",
+        "mahalle"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "field_left_out",
+        "message": "Eklenen tabloda “mahalle” alanı yok; değerleri yazılmadı.",
+        "path": "fields"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "ada": "100"
+         }
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "ada": "100"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 3,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan dosya: üstüne yaz (dosyanın öbür tabloları gider)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/var4.gpkg",
+      "name": "var",
+      "keys": [
+       1,
+       2
+      ],
+      "fields": [
+       {
+        "name": "ada"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/var4.gpkg"
+       ],
+       "table": "var",
+       "written": 2,
+       "fields": [
+        "ada"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/var4.gpkg",
+      "name": "yeni",
+      "keys": [
+       3
+      ],
+      "fields": [
+       {
+        "name": "ada"
+       }
+      ],
+      "existing": "overwriteFile",
+      "addToMap": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/var4.gpkg"
+       ],
+       "table": "yeni",
+       "written": 1,
+       "fields": [
+        "ada"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "ada"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "ada": "100"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 1,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizim katmanı: noktaları GeoPackage'a",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "gpkg",
+      "path": "$tmp:disa/noktalar.gpkg",
+      "addToMap": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/noktalar.gpkg"
+       ],
+       "table": "noktalar",
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 5256,
+       "layer": "layer-1",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "rows": [
+        {
+         "key": 1,
+         "attrs": {
+          "kullanim": "Konut",
+          "alan": "120",
+          "durum": "1"
+         }
+        },
+        {
+         "key": 2,
+         "attrs": {
+          "kullanim": "Park",
+          "alan": "480.5",
+          "durum": "2"
+         }
+        },
+        {
+         "key": 3,
+         "attrs": {
+          "kullanim": "Konut",
+          "alan": "900",
+          "durum": "1"
+         }
+        },
+        {
+         "key": 4,
+         "attrs": {
+          "kullanim": "Ticaret",
+          "alan": "1500"
+         }
+        },
+        {
+         "key": 5,
+         "attrs": {
+          "kullanim": "Eğitim",
+          "alan": "60",
+          "durum": "2"
+         }
+        }
+       ],
+       "offset": 0,
+       "total": 5,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizim katmanı: yazı geometri sütununa yazılmaz, sayılıp söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "karisik",
+      "format": "gpkg",
+      "path": "$tmp:disa/karisik.gpkg",
+      "geometry": "point"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [
+        "$tmp:disa/karisik.gpkg"
+       ],
+       "table": "karisik",
+       "written": 1,
+       "fields": [
+        "ad"
+       ],
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "export_skipped",
+        "message": "1 nesne yazılamadı; ilki: yazı ya da ölçü bir geometri sütununa yazılmaz."
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoJSON: proje koordinatları, sayılar sayı, listeli alan etiketiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "geojson",
+      "path": "$tmp:disa/noktalar.geojson",
+      "fields": [
+       {
+        "name": "kullanim"
+       },
+       {
+        "name": "alan"
+       },
+       {
+        "name": "durum",
+        "labels": true
+       }
+      ],
+      "options": {
+       "projectCoordinates": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "geojson",
+       "files": [
+        "$tmp:disa/noktalar.geojson"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/noktalar.geojson",
+     "as": "json",
+     "returns": {
+      "type": "FeatureCollection",
+      "name": "Noktalar",
+      "crs": "$any",
+      "features": [
+       {
+        "type": "Feature",
+        "properties": {
+         "kullanim": "Konut",
+         "alan": 120.0,
+         "durum": "Sağlam"
+        },
+        "geometry": {
+         "type": "Point",
+         "coordinates": [
+          600000.0,
+          4410000.0
+         ]
+        },
+        "kentos": {
+         "layer": "Noktalar"
+        }
+       },
+       {
+        "type": "Feature",
+        "properties": {
+         "kullanim": "Park",
+         "alan": 480.5,
+         "durum": "Bakımda"
+        },
+        "geometry": {
+         "type": "Point",
+         "coordinates": [
+          600010.0,
+          4410005.0
+         ]
+        },
+        "kentos": {
+         "layer": "Noktalar"
+        }
+       },
+       {
+        "type": "Feature",
+        "properties": {
+         "kullanim": "Konut",
+         "alan": 900.0,
+         "durum": "Sağlam"
+        },
+        "geometry": {
+         "type": "Point",
+         "coordinates": [
+          600020.0,
+          4410010.0
+         ]
+        },
+        "kentos": {
+         "layer": "Noktalar"
+        }
+       },
+       {
+        "type": "Feature",
+        "properties": {
+         "kullanim": "Ticaret",
+         "alan": 1500.0
+        },
+        "geometry": {
+         "type": "Point",
+         "coordinates": [
+          600030.0,
+          4410015.0
+         ]
+        },
+        "kentos": {
+         "layer": "Noktalar"
+        }
+       },
+       {
+        "type": "Feature",
+        "properties": {
+         "kullanim": "Eğitim",
+         "alan": 60.0,
+         "durum": "Bakımda"
+        },
+        "geometry": {
+         "type": "Point",
+         "coordinates": [
+          600040.0,
+          4410020.0
+         ]
+        },
+        "kentos": {
+         "layer": "Noktalar"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "CSV: alanlar ve WKT, virgülle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "csv",
+      "path": "$tmp:disa/noktalar.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "csv",
+       "files": [
+        "$tmp:disa/noktalar.csv"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/noktalar.csv",
+     "as": "text",
+     "returns": "kullanim,alan,durum,wkt\r\nKonut,120,1,POINT (600000 4410000)\r\nPark,480.5,2,POINT (600010 4410005)\r\nKonut,900,1,POINT (600020 4410010)\r\nTicaret,1500,,POINT (600030 4410015)\r\nEğitim,60,2,POINT (600040 4410020)\r\n"
+    }
+   ]
+  },
+  {
+   "name": "CSV: X ve Y sütunları, noktalı virgül, Windows-1254",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "csv",
+      "path": "$tmp:disa/xy.csv",
+      "fields": [
+       {
+        "name": "kullanim"
+       }
+      ],
+      "encoding": "windows1254",
+      "options": {
+       "separator": ";",
+       "xy": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "csv",
+       "files": [
+        "$tmp:disa/xy.csv"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim"
+       ],
+       "geometry": "POINT",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/xy.csv",
+     "as": "windows1254",
+     "returns": "kullanim;x;y\r\nKonut;600000;4410000\r\nPark;600010;4410005\r\nKonut;600020;4410010\r\nTicaret;600030;4410015\r\nEğitim;600040;4410020\r\n"
+    }
+   ]
+  },
+  {
+   "name": "CSV: değeri ayırıcı ya da tırnak taşıyan hücre tırnağa alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "csv",
+      "path": "$tmp:disa/geometrisiz.csv",
+      "geometry": "none",
+      "fields": [
+       {
+        "name": "kullanim",
+        "to": "kullanım, tür"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "csv",
+       "files": [
+        "$tmp:disa/geometrisiz.csv"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanım, tür"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/geometrisiz.csv",
+     "as": "text",
+     "returns": "\"kullanım, tür\"\r\nKonut\r\nPark\r\nKonut\r\nTicaret\r\nEğitim\r\n"
+    }
+   ]
+  },
+  {
+   "name": "Shapefile (UTF-8): dosyaları, .cpg kodlamayı, .prj sistemi söyler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "shapefile",
+      "path": "$tmp:disa/shp-utf8/noktalar.shp",
+      "encoding": "utf8"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "shapefile",
+       "files": [
+        "$tmp:disa/shp-utf8/noktalar.shp",
+        "$tmp:disa/shp-utf8/noktalar.shx",
+        "$tmp:disa/shp-utf8/noktalar.dbf",
+        "$tmp:disa/shp-utf8/noktalar.prj",
+        "$tmp:disa/shp-utf8/noktalar.cpg"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/shp-utf8/noktalar.cpg",
+     "as": "text",
+     "returns": "UTF-8"
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/shp-utf8/noktalar.prj",
+     "as": "text",
+     "returns": "PROJCS[\"TUREF_TM36\",GEOGCS[\"GCS_TUREF\",DATUM[\"D_Turkish_National_Reference_Frame\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",500000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",36.0],PARAMETER[\"Scale_Factor\",1.0],PARAMETER[\"Latitude_Of_Origin\",0.0],UNIT[\"Meter\",1.0]]"
+    }
+   ]
+  },
+  {
+   "name": "Shapefile (1254): dosyaları, .cpg kodlamayı, .prj sistemi söyler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "shapefile",
+      "path": "$tmp:disa/shp-windows1254/noktalar.shp",
+      "encoding": "windows1254"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "shapefile",
+       "files": [
+        "$tmp:disa/shp-windows1254/noktalar.shp",
+        "$tmp:disa/shp-windows1254/noktalar.shx",
+        "$tmp:disa/shp-windows1254/noktalar.dbf",
+        "$tmp:disa/shp-windows1254/noktalar.prj",
+        "$tmp:disa/shp-windows1254/noktalar.cpg"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/shp-windows1254/noktalar.cpg",
+     "as": "text",
+     "returns": "1254"
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/shp-windows1254/noktalar.prj",
+     "as": "text",
+     "returns": "PROJCS[\"TUREF_TM36\",GEOGCS[\"GCS_TUREF\",DATUM[\"D_Turkish_National_Reference_Frame\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",500000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",36.0],PARAMETER[\"Scale_Factor\",1.0],PARAMETER[\"Latitude_Of_Origin\",0.0],UNIT[\"Meter\",1.0]]"
+    }
+   ]
+  },
+  {
+   "name": "KML: her zaman WGS 84",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "kml",
+      "path": "$tmp:disa/noktalar.kml"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kml",
+       "files": [
+        "$tmp:disa/noktalar.kml"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/noktalar.kml",
+     "as": "text",
+     "returns": "$any"
+    }
+   ]
+  },
+  {
+   "name": "KML: katmanın stili; her sınıf kendi stili, kapalı sınıfın yer imi stilsiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "kml",
+      "path": "$tmp:disa/stil.kml",
+      "options": {
+       "symbols": "style"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kml",
+       "files": [
+        "$tmp:disa/stil.kml"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/stil.kml",
+     "as": "kmlStyles",
+     "returns": {
+      "styles": {
+       "s1": {
+        "icon": {
+         "color": "ff1c1ae3",
+         "scale": "0.35"
+        }
+       },
+       "s2": {
+        "icon": {
+         "color": "802ca033",
+         "scale": "0.47"
+        }
+       },
+       "s3": {
+        "icon": {
+         "color": "ff999999",
+         "scale": "0.3"
+        }
+       }
+      },
+      "placemarks": [
+       "#s1",
+       "#s2",
+       "#s1",
+       null,
+       "#s3"
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Katmanı dışa aktar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "noktalar",
+      "name": "Noktalar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "renderer": {
+        "type": "categorized",
+        "expr": "kullanim",
+        "categories": [
+         {
+          "value": "Konut",
+          "label": "Konut",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "fill": "#e31a1c",
+              "size": 3
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "Park",
+          "label": "Park",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "fill": "#33a02c",
+              "size": 4,
+              "opacity": 0.5
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "Ticaret",
+          "label": "Ticaret",
+          "symbols": {
+           "marker": {
+            "type": "marker",
+            "layers": [
+             {
+              "type": "shape",
+              "shape": "circle",
+              "fill": "#1f78b4",
+              "size": 3
+             }
+            ]
+           }
+          },
+          "enabled": false
+         }
+        ],
+        "other": {
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "type": "shape",
+            "shape": "circle",
+            "fill": "#999999",
+            "size": 2.5
+           }
+          ]
+         }
+        }
+       }
+      },
+      "children": [],
+      "geometry": "point",
+      "fields": [
+       {
+        "name": "kullanim",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "1",
+          "label": "Sağlam"
+         },
+         {
+          "code": "2",
+          "label": "Bakımda"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "karisik",
+      "name": "Karışık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
+     }
+    ],
+    "activeLayer": "noktalar",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Konut",
+       "alan": "120",
+       "durum": "1"
+      },
+      "p": {
+       "x": 600000.0,
+       "y": 4410000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Park",
+       "alan": "480.5",
+       "durum": "2"
+      },
+      "p": {
+       "x": 600010.0,
+       "y": 4410005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Konut",
+       "alan": "900",
+       "durum": "1"
+      },
+      "p": {
+       "x": 600020.0,
+       "y": 4410010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Ticaret",
+       "alan": "1500"
+      },
+      "p": {
+       "x": 600030.0,
+       "y": 4410015.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Eğitim",
+       "alan": "60",
+       "durum": "2"
+      },
+      "p": {
+       "x": 600040.0,
+       "y": 4410020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "karisik",
+      "attrs": {
+       "ad": "A"
+      },
+      "p": {
+       "x": 600100.0,
+       "y": 4410100.0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 21,
+      "layerId": "karisik",
+      "attrs": {
+       "ad": "B"
+      },
+      "p": {
+       "x": 600110.0,
+       "y": 4410100.0
+      },
+      "text": "Yazı",
+      "height": 2.5,
+      "rotation": 0
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "KML: veri katmanının alanları sınıflarının stiliyle; sınıfın alanı yazılmasa da",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "kml",
+      "path": "$tmp:disa/alanlar.kml",
+      "fields": [
+       {
+        "name": "ada"
+       }
+      ],
+      "options": {
+       "symbols": "style"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kml",
+       "files": [
+        "$tmp:disa/alanlar.kml"
+       ],
+       "written": 30,
+       "fields": [
+        "ada"
+       ],
+       "geometry": "POLYGON",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/alanlar.kml",
+     "as": "kmlStyles",
+     "returns": {
+      "styles": {
+       "s1": {
+        "line": {
+         "color": "ff333333",
+         "width": "1.89"
+        },
+        "poly": {
+         "color": "ff7ac2d9",
+         "fill": "1",
+         "outline": "1"
+        }
+       },
+       "s2": {
+        "poly": {
+         "color": "ff3d7a2b",
+         "fill": "1",
+         "outline": "0"
+        }
+       },
+       "s3": {
+        "line": {
+         "color": "ff888888",
+         "width": "0.94"
+        },
+        "poly": {
+         "color": "80cccccc",
+         "fill": "1",
+         "outline": "1"
+        }
+       }
+      },
+      "placemarks": [
+       "#s1",
+       "#s2",
+       "#s3",
+       "#s2",
+       "#s3",
+       "#s1",
+       "#s3",
+       "#s3",
+       "#s3",
+       "#s3",
+       "#s1",
+       "#s3",
+       "#s1",
+       "#s2",
+       "#s3",
+       "#s2",
+       "#s3",
+       "#s3",
+       "#s3",
+       "#s3",
+       "#s2",
+       "#s3",
+       "#s1",
+       "#s3",
+       "#s1",
+       "#s2",
+       "#s3",
+       "#s2",
+       "#s3",
+       "#s1"
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Katmanı dışa aktar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 600000,
+     "y": 4410000
+    },
+    "layers": [
+     {
+      "id": "noktalar",
+      "name": "Noktalar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "geometry": "point",
+      "fields": [
+       {
+        "name": "kullanim",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "1",
+          "label": "Sağlam"
+         },
+         {
+          "code": "2",
+          "label": "Bakımda"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "karisik",
+      "name": "Karışık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "parseller",
+      "name": "Parseller",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "renderer": {
+        "type": "categorized",
+        "expr": "kullanim",
+        "categories": [
+         {
+          "value": "Konut",
+          "label": "Konut",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#d9c27a"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#333333",
+              "width": 0.5
+             }
+            ]
+           }
+          }
+         },
+         {
+          "value": "Park",
+          "label": "Park",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "type": "simpleFill",
+              "color": "#2b7a3d"
+             }
+            ]
+           }
+          }
+         }
+        ],
+        "other": {
+         "fill": {
+          "type": "fill",
+          "layers": [
+           {
+            "type": "simpleFill",
+            "color": "#cccccc",
+            "opacity": 0.5
+           },
+           {
+            "type": "simpleLine",
+            "color": "#888888",
+            "width": 0.25
+           }
+          ]
+         }
+        }
+       }
+      },
+      "children": [],
+      "geometry": "area",
+      "data": {
+       "driver": "gpkg",
+       "address": "$fixture:data/v1/satirlar.gpkg",
+       "table": "parseller",
+       "key": "fid",
+       "geometry": {
+        "column": "geom",
+        "typeName": "POLYGON",
+        "srid": 5256
+       }
+      },
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "integer"
+       },
+       {
+        "name": "parsel",
+        "kind": "integer"
+       },
+       {
+        "name": "mahalle",
+        "kind": "text"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "kullanim",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
+     }
+    ],
+    "activeLayer": "noktalar",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Konut",
+       "alan": "120",
+       "durum": "1"
+      },
+      "p": {
+       "x": 600000.0,
+       "y": 4410000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Park",
+       "alan": "480.5",
+       "durum": "2"
+      },
+      "p": {
+       "x": 600010.0,
+       "y": 4410005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Konut",
+       "alan": "900",
+       "durum": "1"
+      },
+      "p": {
+       "x": 600020.0,
+       "y": 4410010.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Ticaret",
+       "alan": "1500"
+      },
+      "p": {
+       "x": 600030.0,
+       "y": 4410015.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "noktalar",
+      "attrs": {
+       "kullanim": "Eğitim",
+       "alan": "60",
+       "durum": "2"
+      },
+      "p": {
+       "x": 600040.0,
+       "y": 4410020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 20,
+      "layerId": "karisik",
+      "attrs": {
+       "ad": "A"
+      },
+      "p": {
+       "x": 600100.0,
+       "y": 4410100.0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 21,
+      "layerId": "karisik",
+      "attrs": {
+       "ad": "B"
+      },
+      "p": {
+       "x": 600110.0,
+       "y": 4410100.0
+      },
+      "text": "Yazı",
+      "height": 2.5,
+      "rotation": 0
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "KML: sembolsüz; yer imlerinin stili yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "kml",
+      "path": "$tmp:disa/sembolsuz.kml",
+      "options": {
+       "symbols": "none"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kml",
+       "files": [
+        "$tmp:disa/sembolsuz.kml"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/sembolsuz.kml",
+     "as": "kmlStyles",
+     "returns": {
+      "styles": {},
+      "placemarks": [
+       null,
+       null,
+       null,
+       null,
+       null
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "KML: katmanın rengi; tek stil, tema rengi siyah",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "kml",
+      "path": "$tmp:disa/renk.kml",
+      "options": {
+       "symbols": "color"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kml",
+       "files": [
+        "$tmp:disa/renk.kml"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim",
+        "alan",
+        "durum"
+       ],
+       "geometry": "POINT",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "readFile",
+     "from": "$tmp:disa/renk.kml",
+     "as": "kmlStyles",
+     "returns": {
+      "styles": {
+       "s1": {
+        "icon": {
+         "color": "ff000000",
+         "scale": null
+        },
+        "line": {
+         "color": "ff000000",
+         "width": "0.94"
+        }
+       }
+      },
+      "placemarks": [
+       "#s1",
+       "#s1",
+       "#s1",
+       "#s1",
+       "#s1"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: semboller yalnız KML'de",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "geojson",
+      "path": "$tmp:disa/semboller.geojson",
+      "options": {
+       "symbols": "style"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_option",
+       "message": "Semboller bu biçimde yoktur; GeoJSON için verilmez.",
+       "path": "options.symbols"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan: yazılacak satırları sayar, hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/plan.gpkg",
+      "filter": "kullanim = 'Konut'"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "gpkg",
+       "files": [],
+       "table": "parseller",
+       "written": 7,
+       "fields": [
+        "ada",
+        "parsel",
+        "mahalle",
+        "alan",
+        "kullanim"
+       ],
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman verilmedi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": " ",
+      "format": "gpkg",
+      "path": "$tmp:disa/x.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_layer",
+       "message": "Dışa aktarılacak katmanı (layer) verin.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: dosya yolu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "shapefile"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_target",
+       "message": "Yazılacak dosyanın yolunu verin (path).",
+       "path": "path"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: PostGIS'in adresi yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "postgis"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_target",
+       "message": "PostGIS'e yazmak için veritabanının adresini verin (address): postgresql://kullanıcı@sunucu:port/veritabanı.",
+       "path": "address"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: biçimde olmayan seçenek",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "gpkg",
+      "path": "$tmp:disa/x.gpkg",
+      "options": {
+       "separator": ";"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_option",
+       "message": "Ayırıcı bu biçimde yoktur; GeoPackage için verilmez.",
+       "path": "options.separator"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: Shapefile alan adı 10 karakteri geçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "shapefile",
+      "path": "$tmp:disa/x.shp",
+      "fields": [
+       {
+        "name": "kullanim",
+        "to": "kullanim_turu"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_name",
+       "message": "Alanın yazılacak adı boş ya da 10 karakterden uzun olamaz.",
+       "path": "fields[0].to"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok",
+      "format": "gpkg",
+      "path": "$tmp:disa/x.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "grup",
+      "format": "gpkg",
+      "path": "$tmp:disa/x.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir katman grubu; dışa aktarılan bir katmandır. Grubun bir katmanını verin.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: alan yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "gpkg",
+      "path": "$tmp:disa/x.gpkg",
+      "fields": [
+       {
+        "name": "kat"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“kat” alanı “Noktalar” katmanında yok.",
+       "path": "fields[0].name"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: süzgeç derlenmiyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "gpkg",
+      "path": "$tmp:disa/x.gpkg",
+      "filter": "kullanim ="
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_expression",
+       "message": "$any",
+       "path": "filter"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: hiçbir şey kalmadı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parseller",
+      "format": "gpkg",
+      "path": "$tmp:disa/bos.gpkg",
+      "filter": "ada > 10000"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_export",
+       "message": "Yazılacak nesne kalmadı: seçim, kutu ve süzgeç hiçbir nesne bırakmadı.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: harita servisi katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "altlik",
+      "format": "gpkg",
+      "path": "$tmp:disa/servis.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "service_layer",
+       "message": "“OpenStreetMap” bir harita servisinden çizilir; nesnesi ya da satırı yoktur.",
+       "path": "layer"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: bilinmeyen sistem",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "gpkg",
+      "path": "$tmp:disa/sistem.gpkg",
+      "srid": 999999
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_srid",
+       "message": "$any",
+       "path": "srid"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: hedef yapılamıyor (bir dosyanın içinde)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "gpkg",
+      "path": "$fixture:geopackage/v1/qgis.gpkg/alt.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: dosya var (CSV)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "csv",
+      "path": "$tmp:disa/var.csv",
+      "fields": [
+       {
+        "name": "kullanim"
+       }
+      ],
+      "geometry": "none"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "csv",
+       "files": [
+        "$tmp:disa/var.csv"
+       ],
+       "written": 5,
+       "fields": [
+        "kullanim"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "noktalar",
+      "format": "csv",
+      "path": "$tmp:disa/var.csv",
+      "fields": [
+       {
+        "name": "kullanim"
+       }
+      ],
+      "geometry": "none"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "target_exists",
+       "message": "$any",
+       "path": "existing"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

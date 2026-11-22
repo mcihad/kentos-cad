@@ -270,7 +270,29 @@ impl App {
                         self.preview_lines(&tkey, t, at + 1, lines);
                     }
                 }
+                // The projects kept beside them (docs/adr/9107).
+                self.stored_lines(&origin.path(), None, depth, lines);
             }
+        }
+    }
+
+    /// The projects kept at a place (docs/adr/9107), as rows that open them.
+    pub(super) fn stored_lines(&self, address: &str, schema: Option<&str>, depth: usize, lines: &mut Vec<Line>) {
+        let key = crate::sources::stored_key(address, schema);
+        for p in self.gis.sources.stored.get(&key).into_iter().flatten() {
+            let mut meta = Vec::new();
+            meta.extend(p.user.clone());
+            meta.extend(p.modified.as_deref().map(|m| crate::cloud::local_time::when(m, crate::cloud::local_time::Zone::system())).filter(|w| !w.is_empty()));
+            lines.push(Line::Stored {
+                key: format!("pj:{key}\0{}", p.name),
+                at: Box::new(crate::document::StoredSource {
+                    address: address.to_owned(),
+                    schema: schema.map(str::to_owned),
+                    name: p.name.clone(),
+                }),
+                meta: meta.join(" · "),
+                depth,
+            });
         }
     }
 
@@ -455,6 +477,8 @@ impl App {
                                 depth: 3,
                             });
                         }
+                        // The projects kept in the schema (docs/adr/9107).
+                        self.stored_lines(&c.address(), Some(schema), 3, lines);
                     }
                     let hidden = catalog.hidden(&c);
                     if hidden > 0 {

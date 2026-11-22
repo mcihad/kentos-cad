@@ -1,6 +1,6 @@
 //! Which symbols an object gets from its layer's renderer (formerly the
 //! TypeScript `style/resolve.ts`). A rule-based renderer can match
-//! several rules (each draws, as in QGIS); every match carries the scale
+//! several rules (each draws, as the style window's rules say); every match carries the scale
 //! range it is drawn in, so the GPU switches it per frame without a rebuild.
 
 use kentos_geometry_core::jsmath::{js_max, js_min};
@@ -115,14 +115,16 @@ pub fn resolve_renderer<'a>(renderer: &'a Renderer, t: &dyn Values) -> Vec<Resol
             expr,
             categories,
             other,
+            other_enabled,
         } => {
             let v = expr.and_then(|e| t.text(e)).unwrap_or_default();
             // The first category of the value takes the object; switched off, it
-            // draws nothing (as in QGIS). The others take only values no category holds.
+            // draws nothing (docs/adr/0091). The others take only values no category holds.
             match categories.iter().find(|c| c.value == v) {
                 Some(c) if c.enabled => one(&c.symbols),
                 Some(_) => Vec::new(),
-                None => other.as_ref().map_or_else(Vec::new, one),
+                None if *other_enabled => other.as_ref().map_or_else(Vec::new, one),
+                None => Vec::new(),
             }
         }
         Renderer::Graduated { expr, classes } => {
@@ -134,6 +136,8 @@ pub fn resolve_renderer<'a>(renderer: &'a Renderer, t: &dyn Values) -> Vec<Resol
                 .iter()
                 .enumerate()
                 .find(|(i, k)| n >= k.min && (n < k.max || (*i == last && n <= k.max)))
+                // Switched off, the class keeps its objects and draws nothing.
+                .filter(|(_, k)| k.enabled)
                 .map_or_else(Vec::new, |(_, k)| one(&k.symbols))
         }
         Renderer::Rules(rules) => {

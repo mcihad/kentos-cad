@@ -380,6 +380,7 @@ pub(super) fn complex_linetype_timing(gpu: &mut Gpu) {
             plot_scale: 50.,
             screen: false,
             hairlines: false,
+            screen_widths: false,
             clip: None,
             library: &library,
             layer_name: &|_| "A".into(),

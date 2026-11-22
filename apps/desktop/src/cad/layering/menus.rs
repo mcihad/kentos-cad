@@ -22,6 +22,42 @@ impl App {
                 )
                 .icon(Icon::Check);
         }
+        // A data layer's edit session (docs/adr/9103 §5): opened and closed here, its changes saved or let go.
+        if is_layer && let Some(data) = &node.data {
+            use crate::data_edits::{Event as Edit, event as edit};
+            let model = self.document.as_ref().map(|d| &d.model);
+            let editing = model.is_some_and(|m| m.editing(&id));
+            let modified = editing && model.is_some_and(|m| m.data_modified(&id));
+            menu = menu
+                .item(
+                    if editing { "Düzenlemeyi bitir" } else { "Düzenlemeyi başlat" },
+                    (editing || !data.read_only).then(|| {
+                        edit(if editing { Edit::Stop(id.clone()) } else { Edit::Start(id.clone()) })
+                    }),
+                )
+                .icon(icon("edit"))
+                .item(
+                    "Değişiklikleri kaydet",
+                    modified.then(|| edit(Edit::Save(vec![id.clone()]))),
+                )
+                .icon(icon("save"))
+                .item(
+                    "Değişiklikleri geri al",
+                    modified.then(|| edit(Edit::Rollback(vec![id.clone()]))),
+                )
+                .icon(icon("undo"));
+            // Every layer being edited, when another than this one is too (the session's own Kaydet and Geri al).
+            let others = model.map_or(0, |m| m.edited_layers().iter().filter(|l| **l != id).count());
+            if others > 0 {
+                let any = model.is_some_and(|m| m.edited_layers().iter().any(|l| m.data_modified(l)));
+                menu = menu
+                    .item("Bütün katmanları kaydet", any.then(|| edit(Edit::Save(Vec::new()))))
+                    .icon(icon("save"))
+                    .item("Bütün katmanları geri al", any.then(|| edit(Edit::Rollback(Vec::new()))))
+                    .icon(icon("undo"));
+            }
+            menu = menu.separator();
+        }
         menu = menu
             .item(
                 if node.visible { "Gizle" } else { "Göster" },
@@ -135,9 +171,47 @@ impl App {
                 } else {
                     "Gruba yakınlaştır"
                 },
-                (self.objects_below(node) > 0).then(|| event(Event::ZoomTo(id.clone()))),
+                // A data layer frames its table's box (docs/adr/9101 §5): it holds no objects.
+                (self.objects_below(node) > 0 || self.data_box_below(node))
+                    .then(|| event(Event::ZoomTo(id.clone()))),
             )
             .icon(icon("zoomSelection"));
+        // Dışa aktar ▸ (docs/adr/9106): the layer written to a table or a file.
+        if is_layer && node.service.is_none() {
+            let export = |selected: bool| {
+                Message::Gis(crate::gis::Event::LayerExport(crate::layer_export::Event::Open(id.clone(), selected)))
+            };
+            menu = menu
+                .submenu(
+                    "Dışa aktar",
+                    Menu::new()
+                        .item("Farklı kaydet…", export(false))
+                        .icon(icon("saveAs"))
+                        .item(
+                            "Seçilenleri farklı kaydet…",
+                            self.layer_has_selection(&id).then(|| export(true)),
+                        )
+                        .icon(icon("select")),
+                )
+                .icon(icon("export"));
+        }
+        // Veri kaynağına taşı… (docs/adr/9107 §8): a CBS project's drawing layer holding objects, into a table.
+        if self.migrates(node) {
+            menu = menu
+                .item(
+                    "Veri kaynağına taşı…",
+                    Message::Gis(crate::gis::Event::LayerMigrate(crate::layer_migrate::Event::Open(id.clone()))),
+                )
+                .icon(icon("import"));
+        }
+        // Nesne sayısını göster (docs/adr/9105 §4): the layer's objects and its classes' after their names.
+        if is_layer && node.service.is_none() {
+            menu = menu.check(
+                "Nesne sayısını göster",
+                node.class_counts == Some(true),
+                Message::Gis(crate::gis::Event::LayerClasses(crate::layer_classes::Event::Counts(id.clone()))),
+            );
+        }
         // A layer whose objects came from a service: taken again (docs/adr/0208 §10), where the program has services.
         if node.feed.is_some() && self.shows_layer_entry(LayerEntry::Service) {
             menu = menu

@@ -5,6 +5,8 @@
 //! viewer) and other attachments; its layer's actions as buttons. A broken
 //! template's error is said under the title. × closes it, as Esc and a click
 //! on nothing do. The card's body is the Bilgi kartı window's preview too.
+//! A data layer's row (data_info.rs, docs/adr/9101 §6) has the same card:
+//! its columns as read from the source, its layer's actions, no attachments.
 
 use iced::widget::text::Wrapping;
 use iced::widget::{Column, Row, button, column, container, row};
@@ -33,6 +35,8 @@ pub enum Event {
     Attachment(Slot, usize),
     /// One of its layer's actions, by its place in the list.
     Action(Slot, usize),
+    /// One of a data layer's row's actions, by its place in the list.
+    RowAction(usize),
     /// An action's target to the system's clipboard (Öznitelikler's Kopyala).
     Copy(String),
 }
@@ -41,21 +45,32 @@ fn msg(e: Event) -> Message {
     Message::InfoCard(e)
 }
 
-/// The card's body: the title (with the close button when `close` is given),
-/// the error, the rows, the text, the attachments of `slot` and the actions.
+/// What a card is of.
+pub(crate) enum Shown {
+    /// The Bilgi kartı window's preview: no close button, the actions as their targets.
+    Preview,
+    /// An object of the drawing, with its attachments.
+    Object(Slot, Vec<AttachmentView>),
+    /// A data layer's row: no attachments, its actions by their place.
+    Row,
+}
+
+/// The card's body: the title (with the close button but in the preview),
+/// the error, the rows, the text, the attachments of an object and the actions.
 pub(crate) fn card_body<'a>(
     app: &'a App,
     card: &ObjectCard,
-    shown: Option<(Slot, Vec<AttachmentView>)>,
+    shown: Shown,
     actions: &[ObjectAction],
     attachment_count: usize,
 ) -> Element<'a, Message> {
     let size = typography::caption();
-    let shown_preview = shown.is_none();
+    let shown_preview = matches!(shown, Shown::Preview);
+    let row = matches!(shown, Shown::Row);
     let mut head = Row::new().spacing(8).push(
         container(label::strong(card.title.clone()).wrapping(Wrapping::WordOrGlyph)).width(Fill),
     );
-    if shown.is_some() {
+    if !shown_preview {
         head = head.push(
             button(icon(from_web(Some("close"))).size(14.0))
                 .on_press(msg(Event::Close))
@@ -101,7 +116,7 @@ pub(crate) fn card_body<'a>(
         );
     }
     match shown {
-        Some((slot, views)) if card.attachments => {
+        Shown::Object(slot, views) if card.attachments => {
             let (photos, others): (Vec<_>, Vec<_>) =
                 views.into_iter().partition(|v| v.key.is_some());
             if !photos.is_empty() {
@@ -145,7 +160,7 @@ pub(crate) fn card_body<'a>(
                 );
             }
         }
-        None if card.attachments && attachment_count > 0 => {
+        Shown::Preview if card.attachments && attachment_count > 0 => {
             body = body.push(label::caption(format!("{attachment_count} ek")));
         }
         _ => {}
@@ -176,6 +191,7 @@ pub(crate) fn card_body<'a>(
                 "externalOpen"
             };
             let on = match (slot, a.error.is_none()) {
+                (_, true) if row => Some(msg(Event::RowAction(i))),
                 (Some(slot), true) => Some(msg(Event::Action(slot, i))),
                 _ => None,
             };
@@ -206,18 +222,25 @@ pub(crate) fn card_body<'a>(
 }
 
 impl App {
-    /// The card over the drawing, when the Bilgi tool shows one.
+    /// The card over the drawing, when the Bilgi tool shows one: an object's, or a data layer's row's.
     pub(crate) fn info_card_view(&self) -> Option<Element<'_, Message>> {
-        let (slot, at) = self.info_card?;
-        let card = self.slot_card(slot)?;
-        let actions = if card.actions {
-            self.slot_actions(slot)
-        } else {
-            Vec::new()
+        let (body, at) = match self.info_card {
+            Some((slot, at)) => {
+                let card = self.slot_card(slot)?;
+                let actions = if card.actions {
+                    self.slot_actions(slot)
+                } else {
+                    Vec::new()
+                };
+                let views = self.attachment_views(slot);
+                let count = views.len();
+                (card_body(self, &card, Shown::Object(slot, views), &actions, count), at)
+            }
+            None => {
+                let (card, actions, at) = self.data_card()?;
+                (card_body(self, &card, Shown::Row, &actions, 0), at)
+            }
         };
-        let views = self.attachment_views(slot);
-        let count = views.len();
-        let body = card_body(self, &card, Some((slot, views)), &actions, count);
         let [x, y] = self.viewport.camera.world_to_screen(at);
         let framed = container(column![body])
             .width(Length::Fixed(typography::from_default(WIDTH)))
@@ -232,12 +255,24 @@ impl App {
 
     pub(crate) fn info_card_event(&mut self, e: Event) -> iced::Task<Message> {
         match e {
-            Event::Close => self.info_card = None,
+            Event::Close => {
+                let row = self.info_card.is_none() && self.gis.data_info.card.is_some();
+                self.info_card = None;
+                self.gis.data_info.card = None;
+                if row {
+                    self.with_tool(|s, cx| s.data_found(None, cx));
+                }
+            }
             Event::Attachment(slot, index) => {
                 return self.attachment_event(attachments::Event::Open(slot, index));
             }
             Event::Action(slot, index) => {
                 if let Some(a) = self.slot_actions(slot).get(index).cloned() {
+                    self.run_action(&a);
+                }
+            }
+            Event::RowAction(index) => {
+                if let Some(a) = self.data_card().and_then(|(_, actions, _)| actions.into_iter().nth(index)) {
                     self.run_action(&a);
                 }
             }
@@ -252,8 +287,23 @@ impl App {
         iced::Task::none()
     }
 
-    /// After every message: the card goes with the Bilgi tool and with its object.
+    /// After every message: the card goes with the Bilgi tool and with its object (a row's, with its layer).
     pub(crate) fn follow_info_card(&mut self) {
+        if self.gis.data_info.card.is_some() {
+            let gone = self.document.as_ref().is_none_or(|d| {
+                self.gis.data_info
+                    .card
+                    .as_ref()
+                    .is_none_or(|f| d.model.layers().get(&f.layer).is_none_or(|n| n.data.is_none()))
+            });
+            let identify = self.session.tool_id() == kentos_interaction::identify::ID;
+            if gone || !identify {
+                self.gis.data_info.card = None;
+            }
+            if gone && identify {
+                self.with_tool(|s, cx| s.data_found(None, cx));
+            }
+        }
         let Some((slot, _)) = self.info_card else {
             return;
         };

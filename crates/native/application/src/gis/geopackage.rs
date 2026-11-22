@@ -347,6 +347,41 @@ fn geometry_json(
     }
 }
 
+/// A data layer's value as the drawing's attributes keep it (docs/adr/9101 §6): a text, a number as the source wrote
+/// it, yes or no as `true`/`false`, a date and time to the second; none for an empty value, a number that is not
+/// finite and bytes.
+pub fn attribute_text(v: &kentos_data::Value) -> Option<String> {
+    use kentos_data::Value;
+    Some(match v {
+        Value::Null => return None,
+        Value::Bool(b) => if *b { "true" } else { "false" }.to_owned(),
+        Value::Real(r) if !r.is_finite() => return None,
+        Value::DateTime(t) => t.chars().take(19).collect(),
+        Value::Blob(_) => return None,
+        other => other.to_string(),
+    })
+}
+
+/// A row of a data layer's table as an object of the layer `layer` (docs/adr/9101 §6): drawn as the view asks for it,
+/// never written into the drawing. `id` is its place in the part being built, `attrs` its values as the drawing's
+/// attributes keep them. None for a geometry the drawing has no object for (an empty one, a collection).
+pub fn object_of(
+    g: &Geometry,
+    layer: &str,
+    id: u32,
+    attrs: serde_json::Map<String, J>,
+) -> Option<Entity> {
+    let mut losses = BTreeSet::new();
+    let (kind, fields) = geometry_json(g, &mut losses)?;
+    let mut e = serde_json::Map::with_capacity(fields.len() + 4);
+    e.insert("id".into(), json!(id));
+    e.insert("layerId".into(), J::String(layer.to_owned()));
+    e.insert("attrs".into(), J::Object(attrs));
+    e.extend(fields);
+    e.insert("kind".into(), J::String(kind.into()));
+    serde_json::from_value(J::Object(e)).ok()
+}
+
 /// KentOS's document of a table's fields (docs/adr/0629 §4): the kinds a GeoPackage's column types do not say,
 /// `{"kinds": {"column": "kind"}}`, on the table.
 pub const FIELDS_STANDARD: &str = "https://kentos.app/fields/1";
@@ -800,7 +835,7 @@ pub fn read_in(
     {
         return Err(format!("“{missing}” tablosu dosyada yok"));
     }
-    // QGIS's styles and the related tables' mappings are no data of their own: their content comes in as the layers'
+    // The `layer_styles` table and the related tables' mappings are no data of their own: their content comes in as the layers'
     // looks and reference fields (docs/adr/0627 §6, §7); such a table is read only when it is named.
     let beside: BTreeSet<String> = match wanted {
         Some(_) => BTreeSet::new(),
@@ -832,7 +867,7 @@ pub fn read_in(
                 if org.0 == "EPSG" {
                     return org;
                 }
-                // A compound system GDAL keeps under its own id (organization NONE): its horizontal half's EPSG code
+                // A compound system a writer keeps under its own id (organization NONE): its horizontal half's EPSG code
                 // from its definition, as a .prj's is read (docs/adr/0631 §4).
                 match kentos_formats::shp::prj::read(s.definition.as_bytes()).srid {
                     Some(code) if s.definition.to_ascii_uppercase().starts_with("COMPD_CS") => {
@@ -1172,7 +1207,7 @@ pub struct Written {
     pub renamed: Vec<(String, String, String)>,
     /// The batches the rows went in (docs/adr/0549).
     pub batches: u32,
-    /// The relations and the QGIS styles written beside the tables (docs/adr/0627 §6, §7; [`write`] only).
+    /// The relations and the `layer_styles` looks written beside the tables (docs/adr/0627 §6, §7; [`write`] only).
     pub profile: crate::gpkg_profile::ProfileWritten,
     /// What of the layers' indexes the file could not hold as given (docs/adr/0758 §5).
     pub index_notes: Vec<String>,
@@ -1751,7 +1786,7 @@ pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, 
         )?;
     session.commit().map_err(|e| e.0)?;
     let mut out = out;
-    // The project's relations between the tables and the layers' looks as QGIS's default styles (docs/adr/0627).
+    // The project's relations between the tables and the layers' looks as `layer_styles`' defaults (docs/adr/0627).
     out.profile = crate::gpkg_profile::write_profile(
         doc,
         &out.tables,

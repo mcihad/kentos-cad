@@ -10,6 +10,28 @@ use crate::app::{App, Message};
 pub(crate) struct GisUiState {
     /// Kaynaklar (sources/, docs/adr/0199 §7): its folders, what is open and read.
     pub(crate) sources: crate::sources::SourcesPanel,
+    /// The data layers' edit sessions' saves and question (data_edits.rs, docs/adr/9103 §5).
+    pub(crate) data_edits: crate::data_edits::DataEdits,
+    /// Where the projects' pending data edits are kept on this device (data_journal.rs, docs/adr/9111 §3).
+    pub(crate) data_journal: crate::data_journal::Journals,
+    /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
+    pub(crate) data_pick: crate::data_pick::DataPick,
+    /// The counted layers' class counts (docs/adr/9105 §4).
+    pub(crate) layer_classes: crate::layer_classes::LayerClasses,
+    /// Farklı kaydet…'s window (layer_export.rs, docs/adr/9106).
+    pub(crate) layer_export: Option<crate::layer_export::ExportWindow>,
+    /// Dosya › Veri kaynağı's window (project_store.rs, docs/adr/9107).
+    pub(crate) project_store: Option<crate::project_store::StoreWindow>,
+    /// Yeni katman's window in a CBS project (layer_create.rs, docs/adr/9107 §7).
+    pub(crate) layer_create: Option<crate::layer_create::NewLayerWindow>,
+    /// Veri kaynağına taşı…'s window (layer_migrate.rs, docs/adr/9107 §8).
+    pub(crate) layer_migrate: Option<crate::layer_migrate::MigrateWindow>,
+    /// Bilgi's asks of the data layers and the row it shows (data_info.rs, docs/adr/9101 §6).
+    pub(crate) data_info: crate::data_info::State,
+    /// A data layer's selected rows outlined on the map (data_selection.rs, docs/adr/9102 §5).
+    pub(crate) data_selection: crate::data_selection::DataSelection,
+    /// The data layers' labels, each of its layer's drawn read (data_labels.rs, docs/adr/9101 §6).
+    pub(crate) data_labels: Vec<crate::data_labels::DataLabels>,
     /// The connection window while it is open (db_connections.rs, docs/adr/0623).
     pub(crate) db_editor: Option<crate::db_connections::Editor>,
     /// The password question while a server waits for one.
@@ -117,6 +139,26 @@ pub(crate) struct GisUiState {
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone)]
 pub(crate) enum Event {
+    /// Data layers (data_layers.rs, docs/adr/9101): tables described off the interface's thread, then added.
+    DataLayers(crate::data_layers::Event),
+    /// Bilgi's asks of the data layers (data_info.rs, docs/adr/9101 §6).
+    DataInfo(crate::data_info::Event),
+    /// A data layer's selected rows outlined (data_selection.rs, docs/adr/9102 §5).
+    DataSelection(crate::data_selection::Event),
+    /// A data layer's edit session: opened, saved, let go, closed (data_edits.rs, docs/adr/9103 §5).
+    DataEdits(crate::data_edits::Event),
+    /// A layer's style classes in Katmanlar (docs/adr/9105).
+    LayerClasses(crate::layer_classes::Event),
+    /// Farklı kaydet… (docs/adr/9106).
+    LayerExport(crate::layer_export::Event),
+    /// Dosya › Veri kaynağı (project_store.rs, docs/adr/9107).
+    ProjectStore(crate::project_store::Event),
+    /// Yeni katman in a CBS project (layer_create.rs, docs/adr/9107 §7).
+    LayerCreate(crate::layer_create::Event),
+    /// Veri kaynağına taşı… (layer_migrate.rs, docs/adr/9107 §8).
+    LayerMigrate(crate::layer_migrate::Event),
+    /// Seç's asks of the data layers (data_pick.rs, docs/adr/9103 §5).
+    DataPick(crate::data_pick::Event),
     /// The raster windows (Raster ekle, Raster stili) and the rasters' panel (rasters/).
     Rasters(crate::rasters::Event),
     /// The point cloud windows, XYZ sor's answers and the indexes' panel (pointclouds/).
@@ -209,6 +251,19 @@ pub(crate) enum Event {
 /// The GIS (CBS) module's windows, `Dialog::Gis`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum GisDialogKind {
+    /// A data layer's changes asked about: Kaydet, Kaydetme, Vazgeç (data_edits.rs); the question is
+    /// `GisUiState::data_edits.asking`.
+    DataEdits,
+    /// A save that met rows others changed: Üstüne yaz, Vazgeç (data_edits.rs, docs/adr/9104 §3).
+    DataConflict,
+    /// Farklı kaydet… (layer_export.rs, docs/adr/9106); the window is `GisUiState::layer_export`.
+    LayerExport,
+    /// Veri kaynağına kaydet / aç (project_store.rs, docs/adr/9107); the window is `GisUiState::project_store`.
+    ProjectStore,
+    /// Yeni katman (layer_create.rs, docs/adr/9107 §7); the window is `GisUiState::layer_create`.
+    LayerCreate,
+    /// Veri kaynağına taşı… (layer_migrate.rs, docs/adr/9107 §8); the window is `GisUiState::layer_migrate`.
+    LayerMigrate,
     /// A Hesap window (calc/).
     Calc,
     /// A processing tool's or model's window (processing/).
@@ -328,6 +383,16 @@ impl App {
                 let moved = self.time_event(event);
                 return Task::batch([moved, self.time_sources()]);
             }
+            Event::DataLayers(event) => return self.data_layers_event(event),
+            Event::DataInfo(event) => return self.data_info_event(event),
+            Event::DataSelection(event) => return self.data_selection_event(event),
+            Event::DataEdits(event) => return self.data_edits_event(event),
+            Event::LayerClasses(event) => return self.layer_classes_event(event),
+            Event::LayerExport(event) => return self.layer_export_event(event),
+            Event::ProjectStore(event) => return self.project_store_event(event),
+            Event::LayerCreate(event) => return self.layer_create_event(event),
+            Event::LayerMigrate(event) => return self.layer_migrate_event(event),
+            Event::DataPick(event) => return self.data_pick_event(event),
             Event::Rasters(event) => return self.rasters_event(event),
             Event::PointClouds(event) => return self.pointclouds_event(event),
             Event::Reconcile(event) => return self.reconcile_event(event),
@@ -374,6 +439,12 @@ impl App {
     /// A window of the module (`Dialog::Gis`).
     pub(crate) fn gis_dialog_view(&self, kind: GisDialogKind) -> Element<'_, Message> {
         match kind {
+            GisDialogKind::DataEdits => self.data_edits_question(),
+            GisDialogKind::DataConflict => self.data_conflict_question(),
+            GisDialogKind::LayerExport => self.layer_export_view(),
+            GisDialogKind::ProjectStore => self.project_store_view(),
+            GisDialogKind::LayerCreate => self.layer_create_view(),
+            GisDialogKind::LayerMigrate => self.layer_migrate_view(),
             GisDialogKind::SourceReconcile => self.reconcile_view(),
             GisDialogKind::Calc => self.calc_view(),
             GisDialogKind::Processing => self.processing_view(),

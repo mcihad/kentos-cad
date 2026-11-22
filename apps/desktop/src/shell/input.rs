@@ -233,6 +233,7 @@ impl App {
         self.image_file_wanted = false;
         self.raster_values_wanted.clear();
         self.cloud_query_wanted.clear();
+        self.gis.data_info.wanted.clear();
         self.network_wanted.clear();
         self.command_wanted.clear();
         self.form_on_create = None;
@@ -350,7 +351,14 @@ impl App {
                 // Köşelere koordinat yaz's schedule hangs from the cursor (docs/adr/0185 §1).
                 ViewChange::PlaceTable(table, label) => self.place_table(*table, label),
                 // Bilgi's card moves to the object clicked, or closes (info_card.rs, docs/adr/0225 §5).
-                ViewChange::InfoCard(card) => self.info_card = card,
+                ViewChange::InfoCard(card) => {
+                    self.info_card = card;
+                    self.gis.data_info.card = None;
+                }
+                // Bilgi's click on no object of the drawing: the data layers asked after the update (data_info.rs).
+                ViewChange::DataInfo { at, reach } => self.gis.data_info.wanted.push((at, reach)),
+                // Seç's click on no object, or its box: the data layers asked after the update (data_pick.rs).
+                ViewChange::DataSelect(region) => self.gis.data_pick.wanted.push(region),
                 // Konumdan adres's place: its address looked for after the update (address/).
                 ViewChange::AddressAt(p) => self.gis.address.wanted.push(p),
                 // Otomatik seçim off left other layers' objects out: a notice offers to turn it on (layer_types.rs).
@@ -372,7 +380,12 @@ impl App {
                     }
                 }
                 // An extension's map tool: what was drawn goes to its code after the update (extensions/runner.rs).
-                ViewChange::Captured(shape) => self.extensions.captured = Some(shape),
+                ViewChange::Captured(shape) => {
+                    // Farklı kaydet…'s box drawn (layer_export_extent.rs), else an extension's.
+                    if !self.layer_export_box_drawn(&shape) {
+                        self.extensions.captured = Some(shape);
+                    }
+                }
                 // Sahneden seç's objects: the processing window opens again (processing/).
                 ViewChange::PickedObjects(keep) => {
                     if !self.window_picked(keep)
@@ -674,8 +687,17 @@ impl App {
             Some(doc) => {
                 self.spatial.sync(&doc.model);
                 let view = CameraView(&self.viewport.camera);
-                self.session
-                    .snap(&self.spatial, raw, &view, &draft, &self.tracking)
+                let own = self
+                    .session
+                    .snap(&self.spatial, raw, &view, &draft, &self.tracking);
+                // An edited data layer's rows snap too (data_labels.rs, docs/adr/9103 §5): the nearer of the two.
+                match (own, self.data_snap(raw, &view, &draft)) {
+                    (Some(a), Some(b)) => {
+                        let far = |h: &kentos_geometry_core::store::snap::SnapHit| (h.point.x - raw.x).hypot(h.point.y - raw.y);
+                        Some(if far(&b) < far(&a) { b } else { a })
+                    }
+                    (a, b) => a.or(b),
+                }
             }
             None => None,
         };

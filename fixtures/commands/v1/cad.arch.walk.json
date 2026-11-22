@@ -1,0 +1,8738 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.arch.walk",
+ "commandVersion": 1,
+ "title": "Dolaşım güzergâhı: aynı kattaki en kısa yürüme yolu, tıkandığı yer ve engeli",
+ "note": "The walls of these drawings run along x or y, so a floor's edges, a passage's mouth and a column's sides are exact\nsums; the walking room's rounded corners are shapely's (GEOS) buffers, a route around them its shortest polyline.\n\nThe rules:\n- The input: the start and the end finite (not_finite at `start`, then `end`: “Çizimde sonlu bir konum seçin.”), the\n  walking width 0.05–10 m both included (invalid_input at `width`: “Geçiş genişliği 0,05–10 m arasında olmalı.”), a\n  level the project has (level_not_found at `level`: “Çizimde bulunan bir kat seçin.”). Nothing is ever written.\n- The floor: the spaces of the level asked (none asked: the spaces without a level), voids and broken spaces left\n  out, each as drawn (a space given by its rings is its own net part). A start or an end outside it is where the route\n  is blocked: no points, no length.\n- More than 256 edges of the floor's rings (then with the obstacles' outlines too) are refused: invalid_input without a\n  path, “Bu katta rota hesabı için çok fazla sınır var. Daha küçük bir çizim kapsamı kullanın.”\n- A passage joins the floor: a door (its clear width: a swinging leaf open at 90° takes its 4 cm thickness from the\n  light) or an opening without a sill (its own width), a rectangle that wide on the wall's middle, across the wall and\n  15 mm into the floor on both sides; it joins only when both of those ends are floor.\n- Out of the floor: the level's columns and, unless `shellOnly`, its blocks whose card's first category is Mobilya,\n  Mutfak or Islak hacim, by the box of what they draw.\n- The walking room is the floor shrunk by half the width and a millimetre. When one piece of it holds both ends, the\n  route is the shortest polyline in that piece from the start to the end: its points (a straight one: the two ends)\n  and its length. Otherwise the route is blocked where the straight line from the start first leaves the piece that\n  holds the start (the start itself when none does), and the obstacle is the first column or block, in the drawing's\n  order, whose outline holds that point or comes within half the width and 2 mm of it.\n\nA route that bends rounds the room's corners, whose arcs KentOS and GEOS draw each their way: its points are not\ncompared and its length is within a centimetre. A blocked point at a passage's mouth is within a millimetre (the mouth\nis where two rounded corners meet: x = face − √(R² − (w/2)²)).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Dolaşım güzergâhı",
+  "uids": [
+   "0192f5a1-8a1c-7000-8000-000000000001"
+  ],
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100.0,
+   "workspace": "cad",
+   "arch": {
+    "levels": [
+     {
+      "id": "zemin",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0
+     },
+     {
+      "id": "kat1",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "height": 3.0
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "mahal",
+    "name": "Mahal",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yapi",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "mobilya",
+    "name": "Mobilya",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "mahal",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+    "name": "Masa",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "card": {
+     "category": "Mobilya/Masalar",
+     "version": 1
+    },
+    "entities": [
+     {
+      "kind": "polyline",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 2.0,
+        "y": 0.0
+       },
+       {
+        "x": 2.0,
+        "y": 1.0
+       },
+       {
+        "x": 0.0,
+        "y": 1.0
+       }
+      ],
+      "closed": true
+     }
+    ]
+   },
+   {
+    "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+    "name": "Aydınlatma",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "card": {
+     "category": "Elektrik",
+     "version": 1
+    },
+    "entities": [
+     {
+      "kind": "polyline",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 2.0,
+        "y": 0.0
+       },
+       {
+        "x": 2.0,
+        "y": 1.0
+       },
+       {
+        "x": 0.0,
+        "y": 1.0
+       }
+      ],
+      "closed": true
+     }
+    ]
+   }
+  ],
+  "entities": [
+   {
+    "kind": "space",
+    "id": 1,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 10.0,
+         "y": 0.0
+        },
+        {
+         "x": 10.0,
+         "y": 6.0
+        },
+        {
+         "x": 0.0,
+         "y": 6.0
+        }
+       ]
+      }
+     }
+    ],
+    "arch": {
+     "level": "zemin"
+    }
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Açık odada düz yol: iki uç, uzunluğu aralarındaki uzaklık",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 1.0,
+         "y": 3.0
+        },
+        {
+         "x": 9.0,
+         "y": 3.0
+        }
+       ],
+       "length": 8.0,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan aynı yolu verir, hiçbir şey yazmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 1.0,
+         "y": 3.0
+        },
+        {
+         "x": 9.0,
+         "y": 3.0
+        }
+       ],
+       "length": 8.0,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Odanın ortasındaki kolonun çevresinden dolanır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "column",
+      "id": 2,
+      "layerId": "yapi",
+      "attrs": {},
+      "at": {
+       "x": 5.0,
+       "y": 3.0
+      },
+      "width": 1.0,
+      "depth": 1.0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": "$any",
+       "length": 8.256661728726511,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "within": 0.01,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yoldaki masa (Mobilya) engeldir: çevresinden dolanılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "p": {
+       "x": 4.0,
+       "y": 2.5
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": "$any",
+       "length": 8.298720636472524,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "within": 0.01,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız yapı kabuğu: masa yok sayılır, yol düzdür",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "p": {
+       "x": 4.0,
+       "y": 2.5
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin",
+      "shellOnly": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 1.0,
+         "y": 3.0
+        },
+        {
+         "x": 9.0,
+         "y": 3.0
+        }
+       ],
+       "length": 8.0,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka kategorideki blok (Elektrik) engel değildir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "p": {
+       "x": 4.0,
+       "y": 2.5
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 1.0,
+         "y": 3.0
+        },
+        {
+         "x": 9.0,
+         "y": 3.0
+        }
+       ],
+       "length": 8.0,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başlangıç mahallerin dışında: rota orada tıkanır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": -1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 0.9,
+       "blocked": {
+        "x": -1.0,
+        "y": 3.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bitiş mahallerin dışında: rota bitişte tıkanır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 11.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 0.9,
+       "blocked": {
+        "x": 11.0,
+        "y": 3.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Duvara yarım genişlikten yakın başlangıç: başlangıçta tıkanır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 0.3,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 0.9,
+       "blocked": {
+        "x": 0.3,
+        "y": 3.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Koridoru boydan boya kapatan kolon: önünde tıkanır, engel o kolon",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 1.2
+          },
+          {
+           "x": 0.0,
+           "y": 1.2
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "column",
+      "id": 2,
+      "layerId": "yapi",
+      "attrs": {},
+      "at": {
+       "x": 5.0,
+       "y": 0.6
+      },
+      "width": 1.0,
+      "depth": 1.2,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 0.6
+      },
+      "end": {
+       "x": 9.0,
+       "y": 0.6
+      },
+      "width": 0.8,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 0.8,
+       "blocked": {
+        "x": 4.099,
+        "y": 0.6
+       },
+       "obstacle": "$uidOf:2"
+      },
+      "warnings": []
+     },
+     "within": 0.001,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kolonun yanındaki 80 cm'lik boşluktan 50 cm genişlikle geçilir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 2.0
+          },
+          {
+           "x": 0.0,
+           "y": 2.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "column",
+      "id": 2,
+      "layerId": "yapi",
+      "attrs": {},
+      "at": {
+       "x": 5.0,
+       "y": 0.6
+      },
+      "width": 1.0,
+      "depth": 1.2,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 0.6
+      },
+      "end": {
+       "x": 9.0,
+       "y": 0.6
+      },
+      "width": 0.5,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": "$any",
+       "length": 8.205086852637306,
+       "width": 0.5
+      },
+      "warnings": []
+     },
+     "within": 0.01,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı boşluk 90 cm genişliğe yetmez: kolonun önünde tıkanır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 2.0
+          },
+          {
+           "x": 0.0,
+           "y": 2.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "column",
+      "id": 2,
+      "layerId": "yapi",
+      "attrs": {},
+      "at": {
+       "x": 5.0,
+       "y": 0.6
+      },
+      "width": 1.0,
+      "depth": 1.2,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 0.6
+      },
+      "end": {
+       "x": 9.0,
+       "y": 0.6
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 0.9,
+       "blocked": {
+        "x": 4.049,
+        "y": 0.6
+       },
+       "obstacle": "$uidOf:2"
+      },
+      "warnings": []
+     },
+     "within": 0.001,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Arada geçiş olmayan iki oda: ilk odanın yürüme sınırında tıkanır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 4.2,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 4.0
+          },
+          {
+           "x": 4.2,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 2.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 0.9,
+       "blocked": {
+        "x": 3.549,
+        "y": 2.0
+       }
+      },
+      "warnings": []
+     },
+     "within": 0.001,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "120 cm'lik açıklıktan düz geçilir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002",
+     "0192f5a1-8a1c-7000-8000-000000000003",
+     "0192f5a1-8a1c-7000-8000-000000000004"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 4.2,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 4.0
+          },
+          {
+           "x": 4.2,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "yapi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 4.1,
+        "y": 0.0
+       },
+       {
+        "x": 4.1,
+        "y": 4.0
+       }
+      ],
+      "width": 0.2,
+      "justify": "center",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "opening",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-8a1c-7000-8000-000000000003",
+      "at": 2.0,
+      "width": 1.2,
+      "form": "opening",
+      "place": [
+       {
+        "x": 3.9999999999999996,
+        "y": 1.4
+       },
+       {
+        "x": 4.199999999999999,
+        "y": 1.4
+       },
+       {
+        "x": 3.9999999999999996,
+        "y": 2.6
+       },
+       {
+        "x": 4.199999999999999,
+        "y": 2.6
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 2.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 1.0,
+         "y": 2.0
+        },
+        {
+         "x": 7.0,
+         "y": 2.0
+        }
+       ],
+       "length": 6.0,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "80 cm'lik açıklık 90 cm genişliği geçirmez: ağzının önünde tıkanır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002",
+     "0192f5a1-8a1c-7000-8000-000000000003",
+     "0192f5a1-8a1c-7000-8000-000000000004"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 4.2,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 4.0
+          },
+          {
+           "x": 4.2,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "yapi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 4.1,
+        "y": 0.0
+       },
+       {
+        "x": 4.1,
+        "y": 4.0
+       }
+      ],
+      "width": 0.2,
+      "justify": "center",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "opening",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-8a1c-7000-8000-000000000003",
+      "at": 2.0,
+      "width": 0.8,
+      "form": "opening",
+      "place": [
+       {
+        "x": 3.9999999999999996,
+        "y": 1.6
+       },
+       {
+        "x": 4.199999999999999,
+        "y": 1.6
+       },
+       {
+        "x": 3.9999999999999996,
+        "y": 2.4
+       },
+       {
+        "x": 4.199999999999999,
+        "y": 2.4
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 2.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 0.9,
+       "blocked": {
+        "x": 3.7917434732712194,
+        "y": 2.0
+       }
+      },
+      "warnings": []
+     },
+     "within": 0.001,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "100 cm'lik kapının 96 cm temiz genişliğinden 90 cm ile geçilir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002",
+     "0192f5a1-8a1c-7000-8000-000000000003",
+     "0192f5a1-8a1c-7000-8000-000000000004"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 4.2,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 4.0
+          },
+          {
+           "x": 4.2,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "yapi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 4.1,
+        "y": 0.0
+       },
+       {
+        "x": 4.1,
+        "y": 4.0
+       }
+      ],
+      "width": 0.2,
+      "justify": "center",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "opening",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-8a1c-7000-8000-000000000003",
+      "at": 2.0,
+      "width": 1.0,
+      "form": "door",
+      "place": [
+       {
+        "x": 3.9999999999999996,
+        "y": 1.5
+       },
+       {
+        "x": 4.199999999999999,
+        "y": 1.5
+       },
+       {
+        "x": 3.9999999999999996,
+        "y": 2.5
+       },
+       {
+        "x": 4.199999999999999,
+        "y": 2.5
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 2.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 1.0,
+         "y": 2.0
+        },
+        {
+         "x": 7.0,
+         "y": 2.0
+        }
+       ],
+       "length": 6.0,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "90 cm'lik kapının 86 cm temiz genişliği 90 cm'ye yetmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002",
+     "0192f5a1-8a1c-7000-8000-000000000003",
+     "0192f5a1-8a1c-7000-8000-000000000004"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 0.0
+          },
+          {
+           "x": 4.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 4.2,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 0.0
+          },
+          {
+           "x": 8.0,
+           "y": 4.0
+          },
+          {
+           "x": 4.2,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "yapi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 4.1,
+        "y": 0.0
+       },
+       {
+        "x": 4.1,
+        "y": 4.0
+       }
+      ],
+      "width": 0.2,
+      "justify": "center",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "opening",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-8a1c-7000-8000-000000000003",
+      "at": 2.0,
+      "width": 0.9,
+      "form": "door",
+      "place": [
+       {
+        "x": 3.9999999999999996,
+        "y": 1.55
+       },
+       {
+        "x": 4.199999999999999,
+        "y": 1.55
+       },
+       {
+        "x": 3.9999999999999996,
+        "y": 2.45
+       },
+       {
+        "x": 4.199999999999999,
+        "y": 2.45
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 2.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 0.9,
+       "blocked": {
+        "x": 3.864093925071106,
+        "y": 2.0
+       }
+      },
+      "warnings": []
+     },
+     "within": 0.001,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "L biçimli koridorun iç köşesi dönülür",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 1.5
+          },
+          {
+           "x": 1.5,
+           "y": 1.5
+          },
+          {
+           "x": 1.5,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 5.0,
+       "y": 0.75
+      },
+      "end": {
+       "x": 0.75,
+       "y": 5.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": "$any",
+       "length": 7.733817685627744,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "within": 0.01,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kat süzgeci: 1. katın mahali, zemin kattaki kolon yolda değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001",
+     "0192f5a1-8a1c-7000-8000-000000000002",
+     "0192f5a1-8a1c-7000-8000-000000000003"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "column",
+      "id": 2,
+      "layerId": "yapi",
+      "attrs": {},
+      "at": {
+       "x": 5.0,
+       "y": 3.0
+      },
+      "width": 1.0,
+      "depth": 1.0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "kat1"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "kat1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 1.0,
+         "y": 3.0
+        },
+        {
+         "x": 9.0,
+         "y": 3.0
+        }
+       ],
+       "length": 8.0,
+       "width": 0.9
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kat verilmezse katı olan mahaller alınmaz: başlangıçta tıkanır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 0.9,
+       "blocked": {
+        "x": 1.0,
+        "y": 3.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "10 m genişlik kabul edilir; 6 m'lik odada yürüme alanı kalmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 10.0,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [],
+       "length": 0.0,
+       "width": 10.0,
+       "blocked": {
+        "x": 1.0,
+        "y": 3.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "256'dan çok kenarlı mahal: rota hesabı yapılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 9.0,
+           "y": 3.0
+          },
+          {
+           "x": 8.999122733899382,
+           "y": 3.0586387756733995
+          },
+          {
+           "x": 8.996491320395434,
+           "y": 3.117251830441759
+          },
+          {
+           "x": 8.992106913713087,
+           "y": 3.1758134546820775
+          },
+          {
+           "x": 8.985971436998017,
+           "y": 3.2342979613304834
+          },
+          {
+           "x": 8.978087581473094,
+           "y": 3.2926796971494294
+          },
+          {
+           "x": 8.968458805257912,
+           "y": 3.350933053980052
+          },
+          {
+           "x": 8.957089331851954,
+           "y": 3.4090324799747527
+          },
+          {
+           "x": 8.94398414828202,
+           "y": 3.4669524908050864
+          },
+          {
+           "x": 8.929149002914755,
+           "y": 3.524667680840029
+          },
+          {
+           "x": 8.912590402935223,
+           "y": 3.582152734289726
+          },
+          {
+           "x": 8.89431561149264,
+           "y": 3.6393824363098357
+          },
+          {
+           "x": 8.874332644514524,
+           "y": 3.6963316840615934
+          },
+          {
+           "x": 8.852650267190633,
+           "y": 3.752975497722744
+          },
+          {
+           "x": 8.829277990128269,
+           "y": 3.8092890314445205
+          },
+          {
+           "x": 8.804226065180615,
+           "y": 3.8652475842498526
+          },
+          {
+           "x": 8.777505480949925,
+           "y": 3.920826610868033
+          },
+          {
+           "x": 8.749127957967566,
+           "y": 3.9760017325010826
+          },
+          {
+           "x": 8.719105943553005,
+           "y": 4.030748747517098
+          },
+          {
+           "x": 8.687452606354002,
+           "y": 4.085043642065888
+          },
+          {
+           "x": 8.654181830570403,
+           "y": 4.13886260061224
+          },
+          {
+           "x": 8.619308209864078,
+           "y": 4.192182016382203
+          },
+          {
+           "x": 8.582847040957652,
+           "y": 4.244978501717797
+          },
+          {
+           "x": 8.544814316924858,
+           "y": 4.297228898335613
+          },
+          {
+           "x": 8.505226720175454,
+           "y": 4.348910287484803
+          },
+          {
+           "x": 8.464101615137753,
+           "y": 4.4
+          },
+          {
+           "x": 8.421457040642027,
+           "y": 4.4504756262447644
+          },
+          {
+           "x": 8.377311702008061,
+           "y": 4.500315025941191
+          },
+          {
+           "x": 8.331684962840399,
+           "y": 4.549496337881363
+          },
+          {
+           "x": 8.284596836534817,
+           "y": 4.597997989516409
+          },
+          {
+           "x": 8.23606797749979,
+           "y": 4.645798706418924
+          },
+          {
+           "x": 8.186119672096785,
+           "y": 4.692877521614649
+          },
+          {
+           "x": 8.13477382930336,
+           "y": 4.739213784779269
+          },
+          {
+           "x": 8.082052971103156,
+           "y": 4.784787171296331
+          },
+          {
+           "x": 8.027980222607026,
+           "y": 4.829577691172295
+          },
+          {
+           "x": 7.972579301909578,
+           "y": 4.8735656978048025
+          },
+          {
+           "x": 7.915874509685646,
+           "y": 4.916731896600328
+          },
+          {
+           "x": 7.8578907185312135,
+           "y": 4.959057353437423
+          },
+          {
+           "x": 7.798653362053463,
+           "y": 5.000523502971848
+          },
+          {
+           "x": 7.738188423714755,
+           "y": 5.041112156779952
+          },
+          {
+           "x": 7.676522425435433,
+           "y": 5.080805511336703
+          },
+          {
+           "x": 7.613682415960422,
+           "y": 5.119586155824917
+          },
+          {
+           "x": 7.549695958994759,
+           "y": 5.15743707977221
+          },
+          {
+           "x": 7.484591121113242,
+           "y": 5.194341680512351
+          },
+          {
+           "x": 7.4183964594495,
+           "y": 5.230283770467749
+          },
+          {
+           "x": 7.3511410091698925,
+           "y": 5.2652475842498525
+          },
+          {
+           "x": 7.282854270737728,
+           "y": 5.2992177855743705
+          },
+          {
+           "x": 7.213566196973376,
+           "y": 5.332179473988278
+          },
+          {
+           "x": 7.143307179915986,
+           "y": 5.364118191405642
+          },
+          {
+           "x": 7.072108037492521,
+           "y": 5.395019928449418
+          },
+          {
+           "x": 7.0,
+           "y": 5.424871130596428
+          },
+          {
+           "x": 6.927014696406861,
+           "y": 5.453658704122818
+          },
+          {
+           "x": 6.853184140479447,
+           "y": 5.481370021847401
+          },
+          {
+           "x": 6.77854071673971,
+           "y": 5.507992928670356
+          },
+          {
+           "x": 6.703117166260291,
+           "y": 5.533515746904855
+          },
+          {
+           "x": 6.626946572303201,
+           "y": 5.557927281399282
+          },
+          {
+           "x": 6.550062345808412,
+           "y": 5.581216824447801
+          },
+          {
+           "x": 6.472498210738713,
+           "y": 5.603374160487103
+          },
+          {
+           "x": 6.394288189287261,
+           "y": 5.624389570577296
+          },
+          {
+           "x": 6.315466586954333,
+           "y": 5.644253836664946
+          },
+          {
+           "x": 6.23606797749979,
+           "y": 5.662958245626429
+          },
+          {
+           "x": 6.156127187777886,
+           "y": 5.680494593089788
+          },
+          {
+           "x": 6.075679282461063,
+           "y": 5.696855187033442
+          },
+          {
+           "x": 5.9947595486594185,
+           "y": 5.712032851160167
+          },
+          {
+           "x": 5.913403480442623,
+           "y": 5.726020928044848
+          },
+          {
+           "x": 5.831646763271038,
+           "y": 5.738813282054656
+          },
+          {
+           "x": 5.749525258342899,
+           "y": 5.750404302040328
+          },
+          {
+           "x": 5.667074986864409,
+           "y": 5.760788903797414
+          },
+          {
+           "x": 5.584332114249647,
+           "y": 5.769962532296367
+          },
+          {
+           "x": 5.501332934257217,
+           "y": 5.7779211636805385
+          },
+          {
+           "x": 5.418113853070615,
+           "y": 5.784661307031165
+          },
+          {
+           "x": 5.334711373329262,
+           "y": 5.790180005898613
+          },
+          {
+           "x": 5.251162078117254,
+           "y": 5.79447483959916
+          },
+          {
+           "x": 5.167502614916799,
+           "y": 5.797543924276804
+          },
+          {
+           "x": 5.083769679533428,
+           "y": 5.799385913729568
+          },
+          {
+           "x": 5.0,
+           "y": 5.8
+          },
+          {
+           "x": 4.916230320466573,
+           "y": 5.799385913729568
+          },
+          {
+           "x": 4.832497385083202,
+           "y": 5.797543924276804
+          },
+          {
+           "x": 4.748837921882747,
+           "y": 5.79447483959916
+          },
+          {
+           "x": 4.665288626670738,
+           "y": 5.790180005898613
+          },
+          {
+           "x": 4.581886146929387,
+           "y": 5.784661307031165
+          },
+          {
+           "x": 4.498667065742783,
+           "y": 5.7779211636805385
+          },
+          {
+           "x": 4.415667885750355,
+           "y": 5.769962532296367
+          },
+          {
+           "x": 4.33292501313559,
+           "y": 5.760788903797414
+          },
+          {
+           "x": 4.250474741657102,
+           "y": 5.750404302040328
+          },
+          {
+           "x": 4.168353236728962,
+           "y": 5.738813282054656
+          },
+          {
+           "x": 4.086596519557378,
+           "y": 5.726020928044848
+          },
+          {
+           "x": 4.0052404513405815,
+           "y": 5.712032851160167
+          },
+          {
+           "x": 3.9243207175389383,
+           "y": 5.696855187033442
+          },
+          {
+           "x": 3.843872812222113,
+           "y": 5.680494593089788
+          },
+          {
+           "x": 3.7639320225002106,
+           "y": 5.66295824562643
+          },
+          {
+           "x": 3.684533413045667,
+           "y": 5.644253836664947
+          },
+          {
+           "x": 3.60571181071274,
+           "y": 5.624389570577296
+          },
+          {
+           "x": 3.527501789261289,
+           "y": 5.603374160487104
+          },
+          {
+           "x": 3.4499376541915883,
+           "y": 5.581216824447801
+          },
+          {
+           "x": 3.373053427696799,
+           "y": 5.557927281399282
+          },
+          {
+           "x": 3.2968828337397094,
+           "y": 5.533515746904854
+          },
+          {
+           "x": 3.221459283260291,
+           "y": 5.507992928670356
+          },
+          {
+           "x": 3.146815859520554,
+           "y": 5.481370021847401
+          },
+          {
+           "x": 3.0729853035931383,
+           "y": 5.453658704122818
+          },
+          {
+           "x": 2.999999999999999,
+           "y": 5.4248711305964274
+          },
+          {
+           "x": 2.9278919625074797,
+           "y": 5.395019928449418
+          },
+          {
+           "x": 2.8566928200840143,
+           "y": 5.364118191405643
+          },
+          {
+           "x": 2.786433803026624,
+           "y": 5.332179473988278
+          },
+          {
+           "x": 2.7171457292622736,
+           "y": 5.299217785574371
+          },
+          {
+           "x": 2.648858990830108,
+           "y": 5.2652475842498525
+          },
+          {
+           "x": 2.5816035405505007,
+           "y": 5.23028377046775
+          },
+          {
+           "x": 2.515408878886759,
+           "y": 5.194341680512352
+          },
+          {
+           "x": 2.450304041005241,
+           "y": 5.15743707977221
+          },
+          {
+           "x": 2.3863175840395794,
+           "y": 5.119586155824919
+          },
+          {
+           "x": 2.323477574564567,
+           "y": 5.080805511336704
+          },
+          {
+           "x": 2.261811576285245,
+           "y": 5.041112156779952
+          },
+          {
+           "x": 2.201346637946538,
+           "y": 5.000523502971848
+          },
+          {
+           "x": 2.1421092814687874,
+           "y": 4.959057353437424
+          },
+          {
+           "x": 2.0841254903143547,
+           "y": 4.916731896600329
+          },
+          {
+           "x": 2.0274206980904226,
+           "y": 4.8735656978048025
+          },
+          {
+           "x": 1.9720197773929748,
+           "y": 4.829577691172296
+          },
+          {
+           "x": 1.9179470288968434,
+           "y": 4.7847871712963315
+          },
+          {
+           "x": 1.865226170696641,
+           "y": 4.7392137847792695
+          },
+          {
+           "x": 1.813880327903215,
+           "y": 4.692877521614649
+          },
+          {
+           "x": 1.7639320225002106,
+           "y": 4.645798706418925
+          },
+          {
+           "x": 1.7154031634651838,
+           "y": 4.597997989516409
+          },
+          {
+           "x": 1.6683150371596023,
+           "y": 4.549496337881363
+          },
+          {
+           "x": 1.6226882979919397,
+           "y": 4.500315025941191
+          },
+          {
+           "x": 1.5785429593579736,
+           "y": 4.4504756262447644
+          },
+          {
+           "x": 1.535898384862246,
+           "y": 4.4
+          },
+          {
+           "x": 1.4947732798245457,
+           "y": 4.348910287484802
+          },
+          {
+           "x": 1.455185683075141,
+           "y": 4.297228898335613
+          },
+          {
+           "x": 1.4171529590423493,
+           "y": 4.244978501717798
+          },
+          {
+           "x": 1.3806917901359226,
+           "y": 4.192182016382204
+          },
+          {
+           "x": 1.345818169429597,
+           "y": 4.138862600612241
+          },
+          {
+           "x": 1.3125473936459975,
+           "y": 4.085043642065887
+          },
+          {
+           "x": 1.2808940564469946,
+           "y": 4.030748747517099
+          },
+          {
+           "x": 1.2508720420324342,
+           "y": 3.976001732501083
+          },
+          {
+           "x": 1.222494519050076,
+           "y": 3.9208266108680334
+          },
+          {
+           "x": 1.1957739348193859,
+           "y": 3.865247584249853
+          },
+          {
+           "x": 1.170722009871731,
+           "y": 3.8092890314445205
+          },
+          {
+           "x": 1.1473497328093676,
+           "y": 3.752975497722744
+          },
+          {
+           "x": 1.1256673554854757,
+           "y": 3.6963316840615934
+          },
+          {
+           "x": 1.1056843885073588,
+           "y": 3.639382436309836
+          },
+          {
+           "x": 1.0874095970647777,
+           "y": 3.5821527342897275
+          },
+          {
+           "x": 1.0708509970852456,
+           "y": 3.52466768084003
+          },
+          {
+           "x": 1.05601585171798,
+           "y": 3.466952490805086
+          },
+          {
+           "x": 1.0429106681480467,
+           "y": 3.4090324799747522
+          },
+          {
+           "x": 1.031541194742089,
+           "y": 3.350933053980053
+          },
+          {
+           "x": 1.0219124185269068,
+           "y": 3.2926796971494303
+          },
+          {
+           "x": 1.0140285630019825,
+           "y": 3.234297961330484
+          },
+          {
+           "x": 1.0078930862869138,
+           "y": 3.1758134546820767
+          },
+          {
+           "x": 1.0035086796045665,
+           "y": 3.1172518304417594
+          },
+          {
+           "x": 1.000877266100618,
+           "y": 3.0586387756734
+          },
+          {
+           "x": 1.0,
+           "y": 3.0000000000000004
+          },
+          {
+           "x": 1.000877266100618,
+           "y": 2.941361224326601
+          },
+          {
+           "x": 1.0035086796045665,
+           "y": 2.8827481695582424
+          },
+          {
+           "x": 1.0078930862869138,
+           "y": 2.8241865453179225
+          },
+          {
+           "x": 1.0140285630019825,
+           "y": 2.7657020386695166
+          },
+          {
+           "x": 1.0219124185269068,
+           "y": 2.70732030285057
+          },
+          {
+           "x": 1.0315411947420885,
+           "y": 2.6490669460199494
+          },
+          {
+           "x": 1.0429106681480467,
+           "y": 2.5909675200252487
+          },
+          {
+           "x": 1.0560158517179805,
+           "y": 2.5330475091949136
+          },
+          {
+           "x": 1.0708509970852456,
+           "y": 2.4753323191599708
+          },
+          {
+           "x": 1.0874095970647772,
+           "y": 2.4178472657102748
+          },
+          {
+           "x": 1.1056843885073588,
+           "y": 2.3606175636901647
+          },
+          {
+           "x": 1.1256673554854753,
+           "y": 2.303668315938407
+          },
+          {
+           "x": 1.1473497328093671,
+           "y": 2.247024502277257
+          },
+          {
+           "x": 1.1707220098717301,
+           "y": 2.1907109685554813
+          },
+          {
+           "x": 1.195773934819385,
+           "y": 2.1347524157501487
+          },
+          {
+           "x": 1.222494519050076,
+           "y": 2.079173389131966
+          },
+          {
+           "x": 1.2508720420324337,
+           "y": 2.023998267498918
+          },
+          {
+           "x": 1.2808940564469942,
+           "y": 1.9692512524829018
+          },
+          {
+           "x": 1.312547393645998,
+           "y": 1.9149563579341118
+          },
+          {
+           "x": 1.3458181694295965,
+           "y": 1.8611373993877596
+          },
+          {
+           "x": 1.3806917901359221,
+           "y": 1.8078179836177966
+          },
+          {
+           "x": 1.417152959042348,
+           "y": 1.755021498282204
+          },
+          {
+           "x": 1.4551856830751406,
+           "y": 1.702771101664388
+          },
+          {
+           "x": 1.4947732798245452,
+           "y": 1.6510897125151982
+          },
+          {
+           "x": 1.5358983848622447,
+           "y": 1.6000000000000008
+          },
+          {
+           "x": 1.5785429593579718,
+           "y": 1.549524373755237
+          },
+          {
+           "x": 1.6226882979919401,
+           "y": 1.4996849740588092
+          },
+          {
+           "x": 1.6683150371596027,
+           "y": 1.450503662118636
+          },
+          {
+           "x": 1.7154031634651834,
+           "y": 1.4020020104835915
+          },
+          {
+           "x": 1.7639320225002098,
+           "y": 1.3542012935810757
+          },
+          {
+           "x": 1.8138803279032145,
+           "y": 1.3071224783853508
+          },
+          {
+           "x": 1.8652261706966407,
+           "y": 1.2607862152207312
+          },
+          {
+           "x": 1.917947028896843,
+           "y": 1.2152128287036692
+          },
+          {
+           "x": 1.972019777392973,
+           "y": 1.170422308827706
+          },
+          {
+           "x": 2.0274206980904217,
+           "y": 1.126434302195198
+          },
+          {
+           "x": 2.084125490314353,
+           "y": 1.0832681033996727
+          },
+          {
+           "x": 2.1421092814687865,
+           "y": 1.0409426465625768
+          },
+          {
+           "x": 2.2013466379465387,
+           "y": 0.9994764970281502
+          },
+          {
+           "x": 2.2618115762852455,
+           "y": 0.9588878432200478
+          },
+          {
+           "x": 2.3234775745645675,
+           "y": 0.9191944886632961
+          },
+          {
+           "x": 2.3863175840395776,
+           "y": 0.8804138441750826
+          },
+          {
+           "x": 2.450304041005242,
+           "y": 0.84256292022779
+          },
+          {
+           "x": 2.515408878886758,
+           "y": 0.8056583194876494
+          },
+          {
+           "x": 2.5816035405504985,
+           "y": 0.7697162295322517
+          },
+          {
+           "x": 2.648858990830107,
+           "y": 0.7347524157501475
+          },
+          {
+           "x": 2.7171457292622714,
+           "y": 0.7007822144256299
+          },
+          {
+           "x": 2.786433803026623,
+           "y": 0.6678205260117216
+          },
+          {
+           "x": 2.8566928200840147,
+           "y": 0.6358818085943572
+          },
+          {
+           "x": 2.927891962507479,
+           "y": 0.6049800715505818
+          },
+          {
+           "x": 3.0000000000000018,
+           "y": 0.5751288694035717
+          },
+          {
+           "x": 3.072985303593139,
+           "y": 0.5463412958771823
+          },
+          {
+           "x": 3.1468158595205518,
+           "y": 0.5186299781525996
+          },
+          {
+           "x": 3.22145928326029,
+           "y": 0.49200707132964405
+          },
+          {
+           "x": 3.2968828337397085,
+           "y": 0.4664842530951461
+          },
+          {
+           "x": 3.3730534276967967,
+           "y": 0.4420727186007185
+          },
+          {
+           "x": 3.4499376541915874,
+           "y": 0.4187831755521989
+          },
+          {
+           "x": 3.5275017892612857,
+           "y": 0.3966258395128972
+          },
+          {
+           "x": 3.605711810712738,
+           "y": 0.37561042942270406
+          },
+          {
+           "x": 3.684533413045668,
+           "y": 0.35574616333505293
+          },
+          {
+           "x": 3.7639320225002098,
+           "y": 0.3370417543735704
+          },
+          {
+           "x": 3.8438728122221146,
+           "y": 0.3195054069102117
+          },
+          {
+           "x": 3.9243207175389365,
+           "y": 0.30314481296655726
+          },
+          {
+           "x": 4.005240451340579,
+           "y": 0.28796714883983343
+          },
+          {
+           "x": 4.086596519557377,
+           "y": 0.27397907195515137
+          },
+          {
+           "x": 4.168353236728961,
+           "y": 0.2611867179453444
+          },
+          {
+           "x": 4.250474741657102,
+           "y": 0.24959569795967163
+          },
+          {
+           "x": 4.332925013135589,
+           "y": 0.2392110962025864
+          },
+          {
+           "x": 4.41566788575035,
+           "y": 0.23003746770363298
+          },
+          {
+           "x": 4.498667065742785,
+           "y": 0.2220788363194619
+          },
+          {
+           "x": 4.581886146929387,
+           "y": 0.2153386929688348
+          },
+          {
+           "x": 4.665288626670737,
+           "y": 0.2098199941013883
+          },
+          {
+           "x": 4.748837921882747,
+           "y": 0.2055251604008399
+          },
+          {
+           "x": 4.832497385083201,
+           "y": 0.2024560757231968
+          },
+          {
+           "x": 4.916230320466573,
+           "y": 0.20061408627043287
+          },
+          {
+           "x": 4.999999999999999,
+           "y": 0.20000000000000018
+          },
+          {
+           "x": 5.083769679533425,
+           "y": 0.20061408627043287
+          },
+          {
+           "x": 5.167502614916798,
+           "y": 0.2024560757231968
+          },
+          {
+           "x": 5.251162078117251,
+           "y": 0.2055251604008399
+          },
+          {
+           "x": 5.334711373329258,
+           "y": 0.20981999410138785
+          },
+          {
+           "x": 5.418113853070616,
+           "y": 0.2153386929688348
+          },
+          {
+           "x": 5.501332934257217,
+           "y": 0.2220788363194619
+          },
+          {
+           "x": 5.584332114249645,
+           "y": 0.23003746770363298
+          },
+          {
+           "x": 5.667074986864409,
+           "y": 0.2392110962025864
+          },
+          {
+           "x": 5.7495252583428975,
+           "y": 0.24959569795967163
+          },
+          {
+           "x": 5.831646763271038,
+           "y": 0.2611867179453444
+          },
+          {
+           "x": 5.913403480442621,
+           "y": 0.27397907195515137
+          },
+          {
+           "x": 5.994759548659417,
+           "y": 0.28796714883983254
+          },
+          {
+           "x": 6.075679282461062,
+           "y": 0.30314481296655726
+          },
+          {
+           "x": 6.156127187777884,
+           "y": 0.31950540691021123
+          },
+          {
+           "x": 6.236067977499789,
+           "y": 0.33704175437357
+          },
+          {
+           "x": 6.315466586954334,
+           "y": 0.3557461633350534
+          },
+          {
+           "x": 6.39428818928726,
+           "y": 0.3756104294227036
+          },
+          {
+           "x": 6.4724982107387135,
+           "y": 0.39662583951289676
+          },
+          {
+           "x": 6.550062345808412,
+           "y": 0.4187831755521989
+          },
+          {
+           "x": 6.626946572303199,
+           "y": 0.4420727186007172
+          },
+          {
+           "x": 6.703117166260291,
+           "y": 0.4664842530951452
+          },
+          {
+           "x": 6.778540716739708,
+           "y": 0.4920070713296436
+          },
+          {
+           "x": 6.853184140479447,
+           "y": 0.5186299781525987
+          },
+          {
+           "x": 6.92701469640686,
+           "y": 0.5463412958771814
+          },
+          {
+           "x": 6.999999999999997,
+           "y": 0.5751288694035708
+          },
+          {
+           "x": 7.072108037492523,
+           "y": 0.6049800715505822
+          },
+          {
+           "x": 7.143307179915987,
+           "y": 0.6358818085943581
+          },
+          {
+           "x": 7.2135661969733755,
+           "y": 0.6678205260117211
+          },
+          {
+           "x": 7.282854270737728,
+           "y": 0.700782214425629
+          },
+          {
+           "x": 7.351141009169892,
+           "y": 0.734752415750147
+          },
+          {
+           "x": 7.4183964594494975,
+           "y": 0.7697162295322495
+          },
+          {
+           "x": 7.48459112111324,
+           "y": 0.8056583194876485
+          },
+          {
+           "x": 7.549695958994757,
+           "y": 0.8425629202277891
+          },
+          {
+           "x": 7.6136824159604215,
+           "y": 0.8804138441750817
+          },
+          {
+           "x": 7.676522425435431,
+           "y": 0.9191944886632952
+          },
+          {
+           "x": 7.738188423714751,
+           "y": 0.958887843220046
+          },
+          {
+           "x": 7.798653362053463,
+           "y": 0.9994764970281516
+          },
+          {
+           "x": 7.8578907185312135,
+           "y": 1.0409426465625768
+          },
+          {
+           "x": 7.915874509685645,
+           "y": 1.0832681033996712
+          },
+          {
+           "x": 7.972579301909577,
+           "y": 1.1264343021951975
+          },
+          {
+           "x": 8.027980222607024,
+           "y": 1.1704223088277041
+          },
+          {
+           "x": 8.082052971103158,
+           "y": 1.2152128287036692
+          },
+          {
+           "x": 8.13477382930336,
+           "y": 1.2607862152207303
+          },
+          {
+           "x": 8.186119672096783,
+           "y": 1.307122478385349
+          },
+          {
+           "x": 8.23606797749979,
+           "y": 1.3542012935810748
+          },
+          {
+           "x": 8.284596836534815,
+           "y": 1.4020020104835897
+          },
+          {
+           "x": 8.331684962840399,
+           "y": 1.4505036621186362
+          },
+          {
+           "x": 8.377311702008061,
+           "y": 1.4996849740588103
+          },
+          {
+           "x": 8.421457040642027,
+           "y": 1.5495243737552353
+          },
+          {
+           "x": 8.464101615137755,
+           "y": 1.600000000000001
+          },
+          {
+           "x": 8.505226720175454,
+           "y": 1.651089712515197
+          },
+          {
+           "x": 8.544814316924858,
+           "y": 1.702771101664386
+          },
+          {
+           "x": 8.582847040957652,
+           "y": 1.7550214982822032
+          },
+          {
+           "x": 8.619308209864077,
+           "y": 1.8078179836177957
+          },
+          {
+           "x": 8.654181830570401,
+           "y": 1.8611373993877576
+          },
+          {
+           "x": 8.687452606354002,
+           "y": 1.914956357934111
+          },
+          {
+           "x": 8.719105943553004,
+           "y": 1.9692512524828998
+          },
+          {
+           "x": 8.749127957967566,
+           "y": 2.0239982674989165
+          },
+          {
+           "x": 8.777505480949925,
+           "y": 2.0791733891319675
+          },
+          {
+           "x": 8.804226065180615,
+           "y": 2.134752415750147
+          },
+          {
+           "x": 8.829277990128269,
+           "y": 2.1907109685554804
+          },
+          {
+           "x": 8.852650267190633,
+           "y": 2.2470245022772555
+          },
+          {
+           "x": 8.874332644514524,
+           "y": 2.3036683159384053
+          },
+          {
+           "x": 8.89431561149264,
+           "y": 2.3606175636901634
+          },
+          {
+           "x": 8.912590402935223,
+           "y": 2.4178472657102725
+          },
+          {
+           "x": 8.929149002914755,
+           "y": 2.4753323191599708
+          },
+          {
+           "x": 8.94398414828202,
+           "y": 2.5330475091949123
+          },
+          {
+           "x": 8.957089331851954,
+           "y": 2.590967520025245
+          },
+          {
+           "x": 8.968458805257912,
+           "y": 2.6490669460199494
+          },
+          {
+           "x": 8.978087581473094,
+           "y": 2.7073203028505706
+          },
+          {
+           "x": 8.985971436998017,
+           "y": 2.7657020386695157
+          },
+          {
+           "x": 8.992106913713087,
+           "y": 2.824186545317923
+          },
+          {
+           "x": 8.996491320395434,
+           "y": 2.88274816955824
+          },
+          {
+           "x": 8.999122733899382,
+           "y": 2.941361224326601
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 2.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 8.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Bu katta rota hesabı için çok fazla sınır var. Daha küçük bir çizim kapsamı kullanın."
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çok dar genişlik",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.04,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Geçiş genişliği 0,05–10 m arasında olmalı.",
+       "path": "width"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çok geniş genişlik",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 10.5,
+      "level": "zemin"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Geçiş genişliği 0,05–10 m arasında olmalı.",
+       "path": "width"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan kat",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "level_not_found",
+       "message": "Çizimde bulunan bir kat seçin.",
+       "path": "level"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başlangıç sayı değil (NaN)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "nonFinite": {
+      "start.x": "NaN"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Çizimde sonlu bir konum seçin.",
+       "path": "start"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bitiş sonsuz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Dolaşım güzergâhı",
+    "uids": [
+     "0192f5a1-8a1c-7000-8000-000000000001"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100.0,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b1",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Mobilya/Masalar",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-8a1c-7000-8000-0000000000b2",
+      "name": "Aydınlatma",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "card": {
+       "category": "Elektrik",
+       "version": 1
+      },
+      "entities": [
+       {
+        "kind": "polyline",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 0.0
+         },
+         {
+          "x": 2.0,
+          "y": 1.0
+         },
+         {
+          "x": 0.0,
+          "y": 1.0
+         }
+        ],
+        "closed": true
+       }
+      ]
+     }
+    ],
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 0.0
+          },
+          {
+           "x": 10.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "start": {
+       "x": 1.0,
+       "y": 3.0
+      },
+      "end": {
+       "x": 9.0,
+       "y": 3.0
+      },
+      "width": 0.9,
+      "level": "zemin"
+     },
+     "nonFinite": {
+      "end.y": "Infinity"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Çizimde sonlu bir konum seçin.",
+       "path": "end"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

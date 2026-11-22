@@ -1,0 +1,20 @@
+[package]
+name = "kentos-data-postgis"
+description = "The PostGIS data driver: a database's tables read through a cursor by box, condition, order and page, the geometry simplified by the server, written in one transaction"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native only (scripts/arch/deps.mjs, group `data-postgis`; docs/adr/9100): kentos-data's traits over sqlx with TLS (the
+# system's root certificates, as kentos-postgis), on a runtime of its own so the callers stay synchronous. One pool of
+# connections per database, shared by every layer that reads it.
+[dependencies]
+kentos-data = { path = "../data" }
+sqlx = { workspace = true, features = ["tls-rustls-ring-native-roots"] }
+tokio = { workspace = true }
+
+[dev-dependencies]
+kentos-data = { path = "../data", features = ["conformance"] }
+sqlx = { workspace = true }
+tokio = { workspace = true }

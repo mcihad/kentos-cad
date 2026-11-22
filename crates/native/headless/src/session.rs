@@ -142,6 +142,59 @@ impl Session {
     /// Saves as `.kcad` v2 to `path`, or where it was read from. A v1 file
     /// is not written over: its drawing goes to a new path. The drawing is
     /// clean afterwards; the answer says where and how much.
+    /// Saves the drawing as a project kept in a data source (docs/adr/9107): a GeoPackage file's or a PostgreSQL
+    /// schema's `kentos_projects` table, written and read back; a GeoPackage's file is where its relative paths start
+    /// from. The answer: where, the bytes, the revision.
+    pub fn save_to_source(&mut self, address: &str, schema: Option<&str>, name: &str) -> Result<Value, HeadlessError> {
+        if self.group.is_some() {
+            return Err(HeadlessError::new(
+                "busy",
+                "Açık bir işlem grubu varken kaydedilmez: önce grubu bitirin ya da iptal edin.",
+            ));
+        }
+        let revision = self.doc.revision();
+        let mut snapshot = self.doc.to_snapshot_v2();
+        kentos_native_application::project_store::with_relative(&mut snapshot, address);
+        let bytes = kentos_kcad::encode_verified(&snapshot)
+            .map_err(|e| HeadlessError::new("file_unwritable", format!("çizim KCAD v2'ye yazılamadı: {e}")))?;
+        kentos_native_application::project_store::write(address, schema, name, &bytes)
+            .map_err(|e| HeadlessError::new("source_unwritable", e))?;
+        self.doc.mark_saved(revision);
+        Ok(json!({
+            "address": address,
+            "schema": schema,
+            "name": name.trim(),
+            "bytes": bytes.len(),
+            "revision": revision.to_string(),
+        }))
+    }
+
+    /// A project kept in a data source (docs/adr/9107), opened: a GeoPackage's data layers and bound files found from
+    /// that file when they are not at their addresses.
+    pub fn open_from_source(address: &str, schema: Option<&str>, name: &str) -> Result<Self, HeadlessError> {
+        let bytes = kentos_native_application::project_store::read(address, schema, name)
+            .map_err(|e| HeadlessError::new("source_unreadable", e))?;
+        let (mut doc, legacy) = files::from_bytes(&bytes)?;
+        let located = match kentos_native_application::project_store::place_of(address) {
+            Some(place) => kentos_native_application::source_places::relocate(&mut doc, &place),
+            None => Default::default(),
+        };
+        let mut session = Self::of(doc, None, legacy);
+        session.located = located;
+        Ok(session)
+    }
+
+    /// The projects kept in a data source: name, who wrote it last and when, its bytes.
+    pub fn projects_in(address: &str, schema: Option<&str>) -> Result<Value, HeadlessError> {
+        let list = kentos_native_application::project_store::list(address, schema)
+            .map_err(|e| HeadlessError::new("source_unreadable", e))?;
+        Ok(Value::Array(
+            list.into_iter()
+                .map(|p| json!({"name": p.name, "modified": p.modified, "user": p.user, "bytes": p.size}))
+                .collect(),
+        ))
+    }
+
     pub fn save(&mut self, path: Option<&Path>) -> Result<Value, HeadlessError> {
         if self.group.is_some() {
             return Err(HeadlessError::new(

@@ -136,6 +136,10 @@ impl App {
                 );
                 rows
             }
+            Pane::Store => vec![
+                (Some(event(Event::Store(true))), self.document.is_some()),
+                (Some(event(Event::Store(false))), true),
+            ],
             Pane::Cloud => {
                 let mut rows: Vec<(Option<Message>, bool)> = self
                     .cloud_actions()

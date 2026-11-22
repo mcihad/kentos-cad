@@ -1,10 +1,10 @@
-//! PostGIS'e bağlan (docs/adr/0505, 0582, 0623; QGIS's Veri kaynağı yöneticisi › PostgreSQL): a saved connection is
-//! chosen (Yeni and Düzenle open the connection window, db_connections.rs), its tables, views and materialized views
-//! are read from the database's catalogue off the interface's thread (`kentos_postgis::probe::browse`: no row is
-//! counted) and searched, and the chosen ones and a query layer are bound to new layers with `cad.sources.edit`, by
-//! the view's area when asked, a table in another system only with Projenin sistemine çevir ticked. A server asking
-//! for a password KentOS does not know opens the password question. Nobody types an address: the one a bound layer
-//! keeps is built from the connection's fields and carries no password.
+//! PostGIS'e bağlan (docs/adr/0505, 0582, 0623, 9101): a saved connection is chosen (Yeni and Düzenle open the
+//! connection window, db_connections.rs), its tables, views and materialized views are read from the database's
+//! catalogue off the interface's thread (`kentos_postgis::probe::browse`: no row is counted) and searched. The chosen
+//! tables are added as data layers (`cad.layers.data`): their rows stay in the database and the view reads them as it
+//! draws. A query layer is a data layer too, read live and read-only (postgis_query.rs, docs/adr/9113 §3). A server asking for a password KentOS does not know opens
+//! the password question. Nobody types an address: the one a layer keeps is built from the connection's fields and
+//! carries no password.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -20,7 +20,6 @@ use kentos_postgis::probe::{self, Catalog, Diagnosis, Problem, Relation};
 use kentos_ui::label;
 use kentos_ui::widget::{Choice, Dialog, InputField, Select, overlay};
 
-use super::binding::{Ask, Started, Table};
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message};
 use crate::app::{App, Message};
@@ -38,8 +37,14 @@ pub struct State {
     /// The chosen tables, `schema.name`.
     pub chosen: BTreeSet<String>,
     pub reproject: bool,
-    /// A query layer's SQL (docs/adr/0582 §3); empty: none.
+    /// A query layer's SQL (docs/adr/9113 §3); empty: none.
     pub query: String,
+    /// Its columns as last read, or why not; the key and the geometry chosen (none: without geometry); the layer's name.
+    pub query_columns: Option<Result<Vec<kentos_data::QueryColumn>, String>>,
+    pub query_reading: bool,
+    pub query_key: Option<String>,
+    pub query_geometry: Option<String>,
+    pub query_name: String,
     /// Gelişmiş (the query layer) open.
     pub advanced: bool,
     /// Only the rows in the view's area (docs/adr/0582 §1).
@@ -62,6 +67,13 @@ pub enum Event {
     All(bool),
     Reproject,
     Query(String),
+    /// Sütunları oku.
+    QueryRead,
+    /// The query's columns (its SQL), or why not.
+    QueryColumns(String, Result<Vec<kentos_data::QueryColumn>, String>),
+    QueryKey(usize),
+    QueryGeometry(usize),
+    QueryName(String),
     Advanced,
     Area,
     Run,
@@ -250,68 +262,44 @@ impl App {
                 }
             }
             Event::Reproject => s.reproject = !s.reproject,
-            Event::Query(q) => {
-                s.query = q;
-                s.status = None;
-            }
+            Event::Query(q) => s.query_changed(q),
+            Event::QueryRead => return self.postgis_query_columns(),
+            Event::QueryColumns(sql, read) => s.query_read(&sql, read),
+            Event::QueryKey(_) | Event::QueryGeometry(_) => super::postgis_query::choose(s, &e),
+            Event::QueryName(n) => s.query_name = n,
             Event::Advanced => s.advanced = !s.advanced,
             Event::Area => s.area = !s.area,
-            Event::Run => self.postgis_bind(),
+            Event::Run => return self.postgis_bind(),
         }
         Task::none()
     }
 
-    /// Bağla: the chosen tables and the query layer bound to new layers on threads of their own while the window closes
-    /// (exchange/binding.rs); a refusal at once is said in the window.
-    fn postgis_bind(&mut self) {
+    /// Bağla: the chosen tables, views and materialized views added as data layers (docs/adr/9101): their rows stay in
+    /// the database and the view reads them as it draws; the window closes at once and the catalogue is read on a thread
+    /// of its own. A query is a data layer too, read live and read-only (docs/adr/9113 §3).
+    fn postgis_bind(&mut self) -> Task<Message> {
         let Some(Window::Postgis(s)) = &self.exchange else {
-            return;
+            return Task::none();
         };
         let Some(c) = s.connection.as_deref().and_then(|n| self.db_store.get(n)) else {
-            return;
+            return Task::none();
         };
-        // The view's area, for what has geometry (a query: whatever it holds; docs/adr/0582 §1).
-        let area = s.area.then(|| {
-            let b = self.viewport.camera.visible_bounds();
-            [b.min_x, b.min_y, b.max_x, b.max_y]
-        });
-        let mut tables: Vec<Table> = s
+        let tables: Vec<String> = s
             .catalog
             .iter()
             .flat_map(|catalog| catalog.relations.iter())
             .filter(|r| s.chosen.contains(&r.table()))
-            .map(|r| Table {
-                name: r.table(),
-                geometry: r.geometry.is_some(),
-                rows: r.estimate,
-            })
+            .map(|r| r.table())
             .collect();
-        if !s.query.trim().is_empty() {
-            tables.push(Table {
-                name: s.query.trim().to_owned(),
-                geometry: true,
-                rows: None,
-            });
+        let query = s.query_table().map(|q| (q, s.query_name.clone()));
+        let address = c.address();
+        self.close_exchange();
+        let mut tasks = vec![self.add_tables(address.clone(), tables)];
+        // The query a live data layer too (docs/adr/9113 §3).
+        if let Some((q, name)) = query {
+            tasks.push(self.add_query(address, q, name));
         }
-        let ask = Ask {
-            source: c.address(),
-            shown: c.name.clone(),
-            tables,
-            reproject: s.reproject,
-            area,
-            key: None,
-            file: false,
-            then: "Tabloların değişikliklerini Kaynağa yaz ile veritabanına yazın; view ve sorgu salt okunurdur."
-                .to_owned(),
-        };
-        match self.start_binding(ask) {
-            Started::Done | Started::Going => self.close_exchange(),
-            Started::Failed(why) => {
-                if let Some(Window::Postgis(s)) = &mut self.exchange {
-                    s.status = Some((true, why));
-                }
-            }
-        }
+        Task::batch(tasks)
     }
 
     pub(super) fn postgis_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
@@ -454,10 +442,7 @@ impl App {
                 ),
                 Some("Milyon satırlı tabloda ilk harita bütün tabloyu indirmeden gelir: yalnız kutusu görünen alana değen satırlar alınır, yazma alanın dışına dokunmaz. Geometrisiz tablo bütün bağlanır.".to_owned()),
             ));
-            // A query's system is known only once it runs (GIS-055): the same choice is offered for it; a query in the
-            // project's own system is not moved by it.
-            let query = !s.query.trim().is_empty();
-            if other || query {
+            if other {
                 body = body.push(words::field(
                     "Koordinat sistemi",
                     words::check(
@@ -465,10 +450,7 @@ impl App {
                         format!("Projenin sistemine çevir (EPSG:{project}); tablo kendi sisteminde kalır"),
                         Some(event(Event::Reproject)),
                     ),
-                    (query && !other).then(|| {
-                        "Sorgunun sistemi bağlanınca okunur: projeninkinden başkaysa bu kutu onu projenin sistemine çevirir, aynıysa bir şey değiştirmez."
-                            .to_owned()
-                    }),
+                    None,
                 ));
             }
             let advanced = iced::widget::button(
@@ -489,18 +471,10 @@ impl App {
             .style(kentos_ui::style::button::ghost);
             body = body.push(advanced);
             if s.advanced {
-                let query =
-                    InputField::new("SELECT fid, ad, geom FROM şema.tablo WHERE …", &s.query)
-                        .mono()
-                        .on_input(|t| event(Event::Query(t)));
-                body = body.push(words::field(
-                    "Sorgu katmanı",
-                    query,
-                    Some("Tek bir SELECT; salt okunur bağlanır. Tam sayı bir anahtar sütunu (fid, id, gid ya da ogc_fid) gerekir; geometri ilk geometry sütunudur.".to_owned()),
-                ));
+                body = super::postgis_query::view(s, body);
             }
         }
-        let count = s.chosen.len() + usize::from(!s.query.trim().is_empty());
+        let count = s.chosen.len() + usize::from(s.query_table().is_some());
         let ready = count > 0 && (!other || s.reproject) && !s.listing;
         let add = if count > 1 {
             format!("{count} kaynağı ekle")

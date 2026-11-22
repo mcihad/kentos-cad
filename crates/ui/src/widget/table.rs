@@ -203,6 +203,7 @@ struct Lazy<'a, Message> {
     count: usize,
     view: Box<dyn Fn(usize) -> Row<'a, Message> + 'a>,
     reveal: Option<usize>,
+    on_range: Option<Box<dyn Fn(usize, usize) -> Message + 'a>>,
 }
 
 impl<'a, Message: Clone + 'a> Table<'a, Message> {
@@ -231,7 +232,17 @@ impl<'a, Message: Clone + 'a> Table<'a, Message> {
             count,
             view: Box::new(view),
             reveal: None,
+            on_range: None,
         });
+        self
+    }
+
+    /// Sanal tabloda görünen satırların aralığı değişince giden ileti (ilk ve son hariç): satırları sayfa sayfa
+    /// okuyan tablo yalnız görüneni ister ([`VirtualList::on_range`]).
+    pub fn on_range(mut self, on_range: impl Fn(usize, usize) -> Message + 'a) -> Self {
+        if let Some(lazy) = &mut self.lazy {
+            lazy.on_range = Some(Box::new(on_range));
+        }
         self
     }
 
@@ -472,16 +483,16 @@ impl<'a, Message: Clone + 'a> From<Table<'a, Message>> for Element<'a, Message> 
                 let height = row_height();
                 let row_layout = layout.clone();
                 let view = lazy.view;
+                let mut list = VirtualList::new(lazy.count, height, move |index| {
+                    row_element(view(index), &row_layout, Some(height), grid)
+                })
+                .reveal(lazy.reveal)
+                .height(table.height.unwrap_or(Length::Fill));
+                if let Some(on_range) = lazy.on_range {
+                    list = list.on_range(on_range);
+                }
 
-                (
-                    VirtualList::new(lazy.count, height, move |index| {
-                        row_element(view(index), &row_layout, Some(height), grid)
-                    })
-                    .reveal(lazy.reveal)
-                    .height(table.height.unwrap_or(Length::Fill))
-                    .into(),
-                    true,
-                )
+                (list.into(), true)
             }
             (_, _, None) => (
                 iced::widget::Column::with_children(

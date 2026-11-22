@@ -44,6 +44,9 @@ pub struct VirtualList<'a, Message> {
     width: Length,
     height: Length,
     reveal: Option<usize>,
+    /// Görünen aralık değişince gönderilen ileti (ilk ve son hariç satır): satırları sayfa sayfa bir kaynaktan
+    /// okuyan tablo, yalnız görüneni ister (docs/adr/9102 §5).
+    on_range: Option<Box<dyn Fn(usize, usize) -> Message + 'a>>,
 }
 
 impl<'a, Message: 'a> VirtualList<'a, Message> {
@@ -62,7 +65,14 @@ impl<'a, Message: 'a> VirtualList<'a, Message> {
             width: Length::Fill,
             height: Length::Fill,
             reveal: None,
+            on_range: None,
         }
+    }
+
+    /// Görünen satırların aralığı her değiştiğinde (kaydırma, boyut, ilk çizim) `on_range(ilk, son)` iletisi gider.
+    pub fn on_range(mut self, on_range: impl Fn(usize, usize) -> Message + 'a) -> Self {
+        self.on_range = Some(Box::new(on_range));
+        self
     }
 
     /// Satırı görünür yapar; aynı satır için bir kez, kullanıcının
@@ -130,6 +140,8 @@ struct State {
     dragging: Option<(f32, f32)>,
     bar_hovered: bool,
     revealed: Option<usize>,
+    /// The visible range last said with `on_range`.
+    said: Option<(usize, usize)>,
 }
 
 impl<'a, Message: 'a> VirtualList<'a, Message> {
@@ -238,6 +250,16 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for VirtualList<'a, Messa
         let state = tree.state.downcast_mut::<State>();
         let total = self.total();
         let max_offset = (total - bounds.height).max(0.0);
+
+        // The visible range said once each time it changes (a scroll, a resize, the first frame).
+        if let Some(on_range) = &self.on_range {
+            let range = visible(state.offset, bounds.height, self.row_height, self.count);
+            let now = (range.start, range.end);
+            if state.said != Some(now) {
+                state.said = Some(now);
+                shell.publish(on_range(now.0, now.1));
+            }
+        }
 
         // Kaydırma çubuğu sürükleniyor.
         if let Some((origin, start)) = state.dragging {

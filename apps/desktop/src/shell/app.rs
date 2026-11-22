@@ -404,6 +404,8 @@ pub enum Message {
     /// The map services brought tiles or read what they need, or one failed:
     /// the drawing draws again, the failure goes to the log (docs/adr/0208 §6).
     ServicesReady,
+    /// Data layers' parts came (data_view.rs, docs/adr/9101 §6): the next frame draws them.
+    DataReady,
     /// A mouse press anywhere or the window losing the focus while the key
     /// tips show: they go (ribbon_keys.rs, docs/adr/0118).
     KeyTipsAway,
@@ -1273,6 +1275,10 @@ impl App {
             self.output("Kaydedilecek çizim yok. Önce bir çizim açın (Ctrl+O).");
             return Task::none();
         };
+        // A project kept in a data source is written there again (docs/adr/9107); Farklı kaydet asks for a file.
+        if !choose && let Some(at) = doc.stored_source().cloned() {
+            return self.start_save(saving::Target::Source(at));
+        }
         let title = if doc.legacy && !choose {
             "Yeni biçimde kaydet (KCAD v2)"
         } else {

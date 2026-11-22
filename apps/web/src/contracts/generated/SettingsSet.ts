@@ -5,6 +5,7 @@ import type { AreaUnit } from "./AreaUnit";
 import type { CadWork } from "./CadWork";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { EditGrouping } from "./EditGrouping";
 import type { HeightReference } from "./HeightReference";
 import type { LengthStyle } from "./LengthStyle";
 import type { ProjectStandardDocument } from "./ProjectStandardDocument";
@@ -110,7 +111,12 @@ mapSrid?: number,
  * Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
  * the active layer's. No object changes.
  */
-autoSelect?: boolean, drawingUnit?: DrawingUnit, 
+autoSelect?: boolean, 
+/**
+ * How the data layers' edit sessions go together (docs/adr/9104 §2): each layer alone, a source's layers
+ * together, or every editable layer together. No object changes.
+ */
+editGrouping?: EditGrouping, drawingUnit?: DrawingUnit, 
 /**
  * How lengths are written (docs/adr/0262 §2): decimal, or architectural,
  * engineering and fractional feet and inches in an inch or foot drawing.

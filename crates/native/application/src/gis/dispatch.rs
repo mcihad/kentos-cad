@@ -274,6 +274,62 @@ macro_rules! gis_commands {
             kentos_commands::CAD_LAYERS_FILTER => {
                 crate::gis_dispatch::gis_arm!($command, $then, layers_filter, LayersFilter)
             }
+            kentos_commands::CAD_LAYERS_ROWS => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layers_rows,
+                    kentos_commands::LayersRows
+                )
+            }
+            kentos_commands::CAD_LAYERS_DATA => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layers_data,
+                    kentos_commands::LayersData
+                )
+            }
+            kentos_commands::CAD_LAYERS_SESSION => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layers_session,
+                    kentos_commands::LayersSession
+                )
+            }
+            kentos_commands::CAD_LAYERS_CLASSES => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layer_classes,
+                    kentos_commands::LayersClasses
+                )
+            }
+            kentos_commands::CAD_LAYERS_EXPORT => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layer_export,
+                    kentos_commands::LayersExport
+                )
+            }
+            kentos_commands::CAD_LAYERS_CREATE => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layers_create,
+                    kentos_commands::LayersCreate
+                )
+            }
+            kentos_commands::CAD_LAYERS_MIGRATE => {
+                crate::gis_dispatch::gis_arm!(
+                    $command,
+                    $then,
+                    layers_migrate,
+                    kentos_commands::LayersMigrate
+                )
+            }
             kentos_commands::CAD_LAYERS_CRS => {
                 crate::gis_dispatch::gis_arm!(
                     $command,

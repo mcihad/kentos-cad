@@ -90,6 +90,111 @@ pub(crate) fn mover_in(
     }))
 }
 
+/// The move between the project's system and a data layer's table (docs/adr/9101 §6): its rows' positions brought
+/// into the project's system as they are drawn, the view's box taken into the table's for the request. None in the
+/// same system or for a table that declares none.
+pub struct TableSystem {
+    mover: Mover,
+}
+
+impl TableSystem {
+    /// The move for a table of `srid` in this project; why not, when the systems do not meet.
+    pub fn of(
+        settings: &kentos_commands::ProjectSettings,
+        srid: Option<u32>,
+    ) -> Result<Option<TableSystem>, String> {
+        Ok(mover_in(settings, srid)?.map(|mover| TableSystem { mover }))
+    }
+
+    /// A position of the table in the project's system; none where it has no value there.
+    pub fn to_project(&self, x: f64, y: f64) -> Option<(f64, f64)> {
+        kentos_geometry_core::crs::transform_in(
+            &self.mover.source,
+            &self.mover.project,
+            kentos_geometry_core::Vec2 { x, y },
+            &self.mover.choices,
+        )
+        .ok()
+        .map(|t| (t.point.x, t.point.y))
+    }
+
+    /// A position of the project in the table's system; none where it has no value there.
+    pub fn to_table_point(&self, x: f64, y: f64) -> Option<(f64, f64)> {
+        kentos_geometry_core::crs::transform_in(
+            &self.mover.project,
+            &self.mover.source,
+            kentos_geometry_core::Vec2 { x, y },
+            &self.mover.choices,
+        )
+        .ok()
+        .map(|t| (t.point.x, t.point.y))
+    }
+
+    /// A geometry of the table moved into the project's system, position by position; none where a position has no
+    /// value there.
+    pub fn moved(&self, g: &kentos_data::Geometry) -> Option<kentos_data::Geometry> {
+        moved_by(g, &|x, y| self.to_project(x, y))
+    }
+
+    /// A geometry of the project moved into the table's system (a row written, docs/adr/9103 §4); none where a position
+    /// has no value there.
+    pub fn moved_back(&self, g: &kentos_data::Geometry) -> Option<kentos_data::Geometry> {
+        moved_by(g, &|x, y| self.to_table_point(x, y))
+    }
+
+    /// A box of the project's system as one of the table's, its sides densified.
+    pub fn to_table(&self, b: [f64; 4]) -> Option<[f64; 4]> {
+        kentos_geometry_core::crs::transform_bounds(
+            &self.mover.project,
+            &self.mover.source,
+            b,
+            16,
+            &self.mover.choices,
+        )
+    }
+}
+
+/// `g` with every position moved by `to`; none where a position has no value there.
+fn moved_by(
+    g: &kentos_data::Geometry,
+    to: &dyn Fn(f64, f64) -> Option<(f64, f64)>,
+) -> Option<kentos_data::Geometry> {
+    use kentos_data::{Coord, Curve, Geometry};
+    let coord = |c: &Coord| -> Option<Coord> {
+        let (x, y) = to(c.x, c.y)?;
+        Some(Coord { x, y, ..*c })
+    };
+    fn curve(c: &Curve, coord: &dyn Fn(&Coord) -> Option<Coord>) -> Option<Curve> {
+        Some(match c {
+            Curve::Line(p) => Curve::Line(p.iter().map(coord).collect::<Option<_>>()?),
+            Curve::Arc(p) => Curve::Arc(p.iter().map(coord).collect::<Option<_>>()?),
+            Curve::Compound(parts) => {
+                Curve::Compound(parts.iter().map(|c| curve(c, coord)).collect::<Option<_>>()?)
+            }
+        })
+    }
+    Some(match g {
+        Geometry::Point(p) => Geometry::Point(match p {
+            Some(c) => Some(coord(c)?),
+            None => None,
+        }),
+        Geometry::MultiPoint(ps) => Geometry::MultiPoint(ps.iter().map(coord).collect::<Option<_>>()?),
+        Geometry::Curve(c) => Geometry::Curve(curve(c, &coord)?),
+        Geometry::Polygon(r) => Geometry::Polygon(r.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?),
+        Geometry::MultiCurve(cs) => {
+            Geometry::MultiCurve(cs.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?)
+        }
+        Geometry::MultiPolygon(ps) => Geometry::MultiPolygon(
+            ps.iter()
+                .map(|r| r.iter().map(|c| curve(c, &coord)).collect::<Option<Vec<_>>>())
+                .collect::<Option<_>>()?,
+        ),
+        Geometry::Collection(gs) => {
+            Geometry::Collection(gs.iter().map(|g| moved_by(g, to)).collect::<Option<_>>()?)
+        }
+    })
+}
+
 /// A table's declared box (`SourceTable::extent`) in the project's system, for Kapsamı göster (docs/adr/0599 §9):
 /// moved across with its sides densified when the table is in another system. Why not, when the table declares no
 /// system in a project that has one, or the systems do not meet.
@@ -2740,8 +2845,8 @@ fn link_table(
         }
     };
     // A geometry column none of whose rows hold one (docs/adr/0745 §3): the rows came as records, so nothing is drawn;
-    // said before the layer looks empty for no reason. Some rows without geometry are ordinary (QGIS says nothing of
-    // them either): they are records in the attribute table.
+    // said before the layer looks empty for no reason. Some rows without geometry are ordinary and nothing is said of
+    // them: they are records in the attribute table.
     if let Some(column) = &stored.layer.geometry {
         let (all, bare) = doc
             .by_layer(&layer)

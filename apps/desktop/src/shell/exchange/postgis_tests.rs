@@ -657,10 +657,12 @@ fn every_kind_of_table_is_drawn_once_bound() {
     }
 }
 
-/// GIS-055 (docs/adr/1115): a query layer alone (no table chosen) is offered “Projenin sistemine çevir” as a table in
-/// another system is, its system read when it runs; with it ticked, Ekle is there. Picture `gis-055-sorgu-sistemi`.
+/// A query layer alone (docs/adr/9113 §3; GIS-055's query, a live data layer now): its columns read, the key and the
+/// geometry offered (fid and geom), the layer named after its table, Ekle there. No system question: a data layer is
+/// drawn in the project's system whatever its own. Picture `vy16-sorgu-katmani`.
 #[test]
-fn a_query_alone_is_offered_the_system_move() {
+fn a_query_alone_is_read_for_its_columns_and_offered_its_key() {
+    use kentos_data::QueryColumn;
     let mut app = app_with_drawing();
     let name = "Sorgu penceresi";
     keep_connection(&app, &connection(name));
@@ -669,20 +671,49 @@ fn a_query_alone_is_offered_the_system_move() {
     send(&mut app, Event::Postgis(P::Choose(at)));
     send(&mut app, Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)));
     send(&mut app, Event::Postgis(P::Advanced));
+    let sql = "SELECT fid, ada, geom FROM kadastro.parsel WHERE ada = 105";
+    let said = window(&app).status.clone();
+    assert!(said.is_some(), "Bağlandı …");
+    send(&mut app, Event::Postgis(P::Query(sql.into())));
+    assert!(window(&app).query_table().is_none(), "not added before its columns are read");
+    // The connection's line stays as the SQL is typed: taken away, the lines under it moved up and the input lost the
+    // keyboard after its first letter.
+    assert_eq!(window(&app).status, said);
+    let column = |name: &str, integer: bool, geometry: bool| QueryColumn { name: name.into(), integer, geometry };
     send(
         &mut app,
-        Event::Postgis(P::Query(
-            "SELECT 1 AS fid, ST_SetSRID(ST_MakePoint(38.07267801,40.16263730),4326)::geometry(Point,4326) AS geom".into(),
-        )),
+        Event::Postgis(P::QueryColumns(sql.into(), Ok(vec![column("ada", true, false), column("fid", true, false), column("geom", false, true)]))),
     );
+    let w = window(&app);
+    assert_eq!((w.query_key.as_deref(), w.query_geometry.as_deref()), (Some("fid"), Some("geom")), "fid offered first");
+    assert_eq!(w.query_name, "Sorgu: parsel");
+    let q = w.query_table().expect("ready");
+    assert_eq!(q.text(), "-- kentos: key=fid geometry=geom\nSELECT fid, ada, geom FROM kadastro.parsel WHERE ada = 105");
+    // The key chosen otherwise, the geometry left out.
+    send(&mut app, Event::Postgis(P::QueryKey(0)));
+    send(&mut app, Event::Postgis(P::QueryGeometry(1)));
+    let w = window(&app);
+    assert_eq!((w.query_key.as_deref(), w.query_geometry.as_deref()), (Some("ada"), None));
+    send(&mut app, Event::Postgis(P::QueryKey(1)));
+    send(&mut app, Event::Postgis(P::QueryGeometry(0)));
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
     shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    assert!(crate::files_testing::find_text(&mut shot, &app, "Anahtar sütunu").is_some());
     let project = app.document.as_ref().expect("open").settings().srid;
-    let label = format!("Projenin sistemine çevir (EPSG:{project}); tablo kendi sisteminde kalır");
-    assert!(crate::files_testing::find_text(&mut shot, &app, &label).is_some(), "{label}");
-    send(&mut app, Event::Postgis(P::Reproject));
-    assert!(window(&app).reproject);
+    let question = format!("Projenin sistemine çevir (EPSG:{project}); tablo kendi sisteminde kalır");
+    assert!(crate::files_testing::find_text(&mut shot, &app, &question).is_none(), "no system question");
+    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "vy16-sorgu-katmani");
+    // Another query: the columns read before are forgotten.
+    send(&mut app, Event::Postgis(P::Query("SELECT 1 AS fid".into())));
+    assert!(window(&app).query_columns.is_none() && window(&app).query_table().is_none());
+    // A query longer than a layer keeps is not offered: the window says so and suggests a view.
+    let ors: Vec<String> = (0..200).map(|i| format!("ada = {i}")).collect();
+    let long = format!("SELECT fid, geom FROM kadastro.parsel WHERE {}", ors.join(" OR "));
+    send(&mut app, Event::Postgis(P::Query(long.clone())));
+    send(&mut app, Event::Postgis(P::QueryColumns(long, Ok(vec![column("fid", true, false), column("geom", false, true)]))));
+    assert!(window(&app).query_key.is_some() && window(&app).query_table().is_none(), "too long to keep");
     shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-    crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-055-sorgu-sistemi");
+    let said = super::postgis_query::too_long_words();
+    assert!(crate::files_testing::find_text(&mut shot, &app, &said).is_some(), "{said}");
     let _ = app.db_store.remove(name);
 }

@@ -215,12 +215,17 @@ impl Document {
             object_isolation: None,
             isolation_version: 0,
             works_tables: true,
+            data_edits: Default::default(),
+            data_written: 0,
+            data_left: Default::default(),
         }
+        .with_held_sessions()
     }
 
     /// The drawing as a v1 snapshot to write: deep copies, objects in document
     /// order. v1 keeps no persistent ids (docs/adr/0014).
     pub fn to_snapshot(&self) -> DocumentSnapshotV1 {
+        let taken = self.taken_uids();
         DocumentSnapshotV1 {
             format: DOCUMENT_FORMAT.to_owned(),
             version: DOCUMENT_VERSION,
@@ -230,7 +235,12 @@ impl Document {
             home_view: self.home_view,
             layers: self.layers.nodes().to_vec(),
             active_layer: self.layers.active().to_owned(),
-            entities: self.entities().cloned().collect(),
+            entities: self
+                .store
+                .iter()
+                .filter(|s| !taken.contains(&s.uid))
+                .map(|s| (*s.entity).clone())
+                .collect(),
             styles: (*self.styles).clone(),
             blocks: self.block_list(),
         }
@@ -251,9 +261,12 @@ impl Document {
     /// the objects themselves shared with the document, in the same order. What a save writes from
     /// (`kentos_kcad::encode_verified_parts_watched`): a large drawing is not copied whole to be written.
     pub fn to_snapshot_v2_shared(&self) -> (DocumentSnapshotV2, Vec<Arc<Entity>>) {
+        // A data layer's taken rows are in its table (docs/adr/9103 §2): a file keeps only its new rows.
+        let taken = self.taken_uids();
         let (objects, uids): (Vec<Arc<Entity>>, Vec<EntityId>) = self
             .store
             .iter()
+            .filter(|stored| !taken.contains(&stored.uid))
             .map(|stored| (stored.entity.clone(), EntityId(stored.uid.into_bytes())))
             .unzip();
         let head = DocumentSnapshotV2 {

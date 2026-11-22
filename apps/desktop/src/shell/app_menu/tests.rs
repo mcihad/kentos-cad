@@ -135,14 +135,14 @@ fn the_keyboard_walks_the_rows_and_enter_runs_one() {
     key(&mut app, Named::ArrowUp);
     assert_eq!(
         state(&app).focus,
-        Some(Focus::Nav(8)),
+        Some(Focus::Nav(9)),
         "round to Proje ayarları"
     );
-    // Down to İçe aktar: its formats show on the right.
-    for _ in 0..5 {
+    // Down to İçe aktar (past Veri kaynağı, docs/adr/9107): its formats show on the right.
+    for _ in 0..6 {
         key(&mut app, Named::ArrowDown);
     }
-    assert_eq!(state(&app).focus, Some(Focus::Nav(4)));
+    assert_eq!(state(&app).focus, Some(Focus::Nav(5)));
     assert_eq!(state(&app).pane, Pane::Import);
     key(&mut app, Named::ArrowRight);
     assert_eq!(state(&app).focus, Some(Focus::Pane(0)), "DWG");
@@ -173,12 +173,11 @@ fn the_keyboard_walks_the_rows_and_enter_runs_one() {
     key(&mut app, Named::ArrowDown);
     assert_eq!(state(&app).focus, Some(Focus::Pane(0)), "round to DWG");
     key(&mut app, Named::ArrowLeft);
-    assert_eq!(state(&app).focus, Some(Focus::Nav(4)), "back to İçe aktar");
+    assert_eq!(state(&app).focus, Some(Focus::Nav(5)), "back to İçe aktar");
     // Enter on a command row runs it.
-    key(&mut app, Named::ArrowUp);
-    key(&mut app, Named::ArrowUp);
-    key(&mut app, Named::ArrowUp);
-    key(&mut app, Named::ArrowUp);
+    for _ in 0..5 {
+        key(&mut app, Named::ArrowUp);
+    }
     assert_eq!(state(&app).focus, Some(Focus::Nav(0)));
     key(&mut app, Named::Enter);
     assert!(app.app_menu.is_none());

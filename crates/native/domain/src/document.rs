@@ -88,6 +88,13 @@ pub struct Document {
     /// Whether a step works out the tables' computed cells (docs/adr/0327): not on a dry run's copy that never reads
     /// them (docs/adr/8051 §3).
     pub(crate) works_tables: bool,
+    /// The data layers being edited (docs/adr/9103 §2, data_edits.rs): the session's, not the file's.
+    pub(crate) data_edits: Arc<crate::data_edits::DataEdits>,
+    /// How many times a data layer's changes were written to its table or let go: what is read from a table again when
+    /// it moves.
+    pub(crate) data_written: u64,
+    /// The objects that left the drawing because they were written to their tables or let go, in order (data_pending.rs).
+    pub(crate) data_left: Arc<Vec<Uuid>>,
 }
 
 /// What a step may do to the drawing's objects (docs/adr/0411 §5).
@@ -336,6 +343,9 @@ impl Document {
             object_isolation: self.object_isolation.clone(),
             isolation_version: self.isolation_version,
             works_tables: self.works_tables,
+            data_edits: self.data_edits.clone(),
+            data_written: self.data_written,
+            data_left: self.data_left.clone(),
         }
     }
 

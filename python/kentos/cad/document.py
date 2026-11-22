@@ -427,6 +427,35 @@ class Saved:
 
 
 @dataclass(frozen=True, slots=True)
+class StoredSaved:
+    """Where a project kept in a data source went (docs/adr/9107): the source, its schema (a database's), the
+    project's name, how many bytes, at which revision."""
+
+    address: str
+    schema: str | None
+    name: str
+    bytes: int
+    revision: str
+
+
+@dataclass(frozen=True, slots=True)
+class StoredProject:
+    """A project kept in a data source: its name, when it was last written (UTC) and by whom, its bytes."""
+
+    name: str
+    modified: str | None
+    user: str | None
+    bytes: int
+
+
+def projects(address: str | os.PathLike[str], *, schema: str | None = None) -> list[StoredProject]:
+    """The projects kept in a GeoPackage file or a PostgreSQL schema (docs/adr/9107), by name in the Turkish
+    alphabet's order; none when nothing is kept there yet."""
+    raw = json.loads(_host(_native.projects_in, os.fspath(address), schema))
+    return [StoredProject(str(p["name"]), p.get("modified"), p.get("user"), int(p["bytes"])) for p in raw]
+
+
+@dataclass(frozen=True, slots=True)
 class Exported:
     """Where an export went, how many bytes, how many objects and layers, and
     what changed on the way (the writer's report: ``counts``, ``notes``,
@@ -586,6 +615,14 @@ class Document:
         """A drawing from a ``.kcad`` file's bytes (a download, a database cell)."""
         return cls(_host(_native.Session.from_bytes, bytes(data)))
 
+    @classmethod
+    def open_from(cls, address: str | os.PathLike[str], project: str, *, schema: str | None = None) -> Document:
+        """Opens a project kept in a data source (docs/adr/9107): a GeoPackage file's ``kentos_projects`` table
+        (``address`` its path) or a PostgreSQL schema's (``address`` ``postgresql://user@host:port/db``, its
+        password never in it; ``schema`` defaults to ``public``). A GeoPackage's data layers are found from that
+        file when they are not at their paths."""
+        return cls(_host(_native.Session.open_from_source, os.fspath(address), project, schema))
+
     # ------------------------------------------------------------ keeping
 
     def save(self, path: str | os.PathLike[str] | None = None) -> Saved:
@@ -598,6 +635,13 @@ class Document:
     def to_bytes(self) -> bytes:
         """The ``.kcad`` v2 bytes of the drawing as it is now, verified."""
         return _host(self._session.to_bytes)
+
+    def save_to(self, address: str | os.PathLike[str], project: str, *, schema: str | None = None) -> StoredSaved:
+        """Saves the drawing as a project kept in a data source (docs/adr/9107), beside its data: a GeoPackage
+        file (made when it is not there) or a PostgreSQL schema. Written over a project of that name, read back
+        before it counts. Saving to a file stays as it was; this is a choice, never required."""
+        raw = json.loads(_host(self._session.save_to_source, os.fspath(address), project, schema))
+        return StoredSaved(str(raw["address"]), raw.get("schema"), str(raw["name"]), int(raw["bytes"]), str(raw["revision"]))
 
     def export_dxf(self, path: str | os.PathLike[str]) -> Exported:
         """The whole drawing as an AutoCAD 2007 DXF file, as the desktop's DXF
@@ -1153,4 +1197,4 @@ def _walk(nodes: Iterable[LayerNode]) -> Iterator[LayerNode]:
         yield from _walk(n.children)
 
 
-__all__ = ["Basis", "BoundsLike", "Conventions", "Document", "UcsFrame", "WORLD_UCS", "DocumentInfo", "Exported", "Measure", "MeasureItem", "Measures", "Page", "Printed", "Record", "Saved", "Units", "View", "current"]
+__all__ = ["Basis", "BoundsLike", "Conventions", "Document", "UcsFrame", "WORLD_UCS", "DocumentInfo", "Exported", "Measure", "MeasureItem", "Measures", "Page", "Printed", "Record", "Saved", "StoredProject", "StoredSaved", "Units", "View", "current", "projects"]

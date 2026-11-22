@@ -1505,6 +1505,66 @@ mod snap_menu;
 mod snap_tests;
 #[path = "shell/snapshot.rs"]
 mod snapshot;
+#[path = "gis/data_layers.rs"]
+mod data_layers;
+#[cfg(test)]
+#[path = "gis/data_layers_tests.rs"]
+mod data_layers_tests;
+#[cfg(test)]
+#[path = "gis/data_edits_tests.rs"]
+mod data_edits_tests;
+#[cfg(test)]
+#[path = "gis/data_journal_tests.rs"]
+mod data_journal_tests;
+#[cfg(test)]
+#[path = "gis/layer_export_memory_tests.rs"]
+mod layer_export_memory_tests;
+#[cfg(test)]
+#[path = "gis/query_layer_tests.rs"]
+mod query_layer_tests;
+#[path = "gis/data_view.rs"]
+mod data_view;
+#[path = "gis/data_info.rs"]
+mod data_info;
+#[path = "gis/data_labels.rs"]
+mod data_labels;
+#[path = "gis/data_selection.rs"]
+mod data_selection;
+#[path = "gis/data_edits.rs"]
+mod data_edits;
+#[path = "gis/data_journal.rs"]
+mod data_journal;
+#[path = "gis/data_pick.rs"]
+mod data_pick;
+#[path = "gis/layer_classes.rs"]
+mod layer_classes;
+#[path = "gis/layer_export.rs"]
+mod layer_export;
+#[path = "gis/layer_export_extent.rs"]
+mod layer_export_extent;
+#[path = "gis/system_select.rs"]
+mod system_select;
+#[path = "gis/project_store.rs"]
+mod project_store;
+#[path = "gis/layer_create.rs"]
+mod layer_create;
+#[path = "gis/layer_migrate.rs"]
+mod layer_migrate;
+#[cfg(test)]
+#[path = "gis/layer_migrate_tests.rs"]
+mod layer_migrate_tests;
+#[cfg(test)]
+#[path = "gis/project_store_tests.rs"]
+mod project_store_tests;
+#[cfg(test)]
+#[path = "gis/layer_export_tests.rs"]
+mod layer_export_tests;
+#[cfg(test)]
+#[path = "gis/layer_classes_tests.rs"]
+mod layer_classes_tests;
+#[cfg(test)]
+#[path = "gis/layer_classes_source_tests.rs"]
+mod layer_classes_source_tests;
 #[path = "gis/db_connections.rs"]
 mod db_connections;
 #[path = "gis/sources/mod.rs"]

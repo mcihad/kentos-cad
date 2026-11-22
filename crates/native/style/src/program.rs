@@ -59,6 +59,9 @@ pub struct BuildOptions<'a> {
     pub screen: bool,
     /// Line weights hidden (Kalınlık off): the simple look draws one-pixel lines.
     pub hairlines: bool,
+    /// A data layer on the model screen (docs/adr/9115): its lines' paper widths drawn as px, so they keep their paper
+    /// width zoomed out too instead of thinning with the world to a faint pixel.
+    pub screen_widths: bool,
     /// The box construction lines are clipped to.
     pub clip: Option<Bounds>,
     pub library: &'a StyleLibrary,
@@ -586,6 +589,9 @@ pub fn layer_call(
     // Kalınlık off takes a dimension's own weights too (docs/adr/0205 §6); written as the web's page writes it.
     if opts.hairlines {
         program["hairlines"] = json!(true);
+    }
+    if opts.screen_widths {
+        program["screenWidths"] = json!(true);
     }
     let program = program.to_string();
     LayerCall {

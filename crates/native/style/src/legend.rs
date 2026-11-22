@@ -199,12 +199,12 @@ fn rows_of(
                 };
                 entries.extend(set_entries(Some(&k.symbols), label));
             }
-            if let Some(other) = &r.other {
+            if let Some(other) = r.other.as_ref().filter(|_| r.other_enabled != Some(false)) {
                 entries.extend(set_entries(Some(other), "Diğer değerler"));
             }
         }
         Some(Ok(Renderer::Graduated(r))) => {
-            for k in &r.classes {
+            for k in r.classes.iter().filter(|k| k.enabled()) {
                 entries.extend(set_entries(Some(&k.symbols), &k.label));
             }
         }

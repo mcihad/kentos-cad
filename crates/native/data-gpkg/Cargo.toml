@@ -1,0 +1,17 @@
+[package]
+name = "kentos-data-gpkg"
+description = "The GeoPackage data driver: a file's tables read by box, condition, order and page in SQL over its spatial index, written in one transaction"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native only (scripts/arch/deps.mjs, group `data-gpkg`; docs/adr/9100): kentos-data's traits over kentos-geopackage's
+# file (SQLite compiled in). No runtime, network or interface.
+[dependencies]
+kentos-data = { path = "../data" }
+kentos-geopackage = { path = "../geopackage" }
+rusqlite = { workspace = true }
+
+[dev-dependencies]
+kentos-data = { path = "../data", features = ["conformance"] }

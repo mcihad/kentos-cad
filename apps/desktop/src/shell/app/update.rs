@@ -104,6 +104,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // The data layers' parts as they are read and drawn (data_view.rs, docs/adr/9101 §6).
+            if crate::data_view::in_use() {
+                Subscription::run(crate::data_view::ready)
+            } else {
+                Subscription::none()
+            },
             // The loaded external references' files, looked at every few seconds (xrefs_watch.rs, docs/adr/0349 §3).
             if self.xrefs_watching() {
                 Subscription::run(crate::xrefs_watch::ticks)
@@ -203,6 +209,10 @@ impl App {
         // The key tips follow what the ribbon shows now (ribbon_keys.rs).
         self.refresh_key_tips();
         self.dialog_back();
+        // The edited data layers' unsaved rows outlined (data_edits.rs, docs/adr/9103 §5).
+        self.data_edits_tasks();
+        // The project's pending data edits kept beside it follow its tables (data_journal.rs, docs/adr/9111 §3).
+        self.journal_tasks();
         let task = Task::batch([
             task,
             self.text_field_tasks(),
@@ -220,6 +230,16 @@ impl App {
             self.raster_values_tasks(),
             self.service_info_tasks(),
             self.cloud_query_tasks(),
+            // Bilgi's clicks on the data layers, asked of their sources (data_info.rs, docs/adr/9101 §6).
+            self.data_info_tasks(),
+            // A data layer's table: its pages read from its source (features/data.rs, docs/adr/9102 §5).
+            self.data_table_tasks(),
+            // Its selected rows outlined on the map (data_selection.rs).
+            self.data_selection_tasks(),
+            // Seç's clicks and boxes on the data layers, asked of their sources (data_pick.rs, docs/adr/9103 §5).
+            self.data_pick_tasks(),
+            // The counted layers' class counts, asked again when their style or data changed (layer_classes.rs).
+            self.layer_classes_tasks(),
             self.network_tasks(),
             // Konumdan adres's places, asked on the address thread or of a provider (address/).
             self.address_tasks(),
@@ -542,6 +562,13 @@ impl App {
                     self.warn(text);
                 }
             }
+            // The next frame draws them; a table that failed is said once.
+            Message::DataReady => {
+                for text in crate::data_view::service().take_notices() {
+                    self.warn(text);
+                }
+                self.sync_data_labels();
+            }
             Message::Services(event) => return self.services_event(event),
             Message::Bound(event) => return self.bound_event(event),
             Message::CommandCancelled => {
@@ -718,8 +745,10 @@ impl App {
                 if doc.disk.is_none() {
                     doc.disk = doc.path.as_deref().and_then(crate::document::disk_stamp);
                 }
-                // Bound GeoPackages moved with the project are found again (docs/adr/0506).
-                let located = match doc.path.clone() {
+                // Bound GeoPackages moved with the project are found again (docs/adr/0506); a project kept in a
+                // GeoPackage finds its layers' files from that file (docs/adr/9107 §3).
+                let place = doc.path.clone().or_else(|| doc.stored_source().and_then(|s| s.file()));
+                let located = match place {
                     Some(path) if doc.cloud_source().is_none() => {
                         kentos_native_application::source_places::relocate(&mut doc.model, &path)
                     }
@@ -741,18 +770,28 @@ impl App {
                             doc.entity_count()
                         ),
                     ),
-                    None => self.output(format!(
-                        "{} açıldı: {} nesne, {} katman.",
-                        doc.name(),
-                        doc.entity_count(),
-                        doc.layer_count()
-                    )),
+                    None => match doc.stored_source() {
+                        Some(s) => self.output(format!(
+                            "“{}” projesi açıldı ({}): {} katman.",
+                            s.name,
+                            s.place(),
+                            doc.layer_count()
+                        )),
+                        None => self.output(format!(
+                            "{} açıldı: {} nesne, {} katman.",
+                            doc.name(),
+                            doc.entity_count(),
+                            doc.layer_count()
+                        )),
+                    },
                 }
                 if doc.legacy {
                     self.output(
                         "Dosya eski biçimde (KCAD v1). Kaydet, yeni biçimde (v2) yazmak için yer sorar; eski dosyanın üzerine kendiliğinden yazmaz.",
                     );
                 }
+                // What its file left out given back from this device (docs/adr/9111 §3).
+                self.journal_opened(&mut doc);
                 self.show_document(*doc);
                 // The level and view the drawing was saved with (docs/adr/0720 §1).
                 self.say_level_state();

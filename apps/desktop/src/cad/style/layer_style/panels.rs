@@ -179,8 +179,19 @@ fn kind_picker<'a>(kind: Kind, kinds: Vec<Kind>) -> Element<'a, Message> {
     )
 }
 
-/// “6 nesne: 6 alan”, or that nothing of the layer is drawn by a style.
+/// “6 nesne: 6 alan”, or that nothing of the layer is drawn by a style; a data layer's rows as its source counted them
+/// (docs/adr/9110 §1), its objects not being in the drawing.
 fn objects_text(n: usize, window: &LayerStyleWindow) -> String {
+    if window.data.is_some() {
+        return match (&window.source, window.reading) {
+            (Some(s), _) => format!(
+                "{} satır kaynakta",
+                crate::view::thousands(s.groups.iter().map(|(_, n)| *n).sum::<u64>() as f64)
+            ),
+            (None, true) => super::source_values::READING.to_owned(),
+            (None, false) => "Satırları kaynakta".to_owned(),
+        };
+    }
     let p = window.present;
     let parts: Vec<String> = [(p.fill, "alan"), (p.line, "çizgi"), (p.marker, "nokta")]
         .into_iter()
@@ -416,7 +427,10 @@ fn categorized_panel<'a>(
     let c = &window.categorized;
     let values = window.values(src);
     let error = values.error_text();
-    let (counts, rest) = category_tally(&values.values, &window.drawn(src), &c.categories);
+    // A data layer's rows are counted by its source (docs/adr/9110 §1), a drawing layer's objects here.
+    let (counts, rest) = window
+        .source_category_tally()
+        .unwrap_or_else(|| category_tally(&values.values, &window.drawn(src), &c.categories));
     let has_expr = !kentos_processing::text::js_trim(&c.expr).is_empty();
     let classify = small_button(
         None,
@@ -576,7 +590,9 @@ fn graduated_panel<'a>(
     let error = numbers
         .error_text()
         .or_else(|| (has_expr && !any).then(|| texts::NO_NUMBERS.to_owned()));
-    let (counts, rest) = class_tally(&numbers.values, &window.drawn(src), &g.classes);
+    let (counts, rest) = window
+        .source_class_tally()
+        .unwrap_or_else(|| class_tally(&numbers.values, &window.drawn(src), &g.classes));
     let mut out = Column::new().spacing(10).push(
         row![
             label::caption("Değer").style(style::text::muted),

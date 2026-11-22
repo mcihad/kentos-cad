@@ -346,6 +346,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         snap: None,
         fields: Vec::new(),
         service: None,
+        data: None,
         feed: None,
         time: None,
         scenario: None,
@@ -358,6 +359,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         indexes: Vec::new(),
         dataset: None,
         derivation: None,
+        class_counts: None,
     }
 }
 
@@ -398,6 +400,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             snap: None,
             fields: Vec::new(),
             service: None,
+            data: None,
             feed: None,
             time: None,
             scenario: None,
@@ -410,6 +413,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             indexes: Vec::new(),
             dataset: None,
             derivation: None,
+            class_counts: None,
         });
     }
     let mut entities = Vec::new();
@@ -500,6 +504,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
         settings: ProjectSettings {
             map_srid: None,
             auto_select: None,
+            edit_grouping: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,

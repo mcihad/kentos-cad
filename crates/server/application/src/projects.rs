@@ -1320,6 +1320,7 @@ mod tests {
             snap,
             fields: Vec::new(),
             service: None,
+            data: None,
             feed: None,
             time: None,
             scenario: None,
@@ -1332,6 +1333,7 @@ mod tests {
             indexes: Vec::new(),
             dataset: None,
             derivation: None,
+            class_counts: None,
         }
     }
 

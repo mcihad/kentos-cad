@@ -51,5 +51,5 @@ komşunun sessizce bozulması, yarım yazma.
 - `KENTOS_WRITE_GPKG=1 cargo test -p kentos-native-application --test all a_part_writes_its_neighbours`: geçici kopyaya
   yazar. Planın yazmadığı, üç parselin çıkıntısının bir metre doğuda olduğu denetlenir.
 - `cargo test -p kentos-desktop a_part_writes_its_neighbours_while_topology_is_on`. Resimler:
-  `cargo test -p kentos-desktop exchange::gpkg_tests::neighbour_screens -- --ignored --nocapture`
+  `cargo test -p kentos-desktop exchange::gpkg_tests::neighbours::neighbour_screens -- --ignored --nocapture`
   (`.run/shots/gpkg-*-10-komsular-*`).

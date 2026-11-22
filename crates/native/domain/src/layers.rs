@@ -49,6 +49,8 @@ pub struct NewLayer {
     /// (docs/adr/0208 §2); a group keeps neither.
     pub service: Option<ServiceLayer>,
     pub feed: Option<FeatureFeed>,
+    /// A data layer's table (docs/adr/9101 §2): its rows stay in the source; a group keeps none.
+    pub data: Option<kentos_contracts::DataLayer>,
     /// A layer's time setting, a group's scenario and a scenario layer's
     /// base layer (docs/adr/0210 §2): Senaryo oluştur's copies keep their
     /// source's time and stand for it; a group keeps only `scenario`.
@@ -91,6 +93,7 @@ impl NewLayer {
             snap: None,
             fields: Vec::new(),
             service: None,
+            data: None,
             feed: None,
             time: None,
             scenario: None,
@@ -314,6 +317,41 @@ impl LayerTree {
     }
 
     /// A node's printing set (docs/adr/0260 §4): only `false` is kept; whether it changed.
+    /// A layer's renderer with its classes switched on or off (docs/adr/9105 §3): the tree's own change, as the eye
+    /// is. Whether it changed.
+    pub(crate) fn set_class_switches(&mut self, id: &str, renderer: serde_json::Value) -> bool {
+        match self.node_mut(id) {
+            Some(node) if node.style.renderer.as_ref() != Some(&renderer) => {
+                node.style.renderer = Some(renderer);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// A data layer's source found at another place (docs/adr/9107 §3). Whether it changed.
+    pub(crate) fn set_data_address(&mut self, id: &str, address: &str) -> bool {
+        match self.node_mut(id).and_then(|n| n.data.as_mut()) {
+            Some(data) if data.address != address => {
+                data.address = address.to_owned();
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Nesne sayısını göster (docs/adr/9105 §4): only `true` is kept. Whether it changed.
+    pub(crate) fn set_class_counts(&mut self, id: &str, on: bool) -> bool {
+        let want = on.then_some(true);
+        match self.node_mut(id) {
+            Some(node) if node.class_counts != want => {
+                node.class_counts = want;
+                true
+            }
+            _ => false,
+        }
+    }
+
     pub(crate) fn set_plot(&mut self, id: &str, plot: bool) -> bool {
         let want = (!plot).then_some(false);
         match self.node_mut(id) {
@@ -725,6 +763,7 @@ impl LayerTree {
             node.name.clone_from(&served.name);
             node.service.clone_from(&served.by.service);
             node.feed.clone_from(&served.by.feed);
+            node.data.clone_from(&served.by.data);
         }
     }
 
@@ -763,6 +802,7 @@ impl LayerTree {
                 Vec::new()
             },
             service: new.service.filter(|_| new.kind == LayerNodeType::Layer),
+            data: new.data.filter(|_| new.kind == LayerNodeType::Layer),
             feed: new.feed.filter(|_| new.kind == LayerNodeType::Layer),
             time: new.time.filter(|_| new.kind == LayerNodeType::Layer),
             scenario: new.scenario.filter(|_| new.kind == LayerNodeType::Group),
@@ -781,6 +821,7 @@ impl LayerTree {
             indexes: Vec::new(),
             dataset: None,
             derivation: None,
+            class_counts: None,
         }
     }
 
@@ -919,7 +960,8 @@ fn visit_mut(
 }
 
 /// What a node keeps outside the undo history (docs/adr/0253 §1): its
-/// visibility, lock, fold, name and snapping.
+/// visibility, lock, fold, name and snapping, its style's classes switched on and off and whether their counts are
+/// shown (docs/adr/9105 §3, §4).
 #[derive(Clone, Debug, PartialEq)]
 struct NodeFlags {
     visible: bool,
@@ -927,6 +969,8 @@ struct NodeFlags {
     expanded: bool,
     name: String,
     snap: Option<LayerSnap>,
+    renderer: Option<serde_json::Value>,
+    class_counts: Option<bool>,
 }
 
 /// Every node's flags, by id: what a failed command's step puts back.
@@ -946,6 +990,8 @@ impl LayerTree {
                         expanded: node.expanded,
                         name: node.name.clone(),
                         snap: node.snap.clone(),
+                        renderer: node.style.renderer.clone(),
+                        class_counts: node.class_counts,
                     },
                 );
                 walk(&node.children, out);
@@ -966,6 +1012,8 @@ impl LayerTree {
                 node.expanded = f.expanded;
                 f.name.clone_into(&mut node.name);
                 node.snap = f.snap.clone();
+                node.style.renderer = f.renderer.clone();
+                node.class_counts = f.class_counts;
             }
         });
     }

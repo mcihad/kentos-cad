@@ -147,60 +147,7 @@ impl CompiledFilter {
         if list.is_empty() {
             return Vec::new();
         }
-        let needs = e.needs;
-        let mut texts = String::new();
-        let mut lens: Vec<i32> = Vec::with_capacity(list.len() * (e.fields.len() + 3));
-        let mut numbers: Vec<f64> = Vec::new();
-        let put = |texts: &mut String, lens: &mut Vec<i32>, v: Option<&str>| match v {
-            None => lens.push(-1),
-            Some(v) => {
-                texts.push_str(v);
-                lens.push(v.encode_utf16().count() as i32);
-            }
-        };
-        for o in list {
-            let base = o.base();
-            for f in &e.fields {
-                put(&mut texts, &mut lens, base.attrs.get(f).map(String::as_str));
-            }
-            if needs.label {
-                put(&mut texts, &mut lens, base.label.as_deref());
-            }
-            if needs.layer {
-                let name = layer_name(&base.layer_id);
-                put(&mut texts, &mut lens, Some(&name));
-            }
-            if needs.kind {
-                put(&mut texts, &mut lens, Some(kind_label(o)));
-            }
-            if needs.id {
-                numbers.push(f64::from(base.id));
-            }
-            if needs.vertices {
-                numbers.push(vertex_count(o).unwrap_or(f64::NAN));
-            }
-        }
-        let input = RowsInput {
-            n: list.len(),
-            texts: &texts,
-            text_lens: &lens,
-            numbers: &numbers,
-            measures: &[],
-            scale: f64::NAN,
-        };
-        // A table that does not read (it cannot: it was built for this
-        // condition) lets nothing through rather than everything. An extension's function is answered by the host
-        // without waiting: an answer not had yet is empty (the object left out until it comes).
-        let calls = (!e.externals().is_empty())
-            .then(crate::label_texts::external_calls)
-            .flatten();
-        let read = match &calls {
-            Some(c) => {
-                let c: &dyn kentos_expression::external::ExternalCalls = &**c;
-                evaluate_rows_on_with(e, &input, As::Bool, shape, Some(c))
-            }
-            None => evaluate_rows_on(e, &input, As::Bool, shape),
-        };
+        let read = evaluate_objects(e, list, layer_name, shape, As::Bool);
         let Ok(column) = read else {
             return vec![false; list.len()];
         };
@@ -208,6 +155,70 @@ impl CompiledFilter {
         (0..list.len())
             .map(|k| column.kinds.get(k) == Some(&3) && column.numbers.get(k) == Some(&1.0))
             .collect()
+    }
+}
+
+/// An expression's value for each object, as `want` asks (the language's column engine over a table of what the
+/// expression reads of each object, its geometry values from `shape(i)`): `layer_name` names a layer by its id
+/// (`$katman`). An extension's function is answered by the host without waiting: an answer not had yet is empty.
+/// A table that does not read (it cannot: it was built for this expression) is an error.
+pub fn evaluate_objects<'s>(
+    e: &Expr,
+    list: &[&Entity],
+    layer_name: &dyn Fn(&str) -> String,
+    shape: impl Fn(usize) -> Option<&'s Shape>,
+    want: As,
+) -> Result<kentos_expression::rows::Column, String> {
+    let needs = e.needs;
+    let mut texts = String::new();
+    let mut lens: Vec<i32> = Vec::with_capacity(list.len() * (e.fields.len() + 3));
+    let mut numbers: Vec<f64> = Vec::new();
+    let put = |texts: &mut String, lens: &mut Vec<i32>, v: Option<&str>| match v {
+        None => lens.push(-1),
+        Some(v) => {
+            texts.push_str(v);
+            lens.push(v.encode_utf16().count() as i32);
+        }
+    };
+    for o in list {
+        let base = o.base();
+        for f in &e.fields {
+            put(&mut texts, &mut lens, base.attrs.get(f).map(String::as_str));
+        }
+        if needs.label {
+            put(&mut texts, &mut lens, base.label.as_deref());
+        }
+        if needs.layer {
+            let name = layer_name(&base.layer_id);
+            put(&mut texts, &mut lens, Some(&name));
+        }
+        if needs.kind {
+            put(&mut texts, &mut lens, Some(kind_label(o)));
+        }
+        if needs.id {
+            numbers.push(f64::from(base.id));
+        }
+        if needs.vertices {
+            numbers.push(vertex_count(o).unwrap_or(f64::NAN));
+        }
+    }
+    let input = RowsInput {
+        n: list.len(),
+        texts: &texts,
+        text_lens: &lens,
+        numbers: &numbers,
+        measures: &[],
+        scale: f64::NAN,
+    };
+    let calls = (!e.externals().is_empty())
+        .then(crate::label_texts::external_calls)
+        .flatten();
+    match &calls {
+        Some(c) => {
+            let c: &dyn kentos_expression::external::ExternalCalls = &**c;
+            evaluate_rows_on_with(e, &input, want, shape, Some(c))
+        }
+        None => evaluate_rows_on(e, &input, want, shape),
     }
 }
 

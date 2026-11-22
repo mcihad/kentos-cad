@@ -116,6 +116,12 @@ pub struct Category {
     pub extra: Map<String, Value>,
 }
 
+impl Category {
+    pub fn enabled(&self) -> bool {
+        self.enabled != Some(false)
+    }
+}
+
 /// A class of a graduated renderer: min ≤ value < max; the last class includes its max.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GraduatedClass {
@@ -124,11 +130,20 @@ pub struct GraduatedClass {
     pub label: String,
     #[serde(default)]
     pub symbols: SymbolSet,
+    /// Only `false` is written: the class keeps its objects but draws nothing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
 }
 
-/// A rule of a rule-based renderer (QGIS “Kurala dayalı”).
+impl GraduatedClass {
+    pub fn enabled(&self) -> bool {
+        self.enabled != Some(false)
+    }
+}
+
+/// A rule of a rule-based renderer (Kurallı).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Rule {
@@ -201,6 +216,9 @@ pub struct Categorized {
     /// “Diğer değerler”: what the objects no category takes draw with; none: nothing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub other: Option<SymbolSet>,
+    /// Only `false` is written: “Diğer değerler” is kept but draws nothing.
+    #[serde(default, rename = "otherEnabled", skip_serializing_if = "Option::is_none")]
+    pub other_enabled: Option<bool>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
 }

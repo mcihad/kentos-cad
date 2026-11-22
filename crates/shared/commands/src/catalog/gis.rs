@@ -430,6 +430,298 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Veri katmanının düzenleme oturumu (docs/adr/9103 §3), held together by
+        // fixtures/commands/v1/cad.layers.session.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_SESSION.into(),
+            version: crate::CAD_LAYERS_SESSION_VERSION,
+            title: "Veri katmanının düzenleme oturumu".into(),
+            summary: "Bir veri katmanını düzenlemeye açar, değişikliklerini tablosuna yazar, geri alır ya da düzenlemeyi bitirir. \
+                      Değişiklikler kaydedilene kadar çizimde bekler: katmana çizilen nesne yeni satırdır; take ile anahtarından alınan satır, nesne komutlarıyla değiştirilen, taşınan ya da silinen bir nesne olur; delete satırları anahtarlarıyla, almadan siler (bir geri alma adımı). \
+                      action: start (düzenlemeye aç; düzenleme değildir), save (her katmanın değişikliklerini tablosuna tek işlemle yazar, katman açık kalır), rollback (değişiklikleri bırakır, katman açık kalır), cancel (bırakır ve kapatır), stop (değişikliği olmayan katmanı kapatır), take, delete, status (oturumu söyler, hiçbir şey yazmaz). \
+                      layers verilmezse düzenlenen bütün katmanlar (save, rollback, cancel, stop, status); start en az bir, take ve delete tek bir katman ister; keys 1–10 000 anahtar. \
+                      Tablonun reddettiği kayıtta o katmana hiçbir şey yazılmaz, değişiklikleri bekler; birkaç katman kaydedilirken yazılamayanlar uyarıyla söylenir. Kaydedilen satır buradan geri alınmaz."
+                .into(),
+            aliases: vec!["duzenlemeoturumu".into(), "verikaydet".into(), "duzenlemeyibaslat".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersSession>(),
+            output: schema::<crate::LayersSessionDone>(),
+            plan: Some(schema::<crate::LayersSessionDone>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parselleri düzenlemeye aç".into(),
+                    input: json!({ "action": "start", "layers": ["parseller"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İki parseli değiştirmek için çizime al".into(),
+                    input: json!({ "action": "take", "layers": ["parseller"], "keys": [492776, 492777] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Düzenlenen bütün katmanları kaydet".into(),
+                    input: json!({ "action": "save" }),
+                    output: None,
+                },
+            ],
+        },
+        // Veri katmanının satırları (docs/adr/9102 §4), held together by fixtures/commands/v1/cad.layers.rows.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_ROWS.into(),
+            version: crate::CAD_LAYERS_ROWS_VERSION,
+            title: "Veri katmanının satırları".into(),
+            summary: "Bir veri katmanının satırlarını kaynağından okur (GeoPackage dosyası ya da PostGIS tablosu); Öznitelik tablosu sayfalarını bununla okur. Hiçbir şey yazmaz. \
+                      bbox (projenin sisteminde batı, güney, doğu, kuzey) kutusu ona değen satırları, keys o anahtarlı satırları, search alanlarından birinde o sözcükleri (büyük-küçük harf Türkçe kurallarla ayırt edilmeden) geçen satırları, filter İfadeyle seç'in dilindeki koşulu sağlayan satırları tutar; hepsi birlikte uygulanır. \
+                      order alan alan sıralar (metin Türk alfabesinin sırasıyla, boş değerler sonda), sonra anahtarla; offset kaç satırın atlanacağı, limit sayfanın satır sayısı (0–1 000; verilmezse 100). \
+                      count bütün tutulan satırları sayar (total), allKeys hepsinin anahtarını sırasıyla verir (keys). fields dönen alanlar (verilmezse tablonun sırasıyla hepsi), geometry satırın geometrisini projenin sisteminde WKT olarak verir. \
+                      Süzgeç yoksa her şey kaynakta yapılır (checked: source); süzgeç varsa kaynağın tuttuğu her satır okunup koşul burada sorulur (checked: here)."
+                .into(),
+            aliases: vec!["satirlar".into(), "oznitelik".into(), "verioku".into(), "tablo".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersRows>(),
+            output: schema::<crate::LayerRowsAnswer>(),
+            plan: Some(schema::<crate::LayerRowsAnswer>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsellerin Türk alfabesiyle mahalleye göre ilk sayfası, sayısıyla".into(),
+                    input: json!({ "layer": "parseller", "order": [{ "field": "mahalle" }], "limit": 50, "count": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Görünümdeki konut parselleri".into(),
+                    input: json!({
+                        "layer": "parseller",
+                        "bbox": [600000.0, 4410000.0, 601000.0, 4411000.0],
+                        "filter": "kullanim = 'Konut'"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        // Katmanın sınıfları (docs/adr/9105 §2), held together by fixtures/commands/v1/cad.layers.classes.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_CLASSES.into(),
+            version: crate::CAD_LAYERS_CLASSES_VERSION,
+            title: "Katmanın sınıfları".into(),
+            summary: "Bir katmanın stilindeki sınıfları, katman ağacının katmanın altında listelediği gibi verir: kategorili stilde her kategori ve Diğer değerler, aralıklı stilde her aralık, kurallı stilde her kural (alt kuralları ondan sonra, depth derinliğiyle). Kendi görünüşüyle, tek sembolle ya da tematik bir işleyiciyle çizilen katmanın sınıfı yoktur. Hiçbir şey yazmaz. \
+                      Her sınıf: id (c3, other, g2, r0.1), adı, çizilip çizilmediği (enabled; kapalı sınıfın nesnelerini hiçbir sınıf çizmez), İfadeyle seç'in dilinde koşulu (expression; yoksa katmanın bütün nesneleri). \
+                      count her sınıfın aldığı nesneleri çizimin kuralıyla sayar (kapalı sınıf da aldığını söyler) ve total katmanın nesne sayısıdır: nesne ilk kategorisine ve sayısını alan ilk aralığa gider, alt kural üst kuralın nesnelerinden alır, değilse kuralı hiçbir açık kardeşin almadığını alır. Veri katmanında satırlar kaynağından bir kez okunur, yalnız sınıfların okuduğu alanlarla. \
+                      Sınıflar cad.layers.set ile açılıp kapanır (classVisible, classInvert)."
+                .into(),
+            aliases: vec!["siniflar".into(), "lejant".into(), "kategoriler".into(), "nesnesayisi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersClasses>(),
+            output: schema::<crate::LayerClassesAnswer>(),
+            plan: Some(schema::<crate::LayerClassesAnswer>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsellerin kullanıma göre sınıfları ve nesne sayıları".into(),
+                    input: json!({ "layer": "parseller", "count": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yolların sınıfları".into(),
+                    input: json!({ "layer": "yollar" }),
+                    output: None,
+                },
+            ],
+        },
+        // Katmanı dışa aktar (docs/adr/9106), held together by fixtures/commands/v1/cad.layers.export.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_EXPORT.into(),
+            version: crate::CAD_LAYERS_EXPORT_VERSION,
+            title: "Katmanı dışa aktar".into(),
+            summary: "Bir katmanın nesnelerini (veri katmanında kaynaktaki satırlarını) bir GeoPackage ya da PostGIS tablosuna, bir GeoJSON, Shapefile, CSV ya da KML dosyasına yazar (Dışa aktar › Farklı kaydet…). Veri katmanının satırları kaynaktan parça parça okunur ve geldikçe yazılır. \
+                      Ne yazılır: katmanın bütün nesneleri; uids (çizim katmanı) ya da keys (veri katmanı) yalnız seçilenleri, bbox kutuya değenleri, filter İfadeyle seç'in dilindeki koşulu sağlayanları bırakır. fields alanları sırasıyla seçer, to ile yeniden adlandırır, labels ile listeli değerlerin etiketlerini yazar (görünen değer). \
+                      geometry nesneleri bir türe çevirir (alanın çevresi çizgi, kapalı çizgi alan olur; çevrilemeyen yazılmaz ve export_skipped ile sayılır), multi çok parçalı yazar, z ve m boyutları ekler ya da atar; srid yazılan sistemdir (GeoJSON, projectCoordinates verilmezse, ve KML her zaman WGS 84). \
+                      existing hedef varken ne olacağıdır: refuse (target_exists), overwriteFile, replaceLayer, append (tabloda olmayan alan field_left_out ile bırakılır). options biçime özel seçeneklerdir: description, key, geometryColumn, noSpatialIndex (tablolar), separator ve xy (CSV), projectCoordinates (GeoJSON). encoding Shapefile ve CSV'nin kodlaması (utf8, windows1254). metadata GeoPackage tablosuna katmanın veri kümesi bilgisini yazar; addToMap yazılan tabloyu veri katmanı olarak ekler (tek geri alma adımı). plan hiçbir şey yazmadan yazılacak satırları sayar."
+                .into(),
+            aliases: vec!["disaaktar".into(), "farklikaydet".into(), "export".into(), "geopackageyaz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersExport>(),
+            output: schema::<crate::LayersExported>(),
+            plan: Some(schema::<crate::LayersExported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Konut parselleri bir GeoPackage tablosuna, haritaya eklenerek".into(),
+                    input: json!({
+                        "layer": "parseller", "format": "gpkg", "path": "/veri/konut.gpkg", "name": "konut",
+                        "filter": "kullanim = 'Konut'", "addToMap": true
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Seçilen satırlar Windows-1254 bir Shapefile'a".into(),
+                    input: json!({
+                        "layer": "parseller", "format": "shapefile", "path": "/veri/secilen.shp",
+                        "keys": [3, 7, 11], "encoding": "windows1254"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        // Yeni veri katmanı (docs/adr/9107 §7), held together by fixtures/commands/v1/cad.layers.create.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_CREATE.into(),
+            version: crate::CAD_LAYERS_CREATE_VERSION,
+            title: "Yeni veri katmanı".into(),
+            summary: "CBS projesinde yeni katmanı bir veri kaynağının yeni tablosu olarak yapar: bir GeoPackage dosyasında (dosya yoksa yapılır) ya da bir PostgreSQL şemasında tabloyu kurar ve onu veri katmanı olarak ekler (Yeni katman ▸ Nokta, Çizgi, Alan katmanı…). Nesneleri proje dosyasında değil tablonun satırlarında durur. \
+                      table tablonun adıdır (verilmezse katmanın adından üretilir); geometry point, line, area ya da none (geometrisiz kayıt tablosu); multi çok parçalı, z üç boyutlu yapar; srid tablonun sistemidir (verilmezse projeninki). \
+                      fields sütunlardır (ad, tür, metinde uzunluk); key anahtar sütunu (fid), geometryColumn geometri sütunu (geom). parent ve index katmanın ağaçtaki yeri. \
+                      Tablo kendi işlemiyle yapılır; katmanın eklenmesi tek geri alma adımıdır, geri alınınca katman gider, tablo kaynakta kalır.".into(),
+            aliases: vec!["yenikatman".into(), "yenitablo".into(), "newlayer".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersCreate>(),
+            output: schema::<crate::LayersCreated>(),
+            plan: Some(schema::<crate::LayersCreated>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Projenin GeoPackage'ında bir direk (nokta) katmanı".into(),
+                    input: json!({
+                        "name": "Direkler", "target": "gpkg", "path": "/veri/sivas.gpkg", "geometry": "point",
+                        "fields": [{ "name": "no", "kind": "integer" }, { "name": "durum", "kind": "text", "length": 20 }]
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "PostgreSQL'de çok parçalı bir imar adası katmanı".into(),
+                    input: json!({
+                        "name": "İmar adaları", "target": "postgis", "address": "postgresql://cbs@sunucu:5432/kent",
+                        "schema": "imar", "table": "imar_adalari", "geometry": "area", "multi": true
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        // Katmanı kaynağa taşı (docs/adr/9107 §8), held together by fixtures/commands/v1/cad.layers.migrate.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_MIGRATE.into(),
+            version: crate::CAD_LAYERS_MIGRATE_VERSION,
+            title: "Katmanı kaynağa taşı".into(),
+            summary: "Nesneleri proje dosyasında duran bir CBS çizim katmanını tek adımda bir veri kaynağına taşır: nesnelerini bir GeoPackage dosyasında (yoksa yapılır) ya da bir PostgreSQL şemasında yeni bir tablonun satırları olarak yazar ve katmanın yerine o tabloyu okuyan bir veri katmanı koyar; adı, stili (işleyicisi, etiketleri), etkinliği aynen kalır, çizim katmanı nesneleriyle gider. \
+                      Katmanın bütün nesneleri yazılır, katman süzgecinin gizledikleri de. Tabloya yazılamayan nesne (yazı, ölçü) varsa hiçbir şey yazılmaz (unwritable_objects): katmanla birlikte kaybolurlardı. \
+                      table tablonun adıdır (verilmezse katmanın adından üretilir). Tek geri alma adımıdır: geri alınınca çizim katmanı nesneleriyle döner, tablo kaynakta kalır.".into(),
+            aliases: vec!["kaynagatasi".into(), "tasi".into(), "migrate".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LayersMigrate>(),
+            output: schema::<crate::LayersMigrated>(),
+            plan: Some(schema::<crate::LayersMigrated>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Direkler katmanını projenin GeoPackage'ına taşı".into(),
+                input: json!({ "layer": "direkler", "target": "gpkg", "path": "/veri/sivas.gpkg" }),
+                output: None,
+            }],
+        },
+        // Veri katmanı (docs/adr/9101 §4), held together by fixtures/commands/v1/cad.layers.data.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_DATA.into(),
+            version: crate::CAD_LAYERS_DATA_VERSION,
+            title: "Veri katmanı".into(),
+            summary: "Katman ağacına bir GeoPackage dosyasının ya da bir PostGIS veritabanının tablosundan çizilen veri katmanı ekler (add), birini değiştirir (update: adı, tablonun yeri, alanları) ya da kaldırır (remove; tablo olduğu gibi kalır); tek geri alma adımı, adı işlemin. \
+                      Veri katmanının satırları çizime kopyalanmaz: kaynağında kalır, görünüm, tablo ve araçlar gerektikçe kaynaktan okunur. \
+                      data: sürücü (gpkg ya da postgis), kaynağın adresi (dosyanın mutlak yolu ya da postgresql://kullanıcı@sunucu:port/veritabanı; parola yazılmaz), tablo, tam sayı anahtar sütunu, geometri sütunu (türü, EPSG kodu, Z, M), salt okunur. \
+                      fields tablonun sütunlarıdır; ev sahibi tablonun kataloğunu okuyup verir, komut kaynağı okumaz. Katman tablonun çizdiği türü alır (nokta, çizgi, alan). \
+                      parent katmanın gireceği grup, index gruptaki yeri: ilki en üstte çizilir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["verikatmani".into(), "tabloekle".into(), "postgis".into(), "geopackage".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersData>(),
+            output: schema::<crate::LayersDataDone>(),
+            plan: Some(schema::<crate::LayersDataPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Belediyenin PostGIS parselleri".into(),
+                    input: json!({
+                        "operation": "add",
+                        "name": "Parseller",
+                        "data": {
+                            "driver": "postgis",
+                            "address": "postgresql://kbs@db.ornek.bel.tr:5432/kent",
+                            "table": "kadastro.parseller",
+                            "key": "fid",
+                            "geometry": { "column": "geom", "typeName": "MULTIPOLYGON", "srid": 5256 }
+                        },
+                        "fields": [
+                            { "name": "ada", "kind": "integer" },
+                            { "name": "parsel", "kind": "integer" },
+                            { "name": "mahalle", "kind": "text" }
+                        ]
+                    }),
+                    output: Some(json!({ "layer": "layer-7", "revision": "41" })),
+                },
+                CommandExample {
+                    title: "GeoPackage'taki direkler, salt okunur".into(),
+                    input: json!({
+                        "operation": "add",
+                        "name": "Direkler",
+                        "data": {
+                            "driver": "gpkg",
+                            "address": "/veri/altyapi.gpkg",
+                            "table": "direkler",
+                            "key": "fid",
+                            "geometry": { "column": "geom", "typeName": "POINT", "srid": 5256 },
+                            "readOnly": true
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Veri katmanını kaldır (tablo kalır)".into(),
+                    input: json!({ "operation": "remove", "layer": "layer-7" }),
+                    output: None,
+                },
+            ],
+        },
         // Katmanın koordinat sistemini tanımla (docs/adr/0583 §2), held together by fixtures/commands/v1/cad.layers.crs.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_CRS.into(),

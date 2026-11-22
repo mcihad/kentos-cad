@@ -136,6 +136,7 @@ fn rows(app: &App) -> Vec<String> {
             Line::Table {
                 relation, depth, ..
             } => format!("{}{}", "  ".repeat(depth), relation.name),
+            Line::Stored { at, meta, depth, .. } => format!("{}[proje {} · {meta}]", "  ".repeat(depth), at.name),
         })
         .collect()
 }
@@ -412,7 +413,7 @@ fn the_new_kinds_are_listed_and_a_geopackage_opens_into_its_tables_and_a_preview
 }
 
 #[test]
-fn a_table_is_bound_from_the_browser_then_gone_to_and_never_bound_twice() {
+fn a_table_is_taken_from_the_browser_as_a_copy_or_a_data_layer_and_gone_to() {
     let mut app = app_with_drawing();
     let dir = browser_folder("bag");
     let origin = open_tables(&mut app, &dir);
@@ -432,28 +433,20 @@ fn a_table_is_bound_from_the_browser_then_gone_to_and_never_bound_twice() {
         names.iter().map(|n| n == "parsel").collect::<Vec<_>>()
     );
     app.exchange = None;
-    // Bağlı katman olarak aç: the same window with the binding ticked; Çalıştır binds it.
-    send(
-        &mut app,
-        Event::OpenTable(origin.clone(), "parsel".into(), true),
-    );
-    assert_eq!(window_kind(&app).map(|w| w.0), Some(true));
-    let _ = app.update(Message::Exchange(Box::new(crate::exchange::Event::Gpkg(
-        crate::exchange::gpkg::Event::Run,
-    ))));
-    assert!(app.exchange.is_none(), "{}", last_said(&app));
-    let all = rows(&app);
-    let bound = all
-        .iter()
-        .find(|r| r.contains("▸ parsel · Bağlı: "))
-        .unwrap_or_else(|| panic!("the bound row: {all:?}"));
-    assert!(bound.ends_with("parsel"), "{bound}");
-    // Katmana git instead of a second binding: the layer chosen in Katmanlar.
-    let id = app
-        .bound_layer_of(&origin.path(), "parsel")
-        .expect("the layer");
-    send(&mut app, Event::GoToLayer(id.clone()));
-    assert_eq!(app.selected_layer.as_deref(), Some(id.as_str()));
+    // Veri katmanı olarak aç (docs/adr/9101 §2): no window; the table, read off the thread, becomes a data layer whose
+    // rows stay in the file.
+    let task = app.update(Message::Gis(gis::Event::Sources(Event::OpenTable(origin.clone(), "parsel".into(), true))));
+    assert!(window_kind(&app).is_none(), "no binding window");
+    crate::files_testing::drive(&mut app, task);
+    let layer = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.layers().leaves().into_iter().find(|n| n.data.as_ref().is_some_and(|t| t.table == "parsel")).cloned())
+        .unwrap_or_else(|| panic!("the data layer: {}", last_said(&app)));
+    assert_eq!(layer.data.as_ref().map(|d| d.address.clone()), Some(origin.path()));
+    // Katmana git: the layer chosen in Katmanlar.
+    send(&mut app, Event::GoToLayer(layer.id.clone()));
+    assert_eq!(app.selected_layer.as_deref(), Some(layer.id.as_str()));
     // Both opened tables are the newest recent sources, once.
     assert_eq!(
         app.gis.sources.folders.recent(),
@@ -865,4 +858,39 @@ fn screens() {
         }
     }
     let _ = std::fs::remove_dir_all(&data);
+}
+
+#[test]
+fn a_project_kept_in_a_geopackage_is_listed_beside_its_tables_and_opens() {
+    crate::data_layers::register();
+    let mut app = app_with_drawing();
+    let dir = browser_folder("proje");
+    let gpkg = dir.join("kadastro.gpkg");
+    let address = gpkg.display().to_string();
+    // A project kept in the file (docs/adr/9107), as Veri kaynağına kaydet writes it.
+    let bytes = {
+        let doc = app.document.as_ref().expect("a drawing");
+        kentos_kcad::encode_verified(&doc.model.to_snapshot_v2()).expect("encoded")
+    };
+    kentos_native_application::project_store::write(&address, None, "Kadastro projesi", &bytes).expect("kept");
+    let origin = open_tables(&mut app, &dir);
+    // Listed with the tables, as the off-thread read lists it.
+    let list = kentos_native_application::project_store::list(&address, None).expect("listed");
+    send(&mut app, Event::StoredListed(super::stored_key(&address, None), list));
+    let all = rows(&app);
+    let row = all
+        .iter()
+        .find(|r| r.contains("[proje Kadastro projesi · "))
+        .unwrap_or_else(|| panic!("the project's row: {all:?}"));
+    assert!(row.starts_with("      "), "under the file, beside its tables: {row}");
+    // The projects table is not listed as a table.
+    assert!(all.iter().all(|r| !r.contains("kentos_projects")), "{all:?}");
+    let _ = origin;
+    // A click opens it in a tab of its own.
+    let at = crate::document::StoredSource { address: address.clone(), schema: None, name: "Kadastro projesi".into() };
+    let task = app.update(Message::Gis(gis::Event::Sources(Event::OpenStored(Box::new(at)))));
+    crate::files_testing::drive(&mut app, task);
+    let doc = app.document.as_ref().expect("opened");
+    assert_eq!(doc.stored_source().map(|s| s.name.as_str()), Some("Kadastro projesi"));
+    let _ = std::fs::remove_dir_all(&dir);
 }

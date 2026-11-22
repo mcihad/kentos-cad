@@ -58,6 +58,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         snap: None,
         fields: Vec::new(),
         service: None,
+        data: None,
         feed: None,
         time: None,
         scenario: None,
@@ -70,6 +71,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         indexes: Vec::new(),
         dataset: None,
         derivation: None,
+        class_counts: None,
     }
 }
 
@@ -142,6 +144,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         settings: ProjectSettings {
             map_srid: None,
             auto_select: None,
+            edit_grouping: None,
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,
@@ -459,6 +462,7 @@ fn parts_draw_whole(n: usize) {
         plot_scale: look.symbol_scale,
         screen: look.screen,
         hairlines: look.hairlines,
+        screen_widths: false,
         clip: Some(construction_clip(&VIEW)),
         library: &library,
         layer_name: &names,
@@ -590,6 +594,7 @@ fn a_block_s_pieces_take_the_insert_s_line_type_and_transparency() {
         plot_scale: look.symbol_scale,
         screen: look.screen,
         hairlines: look.hairlines,
+        screen_widths: false,
         clip: Some(construction_clip(&VIEW)),
         library: &library,
         layer_name: &names,
@@ -667,6 +672,7 @@ fn a_hatch_s_fill_takes_its_transparency() {
         plot_scale: look.symbol_scale,
         screen: look.screen,
         hairlines: look.hairlines,
+        screen_widths: false,
         clip: Some(construction_clip(&VIEW)),
         library: &library,
         layer_name: &names,

@@ -12907,7 +12907,7 @@
    "operation": null,
    "python": "Document.entity",
    "mcp": null,
-   "note": "Bilgi kartı; nesnenin kaydı Python ve MCP'de okunur.",
+   "note": "Bilgi kartı; nesnenin kaydı Python ve MCP'de okunur. Veri katmanının satırı tıklanan yerde kaynağından okunur (ADR 9101 §6); Python ve MCP'de veri katmanının satırları VY-04'ün komutuyla okunur.",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

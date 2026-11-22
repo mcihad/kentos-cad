@@ -237,6 +237,27 @@ pub fn lens_layer<'a>(
     )
 }
 
+/// A data layer's labels (docs/adr/9101 §6): its read's objects in a document of their own, placed as the drawing's
+/// are, without the area's grid north, scale bar or axes; `read` tells one read from another.
+#[allow(clippy::too_many_arguments)]
+pub fn data_layer<'a>(
+    doc: &'a Document,
+    read: u64,
+    spatial: &Spatial,
+    kept: &Spots,
+    camera: &Camera,
+    canvas: Canvas,
+    palette: &Palette,
+    format: &Format,
+    mode: ColorMode,
+    size: LabelSize,
+    engine: Engine,
+) -> Element<'a, Message> {
+    build(
+        doc, read, spatial, kept, camera, canvas, palette, format, None, None, None, mode, size, engine, None,
+    )
+}
+
 /// A multi-line text being written or edited (paragraph_editor.rs,
 /// docs/adr/0182 §4), drawn as it will be: its label records
 /// (`paragraph_records`: its mask's box, then its lines), words and runs.

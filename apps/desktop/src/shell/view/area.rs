@@ -229,6 +229,12 @@ impl App {
                             Tokens::of(&self.theme()).warning,
                         ))
                         .extend(service_labels)
+                        // The data layers' labels under the drawing's own (data_labels.rs, docs/adr/9101 §6).
+                        .extend(self.data_label_layers(&format))
+                        // A data layer's rows selected in the table (data_selection.rs, docs/adr/9102 §5).
+                        .extend(self.data_selection_layer(crate::view::rgba_color(accent)))
+                        // The edited data layers' rows not saved yet, whatever their style draws (data_edits.rs).
+                        .extend(self.data_edits_layer(Tokens::of(&self.theme()).warning))
                         .push(labels)
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
                         .extend(self.swipe_layer())
@@ -409,11 +415,13 @@ impl App {
                 ])
                 .virtualized(rows.len(), move |index| {
                     let row = &rows[index];
-                    (
-                        row.depth,
+                    let node = match row.class {
+                        // A style class under its layer (layer_classes.rs, docs/adr/9105 §2): not dragged.
+                        Some(at) => self.class_node(doc, row.node, at, row.parent_visible),
                         // The row's place is its id for dragging (layer_order.rs).
-                        self.layer_node(doc, row.node, row.parent_visible).id(index),
-                    )
+                        None => self.layer_node(doc, row.node, row.parent_visible).id(index),
+                    };
+                    (row.depth, node)
                 })
                 // A row dragged before, after or into another (layer_order.rs).
                 .on_move(|from, to, place| {
@@ -564,7 +572,12 @@ impl App {
                     .into(),
             ]
         };
-        let mut row = Node::new(node.name.as_str())
+        // Nesne sayısını göster (docs/adr/9105 §4): the layer's objects after its name, as its classes' are.
+        let name = match self.class_total(node) {
+            Some(n) => format!("{} [{}]", node.name, crate::view::thousands(n as f64)),
+            None => node.name.clone(),
+        };
+        let mut row = Node::new(name)
             // Its place in the tree (the web's name title).
             .tip(kentos_ui::widget::Tip::new(
                 doc.model.layers().path(&node.id),
@@ -596,7 +609,7 @@ impl App {
                 Message::Layer(crate::layering::Event::RenameCancel),
             ));
         }
-        match node.kind {
+        let built = match node.kind {
             // A scenario's own icon, its note in the tip (docs/adr/0210 §10).
             LayerNodeType::Group if node.scenario.is_some() => {
                 let note = node.scenario.as_ref().and_then(|s| s.note.clone());
@@ -638,6 +651,65 @@ impl App {
                 }
                 row
             }
+            // A data layer (docs/adr/9101 §5): its kind's glyph in its colour, a mark for where its rows are (a file, a
+            // database), and the tip saying both.
+            LayerNodeType::Layer if node.data.is_some() => {
+                let Some(data) = node.data.as_ref() else {
+                    return row;
+                };
+                let palette = crate::viewport::palette(self.canvas());
+                let color = palette
+                    .resolve(&node.style.color)
+                    .map_or_else(|| hex_color(&node.style.color), rgba_color);
+                let face: Element<'_, Message> = match node.geometry {
+                    Some(g) => kentos_ui::icon::icon(crate::layer_types::glyph(Some(g)))
+                        .size(14.0)
+                        .color(color)
+                        .into(),
+                    None => kentos_ui::icon::icon(crate::icons::from_web(Some("table")))
+                        .size(14.0)
+                        .color(color)
+                        .into(),
+                };
+                let mark = if data.driver == "gpkg" { "fileOpen" } else { "sourceDatabase" };
+                // One cell (Öğe): where its rows are, and the pencil while it is being edited.
+                let mut marks = iced::widget::Row::new().spacing(4).align_y(iced::Alignment::Center).push(
+                    kentos_ui::icon::icon(crate::icons::from_web(Some(mark)))
+                        .size(11.0)
+                        .tone(kentos_ui::icon::Tone::Muted),
+                );
+                // Being edited, a pencil; with changes not saved, the pencil in the warning's tone (docs/adr/9103 §5).
+                let mut session = String::new();
+                if doc.model.editing(&node.id) {
+                    let c = doc.model.data_changes(&node.id);
+                    let modified = !c.is_empty();
+                    marks = marks.push(
+                        kentos_ui::icon::icon(crate::icons::from_web(Some("edit")))
+                            .size(12.0)
+                            .tone(if modified {
+                                kentos_ui::icon::Tone::Warning
+                            } else {
+                                kentos_ui::icon::Tone::Accent
+                            }),
+                    );
+                    session = if modified {
+                        format!(
+                            "\nDüzenleniyor; kaydedilmemiş: {}",
+                            crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len())
+                        )
+                    } else {
+                        "\nDüzenleniyor".to_owned()
+                    };
+                }
+                row.icon(MenuButton::new(face, move || self.layer_colors(node)))
+                    .cells([marks.into()])
+                    .tip(kentos_ui::widget::Tip::new(format!(
+                        "{}\n{}{}{session}",
+                        data.kind_words(),
+                        data.place_words(),
+                        if data.read_only { "\nSalt okunur" } else { "" }
+                    )))
+            }
             LayerNodeType::Layer => {
                 let palette = crate::viewport::palette(self.canvas());
                 let color = palette
@@ -654,6 +726,18 @@ impl App {
                 };
                 row.icon(MenuButton::new(face, move || self.layer_colors(node)))
             }
+        };
+        // A layer whose style has classes opens and closes them under it (docs/adr/9105 §2).
+        let classed = node.kind == LayerNodeType::Layer
+            && node
+                .style
+                .renderer
+                .as_ref()
+                .is_some_and(|r| kentos_native_application::style_classes::classes_kind(r).is_some());
+        if classed {
+            built.expanded(node.expanded, Message::LayerExpanded(node.id.clone()))
+        } else {
+            built
         }
     }
 }

@@ -443,16 +443,21 @@ impl Document {
                 "“{name}” bir grup; servis ve veri kaynağı yalnız katmanın olur."
             )));
         }
-        if next.service.is_some() && next.feed.is_some() {
+        if usize::from(next.service.is_some())
+            + usize::from(next.feed.is_some())
+            + usize::from(next.data.is_some())
+            > 1
+        {
             return Err(Refusal(format!(
-                "“{name}” katmanı hem servisten çizilir hem nesnelerini bir kaynaktan alır; ikisi birden olmaz."
+                "“{name}” katmanı tek bir yerden gelir: bir harita servisinden, bir servisin nesnelerinden ya da bir veri tablosundan; ikisi birden olmaz."
             )));
         }
         let problem = next
             .service
             .as_ref()
             .and_then(|s| s.problem())
-            .or_else(|| next.feed.as_ref().and_then(|f| f.problem()));
+            .or_else(|| next.feed.as_ref().and_then(|f| f.problem()))
+            .or_else(|| next.data.as_ref().and_then(|d| d.problem()));
         if let Some(problem) = problem {
             return Err(Refusal(problem));
         }
@@ -461,11 +466,17 @@ impl Document {
                 "“{name}” katmanında nesne var; servis katmanı nesne tutmaz. Servisi yeni bir katmana ekleyin."
             )));
         }
+        if next.data.is_some() && self.holds_objects(id) {
+            return Err(Refusal(format!(
+                "“{name}” katmanında nesne var; veri katmanı nesne tutmaz, satırları kaynağında kalır. Tabloyu yeni bir katman olarak ekleyin."
+            )));
+        }
         let before = Served {
             name: node.name.clone(),
             by: ServedBy {
                 service: node.service.clone(),
                 feed: node.feed.clone(),
+                data: node.data.clone(),
             },
         };
         let next = Served {
@@ -1094,6 +1105,32 @@ impl Document {
     pub fn set_layer_plot(&mut self, id: &str, plot: bool) -> bool {
         let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
         let changed = self.layers.set_plot(id, plot);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
+    /// A layer's style classes switched on or off in the tree (docs/adr/9105 §3): its renderer as given, an edit when
+    /// it changes, never an undo step, as the eye. Whether it changed.
+    pub fn set_layer_class_switches(&mut self, id: &str, renderer: serde_json::Value) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_class_switches(id, renderer);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
+    /// A data layer's GeoPackage found at its path from the project when the project was opened (docs/adr/9107 §3): an
+    /// edit when it changes, never an undo step, as a bound source moved with its project. Whether it changed.
+    pub fn set_layer_data_address(&mut self, id: &str, address: &str) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_data_address(id, address);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
+    /// Nesne sayısını göster (docs/adr/9105 §4): an edit when it changes, never an undo step. Whether it changed.
+    pub fn set_layer_class_counts(&mut self, id: &str, on: bool) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_class_counts(id, on);
         self.flags_written(framed, changed, base);
         changed
     }

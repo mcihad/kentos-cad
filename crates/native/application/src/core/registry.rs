@@ -238,7 +238,7 @@ use crate::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 use crate::{
     fields_edit, fields_usage, gis_derivation, gis_detach, gis_takeback, images_clip, images_edit,
     layers_compose, layers_contingents, layers_edit, layers_filter, layers_find, layers_indexes,
-    layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
+    layer_classes, layer_export, layers_create, layers_data, layers_migrate, layers_rows, layers_session, layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
     layers_states, layers_subtypes, layers_table, layers_time, layers_translate, linearref_define,
     maplibre, network_define, qml, rasters_georef, rasters_mosaic, rasters_reproject,
     scenarios_edit, sld, time_version,

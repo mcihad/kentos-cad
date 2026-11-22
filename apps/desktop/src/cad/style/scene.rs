@@ -142,6 +142,8 @@ pub struct StyledCache {
     /// The store's filters calling an extension's function as worked out now (`Spatial::filters_version`) and as
     /// the layers were last built with: a layer such a filter filters is built again after (docs/adr/8057 §8).
     filters_now: u64,
+    /// The data layers' parts as last drawn (docs/adr/9101 §6): a part that came builds the scene again.
+    data_generation: u64,
     filters_built: u64,
 }
 
@@ -421,9 +423,11 @@ impl StyledCache {
             && !self.view_built.values().any(|b| b.stale(view, q, settled))
             && self.answers == kentos_native_style::externals::answers_generation()
             && self.filters_built == self.filters_now
+            && self.data_generation == crate::data_view::service().generation()
         {
             return self.scene.clone();
         }
+        self.data_generation = crate::data_view::service().generation();
         let refiltered = self.filters_built != self.filters_now;
         self.filters_built = self.filters_now;
         // The extensions' answers grew (a background ask came back): the layers whose styles call their functions are
@@ -767,6 +771,9 @@ impl StyledCache {
                 plot_scale: look.symbol_scale,
                 screen: look.screen,
                 hairlines: look.hairlines,
+                // A data layer's rows taken into the drawing (its edit session) draw as its read rows do: their lines
+                // keep their paper width on the model screen at every scale (docs/adr/9115).
+                screen_widths: look.hold_weights && node.data.is_some(),
                 clip: Some(framed.map_or(clip, |f| f.0)),
                 library,
                 layer_name: &|id: &str| {
@@ -970,6 +977,25 @@ impl StyledCache {
         // Each shown layer's scene layers (docs/adr/0226: a composed layer draws them into a picture of its own).
         let mut ranges: HashMap<&str, std::ops::Range<u32>> = HashMap::new();
         for node in &shown {
+            // A data layer's parts as its source's rows were read for the view (docs/adr/9101 §6).
+            if node.data.is_some() {
+                let base = parts.len();
+                let list = crate::data_view::service().parts(&node.id);
+                for (i, part) in list.iter().enumerate() {
+                    order.extend((0..part.layer.batches.len()).map(|b| ((base + i) as u32, b as u32)));
+                }
+                parts.extend(list);
+                // Its unsaved rows over its table's (docs/adr/9103 §5): the layer's objects in the drawing.
+                if let Some(layer) = self.layers.get(&node.id) {
+                    for p in layer.parts.values() {
+                        let at = parts.len() as u32;
+                        order.extend((0..p.part.layer.batches.len()).map(|b| (at, b as u32)));
+                        parts.push(p.part.clone());
+                    }
+                }
+                ranges.insert(node.id.as_str(), base as u32..parts.len() as u32);
+                continue;
+            }
             if let Some(service) = &node.service {
                 let base = parts.len();
                 let part = self.service_part(doc, node, service);

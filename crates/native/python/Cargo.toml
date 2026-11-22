@@ -16,6 +16,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 kentos-postgis = { path = "../postgis" }
+# The data drivers of data layers (docs/adr/9100): registered at the start, as the desktop registers them.
+kentos-data-gpkg = { path = "../data-gpkg" }
+kentos-data-postgis = { path = "../data-postgis" }
 kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-headless = { path = "../headless" }
 # kentos.services (docs/adr/0208 §15): the map services' core, the project's systems and the transforms.

@@ -135,6 +135,7 @@ fn build(
         plot_scale: 5000.0,
         screen: false,
         hairlines: false,
+        screen_widths: false,
         clip,
         library: &library,
         layer_name: &names,

@@ -1405,7 +1405,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -2254,7 +2255,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -2827,7 +2829,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -3152,7 +3155,8 @@
                     "sides": [
                       1,
                       3
-                    ]
+                    ],
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -3461,7 +3465,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -3803,7 +3808,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -4294,7 +4300,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -4500,7 +4507,8 @@
                     "digest": "$any",
                     "sides": [
                       3
-                    ]
+                    ],
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -4888,7 +4896,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -5956,7 +5965,8 @@
                     "digest": "$any",
                     "sides": [
                       1
-                    ]
+                    ],
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -7694,7 +7704,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -9375,7 +9386,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -9970,7 +9982,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -11105,7 +11118,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -12245,7 +12259,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -13379,7 +13394,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -14467,7 +14483,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -15130,7 +15147,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",
@@ -15757,7 +15775,8 @@
                     },
                     "gap": 1.0,
                     "members": "$any",
-                    "digest": "$any"
+                    "digest": "$any",
+                    "memberHashes": "$any"
                   },
                   "documentRevision": "$any",
                   "engine": "$any",

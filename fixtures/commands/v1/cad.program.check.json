@@ -1479,13 +1479,14 @@
          }
         },
         {
-         "key": "program_adjacent_missing:$uidOf:23",
+         "key": "program_adjacent_missing:$uidOf:23,$uidOf:18",
          "check": "program",
          "code": "program_adjacent_missing",
          "message": "“203 Salon”: tasarım hedefi “Mutfak” komşusu istiyor; yanında öyle bir mahal yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Komşu mahali bu mahalin yanına alın ya da tasarım hedefini değiştirin.",
          "uids": [
-          "$uidOf:23"
+          "$uidOf:23",
+          "$uidOf:18"
          ],
          "at": {
           "x": 9.7,
@@ -1507,13 +1508,14 @@
          }
         },
         {
-         "key": "program_reach_missing:$uidOf:21",
+         "key": "program_reach_missing:$uidOf:21,$uidOf:23",
          "check": "program",
          "code": "program_reach_missing",
          "message": "“201 Yatak odası”: tasarım hedefi “Salon” mahaline geçiş istiyor; kapı ya da açık geçiş yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.",
          "uids": [
-          "$uidOf:21"
+          "$uidOf:21",
+          "$uidOf:23"
          ],
          "at": {
           "x": 8.2,
@@ -1970,13 +1972,14 @@
          }
         },
         {
-         "key": "program_adjacent_missing:$uidOf:23",
+         "key": "program_adjacent_missing:$uidOf:23,$uidOf:18",
          "check": "program",
          "code": "program_adjacent_missing",
          "message": "“203 Salon”: tasarım hedefi “Mutfak” komşusu istiyor; yanında öyle bir mahal yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Komşu mahali bu mahalin yanına alın ya da tasarım hedefini değiştirin.",
          "uids": [
-          "$uidOf:23"
+          "$uidOf:23",
+          "$uidOf:18"
          ],
          "at": {
           "x": 9.7,
@@ -1998,13 +2001,14 @@
          }
         },
         {
-         "key": "program_reach_missing:$uidOf:21",
+         "key": "program_reach_missing:$uidOf:21,$uidOf:23",
          "check": "program",
          "code": "program_reach_missing",
          "message": "“201 Yatak odası”: tasarım hedefi “Salon” mahaline geçiş istiyor; kapı ya da açık geçiş yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.",
          "uids": [
-          "$uidOf:21"
+          "$uidOf:21",
+          "$uidOf:23"
          ],
          "at": {
           "x": 8.2,
@@ -2470,13 +2474,14 @@
          }
         },
         {
-         "key": "program_adjacent_missing:$uidOf:23",
+         "key": "program_adjacent_missing:$uidOf:23,$uidOf:18",
          "check": "program",
          "code": "program_adjacent_missing",
          "message": "“203 Salon”: tasarım hedefi “Mutfak” komşusu istiyor; yanında öyle bir mahal yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Komşu mahali bu mahalin yanına alın ya da tasarım hedefini değiştirin.",
          "uids": [
-          "$uidOf:23"
+          "$uidOf:23",
+          "$uidOf:18"
          ],
          "at": {
           "x": 9.7,
@@ -2498,13 +2503,14 @@
          }
         },
         {
-         "key": "program_reach_missing:$uidOf:16",
+         "key": "program_reach_missing:$uidOf:16,$uidOf:17",
          "check": "program",
          "code": "program_reach_missing",
          "message": "“101 Yatak odası”: tasarım hedefi “Salon” mahaline geçiş istiyor; kapı ya da açık geçiş yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.",
          "uids": [
-          "$uidOf:16"
+          "$uidOf:16",
+          "$uidOf:17"
          ],
          "at": {
           "x": 2.5,
@@ -2512,13 +2518,14 @@
          }
         },
         {
-         "key": "program_reach_missing:$uidOf:21",
+         "key": "program_reach_missing:$uidOf:21,$uidOf:23",
          "check": "program",
          "code": "program_reach_missing",
          "message": "“201 Yatak odası”: tasarım hedefi “Salon” mahaline geçiş istiyor; kapı ya da açık geçiş yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.",
          "uids": [
-          "$uidOf:21"
+          "$uidOf:21",
+          "$uidOf:23"
          ],
          "at": {
           "x": 8.2,
@@ -4083,13 +4090,14 @@
          }
         },
         {
-         "key": "program_adjacent_missing:$uidOf:23",
+         "key": "program_adjacent_missing:$uidOf:23,$uidOf:18",
          "check": "program",
          "code": "program_adjacent_missing",
          "message": "“203 Salon”: tasarım hedefi “Mutfak” komşusu istiyor; yanında öyle bir mahal yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Komşu mahali bu mahalin yanına alın ya da tasarım hedefini değiştirin.",
          "uids": [
-          "$uidOf:23"
+          "$uidOf:23",
+          "$uidOf:18"
          ],
          "at": {
           "x": 9.7,
@@ -4111,13 +4119,14 @@
          }
         },
         {
-         "key": "program_reach_missing:$uidOf:21",
+         "key": "program_reach_missing:$uidOf:21,$uidOf:23",
          "check": "program",
          "code": "program_reach_missing",
          "message": "“201 Yatak odası”: tasarım hedefi “Salon” mahaline geçiş istiyor; kapı ya da açık geçiş yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.",
          "uids": [
-          "$uidOf:21"
+          "$uidOf:21",
+          "$uidOf:23"
          ],
          "at": {
           "x": 8.2,
@@ -5612,13 +5621,14 @@
          }
         },
         {
-         "key": "program_adjacent_missing:$uidOf:23",
+         "key": "program_adjacent_missing:$uidOf:23,$uidOf:18",
          "check": "program",
          "code": "program_adjacent_missing",
          "message": "“203 Salon”: tasarım hedefi “Mutfak” komşusu istiyor; yanında öyle bir mahal yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Komşu mahali bu mahalin yanına alın ya da tasarım hedefini değiştirin.",
          "uids": [
-          "$uidOf:23"
+          "$uidOf:23",
+          "$uidOf:18"
          ],
          "at": {
           "x": 9.7,
@@ -5640,13 +5650,14 @@
          }
         },
         {
-         "key": "program_reach_missing:$uidOf:21",
+         "key": "program_reach_missing:$uidOf:21,$uidOf:23",
          "check": "program",
          "code": "program_reach_missing",
          "message": "“201 Yatak odası”: tasarım hedefi “Salon” mahaline geçiş istiyor; kapı ya da açık geçiş yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.",
          "uids": [
-          "$uidOf:21"
+          "$uidOf:21",
+          "$uidOf:23"
          ],
          "at": {
           "x": 8.2,
@@ -7140,13 +7151,14 @@
          }
         },
         {
-         "key": "program_adjacent_missing:$uidOf:23",
+         "key": "program_adjacent_missing:$uidOf:23,$uidOf:18",
          "check": "program",
          "code": "program_adjacent_missing",
          "message": "“203 Salon”: tasarım hedefi “Mutfak” komşusu istiyor; yanında öyle bir mahal yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Komşu mahali bu mahalin yanına alın ya da tasarım hedefini değiştirin.",
          "uids": [
-          "$uidOf:23"
+          "$uidOf:23",
+          "$uidOf:18"
          ],
          "at": {
           "x": 9.7,
@@ -7168,13 +7180,14 @@
          }
         },
         {
-         "key": "program_reach_missing:$uidOf:21",
+         "key": "program_reach_missing:$uidOf:21,$uidOf:23",
          "check": "program",
          "code": "program_reach_missing",
          "message": "“201 Yatak odası”: tasarım hedefi “Salon” mahaline geçiş istiyor; kapı ya da açık geçiş yok (kentos.program/1 · Ofis konut hedefleri 2026-1).",
          "repair": "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.",
          "uids": [
-          "$uidOf:21"
+          "$uidOf:21",
+          "$uidOf:23"
          ],
          "at": {
           "x": 8.2,
@@ -8667,13 +8680,14 @@
          }
         },
         {
-         "key": "program_adjacent_missing:$uidOf:23",
+         "key": "program_adjacent_missing:$uidOf:23,$uidOf:18",
          "check": "program",
          "code": "program_adjacent_missing",
          "message": "“203 Salon”: tasarım hedefi “Mutfak” komşusu istiyor; yanında öyle bir mahal yok (kentos.program/1).",
          "repair": "Komşu mahali bu mahalin yanına alın ya da tasarım hedefini değiştirin.",
          "uids": [
-          "$uidOf:23"
+          "$uidOf:23",
+          "$uidOf:18"
          ],
          "at": {
           "x": 9.7,
@@ -8695,13 +8709,14 @@
          }
         },
         {
-         "key": "program_reach_missing:$uidOf:21",
+         "key": "program_reach_missing:$uidOf:21,$uidOf:23",
          "check": "program",
          "code": "program_reach_missing",
          "message": "“201 Yatak odası”: tasarım hedefi “Salon” mahaline geçiş istiyor; kapı ya da açık geçiş yok (kentos.program/1).",
          "repair": "Aradaki duvara kapı koyun ya da mahalleri ayırıcıyla açın.",
          "uids": [
-          "$uidOf:21"
+          "$uidOf:21",
+          "$uidOf:23"
          ],
          "at": {
           "x": 8.2,

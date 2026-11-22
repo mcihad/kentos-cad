@@ -422,6 +422,12 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
                 frozen: None,
                 source_crs: None,
                 geometry: None,
+                // A data layer's table (docs/adr/9101 §2), as `LayerInit` carries it.
+                data: match layer.get("data") {
+                    None => None,
+                    Some(v) => serde_json::from_value(v.clone())
+                        .or_else(|e| fail(format!("{at}: veri tablosu okunamadı: {e}")))?,
+                },
                 plot: None,
                 id: layer.get("id").and_then(Value::as_str).map(str::to_owned),
                 name: text(layer, "name", at)?.to_owned(),

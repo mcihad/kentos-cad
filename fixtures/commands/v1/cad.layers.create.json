@@ -1,0 +1,892 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.layers.create",
+ "commandVersion": 1,
+ "title": "Yeni veri katmanı: GeoPackage tablosu, nokta, çizgi, alan, çok parçalı, Z, geometrisiz; retler (ADR 9107 §7)",
+ "note": "ADR 9107 §7. Beklentiler sözleşmenin kurallarıyla burada hesaplanır; yapılan tablo cad.layers.rows ile boş okunur, aynı tablonun ikinci kez yapılması reddedilir.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Yeni veri katmanı",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 600000,
+   "y": 4410000
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Altyapı",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Nokta katmanı yeni bir GeoPackage'ta; tablo boş okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Direkler",
+      "target": "gpkg",
+      "path": "$tmp:yeni/direk.gpkg",
+      "geometry": "point",
+      "fields": [
+       {
+        "name": "no",
+        "kind": "integer"
+       },
+       {
+        "name": "durum",
+        "kind": "text",
+        "length": 20
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "direkler",
+       "address": "$tmp:yeni/direk.gpkg",
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no",
+        "durum"
+       ],
+       "rows": [],
+       "offset": 0,
+       "total": 0,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Yollar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/yol.gpkg",
+      "geometry": "line"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "yollar",
+       "address": "$tmp:yeni/yol.gpkg",
+       "geometry": "LINESTRING",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan katmanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Parseller",
+      "target": "gpkg",
+      "path": "$tmp:yeni/parsel.gpkg",
+      "geometry": "area",
+      "fields": [
+       {
+        "name": "no",
+        "kind": "integer"
+       },
+       {
+        "name": "durum",
+        "kind": "text",
+        "length": 20
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "parseller",
+       "address": "$tmp:yeni/parsel.gpkg",
+       "geometry": "POLYGON",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no",
+        "durum"
+       ],
+       "rows": [],
+       "offset": 0,
+       "total": 0,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çok parçalı alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Adalar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/ada.gpkg",
+      "geometry": "area",
+      "multi": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "adalar",
+       "address": "$tmp:yeni/ada.gpkg",
+       "geometry": "MULTIPOLYGON",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çok parçalı nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Ağaçlar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/agac.gpkg",
+      "geometry": "point",
+      "multi": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "agaclar",
+       "address": "$tmp:yeni/agac.gpkg",
+       "geometry": "MULTIPOINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çok parçalı çizgi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Hatlar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/hat.gpkg",
+      "geometry": "line",
+      "multi": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "hatlar",
+       "address": "$tmp:yeni/hat.gpkg",
+       "geometry": "MULTILINESTRING",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Z ile nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Kotlu noktalar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/kot.gpkg",
+      "geometry": "point",
+      "z": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "kotlu_noktalar",
+       "address": "$tmp:yeni/kot.gpkg",
+       "geometry": "POINT Z",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geometrisiz kayıt tablosu: sistem yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Abone listesi",
+      "target": "gpkg",
+      "path": "$tmp:yeni/abone.gpkg",
+      "geometry": "none",
+      "fields": [
+       {
+        "name": "no",
+        "kind": "integer"
+       },
+       {
+        "name": "durum",
+        "kind": "text",
+        "length": 20
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "abone_listesi",
+       "address": "$tmp:yeni/abone.gpkg",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "no",
+        "durum"
+       ],
+       "rows": [],
+       "offset": 0,
+       "total": 0,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tablonun adı katmanın Türkçe adından",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Su Hatları (İçme)",
+      "target": "gpkg",
+      "path": "$tmp:yeni/su.gpkg",
+      "geometry": "line"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "su_hatlari__icme",
+       "address": "$tmp:yeni/su.gpkg",
+       "geometry": "LINESTRING",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Verilen tablo adı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "İşletme hattı",
+      "target": "gpkg",
+      "path": "$tmp:yeni/isletme.gpkg",
+      "geometry": "line",
+      "table": "isletme_hatti_2026"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "isletme_hatti_2026",
+       "address": "$tmp:yeni/isletme.gpkg",
+       "geometry": "LINESTRING",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Anahtar ve geometri sütununun adı verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Vanalar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/vana.gpkg",
+      "geometry": "point",
+      "key": "kimlik",
+      "geometryColumn": "sekil",
+      "fields": [
+       {
+        "name": "cap",
+        "kind": "integer"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "vanalar",
+       "address": "$tmp:yeni/vana.gpkg",
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.rows",
+     "input": {
+      "layer": "layer-1",
+      "count": true,
+      "limit": 1000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        "cap"
+       ],
+       "rows": [],
+       "offset": 0,
+       "total": 0,
+       "checked": "source"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka sistemde tablo (WGS 84)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "GPS izi",
+      "target": "gpkg",
+      "path": "$tmp:yeni/gps.gpkg",
+      "geometry": "line",
+      "srid": 4326
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "gps_izi",
+       "address": "$tmp:yeni/gps.gpkg",
+       "geometry": "LINESTRING",
+       "srid": 4326,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı dosyada iki tablo",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Rögarlar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/kanal.gpkg",
+      "geometry": "point"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "rogarlar",
+       "address": "$tmp:yeni/kanal.gpkg",
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "name": "Kanal hatları",
+      "target": "gpkg",
+      "path": "$tmp:yeni/kanal.gpkg",
+      "geometry": "line"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-2",
+       "table": "kanal_hatlari",
+       "address": "$tmp:yeni/kanal.gpkg",
+       "geometry": "LINESTRING",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Grubun içine, ilk sıraya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Trafolar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/trafo.gpkg",
+      "geometry": "point",
+      "parent": "grup",
+      "index": 0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "trafolar",
+       "address": "$tmp:yeni/trafo.gpkg",
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan hiçbir şey yazmaz: aynı tablo sonra yapılır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "name": "Duraklar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/durak.gpkg",
+      "geometry": "point"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "",
+       "table": "duraklar",
+       "address": "$tmp:yeni/durak.gpkg",
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "name": "Duraklar",
+      "target": "gpkg",
+      "path": "$tmp:yeni/durak.gpkg",
+      "geometry": "point"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "duraklar",
+       "address": "$tmp:yeni/durak.gpkg",
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: ad boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "  ",
+      "target": "gpkg",
+      "path": "$tmp:yeni/bos.gpkg",
+      "geometry": "point"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "empty_name",
+       "message": "Katmanın adı boş olamaz.",
+       "path": "name"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: GeoPackage dosyası yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "A",
+      "target": "gpkg",
+      "geometry": "point"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_target",
+       "message": "Tablonun yapılacağı GeoPackage dosyası verilmedi (path).",
+       "path": "path"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: veritabanı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "A",
+      "target": "postgis",
+      "geometry": "point"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_target",
+       "message": "Tablonun yapılacağı veritabanı verilmedi (address).",
+       "path": "address"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kaynağın kendi tablosunun adı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "A",
+      "target": "gpkg",
+      "path": "$tmp:yeni/ayrik.gpkg",
+      "geometry": "point",
+      "table": "gpkg_katman"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_name",
+       "message": "Tablonun adı alınamaz: “gpkg_katman” kaynağın kendi tablolarına ayrılmış bir ad.",
+       "path": "table"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tablo adı 63 bayttan uzun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "A",
+      "target": "gpkg",
+      "path": "$tmp:yeni/uzun.gpkg",
+      "geometry": "point",
+      "table": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_name",
+       "message": "Tablonun adı alınamaz: “aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa” en çok 63 bayt olabilir.",
+       "path": "table"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: alanın adı anahtar sütununun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "A",
+      "target": "gpkg",
+      "path": "$tmp:yeni/fid.gpkg",
+      "geometry": "point",
+      "fields": [
+       {
+        "name": "fid",
+        "kind": "integer"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_name",
+       "message": "“fid” anahtar ya da geometri sütununun adı; alana başka bir ad verin.",
+       "path": "fields.0.name"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: alanlar kurala uymuyor (aynı ad iki kez)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "A",
+      "target": "gpkg",
+      "path": "$tmp:yeni/iki.gpkg",
+      "geometry": "point",
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "ad",
+        "kind": "text"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_fields",
+       "message": "$any",
+       "path": "fields"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: bilinmeyen sistem",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "A",
+      "target": "gpkg",
+      "path": "$tmp:yeni/sistem.gpkg",
+      "geometry": "point",
+      "srid": 999999
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_srid",
+       "message": "$any",
+       "path": "srid"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kaynak yapılamıyor (bir dosyanın içinde)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "A",
+      "target": "gpkg",
+      "geometry": "point",
+      "path": "$fixture:geopackage/v1/qgis.gpkg/alt.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tablo var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "Direkler",
+      "target": "gpkg",
+      "path": "$tmp:yeni/var.gpkg",
+      "geometry": "point"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "layer-1",
+       "table": "direkler",
+       "address": "$tmp:yeni/var.gpkg",
+       "geometry": "POINT",
+       "srid": 5256,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "name": "Direkler",
+      "target": "gpkg",
+      "path": "$tmp:yeni/var.gpkg",
+      "geometry": "point"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "target_exists",
+       "message": "“direkler” tablosu kaynakta var; başka bir ad verin ya da onu Kaynaklar'dan veri katmanı olarak ekleyin.",
+       "path": "table"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

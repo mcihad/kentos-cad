@@ -86,6 +86,15 @@ impl Pointer {
 /// The view a tool works through (docs/adr/8054 §8: the viewer core's, re-exported).
 pub use kentos_scene_query::view::View;
 
+/// Where Seç asks the data layers for rows ([`ViewChange::DataSelect`]), in the drawing's units.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum DataRegion {
+    /// A click: the row under `at` within `reach`.
+    Point { at: Vec2, reach: f64 },
+    /// A box between two corners: every row wholly inside it, or every row meeting it (`crossing`).
+    Box { a: Vec2, b: Vec2, crossing: bool },
+}
+
 /// A change of the view a tool asks for (docs/adr/0056): Kaydır drags it,
 /// Pencere yakınlaştır fits a box. The web's tools move `ctx.view.camera`
 /// themselves; here the host's camera takes the changes, in order, right
@@ -148,6 +157,15 @@ pub enum ViewChange {
     /// Bilgi's card (docs/adr/0225 §5): the object it shows and the drawing's
     /// point it was clicked at, or none (closed).
     InfoCard(Option<(kentos_domain::Slot, Vec2)>),
+    /// Bilgi's click on no object of the drawing (docs/adr/9101 §6): the host
+    /// asks the shown data layers' tables for the row under `at` within
+    /// `reach` (world units), shows its card and gives the row back with
+    /// [`Tool::data_found`].
+    DataInfo { at: Vec2, reach: f64 },
+    /// Seç's click on no object of the drawing, or its box (docs/adr/9103 §5): the host takes the rows of the data
+    /// layers being edited under it into the drawing and adds their objects to the selection; a data layer that is not
+    /// being edited (the active one) selects its rows in its table. The selection the tool left stays.
+    DataSelect(DataRegion),
     /// Konumdan adres's place (docs/adr/0229 §13): the host looks for its
     /// address in the Adres tab's source and shows it there.
     AddressAt(Vec2),
@@ -886,26 +904,26 @@ pub struct Memory {
     pub stream: bool,
     pub stream_step: f64,
     /// Çoklu çizgi's Genişlik, metres: every edge's start and end width; 0 none
-    /// (docs/adr/0258 §2). Kept for the session, as AutoCAD's PLINE keeps it.
+    /// (docs/adr/0258 §2). Kept for the session.
     pub polyline_width: f64,
     /// Genişlik's end width, metres (docs/adr/0288): the next edge tapers from `polyline_width` to it, the ones
     /// after keep it.
     pub polyline_width_end: f64,
     /// The arc Yay wrote last when it was given clockwise (docs/adr/0289): its slot. Its way ends at its stored
-    /// start, so Devam goes on from there, as AutoCAD's ARC goes on from the last point given.
+    /// start, so Devam goes on from there: from the last point given.
     pub arc_drawn_back: Option<u32>,
-    /// Kopyala's Kip (docs/adr/0291): one copy, then the tool leaves; AutoCAD's COPYMODE, kept for the session.
+    /// Kopyala's Kip (docs/adr/0291): one copy, then the tool leaves; kept for the session.
     pub copy_single: bool,
     /// The last displacement Taşı or Kopyala used (docs/adr/0291): Yer değiştirme's Enter.
     pub last_displacement: Option<[f64; 2]>,
-    /// Aynala's Yazılar (docs/adr/0292; AutoCAD's MIRRTEXT): the texts turn with the mirror instead of staying
+    /// Aynala's Yazılar (docs/adr/0292; DXF's MIRRTEXT): the texts turn with the mirror instead of staying
     /// readable; the tool and the grip mode share it for the session.
     pub mirror_text_mirrored: bool,
-    /// Buda's and Uzat's Uzantılar (docs/adr/0294; AutoCAD's EDGEMODE): the boundaries bound along their
+    /// Buda's and Uzat's Uzantılar (docs/adr/0294): the boundaries bound along their
     /// extensions too; the two tools share it for the session.
     pub trim_edge_mode: bool,
     /// NURBS eğrisi's method (control points, else fit points) and degree
-    /// (docs/adr/0259 §6), kept for the session as AutoCAD's SPLINE keeps them.
+    /// (docs/adr/0259 §6), kept for the session.
     pub nurbs_control: bool,
     pub nurbs_degree: u32,
     /// Eğriyi düzenle's Çoklu çizgiye çevir tolerance, metres (docs/adr/0303), kept for the session.
@@ -924,7 +942,7 @@ pub struct Memory {
     pub explode_count: u32,
     pub explode_step: f64,
     pub explode_deviation: f64,
-    /// Maske's options (docs/adr/0310 §5), kept for the session: its frame hidden (AutoCAD's WIPEOUTFRAME 0; shown
+    /// Maske's options (docs/adr/0310 §5), kept for the session: its frame hidden (shown
     /// at first), and Nesne: an area clicked becomes a mask.
     pub wipeout_no_frame: bool,
     pub wipeout_object: bool,
@@ -1964,6 +1982,8 @@ pub trait Tool {
     fn image_given(&mut self, _file: Option<ImageFile>, _cx: &mut Context<'_>) {}
     /// The point XYZ sor's place found ([`ViewChange::CloudQuery`]), or none.
     fn cloud_found(&mut self, _found: Option<[f64; 3]>, _cx: &mut Context<'_>) {}
+    /// The data layer's row found under Bilgi's click ([`ViewChange::DataInfo`]), as an object of no drawing, or none.
+    fn data_found(&mut self, _found: Option<&kentos_commands::Entity>, _cx: &mut Context<'_>) {}
     /// A network's answer to a question the tool asked ([`ViewChange::Network`]).
     fn network_answered(&mut self, _reply: crate::network::NetworkReply, _cx: &mut Context<'_>) {}
     /// The answer of the values it asked for ([`ViewChange::AttributeValues`]):

@@ -18,6 +18,9 @@ kentos-domain = { path = "../domain" }
 # Patlat (docs/adr/0302): a dimension exploded writes its value as the project shows it (the project's Format).
 kentos-project = { path = "../project" }
 kentos-geopackage = { path = "../geopackage" }
+# A data layer's rows read from its source (cad.layers.rows, docs/adr/9102 §4): the drivers' contract only; the host
+# registers the drivers.
+kentos-data = { path = "../data" }
 # The shared geometry core: what a transform does to each kind of object (docs/adr/0037),
 # the same code the web reaches through WASM.
 kentos-geometry-core = { path = "../../shared/geometry-core" }
@@ -74,6 +77,8 @@ mod-gis = []
 mod-road = ["terrain", "dep:kentos-ifc"]
 
 [dev-dependencies]
+# cad.layers.rows' shared cases read a GeoPackage through its driver (docs/adr/9102 §4).
+kentos-data-gpkg = { path = "../data-gpkg" }
 # The command catalog (tests/catalog.rs) needs the contracts' JSON Schema feature, as
 # the server's catalog test does.
 kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }

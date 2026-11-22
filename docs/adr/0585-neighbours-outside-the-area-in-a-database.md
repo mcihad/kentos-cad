@@ -110,6 +110,6 @@ Bu kural GeoPackage'ta da geçer.
   - satır güvenliği B'yi değiştirmeyi yasaklayan `kisitli` hesabıyla komşulu yazma `rows_denied` (`topology`, B'nin
     kalıcı kimliği) ile döner, hiçbir şey yazılmaz; komşusuz yazmada A yazılır.
   - Betik veritabanının son hâlini psycopg2'yle ayrıca denetler.
-- Masaüstünde `exchange::gpkg_tests::a_neighbour_left_invalid_stops_a_strict_write_and_says_so` ve
+- Masaüstünde `exchange::gpkg_tests::neighbours::a_neighbour_left_invalid_stops_a_strict_write_and_says_so` ve
   `validity_screens` (`.run/shots/gpkg-*-11-gecerlilik-*`).
 - ADR 0531'in GeoPackage durumları ve yerel topolojik düzenlemenin izleri değişmeden geçer.

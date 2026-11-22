@@ -28,6 +28,8 @@ pub enum Pane {
     Import,
     Export,
     Cloud,
+    /// Veri kaynağı (docs/adr/9107): the project kept in a GeoPackage or a PostgreSQL schema.
+    Store,
 }
 
 /// A row of the left column: a command, or a pane to show.
@@ -44,7 +46,7 @@ enum Target {
 }
 
 /// The left column, in the web's order.
-const NAV: [Nav; 9] = [
+const NAV: [Nav; 10] = [
     Nav {
         label: "Yeni",
         icon: Icon::DocumentNew,
@@ -64,6 +66,12 @@ const NAV: [Nav; 9] = [
         label: "Farklı kaydet",
         icon: Icon::SaveAs,
         target: Target::Command("file.saveAs"),
+    },
+    // A project kept in a data source with its data (docs/adr/9107), where the program has data layers.
+    Nav {
+        label: "Veri kaynağı",
+        icon: Icon::Table,
+        target: Target::Pane(Pane::Store),
     },
     Nav {
         label: "İçe aktar",
@@ -272,6 +280,8 @@ pub enum Event {
         id: u64,
         result: Box<Result<ProjectPage, ApiFailure>>,
     },
+    /// Veri kaynağına kaydet… (true) or Veri kaynağından aç… (docs/adr/9107): the menu closes, the window opens.
+    Store(bool),
 }
 
 fn event(e: Event) -> Message {
@@ -297,6 +307,10 @@ impl App {
                 return self.open_recent(path);
             }
             Event::Forget(path) => self.recent.remove(&path),
+            Event::Store(save) => {
+                self.app_menu = None;
+                return self.open_project_store(save);
+            }
             Event::OpenProject { tenant, project } => {
                 // The opening window names the project and how it is kept, as from the catalog.
                 let hint = self.app_menu.take().and_then(|s| match s.projects {
@@ -410,8 +424,14 @@ impl App {
     fn nav_enabled(&self, i: usize) -> bool {
         match NAV[i].target {
             Target::Command(id) => self.menu_runs(id),
+            Target::Pane(Pane::Store) => self.stores_projects(),
             Target::Pane(_) => true,
         }
+    }
+
+    /// Whether the program keeps projects in data sources (docs/adr/9107): one with data layers (CBS, Harita).
+    pub(crate) fn stores_projects(&self) -> bool {
+        matches!(self.program, None | Some(kentos_launch::Module::Gis) | Some(kentos_launch::Module::Map))
     }
 
     /// Whether a command runs from the menu: on the desktop, possible now,

@@ -52,6 +52,7 @@ fn built(store: &Store, list: &[&Entity], walls: Option<View>) -> (String, Vec<f
         plot_scale: 100.0,
         screen: false,
         hairlines: false,
+        screen_widths: false,
         clip: None,
         library: &library,
         layer_name: &names,

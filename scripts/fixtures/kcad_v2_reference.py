@@ -310,6 +310,8 @@ def settings(s):
                 "mapSrid": (uint, False),
                 # Schema 102 (docs/adr/0622 §5): Otomatik seçim, written only when the project chose.
                 "autoSelect": (boolean, False),
+                # GIS data 3 (docs/adr/9104 §2): the data layers' edit grouping, written only when the project chose.
+                "editGrouping": (text, False),
                 "customCrs": (crs_definition, False),
                 "secondCustomCrs": (crs_definition, False),
                 "datumTransforms": (datum_transforms, False),
@@ -1491,6 +1493,10 @@ def layer_entries(n):
                 # Schema 106 (docs/adr/0633 §3): the layer as a dataset and what it was derived from, as their JSON.
                 "dataset": (opaque, False),
                 "derivation": (opaque, False),
+                # GIS data 2 (docs/adr/9101 §3): a data layer's table, as its JSON.
+                "data": (opaque, False),
+                # GIS data 4 (docs/adr/9105 §4): Nesne sayısını göster; only `true` is written.
+                "classCounts": (lambda b: boolean(b) if b is True else None, False),
                 # Schema 102 (docs/adr/0622 §5): what the layer holds.
                 "geometry": (enum(("point", "line", "area", "annotation")), False),
                 "type": (enum(("group", "layer")), True),
@@ -3002,9 +3008,25 @@ def document(d):
     def extended(nodes):
         return any("extension" in n.get("derivation", {}) or "environment" in n.get("derivation", {})
                    or extended(n.get("children", [])) for n in nodes)
-    if extended(d["layers"]):
+    # GIS data 2 (docs/adr/9101 §3): a data layer.
+    def data_layers(nodes):
+        return any("data" in n or data_layers(n.get("children", [])) for n in nodes)
+    # GIS data 4 (docs/adr/9105 §4): a layer's class counts shown.
+    def counted(nodes):
+        return any(n.get("classCounts") is not None or counted(n.get("children", [])) for n in nodes)
+    # GIS data 5 (docs/adr/9114 §1): a data layer whose rows are texts.
+    def text_tables(nodes):
+        return any("text" in n.get("data", {}) or text_tables(n.get("children", [])) for n in nodes)
+    # GIS data 3 (docs/adr/9104 §2): the data layers' edit grouping.
+    gis = (5 if text_tables(d["layers"]) else 4 if counted(d["layers"]) else 3 if "editGrouping" in d.get("settings", {})
+           else 2 if data_layers(d["layers"]) else 1 if extended(d["layers"]) else 0)
+    # Architecture data 18 (docs/adr/8101 §2): the underlay models (`settings.arch.underlays`), the one version-gated
+    # architecture data the shared cases' v2 setups hold; a reader refuses them in an older version.
+    arch = 18 if (d.get("settings", {}).get("arch") or {}).get("underlays") else 0
+    modules = {k: uint(v) for k, v in (("arch", arch), ("gis", gis)) if v}
+    if modules:
         schema = max(schema, 254)
-        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(1)})
+        return (head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap(modules)
                 + text("version") + uint(schema) + text("document") + cmap(body))
     return root(cmap(body), version=uint(schema))
 
@@ -5744,6 +5766,76 @@ def build():
     ext_other = copy.deepcopy(load("extension-derivation.json"))
     derived_layer(ext_other)["derivation"]["extension"]["extension"] = "tr.ornek.baska"
     out["broken/derivation-extension-other-tool.kcad"] = container(document(ext_other))
+    # Data layers (docs/adr/9101 §3): GIS data 2; without `modules` an unknown field; a group's table, a password in its
+    # address, a `false` written, a data layer that is also a service's, an unknown geometry type, a box turned inside out
+    # are bad values.
+    out["data-layers.kcad"] = container(document(load("data-layers.json")))
+    data_payload = document(load("data-layers.json"))
+    with_gis2 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(2)})
+    assert data_payload.startswith(with_gis2), "a data layer raises the GIS data's version to 2"
+    out["broken/data-layer-without-gis.kcad"] = container(
+        head(5, 3) + text("format") + text("kentos.document") + data_payload[len(with_gis2):])
+
+    def data_broken(change):
+        d = copy.deepcopy(load("data-layers.json"))
+        change(d)
+        return container(document(d))
+
+    def parcels(d):
+        return next(n for n in d["layers"] if n["id"] == "parseller")
+
+    out["broken/data-layer-on-group.kcad"] = data_broken(lambda d: d["layers"][2].update(data=dict(parcels(d)["data"])))
+    out["broken/data-layer-password.kcad"] = data_broken(
+        lambda d: parcels(d)["data"].update(address="postgresql://kbs:gizli@db.ornek.bel.tr:5432/kent"))
+    out["broken/data-layer-false-written.kcad"] = data_broken(lambda d: parcels(d)["data"].update(readOnly=False))
+    out["broken/data-layer-and-service.kcad"] = data_broken(lambda d: parcels(d).update(
+        service={"kind": "xyz", "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"}))
+    out["broken/data-layer-type.kcad"] = data_broken(lambda d: parcels(d)["data"]["geometry"].update(typeName="Polygon"))
+    out["broken/data-layer-extent.kcad"] = data_broken(
+        lambda d: parcels(d)["data"].update(extent=[617000.0, 4400000.0, 587000.0, 4430000.0]))
+    # The data layers' edit grouping (docs/adr/9104 §2): GIS data 3; under GIS data 2 an unknown field; a grouping of no
+    # name a bad value.
+    grouping = copy.deepcopy(load("data-layers.json"))
+    grouping["settings"]["editGrouping"] = "source"
+    out["edit-grouping.kcad"] = container(document(grouping))
+    grouping_payload = document(grouping)
+    with_gis3 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(3)})
+    assert grouping_payload.startswith(with_gis3), "an edit grouping raises the GIS data's version to 3"
+    with_gis2 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(2)})
+    out["broken/edit-grouping-in-gis-2.kcad"] = container(with_gis2 + grouping_payload[len(with_gis3):])
+    grouping["settings"]["editGrouping"] = "katman"
+    out["broken/edit-grouping-unknown.kcad"] = container(document(grouping))
+    # Nesne sayısını göster (docs/adr/9105 §4): GIS data 4; under GIS data 3 an unknown field; false written, or on a
+    # group, a bad value.
+    counts = copy.deepcopy(load("data-layers.json"))
+    parcels(counts)["classCounts"] = True
+    out["class-counts.kcad"] = container(document(counts))
+    counts_payload = document(counts)
+    with_gis4 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(4)})
+    assert counts_payload.startswith(with_gis4), "a layer's class counts raise the GIS data's version to 4"
+    out["broken/class-counts-in-gis-3.kcad"] = container(with_gis3 + counts_payload[len(with_gis4):])
+    false_written = document(counts).replace(text("classCounts") + b"\xf5", text("classCounts") + b"\xf4")
+    assert false_written != counts_payload, "the flag is in the payload once"
+    out["broken/class-counts-false.kcad"] = container(false_written)
+    on_group = copy.deepcopy(load("data-layers.json"))
+    on_group["layers"][2]["classCounts"] = True
+    out["broken/class-counts-on-group.kcad"] = container(document(on_group))
+    # Text tables (docs/adr/9114 §1): GIS data 5; under GIS data 4 an unknown field; a mapping on a table of areas, or
+    # one column for two parts, a bad value.
+    out["text-tables.kcad"] = container(document(load("text-tables.json")))
+    texts_payload = document(load("text-tables.json"))
+    with_gis5 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(5)})
+    assert texts_payload.startswith(with_gis5), "a table of texts raises the GIS data's version to 5"
+    out["broken/text-table-in-gis-4.kcad"] = container(with_gis4 + texts_payload[len(with_gis5):])
+
+    def texts_broken(change):
+        d = copy.deepcopy(load("text-tables.json"))
+        change(next(n for n in d["layers"] if n["id"] == "yazilar")["data"])
+        return container(document(d))
+
+    out["broken/text-table-of-areas.kcad"] = texts_broken(
+        lambda data: data["geometry"].update(typeName="MULTIPOLYGON"))
+    out["broken/text-table-column-twice.kcad"] = texts_broken(lambda data: data["text"].update(angle="metin"))
     # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
     # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
     # two columns of one name, an unknown way, an empty list of columns.

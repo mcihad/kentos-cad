@@ -9576,7 +9576,7 @@
           "No"
          ],
          [
-          "Toplam"
+          "Kapsam dışı · Seçilen kat veya süzgeçte bölüm yok."
          ]
         ],
         "source": {
@@ -9595,7 +9595,13 @@
            "c"
           ]
          },
-         "total": true
+         "total": true,
+         "members": [
+          []
+         ],
+         "units": [
+          []
+         ]
         },
         "aligns": [
          "left"
@@ -9607,7 +9613,9 @@
           "col": 0,
           "rows": 1,
           "cols": 1,
-          "bold": true
+          "align": "left",
+          "bold": true,
+          "color": "#a55019"
          }
         ]
        }
@@ -9645,7 +9653,7 @@
          "row": 1,
          "role": "total",
          "cells": [
-          "Toplam"
+          "Kapsam dışı · Seçilen kat veya süzgeçte bölüm yok."
          ],
          "members": []
         }

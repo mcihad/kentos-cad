@@ -59,7 +59,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2986,
+       "records": 3017,
        "objects": 95,
        "classes": {
         "IfcBeam": 8,
@@ -123,7 +123,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi-kunye.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 3018,
+       "records": 3049,
        "objects": 96,
        "classes": {
         "IfcActor": 1,
@@ -437,7 +437,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/egri-bina.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 723,
+       "records": 728,
        "objects": 34,
        "classes": {
         "IfcBuilding": 1,
@@ -497,7 +497,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/egri-bina-referans.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 863,
+       "records": 868,
        "objects": 34,
        "classes": {
         "IfcBuilding": 1,
@@ -622,7 +622,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2989,
+       "records": 3020,
        "objects": 95,
        "classes": {
         "IfcBeam": 8,
@@ -1193,7 +1193,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2986,
+       "records": 3017,
        "objects": 95,
        "classes": {
         "IfcBeam": 8,
@@ -1356,7 +1356,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2986,
+       "records": 3017,
        "objects": 95,
        "classes": {
         "IfcBeam": 8,
@@ -1540,7 +1540,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2986,
+       "records": 3017,
        "objects": 95,
        "classes": {
         "IfcBeam": 8,
@@ -2055,7 +2055,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2986,
+       "records": 3017,
        "objects": 95,
        "classes": {
         "IfcBeam": 8,

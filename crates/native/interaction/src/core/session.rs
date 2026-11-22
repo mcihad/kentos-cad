@@ -377,8 +377,8 @@ pub const TOOLS: &[&str] = &[
     crate::network::trace::ID,
 ];
 
-/// The tools that run over a command without ending it, as AutoCAD's
-/// `'pan`, `'zoom` and `'dist` (docs/adr/0283): they change the view or
+/// The tools that run over a command without ending it (Kaydır,
+/// Yakınlaştır, Mesafe ölç; docs/adr/0283): they change the view or
 /// only read the drawing. A tool that writes is never one of them.
 pub const TRANSPARENT: &[&str] = &[
     navigate::PAN_ID,
@@ -866,7 +866,7 @@ impl Session {
     }
 
     /// Runs the transparent tool `id` over the running command (or a grip
-    /// being moved) without ending it, as AutoCAD's `'pan` and `'dist`
+    /// being moved) without ending it, as Kaydır and Mesafe ölç do
     /// (docs/adr/0283): the command keeps its points, options and memory,
     /// and its locks, reference and Yapım kipi wait with it. When the tool
     /// ends (Esc, Enter with nothing, Pencere yakınlaştır's box), the
@@ -1938,6 +1938,14 @@ impl Session {
     pub fn cloud_found(&mut self, found: Option<[f64; 3]>, cx: &mut Context<'_>) {
         if let Some(tool) = self.tool.as_mut() {
             tool.cloud_found(found, cx);
+        }
+        self.settle(cx);
+    }
+
+    /// The data layer's row found under Bilgi's click (docs/adr/9101 §6), or none.
+    pub fn data_found(&mut self, found: Option<&kentos_commands::Entity>, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.data_found(found, cx);
         }
         self.settle(cx);
     }

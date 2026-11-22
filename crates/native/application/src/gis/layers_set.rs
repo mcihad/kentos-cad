@@ -1,6 +1,6 @@
-//! `cad.layers.set` v1 (docs/adr/0248 §2, 0311 §1–§2): the layer tree's own
-//! changes, as the Katmanlar panel's eye, lock, freeze, name and Etkin katman
-//! yap make them: an
+//! `cad.layers.set` v1 (docs/adr/0248 §2, 0311 §1–§2, 9105 §3–§4): the layer tree's own
+//! changes, as the Katmanlar panel's eye, lock, freeze, name, Etkin katman
+//! yap, a style class's box and Nesne sayısını göster make them: an
 //! edit of the drawing (dirty, a new revision), never an undo step
 //! (docs/adr/0020, the shared document cases); the active layer is kept in
 //! the file but is no edit. The shared cases are in
@@ -22,7 +22,15 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
     let op = input.operation;
     if matches!(
         op,
-        Op::Rename | Op::Visible | Op::Locked | Op::Plot | Op::Frozen | Op::Active
+        Op::Rename
+            | Op::Visible
+            | Op::Locked
+            | Op::Plot
+            | Op::Frozen
+            | Op::Active
+            | Op::ClassVisible
+            | Op::ClassInvert
+            | Op::ClassCounts
     ) && input.layer.is_none()
     {
         return Err(fail(
@@ -45,7 +53,11 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
             "name",
         ));
     }
-    if matches!(op, Op::Visible | Op::Locked | Op::Plot | Op::Frozen) && input.value.is_none() {
+    if matches!(
+        op,
+        Op::Visible | Op::Locked | Op::Plot | Op::Frozen | Op::ClassVisible | Op::ClassCounts
+    ) && input.value.is_none()
+    {
         return Err(fail(
             codes::NO_VALUE,
             "Açık mı kapalı mı olduğunu value ile verin (true ya da false).".into(),
@@ -70,6 +82,19 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
         .filter(|_| !matches!(op, Op::Isolate | Op::ShowAll | Op::ThawAll | Op::Unisolate))
     {
         let n = known(id, "layer")?;
+        if matches!(op, Op::ClassVisible | Op::ClassInvert | Op::ClassCounts) && n.kind == LayerNodeType::Group {
+            return Err(fail(
+                codes::NOT_A_LAYER,
+                format!(
+                    "“{}” bir katman grubu; sınıflar ve nesne sayısı katmanın stilinindir. Grubun bir katmanını verin.",
+                    n.name
+                ),
+                "layer",
+            ));
+        }
+        if matches!(op, Op::ClassVisible | Op::ClassInvert) {
+            switched(n, input)?;
+        }
         if op == Op::Active {
             if n.kind == LayerNodeType::Group {
                 return Err(fail(
@@ -126,6 +151,41 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
         }
     }
     Ok(())
+}
+
+/// The layer's renderer with the classes of `input` switched (docs/adr/9105 §3), or why it cannot be.
+fn switched(node: &kentos_commands::LayerNode, input: &LayersSet) -> Result<(serde_json::Value, bool), Stop> {
+    use kentos_scene_query::style_classes::{Switch, SwitchRefused, set_enabled};
+    let switch = match (input.operation, input.value) {
+        (LayerSetOperation::ClassInvert, _) => Switch::Invert,
+        (_, Some(true)) => Switch::On,
+        _ => Switch::Off,
+    };
+    let no_classes = || {
+        fail(
+            codes::NO_CLASSES,
+            format!(
+                "“{}” kendi görünüşüyle ya da sınıfsız bir stille çiziliyor; açılıp kapanacak sınıfı yok. Ona kategorili, \
+                 aralıklı ya da kurallı bir stil verin (cad.layers.renderer).",
+                node.name
+            ),
+            "layer",
+        )
+    };
+    let mut renderer = node.style.renderer.clone().ok_or_else(no_classes)?;
+    match set_enabled(&mut renderer, input.classes.as_deref(), switch) {
+        Ok(changed) => Ok((renderer, changed)),
+        Err(SwitchRefused::NoClasses) => Err(no_classes()),
+        Err(SwitchRefused::UnknownClass(i)) => Err(fail(
+            codes::CLASS_NOT_FOUND,
+            format!(
+                "“{}” katmanının stilinde “{}” kimlikli sınıf yok. Sınıfları cad.layers.classes verir.",
+                node.name,
+                input.classes.as_ref().and_then(|c| c.get(i)).map(String::as_str).unwrap_or_default()
+            ),
+            &format!("classes[{i}]"),
+        )),
+    }
 }
 
 /// Checks `input` against the document, writing nothing.
@@ -206,6 +266,16 @@ fn write(doc: &mut Document, input: &LayersSet) -> LayersChanged {
             doc.show_all_layers();
             doc.revision() != before
         }
+        Op::ClassVisible | Op::ClassInvert => {
+            let renderer = doc
+                .layers()
+                .get(id)
+                .and_then(|n| switched(n, input).ok())
+                .filter(|(_, changed)| *changed)
+                .map(|(r, _)| r);
+            renderer.is_some_and(|r| doc.set_layer_class_switches(id, r))
+        }
+        Op::ClassCounts => doc.set_layer_class_counts(id, value),
     };
     LayersChanged {
         changed,

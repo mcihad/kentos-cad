@@ -304,6 +304,18 @@ pub fn secondary<'a, Message: Clone + 'a>(
         .into()
 }
 
+/// A button whose act cannot be taken back (“Sil”): the danger colour.
+pub fn danger<'a, Message: Clone + 'a>(
+    caption: impl iced::widget::text::IntoFragment<'a>,
+    on: Option<Message>,
+) -> Element<'a, Message> {
+    button(label::body(caption))
+        .on_press_maybe(on)
+        .padding(kentos_ui::theme::metrics::action())
+        .style(style::button::danger)
+        .into()
+}
+
 /// A quiet button at the start of the footer (“Başka dosya…”).
 pub fn ghost<'a, Message: Clone + 'a>(
     caption: impl iced::widget::text::IntoFragment<'a>,

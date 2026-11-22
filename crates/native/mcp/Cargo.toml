@@ -15,6 +15,9 @@ path = "src/main.rs"
 
 [dependencies]
 kentos-postgis = { path = "../postgis" }
+# The data drivers of data layers (docs/adr/9100): registered at the start, as the desktop registers them.
+kentos-data-gpkg = { path = "../data-gpkg" }
+kentos-data-postgis = { path = "../data-postgis" }
 kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }
 kentos-domain = { path = "../domain" }
 kentos-headless = { path = "../headless", default-features = false }

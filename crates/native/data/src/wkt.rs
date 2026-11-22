@@ -1,5 +1,5 @@
 //! ISO well-known text (OGC 06-103r4, ISO 19125-1 and the curve types of ISO 13249-3) for [`Geometry`]: what a CSV's
-//! geometry column holds (GDAL's CSV driver, QGIS's delimited text; docs/adr/0522). Written with Z and M as ISO does
+//! geometry column holds (docs/adr/0522). Written with Z and M as ISO does
 //! (`POINT Z (1 2 3)`, `LINESTRING M (…)`, `ZM`), numbers as the shortest text that reads back to them; read as ISO,
 //! EWKT's `SRID=n;` prefix and the old `POINT(1 2 3)` with a third ordinate as Z too. Reading never panics: a text too
 //! deep or not WKT is an error.

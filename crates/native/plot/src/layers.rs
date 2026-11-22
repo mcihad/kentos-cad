@@ -326,6 +326,9 @@ pub fn build_whole(
         plot_scale: look.symbol_scale,
         screen: look.screen,
         hairlines: look.hairlines,
+        // A data layer's lines keep their paper width on the model screen at every scale (docs/adr/9115); paper (a
+        // sheet's map, the PDF) leaves them in the world.
+        screen_widths: look.hold_weights && node.data.is_some(),
         clip: Some(clip),
         library,
         layer_name: &|id: &str| names.get(id).cloned().unwrap_or_else(|| id.to_owned()),

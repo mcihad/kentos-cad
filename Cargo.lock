@@ -2953,6 +2953,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-data"
+version = "0.1.0"
+
+[[package]]
+name = "kentos-data-gpkg"
+version = "0.1.0"
+dependencies = [
+ "kentos-data",
+ "kentos-geopackage",
+ "rusqlite",
+]
+
+[[package]]
+name = "kentos-data-postgis"
+version = "0.1.0"
+dependencies = [
+ "kentos-data",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
 name = "kentos-desktop"
 version = "0.1.0"
 dependencies = [
@@ -2961,6 +2983,9 @@ dependencies = [
  "kentos-agent",
  "kentos-cloud",
  "kentos-commands",
+ "kentos-data",
+ "kentos-data-gpkg",
+ "kentos-data-postgis",
  "kentos-digital-project",
  "kentos-domain",
  "kentos-dwg",
@@ -3183,6 +3208,7 @@ dependencies = [
 name = "kentos-geopackage"
 version = "0.1.0"
 dependencies = [
+ "kentos-data",
  "rusqlite",
  "serde_json",
 ]
@@ -3462,6 +3488,8 @@ version = "0.1.0"
 dependencies = [
  "kentos-cloud",
  "kentos-commands",
+ "kentos-data-gpkg",
+ "kentos-data-postgis",
  "kentos-domain",
  "kentos-extension-host",
  "kentos-extension-tools",
@@ -3499,6 +3527,8 @@ name = "kentos-native-application"
 version = "0.1.0"
 dependencies = [
  "kentos-commands",
+ "kentos-data",
+ "kentos-data-gpkg",
  "kentos-digital-project",
  "kentos-domain",
  "kentos-dwg",
@@ -3682,6 +3712,8 @@ name = "kentos-python"
 version = "0.1.0"
 dependencies = [
  "kentos-commands",
+ "kentos-data-gpkg",
+ "kentos-data-postgis",
  "kentos-domain",
  "kentos-extension-tools",
  "kentos-geometry-core",

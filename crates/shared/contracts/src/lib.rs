@@ -28,7 +28,6 @@
 //!   in v1 and become typed when the style core moves to Rust.
 
 #[path = "gis/address.rs"]
-
 pub mod address;
 #[path = "core/annotation.rs"]
 pub mod annotation;
@@ -138,6 +137,10 @@ pub mod cad_views;
 pub mod dataset;
 #[path = "gis/join_view.rs"]
 pub mod join_view;
+#[path = "gis/data_layer.rs"]
+pub mod data_layer;
+#[path = "gis/data_text.rs"]
+pub mod data_text;
 #[path = "gis/layer_crs.rs"]
 pub mod layer_crs;
 #[path = "map/linear_events.rs"]
@@ -417,6 +420,8 @@ pub use cad_ucs::*;
 pub use cad_views::*;
 pub use dataset::*;
 pub use join_view::*;
+pub use data_layer::*;
+pub use data_text::*;
 pub use layer_crs::*;
 pub use linear_events::*;
 pub use lineage::*;
@@ -532,16 +537,13 @@ pub const CONTRACTS_VERSION: u32 = 1;
 pub mod tool_layers;
 pub use tool_layers::{AnnotationTool, ToolLayer, tool_layer, tool_layers_problem};
 #[path = "core/paper_scale.rs"]
-
 mod paper_scale;
 pub use paper_scale::PaperScaleRatio;
 
 #[path = "core/sheet_info.rs"]
-
 mod sheet_info;
 pub use sheet_info::DrawingInfo;
 
 #[path = "gis/derived_entities.rs"]
-
 mod derived_entities;
 pub use derived_entities::DerivedEntitiesPlan;

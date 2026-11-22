@@ -1718,6 +1718,24 @@ ConvertFailName = Literal["keep", "clear"]
 """The names of :class:`ConvertFail`, for a plain string."""
 
 
+class CreateGeometry(_StrEnum):
+    """What the table's rows are.
+
+    - ``point``
+    - ``line``
+    - ``area``
+    - ``none``: No geometry: a table of records.
+    """
+    POINT = "point"
+    LINE = "line"
+    AREA = "area"
+    NONE = "none"
+
+
+CreateGeometryName = Literal["point", "line", "area", "none"]
+"""The names of :class:`CreateGeometry`, for a plain string."""
+
+
 class CreateOperation(_StrEnum):
     """The drawing tool or Hesap window whose step has its own name; without
     one the step is “Ekle”, as for every object a drawing tool adds.
@@ -1841,6 +1859,20 @@ class CreateOperation(_StrEnum):
 
 CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "terrainCutFill", "pipeProfile", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse", "scenarioRecord"]
 """The names of :class:`CreateOperation`, for a plain string."""
+
+
+class CreateTarget(_StrEnum):
+    """Where the table is made.
+
+    - ``gpkg``: A table of a GeoPackage file (`path`), the file made when it is not there.
+    - ``postgis``: A table of a PostgreSQL database (`address`) in `schema`.
+    """
+    GPKG = "gpkg"
+    POSTGIS = "postgis"
+
+
+CreateTargetName = Literal["gpkg", "postgis"]
+"""The names of :class:`CreateTarget`, for a plain string."""
 
 
 class CrossingHatch(_StrEnum):
@@ -2453,6 +2485,23 @@ DxfFormName = Literal["native", "block"]
 """The names of :class:`DxfForm`, for a plain string."""
 
 
+class EditGrouping(_StrEnum):
+    """How the project's data layers' edit sessions go together (docs/adr/9104 §2): which layers open, save, let go and
+    close together, and which are written in one transaction.
+
+    - ``layer``: Each layer alone: its changes in a transaction of their own.
+    - ``source``: The layers of a source (a GeoPackage, a database) together: opened and closed together, written in one
+    - ``all``: Every editable data layer together: opened and closed together, written in one transaction a source.
+    """
+    LAYER = "layer"
+    SOURCE = "source"
+    ALL = "all"
+
+
+EditGroupingName = Literal["layer", "source", "all"]
+"""The names of :class:`EditGrouping`, for a plain string."""
+
+
 class EditOperation(_StrEnum):
     """The modify tool an edit comes from; it names the undo step.
 
@@ -2770,6 +2819,96 @@ class ExchangeState(_StrEnum):
 
 ExchangeStateName = Literal["kept", "approximated", "converted", "added", "lost"]
 """The names of :class:`ExchangeState`, for a plain string."""
+
+
+class ExportEncoding(_StrEnum):
+    """The text encoding of a Shapefile's `.dbf` and of a CSV file.
+
+    - ``utf8``
+    - ``windows1254``: Windows-1254 (Turkish Windows): for programs that read only the old code pages.
+    """
+    UTF8 = "utf8"
+    WINDOWS1254 = "windows1254"
+
+
+ExportEncodingName = Literal["utf8", "windows1254"]
+"""The names of :class:`ExportEncoding`, for a plain string."""
+
+
+class ExportExisting(_StrEnum):
+    """What is done when the target is there already.
+
+    - ``refuse``: Nothing is written (`target_exists`).
+    - ``overwriteFile``: The file is written anew (a GeoPackage loses its other tables).
+    - ``replaceLayer``: The table is dropped and made again; the file's other tables stay (GeoPackage, PostGIS).
+    - ``append``: The rows are added to the table; a field it does not have is left out with a warning (GeoPackage, PostGIS).
+    """
+    REFUSE = "refuse"
+    OVERWRITE_FILE = "overwriteFile"
+    REPLACE_LAYER = "replaceLayer"
+    APPEND = "append"
+
+
+ExportExistingName = Literal["refuse", "overwriteFile", "replaceLayer", "append"]
+"""The names of :class:`ExportExisting`, for a plain string."""
+
+
+class ExportFormat(_StrEnum):
+    """Where `cad.layers.export` writes.
+
+    - ``gpkg``: A table of a GeoPackage file (`path`), made when the file is not there.
+    - ``postgis``: A table of a PostGIS database (`address`), in `schema`.
+    - ``geojson``: A GeoJSON file: RFC 7946 (longitude, latitude in WGS 84) unless `options.projectCoordinates`.
+    - ``shapefile``: A Shapefile (`path` ends `.shp`; its `.shx`, `.dbf`, `.prj`, `.cpg` beside it).
+    - ``csv``: A CSV file: the fields, the geometry as WKT or X and Y columns.
+    - ``kml``: A KML file (always longitude, latitude in WGS 84).
+    """
+    GPKG = "gpkg"
+    POSTGIS = "postgis"
+    GEOJSON = "geojson"
+    SHAPEFILE = "shapefile"
+    CSV = "csv"
+    KML = "kml"
+
+
+ExportFormatName = Literal["gpkg", "postgis", "geojson", "shapefile", "csv", "kml"]
+"""The names of :class:`ExportFormat`, for a plain string."""
+
+
+class ExportGeometry(_StrEnum):
+    """The geometry the written rows take.
+
+    - ``point``
+    - ``line``
+    - ``area``
+    - ``auto``: The layer's own kind (a mixed drawing layer: each object's).
+    - ``none``: No geometry: a table of the fields alone.
+    """
+    POINT = "point"
+    LINE = "line"
+    AREA = "area"
+    AUTO = "auto"
+    NONE = "none"
+
+
+ExportGeometryName = Literal["point", "line", "area", "auto", "none"]
+"""The names of :class:`ExportGeometry`, for a plain string."""
+
+
+class ExportSymbols(_StrEnum):
+    """What a KML file's placemarks are drawn with (docs/adr/9112 §4).
+
+    - ``color``: The layer's colour: one style for every placemark.
+    - ``style``: The layer's style: each class (category, graduated class, rule) a style of its own with its fill, outline and
+    - ``none``: No style: the reading program draws them its own way.
+    """
+    COLOR = "color"
+    STYLE = "style"
+    NONE = "none"
+
+
+ExportSymbolsName = Literal["color", "style", "none"]
+"""The names of :class:`ExportSymbols`, for a plain string."""
 
 
 class ExtractAreaUnit(_StrEnum):
@@ -3799,6 +3938,22 @@ LatePolicyName = Literal["accept", "reject"]
 """The names of :class:`LatePolicy`, for a plain string."""
 
 
+class LayerDataOperation(_StrEnum):
+    """What `cad.layers.data` does.
+
+    - ``add``: Veri katmanı ekle.
+    - ``update``: Veri katmanını değiştir: its name, its table (another place of the same table, a moved file) or its fields.
+    - ``remove``: Veri katmanını kaldır: the layer goes, the table stays as it is.
+    """
+    ADD = "add"
+    UPDATE = "update"
+    REMOVE = "remove"
+
+
+LayerDataOperationName = Literal["add", "update", "remove"]
+"""The names of :class:`LayerDataOperation`, for a plain string."""
+
+
 class LayerEditOperation(_StrEnum):
     """What `cad.layers.edit` does; it names the undo step.
 
@@ -3929,6 +4084,9 @@ class LayerSetOperation(_StrEnum):
     - ``frozen``: Dondur / Çöz (docs/adr/0311 §1): whether the node is frozen.
     - ``thawAll``: Bütün katmanları çöz: every node thawed.
     - ``unisolate``: Yalıtımı kaldır: the nodes the last `isolate` hid, still hidden, shown again.
+    - ``classVisible``: A layer's style classes switched on or off (docs/adr/9105 §3): the tree's boxes under the layer.
+    - ``classInvert``: A layer's style classes each turned the other way (Tersine çevir).
+    - ``classCounts``: Nesne sayısını göster (docs/adr/9105 §4): whether the tree says how many objects the layer and its classes hold.
     """
     RENAME = "rename"
     VISIBLE = "visible"
@@ -3940,9 +4098,12 @@ class LayerSetOperation(_StrEnum):
     FROZEN = "frozen"
     THAW_ALL = "thawAll"
     UNISOLATE = "unisolate"
+    CLASS_VISIBLE = "classVisible"
+    CLASS_INVERT = "classInvert"
+    CLASS_COUNTS = "classCounts"
 
 
-LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll", "plot", "frozen", "thawAll", "unisolate"]
+LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll", "plot", "frozen", "thawAll", "unisolate", "classVisible", "classInvert", "classCounts"]
 """The names of :class:`LayerSetOperation`, for a plain string."""
 
 
@@ -7173,6 +7334,20 @@ RoofPartKindName = Literal["chimney", "vent", "window", "downpipe"]
 """The names of :class:`RoofPartKind`, for a plain string."""
 
 
+class RowsChecked(_StrEnum):
+    """Where a question's filter was checked.
+
+    - ``source``: By the source: the box, the keys, the search and the filter, if any, which the source answered exactly
+    - ``here``: Here: every row the source kept (by the filter's part it could answer) was read and the filter asked of it.
+    """
+    SOURCE = "source"
+    HERE = "here"
+
+
+RowsCheckedName = Literal["source", "here"]
+"""The names of :class:`RowsChecked`, for a plain string."""
+
+
 class ScaleBasis(_StrEnum):
     """What a pattern's Ölçek is of (docs/adr/0331 §3).
 
@@ -7530,6 +7705,32 @@ class ServiceKind(_StrEnum):
 
 ServiceKindName = Literal["wms", "wmts", "xyz", "ogcTiles", "arcgis", "google", "vector"]
 """The names of :class:`ServiceKind`, for a plain string."""
+
+
+class SessionAction(_StrEnum):
+    """What `cad.layers.session` does.
+
+    - ``start``: Opens the layers for editing; not an edit.
+    - ``save``: Writes each layer's changes to its table, one transaction a layer; the layer stays open.
+    - ``rollback``: Lets go of each layer's changes; the layer stays open.
+    - ``cancel``: Lets go of each layer's changes and closes it.
+    - ``stop``: Closes each layer; refused for one with changes not saved.
+    - ``take``: Takes rows of the layer into the drawing by key, as objects the object commands change.
+    - ``delete``: Deletes rows of the layer by key, as one undo step.
+    - ``status``: Says each layer's session; writes nothing.
+    """
+    START = "start"
+    SAVE = "save"
+    ROLLBACK = "rollback"
+    CANCEL = "cancel"
+    STOP = "stop"
+    TAKE = "take"
+    DELETE = "delete"
+    STATUS = "status"
+
+
+SessionActionName = Literal["start", "save", "rollback", "cancel", "stop", "take", "delete", "status"]
+"""The names of :class:`SessionAction`, for a plain string."""
 
 
 class ShareRule(_StrEnum):
@@ -31049,6 +31250,104 @@ class CutFillSections(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DataGeometry(_Model):
+    """The geometry column of a data layer's table as last read.
+    Attributes:
+        type_name: OGC's name of its type, upper case (`MULTIPOLYGON`, `POINT`, `GEOMETRY` …).
+        m: Its positions have M; only `true` is written.
+        srid: Its system's EPSG code; absent: undefined. Unit: epsg.
+        z: Its positions have Z; only `true` is written.
+    """
+    column: str
+    type_name: str
+    m: bool | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    z: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["column"] = self.column
+        out["typeName"] = self.type_name
+        if self.m is not UNSET:
+            out["m"] = self.m
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.z is not UNSET:
+            out["z"] = self.z
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DataGeometry:
+        return cls(
+            column=data["column"],
+            type_name=data["typeName"],
+            m=data.get("m", UNSET),
+            srid=data.get("srid", UNSET),
+            z=data.get("z", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DataLayer(_Model):
+    """Where a data layer's rows are.
+    Attributes:
+        driver: The driver's id: `gpkg` or `postgis`.
+        address: A GeoPackage's absolute path; a database's `postgresql://user@host:port/database` (no password).
+        table: The table: its name in a file, `schema.table` in a database.
+        key: The integer key column.
+        extent: The table's box as its catalogue last said it (minimum east, north, maximum east, north, in the table's system):
+            what Katmana yakınlaş and Tümünü göster frame without asking the source. Unit: length.
+        geometry: The geometry column; absent: a table of records without geometry.
+        read_only: The layer is not edited even where the source allows it (the user's choice); only `true` is written.
+        relative: A GeoPackage's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving
+            when the file lies on the same disk; read when `address` is not there.
+        text: Its rows are texts (docs/adr/9114 §1): which columns hold their words, height, angle, alignment and width
+            factor. Drawn as the drawing's texts are; absent: its rows are drawn by its style.
+    """
+    driver: str
+    address: str
+    table: str
+    key: str
+    extent: list[float] | None | Unset = UNSET
+    geometry: DataGeometry | None | Unset = UNSET
+    read_only: bool | Unset = UNSET
+    relative: str | None | Unset = UNSET
+    text: DataText | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["driver"] = self.driver
+        out["address"] = self.address
+        out["table"] = self.table
+        out["key"] = self.key
+        if self.extent is not UNSET:
+            out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
+        if self.geometry is not UNSET:
+            out["geometry"] = None if self.geometry is None else self.geometry.to_json()
+        if self.read_only is not UNSET:
+            out["readOnly"] = self.read_only
+        if self.relative is not UNSET:
+            out["relative"] = self.relative
+        if self.text is not UNSET:
+            out["text"] = None if self.text is None else self.text.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DataLayer:
+        return cls(
+            driver=data["driver"],
+            address=data["address"],
+            table=data["table"],
+            key=data["key"],
+            extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
+            geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else DataGeometry.from_json(data["geometry"]),
+            read_only=data.get("readOnly", UNSET),
+            relative=data.get("relative", UNSET),
+            text=UNSET if "text" not in data else None if data["text"] is None else DataText.from_json(data["text"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DataProfile(_Model):
     """A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.
     Attributes:
@@ -31107,6 +31406,47 @@ class DataProfile(_Model):
             migrations=[ProfileMigration.from_json(e0) for e0 in data["migrations"]] if "migrations" in data else UNSET,
             relations=[ProfileRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             release=data.get("release", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DataText(_Model):
+    """Which columns of a data layer's rows make its texts.
+    Attributes:
+        text: The column of the words.
+        align: The column of the alignment: Yazı's names (“sol alt”, “orta”, “sağ üst” …) or the contract's (`bottomLeft`);
+            absent, empty or another word: the left of the baseline.
+        angle: The column of the angle, degrees counter-clockwise from east; absent or empty: 0.
+        height: The column of the height, metres; absent, or empty or not over 0 in a row: the project's text height.
+        width: The column of the width factor; absent, empty or out of (0, 100]: 1.
+    """
+    text: str
+    align: str | None | Unset = UNSET
+    angle: str | None | Unset = UNSET
+    height: str | None | Unset = UNSET
+    width: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["text"] = self.text
+        if self.align is not UNSET:
+            out["align"] = self.align
+        if self.angle is not UNSET:
+            out["angle"] = self.angle
+        if self.height is not UNSET:
+            out["height"] = self.height
+        if self.width is not UNSET:
+            out["width"] = self.width
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DataText:
+        return cls(
+            text=data["text"],
+            align=data.get("align", UNSET),
+            angle=data.get("angle", UNSET),
+            height=data.get("height", UNSET),
+            width=data.get("width", UNSET),
         )
 
 
@@ -40839,6 +41179,36 @@ class ExportFgb(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportField(_Model):
+    """A field written: the layer's field by name, the name it is written under, its listed values' labels.
+    Attributes:
+        name: The layer's field.
+        labels: Its listed values written as their labels (Görünen değer); a value not listed stays as it is.
+        to: The name written; none: its own.
+    """
+    name: str
+    labels: bool | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportField:
+        return cls(
+            name=data["name"],
+            labels=data.get("labels", UNSET),
+            to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportGis(_Model):
     """Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new derived dataset:
     a GeoPackage, a zip of Shapefiles, GeoJSON or new tables of a PostGIS database (`format`, docs/adr/0634 §3).
@@ -41224,6 +41594,63 @@ class ExportMaplibre(_Model):
             overwrite=data["overwrite"] if "overwrite" in data else False,
             source_kind=UNSET if "sourceKind" not in data else None if data["sourceKind"] is None else _enum_in(MaplibreSourceKind, data["sourceKind"]),
             source_url=data.get("sourceUrl", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportOptions(_Model):
+    """The format's own choices; each one a format does not have is refused.
+    Attributes:
+        description: GeoPackage, PostGIS: the table's description.
+        geometry_column: GeoPackage, PostGIS: the geometry column's name; none: `geom`.
+        key: GeoPackage, PostGIS: the key column's name; none: `fid`.
+        no_spatial_index: GeoPackage, PostGIS: no spatial index (one is made otherwise).
+        project_coordinates: GeoJSON: the coordinates in the system written (`srid`, or the layer's) with the old `crs` member, not moved
+            into WGS 84.
+        separator: CSV: the separator, one character; none: `,`.
+        symbols: KML: what the placemarks are drawn with; none: the layer's colour.
+        xy: CSV: the geometry as `x` and `y` columns (points only) instead of a `wkt` column.
+    """
+    description: str | None | Unset = UNSET
+    geometry_column: str | None | Unset = UNSET
+    key: str | None | Unset = UNSET
+    no_spatial_index: bool | None | Unset = UNSET
+    project_coordinates: bool | None | Unset = UNSET
+    separator: str | None | Unset = UNSET
+    symbols: ExportSymbols | ExportSymbolsName | None | Unset = UNSET
+    xy: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.geometry_column is not UNSET:
+            out["geometryColumn"] = self.geometry_column
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.no_spatial_index is not UNSET:
+            out["noSpatialIndex"] = self.no_spatial_index
+        if self.project_coordinates is not UNSET:
+            out["projectCoordinates"] = self.project_coordinates
+        if self.separator is not UNSET:
+            out["separator"] = self.separator
+        if self.symbols is not UNSET:
+            out["symbols"] = None if self.symbols is None else _enum_out(self.symbols)
+        if self.xy is not UNSET:
+            out["xy"] = self.xy
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportOptions:
+        return cls(
+            description=data.get("description", UNSET),
+            geometry_column=data.get("geometryColumn", UNSET),
+            key=data.get("key", UNSET),
+            no_spatial_index=data.get("noSpatialIndex", UNSET),
+            project_coordinates=data.get("projectCoordinates", UNSET),
+            separator=data.get("separator", UNSET),
+            symbols=UNSET if "symbols" not in data else None if data["symbols"] is None else _enum_in(ExportSymbols, data["symbols"]),
+            xy=data.get("xy", UNSET),
         )
 
 
@@ -55797,6 +56224,85 @@ class LayerAction(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerClass(_Model):
+    """A class of a layer's renderer.
+    Attributes:
+        id: `c3` (a category), `other` (Diğer değerler), `g2` (a graduated class), `r0.1` (a rule by its path).
+        enabled: Drawn; switched off, its objects are drawn by nothing.
+        depth: A rule's depth under the top; 0 for every other class. Unit: count.
+        count: `count`: the objects it takes. Unit: count.
+        count_error: `count`: why it could not be counted (its expression cannot be read).
+        expression: Its condition in İfadeyle seç's language; none: every object of the layer.
+    """
+    id: str
+    label: str
+    enabled: bool
+    depth: int
+    count: int | None | Unset = UNSET
+    count_error: str | None | Unset = UNSET
+    expression: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["label"] = self.label
+        out["enabled"] = self.enabled
+        out["depth"] = self.depth
+        if self.count is not UNSET:
+            out["count"] = self.count
+        if self.count_error is not UNSET:
+            out["countError"] = self.count_error
+        if self.expression is not UNSET:
+            out["expression"] = self.expression
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerClass:
+        return cls(
+            id=data["id"],
+            label=data["label"],
+            enabled=data["enabled"],
+            depth=data["depth"],
+            count=data.get("count", UNSET),
+            count_error=data.get("countError", UNSET),
+            expression=data.get("expression", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerClassesAnswer(_Model):
+    """Output of `cad.layers.classes` v1.
+    Attributes:
+        classes: In the tree's order: a rule's children after it.
+        kind: The renderer's kind: `categorized`, `graduated` or `rules`; none: the layer has no classes.
+        total: `count`: the objects of the layer, every class's and those none takes. Unit: count.
+    """
+    layer: str
+    classes: list[LayerClass]
+    kind: str | None | Unset = UNSET
+    total: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerClassesAnswer:
+        return cls(
+            layer=data["layer"],
+            classes=[LayerClass.from_json(e0) for e0 in data["classes"]],
+            kind=data.get("kind", UNSET),
+            total=data.get("total", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerCompose(_Model):
     """How a layer is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
     §4); absent, as it always was: opaque, normal, no mask.
@@ -56257,11 +56763,16 @@ class LayerNode(_Model):
             service.
         card: What the Bilgi tool shows of its objects (docs/adr/0225 §5); absent:
             the default card. Only on a layer holding objects.
+        class_counts: Nesne sayısını göster (docs/adr/9105 §4): the layer tree says how many objects the layer and each of its style's
+            classes hold. Only a layer has it, never a group; only `true` is written.
         compose: How it is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
             §4): opacity, blending mode, the mask it cuts into other layers;
             absent, opaque and normal. Only a layer has it, never a group.
         contingents: Değer bileşimleri (docs/adr/0423): the groups of fields whose values go together. Only a
             layer holding objects has them.
+        data: A data layer (docs/adr/9101 §2): drawn from a table of a GeoPackage or a database as it is now, its rows asked
+            of the source, never copied into the drawing; it holds no objects. Only a layer has it, never a group, and
+            never with a service or a feed.
         dataset: The layer as a dataset (docs/adr/0633 §1): its title, responsible party, license, quality. Only a layer
             has it, never a group.
         derivation: What a processing tool made the layer from (docs/adr/0633 §2). Only a layer has it, never a group.
@@ -56273,7 +56784,7 @@ class LayerNode(_Model):
         filter: The layer's filter (docs/adr/0211 §2): only the objects that pass it
             are shown, picked and given to its tools. Only a layer has it, never a
             group or a layer drawn from a service.
-        frozen: Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,
+        frozen: Dondur (DXF's 70 bit 1; docs/adr/0311 §1): absent,
             thawed; `true`, frozen: neither drawn, picked, snapped to nor counted
             in the drawing's extent, and Hepsini göster leaves it frozen; the
             active layer is never frozen. A group's covers what it holds. Only
@@ -56283,7 +56794,7 @@ class LayerNode(_Model):
         indexes: Dizinler (docs/adr/0758): what the records are looked up by; a unique one is the layer's key. Only a layer
             holding objects has them.
         plot: Yazdır: absent, it is printed; `false`, it is drawn on screen but not
-            on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
+            on a sheet, its PDF or a print (DXF's 290;
             docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
         replaces: A scenario's layer: the base layer it stands for (docs/adr/0210 §9).
         rules: Kayıt kuralları (docs/adr/0438 §1): the constraints every write of the layer's records keeps.
@@ -56311,8 +56822,10 @@ class LayerNode(_Model):
     children: list[LayerNode]
     actions: list[LayerAction] | Unset = UNSET
     card: InfoCard | None | Unset = UNSET
+    class_counts: bool | None | Unset = UNSET
     compose: LayerCompose | None | Unset = UNSET
     contingents: list[FieldGroup] | Unset = UNSET
+    data: DataLayer | None | Unset = UNSET
     dataset: DatasetInfo | None | Unset = UNSET
     derivation: LayerDerivation | None | Unset = UNSET
     feed: FeatureFeed | None | Unset = UNSET
@@ -56346,10 +56859,14 @@ class LayerNode(_Model):
             out["actions"] = [e0.to_json() for e0 in self.actions]
         if self.card is not UNSET:
             out["card"] = None if self.card is None else self.card.to_json()
+        if self.class_counts is not UNSET:
+            out["classCounts"] = self.class_counts
         if self.compose is not UNSET:
             out["compose"] = None if self.compose is None else self.compose.to_json()
         if self.contingents is not UNSET:
             out["contingents"] = [e0.to_json() for e0 in self.contingents]
+        if self.data is not UNSET:
+            out["data"] = None if self.data is None else self.data.to_json()
         if self.dataset is not UNSET:
             out["dataset"] = None if self.dataset is None else self.dataset.to_json()
         if self.derivation is not UNSET:
@@ -56401,8 +56918,10 @@ class LayerNode(_Model):
             children=[LayerNode.from_json(e0) for e0 in data["children"]],
             actions=[LayerAction.from_json(e0) for e0 in data["actions"]] if "actions" in data else UNSET,
             card=UNSET if "card" not in data else None if data["card"] is None else InfoCard.from_json(data["card"]),
+            class_counts=data.get("classCounts", UNSET),
             compose=UNSET if "compose" not in data else None if data["compose"] is None else LayerCompose.from_json(data["compose"]),
             contingents=[FieldGroup.from_json(e0) for e0 in data["contingents"]] if "contingents" in data else UNSET,
+            data=UNSET if "data" not in data else None if data["data"] is None else DataLayer.from_json(data["data"]),
             dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else DatasetInfo.from_json(data["dataset"]),
             derivation=UNSET if "derivation" not in data else None if data["derivation"] is None else LayerDerivation.from_json(data["derivation"]),
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
@@ -56421,6 +56940,76 @@ class LayerNode(_Model):
             subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
             table_styles=[TableStyle.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerRow(_Model):
+    """A row of a data layer.
+    Attributes:
+        key: Its key in the source. Unit: id.
+        attrs: The fields asked for, as the drawing's attributes read them (an empty value left out).
+        wkt: Its geometry in the project's system, ISO WKT (with `geometry`; none for a row without one).
+    """
+    key: int
+    attrs: dict[str, str]
+    wkt: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["attrs"] = dict(self.attrs)
+        if self.wkt is not UNSET:
+            out["wkt"] = self.wkt
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerRow:
+        return cls(
+            key=data["key"],
+            attrs=dict(data["attrs"]),
+            wkt=data.get("wkt", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerRowsAnswer(_Model):
+    """Output of `cad.layers.rows` v1.
+    Attributes:
+        fields: The fields of the rows, in the table's order.
+        rows: The page's rows, in the order.
+        offset: The page's first row's place among the ordered rows. Unit: count.
+        keys: Every kept row's key in the order (with `allKeys`). Unit: id.
+        total: How many rows the question keeps (with `count`). Unit: count.
+    """
+    fields: list[str]
+    rows: list[LayerRow]
+    offset: int
+    checked: RowsChecked | RowsCheckedName
+    keys: list[int] | None | Unset = UNSET
+    total: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fields"] = list(self.fields)
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["offset"] = self.offset
+        out["checked"] = _enum_out(self.checked)
+        if self.keys is not UNSET:
+            out["keys"] = None if self.keys is None else list(self.keys)
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerRowsAnswer:
+        return cls(
+            fields=list(data["fields"]),
+            rows=[LayerRow.from_json(e0) for e0 in data["rows"]],
+            offset=data["offset"],
+            checked=_enum_in(RowsChecked, data["checked"]),
+            keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
+            total=data.get("total", UNSET),
         )
 
 
@@ -56540,10 +57129,10 @@ class LayerSourceCrs(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class LayerState(_Model):
-    """A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's
-    layer states): the tree's nodes as they were when it was saved, their
-    visibility and, when it was saved with them, their locks and the layers'
-    styles. The project keeps them (`ProjectSettings::layer_states`).
+    """A named layer state (docs/adr/0177 §4): the tree's nodes as they were
+    when it was saved, their visibility and, when it was saved with them,
+    their locks and the layers' styles. The project keeps them
+    (`ProjectSettings::layer_states`).
     Attributes:
         id: One of its kind among the project's states.
         name: Its name as the menu lists it: not empty, one of its kind (as written,
@@ -56920,6 +57509,36 @@ class LayersChanged(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayersClasses(_Model):
+    """Input of `cad.layers.classes` v1: the classes of `layer`'s renderer (kategorili, aralıklı, kurallı); a layer drawn
+    by its own look, tek sembol or a thematic renderer has none.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `layer_not_found`,
+    `not_a_layer` (a group), `service_layer` (a layer drawn from a map service), `source_unreachable` (`count` of a
+    data layer whose table could not be read; the message says why). A job stopped answers `cancelled`.
+    Attributes:
+        layer: The layer (its id).
+        count: Count the objects each class takes (Nesne sayısını göster); a class switched off still says what it takes.
+    """
+    layer: str
+    count: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.count is not UNSET:
+            out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersClasses:
+        return cls(
+            layer=data["layer"],
+            count=data.get("count", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersCompose(_Model):
     """Input of `cad.layers.compose` v1: a layer's opacity, blending mode and
     mask written as one undo step “Katman çizimi”; the layer's composition
@@ -57063,6 +57682,145 @@ class LayersContingents(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayersCreate(_Model):
+    """Input of `cad.layers.create` v1.
+
+    The table: `table` (none: the layer's `name` made a table name), in `path` (`gpkg`) or `address` and `schema`
+    (`postgis`); its rows `geometry`, multi-part with `multi`, with Z with `z`, in `srid` (none: the project's system);
+    its columns `fields` (their names and kinds; a text's length); its key column `key` (none: `fid`) and geometry
+    column `geometryColumn` (none: `geom`). The layer: `name`, placed by `parent` and `index` as `cad.layers.data`
+    places one.
+
+    Refusals (`CommandError.code`), checked in this order: `empty_name` (`name` empty or only white space), `no_target`
+    (`gpkg` without `path`, `postgis` without `address`), `invalid_name` (a table or column name the source cannot take:
+    letters, digits and `_`, not starting with a digit, at most 63 characters), `invalid_fields` (`fields` as layers
+    take them: a repeated name, a kind's choices), `unknown_srid` (a system this project cannot write), `target_exists`
+    (the table is there), `source_unreachable` (the source could not be read or written; the message says why).
+    Attributes:
+        name: The layer's name in Katmanlar.
+        address: `postgis`: the database, `postgresql://user@host:port/db` (its password is never written).
+        fields: The columns, in order: each one's name, kind and (a text's) length; none: no column but the key.
+        geometry_column: The geometry column's name; none: `geom`.
+        index: Its place among its siblings; none: the first. Unit: count.
+        key: The key column's name; none: `fid`.
+        multi: Every geometry a multi-part one (`MULTIPOINT` …).
+        parent: The group the layer goes in; none: the top of the tree.
+        path: `gpkg`: the GeoPackage file.
+        schema: `postgis`: the schema; none: `public`.
+        srid: The table's system, an EPSG code; none: the project's. Unit: id.
+        table: The table's name; none: the layer's name made a table name.
+        z: With Z.
+    """
+    name: str
+    target: CreateTarget | CreateTargetName
+    geometry: CreateGeometry | CreateGeometryName
+    address: str | None | Unset = UNSET
+    fields: list[LayerField] | None | Unset = UNSET
+    geometry_column: str | None | Unset = UNSET
+    index: int | None | Unset = UNSET
+    key: str | None | Unset = UNSET
+    multi: bool | None | Unset = UNSET
+    parent: str | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    schema: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+    z: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["target"] = _enum_out(self.target)
+        out["geometry"] = _enum_out(self.geometry)
+        if self.address is not UNSET:
+            out["address"] = self.address
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
+        if self.geometry_column is not UNSET:
+            out["geometryColumn"] = self.geometry_column
+        if self.index is not UNSET:
+            out["index"] = self.index
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.multi is not UNSET:
+            out["multi"] = self.multi
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.table is not UNSET:
+            out["table"] = self.table
+        if self.z is not UNSET:
+            out["z"] = self.z
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersCreate:
+        return cls(
+            name=data["name"],
+            target=_enum_in(CreateTarget, data["target"]),
+            geometry=_enum_in(CreateGeometry, data["geometry"]),
+            address=data.get("address", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else [LayerField.from_json(e0) for e0 in data["fields"]],
+            geometry_column=data.get("geometryColumn", UNSET),
+            index=data.get("index", UNSET),
+            key=data.get("key", UNSET),
+            multi=data.get("multi", UNSET),
+            parent=data.get("parent", UNSET),
+            path=data.get("path", UNSET),
+            schema=data.get("schema", UNSET),
+            srid=data.get("srid", UNSET),
+            table=data.get("table", UNSET),
+            z=data.get("z", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersCreated(_Model):
+    """What `cad.layers.create` made: the layer added, the table, where it is, its geometry type, its system.
+    Attributes:
+        layer: The data layer added (its id); empty in a plan.
+        table: The table: a GeoPackage's table name, PostGIS's `schema.table`.
+        address: The source: the GeoPackage's path, the database's address.
+        geometry: OGC's name of the geometry type made (`MULTIPOLYGON Z`); none for a table of records.
+        srid: The table's system; none for a table of records. Unit: id.
+    """
+    layer: str
+    table: str
+    address: str
+    revision: str
+    geometry: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["table"] = self.table
+        out["address"] = self.address
+        out["revision"] = self.revision
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersCreated:
+        return cls(
+            layer=data["layer"],
+            table=data["table"],
+            address=data["address"],
+            revision=data["revision"],
+            geometry=data.get("geometry", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersCrs(_Model):
     """Input of `cad.layers.crs` v1.
     Attributes:
@@ -57121,6 +57879,121 @@ class LayersCrsSet(_Model):
             changed=data["changed"],
             revision=data["revision"],
             crs=UNSET if "crs" not in data else None if data["crs"] is None else LayerSourceCrs.from_json(data["crs"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersData(_Model):
+    """Input of `cad.layers.data` v1.
+
+    - `add`: `name`, `data`, `fields` (the table's columns as the layer's fields; absent: none); `parent` and `index`
+      place it as `cad.layers.service` places a layer;
+    - `update`: `layer`, and any of `name`, `data`, `fields`;
+    - `remove`: `layer`.
+
+    The host reads the table's catalog (its columns, key, geometry column, system) and gives it here: the command reads
+    no source. Refusals (`CommandError.code`), checked in this order: `no_layer` (update and remove without `layer`),
+    `empty_name` (add; update with a name that is empty or only white space), `no_data` (add without `data`),
+    `invalid_data` (`DataLayer::problem`), `invalid_fields` (`fields_problem`); then `invalid_revision`,
+    `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer` (a group), `not_a_data_layer` (update or
+    remove of a layer that is not a data layer).
+    Attributes:
+        data: `add`: where its rows are; `update`: where they are now.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        fields: The table's columns as the layer's fields (docs/adr/0199 §1).
+        index: Its place among the group's nodes, first on top; absent or past the end, last. Unit: index.
+        layer: `update`, `remove`: the layer's id.
+        name: `add`: the new layer's name; `update`: a new name.
+        parent: The group it goes into, or a layer whose group it goes into; absent, the top.
+    """
+    operation: LayerDataOperation | LayerDataOperationName
+    data: DataLayer | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    fields: list[LayerField] | None | Unset = UNSET
+    index: int | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    parent: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.data is not UNSET:
+            out["data"] = None if self.data is None else self.data.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
+        if self.index is not UNSET:
+            out["index"] = self.index
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersData:
+        return cls(
+            operation=_enum_in(LayerDataOperation, data["operation"]),
+            data=UNSET if "data" not in data else None if data["data"] is None else DataLayer.from_json(data["data"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else [LayerField.from_json(e0) for e0 in data["fields"]],
+            index=data.get("index", UNSET),
+            layer=data.get("layer", UNSET),
+            name=data.get("name", UNSET),
+            parent=data.get("parent", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersDataDone(_Model):
+    """Output of `cad.layers.data` v1.
+    Attributes:
+        layer: The layer added, changed or removed.
+        revision: The document's revision after the write, as decimal text.
+    """
+    layer: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersDataDone:
+        return cls(
+            layer=data["layer"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersDataPlan(_Model):
+    """What `cad.layers.data` would write (plan mode); nothing is written.
+    Attributes:
+        revision: The document revision the plan was made against.
+        node: The layer as execute would leave it (`add`: with the id it would be given); absent for `remove`.
+    """
+    revision: str
+    node: LayerNode | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        if self.node is not UNSET:
+            out["node"] = None if self.node is None else self.node.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersDataPlan:
+        return cls(
+            revision=data["revision"],
+            node=UNSET if "node" not in data else None if data["node"] is None else LayerNode.from_json(data["node"]),
         )
 
 
@@ -57332,6 +58205,193 @@ class LayersEdited(_Model):
             kept=data["kept"],
             revision=data["revision"],
             layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersExport(_Model):
+    """Input of `cad.layers.export` v1: `layer`'s objects or rows written as `format`.
+
+    What is written: the layer's objects (a data layer's rows read from its source), those of `uids` (a drawing layer)
+    or `keys` (a data layer) only, those whose box meets `bbox`, those `filter` holds for; the texts and dimensions of a
+    drawing layer are left out of a table with geometry. Fields: `fields` in their order (none: every field of the
+    layer). The system: `srid` (none: a data layer's table's own, a drawing layer's the project's); GeoJSON (unless
+    `options.projectCoordinates`) and KML are always WGS 84.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (a file format without
+    `path`, PostGIS without `address`), `invalid_option` (a choice the format does not have: the message says which),
+    `invalid_name` (a table or field name that is empty or longer than the format takes), `layer_not_found`,
+    `not_a_layer` (a group), `service_layer`, `field_not_found` (in `fields`), `invalid_expression` (`filter`),
+    `unknown_srid` (a system this project cannot write), `target_exists` (the file or table is there and `existing` is `refuse`), `source_unreachable` (the
+    layer's source or the target could not be read or written; the message says why), `nothing_to_export` (no object or
+    row was kept). Warnings: `export_skipped` (objects that could not be written as the geometry asked, counted),
+    `field_left_out` (`append` to a table without the field).
+    Attributes:
+        layer: The layer (its id).
+        add_to_map: GeoPackage, PostGIS: the written table added to the layer tree as a data layer (one undo step).
+        address: PostGIS: the database, `postgresql://user@host:port/db` (its password is never written).
+        bbox: Only what meets this box, in the project's system: west, south, east, north. Unit: length.
+        encoding: Shapefile, CSV: the text encoding; none: UTF-8.
+        existing: The target there already.
+        fields: The fields written, in order; none: every field.
+        filter: Only what this condition in İfadeyle seç's language holds for.
+        geometry: The geometry written; none: the layer's own.
+        keys: A data layer's rows to write (keys): Seçilenleri farklı kaydet. Unit: id.
+        m: With M; none: as the layer has it.
+        metadata: GeoPackage: the layer's dataset information written as the table's metadata.
+        multi: Every geometry written as a multi-part one.
+        name: The table (GeoPackage, PostGIS) or the KML document's name; none: the layer's name made a table name.
+        path: The file written (a GeoPackage, GeoJSON, Shapefile, CSV or KML file).
+        schema: PostGIS: the schema; none: `public`.
+        srid: The system written, an EPSG code. Unit: id.
+        uids: A drawing layer's objects to write (persistent ids): Seçilenleri farklı kaydet.
+        z: With Z (an object without its elevation 0); none: as the layer has it.
+    """
+    layer: str
+    format: ExportFormat | ExportFormatName
+    add_to_map: bool | None | Unset = UNSET
+    address: str | None | Unset = UNSET
+    bbox: list[float] | None | Unset = UNSET
+    encoding: ExportEncoding | ExportEncodingName | None | Unset = UNSET
+    existing: ExportExisting | ExportExistingName | None | Unset = UNSET
+    fields: list[ExportField] | None | Unset = UNSET
+    filter: str | None | Unset = UNSET
+    geometry: ExportGeometry | ExportGeometryName | None | Unset = UNSET
+    keys: list[int] | None | Unset = UNSET
+    m: bool | None | Unset = UNSET
+    metadata: bool | None | Unset = UNSET
+    multi: bool | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    options: ExportOptions | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    schema: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+    z: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["format"] = _enum_out(self.format)
+        if self.add_to_map is not UNSET:
+            out["addToMap"] = self.add_to_map
+        if self.address is not UNSET:
+            out["address"] = self.address
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.encoding is not UNSET:
+            out["encoding"] = None if self.encoding is None else _enum_out(self.encoding)
+        if self.existing is not UNSET:
+            out["existing"] = None if self.existing is None else _enum_out(self.existing)
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        if self.geometry is not UNSET:
+            out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
+        if self.keys is not UNSET:
+            out["keys"] = None if self.keys is None else list(self.keys)
+        if self.m is not UNSET:
+            out["m"] = self.m
+        if self.metadata is not UNSET:
+            out["metadata"] = self.metadata
+        if self.multi is not UNSET:
+            out["multi"] = self.multi
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.options is not UNSET:
+            out["options"] = None if self.options is None else self.options.to_json()
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        if self.z is not UNSET:
+            out["z"] = self.z
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersExport:
+        return cls(
+            layer=data["layer"],
+            format=_enum_in(ExportFormat, data["format"]),
+            add_to_map=data.get("addToMap", UNSET),
+            address=data.get("address", UNSET),
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            encoding=UNSET if "encoding" not in data else None if data["encoding"] is None else _enum_in(ExportEncoding, data["encoding"]),
+            existing=UNSET if "existing" not in data else None if data["existing"] is None else _enum_in(ExportExisting, data["existing"]),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else [ExportField.from_json(e0) for e0 in data["fields"]],
+            filter=data.get("filter", UNSET),
+            geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(ExportGeometry, data["geometry"]),
+            keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
+            m=data.get("m", UNSET),
+            metadata=data.get("metadata", UNSET),
+            multi=data.get("multi", UNSET),
+            name=data.get("name", UNSET),
+            options=UNSET if "options" not in data else None if data["options"] is None else ExportOptions.from_json(data["options"]),
+            path=data.get("path", UNSET),
+            schema=data.get("schema", UNSET),
+            srid=data.get("srid", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+            z=data.get("z", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersExported(_Model):
+    """Output of `cad.layers.export` v1.
+    Attributes:
+        files: The files written, absolute (a Shapefile's every file); none for PostGIS.
+        written: The rows (features, records) written. Unit: count.
+        fields: The fields as written, in order.
+        revision: The document's revision after the export (it moves only when a layer was added), as decimal text.
+        geometry: The geometry written: its type name (`MULTIPOLYGON`, `POINT Z` …); none: no geometry.
+        layer: `addToMap`: the data layer added (its id).
+        srid: The system written, an EPSG code; none: none written (a CSV, a local project). Unit: id.
+        table: The table written (GeoPackage, PostGIS: `schema.table`).
+    """
+    format: ExportFormat | ExportFormatName
+    files: list[str]
+    written: int
+    fields: list[str]
+    revision: str
+    geometry: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = _enum_out(self.format)
+        out["files"] = list(self.files)
+        out["written"] = self.written
+        out["fields"] = list(self.fields)
+        out["revision"] = self.revision
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersExported:
+        return cls(
+            format=_enum_in(ExportFormat, data["format"]),
+            files=list(data["files"]),
+            written=data["written"],
+            fields=list(data["fields"]),
+            revision=data["revision"],
+            geometry=data.get("geometry", UNSET),
+            layer=data.get("layer", UNSET),
+            srid=data.get("srid", UNSET),
+            table=data.get("table", UNSET),
         )
 
 
@@ -57778,6 +58838,111 @@ class LayersLabelsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayersMigrate(_Model):
+    """Input of `cad.layers.migrate` v1.
+
+    `layer`'s objects written to `table` (none: the layer's name made a table name) in `path` (`gpkg`) or `address` and
+    `schema` (`postgis`), in the project's system, every field of the layer a column, every object of the layer (those
+    its layer filter hides too: the layer goes, so none may stay behind).
+
+    Its texts are written to a table of their own beside it, `<table>_yazilar` (a layer of texts only: to `table`): a
+    point and the columns `metin`, `yukseklik`, `aci`, `hiza` and `genislik` (docs/adr/9114 §2). A data layer reading
+    it, its rows drawn as texts, goes above the layer's (a layer of texts only: in its place, with its name). A text's
+    style, mask, curve, scales, link to an object or paragraph formats are not written: said as `text_details_left`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `no_target` (`gpkg` without
+    `path`, `postgis` without `address`), `invalid_name`, `layer_not_found`, `not_a_layer` (a group), `service_layer`,
+    `data_layer` (the layer reads a table already), `layer_locked`, `target_exists` (the table, or the texts' table, is
+    there), `source_unreachable`, `nothing_to_export` (an empty layer), `unwritable_objects` (dimensions, blocks, hatches
+    or anything else a table cannot hold, texts aside: they would be lost with the layer, so nothing is written; their
+    count and the first's kind are said).
+    Attributes:
+        layer: The drawing layer (its id).
+        address: `postgis`: the database, `postgresql://user@host:port/db` (its password is never written).
+        path: `gpkg`: the GeoPackage file.
+        schema: `postgis`: the schema; none: `public`.
+        table: The table's name; none: the layer's name made a table name.
+    """
+    layer: str
+    target: CreateTarget | CreateTargetName
+    address: str | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    schema: str | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["target"] = _enum_out(self.target)
+        if self.address is not UNSET:
+            out["address"] = self.address
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersMigrate:
+        return cls(
+            layer=data["layer"],
+            target=_enum_in(CreateTarget, data["target"]),
+            address=data.get("address", UNSET),
+            path=data.get("path", UNSET),
+            schema=data.get("schema", UNSET),
+            table=data.get("table", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersMigrated(_Model):
+    """What `cad.layers.migrate` did: the data layer that took the layer's place, the table, where, how many rows.
+    Attributes:
+        layer: The data layer (its id); empty in a plan.
+        table: The table: a GeoPackage's table name, PostGIS's `schema.table`.
+        address: The source: the GeoPackage's path, the database's address.
+        written: The rows written: the layer's objects a table holds. Unit: count.
+        geometry: OGC's name of the geometry type written; none for a table of records.
+        texts: The layer's texts' table beside it (docs/adr/9114 §2); none when it had no texts, or only texts (then the
+            table above is theirs).
+    """
+    layer: str
+    table: str
+    address: str
+    written: int
+    revision: str
+    geometry: str | None | Unset = UNSET
+    texts: MigratedTexts | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["table"] = self.table
+        out["address"] = self.address
+        out["written"] = self.written
+        out["revision"] = self.revision
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.texts is not UNSET:
+            out["texts"] = None if self.texts is None else self.texts.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersMigrated:
+        return cls(
+            layer=data["layer"],
+            table=data["table"],
+            address=data["address"],
+            written=data["written"],
+            revision=data["revision"],
+            geometry=data.get("geometry", UNSET),
+            texts=UNSET if "texts" not in data else None if data["texts"] is None else MigratedTexts.from_json(data["texts"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersRendered(_Model):
     """Output of `cad.layers.renderer` v1.
     Attributes:
@@ -57991,6 +59156,88 @@ class LayersReprojected(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayersRows(_Model):
+    """Input of `cad.layers.rows` v1: the rows of `layer` (a data layer) that `bbox`, `keys`, `search` and `filter` all
+    keep, in `order` (then by key), `limit` of them from `offset`.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`layer` empty), `invalid_count` (`limit` past
+    1 000), `invalid_extent` (a box reversed or not finite), `layer_not_found`, `not_a_data_layer`, `field_not_found`
+    (in `fields` or `order`), `invalid_expression` (the filter does not compile, reads `$sıra` or `$ölçek`, or looks at
+    other objects), `source_unreachable` (the source could not be read; the message says why). A job stopped answers
+    `cancelled`.
+    Attributes:
+        layer: The data layer (its id).
+        all_keys: Return every kept row's key, in the order (a selection of the rows a filter keeps, a table's pages).
+        bbox: Rows whose geometry's box meets this one, in the project's system: west, south, east, north (Görünümdekiler). Unit: length.
+        count: Count every row the question keeps.
+        fields: The fields returned, by name; none: all of them in the table's order.
+        filter: A condition in İfadeyle seç's language: the rows it holds for (İfade süzgeci).
+        geometry: Return each row's geometry in the project's system (ISO WKT).
+        keys: Rows of these keys only (Seçililer). Unit: id.
+        limit: How many rows the page holds, 0–1 000; none: 100. Unit: count.
+        offset: How many of the ordered rows come before the page. Unit: count.
+        order: The order, field after field; then by key. A text is ordered in the Turkish alphabet's order.
+        search: Rows any of whose fields, read as text, holds these words, case aside the Turkish way (Ara).
+    """
+    layer: str
+    all_keys: bool | None | Unset = UNSET
+    bbox: list[float] | None | Unset = UNSET
+    count: bool | None | Unset = UNSET
+    fields: list[str] | None | Unset = UNSET
+    filter: str | None | Unset = UNSET
+    geometry: bool | None | Unset = UNSET
+    keys: list[int] | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    offset: int | None | Unset = UNSET
+    order: list[QueryOrder] | None | Unset = UNSET
+    search: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.all_keys is not UNSET:
+            out["allKeys"] = self.all_keys
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.count is not UNSET:
+            out["count"] = self.count
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else list(self.fields)
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.keys is not UNSET:
+            out["keys"] = None if self.keys is None else list(self.keys)
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.offset is not UNSET:
+            out["offset"] = self.offset
+        if self.order is not UNSET:
+            out["order"] = None if self.order is None else [e0.to_json() for e0 in self.order]
+        if self.search is not UNSET:
+            out["search"] = self.search
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersRows:
+        return cls(
+            layer=data["layer"],
+            all_keys=data.get("allKeys", UNSET),
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            count=data.get("count", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else list(data["fields"]),
+            filter=data.get("filter", UNSET),
+            geometry=data.get("geometry", UNSET),
+            keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
+            limit=data.get("limit", UNSET),
+            offset=data.get("offset", UNSET),
+            order=UNSET if "order" not in data else None if data["order"] is None else [QueryOrder.from_json(e0) for e0 in data["order"]],
+            search=data.get("search", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersRules(_Model):
     """Input of `cad.layers.rules` v1: a layer's record rules written as one undo step “Kayıt kuralları”;
     none takes them away. A layer that already has them is left as it is. A rule is asked of every
@@ -58167,6 +59414,83 @@ class LayersServiced(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayersSession(_Model):
+    """Input of `cad.layers.session` v1.
+
+    Refusals (`CommandError.code`), checked in this order: `no_layer` (`start`, `take` or `delete` without a layer),
+    `one_layer` (`take` or `delete` naming more than one), `no_keys` (`take` or `delete` without keys),
+    `invalid_count` (more than 10 000 keys), `layer_not_found`, `not_a_data_layer`, `data_layer_read_only` (`start` of a
+    layer kept read-only), `data_layer_not_editing` (any other action naming a layer not being edited),
+    `data_edits_unsaved` (`stop` of a layer with changes, or of one that stops with it), `source_unreachable` (the table
+    could not be read or opened; the message says why), `data_save_failed` (the table refused the writes: nothing of the
+    layers written together was written, their changes wait; with several groups, a warning of those not written while
+    the others were), `rows_changed` (a row taken was changed or deleted by someone else since: nothing written; `force`
+    writes over it).
+
+    The project's edit grouping (`settings.editGrouping`, docs/adr/9104 §2) widens `start`, `save`, `rollback`, `cancel`,
+    `stop` and `status` of a named layer to the layers of its source, or to every data layer; `save` then writes a
+    source's layers in one transaction.
+    Attributes:
+        force: `save`: write over the rows others changed or deleted since they were taken (a `rows_changed` otherwise).
+        keys: `take`, `delete`: the rows' keys, 1–10 000. Unit: id.
+        layers: The data layers (their ids). None: every layer being edited (`save`, `rollback`, `cancel`, `stop`, `status`).
+            `start` names at least one; `take` and `delete` exactly one.
+    """
+    action: SessionAction | SessionActionName
+    force: bool | None | Unset = UNSET
+    keys: list[int] | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["action"] = _enum_out(self.action)
+        if self.force is not UNSET:
+            out["force"] = self.force
+        if self.keys is not UNSET:
+            out["keys"] = None if self.keys is None else list(self.keys)
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersSession:
+        return cls(
+            action=_enum_in(SessionAction, data["action"]),
+            force=data.get("force", UNSET),
+            keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersSessionDone(_Model):
+    """Output of `cad.layers.session` v1.
+    Attributes:
+        layers: The layers acted on, in the tree's order.
+        objects: `take`: the objects' persistent ids for the keys, in order; none for a row deleted or not in the table.
+    """
+    layers: list[SessionLayer]
+    revision: str
+    objects: list[str | None] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["revision"] = self.revision
+        if self.objects is not UNSET:
+            out["objects"] = list(self.objects)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersSessionDone:
+        return cls(
+            layers=[SessionLayer.from_json(e0) for e0 in data["layers"]],
+            revision=data["revision"],
+            objects=list(data["objects"]) if "objects" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayersSet(_Model):
     """Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,
     the lock and the name in the Katmanlar panel make it. Each is an edit of
@@ -58191,26 +59515,34 @@ class LayersSet(_Model):
     - `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither
       drawn, picked, snapped to nor counted in the extent; a group's covers
       everything under it;
-    - `thawAll`: every node thawed.
+    - `thawAll`: every node thawed;
+    - `classVisible`: `layer`, `value`, and `classes` (their ids, as `cad.layers.classes` gives them; none: every
+      class): the layer's style classes drawn or not (docs/adr/9105 §3); a class switched off keeps its objects, drawn
+      by nothing;
+    - `classInvert`: `layer`, and `classes` (none: every class): each turned the other way;
+    - `classCounts`: `layer`, `value` (docs/adr/9105 §4): whether the tree says how many objects the layer and each
+      class hold.
 
-    The eye, the lock, the freeze, printing, the name and the active layer
-    are the project's (kept in the file); only what `isolate` hid is the
-    session's (docs/adr/0311 §2).
+    The eye, the lock, the freeze, printing, the name, the classes switched on and off, the counts shown and the
+    active layer are the project's (kept in the file); only what `isolate` hid is the session's (docs/adr/0311 §2).
 
     Refusals (`CommandError.code`), checked in this order: `no_layer`
-    (rename, visible, locked, plot, frozen, active without `layer`),
+    (rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts without `layer`),
     `no_layers` (isolate without a node), `empty_name` (rename with a name
-    empty or only white space), `no_value` (visible, locked, plot, frozen
+    empty or only white space), `no_value` (visible, locked, plot, frozen, classVisible, classCounts
     without `value`); then `invalid_revision`, `revision_conflict` (status
     `conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`
-    (active: a group), `service_layer` (active: a layer drawn from a map
+    (active and the class operations: a group), `service_layer` (active: a layer drawn from a map
     service holds no objects), `layer_frozen` (active: a frozen layer, or one
     in a frozen group), `active_frozen` (frozen: the active layer, or a group
-    holding it). A change that changes nothing answers `changed` false.
+    holding it), `no_classes` (classVisible, classInvert: the layer's look has no classes), `class_not_found`
+    (`classes[i]` names none of its classes). A change that changes nothing answers `changed` false.
     Attributes:
+        classes: `classVisible`, `classInvert`: the classes' ids (`c3`, `other`, `g2`, `r0.1`); none: every class.
         expected_revision: The document revision the input was prepared against, as decimal text.
     """
     operation: LayerSetOperation | LayerSetOperationName
+    classes: list[str] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
@@ -58220,6 +59552,8 @@ class LayersSet(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["operation"] = _enum_out(self.operation)
+        if self.classes is not UNSET:
+            out["classes"] = None if self.classes is None else list(self.classes)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.layer is not UNSET:
@@ -58236,6 +59570,7 @@ class LayersSet(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> LayersSet:
         return cls(
             operation=_enum_in(LayerSetOperation, data["operation"]),
+            classes=UNSET if "classes" not in data else None if data["classes"] is None else list(data["classes"]),
             expected_revision=data.get("expectedRevision", UNSET),
             layer=data.get("layer", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
@@ -62569,6 +63904,34 @@ class MigratedStep(_Model):
             objects=data["objects"],
             note=data["note"],
             layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MigratedTexts(_Model):
+    """A migrated layer's texts: the data layer drawing them, their table, how many rows.
+    Attributes:
+        layer: The data layer (its id); empty in a plan.
+        table: The table: a GeoPackage's table name, PostGIS's `schema.table`.
+        written: The rows written: one a text. Unit: count.
+    """
+    layer: str
+    table: str
+    written: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["table"] = self.table
+        out["written"] = self.written
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MigratedTexts:
+        return cls(
+            layer=data["layer"],
+            table=data["table"],
+            written=data["written"],
         )
 
 
@@ -84332,6 +85695,7 @@ class ProjectSettings(_Model):
         drawing_font: Absent in files written before drawing typefaces (read as Barlow).
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
+        edit_grouping: How the data layers' edit sessions go together (docs/adr/9104 §2); absent: each layer alone.
         forms: The project's forms, in the order they were made (docs/adr/0401).
         hatch_patterns: The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
         heights: What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
@@ -84423,6 +85787,7 @@ class ProjectSettings(_Model):
     domains: list[FieldDomain] | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET
     forms: list[ProjectForm] | Unset = UNSET
     hatch_patterns: list[HatchPatternDef] | Unset = UNSET
     heights: HeightReference | None | Unset = UNSET
@@ -84502,6 +85867,8 @@ class ProjectSettings(_Model):
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.edit_grouping is not UNSET:
+            out["editGrouping"] = None if self.edit_grouping is None else _enum_out(self.edit_grouping)
         if self.forms is not UNSET:
             out["forms"] = [e0.to_json() for e0 in self.forms]
         if self.hatch_patterns is not UNSET:
@@ -84611,6 +85978,7 @@ class ProjectSettings(_Model):
             domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            edit_grouping=UNSET if "editGrouping" not in data else None if data["editGrouping"] is None else _enum_in(EditGrouping, data["editGrouping"]),
             forms=[ProjectForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
             hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
             heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
@@ -97007,6 +98375,51 @@ class ServiceParam(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SessionLayer(_Model):
+    """A layer's session after the action.
+    Attributes:
+        editing: Being edited after the action.
+        added: New rows waiting; after `save`, the new rows written. Unit: count.
+        changed: Changed rows waiting; after `save`, written. Unit: count.
+        deleted: Deleted rows waiting; after `save`, written. Unit: count.
+        failed: `save` of several layers: why this one was not written (its changes wait); none: written.
+        keys: `save`: the keys the table gave the new rows, in the drawing's order. Unit: id.
+    """
+    layer: str
+    editing: bool
+    added: int
+    changed: int
+    deleted: int
+    failed: str | None | Unset = UNSET
+    keys: list[int] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["editing"] = self.editing
+        out["added"] = self.added
+        out["changed"] = self.changed
+        out["deleted"] = self.deleted
+        if self.failed is not UNSET:
+            out["failed"] = self.failed
+        if self.keys is not UNSET:
+            out["keys"] = list(self.keys)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SessionLayer:
+        return cls(
+            layer=data["layer"],
+            editing=data["editing"],
+            added=data["added"],
+            changed=data["changed"],
+            deleted=data["deleted"],
+            failed=data.get("failed", UNSET),
+            keys=list(data["keys"]) if "keys" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetFrame(_Model):
     """A map frame of the set.
     Attributes:
@@ -97236,6 +98649,8 @@ class SettingsSet(_Model):
             the active layer's. No object changes.
         cad_work: What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon.
         coordinate_epoch: Unit: year.
+        edit_grouping: How the data layers' edit sessions go together (docs/adr/9104 §2): each layer alone, a source's layers
+            together, or every editable layer together. No object changes.
         expected_revision: The document revision the input was prepared against, as decimal text.
         length_decimals: Unit: count.
         length_style: How lengths are written (docs/adr/0262 §2): decimal, or architectural,
@@ -97259,6 +98674,7 @@ class SettingsSet(_Model):
     coordinate_epoch: float | None | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    edit_grouping: EditGrouping | EditGroupingName | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     heights: HeightReference | None | Unset = UNSET
     length_decimals: int | None | Unset = UNSET
@@ -97293,6 +98709,8 @@ class SettingsSet(_Model):
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.edit_grouping is not UNSET:
+            out["editGrouping"] = None if self.edit_grouping is None else _enum_out(self.edit_grouping)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.heights is not UNSET:
@@ -97333,6 +98751,7 @@ class SettingsSet(_Model):
             coordinate_epoch=UNSET if "coordinateEpoch" not in data else None if data["coordinateEpoch"] is None else float(data["coordinateEpoch"]),
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            edit_grouping=UNSET if "editGrouping" not in data else None if data["editGrouping"] is None else _enum_in(EditGrouping, data["editGrouping"]),
             expected_revision=data.get("expectedRevision", UNSET),
             heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
             length_decimals=data.get("lengthDecimals", UNSET),
@@ -146991,11 +148410,15 @@ __all__ = [
     "CreateDomainsOp",
     "CreateFeatureChange",
     "CreateFormsOp",
+    "CreateGeometry",
+    "CreateGeometryName",
     "CreateJoinsOp",
     "CreateOperation",
     "CreateOperationName",
     "CreateRelationsOp",
     "CreateSpaceSeparatorOperation",
+    "CreateTarget",
+    "CreateTargetName",
     "CrossfallZero",
     "CrossingHatch",
     "CrossingHatchName",
@@ -147070,7 +148493,10 @@ __all__ = [
     "CutFillSection",
     "CutFillSectionLabel",
     "CutFillSections",
+    "DataGeometry",
+    "DataLayer",
     "DataProfile",
+    "DataText",
     "DatasetDescription",
     "DatasetDim",
     "DatasetInfo",
@@ -147306,6 +148732,8 @@ __all__ = [
     "EdgeShiftShapeWork",
     "EdgeStraightened",
     "EditFeatureChange",
+    "EditGrouping",
+    "EditGroupingName",
     "EditOperation",
     "EditOperationName",
     "EditTablesOperation",
@@ -147465,7 +148893,16 @@ __all__ = [
     "ExportCsv",
     "ExportDwg",
     "ExportDxf",
+    "ExportEncoding",
+    "ExportEncodingName",
+    "ExportExisting",
+    "ExportExistingName",
     "ExportFgb",
+    "ExportField",
+    "ExportFormat",
+    "ExportFormatName",
+    "ExportGeometry",
+    "ExportGeometryName",
     "ExportGis",
     "ExportGltf",
     "ExportGml",
@@ -147476,12 +148913,15 @@ __all__ = [
     "ExportMaplibre",
     "ExportMaterialsOperation",
     "ExportOpeningTypesOperation",
+    "ExportOptions",
     "ExportParquet",
     "ExportPdf",
     "ExportQml",
     "ExportReport",
     "ExportShp",
     "ExportSld",
+    "ExportSymbols",
+    "ExportSymbolsName",
     "ExportTable",
     "ExportXyz",
     "ExpressionPaperGridLabelFormat",
@@ -148072,7 +149512,11 @@ __all__ = [
     "LatePolicyName",
     "LatticeArrayLayout",
     "LayerAction",
+    "LayerClass",
+    "LayerClassesAnswer",
     "LayerCompose",
+    "LayerDataOperation",
+    "LayerDataOperationName",
     "LayerDerivation",
     "LayerEditOperation",
     "LayerEditOperationName",
@@ -148095,6 +149539,8 @@ __all__ = [
     "LayerNodeTypeName",
     "LayerPaperCoordSource",
     "LayerPaperTableSource",
+    "LayerRow",
+    "LayerRowsAnswer",
     "LayerRule",
     "LayerServiceOperation",
     "LayerServiceOperationName",
@@ -148113,14 +149559,22 @@ __all__ = [
     "LayerTime",
     "LayerTranslation",
     "LayersChanged",
+    "LayersClasses",
     "LayersCompose",
     "LayersComposePlan",
     "LayersComposed",
     "LayersContingents",
+    "LayersCreate",
+    "LayersCreated",
     "LayersCrs",
     "LayersCrsSet",
+    "LayersData",
+    "LayersDataDone",
+    "LayersDataPlan",
     "LayersEdit",
     "LayersEdited",
+    "LayersExport",
+    "LayersExported",
     "LayersFilter",
     "LayersFilterPlan",
     "LayersFiltered",
@@ -148133,15 +149587,20 @@ __all__ = [
     "LayersLabelled",
     "LayersLabels",
     "LayersLabelsPlan",
+    "LayersMigrate",
+    "LayersMigrated",
     "LayersRendered",
     "LayersRenderer",
     "LayersRendererPlan",
     "LayersReproject",
     "LayersReprojected",
+    "LayersRows",
     "LayersRules",
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",
+    "LayersSession",
+    "LayersSessionDone",
     "LayersSet",
     "LayersStates",
     "LayersSubtypes",
@@ -148359,6 +149818,7 @@ __all__ = [
     "MidPointConstruction",
     "MidSubPlace",
     "MigratedStep",
+    "MigratedTexts",
     "MigrationLoss",
     "MigrationStep",
     "MirrorText",
@@ -149683,6 +151143,8 @@ __all__ = [
     "RoutesFind",
     "RowHeightTableEdit",
     "RowOffsetDimensionSetEdit",
+    "RowsChecked",
+    "RowsCheckedName",
     "RubberLink",
     "RubbersheetTransform",
     "RunInput",
@@ -149787,6 +151249,9 @@ __all__ = [
     "ServiceKindName",
     "ServiceLayer",
     "ServiceParam",
+    "SessionAction",
+    "SessionActionName",
+    "SessionLayer",
     "SessionMapSurveyOperation",
     "SetArchOperation",
     "SetAtlasPaperOp",

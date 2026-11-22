@@ -86,6 +86,7 @@ pub(crate) mod package;
 mod package_tests;
 pub(crate) mod photo_import;
 pub(crate) mod postgis;
+mod postgis_query;
 pub(crate) use postgis::{list_tables, listing_document};
 #[cfg(test)]
 mod postgis_tests;

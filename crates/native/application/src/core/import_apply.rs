@@ -563,6 +563,7 @@ fn make_layers(
             snap: None,
             fields: fields.clone(),
             service: None,
+            data: None,
             feed: None,
             time: None,
             scenario: None,

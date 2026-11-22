@@ -129,6 +129,8 @@ Tırnaklı (hashed) çizgi, `line` şekilli ve dönen bir `markerLine`'dır; ayr
 
 Kurallar: geometriyi değiştiren uzunluklar (kaydırma, işaret aralığı, desen aralığı) `mm` ya da `m` olur; genişlik, işaret boyu ve kesik uzunlukları `px` de olabilir (gölgelendiricide ölçeklenir). Hiçbir çizgi 1 aygıt pikselinden ince çizilmez (kıl çizgi).
 
+Model ekranında bir **veri katmanının** çizgileri (kalınlığı ve kesikleri `mm` olanlar) kâğıt kalınlıklarını her ölçekte korur: çekirdek onları piksel olarak çizer, uzaklaşınca dünyayla incelip soluk bir piksele inmezler (programın `screenWidths`'i, ADR 9115). İşaret boyları ve taramalar kâğıtta kalır; pafta ve PDF kalınlıkları dünyada bırakır.
+
 Semboller varsayılan olarak çizim ölçeğinde (kâğıt mm) durur, bu yüzden harita uzaklaştıkça küçülür, basılı pafta gibi. **Görünüm → Sembol boyutu → Ekranda sabit** (uygulama ayarı `prefs.symbolSize`) seçilirse mm ekran milimetresi olur ve semboller her yakınlıkta aynı boyda kalır. Çizilen boylar (çizgi kalınlığı, kesik uzunlukları, işaret ve tarama boyları) çekirdekte doğrudan ekran pikseline çevrilir (`Env.screen`, 96 px/inç), böylece yakınlaştırma sürerken de sabit kalırlar. Geometriyi yerleştiren uzunluklar (çizgi boyunca işaret aralığı, kaydırma) görünüm ölçeğiyle derlenir: ölçek dörtte bir oktavlık adımlara yuvarlanır ve yakınlaştırma durunca (150 ms) yeniden kurulur; o arada yalnız bu aralıklar görünümle ölçeklenir. Uzak görünümde gürültü olmasın diye şu kurallar vardır:
 - Aralığı 3 pikselin altına inen tarama düz bir renk tonuna döner. Bu ton kıl çizgilerin görünüşünden kâğıttaki gerçek kaplama oranına (çizgi kalınlığı ÷ aralık) geçer, böylece ince tarama alanı kapkara yapmaz.
 - Hücresi 4 pikselin altına inen desen ve deseni 4 pikselin altına inen kesik çizgi de ortalama bir tona döner.
@@ -144,8 +146,8 @@ Semboller varsayılan olarak çizim ölçeğinde (kâğıt mm) durur, bu yüzden
 ```ts
 type LayerRenderer =
   | { type: 'single'; symbols: SymbolSet }
-  | { type: 'categorized'; expr; categories: { value, label, symbols, enabled }[]; other?: SymbolSet }
-  | { type: 'graduated'; expr; classes: { min, max, label, symbols }[] }
+  | { type: 'categorized'; expr; categories: { value, label, symbols, enabled }[]; other?: SymbolSet; otherEnabled? }
+  | { type: 'graduated'; expr; classes: { min, max, label, symbols, enabled }[] }
   | { type: 'rules'; rules: Rule[] }          // Rule: filter?, minScale?, maxScale?, symbols?, children?, isElse?
   // Tematik işleyiciler (ADR 0213):
   | { type: 'unclassed'; expr; min; max; ramp; symbols; other? }                       // Sürekli renk
@@ -160,6 +162,7 @@ type LayerRenderer =
 ```
 
 - Kategorili ve aralıklı işleyiciler tasarımcıda veriden üretilir (benzersiz değerler, eşit aralık ya da doğal kırılmalar); saklanırken yine veridir.
+- **Kapalı sınıf** (ADR 9105 §3): kategori, aralık ve kural `enabled: false`, Diğer değerler `otherEnabled: false` ile kapanır; yalnız `false` yazılır. Kapalı sınıf nesnelerini tutar ama çizmez: önceki sınıf da Diğer değerler de onları almaz. Katmanlar'daki sınıf kutusu bunu yazar.
 - **Ölçek aralığı** (1:N paydası) kuralın çizilip çizilmeyeceğini belirler; GPU toplulukları bu aralığı taşır, çizici her karede seçer, tampon yeniden kurulmaz.
 - **Tematik işleyiciler** (ADR 0213): Sürekli renk ve İki değişkenli renk sembolün ana rengini, Orantılı sembol boyunu değiştirir (256
   basamak); Nokta yoğunluğu ve Grafik nesneden yeni çizim üretir; Isı haritası, Kümeleme, Yayma ve Ters alan katmanın nesnelerini birlikte
@@ -192,7 +195,7 @@ style/compile.ts compileSymbol (tek sembol, aynı çekirdek) ─► önizleme ve
 Hesabın hepsi `crates/shared/style-core/src/style/`'dadır (ADR 0008 “Stil derleyicisi”): `resolve.rs`, `compile.rs`, `place.rs` (yerleşim), `batch.rs`, `build.rs` (katmanın çağrısı). TypeScript katmanın programını kurar ve çekirdeğin yanıtını gösterir.
 
 - **Sembol seçimi (`render/styledLayer.ts` sayfanın kipini verir, çekirdek çözer):** nesnenin kendi sembolü (`entity.symbol`), yoksa katmanın işleyicisi (`style.renderer`), yoksa katmanın basit görünüşü (`symbolsOfLayerStyle`: renk, çizgi tipi, kalınlık, dolgu, nokta simgesi). Kurallar:
-  - Hiçbir kurala ya da kategoriye uymayan nesne çizilmez (QGIS gibi).
+  - Hiçbir kurala ya da kategoriye uymayan nesne çizilmez.
   - Uyan takımda nesnenin geometri türüne sembol yoksa ya da başvurulan sembol kitaplıkta yoksa basit görünüş çizilir; nesne sessizce kaybolmaz.
   - Dolgu sembolü olmayan alan, takımın çizgi sembolüyle kenarından çizilir.
   - Tarama nesneleri kendi desenini (`hatchSymbolOf`), ölçüler ince çizgilerini korur; yazılar üst katmandadır.
@@ -242,7 +245,7 @@ Pencereler ilk açılışta yüklenir (`ui/style/`); komutlar Araçlar menüsün
   - Üstte işleyici: Basit, Tek sembol, Kategorili, Aralıklı, Kurallar; her türün taslağı ayrı tutulur, türler arasında gidip gelmek iş kaybettirmez. Katmandaki alan, çizgi ve nokta sayıları yazar; semboller yalnızca katmanda bulunan geometri türleri için sorulur.
   - **Sembol yuvası:** küçük resim ve adı ("Basit görünüş", "Bu stilde" ya da kitaplıktaki adı); tıklayınca kitaplıktan seç, burada düzenle (kitaplık sembolünün kopyası), Kitaplığıma kaydet, basit görünüşe dön. Sembolü olmayan yuvanın resmi, o sınıfın düştüğü düz görünüştür.
   - **İfade alanı:** Alanlar (her birinin kaç nesnede olduğuyla), Değişkenler ve İşlevler menüleri; alan tek parça değilse `[…]` yazılır (`"…"` metindir). Hata yeriyle söylenir ("8. karakterde: …"). Geometri değerleri yerel projede çizim biriminde okunur: mm projesinde `$alan` mm², `$uzunluk` mm'dir; "Değerlerden sınıfla", "Sınıfla", "Verilerden al" ve Nesne sütunu ile çizim aynı birimi kullanır, sınıf sınırları o birimle saklanır.
-  - **Kategorili:** değer ifadesi, "Değerlerden sınıfla" farklı değerleri getirir (var olan kategoriler korunur), düzenlenebilir değer ve etiket, "Diğer değerler". Aynı değerin sonraki kategorisi işaretlenir: yalnız ilki çizer. Kapalı kategorinin nesneleri çizilmez, "Diğer değerler"e de düşmez (QGIS gibi; ADR 0091).
+  - **Kategorili:** değer ifadesi, "Değerlerden sınıfla" farklı değerleri getirir (var olan kategoriler korunur), düzenlenebilir değer ve etiket, "Diğer değerler". Aynı değerin sonraki kategorisi işaretlenir: yalnız ilki çizer. Kapalı kategorinin nesneleri çizilmez, "Diğer değerler"e de düşmez (ADR 0091).
   - **Aralıklı:** sayı veren ifade, eşit aralık ya da eşit sayı, sınıf sayısı, renk rampası; alt sınır dahil, son sınıf üst sınırı da içerir. Hiçbir sınıfın almadıkları ayrı satırda sayılır: çizilmez.
   - **Kurallar:** koşul (boş: hepsi), "değilse", ölçek aralığı (1:en yakın – 1:en uzak), alt kurallar; ifade hatası canlıdır.
   - **Nesne sütunu:** çizimde ne çizileceğidir (`ui/style/tally.ts`, masaüstünde `kentos-native-style` `tally`; ikisi `fixtures/style/v1/tally.json`'ı geçer). Yalnız stil motorunun çizdiği nesneler sayılır (yazı ve ölçü değil). Nesne değerinin ilk kategorisine, sayısını alan ilk sınıfa gider. Alt kural üstünün aldıkları arasında sayılır; değilse kuralı açık kardeşlerinin almadıklarını sayar.

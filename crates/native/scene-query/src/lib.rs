@@ -17,6 +17,7 @@ pub mod query;
 pub mod shx_text;
 pub mod spatial;
 pub mod storeys;
+pub mod style_classes;
 pub mod view;
 pub mod viewport_scope;
 pub mod walls;

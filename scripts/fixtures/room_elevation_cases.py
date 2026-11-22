@@ -726,6 +726,10 @@ def node_expect(m, layer_id):
     params = {"space": r["space"], "at": r["at"], "gap": r["gap"], "members": "$any", "digest": "$any"}
     if r["sides"]:
         params["sides"] = r["sides"]
+    # Each role's own digest, KentOS's to compute like the whole one's (a hand edit is found by it while the source is
+    # stale): there when something was drawn.
+    if r["members"]:
+        params["memberHashes"] = "$any"
     return {"parent": next(l[3] for l in m.layers if l[0] == layer_id), "type": "layer", "name": r["name"],
             "derivation": {"tool": "cad.elevations.edit", "label": STEP, "toolVersion": 1, "parameters": params,
                            "documentRevision": "$any", "engine": "$any", "at": "$any"}}

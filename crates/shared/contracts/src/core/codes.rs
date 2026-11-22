@@ -610,6 +610,45 @@ codes! {
     LAYER_REFUSED = "layer_refused", Failed, false, "Belge değişikliği reddetti (silinemeyecek bir katman).";
     /// Add's id against its rules, or one the tree has (docs/adr/8057 §23).
     INVALID_LAYER_ID = "invalid_layer_id", Failed, false, "Katmanın kimliği kurallarına uymuyor ya da ağaçta var.";
+    /// `cad.layers.data`'s add without a table (docs/adr/9101 §4).
+    NO_DATA = "no_data", Failed, false, "Eklemek için veri tablosu verilmedi.";
+    /// A data layer's table against its rules (`DataLayer::problem`).
+    INVALID_DATA = "invalid_data", Failed, false, "Veri tablosu kurallarına uymuyor.";
+    /// An update or a removal of a layer that is not a data layer.
+    NOT_A_DATA_LAYER = "not_a_data_layer", Failed, false, "Katman bir veri katmanı değil.";
+    DATA_LAYER = "data_layer", Failed, false, "Katman zaten bir veri kaynağının tablosunu okuyor.";
+    UNWRITABLE_OBJECTS = "unwritable_objects", Failed, false, "Katmanın bazı nesneleri bir tabloya yazılamaz; hiçbir şey yazılmadı.";
+    /// An object written on a data layer that is not being edited (docs/adr/9103 §2): its rows stay in its table.
+    DATA_LAYER_NOT_EDITING = "data_layer_not_editing", Failed, false, "Veri katmanı düzenlemeye açık değil; satırları tablosunda durur. Önce katmanın düzenlemesini başlatın. Hiçbir şey yazılmadı.";
+    /// A data layer kept read-only, or whose table the account may not write (docs/adr/9103 §3).
+    DATA_LAYER_READ_ONLY = "data_layer_read_only", Failed, false, "Veri katmanı salt okunur; düzenlenemez.";
+    /// `stop` of a layer with changes not saved (docs/adr/9103 §3): save them or let them go first.
+    DATA_EDITS_UNSAVED = "data_edits_unsaved", Failed, false, "Katmanda kaydedilmemiş değişiklik var; düzenlemeyi bitirmeden önce kaydedin ya da geri alın.";
+    /// A save over rows someone else changed or deleted since they were taken (docs/adr/9104 §3): nothing written.
+    ROWS_CHANGED = "rows_changed", Conflict, true, "Başkası satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş; hiçbir şey yazılmadı. Satırları yeniden alın ya da üstüne yazın.";
+    /// A class switched on or off on a layer whose look has none (docs/adr/9105 §3).
+    NO_CLASSES = "no_classes", Failed, false, "Katmanın görünüşünde sınıf yok: kategorili, aralıklı ya da kurallı bir stil verin.";
+    /// A class id the layer's style does not have.
+    CLASS_NOT_FOUND = "class_not_found", Failed, false, "Katmanın stilinde bu kimlikli sınıf yok.";
+    /// An export without where it goes (docs/adr/9106): a file format's path, PostGIS's address.
+    NO_TARGET = "no_target", Failed, false, "Dışa aktarmanın yazılacağı yer verilmedi: dosyanın yolu ya da veritabanının adresi.";
+    /// A choice the export's format does not have.
+    INVALID_OPTION = "invalid_option", Failed, false, "Bu seçenek bu biçimde yoktur; ileti hangisi olduğunu söyler.";
+    /// The export's file or table is there and was not to be written over.
+    TARGET_EXISTS = "target_exists", Failed, false, "Yazılacak dosya ya da tablo var; üstüne yazmak, katmanı değiştirmek ya da eklemek seçilmedi.";
+    /// Objects an export could not write as asked, counted.
+    EXPORT_SKIPPED = "export_skipped", Warning, false, "Bazı nesneler istenen geometriyle ya da alanlarla yazılamadı; sayıları ve ilkinin nedeni söylenir.";
+    /// A field an append left out: the table does not have it.
+    FIELD_LEFT_OUT = "field_left_out", Warning, false, "Eklenen tabloda bu alan yok; değerleri yazılmadı.";
+    /// `take` or `delete` of `cad.layers.session` naming more than one layer (docs/adr/9103 §3).
+    ONE_LAYER = "one_layer", Failed, false, "Satır alma ve silme tek bir katmanın satırlarıyla çalışır; bir katman verin.";
+    /// `take` or `delete` of `cad.layers.session` without keys (docs/adr/9103 §3).
+    NO_KEYS = "no_keys", Failed, false, "Satırların anahtarları verilmedi.";
+    /// A save the table refused (docs/adr/9103 §4): nothing of the layer was written, its changes wait in the drawing.
+    /// Texts moved into a table (docs/adr/9114 §2) whose style, mask, curve, scales, link or paragraph formats the
+    /// table has no column for: their words, point, height, angle, alignment and width factor are written.
+    TEXT_DETAILS_LEFT = "text_details_left", Warning, false, "Bazı yazıların stili, zemini, eğrisi, ölçekleri, nesne bağı ya da paragraf biçimi yazı tablosuna yazılmadı; metni, noktası, yüksekliği, açısı, hizası ve genişlik çarpanı yazıldı.";
+    DATA_SAVE_FAILED = "data_save_failed", FailedOrWarning, false, "Değişiklikler tabloya yazılamadı; tabloya hiçbir şey yazılmadı, değişiklikler katmanda bekliyor. Söylenen nedeni düzeltip yeniden kaydedin.";
 
     // ── Networks and addresses (docs/adr/0209 §11, 0229 §14) ────────────
     /// `set` without a network.

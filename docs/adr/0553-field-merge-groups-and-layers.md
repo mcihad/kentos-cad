@@ -142,5 +142,5 @@ bir üyeye seçilen yan gruptakilerin hepsine geçer. Bulut tarafında dışarı
 - Bulut: `cargo test -p kentos-contracts --lib entity_merge`, `cargo test -p kentos-cloud --lib` (iki yeni yol, çakışma ve yoldaki komut testleri), gerçek
   sunucuyla `kentos-api` `native_tests` (geçici PostGIS).
 - Masaüstü: `a_reconcile_takes_the_files_other_layers_and_resolves_a_group_whole`; resimler `cargo test -p kentos-desktop
-  exchange::gpkg_tests::reconcile_group_screens -- --ignored --nocapture` (`.run/shots/gpkg-uzlastir-grup-*`).
+  exchange::gpkg_tests::reconcile::reconcile_group_screens -- --ignored --nocapture` (`.run/shots/gpkg-uzlastir-grup-*`).
 - Python SDK ve MCP katalogdan: `python3 scripts/python/sdk.py`, `pnpm py:test`; manifest `python3 scripts/cad/manifest.py --check`.

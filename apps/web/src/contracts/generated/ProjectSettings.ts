@@ -11,6 +11,7 @@ import type { DatumTransform } from "./DatumTransform";
 import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { EditGrouping } from "./EditGrouping";
 import type { EventLink } from "./EventLink";
 import type { FieldDomain } from "./FieldDomain";
 import type { HatchPatternDef } from "./HatchPatternDef";
@@ -76,6 +77,10 @@ cadWork?: CadWork,
  * CBS project, on otherwise ([`ProjectSettings::auto_select`]).
  */
 autoSelect?: boolean, 
+/**
+ * How the data layers' edit sessions go together (docs/adr/9104 §2); absent: each layer alone.
+ */
+editGrouping?: EditGrouping, 
 /**
  * Absent in files written before drawing typefaces (read as Barlow).
  */

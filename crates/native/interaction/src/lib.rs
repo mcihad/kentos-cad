@@ -566,7 +566,7 @@ pub use spatial::{
 };
 pub use tool::{Area, CellGhost, ImageFile, InputPreview, Label, TextGhost, frame_of};
 pub use tool::{
-    Context, Corners, Cursor, DimensionMode, Draft, DraftColor, Flow, LengthenMode, Marker,
+    Context, Corners, Cursor, DataRegion, DimensionMode, Draft, DraftColor, Flow, LengthenMode, Marker,
     MarkerShape, Memory, Name, Offers, OptionChoice, Overlap, ParagraphField, Pointer, Preview,
     Stroke, Tag, TextField, Tone, Tool, ToolOption, View, ViewChange, default_snap_kinds,
     screen_scale, snap_kinds,

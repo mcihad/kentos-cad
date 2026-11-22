@@ -697,13 +697,21 @@ SCHEMA_WITH_TOOL_LAYERS = 255
 # (0: not raised). A newer one, an unknown module or an extension's data is a newer KentOS's file.
 # GIS 1 (docs/adr/8057 §15): a layer's derivation names the extension whose tool made it and where its code ran.
 GIS_WITH_EXTENSION_DERIVATIONS = 1
+# GIS 2 (docs/adr/9101 §3): a data layer (`data` of a layer node), a table drawn as it is now, its rows not in the file.
+GIS_WITH_DATA_LAYERS = 2
+# GIS data 3 (docs/adr/9104 §2): the settings' `editGrouping`, how the data layers' edit sessions go together.
+GIS_WITH_EDIT_GROUPING = 3
+# GIS data 4 (docs/adr/9105 §4): a layer's `classCounts`, the tree saying how many objects it and its classes hold.
+GIS_WITH_CLASS_COUNTS = 4
+# GIS data 5 (docs/adr/9114 §1): a data layer whose rows are texts (`text` of a data layer).
+GIS_WITH_TEXT_TABLES = 5
 ARCH_WITH_BLOCK_ELEMENTS = 2
 ARCH_WITH_COVERINGS = 5
 ARCH_WITH_SLAB_EDGE_BINDINGS = 36
 ARCH_WITH_CEILING_RECIPE = 37
 ARCH_WITH_ELECTRIC_APPLIANCES = 38
 ARCH_WITH_CASEWORK_PLACEMENT = 39
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_EXTENSION_DERIVATIONS), "map": ("harita", 0),
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_TEXT_TABLES), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -4803,6 +4811,8 @@ class _Schema:
                 **({"lineage": (self.lineage_, False)} if self.lineage else {}),
                 **({"mapSrid": (self.uint(32), False)} if self.source_crs else {}),
                 **({"autoSelect": (self.bool, False)} if self.layer_geometry else {}),
+                **({"editGrouping": (self.enum(("layer", "source", "all")), False)}
+                   if getattr(self, "gis_version", 0) >= GIS_WITH_EDIT_GROUPING else {}),
                 **({"heights": (self.heights_, False), "coordinateEpoch": (self.epoch_, False)} if self.heights else {}),
                 **({"road": (self.road_, False)} if self.road_work else {}),
                 **({"mapWork": (self.map_work_, False)} if self.map_work else {}),
@@ -5336,6 +5346,10 @@ class _Schema:
                 **({"sourceCrs": (self.source_crs_, False)} if self.source_crs else {}),
                 # Schema 106 (docs/adr/0633 §3): the layer as a dataset and what it was derived from.
                 **({"dataset": (self.dataset_, False), "derivation": (self.derivation_, False)} if self.datasets else {}),
+                # GIS data 2 (docs/adr/9101 §3): a data layer's table.
+                **({"data": (self.data_layer_, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_DATA_LAYERS else {}),
+                # GIS data 4 (docs/adr/9105 §4): Nesne sayısını göster, only true.
+                **({"classCounts": (self.only_true, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_CLASS_COUNTS else {}),
                 # Schema 102 (docs/adr/0622 §5): what the layer holds.
                 **({"geometry": (self.enum(("point", "line", "area", "annotation")), False)} if self.layer_geometry else {}),
                 "type": (self.enum(("group", "layer")), True),
@@ -5374,6 +5388,12 @@ class _Schema:
             self.fail("bad_value", "grubun koşullu biçimi olmaz; yalnız katmanın olur")
         if ("dataset" in n or "derivation" in n) and n["type"] == "group":
             self.fail("bad_value", "grubun veri kümesi bilgisi ve türetim kaydı olmaz; yalnız katmanın olur")
+        if "data" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun veri tablosu olmaz; yalnız katmanın olur")
+        if "classCounts" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun nesne sayısı gösterilmez; yalnız katmanınki gösterilir")
+        if sum(k in n for k in ("service", "feed", "data")) > 1:
+            self.fail("bad_value", "katman tek bir yerden gelir: bir harita servisinden, bir servisin nesnelerinden ya da bir veri tablosundan")
         if "sourceCrs" in n and n["type"] == "group":
             self.fail("bad_value", "grubun kaynak sistemi olmaz; yalnız katmanın olur")
         if "geometry" in n and n["type"] == "group":
@@ -5526,6 +5546,76 @@ class _Schema:
         })(v)
         if not d:
             self.fail("bad_value", "boş veri kümesi bilgisi yazılmaz")
+        return d
+
+    def data_layer_(self, v):
+        """GIS data 2 (docs/adr/9101 §2): where a data layer's rows are. A flag is written only when true; a database's
+        address carries no password and names a server and a database; a file's relative path uses `/`."""
+        def text_(x):
+            t = self.text(x)
+            if not t.strip() or len(t) > 2048:
+                self.fail("bad_value", "boş ya da 2048 karakterden uzun metin")
+            return t
+
+        def flag(x):
+            if x is not True:
+                self.fail("bad_value", "bayrak yalnız true yazılır")
+            return x
+
+        def srid(x):
+            n = self.uint(32)(x)
+            if n == 0:
+                self.fail("bad_value", "tanımsız sistemin EPSG kodu yazılmaz")
+            return n
+
+        types = ("GEOMETRY", "POINT", "LINESTRING", "POLYGON", "MULTIPOINT", "MULTILINESTRING", "MULTIPOLYGON",
+                 "GEOMETRYCOLLECTION", "CIRCULARSTRING", "COMPOUNDCURVE", "CURVEPOLYGON", "MULTICURVE", "MULTISURFACE")
+        geometry = self.fields({"column": (text_, True), "typeName": (self.enum(types), True), "srid": (srid, False),
+                                "z": (flag, False), "m": (flag, False)})
+        def extent(x):
+            if type(x) is not list or len(x) != 4:
+                self.fail("bad_value", "tablonun kutusu dört sayıdır")
+            b = [self.float(n) for n in x]
+            if any(n != n or n in (float("inf"), float("-inf")) for n in b) or b[0] > b[2] or b[1] > b[3]:
+                self.fail("bad_value", "tablonun kutusu dört sonlu sayıdır, en küçükler en büyüklerden önce")
+            return b
+
+        # GIS data 5 (docs/adr/9114 §1): which columns hold a text's words, height, angle, alignment and width factor.
+        text_map = self.fields({"text": (text_, True), "height": (text_, False), "angle": (text_, False),
+                                "align": (text_, False), "width": (text_, False)})
+        texts = {"text": (text_map, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_TEXT_TABLES else {}
+        d = self.fields({"driver": (self.enum(("gpkg", "postgis")), True), "address": (text_, True),
+                         "relative": (text_, False), "table": (text_, True), "key": (text_, True),
+                         "geometry": (geometry, False), "extent": (extent, False), "readOnly": (flag, False),
+                         **texts})(v)
+        if "extent" in d and "geometry" not in d:
+            self.fail("bad_value", "geometrisiz tablonun kutusu olmaz")
+        if d["driver"] == "postgis":
+            a = d["address"]
+            if not (a.startswith("postgresql://") or a.startswith("postgres://")):
+                self.fail("bad_value", "veritabanı adresi postgresql:// ile başlar")
+            rest = a.split("://", 1)[1]
+            authority, _, tail = rest.partition("/")
+            user, at, host = authority.rpartition("@")
+            database, _, query = tail.partition("?")
+            if (at and ":" in user) or any(kv.split("=", 1)[0].lower() == "password" for kv in query.split("&") if kv):
+                self.fail("bad_value", "adreste parola var; parola projeye yazılmaz")
+            if not host.strip() or not database.strip():
+                self.fail("bad_value", "adreste sunucu ya da veritabanı yok")
+            if "relative" in d:
+                self.fail("bad_value", "veritabanının göreli yolu olmaz")
+        if "\\" in d.get("relative", ""):
+            self.fail("bad_value", "göreli yol / ile yazılır")
+        if "geometry" in d and d["geometry"]["column"] == d["key"]:
+            self.fail("bad_value", "geometri sütunu anahtar olamaz")
+        if "text" in d:
+            columns = [d["text"][k] for k in ("text", "height", "angle", "align", "width") if k in d["text"]]
+            if len(set(columns)) != len(columns):
+                self.fail("bad_value", "bir sütun yazının iki parçası olamaz")
+            if d.get("geometry", {}).get("typeName") not in ("POINT", "MULTIPOINT"):
+                self.fail("bad_value", "yazıların tablosunun geometrisi nokta olmalı (POINT ya da MULTIPOINT)")
+            if d["key"] in columns or d["geometry"]["column"] in columns:
+                self.fail("bad_value", "yazı sütunu anahtar ya da geometri olamaz")
         return d
 
     def derivation_(self, v):

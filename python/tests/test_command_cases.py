@@ -60,6 +60,33 @@ FILES = sorted(p for p in (ROOT / "fixtures/commands/v1").glob("*.json") if not 
 TMP = Path(tempfile.mkdtemp(prefix="kentos-cases-"))
 
 
+def kml_styles(text: str) -> dict[str, Any]:
+    """A KML file's styles and its placemarks' (docs/adr/9112 §4), as the Rust runner sums them up: each style's icon
+    colour and scale, line colour and width, polygon colour, fill and outline as written; each placemark's style URL."""
+    import xml.etree.ElementTree as ET
+
+    k = "{http://www.opengis.net/kml/2.2}"
+    root = ET.fromstring(text)
+
+    def text_of(node: Any, name: str) -> str | None:
+        found = node.find(k + name)
+        return None if found is None else (found.text or "")
+
+    styles: dict[str, Any] = {}
+    for st in root.iter(k + "Style"):
+        entry: dict[str, Any] = {}
+        icon, line, poly = st.find(k + "IconStyle"), st.find(k + "LineStyle"), st.find(k + "PolyStyle")
+        if icon is not None:
+            entry["icon"] = {"color": text_of(icon, "color"), "scale": text_of(icon, "scale")}
+        if line is not None:
+            entry["line"] = {"color": text_of(line, "color"), "width": text_of(line, "width")}
+        if poly is not None:
+            entry["poly"] = {"color": text_of(poly, "color"), "fill": text_of(poly, "fill"), "outline": text_of(poly, "outline")}
+        styles[st.get("id") or ""] = entry
+    placemarks = [text_of(p, "styleUrl") for p in root.iter(k + "Placemark")]
+    return {"styles": styles, "placemarks": placemarks}
+
+
 def paths(value: str) -> str:
     """`$fixture:` and `$tmp:` paths made absolute, anywhere in a text."""
     value = re.sub(r"\$fixture:(\S+)", lambda m: str(ROOT / "fixtures" / m.group(1)), value)
@@ -209,7 +236,7 @@ class Case:
                 _, snapshot = _KCAD.read(self.doc.to_bytes())
                 self.uids[step["as"]] = snapshot["casework"][step.get("index", 0)]["id"]
             elif op == "copyFile":
-                # A file changed by someone else between two steps (a QGIS edit of a bound table, docs/adr/0538).
+                # A file changed by someone else between two steps (another program's edit of a bound table, docs/adr/0538).
                 assert step["to"].startswith("$tmp:"), f"{at}: “to” is not a $tmp: file"
                 target = Path(paths(step["to"]))
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -220,6 +247,19 @@ class Case:
                 target = Path(paths(step["to"]))
                 target.parent.mkdir(parents=True, exist_ok=True)
                 os.replace(paths(step["from"]), target)
+            elif op == "readFile":
+                # A file a command wrote, read back (docs/adr/9106): its text whole, its JSON, or its Windows-1254 text.
+                data = Path(paths(step["from"])).read_bytes()
+                kind = step.get("as", "text")
+                if kind == "json":
+                    got: Any = json.loads(data)
+                elif kind == "windows1254":
+                    got = data.decode("cp1254")
+                elif kind == "kmlStyles":
+                    got = kml_styles(data.decode("utf-8"))
+                else:
+                    got = data.decode("utf-8")
+                same(got, step["returns"], f"{at}: {step['from']}")
             elif op == "captureBlock":
                 block = self.block_named(step["name"])
                 assert block is not None, f"{at}: no block {step['name']}"

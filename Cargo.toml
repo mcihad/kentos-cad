@@ -90,6 +90,9 @@ members = [
     "crates/native/project",
     "crates/native/geopackage",
     "crates/native/postgis",
+    "crates/native/data",
+    "crates/native/data-gpkg",
+    "crates/native/data-postgis",
     "crates/native/headless",
     # The Python SDK's extension module kentos._native (docs/adr/0131): built by maturin, tested
     # from Python; not a default member, as it links a Python.
@@ -189,6 +192,9 @@ default-members = [
     "crates/native/project",
     "crates/native/geopackage",
     "crates/native/postgis",
+    "crates/native/data",
+    "crates/native/data-gpkg",
+    "crates/native/data-postgis",
     "crates/native/headless",
     "crates/native/mcp",
     "crates/native/cloud",

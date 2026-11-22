@@ -10,7 +10,7 @@
 //! layers, and a layer's Katman olarak ekle takes it with its objects into
 //! the open drawing as one undo step (drawing_exchange.rs
 //! `take_layer_into`). Veritabanları lists the device's PostgreSQL
-//! connections (docs/adr/0623, as QGIS's Browser lists its own): a
+//! connections (docs/adr/0623): a
 //! connection opens into its schemas and their tables, views and
 //! materialized views, read from the database's catalogue off the UI thread
 //! (`kentos_postgis::probe::browse`); a table's Katman olarak ekle binds it
@@ -273,6 +273,8 @@ pub struct SourcesPanel {
     pub(crate) focused: Option<String>,
     /// A GeoPackage's tables by its path, a database's by its address (docs/adr/0599 §2, §3).
     pub(crate) tables: HashMap<Origin, Read<Vec<SourceTable>>>,
+    /// The projects kept in a GeoPackage or a schema (docs/adr/9107), by `stored_key`.
+    pub(crate) stored: HashMap<String, Vec<kentos_data::StoredProject>>,
     /// A table's sample rows by its row's key.
     pub(crate) samples: HashMap<String, Read<Vec<String>>>,
     /// A saved service's offer by its row's key (docs/adr/0599 §4).
@@ -303,6 +305,7 @@ impl Default for SourcesPanel {
             requests: HashMap::new(),
             focused: None,
             tables: HashMap::new(),
+            stored: HashMap::new(),
             samples: HashMap::new(),
             services: HashMap::new(),
             search: String::new(),
@@ -339,6 +342,10 @@ pub enum Event {
     Search(String),
     /// A GeoPackage's tables, or why not.
     Tables(Origin, Result<Vec<SourceTable>, String>),
+    /// The projects kept in a GeoPackage or a schema (docs/adr/9107), by `stored_key`; none when they cannot be read.
+    StoredListed(String, Vec<kentos_data::StoredProject>),
+    /// A project kept in a source chosen: it opens.
+    OpenStored(Box<crate::document::StoredSource>),
     /// A table's sample rows by its row's key, or why not.
     Sample(String, Result<Vec<String>, String>),
     /// A saved service read, by its row's key.
@@ -347,7 +354,7 @@ pub enum Event {
     ServiceRemove(usize),
     /// Add a source by what it is (a recent or favourite row, a drop); it becomes the newest recent one.
     Use(Kept),
-    /// A table's Bağlı katman olarak aç (`true`) or Kopya olarak al.
+    /// A table's Veri katmanı olarak ekle (`true`) or Kopya olarak al.
     OpenTable(Origin, String, bool),
     /// Katmana git: the bound layer chosen in Katmanlar and shown.
     GoToLayer(String),
@@ -578,6 +585,16 @@ impl App {
                 if !self.gis.sources.open.contains(&connection_key(&name)) {
                     return Task::none();
                 }
+                // The projects kept in its schemas (docs/adr/9107): read where a schema has the projects table.
+                let mut reads = Vec::new();
+                if let Ok(catalog) = &result
+                    && let Some(c) = kentos_postgis::connections::store().list().into_iter().find(|c| c.name == name)
+                {
+                    let address = c.address();
+                    for r in catalog.relations.iter().filter(|r| r.name == kentos_data::projects::PROJECTS_TABLE) {
+                        reads.push(self.read_stored(address.clone(), Some(r.schema.clone())));
+                    }
+                }
                 let browse = match result {
                     Ok(catalog) => Browse::Ready(catalog),
                     Err(d) => {
@@ -592,6 +609,7 @@ impl App {
                     }
                 };
                 self.gis.sources.catalogs.insert(name, browse);
+                return Task::batch(reads);
             }
             Event::Refresh(name) => {
                 self.gis.sources.open.insert(connection_key(&name));
@@ -624,6 +642,10 @@ impl App {
                 self.take_layer_into(&drawing.drawing, &path, &from);
             }
             Event::Search(words) => self.gis.sources.search = words,
+            Event::StoredListed(key, list) => {
+                self.gis.sources.stored.insert(key, list);
+            }
+            Event::OpenStored(at) => return self.open_stored_project(*at),
             Event::Tables(origin, result) => {
                 let key = tables_key(&origin);
                 if !self.gis.sources.open.contains(&key) {
@@ -848,10 +870,12 @@ impl App {
         }
     }
 
-    /// Bağlı katman olarak aç or Kopya olarak al on a GeoPackage's table: the file's window with the table alone chosen.
-    fn open_table(&mut self, origin: Origin, table: String, bind: bool) -> Task<Message> {
+    /// Veri katmanı olarak ekle on a GeoPackage's table: added as a data layer, its rows left in the file (docs/adr/9101);
+    /// Kopya olarak al: the file's window with the table alone chosen, its objects copied into the drawing.
+    fn open_table(&mut self, origin: Origin, table: String, live: bool) -> Task<Message> {
         match origin {
-            Origin::File(path) => self.update(crate::exchange::open_gpkg(path, Some(table), bind)),
+            Origin::File(path) if live => self.add_tables(path.display().to_string(), vec![table]),
+            Origin::File(path) => self.update(crate::exchange::open_gpkg(path, Some(table), false)),
         }
     }
 
@@ -884,18 +908,6 @@ impl App {
         }
     }
 
-    #[cfg(test)]
-    /// The layer a table is bound to in the open drawing (docs/adr/0599 §7): by its file's path or database's
-    /// address and its name.
-    pub(crate) fn bound_layer_of(&self, path: &str, table: &str) -> Option<String> {
-        let doc = self.document.as_ref()?;
-        doc.settings()
-            .sources
-            .iter()
-            .find(|l| l.table == table && (l.path == path || Path::new(&l.path) == Path::new(path)))
-            .map(|l| l.layer.clone())
-    }
-
     /// Kapsamı göster's frame for the drawing as it is.
     pub(crate) fn extent_mark(&self) -> Option<([f64; 4], String)> {
         let doc = self.document.as_ref()?;
@@ -914,6 +926,7 @@ impl App {
             .insert(origin.clone(), Read::Reading);
         let key = tables_key(&origin);
         let back = origin.clone();
+        let path = origin.path();
         let (task, handle) = off_thread(
             move || crate::exchange::list_tables(origin.path()),
             move |r| Event::Tables(back, r),
@@ -923,7 +936,17 @@ impl App {
             .sources
             .requests
             .insert(key, handle.abort_on_drop());
-        task
+        // The projects kept beside its tables (docs/adr/9107), read with them.
+        Task::batch([task, self.read_stored(path, None)])
+    }
+
+    /// Reads the projects kept in a GeoPackage or a schema off the thread; none listed when they cannot be read.
+    pub(crate) fn read_stored(&mut self, address: String, schema: Option<String>) -> Task<Message> {
+        let key = stored_key(&address, schema.as_deref());
+        off_thread(
+            move || kentos_native_application::project_store::list(&address, schema.as_deref()).unwrap_or_default(),
+            move |list| Event::StoredListed(key, list),
+        )
     }
 
     fn read_sample(&mut self, key: String) -> Task<Message> {
@@ -1287,6 +1310,11 @@ pub(crate) fn tables_key(origin: &Origin) -> String {
 
 fn origin_of_key(key: &str) -> Option<Origin> {
     key.strip_prefix("g:").map(|p| Origin::File(PathBuf::from(p)))
+}
+
+/// The key of a place's projects (docs/adr/9107): its address and, for a database, its schema.
+pub(crate) fn stored_key(address: &str, schema: Option<&str>) -> String {
+    format!("{address}\0{}", schema.unwrap_or(""))
 }
 
 /// A table's row, opened into its preview.

@@ -241,6 +241,17 @@ def unit_rows(program, spaces, src):
                 return o
         return 0
     rows.sort(key=cmp_to_key(cmp))
+    if not rows:
+        # An empty units table says why instead of totalling nothing (the schedules' change of 19 Kasım 2026): with the
+        # program's units there, none is on the chosen storey or in the filter. The note is the row under the heading,
+        # bold, left, in the warning's colour, across the table.
+        assert program["units"], "an empty program's note counts the spaces its filter takes; no case asks it here"
+        width = len(columns)
+        note = ["Kapsam dışı · Seçilen kat veya süzgeçte bölüm yok."] + [""] * (width - 1)
+        aligns = ["right" if c["field"] in NUMERIC else "left" for c in columns]
+        styles = [{"row": 1, "col": 0, "rows": 1, "cols": width, "align": "left", "bold": True, "color": "#a55019"}]
+        merges = [{"row": 1, "col": 0, "rows": 1, "cols": width}] if width > 1 else []
+        return [[heading(c) for c in columns], note], [[]], [[]], aligns, styles, merges
     summed = [c["field"] in SUMMED for c in columns]
     if src.get("group"):
         merged = []

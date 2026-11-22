@@ -26,6 +26,10 @@ test = false
 
 [dependencies]
 kentos-postgis = { path = "../../crates/native/postgis" }
+# The data drivers (docs/adr/9100): a data layer reads its table as it draws.
+kentos-data = { path = "../../crates/native/data" }
+kentos-data-gpkg = { path = "../../crates/native/data-gpkg" }
+kentos-data-postgis = { path = "../../crates/native/data-postgis" }
 # The KentOS modules, the command line that starts one and the recent files, shared with KentOS Launcher (docs/adr/0800, 0801).
 kentos-launch = { path = "../../crates/native/launch" }
 kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }
@@ -146,6 +150,8 @@ raw-window-handle = "=0.6.2"
 esign-mock = ["kentos-imza-signature/mock-token", "kentos-imza-security/issue"]
 
 [dev-dependencies]
+# The drivers' conformance dataset: the same rows in a PostGIS table and a GeoPackage (gis/layer_classes_source_tests.rs).
+kentos-data = { path = "../../crates/native/data", features = ["conformance"] }
 # Tests sign with the software card against the in-process test server.
 kentos-imza-signature = { path = "../../crates/imza/signature", features = ["mock-token"] }
 kentos-imza-security = { path = "../../crates/imza/security", features = ["issue"] }

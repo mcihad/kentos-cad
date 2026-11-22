@@ -1,0 +1,17 @@
+[package]
+name = "kentos-data"
+description = "The data drivers' common ground: a source's tables, their schema, requests pushed to the source, a feature stream, edits in a transaction and the driver registry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native only and pure (scripts/arch/deps.mjs, group `data`; docs/adr/9100): no database, runtime, network or interface.
+# Each driver is a crate of its own (kentos-data-gpkg, kentos-data-postgis) that implements these traits; another
+# database (Oracle, MySQL, SQL Server) is one more crate and one more registration, nothing here changes.
+[dependencies]
+
+[features]
+# The tests every driver runs on itself (docs/adr/9100 §8): the same dataset made through the driver and the same
+# questions asked of it, answered by brute force over the dataset in memory.
+conformance = []

@@ -237,6 +237,8 @@ pub enum Event {
     Font(DrawingFont),
     /// Otomatik seçim (docs/adr/0622 §5): any shown layer's objects selected, or the active layer's alone.
     AutoSelect(bool),
+    /// How the data layers' edit sessions go together (docs/adr/9104 §2).
+    EditGrouping(kentos_commands::EditGrouping),
     Crs(u32),
     Search(String),
     LengthDecimals(u32),
@@ -547,6 +549,7 @@ impl App {
             Event::Mode(w) => d.workspace = Some(w),
             Event::Font(f) => d.drawing_font = Some(f),
             Event::AutoSelect(on) => d.auto_select = Some(on),
+            Event::EditGrouping(g) => d.edit_grouping = Some(g),
             // A system of the registry takes the definition's place (docs/adr/0168 §1).
             Event::Crs(srid) => {
                 d.srid = srid;
@@ -1356,6 +1359,28 @@ impl App {
                     kentos_ui::widget::Switch::new(s.settings.auto_select(), |on| event(Event::AutoSelect(on))),
                 ),
             ))
+            // Veri katmanlarının düzenlenmesi (data_edits.rs, docs/adr/9104 §2).
+            .push(group("Veri katmanlarının düzenlenmesi", {
+                const GROUPINGS: [kentos_commands::EditGrouping; 3] = [
+                    kentos_commands::EditGrouping::Layer,
+                    kentos_commands::EditGrouping::Source,
+                    kentos_commands::EditGrouping::All,
+                ];
+                let now = s.settings.edit_grouping();
+                setting(
+                    "Birlikte düzenlenen katmanlar",
+                    Some("Her katman ayrı: her katman kendi başına düzenlemeye açılır ve kendi işlemiyle kaydedilir. Aynı kaynaktakiler birlikte: aynı GeoPackage'ın ya da veritabanının katmanları birlikte açılıp kapanır, tek işlemle kaydedilir; biri yazılamazsa hiçbiri yazılmaz. Bütün katmanlar birlikte: düzenlenebilen bütün veri katmanları birlikte açılıp kapanır, her kaynak tek işlemle kaydedilir."),
+                    container(
+                        Select::new(
+                            GROUPINGS.iter().map(|g| Choice::new(g.label())),
+                            GROUPINGS.iter().position(|g| *g == now),
+                            |i| event(Event::EditGrouping(GROUPINGS[i.min(GROUPINGS.len() - 1)])),
+                        )
+                        .searchable(false),
+                    )
+                    .width(260),
+                )
+            }))
             .push(group(
                 "Çizim yazı tipi",
                 column![

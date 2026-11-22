@@ -4,6 +4,9 @@
 //! text, the object's attachments, the layer's actions). Another object's
 //! click moves the card to it; a click on nothing and Esc close it; Esc again
 //! leaves. The object is the click's first candidate (docs/adr/0187 §1).
+//! A click on no object of the drawing asks the host for the shown data
+//! layers' row under it (docs/adr/9101 §6): its card is the host's, its ring
+//! the tool's.
 
 use kentos_domain::Slot;
 use kentos_native_application::geometry::shape;
@@ -23,19 +26,29 @@ const STEP: &str = "bilgisi gösterilecek nesneye tıklayın";
 #[derive(Clone, Debug, Default)]
 pub struct IdentifyTool {
     shown: Option<Slot>,
+    /// A data layer's row is shown (its card is the host's): Esc closes it as it closes an object's.
+    row: bool,
     drawn: Preview,
+}
+
+/// An object's ring.
+fn ring(e: &kentos_commands::Entity) -> Preview {
+    let mut preview = Preview::default();
+    let outline = Outline::of(&shape(e), None, 2.5, Tone::Accent);
+    preview.strokes.extend(outline.strokes);
+    preview.marks.extend(outline.marks);
+    preview
 }
 
 impl IdentifyTool {
     fn show(&mut self, shown: Option<(Slot, crate::Vec2)>, cx: &mut Context<'_>) {
         self.shown = shown.map(|(s, _)| s);
-        let mut preview = Preview::default();
-        if let Some(e) = self.shown.and_then(|s| cx.doc.get(s)) {
-            let outline = Outline::of(&shape(e), None, 2.5, Tone::Accent);
-            preview.strokes.extend(outline.strokes);
-            preview.marks.extend(outline.marks);
-        }
-        self.drawn = preview;
+        self.row = false;
+        self.drawn = self
+            .shown
+            .and_then(|s| cx.doc.get(s))
+            .map(ring)
+            .unwrap_or_default();
         cx.view_changes.push(ViewChange::InfoCard(shown));
     }
 }
@@ -71,8 +84,17 @@ impl Tool for IdentifyTool {
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        let hit = cx.spatial.pick(p.raw, cx.pick_tolerance());
+        let reach = cx.pick_tolerance();
+        let hit = cx.spatial.pick(p.raw, reach);
         self.show(hit.map(|s| (s, p.raw)), cx);
+        if hit.is_none() {
+            cx.view_changes.push(ViewChange::DataInfo { at: p.raw, reach });
+        }
+    }
+
+    fn data_found(&mut self, found: Option<&kentos_commands::Entity>, _cx: &mut Context<'_>) {
+        self.row = found.is_some();
+        self.drawn = found.map(ring).unwrap_or_default();
     }
 
     fn input(&mut self, _text: &str, _cx: &mut Context<'_>) -> bool {
@@ -80,7 +102,7 @@ impl Tool for IdentifyTool {
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
-        if self.shown.is_some() {
+        if self.shown.is_some() || self.row {
             self.show(None, cx);
         }
         Flow::Exit
@@ -88,7 +110,7 @@ impl Tool for IdentifyTool {
 
     /// Esc closes the card first; then it leaves.
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
-        if self.shown.is_none() {
+        if self.shown.is_none() && !self.row {
             cx.view_changes.push(ViewChange::InfoCard(None));
             return false;
         }

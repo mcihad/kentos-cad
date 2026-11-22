@@ -27,6 +27,38 @@ pub enum Source {
     Local,
     /// A cloud project; saving goes to the server.
     Cloud(Box<CloudSource>),
+    /// A project kept in a data source with its data (docs/adr/9107); saving writes it there again.
+    Stored(Box<StoredSource>),
+}
+
+/// A project kept in a GeoPackage file or a PostgreSQL schema (docs/adr/9107).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StoredSource {
+    /// The source: a GeoPackage's path, a database's `postgresql://user@host:port/db` (no password).
+    pub address: String,
+    /// A database's schema; none for a file.
+    pub schema: Option<String>,
+    /// The project's name there.
+    pub name: String,
+}
+
+impl StoredSource {
+    /// A GeoPackage's file: where its layers' relative paths start from; none for a database.
+    pub fn file(&self) -> Option<PathBuf> {
+        (!self.address.starts_with("postgres")).then(|| PathBuf::from(self.address.strip_prefix("gpkg:").unwrap_or(&self.address)))
+    }
+
+    /// Where it is kept, as the interface says it: “sivas.gpkg”, “kentos_veri › public”.
+    pub fn place(&self) -> String {
+        match self.file() {
+            Some(f) => f.file_name().map_or_else(|| self.address.clone(), |n| n.to_string_lossy().into_owned()),
+            None => {
+                let db = self.address.rsplit('/').next().unwrap_or(&self.address);
+                let db = db.split('?').next().unwrap_or(db);
+                format!("{db} › {}", self.schema.as_deref().unwrap_or("public"))
+            }
+        }
+    }
 }
 
 /// The cloud project a drawing is.
@@ -84,6 +116,8 @@ pub struct Document {
     /// Its file as this drawing last read or wrote it (its time and size): a save over a file that changed since
     /// (another tab, another program) is refused rather than losing that work.
     pub disk: Option<DiskStamp>,
+    /// Its project's pending data edits as kept on this device beside its place (data_journal.rs, docs/adr/9111 §3).
+    pub kept: Option<crate::data_journal::Kept>,
 }
 
 /// A file's last change and size.
@@ -112,6 +146,7 @@ impl Document {
             source: Source::Local,
             session: session(),
             disk: None,
+            kept: None,
         })
     }
 
@@ -124,6 +159,7 @@ impl Document {
             source: Source::Local,
             session: session(),
             disk: None,
+            kept: None,
         })
     }
 
@@ -144,6 +180,7 @@ impl Document {
             session: session(),
             legacy: false,
             disk: None,
+            kept: None,
         }
     }
 
@@ -157,6 +194,7 @@ impl Document {
             session: session(),
             legacy: false,
             disk: None,
+            kept: None,
         }
     }
 
@@ -169,6 +207,23 @@ impl Document {
         self.legacy = false;
         self.source = Source::Local;
         self.model.mark_saved(revision);
+    }
+
+    /// Written into a data source (docs/adr/9107): it is that project now, and has no file of its own.
+    pub fn stored(&mut self, at: StoredSource, revision: u64) {
+        self.disk = None;
+        self.path = None;
+        self.legacy = false;
+        self.source = Source::Stored(Box::new(at));
+        self.model.mark_saved(revision);
+    }
+
+    /// The data source it is kept in, if it is kept in one.
+    pub fn stored_source(&self) -> Option<&StoredSource> {
+        match &self.source {
+            Source::Stored(s) => Some(s),
+            _ => None,
+        }
     }
 
     /// Why saving over its own file would lose another's work: the file changed since this drawing read or wrote it.
@@ -189,14 +244,14 @@ impl Document {
     pub fn cloud_source(&self) -> Option<&CloudSource> {
         match &self.source {
             Source::Cloud(c) => Some(c),
-            Source::Local => None,
+            Source::Local | Source::Stored(_) => None,
         }
     }
 
     pub fn cloud_source_mut(&mut self) -> Option<&mut CloudSource> {
         match &mut self.source {
             Source::Cloud(c) => Some(c),
-            Source::Local => None,
+            Source::Local | Source::Stored(_) => None,
         }
     }
 

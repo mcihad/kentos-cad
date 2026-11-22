@@ -2,10 +2,10 @@
 import type { LayerStateNode } from "./LayerStateNode";
 
 /**
- * A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's
- * layer states): the tree's nodes as they were when it was saved, their
- * visibility and, when it was saved with them, their locks and the layers'
- * styles. The project keeps them (`ProjectSettings::layer_states`).
+ * A named layer state (docs/adr/0177 §4): the tree's nodes as they were
+ * when it was saved, their visibility and, when it was saved with them,
+ * their locks and the layers' styles. The project keeps them
+ * (`ProjectSettings::layer_states`).
  */
 export type LayerState = { 
 /**

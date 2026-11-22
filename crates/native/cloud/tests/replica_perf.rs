@@ -84,6 +84,7 @@ fn opened(n: usize) -> Opened {
     let settings = ProjectSettings {
         map_srid: None,
         auto_select: None,
+        edit_grouping: None,
         leader_styles: Vec::new(),
         wall_styles: Vec::new(),
         arch: None,
@@ -175,6 +176,7 @@ fn opened(n: usize) -> Opened {
         snap: None,
         fields: Vec::new(),
         service: None,
+        data: None,
         feed: None,
         time: None,
         scenario: None,
@@ -187,6 +189,7 @@ fn opened(n: usize) -> Opened {
         indexes: Vec::new(),
         dataset: None,
         derivation: None,
+        class_counts: None,
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {

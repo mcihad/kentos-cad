@@ -4,6 +4,59 @@
 
 ## 0. Güncel karar özeti
 
+- **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
+  [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),
+  [ADR 9104](../adr/9104-transactions.md), [ADR 9105](../adr/9105-layer-classes.md),
+  [ADR 9106](../adr/9106-layer-export.md), [ADR 9107](../adr/9107-project-in-a-source.md),
+  [ADR 9108](../adr/9108-integer-widths-and-groups.md), [ADR 9109](../adr/9109-expression-to-the-source.md),
+  [ADR 9110](../adr/9110-classes-from-the-source.md), [plan/veri.md](../../plan/veri.md)).**
+  - Veritabanı ve dosya katmanları ayrı crate'lerdeki sürücülerden geçer:
+    - ortak sözleşme `kentos-data`;
+    - `kentos-data-gpkg`;
+    - `kentos-data-postgis`;
+    - Oracle, MySQL ve SQL Server ileride birer sürücü crate'idir.
+  - İstek (kutu, koşul, sıra, sayfa, sadeleştirme) kaynağa gider. PostGIS'te satırlar sunucu imleciyle okunur;
+    veritabanı başına tek bağlantı havuzu vardır.
+  - Yeni bir sürücü, kaydedilmeden önce `kentos_data::conformance`'ı geçer.
+  - **Veri katmanı** ayrı bir katman türüdür (`LayerNode.data`, `cad.layers.data`, `.kcad`'da CBS verisi sürüm 2).
+    Satırları çizime kopyalanmaz; proje adresi taşır, parolayı taşımaz. Kaynaklar'dan ve PostGIS'e bağlan'dan eklenen
+    tablo veri katmanı olur.
+  - Veri katmanı görünümü kaynaktan okur: görünüm ve yarısı kadar pay, yarım piksel sadeleştirme, parça parça çizim,
+    çizim katmanlarıyla aynı stil motoru. Yaklaşmak projede saklanan kutuyla yapılır, kaynağa gitmez.
+  - Öznitelik tablosu veri katmanında sayfa sayfa kaynaktan okunur; metin Türk alfabesiyle sıralanır (`cad.layers.rows`).
+  - **Düzenleme oturumu** (`cad.layers.session`): veri katmanı düzenlemeye açılır. Değişiklikleri kaydedilene kadar
+    çizimde katmanın nesneleri olarak bekler, Kaydet kaynağın tek işlemiyle yazar. Düzenlenmeyen veri katmanına nesne
+    yazılmaz (bütünlük denetimi). Alınan satırlar dosyaya yazılmaz; yeni satırlar dosyada kalır.
+  - **Düzenleme grubu** proje ayarıdır (`settings.editGrouping`: her katman ayrı, aynı kaynaktakiler, bütün katmanlar).
+    Grubun katmanları birlikte açılıp kapanır; aynı kaynağınkiler tek işlemle yazılır. Kaydetmeden önce alınan satırlar
+    aynı işlemde yeniden okunur: başkası değiştirdiyse hiçbir şey yazılmaz (`rows_changed`); üstüne yazmak yalnız
+    değiştirilen alanları ve şekli yazar. Sunucuda açık işlem tutulmaz.
+  - **Katman ağacında sınıflar:** katman stilinin sınıflandırması katmanın altında satır olur. Kutu sınıfı işleyicide
+    açar kapar (`enabled`, `otherEnabled`), geri alma adımı değildir. Kapalı sınıf çizilmez, etiketlenmez, kenet almaz.
+    Sınıf mantığı tek yerde: `kentos_scene_query::style_classes` (sayım ve seçim çizimin kuralıyla). Nesne sayısı
+    `classCounts` (CBS verisi sürüm 4).
+  - **Dışa aktarma** (`cad.layers.export`, katmanın sağ tuşunda Dışa aktar ▸ Farklı kaydet… ve Seçilenleri farklı
+    kaydet…): GeoPackage ya da PostGIS tablosu, GeoJSON, Shapefile, CSV, KML. Veri katmanının satırları parça parça okunur
+    ve yazılır. Arka planda yazar; ilerleme ve Durdur. Yeni dosya `.part` olarak yazılıp sonunda yerine konur: durdurulan
+    ya da başarısız yazma hiçbir şey bırakmaz. GeoPackage'a sistem adı ve WKT'siyle yazılır (`NewTable.system`).
+  - **Proje bir veri kaynağında** (Dosya › Veri kaynağı; ADR 9107): proje dosyaya kaydedildiği gibi bir GeoPackage'a
+    (`kentos_projects` uzantısı) ya da PostgreSQL şemasına da kaydedilebilir. Depo sürücü sözleşmesindedir
+    (`ProjectStore`); yeni bir sürücü projeyi de saklar. Veri katmanının göreli yolu yazılır: GeoPackage, içindeki proje
+    ve katmanlarıyla taşınır. Kaynaklar GeoPackage'ın ve şemanın projelerini tablolarının yanında listeler.
+  - **CBS projesinde nesne verisi proje dosyasına gömülmez:** Nokta, Çizgi, Alan katmanı… bir kaynağın yeni tablosunu
+    yapar (`cad.layers.create`); nesne tutan eski katman tek adımda kaynağa taşınır (`cad.layers.migrate`; süzgecin
+    gizledikleri de, tabloya yazılamayan nesne varsa hiçbiri). Plan/veri.md'nin dokuz maddesi tamam.
+  - **İkinci tur (21 Kasım, “hepsini düzelt”):** tam sayının genişliği sözleşmede (`FieldKind::Int { bits }`): KentOS'un
+    Tam sayısı GeoPackage'a `MEDIUMINT`, Büyük tam sayısı `INTEGER` yazılır; sütunun tutmadığı değer reddedilir.
+    Kaynakta gruplanmış sayım `Source::groups` (Türk alfabesinin sırası, boş değer sonda); kendi sorgusu olmayan sürücü
+    için varsayılan sayar. Tam ortak durum koşusu ve yetenek denetimi temiz tutulur (VY-10).
+  - **İfadeden kaynağın koşuluna** (ADR 9109): ADR 0581 §3'ün kuralı tek yerde (`pushdown::sent`); SQL ve
+    `kentos_data::Condition` onun iki yazılışı. Tablonun, dışa aktarmanın ve canlı çizimin süzgeci kaynakta sorulur; tam
+    olmayan kısım burada yeniden sorulur. SQLite'ta sayı koşulu sütunun metinlerini de geçirir (`Condition::Text`).
+  - **Sınıflar kaynaktan** (ADR 9110): veri katmanında stil penceresi değerleri ve Nesne sayılarını kaynaktan okur;
+    katman ağacının sayımı kaynakta (`GROUP BY`, tam giden koşullar); sınıf satırına çift tık sembolü açar; çizim
+    katmanında kapalı sınıfın nesnesi etiketlenmez; değeri boş alan etikette boş.
+
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.
   Gerçek fare/klavye ve ekran görüntüsüyle doğrulama sürer, ancak ham GUI

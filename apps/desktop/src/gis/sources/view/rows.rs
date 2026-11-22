@@ -213,6 +213,30 @@ impl App {
                 depth,
                 open,
             } => self.file_table_row(key, origin, table, bound.as_ref(), *depth, *open, chosen),
+            // A project kept in the source (docs/adr/9107): a click opens it.
+            Line::Stored { key, at, meta: about, depth } => {
+                let face = self.row_button(
+                    row![
+                        indent(*depth),
+                        space().width(Length::Fixed(12.0)),
+                        glyph("fileOpen"),
+                        name(at.name.clone(), false),
+                        meta("proje".to_owned()),
+                    ],
+                    msg(Event::OpenStored(at.clone())),
+                    chosen,
+                );
+                let _ = key;
+                let written = if about.is_empty() { String::new() } else { format!(" Son yazan: {about}.") };
+                tip(
+                    face,
+                    Tip::new(at.name.clone()).body(format!(
+                        "KentOS projesi, {} içinde saklanıyor.{written} Tıklayınca açılır; katmanları kaynaklarından okunur.",
+                        at.place()
+                    )),
+                    tooltip::Position::Left,
+                )
+            }
             Line::Extent {
                 key,
                 srid,
@@ -664,7 +688,8 @@ impl App {
                     .on_press(add.clone())
                     .padding(kentos_ui::theme::metrics::icon_small(15.0))
                     .style(style::button::ghost),
-                Tip::new("Bağlı katman olarak aç"),
+                Tip::new("Veri katmanı olarak ekle")
+                    .body("Tablo kopyalanmaz: satırları dosyada kalır, görünüm gerektikçe okunur."),
                 tooltip::Position::Left,
             ),
         };
@@ -733,8 +758,9 @@ impl App {
                     .detail("Tablo bu çizimde zaten bağlı; ikinci kez bağlanmaz.")
             } else {
                 Menu::new()
-                    .item("Bağlı katman olarak aç…", bind.clone())
+                    .item("Veri katmanı olarak ekle", bind.clone())
                     .icon(from_web(Some("layerAdd")))
+                    .detail("Satırlar dosyada kalır; görünüm, tablo ve araçlar gerektikçe kaynaktan okur.")
             };
             if let Some(copy) = &copy {
                 menu = menu

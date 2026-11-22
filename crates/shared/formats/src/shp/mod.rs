@@ -9,9 +9,11 @@
 //! [`read_zip`]; docs/adr/0053): each .shp in it is a layer, its parts found
 //! by name.
 
+mod columns;
 pub mod dbf;
 pub mod prj;
 pub mod shape;
+pub mod stream;
 pub mod write;
 
 use std::collections::BTreeMap;

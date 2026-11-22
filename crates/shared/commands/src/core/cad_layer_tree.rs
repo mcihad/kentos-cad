@@ -343,6 +343,12 @@ pub enum LayerSetOperation {
     ThawAll,
     /// Yalıtımı kaldır: the nodes the last `isolate` hid, still hidden, shown again.
     Unisolate,
+    /// A layer's style classes switched on or off (docs/adr/9105 §3): the tree's boxes under the layer.
+    ClassVisible,
+    /// A layer's style classes each turned the other way (Tersine çevir).
+    ClassInvert,
+    /// Nesne sayısını göster (docs/adr/9105 §4): whether the tree says how many objects the layer and its classes hold.
+    ClassCounts,
 }
 
 /// Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,
@@ -368,22 +374,28 @@ pub enum LayerSetOperation {
 /// - `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither
 ///   drawn, picked, snapped to nor counted in the extent; a group's covers
 ///   everything under it;
-/// - `thawAll`: every node thawed.
+/// - `thawAll`: every node thawed;
+/// - `classVisible`: `layer`, `value`, and `classes` (their ids, as `cad.layers.classes` gives them; none: every
+///   class): the layer's style classes drawn or not (docs/adr/9105 §3); a class switched off keeps its objects, drawn
+///   by nothing;
+/// - `classInvert`: `layer`, and `classes` (none: every class): each turned the other way;
+/// - `classCounts`: `layer`, `value` (docs/adr/9105 §4): whether the tree says how many objects the layer and each
+///   class hold.
 ///
-/// The eye, the lock, the freeze, printing, the name and the active layer
-/// are the project's (kept in the file); only what `isolate` hid is the
-/// session's (docs/adr/0311 §2).
+/// The eye, the lock, the freeze, printing, the name, the classes switched on and off, the counts shown and the
+/// active layer are the project's (kept in the file); only what `isolate` hid is the session's (docs/adr/0311 §2).
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_layer`
-/// (rename, visible, locked, plot, frozen, active without `layer`),
+/// (rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts without `layer`),
 /// `no_layers` (isolate without a node), `empty_name` (rename with a name
-/// empty or only white space), `no_value` (visible, locked, plot, frozen
+/// empty or only white space), `no_value` (visible, locked, plot, frozen, classVisible, classCounts
 /// without `value`); then `invalid_revision`, `revision_conflict` (status
 /// `conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`
-/// (active: a group), `service_layer` (active: a layer drawn from a map
+/// (active and the class operations: a group), `service_layer` (active: a layer drawn from a map
 /// service holds no objects), `layer_frozen` (active: a frozen layer, or one
 /// in a frozen group), `active_frozen` (frozen: the active layer, or a group
-/// holding it). A change that changes nothing answers `changed` false.
+/// holding it), `no_classes` (classVisible, classInvert: the layer's look has no classes), `class_not_found`
+/// (`classes[i]` names none of its classes). A change that changes nothing answers `changed` false.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -403,6 +415,10 @@ pub struct LayersSet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<bool>,
+    /// `classVisible`, `classInvert`: the classes' ids (`c3`, `other`, `g2`, `r0.1`); none: every class.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub classes: Option<Vec<String>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -419,6 +435,7 @@ impl LayersSet {
             layers: None,
             name: None,
             value: None,
+            classes: None,
             expected_revision: None,
         }
     }

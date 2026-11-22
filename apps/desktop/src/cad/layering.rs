@@ -41,7 +41,7 @@ use crate::module_surfaces::LayerEntry;
 pub const TREE_LOCKED: &str = "Bu projede katman ağacını değiştirme yetkiniz yok (project.edit); proje sahibinden ya da yöneticisinden isteyin.";
 
 /// Two presses on one row closer than this are a double click (KentOS UI's sash's).
-const DOUBLE_CLICK: Duration = Duration::from_millis(400);
+pub(crate) const DOUBLE_CLICK: Duration = Duration::from_millis(400);
 
 // The colours of the layer's colour menu after the theme's two inks, the line
 // types and weights: the web's `DRAW_COLORS`, `LINE_TYPE_LABEL` and
@@ -185,7 +185,15 @@ impl App {
             .as_ref()
             .is_some_and(|(last, at)| *last == id && now.duration_since(*at) <= DOUBLE_CLICK);
         self.last_layer_press = (!double).then(|| (id.clone(), now));
-        self.selected_layer = Some(id.clone());
+        self.row_chosen(&id);
+        if double {
+            self.activate_row(&id);
+        }
+    }
+
+    /// A row of the tree pressed: its layer chosen, the tree holding the keyboard.
+    pub(crate) fn row_chosen(&mut self, id: &str) {
+        self.selected_layer = Some(id.to_owned());
         // A click in the tree chooses its rows until the selection changes again.
         self.layers_follow = false;
         self.layers_keyboard = true;
@@ -194,9 +202,6 @@ impl App {
         self.arch.templates_panel.keyboard = false;
         // The pressed row is in view already.
         self.layer_reveal = None;
-        if double {
-            self.activate_row(&id);
-        }
     }
 
     pub(crate) fn layer_event(&mut self, event: Event) -> Task<Message> {
@@ -472,6 +477,20 @@ impl App {
         let Some(node) = doc.model.layers().get(id) else {
             return;
         };
+        // A data layer, or a group of them, frames its tables' boxes (docs/adr/9101 §5).
+        let mut boxes = Vec::new();
+        data_boxes(node, doc.settings(), &mut boxes);
+        if let Some(b) = union(&boxes) {
+            self.navigating(|app| {
+                app.zoom_to_bounds(&kentos_commands::Bounds {
+                    min_x: b[0],
+                    min_y: b[1],
+                    max_x: b[2],
+                    max_y: b[3],
+                })
+            });
+            return;
+        }
         let mut layers = Vec::new();
         leaves(node, &mut layers);
         let ids: Vec<f64> = doc
@@ -663,7 +682,7 @@ impl App {
     }
 
     /// How many objects a layer, or every layer below a group, holds.
-    fn objects_below(&self, node: &LayerNode) -> usize {
+    pub(crate) fn objects_below(&self, node: &LayerNode) -> usize {
         self.document
             .as_ref()
             .map_or(0, |doc| doc.count_below(node))
@@ -780,10 +799,13 @@ impl App {
                 container(icon(crate::icons::from_web(Some("layerAdd"))).size(14.0))
                     .padding([2, 4]),
                 || {
+                    // A point, line or area layer is a new table of a data source (docs/adr/9107 §7): its window asks
+                    // where, so the item ends with “…”; an annotation layer is the drawing's.
                     crate::layer_types::NEW_TYPED
                         .iter()
                         .fold(Menu::new().header("Yeni katman"), |m, (id, g)| {
-                            m.item(format!("{} katmanı", g.label()), Message::Run(id))
+                            let window = *g != kentos_commands::LayerGeometry::Annotation;
+                            m.item(format!("{} katmanı{}", g.label(), if window { "…" } else { "" }), Message::Run(id))
                                 .icon(crate::layer_types::glyph(Some(*g)))
                         })
                         .separator()
@@ -794,7 +816,7 @@ impl App {
             tip(
                 menu,
                 Tip::new("Yeni katman").body(
-                    "Nokta, çizgi, alan ya da açıklama katmanı: türlü katman yalnız kendi türünden nesne alır. Karışık katman her türü alır.",
+                    "Nokta, çizgi ve alan katmanı bir veri kaynağının yeni tablosudur (GeoPackage ya da PostgreSQL): nesneleri proje dosyasında değil tablonun satırlarında durur. Açıklama ve karışık katman çizimin katmanıdır.",
                 ),
                 tooltip::Position::Bottom,
             )
@@ -924,6 +946,37 @@ fn removal_counts(model: &kentos_domain::Document, id: &str) -> (usize, usize) {
 }
 
 /// The layers of a node: itself, or every layer below a group.
+/// The boxes of the data layers at or below `node`, in the project's system.
+fn data_boxes(node: &LayerNode, settings: &kentos_commands::ProjectSettings, out: &mut Vec<[f64; 4]>) {
+    if let Some(b) = crate::data_layers::extent_in_project(node, settings) {
+        out.push(b);
+    }
+    for c in &node.children {
+        data_boxes(c, settings, out);
+    }
+}
+
+impl App {
+    /// Whether a data layer at or below `node` has a box to frame.
+    pub(crate) fn data_box_below(&self, node: &LayerNode) -> bool {
+        let Some(doc) = &self.document else {
+            return false;
+        };
+        let mut boxes = Vec::new();
+        data_boxes(node, doc.settings(), &mut boxes);
+        !boxes.is_empty()
+    }
+}
+
+/// The box holding all of `boxes`.
+pub(crate) fn union(boxes: &[[f64; 4]]) -> Option<[f64; 4]> {
+    let mut it = boxes.iter();
+    let first = *it.next()?;
+    Some(it.fold(first, |a, b| {
+        [a[0].min(b[0]), a[1].min(b[1]), a[2].max(b[2]), a[3].max(b[3])]
+    }))
+}
+
 fn leaves<'a>(node: &'a LayerNode, out: &mut Vec<&'a str>) {
     match node.kind {
         LayerNodeType::Layer => out.push(&node.id),

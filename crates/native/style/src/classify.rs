@@ -1,5 +1,5 @@
-//! Classes for the layer style window (the web's `style/classify.ts`, QGIS
-//! “Classify”): the distinct values of an expression over a layer's
+//! Classes for the layer style window (the web's `style/classify.ts`,
+//! “Değerlerden sınıfla”): the distinct values of an expression over a layer's
 //! objects, numeric classes by equal interval or equal count, colour ramps,
 //! and the plain symbols a new class starts with. The window only shows and
 //! edits them. Both platforms are held to `fixtures/style/v1/classify.json`;
@@ -383,7 +383,7 @@ pub fn count_in(numbers: &[f64], min: f64, max: f64, last: bool) -> usize {
 
 // ── Colours ────────────────────────────────────────────────────────────
 
-/// Well-separated colours for categories (QGIS-like “rastgele” but repeatable).
+/// Well-separated colours for categories (“rastgele”, but repeatable).
 pub const QUALITATIVE: [&str; 12] = [
     "#E15759", "#4E79A7", "#F28E2B", "#76B7B2", "#59A14F", "#EDC948", "#B07AA1", "#FF9DA7",
     "#9C755F", "#BAB0AC", "#8CD17D", "#86BCB6",
@@ -700,6 +700,7 @@ pub fn graduated_of(
             max: c.max,
             label: class_label(*c, 2),
             symbols: plain_symbols(&color, present),
+            enabled: None,
             extra: Default::default(),
         })
         .collect()

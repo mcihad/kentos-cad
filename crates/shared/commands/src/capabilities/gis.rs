@@ -147,6 +147,94 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // docs/adr/9102 §4: a data layer's rows read from its source.
+    Entry {
+        id: "cad.layers.rows",
+        refusals: &[
+            &["no_layer", "invalid_count", "invalid_extent"],
+            &["layer_not_found", "not_a_data_layer", "field_not_found"],
+            &["invalid_expression", "source_unreachable"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    // docs/adr/9105 §2: a layer's style classes, counted.
+    Entry {
+        id: "cad.layers.classes",
+        refusals: &[
+            &["no_layer", "layer_not_found", "not_a_layer"],
+            &["service_layer", "source_unreachable"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    // docs/adr/9106: a layer written to a table or a file.
+    Entry {
+        id: "cad.layers.export",
+        refusals: &[
+            &["no_layer", "no_target", "invalid_option", "invalid_name"],
+            &["layer_not_found", "not_a_layer", "service_layer", "field_not_found"],
+            &["invalid_expression", "unknown_srid", "target_exists", "source_unreachable", "nothing_to_export"],
+        ],
+        warnings: &["export_skipped", "field_left_out"],
+        targets: none,
+    },
+    // docs/adr/9107 §8: a drawing layer moved into a data source.
+    Entry {
+        id: "cad.layers.migrate",
+        refusals: &[
+            &["no_layer", "no_target", "invalid_name", "layer_not_found"],
+            &["not_a_layer", "service_layer", "data_layer", "layer_locked"],
+            &["target_exists", "source_unreachable", "nothing_to_export", "unwritable_objects"],
+        ],
+        // docs/adr/9114 §2: a text's details its table has no column for.
+        warnings: &["text_details_left"],
+        targets: none,
+    },
+    // docs/adr/9107 §7: a new layer made as a new table of a data source.
+    Entry {
+        id: "cad.layers.create",
+        refusals: &[
+            &["empty_name", "no_target", "invalid_name", "invalid_fields"],
+            &["unknown_srid", "target_exists", "source_unreachable"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    // docs/adr/9103 §3: a data layer's edit session.
+    Entry {
+        id: "cad.layers.session",
+        refusals: &[
+            &["no_layer", "one_layer", "no_keys", "invalid_count"],
+            &["layer_not_found", "not_a_data_layer", "data_layer_read_only"],
+            &["data_layer_not_editing", "data_edits_unsaved"],
+            &["source_unreachable", "data_save_failed", "rows_changed"],
+        ],
+        warnings: &["data_save_failed"],
+        targets: none,
+    },
+    // docs/adr/9101 §4: a data layer added, changed or removed.
+    Entry {
+        id: "cad.layers.data",
+        refusals: &[
+            &[
+                "no_layer",
+                "empty_name",
+                "no_data",
+                "invalid_data",
+                "invalid_fields",
+            ],
+            REVISION,
+            &[
+                "layer_not_found",
+                "not_a_layer",
+                "not_a_data_layer",
+                "layer_refused",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // docs/adr/0583 §2: a layer's source system recorded, its objects moved from one.
     Entry {
         id: "cad.layers.crs",
@@ -298,6 +386,8 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "no_value",
                 "layer_frozen",
                 "active_frozen",
+                "class_not_found",
+                "no_classes",
             ],
             REVISION,
         ],
