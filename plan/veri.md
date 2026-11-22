@@ -292,3 +292,13 @@ numaraları raporunkidir.
     Kaydet'i veri katmanında “bekliyor” der.
   - Günlüğün yeri ilk kayıtta da çözülmüş klasörle hesaplanır (bağlantılı klasörde bekleyenler açılışta geliyor).
   - Kalan: CBS durum çubuğunun dar penceredeki taşması (rapor 12), çevrimdışı tabloda bekleyenler (rapor 31), web.
+- [~] **VY-23 — Topoloji veri katmanının bütün tablosunu denetler (rapor 16, P0).**
+  ([ADR 9124](../docs/adr/9124-topology-over-a-data-layers-table.md))
+  - Kuralların andığı veri katmanının satırları kaynaktan bütün geometrisiyle okunur; çizimin tuttuğu satırlar
+    çizimdeki hâlleriyle. Sonuç yakınlaştırmadan bağımsız.
+  - Satırlar katman ve anahtarla adlanır, bulgu seçilince tabloda seçilir; kaynaktaki satırı değiştiren düzeltme
+    nedeniyle reddedilir. Okunamayan kaynak “denetlenemedi”, hiç nesne yoksa “temiz sayılmaz”.
+  - Raporun verisiyle masaüstü ve çekirdek sınamaları (2.000 m² tek bulgu, kenardan temas temiz, çizim katmanında
+    aynı sonuç).
+  - Kalan: PostGIS durumu gerçek veritabanında koşturulmadı (Docker yanıt vermedi); kaynaktaki satırı kendiliğinden
+    alarak düzeltme; web.

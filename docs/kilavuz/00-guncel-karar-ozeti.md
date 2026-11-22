@@ -74,6 +74,9 @@
     [ADR 9123](../adr/9123-project-save-and-source-writes-told-apart.md), VY-22): kaynağa yazılmayan satırlar adın
     yanında rozet ve durum çubuğunda hücredir; Katman değişiklikleri penceresi satırları alan alan gösterir, kaynağa
     yazar ya da geri alır. Kapatma sorusunun seçenekleri Kaynağa yaz, Taslak olarak tut, Değişiklikleri geri al'dır.
+  - **Topoloji veri katmanının bütün tablosunu denetler** (22 Kasım, değerlendirmenin 16. maddesi;
+    [ADR 9124](../adr/9124-topology-over-a-data-layers-table.md), VY-23): satırlar kaynaktan bütün geometrisiyle
+    okunur, katman ve anahtarla adlanır; okunamayan kaynak “denetlenemedi”dir, hiçbir zaman temiz değildir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

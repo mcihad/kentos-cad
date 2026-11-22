@@ -2485,6 +2485,9 @@ Liste:
 - [ ] Proje kaydı ile kaynağa yazım ayrı (ADR 9123, 22 Kasım 2026): web'in veri katmanı düzenlemesi geldiğinde
   kaynağa yazılmayan satırlar adın yanında rozet ve durum çubuğunda hücre olsun; Katman değişiklikleri penceresi,
   kapatma sorusunun dört seçeneği ve formun “bekliyor” iletisi masaüstündeki gibi.
+- [ ] Topoloji veri katmanının bütün tablosunu denetler (ADR 9124, 22 Kasım 2026): web'in Topoloji sekmesi WASM'ın
+  `cad.topology.check`'ini çağırırken veri katmanının satırlarını kaynaktan okuyamaz; web'in veri katmanı geldiğinde
+  satırlar sunucunun vekiliyle okunsun, bulgular “satır n” diye görünsün, okunamayan kaynak “denetlenemedi” olsun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

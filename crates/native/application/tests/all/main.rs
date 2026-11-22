@@ -266,3 +266,4 @@ mod module_kinds;
 // A GeoPackage opened as a project (docs/adr/9116).
 #[cfg(feature = "mod-gis")]
 mod gpkg_open;
+mod topology_sources;

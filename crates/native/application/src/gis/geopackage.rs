@@ -48,6 +48,12 @@ pub fn database_row_uid(database: &str, table: &str, key: i64) -> Uuid {
     ))
 }
 
+/// A data layer's row's lasting id while the drawing does not hold it (docs/adr/9124): of the layer's source address,
+/// its table and the row's key, the same in every check.
+pub fn data_row_uid(address: &str, table: &str, key: i64) -> Uuid {
+    Uuid::from_bytes(uuid_v5(&NAMESPACE, format!("veri:{address}/{table}:{key}").as_bytes()))
+}
+
 /// A row's lasting id when the file keeps none.
 pub fn row_uid(table: &str, fid: i64) -> Uuid {
     Uuid::from_bytes(uuid_v5(

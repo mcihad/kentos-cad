@@ -85,6 +85,9 @@ mod-road = ["terrain", "dep:kentos-ifc"]
 [dev-dependencies]
 # cad.layers.rows' shared cases read a GeoPackage through its driver (docs/adr/9102 §4).
 kentos-data-gpkg = { path = "../data-gpkg" }
+# The topology check over a data layer's table runs on PostGIS too when `KENTOS_DATA_PG` names a database
+# (docs/adr/9124).
+kentos-data-postgis = { path = "../data-postgis" }
 # The command catalog (tests/catalog.rs) needs the contracts' JSON Schema feature, as
 # the server's catalog test does.
 kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }

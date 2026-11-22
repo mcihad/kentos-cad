@@ -32,6 +32,8 @@ mod view;
 mod object_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod source_tests;
 
 pub(crate) use plan::{Filter, texts};
 
@@ -87,9 +89,16 @@ impl Checked {
         self.g.key(f)
     }
 
-    /// The objects' ids as the table says them: a drawing's object its id, a row outside a part 0.
-    pub(crate) fn ids(&self) -> Vec<u32> {
-        self.g.slots.iter().map(|s| s.map_or(0, |s| s.0)).collect()
+    /// The objects as the table says them: a drawing's object its id (“#12”), a data layer's row its key (“satır 2”,
+    /// docs/adr/9124), a row outside a part “dışarıda”.
+    pub(crate) fn object_words(&self) -> Vec<String> {
+        (0..self.g.shapes.len())
+            .map(|k| match (self.g.slots.get(k).copied().flatten(), self.g.rows.get(k).cloned().flatten()) {
+                (_, Some((_, key))) => format!("satır {key}"),
+                (Some(slot), None) => format!("#{}", slot.0),
+                (None, None) => "dışarıda".to_owned(),
+            })
+            .collect()
     }
 }
 
@@ -254,7 +263,9 @@ impl App {
             }
         }
         let objects: usize = layers.iter().map(|l| doc.model.count(l)).sum();
-        if objects < running::THREAD_FROM {
+        // A data layer's table is read from its source (docs/adr/9124): never on the interface's thread.
+        let sourced = layers.iter().any(|l| doc.model.layers().get(l).is_some_and(|n| n.data.is_some()));
+        if objects < running::THREAD_FROM && !sourced {
             if let Some(ran) = running::compute(&work, &doc.model, &core::Unwatched) {
                 self.topology_found(ran, then, state);
             }
@@ -313,7 +324,9 @@ impl App {
         match ran {
             Ran::Checked { g, found } => {
                 let n_rules = g.rules.len();
-                let n_objects = g.drawn;
+                let n_objects = g.checked();
+                let sources: Vec<(String, usize)> =
+                    g.sources_read.iter().map(|s| (self.topology_layer_name(&s.layer), s.checked)).collect();
                 let missing = g.missing;
                 let incomplete = g.incomplete.clone();
                 let checked = Checked {
@@ -349,8 +362,10 @@ impl App {
                         self.warn(plan::lapsed_text(lapsed));
                     }
                     if total == 0 {
-                        if incomplete.is_empty() {
-                            self.say(Level::Success, plan::no_findings(n_rules, n_objects));
+                        if incomplete.is_empty() && n_objects == 0 && n_rules > 0 {
+                            self.warn(plan::nothing_checked(n_rules));
+                        } else if incomplete.is_empty() {
+                            self.say(Level::Success, plan::no_findings(n_rules, n_objects, &sources));
                         }
                     } else {
                         self.say(
@@ -595,8 +610,17 @@ impl App {
             .iter()
             .filter_map(|&k| c.g.slots.get(k).copied().flatten())
             .collect();
+        // A data layer's rows read from its source: the table's selection of that layer (docs/adr/9124), outlined on
+        // the map while its table shows.
+        let mut rows: Vec<(String, i64)> =
+            f.objects.iter().filter(|&&k| c.g.in_source(k)).filter_map(|&k| c.g.rows.get(k).cloned().flatten()).collect();
         let view = plan::finding_view(&f.bounds);
         self.selection.set(slots);
+        if let Some((layer, _)) = rows.first().cloned() {
+            rows.retain(|(l, _)| *l == layer);
+            self.gis.features.data.selected.clear();
+            self.gis.features.data.select_rows(&layer, rows.into_iter().map(|(_, k)| k).collect());
+        }
         self.navigating(|app| {
             app.viewport.change(ViewChange::Fit {
                 bounds: view,
@@ -631,6 +655,16 @@ impl App {
         };
         if changes.iter().any(|ch| c.g.outside(ch.object)) {
             self.warn("Bu düzeltme alanın dışındaki bir satırı değiştirir; alanı genişletip satırı çalışma kopyasına alın.");
+            return Task::none();
+        }
+        // A data layer's row read from its source is not the drawing's to change (docs/adr/9124).
+        if let Some(ch) = changes.iter().find(|ch| c.g.in_source(ch.object))
+            && let Some(doc) = self.document.as_ref()
+        {
+            let words = kentos_native_application::topology_check::source_row_words(&doc.model, &c.g, ch.object);
+            self.warn(format!(
+                "Bu düzeltme {words} değiştirir; satır çizimde değil. Katmanı düzenlemeye açıp satırı alın (Düzenlemeyi başlat, sonra satırı seçin), sonra düzeltin."
+            ));
             return Task::none();
         }
         let edits: Vec<EntityEdit> = changes
@@ -783,7 +817,7 @@ impl App {
 
     /// A fix's words in Düzelt ▾ (plan.rs's `fix_label`).
     pub(crate) fn topology_fix_label(&self, f: &Finding, key: &str) -> String {
-        let ids: Vec<u32> = self.topology_checked().map_or_else(Vec::new, Checked::ids);
+        let ids: Vec<String> = self.topology_checked().map_or_else(Vec::new, Checked::object_words);
         let format = self.format();
         plan::fix_label(f, key, &ids, |m| format.length(m))
     }
@@ -847,7 +881,7 @@ impl App {
                 .get(id)
                 .map_or_else(|| id.to_owned(), |n| n.name.clone())
         };
-        let ids: Vec<u32> = c.ids();
+        let ids: Vec<String> = c.object_words();
         let format = self.format();
         let rows = shown
             .iter()

@@ -198,6 +198,12 @@ impl DataTable {
         self.selected_of.as_deref() == Some(layer) && !self.selected.is_empty()
     }
 
+    /// The layer the table's selection is of.
+    #[cfg(test)]
+    pub(crate) fn selected_of_for_test(&self) -> Option<&str> {
+        self.selected_of.as_deref()
+    }
+
     /// Seç's rows of a data layer that is not being edited (data_pick.rs): the table's selection, of that layer.
     pub(crate) fn select_rows(&mut self, layer: &str, keys: Vec<i64>) {
         if self.selected_of.as_deref() != Some(layer) {

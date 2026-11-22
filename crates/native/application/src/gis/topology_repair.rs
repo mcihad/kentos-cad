@@ -123,6 +123,17 @@ fn plan_in(
                 format!("steps[{i}].fix"),
             ));
         }
+        // A data layer's row read from its source is not the drawing's to change (docs/adr/9124).
+        if let Some(c) = changes.iter().find(|c| g.in_source(c.object)) {
+            return Err(fail(
+                codes::FIX_UNAVAILABLE,
+                format!(
+                    "Bu düzeltme {} değiştirir; satır çizimde değil. Katmanı düzenlemeye açıp satırı alın, sonra düzeltin.",
+                    crate::topology_check::source_row_words(doc, &g, c.object)
+                ),
+                format!("steps[{i}].fix"),
+            ));
+        }
         // Nothing on a locked layer is changed (docs/adr/0047): the whole recipe is refused.
         if let Some(c) = changes
             .iter()

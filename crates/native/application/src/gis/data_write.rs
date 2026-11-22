@@ -709,6 +709,77 @@ pub fn rows_to_take(
     }
 }
 
+/// Every row of a data layer read whole for a check over the whole table (docs/adr/9124): what was read and why some
+/// rows were left out.
+#[derive(Clone, Debug, Default)]
+pub struct AllRows {
+    /// Each row's key and its object in the project's system, with every field; rows without geometry left out.
+    pub rows: Vec<(i64, Entity)>,
+    /// How many rows the source gave.
+    pub read: usize,
+    /// Rows left out: without geometry, or a geometry the project's system cannot take (said in `why`).
+    pub skipped: usize,
+    pub why: Vec<String>,
+}
+
+/// Every row of `node`'s table but the keys in `leave` (the rows the drawing holds, and those it deletes), with their
+/// whole geometry (never simplified for a view), in the project's system: a check over the whole table, whatever part
+/// of it the map shows. Stopped when `stopped` says so (an error).
+pub fn all_rows(
+    node: &LayerNode,
+    settings: &ProjectSettings,
+    leave: &BTreeSet<i64>,
+    stopped: &dyn Fn() -> bool,
+) -> Result<AllRows, String> {
+    let Some(data) = &node.data else {
+        return Err(format!("“{}” bir veri katmanı değil.", node.name));
+    };
+    let source = kentos_data::registry()
+        .source(&data.address)
+        .map_err(|e| format!("“{}” tablosu açılamadı: {e}", data.table))?;
+    let srid = data.geometry.as_ref().and_then(|g| g.srid);
+    let system = TableSystem::of(settings, srid)?;
+    let fields: Vec<String> = node.fields.iter().map(|f| f.name.clone()).collect();
+    let height = crate::data_text::default_height(settings);
+    let request = Request {
+        columns: Some(fields.clone()),
+        geometry: data.geometry.is_some(),
+        chunk: CHUNK,
+        ..Request::default()
+    };
+    let mut out = AllRows::default();
+    let mut halted = false;
+    source
+        .features(&data.table, &request, &Cancel::new(), &mut |part: Vec<Feature>| {
+            for f in &part {
+                out.read += 1;
+                if leave.contains(&f.fid) {
+                    continue;
+                }
+                if f.shape().is_none_or(|g| g.is_empty()) {
+                    out.skipped += 1;
+                    continue;
+                }
+                match object_from(f, &fields, &node.id, system.as_ref(), data.text.as_ref(), height) {
+                    Ok(e) => out.rows.push((f.fid, e)),
+                    Err(m) => {
+                        out.skipped += 1;
+                        if out.why.len() < 3 {
+                            out.why.push(m);
+                        }
+                    }
+                }
+            }
+            halted = stopped();
+            !halted
+        })
+        .map_err(|e| format!("“{}” tablosu okunamadı: {e}", data.table))?;
+    if halted {
+        return Err("durduruldu".into());
+    }
+    Ok(out)
+}
+
 /// A row as an object of the layer `layer`: its values (`fields` in order) as attributes, its geometry moved into the
 /// project's system; a row without geometry a record. A layer of texts' row is the text it says (docs/adr/9114 §4;
 /// one without words its point).

@@ -192,10 +192,15 @@ impl App {
             match checked {
                 None if self.gis.topology.running.is_some() => plan::checking(rules),
                 None => plan::not_checked(rules),
-                Some(c) if c.findings.is_empty() && c.g.incomplete.is_empty() => {
-                    plan::no_findings(c.g.rules.len(), c.g.drawn)
+                Some(c) if c.findings.is_empty() && c.g.incomplete.is_empty() && c.g.checked() == 0 => {
+                    plan::nothing_checked(c.g.rules.len())
                 }
-                Some(c) if c.findings.is_empty() => plan::not_clean(c.g.rules.len(), c.g.drawn),
+                Some(c) if c.findings.is_empty() && c.g.incomplete.is_empty() => {
+                    let sources: Vec<(String, usize)> =
+                        c.g.sources_read.iter().map(|s| (self.topology_layer_name(&s.layer), s.checked)).collect();
+                    plan::no_findings(c.g.rules.len(), c.g.checked(), &sources)
+                }
+                Some(c) if c.findings.is_empty() => plan::not_clean(c.g.rules.len(), c.g.checked()),
                 Some(_) => texts::NONE_SHOWN.to_owned(),
             }
         };
@@ -207,7 +212,7 @@ impl App {
         };
         let format = self.format();
         let lines: Vec<(Vec<String>, bool, bool)> = checked.map_or_else(Vec::new, |c| {
-            let ids: Vec<u32> = c.ids();
+            let ids: Vec<String> = c.object_words();
             shown
                 .iter()
                 .map(|&at| {

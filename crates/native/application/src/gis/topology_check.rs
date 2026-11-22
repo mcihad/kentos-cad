@@ -6,6 +6,12 @@
 //! state it saw. An exception bound to its objects' geometry (schema 99) lapses once the geometry changes. A fix of
 //! one finding is previewed: the objects it changes, their measures before and after, the bound sources it touches.
 //! The desktop's Topoloji tab gathers and checks through [`gather`] and [`run`].
+//!
+//! A data layer the rules name (docs/adr/9101, 9124) is checked over its whole table: every row read from its source
+//! with its whole geometry, whatever part of it the map shows, but the rows the drawing holds (taken or deleted in its
+//! edit session), which are checked as the drawing has them. Each row is named by its layer and key; one the drawing
+//! does not hold by a lasting id of its source, table and key. A source that cannot be read leaves its layer
+//! unchecked, said, never clean.
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -49,8 +55,27 @@ pub struct Gathered {
     pub missing: usize,
     /// How many of the objects are the drawing's.
     pub drawn: usize,
+    /// Each object's data layer row, its layer and key (docs/adr/9124); none for an object of no data layer's table (a
+    /// drawing's own, a new row, a bound part's).
+    pub rows: Vec<Option<(String, i64)>>,
+    /// What each data layer's source gave.
+    pub sources_read: Vec<SourceRows>,
     pub incomplete: Vec<TopologyGap>,
     pub stamp: TopologyStamp,
+}
+
+/// A data layer's table as a check read it.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SourceRows {
+    pub layer: String,
+    /// Rows the source gave.
+    pub read: usize,
+    /// Of them, the rows the drawing holds (checked as it has them) and those it deletes.
+    pub held: usize,
+    /// Rows left out: without geometry, or one the project's system cannot take.
+    pub skipped: usize,
+    /// Rows checked: those read and kept, and the drawing's rows of the layer.
+    pub checked: usize,
 }
 
 /// A review mark as the check takes it (docs/adr/1260 §1).
@@ -93,7 +118,18 @@ impl Gathered {
 
     /// Whether the object is a row outside a part.
     pub fn outside(&self, k: usize) -> bool {
-        self.slots.get(k).is_some_and(Option::is_none)
+        self.slots.get(k).is_some_and(Option::is_none) && !self.in_source(k)
+    }
+
+    /// Whether the object is a data layer's row the drawing does not hold: read from its source for the check
+    /// (docs/adr/9124); a fix changing it waits until the row is taken into the drawing.
+    pub fn in_source(&self, k: usize) -> bool {
+        self.slots.get(k).is_some_and(Option::is_none) && self.rows.get(k).is_some_and(Option::is_some)
+    }
+
+    /// How many objects the rules looked at: the drawing's and the data layers' rows, not the rows round bound parts.
+    pub fn checked(&self) -> usize {
+        (0..self.shapes.len()).filter(|&k| !self.outside(k)).count()
     }
 
     /// The digest of the objects' geometry (docs/adr/0589 §3), in the finding's order.
@@ -215,14 +251,22 @@ pub fn gather(doc: &Document, only: Option<&[String]>) -> Gathered {
         ..Gathered::default()
     };
     for (uid, e) in doc.entities_with_uids() {
-        if named.contains(&e.base().layer_id.as_str()) {
+        let layer = e.base().layer_id.as_str();
+        if named.contains(&layer) {
             g.shapes.push(shape(e));
-            g.layers.push(e.base().layer_id.clone());
+            g.layers.push(layer.to_owned());
             g.uids.push(uid.to_string());
             g.slots.push(Some(Slot(e.base().id)));
+            g.rows.push(doc.taken_key(layer, uid).map(|k| (layer.to_owned(), k)));
         }
     }
     g.drawn = g.shapes.len();
+    // The data layers the rules name: their tables whole, from their sources (docs/adr/9124).
+    for layer in &named {
+        if let Some(node) = doc.layers().get(layer).filter(|n| n.data.is_some()) {
+            source_rows(doc, node, &mut g);
+        }
+    }
     // The bound layers the rules name, in the rules' order of their layers.
     let mut sources = Vec::new();
     for layer in &named {
@@ -322,6 +366,49 @@ pub fn rules_digest(doc: &Document, only: Option<&[String]>) -> String {
     sixteen(kentos_commands::canonical::canonical_json(&v).as_bytes())
 }
 
+/// A data layer's table as the check takes it: every row the drawing does not hold, read whole from its source in the
+/// project's system, named by a lasting id of its source, table and key; a gap when the source cannot be read.
+fn source_rows(doc: &Document, node: &kentos_commands::LayerNode, g: &mut Gathered) {
+    let Some(data) = &node.data else {
+        return;
+    };
+    let held = doc.data_hidden(&node.id);
+    let drawn = g.layers.iter().take(g.drawn).filter(|l| **l == node.id).count();
+    match crate::data_write::all_rows(node, doc.settings(), &held, &|| false) {
+        Ok(read) => {
+            let kept = read.rows.len();
+            for (key, e) in read.rows {
+                g.shapes.push(shape(&e));
+                g.layers.push(node.id.clone());
+                g.uids.push(crate::geopackage::data_row_uid(&data.address, &data.table, key).to_string());
+                g.slots.push(None);
+                g.rows.push(Some((node.id.clone(), key)));
+            }
+            if read.skipped > 0 && !read.why.is_empty() {
+                g.incomplete.push(TopologyGap {
+                    layer: node.id.clone(),
+                    reason: format!(
+                        "{} satırın geometrisi projenin sistemine çevrilemedi ve denetlenmedi ({}).",
+                        read.skipped,
+                        read.why.join("; ")
+                    ),
+                });
+            }
+            g.sources_read.push(SourceRows {
+                layer: node.id.clone(),
+                read: read.read,
+                held: held.len(),
+                skipped: read.skipped,
+                checked: kept + drawn,
+            });
+        }
+        Err(why) => g.incomplete.push(TopologyGap {
+            layer: node.id.clone(),
+            reason: format!("kaynağı okunamadı, katman denetlenemedi: {why}."),
+        }),
+    }
+}
+
 /// The rows round `link`'s part taken as neighbours; the digest of what was read; a gap when they could not all be.
 fn band_of(doc: &Document, link: &SourceLink, g: &mut Gathered) -> Option<String> {
     let extent = link.extent?;
@@ -365,6 +452,7 @@ fn band_of(doc: &Document, link: &SourceLink, g: &mut Gathered) -> Option<String
                 g.layers.push(link.layer.clone());
                 g.uids.push(uid.to_string());
                 g.slots.push(None);
+                g.rows.push(None);
             }
             Some(digest)
         }
@@ -413,6 +501,17 @@ impl core::Watch for JobWatch<'_, '_> {
 
 fn count(n: usize) -> u32 {
     n.min(u32::MAX as usize) as u32
+}
+
+/// A data layer's row read from its source, in words: ““parseller” katmanının 2 anahtarlı satırını”.
+pub fn source_row_words(doc: &Document, g: &Gathered, k: usize) -> String {
+    match g.rows.get(k).cloned().flatten() {
+        Some((layer, key)) => format!(
+            "“{}” katmanının {key} anahtarlı satırını",
+            doc.layers().get(&layer).map_or(layer.as_str(), |n| n.name.as_str())
+        ),
+        None => "bir satırı".to_owned(),
+    }
 }
 
 /// A finding as the command says it.
@@ -471,6 +570,12 @@ pub fn preview(
             "Bu düzeltme alanın dışındaki bir satırı değiştirir; alanı genişletip satırı çalışma kopyasına alın."
                 .to_owned(),
         );
+    }
+    if let Some(words) = changes.iter().find(|c| g.in_source(c.object)).map(|c| source_row_words(doc, g, c.object)) {
+        return Err(format!(
+            "Bu düzeltme {words} değiştirir; satır çizimde değil. Katmanı düzenlemeye açıp satırı alın (Düzenlemeyi başlat, \
+             sonra satırı seçin), sonra düzeltin."
+        ));
     }
     let mut out = Vec::with_capacity(changes.len());
     let mut by_layer: BTreeMap<String, u32> = BTreeMap::new();
@@ -641,7 +746,8 @@ fn check_in(
         .count();
     let findings: Vec<TopologyFinding> = kept.into_iter().map(|(_, f)| f).collect();
     let total = findings.len();
-    let neighbours = g.shapes.len() - g.drawn;
+    // The rows round bound parts; the data layers' rows read from their sources are objects the rules looked at.
+    let neighbours = (0..g.shapes.len()).filter(|&k| g.outside(k)).count();
     let mut warnings: Vec<CommandWarning> = g
         .incomplete
         .iter()
@@ -686,7 +792,7 @@ fn check_in(
             errors: count(errors),
             rules: count(g.rules.len()),
             missing: count(g.missing),
-            objects: count(g.drawn),
+            objects: count(g.checked()),
             neighbours: count(neighbours),
             complete: g.incomplete.is_empty(),
             incomplete: g.incomplete.clone(),

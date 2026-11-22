@@ -3529,6 +3529,7 @@ dependencies = [
  "kentos-commands",
  "kentos-data",
  "kentos-data-gpkg",
+ "kentos-data-postgis",
  "kentos-digital-project",
  "kentos-domain",
  "kentos-dwg",

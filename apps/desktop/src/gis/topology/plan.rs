@@ -64,9 +64,19 @@ pub fn checking(rules: usize) -> String {
     format!("{rules} kural denetleniyor; bulgular denetim bitince burada.")
 }
 
-/// After a check without findings: how many rules and objects it looked at.
-pub fn no_findings(rules: usize, objects: usize) -> String {
-    format!("Bulgu yok: {rules} kural, {objects} nesne denetlendi.")
+/// After a check without findings: how many rules and objects it looked at; the data layers' tables read whole from
+/// their sources (docs/adr/9124), each its name and rows checked.
+pub fn no_findings(rules: usize, objects: usize, sources: &[(String, usize)]) -> String {
+    if sources.is_empty() {
+        return format!("Bulgu yok: {rules} kural, {objects} nesne denetlendi.");
+    }
+    let read: Vec<String> = sources.iter().map(|(name, n)| format!("{name}: kaynaktan {n} satır")).collect();
+    format!("Bulgu yok: {rules} kural, {objects} nesne denetlendi ({}).", read.join(", "))
+}
+
+/// No object at all in the rules' layers: nothing was checked, said so rather than clean.
+pub fn nothing_checked(rules: usize) -> String {
+    format!("Denetlenecek nesne yok: {rules} kuralın katmanlarında nesne ya da kaynak satırı bulunmadı; katman temiz sayılmaz.")
 }
 
 /// Rules whose layer (or other layer) the project no longer has.
@@ -104,14 +114,12 @@ pub fn rule_text(rule: &TopologyRule, layer_name: impl Fn(&str) -> String) -> St
     }
 }
 
-/// The objects a finding names, as the drawing shows their ids; a row outside a bound part (id 0) as “dışarıda”.
-pub fn objects_text(f: &Finding, ids: &[u32]) -> String {
+/// The objects a finding names, each as [`Checked::object_words`] says it: the drawing's id, a data layer's row by its
+/// key, a row outside a bound part as “dışarıda”.
+pub fn objects_text(f: &Finding, words: &[String]) -> String {
     f.objects
         .iter()
-        .map(|&k| match ids.get(k).copied().unwrap_or_default() {
-            0 => "dışarıda".to_owned(),
-            id => format!("#{id}"),
-        })
+        .map(|&k| words.get(k).cloned().unwrap_or_else(|| "—".to_owned()))
         .collect::<Vec<_>>()
         .join(", ")
 }
@@ -224,12 +232,13 @@ pub fn finding_view(b: &Bounds) -> Bounds {
 /// A fix as Düzelt ▾ lists it: its name and what it acts on (the object an
 /// area is subtracted from or merged into, the one a vertex is added to or
 /// deleted) or how far an end or a point moves.
-pub fn fix_label(f: &Finding, key: &str, ids: &[u32], length: impl Fn(f64) -> String) -> String {
+pub fn fix_label(f: &Finding, key: &str, words: &[String], length: impl Fn(f64) -> String) -> String {
     let label = kentos_geometry_core::ops::topology_rules::fix_label(key);
+    // The object as the table says it ([`Checked::object_words`]): “#12”, “satır 2”, “dışarıdaki”.
     let id = |k: Option<usize>| {
-        k.and_then(|k| ids.get(k)).map_or_else(String::new, |id| match id {
-            0 => " (dışarıdaki)".to_owned(),
-            id => format!(" (#{id})"),
+        k.and_then(|k| words.get(k)).map_or_else(String::new, |w| match w.as_str() {
+            "dışarıda" => " (dışarıdaki)".to_owned(),
+            w => format!(" ({w})"),
         })
     };
     match key {
