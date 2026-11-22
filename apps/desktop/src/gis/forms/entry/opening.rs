@@ -51,6 +51,59 @@ impl App {
         self.ask_entry_sources()
     }
 
+    /// A read-only connection's row in its form (docs/adr/9159): `e` as its source holds it, shown and not taken; the
+    /// form opens for reading, with no last values and nothing to write.
+    pub(crate) fn open_entry_row(
+        &mut self,
+        layer: &str,
+        key: i64,
+        e: &kentos_commands::Entity,
+        form: &str,
+    ) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let Some(f) = self.project_forms().iter().find(|f| f.id == form).cloned() else {
+            return Task::none();
+        };
+        let (body, draft) = match f.releases.last() {
+            Some(r) => (r.body.clone(), false),
+            None => (f.draft.clone(), true),
+        };
+        let (moment, user) = self.form_moment();
+        let screen = match row_screen(&doc.model, &f.id, e, key, moment.as_deref(), user.as_deref()) {
+            Ok(s) => s,
+            Err(error) => {
+                self.say(Level::Warn, error.message);
+                return Task::none();
+            }
+        };
+        let field = doc
+            .model
+            .layers()
+            .get(layer)
+            .and_then(|n| n.data.as_ref())
+            .map(|d| d.key.clone())
+            .unwrap_or_default();
+        let mut entry = self.entry_of(&f, body, draft, String::new(), screen, moment, user, false, BTreeMap::new());
+        // The row as its source holds it: a new record's last values are not put on it.
+        entry.read_only = true;
+        entry.row = Some((field, key));
+        entry.new_record = false;
+        entry.values.clear();
+        if let Some(doc) = &self.document {
+            entry.recompute(&doc.model);
+        }
+        for (key, content) in entry.notes.iter_mut() {
+            if let Some(f) = entry.fields.iter().find(|f| f.key() == key) {
+                *content = text_editor::Content::with_text(entry.after.get(&f.name).map_or("", String::as_str));
+            }
+        }
+        self.gis.form_entry = Some(entry);
+        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FormEntry));
+        self.ask_entry_sources()
+    }
+
     /// The record's form in the attribute table's Form view (docs/adr/0416): the same editor, no
     /// window.
     pub(crate) fn open_entry_docked(&mut self, slot: Slot, form: &str) -> Task<Message> {
@@ -237,6 +290,7 @@ impl App {
             issue_at: 0,
             asking_close: false,
             read_only: false,
+            row: None,
             removing: None,
             sources: Vec::new(),
             sources_asked: 0,

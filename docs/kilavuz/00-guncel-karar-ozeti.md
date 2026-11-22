@@ -179,6 +179,9 @@
     söyler.
   - **Özet istatistik dosyada sayı** (23 Kasım, rapor 23'ün kalanı;
     [ADR 9158](../adr/9158-typed-summary-statistics-table.md), VY-57): sayılar INTEGER, ölçüler REAL, boş hücre NULL.
+  - **Salt okunur satır formda** (23 Kasım, rapor 27 ve 28'in kalanı;
+    [ADR 9159](../adr/9159-read-only-row-in-its-form.md), VY-58): satır kaynağından okunup yalnız görüntülenir;
+    başlık “salt okunur” der.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

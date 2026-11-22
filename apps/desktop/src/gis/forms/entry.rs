@@ -39,7 +39,7 @@ use kentos_domain::{Document, Slot};
 use kentos_forms::Attrs;
 use kentos_interaction::Level;
 use kentos_native_application::forms::{
-    RecordScreen, preview_screen, record_screen, unique_on_layer,
+    RecordScreen, preview_screen, record_screen, row_screen, unique_on_layer,
 };
 use kentos_native_application::{ExecutionContext, forms_fill, forms_submit};
 use kentos_ui::attribute::{Date, DateTime, Time};
@@ -199,6 +199,9 @@ pub struct Entry {
     /// Opened from a related item that offers reading its children, not changing them
     /// (docs/adr/0762 §1): nothing is written.
     pub(crate) read_only: bool,
+    /// The source row shown and not taken (a read-only connection's: docs/adr/9159): its key field and key. The record
+    /// is not in the drawing; nothing of it is written.
+    pub(crate) row: Option<(String, i64)>,
     /// A related child whose Sil asks first (docs/adr/0762 §4): its item and id.
     removing: Option<(String, String)>,
     /// How the sources of the form's lists stand (docs/adr/0763), the question asked last and whether it runs.

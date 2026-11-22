@@ -130,21 +130,29 @@ impl App {
         lines
     }
 
-    /// What the editor shows above its pages: the record, its place among the layer's, how the form is
-    /// opened, and what is wrong with its values.
-    pub(super) fn entry_head<'a>(&'a self, e: &'a Entry, locked: bool) -> Column<'a, Message> {
-        let mut body = Column::new().spacing(12);
+    /// The record the editor shows, in one line: its kind and layer, a data row's key, a read-only connection, the
+    /// form's draft and the forms waiting under it.
+    pub(crate) fn entry_title(&self, e: &Entry) -> String {
         let mut head = if e.members.is_empty() {
-            // A data layer's row says its key too (docs/adr/9149): the record a table's row named.
-            let key = self.document.as_ref().and_then(|d| {
-                let slot = e.uid_slot(self)?;
-                let uid = d.model.uid(slot)?;
-                let layer = d.model.get(slot)?.base().layer_id.clone();
-                let key = d.model.taken_key(&layer, uid)?;
-                let field = d.model.layers().get(&layer)?.data.as_ref()?.key.clone();
-                Some(format!(" · {field} {key}"))
+            // A data layer's row says its key too (docs/adr/9149): the record a table's row named, taken or only
+            // shown (docs/adr/9159).
+            let key = e.row.as_ref().map(|(field, key)| format!(" · {field} {key}")).or_else(|| {
+                self.document.as_ref().and_then(|d| {
+                    let slot = e.uid_slot(self)?;
+                    let uid = d.model.uid(slot)?;
+                    let layer = d.model.get(slot)?.base().layer_id.clone();
+                    let key = d.model.taken_key(&layer, uid)?;
+                    let field = d.model.layers().get(&layer)?.data.as_ref()?.key.clone();
+                    Some(format!(" · {field} {key}"))
+                })
             });
-            format!("{} · {}{}", e.screen.object.kind, e.screen.object.layer, key.unwrap_or_default())
+            let mut named =
+                format!("{} · {}{}", e.screen.object.kind, e.screen.object.layer, key.unwrap_or_default());
+            // A read-only connection says so where the record is named (docs/adr/9159).
+            if self.read_only_source(&e.screen.layer).is_some() {
+                named.push_str(" · salt okunur");
+            }
+            named
         } else {
             format!(
                 "{} nesne · {} · değiştirdiğiniz alanlar hepsine yazılır",
@@ -166,6 +174,14 @@ impl App {
                 }
             ));
         }
+        head
+    }
+
+    /// What the editor shows above its pages: the record, its place among the layer's, how the form is
+    /// opened, and what is wrong with its values.
+    pub(super) fn entry_head<'a>(&'a self, e: &'a Entry, locked: bool) -> Column<'a, Message> {
+        let mut body = Column::new().spacing(12);
+        let head = self.entry_title(e);
         // ◀ 3 / 12 ▶: the layer's records one after another (docs/adr/0408 §3).
         let step = |glyph: Icon, to: i32, can: bool| {
             iced::widget::button(icon(glyph).size(12.0))
@@ -200,7 +216,9 @@ impl App {
                 "Katmanın alanları bu yayından sonra değişti; tasarımcı formu gözden geçirip yeniden yayınlamalı.",
             )]));
         }
-        if e.read_only {
+        if let Some(why) = self.read_only_source_words(&e.screen.layer) {
+            body = body.push(words::summary(vec![words::text_line(Kind::Info, why)]));
+        } else if e.read_only {
             body = body.push(words::summary(vec![words::text_line(
                 Kind::Info,
                 "İlişkili kayıtlar öğesi bu alt kaydı yalnız okumaya açıyor: kayıt görüntülenir, değiştirilmez.",
@@ -455,7 +473,10 @@ impl App {
 
     /// Why the record may not be written, in the form's own words (docs/adr/9125): opened for reading, the role, the
     /// project's archive, the layer's lock; none when it may.
-    pub(super) fn entry_lock_words(&self, e: &Entry) -> Option<String> {
+    pub(crate) fn entry_lock_words(&self, e: &Entry) -> Option<String> {
+        if let Some(why) = self.read_only_source_words(&e.screen.layer) {
+            return Some(why);
+        }
         if e.read_only {
             return Some("Kayıt yalnız okumaya açıldı.".into());
         }
@@ -468,6 +489,19 @@ impl App {
                 "“{}” katmanı kilitli; kayıt yalnız görüntülenir. Yazmak için katmanın kilidini açın.",
                 self.form_layer_name(&e.screen.layer)
             )
+        })
+    }
+
+    /// The name of `layer` when it is a data layer of a read-only connection (docs/adr/9159).
+    pub(crate) fn read_only_source(&self, layer: &str) -> Option<String> {
+        let node = self.document.as_ref()?.model.layers().get(layer)?;
+        node.data.as_ref().filter(|d| d.read_only).map(|_| node.name.clone())
+    }
+
+    /// Why a read-only connection's record is only shown, in the form's words.
+    pub(super) fn read_only_source_words(&self, layer: &str) -> Option<String> {
+        self.read_only_source(layer).map(|name| {
+            format!("“{name}” salt okunur bağlantıdan geliyor: kayıt görüntülenir, değiştirilmez ve kaynağa yazılmaz.")
         })
     }
 

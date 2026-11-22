@@ -1,16 +1,16 @@
 //! Formla düzenle on a row chosen in a data layer's table (docs/adr/9149): the row is the form's record as a chosen
 //! object of the drawing is. A row taken already opens its object's record, no second copy of it; a row of a layer
 //! being edited is read from its source off the interface's thread, taken into the edit session and opened, so the form
-//! and the session share one pending change; a layer not being edited says so with Düzenlemeyi başlat one press away;
-//! a read-only layer says its records are not written there.
+//! and the session share one pending change; a layer not being edited says so with Düzenlemeyi başlat one press away.
+//! A read-only connection's row is read the same way and shown in its form for reading, not taken (docs/adr/9159).
 
 use iced::Task;
-use kentos_interaction::Level;
 
 use crate::app::{App, Message};
 use crate::gis;
 
-/// A row read to be taken for its form: the ask it answers, the layer, the key, the form and the rows or why not.
+/// A row read for its form: the ask it answers, the layer, the key, the form, the rows or why not, and whether it is
+/// only shown (a read-only connection's) rather than taken.
 #[derive(Debug, Clone)]
 pub struct RowTaken {
     pub asked: u64,
@@ -18,6 +18,7 @@ pub struct RowTaken {
     pub key: i64,
     pub form: String,
     pub rows: Result<Vec<(i64, kentos_commands::Entity)>, String>,
+    pub shown: bool,
 }
 
 impl App {
@@ -48,17 +49,9 @@ impl App {
         let Some(node) = doc.model.layers().get(&layer).cloned() else {
             return Task::none();
         };
-        if node.data.as_ref().is_some_and(|d| d.read_only) {
-            self.say(
-                Level::Warn,
-                format!(
-                    "“{}” salt okunur bağlantıdan geliyor: kayıtları formla yazılmaz. Değerleri tabloda ya da Bilgi kartında görün.",
-                    node.name
-                ),
-            );
-            return Task::none();
-        }
-        if !doc.model.editing(&layer) {
+        // A read-only connection's row: read and shown, not taken; no edit session needed.
+        let shown = node.data.as_ref().is_some_and(|d| d.read_only);
+        if !shown && !doc.model.editing(&layer) {
             let why = format!(
                 "“{}” düzenlemeye açık değil; {key} anahtarlı kaydı formla düzenlemek için önce katmanın düzenleme oturumunu başlatın.",
                 node.name
@@ -83,6 +76,7 @@ impl App {
                     key,
                     form,
                     rows,
+                    shown,
                 })))
             },
         )
@@ -104,6 +98,12 @@ impl App {
                 return Task::none();
             }
         };
+        if t.shown {
+            return match rows.iter().find(|(k, _)| *k == t.key) {
+                Some((_, e)) => self.open_entry_row(&t.layer, t.key, e, &t.form),
+                None => Task::none(),
+            };
+        }
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };

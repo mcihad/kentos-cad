@@ -443,6 +443,37 @@ pub fn preview_screen(
     made.map_err(|stop: Stop| Box::new(stop.into_error()))
 }
 
+/// The screen of a row shown and not written (a read-only connection's row: docs/adr/9159): `e` read from its source,
+/// not in the drawing, numbered by its `key`; the form's latest release, its draft when it has none. The commands'
+/// refusal when it cannot be.
+pub fn row_screen(
+    doc: &Document,
+    form: &str,
+    e: &kentos_commands::Entity,
+    key: i64,
+    moment: Option<&str>,
+    user: Option<&str>,
+) -> Result<RecordScreen, Box<kentos_commands::CommandError>> {
+    let made = (|| {
+        let variables = variables_given(doc, moment, user)?;
+        let form = self::form(doc.settings(), form, "form")?;
+        let (body, version) = body(form, form.releases.is_empty(), "draft")?;
+        let prepared = prepared(doc, form, body, &variables, "form")?;
+        let layer = doc.layers().get(&form.layer).map_or("", |n| n.name.as_str());
+        let mut object = kentos_forms::object_of(e, layer, key as f64);
+        object.attachments = Some(kentos_forms::Attached::of(&e.base().attachments));
+        Ok(RecordScreen {
+            prepared,
+            object,
+            attrs: e.base().attrs.clone(),
+            version,
+            layer: form.layer.clone(),
+            uid: Uuid::nil(),
+        })
+    })();
+    made.map_err(|stop: Stop| Box::new(stop.into_error()))
+}
+
 /// The issues of the screen's unique fields for `attrs` against the layer's other objects.
 pub fn unique_on_layer(doc: &Document, screen: &RecordScreen, attrs: &Attrs) -> Vec<FormIssue> {
     if screen.prepared.unique_keys().is_empty() {

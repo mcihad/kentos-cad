@@ -391,7 +391,8 @@ impl App {
             Event::Language(tag) => {
                 e.language = tag.filter(|t| e.body.translations.contains_key(t));
             }
-            Event::Cancel if e.dirty() && !e.preview && !e.asking_close => {
+            // A record opened for reading has nothing to keep: Vazgeç closes it without asking (docs/adr/9159).
+            Event::Cancel if e.dirty() && !e.preview && !e.read_only && !e.asking_close => {
                 e.asking_close = true;
             }
             // Esc or × on the question goes back to the form: it is the question's Vazgeç.
@@ -628,6 +629,11 @@ impl App {
 
     /// Kaydet: the record through the form; the window closes when it went in.
     pub(super) fn save_entry(&mut self) -> Task<Message> {
+        // A read-only connection's record is only shown (docs/adr/9159): Kaydet writes nothing, pressed or keyed.
+        if let Some(why) = self.gis.form_entry.as_ref().and_then(|e| self.read_only_source_words(&e.screen.layer)) {
+            self.warn(why);
+            return Task::none();
+        }
         // The checks kept for saving are asked now (docs/adr/0438 §2).
         if let (Some(e), Some(doc)) = (self.gis.form_entry.as_mut(), self.document.as_ref())
             && !e.tried

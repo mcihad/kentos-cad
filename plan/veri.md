@@ -476,3 +476,7 @@ numaraları raporunkidir.
   ([ADR 9158](../docs/adr/9158-typed-summary-statistics-table.md))
   - Nesne/Değer INTEGER, toplam ve ölçüler REAL, boş hücre NULL; kesin metin pencerede kalır.
   - Kalan: öbür tablo veren araçlar, Kaydet ▾ biçimleri, PostGIS sınaması, web.
+- [~] **VY-58 — Salt okunur bağlantının satırı formda yalnız görüntülenir (rapor 27 ve 28'in kalanı).**
+  ([ADR 9159](../docs/adr/9159-read-only-row-in-its-form.md))
+  - Satır kaynağından okunur, çizime alınmaz; başlık “fid 22 · salt okunur”, Kaydet yazmaz; on geçişlik yazım sınaması.
+  - Kalan: iki PostGIS bağlantısıyla on geçiş, salt okunur formda ilişkili kayıtlar, web.
