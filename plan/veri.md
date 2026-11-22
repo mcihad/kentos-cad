@@ -430,3 +430,8 @@ numaraları raporunkidir.
   - `sheet-ui/new_extent.rs`: Görünüm, Katman, Çizimin tamamı, Sabit ölçek; `fit::map` ile ölçek ve söz.
   - Masaüstü katman kutuları; iki pafta/Türkçe harf, boş atlas ve lejant senaryoları.
   - Kalan: resimli önizleme, sorusuz şablon, çevrimdışı servis ve dış kaynakla yeniden basım, çok sayfalı atlas kabulü, web.
+- [~] **VY-47 — Kaynağa yazmada çakışma alan alan: ayrı alanlar birleşir, aynı alan seçilir (rapor 26, P1).**
+  ([ADR 9148](../docs/adr/9148-field-level-write-conflicts.md))
+  - `data_clash`: ilk/benim/tablodaki karşılaştırması ve birleştirme; `WriteFailure::Conflict` satır çakışmalarını taşır.
+  - `data_conflict.rs` penceresi; `data_rebase`, `data_untake`, `data_let_go`; seçimden sonra yeniden kayıt ve denetim.
+  - Kalan: gerçek PostgreSQL'de iki oturum, Python/MCP'de alan alan seçim, uzun değerler, web.

@@ -439,6 +439,49 @@ impl Document {
         Ok(had)
     }
 
+    /// A clash settled (docs/adr/9148): the row taken as `uid` is now the table's row `row` as it was read again, so the
+    /// next save compares the object with it and writes only what still differs. Not an edit, as taking is not: no undo
+    /// step. The row keeps the object's slot and the layer.
+    pub fn data_rebase(&mut self, layer: &str, uid: Uuid, mut row: Entity) -> Result<(), String> {
+        let id = self
+            .store
+            .slot_of(uid)
+            .and_then(|s| self.store.get(s))
+            .map(|s| s.entity.base().id)
+            .or_else(|| self.data_edits.get(layer)?.taken.get(&uid).map(|t| t.row.base().id))
+            .ok_or_else(|| format!("“{layer}” katmanında {uid} kimlikli alınmış satır yok."))?;
+        row.base_mut().id = id;
+        layer.clone_into(&mut row.base_mut().layer_id);
+        let Some(t) = Arc::make_mut(&mut self.data_edits).get_mut(layer).and_then(|e| e.taken.get_mut(&uid)) else {
+            return Err(format!("“{layer}” katmanında {uid} kimlikli alınmış satır yok."));
+        };
+        t.row = Arc::new(row);
+        Ok(())
+    }
+
+    /// A clash settled by forgetting that `uid` was taken (docs/adr/9148): an object still on the layer becomes a new row
+    /// (a row deleted in the table written again); one gone writes nothing for its row. No undo step.
+    pub fn data_untake(&mut self, layer: &str, uid: Uuid) -> bool {
+        Arc::make_mut(&mut self.data_edits)
+            .get_mut(layer)
+            .is_some_and(|e| e.taken.remove(&uid).is_some())
+    }
+
+    /// A clash settled by letting the change of `uid` go (docs/adr/9148): its object leaves the drawing as another
+    /// editor's change would and it is no longer taken; nothing is written for its row.
+    pub fn data_let_go(&mut self, layer: &str, uid: Uuid) -> Result<bool, String> {
+        let taken = self.data_untake(layer, uid);
+        let here = self.store.slot_of(uid).is_some();
+        if here {
+            Arc::make_mut(&mut self.data_left).push(uid);
+            self.apply_external(External {
+                remove: vec![uid],
+                ..External::default()
+            })?;
+        }
+        Ok(taken || here)
+    }
+
     /// Closes `layer`'s session (Düzenlemeyi bitir) when it has nothing to save: its taken objects, unchanged, leave the
     /// drawing. Refused while it has changes: save them or let them go first. Whether it was open.
     pub fn stop_editing(&mut self, layer: &str) -> Result<bool, Refusal> {

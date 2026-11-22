@@ -151,7 +151,8 @@ fn pending_edits_wait_with_the_project_and_come_back_when_it_is_opened() {
     assert!(!model.is_dirty() && !model.can_undo());
     assert!(app.log.lines().any(|l| l.text.contains("Bekleyen veri düzenlemeleri geri geldi")), "{}", last_said(&app));
 
-    // Someone changes the 22nd row meanwhile: the save asks first.
+    // Someone changes the 22nd row's kullanim meanwhile: the save asks first (another field would be merged,
+    // docs/adr/9148).
     let source = kentos_data::registry().source(&address).expect("the source");
     let mut tx = source.begin().expect("a transaction");
     tx.update(
@@ -159,7 +160,7 @@ fn pending_edits_wait_with_the_project_and_come_back_when_it_is_opened() {
         &[kentos_data::Change {
             fid: 22,
             geometry: None,
-            values: vec![("alan".into(), kentos_data::Value::Real(700.0))],
+            values: vec![("kullanim".into(), kentos_data::Value::Text("Park2".into()))],
         }],
     )
     .expect("changed");

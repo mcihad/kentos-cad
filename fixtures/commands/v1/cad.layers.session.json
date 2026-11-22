@@ -15143,7 +15143,7 @@
             "status": "conflict",
             "error": {
               "code": "rows_changed",
-              "message": "Başkası bu satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş (değiştirilmiş: 3); hiçbir şey yazılmadı. Değişikliği bırakıp satırları yeniden alın (action: rollback, sonra take) ya da üstüne yazın (force: true).",
+              "message": "Başkası aynı satırların aynı alanlarını siz aldıktan sonra değiştirmiş ya da satırı silmiş (satır 3: kullanim (ilk “Ticaret”, sizinki “Pazar”, tablodaki “Okul”)); hiçbir şey yazılmadı. Değişikliği bırakıp satırları yeniden alın (action: rollback, sonra take) ya da üstüne yazın (force: true).",
               "path": "layers[0]",
               "uids": [
                 "$uidOf:1"
@@ -15516,7 +15516,7 @@
             "status": "conflict",
             "error": {
               "code": "rows_changed",
-              "message": "Başkası bu satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş (silinmiş: 4); hiçbir şey yazılmadı. Değişikliği bırakıp satırları yeniden alın (action: rollback, sonra take) ya da üstüne yazın (force: true).",
+              "message": "Başkası aynı satırların aynı alanlarını siz aldıktan sonra değiştirmiş ya da satırı silmiş (satır 4: tabloda silinmiş, sizde değişmiş); hiçbir şey yazılmadı. Değişikliği bırakıp satırları yeniden alın (action: rollback, sonra take) ya da üstüne yazın (force: true).",
               "path": "layers[0]",
               "uids": [
                 "$uidOf:1"

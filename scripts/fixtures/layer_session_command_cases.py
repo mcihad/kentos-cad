@@ -548,7 +548,11 @@ def cases():
     ])
     k = next(n)
     AGAIN = "Değişikliği bırakıp satırları yeniden alın (action: rollback, sonra take) ya da üstüne yazın (force: true)."
-    changed3 = "Başkası bu satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş (değiştirilmiş: 3); hiçbir şey yazılmadı. " + AGAIN
+    # Both sides changed row 3's kullanim to different values: a clash said with its three values (docs/adr/9148).
+    first3 = BY_KEY[3]["kullanim"]
+    first3 = f"“{first3}”" if first3 else "boş"
+    changed3 = ("Başkası aynı satırların aynı alanlarını siz aldıktan sonra değiştirmiş ya da satırı silmiş "
+                f"(satır 3: kullanim (ilk {first3}, sizinki “Pazar”, tablodaki “Okul”)); hiçbir şey yazılmadı. " + AGAIN)
     case("Başkasının değiştirdiği satır: çakışma söylenir; üstüne yazmak yalnız değiştirileni yazar", [
         copy(k), add_layer(k), add_layer(k, "layer-2", "Parseller B"),
         start(("layer-1", "layer-2")),
@@ -576,7 +580,8 @@ def cases():
         rows_of([3], rows_answer([dict(BY_KEY[3], kullanim="Pazar", mahalle="Yeni")])),
     ])
     k = next(n)
-    gone4 = "Başkası bu satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş (silinmiş: 4); hiçbir şey yazılmadı. " + AGAIN
+    gone4 = ("Başkası aynı satırların aynı alanlarını siz aldıktan sonra değiştirmiş ya da satırı silmiş "
+             "(satır 4: tabloda silinmiş, sizde değişmiş); hiçbir şey yazılmadı. " + AGAIN)
     case("Başkasının sildiği satır: çakışma söylenir, hiçbir şey yazılmaz", [
         copy(k), add_layer(k), add_layer(k, "layer-2", "Parseller B"),
         start(("layer-1", "layer-2")),

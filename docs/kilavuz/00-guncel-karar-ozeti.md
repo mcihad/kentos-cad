@@ -148,6 +148,9 @@
   - **Yeni pafta kapsamı** (23 Kasım, değerlendirmenin 15. maddesi;
     [ADR 9147](../adr/9147-new-sheet-extent-and-print-checks.md), VY-46): “Paftanın bilgileri” Kapsam'ı sorar (Görünüm,
     Katman, Çizimin tamamı, Sabit ölçek) ve vereceği ölçeği söyler; sabit ölçekte kırpma bilerek korunur.
+  - **Alan alan yazma çakışması** (23 Kasım, değerlendirmenin 26. maddesi;
+    [ADR 9148](../adr/9148-field-level-write-conflicts.md), VY-47): ayrı alanlardaki değişiklikler tek kayıtta birleşir;
+    aynı alan “İlk / Benim / Tablodaki” değerleriyle sorulur, seçilmeden yazılmaz.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

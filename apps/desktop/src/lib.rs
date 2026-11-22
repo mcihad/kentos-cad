@@ -1526,6 +1526,8 @@ mod data_info;
 mod data_labels;
 #[path = "gis/data_selection.rs"]
 mod data_selection;
+#[path = "gis/data_conflict.rs"]
+mod data_conflict;
 #[path = "gis/data_edits.rs"]
 mod data_edits;
 #[path = "gis/data_pending.rs"]

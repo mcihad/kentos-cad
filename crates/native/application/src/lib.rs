@@ -548,6 +548,8 @@ pub mod data_text;
 #[path = "gis/data_condition.rs"]
 pub mod data_condition;
 #[cfg(feature = "mod-gis")]
+#[path = "gis/data_clash.rs"]
+pub mod data_clash;
 #[path = "gis/data_write.rs"]
 pub mod data_write;
 #[cfg(feature = "mod-gis")]

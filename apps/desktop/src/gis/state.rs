@@ -453,7 +453,7 @@ impl App {
     pub(crate) fn gis_dialog_view(&self, kind: GisDialogKind) -> Element<'_, Message> {
         match kind {
             GisDialogKind::DataEdits => self.data_edits_question(),
-            GisDialogKind::DataConflict => self.data_conflict_question(),
+            GisDialogKind::DataConflict => self.data_conflict_view(),
             GisDialogKind::DataPending => self.data_pending_view(),
             GisDialogKind::LayerExport => self.layer_export_view(),
             GisDialogKind::ProjectStore => self.project_store_view(),

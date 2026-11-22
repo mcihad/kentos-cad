@@ -309,7 +309,7 @@ fn save(cx: &mut ExecutionContext<'_>, layers: &[String], force: bool) -> Comman
         let (id, failure) = failures.swap_remove(0);
         let path = format!("layers[{}]", order(&id).min(layers.len().saturating_sub(1)));
         return match failure {
-            WriteFailure::Conflict(m, uids) => {
+            WriteFailure::Conflict(m, uids, _) => {
                 let words = format!(
                     "{m} Değişikliği bırakıp satırları yeniden alın (action: rollback, sonra take) ya da üstüne yazın \
                      (force: true)."

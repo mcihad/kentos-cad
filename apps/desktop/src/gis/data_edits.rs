@@ -29,8 +29,9 @@ pub(crate) struct DataEdits {
     after: Option<(After, Vec<String>)>,
     /// The unsaved rows' outlines and the drawing's generation they were drawn for.
     pending: Option<(u64, crate::approved_layer::Approved)>,
-    /// A save that met rows others changed (docs/adr/9104 §3): its layers and the words; Üstüne yaz writes over them.
-    pub(crate) conflict: Option<(Vec<String>, String)>,
+    /// A save that met rows others changed (docs/adr/9104 §3): its layers, the words and each row's clash with what is
+    /// chosen for it (docs/adr/9148, data_conflict.rs).
+    pub(crate) conflict: Option<crate::data_conflict::Conflict>,
     /// Taslak olarak tut answered for this leaving: the drawing is left without its changes being asked about again; they wait
     /// with the project (docs/adr/9111 §3).
     kept_for: Option<Then>,
@@ -173,6 +174,10 @@ pub enum Event {
     Resend(Vec<String>),
     /// The conflict's question closed without writing.
     KeepConflict,
+    /// A clash's choice (docs/adr/9148): the row, its choice, the user's (true) or the table's.
+    Choose(usize, usize, bool),
+    /// Seçilenleri kaydet: the rows settled as chosen, then saved again.
+    Settle,
 }
 
 fn message(e: Event) -> Message {
@@ -220,7 +225,7 @@ impl App {
     }
 
     /// A layer's name, for the words.
-    fn data_layer_name(&self, id: &str) -> String {
+    pub(crate) fn data_layer_name(&self, id: &str) -> String {
         self.document
             .as_ref()
             .and_then(|d| d.model.layers().get(id).map(|n| n.name.clone()))
@@ -316,6 +321,19 @@ impl App {
                     self.dialog = None;
                 }
                 Task::none()
+            }
+            Event::Choose(row, at, mine) => {
+                self.data_conflict_choose(row, at, mine);
+                Task::none()
+            }
+            Event::Settle => {
+                let Some(layers) = self.data_conflict_settle() else {
+                    return Task::none();
+                };
+                if matches!(self.dialog, Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict))) {
+                    self.dialog = None;
+                }
+                self.save_data_layers(&layers, false)
             }
             Event::Rollback(layers) => {
                 let modified = self.data_modified_layers(&layers);
@@ -629,9 +647,9 @@ impl App {
                     self.gis.data_edits.failed.insert(id.clone(), failure.message().to_owned());
                 }
                 match &failure {
-                    WriteFailure::Conflict(words, uids) => {
+                    WriteFailure::Conflict(_, uids, rows) => {
                         self.select_data_objects(uids);
-                        self.gis.data_edits.conflict = Some((ids.clone(), words.clone()));
+                        self.gis.data_edits.conflict = Some(crate::data_conflict::Conflict::of(ids.clone(), rows.clone()));
                         self.dialog = Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict));
                     }
                     WriteFailure::Refused(_, Some(uid)) => {
@@ -646,27 +664,6 @@ impl App {
             return self.data_edits_then();
         }
         Task::none()
-    }
-
-    /// The conflict's question: Üstüne yaz, Vazgeç.
-    pub(crate) fn data_conflict_question(&self) -> Element<'_, Message> {
-        let (layers, words) = self.gis.data_edits.conflict.clone().unwrap_or_default();
-        kentos_ui::widget::overlay::modal(
-            kentos_ui::widget::Confirm::new(
-                "Satırlar başkasınca değiştirilmiş",
-                message(Event::SaveOver(layers)),
-                message(Event::KeepConflict),
-            )
-            .message(words)
-            .detail(
-                "Üstüne yaz yalnız sizin değiştirdiğiniz alanları ve şekli yazar: aynısını başkası da değiştirdiyse \
-                 onunki gider, öbür değişiklikleri kalır. Değişikliğinizi bırakmak için Vazgeç'i, sonra katmanın \
-                 menüsünde Değişiklikleri geri al'ı seçin: satırlar tablodaki şimdiki hâliyle görünür.",
-            )
-            .confirm("Üstüne yaz")
-            .destructive(),
-            message(Event::KeepConflict),
-        )
     }
 
     /// Selects objects by their persistent ids (the object a refused save was about).

@@ -50,8 +50,9 @@ pub enum WriteFailure {
     Unreachable(String),
     /// The table, or a row made of an object, refused: the words, and the object when one was at fault.
     Refused(String, Option<Uuid>),
-    /// Rows taken were changed or deleted by someone else since (docs/adr/9104 §3): the words and the taken objects.
-    Conflict(String, Vec<Uuid>),
+    /// Rows taken were changed or deleted by someone else since (docs/adr/9104 §3): the words, the taken objects and
+    /// each row's clash field by field (docs/adr/9148).
+    Conflict(String, Vec<Uuid>, Vec<crate::data_clash::RowClash>),
     /// The commit's answer was lost (docs/adr/9126): the source may have written it all or nothing. The words, and the
     /// receipt's id when one went in with the rows: the source is asked by it before anything is written again.
     Uncertain(String, Option<String>),
@@ -62,7 +63,7 @@ impl WriteFailure {
         match self {
             WriteFailure::Unreachable(m)
             | WriteFailure::Refused(m, _)
-            | WriteFailure::Conflict(m, _)
+            | WriteFailure::Conflict(m, _, _)
             | WriteFailure::Uncertain(m, _) => m,
         }
     }
@@ -420,9 +421,7 @@ fn conflicts<'a>(
     planned: &[Planned<'a>],
     height: f64,
 ) -> Result<Option<WriteFailure>, (&'a LayerWrites, DataError)> {
-    let mut gone = Vec::new();
-    let mut changed = Vec::new();
-    let mut uids = Vec::new();
+    let mut clashes: Vec<crate::data_clash::RowClash> = Vec::new();
     for p in planned {
         let originals = &p.w.changes.originals;
         if originals.is_empty() {
@@ -433,52 +432,65 @@ fn conflicts<'a>(
         let by_key: std::collections::HashMap<i64, &Feature> = rows.iter().map(|f| (f.fid, f)).collect();
         // The layer's fields out of the schema's order, as the take read them.
         let at: Vec<Option<usize>> = p.w.fields.iter().map(|n| p.schema.index(n)).collect();
+        let text = p.w.data.text.as_ref();
+        // What is here of each taken row: its object now; none for a row deleted here.
+        let here: std::collections::HashMap<i64, &Entity> =
+            p.w.changes.changed.iter().map(|c| (c.key, &*c.now)).collect();
         for (key, (uid, row)) in originals {
-            let now = by_key.get(key).map(|f| {
-                let values: Vec<Value> = at
-                    .iter()
-                    .map(|i| i.and_then(|i| f.values.get(i).cloned()).unwrap_or(Value::Null))
-                    .collect();
-                let read = Feature {
-                    fid: f.fid,
-                    geometry: f.geometry.clone(),
-                    values,
-                };
-                let text = p.w.data.text.as_ref();
-                object_from(&read, &p.w.fields, &p.w.layer, p.system.as_ref(), text, height)
-                    .map(|e| (as_row(text, &e).into_owned(), as_row(text, row).into_owned()))
-            });
-            match now {
-                None => {
-                    gone.push(*key);
-                    uids.push(*uid);
+            // The table's row now as an object, compared as rows (a text's parts as its columns).
+            let theirs = match by_key.get(key) {
+                None => None,
+                Some(f) => {
+                    let values: Vec<Value> = at
+                        .iter()
+                        .map(|i| i.and_then(|i| f.values.get(i).cloned()).unwrap_or(Value::Null))
+                        .collect();
+                    let read = Feature {
+                        fid: f.fid,
+                        geometry: f.geometry.clone(),
+                        values,
+                    };
+                    match object_from(&read, &p.w.fields, &p.w.layer, p.system.as_ref(), text, height) {
+                        Ok(e) => Some(e),
+                        // A row that no longer reads as an object of the layer: a clash with nothing to show.
+                        Err(_) => {
+                            clashes.push(crate::data_clash::RowClash {
+                                layer: p.w.layer.clone(),
+                                uid: *uid,
+                                key: *key,
+                                first: (**row).clone(),
+                                mine: here.get(key).map(|e| (*e).clone()),
+                                theirs: None,
+                                fields: Vec::new(),
+                                geometry: false,
+                            });
+                            continue;
+                        }
+                    }
                 }
-                Some(Ok((e, row))) if e.base().attrs == row.base().attrs && geometry_of(&e) == geometry_of(&row) => {}
-                Some(_) => {
-                    changed.push(*key);
-                    uids.push(*uid);
-                }
+            };
+            let first = as_row(text, row).into_owned();
+            let mine = here.get(key).map(|e| as_row(text, e).into_owned());
+            let theirs_row = theirs.as_ref().map(|e| as_row(text, e).into_owned());
+            if let Some((fields, geometry)) = crate::data_clash::clash_of(&first, mine.as_ref(), theirs_row.as_ref()) {
+                clashes.push(crate::data_clash::RowClash {
+                    layer: p.w.layer.clone(),
+                    uid: *uid,
+                    key: *key,
+                    first: (**row).clone(),
+                    mine: here.get(key).map(|e| (*e).clone()),
+                    theirs,
+                    fields,
+                    geometry,
+                });
             }
         }
     }
-    if gone.is_empty() && changed.is_empty() {
+    if clashes.is_empty() {
         return Ok(None);
     }
-    let list = |keys: &[i64]| keys.iter().map(i64::to_string).collect::<Vec<_>>().join(", ");
-    let mut said = Vec::new();
-    if !changed.is_empty() {
-        said.push(format!("değiştirilmiş: {}", list(&changed)));
-    }
-    if !gone.is_empty() {
-        said.push(format!("silinmiş: {}", list(&gone)));
-    }
-    Ok(Some(WriteFailure::Conflict(
-        format!(
-            "Başkası bu satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş ({}); hiçbir şey yazılmadı.",
-            said.join("; ")
-        ),
-        uids,
-    )))
+    let uids = clashes.iter().map(|c| c.uid).collect();
+    Ok(Some(WriteFailure::Conflict(crate::data_clash::clash_words(&clashes), uids, clashes)))
 }
 
 /// The table's greatest key; 0 for an empty table.
