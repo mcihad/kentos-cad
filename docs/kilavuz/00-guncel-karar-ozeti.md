@@ -124,6 +124,8 @@
   - **GeoPackage teslimi** (22 Kasım, değerlendirmenin 6. maddesi; [ADR 9139](../adr/9139-geopackage-delivery.md),
     VY-38): özet gideni ve gitmeyeni söyler; salt okunur dosya ezilmez; eğri türleri kendi adlarıyla kaydedilir
     (`gpkg_geom_GEOMETRY` yazılmaz).
+  - **PostGIS kataloğu yerinde durur** (22 Kasım, değerlendirmenin 7. maddesi;
+    [ADR 9140](../adr/9140-postgis-catalog-steady.md), VY-39): liste kendi alanında kayar; seçilen tablolar kimlikleriyle.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

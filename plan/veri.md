@@ -394,3 +394,8 @@ numaraları raporunkidir.
   - Özet: katmanlar sayılarıyla, giden tablo/stil/ilişki, geometrisiz kalanlar, gitmeyen form/görünüm/çalışma alanı,
     kopya oluşu; salt okunur hedef `file_unwritable`; eğri türleri `gpkg_geom_<tür>` ile.
   - Kalan: dosya seçildikten sonra onay, yarıda kesme sınaması, web.
+- [~] **VY-39 — PostGIS kataloğu aranırken yerinde durur (rapor 7, P1).**
+  ([ADR 9140](../docs/adr/9140-postgis-catalog-steady.md))
+  - Tablolar sabit yükseklikte kaydırılır, arama üstte kalır; seçilen tabloların kimlik satırı (anahtar, geometri,
+    SRID, yazma hakkı).
+  - Kalan: şema ağacı, sık kullanılanlar, geometri sütunu adı ve kapsam, canlı rol/kesinti sınamaları, web.

@@ -717,3 +717,45 @@ fn a_query_alone_is_read_for_its_columns_and_offered_its_key() {
     assert!(crate::files_testing::find_text(&mut shot, &app, &said).is_some(), "{said}");
     let _ = app.db_store.remove(name);
 }
+
+/// The chosen tables as they will be bound (docs/adr/9140): where each is, its key, its geometry and system, whether this
+/// connection may write it; a view or a table without the write right says it is read only.
+#[test]
+fn a_chosen_table_says_its_key_geometry_system_and_right() {
+    let parcel = relation("kadastro", "parsel", Some("MULTIPOLYGON"), Some(5256), Some("fid"));
+    assert_eq!(
+        super::postgis::identity(&parcel),
+        "kadastro.parsel · anahtar fid · çok parçalı alan · ≈1.240 satır · EPSG:5256 · yazılabilir"
+    );
+    let read_only = Relation { writable: false, ..relation("imar", "plan_notu", Some("POINT"), Some(4326), Some("id")) };
+    assert!(super::postgis::identity(&read_only).ends_with("salt okunur (yazma yetkisi yok ya da görünüm)"));
+}
+
+/// Pictures (docs/adr/9140), light at 1440×900 and dark at 1100×760: the catalogue with every table and searched for
+/// “park”: the window and its search stay where they are, the chosen table said.
+#[test]
+#[ignore = "pictures: cargo test -p kentos-desktop --lib postgis_tests::catalog_screens -- --ignored --nocapture"]
+fn catalog_screens() {
+    let prepare = |filter: &'static str| {
+        move || {
+            let mut app = app_with_drawing();
+            let name = format!("Resim bağlantısı {}", if filter.is_empty() { "tümü" } else { filter });
+            keep_connection(&app, &connection(&name));
+            run(&mut app, "source.postgis");
+            let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+            send(&mut app, Event::Postgis(P::Choose(at)));
+            let mut relations = catalog().relations.clone();
+            for i in 0..30 {
+                relations.push(relation("kent", &format!("tablo_{i:02}"), Some("POINT"), Some(5256), Some("fid")));
+            }
+            relations.push(relation("kent", "park", Some("MULTIPOLYGON"), Some(5256), Some("fid")));
+            let big = Arc::new(Catalog { relations, ..(*catalog()).clone() });
+            send(&mut app, Event::Postgis(P::Listed(name.clone(), Ok(big), true)));
+            send(&mut app, Event::Postgis(P::Toggle("kent.park".into())));
+            send(&mut app, Event::Postgis(P::Filter(filter.into())));
+            app
+        }
+    };
+    crate::files_testing::usage_shots("9140", "01-tumu", prepare(""));
+    crate::files_testing::usage_shots("9140", "02-park", prepare("park"));
+}

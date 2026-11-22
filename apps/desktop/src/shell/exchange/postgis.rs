@@ -385,7 +385,9 @@ impl App {
             ]
             .spacing(6)
             .align_y(Center);
-            let mut tables = Column::new().spacing(4).push(tools);
+            // The list scrolls in a height of its own: the window and its search stay where they are as the search
+            // narrows it (docs/adr/9140).
+            let mut tables = Column::new().spacing(4);
             let mut any = false;
             for (schema, relations) in catalog.schemas(&connection) {
                 let relations: Vec<&Relation> = relations
@@ -429,7 +431,21 @@ impl App {
             let hint = (hidden > 0).then(|| {
                 format!("{hidden} geometrisiz tablo gizli; göstermek için Düzenle… ile “Geometrisiz tabloları da listele”yi açın.")
             });
-            body = body.push(words::field("Tablolar", tables, hint));
+            let list = iced::widget::container(
+                iced::widget::scrollable(iced::widget::container(tables).padding([4, 8]).width(iced::Fill))
+                    .width(iced::Fill)
+                    .height(kentos_ui::theme::typography::scaled(LIST_HEIGHT)),
+            )
+            .style(kentos_ui::style::container::field_box)
+            .width(iced::Fill);
+            body = body.push(words::field("Tablolar", iced::widget::column![tools, list].spacing(6), hint));
+            // Each chosen table as it will be bound: where it is, its key, its geometry and system, whether it may be
+            // written.
+            let chosen: Vec<&Relation> = catalog.relations.iter().filter(|r| s.chosen.contains(&r.table())).collect();
+            if !chosen.is_empty() {
+                let lines = chosen.into_iter().map(|r| words::text_line(Line::Info, identity(r))).collect::<Vec<_>>();
+                body = body.push(words::field("Seçilen tablolar", words::summary(lines), None));
+            }
             other = catalog.relations.iter().any(|r| {
                 s.chosen.contains(&r.table()) && r.srid.is_some_and(|srid| srid != project)
             });
@@ -503,6 +519,17 @@ fn message_db(e: Db) -> Message {
 }
 
 /// A relation as the list says it: `çok parçalı alan · ≈200 satır · EPSG:5256`, `view · nokta`.
+/// The table list's height (logical pixels at the default type size).
+const LIST_HEIGHT: f32 = 280.0;
+
+/// A chosen table as it will be bound (docs/adr/9140): its schema and name, the column its rows are keyed by, its
+/// geometry and system, and whether this connection may write it.
+pub(crate) fn identity(r: &Relation) -> String {
+    let key = r.key.as_deref().map_or_else(|| "anahtar yok".to_owned(), |k| format!("anahtar {k}"));
+    let right = if r.writable { "yazılabilir" } else { "salt okunur (yazma yetkisi yok ya da görünüm)" };
+    format!("{} · {key} · {} · {right}", r.table(), describe(r))
+}
+
 pub(crate) fn describe(r: &Relation) -> String {
     let geometry = match r
         .geometry
