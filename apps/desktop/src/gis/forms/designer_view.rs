@@ -715,26 +715,42 @@ impl App {
             .into()
         };
 
-        let mut problems = Column::new().spacing(2);
-        for i in issues.iter().take(8) {
-            let kind = if i.severity == FormSeverity::Error {
-                Kind::Warn
-            } else {
-                Kind::Info
-            };
+        // The issues under their headings (docs/adr/9161): what keeps the form from a release kind by kind, then the
+        // warnings; a press on one goes to its item.
+        let line_of = |i: &FormIssue, kind: Kind| {
             let line = words::text_line(kind, i.message.clone());
-            problems = problems.push(match &i.item {
+            match &i.item {
                 Some(id) => button(line)
                     .on_press(msg(Event::SelectItem(id.clone())))
                     .padding([1, 4])
                     .style(style::button::row(false))
                     .into(),
                 None => line,
-            });
+            }
+        };
+        let mut problems = Column::new().spacing(2);
+        let mut shown = 0;
+        for (kind, list) in kentos_forms::publish_blockers(issues) {
+            problems = problems.push(label::strong(format!("{} ({})", kind.label(), list.len())));
+            for i in list {
+                if shown < 8 {
+                    problems = problems.push(line_of(i, Kind::Warn));
+                }
+                shown += 1;
+            }
         }
-        if issues.len() > 8 {
-            problems = problems
-                .push(label::caption(format!("{} sorun daha.", issues.len() - 8)).style(muted));
+        let warnings: Vec<&FormIssue> = issues.iter().filter(|i| !kentos_forms::blocks_publishing(i)).collect();
+        if !warnings.is_empty() {
+            problems = problems.push(label::strong(format!("Uyarılar ({})", warnings.len())));
+            for i in warnings {
+                if shown < 8 {
+                    problems = problems.push(line_of(i, Kind::Info));
+                }
+                shown += 1;
+            }
+        }
+        if shown > 8 {
+            problems = problems.push(label::caption(format!("{} sorun daha.", shown - 8)).style(muted));
         }
         let mut col = column![
             toolbar,
@@ -762,14 +778,22 @@ impl App {
         let Some(form) = form else {
             return space::horizontal().into();
         };
-        let errors = issues
-            .iter()
-            .filter(|i| i.severity == FormSeverity::Error)
-            .count();
+        // What keeps it from a release, kind by kind (docs/adr/9161): an empty form is one too.
+        let blockers = kentos_forms::publish_blockers(issues);
         let mut status = format!("Taslak {}. sürüm", form.draft.revision);
         match form.releases.last() {
             Some(r) => status.push_str(&format!(" · son yayın {}", r.version)),
             None => status.push_str(" · yayınlanmadı"),
+        }
+        if !blockers.is_empty() {
+            let kinds: Vec<String> = blockers
+                .iter()
+                .map(|(kind, list)| match (kind, list.len()) {
+                    (kentos_forms::PublishKind::Empty, _) => "boş form".to_owned(),
+                    (kind, n) => format!("{n} {}", kind.label().to_lowercase()),
+                })
+                .collect();
+            status.push_str(&format!(" · yayınlanamaz: {}", kinds.join(", ")));
         }
         if form.withdrawn {
             status.push_str(" · yayından kaldırıldı");
@@ -840,7 +864,7 @@ impl App {
             words::secondary(CANCEL, Some(msg(Event::Cancel))),
             words::secondary(
                 PUBLISH,
-                (editable && errors == 0).then(|| msg(Event::Publish))
+                (editable && blockers.is_empty()).then(|| msg(Event::Publish))
             ),
             words::primary(SAVE, editable.then(|| msg(Event::Save))),
         ]

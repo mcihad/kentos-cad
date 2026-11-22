@@ -25,6 +25,7 @@ pub mod layer_rules;
 mod lookup;
 mod object;
 mod preflight;
+mod publish_check;
 pub mod reach;
 mod record;
 mod relatives;
@@ -44,6 +45,7 @@ pub use lookup::{OtherLayer, PickMiss, World, WorldRelation, labels_of};
 pub use relatives::{named_relations, related_needs};
 pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
+pub use publish_check::{PublishKind, blocks_publishing, publish_blockers, publish_words};
 pub use record::{
     Attached, Attrs, Object, answering_with, calc_schema, form_schema_in, schema_in, schema_of,
 };

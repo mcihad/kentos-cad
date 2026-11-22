@@ -484,3 +484,7 @@ numaraları raporunkidir.
   ([ADR 9160](../docs/adr/9160-display-field-in-the-card-title.md))
   - Adı ad sözü olan alan, yoksa sözcüklerinde ad sözü olan; “ada/adres” değil; rolün okumadığı alan değil.
   - Kalan: aynı tıklamada nesne ile veri satırı, etiket önizlemesi, veri katmanında etiket, yer bulucu, web.
+- [~] **VY-60 — Yayın denetimi formu durduran sorunları türleriyle ayrı söyler (rapor 8'in kalanı).**
+  ([ADR 9161](../docs/adr/9161-publish-check-kind-by-kind.md))
+  - Boş form, zorunlu alan, varsayılan değer, değer listesi, öbürleri; komutun reddi hepsini söyler, boş form yayınlanmaz.
+  - Kalan: yayımlayan rol, yol formunda bütün sınama, kodun katalog açıklaması, web.

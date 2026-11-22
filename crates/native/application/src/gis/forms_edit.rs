@@ -237,13 +237,14 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                 &s.forms[i].layer,
                 &forms::variables(doc),
             );
-            if kentos_forms::has_errors(&issues) {
+            // Every kind that keeps it back, each under its heading (docs/adr/9161); an empty form is one.
+            let blockers = kentos_forms::publish_words(&issues);
+            if !blockers.is_empty() {
                 return Err(fail(
                     codes::FORM_PREFLIGHT,
                     format!(
-                        "“{}” formu yayınlanamıyor: {} Formu tasarımcıda düzeltin.",
-                        s.forms[i].name,
-                        forms::first_error(&issues)
+                        "“{}” formu yayınlanamıyor. {blockers} Formu tasarımcıda düzeltin.",
+                        s.forms[i].name
                     ),
                     "edit.id",
                 ));
