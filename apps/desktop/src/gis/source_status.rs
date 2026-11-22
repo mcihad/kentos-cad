@@ -1,7 +1,11 @@
 //! Kaynak durumu (docs/adr/0543; plan/gis.md CBS-40): a window with every bound layer's state as `cad.sources.describe`
 //! says it (the source, whether it can be written, how much of the table the layer holds, its system, what waits on
 //! either side) and the one way out the state asks for (`next`): Kaynağa yaz, Kaynaktan oku, Uzlaştır… or Yeniden
-//! bağla…, run by the same events as Katmanlar's Kaynak ▸. The states are read again after each.
+//! bağla…, run by the same events as Katmanlar's Kaynak ▸. The states are read again after each. The project's data
+//! layers are listed beside them with their tables' real row counts (source_status_data.rs, docs/adr/9129).
+
+#[path = "source_status_data.rs"]
+mod data;
 
 use crate::gis;
 use iced::widget::{Column, container, row, text};
@@ -30,6 +34,8 @@ pub struct Window {
     states: Result<Vec<SourceState>, String>,
     /// The row pressed: its layer chosen in Katmanlar, its whole state said under the table.
     chosen: Option<usize>,
+    /// The data layers' tables' row counts as their sources answered (docs/adr/9129).
+    counts: data::Counts,
 }
 
 #[derive(Debug, Clone)]
@@ -38,12 +44,26 @@ pub enum Event {
     /// The row's way out (its `next`).
     Act(usize),
     Refresh,
+    /// A data layer's table counted by its source, or why not.
+    Counted(String, Result<u64, String>),
     Close,
 }
 
 fn msg(event: Event) -> Message {
     Message::Gis(gis::Event::SourceStatus(event))
 }
+
+impl Window {
+    /// The data layers' row counts as answered so far.
+    #[cfg(test)]
+    pub(crate) fn counts_for_test(&self) -> &data::Counts {
+        &self.counts
+    }
+}
+
+#[cfg(test)]
+#[path = "source_status_tests.rs"]
+mod source_status_tests;
 
 /// The way out's button words; none when nothing waits.
 pub fn act_words(next: SourceNext, kind: SourceKind) -> Option<&'static str> {
@@ -71,17 +91,19 @@ pub fn way_out(next: SourceNext, layer: Option<String>) -> Option<Bound> {
 
 impl App {
     /// Kaynak durumu (`source.status`): the window over the project's bound layers.
-    pub(crate) fn open_source_status(&mut self) {
+    pub(crate) fn open_source_status(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
-            return;
+            return Task::none();
         }
         self.gis.source_status = Some(Window {
             states: Err(String::new()),
             chosen: None,
+            counts: data::Counts::new(),
         });
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::SourceStatus));
         self.refresh_source_status();
+        self.count_data_layers()
     }
 
     /// The states read again (after a write, a read, a relink), while the window is open.
@@ -141,7 +163,12 @@ impl App {
                 task
             }
             Event::Refresh => {
+                w.counts.clear();
                 self.refresh_source_status();
+                self.count_data_layers()
+            }
+            Event::Counted(layer, counted) => {
+                w.counts.insert(layer, counted);
                 Task::none()
             }
             Event::Close => {
@@ -163,6 +190,14 @@ impl App {
         let (lines, states): (Vec<Element<'_, Message>>, Vec<SourceState>) = match &w.states {
             Err(why) if why.is_empty() => (Vec::new(), Vec::new()),
             Err(why) => (vec![words::text_line(Kind::Warn, why.clone())], Vec::new()),
+            // Data layers draw from their sources (docs/adr/9129): the project is never said to have none.
+            Ok(s) if s.is_empty() && !self.source_data_rows().is_empty() => (
+                vec![words::text_line(
+                    Kind::Info,
+                    "Projede bağlı katman yok; verisi aşağıdaki veri katmanlarında, kaynaklarında.".to_owned(),
+                )],
+                Vec::new(),
+            ),
             Ok(s) if s.is_empty() => (
                 vec![words::text_line(
                     Kind::Info,
@@ -273,10 +308,13 @@ impl App {
             "Satıra basınca katmanı Katmanlar'da seçilir, durumunun tamamı burada yazar. Sağdaki düğme durumun istediği tek işi yapar."
                 .to_owned()
         });
-        let body = Column::new()
+        let mut body = Column::new()
             .spacing(12)
             .push(words::summary(lines))
             .push(words::field("Bağlı katmanlar", table, Some(hint)));
+        if let Some(data) = self.source_data_view(&w.counts) {
+            body = body.push(data);
+        }
         Frame::new(STATUS_TITLE)
             .push(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))

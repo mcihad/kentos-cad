@@ -105,6 +105,63 @@ fn choices_of(
 }
 
 impl App {
+    /// “Çizim hedefi: …” when the table shows another layer than the one drawn on (docs/adr/9129).
+    pub(crate) fn table_target_words(&self, rows: &Rows) -> Option<String> {
+        let d = self.document.as_ref()?;
+        let layers = d.model.layers();
+        let active = layers.active();
+        (rows.layer.as_deref() != Some(active)).then(|| layers.get(active).map(|n| format!("Çizim hedefi: {}", n.name)))?
+    }
+
+    /// The table's target words for the rows as they are now.
+    #[cfg(test)]
+    pub(crate) fn table_target_words_for_test(&self) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        self.table_target_words(&self.feature_rows(doc))
+    }
+
+    /// Katman ▾'s layer choices' words, as the picker shows them.
+    #[cfg(test)]
+    pub(crate) fn table_layer_words_for_test(&self) -> Vec<String> {
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        let rows = self.feature_rows(doc);
+        self.layer_choice_words(&rows)
+    }
+
+    /// Katman ▾'s words for the layers (docs/adr/9129): a data layer “(veri)”, its source added when another layer has
+    /// its name, “salt okunur” when it cannot be written; a drawing layer its object count.
+    pub(crate) fn layer_choice_words(&self, rows: &Rows) -> Vec<String> {
+        // Layers of the same name told apart by their sources: two “bakim” of two GeoPackages, or of a database read
+        // through two connections.
+        let same: std::collections::HashMap<&str, usize> =
+            rows.layers.iter().fold(std::collections::HashMap::new(), |mut m, (_, path, _)| {
+                *m.entry(path.as_str()).or_default() += 1;
+                m
+            });
+        rows.layers
+            .iter()
+            .map(|(id, path, c)| {
+                // A data layer's rows are in its source, not counted here (docs/adr/9102 §5).
+                let data = self.document.as_ref().and_then(|d| d.model.layers().get(id)).and_then(|n| n.data.clone());
+                match data {
+                    Some(d) => {
+                        let mut words = vec!["veri".to_owned()];
+                        if same.get(path.as_str()).is_some_and(|n| *n > 1) {
+                            words.push(d.place_words());
+                        }
+                        if d.read_only {
+                            words.push("salt okunur".to_owned());
+                        }
+                        format!("{path} ({})", words.join(" · "))
+                    }
+                    None => format!("{path} ({c})"),
+                }
+            })
+            .collect()
+    }
+
     /// Katman ▾: the layers, then the project's join views (docs/adr/0527).
     pub(crate) fn layer_select<'a>(&self, rows: &Rows) -> Select<'a, Message> {
         let views: Vec<(String, String)> = self
@@ -132,18 +189,10 @@ impl App {
             .as_deref()
             .and_then(|v| views.iter().position(|(id, _)| id == v).map(|k| n + k))
             .or(layer_at);
-        let choices = rows
-            .layers
-            .iter()
-            .map(|(id, path, c)| {
-                // A data layer's rows are in its source, not counted here (docs/adr/9102 §5).
-                let data = self
-                    .document
-                    .as_ref()
-                    .and_then(|d| d.model.layers().get(id))
-                    .is_some_and(|n| n.data.is_some());
-                Choice::new(if data { format!("{path} (veri)") } else { format!("{path} ({c})") })
-            })
+        let choices = self
+            .layer_choice_words(rows)
+            .into_iter()
+            .map(Choice::new)
             .chain(
                 views
                     .iter()
@@ -188,21 +237,21 @@ impl App {
             Tip::new(texts::ZOOM).body(texts::ZOOM_HINT),
             iced::widget::tooltip::Position::Top,
         );
-        container(
-            row![
-                container(self.layer_select(rows)).width(Length::Fixed(250.0)),
-                container(search).width(Length::Fixed(170.0)),
-                container(show).width(Length::Fixed(170.0)),
-                container(filter).width(Length::Fixed(260.0)),
-                zoom,
-            ]
-            .spacing(8)
-            .align_y(Center)
-            .wrap()
-            .vertical_spacing(6),
-        )
-        .padding([4, 8])
-        .into()
+        // The layer drawn on, when the table shows another (docs/adr/9129): both are read, neither is taken for the other.
+        let target = self.table_target_words(rows);
+        let mut bar = row![
+            container(self.layer_select(rows)).width(Length::Fixed(250.0)),
+            container(search).width(Length::Fixed(170.0)),
+            container(show).width(Length::Fixed(170.0)),
+            container(filter).width(Length::Fixed(260.0)),
+            zoom,
+        ]
+        .spacing(8)
+        .align_y(Center);
+        if let Some(t) = target {
+            bar = bar.push(kentos_ui::label::caption(t).style(kentos_ui::style::text::muted));
+        }
+        container(bar.wrap().vertical_spacing(6)).padding([4, 8]).into()
     }
 
     fn features_bar<'a>(&self, rows: &Rows, width: f32) -> Element<'a, Message> {

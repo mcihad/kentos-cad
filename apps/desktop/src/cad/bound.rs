@@ -153,7 +153,7 @@ impl App {
                 Some(link) => self.bound_unlink(&link),
                 None => self.warn(NO_BOUND),
             },
-            Event::Status => self.open_source_status(),
+            Event::Status => return self.open_source_status(),
         }
         Task::none()
     }

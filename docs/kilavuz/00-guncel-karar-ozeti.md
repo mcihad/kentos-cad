@@ -91,6 +91,9 @@
   - **Katmana bir basış hedefi seçer** (22 Kasım, değerlendirmenin 4. maddesi;
     [ADR 9128](../adr/9128-layer-target-and-data-layer-drawing.md), VY-27): CBS projesinde bir basış katmanı etkin yapar;
     veri katmanına yalnız oturumunda ve tablonun geometrisiyle çizilir, araç nedenini ve Düzenlemeyi başlat'ı söyler.
+  - **Kaynak durumu veri katmanlarını sayar** (22 Kasım, değerlendirmenin 5. ve 28. maddeleri;
+    [ADR 9129](../adr/9129-data-layers-in-source-status-and-table-picker.md), VY-28): veri katmanları kaynağın gerçek
+    satır sayısıyla (“hesaplanmadı” sorulana kadar); tablo seçicisi aynı adlıları kaynakla ayırır, çizim hedefini söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

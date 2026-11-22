@@ -330,3 +330,10 @@ numaraları raporunkidir.
   - Nesne yazan araç veri katmanında oturum kapalıyken, salt okunurken ya da geometri uymazken kapalı ve nedenli;
     çağrılınca Düzenlemeyi başlat düğmeli bildirim.
   - Kalan: Düzenle sekmesinde sürekli hedef ve oturum denetimi, yetki gerekçesi, iki oturumda yanlış yazım sınaması, web.
+- [~] **VY-28 — Kaynak durumu veri katmanlarını sayar; tablo seçicisi aynı adlıları ayırır (rapor 5 ve 28, P1).**
+  ([ADR 9129](../docs/adr/9129-data-layers-in-source-status-and-table-picker.md))
+  - Kaynak durumu'nda veri katmanları: kaynak, erişim, oturum ve kaynağın gerçek satır sayısı (sorulana kadar
+    “hesaplanmadı”); bağlı katman yokken boş kaynak denmez.
+  - Denetçide “Veri katmanları” satırı; tablo başka katmandayken “Çizim hedefi”; Katman ▾'da aynı adlılar kaynakla,
+    salt okunur işaretli.
+  - Kalan: alınmış kopya ve bağlı katmanla tek katalog, form başlığında salt okunur, on geçişlik yazım sınaması, web.
