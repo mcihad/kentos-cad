@@ -13,7 +13,7 @@ use kentos_native_style::{StylePalette, system};
 use serde_json::Value;
 
 /// The layer types a symbol of each kind draws.
-fn allowed(kind: &str) -> &'static [&'static str] {
+pub(crate) fn allowed(kind: &str) -> &'static [&'static str] {
     match kind {
         "marker" => &["shape", "svg", "text"],
         "line" => &["simpleLine", "markerLine"],
@@ -23,7 +23,7 @@ fn allowed(kind: &str) -> &'static [&'static str] {
 }
 
 /// A marker's layers (inside a marker line, a pattern or a centroid marker) are a marker symbol's.
-fn check_layers(id: &str, kind: &str, layers: &[Value], lib: &kentos_native_style::StyleLibrary, problems: &mut Vec<String>) {
+pub(crate) fn check_layers(id: &str, kind: &str, layers: &[Value], lib: &kentos_native_style::StyleLibrary, problems: &mut Vec<String>) {
     for layer in layers {
         let t = layer["type"].as_str().unwrap_or("");
         if !allowed(kind).contains(&t) {

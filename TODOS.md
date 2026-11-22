@@ -2485,6 +2485,9 @@ Liste:
   sınansın.
   Web'in önizlemesi dayanak noktalı işareti bütün sığdırsın (`render/symbolPreview.ts`'in `markerReach`'i,
   masaüstündeki gibi).
+- [ ] BÖHHBÜY işaret kitaplığı (ADR 9120; 22 Kasım 2026): web'in sistem kitaplığı
+  `crates/native/style/assets/bohhbuy-library.kstil`'i de yüklesin (kaynağı `scripts/style/bohhbuy_library.py`); Kot,
+  Numara, Boy, Cins, Açı ve Ad alanlarından okunan yazılar ve yönler web'in çiziminde de sınansın.
 
 ## 1. Koddan doğrulanan mevcut durum
 

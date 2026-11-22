@@ -18,6 +18,8 @@ pub mod designer;
 pub mod fields;
 pub mod images;
 #[cfg(test)]
+mod bohhbuy_screens;
+#[cfg(test)]
 mod general_screens;
 pub mod layer_style;
 pub mod legend;

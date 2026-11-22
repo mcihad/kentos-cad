@@ -24,7 +24,7 @@ fn out() -> PathBuf {
 }
 
 /// Frames until the atlas holds every image the view needs, then the picture.
-fn picture(snapshot: &mut Snapshot, app: &mut App, file: PathBuf) {
+pub(super) fn picture(snapshot: &mut Snapshot, app: &mut App, file: PathBuf) {
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
@@ -39,7 +39,7 @@ fn picture(snapshot: &mut Snapshot, app: &mut App, file: PathBuf) {
     println!("{}", file.display());
 }
 
-fn themed(app: &mut App, mode: &str) {
+pub(super) fn themed(app: &mut App, mode: &str) {
     let _ = app.settings.choose(&[("appearance.theme", Value::from(mode))]);
     app.apply_settings();
 }
@@ -225,7 +225,7 @@ fn catalog(members: &[&Value]) -> (Document, kentos_render_wgpu::Bounds) {
     (doc, bounds(-6.0, y - 2.0, x1 + 6.0, top))
 }
 
-fn slug(s: &str) -> String {
+pub(super) fn slug(s: &str) -> String {
     s.replace('İ', "i")
         .to_lowercase()
         .chars()
@@ -249,11 +249,11 @@ fn slug(s: &str) -> String {
 /// The town's origin: a TM36 point, so the coordinates below are metres east and north of it.
 const O: (f64, f64) = (486_000.0, 4_420_000.0);
 
-fn bounds(x0: f64, y0: f64, x1: f64, y1: f64) -> kentos_render_wgpu::Bounds {
+pub(super) fn bounds(x0: f64, y0: f64, x1: f64, y1: f64) -> kentos_render_wgpu::Bounds {
     kentos_render_wgpu::Bounds { min_x: O.0 + x0, min_y: O.1 + y0, max_x: O.0 + x1, max_y: O.1 + y1 }
 }
 
-fn at(x: f64, y: f64) -> Value {
+pub(super) fn at(x: f64, y: f64) -> Value {
     json!({ "x": O.0 + x, "y": O.1 + y })
 }
 

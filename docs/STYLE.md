@@ -325,7 +325,12 @@ Pencereler ilk açılışta yüklenir (`ui/style/`); komutlar Araçlar menüsün
    işaretleri ve ışıkları, yol çizgileri ve kenarları, kaplamalar ve altyapı ayrıntıları vardır. Ağaç ve çalılar,
    yol çizgileri ve okları gerçek boyundadır. Taç çapı Taç alanından, okun yönü Açı'dan, hız sınırı Hız'dan okunur.
    Kaynak ve dosya Genel'inkiyle aynıdır.
-8. **Paylaşma:** sunucu ile kitaplık paylaşımı ve kurum kitaplıkları.
+8. **BÖHHBÜY işaretleri (yapıldı, [ADR 9120](adr/9120-bohhbuy-sign-library.md)):** Büyük Ölçekli Harita ve Harita
+   Bilgileri Üretim Yönetmeliği Ek-3'ün 277 işareti, 13 sınıfında, numarasıyla ve 1/500–1/2000 çizimindeki ölçüleriyle;
+   33 piktogram. Kimlik `bohhbuy.<sıra no>`, adı “0201 Sert satıhlı yol” gibi numarayla başlar. Yönetmelik renk vermez,
+   bütün işaretler mürekkeptir. Kot, Numara, Boy, Cins, Açı ve Ad alanları yazıları ve yönü verir. Kaynağı
+   `scripts/style/bohhbuy_library.py`, dosyası `crates/native/style/assets/bohhbuy-library.kstil`.
+9. **Paylaşma:** sunucu ile kitaplık paylaşımı ve kurum kitaplıkları.
 
 ## SHX çizgi tipi kaynakları
 

@@ -1,10 +1,12 @@
-//! The system library: everything that ships with KentOS. Two files:
+//! The system library: everything that ships with KentOS. Three files:
 //! - the basic symbols and MPYY's 695 symbols and 81 drawings (docs/STYLE.md §8), whose source is the web's
 //!   TypeScript (`apps/web/src/style/system`), written as a `.kstil` file by
 //!   `apps/web/scripts/style/system-library.test.ts` (which also fails when the file falls behind the TypeScript);
 //! - the general library: Genel, point, line and area symbols for every kind of map by theme (docs/adr/9118), and
 //!   Kent, a city's trees, plants, furniture, signs, markings, paving and utility details (docs/adr/9119), written by
-//!   `scripts/style/general_library.py` (`--check` fails when the file falls behind the script).
+//!   `scripts/style/general_library.py` (`--check` fails when the file falls behind the script);
+//! - the BÖHHBÜY library: the 277 signs of the large-scale map regulation's Ek-3, sign by sign (docs/adr/9120),
+//!   written by `scripts/style/bohhbuy_library.py` (`--check` as above).
 //!
 //! Read once, on first use.
 
@@ -16,8 +18,10 @@ use crate::library::{Item, StyleLibrary};
 
 /// The basic and MPYY items, as the web writes them.
 const FILE: &str = include_str!("../assets/system-library.kstil");
-/// The general library's items (`genel.*`).
+/// The general library's items (`genel.*`, `kent.*`).
 const GENERAL: &str = include_str!("../assets/general-library.kstil");
+/// The BÖHHBÜY library's items (`bohhbuy.*`).
+const BOHHBUY: &str = include_str!("../assets/bohhbuy-library.kstil");
 
 struct System {
     items: Vec<Item>,
@@ -26,7 +30,7 @@ struct System {
 
 fn read() -> System {
     let mut system = System { items: Vec::new(), categories: Vec::new() };
-    for file in [FILE, GENERAL] {
+    for file in [FILE, GENERAL, BOHHBUY] {
         // The files ship with the program and a test reads them: they are well formed.
         let value: Value = serde_json::from_str(file).unwrap_or(Value::Null);
         let list = |k: &str| value.get(k).and_then(Value::as_array).cloned().unwrap_or_default();
@@ -60,10 +64,11 @@ mod tests {
             .filter(|(i, _)| i.kind() == ItemKind::Symbol)
             .count();
         let assets = items.len() - symbols;
-        assert!(symbols >= 695 + 340, "symbols: {symbols}");
-        assert!(assets >= 81 + 120, "assets: {assets}");
+        assert!(symbols >= 695 + 340 + 277, "symbols: {symbols}");
+        assert!(assets >= 81 + 120 + 30, "assets: {assets}");
         assert!(lib.symbol("temel.cizgi.surekli").is_some());
         assert!(lib.symbol("genel.nokta.ulasim.otobus-duragi").is_some());
         assert!(lib.symbol("kent.nokta.agac.yaprakli").is_some());
+        assert!(lib.symbol("bohhbuy.0201").is_some());
     }
 }

@@ -75,6 +75,9 @@
     ağaçlar, çalı ve bitkiler, park ve bahçe, oyun ve spor, kent mobilyaları, trafik işaretleri, yol çizgileri,
     kaplamalar, altyapı ayrıntıları. MPYY'den ayrıdır. Bitkiler, yol çizgileri ve oklar gerçek boyundadır
     (`unit: "m"`); Taç, Açı ve Hız alanları boyu, yönü ve yazıyı verir.
+  - **BÖHHBÜY dalı** (aynı gün, sahibin isteği; [ADR 9120](../adr/9120-bohhbuy-sign-library.md)): Ek-3'ün 277 işareti,
+    13 sınıfında, `bohhbuy.<sıra no>` kimliğiyle. Ölçüler gazetenin taramasındaki 1/500–1/2000 çiziminden; yazılı olmayan
+    ölçü çizimden ölçülür ve açıklamada söylenir. Renk yok, hepsi mürekkep.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.
