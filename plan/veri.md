@@ -456,3 +456,7 @@ numaraları raporunkidir.
   ([ADR 9153](../docs/adr/9153-join-counts-and-relation-removal-preview.md))
   - Rapor satırında “birden çok kayıtla” ve “hiçbir kayıt bağlanmadı”; İlişkiler'de kaldırılacak ilişkinin etkisi.
   - Kalan: yeniden adlandırma etkisi, alt kayıtların eski form sürümü, yol sınıfı kodlarıyla sınama, web.
+- [~] **VY-53 — Adres aramasında eşit adaylar mahalleleriyle söylenir (ek kabul: adres ve istatistik).**
+  ([ADR 9154](../docs/adr/9154-address-ties-named-by-neighbourhood.md))
+  - Belirsiz'de “2 aday aynı puanda (100): Cumhuriyet, Kızılay mahallelerinde; mahalleyi ekleyerek ayırın”.
+  - Kalan: veri katmanında seçili/görünümdeki satırlarla istatistik, tablo/grafik/dışa aktarım toplamlarının uçtan uca sınaması, web.

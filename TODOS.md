@@ -2551,6 +2551,7 @@ Liste:
   tablo silinen satırı listelesin, değişmeyen alan kaynağın değerini göstersin.
 - [ ] Birleşik görünüm sayıları, ilişki kaldırma (ADR 9153, 23 Kasım 2026): web'in görünüm raporu çoklu ve yetim
   eşleşmeyi saysın; İlişkiler kaldırmanın etkisini Kaydet'ten önce söylesin.
+- [ ] Adres eşitliği (ADR 9154, 23 Kasım 2026): web'in Adres sekmesi eşit puanlı adayları mahalleleriyle söylesin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

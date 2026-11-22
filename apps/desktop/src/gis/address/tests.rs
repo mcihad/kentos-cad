@@ -348,3 +348,21 @@ fn a_new_search_takes_the_last_mark_away() {
     assert!(app.gis.address.rows.is_empty());
     assert!(app.address_mark_label().is_none(), "no candidate, no mark");
 }
+
+/// The municipal report's address row (docs/adr/9154): the same street in two neighbourhoods is tied and named by
+/// them, the neighbourhood added matches one, and no candidate is said apart from a tie.
+#[test]
+fn a_tie_names_its_neighbourhoods_and_no_candidate_is_said_apart() {
+    let mut app = app();
+    send(&mut app, Message::Run("address.search"));
+    find(&mut app, "Atatürk Bulvarı No:2");
+    let (line, _) = app.address_seen().expect("the tab is open");
+    assert!(line.contains("aday aynı puanda (100): "), "{line}");
+    assert!(line.contains("Cumhuriyet") && line.contains("Kızılay") && line.contains("mahalleyi ekleyerek ayırın"), "{line}");
+    find(&mut app, "Kızılay Atatürk Bulvarı No:4");
+    let (line, _) = app.address_seen().expect("the tab is open");
+    assert!(line.contains("En iyisi: Eşleşti (100)"), "{line}");
+    find(&mut app, "1203/2 Sokak No:1");
+    let (line, _) = app.address_seen().expect("the tab is open");
+    assert_eq!(line, texts::NOT_FOUND, "no candidate is no tie");
+}

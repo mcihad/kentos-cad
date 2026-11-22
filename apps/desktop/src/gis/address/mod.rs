@@ -110,6 +110,16 @@ pub mod texts {
         format!("{n} aday")
     }
 
+    /// Candidates tied at the top (docs/adr/9154): how many, their score and the neighbourhoods that tell them apart.
+    pub fn tied(n: usize, score: Option<u32>, places: &[&str]) -> String {
+        let points = score.map(|p| format!(" ({p})")).unwrap_or_default();
+        if places.len() > 1 {
+            format!("{n} aday aynı puanda{points}: {} mahallelerinde; mahalleyi ekleyerek ayırın", places.join(", "))
+        } else {
+            format!("{n} aday aynı puanda{points}: mahalleyi, ilçeyi ya da posta kodunu ekleyerek ayırın")
+        }
+    }
+
     /// Where an online address went (§10: said every time).
     pub fn sent(host: &str) -> String {
         format!("Adres {host} sunucusuna gönderildi")
@@ -993,10 +1003,30 @@ impl App {
             parts.push(texts::PLACE.to_owned());
         }
         if matches!(a.question, Some(Question::Address(_))) {
-            parts.push(texts::count(a.rows.len()));
-            if let (Some(s), Some(best)) = (a.status, a.rows.first()) {
-                let points = best.score.map(|p| format!(" ({p})")).unwrap_or_default();
-                parts.push(format!("En iyisi: {}{points}", s.word()));
+            // No candidate and candidates tied at the top are said apart (docs/adr/9154): the one asks for the spelling,
+            // the other names the neighbourhoods to tell them apart by.
+            match (a.status, a.rows.first()) {
+                (_, None) => parts.push(texts::NOT_FOUND.to_owned()),
+                (Some(kentos_geometry_core::ops::geocode::Status::Tied), Some(best)) => {
+                    let tied: Vec<&kentos_processing::address::Match> =
+                        a.rows.iter().filter(|m| m.score == best.score).collect();
+                    let mut places: Vec<&str> = Vec::new();
+                    for m in &tied {
+                        let n = m.neighbourhood();
+                        if !n.is_empty() && !places.contains(&n) {
+                            places.push(n);
+                        }
+                    }
+                    parts.push(texts::count(a.rows.len()));
+                    parts.push(texts::tied(tied.len(), best.score, &places));
+                }
+                (status, Some(best)) => {
+                    parts.push(texts::count(a.rows.len()));
+                    if let Some(s) = status {
+                        let points = best.score.map(|p| format!(" ({p})")).unwrap_or_default();
+                        parts.push(format!("En iyisi: {}{points}", s.word()));
+                    }
+                }
             }
         }
         if let Some(who) = &a.answerer {

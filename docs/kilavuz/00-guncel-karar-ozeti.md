@@ -166,6 +166,8 @@
   - **Birleşik görünüm sayıları, ilişki kaldırma** (23 Kasım, ek kabul “ilişkiler”;
     [ADR 9153](../adr/9153-join-counts-and-relation-removal-preview.md), VY-52): rapor çoklu ve yetim eşleşmeyi sayar;
     ilişki kaldırılmadan etkisi söylenir.
+  - **Adres eşitliği** (23 Kasım, ek kabul “adres”; [ADR 9154](../adr/9154-address-ties-named-by-neighbourhood.md),
+    VY-53): eşit puanlı adaylar mahalleleriyle söylenir, aday yokluğundan ayrıdır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
