@@ -318,3 +318,9 @@ numaraları raporunkidir.
     bulunursa yazılanı çizimden çıkarır, bulunmazsa yazar. Makbuzsuzda kendiliğinden göndermez, Yeniden gönder…
   - Kayıp yanıtlı sınama kaynağı (`kentos_data::lossy`) ile çekirdek ve masaüstü sınamaları.
   - Kalan: gerçek PostgreSQL'de kesintiler (Docker yanıt vermedi), Python/MCP'de makbuz, web.
+- [~] **VY-26 — CBS projesi binanın komutlarını sunmaz (rapor 12'nin sızıntısı, P1).**
+  ([ADR 9127](../docs/adr/9127-cbs-project-offers-no-building-commands.md))
+  - kentos-cad'de CBS projesi açıkken yalnız Mimari'nin şeridindeki komut aramada çıkmaz, çalıştırılınca nedeniyle
+    reddedilir; Harita, CBS ve yolun komutları kalır.
+  - CBS şeridinden bina IFC'si, UCS paneli ve Analiz'deki nokta bulutu araçları çıktı (bağlamsal sekmede ve aramada).
+  - Kalan: görünürlük matrisi, CBS alt şeridindeki CAD terimleri, raster ve ağ için bağlamsal araçlar, web.

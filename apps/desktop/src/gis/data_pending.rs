@@ -618,3 +618,10 @@ impl App {
         c.push(actions).height(Length::Fill).into()
     }
 }
+
+#[cfg(test)]
+#[path = "data_pending_tests.rs"]
+mod data_pending_tests;
+#[cfg(test)]
+#[path = "data_receipts_tests.rs"]
+mod data_receipts_tests;

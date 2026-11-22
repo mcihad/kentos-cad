@@ -23,6 +23,9 @@ pub mod location;
 pub mod map_pick;
 #[cfg(test)]
 mod related_actions_tests;
+#[cfg(test)]
+#[path = "../../tests/form_roles_tests.rs"]
+mod form_roles_tests;
 pub mod package;
 pub mod relations;
 pub mod subtypes;

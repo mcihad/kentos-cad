@@ -260,15 +260,32 @@ impl App {
             .collect()
     }
 
-    /// Whether this program offers a command (docs/adr/0802): every one in kentos-cad, a module's own in a
-    /// module's program (Komut ara, the command line, the shortcuts, the quick access bar, F1 and the drawing's
-    /// menus find nothing else; `App::run` refuses it, `App::available` is false).
+    /// Whether `id` is the building's command alone (KentOS Mimari's: no other module's ribbon holds it) while a CBS
+    /// project is open in kentos-cad (docs/adr/9127): a map's project does not offer it, whichever way it is asked
+    /// for (Menülerde ara, the command line, a shortcut, a menu). The map's, CBS's and road's commands stay.
+    pub(crate) fn building_only_here(&self, id: &str) -> bool {
+        self.program.is_none()
+            && self.document_module() == Some(Module::Gis)
+            && catalog().module_has(Module::Architecture, id)
+            && Module::ALL
+                .into_iter()
+                .filter(|m| *m != Module::Architecture)
+                .all(|m| !catalog().module_has(m, id))
+    }
+
+    /// Whether this program offers a command (docs/adr/0802): every one in kentos-cad but the building's alone in a
+    /// CBS project (docs/adr/9127), a module's own in a module's program (Komut ara, the command line, the shortcuts,
+    /// the quick access bar, F1 and the drawing's menus find nothing else; `App::run` refuses it, `App::available` is
+    /// false).
     pub(crate) fn offers(&self, id: &str) -> bool {
-        self.program.is_none_or(|m| catalog().module_has(m, id))
+        self.program.is_none_or(|m| catalog().module_has(m, id)) && !self.building_only_here(id)
     }
 
     /// Why a command typed or found is not run here (docs/adr/0802): the programs that have it.
     pub(crate) fn not_offered(&self, id: &str, title: &str) -> Option<String> {
+        if self.building_only_here(id) {
+            return Some(format!("“{title}” bu CBS projesinde yok; {} var.", in_program(Module::Architecture)));
+        }
         let here = self.program?;
         if catalog().module_has(here, id) {
             return None;
@@ -281,11 +298,7 @@ impl App {
         Some(if others.is_empty() {
             format!("“{title}” {} yok.", in_program(here))
         } else {
-            format!(
-                "“{title}” {} yok; {} var.",
-                in_program(here),
-                and_list(&others)
-            )
+            format!("“{title}” {} yok; {} var.", in_program(here), and_list(&others))
         })
     }
 

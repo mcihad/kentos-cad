@@ -3265,16 +3265,6 @@
           ]
          },
          {
-          "label": "Bina modeli",
-          "items": [
-           "arch.ifcExport",
-           "arch.ifcExportCut"
-          ],
-          "works": [
-           "architecture"
-          ]
-         },
-         {
           "label": "Coğrafi veri",
           "items": [
            "file.export.shp",
@@ -4176,32 +4166,9 @@
         "size": "small"
        },
        {
-        "command": "pointcloud.region",
-        "size": "small"
-       },
-       {
-        "command": "pointcloud.overlap",
-        "size": "small"
-       },
-       {
-        "command": "pointcloud.register",
-        "size": "small"
-       },
-       {
-        "command": "pointcloud.network",
-        "size": "small"
-       },
-       {
-        "command": "pointcloud.place",
-        "size": "small"
-       },
-       {
-        "command": "pointcloud.profile",
+        "command": "mesh.query",
         "size": "small"
        }
-      ],
-      "overflow": [
-       "mesh.query"
       ]
      },
      {
@@ -4374,31 +4341,6 @@
         "command": "view.northUp",
         "size": "small"
        }
-      ]
-     },
-     {
-      "label": "Koordinatlar",
-      "icon": "ucsWorld",
-      "items": [
-       {
-        "command": "ucs.world",
-        "size": "small"
-       },
-       {
-        "command": "ucs.previous",
-        "size": "small"
-       },
-       {
-        "command": "tool.ucsObject",
-        "size": "small"
-       }
-      ],
-      "overflow": [
-       "tool.ucsTwoPoints",
-       "tool.ucsOrigin",
-       "tool.ucsRotate",
-       "tool.ucsNamed",
-       "view.twistUcs"
       ]
      },
      {

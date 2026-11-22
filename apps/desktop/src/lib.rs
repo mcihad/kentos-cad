@@ -1125,9 +1125,6 @@ mod arch_ifc_tests;
 #[cfg(test)]
 #[path = "tests/quality_form_tests.rs"]
 mod quality_form_tests;
-#[cfg(test)]
-#[path = "tests/form_roles_tests.rs"]
-mod form_roles_tests;
 #[path = "road/terrain_layer.rs"]
 mod terrain_layer;
 #[path = "road/terrain_edits.rs"]
@@ -1515,12 +1512,6 @@ mod data_edits_tests;
 #[cfg(test)]
 #[path = "gis/data_journal_tests.rs"]
 mod data_journal_tests;
-#[cfg(test)]
-#[path = "gis/data_pending_tests.rs"]
-mod data_pending_tests;
-#[cfg(test)]
-#[path = "gis/data_receipts_tests.rs"]
-mod data_receipts_tests;
 #[cfg(test)]
 #[path = "gis/layer_export_memory_tests.rs"]
 mod layer_export_memory_tests;

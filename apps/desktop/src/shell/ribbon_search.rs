@@ -610,3 +610,7 @@ fn screens() {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "../tests/gis_surface_tests.rs"]
+mod gis_surface_tests;

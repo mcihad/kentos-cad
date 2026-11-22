@@ -85,6 +85,9 @@
     [ADR 9126](../adr/9126-write-receipts-and-uncertain-commits.md), VY-25): yanıtı kaybolan COMMIT `Uncertain`'dır;
     makbuz satırlarla aynı işlemde `kentos_writes`'a yazılır (kurulum sahibin düğmesiyle); sonraki Kaynağa yaz önce
     makbuzu sorar, makbuzsuzda kendiliğinden yeniden göndermez.
+  - **CBS projesi binanın komutlarını sunmaz** (22 Kasım, değerlendirmenin 12. maddesi;
+    [ADR 9127](../adr/9127-cbs-project-offers-no-building-commands.md), VY-26): kentos-cad'de `building_only_here`
+    yalnız Mimari'nin şeridindeki komutu CBS projesinde sunmaz; CBS şeridinde IFC, UCS ve Analiz'de nokta bulutu yok.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
