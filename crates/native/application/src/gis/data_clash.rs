@@ -22,7 +22,8 @@ pub struct FieldClash {
 }
 
 /// A taken row a save cannot write as it is: its layer, object and key; the row as taken and as it is here (none:
-/// deleted here) and in the table (none: deleted there); the fields that clash and whether the geometry does.
+/// deleted here) and in the table (none: deleted there); the fields that clash and whether the geometry does; whether
+/// the table takes new rows from this connection.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RowClash {
     pub layer: String,
@@ -33,6 +34,9 @@ pub struct RowClash {
     pub theirs: Option<Entity>,
     pub fields: Vec<FieldClash>,
     pub geometry: bool,
+    /// Whether the connection may add rows to the table (its insert right, docs/adr/9162): a row deleted in the table
+    /// can be written again as a new row only then; else its draft is let go.
+    pub may_add: bool,
 }
 
 impl RowClash {

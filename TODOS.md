@@ -2566,6 +2566,8 @@ Liste:
   `display_field`'ın kuralıyla kaydın adını eklesin.
 - [ ] Yayın denetimi türleriyle (ADR 9161, 23 Kasım 2026): web'in form tasarımcısı sorunları `publish_check`'in
   türleriyle başlıklı göstersin, boş formu yayınlamasın; yayın reddinin sözü masaüstününkiyle aynı olsun.
+- [ ] Ekleme yetkisiyle yeni satır (ADR 9162, 23 Kasım 2026): web'in çakışma penceresi silinmiş satırı yalnız
+  tablonun ekleme yetkisi varken yeni satır olarak sunsun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

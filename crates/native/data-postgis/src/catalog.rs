@@ -22,10 +22,21 @@ pub struct Shape {
     pub geography: bool,
     /// Rows can be written.
     pub writable: bool,
+    /// What the account may do to its rows, each on its own (docs/adr/9162): the table's INSERT, UPDATE and DELETE
+    /// rights. A right counts only where rows can be written at all.
+    pub rights: Rights,
     /// The database has ICU's Turkish collation (`tr-x-icu`): texts are ordered by it (docs/adr/9102 §3).
     pub turkish: bool,
     /// A query read as a table (docs/adr/9113 §2): the catalog says nothing of it, so nothing is estimated from it.
     pub query: bool,
+}
+
+/// The account's rights on a table's rows (docs/adr/9162).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Rights {
+    pub insert: bool,
+    pub update: bool,
+    pub delete: bool,
 }
 
 /// An identifier quoted.
@@ -208,8 +219,8 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
     let (sql, ns, rel) = qualified(table);
     let found = sqlx::query(
         "SELECT c.oid::int8 AS oid, c.relkind::text AS kind,
-                (has_table_privilege(c.oid, 'INSERT') OR has_table_privilege(c.oid, 'UPDATE')
-                   OR has_table_privilege(c.oid, 'DELETE')) AS writes
+                has_table_privilege(c.oid, 'INSERT') AS ins, has_table_privilege(c.oid, 'UPDATE') AS upd,
+                has_table_privilege(c.oid, 'DELETE') AS del
          FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
          WHERE n.nspname = $1 AND c.relname = $2",
     )
@@ -221,7 +232,12 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
     .ok_or_else(|| DataError::NoTable(table.to_owned()))?;
     let oid: i64 = found.try_get("oid").map_err(error_of)?;
     let kind: String = found.try_get("kind").map_err(error_of)?;
-    let writes: bool = found.try_get("writes").map_err(error_of)?;
+    let granted = Rights {
+        insert: found.try_get("ins").map_err(error_of)?,
+        update: found.try_get("upd").map_err(error_of)?,
+        delete: found.try_get("del").map_err(error_of)?,
+    };
+    let writes = granted.insert || granted.update || granted.delete;
     let cols = sqlx::query(
         "SELECT a.attname::text AS name, format_type(a.atttypid, a.atttypmod) AS formatted, t.typname::text AS typ,
                 a.attnotnull AS notnull, pg_get_expr(d.adbin, d.adrelid) AS def, a.attgenerated::text AS generated,
@@ -336,6 +352,7 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
         relation: rel,
         geography,
         writable: writes && pk.is_some() && matches!(kind.as_str(), "r" | "p"),
+        rights: if pk.is_some() && matches!(kind.as_str(), "r" | "p") { granted } else { Rights::default() },
         turkish,
         query: false,
     })

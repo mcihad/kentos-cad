@@ -247,6 +247,8 @@ struct Planned<'a> {
     system: Option<TableSystem>,
     inserts: Vec<NewFeature>,
     updates: Vec<Change>,
+    /// The table takes new rows from this connection (docs/adr/9162).
+    may_add: bool,
 }
 
 /// Writes the layers of one source together in one transaction (docs/adr/9104 §2): first each taken row is read again
@@ -319,6 +321,7 @@ pub fn write_group_receipted(
             system,
             inserts,
             updates,
+            may_add: caps.insert,
         });
     }
     // A receipt where the source keeps them; a source that keeps none writes as before.
@@ -463,6 +466,7 @@ fn conflicts<'a>(
                                 theirs: None,
                                 fields: Vec::new(),
                                 geometry: false,
+                                may_add: p.may_add,
                             });
                             continue;
                         }
@@ -482,6 +486,7 @@ fn conflicts<'a>(
                     theirs,
                     fields,
                     geometry,
+                    may_add: p.may_add,
                 });
             }
         }

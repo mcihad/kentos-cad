@@ -2,7 +2,8 @@
 //! they were taken. The shared write path merges what the two sides changed in different fields and writes it; what
 //! clashes comes here, a row at a time: each field both sides changed to different values with its first value, the
 //! user's and the table's, and a choice of which stays; the geometry moved on both sides likewise; a row deleted in the
-//! table (written again as a new row, or let go) and a row deleted here that the table changed (deleted still, or kept).
+//! table (written again as a new row where the connection may add rows, else let go: docs/adr/9162) and a row deleted
+//! here that the table changed (deleted still, or kept).
 //! Nothing is chosen for the user: Seçilenleri kaydet waits until every clash has a choice, then settles the rows (the
 //! object made of the choice as one undo step, the row compared from now on with the table's as read) and saves again,
 //! which checks the table once more. Vazgeç keeps the draft as it is; Hepsinde benimkini yaz writes over every clash.
@@ -36,12 +37,13 @@ pub(crate) struct Conflict {
 }
 
 impl Conflict {
-    /// The clashes of a save, nothing chosen; a row deleted on both sides has its one way, let go, chosen.
+    /// The clashes of a save, nothing chosen; a row with one way only has it chosen: deleted on both sides, or deleted
+    /// in a table the connection may not add rows to (docs/adr/9162), it is let go.
     pub(crate) fn of(layers: Vec<String>, rows: Vec<RowClash>) -> Self {
         let chosen = rows
             .iter()
             .map(|r| {
-                if r.gone() && r.mine.is_none() {
+                if r.gone() && (r.mine.is_none() || !r.may_add) {
                     vec![Some(false)]
                 } else if r.gone() || r.deleted_here() {
                     vec![None]
@@ -115,6 +117,9 @@ impl App {
                 let line = row![container(label::body(what)).width(Fill)].spacing(12).align_y(Center);
                 let line = if r.gone() && r.mine.is_none() {
                     line.push(label::muted("Bırakılır."))
+                } else if r.gone() && !r.may_add {
+                    // No new row where the connection may not add one (docs/adr/9162): the draft is let go.
+                    line.push(label::muted("Bırakılır: bu bağlantının tabloya satır ekleme yetkisi yok."))
                 } else {
                     line.push(choice(0, picks.first().copied().flatten()))
                 };
@@ -193,16 +198,16 @@ impl App {
         }
     }
 
-    /// A choice made.
+    /// A choice made. A row deleted in the table goes back as a new row only where the connection may add rows
+    /// (docs/adr/9162); else asking for it changes nothing.
     pub(crate) fn data_conflict_choose(&mut self, row: usize, at: usize, mine: bool) {
-        if let Some(pick) = self
-            .gis
-            .data_edits
-            .conflict
-            .as_mut()
-            .and_then(|c| c.chosen.get_mut(row))
-            .and_then(|r| r.get_mut(at))
-        {
+        let Some(c) = self.gis.data_edits.conflict.as_mut() else {
+            return;
+        };
+        if mine && c.rows.get(row).is_some_and(|r| r.gone() && !r.may_add) {
+            return;
+        }
+        if let Some(pick) = c.chosen.get_mut(row).and_then(|r| r.get_mut(at)) {
             *pick = Some(mine);
         }
     }
@@ -249,8 +254,8 @@ impl App {
                 // Deleted here, changed in the table: deleted still against the table's row, or forgotten.
                 (None, Some(theirs)) if first => rebase.push((r.layer.clone(), r.uid, theirs.clone())),
                 (None, Some(_)) => untake.push((r.layer.clone(), r.uid)),
-                // Deleted in the table: written again as a new row, or let go.
-                (Some(_), None) if first => untake.push((r.layer.clone(), r.uid)),
+                // Deleted in the table: written again as a new row where the connection may add one, or let go.
+                (Some(_), None) if first && r.may_add => untake.push((r.layer.clone(), r.uid)),
                 (_, None) => let_go.push((r.layer.clone(), r.uid)),
             }
         }

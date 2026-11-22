@@ -187,6 +187,9 @@
   - **Yayın denetimi türleriyle** (23 Kasım, rapor 8'in kalanı;
     [ADR 9161](../adr/9161-publish-check-kind-by-kind.md), VY-60): boş form, zorunlu alan, varsayılan değer ve değer
     listesi ayrı başlıklarla söylenir; boş form yayınlanmaz.
+  - **Ekleme yetkisiyle yeni satır** (23 Kasım, rapor 32'nin kalanı;
+    [ADR 9162](../adr/9162-new-row-only-with-the-insert-right.md), VY-61): PostGIS yetkileri ayrı okunur; ekleme
+    yetkisi olmayan bağlantıda silinmiş satır yeni satır olarak yazılmaz.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

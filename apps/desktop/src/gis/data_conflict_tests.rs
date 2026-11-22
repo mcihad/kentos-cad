@@ -3,7 +3,7 @@
 //! Another field changed there is merged in one save; the same field to another value asks, field by field, with the
 //! three values, and nothing is written until chosen; Vazgeç keeps the draft; the table's value chosen stays in the
 //! table, the user's chosen is written; a choice met by yet another change is checked again; a row deleted in the table
-//! can be written again as a new row.
+//! can be written again as a new row, and only where the connection may add rows (docs/adr/9162).
 
 use kentos_data::Value;
 use kentos_native_application::data_write;
@@ -176,6 +176,45 @@ fn a_row_deleted_in_the_table_can_be_written_again_as_a_new_row() {
     assert_eq!(pending(&app, &id), 0);
 }
 
+/// The clash of a deleted row as a connection that may not add rows meets it (docs/adr/9162).
+fn without_the_insert_right(app: &mut App) {
+    let c = app.gis.data_edits.conflict.take().expect("the clash");
+    assert!(c.rows.iter().all(|r| r.may_add), "a GeoPackage file takes new rows");
+    let rows = c
+        .rows
+        .into_iter()
+        .map(|mut r| {
+            r.may_add = false;
+            r
+        })
+        .collect();
+    app.gis.data_edits.conflict = Some(super::Conflict::of(c.layers, rows));
+}
+
+#[test]
+fn without_the_insert_right_a_row_deleted_in_the_table_is_let_go() {
+    let (mut app, id, address) = taken("cakisma-ekleme-yetkisiz");
+    others(&address, None);
+    save(&mut app, &id);
+    assert!(asking(&app));
+    without_the_insert_right(&mut app);
+    let c = app.gis.data_edits.conflict.as_ref().expect("the clash");
+    assert_eq!(c.chosen, vec![vec![Some(false)]], "its one way, let go, chosen");
+    assert!(c.ready());
+    // Asking for a new row changes nothing.
+    let _ = app.data_edits_event(Event::Choose(0, 0, true));
+    let c = app.gis.data_edits.conflict.as_ref().expect("the clash");
+    assert_eq!(c.chosen, vec![vec![Some(false)]]);
+    let count = app.data_conflict_count(c);
+    assert!(count.contains("1 satırın taslağı bırakılır"), "{count}");
+    let task = app.data_edits_event(Event::Settle);
+    drive(&mut app, task);
+    assert!(!asking(&app));
+    assert_eq!(table(&address, 22), None, "the old key stays deleted");
+    assert_eq!(table(&address, 41), None, "no new row");
+    assert_eq!(pending(&app, &id), 0);
+}
+
 /// The window's picture (`.run/gui-evidence/kullanim-9148/`): the same field clashing, its three values and the choice.
 #[test]
 #[ignore = "pictures for the owner"]
@@ -185,6 +224,23 @@ fn screens() {
         others(&address, Some(vec![("kullanim", Value::Text("Park2".into()))]));
         save(&mut app, &id);
         let _ = app.data_edits_event(Event::Choose(0, 0, false));
+        app
+    });
+}
+
+/// The picture (`.run/gui-evidence/kullanim-9162/`): a row deleted in the table, met by a connection that may not add
+/// rows: let go, said why.
+#[test]
+#[ignore = "pictures for the owner"]
+fn insert_right_screens() {
+    // A file each time: the light and the dark picture each delete its row.
+    static TURN: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    crate::files_testing::usage_shots("9162", "01-ekleme-yetkisi-yok", || {
+        let n = TURN.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let (mut app, id, address) = taken(&format!("cakisma-yetki-resim-{n}"));
+        others(&address, None);
+        save(&mut app, &id);
+        without_the_insert_right(&mut app);
         app
     });
 }

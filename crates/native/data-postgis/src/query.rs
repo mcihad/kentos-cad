@@ -155,6 +155,7 @@ pub(crate) async fn shape(conn: &mut PgConnection, q: &QueryTable) -> Result<Sha
         relation: String::new(),
         geography,
         writable: false,
+        rights: crate::catalog::Rights::default(),
         turkish,
         query: true,
     })

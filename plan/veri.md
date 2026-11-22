@@ -488,3 +488,7 @@ numaraları raporunkidir.
   ([ADR 9161](../docs/adr/9161-publish-check-kind-by-kind.md))
   - Boş form, zorunlu alan, varsayılan değer, değer listesi, öbürleri; komutun reddi hepsini söyler, boş form yayınlanmaz.
   - Kalan: yayımlayan rol, yol formunda bütün sınama, kodun katalog açıklaması, web.
+- [~] **VY-61 — Silinmiş satır yeni satır olarak yalnız ekleme yetkisiyle yazılır (rapor 32'nin kalanı).**
+  ([ADR 9162](../docs/adr/9162-new-row-only-with-the-insert-right.md))
+  - PostGIS INSERT/UPDATE/DELETE yetkilerini ayrı okur; yetkisiz bağlantıda silinmiş satırın taslağı bırakılır.
+  - Kalan: gerçek PostgreSQL'de ikinci hesapla deneme, sütun düzeyinde yetkiler, web.

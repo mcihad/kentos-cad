@@ -39,6 +39,38 @@ fn the_driver_passes_the_conformance_suite() {
     tx.commit().expect("commit");
 }
 
+/// Each right on a table's rows read on its own (docs/adr/9162): the account that made the table may add, change and
+/// delete its rows; the catalog's own view may only be read.
+#[test]
+fn the_rights_on_rows_are_read_each_on_its_own() {
+    let Some(address) = address() else {
+        eprintln!("KENTOS_DATA_PG yok: satır yetkileri atlandı");
+        return;
+    };
+    let source = PostGis.open(&address).expect("open");
+    let mut tx = source.begin().expect("begin");
+    tx.create_table(
+        &kentos_data::NewTable {
+            name: "public.kentos_yetki".into(),
+            title: None,
+            description: None,
+            key: "fid".into(),
+            fields: vec![kentos_data::Field::new("ad", kentos_data::FieldKind::Text { max: Some(8) })],
+            geometry: None,
+            spatial_index: false,
+            system: None,
+        },
+        false,
+    )
+    .expect("table");
+    tx.commit().expect("commit");
+    let caps = source.capabilities("public.kentos_yetki").expect("its capabilities");
+    assert!(caps.insert && caps.update_values && caps.delete && !caps.update_geometry, "{caps:?}");
+    let mut tx = source.begin().expect("begin");
+    tx.drop_table("public.kentos_yetki").expect("drop");
+    tx.commit().expect("commit");
+}
+
 /// A query read as a layer (docs/adr/9113 §2) is only ever run read-only: one that would write (a large object made by
 /// a function it calls) is refused when its shape is read, though the transaction it is read in is taken back anyway.
 #[test]

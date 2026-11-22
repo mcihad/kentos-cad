@@ -118,20 +118,7 @@ impl Source for PgSource {
 
     fn capabilities(&self, table: &str) -> Result<Capabilities, DataError> {
         let s = self.shape(table)?;
-        let w = s.writable;
-        Ok(Capabilities {
-            read: true,
-            insert: w,
-            update_values: w,
-            update_geometry: w && s.schema.geometry.is_some(),
-            delete: w,
-            transactions: true,
-            spatial_index: true,
-            simplify_at_source: true,
-            query_at_source: true,
-            curves: true,
-            create_table: true,
-        })
+        Ok(capabilities_of(s.writable, s.rights, s.schema.geometry.is_some()))
     }
 
     fn extent(&self, table: &str, estimate: bool) -> Result<Option<[f64; 4]>, DataError> {
@@ -425,5 +412,42 @@ impl Source for PgSource {
 
     fn project_store(&self) -> Option<&dyn kentos_data::ProjectStore> {
         Some(self)
+    }
+}
+
+/// A table's capabilities from what its shape says: each right on its own (docs/adr/9162), an account may update rows
+/// and not add any; none where rows cannot be written at all (a view, a table without a single key).
+pub(crate) fn capabilities_of(writable: bool, rights: crate::catalog::Rights, geometry: bool) -> Capabilities {
+    Capabilities {
+        read: true,
+        insert: writable && rights.insert,
+        update_values: writable && rights.update,
+        update_geometry: writable && rights.update && geometry,
+        delete: writable && rights.delete,
+        transactions: true,
+        spatial_index: true,
+        simplify_at_source: true,
+        query_at_source: true,
+        curves: true,
+        create_table: true,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::capabilities_of;
+    use crate::catalog::Rights;
+
+    /// docs/adr/9162: an account with SELECT and UPDATE only may change rows and add none; a table that cannot be
+    /// written at all gives no right, whatever was granted.
+    #[test]
+    fn each_right_on_rows_is_its_own() {
+        let update_only = capabilities_of(true, Rights { insert: false, update: true, delete: false }, true);
+        assert!(!update_only.insert && update_only.update_values && update_only.update_geometry && !update_only.delete);
+        assert!(update_only.writable());
+        let all = capabilities_of(true, Rights { insert: true, update: true, delete: true }, false);
+        assert!(all.insert && all.update_values && !all.update_geometry && all.delete, "no geometry to update");
+        let view = capabilities_of(false, Rights { insert: true, update: true, delete: true }, true);
+        assert!(!view.writable(), "nothing where rows cannot be written");
     }
 }
