@@ -770,7 +770,7 @@ impl App {
             rows.slots.len()
         );
         if let Some(why) = &rows.filter_error {
-            words.push_str(&format!(" · süzgeç okunamadı: {why}"));
+            words.push_str(&format!(" · {why}"));
         }
         foot_line(label::caption(words).style(style::text::muted).into(), None)
     }

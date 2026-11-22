@@ -35,6 +35,7 @@ use crate::app::{App, Message};
 use crate::document::Document;
 use crate::points::{click_pick, focus_field};
 
+pub(crate) mod conditions;
 pub(crate) mod data;
 pub(crate) mod joins;
 #[cfg(test)]
@@ -313,6 +314,10 @@ pub(crate) struct FeaturesPanel {
     pub(crate) whole: whole::WholePane,
     /// A data layer's rows read from its source a page at a time (data.rs, docs/adr/9102 §5).
     pub(crate) data: data::DataTable,
+    /// Each layer's Ara, İfade süzgeci and order while the table shows another, and the layer the ones in the bar are
+    /// of (conditions.rs, docs/adr/9132).
+    pub(crate) kept: BTreeMap<conditions::Key, conditions::Conditions>,
+    pub(crate) conditions_of: Option<conditions::Key>,
 }
 
 impl FeaturesPanel {
@@ -490,7 +495,8 @@ impl App {
         } else {
             Default::default()
         };
-        let (passes, filter_error) = filter_passes(&panel.filter, &entities, model, &|| {
+        let node = layer.as_deref().and_then(|l| model.layers().get(l));
+        let (passes, filter_error) = filter_passes(&panel.filter, &entities, node, model, &|| {
             self.expression_variables()
         });
         let fields = layer
@@ -546,7 +552,7 @@ impl App {
         let holds = styles
             .iter()
             .map(|s| {
-                filter_passes(&s.condition, &entities, model, &|| {
+                filter_passes(&s.condition, &entities, None, model, &|| {
                     self.expression_variables()
                 })
                 .0
@@ -677,9 +683,10 @@ impl App {
                 }
                 self.gis.features.layer = Some(id);
                 self.gis.features.join.view = None;
-                self.gis.features.sort = None;
                 self.gis.features.editing = None;
                 self.gis.features.changed();
+                // Its own Ara, İfade süzgeci and order, the ones left kept under the layer left (docs/adr/9132).
+                self.table_conditions_follow();
             }
             Event::NewFormFor(layer) => {
                 // The designer opened on a new form of the table's layer, its name the layer's: the fields come
@@ -1158,10 +1165,13 @@ pub(super) fn write_attribute(
 /// Which objects the expression filter keeps (none: no filter), and why it
 /// cannot be read; a filter that cannot be read keeps none. The filter is
 /// evaluated when asked, so it reads the project's `@` values (docs/adr/0214
-/// §2.3): `variables` gives them, asked only when the filter has a `@`.
+/// §2.3): `variables` gives them, asked only when the filter has a `@`. A field
+/// neither `layer` nor any of its objects has is said (docs/adr/9132): its rows
+/// would all be empty and none kept, as if the data said so.
 fn filter_passes(
     filter: &str,
     entities: &[&Entity],
+    layer: Option<&kentos_commands::LayerNode>,
     model: &kentos_domain::Document,
     variables: &dyn Fn() -> Vec<kentos_expression::Variable>,
 ) -> (Option<Vec<bool>>, Option<String>) {
@@ -1180,8 +1190,28 @@ fn filter_passes(
         ..kentos_expression::Schema::default()
     };
     match kentos_expression::compile_with(source, &schema) {
-        Err(e) => (Some(vec![false; entities.len()]), Some(e.text())),
+        Err(e) => (
+            Some(vec![false; entities.len()]),
+            Some(format!("Süzgeç okunamadı: {}", e.text())),
+        ),
         Ok(expr) => {
+            if let Some(node) = layer {
+                let mut fields: Vec<String> = node.fields.iter().map(|f| f.name.clone()).collect();
+                for e in entities {
+                    for k in e.base().attrs.keys() {
+                        if !fields.contains(k) {
+                            fields.push(k.clone());
+                        }
+                    }
+                }
+                if let Some(why) = kentos_native_application::layers_rows::missing_fields(
+                    &expr.fields,
+                    &fields,
+                    &node.name,
+                ) {
+                    return (Some(vec![false; entities.len()]), Some(why));
+                }
+            }
             let layer_name = |id: &str| {
                 model
                     .layers()

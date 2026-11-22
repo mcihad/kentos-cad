@@ -347,3 +347,10 @@ numaraları raporunkidir.
   ([ADR 9131](../docs/adr/9131-layer-filter-counts-a-data-layers-rows.md))
   - Önizleme ve bildirim kaynağın satırlarını sayar (okunurken söyler, okununca yeniden sayar); “3 / 6 satır görünür”.
   - Kalan: sıfır eşleşmenin ayrı sınaması, web.
+- [x] **VY-31 — Tablonun arama, ifade ve sırası katmanındır; katmanda olmayan alan söylenir (rapor 20, P1).**
+  ([ADR 9132](../docs/adr/9132-table-conditions-by-layer.md))
+  - Koşullar katmanın kimliği ve kaynağıyla saklanır, tablo katmana dönünce geri gelir; seçimle ya da etkin katmanla
+    geçişte de izler.
+  - `cad.layers.rows` katmanda olmayan alanı anan süzgeci `field_not_found` ile reddeder; çizim katmanının tablosu aynı
+    sözü söyler. Reddedilen soru her iletide yeniden sorulmaz.
+  - Kalan: koşulları proje dosyasında saklamak (sahibin kararı), web.

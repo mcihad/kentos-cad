@@ -36,6 +36,8 @@ pub mod words {
     pub const SOURCE: &str = "süzgeç ve sıra kaynakta";
     pub const HERE: &str = "süzgeç burada soruldu";
     pub const NONE: &str = "Kaynakta soruya uyan satır yok.";
+    /// The question refused, its reason where the rows would be.
+    pub const UNREAD: &str = "Satırlar okunmadı.";
     /// A new row's key cell: it has none until it is saved.
     pub const NEW: &str = "yeni";
     pub fn count(n: u64) -> String {
@@ -168,7 +170,35 @@ impl DataTable {
     }
 }
 
+/// Ara, İfade süzgeci and the order as Enter and the headers asked them, kept by layer (conditions.rs).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub(crate) struct DataConditions {
+    search: String,
+    filter: String,
+    order: Vec<(String, bool)>,
+}
+
 impl DataTable {
+    /// The conditions asked, taken out: the table asks none until others are put.
+    pub(super) fn take_conditions(&mut self) -> DataConditions {
+        DataConditions {
+            search: std::mem::take(&mut self.search),
+            filter: std::mem::take(&mut self.filter),
+            order: std::mem::take(&mut self.order),
+        }
+    }
+
+    /// A layer's conditions asked again.
+    pub(super) fn put_conditions(&mut self, c: DataConditions) {
+        (self.search, self.filter, self.order) = (c.search, c.filter, c.order);
+    }
+
+    /// The question's error, when the source refused it or could not be read.
+    #[cfg(test)]
+    pub(crate) fn error(&self) -> Option<&str> {
+        self.error.as_deref()
+    }
+
     /// The question read again where the table is, its layer's changes written or let go (a taken row then shows what
     /// the table holds): the pages stay shown until their new reads come, the first page read again for the count and,
     /// filtered, the kept keys the later pages wait for.
@@ -180,6 +210,7 @@ impl DataTable {
         self.stale = self.pages.keys().copied().collect();
         self.keys = None;
         self.recount = true;
+        self.error = None;
     }
 
     /// The cell being edited: its row's key, its field and the text typed.
@@ -253,6 +284,8 @@ impl App {
     /// After every message while the table shows a data layer: a new question starts again from its first page, and
     /// the pages the table shows are read.
     pub(crate) fn data_table_tasks(&mut self) -> Task<Message> {
+        // Each layer's own conditions, whichever way the table came to it (conditions.rs, docs/adr/9132).
+        self.table_conditions_follow();
         let Some(node) = self.data_table_layer() else {
             return Task::none();
         };
@@ -280,6 +313,11 @@ impl App {
             data.keys = None;
             data.checked = None;
             data.error = None;
+        }
+        // A refused question is not asked again by itself after every message (a source that cannot answer would be
+        // asked without end): Enter asks it again, as another question or a write does.
+        if data.error.is_some() {
+            return Task::none();
         }
         let (first, last) = data.range;
         let mut wanted: Vec<u64> = (first as u64 / PAGE..=(last.max(first + 1) as u64 - 1) / PAGE).collect();
@@ -428,6 +466,10 @@ impl App {
             DataEvent::Apply => {
                 data.search = self.gis.features.search.trim().to_owned();
                 data.filter = self.gis.features.filter.trim().to_owned();
+                // The same question refused before is asked again.
+                if data.error.is_some() {
+                    data.asked = None;
+                }
             }
             DataEvent::Press(key, toggle) => {
                 if toggle {
@@ -678,7 +720,13 @@ impl App {
                 }
             })
             .on_range(move |a, b| msg(DataEvent::Range(a.saturating_sub(new_rows), b.saturating_sub(new_rows))))
-            .empty(if data.total == Some(0) { words::NONE } else { words::READING });
+            // A refused question says why where the rows would be, not that it reads: a field the layer lacks is no
+            // empty answer (docs/adr/9132).
+            .empty(match (&data.error, data.total) {
+                (Some(why), _) => why.clone(),
+                (None, Some(0)) => words::NONE.to_owned(),
+                (None, _) => words::READING.to_owned(),
+            });
         // Being edited: what waits to be saved.
         let session = changes.map(|c| {
             format!(
@@ -687,6 +735,8 @@ impl App {
             )
         });
         let status = match (&data.error, data.total) {
+            // Said where the rows would be when none is shown: the line only says none was read.
+            (Some(_), _) if count == 0 => label::caption(words::UNREAD).style(kentos_ui::style::text::muted),
             (Some(why), _) => label::caption(why.clone()).style(kentos_ui::style::text::warning),
             (None, None) => label::caption(words::READING),
             (None, Some(n)) => label::caption(format!(

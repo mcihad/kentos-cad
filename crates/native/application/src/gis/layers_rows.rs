@@ -28,6 +28,25 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
+/// What a condition says when it names fields the layer does not have (`named`, in the order written, against the
+/// layer's `fields`): which, on which layer, and the fields it has; none when it has them all (docs/adr/9132). The
+/// table of a drawing's layer says it in the same words.
+pub fn missing_fields(named: &[String], fields: &[String], layer: &str) -> Option<String> {
+    /// The layer's fields named at most: a wide table's list does not fill the line.
+    const SHOWN: usize = 10;
+    let missing: Vec<String> = named.iter().filter(|n| !fields.contains(n)).map(|n| format!("“{n}”")).collect();
+    if missing.is_empty() {
+        return None;
+    }
+    let what = if missing.len() == 1 { "alanı" } else { "alanları" };
+    let has = match fields.len() {
+        0 => "Katmanın alanı yok.".to_owned(),
+        n if n <= SHOWN => format!("Katmanın alanları: {}.", fields.join(", ")),
+        n => format!("Katmanın alanları: {} ve {} alan daha.", fields[..SHOWN].join(", "), n - SHOWN),
+    };
+    Some(format!("Süzgeç uygulanmadı: {} {what} “{layer}” katmanında yok. {has}", missing.join(", ")))
+}
+
 fn unreachable(e: impl std::fmt::Display) -> Stop {
     Stop::failed(error(codes::SOURCE_UNREACHABLE, format!("Kaynak okunamadı: {e}"), None))
 }
@@ -143,6 +162,11 @@ fn asked(
                     "Süzgeç başka nesnelere bakamaz: bir veri katmanının satırı yalnız kendi alanlarıyla sorulur.".into(),
                     "filter",
                 ));
+            }
+            // A field the layer does not have is said, not asked: every row would be empty there and the answer “no
+            // row” would look like the data's (docs/adr/9132).
+            if let Some(why) = f.expr().and_then(|e| missing_fields(&e.fields, &all_fields, &node.name)) {
+                return Err(fail(codes::FIELD_NOT_FOUND, why, "filter"));
             }
             Some(f)
         }

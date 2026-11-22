@@ -2504,6 +2504,8 @@ Liste:
   sekmeleri veri katmanının satırlarını kaynaktan okusun, okunurken ve okunamazken söylesin.
 - [ ] Katman süzgeci veri katmanında satır sayar (ADR 9131, 22 Kasım 2026): web'in süzgeç önizlemesi ve bildirimi veri
   katmanında kaynağın satırlarını saysın.
+- [ ] Tablonun koşulları katmanındır (ADR 9132, 22 Kasım 2026): web'in öznitelik tablosu Ara, ifade ve sırayı katmanın
+  kimliği ve kaynağıyla saklasın; katmanda olmayan alanı anan süzgeci söylesin, boş yanıt diye göstermesin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

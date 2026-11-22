@@ -100,6 +100,9 @@
   - **Katman süzgeci veri katmanında satır sayar** (22 Kasım, değerlendirmenin 19. maddesi;
     [ADR 9131](../adr/9131-layer-filter-counts-a-data-layers-rows.md), VY-30): önizleme ve bildirim `count_rows` ile
     kaynağın satırlarını sayar.
+  - **Tablonun koşulları katmanındır** (22 Kasım, değerlendirmenin 20. maddesi;
+    [ADR 9132](../adr/9132-table-conditions-by-layer.md), VY-31): Ara, ifade ve sıra katmanın kimliği ve kaynağıyla
+    saklanır; `cad.layers.rows` katmanda olmayan alanı `field_not_found` ile söyler, reddedilen soru yinelenmez.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
