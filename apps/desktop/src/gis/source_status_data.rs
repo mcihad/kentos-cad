@@ -125,7 +125,7 @@ impl App {
                 .padding([4, 8]),
             )
         });
-        let failed: Vec<String> = counts.iter().filter_map(|(_, r)| r.as_ref().err().cloned()).collect();
+        let failed: Vec<String> = counts.values().filter_map(|r| r.as_ref().err().cloned()).collect();
         let hint = if failed.is_empty() {
             "Satır sayısı tablonun kaynaktaki gerçek sayısıdır; kaynak yanıtlayana kadar “hesaplanmadı” yazar. Haritada ya da \
              tabloda o an yüklenen satırlar bu sayı değildir."
