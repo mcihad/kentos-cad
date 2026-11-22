@@ -444,3 +444,7 @@ numaraları raporunkidir.
   ([ADR 9150](../docs/adr/9150-fields-the-role-does-not-read.md))
   - `features/role_fields.rs`: `withheld_fields` ortak çözümleyiciden; tabloda sütun yok, alt satır adını söylüyor; kartta satır yok.
   - Kalan: NULL ile boş metnin ayrı görünmesi, veri katmanı tablosunda rol süzgeci, bulutta üç hesapla kabul, web.
+- [~] **VY-50 — Kaynak okunamazken tablo bekleyen değişiklikleri gösterir (rapor 31, P1).**
+  ([ADR 9151](../docs/adr/9151-pending-rows-when-the-source-is-unread.md))
+  - `features/pending_rows.rs`: değişen satır yerel ve önceki değerle, silinen anahtarıyla; “doğrulanmadı” sözü.
+  - Kalan: son doğrulama zamanı, gerçek PostgreSQL kesintisi, web.

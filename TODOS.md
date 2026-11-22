@@ -2545,6 +2545,8 @@ Liste:
   alınmışsa aynı nesneyi kullansın; işlem aracında seçimi yalnız ilk nesne girdisi alsın.
 - [ ] Rolün okumadığı alan (ADR 9150, 23 Kasım 2026): web'in öznitelik tablosu ve kartı Veri girişine formun göstermediği
   alanı boş sütun olarak göstermesin, adıyla söylesin.
+- [ ] Okunamayan kaynakta bekleyenler (ADR 9151, 23 Kasım 2026): web'in veri tablosu kaynak okunamazken oturumun yeni,
+  değişen ve silinen satırlarını listelesin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

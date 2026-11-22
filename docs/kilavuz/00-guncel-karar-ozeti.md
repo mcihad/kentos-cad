@@ -157,6 +157,9 @@
   - **Rolün okumadığı alan** (23 Kasım, değerlendirmenin 29. maddesi;
     [ADR 9150](../adr/9150-fields-the-role-does-not-read.md), VY-49): Veri girişinin tablosunda ve kartında formun
     göstermediği alan sütun ya da satır değildir; adıyla söylenir.
+  - **Okunamayan kaynakta bekleyenler** (23 Kasım, değerlendirmenin 31. maddesi;
+    [ADR 9151](../adr/9151-pending-rows-when-the-source-is-unread.md), VY-50): tablo yeni, değişen (“Okul (önce:
+    Park)”) ve silinen satırları listeler, doğrulanmadığını söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

@@ -40,6 +40,9 @@ pub mod words {
     pub const UNREAD: &str = "Satırlar okunmadı.";
     /// A new row's key cell: it has none until it is saved.
     pub const NEW: &str = "yeni";
+    /// A pending changed or deleted row's mark beside its key while the source is unread (docs/adr/9151).
+    pub const CHANGED: &str = "değişen";
+    pub const DELETED: &str = "silinen";
     pub fn count(n: u64) -> String {
         format!("{} satır", crate::view::thousands(n as f64))
     }
@@ -688,7 +691,18 @@ impl App {
             .map(|m| self.selection.ids().iter().filter_map(|s| m.uid(*s)).collect())
             .unwrap_or_default();
         let new_rows = added.len();
-        let count = new_rows + data.total.unwrap_or(0) as usize;
+        // The source unread (offline, the file gone): the session's changed and deleted rows are listed after the new
+        // ones, from the drawing and its journal (docs/adr/9151).
+        let pending: Vec<super::pending_rows::PendingLine> = match (&data.error, &changes) {
+            (Some(_), Some(c)) => super::pending_rows::pending_lines(c, &fields),
+            _ => Vec::new(),
+        };
+        let offline = data.error.is_some();
+        let count = if offline {
+            new_rows + pending.len()
+        } else {
+            new_rows + data.total.unwrap_or(0) as usize
+        };
         let editing = data.editing.clone();
         let edit_text = data.edit_text.clone();
         let field_count = fields.len() + 1;
@@ -707,6 +721,22 @@ impl App {
                         .on_press(msg(DataEvent::PressNew(*uid)));
                 }
                 let i = i - new_rows;
+                if offline {
+                    let Some(p) = pending.get(i) else {
+                        return TableLine::new(std::iter::once(text("").into()).chain(shown.iter().map(|_| text("").into())));
+                    };
+                    let mark = if p.deleted { words::DELETED } else { words::CHANGED };
+                    let mut cells: Vec<Element<'_, Message>> = vec![
+                        kentos_ui::widget::table::text(format!("{} {mark}", p.key))
+                            .style(kentos_ui::style::text::warning)
+                            .into(),
+                    ];
+                    cells.extend(p.cells.iter().map(|c| {
+                        let face = kentos_ui::widget::table::text(c.clone());
+                        if p.deleted { face.style(kentos_ui::style::text::muted).into() } else { face.into() }
+                    }));
+                    return TableLine::new(cells);
+                }
                 let page = i as u64 / PAGE;
                 let at = (i as u64 % PAGE) as usize;
                 match pages.get(&page).and_then(|p| p.get(at)) {
@@ -765,16 +795,25 @@ impl App {
                 (None, _) => words::READING.to_owned(),
             });
         // Being edited: what waits to be saved.
-        let session = changes.map(|c| {
+        let session = changes.as_ref().map(|c| {
             format!(
                 " · düzenleniyor; kaydedilmemiş: {}",
                 crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len())
             )
         });
+        // The pending rows listed while the source is unread are said as such (docs/adr/9151).
+        let waiting = changes
+            .as_ref()
+            .filter(|c| offline && !c.is_empty())
+            .map(|c| super::pending_rows::pending_words(c.added.len(), c.changed.len(), c.deleted.len()));
         let status = match (&data.error, data.total) {
             // Said where the rows would be when none is shown: the line only says none was read.
             (Some(_), _) if count == 0 => label::caption(words::UNREAD).style(kentos_ui::style::text::muted),
-            (Some(why), _) => label::caption(why.clone()).style(kentos_ui::style::text::warning),
+            (Some(why), _) => label::caption(match &waiting {
+                Some(w) => format!("{why} · {w}"),
+                None => why.clone(),
+            })
+            .style(kentos_ui::style::text::warning),
             (None, None) => label::caption(words::READING),
             (None, Some(n)) => label::caption(format!(
                 "{}{} · {}{}{}",

@@ -43,6 +43,7 @@ mod joins_tests;
 #[cfg(test)]
 mod joins_data_tests;
 pub(crate) mod outgoing;
+pub(crate) mod pending_rows;
 pub(crate) mod role_fields;
 mod records;
 pub(crate) mod source;
