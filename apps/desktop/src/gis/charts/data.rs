@@ -38,12 +38,15 @@ pub(crate) struct LayerData {
     at: HashMap<Slot, u32>,
     /// Where its rows come from.
     pub from: From,
+    /// A data layer's rows read from its source (docs/adr/9156): each row's key (none: a new row) and box, for
+    /// Seçililer (the table's selection) and Görünümdekiler (the view).
+    source: Vec<(Option<i64>, [f64; 4])>,
 }
 
 impl LayerData {
     pub fn of(app: &App, doc: &Document, layer: &str) -> LayerData {
         // A data layer's rows are its source's (docs/adr/9130), the rows the drawing holds as it has them.
-        if let Some(read) = app.data_layer_rows(layer) {
+        if let Some(read) = app.data_layer_rows_keyed(layer) {
             return Self::of_source(app, doc, layer, read);
         }
         let model = &doc.model;
@@ -79,18 +82,38 @@ impl LayerData {
             slots,
             at,
             from: From::Drawing,
+            source: Vec::new(),
         }
     }
 
     /// A data layer's data: its rows as the source and the drawing have them; none while they are read or when they
-    /// could not be (`from` says which). The source's rows have no place in the drawing: their slots are none of its,
-    /// so Seçililer and Görünümdekiler leave them out, and their measures (Alan, Uzunluk) are not the drawing's.
-    fn of_source(app: &App, doc: &Document, layer: &str, read: Result<Option<Vec<Entity>>, String>) -> LayerData {
-        let (entities, from) = match read {
+    /// could not be (`from` says which). The source's rows have no place in the drawing: their measures (Alan, Uzunluk)
+    /// are not the drawing's, and Seçililer and Görünümdekiler find them by their keys and boxes (docs/adr/9156).
+    fn of_source(
+        app: &App,
+        doc: &Document,
+        layer: &str,
+        read: Result<Option<Vec<crate::data_rows::KeyedRow>>, String>,
+    ) -> LayerData {
+        let (keyed, from) = match read {
             Ok(Some(rows)) => (rows, From::Source),
             Ok(None) => (Vec::new(), From::Reading),
             Err(why) => (Vec::new(), From::Failed(why)),
         };
+        let source: Vec<(Option<i64>, [f64; 4])> = keyed
+            .iter()
+            .map(|(k, _, e)| {
+                let b = kentos_geometry_core::entity::entity_bounds(&kentos_native_application::geometry::shape(e));
+                (*k, [b.min_x, b.min_y, b.max_x, b.max_y])
+            })
+            .collect();
+        // A drawing's object keeps its slot (the drawing's selection finds it); a source row gets one past the drawing's.
+        let slots: Vec<Slot> = keyed
+            .iter()
+            .enumerate()
+            .map(|(i, (_, slot, _))| slot.unwrap_or(Slot(u32::MAX - i as u32)))
+            .collect();
+        let entities: Vec<Entity> = keyed.into_iter().map(|(_, _, e)| e).collect();
         let model = &doc.model;
         let fields = model.layers().get(layer).map(|n| n.fields.clone()).unwrap_or_default();
         let per_metre = model.settings().unit().per_metre();
@@ -98,8 +121,6 @@ impl LayerData {
         let mut columns = layer_columns(&fields, &refs, None, per_metre);
         let redacted = app.redacted_fields();
         columns.retain(|c| !redacted.contains(&c.key) && !redacted.contains(&c.label));
-        // Slots past the drawing's: never a drawing's object, each its own.
-        let slots: Vec<Slot> = (0..entities.len()).map(|i| Slot(u32::MAX - i as u32)).collect();
         let at = slots.iter().enumerate().map(|(i, s)| (*s, i as u32)).collect();
         LayerData {
             layer: layer.to_owned(),
@@ -107,11 +128,40 @@ impl LayerData {
             slots,
             at,
             from,
+            source,
         }
     }
 
     /// Göster's rows: every object, the selected ones or the ones in the view.
     pub fn rows(&self, app: &App, show: Show) -> Vec<u32> {
+        // A data layer's source rows (docs/adr/9156): Seçililer the table's selection of the layer and the drawing's
+        // selected objects; Görünümdekiler the rows whose box meets the view.
+        if !self.source.is_empty() {
+            match show {
+                Show::Selected => {
+                    let keys: std::collections::BTreeSet<i64> =
+                        app.gis.features.data.selected_of(&self.layer).into_iter().collect();
+                    let chosen: std::collections::BTreeSet<u32> = self.selected_rows(app).into_iter().collect();
+                    return (0..self.slots.len() as u32)
+                        .filter(|r| {
+                            chosen.contains(r)
+                                || self.source.get(*r as usize).and_then(|(k, _)| *k).is_some_and(|k| keys.contains(&k))
+                        })
+                        .collect();
+                }
+                Show::InView => {
+                    let v = app.viewport.camera.visible_bounds();
+                    return self
+                        .source
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, (_, b))| b[2] >= v.min_x && b[0] <= v.max_x && b[3] >= v.min_y && b[1] <= v.max_y)
+                        .map(|(i, _)| i as u32)
+                        .collect();
+                }
+                _ => {}
+            }
+        }
         match show {
             Show::All => (0..self.slots.len() as u32).collect(),
             Show::Selected => self.selected_rows(app),

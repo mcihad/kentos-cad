@@ -464,3 +464,7 @@ numaraları raporunkidir.
   ([ADR 9155](../docs/adr/9155-relink-data-layers-of-a-moved-file.md))
   - `data_relink.rs`: aynı adresteki bütün veri katmanları; anahtar/geometri/alan şeması denetimi; Kaynak durumunda düğme.
   - Kalan: üç durumun tek pencerede bildirimi, kesinti/yedek sonrası sayım, kalıcı kimlikle denetim, web.
+- [~] **VY-55 — İstatistik ve Grafik veri katmanının seçili ve görünümdeki satırlarını sayar (rapor 17'nin kalanı).**
+  ([ADR 9156](../docs/adr/9156-statistics-of-chosen-and-seen-data-rows.md))
+  - Satırlar anahtar ve kutularıyla; Seçililer tablonun seçimi, Görünümdekiler görünümün kutusu.
+  - Kalan: tablo/grafik/dışa aktarım toplamının tek sınaması, kaynak satırlarının ölçüleri, web.

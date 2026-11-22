@@ -171,6 +171,9 @@
   - **Veri katmanını yeniden bağla** (23 Kasım, ek kabul “kurtarma”;
     [ADR 9155](../adr/9155-relink-data-layers-of-a-moved-file.md), VY-54): taşınan dosyanın bütün veri katmanları bir
     kerede bağlanır; şeması tutmayan aynı adlı tablo bağlanmaz.
+  - **Veri katmanında Seçililer ve Görünümdekiler** (23 Kasım, rapor 17'nin kalanı;
+    [ADR 9156](../adr/9156-statistics-of-chosen-and-seen-data-rows.md), VY-55): İstatistik ve Grafik tablonun seçimini
+    ve görünümdeki satırları sayar.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

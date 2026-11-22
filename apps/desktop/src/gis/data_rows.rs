@@ -14,6 +14,9 @@ use kentos_commands::Entity;
 
 use crate::app::{App, Message};
 
+/// A data layer's row with its key (none: a new row) and, for an object of the drawing, its slot (docs/adr/9156).
+pub(crate) type KeyedRow = (Option<i64>, Option<kentos_domain::Slot>, Entity);
+
 /// What the rows' stamp is: the drawing's session and its writes to the sources.
 type Stamp = (u64, u64);
 
@@ -80,6 +83,29 @@ impl App {
                 let mut out: Vec<Entity> =
                     read.iter().filter(|(k, _)| !held.contains(k)).map(|(_, e)| e.clone()).collect();
                 out.extend(doc.model.by_layer(layer).cloned());
+                Ok(Some(out))
+            }
+        })
+    }
+
+    /// [`App::data_layer_rows`] with each row's key and slot (docs/adr/9156): a source row its key and no slot; an object
+    /// of the drawing (a taken row, a new one) its slot and, taken, its key.
+    pub(crate) fn data_layer_rows_keyed(&self, layer: &str) -> Option<Result<Option<Vec<KeyedRow>>, String>> {
+        let rows = self.data_rows_of(layer)?;
+        let doc = self.document.as_ref()?;
+        Some(match rows {
+            Rows::Reading => Ok(None),
+            Rows::Failed(why) => Err(why),
+            Rows::Ready(read) => {
+                let held = doc.model.data_hidden(layer);
+                let mut out: Vec<KeyedRow> = read
+                    .iter()
+                    .filter(|(k, _)| !held.contains(k))
+                    .map(|(k, e)| (Some(*k), None, e.clone()))
+                    .collect();
+                for (uid, e) in doc.model.by_layer_with_uids(layer) {
+                    out.push((doc.model.taken_key(layer, uid), Some(kentos_domain::Slot(e.base().id)), e.clone()));
+                }
                 Ok(Some(out))
             }
         })

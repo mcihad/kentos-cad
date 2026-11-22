@@ -98,6 +98,36 @@ fn istatistik_counts_a_data_layers_rows_from_its_source() {
     assert_eq!(bedel[8].replace(',', ".").parse::<f64>().ok(), Some(500.0), "{bedel:?}");
     let durum = summary(&app, "durum");
     assert_eq!((durum[2].as_str(), durum[4].as_str()), ("6", "3"), "{durum:?}");
+    // Seçililer (docs/adr/9156): B02 and B03 chosen in the table: two rows, 100 and 250.
+    app.gis.features.data.choose_rows(&layer, [2, 3].into());
+    ev(&mut app, crate::statistics::Event::Show(crate::features::Show::Selected));
+    let bedel = summary(&app, "bedel");
+    assert_eq!(bedel[2].as_str(), "2", "{bedel:?}");
+    assert_eq!(bedel[8].replace(',', ".").parse::<f64>().ok(), Some(350.0), "{bedel:?}");
+    // Görünümdekiler: the view on the first three points alone, as the project's system has them (the source's 5255
+    // drawn in the project's).
+    let rows = app.data_layer_rows(&layer).expect("a data layer").expect("read").expect("ready");
+    let first: Vec<(f64, f64)> = rows
+        .iter()
+        .filter(|e| matches!(e.base().attrs.get("kod").map(String::as_str), Some("B01" | "B02" | "B03")))
+        .map(|e| {
+            let b = kentos_geometry_core::entity::entity_bounds(&kentos_native_application::geometry::shape(e));
+            (b.min_x, b.min_y)
+        })
+        .collect();
+    assert_eq!(first.len(), 3);
+    let (x0, x1) = first.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p.0), b.max(p.0)));
+    let (y0, y1) = first.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p.1), b.max(p.1)));
+    let area = iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(area)));
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: x0 - 1.0, min_y: y0 - 1.0, max_x: x1 + 1.0, max_y: y1 + 1.0 },
+        0.0,
+    );
+    ev(&mut app, crate::statistics::Event::Show(crate::features::Show::InView));
+    let bedel = summary(&app, "bedel");
+    assert_eq!(bedel[2].as_str(), "3", "B01, B02, B03 in the view: {bedel:?}");
+    assert_eq!(bedel[8].replace(',', ".").parse::<f64>().ok(), Some(350.0), "{bedel:?}");
 }
 
 #[test]
