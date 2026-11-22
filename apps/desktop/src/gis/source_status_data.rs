@@ -135,7 +135,7 @@ impl App {
             .padding([4, 8]);
             // A file not read: pointed at its new place, every layer of the file with it (docs/adr/9155).
             let act: Element<'_, Message> = if unread && r.file {
-                words::secondary(RELINK, Some(super::msg(super::Event::RelinkData(r.layer.clone())))).into()
+                words::secondary(RELINK, Some(super::msg(super::Event::RelinkData(r.layer.clone()))))
             } else {
                 iced::widget::text("").into()
             };
