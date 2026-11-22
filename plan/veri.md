@@ -373,3 +373,9 @@ numaraları raporunkidir.
   - İlişkiler penceresinde Üst anahtar ve Kaydet öncesi denetimler (benzersizlik, tür, bağlı, eşleşmeyen, NULL);
     İlişkiden kur anahtarla.
   - Kalan: veri katmanı üzerindeki formun ilişkili listesini kaynaktan okumak, gerçek pencerede silme denemesi, web.
+- [~] **VY-35 — İşlemin tablosu dosyaya sütun türleriyle yazılır (rapor 23, P1).**
+  ([ADR 9136](../docs/adr/9136-typed-table-outputs.md))
+  - Tablo çıktısında isteğe bağlı `kinds` ve `values`; GeoPackage yazıcısı INTEGER/REAL sütun ve düz değer yazar,
+    türsüz rapor metin kalır; PostGIS aynı geçici dosyadan geçer.
+  - Histogram türlerini söyler; SQLite ve GDAL ile doğrulandı.
+  - Kalan: öbür tablo veren araçların türleri, Kaydet ▾'ın sayıları, PostGIS sınamasının koşturulması, web.

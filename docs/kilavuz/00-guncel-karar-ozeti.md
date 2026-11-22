@@ -112,6 +112,9 @@
   - **İlişkide üst anahtar** (22 Kasım, değerlendirmenin 22. maddesi;
     [ADR 9135](../adr/9135-relation-parent-keys.md), VY-34): `parentKey` (CBS verisi 6) ile alt alan üstün kalıcı
     kimliği yerine kurumun kodunu tutar; her yol `ParentKey`'i sorar; pencere Kaydet öncesi denetler.
+  - **İşlemin tablosu türleriyle yazılır** (22 Kasım, değerlendirmenin 23. maddesi;
+    [ADR 9136](../adr/9136-typed-table-outputs.md), VY-35): tablo çıktısının `kinds`/`values`'u GeoPackage'ta INTEGER/REAL
+    sütun olur; Histogram'dan başlandı, serbest metin raporları metin kalır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

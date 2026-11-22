@@ -272,3 +272,5 @@ mod write_receipts;
 mod layers_rows_fields;
 // A relation by a parent key through the commands (docs/adr/9135).
 mod relation_keys;
+// A tool's table written with its columns' kinds (docs/adr/9136).
+mod processing_typed_tables;

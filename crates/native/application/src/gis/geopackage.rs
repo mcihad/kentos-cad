@@ -1674,9 +1674,11 @@ fn conform(g: Geometry, name: &str) -> Geometry {
     }
 }
 
-/// A table a tool made (a summary, a report: `{ columns, rows }`), to be written as an attribute table of text columns
-/// (docs/adr/0551 §3): the cells are the text the tool shows.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// A table a tool made (a summary, a report: `{ columns, rows }`), to be written as an attribute table (docs/adr/0551
+/// §3). Its cells are the text the tool shows; a tool that says its columns' kinds and gives their plain values
+/// (`kinds`, `values`: docs/adr/9136) gets typed columns, whole numbers as INTEGER and the others as REAL, the numbers as
+/// they are, not as shown. A free text report stays text.
+#[derive(Clone, Debug, PartialEq)]
 pub struct TextTable {
     /// The tool's output the table is.
     pub output: String,
@@ -1684,6 +1686,65 @@ pub struct TextTable {
     pub label: String,
     pub columns: Vec<String>,
     pub rows: Vec<Vec<String>>,
+    /// Each column's kind, when the tool says them (none: every column text).
+    pub kinds: Vec<CellKind>,
+    /// The cells' plain values, when the tool gives them: a number, a text or nothing; read with `kinds`.
+    pub values: Vec<Vec<J>>,
+}
+
+/// A table column's kind as a tool says it (docs/adr/9136).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CellKind {
+    Text,
+    Integer,
+    Real,
+}
+
+impl CellKind {
+    /// The kind a tool's word names: `integer`, `real`, else text.
+    pub fn of(word: &str) -> CellKind {
+        match word {
+            "integer" => CellKind::Integer,
+            "real" => CellKind::Real,
+            _ => CellKind::Text,
+        }
+    }
+}
+
+impl TextTable {
+    /// Column `j`'s kind: text unless the tool said another and gave every row's plain values.
+    fn kind(&self, j: usize) -> CellKind {
+        if self.values.len() != self.rows.len() {
+            return CellKind::Text;
+        }
+        self.kinds.get(j).copied().unwrap_or(CellKind::Text)
+    }
+
+    /// Row `i`'s cell `j` as written: its plain value in a typed column (a whole number that does not fit, or a text
+    /// where a number should be, written as nothing would lose it: such a column is text), else its shown text.
+    fn cell(&self, i: usize, j: usize) -> Value {
+        let shown = || self.rows.get(i).and_then(|r| r.get(j)).map_or(Value::Null, |c| Value::Text(c.clone()));
+        let plain = self.values.get(i).and_then(|r| r.get(j));
+        match (self.kind(j), plain) {
+            (CellKind::Text, _) | (_, None) => shown(),
+            (_, Some(J::Null)) => Value::Null,
+            (CellKind::Integer, Some(v)) => v.as_i64().map_or_else(shown, Value::Integer),
+            (CellKind::Real, Some(v)) => v.as_f64().map_or_else(shown, Value::Real),
+        }
+    }
+
+    /// Whether every plain value of column `j` reads as its kind says: else the column is written as text.
+    fn typed(&self, j: usize) -> bool {
+        let kind = self.kind(j);
+        kind != CellKind::Text
+            && self.values.iter().all(|r| match r.get(j) {
+                None | Some(J::Null) => true,
+                Some(v) => match kind {
+                    CellKind::Integer => v.as_i64().is_some(),
+                    _ => v.as_f64().is_some(),
+                },
+            })
+    }
 }
 
 /// A text table's table, worked out before any of it is written.
@@ -1949,18 +2010,26 @@ pub fn write_with_tables(
             columns: p.columns.clone(),
         };
         let mut w = session.start_table(&def)?;
+        let mut written_rows = 0usize;
         for chunk in t.rows.chunks(batch.max(1)) {
             if (flow.stopped)() {
                 return Err(WriteStop::Cancelled);
             }
             let rows: Vec<gpkg::NewRow> = chunk
                 .iter()
-                .map(|r| gpkg::NewRow {
-                    fid: None,
-                    geometry: None,
-                    values: (0..p.columns.len())
-                        .map(|i| r.get(i).map_or(Value::Null, |c| Value::Text(c.clone())))
-                        .collect(),
+                .map(|r| {
+                    let at = written_rows;
+                    written_rows += 1;
+                    gpkg::NewRow {
+                        fid: None,
+                        geometry: None,
+                        values: (0..p.columns.len())
+                            .map(|j| match p.columns[j].kind {
+                                ColumnKind::Integer | ColumnKind::Real => t.cell(at, j),
+                                _ => r.get(j).map_or(Value::Null, |c| Value::Text(c.clone())),
+                            })
+                            .collect(),
+                    }
                 })
                 .collect();
             session.append(&mut w, &rows, None)?;
@@ -2146,10 +2215,16 @@ fn plan(
                 col = format!("{base}_{n}");
                 n += 1;
             }
+            // A number the tool gave plain is a number in the file (docs/adr/9136).
+            let kind = match (t.typed(i), t.kind(i)) {
+                (true, CellKind::Integer) => ColumnKind::Integer,
+                (true, CellKind::Real) => ColumnKind::Real,
+                _ => ColumnKind::Text(None),
+            };
             columns.push(gpkg::Column {
                 name: col,
                 decl: String::new(),
-                kind: ColumnKind::Text(None),
+                kind,
                 not_null: false,
                 default: None,
             });

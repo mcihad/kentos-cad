@@ -305,19 +305,23 @@ def histogram_case():
     n = len(h["counts"])
     total = max(sum(h["counts"]), 1)
     rows = []
+    # docs/adr/9136: the cells' plain values beside the shown text, a file's numbers.
+    values = []
     so_far = 0
     for k, c in enumerate(h["counts"]):
         so_far += c
         a = h["lo"] + (h["hi"] - h["lo"]) * k / n
         b = h["hi"] if k + 1 == n else h["lo"] + (h["hi"] - h["lo"]) * (k + 1) / n
         rows.append([str(k + 1), shown(a, 3), shown(b, 3), str(c), shown(100.0 * c / total, 2), shown(100.0 * so_far / total, 2)])
+        values.append([k + 1, a, b, c, 100.0 * c / total, 100.0 * so_far / total])
     summary = f"{words(h['valid'])} hücre, {shown(h['lo'], 3)} ile {shown(h['hi'], 3)} arası {words(n)} aralık."
     if h["empty"]:
         summary += f" Değeri olmayan {words(h['empty'])} hücre."
     return {"id": "histogram", "title": "Histogram, 8 aralık, bandın sınırlarıyla: değersiz hücreler sayılır", "document": "raster-ops.kcad",
             "selection": [], "run": {"tool": "raster.histogram"}, "values": {"input": {"scope": "layer", "layerId": "bolge"}, "bins": 8},
             "expect": {"status": "ok", "undo": None, "summary": summary,
-                       "outputs": {"table": {"columns": ["Aralık", "Alt sınır", "Üst sınır", "Sayı", "Oran (%)", "Birikimli (%)"], "rows": rows}},
+                       "outputs": {"table": {"columns": ["Aralık", "Alt sınır", "Üst sınır", "Sayı", "Oran (%)", "Birikimli (%)"], "rows": rows,
+                                             "kinds": ["integer", "real", "real", "integer", "real", "real"], "values": values}},
                        "layers": [], "added": []}}
 
 

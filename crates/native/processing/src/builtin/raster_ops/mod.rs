@@ -583,9 +583,15 @@ pub fn run_histogram(
             summary: Some(summary),
             ..RunResult::default()
         };
+        // The cells as shown, and their kinds and plain values: a file gets numbers, not their text (docs/adr/9136).
         result.outputs.insert(
             "table".to_owned(),
-            json!({ "columns": ["Aralık", "Alt sınır", "Üst sınır", "Sayı", "Oran (%)", "Birikimli (%)"], "rows": rows }),
+            json!({
+                "columns": ["Aralık", "Alt sınır", "Üst sınır", "Sayı", "Oran (%)", "Birikimli (%)"],
+                "rows": rows,
+                "kinds": ["integer", "real", "real", "integer", "real", "real"],
+                "values": histogram_values(&h),
+            }),
         );
         Ok(result)
     };
@@ -593,6 +599,35 @@ pub fn run_histogram(
 }
 
 /// The histogram's rows: each interval's bounds, count and shares (§11).
+/// The histogram's rows as plain values (docs/adr/9136): the class's number and count whole, its bounds and shares as
+/// they are, not rounded for the eye.
+pub fn histogram_values(h: &Histogram) -> Vec<serde_json::Value> {
+    let n = h.counts.len() as f64;
+    let total = h.counts.iter().sum::<u64>().max(1) as f64;
+    let mut so_far = 0u64;
+    h.counts
+        .iter()
+        .enumerate()
+        .map(|(k, &c)| {
+            so_far += c;
+            let (a, b) = histogram_bounds(h, k, n);
+            json!([k as u64 + 1, a, b, c, 100.0 * c as f64 / total, 100.0 * so_far as f64 / total])
+        })
+        .collect()
+}
+
+/// Class `k`'s lower and upper bound of `n` classes.
+fn histogram_bounds(h: &Histogram, k: usize, n: f64) -> (f64, f64) {
+    if h.hi > h.lo {
+        (
+            h.lo + (h.hi - h.lo) * k as f64 / n,
+            if k + 1 == h.counts.len() { h.hi } else { h.lo + (h.hi - h.lo) * (k + 1) as f64 / n },
+        )
+    } else {
+        (h.lo, h.hi)
+    }
+}
+
 pub fn histogram_rows(h: &Histogram) -> Vec<Vec<String>> {
     let n = h.counts.len() as f64;
     let total = h.counts.iter().sum::<u64>().max(1) as f64;
@@ -602,18 +637,7 @@ pub fn histogram_rows(h: &Histogram) -> Vec<Vec<String>> {
         .enumerate()
         .map(|(k, &c)| {
             so_far += c;
-            let (a, b) = if h.hi > h.lo {
-                (
-                    h.lo + (h.hi - h.lo) * k as f64 / n,
-                    if k + 1 == h.counts.len() {
-                        h.hi
-                    } else {
-                        h.lo + (h.hi - h.lo) * (k + 1) as f64 / n
-                    },
-                )
-            } else {
-                (h.lo, h.hi)
-            };
+            let (a, b) = histogram_bounds(h, k, n);
             vec![
                 (k + 1).to_string(),
                 fixed(a, 3),

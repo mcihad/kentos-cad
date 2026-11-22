@@ -21,7 +21,7 @@ use kentos_commands::{
 };
 use kentos_domain::{ChangeMark, Document, Slot, Uuid};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_native_application::geopackage::{BATCH_ROWS, TextTable};
+use kentos_native_application::geopackage::{BATCH_ROWS, CellKind, TextTable};
 use kentos_native_application::processing_host::{
     BatchEnd, BatchFlow, RunEnd, ToolHost, register_tools,
 };
@@ -1645,6 +1645,17 @@ pub(crate) fn text_tables(
                 .iter()
                 .map(|r| r.as_array().map(|r| r.iter().map(text).collect()))
                 .collect::<Option<_>>()?;
+            // The columns' kinds and the cells' plain values, when the tool gives them (docs/adr/9136).
+            let kinds = v
+                .get("kinds")
+                .and_then(Value::as_array)
+                .map(|k| k.iter().map(|w| CellKind::of(w.as_str().unwrap_or_default())).collect())
+                .unwrap_or_default();
+            let values = v
+                .get("values")
+                .and_then(Value::as_array)
+                .map(|rs| rs.iter().filter_map(|r| r.as_array().cloned()).collect())
+                .unwrap_or_default();
             Some(TextTable {
                 output: name.clone(),
                 label: labels
@@ -1654,6 +1665,8 @@ pub(crate) fn text_tables(
                     .unwrap_or_else(|| name.clone()),
                 columns,
                 rows,
+                kinds,
+                values,
             })
         })
         .collect()
