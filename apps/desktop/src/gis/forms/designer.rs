@@ -198,6 +198,9 @@ pub struct Window {
     /// Çeviriler (docs/adr/0443 §5): the language whose words are being written, and a new tag typed.
     pub(crate) language: Option<String>,
     pub(crate) new_language: String,
+    /// Yeni alan in the fields' palette (docs/adr/9141): the name typed and the kind chosen (none: text).
+    pub(crate) new_field: String,
+    pub(crate) new_field_kind: Option<kentos_commands::LayerFieldKind>,
 }
 
 /// Which of an item's words a translation writes.
@@ -238,6 +241,11 @@ pub enum Event {
     AddGroup,
     AddNote,
     AddField(String),
+    /// Yeni alan (docs/adr/9141): its name typed, its kind chosen, and Oluştur: the layer's field made and put on the
+    /// form at once.
+    NewFieldName(String),
+    NewFieldKind(kentos_commands::LayerFieldKind),
+    CreateField,
     /// A related item (docs/adr/0404 §4) where the chosen item is.
     AddRelated,
     /// A reference to the parent through a project relation whose child is the form's layer
@@ -1498,3 +1506,7 @@ mod tests {
 }
 
 mod step;
+
+#[cfg(test)]
+#[path = "new_field_tests.rs"]
+mod new_field_tests;

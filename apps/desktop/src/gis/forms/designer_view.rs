@@ -491,7 +491,12 @@ impl App {
                 .filter(|f| !on_form.iter().any(|k| k == f.key()))
                 .collect();
             let mut palette = Column::new().spacing(2);
-            if free.is_empty() {
+            // A layer without a field says so (not that all of them are on the form); Yeni alan makes one (docs/adr/9141).
+            if fields.is_empty() {
+                palette = palette.push(
+                    label::caption("Katmanda alan yok: aşağıdan bir alan oluşturun, forma da eklenir.").style(muted),
+                );
+            } else if free.is_empty() {
                 palette =
                     palette.push(label::caption("Katmanın bütün alanları formda.").style(muted));
             }
@@ -513,8 +518,40 @@ impl App {
                 );
             }
             col = col.push(scrollable(palette).height(Fill));
+            if editable {
+                col = col.push(self.new_field_row(w));
+            }
         }
         col.into()
+    }
+
+    /// Yeni alan (docs/adr/9141): a name and a kind, Oluştur makes the layer's field and puts it on the form.
+    fn new_field_row(&self, w: &crate::forms::designer::Window) -> Element<'_, Message> {
+        let kinds = kentos_commands::LayerFieldKind::ALL;
+        let chosen = kinds.iter().position(|k| *k == w.new_field_kind.unwrap_or(kentos_commands::LayerFieldKind::Text));
+        let name = kentos_ui::widget::text_field("Yeni alanın adı", &w.new_field)
+            .on_input(|t| msg(Event::NewFieldName(t)))
+            .on_submit(msg(Event::CreateField));
+        let kind = kentos_ui::widget::select::Select::new(
+            kinds.iter().map(|k| kentos_ui::widget::select::Choice::new(k.label())),
+            chosen,
+            move |i| msg(Event::NewFieldKind(kinds[i])),
+        );
+        Column::new()
+            .spacing(4)
+            .push(label::caption("Yeni alan").style(muted))
+            .push(name)
+            .push(
+                row![
+                    container(kind).width(Fill),
+                    button(label::body("Oluştur"))
+                        .on_press_maybe((!w.new_field.trim().is_empty()).then(|| msg(Event::CreateField)))
+                        .style(style::button::secondary),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            )
+            .into()
     }
 
     fn forms_tree(
@@ -659,9 +696,11 @@ impl App {
             .map(|i| node(i, &mut next, w, fields, issues))
             .collect();
         let tree: Element<'_, Message> = if body.items.is_empty() {
-            container(label::caption(
-                "Form boş. Soldaki alanlardan birine basın ya da sekme, grup ve not ekleyin.",
-            ))
+            container(label::caption(if fields.is_empty() {
+                "Form boş: katmanda alan yok. Soldan bir alan oluşturun; forma da eklenir."
+            } else {
+                "Form boş. Soldaki alanlardan birine basın ya da sekme, grup ve not ekleyin."
+            }))
             .padding(10)
             .into()
         } else {

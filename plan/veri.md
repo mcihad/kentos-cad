@@ -399,3 +399,7 @@ numaraları raporunkidir.
   - Tablolar sabit yükseklikte kaydırılır, arama üstte kalır; seçilen tabloların kimlik satırı (anahtar, geometri,
     SRID, yazma hakkı).
   - Kalan: şema ağacı, sık kullanılanlar, geometri sütunu adı ve kapsam, canlı rol/kesinti sınamaları, web.
+- [~] **VY-40 — Form tasarımcısı alanı olmayan katmanı söyler, alanı yerinde oluşturur (rapor 8, P1).**
+  ([ADR 9141](../docs/adr/9141-form-designer-new-field.md))
+  - Paletin ve ağacın sözleri; Yeni alan `cad.layers.edit` ile katmana yazar ve forma koyar.
+  - Kalan: yayımlama denetiminin ayrı sözleri, yayımlama rolü, yol formunda bütün sınama, web.

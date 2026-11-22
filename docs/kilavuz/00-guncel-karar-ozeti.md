@@ -126,6 +126,9 @@
     (`gpkg_geom_GEOMETRY` yazılmaz).
   - **PostGIS kataloğu yerinde durur** (22 Kasım, değerlendirmenin 7. maddesi;
     [ADR 9140](../adr/9140-postgis-catalog-steady.md), VY-39): liste kendi alanında kayar; seçilen tablolar kimlikleriyle.
+  - **Tasarımcıda Yeni alan** (22 Kasım, değerlendirmenin 8. maddesi;
+    [ADR 9141](../adr/9141-form-designer-new-field.md), VY-40): alanı olmayan katman söylenir; alan paletten oluşturulup
+    forma konur.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

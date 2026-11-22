@@ -2524,6 +2524,8 @@ Liste:
   GeoPackage yazıcısı eğri türlerini kendi adlarıyla kaydetsin.
 - [ ] PostGIS kataloğu yerinde durur (ADR 9140, 22 Kasım 2026): web'in PostGIS penceresinde liste kendi alanında kaysın,
   seçilen tablolar kimlikleriyle yazılsın.
+- [ ] Tasarımcıda Yeni alan (ADR 9141, 22 Kasım 2026): web'in form tasarımcısı alanı olmayan katmanı söylesin, alanı
+  paletten oluşturup forma koysun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de
