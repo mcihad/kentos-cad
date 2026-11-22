@@ -86,6 +86,8 @@ fn world(c: &Value) -> World {
                                     id: r["id"].as_str().unwrap_or_default().to_owned(),
                                     name: r["name"].as_str().unwrap_or_default().to_owned(),
                                     field: r["field"].as_str().unwrap_or_default().to_owned(),
+                                    // A relation by a parent key (docs/adr/9135): the parent field's name.
+                                    by: r["by"].as_str().map(str::to_owned),
                                 })
                                 .collect()
                         })

@@ -50,6 +50,19 @@ impl Document {
                 world.insert(layer.to_owned(), other);
             }
         }
+        // The relations over a related item's layer and field: one with a parent key lists by that key's value
+        // (docs/adr/9135).
+        for (_, item) in body.walk() {
+            let FormItem::Related { layer, field, .. } = item else { continue };
+            for r in self.settings.relations.iter().filter(|r| r.child == *layer && r.field == *field) {
+                let relation = self.world_relation(r);
+                if let Some(other) = world.get_mut(layer)
+                    && !other.relations.iter().any(|o| o.id == relation.id)
+                {
+                    other.relations.push(relation);
+                }
+            }
+        }
         // The relations the rules' `ilişkili_toplam` names (docs/adr/0761): their child layers, with their
         // objects' shapes when a call reads a related record's measures.
         let (named, with_shapes) = kentos_forms::related_needs(body);
@@ -80,13 +93,28 @@ impl Document {
                     world.entry(r.child.clone()).or_insert(other)
                 }
             };
-            other.relations.push(kentos_forms::WorldRelation {
-                id: r.id.clone(),
-                name: r.name.clone(),
-                field: r.field.clone(),
-            });
+            if !other.relations.iter().any(|o| o.id == r.id) {
+                let relation = self.world_relation(r);
+                other.relations.push(relation);
+            }
         }
         world
+    }
+
+    /// A project relation as a form reads it: the parent field whose value its children hold, by its name, when it has
+    /// a parent key (docs/adr/9135).
+    fn world_relation(&self, r: &kentos_contracts::ProjectRelation) -> kentos_forms::WorldRelation {
+        kentos_forms::WorldRelation {
+            id: r.id.clone(),
+            name: r.name.clone(),
+            field: r.field.clone(),
+            by: match self.parent_key(r) {
+                crate::ParentKey::Field(name) => Some(name),
+                // A key the parent layer lacks ties nothing: a name no field has.
+                crate::ParentKey::Missing => r.parent_key.clone(),
+                crate::ParentKey::Uid => None,
+            },
+        }
     }
 
     /// The layer `layer` as a form reads it: its name, fields and objects, with their shapes when asked.
@@ -191,7 +219,7 @@ impl Document {
         let touches = |s: &Stored| {
             reads
                 .iter()
-                .any(|(_, child, _)| s.entity.base().layer_id == *child)
+                .any(|(_, child, _, _)| s.entity.base().layer_id == *child)
         };
         let related = ops.iter().any(|op| match op {
             Op::Add(s) | Op::Remove(s) => touches(s),
@@ -262,9 +290,9 @@ impl Document {
 
     /// What the enforcing forms' `ilişkili_toplam` reads (docs/adr/0761): (the form's layer, the relation's
     /// child layer, the child field's name), each once.
-    fn related_reads(&self, enforcing: &[ProjectForm]) -> Vec<(String, String, String)> {
+    fn related_reads(&self, enforcing: &[ProjectForm]) -> Vec<(String, String, String, crate::ParentKey)> {
         let fold = |t: &str| kentos_expression::js::text::fold_turkish(t.trim());
-        let mut out: Vec<(String, String, String)> = Vec::new();
+        let mut out: Vec<(String, String, String, crate::ParentKey)> = Vec::new();
         for f in enforcing {
             let Some(release) = f.release() else { continue };
             let named = kentos_forms::named_relations(&release.body);
@@ -281,7 +309,8 @@ impl Document {
                     .get(&r.child)
                     .and_then(|n| n.fields.iter().find(|x| x.key() == r.field))
                     .map_or_else(|| r.field.clone(), |x| x.name.clone());
-                let read = (f.layer.clone(), r.child.clone(), field);
+                // What the child holds of its parent: the persistent id or a key's value (docs/adr/9135).
+                let read = (f.layer.clone(), r.child.clone(), field, self.parent_key(r));
                 if !out.contains(&read) {
                     out.push(read);
                 }
@@ -319,19 +348,36 @@ impl Document {
     }
 
     /// The records on a form's layer the related records `touched` name (before and after), as
-    /// `reads` says: (the form's layer, the child layer, the child field's name). Each once, in order.
-    fn related_parents(&self, touched: &[&Op], reads: &[(String, String, String)]) -> Vec<Uuid> {
+    /// `reads` says: (the form's layer, the child layer, the child field's name, what it holds of the parent). Each
+    /// once, in order.
+    fn related_parents(
+        &self,
+        touched: &[&Op],
+        reads: &[(String, String, String, crate::ParentKey)],
+    ) -> Vec<Uuid> {
         let mut out: Vec<Uuid> = Vec::new();
         let mut seen: HashSet<Uuid> = HashSet::new();
         let mut take = |s: &Stored, out: &mut Vec<Uuid>| {
             let base = s.entity.base();
-            for (parent_layer, child, field) in reads {
+            for (parent_layer, child, field, key) in reads {
                 if base.layer_id != *child {
                     continue;
                 }
                 let Some(held) = base.attrs.get(field) else {
                     continue;
                 };
+                // By a parent key: the parents holding one of the codes (docs/adr/9135).
+                if !matches!(key, crate::ParentKey::Uid) {
+                    let codes: HashSet<&str> = held.split(';').map(str::trim).filter(|h| !h.is_empty()).collect();
+                    for p in self.store.on_layer(parent_layer) {
+                        if key.code_of(p.uid, &p.entity).is_some_and(|c| codes.contains(c.as_str()))
+                            && seen.insert(p.uid)
+                        {
+                            out.push(p.uid);
+                        }
+                    }
+                    continue;
+                }
                 // A many-to-many field holds several ids (docs/adr/0409 §1).
                 for id in held
                     .split(';')

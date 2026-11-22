@@ -3017,8 +3017,12 @@ def document(d):
     # GIS data 5 (docs/adr/9114 §1): a data layer whose rows are texts.
     def text_tables(nodes):
         return any("text" in n.get("data", {}) or text_tables(n.get("children", [])) for n in nodes)
+    # GIS data 6 (docs/adr/9135): a relation by a parent key.
+    def keyed_relations(settings):
+        return any("parentKey" in r for r in (settings or {}).get("relations", []))
     # GIS data 3 (docs/adr/9104 §2): the data layers' edit grouping.
-    gis = (5 if text_tables(d["layers"]) else 4 if counted(d["layers"]) else 3 if "editGrouping" in d.get("settings", {})
+    gis = (6 if keyed_relations(d.get("settings")) else 5 if text_tables(d["layers"]) else 4 if counted(d["layers"])
+           else 3 if "editGrouping" in d.get("settings", {})
            else 2 if data_layers(d["layers"]) else 1 if extended(d["layers"]) else 0)
     # Architecture data 18 (docs/adr/8101 §2): the underlay models (`settings.arch.underlays`), the one version-gated
     # architecture data the shared cases' v2 setups hold; a reader refuses them in an older version.
@@ -5836,6 +5840,16 @@ def build():
     out["broken/text-table-of-areas.kcad"] = texts_broken(
         lambda data: data["geometry"].update(typeName="MULTIPOLYGON"))
     out["broken/text-table-column-twice.kcad"] = texts_broken(lambda data: data["text"].update(angle="metin"))
+    # Relations by a parent key (docs/adr/9135): GIS data 6; under GIS data 5 an unknown field; a blank key a bad value.
+    out["relation-keys.kcad"] = container(document(load("relation-keys.json")))
+    keys_payload = document(load("relation-keys.json"))
+    with_gis6 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(6)})
+    with_gis5 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(5)})
+    assert keys_payload.startswith(with_gis6), "a relation by a parent key raises the GIS data's version to 6"
+    out["broken/relation-key-in-gis-5.kcad"] = container(with_gis5 + keys_payload[len(with_gis6):])
+    blank_key = copy.deepcopy(load("relation-keys.json"))
+    blank_key["settings"]["relations"][0]["parentKey"] = " "
+    out["broken/relation-key-blank.kcad"] = container(document(blank_key))
     # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
     # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
     # two columns of one name, an unknown way, an empty list of columns.

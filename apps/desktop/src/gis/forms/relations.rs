@@ -5,14 +5,18 @@
 //! │ İlişkiler            │ Ad          [Binanın sayaçları        ]            │
 //! │ ● Binanın sayaçları  │ Üst katman  [Bina                    ▾]            │
 //! │   Sayacın vanaları   │ Alt katman  [Sayaç                   ▾]            │
-//! │ [Yeni ilişki]        │ Alan        [bina                    ▾]            │
+//! │ [Yeni ilişki]        │ Üst anahtar [Nesnenin kimliği        ▾]            │
+//! │                      │ Alan        [bina                    ▾]            │
 //! │                      │ Üst nesne silinince [Bağı kopar      ▾]            │
+//! │                      │ ✓ Üst anahtar benzersiz · 4 alt kayıt bağlı …       │
 //! │ [İlişkiyi sil]                                  [Vazgeç] [Kaydet]          │
 //! └──────────────────────────────────────────────────────────────────────────┘
 //! ```
 //!
 //! The window edits a copy of the relations; Kaydet writes what changed through
-//! `cad.relations.edit` (removes, updates, creates, in that order) and closes the window.
+//! `cad.relations.edit` (removes, updates, creates, in that order) and closes the window. Üst anahtar ties the child
+//! field to the parent's persistent id or to one of its fields, an institution's own code (docs/adr/9135); the checks
+//! under it (relation_checks.rs) say before Kaydet what the relation would tie.
 
 use crate::gis;
 use iced::widget::{Column, button, column, container, row, scrollable, space};
@@ -39,6 +43,10 @@ const SAVE: &str = "Kaydet";
 const CANCEL: &str = "Vazgeç";
 const NEW: &str = "Yeni ilişki";
 const REMOVE: &str = "İlişkiyi sil";
+/// Üst anahtar's first choice: the parent's persistent id (docs/adr/9135).
+pub const UID_CHOICE: &str = "Nesnenin kimliği";
+const PARENT_KEY_HINT: &str = "Alt alanın tuttuğu değer: üst nesnenin kalıcı kimliği ya da üst katmanın bir alanı (kurumun \
+                               kendi kodu, örneğin mahalle kodu).";
 /// The sources' side of a many-to-many relation (docs/adr/0532 §2).
 const MAP: &str = "Dosyaya eşle";
 const UNMAP: &str = "Eşlemeyi kaldır";
@@ -87,6 +95,12 @@ impl Window {
     pub(crate) fn has_filed(&self, id: &str, state: RelationState) -> bool {
         self.filed.get(id).is_some_and(|f| f.state == state)
     }
+
+    /// The relation chosen, as edited (a test's question).
+    #[cfg(test)]
+    pub(crate) fn chosen_for_test(&self) -> Option<&ProjectRelation> {
+        self.chosen.and_then(|i| self.rows.get(i))
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -98,6 +112,8 @@ pub enum Event {
     Parent(String),
     Child(String),
     Field(String),
+    /// Üst anahtar: a parent field's key, or none for the persistent id (docs/adr/9135).
+    ParentKey(Option<String>),
     Policy(RelationDelete),
     /// Dosyaya eşle and Eşlemeyi kaldır on the chosen relation (docs/adr/0532 §2): written to the file at once.
     Map,
@@ -223,6 +239,7 @@ impl App {
                     child: parent.clone(),
                     parent,
                     field: String::new(),
+                    parent_key: None,
                     on_delete: RelationDelete::Unlink,
                 });
                 w.chosen = Some(w.rows.len() - 1);
@@ -241,7 +258,16 @@ impl App {
             }
             Event::Parent(id) => {
                 if let Some(r) = chosen {
+                    // Another layer's fields are other fields.
+                    if r.parent != id {
+                        r.parent_key = None;
+                    }
                     r.parent = id;
+                }
+            }
+            Event::ParentKey(key) => {
+                if let Some(r) = chosen {
+                    r.parent_key = key;
                 }
             }
             Event::Child(id) => {
@@ -439,7 +465,22 @@ impl App {
             keys.iter().position(|k| *k == r.field),
             move |i| msg(Event::Field(keys[i].clone())),
         )
-        .placeholder("Üst nesnenin kimliğini tutan alan");
+        .placeholder(if r.parent_key.is_some() {
+            "Üst kaydın anahtarını tutan alan"
+        } else {
+            "Üst nesnenin kimliğini tutan alan"
+        });
+        // Üst anahtar: the persistent id, or a field of the parent layer (docs/adr/9135).
+        let parents = self.layer_fields_of(&r.parent);
+        let parent_keys: Vec<String> = parents.iter().map(|f| f.key().to_owned()).collect();
+        let parent_key = Select::new(
+            std::iter::once(Choice::new(UID_CHOICE)).chain(parents.iter().map(|f| Choice::new(f.label().to_owned()))),
+            match &r.parent_key {
+                None => Some(0),
+                Some(k) => parent_keys.iter().position(|p| p == k).map(|i| i + 1),
+            },
+            move |i| msg(Event::ParentKey(i.checked_sub(1).and_then(|i| parent_keys.get(i).cloned()))),
+        );
         let at = POLICIES.iter().position(|(p, _, _)| *p == r.on_delete);
         let policy = Select::new(POLICIES.iter().map(|(_, w, _)| Choice::new(*w)), at, |i| {
             msg(Event::Policy(POLICIES[i].0))
@@ -460,6 +501,7 @@ impl App {
                 pick(&r.child, Event::Child),
                 None,
             ))
+            .push(words::field("Üst anahtar", parent_key, Some(PARENT_KEY_HINT.to_owned())))
             .push(words::field("Alan", field, None));
         if fields.is_empty() {
             col = col.push(words::text_line(
@@ -470,6 +512,10 @@ impl App {
         col = col
             .push(words::field("Üst nesne silinince", policy, None))
             .push(label::caption(explain).style(muted));
+        // What the relation would tie as the layers are now, before Kaydet (relation_checks.rs).
+        for (kind, line) in self.relation_checks(r) {
+            col = col.push(words::text_line(kind, line));
+        }
         if let Some(filed) = self
             .gis
             .relations_window
@@ -582,3 +628,7 @@ fn muted(theme: &iced::Theme) -> iced::widget::text::Style {
         color: Some(Tokens::of(theme).muted),
     }
 }
+
+#[cfg(test)]
+#[path = "relation_keys_tests.rs"]
+mod relation_keys_tests;

@@ -1065,7 +1065,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             // Schema 91 (docs/adr/0538 §1): the bound layers' bases, read whole; checked against the links below.
             "sourceBases" if has.source_bases => source_bases = gis::source_bases(r, has)?,
             // Schema 72 (docs/adr/0405 §1): the project's relations, read whole and checked.
-            "relations" if has.forms => relations = gis::relations(r)?,
+            "relations" if has.forms => relations = gis::relations(r, has)?,
             // Schema 89 (docs/adr/0527): the project's join views, read whole and checked.
             "joinViews" if has.join_views => join_views = gis::join_views(r, has)?,
             // Schema 102 (docs/adr/0622 §5): Otomatik seçim.

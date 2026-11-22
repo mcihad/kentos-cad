@@ -119,7 +119,11 @@ fn modules_of(doc: &DocumentSnapshotV2, objects: Objs<'_>) -> ModuleVersions {
         nodes.iter().any(|n| n.data.as_ref().is_some_and(|d| d.text.is_some()) || texts(&n.children))
     }
     // GIS 3 (docs/adr/9104 §2): the data layers' edit grouping.
-    if texts(&doc.layers) {
+    // GIS 6 (docs/adr/9135): a relation by a parent key.
+    if doc.settings.relations.iter().any(|r| r.parent_key.is_some()) {
+        out.modules
+            .push(("gis".to_owned(), crate::GIS_WITH_RELATION_KEYS));
+    } else if texts(&doc.layers) {
         out.modules
             .push(("gis".to_owned(), crate::GIS_WITH_TEXT_TABLES));
     } else if counted(&doc.layers) {

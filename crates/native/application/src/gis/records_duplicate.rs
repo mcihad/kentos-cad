@@ -52,7 +52,9 @@ fn kids(doc: &Document, slot: Slot) -> Vec<(Slot, String, bool)> {
     let layers = doc.layers();
     let mut out = Vec::new();
     for r in &doc.settings().relations {
-        if r.parent != *layer || r.on_delete != RelationDelete::Cascade {
+        // A relation by a parent key (docs/adr/9135) is left: the copy carries the same code, so its children would
+        // hold both; a new code is the person's to give.
+        if r.parent != *layer || r.on_delete != RelationDelete::Cascade || r.parent_key.is_some() {
             continue;
         }
         let name = layers

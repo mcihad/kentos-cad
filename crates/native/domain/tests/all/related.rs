@@ -88,6 +88,7 @@ fn doc() -> Document {
         parent: parent.to_owned(),
         child: child.to_owned(),
         field: field.to_owned(),
+        parent_key: None,
         on_delete: RelationDelete::default(),
     };
     v2.settings.relations = vec![

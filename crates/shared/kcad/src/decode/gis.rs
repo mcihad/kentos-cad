@@ -156,9 +156,10 @@ pub(super) fn source_bases(
     Ok(list)
 }
 
-/// `relations`: what the payload's schema lets it hold, checked as it is read.
+/// `relations`: what the payload's schema lets it hold, checked as it is read; a parent key from GIS data 6.
 pub(super) fn relations(
     r: &mut Reader<'_>,
+    has: Features,
 ) -> Result<Vec<kentos_contracts::ProjectRelation>, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
@@ -177,6 +178,14 @@ pub(super) fn relations(
             Code::BadValue,
             at,
             "ilişkiler yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+        ));
+    }
+    // GIS 6 (docs/adr/9135): a relation by a parent key; before it the field is unknown.
+    if has.gis < crate::GIS_WITH_RELATION_KEYS && list.iter().any(|x| x.parent_key.is_some()) {
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            &format!("ilişkinin parentKey alanı CBS verisi {} ister", crate::GIS_WITH_RELATION_KEYS),
         ));
     }
     if list.is_empty() {

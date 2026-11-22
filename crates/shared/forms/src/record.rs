@@ -227,7 +227,7 @@ impl kentos_expression::world::WorldCalls for RuleScope<'_> {
         let (Some(c), Some(related)) = (self.expr.world.get(k), &self.object.related) else {
             return kentos_expression::scalar::R::V(kentos_expression::scalar::V::Null);
         };
-        related.value(c, self.object.uid.as_deref(), out)
+        related.value(c, self.attrs, self.object.uid.as_deref(), out)
     }
 }
 

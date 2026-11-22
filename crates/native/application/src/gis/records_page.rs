@@ -175,33 +175,47 @@ fn run(doc: &Document, input: &RecordsPage) -> Result<RecordsPaged, Stop> {
             .iter()
             .find(|f| f.key() == r.field);
         let (name, many) = field.map_or((r.field.clone(), false), |f| (f.name.clone(), f.multiple));
+        // What a child holds of its parent: the parent's persistent id or its key's value (docs/adr/9135).
+        let key = doc.parent_key(r);
         match side {
             RelationSide::Children => {
-                list =
-                    doc.by_layer_with_uids(&r.child)
+                let code = key.code_of(of, object);
+                list = match code {
+                    Some(code) => doc
+                        .by_layer_with_uids(&r.child)
                         .filter(|(_, e)| {
-                            e.base().attrs.get(&name).is_some_and(|v| {
-                                ids(v, many).iter().any(|h| *h == of_text.as_str())
-                            })
+                            e.base()
+                                .attrs
+                                .get(&name)
+                                .is_some_and(|v| ids(v, many).iter().any(|h| *h == code.as_str()))
                         })
-                        .collect();
+                        .collect(),
+                    None => Vec::new(),
+                };
                 list.sort_by_key(|(u, _)| *u);
             }
             RelationSide::Parents => {
-                list = object
+                let held: Vec<String> = object
                     .base()
                     .attrs
                     .get(&name)
-                    .map(|v| ids(v, many))
-                    .unwrap_or_default()
-                    .iter()
-                    .filter_map(|h| Uuid::parse_str(h).ok())
-                    .filter_map(|u| {
-                        let slot = doc.slot_of(u)?;
-                        let e = doc.get(slot)?;
-                        (e.base().layer_id == r.parent).then_some((u, e))
-                    })
-                    .collect();
+                    .map(|v| ids(v, many).iter().map(|h| (*h).to_owned()).collect())
+                    .unwrap_or_default();
+                list = match key {
+                    kentos_domain::ParentKey::Uid => held
+                        .iter()
+                        .filter_map(|h| Uuid::parse_str(h).ok())
+                        .filter_map(|u| {
+                            let slot = doc.slot_of(u)?;
+                            let e = doc.get(slot)?;
+                            (e.base().layer_id == r.parent).then_some((u, e))
+                        })
+                        .collect(),
+                    _ => doc
+                        .by_layer_with_uids(&r.parent)
+                        .filter(|(u, e)| key.code_of(*u, e).is_some_and(|c| held.contains(&c)))
+                        .collect(),
+                };
             }
         }
     }

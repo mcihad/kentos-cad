@@ -41,13 +41,24 @@ pub struct OtherLayer {
     pub relations: Vec<WorldRelation>,
 }
 
-/// A project relation a form's rules aggregate over (docs/adr/0761): its id, its name and the child
-/// field's key that holds the parent's persistent id.
+/// A project relation a form's rules aggregate over (docs/adr/0761) or a related item lists: its id, its name, the
+/// child field's key that holds the parent's persistent id, and the parent field (its name) whose value it holds
+/// instead when the relation has a parent key (docs/adr/9135).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct WorldRelation {
     pub id: String,
     pub name: String,
     pub field: String,
+    pub by: Option<String>,
+}
+
+/// What a record gives its children to hold: its `by` field's value (the spaces round it dropped, none when empty), else
+/// its persistent id (docs/adr/9135).
+pub(crate) fn code_of<'a>(by: Option<&str>, attrs: &'a Attrs, uid: Option<&'a str>) -> Option<&'a str> {
+    match by {
+        Some(name) => attrs.get(name).map(|v| js_trim(v)).filter(|v| !v.is_empty()),
+        None => uid,
+    }
 }
 
 /// The other layers a form reads, by their ids.
@@ -764,31 +775,35 @@ pub fn labels_of(lookup: &FormLookup, world: &World) -> BTreeMap<String, String>
     out
 }
 
-/// A related item's objects, made once: each object's persistent id and the id its field holds.
+/// A related item's objects, made once: each object's persistent id and the code its field holds, and the record's
+/// field that code is (none: the record's persistent id, docs/adr/9135).
 #[derive(Clone, Debug)]
 pub(crate) struct Related {
     pub rows: Vec<(String, String)>,
+    pub by: Option<String>,
 }
 
 impl Related {
-    /// The objects that refer to the record, in the layer's order.
-    pub(crate) fn of(&self, object: &Object) -> Vec<String> {
-        let Some(uid) = object.uid.as_deref() else {
+    /// The objects that refer to the record (with its values `attrs`), in the layer's order.
+    pub(crate) fn of(&self, attrs: &Attrs, object: &Object) -> Vec<String> {
+        let Some(code) = code_of(self.by.as_deref(), attrs, object.uid.as_deref()) else {
             return Vec::new();
         };
-        // A many-to-many field holds several ids (docs/adr/0409 §1); an id has no `;`.
+        // A many-to-many field holds several codes (docs/adr/0409 §1); a code has no `;`.
         self.rows
             .iter()
-            .filter(|(_, held)| held.split(';').any(|h| js_trim(h) == uid))
+            .filter(|(_, held)| held.split(';').any(|h| js_trim(h) == code))
             .map(|(own, _)| own.clone())
             .collect()
     }
 }
 
-/// The related item over `layer`'s `field`; none when the layer is not in the world.
+/// The related item over `layer`'s `field`; none when the layer is not in the world. A project relation over the same
+/// field with a parent key (the world's) ties it by that key's value.
 pub(crate) fn related_of(layer: &str, field: &str, world: &World) -> Option<Related> {
     let other = world.get(layer)?;
     let name = name_of(&other.fields, field);
+    let by = other.relations.iter().find(|r| r.field == field).and_then(|r| r.by.clone());
     Some(Related {
         rows: other
             .rows
@@ -797,6 +812,7 @@ pub(crate) fn related_of(layer: &str, field: &str, world: &World) -> Option<Rela
                 value(uid, attrs, name, false).map(|v| (uid.clone(), v.to_owned()))
             })
             .collect(),
+        by,
     })
 }
 
@@ -852,5 +868,43 @@ mod tests {
             ..lookup
         };
         assert!(labels_of(&elsewhere, &world()).is_empty());
+    }
+
+    /// docs/adr/9135: a related item over a field a relation ties by a parent key lists the objects holding the
+    /// record's code (its `kod`), not its persistent id; a record with an empty code has none; without the relation's
+    /// key it is the persistent id again.
+    #[test]
+    fn a_related_item_by_a_parent_key_lists_the_records_holding_its_code() {
+        let work = |uid: &str, code: &str| {
+            (uid.to_owned(), [("mahalle".to_owned(), code.to_owned())].into_iter().collect::<Attrs>())
+        };
+        let mut w = World::new();
+        w.insert(
+            "bakim".into(),
+            OtherLayer {
+                name: "Bakım".into(),
+                fields: vec![
+                    serde_json::from_value(serde_json::json!({ "name": "mahalle", "kind": "text" })).expect("a field"),
+                ],
+                rows: vec![work("b1", "M1"), work("b2", "M1"), work("b3", "M2"), work("b5", "M9"), work("b6", "")],
+                shapes: Vec::new(),
+                relations: vec![WorldRelation {
+                    id: "mahalle-bakim".into(),
+                    name: "Bakımlar".into(),
+                    field: "mahalle".into(),
+                    by: Some("kod".into()),
+                }],
+            },
+        );
+        let related = related_of("bakim", "mahalle", &w).expect("the layer");
+        let record = |code: &str| -> Attrs { [("kod".to_owned(), code.to_owned())].into_iter().collect() };
+        let object = Object { uid: Some("m-uid".into()), ..Object::default() };
+        assert_eq!(related.of(&record("M1"), &object), ["b1", "b2"]);
+        assert_eq!(related.of(&record(" M2 "), &object), ["b3"]);
+        assert!(related.of(&record("M3"), &object).is_empty());
+        assert!(related.of(&record(""), &object).is_empty(), "an empty code has no child");
+        w.get_mut("bakim").expect("the layer").relations[0].by = None;
+        let by_uid = related_of("bakim", "mahalle", &w).expect("the layer");
+        assert!(by_uid.of(&record("M1"), &object).is_empty(), "by persistent id the code is not asked");
     }
 }

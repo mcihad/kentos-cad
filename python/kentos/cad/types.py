@@ -85607,13 +85607,15 @@ class ProjectPurged(_Model):
 @dataclass(kw_only=True, slots=True)
 class ProjectRelation(_Model):
     """A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's
-    persistent id.
+    persistent id, or, with a parent key (docs/adr/9135), the value of that parent field: an institution's own code.
     Attributes:
         id: Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
         parent: The parent layer's id.
         child: The child layer's id.
-        field: The child field's key that holds the parent's persistent id.
+        field: The child field's key that holds the parent's persistent id (or its key's value).
         on_delete: Written only when not `unlink`.
+        parent_key: The parent field's key whose value the child field holds (docs/adr/9135): a code such as a neighbourhood's
+            `M1`; none: the parent's persistent id. Written only when given.
     """
     id: str
     name: str
@@ -85621,6 +85623,7 @@ class ProjectRelation(_Model):
     child: str
     field: str
     on_delete: RelationDelete | RelationDeleteName | Unset = UNSET
+    parent_key: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -85631,6 +85634,8 @@ class ProjectRelation(_Model):
         out["field"] = self.field
         if self.on_delete is not UNSET:
             out["onDelete"] = _enum_out(self.on_delete)
+        if self.parent_key is not UNSET:
+            out["parentKey"] = self.parent_key
         return out
 
     @classmethod
@@ -85642,6 +85647,7 @@ class ProjectRelation(_Model):
             child=data["child"],
             field=data["field"],
             on_delete=_enum_in(RelationDelete, data["onDelete"]) if "onDelete" in data else UNSET,
+            parent_key=data.get("parentKey", UNSET),
         )
 
 

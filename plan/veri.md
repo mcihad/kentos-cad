@@ -366,3 +366,10 @@ numaraları raporunkidir.
     `data_rows`'tan arka planda okur, görünüm beklerken söyler; hücreler yalnız okunur.
   - Okunamayan kaynak, boş katman ve eşleşme yok ayrı sözler; `all_records` geometrisiz satırı tutar.
   - Kalan: Kaynak tablosu seçeneğini veri sürücüsüne taşımak, kaynakta birleştirme ölçümü, web.
+- [~] **VY-34 — İlişki üst katmanın kendi kodunu anahtar alabilir (rapor 22, P1).**
+  ([ADR 9135](../docs/adr/9135-relation-parent-keys.md))
+  - `ProjectRelation.parent_key` (CBS verisi 6); `ParentKey` tek kural: silme izleme, ilişkili kayıtlar, formun listesi ve
+    sayımı, `ilişkili_toplam`, `cad.records.page`, formdan bağlama; benzersiz olmayan kodda çocuklar korunur.
+  - İlişkiler penceresinde Üst anahtar ve Kaydet öncesi denetimler (benzersizlik, tür, bağlı, eşleşmeyen, NULL);
+    İlişkiden kur anahtarla.
+  - Kalan: veri katmanı üzerindeki formun ilişkili listesini kaynaktan okumak, gerçek pencerede silme denemesi, web.

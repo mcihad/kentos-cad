@@ -45,6 +45,9 @@ pub struct RelationDocument {
     pub multiple: bool,
     #[serde(default)]
     pub on_delete: RelationDelete,
+    /// The parent field whose value the child field holds (docs/adr/9135); none: the parent's lasting id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_key: Option<String>,
 }
 
 /// What was written beside the tables.
@@ -215,6 +218,7 @@ pub fn write_profile(
             field: r.field.clone(),
             multiple,
             on_delete: r.on_delete,
+            parent_key: r.parent_key.clone(),
         };
         let text = serde_json::to_string(&document).map_err(|e| e.to_string())?;
         // On the child's column that holds the parents' ids; on its table when no row had the field.
@@ -536,6 +540,7 @@ pub fn add_relations(
                 parent: parent.clone(),
                 child: child.clone(),
                 field: d.field.clone(),
+                parent_key: d.parent_key.clone(),
                 on_delete: d.on_delete,
             },
             None => {
@@ -549,6 +554,7 @@ pub fn add_relations(
                     parent: parent.clone(),
                     child: child.clone(),
                     field: field.clone(),
+                    parent_key: None,
                     on_delete: RelationDelete::Unlink,
                 }
             }

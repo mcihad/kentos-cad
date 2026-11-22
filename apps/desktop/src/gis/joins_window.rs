@@ -203,7 +203,8 @@ impl App {
                         id: id_of(&r.id, &taken),
                         name: r.name.clone(),
                         layer: r.parent.clone(),
-                        key: UID_KEY.into(),
+                        // The relation's parent key, else the persistent id (docs/adr/9135).
+                        key: r.parent_key.clone().unwrap_or_else(|| UID_KEY.into()),
                         with: r.child.clone(),
                         with_key: r.field.clone(),
                         keep: JoinKeep::All,

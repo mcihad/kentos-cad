@@ -78,6 +78,21 @@ fn check_layers(doc: &Document, r: &ProjectRelation) -> Result<(), Stop> {
             "edit.relation.field",
         ));
     }
+    // A parent key is a field of the parent layer (docs/adr/9135).
+    if let Some(key) = &r.parent_key {
+        let parent = doc.layers().get(&r.parent);
+        if !parent.is_some_and(|n| n.fields.iter().any(|f| f.key() == key)) {
+            return Err(fail(
+                codes::RELATION_FIELD_UNKNOWN,
+                format!(
+                    "“{}” katmanında “{key}” alanı yok. Üst anahtar olarak üst katmanın, kurumun kodunu tutan alanını \
+                     seçin ya da nesnenin kimliğini bırakın.",
+                    parent.map_or(r.parent.as_str(), |n| n.name.as_str())
+                ),
+                "edit.relation.parentKey",
+            ));
+        }
+    }
     Ok(())
 }
 

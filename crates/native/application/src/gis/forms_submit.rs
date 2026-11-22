@@ -109,12 +109,14 @@ fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
     }
     let mut object = forms::object(doc, slot, e);
     // The children this submission links or unlinks count with those already there (docs/adr/0444 §1).
-    let parent_uid = doc.uid(slot).map(|u| u.to_string()).unwrap_or_default();
+    let parent_uid = doc.uid(slot).unwrap_or_default();
     for c in &input.children {
         let Some(r) = doc.settings().relations.iter().find(|r| r.id == c.relation) else {
             continue;
         };
-        let linked = linked_to(doc, r, &c.uid, &parent_uid);
+        // What its children hold of the record now: its persistent id or its key's value (docs/adr/9135).
+        let code = doc.parent_key(r).code_of(parent_uid, e).unwrap_or_default();
+        let linked = linked_to(doc, r, &c.uid, &code);
         let delta = match (c.unlink, linked) {
             (true, true) => -1,
             (false, false) => 1,
@@ -167,11 +169,11 @@ fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
     checks::made_fit(doc, &form.layer, Some(&e.base().attrs), &after, "values")?;
     let mut entity = e.clone();
     entity.base_mut().attrs = after;
-    let uid_text = uid.to_string();
     let mut children = Vec::with_capacity(input.children.len());
     for (i, c) in input.children.iter().enumerate() {
-        children.push(child(doc, &form.layer, &uid_text, i, c, input, &children)?);
-        offered(doc, body, &uid_text, i, c, &children[i])?;
+        let parent = parent_code(doc, c, uid, e, &entity, i)?;
+        children.push(child(doc, &form.layer, &parent, i, c, input, &children)?);
+        offered(doc, body, &parent, i, c, &children[i])?;
     }
     let skip = forms::snapshot_skip(doc, &form.layer, body)
         .into_iter()
@@ -736,6 +738,45 @@ fn write_execute(
 }
 
 /// Whether the object `child` already refers to `parent` through `r`'s field.
+/// What child `c` holds of the record `uid` through its relation (docs/adr/9135): the record's persistent id, or its
+/// key's value: as written now for a link, as it was for an unlink (what the child holds). A record whose key is empty
+/// or whose layer lacks the key field takes no child.
+fn parent_code(
+    doc: &Document,
+    c: &FormChild,
+    uid: Uuid,
+    before: &Entity,
+    after: &Entity,
+    i: usize,
+) -> Result<String, Stop> {
+    let Some(r) = doc.settings().relations.iter().find(|r| r.id == c.relation) else {
+        // The relation's refusal is the child's own.
+        return Ok(uid.to_string());
+    };
+    let key = doc.parent_key(r);
+    if key == kentos_domain::ParentKey::Uid {
+        return Ok(uid.to_string());
+    }
+    let named = r.parent_key.clone().unwrap_or_default();
+    if key == kentos_domain::ParentKey::Missing {
+        return Err(fail(
+            codes::RELATION_FIELD_UNKNOWN,
+            format!("“{}” ilişkisinin üst anahtarı “{named}” alanı üst katmanda yok.", r.name),
+            &format!("children[{i}].relation"),
+        ));
+    }
+    key.code_of(uid, if c.unlink { before } else { after }).ok_or_else(|| {
+        fail(
+            codes::INVALID_INPUT,
+            format!(
+                "Kaydın “{named}” anahtarı boş; “{}” ilişkisinin alt kaydı ona bağlanamaz. Önce anahtarı yazın.",
+                r.name
+            ),
+            &format!("children[{i}]"),
+        )
+    })
+}
+
 fn linked_to(
     doc: &Document,
     r: &kentos_commands::ProjectRelation,

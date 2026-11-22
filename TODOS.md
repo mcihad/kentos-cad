@@ -2511,6 +2511,9 @@ Liste:
   çerçevelesin.
 - [ ] Birleşik görünüm veri katmanını kaynağından okur (ADR 9134, 22 Kasım 2026): web'in birleşik görünümü veri
   katmanı tarafını kaynağın satırlarıyla kursun; okuma hatası, boş katman ve eşleşme yok ayrı söylensin.
+- [ ] İlişkide üst anahtar (ADR 9135, 22 Kasım 2026): web'in İlişkiler penceresi Üst anahtar seçsin ve Kaydet öncesi
+  denetimleri göstersin; web'in form çalışma zamanı ve silme izlemesi `parentKey`'e göre yürüsün; web'in `.kcad`
+  okuyucusu CBS verisi 6'yı tanısın.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

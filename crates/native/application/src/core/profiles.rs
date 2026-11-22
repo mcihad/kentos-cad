@@ -331,6 +331,7 @@ pub(crate) fn write(
                 parent: parent.clone(),
                 child: child.clone(),
                 field: key,
+                parent_key: None,
                 on_delete: Default::default(),
             });
             out.relations.push(r.id.clone());

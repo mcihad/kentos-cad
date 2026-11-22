@@ -1,6 +1,6 @@
 //! What the project's relations tie to some objects (docs/adr/0525 §1): a network trace's reach as
 //! the records it touches. Through a relation whose parent layer holds an object reached, the
-//! children whose field holds its persistent id are attached to it (a pipe's subscribers); through
+//! children whose field holds its persistent id (or its key's value, docs/adr/9135) are attached to it (a pipe's subscribers); through
 //! one whose child layer holds it, the parent its field names holds it (a valve's chamber). Read
 //! only; the relations' own rules (docs/adr/0405) are not asked.
 
@@ -60,12 +60,14 @@ impl Document {
                     }
                 }
             };
+            // What the children hold of a parent: its persistent id or its key's value (docs/adr/9135).
+            let key = self.parent_key(r);
             // Attached: the children of the parents asked.
             let parents: HashSet<String> = self
                 .store
                 .on_layer(&r.parent)
                 .filter(|s| asked.contains(&s.slot()))
-                .map(|s| s.uid.to_string())
+                .filter_map(|s| key.code_of(s.uid, &s.entity))
                 .collect();
             if !parents.is_empty() {
                 let children: Vec<Slot> = self
@@ -101,7 +103,7 @@ impl Document {
                 let holders: Vec<Slot> = self
                     .store
                     .on_layer(&r.parent)
-                    .filter(|p| named.contains(&p.uid.to_string()))
+                    .filter(|p| key.code_of(p.uid, &p.entity).is_some_and(|c| named.contains(&c)))
                     .map(|p| p.slot())
                     .collect();
                 if !holders.is_empty() {

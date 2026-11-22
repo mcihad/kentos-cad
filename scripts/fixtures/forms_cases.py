@@ -4387,6 +4387,14 @@ def relations_edit_cases():
     refused("alan alt katmanda yok", {"kind": "create", "relation": {**rc, "field": "bina"}},
             failed("relation_field_unknown", "“Vana” katmanında “bina” alanı yok. Alt katmanın, üst nesnenin kimliğini tutacak alanını seçin.",
                    "edit.relation.field"))
+    # docs/adr/9135: a relation by a parent key, the parent field whose value the child field holds; a key the parent
+    # layer lacks refused where it is written; a blank key refused by its shape.
+    rkey = {**r, "parentKey": "Ad"}
+    edited("üst anahtarla ilişki oluşturulur", {"kind": "create", "relation": rkey}, after=[rkey])
+    refused("üst anahtar üst katmanda yok", {"kind": "create", "relation": {**r, "parentKey": "yok"}},
+            failed("relation_field_unknown", "“Bina” katmanında “yok” alanı yok. Üst anahtar olarak üst katmanın, kurumun "
+                   "kodunu tutan alanını seçin ya da nesnenin kimliğini bırakın.", "edit.relation.parentKey"))
+    refused("boş üst anahtar", {"kind": "create", "relation": {**r, "parentKey": " "}}, failed("invalid_relation", ANY, "edit.relation"))
     # docs/adr/0440 §3: compositions in a circle; a key changed under links; the links counted.
     rb = relation("sayac-bina", "sayac", "bina", "Ad", "cascade", "Sayacın binası")
     rcasc = {**base[0], "onDelete": "cascade"}

@@ -235,6 +235,16 @@ Yük, üç (şema 254'ten beri en çok dört) anahtarlı bir haritadır (anahtar
   alandır (`unknown_field`, `broken/class-counts-in-gis-3.kcad`); yazılmış `false` (`broken/class-counts-false.kcad`) ve
   grupta olması (`broken/class-counts-on-group.kcad`) `bad_value`'dur. Örnek dosya `class-counts.kcad`. Sınıfların açık
   ya da kapalı olması stilin opak işleyicisindedir (`enabled`, `otherEnabled`); dosya biçimi onu yorumlamaz.
+- **CBS verisi sürüm 5** ([ADR 9114 §1](../adr/9114-text-tables.md)): veri katmanının `text`'i, satırları yazı olan
+  tablonun hangi sütunlarının yazının metnini, yüksekliğini, açısını, hizasını ve genişlik çarpanını tuttuğu. Yazıcı
+  `gis: 5` yazar; CBS verisi sürüm 4'ün yükünde bilinmeyen alandır (`broken/text-table-in-gis-4.kcad`). Örnek dosya
+  `text-tables.kcad`.
+- **CBS verisi sürüm 6** ([ADR 9135](../adr/9135-relation-parent-keys.md)): ilişkinin `parentKey`'i, alt alanın tuttuğu
+  değerin üst katmanın hangi alanı olduğu (kurumun kendi kodu, örneğin mahalle kodu); yoksa alt alan üst nesnenin kalıcı
+  kimliğini tutar ve anahtar yazılmaz. Okuyucu yalnız biçimini denetler: boş olamaz, en çok 64 karakterdir. Bir
+  ilişkide varsa yazıcı `modules`'e `gis: 6` yazar. CBS verisi sürüm 5'in yükünde bilinmeyen alandır (`unknown_field`,
+  `broken/relation-key-in-gis-5.kcad`); boş anahtar `bad_value`'dur (`broken/relation-key-blank.kcad`). Örnek dosya
+  `relation-keys.kcad`.
 - Yazıcı `modules`'ü yalnız bir modül sürümünü yükselttiğinde, şema en az `254` olarak yazar; başka her çizim eskisiyle bayt bayt aynıdır.
 
 **Şema 255, araç katmanları** (kullanım incelemesi UR-003): ayarların `toolLayers`'ı, ölçü (`dimension`), yazı (`text`) ve taramanın (`hatch`) çizildiği katmanın kimliğidir; boş liste yazılmaz, bir araç bir kez, katman kimliği boş olmaz (`bad_value`; `broken/tool-layers-tool-twice.kcad`, `tool-layers-blank-layer.kcad`); şema 254'te bilinmeyen alandır (`broken/tool-layers-in-schema-254.kcad`). Örnek `tool-layers.kcad`. Verilmezse araçlar etkin katmana çizer.

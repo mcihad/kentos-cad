@@ -53,6 +53,10 @@ pub(super) fn ids_of(value: &str) -> Vec<String> {
 
 /// A relation's child field when it is a many-to-many reference: the field.
 pub(super) fn multiple_field<'a>(doc: &'a Document, r: &ProjectRelation) -> Option<&'a LayerField> {
+    // A relation by a parent key holds codes, not lasting ids: no file maps it by key (docs/adr/9135).
+    if r.parent_key.is_some() {
+        return None;
+    }
     doc.layers()
         .get(&r.child)
         .and_then(|n| n.fields.iter().find(|f| f.key() == r.field))

@@ -564,7 +564,7 @@ impl Prepared {
             }
             // A hidden item's related objects are not looked for (docs/adr/0440 §6).
             if let Some(related) = node.related.as_ref().filter(|_| state.shown) {
-                state.related = Some(related.of(object));
+                state.related = Some(related.of(attrs, object));
             }
             if let (Some(b), Some(held)) = (&node.attachments, &object.attachments) {
                 state.attachments = Some(held.counted(b.accept));
@@ -936,7 +936,7 @@ impl Prepared {
                     .get(&added_key(&c.layer, &c.field))
                     .copied()
                     .unwrap_or(0);
-                let count = (related.of(object).len() as i64 + i64::from(more)).max(0) as u32;
+                let count = (related.of(attrs, object).len() as i64 + i64::from(more)).max(0) as u32;
                 issues.extend(related_issues(&node.id, c, count));
             }
             let Some(b) = &node.field else { continue };

@@ -989,7 +989,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
     ("arch", "mimari", ARCH_WITH_CASEWORK_PLACEMENT),
-    ("gis", "CBS", GIS_WITH_TEXT_TABLES),
+    ("gis", "CBS", GIS_WITH_RELATION_KEYS),
     ("map", "harita", 0),
     ("road", "yol", 0),
 ];
@@ -1621,6 +1621,9 @@ pub const GIS_WITH_CLASS_COUNTS: u16 = 4;
 /// GIS data version 5 (docs/adr/9114 §1): a data layer whose rows are texts (`text` of a data layer: which columns hold
 /// their words, height, angle, alignment and width factor). The document schema stays as it is.
 pub const GIS_WITH_TEXT_TABLES: u16 = 5;
+/// GIS data version 6 (docs/adr/9135): a relation by a parent key (`parentKey` of a relation: the parent field whose
+/// value the child field holds). The document schema stays as it is.
+pub const GIS_WITH_RELATION_KEYS: u16 = 6;
 
 /// A payload root's `modules` (schema 254): the versions above 0 of each module's and each `.kek` extension's data.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

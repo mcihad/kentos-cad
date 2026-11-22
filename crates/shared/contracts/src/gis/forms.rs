@@ -2543,7 +2543,7 @@ impl RelationDelete {
 }
 
 /// A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's
-/// persistent id.
+/// persistent id, or, with a parent key (docs/adr/9135), the value of that parent field: an institution's own code.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -2557,8 +2557,13 @@ pub struct ProjectRelation {
     pub parent: String,
     /// The child layer's id.
     pub child: String,
-    /// The child field's key that holds the parent's persistent id.
+    /// The child field's key that holds the parent's persistent id (or its key's value).
     pub field: String,
+    /// The parent field's key whose value the child field holds (docs/adr/9135): a code such as a neighbourhood's
+    /// `M1`; none: the parent's persistent id. Written only when given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parent_key: Option<String>,
     /// Written only when not `unlink`.
     #[serde(default, skip_serializing_if = "RelationDelete::is_default")]
     #[cfg_attr(feature = "ts", ts(as = "Option<RelationDelete>", optional))]
@@ -2608,6 +2613,16 @@ pub fn relation_problem(r: &ProjectRelation) -> Option<String> {
     {
         return Some(format!(
             "“{}” ilişkisinin üst ve alt katmanı ve alanı yazılmalı, en çok {MOST_FORM_NAME} karakterdir.",
+            r.name
+        ));
+    }
+    if r
+        .parent_key
+        .as_ref()
+        .is_some_and(|k| k.trim().is_empty() || k.chars().count() > MOST_FORM_NAME)
+    {
+        return Some(format!(
+            "“{}” ilişkisinin üst anahtarı boş olamaz, en çok {MOST_FORM_NAME} karakterdir; yoksa hiç yazılmaz.",
             r.name
         ));
     }

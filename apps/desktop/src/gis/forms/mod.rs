@@ -28,6 +28,7 @@ mod related_actions_tests;
 mod form_roles_tests;
 pub mod package;
 pub mod relations;
+mod relation_checks;
 pub mod subtypes;
 pub mod table_styles;
 

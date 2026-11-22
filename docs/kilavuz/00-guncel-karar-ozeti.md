@@ -109,6 +109,9 @@
   - **Birleşik görünüm veri katmanını kaynağından okur** (22 Kasım, değerlendirmenin 21. maddesi;
     [ADR 9134](../adr/9134-join-views-over-data-layers.md), VY-33): `read_with` veri katmanı tarafını kaynağın
     satırlarıyla kurar; okuma hatası, boş katman ve eşleşme yok ayrı söylenir.
+  - **İlişkide üst anahtar** (22 Kasım, değerlendirmenin 22. maddesi;
+    [ADR 9135](../adr/9135-relation-parent-keys.md), VY-34): `parentKey` (CBS verisi 6) ile alt alan üstün kalıcı
+    kimliği yerine kurumun kodunu tutar; her yol `ParentKey`'i sorar; pencere Kaydet öncesi denetler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

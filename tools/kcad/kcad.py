@@ -705,13 +705,15 @@ GIS_WITH_EDIT_GROUPING = 3
 GIS_WITH_CLASS_COUNTS = 4
 # GIS data 5 (docs/adr/9114 §1): a data layer whose rows are texts (`text` of a data layer).
 GIS_WITH_TEXT_TABLES = 5
+# GIS data 6 (docs/adr/9135): a relation by a parent key (`parentKey` of a relation).
+GIS_WITH_RELATION_KEYS = 6
 ARCH_WITH_BLOCK_ELEMENTS = 2
 ARCH_WITH_COVERINGS = 5
 ARCH_WITH_SLAB_EDGE_BINDINGS = 36
 ARCH_WITH_CEILING_RECIPE = 37
 ARCH_WITH_ELECTRIC_APPLIANCES = 38
 ARCH_WITH_CASEWORK_PLACEMENT = 39
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_TEXT_TABLES), "map": ("harita", 0),
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_RELATION_KEYS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -2908,6 +2910,9 @@ def relations_problem(relations):
             return f"“{r['id']}” ilişkisinin adı geçersiz"
         if any(not r[k].strip() or len(r[k]) > MOST_FORM_NAME for k in ("parent", "child", "field")):
             return f"“{r['id']}” ilişkisinin katmanları ve alanı yazılmalı"
+        # A parent key (docs/adr/9135) is never blank: none is not written.
+        if "parentKey" in r and (not r["parentKey"].strip() or len(r["parentKey"]) > MOST_FORM_NAME):
+            return f"“{r['id']}” ilişkisinin üst anahtarı boş olamaz"
     return None
 
 
@@ -8033,12 +8038,15 @@ class _Schema:
                 self.fail("bad_value", f"“{x}” bilinmiyor (keep, cascade, restrict; unlink yazılmaz)")
             return x
 
+        # GIS data 6 (docs/adr/9135): the parent field whose value the child field holds.
+        keys = {"parentKey": (self.text, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_RELATION_KEYS else {}
         relation = self.fields({
             "id": (self.text, True),
             "name": (self.text, True),
             "parent": (self.text, True),
             "child": (self.text, True),
             "field": (self.text, True),
+            **keys,
             "onDelete": (policy, False),
         })
         lst = self.array(relation)(v)

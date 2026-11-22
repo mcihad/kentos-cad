@@ -121,6 +121,8 @@ struct Set {
     name: String,
     records: Vec<(Attrs, Object)>,
     by_parent: HashMap<String, Vec<usize>>,
+    /// The parent's field whose value the records hold; none: its persistent id (docs/adr/9135).
+    by: Option<String>,
 }
 
 /// The related records of every relation a form names, found once.
@@ -173,6 +175,7 @@ impl Relatives {
                     name,
                     records,
                     by_parent,
+                    by: r.by.clone(),
                 });
             }
         }
@@ -200,14 +203,16 @@ impl PartialEq for RelatedRecords {
 }
 
 impl RelatedRecords {
-    /// Call `c`'s value for the record `uid` (a new record, none: no related record).
-    pub(crate) fn value(&self, c: &WorldCall, uid: Option<&str>, out: &mut String) -> R<'static> {
+    /// Call `c`'s value for the record `uid` with its values `attrs` (a new record, none: no related record; a
+    /// relation by a parent key finds it by that key's value, docs/adr/9135).
+    pub(crate) fn value(&self, c: &WorldCall, attrs: &Attrs, uid: Option<&str>, out: &mut String) -> R<'static> {
         let set = c.layer.as_deref().and_then(|n| self.0.set(n));
         let empty: &[usize] = &[];
-        let (records, at) = match (set, uid) {
-            (Some(s), Some(uid)) => (
+        let code = set.and_then(|s| crate::lookup::code_of(s.by.as_deref(), attrs, uid));
+        let (records, at) = match (set, code) {
+            (Some(s), Some(code)) => (
                 s.records.as_slice(),
-                s.by_parent.get(js_trim(uid)).map_or(empty, Vec::as_slice),
+                s.by_parent.get(js_trim(code)).map_or(empty, Vec::as_slice),
             ),
             (Some(s), None) => (s.records.as_slice(), empty),
             // A relation the form does not know: empty, as the preflight warns.

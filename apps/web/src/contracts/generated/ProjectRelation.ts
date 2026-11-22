@@ -3,7 +3,7 @@ import type { RelationDelete } from "./RelationDelete";
 
 /**
  * A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's
- * persistent id.
+ * persistent id, or, with a parent key (docs/adr/9135), the value of that parent field: an institution's own code.
  */
 export type ProjectRelation = { 
 /**
@@ -19,9 +19,14 @@ parent: string,
  */
 child: string, 
 /**
- * The child field's key that holds the parent's persistent id.
+ * The child field's key that holds the parent's persistent id (or its key's value).
  */
 field: string, 
+/**
+ * The parent field's key whose value the child field holds (docs/adr/9135): a code such as a neighbourhood's
+ * `M1`; none: the parent's persistent id. Written only when given.
+ */
+parentKey?: string, 
 /**
  * Written only when not `unlink`.
  */

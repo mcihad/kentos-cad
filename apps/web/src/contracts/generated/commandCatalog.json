@@ -198755,14 +198755,14 @@
     },
     "ProjectRelation": {
       "additionalProperties": false,
-      "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id.",
+      "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id, or, with a parent key (docs/adr/9135), the value of that parent field: an institution's own code.",
       "properties": {
         "child": {
           "description": "The child layer's id.",
           "type": "string"
         },
         "field": {
-          "description": "The child field's key that holds the parent's persistent id.",
+          "description": "The child field's key that holds the parent's persistent id (or its key's value).",
           "type": "string"
         },
         "id": {
@@ -198779,6 +198779,13 @@
         "parent": {
           "description": "The parent layer's id.",
           "type": "string"
+        },
+        "parentKey": {
+          "description": "The parent field's key whose value the child field holds (docs/adr/9135): a code such as a neighbourhood's\n`M1`; none: the parent's persistent id. Written only when given.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [

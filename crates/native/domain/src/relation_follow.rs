@@ -1,17 +1,18 @@
 //! The project's relations, kept by the document (docs/adr/0405 §2): when a step deletes a parent
 //! object, its children (the objects of the relation's child layer whose field holds its persistent
-//! id) follow in the same step: `unlink` empties their field, `cascade` deletes them and follows
+//! id, or its key's value: docs/adr/9135) follow in the same step: `unlink` empties their field, `cascade` deletes them and follows
 //! their own relations; `keep` and `restrict` leave them (a command refuses a `restrict` first). A
-//! child on a locked layer is left as it is.
+//! child on a locked layer is left as it is. Children whose code another parent still holds (a key
+//! that is not unique) keep it and are not followed.
 //! Every way of deleting (Sil, Kes, Python, MCP, a layer removed) gets it alike.
 
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use kentos_contracts::RelationDelete;
+use kentos_contracts::{Entity, ProjectRelation, RelationDelete};
 use uuid::Uuid;
 
-use crate::Document;
+use crate::{Document, ParentKey};
 use crate::history::Op;
 use crate::store::Stored;
 
@@ -21,21 +22,28 @@ impl Document {
         if self.settings.relations.is_empty() {
             return Vec::new();
         }
-        let mut gone: Vec<(String, Uuid)> = ops
+        let mut gone: Vec<(String, Uuid, Arc<Entity>)> = ops
             .iter()
             .filter_map(|op| match op {
-                Op::Remove(s) => Some((s.entity.base().layer_id.clone(), s.uid)),
+                Op::Remove(s) => Some((s.entity.base().layer_id.clone(), s.uid, s.entity.clone())),
                 _ => None,
             })
             .collect();
-        let mut seen: HashSet<Uuid> = gone.iter().map(|(_, u)| *u).collect();
+        let mut seen: HashSet<Uuid> = gone.iter().map(|(_, u, _)| *u).collect();
         let mut out = Vec::new();
-        while let Some((layer, parent)) = gone.pop() {
-            let id = parent.to_string();
+        while let Some((layer, parent, gone_entity)) = gone.pop() {
             for r in self.settings.relations.clone() {
                 if r.parent != layer
                     || matches!(r.on_delete, RelationDelete::Keep | RelationDelete::Restrict)
                 {
+                    continue;
+                }
+                // What its children hold of it; a code another parent still holds keeps them (docs/adr/9135).
+                let key = self.parent_key(&r);
+                let Some(id) = key.code_of(parent, &gone_entity) else {
+                    continue;
+                };
+                if self.code_still_held(&r, &key, &id, &seen) {
                     continue;
                 }
                 let Some((name, many)) = self
@@ -99,7 +107,7 @@ impl Document {
                             if !seen.insert(child.uid) {
                                 continue;
                             }
-                            gone.push((r.child.clone(), child.uid));
+                            gone.push((r.child.clone(), child.uid, child.entity.clone()));
                             Op::Remove(child)
                         }
                         _ => {
@@ -128,7 +136,7 @@ impl Document {
     /// child and how many children would follow.
     pub fn relation_effects(&self, uids: &[Uuid]) -> RelationEffects {
         let mut out = RelationEffects::default();
-        let mut gone: Vec<(String, Uuid)> = Vec::new();
+        let mut gone: Vec<(String, Uuid, Arc<Entity>)> = Vec::new();
         let mut seen: HashSet<Uuid> = HashSet::new();
         for uid in uids {
             if let Some(s) = self
@@ -138,18 +146,24 @@ impl Document {
                 && seen.insert(*uid)
             {
                 out.attachments += s.entity.base().attachments.len() as u32;
-                gone.push((s.entity.base().layer_id.clone(), *uid));
+                gone.push((s.entity.base().layer_id.clone(), *uid, s.entity.clone()));
             }
         }
         // The children's link values as the walk has left them.
         let mut left: std::collections::HashMap<Uuid, String> = std::collections::HashMap::new();
         let mut counts: Vec<(String, u32, u32)> = Vec::new();
-        while let Some((layer, parent)) = gone.pop() {
-            let id = parent.to_string();
+        while let Some((layer, parent, gone_entity)) = gone.pop() {
             for r in &self.settings.relations {
                 if r.parent != layer
                     || matches!(r.on_delete, RelationDelete::Keep | RelationDelete::Restrict)
                 {
+                    continue;
+                }
+                let key = self.parent_key(r);
+                let Some(id) = key.code_of(parent, &gone_entity) else {
+                    continue;
+                };
+                if self.code_still_held(r, &key, &id, &seen) {
                     continue;
                 }
                 let Some((name, many)) = self
@@ -200,7 +214,7 @@ impl Document {
                         counts[at].2 += 1;
                         seen.insert(child.uid);
                         out.attachments += child.entity.base().attachments.len() as u32;
-                        gone.push((r.child.clone(), child.uid));
+                        gone.push((r.child.clone(), child.uid, child.entity.clone()));
                     }
                     out.children += 1;
                 }
@@ -229,13 +243,21 @@ impl Document {
                 continue;
             };
             let layer = e.entity.base().layer_id.clone();
-            let id = uid.to_string();
+            let deleted: HashSet<Uuid> = uids.iter().copied().collect();
             for r in self
                 .settings
                 .relations
                 .iter()
                 .filter(|r| r.parent == layer && r.on_delete == RelationDelete::Restrict)
             {
+                let key = self.parent_key(r);
+                let Some(id) = key.code_of(*uid, &e.entity) else {
+                    continue;
+                };
+                // Another parent keeping the code keeps its children: this one may go (docs/adr/9135).
+                if self.code_still_held(r, &key, &id, &deleted) {
+                    continue;
+                }
                 let Some(name) = self
                     .layers
                     .get(&r.child)
@@ -259,6 +281,18 @@ impl Document {
             }
         }
         out
+    }
+}
+
+impl Document {
+    /// Whether a parent of `r` other than those in `gone` still holds `code` (a parent key that is not unique): its
+    /// children keep their parent. Never for a persistent id, which is one parent's alone.
+    fn code_still_held(&self, r: &ProjectRelation, key: &ParentKey, code: &str, gone: &HashSet<Uuid>) -> bool {
+        matches!(key, ParentKey::Field(_))
+            && self
+                .store
+                .on_layer(&r.parent)
+                .any(|p| !gone.contains(&p.uid) && key.code_of(p.uid, &p.entity).as_deref() == Some(code))
     }
 }
 

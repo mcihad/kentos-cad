@@ -505,6 +505,7 @@ pub(crate) fn subscribers_app() -> App {
         parent: "su".into(),
         child: "abone".into(),
         field: "hat".into(),
+        parent_key: None,
         on_delete: kentos_commands::RelationDelete::default(),
     }];
     let doc = Document::from_v2(v2, None).expect("opens");
