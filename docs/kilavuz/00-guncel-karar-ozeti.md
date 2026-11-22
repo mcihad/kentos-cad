@@ -80,7 +80,7 @@
     ölçü çizimden ölçülür ve açıklamada söylenir. Renk yok, hepsi mürekkep.
   - **Stil düzenleyicilerinin çubuğu** (aynı gün, sahibin isteği; [ADR 9121](../adr/9121-style-editor-strips.md)):
     Sembol tasarımcısı ve SVG düzenleyicide iki uçlu çubuk (geçmiş ve iş solda, görünüm sağda), tek yeri olan eylemler,
-    etiket satırında ƒ ve sabit birim yeriyle hizalı form; seçili katmanın tuşları.
+    etiketin ardında ƒ ve sabit birim yeriyle hizalı form; seçili katmanın tuşları.
 
 - **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
   Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.

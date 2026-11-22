@@ -117,7 +117,7 @@ pub(super) fn number_row<'a>(env: &Env<'_>, key: &str) -> Element<'a, Message> {
 
 // ── Values that may come from each object's data ──────────────────────
 
-/// An expression field in place of a value, and its ƒ pressed for the label line (`dataDefined`
+/// An expression field in place of a value, and its ƒ pressed for after the label (`dataDefined`
 /// switched on): typing keeps the fallback; ƒ goes back to the fallback, or to
 /// `plain` when there is none.
 fn expression<'a>(
@@ -141,8 +141,8 @@ fn expression<'a>(
 }
 
 /// An ƒ value's expression (`key`: the layer's key, or `step.i.field` of a generator's step): its
-/// line, Ekle ▾ and İfade oluşturucu… under it, and the fallback's note. The pressed ƒ is on the
-/// field's label line (`fields::labelled_with`).
+/// line, Ekle ▾ and İfade oluşturucu… under it, and the fallback's note. The pressed ƒ is after the
+/// field's label (`fields::labelled_with`).
 pub(super) fn expression_block<'a>(
     env: &Env<'_>,
     key: &str,
@@ -175,7 +175,7 @@ pub(super) fn expression_block<'a>(
     .into()
 }
 
-/// The ƒ switch of a plain value, on its label line: pressed, the value becomes an
+/// The ƒ switch of a plain value, after its label: pressed, the value becomes an
 /// expression whose fallback is the value; the expression field takes the keyboard.
 fn fx_on<'a>(env: &Env<'_>, key: &'static str, current: Value) -> Element<'a, Message> {
     fields::fx_line(

@@ -37,7 +37,9 @@ Resimler: `.run/shots/sdes-*` ve `svge-*`, açık ve koyu, 1440 × 900 ve 1100 �
    sil) durur.
 5. **Hizalı form** (`style/fields.rs`):
    - her alanın etiket satırı aynı boydadır;
-   - “ƒ” düğmesi etiket satırının sağ ucundadır (`labelled_with`, `fx_line`); denetim sütunun bütün genişliğini alır;
+   - “ƒ” düğmesi etiketin hemen ardındadır (`labelled_with`, `fx_line`); denetim sütunun bütün genişliğini alır.
+     İlk denemede düğme etiket satırının sağ ucundaydı: yandaki alanın etiketine yapışıyor (“Kaydırma … ƒ Döndür”),
+     kendi etiketinden uzak kalıyor, panelin kenarında kesiliyordu (sahibin uyarısı, aynı gün);
    - birim sabit genişlikte bir yerdedir (`UNIT_SLOT`).
 
    Böylece yan yana ve alt alta alanlar tek ızgaraya oturur.

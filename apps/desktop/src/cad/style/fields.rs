@@ -26,7 +26,7 @@ pub type Choice = (&'static str, &'static str);
 
 /// A control's height at the default text size (the web's `--ctl-h`).
 const CONTROL: f32 = 26.0;
-/// A label line's height at the default text size: the label and, at its end, the ƒ switch. Every label line has it,
+/// A label line's height at the default text size: the label and, after it, the ƒ switch. Every label line has it,
 /// so the controls of two fields side by side start on one line whether or not one of them has ƒ.
 const LABEL_LINE: f32 = 18.0;
 /// The room a unit takes after a number (mm, °, %, adet): numbers under one another line up whatever their unit.
@@ -41,20 +41,19 @@ pub fn labelled<'a, M: 'a>(
     labelled_with(label, control, hint, None)
 }
 
-/// A labelled row with a switch at the end of its label line (the ƒ of a value that may come from each object's
-/// data): the control keeps the column's whole width, so the fields beside and under it line up.
+/// A labelled row with a switch right after its label (the ƒ of a value that may come from each object's data):
+/// it reads with its own label, not with the field beside it, and the control keeps the column's whole width, so
+/// the fields beside and under it line up.
 pub fn labelled_with<'a, M: 'a>(
     label: impl Into<String>,
     control: impl Into<Element<'a, M>>,
     hint: Option<&str>,
     tail: Option<Element<'a, M>>,
 ) -> Element<'a, M> {
-    let mut head = row![
-        label::caption(label.into()).style(style::text::muted),
-        space::horizontal()
-    ]
-    .align_y(Center)
-    .height(typography::scaled(LABEL_LINE));
+    let mut head = row![label::caption(label.into()).style(style::text::muted)]
+        .spacing(6)
+        .align_y(Center)
+        .height(typography::scaled(LABEL_LINE));
     if let Some(t) = tail {
         head = head.push(t);
     }
@@ -212,7 +211,7 @@ pub fn check<'a, M: Clone + 'a>(
         .into()
 }
 
-/// The “ƒ” switch of a value that may come from each object's data, at the end of the field's label line
+/// The “ƒ” switch of a value that may come from each object's data, right after the field's label
 /// (`labelled_with`): pressed, the value is an expression.
 pub fn fx_line<'a, M: Clone + 'a>(on: bool, press: M) -> Element<'a, M> {
     let side = LABEL_LINE;

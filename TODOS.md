@@ -2490,7 +2490,7 @@ Liste:
   Numara, Boy, Cins, Açı ve Ad alanlarından okunan yazılar ve yönler web'in çiziminde de sınansın.
 - [ ] Stil düzenleyicilerinin iki uçlu çubuğu ve hizalı formu (ADR 9121; 22 Kasım 2026): web'in Sembol tasarımcısı ve
   SVG düzenleyicisi aynı düzene geçsin (geçmiş solda, görünüm sağda; Altlık, Bitmap izle, Dışa aktar yalnız Dosya
-  menüsünde; ƒ etiket satırında, birim sabit yerde; Ctrl+↑, Ctrl+↓, Ctrl+D, Delete).
+  menüsünde; ƒ etiketin ardında, birim sabit yerde; Ctrl+↑, Ctrl+↓, Ctrl+D, Delete).
 
 ## 1. Koddan doğrulanan mevcut durum
 
