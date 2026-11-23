@@ -48,7 +48,9 @@ impl App {
         );
         self.gis.form_entry = Some(entry);
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FormEntry));
-        self.ask_entry_sources()
+        // Its related items' rows from data layers' sources too (docs/adr/9165).
+        let sources = self.ask_entry_sources();
+        Task::batch([sources, self.ask_entry_rows()])
     }
 
     /// A read-only connection's row in its form (docs/adr/9159): `e` as its source holds it, shown and not taken; the
@@ -71,7 +73,7 @@ impl App {
             None => (f.draft.clone(), true),
         };
         let (moment, user) = self.form_moment();
-        let screen = match row_screen(&doc.model, &f.id, e, key, moment.as_deref(), user.as_deref()) {
+        let screen = match row_screen(&doc.model, &f.id, e, key, moment.as_deref(), user.as_deref(), &Default::default()) {
             Ok(s) => s,
             Err(error) => {
                 self.say(Level::Warn, error.message);
@@ -101,7 +103,8 @@ impl App {
         }
         self.gis.form_entry = Some(entry);
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::FormEntry));
-        self.ask_entry_sources()
+        let sources = self.ask_entry_sources();
+        Task::batch([sources, self.ask_entry_rows()])
     }
 
     /// The record's form in the attribute table's Form view (docs/adr/0416): the same editor, no
@@ -291,6 +294,9 @@ impl App {
             asking_close: false,
             read_only: false,
             row: None,
+            source_rows: Default::default(),
+            source_rows_asked: 0,
+            source_rows_said: Vec::new(),
             removing: None,
             sources: Vec::new(),
             sources_asked: 0,

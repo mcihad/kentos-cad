@@ -500,3 +500,7 @@ numaraları raporunkidir.
   ([ADR 9164](../docs/adr/9164-label-examples-on-the-same-data.md))
   - İlk ve en uzun metin, boş sayısı, görünür ölçekler ve şimdiki görünüm, kâğıtta yazı yüksekliği.
   - Kalan: QML kayıpları, planlı→kontrol sınaması, kendi biçimiyle önizleme, kurallı sınıfların aralığı, web.
+- [~] **VY-64 — Formun ilişkili listesi veri katmanının satırlarını kaynaktan okur (rapor 22'nin kalanı).**
+  ([ADR 9165](../docs/adr/9165-related-rows-from-the-source.md))
+  - Üst anahtarla bağlı veri katmanı öğesi kaynaktan okunur; satırlar `kaynak:<anahtar>` ile dünyaya girer.
+  - Kalan: kaynak satırının formunu listeden açmak, 500'den çok satırda sayfalı okuma, silmenin gerçek pencerede denenmesi, web.

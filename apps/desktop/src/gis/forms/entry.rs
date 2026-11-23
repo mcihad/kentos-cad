@@ -202,6 +202,11 @@ pub struct Entry {
     /// The source row shown and not taken (a read-only connection's: docs/adr/9159): its key field and key. The record
     /// is not in the drawing; nothing of it is written.
     pub(crate) row: Option<(String, i64)>,
+    /// The rows its related items over data layers read from their sources (docs/adr/9165), by layer; the ask they
+    /// answer and, by layer, why a source could not be read.
+    pub(crate) source_rows: kentos_native_application::forms_source::SourceRows,
+    source_rows_asked: u64,
+    pub(crate) source_rows_said: Vec<(String, String)>,
     /// A related child whose Sil asks first (docs/adr/0762 §4): its item and id.
     removing: Option<(String, String)>,
     /// How the sources of the form's lists stand (docs/adr/0763), the question asked last and whether it runs.
@@ -1083,3 +1088,17 @@ mod related;
 #[cfg(test)]
 pub(crate) use related::ordered_for_tests;
 use related::*;
+
+mod source_rows;
+pub(crate) use source_rows::RowsRead;
+
+/// A related child's values, the drawing's or its source's (for the tests).
+#[cfg(test)]
+pub(crate) fn child_attrs_for_tests<'d>(
+    d: &'d crate::document::Document,
+    e: &'d Entry,
+    layer: &str,
+    uid: &str,
+) -> Option<&'d kentos_forms::Attrs> {
+    related::child_attrs(d, e, layer, uid)
+}

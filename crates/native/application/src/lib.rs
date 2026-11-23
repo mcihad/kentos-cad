@@ -1661,6 +1661,8 @@ pub mod forms_sources;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/forms_edit.rs"]
 pub mod forms_edit;
+#[path = "gis/forms_source.rs"]
+pub mod forms_source;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/forms_fill.rs"]
 pub mod forms_fill;

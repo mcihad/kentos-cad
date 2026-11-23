@@ -331,3 +331,7 @@ impl App {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "source_rows_tests.rs"]
+mod source_rows_tests;

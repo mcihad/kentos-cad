@@ -2572,6 +2572,8 @@ Liste:
   tutsun ve okunamayan kaynakta bekleyen satırların yanında söylesin.
 - [ ] Etiket örnekleri (ADR 9164, 23 Kasım 2026): web'in etiket penceresi aynı veriden ilk ve en uzun metni, boşları,
   görünür ölçekleri ve kâğıttaki yazı yüksekliğini söylesin.
+- [ ] İlişkili liste kaynaktan (ADR 9165, 23 Kasım 2026): web'in formu üst anahtarla bağlı veri katmanı öğesinin
+  satırlarını kaynaktan okuyup dünyaya `kaynak:<anahtar>` ile katsın.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

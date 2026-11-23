@@ -2,6 +2,7 @@
 //! box, offers and footer; the list as rows, a table, bars or cards.
 
 use super::*;
+use kentos_native_application::forms_source::source_key;
 use crate::gis;
 
 impl App {
@@ -262,6 +263,20 @@ impl App {
             if !e.preview && !e.new_record && e.members.is_empty() {
                 e.before = screen.attrs.clone();
             }
+            let mut screen = screen;
+            // The data layers' source rows stay in its world (docs/adr/9165).
+            if !e.source_rows.is_empty()
+                && let Ok(prepared) = kentos_native_application::forms::prepared_with_rows(
+                    &doc.model,
+                    &e.form,
+                    e.draft,
+                    e.moment.as_deref(),
+                    e.user.as_deref(),
+                    &e.source_rows,
+                )
+            {
+                screen.prepared = prepared;
+            }
             e.screen = screen;
             e.revision = revision;
             e.unique_asked.clear();
@@ -361,6 +376,12 @@ impl App {
         if let Some(issue) = e.issues.iter().find(|i| i.item.as_deref() == Some(id)) {
             col = col.push(words::text_line(Kind::Error, issue.message.clone()));
         }
+        // A data layer's source that could not be read (docs/adr/9165): the drawing's objects are shown still.
+        if let Some(FormItem::Related { layer, .. }) = crate::forms::designer::find(&e.body.items, id) {
+            for (_, why) in e.source_rows_said.iter().filter(|(l, _)| l == layer) {
+                col = col.push(words::text_line(Kind::Warn, format!("{why} Kaynaktaki kayıtlar listelenmedi.")));
+            }
+        }
         if uids.is_empty() {
             col = col.push(label::caption("Bu kayda başvuran nesne yok.").style(muted));
         }
@@ -415,7 +436,7 @@ impl App {
             }),
         ) = (doc, crate::forms::designer::find(&e.body.items, id))
         {
-            col = col.push(related_chart(d, layer, field, columns, &uids));
+            col = col.push(related_chart(d, e, layer, field, columns, &uids));
             return self.related_footer(e, id, col, live, candidates);
         }
         if let (
@@ -483,7 +504,25 @@ impl App {
             }
             return self.related_footer(e, id, col, live, candidates);
         }
+        let child_layer = match crate::forms::designer::find(&e.body.items, id) {
+            Some(FormItem::Related { layer, .. }) => layer.clone(),
+            _ => String::new(),
+        };
         for uid in uids.iter().take(50) {
+            // A row its source holds (docs/adr/9165): its first value and its key, shown, not written.
+            if let Some(key) = source_key(uid) {
+                let first = doc.and_then(|d| {
+                    let node = d.model.layers().get(&child_layer)?;
+                    let attrs = child_attrs(d, e, &child_layer, uid)?;
+                    node.fields.iter().find_map(|f| attrs.get(&f.name).filter(|v| !v.is_empty())).cloned()
+                });
+                let words = match first {
+                    Some(v) => format!("{v} · satır {key} (kaynakta)"),
+                    None => format!("Satır {key} (kaynakta)"),
+                };
+                col = col.push(related_row(e, id, uid, words, false, &offers));
+                continue;
+            }
             let words = doc
                 .and_then(|d| {
                     let slot = d.model.slot_of(kentos_domain::Uuid::parse_str(uid).ok()?)?;
@@ -745,6 +784,37 @@ pub(super) fn open_offer(offers: &[kentos_forms::Offer]) -> Option<&kentos_forms
 }
 
 /// A related child in the list: its words and the actions its item offers; Sil asks in the row.
+/// A related child's tools, or for a row its data layer's source holds (docs/adr/9165), where it is: it is shown, not
+/// written.
+pub(super) fn source_or_tools<'a>(
+    e: &'a Entry,
+    id: &str,
+    uid: &str,
+    live: bool,
+    offers: &[kentos_forms::Offer],
+) -> Element<'a, Message> {
+    if source_key(uid).is_some() {
+        return label::caption("kaynakta").style(muted).into();
+    }
+    related_tools(e, id, uid, live, offers).into()
+}
+
+/// A related child's values: an object's of the drawing, or a row its data layer's source holds (docs/adr/9165).
+pub(super) fn child_attrs<'d>(
+    d: &'d crate::document::Document,
+    e: &'d Entry,
+    layer: &str,
+    uid: &str,
+) -> Option<&'d kentos_forms::Attrs> {
+    match source_key(uid) {
+        Some(key) => e.source_rows.get(layer)?.iter().find(|(k, _)| *k == key).map(|(_, a)| a),
+        None => {
+            let slot = d.model.slot_of(kentos_domain::Uuid::parse_str(uid).ok()?)?;
+            Some(&d.model.get(slot)?.base().attrs)
+        }
+    }
+}
+
 pub(super) fn related_row<'a>(
     e: &'a Entry,
     id: &str,
@@ -949,34 +1019,27 @@ pub(super) fn related_table<'a>(
         .collect();
     // The totals are of every related object, not only the page's.
     for uid in all {
-        let Some(x) = kentos_domain::Uuid::parse_str(uid)
-            .ok()
-            .and_then(|u| d.model.slot_of(u))
-            .and_then(|s| d.model.get(s))
-        else {
+        let Some(attrs) = child_attrs(d, e, layer, uid) else {
             continue;
         };
         for (i, f) in shown.iter().enumerate() {
-            let raw = x.base().attrs.get(&f.name).map_or("", String::as_str);
+            let raw = attrs.get(&f.name).map_or("", String::as_str);
             if let (Some(t), Ok(v)) = (totals[i].as_mut(), raw.trim().parse::<f64>()) {
                 *t += v;
             }
         }
     }
     for uid in uids {
-        let Some(x) = kentos_domain::Uuid::parse_str(uid)
-            .ok()
-            .and_then(|u| d.model.slot_of(u))
-            .and_then(|s| d.model.get(s))
-        else {
+        let Some(attrs) = child_attrs(d, e, layer, uid) else {
             continue;
         };
         let mut line = Row::new().spacing(8).align_y(Center);
         for f in &shown {
-            let raw = x.base().attrs.get(&f.name).cloned().unwrap_or_default();
+            let raw = attrs.get(&f.name).cloned().unwrap_or_default();
             line = line.push(cell(kentos_commands::display_value(f, &raw), Some(f)));
         }
-        line = line.push(container(related_tools(e, id, uid, live, offers)).width(112));
+        // A row its source holds is shown, not written (docs/adr/9165): no tools, it says where it is.
+        line = line.push(container(source_or_tools(e, id, uid, live, offers)).width(112));
         rows = rows.push(line);
     }
     if totals.iter().any(Option::is_some) && !uids.is_empty() {
@@ -1008,6 +1071,7 @@ pub(super) fn related_table<'a>(
 /// that is not the link) with how many objects hold it, the most first; an empty value last.
 pub(super) fn related_chart<'a>(
     d: &crate::document::Document,
+    e: &Entry,
     layer: &str,
     link: &str,
     columns: &[String],
@@ -1031,14 +1095,10 @@ pub(super) fn related_chart<'a>(
     };
     let mut counts: Vec<(String, usize)> = Vec::new();
     for uid in uids {
-        let Some(x) = kentos_domain::Uuid::parse_str(uid)
-            .ok()
-            .and_then(|u| d.model.slot_of(u))
-            .and_then(|s| d.model.get(s))
-        else {
+        let Some(attrs) = child_attrs(d, e, layer, uid) else {
             continue;
         };
-        let v = x.base().attrs.get(&by.name).cloned().unwrap_or_default();
+        let v = attrs.get(&by.name).cloned().unwrap_or_default();
         match counts.iter_mut().find(|(k, _)| *k == v) {
             Some((_, n)) => *n += 1,
             None => counts.push((v, 1)),
@@ -1114,16 +1174,12 @@ pub(super) fn related_cards<'a>(
     };
     let mut cards = Column::new().spacing(6);
     for uid in uids {
-        let Some(x) = kentos_domain::Uuid::parse_str(uid)
-            .ok()
-            .and_then(|u| d.model.slot_of(u))
-            .and_then(|s| d.model.get(s))
-        else {
+        let Some(attrs) = child_attrs(d, e, layer, uid) else {
             continue;
         };
         let mut body = Column::new().spacing(2);
         for f in &shown {
-            let raw = x.base().attrs.get(&f.name).cloned().unwrap_or_default();
+            let raw = attrs.get(&f.name).cloned().unwrap_or_default();
             body = body.push(
                 row![
                     container(label::caption(f.label().to_owned()).style(muted)).width(120),
@@ -1132,7 +1188,7 @@ pub(super) fn related_cards<'a>(
                 .spacing(8),
             );
         }
-        let tools = related_tools(e, id, uid, live, offers);
+        let tools = source_or_tools(e, id, uid, live, offers);
         cards = cards.push(
             container(
                 row![container(body).width(Fill), tools]

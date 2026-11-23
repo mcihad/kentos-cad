@@ -383,6 +383,7 @@ impl App {
                 labelling: None,
                 labelling_report_at: 0,
                 form_row_asked: 0,
+                form_rows_asked: 0,
                 forms_window: None,
                 form_files: crate::forms::library::FormFiles::default(),
                 form_entry: None,

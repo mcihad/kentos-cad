@@ -207,12 +207,24 @@ pub(crate) fn prepared(
     variables: &[Variable],
     path: &str,
 ) -> Result<Prepared, Stop> {
+    prepared_over(doc, form, body, variables, path, &doc.form_world(body))
+}
+
+/// [`prepared`] over `world` (the drawing's with a data layer's source rows: docs/adr/9165).
+pub(crate) fn prepared_over(
+    doc: &Document,
+    form: &ProjectForm,
+    body: &FormBody,
+    variables: &[Variable],
+    path: &str,
+    world: &kentos_forms::World,
+) -> Result<Prepared, Stop> {
     Prepared::new_with(
         body,
         fields(doc, &form.layer),
         variables,
         crate::expression_unit::reading_unit(doc.settings()),
-        &doc.form_world(body),
+        world,
     )
     .map(|p| {
         let (checks, uniques, dialect) = table(doc, &form.layer);
@@ -394,6 +406,27 @@ pub fn record_screen(
     made.map_err(|stop: Stop| Box::new(stop.into_error()))
 }
 
+/// The form `form` (its draft with `draft`) prepared with a data layer's source rows in its world (docs/adr/9165): its
+/// related items over a data layer list the rows the source holds with the record's code. The commands' refusal when it
+/// cannot be.
+pub fn prepared_with_rows(
+    doc: &Document,
+    form: &str,
+    draft: bool,
+    moment: Option<&str>,
+    user: Option<&str>,
+    rows: &crate::forms_source::SourceRows,
+) -> Result<Prepared, Box<kentos_commands::CommandError>> {
+    let made = (|| {
+        let variables = variables_given(doc, moment, user)?;
+        let form = self::form(doc.settings(), form, "form")?;
+        let (body, _) = body(form, draft, "draft")?;
+        let world = crate::forms_source::world_with(doc, body, rows);
+        prepared_over(doc, form, body, &variables, "form", &world)
+    })();
+    made.map_err(|stop: Stop| Box::new(stop.into_error()))
+}
+
 /// The screen of a body not yet kept (the designer's copy: docs/adr/0403 §3) for the object `uid`,
 /// or for a new, empty record without a shape; the commands' refusal when it cannot be.
 pub fn preview_screen(
@@ -444,8 +477,8 @@ pub fn preview_screen(
 }
 
 /// The screen of a row shown and not written (a read-only connection's row: docs/adr/9159): `e` read from its source,
-/// not in the drawing, numbered by its `key`; the form's latest release, its draft when it has none. The commands'
-/// refusal when it cannot be.
+/// not in the drawing, numbered by its `key`; the form's latest release, its draft when it has none; `rows`, the data
+/// layers' source rows its related items list (docs/adr/9165). The commands' refusal when it cannot be.
 pub fn row_screen(
     doc: &Document,
     form: &str,
@@ -453,12 +486,15 @@ pub fn row_screen(
     key: i64,
     moment: Option<&str>,
     user: Option<&str>,
+    rows: &crate::forms_source::SourceRows,
 ) -> Result<RecordScreen, Box<kentos_commands::CommandError>> {
     let made = (|| {
         let variables = variables_given(doc, moment, user)?;
         let form = self::form(doc.settings(), form, "form")?;
         let (body, version) = body(form, form.releases.is_empty(), "draft")?;
-        let prepared = prepared(doc, form, body, &variables, "form")?;
+        // Its related items over a data layer read the source's rows too (docs/adr/9165).
+        let world = crate::forms_source::world_with(doc, body, rows);
+        let prepared = prepared_over(doc, form, body, &variables, "form", &world)?;
         let layer = doc.layers().get(&form.layer).map_or("", |n| n.name.as_str());
         let mut object = kentos_forms::object_of(e, layer, key as f64);
         object.attachments = Some(kentos_forms::Attached::of(&e.base().attachments));
