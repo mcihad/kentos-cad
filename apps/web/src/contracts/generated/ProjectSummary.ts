@@ -17,8 +17,8 @@ updatedAt: string, tenantId: string, tenantName: string, tenantKind: TenantKind,
  */
 ownerName: string, access: ProjectAccessView, 
 /**
- * What kind of work it is: a label, not a claim of compliance. A CAD type's project is kept as its file
- * (docs/adr/9196 §2).
+ * What kind of work it is: a label, not a claim of compliance. A CAD type's project is kept as its file, a CBS
+ * project in the database (docs/adr/9196 §2).
  */
 projectType: ProjectType, description: string, tags: Array<string>, state: ProjectState, 
 /**

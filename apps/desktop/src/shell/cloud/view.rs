@@ -201,8 +201,8 @@ impl App {
             RadioGroup::new(u.storage, |s| cloud(Event::UploadStorage(s))),
             |g, s| g.option(s, words::storage_title(s), words::storage_detail(s)),
         );
-        // A module's program offers its own module's types alone (kinds.rs, docs/adr/0802).
-        let types = self.cloud_types();
+        // The open project's module's types alone (kinds.rs, docs/adr/0802, 9196 §2).
+        let types = self.upload_types();
         let choices: Vec<Choice> = types.iter().map(|t| Choice::new(type_label(*t))).collect();
         let chosen = types.iter().position(|t| *t == u.project_type);
         let kind = Select::new(choices, chosen, move |i| {
@@ -225,9 +225,24 @@ impl App {
             ProjectStorage::File => format!(
                 "{count} nesne, katman ağacı, proje ayarları ve proje stilleri tek bir .kcad dosyası olarak yüklenir ve projenin 1. revizyonu olur. Proje sizin olur; başkaları paylaşımla eklenir. Sonra Kaydet (Ctrl+S) yeni bir revizyon yazar; kendiliğinden kaydedilmez."
             ),
-            ProjectStorage::Database => format!(
-                "{count} nesne, katman ağacı, proje ayarları ve proje stilleri yüklenir ve veritabanına tek işlemde aktarılır. Proje sizin olur; başkaları paylaşımla eklenir. Sonra her değişiklik kendiliğinden kaydedilir."
-            ),
+            ProjectStorage::Database => {
+                // A CBS project's data layers go up with their rows (docs/adr/9196 §2, cloud/upload.rs).
+                let data = doc
+                    .model
+                    .layers()
+                    .leaves()
+                    .iter()
+                    .filter(|n| n.data.is_some() && n.service.is_none())
+                    .count();
+                let rows = if data > 0 {
+                    format!(", {data} veri katmanının kaynağındaki bütün satırlar")
+                } else {
+                    String::new()
+                };
+                format!(
+                    "{count} nesne{rows}, katman ağacı, proje ayarları ve proje stilleri yüklenir ve veritabanına tek işlemde aktarılır. Proje sizin olur; başkaları paylaşımla eklenir. Sonra her değişiklik kendiliğinden kaydedilir."
+                )
+            }
         };
         form = form
             .field("Proje adı", name)
@@ -235,9 +250,14 @@ impl App {
             .row(storage);
         if storages.len() == 1 {
             form = form.row(
-                label::caption(
-                    "Bu türdeki projenin tamamı proje dosyasındadır; bulutta dosya revizyonu olarak saklanır.",
-                )
+                label::caption(match storages[0] {
+                    ProjectStorage::File => {
+                        "Bu türdeki projenin tamamı proje dosyasındadır; bulutta dosya revizyonu olarak saklanır."
+                    }
+                    ProjectStorage::Database => {
+                        "CBS projesinin verisi veritabanındadır; bulutta veritabanı projesi olarak saklanır."
+                    }
+                })
                 .style(style::text::muted),
             );
         }

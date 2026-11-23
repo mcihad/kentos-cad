@@ -73,18 +73,27 @@ async fn file_project(
         sheets: None,
         arrays: Vec::new(),
         description: None,
-        // A CBS project's file: the type kept in the database (docs/adr/9196 §2); a CAD type's goes nowhere else.
-        project_type: Some(project_type),
+        // A CBS project is kept in the database and a new one is never a file (docs/adr/9196 §2): an old CBS file
+        // project, whose way out is `project.convert`, is a CAD file project given CBS's type afterwards.
+        project_type: Some(if project_type == ProjectType::Gis { ProjectType::Cad } else { project_type }),
         tags: None,
         storage: Some(ProjectStorage::File),
     };
-    Uuid::parse_str(
+    let id = Uuid::parse_str(
         &projects::create(&db.app, who, input, None)
             .await
             .unwrap()
             .id,
     )
-    .unwrap()
+    .unwrap();
+    if project_type == ProjectType::Gis {
+        sqlx::query("update kentos.project set project_type = 'gis' where id = $1")
+            .bind(id)
+            .execute(&db.owner)
+            .await
+            .unwrap();
+    }
+    id
 }
 
 /// Saves `bytes` as a file project's first revision.
@@ -230,6 +239,13 @@ async fn a_database_project_becomes_a_file_project_of_one_moment() {
     let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
     let dilek = member(&db, "buro", "dilek", TenantRole::Viewer).await;
     let project = new_project(&db, &ayse, "Ada 7").await;
+    // An old database project of a CAD type, whose way out is a file project; a CBS project stays in the database
+    // (docs/adr/9196 §2).
+    sqlx::query("update kentos.project set project_type = 'cad' where id = $1")
+        .bind(project)
+        .execute(&db.owner)
+        .await
+        .unwrap();
     let by = open(&db, &ayse, project).await;
     common::share(&db, &by, &dilek.actor, GrantRole::Viewer).await;
     let store = blobs();
@@ -393,6 +409,30 @@ async fn a_cad_types_project_is_kept_as_its_file() {
         .await
         .unwrap();
     assert_eq!(cbs.storage, ProjectStorage::Database);
+    // A CBS project's data is its database: never a file project, nor converted into one.
+    match projects::create(
+        &db.app,
+        &ayse,
+        input("Kent dosyası", ProjectType::Gis, Some(ProjectStorage::File)),
+        None,
+    )
+    .await
+    {
+        Err(e @ AppError::Invalid { .. }) => {
+            assert_eq!(e.path(), Some("storage"));
+            assert!(e.to_string().contains("verisi veritabanındadır"), "{e}");
+        }
+        other => panic!("{other:?}"),
+    }
+    let by = open(&db, &ayse, Uuid::parse_str(&cbs.id).unwrap()).await;
+    let asked = catalog_envelope(&by, PROJECT_CONVERT, json!({ "to": "file" }), &[]);
+    match convert(&db, &blobs(), asked, &by).await {
+        Err(e @ AppError::Invalid { .. }) => {
+            assert_eq!(e.path(), Some("to"));
+            assert!(e.to_string().contains("“CBS” türündeki"), "{e}");
+        }
+        other => panic!("{other:?}"),
+    }
     // A road's file project does not go into the database.
     let project = file_project(&db, &ayse, "Çevre yolu", ProjectType::Road).await;
     let by = open(&db, &ayse, project).await;

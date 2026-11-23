@@ -60,10 +60,11 @@ pub(crate) fn world(tag: &str) -> Document {
         })
         .collect();
     points.push(neighbour);
+    // A bound layer is a map's delivery, not a CBS project's (docs/adr/9196 §2): a CAD project binds.
     let setup = json!({
         "format": "kentos.document", "version": 1, "name": "Parça",
         "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                      "plotScale": 1000, "workspace": "gis" },
+                      "plotScale": 1000, "workspace": "cad" },
         "origin": { "x": 487_000.0, "y": 4_420_000.0 },
         "layers": [{ "id": "nokta", "name": "Nokta", "type": "layer", "visible": true, "locked": false,
                      "expanded": true, "style": nokta, "children": [] },

@@ -12,7 +12,7 @@ use iced::{Background, Border, Center, Element, Fill, FillPortion, Padding, Them
 use kentos_interaction::fixed;
 use kentos_project::crs::datum_label;
 use kentos_project::provinces;
-use kentos_project::wizard::{Coords, DATA_NOTE, PURPOSES, Purpose, STORAGES, WORKS};
+use kentos_project::wizard::{Coords, DATA_NOTE, DATA_PLACES, DataPlace, PURPOSES, Purpose, STORAGES, WORKS, storages_for};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, metrics, shape, typography};
 use kentos_ui::widget::Banner;
@@ -706,15 +706,28 @@ pub(super) fn decision(s: &State, current: Option<Note>) -> Element<'_, Message>
     if d.purpose == Purpose::Template {
         purpose = purpose.push(template_row(s));
     }
-    let storages = Row::with_children(STORAGES.iter().map(|c| {
-        small_card(c.icon, c.name, c.note, d.storage == c.storage, event(Event::Storage(c.storage)))
+    // Where its data is and where its project file goes (docs/adr/9196 §2).
+    let places = Row::with_children(DATA_PLACES.iter().map(|c| {
+        small_card(c.icon, c.name, c.note, d.data == c.data, event(Event::Data(c.data)))
     }))
     .spacing(10);
+    let data = column![places, place_fields(s), label::caption(DATA_NOTE)].spacing(8);
+    let offered = storages_for(d.data);
+    let file: Element<'_, Message> = if offered.is_empty() {
+        label::caption("Proje dosyası bulutta, verisiyle aynı projededir.").into()
+    } else {
+        Row::with_children(STORAGES.iter().filter(|c| offered.contains(&c.storage)).map(|c| {
+            small_card(c.icon, c.name, c.note, d.storage == c.storage, event(Event::Storage(c.storage)))
+        }))
+        .spacing(10)
+        .into()
+    };
     // The decisions first, the place's lists and the zone strip under them.
     let mut parts = vec![
         section("Proje adı", name),
         section("Amaç", purpose),
-        section("Saklama", column![storages, label::caption(DATA_NOTE)].spacing(8)),
+        section("Veri", data),
+        section("Proje dosyası", file),
     ];
     parts.extend(place_in(s, typography::from_default(132.0)));
     if let Some(note) = current {
@@ -731,6 +744,59 @@ pub(super) fn decision(s: &State, current: Option<Note>) -> Element<'_, Message>
         ),
         parts,
     )
+}
+
+/// Where the data place's tables are made: a GeoPackage's path, a database's connection and schema; the cloud's
+/// workspace is chosen in Buluta yükle.
+fn place_fields(s: &State) -> Element<'_, Message> {
+    let p = &s.place;
+    match s.draft.data {
+        DataPlace::Geopackage => row![
+            container(
+                kentos_ui::widget::text_field("GeoPackage dosyasının yolu (.gpkg)", &p.path)
+                    .on_input(|t| event(Event::DataPath(t)))
+            )
+            .width(Fill),
+            words::secondary("Gözat…", Some(event(Event::DataBrowse))),
+        ]
+        .spacing(8)
+        .align_y(Center)
+        .into(),
+        DataPlace::Postgres => {
+            let list = kentos_postgis::connections::store().list();
+            let mut c = Column::new().spacing(6);
+            if !list.is_empty() {
+                let names: Vec<String> = list.iter().map(|c| c.name.clone()).collect();
+                c = c.push(
+                    container(
+                        kentos_ui::widget::select::Select::new(
+                            names.into_iter().map(kentos_ui::widget::select::Choice::new),
+                            p.connection,
+                            |i| event(Event::Connection(i)),
+                        )
+                        .searchable(false),
+                    )
+                    .width(typography::from_default(320.0)),
+                );
+            }
+            c.push(
+                row![
+                    container(
+                        kentos_ui::widget::text_field("postgresql://kullanıcı@sunucu:5432/veritabanı", &p.address)
+                            .on_input(|t| event(Event::Address(t)))
+                    )
+                    .width(FillPortion(3)),
+                    container(kentos_ui::widget::text_field("şema: public", &p.schema).on_input(|t| event(Event::Schema(t))))
+                        .width(FillPortion(1)),
+                ]
+                .spacing(8),
+            )
+            .into()
+        }
+        DataPlace::Cloud => {
+            label::caption("Oluştur, Buluta yükle penceresini açar; çalışma alanını orada seçersiniz.").into()
+        }
+    }
 }
 
 /// A choice on a CBS project's page: its icon and name over what choosing it means, the round mark in the corner.

@@ -215,6 +215,7 @@ impl NewRequest {
             ellipsoidal_heights: false,
             // A script's CBS project starts as the wizard's default: a cadastral sheet kept in a file.
             purpose: Default::default(),
+            data: Default::default(),
             storage: Default::default(),
             template: None,
         };
@@ -264,6 +265,7 @@ mod tests {
             chosen_work: None,
             ellipsoidal_heights: false,
             purpose: Default::default(),
+            data: Default::default(),
             storage: Default::default(),
             template: None,
         };

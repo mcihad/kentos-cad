@@ -4,10 +4,11 @@ import type { SourcesEditOp } from "./SourcesEditOp";
 /**
  * Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,
  * `table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or
- * the table is bound already), `source_differs` (the layer given does not hold the table's objects),
- * `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area
- * that is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is
- * not a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the
+ * the table is bound already), `bound_in_gis` (a link in a CBS project, whose data is its tables: docs/adr/9196 §2),
+ * `source_differs` (the layer given does not hold the table's objects), `source_not_found` (an id), `source_changed`
+ * (relink to another file), `too_many_sources`, `invalid_extent` (an area that is not one, on a table without
+ * geometry, onto a layer given, or of a database), `invalid_key` (a key that is not a column of the objects, is empty
+ * on one or repeats); conflicts: `pending_changes` (an area changed over the
  * layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,
  * `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),
  * `reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key

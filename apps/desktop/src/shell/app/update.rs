@@ -190,7 +190,16 @@ impl App {
             .then_some((self.locks.length, self.locks.toward));
         let held = self.window_over();
         let view = self.viewpoint();
+        // What an import brings into a CBS project goes into its tables (docs/adr/9196 §2): the layers its data would
+        // keep in the project file before and after an import window's message. A run's output layers are the run's
+        // (its sink writes a table); the save asks for them.
+        let in_file = matches!(message, Message::Exchange(_)).then(|| self.data_held_in_file());
         let task = self.handle(message);
+        if let Some(before) = in_file {
+            let new: Vec<(String, String)> =
+                self.data_held_in_file().into_iter().filter(|l| !before.contains(l)).collect();
+            self.data_into_tables(new);
+        }
         // A window resized since the last message keeps its size (dialog_sizes.rs, docs/adr/0746).
         self.dialog_sizes.write_changed();
         // A template's run ends with its tool (templates.rs).

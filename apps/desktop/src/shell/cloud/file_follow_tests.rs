@@ -245,6 +245,8 @@ fn kaydet_over_a_known_newer_revision_uploads_nothing_and_asks() {
 fn a_refused_kaydet_offers_a_copy_a_local_file_or_the_newest_revision() {
     let mut app = signed_in();
     file_project(&mut app);
+    // A cloud file project is a CAD type's (docs/adr/9196 §2): its local file keeps its objects.
+    crate::files_testing::make_cad(&mut app);
     edit(&mut app, 1.0);
     let _ = app.run("file.save");
     let id = app.saving.as_ref().expect("saving").id;

@@ -129,15 +129,14 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
     })
 }
 
+/// The tables chosen, by name.
+fn chosen_tables(s: &State) -> Vec<String> {
+    s.tables.iter().zip(&s.chosen).filter(|(_, c)| **c).map(|(t, _)| t.name.clone()).collect()
+}
+
 /// The command's input for the window as it stands; `files` gives the rows refused their file (not for a plan).
 fn import_input(s: &State, files: bool) -> serde_json::Value {
-    let tables: Vec<&str> = s
-        .tables
-        .iter()
-        .zip(&s.chosen)
-        .filter(|(_, c)| **c)
-        .map(|(t, _)| t.name.as_str())
-        .collect();
+    let tables = chosen_tables(s);
     let mut input =
         json!({ "path": s.path.display().to_string(), "tables": tables, "reproject": s.reproject });
     if let Some(m) = s.merge.input() {
@@ -244,6 +243,15 @@ impl App {
                 }
             }
             Event::Run => {
+                // A CBS project's “Bağ” is its data layers (docs/adr/9196 §2): the tables stay in the file.
+                if let Some(Window::Gpkg(s)) = &self.exchange
+                    && s.bind
+                    && !self.offers("source.link")
+                {
+                    let (path, tables) = (s.path.display().to_string(), chosen_tables(s));
+                    self.close_exchange();
+                    return self.add_tables(path, tables);
+                }
                 self.gpkg_run();
                 return Task::none();
             }
@@ -525,6 +533,11 @@ impl App {
                 (t.rows > 0).then(|| event(Event::Toggle(i))),
             ));
         }
+        // A CBS project's data is its tables (docs/adr/9196 §2): a table is read where it is as a data layer, or taken
+        // into the project's data place by İçe aktar; a bound layer is a map's.
+        let binds = self.offers("source.link");
+        // A data layer reads its table in the table's own system (docs/adr/9101): nothing is moved.
+        let as_data = s.bind && !binds;
         let mut lines = Vec::new();
         // The chosen tables' systems (GIS-006): each table declares its own, the move is asked for those not the
         // project's, the summary says what the import will do with each.
@@ -561,8 +574,10 @@ impl App {
         if mismatch {
             let n = picked.iter().filter(|t| t.srid.is_some_and(|f| f != project)).count();
             lines.push(words::text_line(
-                if s.reproject { Line::Info } else { Line::Warn },
-                if s.reproject {
+                if s.reproject || as_data { Line::Info } else { Line::Warn },
+                if as_data {
+                    format!("{n} tablo {foreign_words} sisteminde kalır; veri katmanı satırlarını projenin sistemine (EPSG:{project}) çevirerek çizer.")
+                } else if s.reproject {
                     format!("{n} tablo {foreign_words} sisteminden projenin sistemine (EPSG:{project}) çevrilerek alınır.")
                 } else {
                     format!("{n} tablo {foreign_words} sisteminde, proje EPSG:{project}. Almak için koordinatlar projenin sistemine çevrilmeli.")
@@ -581,6 +596,8 @@ impl App {
             if chosen == 0 { Line::Warn } else { Line::Info },
             if chosen == 0 {
                 "Alınacak tablo seçilmedi.".to_owned()
+            } else if as_data {
+                format!("{chosen} tablo veri katmanı olarak eklenecek; {rows} satırı bu dosyada kalır.")
             } else if s.bind && s.area {
                 format!("{chosen} tablo bağlanacak, yalnız görünen alandaki satırlarıyla (tablolarda {rows} satır var); her tablo kendi bağlı katmanı olur.")
             } else if s.bind {
@@ -605,7 +622,8 @@ impl App {
             .spacing(12)
             .push(words::file_line(&s.file, s.path.display().to_string()))
             .push(words::field("Tablolar", list, None));
-        body = body.push(words::field(
+        body = body.push(if binds {
+            words::field(
             "Bağ",
             words::check(
                 s.bind,
@@ -617,8 +635,19 @@ impl App {
             } else {
                 "Katman tablonun çalışma kopyası olur: değişiklikler Kaynağa yaz ile dosyaya yazılır, dosyadaki değişiklikler Kaynaktan oku ile gelir.".to_owned()
             }),
-        ));
-        if s.bind {
+        )
+        } else {
+            words::field(
+                "Veri katmanı",
+                words::check(s.bind, "Dosyada bırak, veri katmanı olarak ekle".to_owned(), Some(event(Event::Bind))),
+                Some(
+                    "Tablolar bu dosyada kalır; satırları gerektikçe dosyadan okunur, düzenleme oturumuyla yazılır. \
+                     Kapalıyken İçe aktar onları projenin veri kaynağına tablo olarak yazar."
+                        .to_owned(),
+                ),
+            )
+        });
+        if s.bind && binds {
             let b = self.viewport.camera.visible_bounds();
             let (w, h) = (b.max_x - b.min_x, b.max_y - b.min_y);
             let format = self
@@ -641,7 +670,7 @@ impl App {
                 )),
             ));
         }
-        if s.bind {
+        if s.bind && binds {
             body = body.push(words::field(
                 "Anahtar alanı",
                 kentos_ui::widget::text_field("Yok", &s.key)
@@ -650,7 +679,7 @@ impl App {
                 Some("Tablo başka bir programla yeniden yazılınca satırın kimliği değişebilir: etiket iğneleri o zaman satırı bu alanın değeriyle bulur. Her satırda dolu ve tekil olmalı; boş bırakılırsa iğneler satırın kimliğiyle ve geometrisiyle izlenir.".to_owned()),
             ));
         }
-        if mismatch {
+        if mismatch && !as_data {
             body = body.push(words::field(
                 "Koordinat sistemi",
                 words::check(
@@ -678,8 +707,8 @@ impl App {
                 text.clone(),
             ));
         }
-        let ready = chosen > 0 && (!mismatch || s.reproject);
-        let mut dialog = Dialog::new(if s.bind {
+        let ready = chosen > 0 && (as_data || !mismatch || s.reproject);
+        let mut dialog = Dialog::new(if s.bind && binds {
             "Kaynağa bağla"
         } else {
             "GeoPackage içe aktar"
@@ -696,7 +725,11 @@ impl App {
             dialog
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary(
-                    if s.bind { "Bağla" } else { "İçe aktar" },
+                    match (s.bind, binds) {
+                        (true, true) => "Bağla",
+                        (true, false) => "Ekle",
+                        (false, _) => "İçe aktar",
+                    },
                     ready.then(|| event(Event::Run)),
                 ))
                 .width(640.0)

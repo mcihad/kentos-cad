@@ -2014,6 +2014,8 @@ codes! {
     ROWS_REJECTED = "rows_rejected", Warning, false, "Bazı satırlar alınmadı; nedenleri cevapta, satırları rejects dosyasında.";
     /// A layer or a table bound already (docs/adr/0503).
     SOURCE_BOUND = "source_bound", Failed, false, "Katman ya da tablo zaten bir kaynağa bağlı.";
+    /// A table bound in a CBS project, whose data is its tables (docs/adr/9196 §2): it is added as a data layer.
+    BOUND_IN_GIS = "bound_in_gis", Failed, false, "CBS projesinin verisi kaynağın tablolarındadır; tablonun nesnelerini projeye kopyalayan bağlı katman CBS'de yoktur. Tabloyu veri katmanı olarak ekleyin (cad.layers.data).";
     /// The layer given does not hold the table's objects as they are (docs/adr/0503).
     SOURCE_DIFFERS = "source_differs", Failed, false, "Verilen katman tablonun nesnelerini olduğu gibi taşımıyor; bağlanamaz.";
     /// No bound layer of the id or the layer given (docs/adr/0503).
@@ -3353,6 +3355,8 @@ codes! {
     LEGACY_FILE = "legacy_file", Host, false, "Eski (v1) çizimin üzerine yazılmaz; kaydı yeni bir yola yapın.";
     /// A save with nowhere to go.
     NO_PATH = "no_path", Host, false, "Kaydın gideceği yol yok; bir dosya yolu verin.";
+    /// A CBS project saved with objects its project file may not hold (docs/adr/9196 §2): a drawing or a bound layer's.
+    DATA_HELD_IN_FILE = "data_held_in_file", Host, false, "CBS projesinin verisi tablolardadır; nesne tutan çizim ya da bağlı katman proje dosyasına yazılmaz. Katmanı veri kaynağına taşıyın (cad.layers.migrate), sonra kaydedin.";
     /// The drawing refuses it as it is: a group is open.
     BUSY = "busy", Host, false, "Çizim şu an bunu almıyor: açık bir grup var; önce grubu kapatın.";
     /// An answer that could not be written as JSON.

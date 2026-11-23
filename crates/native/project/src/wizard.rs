@@ -159,16 +159,60 @@ pub const PURPOSES: [PurposeCard; 3] = [
     },
 ];
 
-/// Where a new project is kept (docs/adr/9184): its first Kaydet goes there.
+/// Where a CBS project's data is (docs/adr/9196 §2, CLAUDE.md §25 rule 5): its layers' objects and attributes are the
+/// tables of this store, made by Oluştur.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DataPlace {
+    /// A GeoPackage file, named for the project unless another is given.
+    #[default]
+    Geopackage,
+    /// A PostgreSQL database's schema.
+    Postgres,
+    /// KentOS Bulut: the project and its data are a cloud database project.
+    Cloud,
+}
+
+/// A data place as its card says it: its name and what choosing it means.
+pub struct DataPlaceCard {
+    pub data: DataPlace,
+    pub name: &'static str,
+    pub note: &'static str,
+    pub icon: &'static str,
+}
+
+/// The places a CBS project's data is kept, each with its consequence in one sentence (docs/adr/9196 §2).
+pub const DATA_PLACES: [DataPlaceCard; 3] = [
+    DataPlaceCard {
+        data: DataPlace::Geopackage,
+        name: "GeoPackage",
+        note: "Katmanlar bir GeoPackage dosyasının tablolarıdır; tek dosya taşınır ve paylaşılır, başka CBS programları da okur.",
+        icon: "dataSources",
+    },
+    DataPlaceCard {
+        data: DataPlace::Postgres,
+        name: "PostgreSQL",
+        note: "Katmanlar bir veritabanı şemasının tablolarıdır; yetkili herkes aynı satırları görür, kim neyi yazar veritabanının rolleriyle denetlenir.",
+        icon: "server",
+    },
+    DataPlaceCard {
+        data: DataPlace::Cloud,
+        name: "KentOS Bulut",
+        note: "Proje ve verisi bulut veritabanındadır; roller ve formlar sunucuda denetlenir, oluşturmak için giriş gerekir.",
+        icon: "cloud",
+    },
+];
+
+/// Where a CBS project's file is kept (docs/adr/9184, 9196 §2): its structure, styles, settings and annotation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Storage {
-    /// A `.kcad` file.
+    /// A `.kcad` file beside its data.
     #[default]
     File,
-    /// A GeoPackage file, beside its data (docs/adr/9107).
+    /// In the GeoPackage of its data (docs/adr/9107).
     Geopackage,
-    /// A PostgreSQL database's schema (docs/adr/9107).
+    /// In the PostgreSQL schema of its data (docs/adr/9107).
     Database,
 }
 
@@ -180,31 +224,41 @@ pub struct StorageCard {
     pub icon: &'static str,
 }
 
-/// The places a project is kept, each with its consequence in one sentence (docs/adr/9184).
+/// The places a project file is kept, each with its consequence in one sentence (docs/adr/9184, 9196 §2).
 pub const STORAGES: [StorageCard; 3] = [
     StorageCard {
         storage: Storage::File,
         name: "Dosya (.kcad)",
-        note: "Proje tek bir dosyadır; bağlı tabloların satırları kendi kaynaklarında kalır, dosyayı taşırken onları da taşıyın.",
+        note: "Proje dosyası verinin yanında bir .kcad dosyasıdır; tablolar kendi kaynağında kalır, taşırken ikisini birlikte taşıyın.",
         icon: "save",
     },
     StorageCard {
         storage: Storage::Geopackage,
-        name: "GeoPackage içinde",
-        note: "Proje verisiyle aynı .gpkg dosyasında durur; tek dosya taşınır ve paylaşılır, tabloları başka CBS programları da okur.",
+        name: "GeoPackage'ın içinde",
+        note: "Proje dosyası verisiyle aynı GeoPackage dosyasında durur; tek dosya taşınır ve paylaşılır.",
         icon: "dataSources",
     },
     StorageCard {
         storage: Storage::Database,
-        name: "PostgreSQL veritabanında",
-        note: "Proje bir veritabanı şemasında durur; yetkili herkes açar, kim neyi yazar veritabanının rolleriyle denetlenir.",
+        name: "Veritabanının içinde",
+        note: "Proje dosyası verisiyle aynı şemada durur; yetkili herkes açar.",
         icon: "server",
     },
 ];
 
-/// What binding a table and copying it mean, said under the storage (docs/adr/9184).
-pub const DATA_NOTE: &str = "Bağlanan tabloların satırları kaynağında kalır, herkes aynı satırları görür; içe aktarılan veri \
-     projeye kopyalanır ve kaynaktaki sonraki değişiklikleri görmez.";
+/// The project file's places a data place offers (docs/adr/9196 §2): a GeoPackage's data a `.kcad` beside it or the
+/// file itself, a schema's a `.kcad` or the schema; a cloud project's file is the cloud's, nothing to choose.
+pub fn storages_for(data: DataPlace) -> &'static [Storage] {
+    match data {
+        DataPlace::Geopackage => &[Storage::File, Storage::Geopackage],
+        DataPlace::Postgres => &[Storage::File, Storage::Database],
+        DataPlace::Cloud => &[],
+    }
+}
+
+/// What a CBS project keeps where, said under the choices (docs/adr/9196 §2).
+pub const DATA_NOTE: &str = "Katmanların nesneleri ve öznitelikleri veri deposunun tablolarıdır; proje dosyası yapıyı, \
+     stilleri, ayarları ve açıklamaları (yazı, ölçü, pafta) tutar.";
 
 /// What the wizard holds while it is open; what is not chosen follows the others.
 #[derive(Debug, Clone, PartialEq, serde::Deserialize)]
@@ -241,7 +295,10 @@ pub struct Draft {
     /// What a CBS project is for (docs/adr/9184).
     #[serde(default)]
     pub purpose: Purpose,
-    /// Where it is kept: its first Kaydet goes there (docs/adr/9184).
+    /// Where a CBS project's data is (docs/adr/9196 §2).
+    #[serde(default)]
+    pub data: DataPlace,
+    /// Where a CBS project's file is kept (docs/adr/9184, 9196 §2): one its data place offers.
     #[serde(default)]
     pub storage: Storage,
     /// The institution's template file, when the purpose is one.
@@ -432,8 +489,17 @@ impl Draft {
             chosen_work: None,
             ellipsoidal_heights: false,
             purpose: Purpose::default(),
+            data: DataPlace::default(),
             storage: Storage::default(),
             template: None,
+        }
+    }
+
+    /// Its data's place chosen: the project file's place follows when the new place does not offer it.
+    pub fn choose_data(&mut self, data: DataPlace) {
+        self.data = data;
+        if !storages_for(data).contains(&self.storage) {
+            self.storage = Storage::File;
         }
     }
 
@@ -666,8 +732,14 @@ impl Draft {
                 },
             };
             lines.push(("Katmanlar", layers));
-            let storage = STORAGES.iter().find(|c| c.storage == self.storage).map_or("", |c| c.name);
-            lines.push(("Saklama", storage.to_owned()));
+            let data = DATA_PLACES.iter().find(|c| c.data == self.data).map_or("", |c| c.name);
+            lines.push(("Veri", data.to_owned()));
+            let file = if self.data == DataPlace::Cloud {
+                "Bulutta"
+            } else {
+                STORAGES.iter().find(|c| c.storage == self.storage).map_or("", |c| c.name)
+            };
+            lines.push(("Proje dosyası", file.to_owned()));
         } else {
             lines.push(("Katmanlar", layers(self.kind).to_owned()));
         }
@@ -919,15 +991,29 @@ mod tests {
             ]
         );
         assert_eq!(
+            DATA_PLACES.map(|c| (c.data, c.name)),
+            [
+                (DataPlace::Geopackage, "GeoPackage"),
+                (DataPlace::Postgres, "PostgreSQL"),
+                (DataPlace::Cloud, "KentOS Bulut")
+            ]
+        );
+        assert_eq!(
             STORAGES.map(|c| (c.storage, c.name)),
             [
                 (Storage::File, "Dosya (.kcad)"),
-                (Storage::Geopackage, "GeoPackage içinde"),
-                (Storage::Database, "PostgreSQL veritabanında")
+                (Storage::Geopackage, "GeoPackage'ın içinde"),
+                (Storage::Database, "Veritabanının içinde")
             ]
         );
         // Every choice says what it means in one sentence.
-        for note in PURPOSES.map(|c| c.note).into_iter().chain(STORAGES.map(|c| c.note)).chain([DATA_NOTE]) {
+        for note in PURPOSES
+            .map(|c| c.note)
+            .into_iter()
+            .chain(DATA_PLACES.map(|c| c.note))
+            .chain(STORAGES.map(|c| c.note))
+            .chain([DATA_NOTE])
+        {
             assert!(note.ends_with('.') && note.matches(". ").count() == 0, "{note}");
         }
         assert_eq!(d.notes_of_steps(), ["CBS · harita", "Yeni proje"]);
@@ -939,13 +1025,28 @@ mod tests {
         d.template = Some("/kurum/Belediye şablonu.kcad".into());
         assert_eq!(d.blocked(Step::Details), None);
         assert_eq!(d.template_name().as_deref(), Some("Belediye şablonu.kcad"));
+        // The project file's place is one its data's place offers (docs/adr/9196 §2).
+        assert_eq!((d.data, d.storage), (DataPlace::Geopackage, Storage::File));
+        d.storage = Storage::Geopackage;
+        d.choose_data(DataPlace::Postgres);
+        assert_eq!(d.storage, Storage::File, "a GeoPackage is not a schema's place");
         d.storage = Storage::Database;
         let summary = d.summary();
         let line = |k: &str| summary.iter().find(|(key, _)| *key == k).map(|(_, v)| v.as_str());
         assert_eq!(
-            (line("Amaç"), line("Katmanlar"), line("Saklama")),
-            (Some("Kurum şablonu"), Some("Kurum şablonu: Belediye şablonu.kcad"), Some("PostgreSQL veritabanında"))
+            (line("Amaç"), line("Katmanlar"), line("Veri"), line("Proje dosyası")),
+            (
+                Some("Kurum şablonu"),
+                Some("Kurum şablonu: Belediye şablonu.kcad"),
+                Some("PostgreSQL"),
+                Some("Veritabanının içinde")
+            )
         );
+        d.choose_data(DataPlace::Cloud);
+        let summary = d.summary();
+        let line = |k: &str| summary.iter().find(|(key, _)| *key == k).map(|(_, v)| v.as_str());
+        assert_eq!(line("Proje dosyası"), Some("Bulutta"));
+        assert!(storages_for(DataPlace::Cloud).is_empty());
         // The place is on the same page: a system this version does not know stops Oluştur there.
         d.srid = Some(1234);
         assert_eq!(
@@ -954,7 +1055,7 @@ mod tests {
         );
         let cad = Draft::initial(Workspace::Cad, 5256, DrawingFont::Barlow, None);
         assert_eq!(cad.steps(), &STEPS[..]);
-        assert!(cad.summary().iter().all(|(k, _)| *k != "Amaç" && *k != "Saklama"));
+        assert!(cad.summary().iter().all(|(k, _)| *k != "Amaç" && *k != "Veri"));
     }
 
     #[test]

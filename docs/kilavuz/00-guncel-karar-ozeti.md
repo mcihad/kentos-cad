@@ -13,10 +13,15 @@
   - CBS: veri ve öznitelikler veritabanında; proje dosyası yapıyı, stilleri, ayarları ve açıklamaları tutar ve dosyaya,
     veritabanına ya da buluta kaydedilir. CAD (Mimari, Harita, Yol): tamamı proje dosyasında; dosyaya ya da buluta
     (yalnız dosya revizyonu). Eski projelere taşıma yazılmaz (uygulama geliştirmede).
-  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır. AY-02, AY-03, AY-04 ve AY-06 bitti: ekran
+  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır. AY-02, AY-03, AY-04, AY-05 ve AY-06 bitti
+    (AY-05'in kalanı ADR 9196 §6'da): ekran
     açık projeyi izler; katman menüsü modül × katman türü tablosundandır (ADR 9195 §5, `layer_entries.rs`); her
     modülün profili kendi klasöründedir, ortak katalog `catalog/v1/modules.json`, bağımlılık denetimi
     `scripts/dev/module_deps.py --check` (ADR 9195 §6); CAD türünün bulut projesi yalnız dosyadır (ADR 9196 §4).
+  - AY-05 (ADR 9196 §5): CBS sihirbazı verinin ve proje dosyasının yerini sorar, amaçların tablolarını kurar; kayıt
+    nesne tutan çizim ya da bağlı katmanı proje dosyasına yazmaz (masaüstü, Python, MCP aynı kuralla,
+    `kentos_native_application::layer_kind`); içe alma tabloya gider; CBS'de bağlama yok (`bound_in_gis`); bulutta CBS
+    yalnız veritabanıdır ve yükleme veri katmanlarının satırlarını aktarır.
   - Mobil görüntüleyici ve mobil uygulama (ADR 9197, AY-08): istemciler ortak tanımda (`kentos_launch::Client`);
     görüntüleyici hiçbir şey yazmaz, mobil uygulama yalnız CBS'nin veri satırlarını sunucu komutuyla yazar; katmanın
     mobildeki davranışını masaüstündeki proje belirler (alanı sonra eklenir).

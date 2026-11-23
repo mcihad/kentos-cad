@@ -245,7 +245,9 @@ def scenario() -> dict:
         "id": "parcels",
         "title": "Ada: parseller ve binalar; tipli alanlar, hesap, sorgu; beş biçim; başka ortamda aç (CBS-44)",
         "source": "plan/gis.md CBS-44; docs/adr/0554",
-        "project": {"name": "Ada 101", "workspace": "gis", "srid": SRID},
+        # Parcels drawn as objects and delivered in GIS formats are a map's work: a CBS project's data is its tables
+        # and its file keeps no drawing layer's objects (docs/adr/9196 §2).
+        "project": {"name": "Ada 101", "workspace": "cad", "srid": SRID},
         "tolerance": 1e-9,
         "steps": steps,
         "files": files_expected(),

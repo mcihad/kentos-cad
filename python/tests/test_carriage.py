@@ -64,8 +64,14 @@ class CarriageTests(unittest.TestCase):
                     continue
                 doc = cad.Document.open(DIR / case["file"])
                 path = Path(tmp) / "kopya.kcad"
-                doc.save(path)
-                again = cad.Document.open(path)
+                try:
+                    doc.save(path)
+                    again = cad.Document.open(path)
+                except cad.FileError as held:
+                    # A CBS project's file keeps no drawing layer's objects (docs/adr/9196 §2): such a sample's save is
+                    # refused and its bytes carry it whole.
+                    self.assertEqual((held.code, doc.settings.to_json().get("workspace")), ("data_held_in_file", "gis"))
+                    again = cad.Document.from_bytes(doc.to_bytes())
                 with self.subTest(file=case["file"]):
                     self.assertTrue(same(self.held(again), self.held(doc)))
                 saved += 1
@@ -79,8 +85,12 @@ class CarriageTests(unittest.TestCase):
             for name in ("belediye", "sivas", "park-r1"):
                 doc = cad.Document.from_bytes((folder / f"{name}.json").read_bytes())
                 path = Path(tmp) / f"{name}.kcad"
-                doc.save(path)
-                again = cad.Document.open(path)
+                # A CBS project's file keeps no drawing layer's objects (docs/adr/9196 §2): these projects' objects are
+                # on drawing layers, so their save is refused and their bytes carry them whole.
+                with self.assertRaises(cad.FileError) as held:
+                    doc.save(path)
+                self.assertEqual(held.exception.code, "data_held_in_file")
+                again = cad.Document.from_bytes(doc.to_bytes())
                 with self.subTest(project=name):
                     self.assertTrue(same(self.held(again), self.held(doc)))
                     self.assertFalse(again.info().dirty)
@@ -92,9 +102,19 @@ class CarriageTests(unittest.TestCase):
         # Save writes where a bound file is from the drawing's folder (`relative`, docs/adr/0506): not carried, made.
         for source in settings.get("sources", []):
             source.pop("relative", None)
+        layers = [json.loads(dumps(n.to_json())) for n in doc.layers()]
+
+        # So it writes a data layer's file (docs/adr/9117 §3).
+        def without_relative(nodes: list) -> None:
+            for n in nodes:
+                if isinstance(n.get("data"), dict):
+                    n["data"].pop("relative", None)
+                without_relative(n.get("children", []))
+
+        without_relative(layers)
         return {
             "settings": settings,
-            "layers": [json.loads(dumps(n.to_json())) for n in doc.layers()],
+            "layers": layers,
             "entities": [json.loads(dumps(r.entity.to_json())) for r in doc.entities(page_size=10_000)],
         }
 

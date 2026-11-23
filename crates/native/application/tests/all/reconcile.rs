@@ -23,11 +23,12 @@ fn ok(answer: &Value) -> &Value {
     &answer["output"]
 }
 
+/// A map's project: a bound layer is its delivery, not a CBS project's (docs/adr/9196 §2).
 fn doc() -> Document {
     let setup = json!({
         "format": "kentos.document", "version": 1, "name": "Uzlaştırma",
         "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                      "plotScale": 1000, "workspace": "gis" },
+                      "plotScale": 1000, "workspace": "cad" },
         "origin": { "x": 0.0, "y": 0.0 },
         "layers": [{ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
                      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],

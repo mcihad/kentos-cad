@@ -179,7 +179,7 @@ def layer(id_, name, color):
 
 
 def setup(name="Parsel atlası", *, sheets=True, atlas=None, temporal=False, states=False, form=True, filter_=True,
-          parcels_=True, withheld=False, plain=False):
+          parcels_=True, withheld=False, plain=False, workspace="gis"):
     entities = []
     for p in (parcels() if parcels_ else []):
         attrs = {"Ada": p["ada"], "Parsel": str(p["n"]), "Durum": p["durum"], "Malik": f"Gizli Kişi {p['n']}",
@@ -206,7 +206,7 @@ def setup(name="Parsel atlası", *, sheets=True, atlas=None, temporal=False, sta
     if filter_:
         parsel["filter"] = {"expression": "Durum = 'aktif'"}
     settings = {"srid": 5253, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                "plotScale": 1000, "workspace": "gis"}
+                "plotScale": 1000, "workspace": workspace}
     if form:
         settings["forms"] = [{"id": "parsel-formu", "name": "Parsel formu", "layer": "parsel",
                               "draft": {"revision": 1, "items": [
@@ -619,8 +619,9 @@ def document():
         "states": setup(states=True),
         "temporal": setup(temporal=True),
         "no-form": setup(form=False),
-        # No parcels: the source's tables are bound onto new layers (docs/adr/0638 §3).
-        "source": setup(parcels_=False),
+        # No parcels: the source's tables are bound onto new layers (docs/adr/0638 §3); binding is a map's (CAD) project's,
+        # a CBS project's data is its tables (docs/adr/9196 §2).
+        "source": setup(parcels_=False, workspace="cad"),
         "withheld": setup(form=False, withheld=True),
         "plain": setup(plain=True),
     }

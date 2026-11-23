@@ -187,7 +187,9 @@ class _SourcesEdit(LocalCommand[SourcesEdit, SourcesEdited, SourcesEdited]):
     alan, var olan katman, geometrisiz tablo ve veritabanı invalid_extent. unlink bağı
     çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı
     SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa
-    (source_bound), en çok 1000 bağ. path bir PostGIS adresi de olabilir
+    (source_bound), en çok 1000 bağ. CBS projesinde link yoktur (bound_in_gis): verisi
+    kaynağın tablolarındadır, tablo cad.layers.data ile veri katmanı olarak eklenir;
+    bağlı katman Harita'nın teslim yoludur. path bir PostGIS adresi de olabilir
     (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese
     yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam
     sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.
@@ -225,8 +227,10 @@ class _SourcesEdit(LocalCommand[SourcesEdit, SourcesEdited, SourcesEdited]):
         taşınan nesne kendi satırına yazılır; ters alan, var olan katman, geometrisiz tablo
         ve veritabanı invalid_extent. unlink bağı çözer, nesneler kalır. relink taşınan
         dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed).
-        Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. path bir PostGIS
-        adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table
+        Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. CBS projesinde
+        link yoktur (bound_in_gis): verisi kaynağın tablolarındadır, tablo cad.layers.data
+        ile veri katmanı olarak eklenir; bağlı katman Harita'nın teslim yoludur. path bir
+        PostGIS adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table
         şema.tablo): parola adrese yazılmaz (invalid_address), PGPASSWORD ya da
         ~/.pgpass'tan okunur; tablo tek tam sayı birincil anahtarlı olmalıdır; ulaşılamayan
         veritabanı source_unreachable.

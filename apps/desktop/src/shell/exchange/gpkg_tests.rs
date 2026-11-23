@@ -60,6 +60,42 @@ fn a_geopackage_goes_in_as_one_undo_step_with_its_tables_as_layers() {
     assert_eq!(count(&app), before);
 }
 
+/// A CBS project's data is its tables (docs/adr/9196 §2): its window binds no table but adds the tables as data layers,
+/// read where they are; nothing is copied into the project.
+#[test]
+fn a_cbs_projects_geopackage_tables_are_added_as_data_layers() {
+    crate::data_layers::register();
+    let mut app = app_with_drawing();
+    {
+        let doc = app.document.as_mut().expect("a drawing");
+        let mut settings = doc.settings().clone();
+        settings.workspace = Some(kentos_commands::Workspace::Gis);
+        doc.model.set_settings(settings);
+    }
+    assert!(!app.offers("source.link"), "a CBS project binds no table");
+    let before = count(&app);
+    app.picker = Picker::File(gpkg("qgis.gpkg"));
+    run(&mut app, "file.import.gpkg");
+    send(&mut app, Event::Gpkg(G::Bind));
+    assert!(window(&app).bind);
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(app.exchange.is_none(), "the window closes");
+    assert_eq!(count(&app), before, "nothing is copied into the project");
+    let model = &app.document.as_ref().expect("open").model;
+    let data = model
+        .layers()
+        .leaves()
+        .into_iter()
+        .filter(|n| n.data.as_ref().is_some_and(|d| d.address.ends_with("qgis.gpkg")))
+        .count();
+    assert!(data > 0, "{:?}", app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>());
+    assert!(
+        app.log.lines().any(|l| l.text.contains("veri katmanı eklendi")),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+}
+
 /// Another program's relation and default style come in with the tables (docs/adr/0627 §6, §7); the mapping and style tables
 /// are not listed as layers, and the announcement counts them. The sample drawing's own “Parsel” layer takes the
 /// parcels and keeps its look; a layer the import makes takes the file's.

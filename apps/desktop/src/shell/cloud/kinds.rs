@@ -23,12 +23,13 @@ pub(crate) use crate::program::{
 /// What the server says of a project about to be opened: its name, catalog type and how it is kept.
 pub type Entry = (String, ProjectType, ProjectStorage);
 
-/// The storages a project of `kind` may be kept in (docs/adr/9196 §2, CLAUDE.md §25 rule 5), from the modules' shared
-/// definition: a CAD type's whole project is its file, kept as file revisions alone; a CBS project's either for now.
+/// The storage a project of `kind` is kept in (docs/adr/9196 §2, CLAUDE.md §25 rule 5), from the modules' shared
+/// definition, as the server keeps it: a CAD type's whole project is its file, kept as file revisions alone; a CBS
+/// project's data is the database's, the project with it.
 pub(crate) fn storages_of(kind: ProjectType) -> &'static [ProjectStorage] {
     match Module::of_project_type(kind.name()).map(Module::storage) {
         Some(kentos_launch::Storage::File) => &[ProjectStorage::File],
-        Some(kentos_launch::Storage::Database) | None => &[ProjectStorage::Database, ProjectStorage::File],
+        Some(kentos_launch::Storage::Database) | None => &[ProjectStorage::Database],
     }
 }
 
@@ -60,6 +61,15 @@ impl App {
         match self.program {
             None => plan::PROJECT_TYPES.to_vec(),
             Some(m) => types_of(m),
+        }
+    }
+
+    /// The types the open drawing may go up as (docs/adr/9196 §2, CLAUDE.md §25 rule 1): its module's, whose storage
+    /// it keeps; a drawing no module is decided for, the program's.
+    pub(crate) fn upload_types(&self) -> Vec<ProjectType> {
+        match self.document_module() {
+            Some(m) => types_of(m),
+            None => self.cloud_types(),
         }
     }
 

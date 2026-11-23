@@ -174,6 +174,18 @@ def staged(table, n, layer=None, src=False):
     return out
 
 
+def map_setup():
+    """The binding cases' project (docs/adr/9196 §2): a bound layer is a map's delivery, not a CBS project's; a CAD
+    project's run layer holds plain values, its columns in their names' order (docs/adr/1070 types a CBS one's)."""
+    doc = setup()
+    doc["settings"]["workspace"] = "cad"
+    return doc
+
+
+def bound_case(name, *steps):
+    return {"name": name, "setup": map_setup(), "steps": list(steps)}
+
+
 def setup():
     return {"format": "kentos.document", "version": 1, "name": "İşlemler kaynaktan",
             "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
@@ -238,30 +250,30 @@ def cases():
     # 11. A bound layer read whole in place of its part.
     ext = [X0 - 5, Y0 + 595, X0 + 105, Y0 + 625]
     part = sum(1 for r in bina if meets(r, ext))
-    out.append(case(
+    out.append(bound_case(
         f"parçalı bağlı katman kaynağından: {part} değil {len(bina)} kayıt",
         link("bina", ext),
         step(run_input({"scope": "source", "layer": "import-bina"}, plan),
              done(answer(len(bina), staged("bina", len(bina), "import-bina", src=True), PLAN,
-                         columns=COLUMNS["bina"])), op="plan")))
+                         columns=sorted(COLUMNS["bina"]))), op="plan")))
     # 12. The same layer by scope layer: the part, said.
-    out.append(case(
+    out.append(bound_case(
         f"parçalı bağlı katman scope: layer ile: parçanın {part} kaydı ve partial_scope",
         link("bina", ext),
         step(run_input({"scope": "layer", "layerId": "import-bina"}, plan),
              done(answer(part, {"layer": "import-bina", "digest": ANY, "source": ANY, "revision": ANY}, PLAN,
-                         columns=COLUMNS["bina"]),
+                         columns=sorted(COLUMNS["bina"])),
                   [{"code": "partial_scope",
                     "message": "“bina” katmanı bina tablosunun yalnız bir parçası; araç o parçayla çalıştı. Bütün "
                                "tablo için girdiyi { \"scope\": \"source\", \"layer\": \"import-bina\" } ile verin.",
                     "path": "parameters.input"}]), op="plan")))
     # 13. A bound layer whole, filtered.
     n = sum(1 for r in bina if r["kat"] == 2)
-    out.append(case(
+    out.append(bound_case(
         f"bağlı katman kaynağından süzgeçle: kat = 2, {n} kayıt",
         link("bina", ext),
         step(run_input({"scope": "source", "layer": "import-bina", "filter": "kat = 2"}, plan),
-             done(answer(n, staged("bina", n, "import-bina", src=True), PLAN, columns=COLUMNS["bina"])),
+             done(answer(n, staged("bina", n, "import-bina", src=True), PLAN, columns=sorted(COLUMNS["bina"]))),
              op="plan")))
     # Refusals.
     bad = [

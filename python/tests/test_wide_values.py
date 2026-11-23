@@ -36,7 +36,8 @@ class WideValuesTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "genis.gpkg"
             shutil.copy(SOURCE, path)
-            doc = cad.Document.new("Geniş", srid=5256)
+            # A bound layer is a map's delivery, not a CBS project's (docs/adr/9196 §2).
+            doc = cad.Document.new("Geniş", srid=5256, workspace="cad")
             # Nothing is lost: the integer past 2⁵³ is a big integer, the zoned time a time stamp (docs/adr/0629 §4).
             with warnings.catch_warnings():
                 warnings.simplefilter("error", CommandWarning)

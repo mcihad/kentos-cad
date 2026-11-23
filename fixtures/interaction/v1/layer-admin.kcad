@@ -9,7 +9,7 @@
     "areaUnit": "m2",
     "angleUnit": "grad",
     "plotScale": 1000,
-    "workspace": "gis",
+    "workspace": "cad",
     "drawingFont": "barlow"
   },
   "origin": {

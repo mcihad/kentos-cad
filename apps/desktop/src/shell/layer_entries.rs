@@ -4,7 +4,7 @@
 //! with a project no module is decided for (no type, a CAD drawing without its work) shows every entry the layer's
 //! kind has. What an extension adds to the menu is placed by its manifest, not here.
 
-use kentos_commands::{LayerGeometry, LayerNode, LayerNodeType};
+use kentos_commands::{LayerNode, LayerNodeType};
 
 use crate::app::App;
 
@@ -215,40 +215,20 @@ impl LayerEntry {
 }
 
 impl App {
-    /// What `node` is, for its menu: a group, a service's, a data layer, a bound one, one typed Açıklama, one of
-    /// rasters or of point clouds alone, else a drawing layer.
+    /// What `node` is, for its menu: the shared answer (`kentos_native_application::layer_kind`, docs/adr/9197 §2.4)
+    /// every client and the CBS project's save ask.
     pub(crate) fn layer_kind(&self, node: &LayerNode) -> LayerKind {
-        if node.kind == LayerNodeType::Group {
-            return LayerKind::Group;
-        }
-        if node.service.is_some() {
-            return LayerKind::Service;
-        }
-        if node.data.is_some() {
-            return LayerKind::Data;
-        }
-        if self.bound_link(&node.id).is_some() {
-            return LayerKind::Bound;
-        }
-        if node.geometry == Some(LayerGeometry::Annotation) {
-            return LayerKind::Annotation;
-        }
-        match self.layer_holds_alone(&node.id) {
-            Some("raster") => LayerKind::Raster,
-            Some("pointcloud") => LayerKind::PointCloud,
-            _ => LayerKind::Drawing,
+        match &self.document {
+            Some(doc) => kentos_native_application::layer_kind::of(&doc.model, node),
+            None if node.kind == LayerNodeType::Group => LayerKind::Group,
+            None => LayerKind::Drawing,
         }
     }
 
     /// `raster` or `pointcloud` when `layer` holds those alone: its first object decides unless it is one of them,
     /// so a large layer of lines costs one object (the active layer's contextual tab asks the same, modes.rs).
     pub(crate) fn layer_holds_alone(&self, layer: &str) -> Option<&'static str> {
-        let doc = self.document.as_ref()?;
-        let mut objects = doc.model.by_layer(layer);
-        let first = crate::selection_fit::tab_kind(objects.next()?);
-        (matches!(first, "raster" | "pointcloud")
-            && objects.all(|e| crate::selection_fit::tab_kind(e) == first))
-        .then_some(first)
+        kentos_native_application::layer_kind::alone(&self.document.as_ref()?.model, layer)
     }
 
     /// Whether a layer of `kind`'s menu has `entry` here: the active module has it and it is about that kind.

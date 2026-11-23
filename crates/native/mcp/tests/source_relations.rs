@@ -51,7 +51,8 @@ fn the_parcels_owners_are_mapped_written_together_and_paged_through_the_tools() 
     let made = call(
         &mut server,
         "drawing.new",
-        json!({ "name": "Kadastro", "srid": 5256 }),
+        // A bound layer is a map's delivery, not a CBS project's (docs/adr/9196 §2).
+        json!({ "name": "Kadastro", "srid": 5256, "workspace": "cad" }),
     );
     let drawing = made["drawing"].as_str().expect("a handle").to_owned();
     for table in ["malik", "parsel", "bina"] {

@@ -6,7 +6,7 @@
  "source": "plan/gis.md CBS-44; docs/adr/0554",
  "project": {
   "name": "Ada 101",
-  "workspace": "gis",
+  "workspace": "cad",
   "srid": 5256
  },
  "tolerance": 1e-09,

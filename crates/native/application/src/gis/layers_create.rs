@@ -257,18 +257,9 @@ fn make_table(made: &Made) -> Result<(), Stop> {
     tx.commit().map_err(unreachable)
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersCreate) -> CommandResult<LayersCreated> {
-    let made = match checked_free(cx.doc, &input) {
-        Ok(m) => m,
-        Err(stop) => return stop.into(),
-    };
-    // The protocol's plan runs this on a reading copy: no table made then (docs/adr/0532 §4).
-    if !cx.dry()
-        && let Err(stop) = make_table(&made)
-    {
-        return stop.into();
-    }
-    let data = DataLayer {
+/// The data layer that reads a table made.
+fn data_of(made: &Made) -> DataLayer {
+    DataLayer {
         driver: made.driver.to_owned(),
         address: made.address.clone(),
         relative: None,
@@ -284,7 +275,31 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersCreate) -> CommandR
         extent: None,
         read_only: false,
         text: None,
+    }
+}
+
+/// A new CBS project's table (docs/adr/9196 §2, plan/ayrim.md AY-05): `input`'s table made in its source, the way
+/// `cad.layers.create` makes one, and the data layer that reads it with its columns as the layer's fields, for the
+/// wizard to put on the layer's node before the project opens. Nothing is added to `doc`, which gives the system and
+/// the names taken; no undo step, since the project starts with its tables. Why not, in the command's words.
+pub fn new_project_table(doc: &Document, input: &LayersCreate) -> Result<(DataLayer, Vec<LayerField>), String> {
+    let made = checked_free(doc, input).map_err(crate::checks::words)?;
+    make_table(&made).map_err(crate::checks::words)?;
+    Ok((data_of(&made), made.layer_fields))
+}
+
+fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersCreate) -> CommandResult<LayersCreated> {
+    let made = match checked_free(cx.doc, &input) {
+        Ok(m) => m,
+        Err(stop) => return stop.into(),
     };
+    // The protocol's plan runs this on a reading copy: no table made then (docs/adr/0532 §4).
+    if !cx.dry()
+        && let Err(stop) = make_table(&made)
+    {
+        return stop.into();
+    }
+    let data = data_of(&made);
     let added = crate::layers_data::write_execute(
         cx,
         LayersData {

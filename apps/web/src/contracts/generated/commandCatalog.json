@@ -426,7 +426,7 @@
                 "type": "null"
               }
             ],
-            "description": "How the project is kept, for good (docs/adr/0031); absent: its type's\n(docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,\n`landReadjustment`, `subdivision`, `road`) whole project is its file\n(`file`), refused in the database; a CBS project's is object by\nobject in PostGIS (`database`). A `file` project gets its content\nfrom its first committed revision."
+            "description": "How the project is kept, for good (docs/adr/0031); absent: its type's\n(docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,\n`landReadjustment`, `subdivision`, `road`) whole project is its file\n(`file`), refused in the database; a CBS project's is object by\nobject in PostGIS (`database`), refused as a file. A `file` project\ngets its content from its first committed revision."
           },
           "styles": {
             "$ref": "#/$defs/ProjectStyles"
@@ -91543,7 +91543,7 @@
       "id": "cad.sources.edit",
       "version": 1,
       "title": "Kaynağa bağla",
-      "summary": "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). Başka sistemdeki tablo yalnız reproject ile bağlanır (yoksa crs_mismatch): katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 74), geri alma adımı değildir. extent [minX, minY, maxX, maxY] (projenin sisteminde) yeni katmana bağlamada yalnız kutusu o alana değen satırları alır: büyük tablonun bir parçasının çalışma kopyası; eşitleme alanın dışındaki satırları silinmiş saymaz, alanın dışına taşınan nesne kendi satırına yazılır; ters alan, var olan katman, geometrisiz tablo ve veritabanı invalid_extent. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. path bir PostGIS adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.",
+      "summary": "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). Başka sistemdeki tablo yalnız reproject ile bağlanır (yoksa crs_mismatch): katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 74), geri alma adımı değildir. extent [minX, minY, maxX, maxY] (projenin sisteminde) yeni katmana bağlamada yalnız kutusu o alana değen satırları alır: büyük tablonun bir parçasının çalışma kopyası; eşitleme alanın dışındaki satırları silinmiş saymaz, alanın dışına taşınan nesne kendi satırına yazılır; ters alan, var olan katman, geometrisiz tablo ve veritabanı invalid_extent. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. CBS projesinde link yoktur (bound_in_gis): verisi kaynağın tablolarındadır, tablo cad.layers.data ile veri katmanı olarak eklenir; bağlı katman Harita'nın teslim yoludur. path bir PostGIS adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.",
       "aliases": [
         "kaynakbagla"
       ],
@@ -91560,7 +91560,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area\nthat is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is\nnot a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the\nlayer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,\n`label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),\n`reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key\ndoes not fit the field, or keys that could not be read; docs/adr/0753), `constraints_unread` (the table's CHECK and\nunique constraints could not be read; docs/adr/0755 §1). The link keeps the table's CHECK and unique constraints,\nand a one-column CHECK tying its column to a list of values gives the field that list (docs/adr/0755 §1, §4).",
+        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `bound_in_gis` (a link in a CBS project, whose data is its tables: docs/adr/9196 §2),\n`source_differs` (the layer given does not hold the table's objects), `source_not_found` (an id), `source_changed`\n(relink to another file), `too_many_sources`, `invalid_extent` (an area that is not one, on a table without\ngeometry, onto a layer given, or of a database), `invalid_key` (a key that is not a column of the objects, is empty\non one or repeats); conflicts: `pending_changes` (an area changed over the\nlayer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,\n`label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),\n`reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key\ndoes not fit the field, or keys that could not be read; docs/adr/0753), `constraints_unread` (the table's CHECK and\nunique constraints could not be read; docs/adr/0755 §1). The link keeps the table's CHECK and unique constraints,\nand a one-column CHECK tying its column to a list of values gives the field that list (docs/adr/0755 §1, §4).",
         "properties": {
           "edit": {
             "$ref": "#/$defs/SourcesEditOp"
@@ -91686,6 +91686,7 @@
           "crs_mismatch",
           "entity_exists",
           "source_bound",
+          "bound_in_gis",
           "source_differs",
           "source_not_found",
           "source_changed",
@@ -118449,6 +118450,12 @@
       "meaning": "Katman ya da tablo zaten bir kaynağa bağlı."
     },
     {
+      "code": "bound_in_gis",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "CBS projesinin verisi kaynağın tablolarındadır; tablonun nesnelerini projeye kopyalayan bağlı katman CBS'de yoktur. Tabloyu veri katmanı olarak ekleyin (cad.layers.data)."
+    },
+    {
       "code": "source_differs",
       "kind": "failed",
       "retryable": false,
@@ -122443,6 +122450,12 @@
       "kind": "host",
       "retryable": false,
       "meaning": "Kaydın gideceği yol yok; bir dosya yolu verin."
+    },
+    {
+      "code": "data_held_in_file",
+      "kind": "host",
+      "retryable": false,
+      "meaning": "CBS projesinin verisi tablolardadır; nesne tutan çizim ya da bağlı katman proje dosyasına yazılmaz. Katmanı veri kaynağına taşıyın (cad.layers.migrate), sonra kaydedin."
     },
     {
       "code": "busy",
@@ -199788,7 +199801,7 @@
         },
         "projectType": {
           "$ref": "#/$defs/ProjectType",
-          "description": "What kind of work it is: a label, not a claim of compliance. A CAD type's project is kept as its file\n(docs/adr/9196 §2)."
+          "description": "What kind of work it is: a label, not a claim of compliance. A CAD type's project is kept as its file, a CBS\nproject in the database (docs/adr/9196 §2)."
         },
         "purgeAfter": {
           "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",

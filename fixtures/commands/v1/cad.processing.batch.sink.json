@@ -1518,6 +1518,59 @@
   },
   {
    "name": "parçalı bağlı katman bütün tablosuyla okunur: 4 değil 12 kayıt",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlemler kaynaktan",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {
+       "tur": "direk"
+      },
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
    "steps": [
     {
      "op": "execute",
@@ -1695,12 +1748,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "kat",
-            "column": "kat"
-           },
-           {
             "attribute": "ad",
             "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
            }
           ]
          },
@@ -1713,12 +1766,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "kat",
-            "column": "kat"
-           },
-           {
             "attribute": "ad",
             "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
            }
           ]
          }
@@ -1740,6 +1793,59 @@
   },
   {
    "name": "parçalı bağlı katman scope: layer ile: her satır parçanın 4 kaydıyla, partial_scope bir kez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlemler kaynaktan",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {
+       "tur": "direk"
+      },
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
    "steps": [
     {
      "op": "execute",
@@ -1895,12 +2001,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "kat",
-            "column": "kat"
-           },
-           {
             "attribute": "ad",
             "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
            }
           ]
          },
@@ -1913,12 +2019,12 @@
           "m": "$any",
           "columns": [
            {
-            "attribute": "kat",
-            "column": "kat"
-           },
-           {
             "attribute": "ad",
             "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
            }
           ]
          }

@@ -124,12 +124,6 @@ impl StoreWindow {
         self.name.clone()
     }
 
-    /// Whether the window looks in a database (else a GeoPackage file).
-    #[cfg(test)]
-    pub(crate) fn database_for_test(&self) -> bool {
-        self.kind == Kind::Database
-    }
-
     /// Whether the first Kaydet of a project made of this file's tables opened the window.
     #[cfg(test)]
     pub(crate) fn offered_for_test(&self) -> bool {
@@ -239,19 +233,6 @@ impl App {
             w.offered = true;
         }
         self.list_projects()
-    }
-
-    /// The first Kaydet of a new project its wizard chose to keep in a GeoPackage or a PostgreSQL schema
-    /// (docs/adr/9184): the window on that kind of place, the project's name offered; nothing is written before Kaydet.
-    pub(crate) fn open_project_store_for(&mut self, wanted: kentos_project::wizard::Storage) -> Task<Message> {
-        let task = self.open_project_store(true);
-        if let Some(w) = self.gis.project_store.as_mut() {
-            w.kind = match wanted {
-                kentos_project::wizard::Storage::Database => Kind::Database,
-                _ => Kind::File,
-            };
-        }
-        task
     }
 
     /// Veri kaynağından aç on a GeoPackage (a file of several projects opened, docs/adr/9116): its projects read.

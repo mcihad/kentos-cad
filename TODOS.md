@@ -2650,6 +2650,14 @@ Liste:
   Katman menüsü modül ve katman türüyle kesilir (AY-03, ADR 9195 §5): web'in katman menüsü aynı tabloyu izlesin.
   CAD türünün projesi bulutta yalnız dosyadır (AY-06, ADR 9196 §4): web'in Buluta yükle penceresi CAD türünde yalnız
   dosyayı sunsun, “PostGIS'e aktar” CAD'de kapalı olsun; `ProjectCreate.ts` yeniden üretildi.
+  CBS verisi veritabanındadır (AY-05, ADR 9196 §5): web'in sihirbazı verinin ve proje dosyasının yerini sorsun ve
+  amaçların tablolarını kursun (`fixtures/project/v1/wizard.json`'un özeti değişti); kaydı nesne tutan çizim ya da
+  bağlı katmanı proje dosyasına yazmasın; içe alınan katman projenin veri yerine tablo olsun; GeoPackage penceresi
+  CBS'de bağlamasın, veri katmanı eklesin; Buluta yükle CBS'de yalnız veritabanını sunsun ve veri katmanlarının
+  satırlarını aktarsın; CBS veritabanı projesinde “Dosya projesine çevir” kapalı olsun. Yeni kodlar `bound_in_gis`,
+  `data_held_in_file`; `ProjectSummary.ts`, `ProjectCreate.ts`, `SourcesEdit.ts` yeniden üretildi. Tür ipucu
+  (`TYPE_HINT`; ortak örneğin `typeHint`'i değişti, `catalogPlan.test.ts` onu bekler) türün modülü ve bulutta saklanışı
+  belirlediğini söyler; Buluta yükle açık projenin modülünün türlerini sunar.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

@@ -207,7 +207,8 @@ fn real_paper_space_becomes_a_sheet_book_and_undo_restores_both_model_and_book()
     let folder = scratch("cad-paper");
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../../fixtures/formats/v1/cad-io/layouts.dxf");
-    let mut session = new_drawing();
+    // A drawing's objects saved in its file: a CAD project's (docs/adr/9196 §2).
+    let mut session = drawing_of(Workspace::Cad);
     let before = session.document().to_snapshot_v2();
     let plan = session
         .call(json!({"command":"file.import.dxf","op":"plan","input":{"path":source}}))

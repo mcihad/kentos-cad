@@ -64,7 +64,7 @@ mod gis_check;
 mod gis_export;
 #[cfg(test)]
 mod gis_derivation_tests;
-mod gis_import;
+pub(crate) mod gis_import;
 #[cfg(test)]
 mod gis_tests;
 mod merge_form;

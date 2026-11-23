@@ -117,11 +117,20 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
     assert_eq!(done.project.tags, ["Kadıköy", "DOP %40"]);
     assert_eq!(done.project.catalog_version, "2");
     // A project kept in the database is a CBS project's: it does not become a CAD type (docs/adr/9196 §2).
-    let cbs = open(&db, &pm, new_project(&db, &pm, "Kent").await).await;
+    let kent = new_project(&db, &pm, "Kent").await;
+    let cbs = open(&db, &pm, kent).await;
     match run(&db, &cbs, PROJECT_METADATA_UPDATE, json!({ "projectType": "road" })).await {
         Err(e @ AppError::Invalid { .. }) => {
             assert_eq!(e.path(), Some("projectType"));
             assert!(e.to_string().contains("“Yol” türündeki"), "{e}");
+        }
+        other => panic!("{other:?}"),
+    }
+    // Nor does a file project become a CBS one: a CBS project's data is its database.
+    match run(&db, &owner, PROJECT_METADATA_UPDATE, json!({ "projectType": "gis" })).await {
+        Err(e @ AppError::Invalid { .. }) => {
+            assert_eq!(e.path(), Some("projectType"));
+            assert!(e.to_string().contains("“CBS” türündeki"), "{e}");
         }
         other => panic!("{other:?}"),
     }
@@ -192,32 +201,33 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
         .pop()
         .unwrap();
     assert!(last.meta);
-    // A rename through project.changes (the open drawing's autosave) raises the catalog version as well.
+    // A rename through project.changes (a database project's autosave; a file project's objects are its revisions,
+    // docs/adr/9196 §2) raises the catalog version as well.
     changes::commit(
         &db.app,
-        &owner,
+        &cbs,
         envelope(
             &pm,
-            project,
+            kent,
             ProjectChanges {
                 blocks: Vec::new(),
                 features: vec![],
                 project: Some(ProjectPatch {
-                    name: Some("Ada 101 (son)".into()),
+                    name: Some("Kent (son)".into()),
                     ..Default::default()
                 }),
             },
-            &[("@project", "2")],
+            &[("@project", "1")],
         ),
     )
     .await
     .unwrap();
     let now = changed(
-        run(&db, &owner, PROJECT_METADATA_UPDATE, json!({}))
+        run(&db, &cbs, PROJECT_METADATA_UPDATE, json!({}))
             .await
             .unwrap(),
     );
-    assert_eq!(now.project.catalog_version, "4");
+    assert_eq!(now.project.catalog_version, "2");
 
     // Every change is audited with what changed (not the description's text).
     let audit: Vec<(String, serde_json::Value)> = sqlx::query_as(
@@ -227,7 +237,7 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
     .fetch_all(&db.owner)
     .await
     .unwrap();
-    assert_eq!(audit.len(), 3);
+    assert_eq!(audit.len(), 2);
     assert_eq!(
         audit[0].1["projectType"],
         json!({ "from": "cad", "to": "landReadjustment" })
@@ -237,10 +247,15 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
         audit[1].1["name"],
         json!({ "from": "Ada 101", "to": "Ada 101 (revize)" })
     );
-    assert_eq!(
-        audit[2].1["rename"],
-        json!({ "from": "Ada 101 (revize)", "to": "Ada 101 (son)" })
-    );
+    let renamed: Vec<(String, serde_json::Value)> = sqlx::query_as(
+        "select action, detail from kentos.audit_event where project_id = $1 and action = 'project.changes' order by id",
+    )
+    .bind(kent)
+    .fetch_all(&db.owner)
+    .await
+    .unwrap();
+    assert_eq!(renamed.len(), 1);
+    assert_eq!(renamed[0].1["rename"], json!({ "from": "Kent", "to": "Kent (son)" }));
     db.close().await;
 }
 
@@ -271,7 +286,9 @@ async fn views_are_searched_sorted_paged_and_counted_after_the_access_check() {
         (&space, "ifraz notlarım"),
         (&space, "Bahçe"),
     ] {
-        made.push((name, new_cad_project(&db, who, name).await));
+        // Zeytinlik is a CBS project, kept in the database (docs/adr/9196 §2): a type keeps its storage.
+        let id = if name == "Zeytinlik" { new_project(&db, who, name).await } else { new_cad_project(&db, who, name).await };
+        made.push((name, id));
     }
     let shared = new_cad_project(&db, &other_pm, "Ifraz komşu").await;
     let unshared = new_cad_project(&db, &other_pm, "İfraz gizli").await;
@@ -288,7 +305,7 @@ async fn views_are_searched_sorted_paged_and_counted_after_the_access_check() {
         &db,
         &open(&db, &pm, zeytin).await,
         PROJECT_METADATA_UPDATE,
-        json!({ "projectType": "gis", "tags": ["ifraz-sonrası"] }),
+        json!({ "tags": ["ifraz-sonrası"] }),
     )
     .await
     .unwrap();
@@ -634,7 +651,8 @@ async fn details_give_the_counts_and_the_exact_extent() {
         .await
         .unwrap();
     let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
-    let project = new_cad_project(&db, &pm, "Ada 101").await;
+    // Objects written one by one: a database (CBS) project (docs/adr/9196 §2).
+    let project = new_project(&db, &pm, "Ada 101").await;
     let owner = open(&db, &pm, project).await;
     // No objects: no extent.
     let empty = listing::details(&db.app, &owner).await.unwrap();

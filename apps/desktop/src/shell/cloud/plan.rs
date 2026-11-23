@@ -27,7 +27,7 @@ pub const NO_ORGANIZATION: &str =
 
 /// What choosing a type means, and does not (said wherever one is chosen:
 /// Proje bilgileri, catalog_forms_view.rs).
-pub const TYPE_HINT: &str = "İş türü yalnız projeleri bulmak ve düzenlemek içindir: proje türünü (CAD ya da CBS) değiştirmez, bir modül açmaz, mevzuata uygunluk ya da resmî onay anlamına gelmez, projenin nasıl saklandığını değiştirmez.";
+pub const TYPE_HINT: &str = "İş türü projenin modülünü ve bulutta nasıl saklandığını belirler: CBS projesi veritabanında, öbür türler proje dosyası olarak saklanır. Mevzuata uygunluk ya da resmî onay anlamına gelmez.";
 
 /// The types a project can have, in the web's order (`PROJECT_TYPES`).
 pub const PROJECT_TYPES: [ProjectType; 7] = [
@@ -154,6 +154,10 @@ fn may(p: &ProjectSummary, permission: ProjectPermission) -> bool {
 pub const FILE_ONLY_TEXT: &str =
     "Bu türdeki projenin tamamı proje dosyasındadır; bulutta dosya revizyonu olarak saklanır, veritabanına aktarılmaz.";
 
+/// Why a CBS project in the database does not become a file project (docs/adr/9196 §2).
+pub const DATABASE_ONLY_TEXT: &str =
+    "CBS projesinin verisi veritabanındadır; bulutta veritabanı projesi olarak saklanır, dosya projesine çevrilmez.";
+
 /// The selected project's pane: `open` when it is the project open here.
 pub fn detail_plan(p: &ProjectSummary, open: bool) -> DetailPlan {
     let trashed = p.state == ProjectState::Trashed;
@@ -233,7 +237,12 @@ pub fn detail_plan(p: &ProjectSummary, open: bool) -> DetailPlan {
                     A::Convert,
                     "Dosya projesine çevir…",
                     "save",
-                    needs(P::Download, "dönüştürme"),
+                    // A CBS project's data is its database (docs/adr/9196 §2): it does not become a file.
+                    if crate::cloud::kinds::storages_of(p.project_type).contains(&ProjectStorage::File) {
+                        needs(P::Download, "dönüştürme")
+                    } else {
+                        Some(DATABASE_ONLY_TEXT.to_owned())
+                    },
                     false,
                 )
             },

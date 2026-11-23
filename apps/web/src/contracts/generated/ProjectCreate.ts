@@ -49,7 +49,7 @@ projectType?: ProjectType, tags?: Array<string>,
  * (docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,
  * `landReadjustment`, `subdivision`, `road`) whole project is its file
  * (`file`), refused in the database; a CBS project's is object by
- * object in PostGIS (`database`). A `file` project gets its content
- * from its first committed revision.
+ * object in PostGIS (`database`), refused as a file. A `file` project
+ * gets its content from its first committed revision.
  */
 storage?: ProjectStorage, };

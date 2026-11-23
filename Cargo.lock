@@ -3543,6 +3543,7 @@ dependencies = [
  "kentos-geopackage",
  "kentos-ifc",
  "kentos-kcad",
+ "kentos-launch",
  "kentos-maplibre",
  "kentos-ncz",
  "kentos-pointcloud",

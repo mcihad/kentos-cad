@@ -400,7 +400,8 @@ def with_columns(reads):
 def setup():
     return {"format": "kentos.document", "version": 1, "name": "Kaynağı sorgula",
             "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                         "plotScale": 1000, "workspace": "gis"},
+                         # A bound layer is a map's delivery, not a CBS project's (docs/adr/9196 §2).
+                         "plotScale": 1000, "workspace": "cad"},
             "origin": {"x": 0.0, "y": 0.0},
             "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": True, "locked": False,
                         "expanded": True, "style": STYLE, "children": []}],

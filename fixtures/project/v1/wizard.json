@@ -54,7 +54,11 @@
           "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
         ],
         [
-          "Saklama",
+          "Veri",
+          "GeoPackage"
+        ],
+        [
+          "Proje dosyası",
           "Dosya (.kcad)"
         ],
         [
@@ -123,7 +127,11 @@
           "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
         ],
         [
-          "Saklama",
+          "Veri",
+          "GeoPackage"
+        ],
+        [
+          "Proje dosyası",
           "Dosya (.kcad)"
         ],
         [
@@ -192,7 +200,11 @@
           "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
         ],
         [
-          "Saklama",
+          "Veri",
+          "GeoPackage"
+        ],
+        [
+          "Proje dosyası",
           "Dosya (.kcad)"
         ],
         [
@@ -581,8 +593,12 @@
           "Boş kent haritası: Taslak"
         ],
         [
-          "Saklama",
-          "GeoPackage içinde"
+          "Veri",
+          "GeoPackage"
+        ],
+        [
+          "Proje dosyası",
+          "GeoPackage'ın içinde"
         ],
         [
           "Açılış",
@@ -653,8 +669,12 @@
           "Kurum şablonu: Belediye şablonu.kcad"
         ],
         [
-          "Saklama",
-          "PostgreSQL veritabanında"
+          "Veri",
+          "GeoPackage"
+        ],
+        [
+          "Proje dosyası",
+          "Veritabanının içinde"
         ],
         [
           "Açılış",

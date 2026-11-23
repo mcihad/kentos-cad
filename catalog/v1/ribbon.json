@@ -1445,7 +1445,8 @@
       "overflow": [
        "service.info",
        "service.connections",
-       "source.postgis"
+       "source.postgis",
+       "source.link"
       ],
       "works": [
        "map",
@@ -3979,10 +3980,6 @@
       "items": [
        {
         "command": "data.sources",
-        "size": "small"
-       },
-       {
-        "command": "source.link",
         "size": "small"
        },
        {
@@ -7675,7 +7672,6 @@
    "file.import.parquet",
    "file.import.maplibre",
    "file.export.maplibre",
-   "source.link",
    "source.read",
    "source.write",
    "source.writeTogether",

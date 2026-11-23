@@ -50,6 +50,14 @@ pub enum Event {
     Close,
 }
 
+#[cfg(test)]
+impl MigrateWindow {
+    /// The layer the window moves.
+    pub(crate) fn layer_for_test(&self) -> &str {
+        &self.layer
+    }
+}
+
 fn message(e: Event) -> Message {
     Message::Gis(crate::gis::Event::LayerMigrate(e))
 }
@@ -65,6 +73,103 @@ impl App {
             && node.data.is_none()
             && node.service.is_none()
             && self.objects_below(node) > 0
+    }
+
+    /// The layers of a CBS project whose objects would go into its project file (docs/adr/9196 §2), each id and name in
+    /// the tree's order: the shared rule every client's save follows (`kentos_native_application::layer_kind`).
+    pub(crate) fn data_held_in_file(&self) -> Vec<(String, String)> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        kentos_native_application::layer_kind::held_in_file(&doc.model)
+            .into_iter()
+            .map(|h| (h.id, h.name))
+            .collect()
+    }
+
+    /// Where a CBS project's tables are (docs/adr/9196 §2): the GeoPackage or schema it is kept in, else its first data
+    /// layer's source, else the GeoPackage beside its file (the wizard's place, wizard/data_place.rs); none when nothing
+    /// says.
+    pub(crate) fn cbs_data_place(&self) -> Option<(CreateTarget, String, Option<String>)> {
+        let doc = self.document.as_ref()?;
+        if let Some(s) = doc.stored_source() {
+            return Some(match s.file() {
+                Some(f) => (CreateTarget::Gpkg, f.display().to_string(), None),
+                None => (CreateTarget::Postgis, s.address.clone(), s.schema.clone()),
+            });
+        }
+        let first = doc.model.layers().leaves().iter().find_map(|n| n.data.clone());
+        if let Some(d) = first {
+            return Some(match d.driver.as_str() {
+                "postgis" => {
+                    let schema = d.table.rsplit_once('.').map(|(s, _)| s.to_owned());
+                    (CreateTarget::Postgis, d.address, schema)
+                }
+                _ => (CreateTarget::Gpkg, d.address.trim_start_matches("gpkg:").to_owned(), None),
+            });
+        }
+        doc.path.as_ref().map(|p| (CreateTarget::Gpkg, p.with_extension("gpkg").display().to_string(), None))
+    }
+
+    /// A CBS project's layers its data would keep in the project file, made its data place's tables at once
+    /// (docs/adr/9196 §2): what an import brought in goes where the project's data is, each one `cad.layers.migrate`'s
+    /// step. Where nothing says where the data is, or a layer cannot go, the layer stays and the save asks for it.
+    pub(crate) fn data_into_tables(&mut self, layers: Vec<(String, String)>) {
+        if layers.is_empty() {
+            return;
+        }
+        let Some((target, place, schema)) = self.cbs_data_place() else {
+            self.warn(format!(
+                "İçe alınan {} proje dosyasında duruyor: bu CBS projesinin verisinin yeri bilinmiyor. Kaydetmeden önce \
+                 Katmanlar ▸ sağ tık ▸ Veri kaynağına taşı… ile tabloya taşıyın.",
+                layers.iter().map(|(_, n)| format!("“{n}”")).collect::<Vec<_>>().join(", ")
+            ));
+            return;
+        };
+        let mut moved = Vec::new();
+        for (id, name) in layers {
+            let Some(doc) = self.document.as_mut() else { return };
+            let input = LayersMigrate {
+                layer: id,
+                target,
+                path: (target == CreateTarget::Gpkg).then(|| place.clone()),
+                address: (target == CreateTarget::Postgis).then(|| place.clone()),
+                schema: (target == CreateTarget::Postgis).then(|| schema.clone().unwrap_or_else(|| "public".to_owned())),
+                table: None,
+            };
+            match kentos_native_application::layers_migrate::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+                CommandResult::Completed { output, .. } => moved.push(format!("“{name}” → “{}”", output.table)),
+                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    self.warn(format!(
+                        "“{name}” tabloya taşınamadı: {} Kaydetmeden önce Veri kaynağına taşı… ile taşıyın.",
+                        error.message
+                    ));
+                }
+                CommandResult::Queued { .. } | CommandResult::Cancelled => {}
+            }
+        }
+        if !moved.is_empty() {
+            let file = std::path::Path::new(&place)
+                .file_name()
+                .map_or_else(|| place.clone(), |n| n.to_string_lossy().into_owned());
+            self.say(
+                kentos_interaction::Level::Success,
+                format!(
+                    "CBS projesinin verisi tablolarda durur: içe alınanlar {file} içinde tablo oldu ({}). Her biri bir \
+                     adımda geri alınır.",
+                    moved.join(", ")
+                ),
+            );
+        }
+    }
+
+    /// Why a CBS project is not written to its file (docs/adr/9196 §2): the layers named and the way said.
+    pub(crate) fn data_held_words(held: &[(String, String)]) -> String {
+        let held: Vec<kentos_native_application::layer_kind::Held> = held
+            .iter()
+            .map(|(id, name)| kentos_native_application::layer_kind::Held { id: id.clone(), name: name.clone() })
+            .collect();
+        kentos_native_application::layer_kind::held_words(&held)
     }
 
     pub(crate) fn layer_migrate_event(&mut self, event: Event) -> Task<Message> {

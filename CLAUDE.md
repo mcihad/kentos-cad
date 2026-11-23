@@ -328,6 +328,8 @@ Ayrıntı [ADR 9195](docs/adr/9195-module-separation.md), [ADR 9196](docs/adr/91
      kaydedilir. Bulutta yalnız veritabanı biçimi vardır.
    - **CAD (Mimari, Harita, Yol):** projenin tamamı proje dosyasındadır; dosyaya ya da buluta kaydedilir (yalnız dosya
      revizyonu).
+   - CBS projesinin kaydı nesne tutan çizim ya da bağlı katmanı proje dosyasına yazmaz. Kural ve katmanın türü ortak
+     çekirdektedir (`kentos_native_application::layer_kind`); her istemcinin kaydı onu sorar.
    - Yeni modül bu iki türden birini seçer; üçüncü bir biçim ADR ister.
 6. **Veri yalnız komutla değişir.** Masaüstü, mobil düzenleyici, Python ya da MCP fark etmez: çizim ve veri komutla
    yazılır, CBS verisi düzenleme oturumuyla ya da sunucu komutuyla. İstemci kuralı atlayarak dosyaya ya da

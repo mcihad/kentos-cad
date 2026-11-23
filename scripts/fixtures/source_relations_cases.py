@@ -108,7 +108,8 @@ def static(name="iliskili.gpkg", sources="all", relations=RELATIONS, writable=Tr
         if sources == "all":
             srcs.append(link(BINA, "bina", 3, path, writable and BINA not in readonly, revision))
     settings = {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                "plotScale": 1000, "workspace": "gis", "relations": copy.deepcopy(relations)}
+                # A bound layer is a map's delivery, not a CBS project's (docs/adr/9196 §2).
+                "plotScale": 1000, "workspace": "cad", "relations": copy.deepcopy(relations)}
     if srcs:
         settings["sources"] = srcs
     return {"format": "kentos.document", "version": 1, "name": "İlişkili kayıtlar", "settings": settings,
@@ -125,7 +126,8 @@ def preamble(name="iliskili.gpkg"):
     `malikler` a many-to-many reference, the project's two relations."""
     empty = {"format": "kentos.document", "version": 1, "name": "İlişkili kayıtlar",
              "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                          "plotScale": 1000, "workspace": "gis"},
+                          # A bound layer is a map's delivery, not a CBS project's (docs/adr/9196 §2).
+                          "plotScale": 1000, "workspace": "cad"},
              "origin": {"x": 0.0, "y": 0.0}, "layers": [node("cizim", "Çizim")], "activeLayer": "cizim",
              "entities": [{"kind": "point", "id": 1, "layerId": "cizim", "attrs": {}, "p": {"x": 487500.0, "y": 4420500.0}}],
              "styles": {"items": [], "categories": []}}

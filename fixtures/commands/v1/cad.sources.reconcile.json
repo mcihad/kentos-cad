@@ -14,7 +14,7 @@
    "areaUnit": "m2",
    "angleUnit": "grad",
    "plotScale": 1000,
-   "workspace": "gis"
+   "workspace": "cad"
   },
   "origin": {
    "x": 0.0,
@@ -11841,7 +11841,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis",
+     "workspace": "cad",
      "sources": [
       {
        "id": "kaynak-1",
@@ -11969,7 +11969,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis",
+     "workspace": "cad",
      "sources": [
       {
        "id": "kaynak-1",
@@ -12083,7 +12083,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis",
+     "workspace": "cad",
      "sources": [
       {
        "id": "kaynak-1",
@@ -12197,7 +12197,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis",
+     "workspace": "cad",
      "sources": [
       {
        "id": "kaynak-1",
@@ -12325,7 +12325,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis",
+     "workspace": "cad",
      "sources": [
       {
        "id": "kaynak-1",
@@ -12453,7 +12453,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis",
+     "workspace": "cad",
      "sources": [
       {
        "id": "kaynak-1",
@@ -12581,7 +12581,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis",
+     "workspace": "cad",
      "sources": [
       {
        "id": "kaynak-1",
@@ -12709,7 +12709,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis",
+     "workspace": "cad",
      "sources": [
       {
        "id": "kaynak-1",
@@ -12837,7 +12837,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis",
+     "workspace": "cad",
      "sources": [
       {
        "id": "kaynak-1",

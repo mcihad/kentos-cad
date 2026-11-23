@@ -1307,11 +1307,6 @@ impl App {
         if !choose && doc.path.is_none() && let Some(at) = doc.offered_source().cloned() {
             return self.offer_project_store(at);
         }
-        // A new project its wizard chose to keep in a data source (docs/adr/9184): the first Kaydet opens Veri kaynağı
-        // on that kind of place, with the project's name; Farklı kaydet asks for a file.
-        if !choose && doc.path.is_none() && let Some(kind) = doc.wanted_store() {
-            return self.open_project_store_for(kind);
-        }
         let title = if doc.legacy && !choose {
             "Yeni biçimde kaydet (KCAD v2)"
         } else {

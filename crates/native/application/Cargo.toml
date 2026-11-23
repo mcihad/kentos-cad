@@ -21,6 +21,8 @@ linker_messages = "allow"
 kentos-scene-query = { path = "../scene-query" }
 kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-domain = { path = "../domain" }
+# A layer's kind is the shared module definition's (docs/adr/9197 §2.4); serde alone.
+kentos-launch = { path = "../launch" }
 # Patlat (docs/adr/0302): a dimension exploded writes its value as the project shows it (the project's Format).
 kentos-project = { path = "../project" }
 kentos-geopackage = { path = "../geopackage" }

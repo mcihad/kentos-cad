@@ -48,10 +48,11 @@ fn command(doc: &mut kentos_domain::Document, command: &str, input: Value) -> Va
 fn world(name: &str, tag: &str) -> Document {
     let file = scratch(tag).join(name);
     std::fs::copy(fixture(name), &file).expect("a copy of the file");
+    // A bound layer is a map's delivery, not a CBS project's (docs/adr/9196 §2): a CAD project binds.
     let setup = json!({
         "format": "kentos.document", "version": 1, "name": "Kadastro",
         "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                      "plotScale": 1000, "workspace": "gis" },
+                      "plotScale": 1000, "workspace": "cad" },
         "origin": { "x": 487000.0, "y": 4420000.0 },
         "layers": [{ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
                      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],

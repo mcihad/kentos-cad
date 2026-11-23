@@ -3,7 +3,7 @@
 
 use iced::keyboard::key::Named;
 use kentos_commands::{CadWork, DrawingUnit, Workspace};
-use kentos_project::wizard::{Coords, Kind, Purpose, Step, Storage};
+use kentos_project::wizard::{Coords, DataPlace, Kind, Purpose, Step, Storage};
 
 /// The works' cards (docs/adr/0626 §1, 0802: two CAD works): a building and a plan on real coordinates.
 const BUILDING: usize = 0;
@@ -44,6 +44,8 @@ fn state(app: &App) -> &super::State {
 }
 
 fn open(app: &mut App) {
+    // A CBS project's tables are made with the data drivers, as the program registers them at start (launch.rs).
+    crate::data_layers::register();
     let _ = app.update(Message::Run("file.new"));
     assert_eq!(app.dialog, Some(Dialog::Project));
     assert_eq!(state(app).step, Step::Type);
@@ -333,65 +335,108 @@ fn a_work_brings_its_unit_and_scale_and_another_type_its_own() {
     );
 }
 
-/// A CBS project is decided on one page (docs/adr/9184): its name, an empty city map instead of a cadastral sheet,
-/// its place, and a GeoPackage to keep it in; the first Kaydet asks where, with its name, and writes nothing before.
+/// A CBS project is decided on one page (docs/adr/9184, 9196 §2): its name, what it is for, where its data is and where
+/// its project file goes. Oluştur makes a cadastral sheet's data layers as the tables of a GeoPackage, keeps its sheet
+/// annotation in the project file and writes the project to its place at once; a city map's draft is annotation and
+/// makes no table. A database needs its address, the cloud a signed-in account.
 #[test]
-fn a_cbs_project_is_decided_on_one_page_and_its_first_save_goes_where_it_was_chosen() {
+fn a_cbs_projects_data_is_its_places_tables_and_the_project_is_written_there_at_once() {
+    let dir = scratch("cbs-veri-yeri");
     let mut app = app_with_drawing();
     open(&mut app);
     send(&mut app, Event::Type(Workspace::Gis));
     send(&mut app, Event::Next);
     let s = state(&app);
     assert_eq!((s.step, s.draft.steps().len()), (Step::Details, 2));
-    assert_eq!((s.draft.purpose, s.draft.storage), (Purpose::Cadastre, Storage::File));
-    send(&mut app, Event::Name("Ankara-Mahalle-Hizmetleri".into()));
-    send(&mut app, Event::Purpose(Purpose::City));
-    send(&mut app, Event::Province(6));
-    send(&mut app, Event::Storage(Storage::Geopackage));
-    send(&mut app, Event::Next);
-    assert_eq!(app.dialog, None);
-    let doc = app.document.as_ref().expect("the new project");
-    assert_eq!(doc.name(), "Ankara-Mahalle-Hizmetleri");
-    // One draft layer: no cadastral tree imposed.
-    let leaves: Vec<String> = doc.model.layers().leaves().iter().map(|n| n.id.clone()).collect();
-    assert_eq!(leaves, ["taslak"]);
-    assert_eq!(doc.model.layers().active(), "taslak");
-    assert_eq!((doc.settings().srid, doc.wanted_store()), (5255, Some(Storage::Geopackage)));
-    assert!(doc.path.is_none() && !doc.dirty());
-    assert!(
-        last_said(&app).ends_with("İlk Kaydet, GeoPackage dosyasını ve proje adını sorar."),
-        "{}",
-        last_said(&app)
+    assert_eq!(
+        (s.draft.purpose, s.draft.data, s.draft.storage),
+        (Purpose::Cadastre, DataPlace::Geopackage, Storage::File)
     );
-    // Kaydet opens Veri kaynağı on a GeoPackage, the project's name offered; Vazgeç writes nothing.
-    let _ = app.update(Message::Run("file.save"));
-    let w = app.gis.project_store.as_ref().expect("Veri kaynağı");
-    assert_eq!((w.database_for_test(), w.name_for_test().as_str()), (false, "Ankara-Mahalle-Hizmetleri"));
-    app.gis.project_store = None;
-    app.dialog = None;
-    assert_eq!(app.document.as_ref().and_then(|d| d.wanted_store()), Some(Storage::Geopackage));
+    // The GeoPackage follows the project's name until a file is chosen.
+    send(&mut app, Event::Name("Ada 101".into()));
+    assert!(state(&app).place.path.ends_with("Ada 101.gpkg"), "{}", state(&app).place.path);
+    app.picker = Picker::File(dir.join("kadastro.gpkg"));
+    send_driven(&mut app, Event::DataBrowse);
+    assert_eq!(state(&app).place.path, dir.join("kadastro.gpkg").display().to_string());
+    // A database needs its address; the cloud an account.
+    send(&mut app, Event::Data(DataPlace::Postgres));
+    assert_eq!(state(&app).draft.storage, Storage::File);
+    send(&mut app, Event::Storage(Storage::Geopackage));
+    assert_eq!(state(&app).draft.storage, Storage::File, "a schema's data offers no GeoPackage to keep it in");
+    send(&mut app, Event::Next);
+    assert!(state(&app).status.as_deref().is_some_and(|s| s.starts_with("Veritabanı seçilmedi")));
+    send(&mut app, Event::Data(DataPlace::Cloud));
+    send(&mut app, Event::Next);
+    assert!(state(&app).status.as_deref().is_some_and(|s| s.contains("giriş yapın")));
+    // In the GeoPackage itself: its tables and the project together.
+    send(&mut app, Event::Data(DataPlace::Geopackage));
+    send(&mut app, Event::Storage(Storage::Geopackage));
+    let task = app.update(Message::Project(Box::new(ProjectEvent::New(Event::Next))));
+    drive(&mut app, task);
+    if matches!(app.dialog, Some(Dialog::Unsaved(_))) {
+        let task = app.update(Message::DialogConfirmed);
+        drive(&mut app, task);
+    }
+    let doc = app.document.as_ref().expect("the new project");
+    let leaves = doc.model.layers().leaves();
+    let tables: Vec<&str> = leaves.iter().filter(|n| n.data.is_some()).map(|n| n.id.as_str()).collect();
+    assert_eq!(
+        tables,
+        ["ada", "parsel", "yapi", "yol-ekseni", "kaldirim", "esyukselti", "ana-esyukselti", "kot", "poligon"]
+    );
+    let annotation: Vec<&str> = leaves
+        .iter()
+        .filter(|n| n.geometry == Some(kentos_commands::LayerGeometry::Annotation))
+        .map(|n| n.id.as_str())
+        .collect();
+    assert_eq!(annotation, ["taslak", "pafta", "karelaj", "yazi"]);
+    let parsel = leaves.iter().find(|n| n.id == "parsel").expect("parsel");
+    let data = parsel.data.as_ref().expect("a table");
+    assert_eq!((data.driver.as_str(), data.table.as_str()), ("gpkg", "parsel"));
+    assert!(data.address.ends_with("kadastro.gpkg"), "{}", data.address);
+    assert!(dir.join("kadastro.gpkg").exists(), "the GeoPackage is made");
+    assert_eq!(
+        doc.stored_source().map(|s| s.name.as_str()),
+        Some("Ada 101"),
+        "the project is written into it at once"
+    );
+    assert!(
+        app.log.lines().any(|l| l.text.contains("Verisi 9 tablodadır.") && l.text.contains("içine kaydediliyor")),
+        "{:?}",
+        app.log.lines().map(|l| l.text.as_str()).collect::<Vec<_>>()
+    );
 
-    // A database: its Kaydet looks in a database.
+    // A city map in a `.kcad` beside its GeoPackage: its draft is annotation, no table is made yet.
     open(&mut app);
     send(&mut app, Event::Type(Workspace::Gis));
     send(&mut app, Event::Next);
-    send(&mut app, Event::Storage(Storage::Database));
-    send(&mut app, Event::Next);
-    if matches!(app.dialog, Some(Dialog::Unsaved(_))) {
-        let _ = app.update(Message::DialogConfirmed);
-    }
-    assert!(last_said(&app).ends_with("İlk Kaydet, veritabanı bağlantısını, şemayı ve proje adını sorar."));
-    let _ = app.update(Message::Run("file.save"));
-    assert!(app.gis.project_store.as_ref().expect("Veri kaynağı").database_for_test());
-    app.gis.project_store = None;
-    app.dialog = None;
-    // Farklı kaydet writes a file: the project is a file's from then on.
-    let dir = scratch("cbs-tek-sayfa");
-    app.picker = Picker::File(dir.join("kent.kcad"));
-    let task = app.update(Message::Run("file.saveAs"));
+    send(&mut app, Event::Name("Kent".into()));
+    send(&mut app, Event::Purpose(Purpose::City));
+    app.picker = Picker::File(dir.join("kent.gpkg"));
+    send_driven(&mut app, Event::DataBrowse);
+    let task = app.update(Message::Project(Box::new(ProjectEvent::New(Event::Next))));
     drive(&mut app, task);
-    let doc = app.document.as_ref().expect("saved");
-    assert_eq!((doc.wanted_store(), doc.path.as_deref()), (None, Some(dir.join("kent.kcad").as_path())));
+    if matches!(app.dialog, Some(Dialog::Unsaved(_))) {
+        let task = app.update(Message::DialogConfirmed);
+        drive(&mut app, task);
+    }
+    let doc = app.document.as_ref().expect("the city map");
+    assert_eq!(doc.model.layers().active(), "taslak");
+    assert_eq!(
+        doc.model.layers().leaves().iter().map(|n| (n.id.as_str(), n.geometry)).collect::<Vec<_>>(),
+        [("taslak", Some(kentos_commands::LayerGeometry::Annotation))]
+    );
+    assert_eq!(doc.path.as_deref(), Some(dir.join("kent.kcad").as_path()));
+    assert!(dir.join("kent.kcad").exists() && !dir.join("kent.gpkg").exists());
+    // Its project file is not written over: the next one of that name is stopped before anything is made.
+    open(&mut app);
+    send(&mut app, Event::Type(Workspace::Gis));
+    send(&mut app, Event::Next);
+    send(&mut app, Event::Purpose(Purpose::City));
+    app.picker = Picker::File(dir.join("kent.gpkg"));
+    send_driven(&mut app, Event::DataBrowse);
+    send(&mut app, Event::Next);
+    assert!(state(&app).status.as_deref().is_some_and(|s| s.contains("zaten var")), "{:?}", state(&app).status);
 }
 
 /// Kurum şablonu (docs/adr/9184): the template's layers, scale, forms, relations and topology rules come; none of its
@@ -745,13 +790,28 @@ fn cbs_page_screens() {
         app.picker = Picker::File(path.clone());
         send_driven(&mut app, Event::PickTemplate);
         app.picker = Picker::Dialog;
+        // A database's data (docs/adr/9196 §2): its connection and schema, the project in the schema.
+        send(&mut app, Event::Data(DataPlace::Postgres));
+        send(&mut app, Event::Address("postgresql://kurum@cbs.belediye.local:5432/kent".into()));
+        send(&mut app, Event::Schema("imar".into()));
         send(&mut app, Event::Storage(Storage::Database));
         app
     });
-    usage_shots("9184", "3-ilk-kaydet", || {
+    // A cadastral sheet made in its GeoPackage: its data layers are the tables, its sheet annotation the file's.
+    let made = scratch("kadastro-resim");
+    usage_shots("9196", "1-kadastro-geopackage", || {
         let mut app = page();
-        send(&mut app, Event::Next);
-        let _ = app.update(Message::Run("file.save"));
+        send(&mut app, Event::Purpose(Purpose::Cadastre));
+        app.picker = Picker::File(made.join(format!("kadastro-{}.gpkg", std::process::id())));
+        send_driven(&mut app, Event::DataBrowse);
+        app.picker = Picker::Dialog;
+        let task = app.update(Message::Project(Box::new(ProjectEvent::New(Event::Next))));
+        drive(&mut app, task);
+        if matches!(app.dialog, Some(Dialog::Unsaved(_))) {
+            let task = app.update(Message::DialogConfirmed);
+            drive(&mut app, task);
+        }
+        app.command_expanded = true;
         app
     });
 }

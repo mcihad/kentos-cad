@@ -103,6 +103,43 @@ fn a_geojson_in_the_projects_system_goes_in_as_one_undo_step() {
     assert_eq!(count(&app), before, "one undo step takes all of it back");
 }
 
+/// What an import brings into a CBS project goes into its tables (docs/adr/9196 §2): the file's new layer becomes a
+/// table of the GeoPackage beside the project, read back as a data layer; the project's file holds none of its objects.
+#[test]
+fn an_import_into_a_cbs_project_goes_into_its_tables() {
+    crate::data_layers::register();
+    let dir = scratch("cbs-ice-alma");
+    let mut app = app_with_drawing();
+    {
+        let doc = app.document.as_mut().expect("a drawing");
+        let mut settings = doc.settings().clone();
+        settings.workspace = Some(kentos_commands::Workspace::Gis);
+        doc.model.set_settings(settings);
+        doc.path = Some(dir.join("Kent.kcad"));
+    }
+    app.picker = Picker::File(gis("tm.geojson"));
+    run(&mut app, "file.import.geojson");
+    import(&mut app);
+    let model = &app.document.as_ref().expect("open").model;
+    let tm = model
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|n| n.name == "tm")
+        .cloned()
+        .expect("the file's layer");
+    let data = tm.data.as_ref().expect("a data layer");
+    assert!(data.address.ends_with("Kent.gpkg"), "{}", data.address);
+    assert_eq!(model.count(&tm.id), 0, "its objects are its table's rows");
+    let lines: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(
+        lines.iter().any(|l| l.contains("CBS projesinin verisi tablolarda durur") && l.contains("Kent.gpkg")),
+        "{lines:?}"
+    );
+    // The layer the drawing had already keeps the parcel it took: its own move is the user's (Veri kaynağına taşı).
+    assert!(kentos_native_application::layer_kind::held_in_file(model).iter().all(|h| h.id != tm.id));
+}
+
 #[test]
 fn a_wgs84_geojson_is_refused_until_the_user_says_it_is_the_projects() {
     let mut app = app_with_drawing();

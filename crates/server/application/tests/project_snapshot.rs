@@ -270,6 +270,8 @@ async fn snapshots_follow_the_download_policy() {
     // A file project is its revisions already.
     let source = kentos_kcad::decode(DRAWING).unwrap();
     let mut input = create_input(&source, "Dosya", source.layers.clone());
+    // A file project is a CAD type's (docs/adr/9196 §2).
+    input.project_type = Some(ProjectType::Cad);
     input.storage = Some(ProjectStorage::File);
     let file = Uuid::parse_str(
         &projects::create(&db.app, &ayse, input, None)

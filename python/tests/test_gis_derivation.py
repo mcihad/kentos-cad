@@ -105,9 +105,14 @@ class GisDerivationTests(unittest.TestCase):
             self.assertEqual(sorted(l.kind for l in skipped.left), ["insert", "ray", "text", "xline"])
             full = Path(tmp) / "ada.gpkg"
             cad.file.export.gis(doc, path=str(full))
-            # The derivative's table is not bound as a layer, nor into one.
+            # A CBS project binds no table (docs/adr/9196 §2); a map's project does not bind the derivative's table, as a
+            # layer nor into one.
             with self.assertRaises(CommandFailed) as refused:
                 cad.sources.edit(doc, edit=LinkSourcesEditOp(path=str(full), table="Parsel"))
+            self.assertEqual(refused.exception.code, "bound_in_gis")
+            harita = cad.Document.new("Harita", srid=5256, workspace="cad")
+            with self.assertRaises(CommandFailed) as refused:
+                cad.sources.edit(harita, edit=LinkSourcesEditOp(path=str(full), table="Parsel"))
             self.assertEqual(refused.exception.code, "derived_dataset")
             # Taken into a new drawing it says what it is: the road's arc is a polyline of chords.
             other = cad.Document.new("Ada 101", srid=5256)

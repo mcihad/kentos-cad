@@ -22,7 +22,8 @@ def fixture_drawing() -> cad.Document:
 
 
 def new() -> cad.Document:
-    return cad.Document.new("Ada 101", srid=5256)
+    # A CAD project's file keeps its objects; a CBS project's data is its tables (docs/adr/9196 §2).
+    return cad.Document.new("Ada 101", srid=5256, workspace="cad")
 
 
 def other_layer(doc: cad.Document) -> cad.LayerNode:
@@ -160,18 +161,26 @@ class Refusals(unittest.TestCase):
         self.assertEqual(doc.revision, before)
 
     def test_an_old_file_is_read_and_saved_only_to_a_new_path(self) -> None:
+        # A CAD project's file keeps its objects; a CBS project's data is its tables (docs/adr/9196 §2).
+        setup = {**FIXTURE["setup"], "settings": {**FIXTURE["setup"]["settings"], "workspace": "cad"}}
         with tempfile.TemporaryDirectory() as tmp:
             old = Path(tmp) / "eski.kcad"
-            old.write_text(json.dumps(FIXTURE["setup"]), encoding="utf-8")
+            old.write_text(json.dumps(setup), encoding="utf-8")
             doc = cad.Document.open(old)
             self.assertTrue(doc.info().legacy)
             with self.assertRaises(cad.FileError) as caught:
                 doc.save()
             self.assertEqual(caught.exception.code, "legacy_file")
+            # The same file as a CBS project keeps its objects out of its file.
+            cbs = cad.Document.from_bytes(json.dumps(FIXTURE["setup"]).encode())
+            with self.assertRaises(cad.FileError) as held:
+                cbs.save(Path(tmp) / "cbs.kcad")
+            self.assertEqual(held.exception.code, "data_held_in_file")
+            self.assertFalse((Path(tmp) / "cbs.kcad").exists())
             saved = doc.save(Path(tmp) / "yeni.kcad")
             self.assertFalse(doc.info().legacy)
             self.assertEqual(doc.save().path, saved.path, "then it saves where it went")
-            self.assertEqual(old.read_text(encoding="utf-8"), json.dumps(FIXTURE["setup"]), "the old file is as it was")
+            self.assertEqual(old.read_text(encoding="utf-8"), json.dumps(setup), "the old file is as it was")
 
     def test_the_hosts_refusals_are_typed(self) -> None:
         doc = new()

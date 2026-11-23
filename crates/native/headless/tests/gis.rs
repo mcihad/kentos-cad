@@ -206,12 +206,22 @@ fn a_derivation_is_never_bound_back_and_is_told_what_it_is_when_taken_in() {
         .expect("answers");
     assert_eq!(out["status"], "completed", "{out}");
     let before = s.summary()["revision"].clone();
+    // A CBS project binds no table (docs/adr/9196 §2); a map's project binds, but not the derivative's table.
+    let mut map = {
+        let mut v: Value = serde_json::from_slice(&std::fs::read(drawing_path()).expect("the drawing")).expect("JSON");
+        v["settings"]["workspace"] = json!("cad");
+        Session::from_bytes(v.to_string().as_bytes()).expect("a map's drawing")
+    };
     for layer in [None, Some("parsel")] {
         let mut link = json!({ "kind": "link", "path": p, "table": "Parsel" });
         if let Some(layer) = layer {
             link["layer"] = json!(layer);
         }
         let refused = s
+            .call(json!({ "command": "cad.sources.edit", "input": { "edit": link.clone() } }))
+            .expect("answers");
+        assert_eq!(refused["error"]["code"], "bound_in_gis", "{refused}");
+        let refused = map
             .call(json!({ "command": "cad.sources.edit", "input": { "edit": link } }))
             .expect("answers");
         assert_eq!(refused["error"]["code"], "derived_dataset", "{refused}");

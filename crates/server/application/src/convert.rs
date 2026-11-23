@@ -130,8 +130,8 @@ pub async fn convert(
             ),
         ));
     }
-    // A CAD type's whole project is its file (docs/adr/9196 §2): a database project of one goes back to a file, never
-    // the other way.
+    // A type keeps its storage (docs/adr/9196 §2): an old database project of a CAD type goes back to a file, an old file
+    // project of CBS into the database; never the other way.
     if let Some(t) = kentos_contracts::ProjectType::from_name(&project_type) {
         crate::projects::check_storage(t, Some(to), "to")?;
     }

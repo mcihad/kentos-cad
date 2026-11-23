@@ -1169,6 +1169,8 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "crs_mismatch",
                 "entity_exists",
                 "source_bound",
+                // docs/adr/9196 §2: a CBS project's data is its tables.
+                "bound_in_gis",
                 "source_differs",
                 "source_not_found",
                 "source_changed",

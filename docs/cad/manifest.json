@@ -379,7 +379,7 @@
    "python": "kentos.cad.arch.ifc",
    "mcp": "cad.arch.ifc",
    "note": "IFC dışa aktar (bina) dosyanın yerini sorar ve cad.arch.ifc ile yazar; çizim değişmez (plan/architecture-advanced.md M47, ADR 8047).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -395,7 +395,7 @@
    "python": "kentos.cad.arch.ifc",
    "mcp": "cad.arch.ifc",
    "note": "IFC dışa aktar (bina, kesilmiş gövde) dosyanın yerini sorar ve cad.arch.ifc'yi view: reference ile çalıştırır; çizim değişmez (plan/bim-plan.md BIM-10, ADR 8071 §4).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -10195,7 +10195,7 @@
    "python": "kentos.cad.sources.edit",
    "mcp": "cad.sources.edit",
    "note": "GeoPackage penceresinin Bağlı katman olarak aç'ı her tabloyu cad.sources.edit link ile bağlar (ADR 0503).",
-   "scope": "gis",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -15493,7 +15493,7 @@
    "python": "kentos.cad.ucs.set",
    "mcp": "cad.ucs.set",
    "note": "Ad named, save ya da delete ile komuta verilir (ADR 0261 §2).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -15509,7 +15509,7 @@
    "python": "kentos.cad.ucs.set",
    "mcp": "cad.ucs.set",
    "note": "Tıklanan nesnenin kalıcı kimliği ve yer komuta verilir; çerçeveyi komut bulur (ADR 0261 §3).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -15525,7 +15525,7 @@
    "python": "kentos.cad.ucs.set",
    "mcp": "cad.ucs.set",
    "note": "Yeni başlangıç komuta verilir; açı kalır (ADR 0261 §2).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -15541,7 +15541,7 @@
    "python": "kentos.cad.ucs.set",
    "mcp": "cad.ucs.set",
    "note": "Yazılan açı rotate, tıklanan yön twoPoints olarak komuta verilir (ADR 0261 §2).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -15557,7 +15557,7 @@
    "python": "kentos.cad.ucs.set",
    "mcp": "cad.ucs.set",
    "note": "Başlangıç ve x eksenindeki nokta komuta verilir (ADR 0261 §2).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -16160,7 +16160,7 @@
    "python": "kentos.cad.ucs.set",
    "mcp": "cad.ucs.set",
    "note": "Oturumun geçmişindeki UCS çerçeve (frame) olarak komuta verilir (ADR 0261 §1).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -16176,7 +16176,7 @@
    "python": "kentos.cad.ucs.set",
    "mcp": "cad.ucs.set",
    "note": "world komuta verilir; nesneler değişmez, UCS proje ayarıdır (ADR 0261 §2).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -16866,7 +16866,7 @@
    "python": null,
    "mcp": null,
    "note": "Görünüm; cad.session.* yok (plan §5.1).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },

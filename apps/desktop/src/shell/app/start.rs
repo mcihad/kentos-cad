@@ -9,6 +9,9 @@ impl App {
     pub fn boot(path: Option<PathBuf>) -> (Self, Task<Message>) {
         // The database connections too stay in memory (docs/adr/0623), each app its own.
         kentos_postgis::connections::keep_in_memory();
+        // The data drivers, as the program registers them at start (launch.rs): a CBS project's tables are made and read
+        // through them (docs/adr/9196 §2). Registering again changes nothing.
+        crate::data_layers::register();
         let (mut app, task) = Self::start(path, Settings::memory());
         app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
         (app, task)

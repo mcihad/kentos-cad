@@ -133,17 +133,15 @@ impl App {
             .unwrap_or(0);
         // The program's own type first (module_surfaces.rs); kentos-cad's, Genel CAD. A module's program offers its
         // own types alone (kinds.rs, docs/adr/0802).
-        let types = self.cloud_types();
+        let types = self.upload_types();
         let project_type = Some(self.upload_kind())
             .filter(|k| types.contains(k))
             .or_else(|| types.first().copied())
             .unwrap_or_default();
-        // A CAD type's project is its file (docs/adr/9196 §2): asked for the database, it goes up as a file.
-        let storage = if crate::cloud::kinds::storages_of(project_type).contains(&storage) {
-            storage
-        } else {
-            ProjectStorage::File
-        };
+        // A type keeps its storage (docs/adr/9196 §2): a CAD type's project goes up as its file, a CBS project into the
+        // database, whatever was asked.
+        let storages = crate::cloud::kinds::storages_of(project_type);
+        let storage = if storages.contains(&storage) { storage } else { storages[0] };
         self.cloud.upload = Some(Upload {
             tenants,
             tenant,
@@ -190,12 +188,13 @@ impl App {
             }
             // The catalog's fields are part of what the upload asks for: a change is a new upload.
             // Only a type this program offers (kinds.rs, docs/adr/0802).
-            Event::UploadType(kind) if self.cloud_types().contains(&kind) => {
+            Event::UploadType(kind) if self.upload_types().contains(&kind) => {
                 if let Some(u) = self.cloud.upload.as_mut().filter(|u| !u.working()) {
                     u.project_type = kind;
-                    // A CAD type's project is its file (docs/adr/9196 §2).
-                    if !crate::cloud::kinds::storages_of(kind).contains(&u.storage) {
-                        u.storage = ProjectStorage::File;
+                    // A type keeps its storage (docs/adr/9196 §2).
+                    let storages = crate::cloud::kinds::storages_of(kind);
+                    if !storages.contains(&u.storage) {
+                        u.storage = storages[0];
                     }
                     u.changed();
                 }
@@ -251,13 +250,22 @@ impl App {
         let model = doc.model.clone();
         // The file is the project: it carries the project's name (a file project's drawing is named by it).
         let name = name.to_owned();
+        let storage = u.storage;
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
             let mut snapshot = model.to_snapshot_v2();
             drop(model);
             snapshot.name = name;
-            let result = kentos_kcad::encode_verified(&snapshot)
-                .map(Once::new)
-                .map_err(|e| e.message);
+            // A CBS project's data goes up with it (docs/adr/9196 §2): its data layers' rows into the cloud's database,
+            // read from their sources here; a row the drawing has no object for stops the upload, said.
+            let taken = match storage {
+                ProjectStorage::Database => take_rows(&mut snapshot),
+                ProjectStorage::File => Ok(()),
+            };
+            let result = taken.and_then(|()| {
+                kentos_kcad::encode_verified(&snapshot)
+                    .map(Once::new)
+                    .map_err(|e| e.message)
+            });
             let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
                 &mut out,
                 crate::cloud::msg(Event::UploadEncoded { id, result }),
@@ -343,8 +351,12 @@ impl App {
             u.work = None;
             return Task::none();
         };
-        // The catalog's fields go with the project (the web's `createInput`).
+        // The catalog's fields go with the project (the web's `createInput`); a CBS project's data layers went up as
+        // the layers of its objects (`take_rows`).
         let mut create = project_create(&doc.model, &u.name, u.storage);
+        if u.storage == ProjectStorage::Database {
+            kentos_native_application::data_take::plain(&mut create.layers);
+        }
         create.project_type = Some(u.project_type);
         let description = trim(&u.description.text()).to_owned();
         create.description = (!description.is_empty()).then_some(description);
@@ -491,4 +503,17 @@ impl App {
         self.selection.set([slot]);
         Some(what)
     }
+}
+
+/// A CBS project's data layers read into the upload's copy (docs/adr/9196 §2, `data_take`): every row or none.
+fn take_rows(snapshot: &mut kentos_commands::DocumentSnapshotV2) -> Result<(), String> {
+    let taken = kentos_native_application::data_take::take_rows(snapshot, &kentos_data::Cancel::new())?;
+    if let Some(first) = taken.left.first() {
+        return Err(format!(
+            "{} satır buluta aktarılamaz (ör. {first}); veri katmanlarının satırları eksiksiz gitmeden yüklenmez. \
+             Bu satırları kaynağında düzeltin, sonra yeniden yükleyin.",
+            taken.left.len()
+        ));
+    }
+    Ok(())
 }

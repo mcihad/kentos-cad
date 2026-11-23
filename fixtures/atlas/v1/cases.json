@@ -32210,7 +32210,7 @@
      "areaUnit": "m2",
      "angleUnit": "grad",
      "plotScale": 1000,
-     "workspace": "gis"
+     "workspace": "cad"
     },
     "origin": {
      "x": 400000.0,

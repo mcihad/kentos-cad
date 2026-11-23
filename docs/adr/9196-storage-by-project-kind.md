@@ -148,8 +148,139 @@ Araştırma §1'dedir; bu madde kararı sunucuda ve istemcilerde uygular.
 - **Ortama bağlı kalan:** `kentos-api`'nin üç sunucu denetim işi sınaması (`job_run::audit*`) macOS'ta denetim kutusu
   kurulamadığı için düşer (“Landlock yalnız Linux'ta”); saklama kuralıyla ilgisizdir.
 
-## §5 Kalan
+## §5 AY-05: CBS projesinin verisi veritabanında (23 Kasım 2026)
 
-AY-05: CBS'nin sihirbazı, tabloları, içe alma, kayıt kuralı. Bulutta CBS'nin yalnız veritabanı biçimi olması da
-AY-05'tedir: buluta yüklemenin veri katmanlarının satırlarını aktarması gerekir. Her madde kanıtıyla bu ADR'ye ya da
-kendi ADR'sine yazılır.
+Araştırma §1'dedir: ArcGIS Pro'nun projesi veriye başvurur, veri geodatabase'dedir; QGIS projeyi GeoPackage'ta ya da
+PostgreSQL'de tutar; QGIS'in açıklama katmanı projenin parçasıdır. Bu madde kararı sihirbazda, kayıtta, içe almada,
+bağlamada ve bulutta uygular.
+
+**Sihirbaz** (`crates/native/project/src/wizard.rs`, `apps/desktop/src/shell/project/wizard/`):
+
+- İki soru sorar:
+  - **Veri:** GeoPackage (öntanımlı; proje adıyla, açık çizimin klasöründe ya da Belgeler'de), PostgreSQL (kayıtlı
+    bağlantı ya da adres, şema; parola adrese yazılmaz) ya da KentOS Bulut.
+  - **Proje dosyası:** `.kcad` (GeoPackage'ın yanında), GeoPackage'ın ya da şemanın içinde (ADR 9107) ya da bulutta.
+    Bulut proje dosyası yalnız bulut verisiyle olur.
+- Amaçların katmanları tablodur (`kentos_project::cbs_tables`):
+  - Kadastro paftası: ada, parsel ve yapı alan; yol ekseni, kaldırım, eşyükselti ve ana eşyükselti çizgi; kot ve
+    poligon nokta tablosudur. Yükseklik nesnenin Z'sidir. Nesnenin kendi etiketini yazan katman `etiket` sütununu
+    okur (`{etiket}`).
+  - Taslak, pafta, karelaj ve yazı Açıklama türündedir ve proje dosyasında kalır. Boş kent haritasının tek katmanı
+    Taslak'tır, o da açıklamadır.
+  - Kurum şablonunun türlü katmanı tablo, türsüz katmanı açıklamadır.
+  - Açıklama türü yazı, ölçü, kılavuz, tablo, etiket, tarama, blok, resim ve görünüm işareti alır (ADR 0622 §5).
+    Çizgi, alan ve nokta veri katmanına (düzenleme oturumu) çizilir; etkin katman açıklamaysa o araçlar nedenini
+    söyleyerek kapalıdır.
+- **Oluştur:**
+  - tabloları, ekrandaki çizimden ayrılma sorusu yanıtlandıktan sonra ve proje açılmadan kurar
+    (`layers_create::new_project_table`); Vazgeç tablo bırakmaz;
+  - her tablo katmanının düğümüne onu okuyan veri katmanını koyar;
+  - projeyi yerine hemen yazar: `.kcad`'e, GeoPackage'a ya da şemaya.
+  - KentOS Bulut'ta tablo kurulmaz; Buluta yükle açılır, proje ve verisi birlikte gider.
+- Özet “Veri” ve “Proje dosyası” satırlarını söyler. Ortak örnek (`fixtures/project/v1/wizard.json`) yenilendi.
+
+**Katman türü ve kayıt kuralı** (ortak: `kentos_native_application::layer_kind`):
+
+- Katmanın türünü tek yer söyler: grup, servis, veri, bağlı, açıklama, yalnız raster, yalnız nokta bulutu, çizim
+  (`kentos_launch::LayerKind`, ADR 9197 §2.4). Katman menüsü (AY-03) ve her istemcinin kaydı onu sorar.
+- CBS projesinin kaydı nesne tutan çizim ya da bağlı katmanı proje dosyasına yazmaz. Açıklama, veri ve servis
+  katmanları, raster ve nokta bulutu (pikselleri ve noktaları kendi dosyalarındadır) proje dosyasındadır.
+- **Masaüstü:**
+  - Kaydet (dosyaya ya da veri kaynağına) reddedilir; ileti katmanları adıyla ve çıkış yolunu söyler.
+  - İlk katmanda Veri kaynağına taşı… açılır.
+  - Kopya kaydı ve kurtarma kopyası kuralın dışındadır: veri kaybettirmezler.
+- **Python ve MCP:** `Session::save` ve `save_to_source` aynı kuralla `data_held_in_file` koduyla (Host) reddeder;
+  ileti `cad.layers.migrate`'i söyler.
+
+**İçe alma:**
+
+- Masaüstünde CBS projesine içe alınan (içe alma penceresinden gelen) yeni katman aynı adımda projenin veri yerine tablo olur
+  (`cad.layers.migrate`; her katman bir geri alma adımı). Veri yeri sırasıyla:
+  - projenin saklandığı GeoPackage ya da şema;
+  - yoksa ilk veri katmanının kaynağı;
+  - yoksa proje dosyasının yanındaki GeoPackage.
+- Yer bilinmiyorsa ya da katman taşınamıyorsa (kilitli, karışık türlü) katman kalır, nedeni söylenir, kayıt onu sorar.
+- GeoPackage penceresinde CBS'de “Bağ” yoktur. Yerinde “Veri katmanı: Dosyada bırak, veri katmanı olarak ekle” vardır:
+  tablolar dosyada kalır ve okunur (`cad.layers.data`). Kapalıyken İçe aktar tabloyu projenin veri yerine yazar.
+  Başka sistemdeki tabloyu veri katmanı kendi sisteminden çevirerek çizer.
+
+**Bağlı katman:**
+
+- `cad.sources.edit`'in `link`'i CBS projesinde `bound_in_gis` koduyla reddedilir; kural komuttadır, her istemciye
+  uyar. İleti `cad.layers.data`'yı söyler.
+- Şerit: `source.link` CBS'nin Kaynak panelinden çıktı; Harita ve Yol'un “Ekle ▸ Harita” panelinin ▾'sindedir.
+  Var olan bağlı katmanın komutları (yaz, oku, durum) kalır; eski projeye taşıma yolu yazılmaz (§2.4).
+
+**Bulut:**
+
+- **Sunucu** CBS projesini yalnız veritabanında tutar:
+  - oluşturmada dosya biçimi `storage`,
+  - dönüşümde dosyaya çevirmek `to`,
+  - dosya projesinin türünü CBS'ye çevirmek `projectType` alanıyla, nedenini söyleyerek reddedilir.
+  - Eski CBS dosya projesinin veritabanına dönüşümü açıktır (çıkış yolu).
+- **Masaüstü:**
+  - Buluta yükle CBS türünde yalnız veritabanını sunar ve nedenini yazar.
+  - Bulut projeleri'nde CBS veritabanı projesinin “Dosya projesine çevir…”i kapalıdır, nedenini söyler.
+- **Yükleme veri katmanlarının satırlarını aktarır** (`kentos_native_application::data_take`):
+  - her veri katmanının bütün satırları kaynağından okunur ve yüklemenin kopyasında katmanın nesneleri olur;
+  - değerleri özniteliktir, geometrisiz satır kayıttır, geometri projenin sistemine çevrilir;
+  - katalogdaki katman ağacı dosyanınkiyle aynıdır (`data_take::plain`);
+  - çizimde karşılığı olmayan satır yüklemeyi durdurur ve söylenir (sessiz kayıp yok);
+  - bilgisayardaki proje değişmez.
+
+**Kanıt:**
+
+- **Masaüstü** (`RUST_MIN_STACK=67108864`):
+  - `cbs_storage_tests`: kayıt reddedilir, Veri kaynağına taşı açılır, taşınınca kaydedilir; bağlama komutta
+    reddedilir; buluta giden kopyada satırlar nesne olur.
+  - `exchange::gis_tests::an_import_into_a_cbs_project_goes_into_its_tables`,
+    `exchange::gpkg_tests::a_cbs_projects_geopackage_tables_are_added_as_data_layers`.
+  - Sihirbaz sınamaları (veri yeri, tablolar, hemen kayıt). Modül, şerit, katman menüsü, bulut, katalog ve ayar
+    takımları geçti.
+  - Bulutta dosya projesinin yerel kaydı CAD projesiyle sınanır (`file_follow_tests`).
+- **Ortak:** `layer_kind`'ın birim sınaması; başsız oturumun sınaması (`a_cbs_projects_file_takes_no_drawing_layers_objects`);
+  paket durumlarının bağlı katmanları CAD çiziminde kurulur.
+- **Bağlı katmanın ortak durumları Harita (CAD) projesindedir:**
+  - 19 örnek dosyasının kurulumu (`cad.sources.*`, `cad.records.page`, `cad.forms.submit.commit`,
+    `cad.topology.check`, `cad.topology.exceptions`) CAD'dir; dört dosyada (`cad.gis.derivation`, `cad.gis.detach`,
+    `cad.processing.run.source`, `cad.processing.batch.sink`) yalnız bağlayan 8 durum kendi CAD kurulumunu taşır.
+  - Üreteçler aynı değişikliği yapar ve `--check`'te tutarlıdır (Homebrew'un GDAL'lı Python'u, mpmath).
+  - CAD projesinde işlemin yeni katmanı türlü alan taşımaz (ADR 1070 CBS'nindir): dışa yazılan sütunlar ad
+    sırasıyladır; beklenen sıra buna göre.
+  - Uygulamanın `sources`, `reconcile`, `source_relations` sınamaları ve Python'un üç sınaması da CAD belgesinde
+    bağlar.
+  - Sonuç: 22 475 ortak durumun hepsi geçer.
+- **Ortak kabul senaryosu “Ada: parseller ve binalar” (CBS-44, `fixtures/acceptance/v1/parcels.json`) Harita'nın
+  projesidir:** nesne olarak çizilen parseller ve GIS biçimlerine teslim Harita'nın işidir; senaryonun tek farkı proje
+  türüdür (`cad`). Python, MCP ve masaüstü onu yeniden oynatır ve geçer; PostGIS'li oynatıcı (`#[ignore]`) koşulmadı.
+- **Python ve MCP'nin kaydeden sınamaları** (`test_document`, `test_forms`'un iki sınaması, MCP'nin `mcp.rs` ve
+  `source_relations.rs`'i) CAD belgesiyle kaydeder; CBS belgesinin kaydının reddi başsız oturumun ve `test_document`'ın
+  sınamasındadır. Python'da ret `FileError`'dır (`data_held_in_file`).
+- **Örneklerin gidiş-dönüşü** (`test_carriage`): nesneli CBS örneklerinin ve profil projelerinin kaydı reddedilir, baytları
+  onları bütün taşır. Karşılaştırma veri katmanlarının kayıtta yazılan `relative` yolunu da ayıklar (ADR 9117 §3).
+- **Python takımı** (877 sınama): bu işin dokunmadığı dört yerde hata kalır: Harita çalışma verisinin (`mapWork`)
+  yedi örnekte kayıttan sonra farklı dönmesi, tipli katmandan geçen BIM, teslim, form yanıtı ve imar parseli
+  durumları (253 durum; Rust'ta aynı örnekler geçer), profil listesine eklenen iki yerleşik profil ve panel
+  kurucusunun `split` alanı.
+- **Sunucu** (geçici PostGIS'te `kentos-application`'ın 43 sınama dosyası):
+  - `project_convert`: CBS dosya olarak oluşmaz, dosyaya çevrilmez; eski CBS dosya projesi ve eski CAD veritabanı
+    projesi sınamada SQL'le kurulur (çıkış yolları açık).
+  - `project_catalog`: dosya projesi CBS türüne çevrilmez. AY-06'dan düşük kalan iki sınama (dosya projesine
+    `project.changes` ile nesne yazıyordu) nesnelerini CBS veritabanı projesine yazar.
+  - `project_duplicate`: veritabanı projesinin türü CAD'e çevrilmez; kopya CBS kalır.
+  - `project_snapshot`'ın dosya projesi CAD türündedir.
+- **Üretilenler:** sözleşme kodları (`bound_in_gis`, `data_held_in_file`), komut kataloğu, TS türleri, OpenAPI,
+  Python SDK, `catalog/v1/modules.json` ve şerit. CAD manifestosu yeniden yazıldı; önceki bir işten (ADR 9127)
+  güncellenmemiş kalan bina dışa aktarma ve kullanıcı koordinat sistemi satırları da CAD'e geçti.
+- **Bağımlılık:** uygulama çekirdeği `kentos-launch`'a bağlandı (katman türü); `scripts/arch/deps.mjs`'te onu kullanan
+  gruplara `launch` eklendi. Denetimin `crates/vendor/block` bulgusu önceden vardı.
+
+## §6 Kalan
+
+- Python ve MCP'de yeni CBS projesi (`NewDrawing`) veri yeri sormaz: katmanları çizim katmanıdır ve kayıt onların
+  nesnelerini kaydetmez; `cad.layers.migrate` ile taşınır. Sihirbazın veri yerinin betik karşılığı ayrı bir dilimdir.
+- Bağlı katmanın taşınması (`cad.layers.migrate`) bağını kaldırmaz; eski projelerdedir (§2.4).
+- CBS projesinde bir işlemin (İşlemler) yeni çıktı katmanı proje dosyasına yazılır; kayıt onu sorar. Çıktı bugün de
+  bir tabloya yazılabilir (çıktının yeri); içe almadaki gibi kendiliğinden veri yerine gitmesi ayrı bir dilimdir.
+- `workspace: gis` taşıyan örnekler (378) yalnız kaydedildiklerinde kuralla karşılaşır; kaydedenlerin sınamaları
+  çevrildi, öbürleri olduğu gibi okunur.

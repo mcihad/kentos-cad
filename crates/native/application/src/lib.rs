@@ -243,6 +243,8 @@ pub mod cleanup_cmd;
 pub mod clipboard_cmd;
 #[path = "core/codes.rs"]
 pub mod codes;
+#[path = "core/layer_kind.rs"]
+pub mod layer_kind;
 #[path = "core/context.rs"]
 mod context;
 #[path = "core/corner.rs"]
@@ -549,6 +551,9 @@ mod layers_migrate_texts;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/data_text.rs"]
 pub mod data_text;
+#[cfg(feature = "mod-gis")]
+#[path = "gis/data_take.rs"]
+pub mod data_take;
 // An İfadeyle seç expression's part a data source answers itself (docs/adr/9109).
 #[cfg(feature = "mod-gis")]
 #[path = "gis/data_condition.rs"]

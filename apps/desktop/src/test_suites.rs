@@ -192,6 +192,9 @@ mod arc_join_scenes;
 #[path = "tests/elevation_scenes.rs"]
 mod elevation_scenes;
 #[cfg(test)]
+#[path = "tests/cbs_storage_tests.rs"]
+mod cbs_storage_tests;
+#[cfg(test)]
 #[path = "tests/elevation_tests.rs"]
 mod elevation_tests;
 #[cfg(test)]

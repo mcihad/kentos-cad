@@ -30,7 +30,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from processing_source_cases import (  # noqa: E402
-    ANY, COLUMNS, FX, X0, Y0, case, done, failed, link, meets, rows, setup, sha256, step,
+    ANY, COLUMNS, FX, X0, Y0, bound_case, case, done, failed, link, meets, rows, setup, sha256, step,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -226,26 +226,28 @@ def cases():
     part = sum(1 for r in bina if meets(r, ext))
     whole = {"layer": "import-bina", "digest": ANY, "source": ANY, "revision": sha256(),
              "table": "sorgu.gpkg › bina", "rows": n, "path": FX}
-    out.append(case(
+    # A map's project binds (docs/adr/9196 §2): its run layers hold plain values, their columns in name order.
+    plain = sorted(cols)
+    out.append(bound_case(
         f"parçalı bağlı katman bütün tablosuyla okunur: {part} değil {n} kayıt",
         link("bina", ext),
         step(batch([row(layer="Bir"), row(layer="İki")], {"path": PLAN},
                    {"input": {"scope": "source", "layer": "import-bina"}}),
              done(batched([(0, "Satır 1", n, whole, layer_id("Bir")), (1, "Satır 2", n, whole, layer_id("İki"))],
-                          [("Bir", layer_id("Bir"), n, cols), ("İki", layer_id("İki"), n, cols)], PLAN)),
+                          [("Bir", layer_id("Bir"), n, plain), ("İki", layer_id("İki"), n, plain)], PLAN)),
              op="plan")))
     # 8. The same layer by scope layer: the part, said once.
     bound = {"layer": "import-bina", "digest": ANY, "source": ANY, "revision": ANY}
     msg = ("“bina” katmanı bina tablosunun yalnız bir parçası; araç o parçayla çalıştı. Bütün tablo için girdiyi "
            "{ \"scope\": \"source\", \"layer\": \"import-bina\" } ile verin.")
-    out.append(case(
+    out.append(bound_case(
         f"parçalı bağlı katman scope: layer ile: her satır parçanın {part} kaydıyla, partial_scope bir kez",
         link("bina", ext),
         step(batch([row(layer="Bir"), row(layer="İki")], {"path": PLAN},
                    {"input": {"scope": "layer", "layerId": "import-bina"}}),
              done(batched([(0, "Satır 1", part, bound, layer_id("Bir")),
                            (1, "Satır 2", part, bound, layer_id("İki"))],
-                          [("Bir", layer_id("Bir"), part, cols), ("İki", layer_id("İki"), part, cols)], PLAN),
+                          [("Bir", layer_id("Bir"), part, plain), ("İki", layer_id("İki"), part, plain)], PLAN),
                   [{"code": "partial_scope", "message": msg, "path": "parameters.input"}]), op="plan")))
     # 9. Tables added to a file that is there: its tables untouched.
     out.append(case(

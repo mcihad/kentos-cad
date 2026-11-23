@@ -699,11 +699,13 @@ def detach_cases():
               {"status": "failed", "error": {"code": "not_a_derivation", "message": ANY, "path": "path"}},
               {"revision": "same"}),
         drefused("not_a_derivation", "path", detach("$tmp:ayrik-3.gpkg"))]))
+    # Binding is a map's (docs/adr/9196 §2): the drawing as a CAD project.
     c.append(case("bağı kopan tablo katmana bağlanır: artık türev değil", [
         copy("ada.gpkg", "ayrik-4.gpkg"),
         det(detach("$tmp:ayrik-4.gpkg", ["Yol"]), detached(["Yol"], 5, "ayrik-4.gpkg")),
         other("cad.sources.edit", {"edit": {"kind": "link", "path": "$tmp:ayrik-4.gpkg", "table": "Yol"}},
-              {"status": "completed", "output": ANY, "warnings": ANY}, {"revision": "changed"})]))
+              {"status": "completed", "output": ANY, "warnings": ANY}, {"revision": "changed"})],
+        setup=cg.map_drawing()))
     c.append(case("bağı kopan dosya aynı çizime alınır: satırlar çizimin kimliklerini bıraktı, yeni nesnelerdir", [
         copy("ada.gpkg", "ayrik-5.gpkg"),
         det(detach("$tmp:ayrik-5.gpkg"), detached(ORDER, 0, "ayrik-5.gpkg")),

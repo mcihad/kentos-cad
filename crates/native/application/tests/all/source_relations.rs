@@ -29,11 +29,12 @@ const OWNER_2: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002";
 const PARCEL_1: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001";
 const PARCEL_3: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2003";
 
+/// A map's project: a bound layer is its delivery, not a CBS project's (docs/adr/9196 §2).
 fn empty() -> Document {
     let setup = json!({
         "format": "kentos.document", "version": 1, "name": "İlişkili kayıtlar",
         "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                      "plotScale": 1000, "workspace": "gis" },
+                      "plotScale": 1000, "workspace": "cad" },
         "origin": { "x": 0.0, "y": 0.0 },
         "layers": [{ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
                      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],

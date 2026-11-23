@@ -207,6 +207,19 @@ impl Session {
     /// Saves as `.kcad` v2 to `path`, or where it was read from. A v1 file
     /// is not written over: its drawing goes to a new path. The drawing is
     /// clean afterwards; the answer says where and how much.
+    /// A CBS project's file holds no drawing's or bound layer's objects (docs/adr/9196 §2, CLAUDE.md §25 rule 5): the
+    /// save is refused, the layers named and `cad.layers.migrate` said; the same rule as the desktop's.
+    fn cbs_file_check(&self) -> Result<(), HeadlessError> {
+        let held = kentos_native_application::layer_kind::held_in_file(&self.doc);
+        if held.is_empty() {
+            return Ok(());
+        }
+        Err(HeadlessError::new(
+            kentos_native_application::codes::DATA_HELD_IN_FILE,
+            kentos_native_application::layer_kind::held_words(&held),
+        ))
+    }
+
     /// Saves the drawing as a project kept in a data source (docs/adr/9107): a GeoPackage file's or a PostgreSQL
     /// schema's `kentos_projects` table, written and read back; a GeoPackage's file is where its relative paths start
     /// from. The answer: where, the bytes, the revision.
@@ -217,6 +230,7 @@ impl Session {
                 "Açık bir işlem grubu varken kaydedilmez: önce grubu bitirin ya da iptal edin.",
             ));
         }
+        self.cbs_file_check()?;
         let revision = self.doc.revision();
         let mut snapshot = self.doc.to_snapshot_v2();
         kentos_native_application::project_store::with_relative(&mut snapshot, address);
@@ -319,6 +333,8 @@ impl Session {
                 ));
             }
         };
+        // Where it goes is said first; then what a CBS project's file may hold.
+        self.cbs_file_check()?;
         let revision = self.doc.revision();
         let bytes = files::write(&self.doc, &target)?;
         self.doc.mark_saved(revision);

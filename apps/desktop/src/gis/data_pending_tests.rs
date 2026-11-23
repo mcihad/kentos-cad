@@ -51,6 +51,17 @@ fn two_layers(tag: &str) -> (App, std::path::PathBuf, std::path::PathBuf, std::p
     let mut settings = doc.model.settings().clone();
     settings.workspace = Some(kentos_commands::Workspace::Gis);
     doc.model.set_settings(settings);
+    // A CBS project's data is its tables (docs/adr/9196 §2): the sample's drawing objects go, its layers stay.
+    doc.model.set_layer_locked("bina", false);
+    let uids: Vec<String> = doc.model.entities_with_uids().map(|(u, _)| u.to_string()).collect();
+    let gone = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        "cad.entities.delete",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({ "uids": uids }),
+    )
+    .expect("an answer");
+    assert_eq!(gone["status"], "completed", "{gone}");
     app.gis.data_journal = journals.clone();
     let mut second = crate::data_layers::describe(&b.display().to_string(), "parseller").expect("described");
     second.name = "parseller-b".into();

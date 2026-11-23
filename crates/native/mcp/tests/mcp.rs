@@ -636,10 +636,11 @@ fn a_modern_client_discovers_lists_and_draws_a_measured_polygon_it_saves_and_rea
         listed["result"]["tools"]
     );
 
+    // A drawing's objects saved in its file: a CAD project's (docs/adr/9196 §2).
     let made = call(
         &mut server,
         "drawing.new",
-        json!({ "name": "Ada 101", "srid": 5256 }),
+        json!({ "name": "Ada 101", "srid": 5256, "workspace": "cad" }),
     );
     let drawing = made["structuredContent"]["drawing"]
         .as_str()

@@ -85088,8 +85088,8 @@ class ProjectCreate(_Model):
             (docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,
             `landReadjustment`, `subdivision`, `road`) whole project is its file
             (`file`), refused in the database; a CBS project's is object by
-            object in PostGIS (`database`). A `file` project gets its content
-            from its first committed revision.
+            object in PostGIS (`database`), refused as a file. A `file` project
+            gets its content from its first committed revision.
     """
     name: str
     settings: ProjectSettings
@@ -86346,8 +86346,8 @@ class ProjectSummary(_Model):
         updated_at: RFC 3339.
         owner_name: The owner's name ("Benimle paylaşılanlar" says whose it is); empty
             when the caller cannot see the owner (one who left the organisation).
-        project_type: What kind of work it is: a label, not a claim of compliance. A CAD type's project is kept as its file
-            (docs/adr/9196 §2).
+        project_type: What kind of work it is: a label, not a claim of compliance. A CAD type's project is kept as its file, a CBS
+            project in the database (docs/adr/9196 §2).
         catalog_version: Counts changes of its name, description, type and tags; a catalog edit
             sends it as `expectedVersions["@catalog"]`. Decimal text.
         created_at: RFC 3339.
@@ -102479,10 +102479,11 @@ class SourcesDescribed(_Model):
 class SourcesEdit(_Model):
     """Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,
     `table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or
-    the table is bound already), `source_differs` (the layer given does not hold the table's objects),
-    `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area
-    that is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is
-    not a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the
+    the table is bound already), `bound_in_gis` (a link in a CBS project, whose data is its tables: docs/adr/9196 §2),
+    `source_differs` (the layer given does not hold the table's objects), `source_not_found` (an id), `source_changed`
+    (relink to another file), `too_many_sources`, `invalid_extent` (an area that is not one, on a table without
+    geometry, onto a layer given, or of a database), `invalid_key` (a key that is not a column of the objects, is empty
+    on one or repeats); conflicts: `pending_changes` (an area changed over the
     layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,
     `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),
     `reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key

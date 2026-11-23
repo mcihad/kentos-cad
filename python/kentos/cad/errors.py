@@ -171,7 +171,9 @@ class UnknownObject(HostError):
 class FileError(HostError):
     """A file that cannot be read or written (``file_unreadable``,
     ``file_unwritable``), an old v1 file a save would write over
-    (``legacy_file``), a save with nowhere to go (``no_path``)."""
+    (``legacy_file``), a save with nowhere to go (``no_path``), a CBS
+    project whose file would hold a drawing layer's objects
+    (``data_held_in_file``: its data is its tables, docs/adr/9196 §2)."""
 
 
 class NotRunHere(HostError):
@@ -199,6 +201,7 @@ _HOST: dict[str, type[HostError]] = {
     "file_unwritable": FileError,
     "legacy_file": FileError,
     "no_path": FileError,
+    "data_held_in_file": FileError,
     "server_command": NotRunHere,
     "not_in_console": NotRunHere,
     "no_desktop": NotRunHere,

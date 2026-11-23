@@ -340,6 +340,13 @@ def refused(inp, code, path="path", name_op="execute"):
                 expect={"revision": "same"})
 
 
+def map_drawing():
+    """The drawing as a map's project (docs/adr/9196 §2): a bound layer is a map's delivery, not a CBS project's."""
+    drawing = json.loads(json.dumps(DRAWING))
+    drawing["settings"]["workspace"] = "cad"
+    return drawing
+
+
 def case(name, steps, setup=None):
     c = {"name": name, "steps": steps}
     if setup is not None:
@@ -432,14 +439,15 @@ def commands():
     cases.append(case("PostGIS sağlayıcısı olmayan ortamda veritabanı okunamaz", [
         refused({"path": "postgresql://kentos@127.0.0.1:1/turev"}, "source_unreachable")]))
     # The policy: a derivative's table is not bound, read into a layer or written back; taken in, it says what it is.
+    # Binding is a map's (docs/adr/9196 §2): the drawing as a CAD project.
     cases.append(case("türevin tablosu yeni katmana bağlanmaz", [
         step("execute", {"edit": {"kind": "link", "path": fx("ada.gpkg"), "table": "Parsel"}},
              {"status": "failed", "error": {"code": "derived_dataset", "message": ANY, "path": "edit.table"}},
-             command="cad.sources.edit", expect={"revision": "same"})]))
+             command="cad.sources.edit", expect={"revision": "same"})], setup=map_drawing()))
     cases.append(case("türevin tablosu var olan katmana bağlanmaz", [
         step("execute", {"edit": {"kind": "link", "path": fx("ada.gpkg"), "table": "Parsel", "layer": "parsel"}},
              {"status": "failed", "error": {"code": "derived_dataset", "message": ANY, "path": "edit.table"}},
-             command="cad.sources.edit", expect={"revision": "same"})]))
+             command="cad.sources.edit", expect={"revision": "same"})], setup=map_drawing()))
     link = {"id": "kaynak-1", "kind": "geopackage", "path": fx("ada.gpkg"), "table": "Parsel", "layer": "parsel",
             "revision": "0" * 64, "digest": "0" * 64, "srid": 5256, "writable": True}
     linked = _linked_drawing(link)

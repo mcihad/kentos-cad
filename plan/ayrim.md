@@ -67,15 +67,19 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
   - Kural sınaması yapıldı: yerleşmeyen `Deneme` sekmesi beş profilde derlenmedi; `arch → map` bağı ve kabukta
     `Module::Gis` denetimde düştü.
   - Kalan: taban AY-07'de azalır; `arch/program.rs` `kentos-launch`'a doğru taşınır.
-- [ ] **AY-05 — CBS verisi veritabanında.**
+- [~] **AY-05 — CBS verisi veritabanında.** ([ADR 9196](../docs/adr/9196-storage-by-project-kind.md) §5)
   - Sihirbaz iki şey sorar: verinin yeri (GeoPackage öntanımlı, PostgreSQL, KentOS Bulut) ve proje dosyasının yeri
-    (`.kcad`, veritabanının içinde, bulut).
-  - Amaçlar katmanlarını tablo olarak kurar; yalnız açıklama katmanı proje dosyasında kalır.
-  - İçe alma tabloya yazar ve veri katmanı ekler. CBS'de bağlı katman yok. Çizim araçları veri katmanına ya da
-    açıklama katmanına çizer.
-  - Kayıt, açıklama dışında nesneli katmanı proje dosyasına yazmaz.
-  - Bulutta CBS yalnız veritabanı biçimi. Buluta yükleme veri katmanlarının satırlarını aktarır.
-  - Örnekler ve sınamalar kurala çevrilir; tablo kurma ve içe alma ortak durumları.
+    (`.kcad`, veritabanının içinde, bulut). Oluştur tabloları kurar ve projeyi hemen yazar.
+  - Amaçların katmanları tablodur (`kentos_project::cbs_tables`); taslak, pafta, karelaj ve yazı açıklamadır.
+  - Katmanın türü ortak tek yerdedir (`kentos_native_application::layer_kind`); kayıt, nesne tutan çizim ya da bağlı
+    katmanı proje dosyasına yazmaz: masaüstü Veri kaynağına taşı'yı açar, Python ve MCP `data_held_in_file` der.
+  - İçe alınan yeni katman projenin veri yerine tablo olur; GeoPackage penceresinde “Bağ” yerine “Veri katmanı”.
+  - Bağlama komutta reddedilir (`bound_in_gis`); `source.link` Harita ve Yol'un şeridinde.
+  - Bulut: sunucu CBS'yi yalnız veritabanında tutar; Buluta yükle CBS'de yalnız veritabanını sunar ve veri
+    katmanlarının satırlarını aktarır (`data_take`); CBS veritabanı projesi dosyaya çevrilmez.
+  - Bağlı katman sınamaları ve ortak durumları Harita (CAD) belgesine çevrildi.
+  - Kalan: Python ve MCP'de yeni CBS projesinin veri yeri (`NewDrawing`); bağlı katmanın taşınmasında bağın
+    düşmesi (eski projeler).
 - [x] **AY-06 — CAD projesinin tamamı proje dosyasında.** ([ADR 9196](../docs/adr/9196-storage-by-project-kind.md) §4)
   - Sunucu saklama türünü ortak modül tanımından alır (`kentos_launch::Module::storage`). CAD türleri saklamasız
     dosya olur; veritabanı oluşturmada (`storage`) ve dönüşümde (`to`) nedenini söyleyerek reddedilir. Veritabanındaki
@@ -84,7 +88,7 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     Python ve MCP sunucunun kuralına uyar; SDK'nın belgesi yenilendi.
   - Harita ve Yol'da CBS tablosu salt okunur altlıktır: düzenleme oturumu menüde yalnız CBS'dedir (AY-03).
   - Sınamalar: sunucuda kural sınaması, veritabanı biçimine dayanan sunucu ve API sınamaları CBS projesiyle.
-  - Kalan: bulutta CBS'nin yalnız veritabanı biçimi AY-05'te (satır aktarımıyla).
+  - Bulutta CBS'nin yalnız veritabanı biçimi AY-05'te yapıldı (satır aktarımıyla).
 - [~] **AY-08 — Mobil görüntüleyici ve mobil uygulama için ayrım.** ([ADR 9197](../docs/adr/9197-mobile-clients.md))
   - Sahibin isteği (23 Kasım 2026): “Mobil görüntüleyici ve uygulama da geliştireceğiz ileride ona göre de ayrım yap”.
   - Yapıldı:

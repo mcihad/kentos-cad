@@ -358,10 +358,11 @@ fn a_row_types_its_value_in_the_projects_unit() {
 /// Çakışmamalı on its layer.
 fn part(extent: [f64; 4]) -> App {
     let (mut app, _) = App::boot(None);
+    // A bound layer is a map's delivery, not a CBS project's (docs/adr/9196 §2): a CAD project binds.
     let setup = serde_json::json!({
         "format": "kentos.document", "version": 1, "name": "Topoloji: bağlı parça",
         "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                     "plotScale": 1000, "workspace": "gis",
+                     "plotScale": 1000, "workspace": "cad",
                      "topology": {"tolerance": 0.001,
                                   "rules": [{"id": "p1", "kind": "mustNotOverlap", "layer": "import-parsel"}]}},
         "origin": {"x": 0.0, "y": 0.0},

@@ -100,11 +100,15 @@ fn scratch(name: &str) -> PathBuf {
 }
 
 fn new_drawing() -> Session {
+    drawing_of(Workspace::Gis)
+}
+
+fn drawing_of(workspace: Workspace) -> Session {
     Session::new(&NewDrawing {
         name: "Ada 101".into(),
         srid: 5256,
         plot_scale: 1000.0,
-        workspace: Workspace::Gis,
+        workspace,
         drawing_font: DrawingFont::Barlow,
         province: None,
         drawing_unit: None,
@@ -132,9 +136,33 @@ fn created(answer: &Value) -> String {
     answer["output"]["uid"].as_str().expect("its id").to_owned()
 }
 
+/// A CBS project's file holds no drawing layer's objects (docs/adr/9196 §2): Python's and MCP's save refuses them as
+/// the desktop's does and says which layer and how (`cad.layers.migrate`); the structure alone saves. The desktop's
+/// test moves the layer and saves (tests/cbs_storage_tests.rs).
+#[test]
+fn a_cbs_projects_file_takes_no_drawing_layers_objects() {
+    let mut s = new_drawing();
+    let active = s.summary()["activeLayer"].as_str().expect("an active layer").to_owned();
+    let uid = created(&s.run("cad.polygon.create", None, Op::Execute, square(&active)).expect("runs"));
+    let dir = scratch("cbs-save");
+    let path = dir.join("kent.kcad");
+    let refused = s.save(Some(&path)).expect_err("refused");
+    assert_eq!(refused.code, "data_held_in_file");
+    assert!(refused.message.starts_with("Kaydedilmedi: bu bir CBS projesi"), "{}", refused.message);
+    assert!(refused.message.contains("cad.layers.migrate"), "{}", refused.message);
+    assert!(!path.exists());
+    let gone = s
+        .run("cad.entities.delete", None, Op::Execute, json!({ "uids": [uid] }))
+        .expect("runs");
+    assert_eq!(gone["status"], "completed", "{gone}");
+    s.save(Some(&path)).expect("saves");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
 #[test]
 fn a_polygon_is_made_measured_moved_to_a_layer_saved_and_read_back() {
-    let mut s = new_drawing();
+    // A CAD project's file keeps its objects (docs/adr/9196 §2).
+    let mut s = drawing_of(Workspace::Cad);
     let summary = s.summary();
     assert_eq!(summary["settings"]["srid"], 5256);
     assert_eq!(summary["objects"], 0);
@@ -1334,7 +1362,8 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
     };
     #[cfg(not(unix))]
     let unreadable = false;
-    let mut s = new_drawing();
+    // Bound layers are a map's delivery, not a CBS project's (docs/adr/9196 §2).
+    let mut s = drawing_of(Workspace::Cad);
     let linked = s
         .call(json!({ "command": "cad.sources.edit", "input": { "edit": {
             "kind": "link", "path": gpkg.display().to_string(), "table": "parsel" } } }))

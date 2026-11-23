@@ -45,7 +45,8 @@ impl Template {
 
     /// The new project made of the template and the wizard's choices: the template's scale when it has one, the
     /// wizard's name, system, province and opening view.
-    pub(crate) fn document(&self, d: &Draft) -> Result<Document, String> {
+    /// The new project the template makes, as a snapshot: its tables are made before it opens (data_place.rs).
+    pub(crate) fn snapshot(&self, d: &Draft) -> Result<DocumentSnapshotV2, String> {
         let t = &self.snapshot.settings;
         let mut o = d.options();
         if t.plot_scale.is_finite() && t.plot_scale > 0.0 {
@@ -85,8 +86,7 @@ impl Template {
         s.profile_files = t.profile_files.clone();
         s.standard_docs = t.standard_docs.clone();
         s.approved_sheet_templates = t.approved_sheet_templates.clone();
-        Document::from_v2(
-            DocumentSnapshotV2 {
+        Ok(DocumentSnapshotV2 {
                 dimension_sets: Vec::new(),
                 casework: Vec::new(),
                 constraints: Default::default(),
@@ -107,9 +107,7 @@ impl Template {
                 sheets: None,
                 requests: Vec::new(),
                 arrays: Vec::new(),
-            },
-            None,
-        )
+            })
     }
 }
 

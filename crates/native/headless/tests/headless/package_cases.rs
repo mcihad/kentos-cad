@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use kentos_headless::Session;
 use serde_json::{Value, json};
 
-use super::{new_drawing, scratch};
+use super::scratch;
 
 const ADDRESS: &str = "postgresql://cbs@127.0.0.1:1/kent";
 
@@ -41,7 +41,8 @@ fn drawing(setup: &Value, work: &Path) -> Session {
         work.join("foto/logo.png"),
     )
     .expect("copied");
-    let mut s = new_drawing();
+    // Bound layers are a map's delivery, not a CBS project's (docs/adr/9196 §2): a CAD drawing binds them.
+    let mut s = super::drawing_of(kentos_commands::Workspace::Cad);
     let links = setup["links"].as_array().cloned().unwrap_or_default();
     for l in &links {
         let file = work.join(l["file"].as_str().expect("a file"));

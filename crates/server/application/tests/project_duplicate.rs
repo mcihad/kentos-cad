@@ -251,7 +251,8 @@ async fn a_copy_takes_the_content_and_ids_but_not_history_or_sharing() {
         &db,
         &owner,
         PROJECT_METADATA_UPDATE,
-        json!({ "projectType": "subdivision", "description": "İfraz", "tags": ["Kadıköy"] }),
+        // A database project stays a CBS one: a type keeps its storage (docs/adr/9196 §2).
+        json!({ "description": "İfraz", "tags": ["Kadıköy"] }),
     )
     .await
     .unwrap();
@@ -290,7 +291,7 @@ async fn a_copy_takes_the_content_and_ids_but_not_history_or_sharing() {
             copy.project.tags.clone()
         ),
         (
-            ProjectType::Subdivision,
+            ProjectType::Gis,
             "İfraz",
             vec!["Kadıköy".to_string()]
         )

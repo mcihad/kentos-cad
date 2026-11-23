@@ -209,20 +209,29 @@ async fn apply(
         .project_type
         .filter(|t| t.name() != project_type)
         .map(|t| t.name());
-    // A type keeps its storage (docs/adr/9196 §2): a project in the database does not become a CAD type's.
-    if let Some(t) = patch.project_type.filter(|t| t.name() != project_type)
-        && crate::projects::storage_of(&storage) == kentos_contracts::ProjectStorage::Database
-        && crate::projects::storage_of_type(t) == kentos_contracts::ProjectStorage::File
-    {
-        return Err(AppError::invalid_at(
-            "projectType",
-            format!(
-                "“{}” veritabanında saklanıyor; “{}” türündeki bir projenin tamamı proje dosyasındadır. Türü \
-                 değiştirmek için önce projeyi dosya projesine çevirin.",
-                now.name,
-                crate::projects::type_words(t)
-            ),
-        ));
+    // A type keeps its storage (docs/adr/9196 §2): a project in the database does not become a CAD type's, a file
+    // project not a CBS one's.
+    if let Some(t) = patch.project_type.filter(|t| t.name() != project_type) {
+        let kept = crate::projects::storage_of(&storage);
+        if kept != crate::projects::storage_of_type(t) {
+            return Err(AppError::invalid_at(
+                "projectType",
+                match kept {
+                    kentos_contracts::ProjectStorage::Database => format!(
+                        "“{}” veritabanında saklanıyor; “{}” türündeki bir projenin tamamı proje dosyasındadır. Türü \
+                         değiştirmek için önce projeyi dosya projesine çevirin.",
+                        now.name,
+                        crate::projects::type_words(t)
+                    ),
+                    kentos_contracts::ProjectStorage::File => format!(
+                        "“{}” dosya projesi; “{}” türündeki bir projenin verisi veritabanındadır. Türü değiştirmek \
+                         için önce projeyi veritabanı projesine çevirin (PostGIS'e aktar).",
+                        now.name,
+                        crate::projects::type_words(t)
+                    ),
+                },
+            ));
+        }
     }
     let new_tags = patch.tags.filter(|t| *t != tags);
     let mut detail = serde_json::Map::new();

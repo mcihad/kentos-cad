@@ -29,7 +29,8 @@ def rows(path: Path, sql: str) -> list[tuple]:
 
 
 def world(path: Path) -> cad.Document:
-    doc = cad.Document.new("Kadastro", srid=5256)
+    # A bound layer is a map's delivery, not a CBS project's (docs/adr/9196 §2).
+    doc = cad.Document.new("Kadastro", srid=5256, workspace="cad")
     for table in ("malik", "parsel", "bina"):
         cad.sources.edit(doc, edit=LinkSourcesEditOp(path=str(path), table=table))
     cad.layers.edit(doc, operation="fields", layer="import-parsel", fields=[

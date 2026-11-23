@@ -13,8 +13,8 @@ from pathlib import Path
 import kentos.cad as cad
 
 
-def drawing() -> tuple[cad.Document, str]:
-    doc = cad.Document.new("Mahalle", srid=5256)
+def drawing(workspace: str = "gis") -> tuple[cad.Document, str]:
+    doc = cad.Document.new("Mahalle", srid=5256, workspace=workspace)
     cad.layers.edit(doc, operation="add", name="Bina", activate=True)
     layer = next(n.id for n in doc.layers() if n.name == "Bina")
     cad.layers.edit(
@@ -37,7 +37,8 @@ def drawing() -> tuple[cad.Document, str]:
 
 class FormsTests(unittest.TestCase):
     def test_a_form_is_made_published_used_and_saved_in_the_file(self) -> None:
-        doc, layer = drawing()
+        # A CAD project's file keeps its objects; a CBS project's data is its tables (docs/adr/9196 §2).
+        doc, layer = drawing("cad")
         made = cad.forms.edit(doc, edit=cad.CreateFormsOp(name="Bina denetimi", layer=layer))
         self.assertTrue(made.changed)
         form = made.form
@@ -319,7 +320,8 @@ class FormsTests(unittest.TestCase):
     def test_records_without_a_geometry(self) -> None:
         """docs/adr/0410: owners as a table's rows: written by the fields' rule, saved and read back, linked to a
         building and gone with it (cascade)."""
-        doc = cad.Document.new("Mahalle", srid=5256)
+        # A CAD project's file keeps its objects; a CBS project's data is its tables (docs/adr/9196 §2).
+        doc = cad.Document.new("Mahalle", srid=5256, workspace="cad")
         for name in ("Bina", "Malik"):
             cad.layers.edit(doc, operation="add", name=name)
         building_layer = next(n.id for n in doc.layers() if n.name == "Bina")

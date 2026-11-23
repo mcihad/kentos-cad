@@ -473,13 +473,15 @@ pub fn storage_of_type(project_type: ProjectType) -> ProjectStorage {
     }
 }
 
-/// The storage a new or converted project of `project_type` is kept in: the one asked for, else its type's; a CAD type
-/// in the database is refused with the reason (docs/adr/9196 §2).
+/// The storage a new or converted project of `project_type` is kept in: its type's, asked for or not; the other one is
+/// refused with the reason (docs/adr/9196 §2): a CAD type's whole project is its file, a CBS project's data its
+/// database.
 pub fn check_storage(project_type: ProjectType, asked: Option<ProjectStorage>, path: &str) -> AppResult<ProjectStorage> {
     let own = storage_of_type(project_type);
     match asked {
         None => Ok(own),
-        Some(ProjectStorage::Database) if own == ProjectStorage::File => Err(AppError::invalid_at(
+        Some(storage) if storage == own => Ok(storage),
+        Some(ProjectStorage::Database) => Err(AppError::invalid_at(
             path,
             format!(
                 "“{}” türündeki bir projenin tamamı proje dosyasındadır; bulutta yalnız dosya revizyonu olarak \
@@ -487,7 +489,14 @@ pub fn check_storage(project_type: ProjectType, asked: Option<ProjectStorage>, p
                 type_words(project_type)
             ),
         )),
-        Some(storage) => Ok(storage),
+        Some(ProjectStorage::File) => Err(AppError::invalid_at(
+            path,
+            format!(
+                "“{}” türündeki bir projenin verisi veritabanındadır; bulutta yalnız veritabanı projesi olarak \
+                 saklanır. Saklama biçimini veritabanı seçin.",
+                type_words(project_type)
+            ),
+        )),
     }
 }
 

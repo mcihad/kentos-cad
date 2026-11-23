@@ -2980,6 +2980,20 @@ fn edit_run(
     steps: Steps<'_>,
 ) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
     match &input.edit {
+        // A CBS project's data is its tables (docs/adr/9196 §2): a table is its data layer, never a copy bound to it.
+        SourcesEditOp::Link { table, .. }
+            if doc.settings().project_type() == Some(kentos_commands::Workspace::Gis) =>
+        {
+            Err(refuse(
+                codes::BOUND_IN_GIS,
+                format!(
+                    "Bu bir CBS projesi: verisi kaynağın tablolarında durur, “{table}” tablosunun nesnelerini projeye \
+                     kopyalayan bağlı katman CBS'de yoktur. Tabloyu veri katmanı olarak ekleyin (cad.layers.data; \
+                     masaüstünde Katmanlar ▸ Veri katmanı ekle). Bağlı katman Harita projesinin teslim yoludur."
+                ),
+                "edit",
+            ))
+        }
         SourcesEditOp::Link {
             path,
             table,

@@ -348,8 +348,10 @@ CAD = [
           overflow=["tool.imageClip", W("raster.georef", MAP_ROAD), W("raster.mosaic", MAP_ROAD),
             W("raster.gpkgRead", MAP_ROAD)],
           labels={"architecture": "Resim ve nokta bulutu"}),
+        # Kaynağa bağla (a bound layer, docs/adr/0503) is a map's delivery; a CBS project adds a table as a data layer
+        # (docs/adr/9196 §2).
         P("Harita", "basemap", [BASEMAPS, S("service.add"), S("service.feed")],
-          overflow=["service.info", "service.connections", "source.postgis"], works=MAP_ROAD),
+          overflow=["service.info", "service.connections", "source.postgis", "source.link"], works=MAP_ROAD),
         # A layer's map tips and actions ({$enlem}) are a map's (docs/adr/0802); Bilgi keeps its plain card.
         P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("file.import.photos", MAP)],
           overflow=[W("layer.info", MAP)]),
@@ -592,8 +594,9 @@ GIS = [
         P("Form", "forms", [S("data.forms"), S("data.formEdit"), S("data.relations")],
           overflow=["data.joinViews", "data.formAudit", "data.tableStyles", "data.subtypes", "data.contingents",
             "data.layerRules", "data.layerIndexes", "data.domains", "data.duplicate"]),
-        P("Kaynak", "sourceLinked", [S("data.sources"), S("source.link"), S("source.write"), S("source.read"),
-            S("source.status")],
+        # A CBS project's data is its tables (docs/adr/9196 §2): a table is added as a data layer, never bound; the
+        # bound layer's own commands stay for a bound layer a project already has.
+        P("Kaynak", "sourceLinked", [S("data.sources"), S("source.write"), S("source.read"), S("source.status")],
           overflow=["source.reconcile", "source.relink", "source.unlink", "source.writeTogether", "raster.gpkgWrite"]),
         P("Topoloji", "topologyCheck", [S("draft.topology"), S("topology.check"), S("topology.rules"),
             M("Çakışma", [("", ["draft.overlap.allow", "draft.overlap.layer", "draft.overlap.layers"])])],
@@ -912,7 +915,7 @@ MODULES = {
     "everywhere": ["layer.new", "layer.newGroup", "layer.showAll", "crs.set", "view.properties",
         "processing.run.selection.byExpression", "processing.run.selection.byLocation"],
     "map": ["layer.crs", "layer.reproject", "view.mapCrs", "file.import.fgb", "file.import.gml", "file.import.parquet",
-        "file.import.maplibre", "file.export.maplibre", "source.link", "source.read", "source.write",
+        "file.import.maplibre", "file.export.maplibre", "source.read", "source.write",
         "source.writeTogether", "source.status", "source.reconcile", "source.relink", "source.unlink", "profile.window",
         "linearRef.eventLinks", "layer.newPoint", "layer.newLine", "layer.newArea", "layer.newAnnotation",
         "layer.filter", "layer.filterClear", "layer.labels", "tool.labelMove", "tool.labelPin", "tool.labelHide",

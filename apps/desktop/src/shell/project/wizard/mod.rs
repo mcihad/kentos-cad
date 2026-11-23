@@ -11,6 +11,7 @@
 //! next wizard (Uygulama ayarları → Yeni projeler).
 
 mod art;
+mod data_place;
 mod pages;
 mod strip;
 mod template;
@@ -28,14 +29,14 @@ use iced::widget::{Id, operation};
 use iced::{Element, Task};
 use kentos_commands::{DOCUMENT_VERSION_2, DocumentSnapshotV1, DocumentSnapshotV2, DrawingFont, Workspace};
 use kentos_interaction::Level;
-use kentos_project::wizard::{Draft, Kind, Purpose, Step, Storage, WORKS};
+use kentos_project::wizard::{DataPlace, Draft, Kind, Purpose, Step, WORKS};
 use kentos_ui::widget::{Wizard, overlay};
 
 use super::content::{self, NewProject};
 use super::{Event as ProjectEvent, Window, message};
 use crate::app::{App, Dialog as Asking, Message, Picker, Then};
 use crate::crs;
-use crate::document::{Document, Source};
+use crate::document::Document;
 
 /// Yeni proje's note about the drawing on screen: a warning, or information.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -93,6 +94,8 @@ pub struct State {
     template: Option<Result<Box<template::Template>, String>>,
     /// The template file being read: a later choice overtakes it.
     template_reading: Option<PathBuf>,
+    /// Where a CBS project's tables are made (docs/adr/9196 §2).
+    pub(crate) place: data_place::Place,
 }
 
 impl fmt::Debug for State {
@@ -126,8 +129,22 @@ pub enum Event {
     Name(String),
     /// What a CBS project is for (docs/adr/9184): the layers it starts with.
     Purpose(Purpose),
-    /// Where it is kept: its first Kaydet goes there.
-    Storage(Storage),
+    /// Where a CBS project's data is (docs/adr/9196 §2).
+    Data(DataPlace),
+    /// The GeoPackage's path typed.
+    DataPath(String),
+    /// Gözat… for the GeoPackage.
+    DataBrowse,
+    /// The GeoPackage chosen; none: the dialog was closed.
+    DataBrowsed(Option<PathBuf>),
+    /// A saved database connection, by its place in the list.
+    Connection(usize),
+    /// The database's address typed.
+    Address(String),
+    /// The schema typed.
+    Schema(String),
+    /// Where its project file is kept, among the places its data offers.
+    Storage(kentos_project::wizard::Storage),
     /// Şablon seç…: the institution's template project asked for.
     PickTemplate,
     /// The template's file chosen; none: the dialog was closed.
@@ -170,6 +187,7 @@ impl State {
                 draft.choose_work(card);
             }
         }
+        let draft_name = draft.name.clone();
         // The type is the program's: the wizard starts at what a CAD project is for, or on a CBS project's page.
         let step = match limit {
             Some(_) => draft.steps().get(1).copied().unwrap_or(Step::Details),
@@ -184,6 +202,10 @@ impl State {
             pending: None,
             template: None,
             template_reading: None,
+            place: data_place::Place::new(
+                data_place::default_folder(app.document.as_ref().and_then(|d| d.path.as_deref())),
+                &draft_name,
+            ),
         }
     }
 
@@ -232,30 +254,51 @@ impl State {
         self.status = None;
     }
 
-    /// The project Oluştur makes (docs/adr/9184): a CBS project's purpose gives its layers, a template its layers,
-    /// styles and settings; a project to keep in a data source is written nowhere until its first Kaydet there.
+    /// The project Oluştur makes (docs/adr/9184, 9196 §2): a CBS project's purpose gives its layers, a template its
+    /// layers, styles and settings; each layer that keeps data is a table of its data's place, made before the project
+    /// opens (data_place.rs), the rest its project file's annotation. What then happens: the project written to its
+    /// place at once, or uploaded to the cloud.
+    /// The new project as Oluştur builds it, its tables not made yet: they are made once the drawing on screen is left
+    /// ([`State::tables`]), so a Vazgeç on the unsaved question leaves no table behind.
     fn document(&self) -> Result<Document, String> {
         let d = &self.draft;
-        let mut doc = match (d.kind, d.purpose) {
-            (Kind::Gis, Purpose::Template) => match &self.template {
-                Some(Ok(t)) => t.document(d)?,
+        if d.kind != Kind::Gis {
+            return new_document(&d.options());
+        }
+        let mut v2 = match d.purpose {
+            Purpose::Template => match &self.template {
+                Some(Ok(t)) => {
+                    let mut v2 = t.snapshot(d)?;
+                    v2.layers = kentos_project::cbs_tables::template_tree(v2.layers);
+                    v2
+                }
                 Some(Err(why)) => return Err(why.clone()),
                 None => {
                     return Err(d.blocked(Step::Details).unwrap_or_else(|| "Kurum şablonu henüz okunmadı.".to_owned()));
                 }
             },
-            (Kind::Gis, Purpose::City) => {
+            Purpose::City | Purpose::Cadastre => {
                 let mut v1 = content::new_project(&d.options())?;
-                v1.layers = content::city_layers();
-                v1.active_layer = content::STANDARD_ACTIVE_LAYER.to_owned();
-                from_v1(v1)?
+                if d.purpose == Purpose::City {
+                    v1.layers = content::city_layers();
+                    v1.active_layer = content::STANDARD_ACTIVE_LAYER.to_owned();
+                }
+                v1.layers = kentos_project::cbs_tables::cbs_tree(v1.layers);
+                v2_of(v1)
             }
-            _ => new_document(&d.options())?,
         };
-        if d.kind == Kind::Gis && d.storage != Storage::File {
-            doc.source = Source::Wanted(d.storage);
+        Document::from_v2(v2, None)
+    }
+
+    /// A CBS project's tables made in its data place, each table layer's node a data layer reading its table, and what
+    /// Oluştur does next (docs/adr/9196 §2); a CAD project as it is.
+    fn tables(&self, doc: Document) -> Result<(Document, data_place::After), String> {
+        if self.draft.kind != Kind::Gis {
+            return Ok((doc, data_place::After::Nothing));
         }
-        Ok(doc)
+        let mut v2 = doc.model.to_snapshot_v2();
+        let after = self.place.make(&self.draft, &mut v2)?;
+        Ok((Document::from_v2(v2, None)?, after))
     }
 }
 
@@ -284,7 +327,11 @@ pub fn new_document(o: &NewProject) -> Result<Document, String> {
 
 /// A new project's v1 snapshot as the drawing.
 fn from_v1(v1: DocumentSnapshotV1) -> Result<Document, String> {
-    Document::from_v2(
+    Document::from_v2(v2_of(v1), None)
+}
+
+/// A new project's v1 snapshot as a v2 one, without persistent ids yet.
+fn v2_of(v1: DocumentSnapshotV1) -> DocumentSnapshotV2 {
         DocumentSnapshotV2 {
             dimension_sets: Vec::new(),
             casework: Vec::new(),
@@ -306,9 +353,7 @@ fn from_v1(v1: DocumentSnapshotV1) -> Result<Document, String> {
             sheets: None,
             requests: Vec::new(),
             arrays: Vec::new(),
-        },
-        None,
-    )
+        }
 }
 
 /// The text fields the wizard gives the keyboard to.
@@ -382,9 +427,64 @@ impl App {
                 }
             }
             Event::System(srid) => d.srid = Some(srid),
-            Event::Name(name) => d.name = name,
+            Event::Name(name) => {
+                s.place.named(&name);
+                d.name = name;
+            }
             Event::Purpose(purpose) => d.purpose = purpose,
-            Event::Storage(storage) => d.storage = storage,
+            Event::Data(data) => d.choose_data(data),
+            // A place the data offers (docs/adr/9196 §2).
+            Event::Storage(storage) => {
+                if kentos_project::wizard::storages_for(d.data).contains(&storage) {
+                    d.storage = storage;
+                }
+            }
+            Event::DataPath(path) => {
+                s.place.path = path;
+                s.place.path_typed = true;
+            }
+            Event::DataBrowse => {
+                let suggested = PathBuf::from(&s.place.path);
+                return match &self.picker {
+                    Picker::File(path) => Task::done(event(Event::DataBrowsed(Some(path.clone())))),
+                    Picker::Dialog => Task::perform(
+                        async move {
+                            let mut dialog = rfd::AsyncFileDialog::new()
+                                .set_title("Verinin GeoPackage dosyası")
+                                .add_filter("GeoPackage (.gpkg)", &["gpkg"]);
+                            if let Some(folder) = suggested.parent().filter(|f| f.is_dir()) {
+                                dialog = dialog.set_directory(folder);
+                            }
+                            if let Some(name) = suggested.file_name() {
+                                dialog = dialog.set_file_name(name.to_string_lossy());
+                            }
+                            Some(dialog.save_file().await?.path().to_path_buf())
+                        },
+                        |path| event(Event::DataBrowsed(path)),
+                    ),
+                };
+            }
+            Event::DataBrowsed(None) => return Task::none(),
+            Event::DataBrowsed(Some(path)) => {
+                let path = if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("gpkg")) {
+                    path
+                } else {
+                    path.with_extension("gpkg")
+                };
+                s.place.path = path.display().to_string();
+                s.place.path_typed = true;
+            }
+            Event::Connection(i) => {
+                s.place.connection = Some(i);
+                if let Some(c) = kentos_postgis::connections::store().list().get(i) {
+                    s.place.address = c.address();
+                }
+            }
+            Event::Address(address) => {
+                s.place.address = address;
+                s.place.connection = None;
+            }
+            Event::Schema(schema) => s.place.schema = schema,
             Event::PickTemplate => {
                 d.purpose = Purpose::Template;
                 s.status = None;
@@ -456,6 +556,7 @@ impl App {
 
     /// İleri: the next step, if this one can be left; Oluştur on the last.
     fn new_project_next(&mut self) -> Task<Message> {
+        let signed_in = self.cloud.signed_in().is_some();
         let Some(Window::New(s)) = &mut self.project else {
             return Task::none();
         };
@@ -467,6 +568,20 @@ impl App {
         if at + 1 < s.draft.steps().len() {
             s.go(at + 1);
             return focus(s);
+        }
+        // A CBS project's data place (docs/adr/9196 §2): its tables are made there by Oluştur.
+        if s.draft.kind == Kind::Gis {
+            if let Some(why) = s.place.blocked(&s.draft) {
+                s.status = Some(why);
+                return Task::none();
+            }
+            if s.draft.data == DataPlace::Cloud && !signed_in {
+                s.status = Some(
+                    "KentOS Bulut'ta oluşturmak için önce giriş yapın (Bulut ▸ Giriş yap); ya da veriyi GeoPackage ya da PostgreSQL'de tutun."
+                        .to_owned(),
+                );
+                return Task::none();
+            }
         }
         match s.document() {
             Err(e) => {
@@ -489,12 +604,23 @@ impl App {
         let Some(doc) = s.pending.take() else {
             return Task::none();
         };
+        // Its tables, now that the drawing on screen is left (docs/adr/9196 §2); where they cannot be made the window
+        // stays and says why.
+        let (doc, after) = match s.tables(*doc) {
+            Ok(made) => made,
+            Err(why) => {
+                s.status = Some(why);
+                self.dialog = Some(Asking::Project);
+                return Task::none();
+            }
+        };
+        let doc = Box::new(doc);
         let (kind, unit) = (s.draft.kind, s.draft.is_local().then_some(s.draft.unit));
         let limited = s.limit.is_some();
         self.close_project_window();
         let settings = doc.settings().clone();
         let name = doc.name().to_owned();
-        let wanted = doc.wanted_store();
+        let tables = doc.model.layers().leaves().iter().filter(|n| n.data.is_some()).count();
         // The viewport fits its home view, once the drawing area has its size.
         self.show_document(*doc);
         // KentOS Mimari's new project opens on Mimari, where Duvar is (docs/adr/8007).
@@ -515,20 +641,39 @@ impl App {
         }
         let _ = self.settings.choose(&remembered);
         let system = crs::title_of(settings.srid);
-        // Where its first Kaydet writes (docs/adr/9184).
-        let first_save = match wanted {
-            Some(Storage::Geopackage) => "İlk Kaydet, GeoPackage dosyasını ve proje adını sorar.",
-            Some(Storage::Database) => "İlk Kaydet, veritabanı bağlantısını, şemayı ve proje adını sorar.",
-            _ => "İlk kayıtta dosyanın yeri sorulur.",
+        // Where its data and its project file are (docs/adr/9196 §2).
+        let place = |p: &std::path::Path| {
+            p.file_name().map_or_else(|| p.display().to_string(), |n| n.to_string_lossy().into_owned())
+        };
+        let data = match (&after, tables) {
+            (data_place::After::Cloud, _) | (_, 0) => String::new(),
+            _ => format!(" Verisi {tables} tablodadır."),
+        };
+        let where_ = match &after {
+            data_place::After::File(path) => format!(" Proje “{}” olarak kaydediliyor.", place(path)),
+            data_place::After::Store(at) => format!(" Proje “{}” adıyla {} içine kaydediliyor.", at.name, at.place()),
+            data_place::After::Cloud => {
+                " Buluta yükle açıldı: Yükle ile proje ve verisi KentOS Bulut'ta oluşur.".to_owned()
+            }
+            data_place::After::Nothing => " İlk kayıtta proje dosyasının yeri sorulur.".to_owned(),
         };
         self.say(
             Level::Success,
             format!(
-                "“{name}” yeni projesi açıldı: {system}, 1:{}. {first_save}",
+                "“{name}” yeni projesi açıldı: {system}, 1:{}.{data}{where_}",
                 content::js_number(settings.plot_scale)
             ),
         );
-        Task::none()
+        // The project goes to the place its tables were made in, at once.
+        match after {
+            data_place::After::File(path) => self.start_saving(path),
+            data_place::After::Store(at) => self.start_save(crate::saving::Target::Source(at)),
+            data_place::After::Cloud => {
+                self.open_upload(kentos_commands::ProjectStorage::Database);
+                Task::none()
+            }
+            data_place::After::Nothing => Task::none(),
+        }
     }
 
     /// Vazgeç on the unsaved question: the wizard comes back, nothing built kept.

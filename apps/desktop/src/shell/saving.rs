@@ -495,6 +495,18 @@ impl App {
             ));
             return Task::none();
         }
+        // A CBS project's data is its tables (docs/adr/9196 §2, CLAUDE.md §25 rule 5): its project file takes no layer of
+        // objects but its annotation, rasters and point clouds. Such a save is refused, the layers named and the first
+        // one's Veri kaynağına taşı… opened; a copy is the drawing's as it is (docs/adr/0737 §3).
+        if matches!(target, Target::File(_) | Target::Source(_)) {
+            let held = self.data_held_in_file();
+            if let Some((first, _)) = held.first() {
+                let first = first.clone();
+                self.warn(App::data_held_words(&held));
+                self.save_then_dropped();
+                return self.layer_migrate_event(crate::layer_migrate::Event::Open(first));
+            }
+        }
         let Some(doc) = &self.document else {
             return Task::none();
         };
