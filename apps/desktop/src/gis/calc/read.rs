@@ -183,45 +183,8 @@ pub fn name_at(doc: &Model, p: Vec2) -> Option<String> {
     })
 }
 
-/// A number as typed (the web's `readNumber`): the first comma is a decimal
-/// point; empty is none; anything else not a number is NaN.
-pub fn read_number(text: &str) -> Option<f64> {
-    let t = js_trim(text).replacen(',', ".", 1);
-    if t.is_empty() {
-        return None;
-    }
-    Some(if is_number(&t) {
-        t.parse().unwrap_or(f64::NAN)
-    } else {
-        f64::NAN
-    })
-}
-
-/// `^[-+]?(\d+(\.\d*)?|\.\d+)(e[-+]?\d+)?$`, case-insensitive.
-fn is_number(t: &str) -> bool {
-    let b = t.as_bytes();
-    let mut i = usize::from(matches!(b.first(), Some(b'-' | b'+')));
-    let digits = |from: usize| b[from..].iter().take_while(|c| c.is_ascii_digit()).count();
-    let whole = digits(i);
-    i += whole;
-    let mut fraction = 0;
-    if b.get(i) == Some(&b'.') {
-        fraction = digits(i + 1);
-        i += 1 + fraction;
-    }
-    if whole == 0 && fraction == 0 {
-        return false;
-    }
-    if matches!(b.get(i), Some(b'e' | b'E')) {
-        let sign = usize::from(matches!(b.get(i + 1), Some(b'-' | b'+')));
-        let exponent = digits(i + 1 + sign);
-        if exponent == 0 {
-            return false;
-        }
-        i += 1 + sign + exponent;
-    }
-    i == b.len()
-}
+/// A number as typed: the core's (numbers.rs), Harita reads it too.
+pub use crate::numbers::read_number;
 
 /// The project's angle unit as the core takes it.
 pub fn unit_name(unit: kentos_commands::AngleUnit) -> &'static str {

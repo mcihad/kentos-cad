@@ -28,7 +28,7 @@ use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
-use crate::points::edit::{in_step, refusal};
+use crate::document::{in_step, refusal};
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.

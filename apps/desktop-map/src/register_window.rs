@@ -25,7 +25,7 @@ use kentos_ui::widget::tree_view::Check;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
 use crate::app::{App, Message};
-use crate::calc::traverse::small_angle_text;
+use crate::numbers::small_angle_text;
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::style::fields;

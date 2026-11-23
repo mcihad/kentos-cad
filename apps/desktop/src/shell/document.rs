@@ -676,3 +676,26 @@ mod tests {
         assert!(!doc.dirty());
     }
 }
+
+/// A command's refusal: its error, when it wrote nothing.
+pub fn refusal<T>(result: kentos_commands::CommandResult<T>) -> Option<kentos_commands::CommandError> {
+    match result {
+        kentos_commands::CommandResult::Failed { error }
+        | kentos_commands::CommandResult::Conflict { error }
+        | kentos_commands::CommandResult::NeedsInput { error } => Some(error),
+        _ => None,
+    }
+}
+
+/// Runs `write` as one undo step named `label`; a refusal is rolled back and returned.
+pub fn in_step(
+    doc: &mut kentos_domain::Document,
+    label: &str,
+    write: impl FnOnce(&mut kentos_domain::Document) -> Option<String>,
+) -> Option<String> {
+    doc.transact(label, |doc| match write(doc) {
+        Some(refused) => Err(refused),
+        None => Ok(()),
+    })
+    .err()
+}

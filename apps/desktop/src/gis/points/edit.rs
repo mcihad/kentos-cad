@@ -8,7 +8,7 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
+    EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
     EntityGeometry, PointCreate, PointEntity, PropertiesOperation,
 };
 use kentos_domain::{Document, Slot};
@@ -139,28 +139,8 @@ fn wire(p: kentos_geometry_core::Vec2) -> kentos_commands::Vec2 {
 /// Line work's geometry with its paths put back: the application layer's (`cad.survey.adjust` writes with it too).
 pub use kentos_native_application::elevation::with_paths;
 
-/// A command's refusal: its error, when it wrote nothing.
-pub fn refusal<T>(result: CommandResult<T>) -> Option<kentos_commands::CommandError> {
-    match result {
-        CommandResult::Failed { error }
-        | CommandResult::Conflict { error }
-        | CommandResult::NeedsInput { error } => Some(error),
-        _ => None,
-    }
-}
-
-/// Runs `write` as one undo step named `label`; a refusal is rolled back and returned.
-pub fn in_step(
-    doc: &mut Document,
-    label: &str,
-    write: impl FnOnce(&mut Document) -> Option<String>,
-) -> Option<String> {
-    doc.transact(label, |doc| match write(doc) {
-        Some(refused) => Err(refused),
-        None => Ok(()),
-    })
-    .err()
-}
+/// A command's refusal and one undo step: the core's (document.rs), Harita uses them too.
+pub use crate::document::{in_step, refusal};
 
 /// A point's cell given `text` (docs/adr/0153 §3; the web's `writeCell`).
 pub fn write_cell(

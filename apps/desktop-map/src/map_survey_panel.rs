@@ -149,7 +149,7 @@ pub(crate) trait MapSurveyPanelApp {
 impl MapSurveyPanelApp for App {
     /// Docs/adr/4520: the limits typed, each a length above 0 (another text: not a limit); none when neither is.
     fn map_survey_limits(&self) -> Option<kentos_commands::SurveyPlaceTolerance> {
-        let read = |t: &str| crate::calc::read::read_number(t).filter(|v| v.is_finite() && *v > 0.0);
+        let read = |t: &str| crate::numbers::read_number(t).filter(|v| v.is_finite() && *v > 0.0);
         let t = kentos_commands::SurveyPlaceTolerance {
             horizontal: read(&self.modules.map().map_survey.limit_horizontal),
             vertical: read(&self.modules.map().map_survey.limit_vertical),
@@ -580,7 +580,7 @@ impl MapSurveyPanelApp for App {
         let head: Element<'_, Message> = if tree.known.is_empty() {
             container(bar).padding([4, 12]).width(Fill).into()
         } else {
-            let bad = |t: &str| !t.trim().is_empty() && crate::calc::read::read_number(t).is_none_or(|v| !(v.is_finite() && v > 0.0));
+            let bad = |t: &str| !t.trim().is_empty() && crate::numbers::read_number(t).is_none_or(|v| !(v.is_finite() && v > 0.0));
             let limits = row![
                 label::caption("Kabul farkı sınırı (m)"),
                 container(

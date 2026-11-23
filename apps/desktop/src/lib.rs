@@ -467,6 +467,8 @@ mod open_report_window;
 pub mod module_surfaces;
 #[path = "shell/layer_entries.rs"]
 pub mod layer_entries;
+#[path = "shell/numbers.rs"]
+pub mod numbers;
 #[path = "shell/module_parts.rs"]
 pub mod module_parts;
 #[path = "shell/module_profile.rs"]

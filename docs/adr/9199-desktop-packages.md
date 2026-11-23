@@ -144,9 +144,17 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 - **Sınama:** çekirdek 2837, Harita 191, programlar 34 geçti (önce 3061; Mimari sınaması ikiye bölündü); yok sayılanlar
   (resimler) 664 + 92 + 5 = 761, önceki gibi.
 
+### §4.3 Adım 3: Harita hiçbir modüle bağlı değil
+
+- Harita → CBS'nin üç dosyası CBS'nin dört yardımcısını kullanıyordu; hepsi çekirdeğe indi, eski yerleri onları
+  yeniden dışa verir (CBS'nin yolları aynı):
+  - sayı okuma ve yazma `shell/numbers.rs`: `read_number` (web'in `readNumber`), `small_angle_text`, `mm_text`;
+  - bir komutun reddi ve tek geri alma adımı `shell/document.rs`: `refusal`, `in_step`.
+- Bağımlılık tabanı: Harita → CBS 3 → 0. Harita'nın paketi yalnız çekirdeğin kabuğuna ve CAD'ine bağlıdır.
+- Sınama: çekirdek 2837, Harita 191, programlar 34.
+
 ## §5 Kalan
 
-- Harita → CBS (3 dosya: `cogo`, `map_survey_panel`, `register_window`) ortak çekirdeğe ya da kancaya.
 - Yol, Mimari ve CBS paketleri (en az bağlıdan); her biri aynı düzenle: ortak parçalar çekirdeğe, `ModuleParts`,
   silinen türler, uzantı trait'leri, paket, sınamaların yeri.
 - CAD çekirdeğinin kabuktan ayrılması (§3.1): kabuk → cad 77, CBS → cad 54 dosya.

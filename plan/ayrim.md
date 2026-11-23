@@ -119,4 +119,6 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
   - Adım 2 yapıldı (ADR 9199 §4.2): Harita kendi paketinde (`apps/desktop-map`), program `apps/kentos-cad`'de;
     kayıt dinamik, `impl App`'ler uzantı trait'i, sınamalar üç yerde (çekirdek 2837, Harita 191, programlar 34). Harita'da
     tek satır 17,4 s → 3,7 s. Kabuk → Harita 0.
-  - Sıradaki: Harita → CBS (3 dosya), sonra Yol, Mimari, CBS paketleri; CAD çekirdeğinin kabuktan ayrılması.
+  - Adım 3 yapıldı (ADR 9199 §4.3): Harita → CBS 3 → 0 (sayı ve adım yardımcıları çekirdekte); Harita yalnız
+    çekirdeğe bağlı.
+  - Sıradaki: Yol, Mimari, CBS paketleri (aynı düzenle); CAD çekirdeğinin kabuktan ayrılması.

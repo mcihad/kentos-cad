@@ -272,11 +272,7 @@
     "arch->gis": [],
     "arch->map": [],
     "arch->road": [],
-    "map->gis": [
-      "desktop-map/cogo.rs",
-      "desktop-map/map_survey_panel.rs",
-      "desktop-map/register_window.rs"
-    ],
+    "map->gis": [],
     "map->arch": [],
     "map->road": [],
     "road->gis": [],

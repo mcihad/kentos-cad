@@ -1005,40 +1005,8 @@ impl Table for Form {
     }
 }
 
-/// A small angle (a misclosure) with its fine unit: grad with cc (10⁻⁴ g),
-/// degrees with seconds (the web's `smallAngleText`).
-pub fn small_angle_text(format: &Format, v: f64) -> String {
-    if format.angle_unit_label() == "°" {
-        format!(
-            "{}° ({}″)",
-            unsigned(fixed(v, 5)),
-            unsigned(fixed(v * 3600.0, 1))
-        )
-    } else {
-        format!(
-            "{} g ({} cc)",
-            unsigned(fixed(v, 5)),
-            unsigned(fixed(v * 10_000.0, 1))
-        )
-    }
-}
-
-/// A small length (a misclosure) in millimetres (the web's `mmText`).
-pub fn mm_text(m: f64) -> String {
-    format!("{} mm", unsigned(fixed(m * 1000.0, 1)))
-}
-
-/// A rounded value that came out as −0 reads as 0 (the web's `unsigned`,
-/// `/^-0(\.0*)?$/`).
-fn unsigned(text: String) -> String {
-    let zero = text.strip_prefix("-0").is_some_and(|rest| {
-        rest.is_empty()
-            || rest
-                .strip_prefix('.')
-                .is_some_and(|d| d.bytes().all(|b| b == b'0'))
-    });
-    if zero { text[1..].to_owned() } else { text }
-}
+/// A small angle and a small length as the windows write them: the core's (numbers.rs), Harita writes them too.
+pub use crate::numbers::{mm_text, small_angle_text};
 
 const COLUMNS_GRAD: [Col; 9] = columns("g", "Sonraki noktaya kenar");
 const COLUMNS_DEG: [Col; 9] = columns("°", "Sonraki noktaya kenar");
