@@ -2349,9 +2349,11 @@ fn sink_answer(
                 rows: t.rows,
                 geometry: t.geometry,
                 indexes: t.indexes,
-                replaced: t.replaced,
-                appended: t.appended,
-                already: t.already,
+                // The sink's own report says each table written again (`sinkReport`); the export's fields are the
+                // export's (docs/adr/9191).
+                replaced: false,
+                appended: false,
+                already: 0,
             })
             .collect(),
         left: written.left,
