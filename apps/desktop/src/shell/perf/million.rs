@@ -29,7 +29,8 @@ fn million() {
         .ok()
         .and_then(|v| v.split(',').next().and_then(|s| s.trim().parse().ok()))
         .unwrap_or(1_000_000);
-    let file = file_of(n);
+    // `KENTOS_PROFILE_FILE`: a real drawing instead of the made one (plan/render.md RM-06).
+    let file = std::env::var("KENTOS_PROFILE_FILE").map_or_else(|_| file_of(n), std::path::PathBuf::from);
     assert!(file.exists(), "{}: made by perf::large::large", file.display());
     let what = std::env::var("KENTOS_PROFILE").unwrap_or_else(|_| "select".into());
     let (mut app, _) = App::boot(None);
@@ -52,6 +53,30 @@ fn million() {
                 let frames = pan(&mut app, &mut h, center);
                 let gpu: Vec<f64> = frames.iter().map(|p| p.gpu_ms()).collect();
                 println!("{n} kaydırma {round}: GPU p50 {:.1} ms", percentile(&gpu, 0.5));
+            }
+            // `click`: one object selected with a click at the area's middle, then Esc (plan/render.md RM-06).
+            "click" => {
+                // Tümünü göster first, as `perf::files` clicks after it: the middle of the drawing, not of its open view.
+                if round == 0 {
+                    h.frame_with(&mut app, &[], |app| app.zoom_extents());
+                    h.frame(&mut app, &[]);
+                }
+                let center = app.viewport.bounds.center();
+                let p = h.frame(&mut app, &super::frame::click(center));
+                if round == 0
+                    && let Some(e) = app.selection.ids().first().and_then(|s| app.document.as_ref()?.model.get(*s))
+                {
+                    println!("{n} seçilen nesne: {}", e.kind());
+                }
+                let [ev, ap, vw, ly, dr] = p.split();
+                println!(
+                    "{n} tık {round}: seçilen {}, MİB {:.1} ms (olay {ev:.1}, uygulama {ap:.1}, görünüm {vw:.1}, düzen {ly:.1}, çizim {dr:.1}), GPU {:.1} ms",
+                    app.selection.len(),
+                    p.cpu(),
+                    p.gpu_ms()
+                );
+                let esc = h.frame(&mut app, &key(key::Named::Escape));
+                println!("{n} Esc: MİB {:.1} ms, GPU {:.1} ms", esc.cpu(), esc.gpu_ms());
             }
             _ => {
                 let p = h.frame_with(&mut app, &[], |app| {
