@@ -33,7 +33,7 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07. ADR'ler
       Vectorworks lisans düzeyleri, ortak platformda ayrı ürünler;
     - saklama: ArcGIS Pro projesi veriye başvurur, QGIS projesi veritabanında saklanır ve açıklama katmanı projede
       durur.
-- [ ] **AY-02 — Ekranı açık proje belirler (her programda).**
+- [x] **AY-02 — Ekranı açık proje belirler (her programda).** ([ADR 9195](../docs/adr/9195-module-separation.md) §4)
   - `App::active_module()`: projenin modülü, proje yoksa programınki. Hepsi bir arada programda proje yokken yalnız
     ortak yüzeyler.
   - Bütün `shows_*`, komut kümesi (`offers`, `not_offered`) ve sihirbaz etkin modüle bakar. ADR 9127 ve 9185'in

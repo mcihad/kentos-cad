@@ -65,9 +65,10 @@ fn read(path: &std::path::Path, name: Option<&str>) -> Result<Read, String> {
 
 impl App {
     /// Opens a GeoPackage as a project (its only project, a pick of several, or a new one of its tables); `name`
-    /// asks for one project. Only a program with data layers opens one (CBS, Harita).
+    /// asks for one project. Only a program with data layers opens one (CBS, Harita, and kentos-cad whatever project
+    /// is on screen: it opens in a tab of its own; docs/adr/9195 §2).
     pub(crate) fn open_geopackage(&mut self, path: PathBuf, purpose: Purpose, name: Option<String>) -> Task<Message> {
-        if !self.shows_panel(crate::app::Panel::Sources) {
+        if !crate::module_surfaces::shows_panel_in(self.program, crate::app::Panel::Sources) {
             self.warn(format!(
                 "“{}” bir GeoPackage: veri katmanı olan programlarda (KentOS CBS, KentOS Harita) proje olarak açılır.",
                 file_name(&path)

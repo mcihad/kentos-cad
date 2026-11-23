@@ -2646,6 +2646,7 @@ Liste:
 - [ ] Modül ve istemci ayrımı (ADR 9195, 9196; 23 Kasım 2026): web dönünce aynı kesin kurallar (CLAUDE.md §25):
   ekranı açık projenin modülü belirler; web modülleri ve proje türlerini ortak modül kataloğundan
   (`catalog/v1/modules.json`) okur; CBS verisi veritabanında, CAD projesi proje dosyasında; görüntüleyici yazmaz.
+  Ortak izlerde şablonla çizilen CBS çoklu çizgisi artık Genişlik sormaz (AY-02, `template-draw`, `template-group`).
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

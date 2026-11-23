@@ -22,9 +22,10 @@ fn scratch(name: &str) -> std::path::PathBuf {
     dir
 }
 
-/// The app with the layout kept in `dir`, as main.rs opens it.
+/// The app with the layout kept in `dir`, as main.rs opens it, the sample drawing on screen: a project of no module's
+/// type yet shows every surface in kentos-cad (docs/adr/9195 §2), the panels and tabs these tests keep among them.
 fn opened(dir: &std::path::Path) -> App {
-    let (mut app, _) = App::boot(None);
+    let mut app = crate::files_testing::app_with_drawing();
     app.layout = Keeper::open(dir);
     app.apply_layout();
     app

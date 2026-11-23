@@ -2,8 +2,9 @@
 //! the dock's panels, the status bar's cells, Proje ayarları' and Uygulama ayarları' sections, the layer menu's
 //! entries, the application menu's formats, Kaynaklar's sections, the hover card, the sheet's and the cloud's types
 //! and the files dropped on the window. A tab or panel another program left in the shared layout is not opened
-//! here, an opener of what a program has not falls back to Komut geçmişi and says where it is; kentos-cad shows
-//! everything. Test code only; no program is started.
+//! here, an opener of what a program has not falls back to Komut geçmişi and says where it is. kentos-cad shows the
+//! open project's module's surfaces as that module's program does, the common ones with nothing open, and switches
+//! with its tabs (docs/adr/9195 §2). Test code only; no program is started.
 
 use crate::gis;
 use crate::map;
@@ -107,10 +108,164 @@ fn has(menu: &str, label: &str) -> bool {
     menu.contains(&format!("label: \"{label}"))
 }
 
+/// `module`'s project (its type and first work) on screen in kentos-cad, its surfaces kept as after any message.
+fn in_cad(module: Module) -> App {
+    let mut app = app_with_drawing();
+    app.hand_over = |m, _| Ok(m.program().to_owned());
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut s = doc.model.settings().clone();
+    s.workspace = Some(crate::program::type_of(module));
+    s.cad_work = crate::program::works_of(module).first().copied();
+    doc.model.set_settings(s);
+    let task = app.update(Message::Swallowed);
+    drive(&mut app, task);
+    app
+}
+
+/// Everything a module shows, as a comparable list of words.
+fn surfaces_of(app: &App) -> Vec<String> {
+    let mut out = vec![format!("{:?}", app.bottom_tabs()), format!("{:?}", app.project_sections())];
+    out.extend(Panel::ALL.into_iter().map(|p| format!("{p:?} {}", app.shows_panel(p))));
+    for cell in [Cell::MapCrs, Cell::SecondCrs, Cell::Topology, Cell::Overlap, Cell::Scenario, Cell::Level, Cell::LineWeights] {
+        out.push(format!("{cell:?} {}", app.shows_cell(cell)));
+    }
+    for row in [AppSetting::Geographic, AppSetting::FormOnCreate, AppSetting::NewProjects, AppSetting::NewProjectType, AppSetting::NewProjectUnit] {
+        out.push(format!("{row:?} {}", app.shows_setting(row)));
+    }
+    for entry in [
+        LayerEntry::Time,
+        LayerEntry::Scenario,
+        LayerEntry::Crs,
+        LayerEntry::StyleFiles,
+        LayerEntry::Sld,
+        LayerEntry::Qml,
+        LayerEntry::MapLibre,
+        LayerEntry::Dataset,
+        LayerEntry::Kind,
+        LayerEntry::Service,
+        LayerEntry::Source,
+    ] {
+        out.push(format!("{entry:?} {}", app.shows_layer_entry(entry)));
+    }
+    for section in [SourceSection::Databases, SourceSection::Services] {
+        out.push(format!("{section:?} {}", app.shows_source_section(section)));
+    }
+    for rows in [
+        PropertyRows::Crs,
+        PropertyRows::Services,
+        PropertyRows::Mask,
+        PropertyRows::Separators,
+        PropertyRows::MapWork,
+        PropertyRows::Survey,
+        PropertyRows::Topology,
+    ] {
+        out.push(format!("{rows:?} {}", app.shows_property_rows(rows)));
+    }
+    for id in ["file.import.gpkg", "file.export.gpkg", "file.import.dwg", "file.export.pdf"] {
+        out.push(format!("{id} {}", app.shows_format(id)));
+    }
+    out.push(format!(
+        "parcels {} thematic {} hidden {:?} sheet {:?} cloud {:?} upload {:?} calc {:?}",
+        app.shows_parcel_rows(),
+        app.shows_thematic_renderers(),
+        app.library_hidden(),
+        app.sheet_project_type(),
+        app.cloud_kind(),
+        app.upload_kind(),
+        app.hidden_point_calcs()
+    ));
+    out
+}
+
+/// Whether `app` offers each of the catalog's commands, in the catalog's order.
+fn offered(app: &App) -> Vec<bool> {
+    crate::catalog::catalog().commands().iter().map(|c| app.offers(c.id)).collect()
+}
+
+/// `module`'s project in kentos-cad: what it shows and offers (an app in a frame of its own, see `with`).
+#[inline(never)]
+fn in_cad_view(module: Module) -> (Vec<String>, Vec<bool>) {
+    let app = in_cad(module);
+    assert_eq!(app.active_module(), Some(module));
+    (surfaces_of(&app), offered(&app))
+}
+
+/// `module`'s project in the module's program: what it shows and offers.
+#[inline(never)]
+fn own_view(module: Module) -> (Vec<String>, Vec<bool>) {
+    let app = drawn(Some(module));
+    (surfaces_of(&app), offered(&app))
+}
+
+/// The matrix (docs/adr/9195 §2): in kentos-cad a module's project shows every surface as the module's program shows
+/// it, and offers its commands alone; kentos-cad keeps its own (the project type's switch) besides.
+#[test]
+fn kentos_cad_shows_the_open_projects_module_as_its_program_does() {
+    for module in Module::ALL {
+        let cad = in_cad_view(module);
+        let own = own_view(module);
+        assert_eq!(cad.0, own.0, "{module:?}");
+        for (i, c) in crate::catalog::catalog().commands().iter().enumerate() {
+            let kentos_cads = Module::ALL.into_iter().all(|m| !crate::catalog::catalog().module_has(m, c.id));
+            assert_eq!(cad.1[i], own.1[i] || kentos_cads, "{module:?} {}", c.id);
+        }
+    }
+}
+
+/// kentos-cad's tabs hold every module's projects: the screen follows the one on screen, the panels another module
+/// closed come back where they were and the kept tab in front with them; the user's own closing is kept.
+#[test]
+fn kentos_cad_switches_its_surfaces_with_the_project_on_screen() {
+    let dir = kept("sekme", json!({ "bottomExpanded": true, "bottomTab": "table", "dockTab": "sources" }));
+    let mut app = opened_with(None, &dir);
+    // Nothing open: the common surfaces alone, the kept ones waiting.
+    assert_eq!(app.active_module(), None);
+    assert_eq!(app.bottom_tab, BottomTab::History);
+    assert!(!app.docks.contains(Panel::Sources) && !app.docks.contains(Panel::Blocks));
+    assert_eq!(in_front(&app), Some(Panel::Layers));
+    // A CBS project opens: its panels come back and the kept tabs with them.
+    let mut gis = drawing(0);
+    let mut s = gis.settings().clone();
+    s.workspace = Some(Workspace::Gis);
+    gis.model.set_settings(s);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(gis)))));
+    assert_eq!(app.active_module(), Some(Module::Gis));
+    assert!(app.docks.contains(Panel::Processing) && app.docks.contains(Panel::Sources));
+    assert!(!app.docks.contains(Panel::Blocks) && !app.shows_bottom_tab(BottomTab::CadInspection));
+    assert_eq!(in_front(&app), Some(Panel::Sources));
+    assert_eq!(app.bottom_tab, BottomTab::Table);
+    // The user closes İşlemler: that stays theirs.
+    app.docks.close(Panel::Processing);
+    // A building's project on screen: its panels, no CBS ones, CAD denetimi.
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut s = doc.model.settings().clone();
+    s.workspace = Some(Workspace::Cad);
+    s.cad_work = Some(CadWork::Architecture);
+    doc.model.set_settings(s);
+    let _ = app.update(Message::Swallowed);
+    assert_eq!(app.active_module(), Some(Module::Architecture));
+    assert!(app.docks.contains(Panel::Blocks) && app.docks.contains(Panel::Navigator));
+    assert!(!app.docks.contains(Panel::Sources));
+    assert!(app.shows_bottom_tab(BottomTab::CadInspection) && !app.shows_bottom_tab(BottomTab::Table));
+    assert_eq!(app.bottom_tab, BottomTab::History);
+    // Back to CBS: Kaynaklar back in front, İşlemler still closed as the user left it.
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut s = doc.model.settings().clone();
+    s.workspace = Some(Workspace::Gis);
+    s.cad_work = None;
+    doc.model.set_settings(s);
+    let _ = app.update(Message::Swallowed);
+    assert!(app.docks.contains(Panel::Sources) && !app.docks.contains(Panel::Blocks));
+    assert!(!app.docks.contains(Panel::Processing), "the user's closing is kept");
+    assert_eq!(in_front(&app), Some(Panel::Sources));
+    assert_eq!(app.bottom_tab, BottomTab::Table);
+}
+
 #[test]
 fn each_program_has_its_own_bottom_tabs() {
     use BottomTab::*;
-    assert_eq!(started(None).bottom_tabs(), BottomTab::ALL);
+    // kentos-cad with nothing open: the common tabs alone (docs/adr/9195 §2).
+    assert_eq!(started(None).bottom_tabs(), [History, Works, Messages, Python]);
     assert_eq!(
         started(MIMARI).bottom_tabs(),
         [
@@ -148,8 +303,8 @@ fn each_program_has_its_own_bottom_tabs() {
     let gis = started(GIS).bottom_tabs();
     assert_eq!(gis.len(), BottomTab::ALL.len() - 2);
     assert!(!gis.contains(&Audit) && !gis.contains(&CadInspection) && gis.contains(&Chart));
-    // Komut geçmişi, Koordinat listesi, Çalışan işler, Uyarılar and Python are every program's.
-    for program in PROGRAMS {
+    // Komut geçmişi, Koordinat listesi, Çalışan işler, Uyarılar and Python are every module's.
+    for program in [MIMARI, HARITA, GIS] {
         let app = started(program);
         for tab in [History, Coords, Works, Messages, Python] {
             assert!(app.shows_bottom_tab(tab), "{program:?} {tab:?}");
@@ -250,21 +405,23 @@ fn a_tab_another_program_left_is_komut_gecmisi_here_and_stays_kept_for_it() {
         "blocks",
         "Bloklar stays kept for the others"
     );
-    // KentOS Mimari has neither Tablo nor Kaynaklar; kentos-cad has both.
+    // KentOS Mimari has neither Tablo nor Kaynaklar; kentos-cad has neither with nothing open, both with a CBS
+    // project (kentos_cad_switches_its_surfaces_with_the_project_on_screen).
     let both = json!({ "bottomExpanded": true, "bottomTab": "table", "dockTab": "sources" });
     let mimari = opened_with(MIMARI, &kept("mimari", both.clone()));
     assert_eq!(mimari.bottom_tab, BottomTab::History);
     assert_eq!(in_front(&mimari), Some(Panel::Layers));
     let cad = opened_with(None, &kept("cad", both));
-    assert_eq!(cad.bottom_tab, BottomTab::Table);
-    assert_eq!(in_front(&cad), Some(Panel::Sources));
+    assert_eq!(cad.bottom_tab, BottomTab::History);
+    assert_eq!(in_front(&cad), Some(Panel::Layers));
 }
 
 #[test]
 fn each_program_docks_its_own_panels() {
     use Panel::*;
     let expected: [(Option<Module>, &[Panel]); 4] = [
-        (None, &Panel::ALL),
+        // kentos-cad with nothing open: the common panels (docs/adr/9195 §2).
+        (None, &[Layers, Assistant, Properties]),
         (
             MIMARI,
             &[Layers, Blocks, Templates, Navigator, Assistant, Properties],
@@ -364,17 +521,15 @@ fn f4_and_the_openers_keep_to_the_programs_panels() {
 fn each_program_has_its_own_status_cells() {
     use Cell::*;
     let expected: [(Option<Module>, &[Cell]); 4] = [
-        (
-            None,
-            &[MapCrs, SecondCrs, Topology, Overlap, Scenario, Level],
-        ),
-        (MIMARI, &[Level]),
-        (HARITA, &[MapCrs, SecondCrs, Topology, Overlap]),
+        // kentos-cad with nothing open: no project's cells (docs/adr/9195 §2).
+        (None, &[]),
+        (MIMARI, &[Level, LineWeights]),
+        (HARITA, &[MapCrs, SecondCrs, Topology, Overlap, LineWeights]),
         (GIS, &[MapCrs, SecondCrs, Topology, Overlap, Scenario]),
     ];
     for (program, cells) in expected {
         let app = started(program);
-        for cell in [MapCrs, SecondCrs, Topology, Overlap, Scenario, Level] {
+        for cell in [MapCrs, SecondCrs, Topology, Overlap, Scenario, Level, LineWeights] {
             assert_eq!(
                 app.shows_cell(cell),
                 cells.contains(&cell),
@@ -382,12 +537,12 @@ fn each_program_has_its_own_status_cells() {
             );
         }
         // The lamps follow: every other drafting aid is every program's but Kalınlık, whose lamp a CBS project has not
-        // (docs/adr/9185; a program without a drawing shows its own type).
+        // (docs/adr/9185: the profile's cell).
         for (id, _) in crate::view::STATUS_AIDS {
             let own = match id {
                 "draft.topology" => cells.contains(&Topology),
                 "draft.overlap" => cells.contains(&Overlap),
-                "view.lineWeights" => app.work_mode() != Workspace::Gis,
+                "view.lineWeights" => cells.contains(&LineWeights),
                 _ => true,
             };
             assert_eq!(app.shows_aid(id), own, "{program:?} {id}");
@@ -434,7 +589,8 @@ fn the_cells_with_values_follow_the_program() {
 #[test]
 fn each_program_has_its_own_settings_sections() {
     use ProjectSection::*;
-    assert_eq!(started(None).project_sections(), ProjectSection::ALL);
+    // kentos-cad with nothing open has no project to set (docs/adr/9195 §2).
+    assert!(started(None).project_sections().is_empty());
     assert_eq!(
         started(MIMARI).project_sections(),
         [General, Units, Crs, Variables, Arch]
@@ -1595,5 +1751,35 @@ fn pictures_of_the_options() {
                 );
             });
         }
+    }
+}
+
+/// The pictures (`.run/gui-evidence/kullanim-9195/`): kentos-cad with nothing open (the common surfaces), then a CBS,
+/// a building's, a map's and a road's project, each showing its module's dock, bottom tabs and status bar as its
+/// program does (docs/adr/9195 §2).
+#[test]
+#[ignore = "pictures for the owner"]
+fn kentos_cad_follows_the_project_pictures() {
+    let open = |app: &mut App| {
+        app.command_expanded = true;
+        let task = app.update(Message::Swallowed);
+        drive(app, task);
+    };
+    crate::files_testing::usage_shots("9195", "01-proje-yok", || {
+        let mut app = started(None);
+        open(&mut app);
+        app
+    });
+    for (module, name) in [
+        (Module::Gis, "02-cbs"),
+        (Module::Architecture, "03-mimari"),
+        (Module::Map, "04-harita"),
+        (Module::Road, "05-yol"),
+    ] {
+        crate::files_testing::usage_shots("9195", name, || {
+            let mut app = in_cad(module);
+            open(&mut app);
+            app
+        });
     }
 }

@@ -19,11 +19,17 @@ fn fixture(name: &str) -> PathBuf {
         .join(name)
 }
 
-/// The app with the derivation's drawing: an arced parcel, a block, curves, a text.
+/// The app with the derivation's drawing: an arced parcel, a block, curves, a text. Deriving a CBS from a drawing is
+/// KentOS Harita's work (Dosya › GIS): the drawing is a map's project, whose module the screen follows in kentos-cad
+/// (docs/adr/9195 §2).
 fn gis_app() -> App {
     let json = std::fs::read_to_string(fixture("drawing.json")).expect("the drawing");
     let snapshot = DocumentSnapshotV1::from_json(&json).expect("reads");
-    let doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let mut doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let mut s = doc.settings().clone();
+    s.workspace = Some(kentos_commands::Workspace::Cad);
+    s.cad_work = Some(kentos_commands::CadWork::Map);
+    doc.model.set_settings(s);
     let (mut app, _) = App::boot(None);
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app

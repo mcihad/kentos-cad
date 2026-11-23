@@ -83,6 +83,16 @@ pub(crate) fn in_program(m: Module) -> &'static str {
     }
 }
 
+/// “bu CBS projesinde”: where something is in kentos-cad, by the open project's module (docs/adr/9195 §2).
+pub(crate) fn in_project(m: Module) -> &'static str {
+    match m {
+        Module::Architecture => "bu mimari projede",
+        Module::Map => "bu harita projesinde",
+        Module::Gis => "bu CBS projesinde",
+        Module::Road => "bu yol projesinde",
+    }
+}
+
 /// Whether `module`'s program offers product command `product` to an agent (docs/adr/8056 §1).
 fn offers_product(module: Module, product: &str) -> bool {
     use kentos_native_application::registry::{Discipline, discipline_of};
@@ -247,6 +257,25 @@ impl App {
         self.document.as_ref().and_then(|d| module_of(d.settings()))
     }
 
+    /// The module whose surfaces the screen shows (CLAUDE.md §25, docs/adr/9195 §2). A module's program is its
+    /// module (it opens its own projects alone and hands the others over); kentos-cad follows the open project, by its
+    /// type and work. A project whose module is not decided yet (no type, a CAD drawing not asked its work, the old
+    /// hybrid type, an announced type: plan3d …) leaves kentos-cad none, every surface as before, until its type and
+    /// work are given; every new project has them (the wizard, Python, MCP). None in kentos-cad with nothing open.
+    pub(crate) fn active_module(&self) -> Option<Module> {
+        self.program.or_else(|| self.document_module())
+    }
+
+    /// Where something is, in a sentence: the module's program (“KentOS Harita'da”), the open project in kentos-cad
+    /// (“bu CBS projesinde”), or nothing open.
+    pub(crate) fn here_words(&self) -> &'static str {
+        match (self.program, self.active_module()) {
+            (Some(m), _) => in_program(m),
+            (None, Some(m)) => in_project(m),
+            (None, None) => "açık proje yokken",
+        }
+    }
+
     /// The recent files this program shows: a module's own and those no module
     /// was kept for; every one in kentos-cad.
     pub(crate) fn shown_recent(&self) -> Vec<&Recent> {
@@ -260,45 +289,36 @@ impl App {
             .collect()
     }
 
-    /// Whether `id` is the building's command alone (KentOS Mimari's: no other module's ribbon holds it) while a CBS
-    /// project is open in kentos-cad (docs/adr/9127): a map's project does not offer it, whichever way it is asked
-    /// for (Menülerde ara, the command line, a shortcut, a menu). The map's, CBS's and road's commands stay.
-    pub(crate) fn building_only_here(&self, id: &str) -> bool {
-        self.program.is_none()
-            && self.document_module() == Some(Module::Gis)
-            && catalog().module_has(Module::Architecture, id)
-            && Module::ALL
-                .into_iter()
-                .filter(|m| *m != Module::Architecture)
-                .all(|m| !catalog().module_has(m, id))
-    }
-
-    /// Whether this program offers a command (docs/adr/0802): every one in kentos-cad but the building's alone in a
-    /// CBS project (docs/adr/9127), a module's own in a module's program (Komut ara, the command line, the shortcuts,
-    /// the quick access bar, F1 and the drawing's menus find nothing else; `App::run` refuses it, `App::available` is
-    /// false).
+    /// Whether a command is offered here (docs/adr/0802, 9195 §2): the active module's own, in its program and in
+    /// kentos-cad alike (Komut ara, the command line, the shortcuts, the quick access bar, F1 and the drawing's menus
+    /// find nothing else; `App::run` refuses it, `App::available` is false); every one in kentos-cad with nothing
+    /// open. kentos-cad keeps its own too, the ribbon's commands no module has (the project type's switch).
     pub(crate) fn offers(&self, id: &str) -> bool {
-        self.program.is_none_or(|m| catalog().module_has(m, id)) && !self.building_only_here(id)
+        match self.active_module() {
+            None => true,
+            Some(m) => {
+                catalog().module_has(m, id)
+                    || (self.program.is_none() && Module::ALL.into_iter().all(|o| !catalog().module_has(o, id)))
+            }
+        }
     }
 
-    /// Why a command typed or found is not run here (docs/adr/0802): the programs that have it.
+    /// Why a command typed or found is not run here (docs/adr/0802, 9195 §2): the programs that have it.
     pub(crate) fn not_offered(&self, id: &str, title: &str) -> Option<String> {
-        if self.building_only_here(id) {
-            return Some(format!("“{title}” bu CBS projesinde yok; {} var.", in_program(Module::Architecture)));
-        }
-        let here = self.program?;
-        if catalog().module_has(here, id) {
+        if self.offers(id) {
             return None;
         }
+        let here = self.active_module()?;
         let others: Vec<&str> = Module::ALL
             .into_iter()
             .filter(|m| *m != here && catalog().module_has(*m, id))
             .map(in_program)
             .collect();
+        let place = self.here_words();
         Some(if others.is_empty() {
-            format!("“{title}” {} yok.", in_program(here))
+            format!("“{title}” {place} yok.")
         } else {
-            format!("“{title}” {} yok; {} var.", in_program(here), and_list(&others))
+            format!("“{title}” {place} yok; {} var.", and_list(&others))
         })
     }
 

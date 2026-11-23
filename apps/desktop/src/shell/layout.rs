@@ -117,6 +117,16 @@ impl Keeper {
 
     /// The commands the user put on the quick access bar
     /// (`ribbonQuickAccess`), in the order added.
+    /// The bottom tab the layout keeps in front (another module's when this one does not show it, docs/adr/0802 §5).
+    pub(crate) fn kept_bottom_tab(&self) -> BottomTab {
+        tab_of_key(self.text("bottomTab"))
+    }
+
+    /// The panel the layout keeps in front of Katmanlar' slot.
+    pub(crate) fn kept_dock_tab(&self) -> Panel {
+        panel_of_key(self.text("dockTab"))
+    }
+
     pub(crate) fn quick_access(&self) -> Vec<String> {
         self.texts("ribbonQuickAccess").map(str::to_owned).collect()
     }

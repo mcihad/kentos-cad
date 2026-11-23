@@ -109,6 +109,55 @@ Ayrıntı [plan/ayrim.md](../../plan/ayrim.md)'de:
   modül kataloğu.
 - **AY-07:** paketlere bölme.
 
-## §4 Kalan
+## §4 AY-02: ekran açık projeyi izliyor (23 Kasım 2026)
 
-AY-02 ve sonrası. Her madde kanıtıyla bu ADR'ye ya da kendi ADR'sine yazılır.
+- **Etkin modül** (`App::active_module`, `apps/desktop/src/arch/program.rs`): modül programı kendi modülüdür, çünkü
+  yalnız kendi projesini açar, öbürlerini devreder. `kentos-cad` açık projenin modülünü izler (türü ve işi).
+  - Modülü belirlenmemiş proje `kentos-cad`'de her yüzeyi gösterir, karar verilene kadar: türsüz, işi sorulmamış CAD,
+    eski karma tür, duyurulmuş türler.
+  - Sihirbaz, Python ve MCP her yeni projeye tür ve iş verir.
+- **Yüzeyler ve komutlar** (`apps/desktop/src/shell/module_surfaces.rs`):
+  - Yüzeyler, paneller, araç seçenekleri ve komut kümesi (`offers`, `not_offered`) etkin modülden gelir.
+  - `kentos-cad` projesizken yalnız ortak yüzeyleri gösterir (`NO_PROJECT`): Komut geçmişi, Çalışan işler, Uyarılar,
+    Python; Katmanlar, Asistan, Eklenti, Öznitelikler.
+  - Hiçbir modüle verilmeyen şerit komutları `kentos-cad`'in kendisinindir ve orada kalır (projenin türünü değiştiren
+    `workspace.*`).
+- **Yamalar genel kurala döndü:**
+  - ADR 9127'nin yaması (`building_only_here`) kalktı: CBS projesinde bina komutları modülün kümesinden düşer.
+  - ADR 9185'in yaması (`shows_aid`) kalktı: Kalınlık lambası profilin hücresidir (`Cell::LineWeights`).
+  - Ret iletisi yeri söyler: ““Duvar” bu CBS projesinde yok; KentOS Mimari'de var.”
+- **Paneller:**
+  - Modül değişince göstermediği paneller kapanır (`surface_closed`). Onları gösteren bir modülle, Katmanlar'ın
+    yuvasındaki sıralarıyla geri gelirler (`Panel::TOP_SLOT`).
+  - Kullanıcının kapattığı panel kapalı kalır.
+  - Ekran Komut geçmişi'ne ya da Katmanlar'a düştüyse ve yeni modül gösteriyorsa, saklı alt sekme ve öndeki panel
+    geri gelir.
+  - Bütün bu kural açılışta bir kez uygulanır.
+- **GeoPackage:** açmak programın yeteneğidir (`shows_panel_in(program, Sources)`). `kentos-cad` bırakılan
+  GeoPackage'ı kendi sekmesinde CBS projesi olarak açar.
+- **Yeni proje:** `kentos-cad` projesizken ortak yüzeyleri gösterir; kurulan proje yalnız modülününkileri. Yeni
+  proje yeniden açıkken de ekran o projenin modülündedir. Sahibin gördüğü “bütün menüler” buydu: hepsi bir arada
+  program her projede her yüzeyi gösteriyordu.
+- **Kanıt:**
+  - Yeni sınamalar:
+    - `module_surface_tests::kentos_cad_shows_the_open_projects_module_as_its_program_does`: dört modülde `kentos-cad`'in
+      bütün yüzeyleri ve katalogdaki her komutun sunulması, modül programındakiyle aynı;
+    - `kentos_cad_switches_its_surfaces_with_the_project_on_screen`;
+    - `wizard::tests::a_new_project_shows_its_modules_surfaces_alone_and_so_does_the_next`.
+  - Yeni kurala çevrilen sınamalar:
+    - `kentos-cad`'in projesiz satırları (alt sekmeler, paneller, durum hücreleri, ayar bölümleri);
+    - ADR 9127'nin sınaması;
+    - `module_tests`'in “`kentos-cad` her komutu çalıştırır” iki satırı;
+    - CBS türlü örneklerle Harita araçlarını koşan ölçü ağı ve türetme sınamalarının sahnesi Harita projesi oldu;
+    - şablon izlerinde CBS projesinin çoklu çizgisi Genişlik sormuyor.
+  - **İzlerin geçici dosyası** artık her oynatmada ayrı (`traces::scratch_file`). Aynı izi aynı anda oynatan iki sınama
+    birbirinin dosyasını açıyordu.
+  - **Masaüstü:** 3047 sınama geçti. Düşen 4 sınama HEAD'de de düşüyordu, ayrı işlenir:
+    - `project::tests`'in iki sihirbaz sınaması;
+    - `python::tests::every_program_opens_a_link_of_its_own`;
+    - `source_size_tests` (`lib.rs` 2010 satır).
+  - **Resim:** `.run/gui-evidence/kullanim-9195`: projesiz, CBS, Mimari, Harita ve Yol; açık ve koyu.
+
+## §5 Kalan
+
+AY-03 ve sonrası. Her madde kanıtıyla bu ADR'ye ya da kendi ADR'sine yazılır.

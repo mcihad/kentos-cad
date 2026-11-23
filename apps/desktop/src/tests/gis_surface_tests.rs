@@ -1,7 +1,9 @@
-//! A CBS project in kentos-cad offers none of the building's own commands (docs/adr/9127): Menülerde ara finds none,
-//! and one run any way (search, command line, shortcut) is refused, said where it is; the map's commands stay; the CBS
-//! ribbon carries no building model export, no user coordinate system panel and no point cloud tools in Analiz (they
-//! come with a selected point cloud). A CAD project finds and runs Duvar as before.
+//! A CBS project in kentos-cad offers the CBS module's commands alone (docs/adr/9127, 9195 §2): Menülerde ara finds no
+//! building command, and one run any way (search, command line, shortcut) is refused, said where it is; the CBS ribbon
+//! carries no building model export, no user coordinate system panel and no point cloud tools in Analiz (they come with
+//! a selected point cloud). A building's project finds and runs Duvar.
+
+use kentos_launch::Module;
 
 use crate::app::{App, Message};
 use crate::files_testing::{app_with_drawing, last_said};
@@ -37,7 +39,8 @@ fn tab_commands(app: &App, tab: &str) -> Vec<&'static str> {
 fn duvar_finds_no_building_command_in_a_cbs_project_and_does_not_run() {
     let mut app = gis_app();
     assert!(app.program.is_none(), "kentos-cad, every module");
-    assert!(app.building_only_here("tool.wall") && !app.building_only_here("calc.network"), "the map's commands stay");
+    assert_eq!(app.active_module(), Some(Module::Gis), "the screen is the project's module's");
+    assert!(!app.offers("tool.wall") && app.offers("file.export.gpkg"), "the CBS module's commands alone");
     let ids = found(&mut app, "duvar");
     assert!(!ids.contains(&"tool.wall"), "{ids:?}");
     assert!(!ids.iter().any(|id| id.starts_with("arch.")), "{ids:?}");
@@ -65,10 +68,15 @@ fn the_cbs_ribbon_carries_no_building_export_ucs_or_point_cloud_analysis() {
 }
 
 #[test]
-fn a_cad_project_finds_and_runs_duvar_as_before() {
+fn a_buildings_project_finds_and_runs_duvar() {
     let mut app = app_with_drawing();
     crate::files_testing::make_cad(&mut app);
-    assert!(!app.building_only_here("tool.wall"), "a CAD project: every module");
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.settings().clone();
+    settings.cad_work = Some(kentos_commands::CadWork::Architecture);
+    doc.model.set_settings(settings);
+    assert_eq!(app.active_module(), Some(Module::Architecture));
+    assert!(app.offers("tool.wall"));
     let ids = found(&mut app, "duvar");
     assert!(ids.contains(&"tool.wall"), "{ids:?}");
 }

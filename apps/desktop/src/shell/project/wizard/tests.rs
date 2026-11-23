@@ -195,6 +195,48 @@ fn a_cbs_project_takes_its_provinces_zone_and_opens_on_it() {
     assert!((505_000.0..520_000.0).contains(&east), "{east}");
 }
 
+/// Yeni proje in kentos-cad (docs/adr/9195 §2; the owner saw every menu after it): with nothing open the common
+/// surfaces; the project made shows its module's alone, and so does the screen while Yeni proje is open again over
+/// it; the next project made, of another module, shows that module's.
+#[test]
+fn a_new_project_shows_its_modules_surfaces_alone_and_so_does_the_next() {
+    use crate::app::Panel;
+    use crate::bottom::BottomTab;
+    use kentos_launch::Module;
+    let (mut app, _) = App::boot(None);
+    assert_eq!(app.active_module(), None);
+    assert_eq!(app.bottom_tabs(), [BottomTab::History, BottomTab::Works, BottomTab::Messages, BottomTab::Python]);
+    // A map's project on real coordinates.
+    open(&mut app);
+    send(&mut app, Event::Type(Workspace::Cad));
+    send(&mut app, Event::Next);
+    send(&mut app, Event::Work(PLAN));
+    send(&mut app, Event::System(5254));
+    send(&mut app, Event::Next);
+    send(&mut app, Event::Name("Ada 7".into()));
+    send(&mut app, Event::Next);
+    assert_eq!(app.active_module(), Some(Module::Map));
+    let map_tabs = app.bottom_tabs();
+    assert!(map_tabs.contains(&BottomTab::CadInspection) && !map_tabs.contains(&BottomTab::Chart), "{map_tabs:?}");
+    assert!(app.docks.contains(Panel::Sources) && !app.docks.contains(Panel::Navigator));
+    // Yeni proje again: the screen behind it is still the map's.
+    open(&mut app);
+    assert_eq!(app.bottom_tabs(), map_tabs);
+    assert!(!app.offers("tool.wall"), "no building's command over a map's project");
+    // A CBS project made: its module's surfaces alone.
+    send(&mut app, Event::Type(Workspace::Gis));
+    send(&mut app, Event::Next);
+    send(&mut app, Event::Province(6));
+    send(&mut app, Event::Next);
+    let _ = app.update(Message::Swallowed);
+    assert_eq!(app.active_module(), Some(Module::Gis));
+    let gis_tabs = app.bottom_tabs();
+    assert!(!gis_tabs.contains(&BottomTab::CadInspection) && !gis_tabs.contains(&BottomTab::Audit), "{gis_tabs:?}");
+    assert!(gis_tabs.contains(&BottomTab::Chart));
+    assert!(!app.docks.contains(Panel::Blocks) && app.docks.contains(Panel::Processing));
+    assert!(!app.shows_aid("view.lineWeights"));
+}
+
 #[test]
 fn the_rail_goes_back_and_forth_and_a_step_that_cannot_be_left_stops_the_way() {
     let mut app = app_with_drawing();

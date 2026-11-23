@@ -1,9 +1,11 @@
-//! What each KentOS program shows of its window (docs/adr/0802 §5): the bottom panel's tabs, the dock's
+//! What the window shows for each module (docs/adr/0802 §5, 9195 §2): the bottom panel's tabs, the dock's
 //! panels, the status bar's cells, Proje ayarları' and Uygulama ayarları' sections and rows, the layer menu's
 //! entries, the application menu's file formats, Kaynaklar's sections, the files it takes when they are
 //! dropped on the window, the properties' rows, the hover card's parcel rows, the project type the sheet mode
 //! and the cloud start with, the tools' options, Katman stili's renderers and the style library's branches.
-//! kentos-cad, every module at once, shows every one; a module's program its own:
+//! The active module decides (CLAUDE.md §25): the open project's, else the program's (`App::active_module`), in a
+//! module's program and in kentos-cad alike; kentos-cad with nothing open shows the common surfaces alone
+//! (`NO_PROJECT`), and switches as its tabs' projects do:
 //!
 //! - KentOS Mimari, a building on its own coordinates: Komut geçmişi, Koordinat listesi, Arama (Veride ara
 //!   finds the texts of a building too), Denetim, Uyarılar and Python; Katmanlar, Öznitelikler, Bloklar and
@@ -55,6 +57,9 @@ pub(crate) enum Cell {
     Scenario,
     /// Kat (active_level.rs, docs/adr/0713), and Etkin aracın ayarları' Kat row.
     Level,
+    /// Çizgi kalınlığı's lamp (`view.lineWeights`): a drawing's habit; a CBS project's stays in Görünüm
+    /// (docs/adr/9185).
+    LineWeights,
 }
 
 /// An entry of Uygulama ayarları only some programs show.
@@ -203,7 +208,7 @@ const ARCHITECTURE: Surfaces = Surfaces {
         Panel::Extension,
         Panel::Properties,
     ],
-    cells: &[Cell::Level],
+    cells: &[Cell::Level, Cell::LineWeights],
     project: &[
         ProjectSection::General,
         ProjectSection::Units,
@@ -264,7 +269,13 @@ const MAP: Surfaces = Surfaces {
         Panel::Extension,
         Panel::Properties,
     ],
-    cells: &[Cell::MapCrs, Cell::SecondCrs, Cell::Topology, Cell::Overlap],
+    cells: &[
+        Cell::MapCrs,
+        Cell::SecondCrs,
+        Cell::Topology,
+        Cell::Overlap,
+        Cell::LineWeights,
+    ],
     project: &[
         ProjectSection::General,
         ProjectSection::Units,
@@ -334,7 +345,7 @@ const ROAD: Surfaces = Surfaces {
         Panel::Extension,
         Panel::Properties,
     ],
-    cells: &[Cell::SecondCrs],
+    cells: &[Cell::SecondCrs, Cell::LineWeights],
     project: &[
         ProjectSection::General,
         ProjectSection::Units,
@@ -432,6 +443,46 @@ const GIS: Surfaces = Surfaces {
     library_hidden: &[],
 };
 
+/// kentos-cad with nothing open (docs/adr/9195 §2): the surfaces every module shares, no module's own. A project
+/// opened brings its module's.
+const NO_PROJECT: Surfaces = Surfaces {
+    bottom: &[
+        BottomTab::History,
+        BottomTab::Works,
+        BottomTab::Messages,
+        BottomTab::Python,
+    ],
+    panels: &[
+        Panel::Layers,
+        // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
+        Panel::Assistant,
+        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
+        Panel::Extension,
+        Panel::Properties,
+    ],
+    cells: &[],
+    project: &[],
+    settings: &[
+        AppSetting::Geographic,
+        AppSetting::FormOnCreate,
+        AppSetting::NewProjects,
+        AppSetting::NewProjectType,
+        AppSetting::NewProjectUnit,
+    ],
+    layer_menu: &[],
+    formats: Formats::All,
+    sources: &[SourceSection::Databases, SourceSection::Services],
+    rows: &[],
+    parcels: false,
+    sheet: ProjectType::Cad,
+    cloud: None,
+    upload: ProjectType::Cad,
+    hidden_calc: &[],
+    left_out: &[],
+    thematic: false,
+    library_hidden: &[],
+};
+
 /// What `module`'s program shows.
 pub(crate) fn surfaces(module: Module) -> &'static Surfaces {
     match module {
@@ -442,15 +493,16 @@ pub(crate) fn surfaces(module: Module) -> &'static Surfaces {
     }
 }
 
-/// Whether `program` (none: kentos-cad) shows `panel`: the dock is laid out by it before the app is.
+/// Whether `program` (none: kentos-cad, every module's) may show `panel`: the dock is laid out by it before the app
+/// is; what the active module does not show is closed after (`App::keep_own_surfaces`).
 pub(crate) fn shows_panel_in(program: Option<Module>, panel: Panel) -> bool {
     program.is_none_or(|m| surfaces(m).panels.contains(&panel))
 }
 
-/// The tools' options `program` (none: kentos-cad, every one) offers: what the drafting aids give the tools
-/// (app.rs fills them with the settings).
-pub(crate) fn tool_offers_in(program: Option<Module>) -> Offers {
-    program.map_or(Offers::ALL, |m| Offers::without(surfaces(m).left_out))
+/// The tools' options `module` (none: kentos-cad with nothing open, every one) offers: what the drafting aids give
+/// the tools (app.rs fills them with the settings).
+pub(crate) fn tool_offers_in(module: Option<Module>) -> Offers {
+    module.map_or(Offers::ALL, |m| Offers::without(surfaces(m).left_out))
 }
 
 /// Whether a style library item from `source` at `path` shows with the system branches `hidden` left out
@@ -462,6 +514,15 @@ pub(crate) fn library_shows(
 ) -> bool {
     source != kentos_native_style::library::Source::System
         || path.first().is_none_or(|branch| !hidden.contains(branch))
+}
+
+/// The panel in front of Katmanlar' slot.
+fn front_of_layers(docks: &kentos_ui::widget::docking::Docks<Panel>) -> Option<Panel> {
+    use kentos_ui::widget::docking::Slot;
+    let Some(Slot::Docked(side, i)) = docks.slot(Panel::Layers) else {
+        return None;
+    };
+    docks.stacks(side).get(i).and_then(|s| s.active())
 }
 
 /// The application menu's drawing formats: every program lists them.
@@ -484,6 +545,7 @@ fn aid_cell(id: &str) -> Option<Cell> {
     match id {
         "draft.topology" => Some(Cell::Topology),
         "draft.overlap" => Some(Cell::Overlap),
+        "view.lineWeights" => Some(Cell::LineWeights),
         _ => None,
     }
 }
@@ -505,9 +567,14 @@ fn joined(modules: &[Module]) -> String {
 }
 
 impl App {
-    /// The program's profile; none in kentos-cad, which shows everything.
+    /// The active module's profile (docs/adr/9195 §2): the open project's module's, else the program's; the common
+    /// surfaces in kentos-cad with nothing open; none for an announced type (plan3d …), which shows every one.
     fn surfaces(&self) -> Option<&'static Surfaces> {
-        self.program.map(surfaces)
+        match self.active_module() {
+            Some(m) => Some(surfaces(m)),
+            None if self.document.is_none() => Some(&NO_PROJECT),
+            None => None,
+        }
     }
 
     /// Whether the bottom panel has `tab` here.
@@ -525,7 +592,7 @@ impl App {
 
     /// Whether the dock has `panel` here.
     pub(crate) fn shows_panel(&self, panel: Panel) -> bool {
-        shows_panel_in(self.program, panel)
+        self.surfaces().is_none_or(|s| s.panels.contains(&panel))
     }
 
     /// Whether the status bar shows `cell` here (and what goes with it, see [`Cell`]).
@@ -533,12 +600,9 @@ impl App {
         self.surfaces().is_none_or(|s| s.cells.contains(&cell))
     }
 
-    /// Whether the status bar shows the drafting aid `id`'s lamp here. A CBS project's bar has no Kalınlık lamp, a CAD
-    /// drawing's habit: its Çizgi kalınlığı stays in Görünüm (docs/adr/9185).
+    /// Whether the status bar shows the drafting aid `id`'s lamp here: the profile's cells say (a CBS project's bar
+    /// has no Kalınlık lamp, docs/adr/9185).
     pub(crate) fn shows_aid(&self, id: &str) -> bool {
-        if id == "view.lineWeights" && self.work_mode() == Workspace::Gis {
-            return false;
-        }
         aid_cell(id).is_none_or(|cell| self.shows_cell(cell))
     }
 
@@ -598,7 +662,7 @@ impl App {
     /// Whether the tools here offer `option` (Draft::offers), and what goes with it outside them: Şablon
     /// düzenleyici's Blok ekle with Blocks, Öznitelikler' Genişlik of a polyline with Widths.
     pub(crate) fn offers_tool_option(&self, option: ToolOption) -> bool {
-        tool_offers_in(self.program).has(option)
+        tool_offers_in(self.active_module()).has(option)
     }
 
     /// Whether Katman stili lists the thematic renderers (docs/adr/0213).
@@ -643,17 +707,18 @@ impl App {
             return true;
         }
         let others = self.others_showing(|s| !s.hidden_calc.contains(&kind));
-        let here = self.program.map_or("", crate::program::in_program);
+        let here = self.here_words();
         let title = CalcDef::of(kind).label;
         self.warn(format!("“{title}” {here} yok; {} var.", joined(&others)));
         false
     }
 
-    /// The programs other than this one that show what `shows` says, in the launcher's order.
+    /// The modules other than the active one that show what `shows` says, in the launcher's order.
     fn others_showing(&self, shows: impl Fn(&Surfaces) -> bool) -> Vec<Module> {
+        let here = self.active_module();
         Module::ALL
             .into_iter()
-            .filter(|m| Some(*m) != self.program && shows(surfaces(*m)))
+            .filter(|m| Some(*m) != here && shows(surfaces(*m)))
             .collect()
     }
 
@@ -664,7 +729,7 @@ impl App {
             return true;
         }
         let others = self.others_showing(|s| s.bottom.contains(&tab));
-        let here = self.program.map_or("", crate::program::in_program);
+        let here = self.here_words();
         let title = tab.title();
         self.output(if others.is_empty() {
             format!("“{title}” {here} yok.")
@@ -681,7 +746,7 @@ impl App {
             return true;
         }
         let others = self.others_showing(|s| s.panels.contains(&panel));
-        let here = self.program.map_or("", crate::program::in_program);
+        let here = self.here_words();
         let title = panel.title();
         self.output(if others.is_empty() {
             format!("“{title}” {here} yok.")
@@ -691,24 +756,88 @@ impl App {
         false
     }
 
-    /// After every message (layout.rs): what this program does not show is not on screen, whichever way it
-    /// came (a remembered tab of another program, an opener, a test setting the program late).
+    /// After every message (layout.rs): what the active module does not show is not on screen, whichever way it came
+    /// (a remembered tab of another program, an opener, a test setting the program late, another module's project in
+    /// kentos-cad's tab). A panel closed for that comes back where it was when a project whose module shows it is on
+    /// screen again; one the user closed stays closed.
     pub(crate) fn keep_own_surfaces(&mut self) {
         // The tools' options too: a program set after the settings were applied (a test) is followed.
-        self.draft.offers = tool_offers_in(self.program);
-        if self.program.is_none() {
-            return;
-        }
+        self.draft.offers = tool_offers_in(self.active_module());
         if !self.shows_bottom_tab(self.bottom_tab) {
             self.bottom_tab = BottomTab::History;
         }
+        let back: Vec<Panel> = self
+            .surface_closed
+            .iter()
+            .copied()
+            .filter(|p| self.shows_panel(*p))
+            .collect();
+        if !back.is_empty() {
+            self.surface_closed.retain(|p| !back.contains(p));
+            let docks = self.hidden_docks.as_mut().unwrap_or(&mut self.docks);
+            // The tabs in front stay in front: the panels come back behind them.
+            let fronts: Vec<Panel> = docks
+                .stacks(kentos_ui::widget::docking::Side::Right)
+                .iter()
+                .filter_map(|s| s.active())
+                .collect();
+            for panel in back {
+                docks.show(panel, kentos_ui::widget::docking::Side::Right);
+            }
+            // Each in its place among Katmanlar' slot, as a module's program docks them.
+            if let Some(slot) = docks.slot(Panel::Layers) {
+                let in_slot: Vec<Panel> =
+                    Panel::TOP_SLOT.into_iter().filter(|p| docks.slot(*p) == Some(slot)).collect();
+                for (i, panel) in in_slot.into_iter().enumerate() {
+                    docks.update(kentos_ui::widget::docking::Event::Moved(
+                        panel,
+                        kentos_ui::widget::docking::Target::Tab(slot, i),
+                    ));
+                }
+            }
+            for front in fronts {
+                docks.update(kentos_ui::widget::docking::Event::Selected(front));
+            }
+        }
+        let mut closed_any = false;
         for panel in Panel::ALL {
             if self.shows_panel(panel) {
                 continue;
             }
-            self.docks.close(panel);
+            let mut closed = self.docks.close(panel);
             if let Some(docks) = &mut self.hidden_docks {
-                docks.close(panel);
+                closed |= docks.close(panel);
+            }
+            closed_any |= closed;
+            if closed && !self.surface_closed.contains(&panel) {
+                self.surface_closed.push(panel);
+            }
+        }
+        // A panel closed here leaves Katmanlar in front, as at start, so the kept one in front stays kept for the
+        // modules that show it (layout.rs keeps no fallback over another module's).
+        if closed_any && !self.shows_panel(self.layout.kept_dock_tab()) {
+            let docks = self.hidden_docks.as_mut().unwrap_or(&mut self.docks);
+            if docks.contains(Panel::Layers) {
+                docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
+            }
+        }
+        // Another module now (a project opened in kentos-cad, its tab chosen): the kept bottom tab and panel in front
+        // come back when this module shows them, as each module's program would show its own, where the screen fell
+        // back (Komut geçmişi, Katmanlar); a tab chosen meanwhile stays.
+        let module = self.active_module();
+        if self.surfaces_of != Some(module) {
+            let first = self.surfaces_of.is_none();
+            self.surfaces_of = Some(module);
+            if !first {
+                let tab = self.layout.kept_bottom_tab();
+                if self.bottom_tab == BottomTab::History && self.shows_bottom_tab(tab) {
+                    self.bottom_tab = tab;
+                }
+                let front = self.layout.kept_dock_tab();
+                let docks = self.hidden_docks.as_mut().unwrap_or(&mut self.docks);
+                if front_of_layers(docks) == Some(Panel::Layers) && docks.contains(front) {
+                    docks.update(kentos_ui::widget::docking::Event::Selected(front));
+                }
             }
         }
     }
@@ -719,7 +848,11 @@ impl App {
     pub(crate) fn drop_drawing(&mut self, path: PathBuf) -> Task<Message> {
         let name = crate::sources::folder_name(&path);
         let ext = extension(&path);
-        if DROPPED_DRAWINGS.contains(&ext.as_str()) {
+        // kentos-cad opens a GeoPackage as a CBS project in a tab of its own, beside the project on screen
+        // (docs/adr/9195 §2: its tabs hold every module's projects).
+        let gpkg =
+            self.program.is_none() && kentos_native_application::project_store::is_geopackage(&path);
+        if DROPPED_DRAWINGS.contains(&ext.as_str()) || gpkg {
             return self.update(Message::Opening(crate::opening::Event::PickedTab(Some(
                 path,
             ))));
@@ -737,20 +870,19 @@ impl App {
                 )),
             )));
         }
-        let here = self.program.map_or("KentOS", Module::title);
-        let takes = format!("{here} çizimleri (KCAD, DWG, DXF, NCZ) açar, PDF'i içe aktarır.");
+        let takes = match self.program {
+            Some(m) => format!("{} çizimleri (KCAD, DWG, DXF, NCZ) açar, PDF'i içe aktarır.", m.title()),
+            None => "Bu proje çizimleri (KCAD, DWG, DXF, NCZ) açar, PDF'i içe aktarır.".to_owned(),
+        };
+        let here = self.here_words();
         let others = self.others_showing(|s| s.panels.contains(&Panel::Sources));
         let said = match kentos_interaction::sources::source_kind(&name) {
             Some(kind) if !others.is_empty() => format!(
-                "“{name}” {} açılmaz: {takes} {} {} açılır.",
-                self.program.map_or("", crate::program::in_program),
+                "“{name}” {here} açılmaz: {takes} {} {} açılır.",
                 kind.label(),
                 joined(&others)
             ),
-            _ => format!(
-                "“{name}” {} açılmaz: {takes}",
-                self.program.map_or("", crate::program::in_program)
-            ),
+            _ => format!("“{name}” {here} açılmaz: {takes}"),
         };
         self.warn(said);
         Task::none()

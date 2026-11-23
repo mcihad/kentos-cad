@@ -179,11 +179,13 @@ fn the_works_together_show_every_command_and_the_contextual_tabs_stay() {
         );
         assert!(app.selection_tab().is_some(), "{w:?}");
     }
-    // A command a work's ribbon hides still runs from kentos-cad (the type is no security boundary).
+    // A command another work's module has is not run in kentos-cad either (docs/adr/9195 §2): said where it is.
     let mut app = cad_drawing(Some(CadWork::Map));
     assert!(!commands(app.ribbon_tabs()).contains("tool.wall"));
     let _ = app.update(Message::Run("tool.wall"));
-    assert_eq!(app.session.tool_id(), "wall");
+    assert_ne!(app.session.tool_id(), "wall");
+    let said = last_said(&app);
+    assert!(said.contains("bu harita projesinde yok") && said.contains("KentOS Mimari'de var"), "{said}");
 }
 
 #[test]
@@ -1072,10 +1074,13 @@ fn run_refuses_another_modules_command_and_says_which_program_has_it() {
     assert_eq!(last_said(&gis), "“CAD” KentOS GIS'te yok.");
     assert_eq!(gis.work_mode(), Workspace::Gis);
     assert!(gis.why_disabled("workspace.cad").is_some());
-    // kentos-cad runs any (the type is no security boundary).
+    // kentos-cad follows the open project's module as its program does (docs/adr/9195 §2): a building's project does
+    // not run Harita's tool either, and says where it is.
     let mut all = cad_drawing(Some(CadWork::Architecture));
     let _ = all.update(Message::Run("tool.parcel"));
-    assert_eq!(all.session.tool_id(), "parcel");
+    assert_ne!(all.session.tool_id(), "parcel");
+    let said = last_said(&all);
+    assert!(said.contains("bu mimari projede yok") && said.contains("KentOS Harita'da var"), "{said}");
 }
 
 /// A tool's method typed by its own name follows the program's ribbon (docs/adr/0802): Ölçülendirme's Semt,

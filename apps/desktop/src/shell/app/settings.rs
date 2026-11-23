@@ -36,8 +36,8 @@ impl App {
             // Seçim süzgeci's kinds are the session's (docs/adr/0187 §5).
             select_kinds: s.bool("drafting.selectFilter").then_some(self.select_kinds),
             unplaced_labels: s.bool("graphics.unplacedLabels"),
-            // The program's, not a setting: a module's program leaves out what is not its work (docs/adr/0802).
-            offers: crate::module_surfaces::tool_offers_in(self.program),
+            // The active module's, not a setting: a module leaves out what is not its work (docs/adr/0802, 9195 §2).
+            offers: crate::module_surfaces::tool_offers_in(self.active_module()),
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");

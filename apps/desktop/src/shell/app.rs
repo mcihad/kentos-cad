@@ -119,22 +119,28 @@ impl Panel {
         }
     }
 
+    /// The panels sharing Katmanlar' slot, in their order: İşlemler, Bloklar, Şablonlar and Kaynaklar beside Katmanlar,
+    /// as the web's tabs. A panel a module closed comes back to its place in it (module_surfaces.rs).
+    pub(crate) const TOP_SLOT: [Panel; 10] = [
+        Panel::Layers,
+        Panel::Processing,
+        Panel::Blocks,
+        Panel::Templates,
+        Panel::Sources,
+        Panel::Navigator,
+        Panel::RoadProject,
+        Panel::MapWork,
+        Panel::MapSurvey,
+        Panel::Assistant,
+    ];
+
     /// The dock at start: `program`'s panels (none: kentos-cad's, every one; docs/adr/0802 §5).
     fn layout(program: Option<kentos_launch::Module>) -> Docks<Panel> {
         let mut docks = Docks::new();
         docks.dock(Panel::Layers, Side::Right);
-        // İşlemler, Bloklar, Şablonlar and Kaynaklar share the top slot with Katmanlar, as the web's tabs; Katmanlar in front.
-        for panel in [
-            Panel::Processing,
-            Panel::Blocks,
-            Panel::Templates,
-            Panel::Sources,
-            Panel::Navigator,
-            Panel::RoadProject,
-            Panel::MapWork,
-            Panel::MapSurvey,
-            Panel::Assistant,
-        ] {
+        // The others of the top slot, Katmanlar in front.
+        for panel in &Self::TOP_SLOT[1..] {
+            let panel = *panel;
             if crate::module_surfaces::shows_panel_in(program, panel) {
                 docks.dock(panel, Side::Right);
             }
@@ -1140,6 +1146,12 @@ pub struct App {
     pub fullscreen: bool,
     /// The side panels' layout while F4 hides them, put back as it was.
     pub(crate) hidden_docks: Option<Docks<Panel>>,
+    /// The panels closed because the active module does not show them (module_surfaces.rs, docs/adr/9195 §2): they
+    /// come back where they were with a project whose module shows them. One the user closed is not here.
+    pub(crate) surface_closed: Vec<Panel>,
+    /// The active module the surfaces were last kept for (module_surfaces.rs): when it changes, the layout's kept
+    /// bottom tab and panel in front come back if this module shows them. None before the first keeping.
+    pub(crate) surfaces_of: Option<Option<kentos_launch::Module>>,
     /// A server check is on its way (`server.check` waits for it).
     /// The check at start: its answer goes to the server cell, not to the log.
     pub(crate) server_quiet: bool,

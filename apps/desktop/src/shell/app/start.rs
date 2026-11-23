@@ -277,6 +277,8 @@ impl App {
             shape: kentos_ui::theme::shape::current(),
             fullscreen: false,
             hidden_docks: None,
+            surface_closed: Vec::new(),
+            surfaces_of: None,
             server_checking: false,
             server_quiet: false,
             server_health: None,
@@ -472,6 +474,9 @@ impl App {
         app.report_settings_open();
         // The layout's defaults until the kept one is read (main.rs, layout.rs).
         app.apply_layout();
+        // The dock and the tabs as the active module shows them from the start: kentos-cad with nothing open the
+        // common ones (docs/adr/9195 §2); the others come back with a project whose module shows them.
+        app.keep_own_surfaces();
         let task = match path {
             Some(path) => app.start_opening(path, Purpose::File),
             None => Task::none(),

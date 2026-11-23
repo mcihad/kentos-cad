@@ -73,8 +73,12 @@ pub fn folder() -> PathBuf {
 
 /// A temporary file for a trace's saves.
 pub fn scratch_file(trace: &Trace, variant: Variant) -> PathBuf {
+    // A file of its own for each play: two tests playing the same trace in the same variant at once (every trace's
+    // test and a trace's own) wrote and reopened each other's file.
+    static PLAYS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let play = PLAYS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     std::env::temp_dir().join(format!(
-        "kentos-iz-{}-{}-{}.kcad",
+        "kentos-iz-{}-{}-{}-{play}.kcad",
         std::process::id(),
         trace.id,
         variant.id
