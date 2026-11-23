@@ -250,6 +250,41 @@ impl LayerKind {
         }
     }
 
+    /// Where its content is kept (docs/adr/9197 §2.4): a drawing's, an annotation's, a bound layer's, rasters' and point
+    /// clouds' objects in the project file (a bound layer's written to its table too, the pixels and points in files
+    /// beside); a data layer's rows in their source; a service's on its server; a group holds nothing of its own.
+    pub const fn kept(self) -> Kept {
+        match self {
+            LayerKind::Drawing
+            | LayerKind::Annotation
+            | LayerKind::Bound
+            | LayerKind::Raster
+            | LayerKind::PointCloud => Kept::ProjectFile,
+            LayerKind::Data => Kept::Source,
+            LayerKind::Service => Kept::Service,
+            LayerKind::Group => Kept::Nothing,
+        }
+    }
+
+    /// What a client writes when it writes on a layer of this kind (docs/adr/9197 §2.4): the project file's objects, or
+    /// a source's rows; nothing for a service's layer and a group.
+    pub const fn written_as(self) -> Option<Writes> {
+        match self {
+            LayerKind::Drawing
+            | LayerKind::Annotation
+            | LayerKind::Bound
+            | LayerKind::Raster
+            | LayerKind::PointCloud => Some(Writes::ProjectFile),
+            LayerKind::Data => Some(Writes::DataRows),
+            LayerKind::Service | LayerKind::Group => None,
+        }
+    }
+
+    /// Whether `client` writes on a layer of this kind in a project kept as `storage`.
+    pub fn written_by(self, client: Client, storage: Storage) -> bool {
+        self.written_as().is_some_and(|w| client.writes(storage).contains(&w))
+    }
+
     /// Its name in a sentence.
     pub const fn title(self) -> &'static str {
         match self {
@@ -261,6 +296,110 @@ impl LayerKind {
             LayerKind::Raster => "raster",
             LayerKind::PointCloud => "nokta bulutu",
             LayerKind::Group => "grup",
+        }
+    }
+}
+
+/// Where a layer kind's content is kept (docs/adr/9197 §2.4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Kept {
+    /// In the project file.
+    ProjectFile,
+    /// In a table of a source: a GeoPackage, PostgreSQL or KentOS Bulut.
+    Source,
+    /// On a map service's server.
+    Service,
+    /// Nothing of its own: a group.
+    Nothing,
+}
+
+impl Kept {
+    /// Its name as the module catalog writes it.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Kept::ProjectFile => "projectFile",
+            Kept::Source => "source",
+            Kept::Service => "service",
+            Kept::Nothing => "nothing",
+        }
+    }
+}
+
+/// What a client writes of a project (docs/adr/9197 §2.1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Writes {
+    /// The project file: its structure, styles, settings and annotation; a CAD project whole.
+    ProjectFile,
+    /// The data layers' rows in their source.
+    DataRows,
+}
+
+impl Writes {
+    /// Its name as the module catalog writes it.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Writes::ProjectFile => "projectFile",
+            Writes::DataRows => "dataRows",
+        }
+    }
+}
+
+/// A KentOS client (docs/adr/9197, CLAUDE.md §25 rules 6–7): what it writes of a module's project, by the project's
+/// storage. Every client reads the module catalog and decides its screens by the project's module.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Client {
+    /// The desktop programs.
+    Desktop,
+    /// The web application (paused, docs/adr/0228): the desktop's rules when it returns.
+    Web,
+    /// A mobile viewer: reads every module's project, writes nothing; in the cloud with a read-only key.
+    MobileViewer,
+    /// The mobile application: writes a CBS project's data rows by server commands under the forms' rules and the
+    /// roles; views a CAD project.
+    MobileApp,
+}
+
+impl Client {
+    /// Every client, in the catalog's order.
+    pub const ALL: [Client; 4] = [
+        Client::Desktop,
+        Client::Web,
+        Client::MobileViewer,
+        Client::MobileApp,
+    ];
+
+    /// Its name as the module catalog writes it.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Client::Desktop => "desktop",
+            Client::Web => "web",
+            Client::MobileViewer => "mobileViewer",
+            Client::MobileApp => "mobileApp",
+        }
+    }
+
+    /// Its name in a sentence.
+    pub const fn title(self) -> &'static str {
+        match self {
+            Client::Desktop => "Masaüstü",
+            Client::Web => "Web",
+            Client::MobileViewer => "Mobil görüntüleyici",
+            Client::MobileApp => "Mobil uygulama",
+        }
+    }
+
+    /// What it writes of a project kept as `storage` (docs/adr/9197 §2.1): a viewer nothing; the mobile application a
+    /// CBS project's data rows alone, never a project file; the desktop (and the web, when it returns) the project file,
+    /// and a CBS project's data rows too.
+    pub const fn writes(self, storage: Storage) -> &'static [Writes] {
+        match (self, storage) {
+            (Client::Desktop | Client::Web, Storage::Database) => &[Writes::ProjectFile, Writes::DataRows],
+            (Client::Desktop | Client::Web, Storage::File) => &[Writes::ProjectFile],
+            (Client::MobileApp, Storage::Database) => &[Writes::DataRows],
+            (Client::MobileApp, Storage::File) | (Client::MobileViewer, _) => &[],
         }
     }
 }
@@ -403,6 +542,40 @@ mod tests {
         assert_eq!(serde_json::to_string(&Storage::Database).expect("json"), "\"database\"");
         for k in LayerKind::ALL {
             assert_eq!(serde_json::to_string(&k).expect("json"), format!("\"{}\"", k.id()));
+        }
+    }
+
+    #[test]
+    fn a_client_writes_what_its_role_and_the_storage_allow() {
+        for storage in [Storage::Database, Storage::File] {
+            // A viewer writes nothing.
+            assert!(Client::MobileViewer.writes(storage).is_empty());
+            // The desktop always writes the project file.
+            assert!(Client::Desktop.writes(storage).contains(&Writes::ProjectFile));
+            // The mobile application never does.
+            assert!(!Client::MobileApp.writes(storage).contains(&Writes::ProjectFile));
+            // The web, when it returns, keeps the desktop's rules.
+            assert_eq!(Client::Web.writes(storage), Client::Desktop.writes(storage));
+        }
+        assert_eq!(Client::MobileApp.writes(Storage::Database), [Writes::DataRows]);
+        assert!(Client::MobileApp.writes(Storage::File).is_empty(), "a CAD project is viewed");
+        // On a module's layers: the mobile application writes a CBS project's data tables alone; nothing of a CAD
+        // project; a viewer nothing anywhere; services and groups no client writes.
+        for m in Module::ALL {
+            for k in m.layer_kinds() {
+                let app = k.written_by(Client::MobileApp, m.storage());
+                assert_eq!(app, m.storage() == Storage::Database && *k == LayerKind::Data, "{m:?} {k:?}");
+                assert!(!k.written_by(Client::MobileViewer, m.storage()), "{m:?} {k:?}");
+                if matches!(k, LayerKind::Service | LayerKind::Group) {
+                    assert!(!k.written_by(Client::Desktop, m.storage()), "{m:?} {k:?}");
+                }
+            }
+        }
+        // A data table is in its source, the rest of what draws in the project file.
+        assert_eq!(LayerKind::Data.kept(), Kept::Source);
+        assert_eq!(LayerKind::Annotation.kept(), Kept::ProjectFile);
+        for c in Client::ALL {
+            assert_eq!(serde_json::to_string(&c).expect("json"), format!("\"{}\"", c.id()));
         }
     }
 

@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use kentos_launch::{LayerKind, Module, Storage};
+use kentos_launch::{Client, LayerKind, Module, Storage};
 use serde_json::{Value, json};
 
 use crate::catalog::catalog;
@@ -34,9 +34,32 @@ fn catalog_text() -> String {
             })
         })
         .collect();
+    // Where each kind's content is kept and how a client writes on it (docs/adr/9197 §2.4).
     let kinds: Vec<Value> = LayerKind::ALL
         .into_iter()
-        .map(|k| json!({ "id": k.id(), "title": k.title() }))
+        .map(|k| {
+            json!({
+                "id": k.id(),
+                "title": k.title(),
+                "kept": k.kept().id(),
+                "writtenAs": k.written_as().map(|w| w.id()),
+            })
+        })
+        .collect();
+    // What each client writes, by the project's storage (docs/adr/9197 §2.1).
+    let writes = |c: Client, s: Storage| c.writes(s).iter().map(|w| w.id()).collect::<Vec<_>>();
+    let clients: Vec<Value> = Client::ALL
+        .into_iter()
+        .map(|c| {
+            json!({
+                "id": c.id(),
+                "title": c.title(),
+                "writes": {
+                    "database": writes(c, Storage::Database),
+                    "file": writes(c, Storage::File),
+                },
+            })
+        })
         .collect();
     let storages: Vec<Value> = [Storage::Database, Storage::File]
         .into_iter()
@@ -47,11 +70,13 @@ fn catalog_text() -> String {
         "version": 1,
         "note": "KentOS modüllerinin ortak tanımı (ADR 9195 §6, CLAUDE.md §25): kimlik, program, proje türü ve işleri, \
                  bulut türleri, saklama türü (database: CBS verisi veritabanında; file: CAD projesinin tamamı proje \
-                 dosyasında, ADR 9196), katman türleri ve şeridin modüle verdiği komutlar. Hiçbir şeridin tutmadığı \
+                 dosyasında, ADR 9196), katman türleri ve şeridin modüle verdiği komutlar. İstemciler saklama türüne \
+                 göre ne yazdıklarını, katman türleri tutuldukları yeri ve yazılışlarını söyler (ADR 9197). Hiçbir şeridin tutmadığı \
                  komut her modülündür ve listelenmez. Üretici: KENTOS_WRITE_MODULES=1 cargo test -p kentos-desktop \
                  --lib module_catalog.",
         "storages": storages,
         "layerKinds": kinds,
+        "clients": clients,
         "modules": modules,
     }))
     .expect("serializes");
@@ -96,6 +121,11 @@ fn the_module_catalog_says_what_each_module_offers() {
             "{m:?}"
         );
     }
+    // A viewer writes nothing; the mobile application a CBS project's data rows alone (docs/adr/9197 §2.1).
+    let clients = written["clients"].as_array().expect("clients");
+    let of = |id: &str| clients.iter().find(|c| c["id"] == id).expect("a client").clone();
+    assert_eq!(of("mobileViewer")["writes"], json!({ "database": [], "file": [] }));
+    assert_eq!(of("mobileApp")["writes"], json!({ "database": ["dataRows"], "file": [] }));
     // A building's commands are not a CBS's, nor a CBS's edit session tools a building's.
     let ids = |m: Module| catalog().module_command_list(m);
     assert!(

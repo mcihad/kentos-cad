@@ -20,7 +20,8 @@ istemci tarifi kılavuz §9.9'dadır.
 Her madde tek dilimde biter: araştırma, ADR, kod, sınama, resim (`.run/gui-evidence/kullanim-NNNN`, Git'e girmez),
 plan ve TODOS işareti, commit ve push.
 
-Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07. ADR'ler **9195**'ten başlar.
+Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (mobil istemciler) ortak tanımla başladı. ADR'ler
+**9195**'ten başlar.
 
 ## Maddeler
 
@@ -84,6 +85,21 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07. ADR'ler
   - Harita ve Yol'da CBS tablosu salt okunur altlıktır: düzenleme oturumu menüde yalnız CBS'dedir (AY-03).
   - Sınamalar: sunucuda kural sınaması, veritabanı biçimine dayanan sunucu ve API sınamaları CBS projesiyle.
   - Kalan: bulutta CBS'nin yalnız veritabanı biçimi AY-05'te (satır aktarımıyla).
+- [~] **AY-08 — Mobil görüntüleyici ve mobil uygulama için ayrım.** ([ADR 9197](../docs/adr/9197-mobile-clients.md))
+  - Sahibin isteği (23 Kasım 2026): “Mobil görüntüleyici ve uygulama da geliştireceğiz ileride ona göre de ayrım yap”.
+  - Yapıldı:
+    - istemciler ortak tanımda (`kentos_launch::Client`): masaüstü, web, mobil görüntüleyici, mobil uygulama;
+      saklama türüne göre ne yazdıkları;
+    - katman türünün tutulduğu yer ve yazılışı (`LayerKind::kept`, `written_as`, `written_by`);
+    - `catalog/v1/modules.json`'da istemciler ve katman türlerinin yetenekleri;
+    - CLAUDE.md §25 kural 7, kılavuz §9.9.
+  - Kalan:
+    - katmanın mobil davranışı (göster, düzenle, gösterme), proje dosyasının alanı olarak ADR'siyle;
+    - mobil istemcinin modül profilleri;
+    - CBS'de çevrimdışı düzenleme (değişiklik günlüğü, eşitlemede sunucu komutları);
+    - mobilde CAD düzenleme kararı;
+    - mobil uygulamanın teknolojisi.
+  - AY-07'nin paketleri mobilin kullanacağı ortak crate'leri arayüzsüz tutar.
 - [ ] **AY-07 — Paketlere bölme (uzun soluklu).**
   - CAD çekirdeği ayrı paket. Sonra Harita, Mimari, Yol ve CBS masaüstü paketleri, en az bağlıdan başlayarak.
   - Her adımda bağımlılık denetimi ve derleme süresi ölçülür.

@@ -13,10 +13,13 @@
   - CBS: veri ve öznitelikler veritabanında; proje dosyası yapıyı, stilleri, ayarları ve açıklamaları tutar ve dosyaya,
     veritabanına ya da buluta kaydedilir. CAD (Mimari, Harita, Yol): tamamı proje dosyasında; dosyaya ya da buluta
     (yalnız dosya revizyonu). Eski projelere taşıma yazılmaz (uygulama geliştirmede).
-  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır. AY-02, AY-03 ve AY-04 bitti: ekran açık
-    projeyi izler; katman menüsü modül × katman türü tablosundandır (ADR 9195 §5, `layer_entries.rs`); her modülün
-    profili kendi klasöründedir, ortak katalog `catalog/v1/modules.json`, bağımlılık denetimi
-    `scripts/dev/module_deps.py --check` (ADR 9195 §6).
+  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır. AY-02, AY-03, AY-04 ve AY-06 bitti: ekran
+    açık projeyi izler; katman menüsü modül × katman türü tablosundandır (ADR 9195 §5, `layer_entries.rs`); her
+    modülün profili kendi klasöründedir, ortak katalog `catalog/v1/modules.json`, bağımlılık denetimi
+    `scripts/dev/module_deps.py --check` (ADR 9195 §6); CAD türünün bulut projesi yalnız dosyadır (ADR 9196 §4).
+  - Mobil görüntüleyici ve mobil uygulama (ADR 9197, AY-08): istemciler ortak tanımda (`kentos_launch::Client`);
+    görüntüleyici hiçbir şey yazmaz, mobil uygulama yalnız CBS'nin veri satırlarını sunucu komutuyla yazar; katmanın
+    mobildeki davranışını masaüstündeki proje belirler (alanı sonra eklenir).
 
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
   [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),

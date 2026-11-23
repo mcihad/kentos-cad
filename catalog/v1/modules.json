@@ -1,37 +1,99 @@
 {
+  "clients": [
+    {
+      "id": "desktop",
+      "title": "Masaüstü",
+      "writes": {
+        "database": [
+          "projectFile",
+          "dataRows"
+        ],
+        "file": [
+          "projectFile"
+        ]
+      }
+    },
+    {
+      "id": "web",
+      "title": "Web",
+      "writes": {
+        "database": [
+          "projectFile",
+          "dataRows"
+        ],
+        "file": [
+          "projectFile"
+        ]
+      }
+    },
+    {
+      "id": "mobileViewer",
+      "title": "Mobil görüntüleyici",
+      "writes": {
+        "database": [],
+        "file": []
+      }
+    },
+    {
+      "id": "mobileApp",
+      "title": "Mobil uygulama",
+      "writes": {
+        "database": [
+          "dataRows"
+        ],
+        "file": []
+      }
+    }
+  ],
   "format": "kentos.modules",
   "layerKinds": [
     {
       "id": "drawing",
-      "title": "çizim"
+      "kept": "projectFile",
+      "title": "çizim",
+      "writtenAs": "projectFile"
     },
     {
       "id": "annotation",
-      "title": "açıklama"
+      "kept": "projectFile",
+      "title": "açıklama",
+      "writtenAs": "projectFile"
     },
     {
       "id": "data",
-      "title": "veri tablosu"
+      "kept": "source",
+      "title": "veri tablosu",
+      "writtenAs": "dataRows"
     },
     {
       "id": "bound",
-      "title": "bağlı"
+      "kept": "projectFile",
+      "title": "bağlı",
+      "writtenAs": "projectFile"
     },
     {
       "id": "service",
-      "title": "servis"
+      "kept": "service",
+      "title": "servis",
+      "writtenAs": null
     },
     {
       "id": "raster",
-      "title": "raster"
+      "kept": "projectFile",
+      "title": "raster",
+      "writtenAs": "projectFile"
     },
     {
       "id": "pointCloud",
-      "title": "nokta bulutu"
+      "kept": "projectFile",
+      "title": "nokta bulutu",
+      "writtenAs": "projectFile"
     },
     {
       "id": "group",
-      "title": "grup"
+      "kept": "nothing",
+      "title": "grup",
+      "writtenAs": null
     }
   ],
   "modules": [
@@ -2331,7 +2393,7 @@
       "title": "KentOS Yol"
     }
   ],
-  "note": "KentOS modüllerinin ortak tanımı (ADR 9195 §6, CLAUDE.md §25): kimlik, program, proje türü ve işleri, bulut türleri, saklama türü (database: CBS verisi veritabanında; file: CAD projesinin tamamı proje dosyasında, ADR 9196), katman türleri ve şeridin modüle verdiği komutlar. Hiçbir şeridin tutmadığı komut her modülündür ve listelenmez. Üretici: KENTOS_WRITE_MODULES=1 cargo test -p kentos-desktop --lib module_catalog.",
+  "note": "KentOS modüllerinin ortak tanımı (ADR 9195 §6, CLAUDE.md §25): kimlik, program, proje türü ve işleri, bulut türleri, saklama türü (database: CBS verisi veritabanında; file: CAD projesinin tamamı proje dosyasında, ADR 9196), katman türleri ve şeridin modüle verdiği komutlar. İstemciler saklama türüne göre ne yazdıklarını, katman türleri tutuldukları yeri ve yazılışlarını söyler (ADR 9197). Hiçbir şeridin tutmadığı komut her modülündür ve listelenmez. Üretici: KENTOS_WRITE_MODULES=1 cargo test -p kentos-desktop --lib module_catalog.",
   "storages": [
     {
       "id": "database"

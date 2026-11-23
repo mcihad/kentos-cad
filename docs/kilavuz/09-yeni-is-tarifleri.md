@@ -170,10 +170,13 @@ Kayıt `apps/desktop/src/shell/module_profile.rs`'tedir (`ModuleProfile`, `profi
    `TRACKED` listelerine modülün klasörü girer; `--check` yeşil kalır, taban yalnız azalır.
 8. **Resim:** modülün penceresi, her katman türünün menüsü ve sihirbazı.
 
-**Yeni istemci** (ör. mobil görüntüleyici ya da düzenleyici):
+**Yeni istemci** (ör. mobil görüntüleyici ya da düzenleyici; karar [ADR 9197](../adr/9197-mobile-clients.md)):
 
 1. Modülleri, proje türlerini, saklama türünü, katman türlerini ve komut kümesini ortak katalogdan
    (`catalog/v1/modules.json`) okur; modül mantığını kendi içinde yeniden yazmaz.
+   - İstemci ortak tanıma girer (`kentos_launch::Client`): neyi yazdığını saklama türüne göre söyler (`writes`).
+   - Hangi katmanı yazdığı katman türünden çıkar (`LayerKind::written_by`); istemci bunu yeniden yazmaz.
+   - Katalog yeniden üretilir; masaüstünün `module_catalog_tests`'i istemcileri ortak tanımla karşılaştırır.
 2. Projeyi sözleşmeyle açar: bulut API'si ya da `.kcad`. CBS verisini veri katmanının kaynağından, rolün okuduğu
    biçimde alır (sunucuda `form_guard`, istemcide `kentos_forms::reach`).
 3. **Görüntüleyici** yalnız okur. Rolün okumadığı alanı göstermez, adını söyler.

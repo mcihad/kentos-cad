@@ -334,6 +334,7 @@ Ayrıntı [ADR 9195](docs/adr/9195-module-separation.md), [ADR 9196](docs/adr/91
    veritabanına yazmaz. Rol ve form kuralları (ortak çözümleyici `kentos_forms::reach`, sunucuda `form_guard`) her
    istemcide aynıdır.
 7. **Görüntüleyici yazmaz.** Mobil ya da web görüntüleyici yalnız okur. Rolün okumadığı alanı göstermez, adını
-   söyler.
+   söyler. Her istemcinin neyi yazdığı ortak tanımdadır (`kentos_launch::Client::writes`, ADR 9197): mobil uygulama
+   CBS'nin veri satırlarını sunucu komutuyla yazar, proje dosyasını hiç yazmaz.
 8. **Yeni modül ya da istemci tarifle eklenir** (§9.9). Tarif sırasıyla: modül tanımı, profil, sihirbaz, komut
    kümesi, saklama türü, bulut türleri, matris sınaması, bağımlılık denetimi, resim.
