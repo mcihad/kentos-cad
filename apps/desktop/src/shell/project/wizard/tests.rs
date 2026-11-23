@@ -3,19 +3,25 @@
 
 use iced::keyboard::key::Named;
 use kentos_commands::{CadWork, DrawingUnit, Workspace};
-use kentos_project::wizard::{Coords, Kind, Step};
+use kentos_project::wizard::{Coords, Kind, Purpose, Step, Storage};
 
 /// The works' cards (docs/adr/0626 §1, 0802: two CAD works): a building and a plan on real coordinates.
 const BUILDING: usize = 0;
 const PLAN: usize = 1;
 
 use super::Event;
-use crate::app::{App, Dialog, Message};
-use crate::files_testing::{app_with_drawing, last_said};
+use crate::app::{App, Dialog, Message, Picker};
+use crate::files_testing::{app_with_drawing, drawing, drive, last_said, scratch};
 use crate::project::{Event as ProjectEvent, Window};
 
 fn send(app: &mut App, e: Event) {
     let _ = app.update(Message::Project(Box::new(ProjectEvent::New(e))));
+}
+
+/// An event whose tasks run to their end (a template read off the interface's thread).
+fn send_driven(app: &mut App, e: Event) {
+    let task = app.update(Message::Project(Box::new(ProjectEvent::New(e))));
+    drive(app, task);
 }
 
 fn key(app: &mut App, named: Named) {
@@ -160,6 +166,8 @@ fn a_cbs_project_takes_its_provinces_zone_and_opens_on_it() {
     open(&mut app);
     send(&mut app, Event::Type(Workspace::Gis));
     send(&mut app, Event::Next);
+    // A CBS project's place is on its one page (docs/adr/9184).
+    assert_eq!(state(&app).step, Step::Details);
     // Enter in the search takes its first province.
     send(&mut app, Event::Search("izm".into()));
     send(&mut app, Event::SearchFirst);
@@ -177,7 +185,6 @@ fn a_cbs_project_takes_its_provinces_zone_and_opens_on_it() {
     send(&mut app, Event::Province(61));
     assert_eq!(state(&app).draft.province, None);
     send(&mut app, Event::Province(35));
-    send(&mut app, Event::Next);
     send(&mut app, Event::Next);
     let doc = app.document.as_ref().expect("a drawing");
     assert_eq!(doc.settings().srid, 5253);
@@ -232,7 +239,8 @@ fn enter_goes_on_and_the_arrows_choose_the_type() {
     key(&mut app, Named::ArrowLeft);
     assert_eq!(state(&app).draft.kind, first);
     key(&mut app, Named::Enter);
-    assert_eq!(state(&app).step, Step::Coords);
+    // CBS's one page, or what a CAD project is for (docs/adr/9184).
+    assert_eq!(state(&app).step, state(&app).draft.steps()[1]);
     // A double click on a card chooses it and goes on.
     send(&mut app, Event::Back);
     send(&mut app, Event::Choose(Workspace::Cad));
@@ -251,7 +259,7 @@ fn enter_goes_on_and_the_arrows_choose_the_type() {
 fn a_work_brings_its_unit_and_scale_and_another_type_its_own() {
     let mut app = app_with_drawing();
     open(&mut app);
-    send(&mut app, Event::Go(2));
+    send(&mut app, Event::Go(1));
     assert_eq!(state(&app).draft.scale(), 1000.0, "CBS: 1:1000");
     send(&mut app, Event::Type(Workspace::Cad));
     // A new CAD project is a building: metres, 1:100, from 0,0 (docs/adr/0626 §1).
@@ -281,6 +289,152 @@ fn a_work_brings_its_unit_and_scale_and_another_type_its_own() {
         state(&app).draft.work().map(|w| w.name),
         Some("Mimari proje")
     );
+}
+
+/// A CBS project is decided on one page (docs/adr/9184): its name, an empty city map instead of a cadastral sheet,
+/// its place, and a GeoPackage to keep it in; the first Kaydet asks where, with its name, and writes nothing before.
+#[test]
+fn a_cbs_project_is_decided_on_one_page_and_its_first_save_goes_where_it_was_chosen() {
+    let mut app = app_with_drawing();
+    open(&mut app);
+    send(&mut app, Event::Type(Workspace::Gis));
+    send(&mut app, Event::Next);
+    let s = state(&app);
+    assert_eq!((s.step, s.draft.steps().len()), (Step::Details, 2));
+    assert_eq!((s.draft.purpose, s.draft.storage), (Purpose::Cadastre, Storage::File));
+    send(&mut app, Event::Name("Ankara-Mahalle-Hizmetleri".into()));
+    send(&mut app, Event::Purpose(Purpose::City));
+    send(&mut app, Event::Province(6));
+    send(&mut app, Event::Storage(Storage::Geopackage));
+    send(&mut app, Event::Next);
+    assert_eq!(app.dialog, None);
+    let doc = app.document.as_ref().expect("the new project");
+    assert_eq!(doc.name(), "Ankara-Mahalle-Hizmetleri");
+    // One draft layer: no cadastral tree imposed.
+    let leaves: Vec<String> = doc.model.layers().leaves().iter().map(|n| n.id.clone()).collect();
+    assert_eq!(leaves, ["taslak"]);
+    assert_eq!(doc.model.layers().active(), "taslak");
+    assert_eq!((doc.settings().srid, doc.wanted_store()), (5255, Some(Storage::Geopackage)));
+    assert!(doc.path.is_none() && !doc.dirty());
+    assert!(
+        last_said(&app).ends_with("İlk Kaydet, GeoPackage dosyasını ve proje adını sorar."),
+        "{}",
+        last_said(&app)
+    );
+    // Kaydet opens Veri kaynağı on a GeoPackage, the project's name offered; Vazgeç writes nothing.
+    let _ = app.update(Message::Run("file.save"));
+    let w = app.gis.project_store.as_ref().expect("Veri kaynağı");
+    assert_eq!((w.database_for_test(), w.name_for_test().as_str()), (false, "Ankara-Mahalle-Hizmetleri"));
+    app.gis.project_store = None;
+    app.dialog = None;
+    assert_eq!(app.document.as_ref().and_then(|d| d.wanted_store()), Some(Storage::Geopackage));
+
+    // A database: its Kaydet looks in a database.
+    open(&mut app);
+    send(&mut app, Event::Type(Workspace::Gis));
+    send(&mut app, Event::Next);
+    send(&mut app, Event::Storage(Storage::Database));
+    send(&mut app, Event::Next);
+    if matches!(app.dialog, Some(Dialog::Unsaved(_))) {
+        let _ = app.update(Message::DialogConfirmed);
+    }
+    assert!(last_said(&app).ends_with("İlk Kaydet, veritabanı bağlantısını, şemayı ve proje adını sorar."));
+    let _ = app.update(Message::Run("file.save"));
+    assert!(app.gis.project_store.as_ref().expect("Veri kaynağı").database_for_test());
+    app.gis.project_store = None;
+    app.dialog = None;
+    // Farklı kaydet writes a file: the project is a file's from then on.
+    let dir = scratch("cbs-tek-sayfa");
+    app.picker = Picker::File(dir.join("kent.kcad"));
+    let task = app.update(Message::Run("file.saveAs"));
+    drive(&mut app, task);
+    let doc = app.document.as_ref().expect("saved");
+    assert_eq!((doc.wanted_store(), doc.path.as_deref()), (None, Some(dir.join("kent.kcad").as_path())));
+}
+
+/// Kurum şablonu (docs/adr/9184): the template's layers, scale, forms, relations and topology rules come; none of its
+/// objects nor its topology exceptions; the wizard's name and system stay. A CAD project is no template.
+#[test]
+fn a_template_gives_its_layers_and_settings_and_none_of_its_objects() {
+    let dir = scratch("kurum-sablonu");
+    let path = dir.join("Belediye şablonu.kcad");
+    let mut template = drawing(0);
+    let mut s = template.settings().clone();
+    s.forms = serde_json::from_value(serde_json::json!([
+        { "id": "bina-formu", "name": "Bina formu", "layer": "bina", "draft": { "revision": 1, "items": [] } }
+    ]))
+    .expect("a form");
+    s.relations = serde_json::from_value(serde_json::json!([
+        { "id": "parsel-bina", "name": "Parselin binaları", "parent": "parsel", "child": "bina", "field": "parsel_id" }
+    ]))
+    .expect("a relation");
+    s.topology = Some(
+        serde_json::from_value(serde_json::json!({
+            "rules": [{ "id": "kural-1", "kind": "mustNotOverlap", "layer": "parsel" }],
+            "exceptions": [{ "rule": "kural-1", "objects": [], "at": { "x": 0.0, "y": 0.0 } }]
+        }))
+        .expect("topology"),
+    );
+    s.plot_scale = 500.0;
+    template.model.set_settings(s);
+    assert!(template.entity_count() > 0);
+    crate::document::write(&template.model.to_snapshot_v2(), &path).expect("the template is written");
+
+    let mut app = app_with_drawing();
+    open(&mut app);
+    send(&mut app, Event::Type(Workspace::Gis));
+    send(&mut app, Event::Next);
+    send(&mut app, Event::Purpose(Purpose::Template));
+    send(&mut app, Event::Next);
+    assert_eq!(
+        state(&app).status.as_deref(),
+        Some("Kurum şablonu seçilmedi: Şablon seç… ile şablon projenin dosyasını gösterin.")
+    );
+    app.picker = Picker::File(path.clone());
+    send_driven(&mut app, Event::PickTemplate);
+    app.picker = Picker::Dialog;
+    let s = state(&app);
+    let t = s.template.as_ref().expect("read").as_ref().expect("a template");
+    assert_eq!((t.name().as_str(), t.words().as_str()), ("Belediye şablonu.kcad", "3 katman, 1 form, 1 ilişki, 1 topoloji kuralı"));
+    assert_eq!(s.draft.template.as_deref(), Some(path.display().to_string().as_str()));
+    send(&mut app, Event::Province(35));
+    send(&mut app, Event::Name("İzmir imar".into()));
+    send(&mut app, Event::Next);
+    let doc = app.document.as_ref().expect("the new project");
+    assert_eq!((doc.name(), doc.entity_count()), ("İzmir imar", 0));
+    let leaves: Vec<String> = doc.model.layers().leaves().iter().map(|n| n.id.clone()).collect();
+    assert_eq!(leaves, ["parsel", "bina", "cizim"]);
+    let st = doc.settings();
+    // İzmir's zone and centre, not the template's TM36.
+    assert_eq!((st.srid, st.plot_scale, st.workspace), (5253, 500.0, Some(Workspace::Gis)));
+    assert_eq!((st.forms.len(), st.relations.len()), (1, 1));
+    let topology = st.topology.as_ref().expect("the rules");
+    assert_eq!((topology.rules.len(), topology.exceptions.len()), (1, 0));
+    let home = doc.model.home_view().expect("a home view");
+    let east = (home.min_x + home.max_x) / 2.0;
+    assert!((505_000.0..520_000.0).contains(&east), "{east}");
+
+    // A CAD project is refused as a template, with the reason; Oluştur stays closed.
+    let cad = dir.join("Mimari.kcad");
+    let mut c = drawing(0);
+    let mut cs = c.settings().clone();
+    cs.workspace = Some(Workspace::Cad);
+    c.model.set_settings(cs);
+    crate::document::write(&c.model.to_snapshot_v2(), &cad).expect("written");
+    open(&mut app);
+    send(&mut app, Event::Type(Workspace::Gis));
+    send(&mut app, Event::Next);
+    app.picker = Picker::File(cad);
+    send_driven(&mut app, Event::PickTemplate);
+    app.picker = Picker::Dialog;
+    let s = state(&app);
+    assert_eq!(
+        s.template.as_ref().and_then(|t| t.as_ref().err()).map(String::as_str),
+        Some("“Mimari.kcad” bir CAD projesi; kurum şablonu bir CBS projesi olmalı. Kurumun CBS şablon projesini seçin.")
+    );
+    assert_eq!((s.draft.purpose, s.draft.template.as_deref()), (Purpose::Template, None));
+    send(&mut app, Event::Next);
+    assert_eq!(app.dialog, Some(Dialog::Project));
 }
 
 /// Pictures of the wizard for the owner, dark and light, at 1440 × 900 and
@@ -507,4 +661,55 @@ fn axes_screens() {
             println!("{}", file.display());
         }
     }
+}
+
+/// The CBS project's one page for the owner (docs/adr/9184): the page with an empty city map kept in a GeoPackage, a
+/// template read, and the first Kaydet asking where; light 1440 × 900 and dark 1100 × 760 into
+/// `.run/gui-evidence/kullanim-9184` (never committed).
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib project::wizard::tests::cbs_page_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn cbs_page_screens() {
+    use crate::files_testing::usage_shots;
+
+    let page = || {
+        let mut app = app_with_drawing();
+        open(&mut app);
+        send(&mut app, Event::Type(Workspace::Gis));
+        send(&mut app, Event::Next);
+        send(&mut app, Event::Name("Ankara-Mahalle-Hizmetleri".into()));
+        send(&mut app, Event::Purpose(Purpose::City));
+        send(&mut app, Event::Search("ank".into()));
+        send(&mut app, Event::Province(6));
+        send(&mut app, Event::Storage(Storage::Geopackage));
+        app
+    };
+    usage_shots("9184", "1-tek-sayfa", page);
+    let dir = scratch("kurum-sablonu-resim");
+    let path = dir.join("Belediye şablonu.kcad");
+    let mut template = drawing(0);
+    let mut s = template.settings().clone();
+    s.forms = serde_json::from_value(serde_json::json!([
+        { "id": "bina-formu", "name": "Bina formu", "layer": "bina", "draft": { "revision": 1, "items": [] } }
+    ]))
+    .expect("a form");
+    template.model.set_settings(s);
+    crate::document::write(&template.model.to_snapshot_v2(), &path).expect("the template is written");
+    usage_shots("9184", "2-kurum-sablonu", || {
+        let mut app = page();
+        app.picker = Picker::File(path.clone());
+        send_driven(&mut app, Event::PickTemplate);
+        app.picker = Picker::Dialog;
+        send(&mut app, Event::Storage(Storage::Database));
+        app
+    });
+    usage_shots("9184", "3-ilk-kaydet", || {
+        let mut app = page();
+        send(&mut app, Event::Next);
+        let _ = app.update(Message::Run("file.save"));
+        app
+    });
 }

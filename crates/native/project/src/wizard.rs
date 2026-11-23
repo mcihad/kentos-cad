@@ -27,13 +27,14 @@ pub const STEPS: [Step; 3] = [Step::Type, Step::Coords, Step::Details];
 
 impl Step {
     /// The step's name, as the rail writes it: a CAD project's second step asks what it is for, a CBS
-    /// project's where it is (docs/adr/0626 §1).
+    /// project's where it is (docs/adr/0626 §1); a CBS project decides the rest on one page (docs/adr/9184).
     pub fn name(self, kind: Kind) -> &'static str {
         match (self, kind) {
             (Self::Type, _) => "Proje türü",
             (Self::Coords, Kind::Cad) => "Çizim",
             (Self::Coords, Kind::Gis) => "Konum",
-            (Self::Details, _) => "Proje adı",
+            (Self::Details, Kind::Cad) => "Proje adı",
+            (Self::Details, Kind::Gis) => "Proje",
         }
     }
 
@@ -114,6 +115,97 @@ pub const WORKS: [Work; 3] = [
     },
 ];
 
+/// What a CBS project is for (docs/adr/9184): the layers it starts with. A cadastral sheet's tree is one choice
+/// among three, never imposed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Purpose {
+    /// An empty city map: one draft layer, the rest made as the work needs.
+    City,
+    /// A cadastral sheet's standard tree.
+    #[default]
+    Cadastre,
+    /// The institution's template project: its layers, styles, forms and relations, none of its objects.
+    Template,
+}
+
+/// A purpose as its card says it.
+pub struct PurposeCard {
+    pub purpose: Purpose,
+    pub name: &'static str,
+    pub note: &'static str,
+    pub icon: &'static str,
+}
+
+/// The purposes a CBS project is chosen among (docs/adr/9184).
+pub const PURPOSES: [PurposeCard; 3] = [
+    PurposeCard {
+        purpose: Purpose::City,
+        name: "Boş kent haritası",
+        note: "Bir taslak katmanıyla başlar; katmanları işinize göre kurarsınız.",
+        icon: "layers",
+    },
+    PurposeCard {
+        purpose: Purpose::Cadastre,
+        name: "Kadastro paftası",
+        note: "Taslak, Kadastro, Ulaşım, Topografya, Jeodezi ve Pafta gruplarıyla başlar.",
+        icon: "parcel",
+    },
+    PurposeCard {
+        purpose: Purpose::Template,
+        name: "Kurum şablonu",
+        note: "Kurumun şablon projesinin katmanları, stilleri ve formlarıyla başlar; nesneleri alınmaz.",
+        icon: "projectPack",
+    },
+];
+
+/// Where a new project is kept (docs/adr/9184): its first Kaydet goes there.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Storage {
+    /// A `.kcad` file.
+    #[default]
+    File,
+    /// A GeoPackage file, beside its data (docs/adr/9107).
+    Geopackage,
+    /// A PostgreSQL database's schema (docs/adr/9107).
+    Database,
+}
+
+/// A storage as its card says it: its name and what choosing it means.
+pub struct StorageCard {
+    pub storage: Storage,
+    pub name: &'static str,
+    pub note: &'static str,
+    pub icon: &'static str,
+}
+
+/// The places a project is kept, each with its consequence in one sentence (docs/adr/9184).
+pub const STORAGES: [StorageCard; 3] = [
+    StorageCard {
+        storage: Storage::File,
+        name: "Dosya (.kcad)",
+        note: "Proje tek bir dosyadır; bağlı tabloların satırları kendi kaynaklarında kalır, dosyayı taşırken onları da taşıyın.",
+        icon: "save",
+    },
+    StorageCard {
+        storage: Storage::Geopackage,
+        name: "GeoPackage içinde",
+        note: "Proje verisiyle aynı .gpkg dosyasında durur; tek dosya taşınır ve paylaşılır, tabloları başka CBS programları da okur.",
+        icon: "dataSources",
+    },
+    StorageCard {
+        storage: Storage::Database,
+        name: "PostgreSQL veritabanında",
+        note: "Proje bir veritabanı şemasında durur; yetkili herkes açar, kim neyi yazar veritabanının rolleriyle denetlenir.",
+        icon: "server",
+    },
+];
+
+/// What binding a table and copying it mean, said under the storage (docs/adr/9184).
+pub const DATA_NOTE: &str = "Bağlanan tabloların satırları kaynağında kalır, herkes aynı satırları görür; içe aktarılan veri \
+     projeye kopyalanır ve kaynaktaki sonraki değişiklikleri görmez.";
+
 /// What the wizard holds while it is open; what is not chosen follows the others.
 #[derive(Debug, Clone, PartialEq, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -146,6 +238,15 @@ pub struct Draft {
     /// ROAD-NUM-03): the wizard's Kotlar.
     #[serde(default)]
     pub ellipsoidal_heights: bool,
+    /// What a CBS project is for (docs/adr/9184).
+    #[serde(default)]
+    pub purpose: Purpose,
+    /// Where it is kept: its first Kaydet goes there (docs/adr/9184).
+    #[serde(default)]
+    pub storage: Storage,
+    /// The institution's template file, when the purpose is one.
+    #[serde(default)]
+    pub template: Option<String>,
 }
 
 /// Map scales for a CBS project, drawing scales for a CAD one (1:N).
@@ -330,7 +431,30 @@ impl Draft {
             annotation: None,
             chosen_work: None,
             ellipsoidal_heights: false,
+            purpose: Purpose::default(),
+            storage: Storage::default(),
+            template: None,
         }
+    }
+
+    /// The steps the wizard shows for this type (docs/adr/9184): a CBS project decides its name, purpose, place and
+    /// storage on one page; a CAD project is asked what it is for first.
+    pub fn steps(&self) -> &'static [Step] {
+        match self.kind {
+            Kind::Cad => &STEPS,
+            Kind::Gis => &[Step::Type, Step::Details],
+        }
+    }
+
+    /// What the rail writes under each step the type shows.
+    pub fn notes_of_steps(&self) -> Vec<String> {
+        self.steps().iter().map(|s| self.note(*s)).collect()
+    }
+
+    /// The template's file name as said, when one is chosen.
+    pub fn template_name(&self) -> Option<String> {
+        let path = self.template.as_deref()?;
+        Some(std::path::Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned()))
     }
 
     /// The work a CAD draft is made for, when its coordinates and unit are one's (a request may ask others).
@@ -530,7 +654,23 @@ impl Draft {
             },
             scale_text(self.scale()),
         ));
-        lines.push(("Katmanlar", layers(self.kind).to_owned()));
+        if self.kind == Kind::Gis {
+            let purpose = PURPOSES.iter().find(|c| c.purpose == self.purpose).map_or("", |c| c.name);
+            lines.push(("Amaç", purpose.to_owned()));
+            let layers = match self.purpose {
+                Purpose::City => "Boş kent haritası: Taslak".to_owned(),
+                Purpose::Cadastre => layers(self.kind).to_owned(),
+                Purpose::Template => match self.template_name() {
+                    Some(t) => format!("Kurum şablonu: {t}"),
+                    None => "Kurum şablonu: seçilmedi".to_owned(),
+                },
+            };
+            lines.push(("Katmanlar", layers));
+            let storage = STORAGES.iter().find(|c| c.storage == self.storage).map_or("", |c| c.name);
+            lines.push(("Saklama", storage.to_owned()));
+        } else {
+            lines.push(("Katmanlar", layers(self.kind).to_owned()));
+        }
         lines.push((
             "Açılış",
             if local {
@@ -549,6 +689,14 @@ impl Draft {
         match step {
             Step::Details if self.name.trim().is_empty() => {
                 Some("Proje adı boş olamaz.".to_owned())
+            }
+            // A CBS project's place is on its one page (docs/adr/9184).
+            Step::Details if self.kind == Kind::Gis && system(self.srid()).is_none() => Some(format!(
+                "EPSG:{} bu sürümde tanımlı değil; listeden bir sistem seçin.",
+                self.srid()
+            )),
+            Step::Details if self.kind == Kind::Gis && self.purpose == Purpose::Template && self.template.is_none() => {
+                Some("Kurum şablonu seçilmedi: Şablon seç… ile şablon projenin dosyasını gösterin.".to_owned())
             }
             Step::Coords if !self.is_local() && system(self.srid()).is_none() => Some(format!(
                 "EPSG:{} bu sürümde tanımlı değil; listeden bir sistem seçin.",
@@ -620,7 +768,7 @@ mod tests {
             "suggested": d.suggested_srid(),
             "scale": num(d.scale()),
             "unit": d.unit(),
-            "notes": STEPS.iter().map(|s| d.note(*s)).collect::<Vec<_>>(),
+            "notes": d.notes_of_steps(),
             "summary": d.summary().into_iter().map(|(k, v)| vec![k.to_owned(), v]).collect::<Vec<_>>(),
             "firstSystem": d.system_choices().first().map(|(s, _)| s.srid),
             "options": options,
@@ -751,6 +899,62 @@ mod tests {
             ["Proje türü", "Çizim", "Proje adı"]
         );
         assert_eq!(Step::Coords.name(Kind::Gis), "Konum");
+    }
+
+    /// A CBS project decides its name, purpose, place and storage on one page (docs/adr/9184): a cadastral sheet
+    /// is one purpose among three, a template is shown before Oluştur, and the summary says the purpose and where
+    /// the project is kept. A CAD project keeps its three steps.
+    #[test]
+    fn a_cbs_project_decides_its_purpose_and_storage_on_one_page() {
+        let mut d = Draft::initial(Workspace::Gis, 5256, DrawingFont::Barlow, None);
+        assert_eq!(d.steps(), &[Step::Type, Step::Details][..]);
+        assert_eq!((d.purpose, d.storage, d.template.as_deref()), (Purpose::Cadastre, Storage::File, None));
+        assert_eq!(Step::Details.name(Kind::Gis), "Proje");
+        assert_eq!(
+            PURPOSES.map(|c| (c.purpose, c.name)),
+            [
+                (Purpose::City, "Boş kent haritası"),
+                (Purpose::Cadastre, "Kadastro paftası"),
+                (Purpose::Template, "Kurum şablonu")
+            ]
+        );
+        assert_eq!(
+            STORAGES.map(|c| (c.storage, c.name)),
+            [
+                (Storage::File, "Dosya (.kcad)"),
+                (Storage::Geopackage, "GeoPackage içinde"),
+                (Storage::Database, "PostgreSQL veritabanında")
+            ]
+        );
+        // Every choice says what it means in one sentence.
+        for note in PURPOSES.map(|c| c.note).into_iter().chain(STORAGES.map(|c| c.note)).chain([DATA_NOTE]) {
+            assert!(note.ends_with('.') && note.matches(". ").count() == 0, "{note}");
+        }
+        assert_eq!(d.notes_of_steps(), ["CBS · harita", "Yeni proje"]);
+        d.purpose = Purpose::Template;
+        assert_eq!(
+            d.blocked(Step::Details).as_deref(),
+            Some("Kurum şablonu seçilmedi: Şablon seç… ile şablon projenin dosyasını gösterin.")
+        );
+        d.template = Some("/kurum/Belediye şablonu.kcad".into());
+        assert_eq!(d.blocked(Step::Details), None);
+        assert_eq!(d.template_name().as_deref(), Some("Belediye şablonu.kcad"));
+        d.storage = Storage::Database;
+        let summary = d.summary();
+        let line = |k: &str| summary.iter().find(|(key, _)| *key == k).map(|(_, v)| v.as_str());
+        assert_eq!(
+            (line("Amaç"), line("Katmanlar"), line("Saklama")),
+            (Some("Kurum şablonu"), Some("Kurum şablonu: Belediye şablonu.kcad"), Some("PostgreSQL veritabanında"))
+        );
+        // The place is on the same page: a system this version does not know stops Oluştur there.
+        d.srid = Some(1234);
+        assert_eq!(
+            d.blocked(Step::Details).as_deref(),
+            Some("EPSG:1234 bu sürümde tanımlı değil; listeden bir sistem seçin.")
+        );
+        let cad = Draft::initial(Workspace::Cad, 5256, DrawingFont::Barlow, None);
+        assert_eq!(cad.steps(), &STEPS[..]);
+        assert!(cad.summary().iter().all(|(k, _)| *k != "Amaç" && *k != "Saklama"));
     }
 
     #[test]

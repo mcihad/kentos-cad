@@ -403,6 +403,12 @@ pub fn cad_layers() -> Vec<LayerNode> {
     ]
 }
 
+/// An empty city map's layers (docs/adr/9184): one draft layer; the map tools' layers come when they first write
+/// (`standard_layer`).
+pub fn city_layers() -> Vec<LayerNode> {
+    vec![node("taslak", "Taslak", style("ink", None))]
+}
+
 /// The standard layer tree of a cadastral sheet: what a new project starts
 /// with. The map tools write to layers of this tree by id (`parsel`, `kot`),
 /// so a new project carries them. `plot_scale` is written into the sheet

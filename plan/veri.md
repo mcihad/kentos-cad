@@ -604,3 +604,12 @@ numaraları raporunkidir.
   - İlişkili tablolar seçilen tablonun altında düğmeyle seçilir, geometrisiz tablolar listelenmiyorken de.
   - Gerçek PostgreSQL'de sınandı: anahtarsız görünüm, salt okunur hesap, kesinti ve yeniden listeleme.
   - Kalan: gerçek pencerede deneme, web.
+- [x] **VY-83 — CBS projesi tek sayfada kurulur: ad, amaç, konum ve saklama (rapor 3'ün kalanı).**
+  ([ADR 9184](../docs/adr/9184-cbs-project-on-one-page.md))
+  - Sihirbazın CBS adımları ikidir; ad, amaç, il ve koordinat sistemi, saklama aynı sayfada. Kartlar sonuçlarını birer
+    cümleyle söyler; veri notu bağlamakla kopyalamayı ayırır.
+  - Boş kent haritası yalnız Taslak katmanıyla başlar; Kadastro paftası öntanımlı kalır.
+  - Kurum şablonu arayüzü bekletmeden okunur: katmanları, stilleri ve kurum ayarları gelir; nesneleri, paftaları ve
+    kendi işi gelmez; CAD projesi reddedilir.
+  - GeoPackage ya da PostgreSQL seçilince proje hiçbir yere yazılmaz; ilk Kaydet Veri kaynağı'nı o yerle ve adıyla açar.
+  - Kalan: betikte amaç ve şablon, şablonun paftaları, gerçek pencere, web.

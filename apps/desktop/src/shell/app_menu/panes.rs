@@ -161,6 +161,10 @@ impl App {
         if let Some(s) = doc.offered_source() {
             return format!("Kaydedilmedi · Kaydet “{}” içinde saklamayı önerir", s.place());
         }
+        // A new project its wizard chose to keep in a data source (docs/adr/9184).
+        if let Some(kind) = doc.wanted_store() {
+            return format!("Kaydedilmedi · {} saklanacak; Kaydet yeri sorar", wanted_words(kind));
+        }
         match (doc.cloud_source(), &doc.path) {
             (Some(_), _) if doc.is_database() => {
                 "Bulut projesi: kendiliğinden kaydediliyor".to_owned()
@@ -418,6 +422,11 @@ impl App {
                 s.place(),
                 s.name
             )));
+        } else if let Some(kind) = self.document.as_ref().and_then(|d| d.wanted_store()) {
+            c = c.push(label::caption(format!(
+                "Bu yeni proje {} saklanacak; henüz bir yere yazılmadı. İlk Kaydet bu pencereyi o yerle açar.",
+                wanted_words(kind)
+            )));
         }
         c.into()
     }
@@ -467,4 +476,12 @@ pub(super) fn soon<'a>(words: &'a str) -> Element<'a, Message> {
         .padding([1, 8])
         .style(style::container::badge)
         .into()
+}
+
+/// Where a new project's wizard chose to keep it, as a sentence says it (docs/adr/9184).
+fn wanted_words(kind: kentos_project::wizard::Storage) -> &'static str {
+    match kind {
+        kentos_project::wizard::Storage::Database => "PostgreSQL veritabanında",
+        _ => "GeoPackage içinde",
+    }
 }

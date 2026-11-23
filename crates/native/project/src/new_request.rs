@@ -213,6 +213,10 @@ impl NewRequest {
             annotation: None,
             chosen_work: self.cad_work,
             ellipsoidal_heights: false,
+            // A script's CBS project starts as the wizard's default: a cadastral sheet kept in a file.
+            purpose: Default::default(),
+            storage: Default::default(),
+            template: None,
         };
         if !local && draft.srid.or_else(|| draft.suggested_srid()).is_none() {
             return Err(invalid(
@@ -259,6 +263,9 @@ mod tests {
             annotation: None,
             chosen_work: None,
             ellipsoidal_heights: false,
+            purpose: Default::default(),
+            storage: Default::default(),
+            template: None,
         };
         assert_eq!(p, d.options());
         assert_eq!(

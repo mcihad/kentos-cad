@@ -32,6 +32,9 @@ pub enum Source {
     /// A project made of a GeoPackage's tables and kept nowhere yet (docs/adr/9122): opening wrote nothing into the
     /// file. Kaydet offers to keep it there, under this name, and shows where before it writes.
     Offered(Box<StoredSource>),
+    /// A new project whose wizard chose to keep it in a GeoPackage or a PostgreSQL schema (docs/adr/9184): nothing is
+    /// written yet; its first Kaydet opens Veri kaynağı on that kind of place.
+    Wanted(kentos_project::wizard::Storage),
 }
 
 /// A project kept in a GeoPackage file or a PostgreSQL schema (docs/adr/9107).
@@ -238,6 +241,14 @@ impl Document {
         }
     }
 
+    /// Where its wizard chose to keep a new project, while it is kept nowhere (docs/adr/9184).
+    pub fn wanted_store(&self) -> Option<kentos_project::wizard::Storage> {
+        match &self.source {
+            Source::Wanted(s) => Some(*s),
+            _ => None,
+        }
+    }
+
     /// Why saving over its own file would lose another's work: the file changed since this drawing read or wrote it.
     pub fn changed_on_disk(&self) -> Option<String> {
         let path = self.path.as_ref()?;
@@ -256,14 +267,14 @@ impl Document {
     pub fn cloud_source(&self) -> Option<&CloudSource> {
         match &self.source {
             Source::Cloud(c) => Some(c),
-            Source::Local | Source::Stored(_) | Source::Offered(_) => None,
+            Source::Local | Source::Stored(_) | Source::Offered(_) | Source::Wanted(_) => None,
         }
     }
 
     pub fn cloud_source_mut(&mut self) -> Option<&mut CloudSource> {
         match &mut self.source {
             Source::Cloud(c) => Some(c),
-            Source::Local | Source::Stored(_) | Source::Offered(_) => None,
+            Source::Local | Source::Stored(_) | Source::Offered(_) | Source::Wanted(_) => None,
         }
     }
 

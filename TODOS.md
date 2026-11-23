@@ -2610,6 +2610,10 @@ Liste:
   sayaçlarıyla (PostGIS'te `pg_stat_all_tables`) eskisin; işaret arayüzü bekletmeden, sekme açıkken arada bir sorulsun.
 - [ ] Katalogda sütun, kapsam ve ilişkili tablolar (ADR 9183, 23 Kasım 2026): web'in PostGIS'e bağlan penceresi de
   seçilen tablonun geometri sütununu ve kapsamını söylesin, yabancı anahtarla bağlı tabloları düğmeyle sunsun.
+- [ ] CBS projesi tek sayfada (ADR 9184, 23 Kasım 2026): web'in Yeni proje sihirbazı da CBS projesini iki adımda
+  kursun (ad, amaç, il ve sistem, saklama aynı sayfada; `fixtures/project/v1/wizard.json`'ın ray notları gösterilen
+  adımlara göredir); kurum şablonundan katmanları, stilleri ve kurum ayarlarını alsın, GeoPackage ya da veritabanı
+  seçilen projenin ilk kaydı Veri kaynağı'nı açsın.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

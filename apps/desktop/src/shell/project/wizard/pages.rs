@@ -2,7 +2,8 @@
 //! DESIGN.md §7.10.1, docs/adr/0626 §1): the project's type on cards with their
 //! pictures; what a CAD drawing is for (a building or a plan on real
 //! coordinates, docs/adr/0802), and a plan's or a CBS project's province and system, the zone
-//! suggested and shown on a strip of Türkiye's longitudes; its name and a summary.
+//! suggested and shown on a strip of Türkiye's longitudes; its name and a summary. A CBS project's
+//! name, purpose, place and storage are one page, each choice with what it means (docs/adr/9184).
 
 use iced::widget::{
     Column, Id, Row, button, column, container, mouse_area, row, rule, scrollable, space, text,
@@ -11,7 +12,7 @@ use iced::{Background, Border, Center, Element, Fill, FillPortion, Padding, Them
 use kentos_interaction::fixed;
 use kentos_project::crs::datum_label;
 use kentos_project::provinces;
-use kentos_project::wizard::{Coords, Kind, WORKS};
+use kentos_project::wizard::{Coords, DATA_NOTE, PURPOSES, Purpose, STORAGES, WORKS};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, metrics, shape, typography};
 use kentos_ui::widget::Banner;
@@ -20,6 +21,7 @@ use kentos_ui::{label, style};
 use super::{Event, Note, State, art, event, strip};
 use crate::app::Message;
 use crate::catalog::{Mode, catalog};
+use crate::exchange::words;
 
 /// A page's title and what it is about.
 fn head<'a>(title: &'a str, lead: &'a str) -> Element<'a, Message> {
@@ -352,17 +354,9 @@ fn soon_card<'a>(m: &'static Mode) -> Element<'a, Message> {
 
 // ── 2. Koordinatlar ────────────────────────────────────────────────────
 
+/// What a CAD drawing is for, and a plan's place; a CBS project's place is on its one page (docs/adr/9184).
 pub(super) fn coords(s: &State) -> Element<'_, Message> {
     let d = &s.draft;
-    if d.kind == Kind::Gis {
-        return page(
-            head(
-                "Konum ve koordinat sistemi",
-                "İli seçin: proje il merkezinde açılır ve ilin TM dilimi önerilir.",
-            ),
-            place(s),
-        );
-    }
     // What the drawing is for (docs/adr/0626 §1): its unit, scale and coordinates come with it; a module's program
     // offers its own works (docs/adr/0801).
     let chosen = d.work();
@@ -475,8 +469,12 @@ pub(in crate::project) fn choice_card<'a>(
 /// The province's search and list, the systems with the suggested one
 /// first, and the zone strip.
 fn place(s: &State) -> Vec<Element<'_, Message>> {
+    place_in(s, typography::from_default(206.0))
+}
+
+/// [`place`] with lists of this height.
+fn place_in(s: &State, list_height: f32) -> Vec<Element<'_, Message>> {
     let d = &s.draft;
-    let list_height = typography::from_default(206.0);
     let search = kentos_ui::widget::text_field("İl adı ya da plaka kodu", &s.query)
         .id(Id::new(super::SEARCH))
         .on_input(|q| event(Event::Search(q)))
@@ -688,3 +686,108 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
         parts,
     )
 }
+
+// ── CBS projesi: tek sayfa ─────────────────────────────────────────────
+
+/// A CBS project's one page (docs/adr/9184): its name, what it is for, where it is and where it is kept, each choice
+/// saying in a sentence what it means; nothing changes until Oluştur.
+pub(super) fn decision(s: &State, current: Option<Note>) -> Element<'_, Message> {
+    let d = &s.draft;
+    let name = kentos_ui::widget::text_field("Proje adı", &d.name)
+        .id(Id::new(super::NAME))
+        .on_input(|t| event(Event::Name(t)))
+        .on_submit(event(Event::Next))
+        .width(typography::from_default(420.0));
+    let purposes = Row::with_children(PURPOSES.iter().map(|c| {
+        small_card(c.icon, c.name, c.note, d.purpose == c.purpose, event(Event::Purpose(c.purpose)))
+    }))
+    .spacing(10);
+    let mut purpose = Column::new().push(purposes).spacing(8);
+    if d.purpose == Purpose::Template {
+        purpose = purpose.push(template_row(s));
+    }
+    let storages = Row::with_children(STORAGES.iter().map(|c| {
+        small_card(c.icon, c.name, c.note, d.storage == c.storage, event(Event::Storage(c.storage)))
+    }))
+    .spacing(10);
+    // The decisions first, the place's lists and the zone strip under them.
+    let mut parts = vec![
+        section("Proje adı", name),
+        section("Amaç", purpose),
+        section("Saklama", column![storages, label::caption(DATA_NOTE)].spacing(8)),
+    ];
+    parts.extend(place_in(s, typography::from_default(132.0)));
+    if let Some(note) = current {
+        parts.push(if note.warn {
+            Banner::warning(note.text).into()
+        } else {
+            Banner::info(note.text).into()
+        });
+    }
+    page(
+        head(
+            "Ad, amaç, konum ve saklama",
+            "Hepsi bu sayfadadır; Oluştur’a basana kadar değiştirebilirsiniz. Ölçek, yazı boyları ve yazı tipi Proje ayarları’ndadır.",
+        ),
+        parts,
+    )
+}
+
+/// A choice on a CBS project's page: its icon and name over what choosing it means, the round mark in the corner.
+fn small_card<'a>(
+    icon_name: &'static str,
+    name: &'a str,
+    note: &'a str,
+    on: bool,
+    message: Message,
+) -> Element<'a, Message> {
+    let mark = container(icon(crate::icons::from_web(Some(icon_name))).size(16.0))
+        .center_x(typography::from_default(28.0))
+        .center_y(typography::from_default(28.0))
+        .style(mark_box(on));
+    button(
+        column![
+            row![
+                mark,
+                text(name)
+                    .font(typography::ui_strong())
+                    .size(typography::body())
+                    .width(Fill),
+                check(on),
+            ]
+            .spacing(8)
+            .align_y(Center),
+            text(note)
+                .size(typography::caption())
+                .style(style::text::muted),
+        ]
+        .spacing(6),
+    )
+    .on_press(message)
+    .padding(10)
+    .width(Fill)
+    .style(card(on))
+    .into()
+}
+
+/// Under Kurum şablonu: Şablon seç… and what the template brings, while it is read, or why it cannot be one.
+fn template_row(s: &State) -> Element<'_, Message> {
+    let said: Element<'_, Message> = match (&s.template_reading, &s.template) {
+        (Some(path), _) => label::muted(format!(
+            "“{}” okunuyor…",
+            path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned())
+        ))
+        .into(),
+        (None, Some(Ok(t))) => label::body(format!("“{}”: {}; nesneleri alınmaz.", t.name(), t.words())).into(),
+        (None, Some(Err(why))) => words::text_line(words::Kind::Error, why.clone()),
+        (None, None) => label::muted("Kurumun şablon projesini (.kcad) gösterin.").into(),
+    };
+    row![
+        words::secondary("Şablon seç…", Some(event(Event::PickTemplate))),
+        container(said).width(Fill),
+    ]
+    .spacing(10)
+    .align_y(Center)
+    .into()
+}
+

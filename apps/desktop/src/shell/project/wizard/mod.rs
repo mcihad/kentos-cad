@@ -1,7 +1,8 @@
 //! Dosya → Yeni proje as a wizard (docs/adr/0165 §3, 0626 §1, DESIGN.md §7.10.1;
 //! the web's `ui/settings/NewProjectWizard.ts`): the project's type, what a CAD
-//! drawing is for or where a CBS project is, and its name, one page at a time
-//! beside a rail of the steps and what was chosen in each. The rules are the
+//! drawing is for, and its name, one page at a time beside a rail of the steps
+//! and what was chosen in each; a CBS project's name, purpose, place and storage
+//! on one page (docs/adr/9184). The rules are the
 //! shared `kentos_project::wizard`, held by fixtures/project/v1/wizard.json.
 //! Nothing changes until Oluştur. Unsaved changes of the drawing on screen
 //! are asked about then, over the wizard, so Vazgeç there comes back here;
@@ -12,6 +13,7 @@
 mod art;
 mod pages;
 mod strip;
+mod template;
 
 /// A card to choose one of, as the wizard's works are: the work question uses it too (docs/adr/0801).
 pub(super) use pages::choice_card;
@@ -19,19 +21,21 @@ pub(super) use pages::choice_card;
 mod tests;
 
 use std::fmt;
+use std::path::PathBuf;
 
+use iced::futures::channel::mpsc;
 use iced::widget::{Id, operation};
 use iced::{Element, Task};
-use kentos_commands::{DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, Workspace};
+use kentos_commands::{DOCUMENT_VERSION_2, DocumentSnapshotV1, DocumentSnapshotV2, DrawingFont, Workspace};
 use kentos_interaction::Level;
-use kentos_project::wizard::{Draft, Kind, STEPS, Step, WORKS};
+use kentos_project::wizard::{Draft, Kind, Purpose, Step, Storage, WORKS};
 use kentos_ui::widget::{Wizard, overlay};
 
 use super::content::{self, NewProject};
 use super::{Event as ProjectEvent, Window, message};
-use crate::app::{App, Dialog as Asking, Message, Then};
+use crate::app::{App, Dialog as Asking, Message, Picker, Then};
 use crate::crs;
-use crate::document::Document;
+use crate::document::{Document, Source};
 
 /// Yeni proje's note about the drawing on screen: a warning, or information.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -85,6 +89,10 @@ pub struct State {
     status: Option<String>,
     /// The drawing Oluştur built, while the drawing on screen is left.
     pending: Option<Box<Document>>,
+    /// The institution's template read (docs/adr/9184), or why it could not be.
+    template: Option<Result<Box<template::Template>, String>>,
+    /// The template file being read: a later choice overtakes it.
+    template_reading: Option<PathBuf>,
 }
 
 impl fmt::Debug for State {
@@ -94,6 +102,7 @@ impl fmt::Debug for State {
             .field("limit", &self.limit)
             .field("step", &self.step)
             .field("pending", &self.pending.is_some())
+            .field("template_reading", &self.template_reading)
             .finish_non_exhaustive()
     }
 }
@@ -115,6 +124,16 @@ pub enum Event {
     SearchFirst,
     System(u32),
     Name(String),
+    /// What a CBS project is for (docs/adr/9184): the layers it starts with.
+    Purpose(Purpose),
+    /// Where it is kept: its first Kaydet goes there.
+    Storage(Storage),
+    /// Şablon seç…: the institution's template project asked for.
+    PickTemplate,
+    /// The template's file chosen; none: the dialog was closed.
+    TemplatePicked(Option<PathBuf>),
+    /// The template read off the interface's thread, or why it could not be.
+    TemplateRead(PathBuf, Result<Box<template::Template>, String>),
     /// A step on the rail.
     Go(usize),
     Back,
@@ -151,28 +170,32 @@ impl State {
                 draft.choose_work(card);
             }
         }
+        // The type is the program's: the wizard starts at what a CAD project is for, or on a CBS project's page.
+        let step = match limit {
+            Some(_) => draft.steps().get(1).copied().unwrap_or(Step::Details),
+            None => Step::Type,
+        };
         Self {
             draft,
             limit,
-            // The type is the program's: the wizard starts at what the project is for, or where it is.
-            step: if limit.is_some() {
-                Step::Coords
-            } else {
-                Step::Type
-            },
+            step,
             query: String::new(),
             status: None,
             pending: None,
+            template: None,
+            template_reading: None,
         }
     }
 
-    /// The first step the wizard shows: a module's program asks no type (docs/adr/0802).
+    /// The first step the wizard shows, by its place among the type's steps: a module's program asks no type
+    /// (docs/adr/0802).
     pub(crate) fn first_step(&self) -> usize {
-        if self.limit.is_some() {
-            Step::Coords.index()
-        } else {
-            0
-        }
+        usize::from(self.limit.is_some())
+    }
+
+    /// The step's place among the steps the type shows (docs/adr/9184: a CBS project has two).
+    fn at(&self) -> usize {
+        self.draft.steps().iter().position(|s| *s == self.step).unwrap_or(0)
     }
 
     /// Whether the wizard may make a project of this type.
@@ -186,12 +209,13 @@ impl State {
             .is_none_or(|m| crate::program::works_of(m).contains(&w))
     }
 
-    /// The step at `index`, if every step before it can be left.
+    /// The step at `index` among the type's steps, if every step before it can be left.
     fn go(&mut self, index: usize) {
         // A module's program has no type step (docs/adr/0802): nothing before its first step is gone to.
         let index = index.max(self.first_step());
-        let Some(to) = STEPS.get(index) else { return };
-        for s in &STEPS[..index] {
+        let steps = self.draft.steps();
+        let Some(to) = steps.get(index) else { return };
+        for s in &steps[..index] {
             if let Some(why) = self.draft.blocked(*s) {
                 self.step = *s;
                 self.status = Some(why);
@@ -200,6 +224,32 @@ impl State {
         }
         self.step = *to;
         self.status = None;
+    }
+
+    /// The project Oluştur makes (docs/adr/9184): a CBS project's purpose gives its layers, a template its layers,
+    /// styles and settings; a project to keep in a data source is written nowhere until its first Kaydet there.
+    fn document(&self) -> Result<Document, String> {
+        let d = &self.draft;
+        let mut doc = match (d.kind, d.purpose) {
+            (Kind::Gis, Purpose::Template) => match &self.template {
+                Some(Ok(t)) => t.document(d)?,
+                Some(Err(why)) => return Err(why.clone()),
+                None => {
+                    return Err(d.blocked(Step::Details).unwrap_or_else(|| "Kurum şablonu henüz okunmadı.".to_owned()));
+                }
+            },
+            (Kind::Gis, Purpose::City) => {
+                let mut v1 = content::new_project(&d.options())?;
+                v1.layers = content::city_layers();
+                v1.active_layer = content::STANDARD_ACTIVE_LAYER.to_owned();
+                from_v1(v1)?
+            }
+            _ => new_document(&d.options())?,
+        };
+        if d.kind == Kind::Gis && d.storage != Storage::File {
+            doc.source = Source::Wanted(d.storage);
+        }
+        Ok(doc)
     }
 }
 
@@ -223,7 +273,11 @@ fn ready(w: Workspace) -> bool {
 /// The drawing, without persistent ids or a source record yet (the web's
 /// `replaceWith` of a new project): the first save gives them.
 pub fn new_document(o: &NewProject) -> Result<Document, String> {
-    let v1 = content::new_project(o)?;
+    from_v1(content::new_project(o)?)
+}
+
+/// A new project's v1 snapshot as the drawing.
+fn from_v1(v1: DocumentSnapshotV1) -> Result<Document, String> {
     Document::from_v2(
         DocumentSnapshotV2 {
             dimension_sets: Vec::new(),
@@ -323,12 +377,53 @@ impl App {
             }
             Event::System(srid) => d.srid = Some(srid),
             Event::Name(name) => d.name = name,
+            Event::Purpose(purpose) => d.purpose = purpose,
+            Event::Storage(storage) => d.storage = storage,
+            Event::PickTemplate => {
+                d.purpose = Purpose::Template;
+                s.status = None;
+                return match &self.picker {
+                    Picker::File(path) => Task::done(event(Event::TemplatePicked(Some(path.clone())))),
+                    Picker::Dialog => Task::perform(
+                        async {
+                            let file = rfd::AsyncFileDialog::new()
+                                .set_title("Kurum şablonu")
+                                .add_filter("KentOS projesi (.kcad)", &["kcad"])
+                                .pick_file()
+                                .await?;
+                            Some(file.path().to_path_buf())
+                        },
+                        |path| event(Event::TemplatePicked(path)),
+                    ),
+                };
+            }
+            Event::TemplatePicked(None) => return Task::none(),
+            Event::TemplatePicked(Some(path)) => {
+                s.template_reading = Some(path.clone());
+                s.template = None;
+                d.template = None;
+                s.status = None;
+                return iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
+                    let read = template::read(&path).map(Box::new);
+                    let done = event(Event::TemplateRead(path, read));
+                    let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, done));
+                });
+            }
+            Event::TemplateRead(path, read) => {
+                // A later choice overtakes an earlier read: its answer is dropped.
+                if s.template_reading.as_ref() != Some(&path) {
+                    return Task::none();
+                }
+                s.template_reading = None;
+                d.template = read.is_ok().then(|| path.display().to_string());
+                s.template = Some(read);
+            }
             Event::Go(index) => {
                 s.go(index);
                 return focus(s);
             }
             Event::Back => {
-                s.go(s.step.index().saturating_sub(1).max(s.first_step()));
+                s.go(s.at().saturating_sub(1).max(s.first_step()));
                 return focus(s);
             }
             Event::Next => return self.new_project_next(),
@@ -340,7 +435,7 @@ impl App {
     /// KentOS Mimari's Yeni proje (docs/adr/0802): no wizard, the project as its first work makes it (a building in
     /// metres at 1:100, local coordinates); the drawing on screen is left as Oluştur leaves it.
     pub(crate) fn new_project_at_once(&mut self, mut state: State) -> Task<Message> {
-        match new_document(&state.draft.options()) {
+        match state.document() {
             Err(e) => {
                 self.error(e);
                 Task::none()
@@ -362,12 +457,12 @@ impl App {
             s.status = Some(why);
             return Task::none();
         }
-        let at = s.step.index();
-        if at + 1 < STEPS.len() {
+        let at = s.at();
+        if at + 1 < s.draft.steps().len() {
             s.go(at + 1);
             return focus(s);
         }
-        match new_document(&s.draft.options()) {
+        match s.document() {
             Err(e) => {
                 s.status = Some(e);
                 Task::none()
@@ -393,6 +488,7 @@ impl App {
         self.close_project_window();
         let settings = doc.settings().clone();
         let name = doc.name().to_owned();
+        let wanted = doc.wanted_store();
         // The viewport fits its home view, once the drawing area has its size.
         self.show_document(*doc);
         // KentOS Mimari's new project opens on Mimari, where Duvar is (docs/adr/8007).
@@ -413,10 +509,16 @@ impl App {
         }
         let _ = self.settings.choose(&remembered);
         let system = crs::title_of(settings.srid);
+        // Where its first Kaydet writes (docs/adr/9184).
+        let first_save = match wanted {
+            Some(Storage::Geopackage) => "İlk Kaydet, GeoPackage dosyasını ve proje adını sorar.",
+            Some(Storage::Database) => "İlk Kaydet, veritabanı bağlantısını, şemayı ve proje adını sorar.",
+            _ => "İlk kayıtta dosyanın yeri sorulur.",
+        };
         self.say(
             Level::Success,
             format!(
-                "“{name}” yeni projesi açıldı: {system}, 1:{}. İlk kayıtta dosyanın yeri sorulur.",
+                "“{name}” yeni projesi açıldı: {system}, 1:{}. {first_save}",
                 content::js_number(settings.plot_scale)
             ),
         );
@@ -488,11 +590,14 @@ impl App {
         let page = match s.step {
             Step::Type => pages::kind(s, &self.theme()),
             Step::Coords => pages::coords(s),
+            // A CBS project's one page (docs/adr/9184).
+            Step::Details if s.draft.kind == Kind::Gis => pages::decision(s, self.new_project_note()),
             Step::Details => pages::details(s, self.new_project_note()),
         };
-        // A module's program asks no type (docs/adr/0802): its own window, its coordinates and its name only.
+        // A module's program asks no type (docs/adr/0802): its own window, from what a CAD project is for or a CBS
+        // project's page.
         let first = s.first_step();
-        let steps = &STEPS[first..];
+        let steps = &s.draft.steps()[first..];
         let title = match s.limit {
             Some(kentos_launch::Module::Map) => "Yeni harita projesi",
             Some(kentos_launch::Module::Gis) => "Yeni CBS projesi",
@@ -502,15 +607,16 @@ impl App {
         };
         let mut wizard = Wizard::new(title, steps.iter().map(|step| step.name(s.draft.kind)))
             .rail(steps.iter().map(|step| s.draft.note(*step)))
-            .current(s.step.index() - first)
+            .current(s.at().saturating_sub(first))
             .body(page)
             .on_step(move |i| event(Event::Go(i + first)))
             .back(event(Event::Back))
             .next(Some(event(Event::Next)))
             .finish("Oluştur", Some(event(Event::Next)))
             .on_cancel(message(ProjectEvent::Close))
-            // 1040 × 704 at the default text size (the web's); a lower window keeps a margin.
-            .size(960.0, 650.0);
+            // 1040 × 704 at the default text size (the web's); a lower window keeps a margin. A CBS project's one
+            // page is taller (docs/adr/9184).
+            .size(960.0, if s.draft.kind == Kind::Gis && s.step == Step::Details { 720.0 } else { 650.0 });
         if let Some(status) = &s.status {
             wizard = wizard.problem(status.clone());
         }

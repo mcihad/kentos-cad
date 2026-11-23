@@ -16,7 +16,6 @@
       "name": "CBS, il yok",
       "notes": [
         "CBS · harita",
-        "TUREF / TM36",
         "Yeni proje"
       ],
       "options": {
@@ -47,8 +46,16 @@
           "1:1.000"
         ],
         [
+          "Amaç",
+          "Kadastro paftası"
+        ],
+        [
           "Katmanlar",
           "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
+        ],
+        [
+          "Saklama",
+          "Dosya (.kcad)"
         ],
         [
           "Açılış",
@@ -73,7 +80,6 @@
       "name": "CBS, İzmir",
       "notes": [
         "CBS · harita",
-        "İzmir · TUREF / TM27",
         "Yeni proje"
       ],
       "options": {
@@ -109,8 +115,16 @@
           "1:1.000"
         ],
         [
+          "Amaç",
+          "Kadastro paftası"
+        ],
+        [
           "Katmanlar",
           "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
+        ],
+        [
+          "Saklama",
+          "Dosya (.kcad)"
         ],
         [
           "Açılış",
@@ -135,7 +149,6 @@
       "name": "CBS, Van, ED50 seçilmiş, 1:5000",
       "notes": [
         "CBS · harita",
-        "Van · ED50 / TM42",
         "Van kadastro"
       ],
       "options": {
@@ -171,8 +184,16 @@
           "1:5.000"
         ],
         [
+          "Amaç",
+          "Kadastro paftası"
+        ],
+        [
           "Katmanlar",
           "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
+        ],
+        [
+          "Saklama",
+          "Dosya (.kcad)"
         ],
         [
           "Açılış",
@@ -495,6 +516,149 @@
         [
           "Açılış",
           "A3 kâğıt, yatay; 0,0 sol altta"
+        ]
+      ],
+      "unit": "m"
+    },
+    {
+      "draft": {
+        "coords": "local",
+        "fallbackSrid": 5256,
+        "font": "barlow",
+        "name": "Ankara-Mahalle-Hizmetleri",
+        "plotScale": null,
+        "province": 6,
+        "purpose": "city",
+        "srid": null,
+        "storage": "geopackage",
+        "type": "gis",
+        "unit": "m"
+      },
+      "firstSystem": 5255,
+      "name": "CBS, Ankara, boş kent haritası, GeoPackage içinde",
+      "notes": [
+        "CBS · harita",
+        "Ankara-Mahalle-Hizmetleri"
+      ],
+      "options": {
+        "drawingFont": "barlow",
+        "name": "Ankara-Mahalle-Hizmetleri",
+        "plotScale": 1000,
+        "province": 6,
+        "srid": 5255,
+        "workspace": "gis"
+      },
+      "scale": 1000,
+      "srid": 5255,
+      "suggested": 5255,
+      "summary": [
+        [
+          "Tür",
+          "CBS, coğrafi bilgi sistemi"
+        ],
+        [
+          "Koordinatlar",
+          "TUREF / TM33 (EPSG:5255)"
+        ],
+        [
+          "İl",
+          "Ankara"
+        ],
+        [
+          "Birim",
+          "metre"
+        ],
+        [
+          "Harita ölçeği",
+          "1:1.000"
+        ],
+        [
+          "Amaç",
+          "Boş kent haritası"
+        ],
+        [
+          "Katmanlar",
+          "Boş kent haritası: Taslak"
+        ],
+        [
+          "Saklama",
+          "GeoPackage içinde"
+        ],
+        [
+          "Açılış",
+          "Ankara merkezinde bir pafta"
+        ]
+      ],
+      "unit": "m"
+    },
+    {
+      "draft": {
+        "coords": "local",
+        "fallbackSrid": 5256,
+        "font": "barlow",
+        "name": "Sivas imar",
+        "plotScale": null,
+        "province": 58,
+        "purpose": "template",
+        "srid": null,
+        "storage": "database",
+        "template": "/kurum/Belediye şablonu.kcad",
+        "type": "gis",
+        "unit": "m"
+      },
+      "firstSystem": 5256,
+      "name": "CBS, Sivas, kurum şablonu, PostgreSQL",
+      "notes": [
+        "CBS · harita",
+        "Sivas imar"
+      ],
+      "options": {
+        "drawingFont": "barlow",
+        "name": "Sivas imar",
+        "plotScale": 1000,
+        "province": 58,
+        "srid": 5256,
+        "workspace": "gis"
+      },
+      "scale": 1000,
+      "srid": 5256,
+      "suggested": 5256,
+      "summary": [
+        [
+          "Tür",
+          "CBS, coğrafi bilgi sistemi"
+        ],
+        [
+          "Koordinatlar",
+          "TUREF / TM36 (EPSG:5256)"
+        ],
+        [
+          "İl",
+          "Sivas"
+        ],
+        [
+          "Birim",
+          "metre"
+        ],
+        [
+          "Harita ölçeği",
+          "1:1.000"
+        ],
+        [
+          "Amaç",
+          "Kurum şablonu"
+        ],
+        [
+          "Katmanlar",
+          "Kurum şablonu: Belediye şablonu.kcad"
+        ],
+        [
+          "Saklama",
+          "PostgreSQL veritabanında"
+        ],
+        [
+          "Açılış",
+          "Sivas merkezinde bir pafta"
         ]
       ],
       "unit": "m"
