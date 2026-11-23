@@ -89,6 +89,8 @@ pub(super) fn stats(frames: &[Parts]) -> Value {
         "gpuP50": percentile(&gpu, 0.5), "gpuP95": percentile(&gpu, 0.95), "gpuP99": percentile(&gpu, 0.99),
         "gpuMax": percentile(&gpu, 1.0),
         "uiOverBudget": ui.iter().filter(|&&t| t > BUDGET_MS).count(),
+        // Frames the app's view was built for (docs/adr/9205): a gesture of the area's live camera builds none.
+        "viewsBuilt": frames.iter().filter(|p| p.rebuilt()).count(),
         "viewP50": percentile(&frames.iter().map(|p| p.view_ms()).collect::<Vec<_>>(), 0.5),
         // The UI thread's parts at its p95 frame: event, app, view, layout, draw.
         "uiP95Parts": frames

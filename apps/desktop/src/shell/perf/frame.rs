@@ -51,6 +51,10 @@ pub(super) struct Parts {
     layout: f64,
     draw: f64,
     gpu: Option<f64>,
+    /// The app's view was built for this frame: a message reached the app since the last one (docs/adr/9205). A frame
+    /// a widget asked for without a message (a gesture of the area's live camera) redraws the interface as it is,
+    /// as the runtime does; its view and layout are not counted.
+    rebuilt: bool,
 }
 
 impl Parts {
@@ -73,6 +77,11 @@ impl Parts {
     pub(super) fn gpu_ms(&self) -> f64 {
         self.gpu.unwrap_or(0.0)
     }
+
+    /// Whether the app's view was built for this frame.
+    pub(super) fn rebuilt(&self) -> bool {
+        self.rebuilt
+    }
 }
 
 /// The interface without a window, driven as Iced's runtime drives it.
@@ -81,6 +90,9 @@ pub(super) struct Harness {
     cache: user_interface::Cache,
     cursor: mouse::Cursor,
     gpu: bool,
+    /// A message reached the app after the last frame was drawn (what its redraw asked for): the next frame builds
+    /// the view.
+    dirty: bool,
 }
 
 fn redraw() -> Event {
@@ -120,6 +132,7 @@ impl Harness {
             cache: user_interface::Cache::default(),
             cursor: mouse::Cursor::Unavailable,
             gpu,
+            dirty: true,
         }
     }
 
@@ -130,6 +143,16 @@ impl Harness {
         app: &mut App,
         events: &[Event],
         act: impl FnOnce(&mut App),
+    ) -> Parts {
+        self.frame_acting(app, events, Some(act))
+    }
+
+    /// One input; `act`, when given, is the app taking something besides the widgets' messages.
+    fn frame_acting(
+        &mut self,
+        app: &mut App,
+        events: &[Event],
+        act: Option<impl FnOnce(&mut App)>,
     ) -> Parts {
         for event in events {
             if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
@@ -168,15 +191,20 @@ impl Harness {
             self.cache = ui.into_cache();
         }
         let t = Instant::now();
+        // The runtime builds the app's view only after a message (the runtime's `update` then `view`): a frame a
+        // widget asked for without one draws the interface it has (docs/adr/9205).
+        parts.rebuilt = self.dirty || !messages.is_empty() || act.is_some();
         for message in messages {
             let _ = app.update(message);
         }
-        act(app);
+        if let Some(act) = act {
+            act(app);
+        }
         parts.app = ms(t);
         let theme = app.theme();
         let t = Instant::now();
         let element = app.view();
-        parts.view = ms(t);
+        parts.view = if parts.rebuilt { ms(t) } else { 0.0 };
         let t = Instant::now();
         let mut ui = UserInterface::build(
             element,
@@ -184,7 +212,7 @@ impl Harness {
             std::mem::take(&mut self.cache),
             &mut self.renderer,
         );
-        parts.layout = ms(t);
+        parts.layout = if parts.rebuilt { ms(t) } else { 0.0 };
         let t = Instant::now();
         let mut later = Vec::new();
         let _ = ui.update(
@@ -214,6 +242,7 @@ impl Harness {
             parts.gpu = Some(ms(t));
         }
         // What the redraw asked for goes to the app before the next input, as in the runtime.
+        self.dirty = !later.is_empty();
         for message in later {
             let _ = app.update(message);
         }
@@ -221,7 +250,7 @@ impl Harness {
     }
 
     pub(super) fn frame(&mut self, app: &mut App, events: &[Event]) -> Parts {
-        self.frame_with(app, events, |_| {})
+        self.frame_acting(app, events, None::<fn(&mut App)>)
     }
 
     /// The last frame drawn again and read back: RGBA rows of the window at one device pixel per logical pixel
@@ -244,6 +273,7 @@ impl Harness {
 
     /// Frames until the interface asks for nothing more (the area's size, the first fit).
     pub(super) fn settle(&mut self, app: &mut App) {
+        self.dirty = true;
         for _ in 0..12 {
             let mut messages = Vec::new();
             let mut ui = UserInterface::build(
