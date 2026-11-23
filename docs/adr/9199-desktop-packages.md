@@ -155,6 +155,21 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 
 ## §5 Kalan
 
+**Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):
+
+- Yol 46 modül, 31,5 bin satır, 46 dosyada `impl App`; başka modüle bağı yok. Çekirdekten ona dokunan: kabuğun `app`'i
+  (ileti, pencere, durum), kayıt, izler, görünüm; gizli çağrılar: ~50 komut kimliği, dosya seçici sonuçları
+  (`Message::LandxmlExport`, `LandxmlMachine`, `LandxmlAlignments`, `IfcExport`, `GltfExport`), görünüm alanında seçme
+  (`terrain_picked`, `grade_picked`), işaretler (`grade_marks`: `cad/sub_object.rs` ve alan), panel ve başlığı, 3B
+  penceresinin glTF dışa aktarımı, iz başlıkları ve denetimleri.
+- **Ortak olan** (ortak katalogda Harita'nın komut kümesinde de): Arazi (`terrain.surfaces`, `terrain.new`,
+  `terrain.sheetContours`, `terrain.stockpile`, `terrain.cloud`, `terrain.analysis`), `tool.grade`, `platform.editor`,
+  `drainage.editor` ve proje ağacı (`Panel::RoadProject`, Harita'da “Proje ağacı”; `panel_title`'da modül adına göre
+  dal var). Bunlar §3.2 gereği Yol ayrılmadan önce çekirdeğe (CAD) iner.
+- **Yol'a özgü:** eksen, boykesit, enkesit ve şablon, dever, koridor ve şev planı, hacim, taşıma ve plan, aplikasyon,
+  yol paftaları ve görünüşleri, çizgiden eksen ve boykesit, korkuluk, menfez, istinat, süpürme, görüş, platform suyu,
+  hakediş, güzergâh, kavşak, LandXML/IFC/glTF.
+
 - Yol, Mimari ve CBS paketleri (en az bağlıdan); her biri aynı düzenle: ortak parçalar çekirdeğe, `ModuleParts`,
   silinen türler, uzantı trait'leri, paket, sınamaların yeri.
 - CAD çekirdeğinin kabuktan ayrılması (§3.1): kabuk → cad 77, CBS → cad 54 dosya.
