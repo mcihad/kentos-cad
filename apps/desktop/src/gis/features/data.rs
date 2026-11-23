@@ -451,6 +451,10 @@ impl App {
                 match answer {
                     Ok(a) => {
                         data.error = None;
+                        // The source answered: the layer checked now (docs/adr/9163).
+                        if let Some(asked) = &data.asked {
+                            self.gis.data_edits.verified.insert(asked.layer.clone(), crate::data_edits::now_ms());
+                        }
                         if data.fields.is_empty() || page == 0 {
                             data.fields = a.fields.clone();
                         }
@@ -843,7 +847,11 @@ impl App {
         let waiting = changes
             .as_ref()
             .filter(|c| offline && !c.is_empty())
-            .map(|c| super::pending_rows::pending_words(c.added.len(), c.changed.len(), c.deleted.len()));
+            .map(|c| {
+                // When the source last answered for the layer (docs/adr/9163).
+                let verified = self.gis.data_edits.verified.get(&node.id).copied();
+                super::pending_rows::pending_words(c.added.len(), c.changed.len(), c.deleted.len(), verified)
+            });
         let status = match (&data.error, data.total) {
             // Said where the rows would be when none is shown: the line only says none was read.
             (Some(_), _) if count == 0 => label::caption(words::UNREAD).style(kentos_ui::style::text::muted),

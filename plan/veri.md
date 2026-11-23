@@ -492,3 +492,7 @@ numaraları raporunkidir.
   ([ADR 9162](../docs/adr/9162-new-row-only-with-the-insert-right.md))
   - PostGIS INSERT/UPDATE/DELETE yetkilerini ayrı okur; yetkisiz bağlantıda silinmiş satırın taslağı bırakılır.
   - Kalan: gerçek PostgreSQL'de ikinci hesapla deneme, sütun düzeyinde yetkiler, web.
+- [~] **VY-62 — Bekleyen satırlar kaynağın son doğrulama zamanını söyler (rapor 31'in kalanı).**
+  ([ADR 9163](../docs/adr/9163-last-verification-of-pending-rows.md))
+  - Sayfa okunduğunda ve kaynağa yazıldığında zaman tutulur; günlükle gider, çevrimdışı açılışta “son doğrulama” der.
+  - Kalan: gerçek PostgreSQL kesintisi, satır başına alma anı, kaynak hatalarının Türkçesi, web.

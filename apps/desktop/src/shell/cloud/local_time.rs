@@ -319,6 +319,18 @@ pub fn iso_local(t: i64, zone: &Zone) -> String {
     )
 }
 
+/// A moment (milliseconds since 1970) in the device's zone, tr-TR short date
+/// and time: “26.09.2026 14:05”.
+pub fn stamp(ms: u64, zone: &Zone) -> String {
+    let t = i64::try_from(ms / 1000).unwrap_or(0);
+    let (year, month, day, secs) = civil(t + i64::from(zone.offset_at(t)));
+    format!(
+        "{day:02}.{month:02}.{year} {:02}:{:02}",
+        secs / 3600,
+        secs % 3600 / 60
+    )
+}
+
 /// A moment (milliseconds since 1970) as the time of day in the device's
 /// zone, tr-TR: “14:05:09” (the web's `toLocaleTimeString`).
 pub fn clock(ms: u64, zone: &Zone) -> String {

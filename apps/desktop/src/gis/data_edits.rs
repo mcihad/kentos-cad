@@ -44,6 +44,16 @@ pub(crate) struct DataEdits {
     /// A write whose commit's answer was lost (docs/adr/9126), by each layer it wrote: what it sent and its receipt.
     /// The next Kaynağa yaz of those layers asks the source first; one without a receipt is not sent again by itself.
     pub(crate) uncertain: BTreeMap<String, Uncertain>,
+    /// When each data layer's source last answered (docs/adr/9163), milliseconds since 1970: a page of its table read,
+    /// a save that went. It goes with the project's journal, so a project opened again offline says how old its check is.
+    pub(crate) verified: BTreeMap<String, u64>,
+}
+
+/// Now, in milliseconds since 1970: a source's answer's time (docs/adr/9163).
+pub(crate) fn now_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_millis() as u64)
 }
 
 /// A write whose commit's answer was lost (docs/adr/9126): the source may hold it all or none of it. Kept with the
@@ -643,6 +653,8 @@ impl App {
                         Ok(()) => {
                             self.gis.data_edits.failed.remove(&w.layer);
                             self.gis.data_edits.gone.remove(&w.layer);
+                            // The source answered: checked now (docs/adr/9163).
+                            self.gis.data_edits.verified.insert(w.layer.clone(), now_ms());
                             said.push(format!("“{}”: {words}", w.name));
                         }
                         Err(why) => self.warn(why),

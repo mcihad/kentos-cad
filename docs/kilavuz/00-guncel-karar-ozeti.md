@@ -190,6 +190,9 @@
   - **Ekleme yetkisiyle yeni satır** (23 Kasım, rapor 32'nin kalanı;
     [ADR 9162](../adr/9162-new-row-only-with-the-insert-right.md), VY-61): PostGIS yetkileri ayrı okunur; ekleme
     yetkisi olmayan bağlantıda silinmiş satır yeni satır olarak yazılmaz.
+  - **Son doğrulama zamanı** (23 Kasım, rapor 31'in kalanı;
+    [ADR 9163](../adr/9163-last-verification-of-pending-rows.md), VY-62): kaynağı okunamayan tablo bekleyen satırların
+    yanında “son doğrulama: 22.11.2026 14:32” der; zaman günlükle gider.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

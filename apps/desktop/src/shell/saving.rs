@@ -530,6 +530,8 @@ impl App {
         // The writes whose answer was lost go with the journal (docs/adr/9126).
         if let Some(k) = kept.as_mut() {
             k.uncertain = crate::data_journal::uncertain_of(&self.gis.data_edits);
+            // When the sources of the layers waiting last answered (docs/adr/9163).
+            k.verified = crate::data_journal::verified_of(&self.gis.data_edits, &k.layers);
         }
         // The level and view on screen go with the file, no edit of the drawing (docs/adr/0720 §1).
         let level = (self.arch.active_level.clone(), self.level_view);

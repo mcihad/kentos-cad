@@ -13,7 +13,7 @@
 //!   (`Document::drop_left`).
 //! - A copy (Kopyasını kaydet), a cloud project and a recovery copy keep no journal: the drawing stays with its own file.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use kentos_commands::Entity;
@@ -129,6 +129,18 @@ pub(crate) struct Kept {
     /// The writes whose commit's answer was lost (docs/adr/9126), one each: asked by their receipts before the layers
     /// are written again, the project opened again too.
     pub uncertain: Vec<crate::data_edits::Uncertain>,
+    /// When each layer with rows waiting last had its source answer (docs/adr/9163), milliseconds since 1970.
+    pub verified: BTreeMap<String, u64>,
+}
+
+/// When the layers of `layers` last had their source answer (docs/adr/9163): the journal keeps theirs only.
+pub(crate) fn verified_of(edits: &crate::data_edits::DataEdits, layers: &[PendingLayer]) -> BTreeMap<String, u64> {
+    edits
+        .verified
+        .iter()
+        .filter(|(l, _)| layers.iter().any(|p| &p.layer == *l))
+        .map(|(l, t)| (l.clone(), *t))
+        .collect()
 }
 
 /// The uncertain writes of the edit sessions, one each (a write of several layers is kept under each of them).
@@ -177,6 +189,7 @@ pub(crate) fn kept_for(model: &kentos_domain::Document, place: String) -> Kept {
         left_from: model.data_left().len(),
         written: model.data_written(),
         uncertain: Vec::new(),
+        verified: BTreeMap::new(),
     }
 }
 
@@ -198,6 +211,9 @@ struct Written {
     /// The writes whose commit's answer was lost (docs/adr/9126).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     uncertain: Vec<crate::data_edits::Uncertain>,
+    /// When each layer's source last answered (docs/adr/9163), milliseconds since 1970.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    verified: BTreeMap<String, u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -243,6 +259,7 @@ impl Written {
                 .collect(),
             gone: kept.gone.iter().map(ToString::to_string).collect(),
             uncertain: kept.uncertain.clone(),
+            verified: kept.verified.clone(),
         }
     }
 
@@ -343,6 +360,7 @@ impl App {
             return finish(doc, kept);
         }
         let uncertain = std::mem::take(&mut written.uncertain);
+        let verified = std::mem::take(&mut written.verified);
         let (layers, gone) = written.parts();
         let dropped = doc.model.drop_left(&gone);
         let said = doc.model.restore_pending(layers);
@@ -357,6 +375,9 @@ impl App {
                 format!("{name}: {}", crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len()))
             })
             .collect();
+        // When the sources last answered comes back too (docs/adr/9163): an unread table says how old its check is.
+        self.gis.data_edits.verified.extend(verified.clone());
+        kept.verified = verified;
         // The writes whose answer was lost come back too: asked before the layers are written again (docs/adr/9126).
         kept.uncertain = uncertain.clone();
         for u in &uncertain {
@@ -448,6 +469,7 @@ impl App {
         let mut written_kept = kept.clone();
         written_kept.gone = gone;
         written_kept.uncertain = uncertain_of(&self.gis.data_edits);
+        written_kept.verified = verified_of(&self.gis.data_edits, &written_kept.layers);
         let project = model.project_id();
         if let Err(e) = journals.write(&written_kept, project) {
             self.warn(format!("Bekleyen veri düzenlemelerinin günlüğü güncellenemedi ({e})."));

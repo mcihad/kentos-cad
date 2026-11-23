@@ -2,7 +2,8 @@
 //! gone). The edit session's rows wait in the drawing and its journal; the table lists them still, so a changed row's
 //! draft is seen beside the new ones: each changed row by its key with its local values and, where a value changed,
 //! the one it had when it was taken; each deleted row by its key, faded. None of it is checked against the source until
-//! it can be read again; when it can, the source's pages come back and the taken rows show over them by their keys.
+//! it can be read again; when it can, the source's pages come back and the taken rows show over them by their keys. The
+//! line says when the source last answered for the layer, kept with the project's journal (docs/adr/9163).
 
 use kentos_domain::DataChanges;
 
@@ -70,10 +71,15 @@ pub(crate) fn cell_value(
     }
 }
 
-/// The status line's words for the pending rows shown while the source cannot be read.
-pub(crate) fn pending_words(added: usize, changed: usize, deleted: usize) -> String {
+/// The status line's words for the pending rows shown while the source cannot be read, with when the source last
+/// answered for the layer (`verified`, milliseconds since 1970: docs/adr/9163), in the device's time.
+pub(crate) fn pending_words(added: usize, changed: usize, deleted: usize, verified: Option<u64>) -> String {
+    let last = match verified {
+        Some(ms) => crate::cloud::local_time::stamp(ms, crate::cloud::local_time::Zone::system()),
+        None => "bilinmiyor".to_owned(),
+    };
     format!(
-        "Bekleyen değişiklikler: {}; kaynak okunamadığı için doğrulanmadı",
+        "Bekleyen değişiklikler: {}; kaynak okunamadığı için doğrulanmadı (son doğrulama: {last})",
         crate::data_edits::counts_words(added, changed, deleted)
     )
 }
