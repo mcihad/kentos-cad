@@ -529,3 +529,7 @@ numaraları raporunkidir.
   ([ADR 9171](../docs/adr/9171-topology-old-after-an-outside-write.md))
   - Okunan kaynağın adresi, tablosu ve dosyanın parmak izi saklanır; değişince not ve tam Denetle.
   - Kalan: PostGIS'in dışarıdaki yazımı, kendi yazımını ayırmak, kurum eşikleri, web.
+- [~] **VY-71 — PostGIS kataloğu şema ağacı ve sık kullanılan tablolarla (rapor 7'nin kalanı).**
+  ([ADR 9172](../docs/adr/9172-catalog-schema-tree-and-favourites.md))
+  - Şemalar açılıp kapanır, arama eşleşenleri açar; yıldızlı tablolar başta, bağlantının adıyla cihazda saklanır.
+  - Kalan: ilişkili öznitelik tabloları, geometri sütunu adı ve kapsam, canlı sınamalar, web.

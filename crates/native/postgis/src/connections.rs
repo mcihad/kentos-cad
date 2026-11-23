@@ -435,12 +435,17 @@ struct StoreFile {
     format: String,
     version: u32,
     connections: Vec<DbConnection>,
+    /// Each connection's favourite tables (`schema.table`, docs/adr/9172), by the connection's name.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    favorites: std::collections::BTreeMap<String, Vec<String>>,
 }
 
 /// The device's connections, read once and written whole on each change.
 pub struct ConnectionStore {
     folder: Option<PathBuf>,
     list: Mutex<Vec<DbConnection>>,
+    /// Each connection's favourite tables, by its name (docs/adr/9172).
+    favorites: Mutex<std::collections::BTreeMap<String, Vec<String>>>,
     /// Bumped on each change, so lists follow.
     version: AtomicU64,
     /// The file set aside when it did not read, for the user to be told once.
@@ -450,13 +455,14 @@ pub struct ConnectionStore {
 impl ConnectionStore {
     /// The connections kept in `folder` (none: in memory only).
     pub fn open(folder: Option<PathBuf>) -> ConnectionStore {
-        let (list, set_aside) = match folder.as_deref() {
+        let (list, favorites, set_aside) = match folder.as_deref() {
             Some(f) => read(f),
-            None => (Vec::new(), None),
+            None => (Vec::new(), Default::default(), None),
         };
         ConnectionStore {
             folder,
             list: Mutex::new(list),
+            favorites: Mutex::new(favorites),
             version: AtomicU64::new(0),
             set_aside: Mutex::new(set_aside),
         }
@@ -503,12 +509,49 @@ impl ConnectionStore {
         }
         let mut connection = connection;
         connection.name = name;
+        // A renamed connection keeps its favourites.
+        if let Some(p) = previous.filter(|p| *p != connection.name) {
+            let mut favorites = self.favorites.lock().unwrap_or_else(PoisonError::into_inner);
+            if let Some(kept) = favorites.remove(p) {
+                favorites.insert(connection.name.clone(), kept);
+            }
+        }
         match previous.and_then(|p| list.iter().position(|c| c.name == p)) {
             Some(at) => list[at] = connection,
             None => list.push(connection),
         }
         self.version.fetch_add(1, Ordering::Relaxed);
         self.write(&list)
+    }
+
+    /// The favourite tables of the connection named `name` (docs/adr/9172), `schema.table`, in the order starred.
+    pub fn favorites(&self, name: &str) -> Vec<String> {
+        self.favorites.lock().unwrap_or_else(PoisonError::into_inner).get(name).cloned().unwrap_or_default()
+    }
+
+    /// Stars `table` of the connection named `name`, or takes its star away; whether it is a favourite now.
+    pub fn toggle_favorite(&self, name: &str, table: &str) -> Result<bool, String> {
+        let now = {
+            let mut favorites = self.favorites.lock().unwrap_or_else(PoisonError::into_inner);
+            let list = favorites.entry(name.to_owned()).or_default();
+            let now = match list.iter().position(|t| t == table) {
+                Some(at) => {
+                    list.remove(at);
+                    false
+                }
+                None => {
+                    list.push(table.to_owned());
+                    true
+                }
+            };
+            if list.is_empty() {
+                favorites.remove(name);
+            }
+            now
+        };
+        self.version.fetch_add(1, Ordering::Relaxed);
+        let list = self.lock().clone();
+        self.write(&list).map(|()| now)
     }
 
     /// Forgets the connection named `name`; whether there was one.
@@ -519,6 +562,7 @@ impl ConnectionStore {
         if list.len() == before {
             return Ok(false);
         }
+        self.favorites.lock().unwrap_or_else(PoisonError::into_inner).remove(name);
         self.version.fetch_add(1, Ordering::Relaxed);
         self.write(&list).map(|()| true)
     }
@@ -556,6 +600,7 @@ impl ConnectionStore {
             format: FORMAT.into(),
             version: 1,
             connections: list.to_vec(),
+            favorites: self.favorites.lock().unwrap_or_else(PoisonError::into_inner).clone(),
         };
         let text = serde_json::to_string_pretty(&file).map_err(|e| e.to_string())?;
         write_private(&folder.join(FILE), text.as_bytes()).map_err(|e| {
@@ -601,21 +646,21 @@ fn write_private(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     std::fs::rename(&temp, path)
 }
 
-/// The connections of the file in `folder`; one that does not read is set aside and said.
-fn read(folder: &Path) -> (Vec<DbConnection>, Option<PathBuf>) {
+/// The connections of the file in `folder` and their favourites; one that does not read is set aside and said.
+fn read(folder: &Path) -> (Vec<DbConnection>, std::collections::BTreeMap<String, Vec<String>>, Option<PathBuf>) {
     let path = folder.join(FILE);
     let Ok(bytes) = std::fs::read(&path) else {
-        return (Vec::new(), None);
+        return (Vec::new(), Default::default(), None);
     };
     match serde_json::from_slice::<StoreFile>(&bytes) {
-        Ok(f) if f.format == FORMAT && f.version == 1 => (f.connections, None),
+        Ok(f) if f.format == FORMAT && f.version == 1 => (f.connections, f.favorites, None),
         _ => {
             let stamp = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_or(0, |d| d.as_secs());
             let aside = folder.join(format!("veritabani-baglantilari-okunamadi-{stamp}.json"));
             let moved = std::fs::rename(&path, &aside).is_ok();
-            (Vec::new(), moved.then_some(aside))
+            (Vec::new(), Default::default(), moved.then_some(aside))
         }
     }
 }
@@ -704,10 +749,12 @@ pub fn export(connections: &[DbConnection], passwords: bool) -> String {
             ..c.clone()
         })
         .collect();
+    // A file given to others carries no one's favourites.
     let file = StoreFile {
         format: FORMAT.into(),
         version: 1,
         connections: list,
+        favorites: Default::default(),
     };
     serde_json::to_string_pretty(&file).unwrap_or_default()
 }
@@ -890,6 +937,31 @@ mod tests {
         let aside = fresh.take_set_aside().expect("set aside");
         assert!(aside.exists());
         assert!(fresh.take_set_aside().is_none(), "said once");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// docs/adr/9172: a connection's favourite tables are kept in the device's file, follow a rename, go with the
+    /// connection and are left out of a file given to others.
+    #[test]
+    fn favourite_tables_are_kept_by_connection() {
+        let dir = std::env::temp_dir().join(format!("kentos-db-favori-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let s = ConnectionStore::open(Some(dir.clone()));
+        s.put(None, kent()).expect("kept");
+        assert_eq!(s.toggle_favorite("Belediye", "kadastro.parsel"), Ok(true));
+        assert_eq!(s.toggle_favorite("Belediye", "public.park"), Ok(true));
+        assert_eq!(s.favorites("Belediye"), ["kadastro.parsel", "public.park"]);
+        assert_eq!(s.toggle_favorite("Belediye", "kadastro.parsel"), Ok(false), "starred again: taken away");
+        assert_eq!(ConnectionStore::open(Some(dir.clone())).favorites("Belediye"), ["public.park"], "kept in the file");
+        // Renamed: the favourites follow.
+        s.put(Some("Belediye"), DbConnection { name: "Kent".into(), ..kent() }).expect("renamed");
+        assert_eq!(s.favorites("Kent"), ["public.park"]);
+        assert!(s.favorites("Belediye").is_empty());
+        // Given to others: no favourites in the file.
+        assert!(!export(&s.list(), false).contains("public.park"));
+        // Removed: they go with it.
+        assert_eq!(s.remove("Kent"), Ok(true));
+        assert!(ConnectionStore::open(Some(dir.clone())).favorites("Kent").is_empty());
         let _ = std::fs::remove_dir_all(&dir);
     }
 

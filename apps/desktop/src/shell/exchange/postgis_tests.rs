@@ -759,3 +759,61 @@ fn catalog_screens() {
     crate::files_testing::usage_shots("9140", "01-tumu", prepare(""));
     crate::files_testing::usage_shots("9140", "02-park", prepare("park"));
 }
+
+/// The 7th item's catalogue (docs/adr/9172): a tree of schemas each opened and closed, a search opening every schema
+/// with a match; a starred table first under Sık kullanılanlar, kept for the connection on the device.
+#[test]
+fn schemas_open_and_close_and_starred_tables_come_first() {
+    use super::postgis::{ListLine as L, list_lines};
+    let mut app = app_with_drawing();
+    let name = "Ağaç ve yıldız";
+    keep_connection(&app, &connection(name));
+    run(&mut app, "source.postgis");
+    let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+    send(&mut app, Event::Postgis(P::Choose(at)));
+    send(&mut app, Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)));
+    let lines = |app: &App| {
+        let w = window(app);
+        let c = app.db_store.get(name).expect("kept");
+        list_lines(w.catalog.as_deref().expect("listed"), &c, &app.db_store.favorites(name), &w.closed, &w.filter)
+    };
+    let all = lines(&app);
+    assert!(matches!(all.first(), Some(L::Schema(_, _, true))), "every schema open at first: {all:?}");
+    // Kadastro closed: its head stays, its tables go.
+    send(&mut app, Event::Postgis(P::Schema("kadastro".into())));
+    let closed = lines(&app);
+    assert!(closed.iter().any(|l| matches!(l, L::Schema(s, _, false) if s == "kadastro")), "{closed:?}");
+    assert!(!closed.iter().any(|l| matches!(l, L::Table(t) if t.starts_with("kadastro."))), "{closed:?}");
+    // A search opens it again for what it matches.
+    send(&mut app, Event::Postgis(P::Filter("yer".into())));
+    assert_eq!(lines(&app), [L::Schema("kadastro".into(), 1, true), L::Table("kadastro.yer".into())]);
+    send(&mut app, Event::Postgis(P::Filter(String::new())));
+    // Starred: first under Sık kullanılanlar, kept for the connection.
+    send(&mut app, Event::Postgis(P::Favorite("imar.plan_notu".into())));
+    let starred = lines(&app);
+    assert_eq!(&starred[..2], [L::Starred(1), L::Favorite("imar.plan_notu".into())]);
+    assert_eq!(app.db_store.favorites(name), ["imar.plan_notu"]);
+    // Opened again: the closed schema is the window's, the star the connection's.
+    send(&mut app, Event::Postgis(P::Favorite("imar.plan_notu".into())));
+    assert!(app.db_store.favorites(name).is_empty(), "starred again: taken away");
+    let _ = app.db_store.remove(name);
+}
+
+/// The picture (`.run/gui-evidence/kullanim-9172/`): the catalogue with a starred table first and İmar closed.
+#[test]
+#[ignore = "pictures for the owner"]
+fn tree_screens() {
+    crate::files_testing::usage_shots("9172", "01-sema-agaci-yildiz", || {
+        let mut app = app_with_drawing();
+        let name = "Belediye sunucusu";
+        let _ = app.db_store.remove(name);
+        keep_connection(&app, &connection(name));
+        run(&mut app, "source.postgis");
+        let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+        send(&mut app, Event::Postgis(P::Choose(at)));
+        send(&mut app, Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)));
+        send(&mut app, Event::Postgis(P::Favorite("kadastro.parsel".into())));
+        send(&mut app, Event::Postgis(P::Schema("imar".into())));
+        app
+    });
+}

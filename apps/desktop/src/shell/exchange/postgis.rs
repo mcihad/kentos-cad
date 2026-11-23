@@ -4,7 +4,8 @@
 //! tables are added as data layers (`cad.layers.data`): their rows stay in the database and the view reads them as it
 //! draws. A query layer is a data layer too, read live and read-only (postgis_query.rs, docs/adr/9113 §3). A server asking for a password KentOS does not know opens
 //! the password question. Nobody types an address: the one a layer keeps is built from the connection's fields and
-//! carries no password.
+//! carries no password. The list is a tree of schemas, each opened and closed, with the connection's starred tables
+//! first under Sık kullanılanlar (docs/adr/9172).
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -50,6 +51,8 @@ pub struct State {
     /// Only the rows in the view's area (docs/adr/0582 §1).
     pub area: bool,
     pub status: Option<(bool, String)>,
+    /// The schemas closed in the list (docs/adr/9172); a search shows every schema with a match open.
+    pub closed: BTreeSet<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -77,6 +80,10 @@ pub enum Event {
     Advanced,
     Area,
     Run,
+    /// A schema of the list opened or closed (docs/adr/9172).
+    Schema(String),
+    /// A table starred as the connection's favourite, or its star taken away (docs/adr/9172).
+    Favorite(String),
 }
 
 /// An empty drawing for the listing: describing a database reads no drawing.
@@ -125,6 +132,55 @@ pub(crate) fn shown_name(table: &str) -> String {
 }
 
 /// Whether a relation is shown for `filter` (its schema, name or comment, Turkish case aside).
+/// A line of the catalogue's list (docs/adr/9172).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum ListLine {
+    /// Sık kullanılanlar's head: how many starred tables the search shows.
+    Starred(usize),
+    /// A starred table, `schema.table`.
+    Favorite(String),
+    /// A schema's head: its name, how many of its tables the search shows and whether it is open.
+    Schema(String, usize, bool),
+    /// A table of an open schema, `schema.table`.
+    Table(String),
+}
+
+/// The list's lines (docs/adr/9172): the starred tables first under Sık kullanılanlar, in the order starred; then each
+/// schema with its count and, when it is open, its tables. A search keeps what it matches and shows every schema with a
+/// match open.
+pub(crate) fn list_lines(
+    catalog: &Catalog,
+    connection: &connections::DbConnection,
+    favorites: &[String],
+    closed: &BTreeSet<String>,
+    filter: &str,
+) -> Vec<ListLine> {
+    let schemas = catalog.schemas(connection);
+    let mut out = Vec::new();
+    let starred: Vec<String> = favorites
+        .iter()
+        .filter(|t| schemas.iter().flat_map(|(_, rs)| rs.iter()).any(|r| r.table() == **t && shown(r, filter)))
+        .cloned()
+        .collect();
+    if !starred.is_empty() {
+        out.push(ListLine::Starred(starred.len()));
+        out.extend(starred.into_iter().map(ListLine::Favorite));
+    }
+    let searching = !filter.trim().is_empty();
+    for (schema, relations) in &schemas {
+        let kept: Vec<&&Relation> = relations.iter().filter(|r| shown(r, filter)).collect();
+        if kept.is_empty() {
+            continue;
+        }
+        let open = searching || !closed.contains(*schema);
+        out.push(ListLine::Schema((*schema).to_owned(), kept.len(), open));
+        if open {
+            out.extend(kept.into_iter().map(|r| ListLine::Table(r.table())));
+        }
+    }
+    out
+}
+
 fn shown(r: &Relation, filter: &str) -> bool {
     let fold = |t: &str| t.to_lowercase().replace('İ', "i").replace('I', "ı");
     let f = fold(filter.trim());
@@ -186,6 +242,20 @@ impl App {
             return Task::none();
         };
         match e {
+            Event::Schema(schema) => {
+                if !s.closed.remove(&schema) {
+                    s.closed.insert(schema);
+                }
+                return Task::none();
+            }
+            Event::Favorite(table) => {
+                if let Some(name) = s.connection.clone()
+                    && let Err(why) = self.db_store.toggle_favorite(&name, &table)
+                {
+                    self.warn(why);
+                }
+                return Task::none();
+            }
             Event::Choose(i) => {
                 let list = self.db_store.list();
                 let Some(c) = list.get(i) else {
@@ -389,36 +459,78 @@ impl App {
             // narrows it (docs/adr/9140).
             let mut tables = Column::new().spacing(4);
             let mut any = false;
-            for (schema, relations) in catalog.schemas(&connection) {
-                let relations: Vec<&Relation> = relations
-                    .into_iter()
-                    .filter(|r| shown(r, &s.filter))
-                    .collect();
-                if relations.is_empty() {
-                    continue;
+            // The list's lines (docs/adr/9172): the starred tables first, then the tree of schemas.
+            let favorites = s.connection.as_ref().map(|c| self.db_store.favorites(c)).unwrap_or_default();
+            let lines = list_lines(catalog, &connection, &favorites, &s.closed, &s.filter);
+            let by_table: std::collections::HashMap<String, &Relation> = catalog
+                .schemas(&connection)
+                .into_iter()
+                .flat_map(|(_, rs)| rs)
+                .map(|r| (r.table(), r))
+                .collect();
+            let line = |r: &Relation, prefix: bool| -> Element<'a, Message> {
+                let why = r.why_not();
+                let name = if prefix { r.table() } else { r.name.clone() };
+                let mut words_line = format!("{name} — {}", describe(r));
+                if why.is_some() {
+                    words_line.push_str(" — bağlanamaz");
                 }
+                let check = words::check(
+                    s.chosen.contains(&r.table()),
+                    words_line,
+                    why.is_none().then(|| event(Event::Toggle(r.table()))),
+                );
+                let check: Element<'a, Message> = match why {
+                    Some(w) => kentos_ui::widget::tip(
+                        check,
+                        kentos_ui::widget::Tip::new(r.table()).body(w),
+                        iced::widget::tooltip::Position::Top,
+                    ),
+                    None => check,
+                };
+                let on = favorites.contains(&r.table());
+                let star = kentos_ui::widget::tip(
+                    iced::widget::button(
+                        kentos_ui::icon::icon(crate::icons::from_web(Some(if on { "starOn" } else { "star" })))
+                            .size(13.0)
+                            .tone(if on { kentos_ui::icon::Tone::Accent } else { kentos_ui::icon::Tone::Muted }),
+                    )
+                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
+                    .style(kentos_ui::style::button::ghost)
+                    .on_press(event(Event::Favorite(r.table()))),
+                    kentos_ui::widget::Tip::new(if on { "Sık kullanılanlardan çıkar" } else { "Sık kullanılanlara ekle" }),
+                    iced::widget::tooltip::Position::Top,
+                );
+                row![star, check].spacing(4).align_y(Center).into()
+            };
+            for l in &lines {
                 any = true;
-                tables = tables.push(label::strong(schema.to_owned()));
-                for r in relations {
-                    let why = r.why_not();
-                    let mut words_line = format!("{} — {}", r.name, describe(r));
-                    if why.is_some() {
-                        words_line.push_str(" — bağlanamaz");
-                    }
-                    let check = words::check(
-                        s.chosen.contains(&r.table()),
-                        words_line,
-                        why.is_none().then(|| event(Event::Toggle(r.table()))),
-                    );
-                    tables = tables.push(match why {
-                        Some(w) => kentos_ui::widget::tip(
-                            check,
-                            kentos_ui::widget::Tip::new(r.table()).body(w),
-                            iced::widget::tooltip::Position::Top,
-                        ),
-                        None => check,
-                    });
-                }
+                let element: Element<'a, Message> = match l {
+                    ListLine::Starred(n) => label::strong(format!("Sık kullanılanlar ({n})")).into(),
+                    ListLine::Favorite(t) | ListLine::Table(t) => match by_table.get(t) {
+                        Some(r) => line(r, matches!(l, ListLine::Favorite(_))),
+                        None => continue,
+                    },
+                    ListLine::Schema(schema, n, open) => iced::widget::button(
+                        row![
+                            kentos_ui::icon::icon(if *open {
+                                kentos_ui::icon::Icon::ChevronDown
+                            } else {
+                                kentos_ui::icon::Icon::ChevronRight
+                            })
+                            .size(12.0),
+                            label::strong(schema.clone()),
+                            label::caption(format!("({n})")),
+                        ]
+                        .spacing(6)
+                        .align_y(Center),
+                    )
+                    .padding([1, 2])
+                    .style(kentos_ui::style::button::ghost)
+                    .on_press(event(Event::Schema(schema.clone())))
+                    .into(),
+                };
+                tables = tables.push(element);
             }
             if !any {
                 tables = tables.push(label::caption(if s.filter.trim().is_empty() {

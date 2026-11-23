@@ -217,6 +217,9 @@
   - **Topoloji kaynak dışarıda değişince eskir** (23 Kasım, rapor 14'ün kalanı;
     [ADR 9171](../adr/9171-topology-old-after-an-outside-write.md), VY-70): veri katmanının dosyası dışarıda yazılınca
     ya da katman başka tabloya bağlanınca sonuç eskir; not tam Denetle'yi önerir.
+  - **PostGIS kataloğunda şema ağacı ve yıldız** (23 Kasım, rapor 7'nin kalanı;
+    [ADR 9172](../adr/9172-catalog-schema-tree-and-favourites.md), VY-71): şemalar açılıp kapanır; yıldızlı tablolar
+    “Sık kullanılanlar” altında başta durur.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
