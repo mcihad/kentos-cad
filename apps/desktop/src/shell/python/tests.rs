@@ -1434,7 +1434,9 @@ fn an_agent_stays_on_its_drawing_when_another_comes_in_front() {
 #[test]
 fn every_program_opens_a_link_of_its_own() {
     use kentos_launch::Module;
-    let dir = crate::files_testing::scratch("ajan-programlar");
+    // A short folder: a socket's path is at most 104 bytes on macOS, and the system's temporary folder there is long
+    // (`/var/folders/…/T/`); “ajan-programlar” made the modules' links 108 bytes and they did not open.
+    let dir = crate::files_testing::scratch("ajan");
     let link = super::link::path_in;
     assert_eq!(link(&dir, None), dir.join("masaustu.sock"));
     assert_eq!(

@@ -302,6 +302,15 @@ mod tests {
     use crate::app::{App, Dialog, Message};
     use crate::files_testing::{app_with_drawing, last_said};
 
+    /// Yeni proje on its last step, whatever its type's steps are (a CBS project's two since docs/adr/9184).
+    fn go_last(app: &mut App) {
+        let last = match &app.project {
+            Some(super::Window::New(s)) => s.last_step(),
+            _ => panic!("the wizard is not open"),
+        };
+        send(app, Event::New(New::Go(last)));
+    }
+
     fn send(app: &mut App, event: Event) {
         let _ = app.update(Message::Project(Box::new(event)));
     }
@@ -405,7 +414,7 @@ mod tests {
 
         let (mut app, _) = App::boot(None);
         let _ = app.update(Message::Run("file.new"));
-        send(&mut app, Event::New(New::Go(2)));
+        go_last(&mut app);
         send(&mut app, Event::New(New::Next));
         assert!(app.document.is_some());
         let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
@@ -423,7 +432,7 @@ mod tests {
         let _ = app.update(Message::LayerLocked(layer));
         assert!(app.document.as_ref().expect("open").dirty());
         let _ = app.update(Message::Run("file.new"));
-        send(&mut app, Event::New(New::Go(2)));
+        go_last(&mut app);
         send(&mut app, Event::New(New::Next));
         assert!(matches!(app.dialog, Some(Dialog::Unsaved(_))));
         let _ = app.update(Message::DialogClosed);

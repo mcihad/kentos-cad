@@ -193,6 +193,12 @@ impl State {
         usize::from(self.limit.is_some())
     }
 
+    /// The last step's place among the type's steps (a CBS project has two since docs/adr/9184).
+    #[cfg(test)]
+    pub(crate) fn last_step(&self) -> usize {
+        self.draft.steps().len().saturating_sub(1)
+    }
+
     /// The step's place among the steps the type shows (docs/adr/9184: a CBS project has two).
     fn at(&self) -> usize {
         self.draft.steps().iter().position(|s| *s == self.step).unwrap_or(0)

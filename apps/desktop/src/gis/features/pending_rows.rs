@@ -57,7 +57,9 @@ pub(crate) fn pending_lines(changes: &DataChanges, fields: &[String]) -> Vec<Pen
 }
 
 /// A table cell of a row read from the source (docs/adr/9152): the draft's value where the row is changed here in that
-/// field (`local`: the object now and the row as taken), else the source's value now.
+/// field (`local`: the object now and the row as taken), else the source's value now. The table reads [`cell_raw`]
+/// since a NULL is told apart (docs/adr/9188); this stays for the tests.
+#[cfg(test)]
 pub(crate) fn cell_value(
     local: Option<(&kentos_commands::Entity, &kentos_commands::Entity)>,
     page: &std::collections::BTreeMap<String, String>,
