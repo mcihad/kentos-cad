@@ -213,6 +213,15 @@ impl App {
             .filter(|c| c.session == doc.session)
     }
 
+    /// The data layers whose source changed outside the drawing since the check (docs/adr/9171), by name: what only a
+    /// whole check reads again.
+    pub(crate) fn topology_sources_changed(&self) -> Vec<String> {
+        let (Some(doc), Some(c)) = (self.document.as_ref(), self.topology_checked()) else {
+            return Vec::new();
+        };
+        data_sources_changed(&doc.model, c).iter().map(|l| self.topology_layer_name(l)).collect()
+    }
+
     /// Whether what the check read changed since (docs/adr/9146): its rules, tolerance, exceptions or profile; an
     /// object of the rules' layers added, removed, reshaped or moved to another layer; a bound layer's source. A
     /// change of style, labels or attributes alone leaves the findings as they are.
@@ -220,6 +229,11 @@ impl App {
         let (Some(doc), Some(c)) = (self.document.as_ref(), self.topology_checked()) else {
             return false;
         };
+        // A data layer's source changed outside the drawing (docs/adr/9171): asked each time, a file's facts are cheap
+        // and no change of the drawing says it.
+        if !data_sources_changed(&doc.model, c).is_empty() {
+            return true;
+        }
         if c.generation == doc.model.generation() && c.revision == doc.model.revision() {
             return false;
         }
@@ -928,6 +942,24 @@ impl App {
             .collect();
         Some((count, rows))
     }
+}
+
+/// Whether a data layer check `c` read changed outside the drawing (docs/adr/9171): bound to another table since, gone,
+/// or its file written since (its size or its last write); a source that says nothing of its changes (a database) is
+/// not taken as changed.
+fn data_sources_changed(doc: &kentos_domain::Document, c: &Checked) -> Vec<String> {
+    c.g.sources_read
+        .iter()
+        .filter(|s| {
+            let Some(data) = doc.layers().get(&s.layer).and_then(|n| n.data.as_ref()) else {
+                return true;
+            };
+            data.address != s.address
+                || data.table != s.table
+                || (s.fingerprint.is_some() && topology_check::data_fingerprint(data) != s.fingerprint)
+        })
+        .map(|s| s.layer.clone())
+        .collect()
 }
 
 /// Whether what check `c` read changed in `doc` since (docs/adr/9146). The rules are geometric: an object's style,

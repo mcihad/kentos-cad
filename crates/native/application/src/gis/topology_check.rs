@@ -68,6 +68,12 @@ pub struct Gathered {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SourceRows {
     pub layer: String,
+    /// The source and table read (docs/adr/9171): a layer bound to another since makes the findings old.
+    pub address: String,
+    pub table: String,
+    /// The source's file as it was read, its size and last write ([`data_fingerprint`]); none for a source that says
+    /// nothing of its changes (a database).
+    pub fingerprint: Option<String>,
     /// Rows the source gave.
     pub read: usize,
     /// Of them, the rows the drawing holds (checked as it has them) and those it deletes.
@@ -366,6 +372,25 @@ pub fn rules_digest(doc: &Document, only: Option<&[String]>) -> String {
     sixteen(kentos_commands::canonical::canonical_json(&v).as_bytes())
 }
 
+/// A data layer's file as it stands (docs/adr/9171): its size and last write, with its write-ahead log's when it has
+/// one (a GeoPackage written but not yet folded in), so any write to it changes this; none for a source that is not a
+/// file (a database), which says nothing of its changes this way.
+pub fn data_fingerprint(data: &kentos_commands::DataLayer) -> Option<String> {
+    if data.driver != "gpkg" {
+        return None;
+    }
+    let of = |path: &str| {
+        let m = std::fs::metadata(path).ok()?;
+        let at = m.modified().ok()?.duration_since(std::time::UNIX_EPOCH).ok()?.as_nanos();
+        Some(format!("{}:{at}", m.len()))
+    };
+    let file = of(&data.address)?;
+    Some(match of(&format!("{}-wal", data.address)) {
+        Some(wal) => format!("{file};{wal}"),
+        None => file,
+    })
+}
+
 /// A data layer's table as the check takes it: every row the drawing does not hold, read whole from its source in the
 /// project's system, named by a lasting id of its source, table and key; a gap when the source cannot be read.
 fn source_rows(doc: &Document, node: &kentos_commands::LayerNode, g: &mut Gathered) {
@@ -374,6 +399,8 @@ fn source_rows(doc: &Document, node: &kentos_commands::LayerNode, g: &mut Gather
     };
     let held = doc.data_hidden(&node.id);
     let drawn = g.layers.iter().take(g.drawn).filter(|l| **l == node.id).count();
+    // The file as it is before it is read: a write after the read makes the findings old (docs/adr/9171).
+    let fingerprint = data_fingerprint(data);
     match crate::data_write::all_rows(node, doc.settings(), &held, &|| false) {
         Ok(read) => {
             let kept = read.rows.len();
@@ -396,6 +423,9 @@ fn source_rows(doc: &Document, node: &kentos_commands::LayerNode, g: &mut Gather
             }
             g.sources_read.push(SourceRows {
                 layer: node.id.clone(),
+                address: data.address.clone(),
+                table: data.table.clone(),
+                fingerprint,
                 read: read.read,
                 held: held.len(),
                 skipped: read.skipped,

@@ -107,6 +107,8 @@ impl App {
             .map_or(0, |t| t.rules.len());
         let checked = self.topology_checked();
         let stale = self.topology_stale();
+        // A data layer's source changed outside: said as such, a whole check offered (docs/adr/9171).
+        let outside = self.topology_sources_changed();
         let shown = self.topology_shown();
         let chosen = &self.gis.topology.selected;
         // The bar on one line where it fits, else its end on a second (the web's wrapping bar).
@@ -115,7 +117,8 @@ impl App {
 
         // A note: the drawing changed since the check, rules not checked.
         let notes: Vec<String> = [
-            stale.then(|| texts::STALE.to_owned()),
+            (!outside.is_empty()).then(|| plan::sources_changed_text(&outside)),
+            (stale && outside.is_empty()).then(|| texts::STALE.to_owned()),
             checked
                 .filter(|c| c.g.missing > 0)
                 .map(|c| plan::missing_layers(c.g.missing)),
@@ -130,17 +133,13 @@ impl App {
         .collect();
         let banner = (!notes.is_empty()).then(|| {
             // Değişenleri denetle under the note that the drawing changed (docs/adr/0524).
+            let free = self.gis.topology.running.is_none();
             let recheck = stale.then(|| {
-                bar_button(
-                    "topologyCheck",
-                    texts::RECHECK,
-                    texts::RECHECK_HINT,
-                    self.gis
-                        .topology
-                        .running
-                        .is_none()
-                        .then(|| msg(Event::Recheck)),
-                )
+                if outside.is_empty() {
+                    bar_button("topologyCheck", texts::RECHECK, texts::RECHECK_HINT, free.then(|| msg(Event::Recheck)))
+                } else {
+                    bar_button("topologyCheck", texts::CHECK, texts::CHECK_HINT, free.then(|| msg(Event::Check)))
+                }
             });
             container(
                 notes

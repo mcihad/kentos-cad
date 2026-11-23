@@ -525,3 +525,7 @@ numaraları raporunkidir.
   ([ADR 9170](../docs/adr/9170-deselect-data-rows-and-the-table-chain.md))
   - Seç→kart→form→süz→temizle zincirinde katman ve anahtar korunur; 0 değerdir, NULL ve boş metin dilin tek boşudur; Türkçe sıra ve arama.
   - Kalan: kodlu değer, NULL/boş metin işareti (29), PostGIS'te zincir, web.
+- [~] **VY-70 — Topoloji sonucu veri katmanının kaynağı dışarıda değişince eskir (rapor 14'ün kalanı).**
+  ([ADR 9171](../docs/adr/9171-topology-old-after-an-outside-write.md))
+  - Okunan kaynağın adresi, tablosu ve dosyanın parmak izi saklanır; değişince not ve tam Denetle.
+  - Kalan: PostGIS'in dışarıdaki yazımı, kendi yazımını ayırmak, kurum eşikleri, web.

@@ -229,3 +229,64 @@ fn screens() {
         app
     });
 }
+
+/// The 14th item's last part (docs/adr/9171): the findings over a data layer go old when its file is written outside
+/// the drawing (another program adds a parcel), are current again once checked, and go old when the layer is bound to
+/// another file; a check not followed by a write stays current.
+#[test]
+fn a_data_layers_file_written_outside_or_bound_elsewhere_makes_the_findings_old() {
+    use kentos_data::Driver as _;
+    let path = parcels("topoloji-disaridan", OVERLAPPING);
+    let (mut app, id) = app_over(&path);
+    check(&mut app);
+    assert!(app.topology_checked().is_some(), "{:?}", said(&app));
+    assert!(!app.topology_stale(), "checked now");
+    // Another program writes a fourth parcel into the file: nothing of the drawing changed, the findings are old.
+    std::thread::sleep(std::time::Duration::from_millis(20));
+    let address = path.display().to_string();
+    let source = kentos_data_gpkg::Gpkg.open(&address).expect("open");
+    let mut tx = source.begin().expect("begin");
+    tx.insert(
+        "parseller",
+        &[NewFeature { fid: None, geometry: Some(square(487_000.0, 4_420_200.0)), values: vec![("ad".into(), Value::Text("P4".into()))] }],
+    )
+    .expect("a row");
+    tx.commit().expect("written");
+    drop(source);
+    assert!(app.topology_stale(), "written outside: old");
+    assert_eq!(app.topology_sources_changed(), ["parseller"], "said as the source's change");
+    // Checked again: current.
+    check(&mut app);
+    assert!(!app.topology_stale(), "checked again");
+    assert!(app.topology_sources_changed().is_empty());
+    // The layer bound to another file with the same table: old.
+    let other = parcels("topoloji-baska-dosya", TOUCHING);
+    app.relink_data_layers(&id, &other).expect("relinked");
+    assert!(app.topology_stale(), "bound elsewhere: old");
+}
+
+/// The picture (`.run/gui-evidence/kullanim-9171/`): the Topoloji tab after the data layer's file was written outside.
+#[test]
+#[ignore = "pictures for the owner"]
+fn outside_screens() {
+    use kentos_data::Driver as _;
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    crate::files_testing::usage_shots("9171", "01-disaridan-degisti", || {
+        let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let path = parcels(&format!("topoloji-disaridan-resim-{n}"), OVERLAPPING);
+        let (mut app, _) = app_over(&path);
+        check(&mut app);
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        let source = kentos_data_gpkg::Gpkg.open(&path.display().to_string()).expect("open");
+        let mut tx = source.begin().expect("begin");
+        tx.insert(
+            "parseller",
+            &[NewFeature { fid: None, geometry: Some(square(487_000.0, 4_420_200.0)), values: vec![("ad".into(), Value::Text("P4".into()))] }],
+        )
+        .expect("a row");
+        tx.commit().expect("written");
+        app.command_expanded = true;
+        app.bottom_tab = crate::bottom::BottomTab::Topology;
+        app
+    });
+}

@@ -214,6 +214,9 @@
   - **Seçimi kaldır ve tablo zinciri** (23 Kasım, rapor 9'un kalanı;
     [ADR 9170](../adr/9170-deselect-data-rows-and-the-table-chain.md), VY-69): Seçimi kaldır veri tablosunun seçimini de
     temizler; seç→kart→form→süz→temizle zinciri ve örnek değerler sınanır.
+  - **Topoloji kaynak dışarıda değişince eskir** (23 Kasım, rapor 14'ün kalanı;
+    [ADR 9171](../adr/9171-topology-old-after-an-outside-write.md), VY-70): veri katmanının dosyası dışarıda yazılınca
+    ya da katman başka tabloya bağlanınca sonuç eskir; not tam Denetle'yi önerir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

@@ -274,3 +274,13 @@ pub fn fix_label(f: &Finding, key: &str, words: &[String], length: impl Fn(f64) 
         _ => label.to_owned(),
     }
 }
+
+/// The note of data layers whose source changed outside the drawing since the check (docs/adr/9171): only a whole
+/// check reads them again.
+pub(crate) fn sources_changed_text(names: &[String]) -> String {
+    let named: Vec<String> = names.iter().map(|n| format!("“{n}”")).collect();
+    format!(
+        "{} katmanının kaynağı son denetimden sonra çizimin dışında değişti (yazıldı ya da başka tabloya bağlandı); sonuçlar eski olabilir. Denetle ile yenileyin.",
+        named.join(", ")
+    )
+}
