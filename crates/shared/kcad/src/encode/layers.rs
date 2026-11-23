@@ -235,6 +235,7 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.card.is_some())
                 + usize::from(compose.is_some())
                 + usize::from(n.plot == Some(false))
+                + usize::from(n.mobile.is_some())
                 + usize::from(n.frozen == Some(true))
                 + usize::from(!n.table_styles.is_empty())
                 + usize::from(n.subtypes.is_some())
@@ -249,7 +250,7 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.origin.is_some()),
             true,
         )?;
-        // id (2), card data feed name plot snap time type (4), rules style (5), fields filter frozen locked origin (6),
+        // id (2), card data feed name plot snap time type (4), rules style (5), fields filter frozen locked mobile origin (6),
         // actions compose dataset indexes service visible (7), children expanded geometry replaces scenario
         // subtypes (8), sourceCrs (9), derivation (10), classCounts contingents tableStyles (11).
         if usize::from(n.service.is_some()) + usize::from(n.feed.is_some()) + usize::from(n.data.is_some()) > 1 {
@@ -361,6 +362,24 @@ impl<'d> Encoder<'d> {
         }
         self.key("locked");
         self.w.bool(n.locked);
+        // Schema 256 (docs/adr/9198): the node on the mobile clients; shown, the default, is not written.
+        match n.mobile {
+            Some(kentos_contracts::LayerMobile::Edit) => {
+                self.key("mobile");
+                self.w.text("edit");
+            }
+            Some(kentos_contracts::LayerMobile::Hide) => {
+                self.key("mobile");
+                self.w.text("hide");
+            }
+            Some(kentos_contracts::LayerMobile::Show) => {
+                return Err(self.fail(
+                    Code::BadValue,
+                    "mobile yalnız edit ya da hide yazılır; mobilde gösterilen katmanda alan yoktur",
+                ));
+            }
+            None => {}
+        }
         // GIS data 7 (docs/adr/9192): where the layer's objects were copied from, as its JSON, only by a layer.
         if let Some(o) = &n.origin {
             self.key("origin");

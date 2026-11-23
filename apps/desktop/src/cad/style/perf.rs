@@ -27,6 +27,7 @@ use crate::document::Document;
 
 fn layer(id: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
+        mobile: None,
         source_crs: None,
         geometry: None,
         table_styles: Vec::new(),

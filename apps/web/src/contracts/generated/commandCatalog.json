@@ -82280,7 +82280,7 @@
       "id": "cad.layers.set",
       "version": 1,
       "title": "Katman ağacı",
-      "summary": "Katmanlar panelinin göz, kilit, ad ve etkin katman değişikliklerini yapar (operation): rename (layer, name), visible ve locked (layer, value; grubun gizliliği ve kilidi altındakilerin hepsine geçer), active (layer: nesne alan, dondurulmamış bir katman; grup ve servis katmanı olmaz), isolate (layers: bu düğümler, üstlerindeki gruplar ve altlarındakiler görünür, gerisi gizlenir; gizlediklerini çizim oturum boyunca hatırlar), unisolate (isolate'in gizledikleri, hâlâ gizliyse yeniden görünür), showAll (hepsi görünür; dondurulmuş düğüm dondurulmuş kalır), plot (layer, value: yazdırılır mı), frozen (layer, value: dondurulmuş düğüm çizilmez, seçilmez, kenetlenmez, kapsama sayılmaz; etkin katman dondurulamaz) ve thawAll (hepsi çözülür). Bunlar ağacın kendi değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz; yalnız isolate'in hatırladıkları oturumundur. Değişmeyen hiçbir şey yazmaz (changed false). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Katmanlar panelinin göz, kilit, ad ve etkin katman değişikliklerini yapar (operation): rename (layer, name), visible ve locked (layer, value; grubun gizliliği ve kilidi altındakilerin hepsine geçer), active (layer: nesne alan, dondurulmamış bir katman; grup ve servis katmanı olmaz), isolate (layers: bu düğümler, üstlerindeki gruplar ve altlarındakiler görünür, gerisi gizlenir; gizlediklerini çizim oturum boyunca hatırlar), unisolate (isolate'in gizledikleri, hâlâ gizliyse yeniden görünür), showAll (hepsi görünür; dondurulmuş düğüm dondurulmuş kalır), plot (layer, value: yazdırılır mı), frozen (layer, value: dondurulmuş düğüm çizilmez, seçilmez, kenetlenmez, kapsama sayılmaz; etkin katman dondurulamaz), thawAll (hepsi çözülür) ve mobile (layer, mobile: show, edit ya da hide: düğüm mobil istemcilerde salt okunur gösterilir, mobil uygulamayla düzenlenir ya da hiç gösterilmez; edit yalnız CBS projesinin veri katmanında, yoksa mobile_not_offered; grubun seçimi altındakilere geçer). Bunlar ağacın kendi değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz; yalnız isolate'in hatırladıkları oturumundur. Değişmeyen hiçbir şey yazmaz (changed false). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -82295,7 +82295,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,\nthe lock and the name in the Katmanlar panel make it. Each is an edit of\nthe drawing (it gets dirty, its revision moves) but no undo step\n(docs/adr/0020); making a layer active is kept in the file but is no\nedit (the revision stays).\n\n- `rename`: `layer`, `name` (trimmed);\n- `plot`: `layer`, `value` (docs/adr/0260 §4): a node not printed is drawn\n  on screen but not on a sheet, its PDF or a print; a group's covers\n  everything under it;\n- `visible`, `locked`: `layer`, `value`; a group's lock holds for\n  everything under it, a hidden group hides everything under it;\n- `active`: `layer`, a layer holding objects;\n- `isolate`: `layers`: these nodes, the groups above them and everything\n  under them shown, the rest hidden; the drawing remembers the nodes it\n  hid (for this session, not in the file);\n- `unisolate`: the nodes the last `isolate` hid that are still hidden\n  shown again; those shown by hand meanwhile stay as they are; nothing\n  remembered changes nothing;\n- `showAll`: every node shown; a frozen node stays frozen;\n- `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither\n  drawn, picked, snapped to nor counted in the extent; a group's covers\n  everything under it;\n- `thawAll`: every node thawed;\n- `classVisible`: `layer`, `value`, and `classes` (their ids, as `cad.layers.classes` gives them; none: every\n  class): the layer's style classes drawn or not (docs/adr/9105 §3); a class switched off keeps its objects, drawn\n  by nothing;\n- `classInvert`: `layer`, and `classes` (none: every class): each turned the other way;\n- `classCounts`: `layer`, `value` (docs/adr/9105 §4): whether the tree says how many objects the layer and each\n  class hold.\n\nThe eye, the lock, the freeze, printing, the name, the classes switched on and off, the counts shown and the\nactive layer are the project's (kept in the file); only what `isolate` hid is the session's (docs/adr/0311 §2).\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts without `layer`),\n`no_layers` (isolate without a node), `empty_name` (rename with a name\nempty or only white space), `no_value` (visible, locked, plot, frozen, classVisible, classCounts\nwithout `value`); then `invalid_revision`, `revision_conflict` (status\n`conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`\n(active and the class operations: a group), `service_layer` (active: a layer drawn from a map\nservice holds no objects), `layer_frozen` (active: a frozen layer, or one\nin a frozen group), `active_frozen` (frozen: the active layer, or a group\nholding it), `no_classes` (classVisible, classInvert: the layer's look has no classes), `class_not_found`\n(`classes[i]` names none of its classes). A change that changes nothing answers `changed` false.",
+        "description": "Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,\nthe lock and the name in the Katmanlar panel make it. Each is an edit of\nthe drawing (it gets dirty, its revision moves) but no undo step\n(docs/adr/0020); making a layer active is kept in the file but is no\nedit (the revision stays).\n\n- `rename`: `layer`, `name` (trimmed);\n- `plot`: `layer`, `value` (docs/adr/0260 §4): a node not printed is drawn\n  on screen but not on a sheet, its PDF or a print; a group's covers\n  everything under it;\n- `visible`, `locked`: `layer`, `value`; a group's lock holds for\n  everything under it, a hidden group hides everything under it;\n- `active`: `layer`, a layer holding objects;\n- `isolate`: `layers`: these nodes, the groups above them and everything\n  under them shown, the rest hidden; the drawing remembers the nodes it\n  hid (for this session, not in the file);\n- `unisolate`: the nodes the last `isolate` hid that are still hidden\n  shown again; those shown by hand meanwhile stay as they are; nothing\n  remembered changes nothing;\n- `showAll`: every node shown; a frozen node stays frozen;\n- `frozen`: `layer`, `value` (docs/adr/0311 §1): a frozen node is neither\n  drawn, picked, snapped to nor counted in the extent; a group's covers\n  everything under it;\n- `thawAll`: every node thawed;\n- `classVisible`: `layer`, `value`, and `classes` (their ids, as `cad.layers.classes` gives them; none: every\n  class): the layer's style classes drawn or not (docs/adr/9105 §3); a class switched off keeps its objects, drawn\n  by nothing;\n- `classInvert`: `layer`, and `classes` (none: every class): each turned the other way;\n- `classCounts`: `layer`, `value` (docs/adr/9105 §4): whether the tree says how many objects the layer and each\n  class hold;\n- `mobile`: `layer`, `mobile` (docs/adr/9198): the node on the mobile clients: `show` (read only, the default),\n  `edit` (its rows written by the mobile app: only a CBS project's data layer, `mobile_not_offered` otherwise) or\n  `hide`; a group's covers everything under it.\n\nThe eye, the lock, the freeze, printing, the place on the phone, the name, the classes switched on and off, the counts\nshown and the active layer are the project's (kept in the file); only what `isolate` hid is the session's\n(docs/adr/0311 §2).\n\nRefusals (`CommandError.code`), checked in this order: `no_layer`\n(rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts, mobile without `layer`),\n`no_layers` (isolate without a node), `empty_name` (rename with a name\nempty or only white space), `no_value` (visible, locked, plot, frozen, classVisible, classCounts\nwithout `value`, mobile without `mobile`); then `invalid_revision`, `revision_conflict` (status\n`conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`\n(active and the class operations: a group), `service_layer` (active: a layer drawn from a map\nservice holds no objects), `layer_frozen` (active: a frozen layer, or one\nin a frozen group), `active_frozen` (frozen: the active layer, or a group\nholding it), `no_classes` (classVisible, classInvert: the layer's look has no classes), `class_not_found`\n(`classes[i]` names none of its classes), `mobile_not_offered` (mobile `edit` on a node the mobile app does not\nwrite). A change that changes nothing answers `changed` false.",
         "properties": {
           "classes": {
             "description": "`classVisible`, `classInvert`: the classes' ids (`c3`, `other`, `g2`, `r0.1`); none: every class.",
@@ -82329,6 +82329,17 @@
               "array",
               "null"
             ]
+          },
+          "mobile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerMobile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`mobile`: the node on the mobile clients (docs/adr/9198)."
           },
           "name": {
             "type": [
@@ -82417,6 +82428,7 @@
           "active_frozen",
           "class_not_found",
           "no_classes",
+          "mobile_not_offered",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -118448,6 +118460,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Katman ya da tablo zaten bir kaynağa bağlı."
+    },
+    {
+      "code": "mobile_not_offered",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu katman mobilde düzenlenemez: mobil uygulama yalnız CBS projesinin veri tablosunun satırlarını yazar. Göster ya da gösterme seçin."
     },
     {
       "code": "bound_in_gis",
@@ -167021,6 +167039,15 @@
       ],
       "type": "object"
     },
+    "LayerMobile": {
+      "description": "What a layer is on the mobile clients (docs/adr/9198): its project on the desktop says it. Absent, shown read only;\n`edit`, its rows written by the mobile app (only a CBS project's data layer takes it); `hide`, not on the phone. A\ngroup's covers what it holds. Only `edit` and `hide` are written.",
+      "enum": [
+        "show",
+        "edit",
+        "hide"
+      ],
+      "type": "string"
+    },
     "LayerNode": {
       "description": "A node of the layer tree: a group or a layer.",
       "properties": {
@@ -167168,6 +167195,17 @@
         },
         "locked": {
           "type": "boolean"
+        },
+        "mobile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayerMobile"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "On the mobile clients (docs/adr/9198): absent, shown read only. Only `edit` and `hide` are written."
         },
         "name": {
           "type": "string"
@@ -167486,6 +167524,11 @@
         {
           "const": "classCounts",
           "description": "Nesne sayısını göster (docs/adr/9105 §4): whether the tree says how many objects the layer and its classes hold.",
+          "type": "string"
+        },
+        {
+          "const": "mobile",
+          "description": "Mobilde (docs/adr/9198): the node on the mobile clients: shown, edited or left out.",
           "type": "string"
         }
       ]

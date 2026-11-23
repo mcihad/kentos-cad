@@ -20,7 +20,7 @@ use crate::tools_scenes::{Objects, layer, open_edited};
 /// The table of docs/adr/9195 §5: each entry, the words its presence is read by, the modules that have it (M Mimari,
 /// H Harita, Y Yol, C CBS) and the kinds of layer it is about (d çizim, a açıklama, v veri tablosu, b bağlı,
 /// s servis, r raster, n nokta bulutu, g grup).
-const TABLE: [(LayerEntry, &str, &str, &str); 42] = [
+const TABLE: [(LayerEntry, &str, &str, &str); 43] = [
     (LayerEntry::Activate, "Etkin katman yap", "MHYC", "davbrn"),
     (LayerEntry::EditSession, "Düzenlemeyi başlat", "C", "v"),
     (
@@ -32,6 +32,7 @@ const TABLE: [(LayerEntry, &str, &str, &str); 42] = [
     (LayerEntry::Lock, "Kilitle", "MHYC", "davbrng"),
     (LayerEntry::Freeze, "Bütün katmanları çöz", "MHYC", "dabrng"),
     (LayerEntry::Plot, "Yazdırma", "MHYC", "davbsrng"),
+    (LayerEntry::Mobile, "Mobilde", "MHYC", "davbsrng"),
     (LayerEntry::Order, "Yukarı taşı", "MHYC", "davbsrng"),
     (LayerEntry::Service, "Servis ayarları…", "HYC", "s"),
     (LayerEntry::Refresh, "Yenile", "HYC", "d"),
@@ -256,6 +257,40 @@ fn check(module: Option<Module>, program: Option<Module>) -> Vec<String> {
     wrong
 }
 
+/// Mobilde (docs/adr/9198): every node may be shown on the phone or not; to edit is a CBS project's data layer's alone.
+/// The choice is `cad.layers.set`'s, kept on the node; shown, the default, keeps no field.
+#[test]
+fn the_phone_edits_a_cbs_data_layer_alone() {
+    use kentos_commands::LayerMobile;
+    let item = |menu: &str, label: &str| menu.contains(&format!("label: \"{label}\""));
+    for (module, edits) in [(Some(Module::Gis), true), (Some(Module::Map), false), (Some(Module::Architecture), false)] {
+        let mut app = every_kind(module, None);
+        let mobile = |app: &App, id: &str| app.document.as_ref().and_then(|d| d.model.layers().get(id)).and_then(|n| n.mobile);
+        for (id, _, kind) in LAYERS {
+            let node = app.document.as_ref().and_then(|d| d.model.layers().get(id)).cloned().expect("the layer");
+            let menu = format!("{:?}", app.layer_menu(&node, false));
+            assert!(item(&menu, "Gösterme") && item(&menu, "Göster"), "{module:?} {kind:?}");
+            let editable = edits && kind == LayerKind::Data;
+            assert_eq!(item(&menu, "Düzenle"), editable, "{module:?} {kind:?}");
+        }
+        // Gösterme leaves the data layer out of the phone; Düzenle is its rows' writing in CBS alone; Göster takes the
+        // field away again.
+        app.set_layer_mobile("veri", LayerMobile::Hide);
+        assert_eq!(mobile(&app, "veri"), Some(LayerMobile::Hide));
+        app.set_layer_mobile("veri", LayerMobile::Edit);
+        assert_eq!(mobile(&app, "veri"), Some(if edits { LayerMobile::Edit } else { LayerMobile::Hide }), "{module:?}");
+        if !edits {
+            let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+            assert!(said.iter().any(|t| t.contains("mobilde düzenlenemez: mobil uygulama CAD projesini yazmaz")), "{said:?}");
+        }
+        app.set_layer_mobile("veri", LayerMobile::Show);
+        assert_eq!(mobile(&app, "veri"), None);
+        // A group hidden hides what it holds.
+        app.set_layer_mobile("grup", LayerMobile::Hide);
+        assert_eq!(mobile(&app, "grup"), Some(LayerMobile::Hide));
+    }
+}
+
 #[test]
 fn each_modules_layer_menu_has_its_entries_on_each_kind_of_layer() {
     // The table lists every entry once, in the menu's order.
@@ -376,6 +411,43 @@ fn each_modules_layer_menu_pictures() {
         size,
         &out,
     );
+}
+
+/// The pictures of docs/adr/9198: Görünürlük ▸ Mobilde ▸ on a CBS project's data layer (Göster, Düzenle, Gösterme) and
+/// on a map's drawing layer (Göster, Gösterme), light at 1440×900, into `.run/gui-evidence/kullanim-9198/`. For the
+/// owner, run by hand; the folder is not committed.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn the_phone_menu_pictures() {
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9198");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let size = Size::new(1440.0, 900.0);
+    for (module, name, kind) in [
+        (Module::Gis, "Veri katmanı", LayerKind::Data),
+        (Module::Map, "Çizim katmanı", LayerKind::Drawing),
+    ] {
+        let mut app = every_kind(Some(module), None);
+        let _ = app.settings.choose(&[("appearance.theme", Value::from("light"))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = kentos_ui::snapshot::Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::tools_screens::press_caption(&mut snapshot, &mut app, name, true, false);
+        snapshot.settle(&mut app, App::view, &mut update);
+        for caption in ["Görünürlük", "Mobilde"] {
+            let item = crate::tools_screens::caption_at(&mut snapshot, &app, caption, false);
+            snapshot.input(&mut app, App::view, &mut update, Input::Click(item));
+            snapshot.settle(&mut app, App::view, &mut update);
+            snapshot.input(&mut app, App::view, &mut update, Input::Move(Point::new(item.x + 4.0, item.y)));
+            snapshot.settle(&mut app, App::view, &mut update);
+        }
+        let file = out.join(format!("mobilde-{}-{}.png", module.id(), kind.title().replace(' ', "-")));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }
 
 #[inline(never)]

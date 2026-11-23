@@ -22,6 +22,8 @@ fn schema(file: &[u8]) -> u32 {
         + key.len();
     match payload[at] {
         0x18 => u32::from(payload[at + 1]),
+        // Schema 256 and up: a two-byte unsigned integer.
+        0x19 => u32::from(u16::from_be_bytes([payload[at + 1], payload[at + 2]])),
         b => u32::from(b),
     }
 }

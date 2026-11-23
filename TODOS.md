@@ -2658,6 +2658,10 @@ Liste:
   `data_held_in_file`; `ProjectSummary.ts`, `ProjectCreate.ts`, `SourcesEdit.ts` yeniden üretildi. Tür ipucu
   (`TYPE_HINT`; ortak örneğin `typeHint`'i değişti, `catalogPlan.test.ts` onu bekler) türün modülü ve bulutta saklanışı
   belirlediğini söyler; Buluta yükle açık projenin modülünün türlerini sunar.
+  Katmanın mobildeki davranışı (AY-08, ADR 9198): web'in `.kcad` okuyucusu şema 256'yı ve katmanın `mobile` alanını
+  (yalnız `edit`, `hide`) okusun ve yazsın; katman menüsünde Görünürlük ▸ Mobilde ▸ (Göster, Düzenle, Gösterme;
+  seçenekler `catalog/v1/modules.json`'daki katman türünün `mobile`'ından); `cad.layers.set`'in `mobile` işlemi ve
+  `mobile_not_offered` kodu. `LayerMobile.ts`, `LayerNode.ts`, `LayersSet.ts`, `LayerSetOperation.ts` yeniden üretildi.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

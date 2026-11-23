@@ -1478,6 +1478,8 @@ def layer_entries(n):
                 "plot": (lambda b: boolean(b) if b is False else None, False),
                 # Schema 55 (docs/adr/0311 §1): a layer or group frozen; only `true` is written.
                 "frozen": (lambda b: boolean(b) if b is True else None, False),
+                # Schema 256 (docs/adr/9198): the node on the mobile clients; shown, the default, is never written.
+                "mobile": (enum(("edit", "hide")), False),
                 # Schema 72 (docs/adr/0413 §3): the attribute table's rules, as their JSON.
                 "tableStyles": (opaque, False),
                 # Schema 72 (docs/adr/0422 §4): the subtypes, as their JSON.
@@ -2858,6 +2860,13 @@ def document(d):
         # The layer each annotation tool draws on (usage review UR-003).
         schema = max(schema, 255)
 
+    def on_phone(nodes):
+        return any("mobile" in n or on_phone(n["children"]) for n in nodes)
+
+    if on_phone(d["layers"]):
+        # A node's place on the mobile clients (docs/adr/9198).
+        schema = max(schema, 256)
+
     def built(e):
         if e["kind"] == "wall":
             return any(c.get("wrap") for c in e.get("components", [])) or any(
@@ -3751,7 +3760,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-256.kcad"] = container(root(cmap(parts), version=uint(256)))
+    files["schema-version-257.kcad"] = container(root(cmap(parts), version=uint(257)))
     # Schema 254's module versions (docs/adr/8054 §10): `modules` before `version`, refused before the document when
     # this build does not know a module's version, the module or an extension's data.
     def with_modules(modules, version):
@@ -6593,6 +6602,21 @@ def build():
         broken_tooled = copy.deepcopy(tooled)
         change(broken_tooled["settings"]["toolLayers"])
         out[f"broken/tool-layers-{name}.kcad"] = container(document(broken_tooled))
+    # Schema 256 (docs/adr/9198): a node left out of the mobile clients; schema 255 refuses it, and `show` (the default,
+    # never written) and an unknown word are refused.
+    phone = copy.deepcopy(minimal)
+    phone["name"] = "Mobilde"
+    phone["layers"][0]["mobile"] = "hide"
+    out["layer-mobile.json"] = json_text(phone).encode("utf-8")
+    phone_data = document(phone)
+    assert phone_data.count(b"\x67version\x19\x01\x00") == 1, "a node on the phone is schema 256"
+    out["layer-mobile.kcad"] = container(phone_data)
+    out["broken/layer-mobile-in-schema-255.kcad"] = container(
+        phone_data.replace(b"\x67version\x19\x01\x00", b"\x67version\x18\xff"))
+    assert phone_data.count(b"\x66mobile\x64hide") == 1
+    for name, word in (("show", b"show"), ("unknown", b"nope")):
+        out[f"broken/layer-mobile-{name}.kcad"] = container(
+            phone_data.replace(b"\x66mobile\x64hide", b"\x66mobile\x64" + word))
     # Schema 208 (docs/adr/2580): a parcel's front edge kept 5 m from the road's edge, a map bond; schema 207 refuses
     # it, and a boundary edge in a parallel and a bond from a boundary to a segment are refused.
     kept = load("map-bond.json")

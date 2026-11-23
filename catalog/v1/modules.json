@@ -50,48 +50,129 @@
     {
       "id": "drawing",
       "kept": "projectFile",
+      "mobile": {
+        "database": [
+          "show",
+          "hide"
+        ],
+        "file": [
+          "show",
+          "hide"
+        ]
+      },
       "title": "çizim",
       "writtenAs": "projectFile"
     },
     {
       "id": "annotation",
       "kept": "projectFile",
+      "mobile": {
+        "database": [
+          "show",
+          "hide"
+        ],
+        "file": [
+          "show",
+          "hide"
+        ]
+      },
       "title": "açıklama",
       "writtenAs": "projectFile"
     },
     {
       "id": "data",
       "kept": "source",
+      "mobile": {
+        "database": [
+          "show",
+          "edit",
+          "hide"
+        ],
+        "file": [
+          "show",
+          "hide"
+        ]
+      },
       "title": "veri tablosu",
       "writtenAs": "dataRows"
     },
     {
       "id": "bound",
       "kept": "projectFile",
+      "mobile": {
+        "database": [
+          "show",
+          "hide"
+        ],
+        "file": [
+          "show",
+          "hide"
+        ]
+      },
       "title": "bağlı",
       "writtenAs": "projectFile"
     },
     {
       "id": "service",
       "kept": "service",
+      "mobile": {
+        "database": [
+          "show",
+          "hide"
+        ],
+        "file": [
+          "show",
+          "hide"
+        ]
+      },
       "title": "servis",
       "writtenAs": null
     },
     {
       "id": "raster",
       "kept": "projectFile",
+      "mobile": {
+        "database": [
+          "show",
+          "hide"
+        ],
+        "file": [
+          "show",
+          "hide"
+        ]
+      },
       "title": "raster",
       "writtenAs": "projectFile"
     },
     {
       "id": "pointCloud",
       "kept": "projectFile",
+      "mobile": {
+        "database": [
+          "show",
+          "hide"
+        ],
+        "file": [
+          "show",
+          "hide"
+        ]
+      },
       "title": "nokta bulutu",
       "writtenAs": "projectFile"
     },
     {
       "id": "group",
       "kept": "nothing",
+      "mobile": {
+        "database": [
+          "show",
+          "hide"
+        ],
+        "file": [
+          "show",
+          "hide"
+        ]
+      },
       "title": "grup",
       "writtenAs": null
     }

@@ -1961,6 +1961,8 @@ __all__ = [
     "LayerLabelReport",
     "LayerLabels",
     "LayerMask",
+    "LayerMobile",
+    "LayerMobileName",
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",

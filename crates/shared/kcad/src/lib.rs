@@ -983,6 +983,8 @@ pub const SCHEMA_WITH_MONITORING_REVIEWS: u32 = 253;
 pub const SCHEMA_WITH_MODULE_VERSIONS: u32 = 254;
 /// Schema 255 (usage review UR-003): the layer each annotation tool draws on (`toolLayers`).
 pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
+/// Schema 256 (docs/adr/9198): a layer's or group's place on the mobile clients (`mobile`: `edit` or `hide`).
+pub const SCHEMA_WITH_LAYER_MOBILE: u32 = 256;
 
 /// The modules a root's `modules` may name: key, name for people, and the version of its data this build reads (0: not
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
@@ -1654,7 +1656,7 @@ impl ModuleVersions {
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 253] = [
+pub const SCHEMAS: [u32; 254] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1908,6 +1910,7 @@ pub const SCHEMAS: [u32; 253] = [
     SCHEMA_WITH_MONITORING_REVIEWS,
     SCHEMA_WITH_MODULE_VERSIONS,
     SCHEMA_WITH_TOOL_LAYERS,
+    SCHEMA_WITH_LAYER_MOBILE,
 ];
 
 /// The file a drawing is saved as.

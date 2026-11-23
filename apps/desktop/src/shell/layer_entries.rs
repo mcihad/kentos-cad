@@ -28,6 +28,8 @@ pub(crate) enum LayerEntry {
     Freeze,
     /// Görünürlük ▸ Yazdır or Yazdırma (docs/adr/0260 §4).
     Plot,
+    /// Görünürlük ▸ Mobilde ▸ Göster, Düzenle, Gösterme (docs/adr/9198): the node on the mobile clients.
+    Mobile,
     /// Sıra ▸ (layer_order.rs).
     Order,
     /// A map service layer's own items: Servis ayarları, Yeniden yükle, Önbelleği temizle, Servisin kapsamına
@@ -105,13 +107,14 @@ pub(crate) enum LayerEntry {
 
 impl LayerEntry {
     /// Every entry, in the menu's order.
-    pub(crate) const ALL: [LayerEntry; 42] = [
+    pub(crate) const ALL: [LayerEntry; 43] = [
         LayerEntry::Activate,
         LayerEntry::EditSession,
         LayerEntry::Visibility,
         LayerEntry::Lock,
         LayerEntry::Freeze,
         LayerEntry::Plot,
+        LayerEntry::Mobile,
         LayerEntry::Order,
         LayerEntry::Service,
         LayerEntry::Refresh,
@@ -155,9 +158,10 @@ impl LayerEntry {
     pub(crate) fn kinds(self) -> &'static [LayerKind] {
         use LayerKind::{Annotation, Bound, Data, Drawing, Group, PointCloud, Raster, Service};
         match self {
-            // What every node has: shown, ordered, printed or not, renamed, removed.
+            // What every node has: shown, ordered, printed or not, on the phone or not, renamed, removed.
             LayerEntry::Visibility
             | LayerEntry::Plot
+            | LayerEntry::Mobile
             | LayerEntry::Order
             | LayerEntry::Rename
             | LayerEntry::Remove => &LayerKind::ALL,

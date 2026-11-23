@@ -47,6 +47,8 @@ from .types import (  # noqa: F401
     LayerIndex,
     LayerLabels,
     LayerMask,
+    LayerMobile,
+    LayerMobileName,
     LayerNodeType,
     LayerNodeTypeName,
     LayerRowsAnswer,
@@ -3606,11 +3608,15 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
     gizledikleri, hâlâ gizliyse yeniden görünür), showAll (hepsi görünür; dondurulmuş
     düğüm dondurulmuş kalır), plot (layer, value: yazdırılır mı), frozen (layer, value:
     dondurulmuş düğüm çizilmez, seçilmez, kenetlenmez, kapsama sayılmaz; etkin katman
-    dondurulamaz) ve thawAll (hepsi çözülür). Bunlar ağacın kendi değişiklikleridir:
-    çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman
-    dosyada saklanır ama düzenleme sayılmaz; yalnız isolate'in hatırladıkları
-    oturumundur. Değişmeyen hiçbir şey yazmaz (changed false). expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    dondurulamaz), thawAll (hepsi çözülür) ve mobile (layer, mobile: show, edit ya da
+    hide: düğüm mobil istemcilerde salt okunur gösterilir, mobil uygulamayla düzenlenir
+    ya da hiç gösterilmez; edit yalnız CBS projesinin veri katmanında, yoksa
+    mobile_not_offered; grubun seçimi altındakilere geçer). Bunlar ağacın kendi
+    değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı
+    değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz; yalnız isolate'in
+    hatırladıkları oturumundur. Değişmeyen hiçbir şey yazmaz (changed false).
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.layers.set"
@@ -3631,6 +3637,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
         expected_revision: str | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        mobile: LayerMobile | LayerMobileName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         value: bool | None | Unset = UNSET,
         request_id: str | None = None,
@@ -3645,11 +3652,15 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
         hâlâ gizliyse yeniden görünür), showAll (hepsi görünür; dondurulmuş düğüm
         dondurulmuş kalır), plot (layer, value: yazdırılır mı), frozen (layer, value:
         dondurulmuş düğüm çizilmez, seçilmez, kenetlenmez, kapsama sayılmaz; etkin katman
-        dondurulamaz) ve thawAll (hepsi çözülür). Bunlar ağacın kendi değişiklikleridir:
-        çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı değildir; etkin katman
-        dosyada saklanır ama düzenleme sayılmaz; yalnız isolate'in hatırladıkları
-        oturumundur. Değişmeyen hiçbir şey yazmaz (changed false). expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        dondurulamaz), thawAll (hepsi çözülür) ve mobile (layer, mobile: show, edit ya da
+        hide: düğüm mobil istemcilerde salt okunur gösterilir, mobil uygulamayla düzenlenir
+        ya da hiç gösterilmez; edit yalnız CBS projesinin veri katmanında, yoksa
+        mobile_not_offered; grubun seçimi altındakilere geçer). Bunlar ağacın kendi
+        değişiklikleridir: çizimi kirli yapar ve sürümü değiştirir ama geri alma adımı
+        değildir; etkin katman dosyada saklanır ama düzenleme sayılmaz; yalnız isolate'in
+        hatırladıkları oturumundur. Değişmeyen hiçbir şey yazmaz (changed false).
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -3658,6 +3669,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
             expected_revision: The document revision the input was prepared against, as decimal text.
             layer:
             layers:
+            mobile: `mobile`: the node on the mobile clients (docs/adr/9198).
             name:
             value:
             request_id: Names this write: sent again with the same call it is answered as
@@ -3678,6 +3690,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
             expected_revision=expected_revision,
             layer=layer,
             layers=_opt(layers, lambda x: list(x)),
+            mobile=mobile,
             name=name,
             value=value,
         ), request_id=request_id, expected=expected)
@@ -3692,6 +3705,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
         expected_revision: str | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        mobile: LayerMobile | LayerMobileName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         value: bool | None | Unset = UNSET,
     ) -> LayersChanged:
@@ -3704,6 +3718,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
             expected_revision=expected_revision,
             layer=layer,
             layers=_opt(layers, lambda x: list(x)),
+            mobile=mobile,
             name=name,
             value=value,
         ))
@@ -3718,6 +3733,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
         expected_revision: str | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        mobile: LayerMobile | LayerMobileName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         value: bool | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -3730,6 +3746,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
             expected_revision=expected_revision,
             layer=layer,
             layers=_opt(layers, lambda x: list(x)),
+            mobile=mobile,
             name=name,
             value=value,
         ))
@@ -3744,6 +3761,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
         expected_revision: str | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        mobile: LayerMobile | LayerMobileName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         value: bool | None | Unset = UNSET,
         op: str = "execute",
@@ -3761,6 +3779,7 @@ class _LayersSet(LocalCommand[LayersSet, LayersChanged, LayersChanged]):
             expected_revision=expected_revision,
             layer=layer,
             layers=_opt(layers, lambda x: list(x)),
+            mobile=mobile,
             name=name,
             value=value,
         ), op=op, request_id=request_id, expected=expected)

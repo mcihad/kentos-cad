@@ -956,6 +956,100 @@
    ]
   },
   {
+   "name": "CBS projesinde tablo bağlanmaz: verisi tablolarındadır, tablo veri katmanı olarak eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "bound_in_gis",
+       "message": "Bu bir CBS projesi: verisi kaynağın tablolarında durur, “parsel” tablosunun nesnelerini projeye kopyalayan bağlı katman CBS'de yoktur. Tabloyu veri katmanı olarak ekleyin (cad.layers.data; masaüstünde Katmanlar ▸ Veri katmanı ekle). Bağlı katman Harita projesinin teslim yoludur.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
    "name": "olmayan katman",
    "steps": [
     {

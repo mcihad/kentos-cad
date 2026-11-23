@@ -1,6 +1,6 @@
 //! `cad.layers.set` v1 (docs/adr/0248 §2, 0311 §1–§2, 9105 §3–§4): the layer tree's own
 //! changes, as the Katmanlar panel's eye, lock, freeze, name, Etkin katman
-//! yap, a style class's box and Nesne sayısını göster make them: an
+//! yap, a style class's box, Nesne sayısını göster and Mobilde (docs/adr/9198) make them: an
 //! edit of the drawing (dirty, a new revision), never an undo step
 //! (docs/adr/0020, the shared document cases); the active layer is kept in
 //! the file but is no edit. The shared cases are in
@@ -31,6 +31,7 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
             | Op::ClassVisible
             | Op::ClassInvert
             | Op::ClassCounts
+            | Op::Mobile
     ) && input.layer.is_none()
     {
         return Err(fail(
@@ -62,6 +63,13 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
             codes::NO_VALUE,
             "Açık mı kapalı mı olduğunu value ile verin (true ya da false).".into(),
             "value",
+        ));
+    }
+    if op == Op::Mobile && input.mobile.is_none() {
+        return Err(fail(
+            codes::NO_VALUE,
+            "Düğümün mobildeki yerini mobile ile verin (show, edit ya da hide).".into(),
+            "mobile",
         ));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -124,6 +132,20 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
                         n.name
                     ),
                     "layer",
+                ));
+            }
+        }
+        // To edit on the phone is the mobile app's, on a CBS project's data layer alone (docs/adr/9198 §2.2).
+        if op == Op::Mobile && input.mobile == Some(kentos_commands::LayerMobile::Edit) {
+            if !crate::layer_kind::mobile_choices(doc, n).contains(&kentos_launch::Mobile::Edit) {
+                let why = match crate::layer_kind::storage(doc) {
+                    kentos_launch::Storage::File => "mobil uygulama CAD projesini yazmaz, yalnız görüntüler",
+                    kentos_launch::Storage::Database => "mobil uygulama yalnız veri tablosunun satırlarını yazar",
+                };
+                return Err(fail(
+                    codes::MOBILE_NOT_OFFERED,
+                    format!("“{}” mobilde düzenlenemez: {why}. Göster ya da gösterme seçin.", n.name),
+                    "mobile",
                 ));
             }
         }
@@ -253,6 +275,7 @@ fn write(doc: &mut Document, input: &LayersSet) -> LayersChanged {
         }
         Op::Locked => doc.set_layer_locked(id, value),
         Op::Plot => doc.set_layer_plot(id, value),
+        Op::Mobile => doc.set_layer_mobile(id, input.mobile.unwrap_or(kentos_commands::LayerMobile::Show)),
         Op::Frozen => doc.set_layer_frozen(id, value),
         Op::ThawAll => doc.thaw_all_layers(),
         Op::Unisolate => doc.unisolate_layers(),

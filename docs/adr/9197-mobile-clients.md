@@ -108,7 +108,9 @@
 
 ## §4 Kalan
 
-- Katmanın mobil davranışı (göster, düzenle, gösterme): proje dosyasının alanı, ADR'siyle.
+- ~~Katmanın mobil davranışı (göster, düzenle, gösterme): proje dosyasının alanı, ADR'siyle.~~ Yapıldı:
+  [ADR 9198](9198-layer-on-mobile.md) (`LayerNode.mobile`, `.kcad` şema 256, `cad.layers.set`'in `mobile` işlemi,
+  masaüstünde Mobilde ▸).
 - Mobil istemcinin modül profilleri.
 - CBS'de çevrimdışı düzenleme: değişiklik günlüğü ve eşitlemede sunucu komutları.
 - Mobilde CAD düzenleme kararı.

@@ -147,6 +147,7 @@ fn opened(n: usize) -> Opened {
         sources: Vec::new(),
     };
     let layers = vec![LayerNode {
+        mobile: None,
         source_crs: None,
         geometry: None,
         table_styles: Vec::new(),

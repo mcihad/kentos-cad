@@ -137,6 +137,19 @@ impl App {
                 )
                 .icon(Icon::Print);
         }
+        // Mobilde ▸ (docs/adr/9198): shown read only, edited by the mobile app (a CBS data layer's alone) or left out.
+        if has(LayerEntry::Mobile) {
+            let current = node.mobile.unwrap_or(kentos_commands::LayerMobile::Show);
+            let mobile = self.mobile_choices(node).iter().fold(Menu::new(), |menu, m| {
+                let choice = match m {
+                    kentos_launch::Mobile::Show => kentos_commands::LayerMobile::Show,
+                    kentos_launch::Mobile::Edit => kentos_commands::LayerMobile::Edit,
+                    kentos_launch::Mobile::Hide => kentos_commands::LayerMobile::Hide,
+                };
+                menu.radio(m.title(), choice == current, event(Event::Mobile(id.clone(), choice)))
+            });
+            visibility = visibility.submenu("Mobilde", mobile);
+        }
         // Sıra ▸ (layer_order.rs): the node among its siblings, or out of its group.
         let in_group = self
             .document

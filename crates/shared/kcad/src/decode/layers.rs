@@ -12,6 +12,7 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
     let mut filter = None;
     let (mut actions, mut card, mut compose) = (None, None, None);
     let (mut plot, mut frozen) = (None, None);
+    let mut mobile = None;
     let mut table_styles = Vec::new();
     let mut subtypes: Option<(usize, kentos_contracts::LayerSubtypes)> = None;
     let mut source_crs: Option<kentos_contracts::LayerSourceCrs> = None;
@@ -357,6 +358,21 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
                 }
                 source_crs = Some(read);
             }
+            // Schema 256 (docs/adr/9198): the node on the mobile clients; shown, the default, is never written.
+            "mobile" if has.layer_mobile => {
+                let at = r.position();
+                mobile = Some(match text(r)?.as_str() {
+                    "edit" => kentos_contracts::LayerMobile::Edit,
+                    "hide" => kentos_contracts::LayerMobile::Hide,
+                    other => {
+                        return Err(r.fail_at(
+                            Code::BadValue,
+                            at,
+                            &format!("mobile “{other}” olamaz: edit ya da hide yazılır (gösterilen katmanda alan yoktur)"),
+                        ));
+                    }
+                });
+            }
             "plot" if has.look => {
                 if r.bool()? {
                     return Err(r.fail(
@@ -520,6 +536,7 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
         subtypes: subtypes.map(|(_, s)| s),
         table_styles,
         plot,
+        mobile,
         frozen,
         id: required(r, id, "id")?,
         name: required(r, name, "name")?,

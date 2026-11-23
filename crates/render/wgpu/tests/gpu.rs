@@ -246,6 +246,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         y: 4_420_187.52,
     };
     doc.layers = vec![LayerNode {
+        mobile: None,
         source_crs: None,
         geometry: None,
         table_styles: Vec::new(),

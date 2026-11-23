@@ -195,7 +195,7 @@ Yük, üç (şema 254'ten beri en çok dört) anahtarlı bir haritadır (anahtar
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
 | `modules` | harita, isteğe bağlı | modül sürümleri (şema 254, aşağıda); şema 2–253 yükünde bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/modules-in-schema-253.kcad`) |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `255`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-256.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `256`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-257.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format`, `modules` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü ve modül sürümlerini bilir.
@@ -256,6 +256,8 @@ Yük, üç (şema 254'ten beri en çok dört) anahtarlı bir haritadır (anahtar
 - Yazıcı `modules`'ü yalnız bir modül sürümünü yükselttiğinde, şema en az `254` olarak yazar; başka her çizim eskisiyle bayt bayt aynıdır.
 
 **Şema 255, araç katmanları** (kullanım incelemesi UR-003): ayarların `toolLayers`'ı, ölçü (`dimension`), yazı (`text`) ve taramanın (`hatch`) çizildiği katmanın kimliğidir; boş liste yazılmaz, bir araç bir kez, katman kimliği boş olmaz (`bad_value`; `broken/tool-layers-tool-twice.kcad`, `tool-layers-blank-layer.kcad`); şema 254'te bilinmeyen alandır (`broken/tool-layers-in-schema-254.kcad`). Örnek `tool-layers.kcad`. Verilmezse araçlar etkin katmana çizer.
+
+**Şema 256, katmanın mobildeki yeri** (ADR 9198, AY-08): katmanın ya da grubun `mobile`'ı (§6.5) yalnız `edit` (mobil uygulama veri tablosunun satırlarını düzenler) ya da `hide`'dır (mobilde yoktur); gösterilen düğümde alan yazılmaz (`show` `bad_value`: `broken/layer-mobile-show.kcad`; bilinmeyen değer `broken/layer-mobile-unknown.kcad`). Gizlenen grup altındakilerle gizlenir. `edit`'i hangi katman türünün alacağı biçimin değil komutun kuralıdır (`cad.layers.set`, `mobile_not_offered`). Yazıcı `256`'yı **yalnız bir düğümde bu alan varken** yazar; başka her çizim eskisiyle bayt bayt aynıdır. Şema 255 yükünde bilinmeyen alandır (`unknown_field`, `broken/layer-mobile-in-schema-255.kcad`). Örnek dosya `layer-mobile.kcad`.
 
 **Şema 3**, şema 2'nin kendisi ve nesnenin kendi çizgi kalınlığıdır (`lineWeight`, §6.6; ADR 0139). Yazıcı `3`'ü **yalnız bir nesnenin kendi kalınlığı varken** yazar; başka her çizim şema 2'dir ve eskisiyle bayt bayt aynıdır, bu yüzden şema 2 okuyucusu onu açmaya devam eder. Şema 2 yükünde `lineWeight` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/line-weight-in-schema-2.kcad`).
 
@@ -1679,6 +1681,7 @@ onlar formun ön denetimidir (ADR 0401 §4). Örnek dosya `forms.kcad`.
 | `compose` | katman çizimi | | şema 41'de: katmanın çizime nasıl girdiği (aşağıda); yalnız katmanda, grupta `bad_value` |
 | `frozen` | bool | | şema 55'te: yalnız `true` (`false` `bad_value`: `broken/frozen-false.kcad`); katman ya da grup altındakilerle dondurulmuştur: çizilmez, seçilmez, kenetlenmez, kapsama sayılmaz; etkin katman dondurulmaz (ADR 0311 §1) |
 | `locked` | bool | evet | |
+| `mobile` | numaralı metin | | şema 256'da: yalnız `edit` ya da `hide`; düğümün mobil istemcilerdeki yeri, gruptaki `hide` altındakilerle (ADR 9198); yoksa gösterilir |
 | `service` | servis | | şema 32'de: katman bu harita servisinden çizilir (aşağıda); yalnız katmanda; böyle katman nesne tutmaz |
 | `visible` | bool | evet | |
 | `plot` | bool | | şema 48'de: yalnız `false` (`true` `bad_value`: `broken/plot-true.kcad`); katman ya da grup paftada ve yazdırmada çizilmez, altındakilerle (ADR 0260 §4) |

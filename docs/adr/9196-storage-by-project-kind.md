@@ -207,7 +207,8 @@ bağlamada ve bulutta uygular.
 **Bağlı katman:**
 
 - `cad.sources.edit`'in `link`'i CBS projesinde `bound_in_gis` koduyla reddedilir; kural komuttadır, her istemciye
-  uyar. İleti `cad.layers.data`'yı söyler.
+  uyar. İleti `cad.layers.data`'yı söyler. Ortak durumu `cad.sources.edit.json`'dadır (üretici
+  `scripts/fixtures/bound_sources_cases.py`; AY-08'in diliminde eklendi, yetenek sınaması onu istedi).
 - Şerit: `source.link` CBS'nin Kaynak panelinden çıktı; Harita ve Yol'un “Ekle ▸ Harita” panelinin ▾'sindedir.
   Var olan bağlı katmanın komutları (yaz, oku, durum) kalır; eski projeye taşıma yolu yazılmaz (§2.4).
 

@@ -123,6 +123,8 @@ pub enum Event {
     Order(String, crate::layer_order::Step),
     /// Katman türü ▸ (layer_types.rs, docs/adr/0622 §5): what the layer holds.
     Geometry(String, kentos_commands::LayerGeometryChoice),
+    /// Görünürlük ▸ Mobilde ▸ (layer_commands.rs, docs/adr/9198): the node on the mobile clients.
+    Mobile(String, kentos_commands::LayerMobile),
 }
 
 impl App {
@@ -238,6 +240,10 @@ impl App {
         }
         if let Event::Geometry(id, choice) = event {
             self.set_layer_geometry(id, choice);
+            return Task::none();
+        }
+        if let Event::Mobile(id, mobile) = event {
+            self.set_layer_mobile(&id, mobile);
             return Task::none();
         }
         if let Event::Order(id, step) = event {
@@ -418,6 +424,7 @@ impl App {
             // Handled above, before the drawing is borrowed.
             Event::Duplicate(_)
             | Event::Geometry(..)
+            | Event::Mobile(..)
             | Event::Move(..)
             | Event::Order(..)
             | Event::MergeInto(_)

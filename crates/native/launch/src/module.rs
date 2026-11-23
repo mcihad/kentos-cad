@@ -285,6 +285,16 @@ impl LayerKind {
         self.written_as().is_some_and(|w| client.writes(storage).contains(&w))
     }
 
+    /// The mobile behaviours a layer of this kind may take in a project kept as `storage` (docs/adr/9198 §2.2): to edit
+    /// only where the mobile app writes the kind (a CBS project's data table); to show or not, every kind.
+    pub fn mobile_choices(self, storage: Storage) -> &'static [Mobile] {
+        if self.written_by(Client::MobileApp, storage) {
+            &Mobile::ALL
+        } else {
+            &[Mobile::Show, Mobile::Hide]
+        }
+    }
+
     /// Its name in a sentence.
     pub const fn title(self) -> &'static str {
         match self {
@@ -296,6 +306,41 @@ impl LayerKind {
             LayerKind::Raster => "raster",
             LayerKind::PointCloud => "nokta bulutu",
             LayerKind::Group => "grup",
+        }
+    }
+}
+
+/// What a layer is on the mobile clients (docs/adr/9198): the desktop's project says it, as a layer's field.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Mobile {
+    /// Shown, read only: what a layer is when its project says nothing.
+    Show,
+    /// Shown, its rows written by the mobile app.
+    Edit,
+    /// Not on the mobile clients.
+    Hide,
+}
+
+impl Mobile {
+    /// Every behaviour, in the order the menus list them.
+    pub const ALL: [Mobile; 3] = [Mobile::Show, Mobile::Edit, Mobile::Hide];
+
+    /// Its name as the module catalog and the layer's field write it.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Mobile::Show => "show",
+            Mobile::Edit => "edit",
+            Mobile::Hide => "hide",
+        }
+    }
+
+    /// Its name in the interface.
+    pub const fn title(self) -> &'static str {
+        match self {
+            Mobile::Show => "Göster",
+            Mobile::Edit => "Düzenle",
+            Mobile::Hide => "Gösterme",
         }
     }
 }
@@ -576,6 +621,22 @@ mod tests {
         assert_eq!(LayerKind::Annotation.kept(), Kept::ProjectFile);
         for c in Client::ALL {
             assert_eq!(serde_json::to_string(&c).expect("json"), format!("\"{}\"", c.id()));
+        }
+    }
+
+    /// To edit on the phone is the mobile app's alone, on a CBS project's data table; every layer may be shown or not
+    /// (docs/adr/9198 §2.2).
+    #[test]
+    fn only_a_cbs_data_table_is_edited_on_the_phone() {
+        assert_eq!(LayerKind::Data.mobile_choices(Storage::Database), Mobile::ALL);
+        for kind in LayerKind::ALL {
+            assert_eq!(kind.mobile_choices(Storage::File), [Mobile::Show, Mobile::Hide], "{kind:?}");
+            if kind != LayerKind::Data {
+                assert_eq!(kind.mobile_choices(Storage::Database), [Mobile::Show, Mobile::Hide], "{kind:?}");
+            }
+        }
+        for m in Mobile::ALL {
+            assert_eq!(serde_json::to_string(&m).expect("json"), format!("\"{}\"", m.id()));
         }
     }
 

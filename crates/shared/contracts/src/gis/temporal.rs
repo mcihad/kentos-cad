@@ -307,6 +307,7 @@ mod tests {
 
     fn node(id: &str, kind: LayerNodeType, children: Vec<LayerNode>) -> LayerNode {
         LayerNode {
+            mobile: None,
             source_crs: None,
             geometry: None,
             table_styles: Vec::new(),

@@ -352,6 +352,18 @@ impl LayerTree {
         }
     }
 
+    /// A node's place on the mobile clients (docs/adr/9198): `show`, the default, kept as no field.
+    pub(crate) fn set_mobile(&mut self, id: &str, mobile: kentos_contracts::LayerMobile) -> bool {
+        let want = (mobile != kentos_contracts::LayerMobile::Show).then_some(mobile);
+        match self.node_mut(id) {
+            Some(node) if node.mobile != want => {
+                node.mobile = want;
+                true
+            }
+            _ => false,
+        }
+    }
+
     pub(crate) fn set_plot(&mut self, id: &str, plot: bool) -> bool {
         let want = (!plot).then_some(false);
         match self.node_mut(id) {
@@ -781,6 +793,7 @@ impl LayerTree {
             None => self.next_id(),
         };
         LayerNode {
+            mobile: None,
             source_crs: new
                 .source_crs
                 .clone()

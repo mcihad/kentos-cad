@@ -96,9 +96,12 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
       saklama türüne göre ne yazdıkları;
     - katman türünün tutulduğu yer ve yazılışı (`LayerKind::kept`, `written_as`, `written_by`);
     - `catalog/v1/modules.json`'da istemciler ve katman türlerinin yetenekleri;
-    - CLAUDE.md §25 kural 7, kılavuz §9.9.
+    - CLAUDE.md §25 kural 7, kılavuz §9.9;
+    - katmanın mobil davranışı ([ADR 9198](../docs/adr/9198-layer-on-mobile.md)): göster, düzenle, gösterme;
+      `LayerNode.mobile`, `.kcad` şema 256, `cad.layers.set`'in `mobile` işlemi (`mobile_not_offered`), seçenekler
+      ortak tanımda (`LayerKind::mobile_choices`: düzenle yalnız CBS'nin veri tablosunda), mobil istemcinin okuması
+      `layer_on_mobile`; masaüstünde Görünürlük ▸ Mobilde ▸. Resim `.run/gui-evidence/kullanim-9198/`.
   - Kalan:
-    - katmanın mobil davranışı (göster, düzenle, gösterme), proje dosyasının alanı olarak ADR'siyle;
     - mobil istemcinin modül profilleri;
     - CBS'de çevrimdışı düzenleme (değişiklik günlüğü, eşitlemede sunucu komutları);
     - mobilde CAD düzenleme kararı;

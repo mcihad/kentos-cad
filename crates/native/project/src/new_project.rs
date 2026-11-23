@@ -329,6 +329,7 @@ fn label(placement: LabelPlacement, size: f64) -> LabelStyle {
 
 fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
+        mobile: None,
         source_crs: None,
         geometry: None,
         table_styles: Vec::new(),

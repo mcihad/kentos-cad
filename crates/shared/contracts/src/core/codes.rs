@@ -2014,6 +2014,8 @@ codes! {
     ROWS_REJECTED = "rows_rejected", Warning, false, "Bazı satırlar alınmadı; nedenleri cevapta, satırları rejects dosyasında.";
     /// A layer or a table bound already (docs/adr/0503).
     SOURCE_BOUND = "source_bound", Failed, false, "Katman ya da tablo zaten bir kaynağa bağlı.";
+    /// Mobilde düzenle on a node the mobile app does not write (docs/adr/9198 §2.2): only a CBS project's data layer.
+    MOBILE_NOT_OFFERED = "mobile_not_offered", Failed, false, "Bu katman mobilde düzenlenemez: mobil uygulama yalnız CBS projesinin veri tablosunun satırlarını yazar. Göster ya da gösterme seçin.";
     /// A table bound in a CBS project, whose data is its tables (docs/adr/9196 §2): it is added as a data layer.
     BOUND_IN_GIS = "bound_in_gis", Failed, false, "CBS projesinin verisi kaynağın tablolarındadır; tablonun nesnelerini projeye kopyalayan bağlı katman CBS'de yoktur. Tabloyu veri katmanı olarak ekleyin (cad.layers.data).";
     /// The layer given does not hold the table's objects as they are (docs/adr/0503).

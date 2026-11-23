@@ -388,6 +388,8 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "active_frozen",
                 "class_not_found",
                 "no_classes",
+                // docs/adr/9198 §2.2: to edit on the phone is a CBS data layer's.
+                "mobile_not_offered",
             ],
             REVISION,
         ],

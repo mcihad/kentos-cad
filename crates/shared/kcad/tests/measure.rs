@@ -144,6 +144,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         },
         home_view: None,
         layers: vec![LayerNode {
+            mobile: None,
             source_crs: None,
             geometry: None,
             table_styles: Vec::new(),

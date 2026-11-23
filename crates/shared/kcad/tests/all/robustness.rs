@@ -302,6 +302,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         ..LabelStyle::default()
     });
     LayerNode {
+        mobile: None,
         source_crs: None,
         geometry: None,
         table_styles: Vec::new(),
@@ -372,6 +373,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
     if ids.is_empty() {
         ids.push("son".to_owned());
         layers.push(LayerNode {
+            mobile: None,
             source_crs: None,
             geometry: None,
             table_styles: Vec::new(),

@@ -18443,6 +18443,15 @@
         ],
         "type": "object"
       },
+      "LayerMobile": {
+        "description": "What a layer is on the mobile clients (docs/adr/9198): its project on the desktop says it. Absent, shown read only;\n`edit`, its rows written by the mobile app (only a CBS project's data layer takes it); `hide`, not on the phone. A\ngroup's covers what it holds. Only `edit` and `hide` are written.",
+        "enum": [
+          "show",
+          "edit",
+          "hide"
+        ],
+        "type": "string"
+      },
       "LayerNode": {
         "description": "A node of the layer tree: a group or a layer.",
         "properties": {
@@ -18590,6 +18599,17 @@
           },
           "locked": {
             "type": "boolean"
+          },
+          "mobile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LayerMobile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "On the mobile clients (docs/adr/9198): absent, shown read only. Only `edit` and `hide` are written."
           },
           "name": {
             "type": "string"

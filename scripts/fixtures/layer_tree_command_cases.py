@@ -696,6 +696,74 @@ def set_cases():
     out.append(refused("Yazdırma: değersiz", {"operation": "plot", "layer": "parsel"}, "no_value",
                        "Açık mı kapalı mı olduğunu value ile verin (true ya da false).", "value", t))
     out.append(refused("Yazdırma: katmansız", {"operation": "plot", "value": False}, "no_layer", "Katmanı ya da grubu kimliğiyle verin (layer).", "layer", t))
+    # Mobilde (docs/adr/9198): the node on the mobile clients; `show`, the default, takes the field away; `edit` only on a
+    # layer the mobile app writes, a CBS project's data layer.
+    out.append({"name": "Mobilde gösterme: düzenlemedir, geri alma adımı değildir (ADR 9198)",
+                "steps": [step("execute", {"operation": "mobile", "layer": "yol", "mobile": "hide"}, set_result(), edit_flags(changed(t, "yol", mobile="hide"))),
+                          step("undo", returns=None, expect={"layers": changed(t, "yol", mobile="hide")})]})
+    out.append({"name": "Mobilde: grup altındakileriyle gösterilmez; göster alanı kaldırır",
+                "steps": [step("execute", {"operation": "mobile", "layer": "kadastro", "mobile": "hide"}, set_result(), edit_flags(changed(t, "kadastro", mobile="hide"))),
+                          step("execute", {"operation": "mobile", "layer": "kadastro", "mobile": "show"}, set_result(), edit_flags(t))]})
+    out.append({"name": "Mobilde göster: zaten gösterilen bir şey değiştirmez",
+                "steps": [step("execute", {"operation": "mobile", "layer": "yol", "mobile": "show"}, set_result(False), unchanged(t))]})
+    out.append({"name": "Mobilde: servisten çizilen katman da gösterilmeyebilir",
+                "steps": [step("execute", {"operation": "mobile", "layer": "altlik", "mobile": "hide"}, set_result(), edit_flags(changed(t, "altlik", mobile="hide")))]})
+    out.append(refused("Mobilde: değersiz", {"operation": "mobile", "layer": "yol"}, "no_value",
+                       "Düğümün mobildeki yerini mobile ile verin (show, edit ya da hide).", "mobile", t))
+    out.append(refused("Mobilde: katmansız", {"operation": "mobile", "mobile": "hide"}, "no_layer", "Katmanı ya da grubu kimliğiyle verin (layer).", "layer", t))
+    out.append(refused("Mobilde düzenle: CAD projesinin katmanı", {"operation": "mobile", "layer": "yol", "mobile": "edit"}, "mobile_not_offered",
+                       "“Yol” mobilde düzenlenemez: mobil uygulama CAD projesini yazmaz, yalnız görüntüler. Göster ya da gösterme seçin.", "mobile", t))
+    # A CBS project: its data layer is edited on the phone; its annotation layer and its groups are not.
+    data = {"driver": "gpkg", "address": "/veri/kent.gpkg", "table": "parsel", "key": "fid",
+            "geometry": {"column": "geom", "typeName": "POLYGON", "srid": 5256}}
+    cbs = edit_layers() + [node("veri", "Parsel tablosu", data=data, geometry="area"), node("not", "Notlar", geometry="annotation")]
+    out.append({"name": "Mobilde düzenle: CBS projesinin veri katmanı; göster alanı kaldırır",
+                "setup": setup(cbs, workspace="gis"),
+                "steps": [step("execute", {"operation": "mobile", "layer": "veri", "mobile": "edit"}, set_result(), edit_flags(changed(cbs, "veri", mobile="edit"))),
+                          step("execute", {"operation": "mobile", "layer": "veri", "mobile": "show"}, set_result(), edit_flags(cbs))]})
+    for layer, name in (("not", "Notlar"), ("kadastro", "Kadastro")):
+        out.append({"name": f"Mobilde düzenle: CBS projesinde veri katmanı olmayan “{name}” düzenlenmez",
+                    "setup": setup(cbs, workspace="gis"),
+                    "steps": [step("execute", {"operation": "mobile", "layer": layer, "mobile": "edit"},
+                                   failed("mobile_not_offered", f"“{name}” mobilde düzenlenemez: mobil uygulama yalnız veri tablosunun satırlarını yazar. Göster ya da gösterme seçin.", "mobile"),
+                                   unchanged(cbs))]})
+    out.append(refused("Mobilde: olmayan katman", {"operation": "mobile", "layer": "yok", "mobile": "hide"}, "layer_not_found",
+                       "“yok” kimlikli katman ya da grup çizimde yok. Var olan bir düğümün kimliğini verin.", "layer", t))
+    # The mobile place is the project's setting, not the objects': a lock, a hidden or frozen node and a group above take it.
+    out.append({"name": "Mobilde gösterme: kilitli katman da; kilit nesnelerindir",
+                "steps": [step("execute", {"operation": "mobile", "layer": "bina", "mobile": "hide"}, set_result(), edit_flags(changed(t, "bina", mobile="hide")))]})
+    out.append({"name": "Mobilde gösterme: kilitli grup da",
+                "steps": [step("execute", {"operation": "mobile", "layer": "koruma", "mobile": "hide"}, set_result(), edit_flags(changed(t, "koruma", mobile="hide")))]})
+    out.append({"name": "Mobilde gösterme: masaüstünde gizli katman; görünürlüğü değişmez",
+                "steps": [step("execute", {"operation": "mobile", "layer": "gizli", "mobile": "hide"}, set_result(), edit_flags(changed(t, "gizli", mobile="hide")))]})
+    out.append({"name": "Mobilde gösterme: grubun içindeki katman kendi başına; grup gösterilir",
+                "steps": [step("execute", {"operation": "mobile", "layer": "eski", "mobile": "hide"}, set_result(), edit_flags(changed(t, "eski", mobile="hide")))]})
+    out.append({"name": "Mobilde gösterme: aynı seçim ikinci kez bir şey değiştirmez",
+                "steps": [step("execute", {"operation": "mobile", "layer": "yol", "mobile": "hide"}, set_result(), edit_flags(changed(t, "yol", mobile="hide"))),
+                          step("execute", {"operation": "mobile", "layer": "yol", "mobile": "hide"}, set_result(False),
+                               {**edit_flags(changed(t, "yol", mobile="hide")), "revision": "same"})]})
+    out.append({"name": "Mobilde: doğrula yazmaz",
+                "steps": [step("validate", {"operation": "mobile", "layer": "yol", "mobile": "hide"}, VALID, unchanged(t))]})
+    out.append(conflict_case("Mobilde: sürüm çakışması; hiçbir şey yazılmaz",
+                             step("execute", {"operation": "mobile", "layer": "yol", "mobile": "hide"}, set_result(),
+                                  {"revision": "changed"}),
+                             {"operation": "mobile", "layer": "bos", "mobile": "hide"},
+                             {"layers": changed(t, "yol", mobile="hide"), "ids": IDS}))
+    out.append({"name": "Mobilde: CBS'nin düzenlenen veri katmanı gösterilmez yapılır",
+                "setup": setup(cbs, workspace="gis"),
+                "steps": [step("execute", {"operation": "mobile", "layer": "veri", "mobile": "edit"}, set_result(), edit_flags(changed(cbs, "veri", mobile="edit"))),
+                          step("execute", {"operation": "mobile", "layer": "veri", "mobile": "hide"}, set_result(), edit_flags(changed(cbs, "veri", mobile="hide")))]})
+    out.append({"name": "Mobilde düzenle: CBS projesinde servisten çizilen “OpenStreetMap” düzenlenmez",
+                "setup": setup(cbs, workspace="gis"),
+                "steps": [step("execute", {"operation": "mobile", "layer": "altlik", "mobile": "edit"},
+                               failed("mobile_not_offered", "“OpenStreetMap” mobilde düzenlenemez: mobil uygulama yalnız veri tablosunun satırlarını yazar. Göster ya da gösterme seçin.", "mobile"),
+                               unchanged(cbs))]})
+    # A map's (CAD) project may show a CBS table as an underlay; the mobile app writes no CAD project, its table neither.
+    out.append({"name": "Mobilde düzenle: CAD projesinde altlık veri tablosu düzenlenmez",
+                "setup": setup(cbs),
+                "steps": [step("execute", {"operation": "mobile", "layer": "veri", "mobile": "edit"},
+                               failed("mobile_not_offered", "“Parsel tablosu” mobilde düzenlenemez: mobil uygulama CAD projesini yazmaz, yalnız görüntüler. Göster ya da gösterme seçin.", "mobile"),
+                               unchanged(cbs))]})
     out.append({"name": "Etkin katman: dosyada saklanır ama düzenleme değildir (sürüm aynı)",
                 "steps": [step("execute", {"operation": "active", "layer": "yol"}, set_result(True, "yol"),
                                {"layers": t, "activeLayer": "yol", "revision": "same", "dirty": False, "canUndo": False})]})

@@ -265,7 +265,7 @@ impl State {
         if d.kind != Kind::Gis {
             return new_document(&d.options());
         }
-        let mut v2 = match d.purpose {
+        let v2 = match d.purpose {
             Purpose::Template => match &self.template {
                 Some(Ok(t)) => {
                     let mut v2 = t.snapshot(d)?;

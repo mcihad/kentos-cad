@@ -11,6 +11,7 @@ import type { LayerField } from "./LayerField";
 import type { LayerFilter } from "./LayerFilter";
 import type { LayerGeometry } from "./LayerGeometry";
 import type { LayerIndex } from "./LayerIndex";
+import type { LayerMobile } from "./LayerMobile";
 import type { LayerNodeType } from "./LayerNodeType";
 import type { LayerOrigin } from "./LayerOrigin";
 import type { LayerRule } from "./LayerRule";
@@ -105,6 +106,10 @@ geometry?: LayerGeometry,
  * docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
  */
 plot?: boolean, 
+/**
+ * On the mobile clients (docs/adr/9198): absent, shown read only. Only `edit` and `hide` are written.
+ */
+mobile?: LayerMobile, 
 /**
  * Dondur (DXF's 70 bit 1; docs/adr/0311 §1): absent,
  * thawed; `true`, frozen: neither drawn, picked, snapped to nor counted

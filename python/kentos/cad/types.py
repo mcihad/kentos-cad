@@ -4088,6 +4088,20 @@ LayerGeometryChoiceName = Literal["point", "line", "area", "annotation", "mixed"
 """The names of :class:`LayerGeometryChoice`, for a plain string."""
 
 
+class LayerMobile(_StrEnum):
+    """What a layer is on the mobile clients (docs/adr/9198): its project on the desktop says it. Absent, shown read only;
+    `edit`, its rows written by the mobile app (only a CBS project's data layer takes it); `hide`, not on the phone. A
+    group's covers what it holds. Only `edit` and `hide` are written.
+    """
+    SHOW = "show"
+    EDIT = "edit"
+    HIDE = "hide"
+
+
+LayerMobileName = Literal["show", "edit", "hide"]
+"""The names of :class:`LayerMobile`, for a plain string."""
+
+
 class LayerNodeType(_StrEnum):
     GROUP = "group"
     LAYER = "layer"
@@ -4131,6 +4145,7 @@ class LayerSetOperation(_StrEnum):
     - ``classVisible``: A layer's style classes switched on or off (docs/adr/9105 §3): the tree's boxes under the layer.
     - ``classInvert``: A layer's style classes each turned the other way (Tersine çevir).
     - ``classCounts``: Nesne sayısını göster (docs/adr/9105 §4): whether the tree says how many objects the layer and its classes hold.
+    - ``mobile``: Mobilde (docs/adr/9198): the node on the mobile clients: shown, edited or left out.
     """
     RENAME = "rename"
     VISIBLE = "visible"
@@ -4145,9 +4160,10 @@ class LayerSetOperation(_StrEnum):
     CLASS_VISIBLE = "classVisible"
     CLASS_INVERT = "classInvert"
     CLASS_COUNTS = "classCounts"
+    MOBILE = "mobile"
 
 
-LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll", "plot", "frozen", "thawAll", "unisolate", "classVisible", "classInvert", "classCounts"]
+LayerSetOperationName = Literal["rename", "visible", "locked", "active", "isolate", "showAll", "plot", "frozen", "thawAll", "unisolate", "classVisible", "classInvert", "classCounts", "mobile"]
 """The names of :class:`LayerSetOperation`, for a plain string."""
 
 
@@ -56943,6 +56959,7 @@ class LayerNode(_Model):
             has it, never a group.
         indexes: Dizinler (docs/adr/0758): what the records are looked up by; a unique one is the layer's key. Only a layer
             holding objects has them.
+        mobile: On the mobile clients (docs/adr/9198): absent, shown read only. Only `edit` and `hide` are written.
         origin: Where the layer's objects were copied from (docs/adr/9192): the file's or database's table an import read. The
             objects are the project's own; the source is not bound, nothing is written back to it. Only a layer has it,
             never a group.
@@ -56987,6 +57004,7 @@ class LayerNode(_Model):
     frozen: bool | None | Unset = UNSET
     geometry: LayerGeometry | LayerGeometryName | None | Unset = UNSET
     indexes: list[LayerIndex] | Unset = UNSET
+    mobile: LayerMobile | LayerMobileName | None | Unset = UNSET
     origin: LayerOrigin | None | Unset = UNSET
     plot: bool | None | Unset = UNSET
     replaces: str | None | Unset = UNSET
@@ -57037,6 +57055,8 @@ class LayerNode(_Model):
             out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
         if self.indexes is not UNSET:
             out["indexes"] = [e0.to_json() for e0 in self.indexes]
+        if self.mobile is not UNSET:
+            out["mobile"] = None if self.mobile is None else _enum_out(self.mobile)
         if self.origin is not UNSET:
             out["origin"] = None if self.origin is None else self.origin.to_json()
         if self.plot is not UNSET:
@@ -57086,6 +57106,7 @@ class LayerNode(_Model):
             frozen=data.get("frozen", UNSET),
             geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometry, data["geometry"]),
             indexes=[LayerIndex.from_json(e0) for e0 in data["indexes"]] if "indexes" in data else UNSET,
+            mobile=UNSET if "mobile" not in data else None if data["mobile"] is None else _enum_in(LayerMobile, data["mobile"]),
             origin=UNSET if "origin" not in data else None if data["origin"] is None else LayerOrigin.from_json(data["origin"]),
             plot=data.get("plot", UNSET),
             replaces=data.get("replaces", UNSET),
@@ -59731,31 +59752,38 @@ class LayersSet(_Model):
       by nothing;
     - `classInvert`: `layer`, and `classes` (none: every class): each turned the other way;
     - `classCounts`: `layer`, `value` (docs/adr/9105 §4): whether the tree says how many objects the layer and each
-      class hold.
+      class hold;
+    - `mobile`: `layer`, `mobile` (docs/adr/9198): the node on the mobile clients: `show` (read only, the default),
+      `edit` (its rows written by the mobile app: only a CBS project's data layer, `mobile_not_offered` otherwise) or
+      `hide`; a group's covers everything under it.
 
-    The eye, the lock, the freeze, printing, the name, the classes switched on and off, the counts shown and the
-    active layer are the project's (kept in the file); only what `isolate` hid is the session's (docs/adr/0311 §2).
+    The eye, the lock, the freeze, printing, the place on the phone, the name, the classes switched on and off, the counts
+    shown and the active layer are the project's (kept in the file); only what `isolate` hid is the session's
+    (docs/adr/0311 §2).
 
     Refusals (`CommandError.code`), checked in this order: `no_layer`
-    (rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts without `layer`),
+    (rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts, mobile without `layer`),
     `no_layers` (isolate without a node), `empty_name` (rename with a name
     empty or only white space), `no_value` (visible, locked, plot, frozen, classVisible, classCounts
-    without `value`); then `invalid_revision`, `revision_conflict` (status
+    without `value`, mobile without `mobile`); then `invalid_revision`, `revision_conflict` (status
     `conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`
     (active and the class operations: a group), `service_layer` (active: a layer drawn from a map
     service holds no objects), `layer_frozen` (active: a frozen layer, or one
     in a frozen group), `active_frozen` (frozen: the active layer, or a group
     holding it), `no_classes` (classVisible, classInvert: the layer's look has no classes), `class_not_found`
-    (`classes[i]` names none of its classes). A change that changes nothing answers `changed` false.
+    (`classes[i]` names none of its classes), `mobile_not_offered` (mobile `edit` on a node the mobile app does not
+    write). A change that changes nothing answers `changed` false.
     Attributes:
         classes: `classVisible`, `classInvert`: the classes' ids (`c3`, `other`, `g2`, `r0.1`); none: every class.
         expected_revision: The document revision the input was prepared against, as decimal text.
+        mobile: `mobile`: the node on the mobile clients (docs/adr/9198).
     """
     operation: LayerSetOperation | LayerSetOperationName
     classes: list[str] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
+    mobile: LayerMobile | LayerMobileName | None | Unset = UNSET
     name: str | None | Unset = UNSET
     value: bool | None | Unset = UNSET
 
@@ -59770,6 +59798,8 @@ class LayersSet(_Model):
             out["layer"] = self.layer
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
+        if self.mobile is not UNSET:
+            out["mobile"] = None if self.mobile is None else _enum_out(self.mobile)
         if self.name is not UNSET:
             out["name"] = self.name
         if self.value is not UNSET:
@@ -59784,6 +59814,7 @@ class LayersSet(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             layer=data.get("layer", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            mobile=UNSET if "mobile" not in data else None if data["mobile"] is None else _enum_in(LayerMobile, data["mobile"]),
             name=data.get("name", UNSET),
             value=data.get("value", UNSET),
         )
@@ -149809,6 +149840,8 @@ __all__ = [
     "LayerLabelReport",
     "LayerLabels",
     "LayerMask",
+    "LayerMobile",
+    "LayerMobileName",
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",

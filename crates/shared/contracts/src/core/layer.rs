@@ -374,6 +374,35 @@ pub enum LayerNodeType {
     Layer,
 }
 
+/// What a layer is on the mobile clients (docs/adr/9198): its project on the desktop says it. Absent, shown read only;
+/// `edit`, its rows written by the mobile app (only a CBS project's data layer takes it); `hide`, not on the phone. A
+/// group's covers what it holds. Only `edit` and `hide` are written.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LayerMobile {
+    Show,
+    Edit,
+    Hide,
+}
+
+/// What the node `id` is on the mobile clients (docs/adr/9198 §2.1), as a mobile client reads `nodes`: hidden when it
+/// or a group above it is hidden, else its own choice (absent: shown); none for a node not in the tree.
+pub fn layer_on_mobile(nodes: &[LayerNode], id: &str) -> Option<LayerMobile> {
+    for n in nodes {
+        let own = n.mobile.unwrap_or(LayerMobile::Show);
+        if n.id == id {
+            return Some(own);
+        }
+        if let Some(below) = layer_on_mobile(&n.children, id) {
+            return Some(if own == LayerMobile::Hide { LayerMobile::Hide } else { below });
+        }
+    }
+    None
+}
+
 /// What a layer holds (docs/adr/0622 §5): GIS's layer type, a layer of points, lines, areas or annotation; absent,
 /// any kind (Karışık, a CAD layer). A typed layer takes only the objects of its kind: a write that would put another
 /// kind on it is refused (`layer_geometry_mismatch`) and the tools that draw another kind are off while it is active.
@@ -564,6 +593,10 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
+    /// On the mobile clients (docs/adr/9198): absent, shown read only. Only `edit` and `hide` are written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mobile: Option<LayerMobile>,
     /// Dondur (DXF's 70 bit 1; docs/adr/0311 §1): absent,
     /// thawed; `true`, frozen: neither drawn, picked, snapped to nor counted
     /// in the drawing's extent, and Hepsini göster leaves it frozen; the

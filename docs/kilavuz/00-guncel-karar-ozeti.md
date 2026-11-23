@@ -24,7 +24,9 @@
     yalnız veritabanıdır ve yükleme veri katmanlarının satırlarını aktarır.
   - Mobil görüntüleyici ve mobil uygulama (ADR 9197, AY-08): istemciler ortak tanımda (`kentos_launch::Client`);
     görüntüleyici hiçbir şey yazmaz, mobil uygulama yalnız CBS'nin veri satırlarını sunucu komutuyla yazar; katmanın
-    mobildeki davranışını masaüstündeki proje belirler (alanı sonra eklenir).
+    mobildeki davranışını masaüstündeki proje belirler: göster, düzenle, gösterme (ADR 9198; `LayerNode.mobile`,
+    `.kcad` şema 256, `cad.layers.set`'in `mobile` işlemi; düzenle yalnız CBS'nin veri tablosunda; masaüstünde
+    Görünürlük ▸ Mobilde ▸).
 
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
   [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),

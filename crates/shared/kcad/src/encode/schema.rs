@@ -40,6 +40,13 @@ use super::*;
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 256 (docs/adr/9198): a node's place on the mobile clients.
+    fn mobile(nodes: &[kentos_contracts::LayerNode]) -> bool {
+        nodes.iter().any(|n| n.mobile.is_some() || mobile(&n.children))
+    }
+    if mobile(&doc.layers) {
+        return crate::SCHEMA_WITH_LAYER_MOBILE;
+    }
     // Schema 255 (usage review UR-003): the layer each annotation tool draws on.
     if !doc.settings.tool_layers.is_empty() {
         return crate::SCHEMA_WITH_TOOL_LAYERS;

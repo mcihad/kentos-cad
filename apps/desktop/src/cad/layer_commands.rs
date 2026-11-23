@@ -98,6 +98,22 @@ impl App {
         self.set_layers(input);
     }
 
+    /// Mobilde ▸ (docs/adr/9198): the node's place on the mobile clients; a choice its kind has not is the command's to
+    /// refuse, in its words.
+    pub(crate) fn set_layer_mobile(&mut self, id: &str, mobile: kentos_commands::LayerMobile) {
+        let mut input = LayersSet::new(LayerSetOperation::Mobile, Some(id.to_owned()));
+        input.mobile = Some(mobile);
+        self.set_layers(input);
+    }
+
+    /// The mobile behaviours `node` may take here (docs/adr/9198 §2.2): to edit only a CBS project's data layer.
+    pub(crate) fn mobile_choices(&self, node: &kentos_commands::LayerNode) -> &'static [kentos_launch::Mobile] {
+        match self.document.as_ref() {
+            Some(d) => kentos_native_application::layer_kind::mobile_choices(&d.model, node),
+            None => &[],
+        }
+    }
+
     /// Dondur / Çöz (docs/adr/0311 §1): the node's freeze turned over; the
     /// active layer's refusal said in the command's words.
     pub(crate) fn toggle_layer_frozen(&mut self, id: &str) {

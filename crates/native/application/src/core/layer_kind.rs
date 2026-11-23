@@ -5,7 +5,7 @@
 
 use kentos_commands::{LayerGeometry, LayerNode, LayerNodeType, Workspace};
 use kentos_domain::Document;
-pub use kentos_launch::LayerKind;
+pub use kentos_launch::{LayerKind, Mobile, Storage};
 
 /// What `node` is.
 pub fn of(doc: &Document, node: &LayerNode) -> LayerKind {
@@ -29,6 +29,20 @@ pub fn of(doc: &Document, node: &LayerNode) -> LayerKind {
         Some("pointcloud") => LayerKind::PointCloud,
         _ => LayerKind::Drawing,
     }
+}
+
+/// Where the project keeps its data (docs/adr/9196 §2, CLAUDE.md §25 rule 5): a CBS project's layers in a database,
+/// any other project whole in its file.
+pub fn storage(doc: &Document) -> Storage {
+    match doc.settings().project_type() {
+        Some(Workspace::Gis) => Storage::Database,
+        _ => Storage::File,
+    }
+}
+
+/// What `node` may be on the mobile clients here (docs/adr/9198 §2.2): to edit a CBS project's data layer alone.
+pub fn mobile_choices(doc: &Document, node: &LayerNode) -> &'static [Mobile] {
+    of(doc, node).mobile_choices(storage(doc))
 }
 
 /// `raster` or `pointcloud` when `layer` holds those alone: its first object decides unless it is one of them, so a
@@ -136,5 +150,19 @@ mod tests {
         assert!(held_words(&held_in_file(&gis)).contains("“taslak”, “bagli”"));
         // A CAD project keeps everything in its file.
         assert!(held_in_file(&doc("cad")).is_empty());
+    }
+
+    /// The phone edits none of these: the mobile app writes a CBS data table's rows alone (docs/adr/9198 §2.2); a CAD
+    /// project is shown or left out.
+    #[test]
+    fn the_phone_shows_or_leaves_out_what_it_does_not_write() {
+        let (gis, cad) = (doc("gis"), doc("cad"));
+        assert_eq!((storage(&gis), storage(&cad)), (Storage::Database, Storage::File));
+        for id in ["taslak", "yazi", "bagli"] {
+            for d in [&gis, &cad] {
+                let node = d.layers().get(id).cloned().expect("a layer");
+                assert_eq!(mobile_choices(d, &node), [Mobile::Show, Mobile::Hide], "{id}");
+            }
+        }
     }
 }

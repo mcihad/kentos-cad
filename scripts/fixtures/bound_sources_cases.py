@@ -133,6 +133,14 @@ def setup(layers=(), entities=(), sources=(), uids=None):
     return doc
 
 
+def cbs_setup():
+    """The same drawing as a CBS project's, whose data is its tables (docs/adr/9196 §2): no bound layer there."""
+    doc = setup()
+    doc["settings"]["workspace"] = "gis"
+    doc["entities"] = []
+    return doc
+
+
 def layer(id_, locked=False):
     return {"id": id_, "name": id_.capitalize(), "type": "layer", "visible": True, "locked": locked, "expanded": True,
             "style": STYLE, "children": []}
@@ -478,6 +486,13 @@ def edit_cases():
                   failed("source_differs", "“cizim” katmanı “parsel” tablosunun nesnelerini taşımıyor: tabloda olmayan "
                          "0, farklı 0, katmanda olmayan 3 nesne. Tabloyu yeni bir katmana bağlayın (layer vermeden).",
                          "edit.layer"))),
+        case("CBS projesinde tablo bağlanmaz: verisi tablolarındadır, tablo veri katmanı olarak eklenir",
+             step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel"}},
+                  failed("bound_in_gis", "Bu bir CBS projesi: verisi kaynağın tablolarında durur, “parsel” tablosunun "
+                         "nesnelerini projeye kopyalayan bağlı katman CBS'de yoktur. Tabloyu veri katmanı olarak ekleyin "
+                         "(cad.layers.data; masaüstünde Katmanlar ▸ Veri katmanı ekle). Bağlı katman Harita projesinin "
+                         "teslim yoludur.", "edit")),
+             setup_=cbs_setup()),
         case("olmayan katman",
              step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel", "layer": "yok"}},
                   failed("layer_not_found", "“yok” kimlikli katman çizimde yok; var olan bir katmanın kimliğini verin.",

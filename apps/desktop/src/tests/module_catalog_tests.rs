@@ -43,6 +43,11 @@ fn catalog_text() -> String {
                 "title": k.title(),
                 "kept": k.kept().id(),
                 "writtenAs": k.written_as().map(|w| w.id()),
+                // What it may be on the mobile clients, by the project's storage (docs/adr/9198 §2.2).
+                "mobile": {
+                    "database": k.mobile_choices(Storage::Database).iter().map(|m| m.id()).collect::<Vec<_>>(),
+                    "file": k.mobile_choices(Storage::File).iter().map(|m| m.id()).collect::<Vec<_>>(),
+                },
             })
         })
         .collect();

@@ -91,6 +91,8 @@ impl ModuleProfile for Map {
             | E::Lock
             | E::Freeze
             | E::Plot
+            // The mobile viewer shows every module's project (docs/adr/9197 §2.2, 9198).
+            | E::Mobile
             | E::Order
             | E::Service
             | E::Refresh

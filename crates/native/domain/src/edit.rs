@@ -1113,6 +1113,15 @@ impl Document {
         changed
     }
 
+    /// Mobilde (docs/adr/9198): a layer's or group's place on the mobile clients; an edit when it changes, never an undo
+    /// step, as Yazdır. Whether it changed.
+    pub fn set_layer_mobile(&mut self, id: &str, mobile: kentos_contracts::LayerMobile) -> bool {
+        let (framed, base) = (self.before_part(ProjectPart::LayerFlags), self.edits);
+        let changed = self.layers.set_mobile(id, mobile);
+        self.flags_written(framed, changed, base);
+        changed
+    }
+
     /// A layer's style classes switched on or off in the tree (docs/adr/9105 §3): its renderer as given, an edit when
     /// it changes, never an undo step, as the eye. Whether it changed.
     pub fn set_layer_class_switches(&mut self, id: &str, renderer: serde_json::Value) -> bool {

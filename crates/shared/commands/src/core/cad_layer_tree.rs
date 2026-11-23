@@ -349,6 +349,8 @@ pub enum LayerSetOperation {
     ClassInvert,
     /// Nesne sayısını göster (docs/adr/9105 §4): whether the tree says how many objects the layer and its classes hold.
     ClassCounts,
+    /// Mobilde (docs/adr/9198): the node on the mobile clients: shown, edited or left out.
+    Mobile,
 }
 
 /// Input of `cad.layers.set` v1: one of the tree's own changes, as the eye,
@@ -380,22 +382,27 @@ pub enum LayerSetOperation {
 ///   by nothing;
 /// - `classInvert`: `layer`, and `classes` (none: every class): each turned the other way;
 /// - `classCounts`: `layer`, `value` (docs/adr/9105 §4): whether the tree says how many objects the layer and each
-///   class hold.
+///   class hold;
+/// - `mobile`: `layer`, `mobile` (docs/adr/9198): the node on the mobile clients: `show` (read only, the default),
+///   `edit` (its rows written by the mobile app: only a CBS project's data layer, `mobile_not_offered` otherwise) or
+///   `hide`; a group's covers everything under it.
 ///
-/// The eye, the lock, the freeze, printing, the name, the classes switched on and off, the counts shown and the
-/// active layer are the project's (kept in the file); only what `isolate` hid is the session's (docs/adr/0311 §2).
+/// The eye, the lock, the freeze, printing, the place on the phone, the name, the classes switched on and off, the counts
+/// shown and the active layer are the project's (kept in the file); only what `isolate` hid is the session's
+/// (docs/adr/0311 §2).
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_layer`
-/// (rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts without `layer`),
+/// (rename, visible, locked, plot, frozen, active, classVisible, classInvert, classCounts, mobile without `layer`),
 /// `no_layers` (isolate without a node), `empty_name` (rename with a name
 /// empty or only white space), `no_value` (visible, locked, plot, frozen, classVisible, classCounts
-/// without `value`); then `invalid_revision`, `revision_conflict` (status
+/// without `value`, mobile without `mobile`); then `invalid_revision`, `revision_conflict` (status
 /// `conflict`); `layer_not_found` (`layer`, `layers[i]`), `not_a_layer`
 /// (active and the class operations: a group), `service_layer` (active: a layer drawn from a map
 /// service holds no objects), `layer_frozen` (active: a frozen layer, or one
 /// in a frozen group), `active_frozen` (frozen: the active layer, or a group
 /// holding it), `no_classes` (classVisible, classInvert: the layer's look has no classes), `class_not_found`
-/// (`classes[i]` names none of its classes). A change that changes nothing answers `changed` false.
+/// (`classes[i]` names none of its classes), `mobile_not_offered` (mobile `edit` on a node the mobile app does not
+/// write). A change that changes nothing answers `changed` false.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -419,6 +426,10 @@ pub struct LayersSet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub classes: Option<Vec<String>>,
+    /// `mobile`: the node on the mobile clients (docs/adr/9198).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mobile: Option<crate::LayerMobile>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -436,6 +447,7 @@ impl LayersSet {
             name: None,
             value: None,
             classes: None,
+            mobile: None,
             expected_revision: None,
         }
     }
