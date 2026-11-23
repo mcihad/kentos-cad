@@ -14,7 +14,7 @@ use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, Table};
 use kentos_ui::widget::{Tip, horizontal_divider, tip, vertical_divider};
 
 use super::source::texts as whole_texts;
-use super::{Event, StatsNow, summary_cells, texts};
+use super::{Counted, Event, StatsNow, summary_cells, texts};
 use crate::app::{App, Message};
 use crate::charts::data::layer_list;
 use crate::features::Show;
@@ -23,6 +23,9 @@ use crate::icons::from_web;
 fn msg(e: Event) -> Message {
     Message::Gis(gis::Event::Statistics(e))
 }
+
+/// While a data layer's source counts its fields (docs/adr/9181).
+const COUNTING: &str = "Kaynak sayıyor…";
 
 /// The detail pane's width (the web's 320 px).
 const DETAIL_WIDTH: f32 = 320.0;
@@ -60,8 +63,13 @@ impl App {
         let now = self.gis.charts.stats.borrow();
         let bar = self.statistics_bar(&now);
         let table = self.summary_table(&now);
+        // A chosen field of a data layer its source is counting (docs/adr/9181).
+        let waiting = now.counted.is_some()
+            && now.detail.is_none()
+            && self.gis.charts.field.as_ref().is_some_and(|f| now.keys.contains(f));
         let detail = match self.whole_pane() {
             Some(whole) => whole,
+            None if waiting => container(label::muted(COUNTING).size(typography::caption())).padding([10, 12]).into(),
             None => detail_pane(&now),
         };
         let detail = match self.scope_row() {
@@ -118,19 +126,7 @@ impl App {
             container(layer).width(Length::Fixed(180.0)),
             container(label::muted(texts::SHOW)).padding([0, 2]),
             container(show).width(Length::Fixed(140.0)),
-            label::muted(match self.layer_rows_from() {
-                // A data layer's rows are its source's (docs/adr/9130).
-                Some(crate::charts::data::From::Source) => {
-                    // Changes not yet written are counted as this device has them (docs/adr/9130), said so.
-                    let pending = self.chart_layer().is_some_and(|l| self.data_waiting().iter().any(|w| w.layer == l));
-                    if pending {
-                        format!("{} satır, kaynaktan; kaynağa yazılmamış değişiklikler bu cihazdaki hâliyle", now.rows.len())
-                    } else {
-                        format!("{} satır, kaynaktan", now.rows.len())
-                    }
-                }
-                _ => texts::objects(now.rows.len()),
-            }),
+            label::muted(self.stats_count_words(now)),
         ]
         .spacing(8)
         .align_y(Center);
@@ -194,16 +190,7 @@ impl App {
         let keys = now.keys.clone();
         let chosen = self.gis.charts.field.clone();
         let count = lines.len();
-        let empty: String = if self.chart_layer().is_none() {
-            texts::NO_LAYERS.to_owned()
-        } else {
-            match self.layer_rows_from() {
-                Some(crate::charts::data::From::Reading) => "Kaynak okunuyor…".to_owned(),
-                Some(crate::charts::data::From::Failed(why)) => format!("Kaynak okunamadı: {why}"),
-                Some(crate::charts::data::From::Source) => "Kaynakta satır yok.".to_owned(),
-                _ => texts::NONE.to_owned(),
-            }
-        };
+        let empty = self.stats_empty_words(now);
         Table::new(columns)
             .horizontal()
             .min_width(WIDTHS.iter().sum::<f32>() + 8.0 * WIDTHS.len() as f32)
@@ -444,4 +431,50 @@ fn detail_pane<'a>(now: &StatsNow) -> Element<'a, Message> {
     .padding([8, 12])
     .width(Fill)
     .into()
+}
+
+impl App {
+    /// The count beside Göster: the objects counted, a data layer's rows read from its source (docs/adr/9130) or
+    /// counted by it (docs/adr/9181), and whether changes not yet written are counted as this device has them.
+    pub(crate) fn stats_count_words(&self, now: &StatsNow) -> String {
+        // Changes not yet written are counted as this device has them (docs/adr/9130), said so.
+        let pending = || self.chart_layer().is_some_and(|l| self.data_waiting().iter().any(|w| w.layer == l));
+        const PENDING: &str = "kaynağa yazılmamış değişiklikler bu cihazdaki hâliyle";
+        match (&now.counted, self.layer_rows_from()) {
+            // A data layer counted by its source (docs/adr/9181).
+            (Some(Counted::Counting), _) => COUNTING.to_owned(),
+            (Some(Counted::Failed(_)), _) => "Kaynak sayamadı".to_owned(),
+            (Some(Counted::Ready), _) => {
+                let n = crate::view::thousands(now.objects as f64);
+                if pending() { format!("{n} satır, kaynakta sayıldı; {PENDING}") } else { format!("{n} satır, kaynakta sayıldı") }
+            }
+            // A data layer's rows are its source's (docs/adr/9130).
+            (None, Some(crate::charts::data::From::Source)) => {
+                let n = now.rows.len();
+                if pending() { format!("{n} satır, kaynaktan; {PENDING}") } else { format!("{n} satır, kaynaktan") }
+            }
+            _ => texts::objects(now.rows.len()),
+        }
+    }
+
+    /// What the summary table says without rows: no layer, a data layer's source counting or reading it, why it
+    /// could not, or that it has no row.
+    pub(crate) fn stats_empty_words(&self, now: &StatsNow) -> String {
+        if self.chart_layer().is_none() {
+            texts::NO_LAYERS.to_owned()
+        } else if let Some(c) = &now.counted {
+            match c {
+                Counted::Counting => COUNTING.to_owned(),
+                Counted::Failed(why) => format!("Kaynak sayamadı: {why}"),
+                Counted::Ready => "Kaynakta satır yok.".to_owned(),
+            }
+        } else {
+            match self.layer_rows_from() {
+                Some(crate::charts::data::From::Reading) => "Kaynak okunuyor…".to_owned(),
+                Some(crate::charts::data::From::Failed(why)) => format!("Kaynak okunamadı: {why}"),
+                Some(crate::charts::data::From::Source) => "Kaynakta satır yok.".to_owned(),
+                _ => texts::NONE.to_owned(),
+            }
+        }
+    }
 }

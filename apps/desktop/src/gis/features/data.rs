@@ -256,6 +256,16 @@ impl DataTable {
         self.selected = keys;
     }
 
+    /// Rows taken out of the table's selection of `layer` (a press with Ctrl on counted values, data_counts.rs).
+    pub(crate) fn unselect_rows(&mut self, layer: &str, keys: &[i64]) {
+        if self.selected_of.as_deref() != Some(layer) {
+            return;
+        }
+        for k in keys {
+            self.selected.remove(k);
+        }
+    }
+
     /// Seç's rows of a data layer that is not being edited (data_pick.rs): the table's selection, of that layer.
     pub(crate) fn select_rows(&mut self, layer: &str, keys: Vec<i64>) {
         if self.selected_of.as_deref() != Some(layer) {

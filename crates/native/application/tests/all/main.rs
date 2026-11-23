@@ -268,6 +268,9 @@ mod module_kinds;
 mod gpkg_open;
 mod topology_sources;
 mod write_receipts;
+// A data layer's field counted by its source for İstatistik and Grafik (docs/adr/9181).
+#[cfg(feature = "mod-gis")]
+mod field_counts;
 // A condition naming a field the data layer lacks (docs/adr/9132).
 mod layers_rows_fields;
 // A relation by a parent key through the commands (docs/adr/9135).

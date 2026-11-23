@@ -1,7 +1,7 @@
 //! İstatistik over a data layer (docs/adr/9130), the report's fixed data: six maintenance points whose bedel is 0, 100,
-//! 250, NULL, 50 and 100 and whose durum is acil, planlı and tamam twice each. Their rows are read from the source:
-//! while they are read the tab says so, then 5 filled, 1 empty, sum 500, mean 100, least 0; durum's values three, two
-//! each. A row changed in the edit session is counted as the drawing has it.
+//! 250, NULL, 50 and 100 and whose durum is acil, planlı and tamam twice each: 5 filled, 1 empty, sum 500, mean 100,
+//! least 0; durum's values three, two each. Every row (Tümü) is counted by the source (docs/adr/9181, data_counts.rs);
+//! Seçililer and Görünümdekiler read the rows from the source, and while they are read the tab says so.
 
 use kentos_data::{Coord, Driver as _, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value};
 
@@ -82,14 +82,11 @@ fn istatistik_counts_a_data_layers_rows_from_its_source() {
     let task = app.update(Message::Run("data.statistics"));
     drive(&mut app, task);
     ev(&mut app, crate::statistics::Event::Layer(layer.clone()));
-    // Counted once: the rows asked of the source, the tab saying it reads them.
+    // Every row (Tümü) counted by the source (docs/adr/9181): asked, counted after the message (a frame does it).
     let (count, _) = app.statistics_seen().expect("the tab is open");
     assert_eq!(count, "0 nesne");
-    assert_eq!(app.layer_rows_from(), Some(crate::charts::data::From::Reading));
-    // Read after the message (a frame does it in the program), then counted.
-    let task = app.data_rows_tasks();
+    let task = app.data_counts_tasks();
     drive(&mut app, task);
-    assert_eq!(app.layer_rows_from(), None, "read again for the rows");
     let bedel = summary(&app, "bedel");
     // Alan | Tür | Dolu | Boş | Benzersiz | En az | En çok | Ortalama | Toplam
     assert_eq!((bedel[2].as_str(), bedel[3].as_str()), ("5", "1"), "{bedel:?}");
@@ -98,9 +95,15 @@ fn istatistik_counts_a_data_layers_rows_from_its_source() {
     assert_eq!(bedel[8].replace(',', ".").parse::<f64>().ok(), Some(500.0), "{bedel:?}");
     let durum = summary(&app, "durum");
     assert_eq!((durum[2].as_str(), durum[4].as_str()), ("6", "3"), "{durum:?}");
-    // Seçililer (docs/adr/9156): B02 and B03 chosen in the table: two rows, 100 and 250.
+    // Seçililer (docs/adr/9156): B02 and B03 chosen in the table: two rows, 100 and 250. The rows are asked of the
+    // source, the tab saying it reads them, and read after the message.
     app.gis.features.data.choose_rows(&layer, [2, 3].into());
     ev(&mut app, crate::statistics::Event::Show(crate::features::Show::Selected));
+    let _ = app.statistics_seen();
+    assert_eq!(app.layer_rows_from(), Some(crate::charts::data::From::Reading));
+    let task = app.data_rows_tasks();
+    drive(&mut app, task);
+    assert_eq!(app.layer_rows_from(), None, "read again for the rows");
     let bedel = summary(&app, "bedel");
     assert_eq!(bedel[2].as_str(), "2", "{bedel:?}");
     assert_eq!(bedel[8].replace(',', ".").parse::<f64>().ok(), Some(350.0), "{bedel:?}");

@@ -26,7 +26,7 @@ use kentos_ui::theme::{Tokens, typography};
 
 use super::paint::{Step, circle, picture, round_rect, wedge};
 use super::palette::color;
-use super::{ChartsPanel, Event, Source};
+use super::{ChartsPanel, Event};
 use crate::app::Message;
 
 /// A drag shorter than this (px) is a press.
@@ -66,18 +66,9 @@ fn theme_key(t: &Tokens) -> u64 {
     c(t.surface) ^ c(t.accent).rotate_left(17) ^ c(t.text).rotate_left(34) ^ u64::from(t.is_dark)
 }
 
-/// The work of the source shown, borrowed for `f`.
+/// The work of the source shown, borrowed for `f` (a counted chart's, docs/adr/9181).
 fn with_work<R>(panel: &ChartsPanel, f: impl FnOnce(&mut Work) -> R) -> Option<R> {
-    match panel.source {
-        Source::Table if panel.table.is_some() => {
-            panel.table_data.borrow_mut().as_mut().map(|(_, w)| f(w))
-        }
-        _ => panel
-            .layer_data
-            .borrow_mut()
-            .as_mut()
-            .map(|(_, d)| f(&mut d.work)),
-    }
+    panel.with_work(f)
 }
 
 /// The chart, laid out in its room and painted.

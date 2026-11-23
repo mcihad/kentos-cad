@@ -41,6 +41,16 @@ impl Work {
         }
     }
 
+    /// A chart's work over rows that stand for others (a value a data source counted, docs/adr/9181): `all` each
+    /// row's place repeated as many times as the rows it stands for, so a pie's colours rank the values by every row
+    /// holding them, as they would over the rows read.
+    pub fn counted(data: DataSet, all: Vec<u32>) -> Work {
+        Work {
+            all,
+            ..Work::new(data)
+        }
+    }
+
     pub fn rows(&self) -> usize {
         self.data.rows
     }

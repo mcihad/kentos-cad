@@ -576,3 +576,15 @@ numaraları raporunkidir.
   - Değer listesi, koşullu alan, alt bakım kayıtları, rol kısıtı ve sürüm yükseltmesi tek yolda birlikte sınanıyor.
   - Kusur: Yeni alt kayıt kimlik yazıyordu; artık ilişkinin üst anahtarının değerini (yolun kodu) yazıyor.
   - Kalan: kısıtın kaynakta da uygulanması (GeoPackage, PostgreSQL), web (TODOS.md §0.2).
+- [x] **VY-80 — İstatistik ve Grafik veri katmanını kaynağın kendi sayımıyla sayar (rapor 17'nin kalanı).**
+  ([ADR 9181](../docs/adr/9181-statistics-counted-by-the-source.md))
+  - Tümü'de her alan kaynağın `GROUP BY`'ıyla sayılır; satırlar okunmaz. Toplamı ve ortalamayı KentOS kesin ondalıkla
+    yapar (kaynağın `SUM`/`AVG`'si kayan noktalıdır).
+  - Sonuçlar okunan satırlarınkiyle aynı, oturumdaki satırlar dahil. Tek alan okuyan grafik de kaynağın sayımıyla
+    çizilir.
+  - Bir milyon parselin yedi alanı: 31 931 ms ve 5 536 MB yerine 5 713 ms ve 736 MB (hata ayıklama derlemesi);
+    özetler harfi harfine aynı.
+  - Değere ya da çubuğa basmak o satırları tabloda seçer (Shift ekler, Ctrl çıkarır). Satırları okunan yoldaki
+    olmayan yuva kusuru düzeldi.
+  - Kalan: Seçililer, Görünümdekiler ve iki alanlı grafiklerin kaynakta sayımı; PostgreSQL'de ve sürüm derlemesinde
+    ölçüm; gerçek pencere; web.

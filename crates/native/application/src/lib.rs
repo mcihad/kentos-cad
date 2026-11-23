@@ -503,6 +503,10 @@ pub mod layers_session;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layer_classes.rs"]
 pub mod layer_classes;
+// A data layer's field counted by its source for İstatistik and Grafik (docs/adr/9181).
+#[cfg(feature = "mod-gis")]
+#[path = "gis/field_counts.rs"]
+pub mod field_counts;
 #[cfg(feature = "mod-gis")]
 #[path = "gis/layer_export.rs"]
 pub mod layer_export;

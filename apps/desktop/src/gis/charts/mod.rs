@@ -8,6 +8,10 @@
 //! kopyala copies them; Kaydet saves it as PNG or SVG (export.rs).
 //!
 //! The choices are kept for the session; another drawing starts them again.
+//!
+//! A chart of a data layer's every row that reads one field (Çubuk and Pasta
+//! by count, Histogram, Kutu without groups) is drawn from the field as its
+//! source counted it (docs/adr/9181, data_counts.rs); its rows are not read.
 
 use std::cell::{Cell, RefCell};
 
@@ -269,6 +273,28 @@ pub(crate) struct ChartsPanel {
     pub(crate) whole: crate::statistics::Whole,
     /// The chart's picture as last painted.
     pub(crate) painted: canvas::Painted,
+    /// A data layer's chart drawn from its field as the source counted it (docs/adr/9181).
+    pub(crate) counted: RefCell<Option<CountedChart>>,
+}
+
+/// A data layer's chart drawn from its field as its source counted it (docs/adr/9181): the layer, the field, what its
+/// counted cells stand for and the work on them.
+pub(crate) struct CountedChart {
+    pub layer: String,
+    pub field: String,
+    pub picker: crate::data_counts::Picker,
+    pub work: Work,
+}
+
+impl ChartsPanel {
+    /// The work the chart shown is drawn from: a counted chart's, the layer's or the table's.
+    pub(crate) fn with_work<R>(&self, f: impl FnOnce(&mut Work) -> R) -> Option<R> {
+        match self.source {
+            Source::Table if self.table.is_some() => self.table_data.borrow_mut().as_mut().map(|(_, w)| f(w)),
+            _ if self.chart.borrow().counted => self.counted.borrow_mut().as_mut().map(|c| f(&mut c.work)),
+            _ => self.layer_data.borrow_mut().as_mut().map(|(_, d)| f(&mut d.work)),
+        }
+    }
 }
 
 /// A spec with another kind: its columns stay, its aggregate starts at the
@@ -515,11 +541,11 @@ impl App {
             Event::Save(picture) => return self.save_chart(picture),
             Event::Saved(Ok(file)) => self.say(Level::Success, texts::saved(&file)),
             Event::Saved(Err(why)) => self.error(why),
-            Event::Press(element) => self.chart_press(element),
+            Event::Press(element) => return self.chart_press(element),
             Event::Within(r) => {
                 let rows = self.charts_work(|w| w.rows_within(r[0], r[1], r[2], r[3]));
                 if let Some(rows) = rows {
-                    self.pick_rows(&rows);
+                    return self.pick_rows(&rows);
                 }
             }
             Event::OpenStatistics(layer) => self.open_statistics(layer),
@@ -531,43 +557,81 @@ impl App {
     /// A press on the chart: the element's objects selected (Shift adds, Ctrl
     /// takes away); the background clears the selection. A table's rows are
     /// no objects: a press there selects nothing.
-    fn chart_press(&mut self, element: Option<u32>) {
+    fn chart_press(&mut self, element: Option<u32>) -> Task<Message> {
         if self.gis.charts.source != Source::Layer {
-            return;
+            return Task::none();
         }
         match element {
             Some(e) => {
+                // A data layer's chart counted by its source (docs/adr/9181): the element's values asked of the source.
+                let counted = self.gis.charts.counted.borrow().as_ref().filter(|_| self.gis.charts.chart.borrow().counted).map(|c| {
+                    (c.layer.clone(), c.field.clone(), c.picker.picked(c.work.element_rows(e as usize)))
+                });
+                if let Some((layer, field, picked)) = counted {
+                    let label = self.element_label(e as usize);
+                    return self.pick_values(&layer, &field, label, picked);
+                }
                 let rows = self.charts_work(|w| w.element_rows(e as usize).to_vec());
                 if let Some(rows) = rows {
-                    self.pick_rows(&rows);
+                    return self.pick_rows(&rows);
                 }
             }
             None => {
                 let m = self.modifiers;
                 if !m.shift() && !m.control() && !m.logo() {
                     self.selection.clear();
+                    // A data layer's rows are chosen in its table (docs/adr/9181): cleared too.
+                    if let Some(layer) = self.chart_layer()
+                        && self.gis.features.data.any_selected_of(&layer)
+                    {
+                        self.gis.features.data.clear_selection();
+                    }
                 }
             }
         }
+        Task::none()
     }
 
-    /// The layer's rows picked as the drawing's selection.
-    pub(crate) fn pick_rows(&mut self, rows: &[u32]) {
-        let slots = self
-            .gis
-            .charts
-            .layer_data
-            .borrow()
-            .as_ref()
-            .map(|(_, d)| d.slots_of(rows));
-        if let Some(slots) = slots {
-            self.apply_pick(slots);
+    /// What an element of the chart shown stands for, as its table's row names it: a bar's or a slice's category, a
+    /// box's group, an interval's bounds.
+    fn element_label(&self, element: usize) -> Option<String> {
+        let now = self.gis.charts.chart.borrow();
+        let row = now.table.as_ref()?.rows.get(element)?;
+        match now.kind? {
+            ChartKind::Histogram => Some(format!("{} – {}", row.first()?, row.get(1)?)),
+            ChartKind::Box if now.spec.as_ref().is_some_and(|s| s.group.is_none()) => None,
+            _ => row.first().cloned(),
         }
     }
 
-    /// Something read from the chart's work as it is now (the layer's or the table's).
+    /// The layer's rows picked (Shift adds, Ctrl takes away): the drawing's objects as its selection, a data layer's
+    /// rows read from its source in its table (docs/adr/9181).
+    pub(crate) fn pick_rows(&mut self, rows: &[u32]) -> Task<Message> {
+        let picked = self.gis.charts.layer_data.borrow().as_ref().map(|(_, d)| (d.picked(rows), d.layer().to_owned()));
+        let Some(((slots, keys), layer)) = picked else {
+            return Task::none();
+        };
+        let pick = self.pick_now();
+        self.apply_pick(slots);
+        let data = self.document.as_ref().and_then(|d| d.model.layers().get(&layer)).is_some_and(|n| n.data.is_some());
+        if data {
+            use crate::data_counts::Pick;
+            let table = &mut self.gis.features.data;
+            match pick {
+                Pick::Replace => table.choose_rows(&layer, keys.into_iter().collect()),
+                Pick::Add => table.select_rows(&layer, keys),
+                Pick::Remove => table.unselect_rows(&layer, &keys),
+            }
+        }
+        Task::none()
+    }
+
+    /// Something read from the chart's work as it is now (the layer's, a counted chart's or the table's).
     pub(crate) fn charts_work<R>(&self, read: impl FnOnce(&Work) -> R) -> Option<R> {
         match self.gis.charts.source {
+            Source::Layer if self.gis.charts.chart.borrow().counted => {
+                self.gis.charts.counted.borrow().as_ref().map(|c| read(&c.work))
+            }
             Source::Layer => self
                 .gis
                 .charts

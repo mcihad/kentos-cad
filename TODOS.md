@@ -2603,6 +2603,9 @@ Liste:
   tutsun (girdi, sayı birimiyle, yazılan katman); web'in `buffer.ts`'i geçersiz girdiyi söylesin, onarmasın.
 - [ ] Yeni alt kayıt üst kaydın kodunu alır (ADR 9180, 23 Kasım 2026): web'in formunda ilişkili öğenin Yeni'si, proje
   ilişkisi üst anahtarla bağlıyorsa alt kayda kimlik değil kodu yazsın; anahtar boşsa nedenini söylesin.
+- [ ] Kaynağın kendi sayımı (ADR 9181, 23 Kasım 2026): web'in İstatistik ve Grafik'i veri katmanının alanlarını
+  kaynağın `GROUP BY`'ıyla saysın (her değer bir hücre, yeri satır sayısı kadar tekrarlı); değere ya da çubuğa
+  basmak o satırları tabloda seçsin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

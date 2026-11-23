@@ -41,6 +41,8 @@ pub(crate) struct LayerData {
     /// A data layer's rows read from its source (docs/adr/9156): each row's key (none: a new row) and box, for
     /// Seçililer (the table's selection) and Görünümdekiler (the view).
     source: Vec<(Option<i64>, [f64; 4])>,
+    /// Of a data layer's rows, the ones the drawing holds (they have their slots; the others only their keys).
+    drawn: Vec<bool>,
 }
 
 impl LayerData {
@@ -83,6 +85,7 @@ impl LayerData {
             at,
             from: From::Drawing,
             source: Vec::new(),
+            drawn: Vec::new(),
         }
     }
 
@@ -107,6 +110,7 @@ impl LayerData {
                 (*k, [b.min_x, b.min_y, b.max_x, b.max_y])
             })
             .collect();
+        let drawn: Vec<bool> = keyed.iter().map(|(_, slot, _)| slot.is_some()).collect();
         // A drawing's object keeps its slot (the drawing's selection finds it); a source row gets one past the drawing's.
         let slots: Vec<Slot> = keyed
             .iter()
@@ -129,7 +133,33 @@ impl LayerData {
             at,
             from,
             source,
+            drawn,
         }
+    }
+
+    /// The layer the data is of.
+    pub fn layer(&self) -> &str {
+        &self.layer
+    }
+
+    /// The rows picked (a press on a value or a chart's element): the drawing's objects among them by their slots, a
+    /// data layer's source rows by their keys (docs/adr/9181), to be picked in its table.
+    pub fn picked(&self, rows: &[u32]) -> (Vec<Slot>, Vec<i64>) {
+        if self.source.is_empty() {
+            return (self.slots_of(rows), Vec::new());
+        }
+        let (mut slots, mut keys) = (Vec::new(), Vec::new());
+        for &r in rows {
+            let r = r as usize;
+            if self.drawn.get(r).copied().unwrap_or(false) {
+                slots.extend(self.slots.get(r).copied());
+            } else if let Some((Some(k), _)) = self.source.get(r) {
+                keys.push(*k);
+            }
+        }
+        keys.sort_unstable();
+        keys.dedup();
+        (slots, keys)
     }
 
     /// Göster's rows: every object, the selected ones or the ones in the view.

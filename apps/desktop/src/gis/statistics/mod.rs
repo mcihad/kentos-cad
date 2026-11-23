@@ -6,6 +6,10 @@
 //! The core counts (`ops::charts::fields`); the summaries are counted a few
 //! fields a frame (8 ms at most, one at least) so a large layer never
 //! freezes the window. The layer and Göster are Grafik's (charts/).
+//!
+//! A data layer's every row (Göster: Tümü) is counted by its source
+//! (docs/adr/9181): each field by the source's own `GROUP BY`
+//! (data_counts.rs), summed up as its count comes; the rows are not read.
 
 use std::time::{Duration, Instant};
 
@@ -17,13 +21,17 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
 use crate::charts::now::LayerKey;
+use crate::data_counts::{Picker, shape_columns};
 use crate::features::Show;
 
+mod counted;
 mod source;
 #[cfg(test)]
 mod source_tests;
 mod view;
 
+pub(crate) use counted::Counted;
+use counted::CountedKey;
 pub(crate) use source::Whole;
 
 /// The tab's words (the web's `STATISTICS_TEXTS`).
@@ -112,6 +120,21 @@ pub(crate) struct StatsNow {
     /// The chosen field's statistics, for the rows and the field it was counted for.
     pub detail: Option<Detail>,
     detail_for: Option<(LayerKey, RowsKey, String)>,
+    /// Counted by the source (docs/adr/9181): what for, and how the counts stand.
+    counted_key: Option<CountedKey>,
+    pub counted: Option<Counted>,
+    /// Each summary's count (its number), to sum a field counted again up again.
+    seqs: Vec<Option<u64>>,
+    /// What the chosen field's counted cells stand for, and its count's number: a value row's press asks for its rows.
+    pub grouped: Option<Picker>,
+    grouped_for: Option<(String, u64)>,
+}
+
+impl StatsNow {
+    /// The rows the tab counts: Göster's, or a data layer's every row as its source counted them.
+    pub(crate) fn shown(&self) -> usize {
+        if self.counted.is_some() { self.objects } else { self.rows.len() }
+    }
 }
 
 impl App {
@@ -151,6 +174,9 @@ impl App {
     /// again when the data or the rows changed; the chosen field's
     /// statistics are counted at once.
     pub(crate) fn stats_refresh(&self) {
+        if self.stats_refresh_counted() {
+            return;
+        }
         let p = &self.gis.charts;
         let Some(data) = self.stats_data_now() else {
             *p.stats.borrow_mut() = StatsNow::default();
@@ -199,6 +225,10 @@ impl App {
         if !self.command_expanded || self.bottom_tab != BottomTab::Statistics {
             return false;
         }
+        // A data layer counted by its source (docs/adr/9181).
+        if let Some(waiting) = self.stats_counted_waiting() {
+            return waiting;
+        }
         let stats = self.gis.charts.stats.borrow();
         let fresh = match (&stats.key, self.document.as_ref(), self.chart_layer()) {
             (Some((k, rows)), Some(doc), Some(layer)) => {
@@ -213,6 +243,10 @@ impl App {
     /// Summaries counted: as many as `budget` allows, one at least; all without one.
     fn count_within(&self, budget: Option<Duration>) {
         self.stats_refresh();
+        if self.gis.charts.stats.borrow().counted_key.is_some() {
+            self.count_counted(budget);
+            return;
+        }
         let start = Instant::now();
         let mut now = self.gis.charts.stats.borrow_mut();
         let mut held = self.gis.charts.layer_data.borrow_mut();
@@ -243,7 +277,7 @@ impl App {
         self.count_within(None);
         let now = self.gis.charts.stats.borrow();
         Some((
-            texts::objects(now.rows.len()),
+            texts::objects(now.shown()),
             now.summaries
                 .iter()
                 .map(|s| {
@@ -268,31 +302,36 @@ impl App {
                 return self.stats_whole();
             }
             Event::Value(i) => {
-                let rows = self
-                    .gis
-                    .charts
-                    .stats
-                    .borrow()
-                    .detail
-                    .as_ref()
-                    .and_then(|d| d.values.get(i))
-                    .map(|v| v.rows.clone());
-                if let Some(rows) = rows {
-                    self.pick_rows(&rows);
+                let (row, picked) = {
+                    let now = self.gis.charts.stats.borrow();
+                    let row = now.detail.as_ref().and_then(|d| d.values.get(i)).map(|v| (v.rows.clone(), v.text.clone()));
+                    let picked = row.as_ref().and_then(|(rows, _)| now.grouped.as_ref().map(|p| p.picked(rows)));
+                    (row, picked)
+                };
+                let Some((rows, text)) = row else {
+                    return Task::none();
+                };
+                // A data layer counted by its source (docs/adr/9181): the value's rows asked of the source.
+                if let (Some(picked), Some(layer), Some(field)) = (picked, self.chart_layer(), self.gis.charts.field.clone()) {
+                    return self.pick_values(&layer, &field, Some(text), picked);
                 }
+                return self.pick_rows(&rows);
             }
             Event::Chart => {
                 let Some(field) = self.gis.charts.field.clone() else {
                     return Task::none();
                 };
-                let spec = self
-                    .gis
-                    .charts
-                    .layer_data
-                    .borrow()
-                    .as_ref()
-                    .map(|(_, d)| for_column(&d.work.data, &field));
                 let layer = self.chart_layer();
+                // A data layer's columns are its fields, its rows unread (docs/adr/9181).
+                let shape = self.document.as_ref().zip(layer.as_ref()).and_then(|(doc, l)| {
+                    doc.model.layers().get(l)?.data.as_ref()?;
+                    let columns = shape_columns(self, doc, l).into_iter().map(|(c, _)| c).collect();
+                    Some(kentos_geometry_core::ops::charts::data::DataSet { rows: 0, columns })
+                });
+                let spec = match shape {
+                    Some(data) => Some(for_column(&data, &field)),
+                    None => self.gis.charts.layer_data.borrow().as_ref().map(|(_, d)| for_column(&d.work.data, &field)),
+                };
                 if let Some(spec) = spec {
                     self.open_chart(layer, None, Some(spec));
                 }

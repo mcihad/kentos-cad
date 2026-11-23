@@ -17,6 +17,8 @@ use crate::app::App;
 use crate::document::Document;
 use crate::features::Show;
 
+mod counted;
+
 /// A layer's data as read: the drawing's session and generation, the layer, and the unit (its bits).
 pub(crate) type LayerKey = (u64, u64, String, u64);
 
@@ -32,6 +34,9 @@ pub(crate) fn layer_key(doc: &Document, layer: &str) -> LayerKey {
 enum DataKey {
     Layer(LayerKey),
     Table(u64),
+    /// A data layer's field as its source counted it (docs/adr/9181): the layer's data, the drawing's writes to the
+    /// sources, the field and its count's number (none while it is counted, or when it could not be).
+    Counted(LayerKey, u64, String, Option<u64>),
 }
 
 /// Göster's rows as they depend on the selection (Seçililer) and the view (Görünümdekiler).
@@ -65,6 +70,8 @@ pub(crate) struct ChartNow {
     marked: Option<u64>,
     /// Bumped whenever the picture changes: the chart or its marks.
     pub stamp: u64,
+    /// Drawn from a data layer's field as its source counted it (docs/adr/9181): the panel's counted chart's work.
+    pub counted: bool,
 }
 
 impl App {
@@ -133,6 +140,8 @@ impl App {
                 .borrow()
                 .as_ref()
                 .map(|(_, d)| read(&d.work.data)),
+            // The data the rows are read for is never a count (docs/adr/9181).
+            DataKey::Counted(..) => None,
         }
     }
 
@@ -141,6 +150,11 @@ impl App {
     pub(crate) fn whole_spec(&self) -> Option<Spec> {
         let p = &self.gis.charts;
         let table = self.charting_table();
+        // A data layer's columns are its fields: its rows are not read for them (docs/adr/9181).
+        if !table && let Some(data) = self.data_layer_shape() {
+            let kept = p.layer_spec.clone();
+            return Some(complete(&kept.unwrap_or_else(|| Spec::new(ChartKind::Bar)), &data));
+        }
         self.with_chart_data(|data| {
             let kept = if table {
                 p.table_spec
@@ -182,6 +196,9 @@ impl App {
     /// now: worked out again when its data, its rows or its spec changed,
     /// marked again when the selection did.
     pub(crate) fn chart_refresh(&self) {
+        if self.chart_refresh_counted() {
+            return;
+        }
         let p = &self.gis.charts;
         let (Some(data), Some(spec)) = (self.chart_data_now(), self.whole_spec()) else {
             let stamp = p.chart.borrow().stamp + 1;

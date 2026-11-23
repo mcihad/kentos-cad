@@ -1539,6 +1539,8 @@ mod data_edits;
 mod data_pending;
 #[path = "gis/data_rows.rs"]
 mod data_rows;
+#[path = "gis/data_counts.rs"]
+mod data_counts;
 #[path = "gis/data_journal.rs"]
 mod data_journal;
 #[path = "gis/data_pick.rs"]
