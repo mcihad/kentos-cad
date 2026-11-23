@@ -7,6 +7,9 @@ impl Viewport {
     pub fn new() -> Self {
         Self {
             camera: Camera::default(),
+            live: super::live::LiveView::new(Camera::default()),
+            live_sent: std::cell::Cell::new(Camera::default()),
+            pointer_px: None,
             sheet_saved_camera: None,
             cursor: None,
             bounds: Rectangle::default(),
@@ -203,8 +206,14 @@ impl Viewport {
                     self.fit(doc);
                 }
             }
-            Event::Moved(at) => self.cursor = Some(self.world(at)),
-            Event::Left => self.cursor = None,
+            Event::Moved(at) => {
+                self.pointer_px = Some(at);
+                self.cursor = Some(self.world(at));
+            }
+            Event::Left => {
+                self.pointer_px = None;
+                self.cursor = None;
+            }
             Event::Panned { by, at } => {
                 self.camera.pan_by(f64::from(by.x), f64::from(by.y));
                 self.cursor = Some(self.world(at));
@@ -216,6 +225,14 @@ impl Viewport {
                 self.cursor = Some(self.world(at));
                 self.zoomed_at = Some(Instant::now());
                 self.moved_at = self.zoomed_at;
+            }
+            // A gesture the area made on its live camera, settled (live.rs): its camera is the app's now, and the
+            // pointer's world point is the one under the same place of the screen. The view has already been still
+            // for the labels' settle: they and screen-sized symbols are placed for it at once.
+            Event::ViewChanged { to, .. } => {
+                self.camera = to;
+                self.live_sent.set(to);
+                self.cursor = self.pointer_px.map(|at| self.world(at));
             }
             // The app fits the store's box (`App::zoom_extents`); this is its objects' boxes.
             Event::Extents => {
@@ -330,7 +347,6 @@ impl Viewport {
             document: doc.session,
             parts: [grid, underlay, fixed, curves, construction, selected, hovered],
             origin,
-            camera: self.camera,
             settings,
             status: self.status.clone(),
             cursor,
@@ -345,6 +361,7 @@ impl Viewport {
             moving: self.moving(),
             drawing,
             keep: !self.fresh,
+            live: self.live_for_view(),
             other: self.other,
             passive: self.passive,
         })
@@ -631,6 +648,22 @@ impl Viewport {
     #[cfg(test)]
     pub(crate) fn hold_moving(&mut self, on: bool) {
         self.moved_at = on.then(|| Instant::now() + std::time::Duration::from_secs(3600));
+    }
+
+    /// The live camera for the area this view builds (live.rs): a change the app made to its own camera since the last
+    /// view is pushed to it first, and ends a gesture the area was running (the app's change wins).
+    pub(super) fn live_for_view(&self) -> super::live::LiveView {
+        if self.camera != self.live_sent.get() {
+            self.live.set(self.camera);
+            self.live_sent.set(self.camera);
+        }
+        self.live.clone()
+    }
+
+    /// A gesture the area is running or has not yet told, taken by the app before it reads the pointer (live.rs):
+    /// the camera it started at and the one the area shows.
+    pub fn take_live(&mut self) -> Option<(Camera, Camera)> {
+        self.live.take()
     }
 
     /// Whether the view is moving (a pan or the wheel within the last [`SYMBOLS_SETTLE`]): the labels keep their
@@ -960,8 +993,14 @@ impl Viewport {
 
     /// The world point at a position of the area, through the float64 camera.
     pub fn world(&self, at: Point) -> Vec2 {
-        self.camera
+        self.shown()
             .screen_to_world(f64::from(at.x), f64::from(at.y))
+    }
+
+    /// The camera the area shows: a running gesture's live one (live.rs), else the app's. The pointer's world point
+    /// and a snap's reach are read through it, so a move while the wheel turns lands where the screen shows it.
+    pub fn shown(&self) -> Camera {
+        if self.live.moving() { self.live.camera() } else { self.camera }
     }
 }
 

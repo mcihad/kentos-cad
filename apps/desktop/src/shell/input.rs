@@ -606,6 +606,17 @@ impl App {
     /// What the drawing area reports: the view changes, and the pointer goes
     /// to the running tool, or to the select tool while none runs (docs/adr/0029).
     pub(crate) fn pointer(&mut self, event: viewport::Event) -> Task<Message> {
+        // A gesture the area ran on its live camera comes first (viewport/live.rs, docs/adr/9205) for what acts on the
+        // drawing: a press, a menu, Tümünü göster read the camera the screen shows. A move does not take it: the app
+        // would build the view's labels and curves again on every move while the wheel turns. It reads the pointer
+        // through the live camera instead (`Viewport::world`).
+        if !matches!(
+            event,
+            viewport::Event::ViewChanged { .. } | viewport::Event::Moved(_) | viewport::Event::Left
+        ) && let Some((from, to)) = self.viewport.take_live()
+        {
+            let _ = self.pointer(viewport::Event::ViewChanged { from, to });
+        }
         // A press on the drawing, or a pan with the middle button, keeps the text
         // field's text first (the web's blur); the wheel does not (text_field.rs).
         if matches!(
@@ -692,7 +703,10 @@ impl App {
             // The view moved under a still pointer (the wheel, a pan, Tümünü göster): the object it rested on is no
             // longer under it. Its highlight and rollover card go until the pointer moves (docs/adr/9204); they stayed
             // and named the object under the pointer before the wheel turned, over an empty part of the drawing.
-            viewport::Event::Zoomed { .. } | viewport::Event::Panned { .. } | viewport::Event::Extents => {
+            viewport::Event::Zoomed { .. }
+            | viewport::Event::Panned { .. }
+            | viewport::Event::Extents
+            | viewport::Event::ViewChanged { .. } => {
                 if !self.session.is_running() {
                     self.selection.set_hover(None);
                 }
@@ -714,10 +728,11 @@ impl App {
         self.sync_sheet_model_index();
         let raw = self.viewport.world(at);
         let draft = self.snap_draft();
+        let shown = self.viewport.shown();
         self.snap = match &self.document {
             Some(doc) => {
                 self.spatial.sync(&doc.model);
-                let view = CameraView(&self.viewport.camera);
+                let view = CameraView(&shown);
                 let own = self
                     .session
                     .snap(&self.spatial, raw, &view, &draft, &self.tracking);

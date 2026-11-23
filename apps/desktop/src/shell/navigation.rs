@@ -155,7 +155,9 @@ impl App {
         match event {
             viewport::Event::Panned { .. } if !was_panning => self.view_history.record(before),
             viewport::Event::Extents => self.view_history.record(before),
-            viewport::Event::Zoomed { .. } => {
+            // A settled gesture of the area's live camera (docs/adr/9205) is a wheel series: one record, or none when it
+            // follows the last within the wheel's pause.
+            viewport::Event::Zoomed { .. } | viewport::Event::ViewChanged { .. } => {
                 let at = self.view_clock.unwrap_or_else(clock);
                 self.view_history.record_wheel(before, at);
             }

@@ -81,10 +81,27 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F1 — Tuval arayüzden ayrılır
 
-- [ ] **RM-05 — Kamera ve jestler tuvale geçer.**
-  - `Message::Viewport` kalkar.
-  - Durum çubuğundaki koordinat kendi küçük bileşeninden okunur.
-  - Görünüm geçmişi, Büyüteç ve bölünmüş görünüm uyarlanır.
+- [x] **RM-05 — Kamera ve jestler tuvale geçer.** ([ADR 9205](../docs/adr/9205-live-camera-in-the-canvas.md),
+  [ölçü](../docs/perf/files-desktop-rm05-2026-11-23.md))
+  - Tekerlek ve orta tuşla kaydırma, çizim alanının canlı kamerasını widget'ın içinde değiştirir ve yalnız kare ister;
+    uygulamanın `update`'i ve `view`'ı çalışmaz.
+  - Görünüm 150 ms durunca uygulamaya tek ileti gider (`ViewChanged`); ağır iş o zaman, jest başına bir kez yapılır.
+  - Üst katmanlar canlı görünümü izler (`Follow`):
+    - yazılar ve veri katmanlarının işaretleri taşınıp ölçeklenir;
+    - ekran boyutlu işaretler, kartlar ve düzenleyiciler görünüm durana kadar gizlenir.
+  - Jest sürerken imleç hareketi dünya noktasını canlı kameradan okur; basma jesti önce alır.
+  - **Ölçü (UHD 770):**
+    - tekerlek karesinde UI 23,6–92,8 ms → 0,2 ms;
+    - görünüm 32 karenin 32'sinde → 1'inde;
+    - kaydırmada 40 → 0;
+    - bütçeyi aşan tekerlek karesi 16–32 → 0–1.
+  - **Gerçek pencerede** NCZ'de ilk değişim 1 074 → 330 ms (içeri) ve 260 → 127 ms (dışarı).
+  - **Denetçi:** durmuş görünümde dört dosyada fark 0.
+  - **Bedel:** resmin son hâline varış uzadı (59–313 → 294–591 ms). Dinlenmedeki ağır kare RM-07 ve RM-08..10'da
+    arayüz iş parçacığından çıkacak.
+  - **Planda olmayan:**
+    - `Message::Viewport` kalkmadı, çünkü imleç ve tıklama araçların iletisi olarak kalıyor;
+    - durum çubuğundaki ölçek görünüm durunca değişiyor.
 - [ ] **RM-06 — Seçim ve gezinme vurgusu motora geçer.** Seçim değişince yalnız ilgili panel değişir.
 
 ### F2 — Çizim iş parçacığı

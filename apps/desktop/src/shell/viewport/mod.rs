@@ -24,7 +24,9 @@
 //! The selection and the hovered object are two more scene parts, drawn after
 //! every layer (`highlight.rs`, docs/adr/0029).
 
+pub(crate) mod follow;
 pub(crate) mod highlight;
+pub(crate) mod live;
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -119,6 +121,9 @@ pub enum Event {
     Zoomed { factor: f64, at: Point },
     /// Show everything (a middle double click).
     Extents,
+    /// A wheel turn or a middle-button pan the area made on its live camera has settled (live.rs, docs/adr/9205): from
+    /// the camera it started at to the one it stopped at. Wheel turns and pans reach the app so, once a gesture.
+    ViewChanged { from: Camera, to: Camera },
     /// Put this world point in the middle of the area.
     CenterOn(Vec2),
     /// The left button went down here (logical pixels from the area's top-left).
@@ -306,6 +311,13 @@ type KeptLineTypes = (
 /// The drawing area's state in the app.
 pub struct Viewport {
     pub camera: Camera,
+    /// The camera the area draws with while a gesture runs, shared with its widget (live.rs, docs/adr/9205).
+    pub(crate) live: live::LiveView,
+    /// The app's camera last given to `live`: a change of the app's own is pushed when its view is built.
+    live_sent: std::cell::Cell<Camera>,
+    /// Where the pointer is on the area, logical pixels; `None` off it. A settled gesture puts the world point under
+    /// it again through the camera it stopped at (docs/adr/9205).
+    pointer_px: Option<Point>,
     pub sheet_saved_camera: Option<Camera>,
     /// The world point under the pointer; `None` off the area.
     pub cursor: Option<Vec2>,
@@ -551,7 +563,6 @@ struct Program {
     /// The grid, the drawing's parts and the highlights, bottom first.
     parts: [Arc<ScenePart>; 7],
     origin: Vec2,
-    camera: Camera,
     settings: RenderSettings,
     status: Arc<Mutex<Status>>,
     /// The pointer's look the running tool asks for over the area.
@@ -567,6 +578,8 @@ struct Program {
     drawing: Option<u64>,
     /// A picture of an earlier frame may serve (`FrameInput::keep_picture`); off for `Viewport::fresh`.
     keep: bool,
+    /// The camera the area draws with while a gesture runs (live.rs, docs/adr/9205).
+    live: live::LiveView,
     /// The inactive view of a split area (docs/adr/0285 §3).
     other: Option<usize>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
@@ -656,6 +669,17 @@ impl shader::Program<Message> for Program {
                 Hold::Wait(until) => shader::Action::request_redraw_at(until),
             });
         }
+        // A live gesture settled: the app is told once, from where it started to where it stopped (live.rs).
+        if let iced::Event::Window(iced::window::Event::RedrawRequested(now)) = event
+            && let Some(at) = self.live.settles_at()
+        {
+            if *now < at {
+                return Some(shader::Action::request_redraw_at(at));
+            }
+            if let Some((from, to)) = self.live.take() {
+                return Some(shader::Action::publish(self.message(Event::ViewChanged { from, to })));
+            }
+        }
         // Screen-sized symbols wait for the wheel to stop, then are built again (docs/adr/0090).
         if let iced::Event::Window(iced::window::Event::RedrawRequested(now)) = event
             && let Some(at) = self.settle_at
@@ -685,6 +709,18 @@ impl shader::Program<Message> for Program {
             };
         }
         let action = match event {
+            // The wheel and a middle-button pan of the active view move its live camera: a frame, no message, no
+            // view of the app's (live.rs, docs/adr/9205). The app hears of it once the view settles.
+            // A frame drawn afresh (`Viewport::fresh`) takes the old way: every turn a message, the truth the live
+            // view is checked against (perf::oracle).
+            Some(Event::Zoomed { factor, at }) if self.other.is_none() && self.keep => {
+                self.live.zoom(factor, at, Instant::now());
+                shader::Action::request_redraw()
+            }
+            Some(Event::Panned { by, .. }) if self.other.is_none() && self.keep => {
+                self.live.pan(by, Instant::now());
+                shader::Action::request_redraw()
+            }
             Some(event) => shader::Action::publish(self.message(event)),
             None => shader::Action::request_redraw(),
         };
@@ -696,17 +732,19 @@ impl shader::Program<Message> for Program {
     }
 
     fn draw(&self, _state: &Gesture, _cursor: mouse::Cursor, _bounds: Rectangle) -> Frame {
+        // The live camera: a gesture's frames are drawn without the app's view (live.rs).
+        let camera = self.live.camera();
         Frame {
             id: self.id,
             parts: self.parts.clone(),
             origin: self.origin,
-            camera: self.camera,
+            camera,
             settings: self.settings,
             status: self.status.clone(),
             styled: self.styled.clone(),
             images: self.images.clone(),
             lens: false,
-            moving: self.moving,
+            moving: self.moving || self.live.moving(),
             drawing: self.drawing,
             keep: self.keep,
         }

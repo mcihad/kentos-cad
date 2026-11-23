@@ -185,6 +185,9 @@ fn play(t: &mut Twins) {
                 t.frame("tekerlek", &[wheel(lines)]);
             }
             std::thread::sleep(Duration::from_millis(200));
+            // The live gesture settles in this frame's redraw (viewport/live.rs); the next one shows the view built
+            // for where it stopped.
+            t.frame("tekerlek-dinleniyor", &[]);
             t.frame("tekerlek-dinlenme", &[]);
         }
         for lines in [1.0, -1.0] {
@@ -194,6 +197,7 @@ fn play(t: &mut Twins) {
                 t.frame("patlama-sonrasi", &[]);
             }
             std::thread::sleep(Duration::from_millis(200));
+            t.frame("patlama-dinleniyor", &[]);
             t.frame("patlama-dinlenme", &[]);
         }
         pan(t, center);
@@ -221,6 +225,7 @@ fn pan(t: &mut Twins, center: Point) {
     }
     t.frame("kaydirma", &[Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Middle))]);
     std::thread::sleep(Duration::from_millis(200));
+    t.frame("kaydirma-dinleniyor", &[]);
     t.frame("kaydirma-dinlenme", &[]);
 }
 
