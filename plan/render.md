@@ -34,13 +34,26 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F0 — Ölçüm, doğruluk denetçisi, hızlı düzeltmeler
 
-- [ ] **RM-01 — Ölçüm koşumu.** Ölçümün araçları:
-  - Gerçek pencere sürücüsüne `burst` komutu: tekerlek çentiklerinin arasında beklemeden görüntü alır.
-  - Kare istatistiklerine eklenenler: CPU hazırlık süresi, GPU süresi, çizilen köşe ve döşeme sayısı.
-  - Arayüzün yeniden kurulma sayacı (`App::view`).
-  - Pencere açmadan gerçek GPU'da ölçen bir ikili: dosyayı yükler, bir kamera yolunu ekran dışında oynatır.
-  - Veri kümeleri: sivas.kcad (1 M nesne), SIVAS_UIP_2025_06 NCZ (453 534), SİVAS AVM DWG (601 619), Suşehri DXF,
-    1 M PostGIS parseli (yalnız yalıtılmış `kentos-portal-db`).
+- [x] **RM-01 — Ölçüm koşumu.** ([ADR 9201](../docs/adr/9201-render-measurement.md),
+  [taban](../docs/perf/files-desktop-once-2026-11-23.md))
+  - `perf::files`: gerçek dosyalar uygulamanın kendi açılışıyla, kendi sürecinde açılır. Ölçülenler:
+    - `perf::large`'ın izi;
+    - on dört çentiklik patlama;
+    - “Tümünü göster”in kutusu;
+    - bir tıkla seçim;
+    - bellek.
+
+    Ölçüm gerçek GPU'da yapılır ve pencere açmaz.
+  - Gerçek pencere sürücüsüne `burst` eklendi: çentikler beklemeden verilir, ekran ilk çentikten önce izlenmeye
+    başlar. İlk ve son değişimin süresi yazılır.
+  - **Taban çizgisi** (UHD 770, release):
+    - Tekerlek çentiği sivas.kcad'de 95 ms UI + 108 ms GPU, NCZ'de 71–180 ms UI. Sürenin çoğu `App::view`'da: sahne
+      ve yazılar her yakınlık bandında yeniden üretiliyor.
+    - İmleç ve kaydırma 1 ms UI.
+    - DWG'de bir tık seçim 106 ms UI tutuyor, bunun 65 ms'i görünüm.
+    - “Tümünü göster” NCZ'de x'i −4,1 M ile +4,7 M arasına açıyor.
+    - DWG açılışı 22,6 s.
+  - **Planda olmayan:** GPU süresi zaman damgası sorgusuyla değil, geri okumayla ölçüldü. Sorgu RM-07'ye kaldı.
 - [ ] **RM-02 — Doğruluk denetçisi.**
   - Sınama kipinde, ekrana konan her kare aynı kamerayla taze çizilen kareyle piksel piksel karşılaştırılır.
   - Fark çıkarsa hangi yeniden kullanma yolunun ve hangi anahtarın yol açtığı yazılır.

@@ -8,6 +8,11 @@ Scenario lines, one per line; a line starting with '#' and anything after ' #' i
   move X Y                the pointer goes there through the points between
   click X Y [right|middle], dclick X Y, drag X1 Y1 X2 Y2
   wheel X Y N             N wheel notches there: positive closer, negative farther
+  burst X Y N GAP NAME [X0 Y0 X1 Y1]
+                          a fast hand's wheel: N notches GAP ms apart with no wait between, then pictures of the
+                          region (the drawing area; the whole screen when not given) every 50 ms while it changes,
+                          OUT_DIR/NAME-<ms>.png, until it holds still 400 ms or 6 s pass; prints when the last change
+                          came after the last notch (plan/render.md RM-01)
   key SPEC                Return, Escape, Home, F8, ctrl+a, shift+Tab …
   type TEXT               the text as keystrokes (Turkish letters too)
   shot NAME               the screen as OUT_DIR/NAME.png
@@ -112,6 +117,57 @@ def shot(name):
     raw = root.get_image(0, 0, g.width, g.height, X.ZPixmap, 0xffffffff)
     Image.frombytes("RGB", (g.width, g.height), raw.data, "raw", "BGRX").save(f"{out}/{name}.png")
 
+def grab(region=None):
+    # The screen's pixels, or a region's (X0 Y0 X1 Y1), as raw bytes: compared, not saved.
+    root = d.screen().root
+    g = root.get_geometry()
+    x0, y0, x1, y1 = region or (0, 0, g.width, g.height)
+    return root.get_image(x0, y0, x1 - x0, y1 - y0, X.ZPixmap, 0xffffffff).data
+
+def burst(x, y, notches, gap, name, region=None):
+    # A fast hand's wheel (plan/render.md RM-01): the notches without the 40 ms each button() waits, the region watched
+    # from before the first notch, between the notches and after the last, until it holds still 400 ms with the app
+    # idle (under a quarter of a core) or 10 s pass. A picture of each change, named by its time from the first notch.
+    move(x, y)
+    sync(300)
+    pid = app_pid()
+    b = 4 if notches > 0 else 5
+    before = grab(region)
+    first = changed = None
+    pictures = 0
+
+    def look():
+        nonlocal before, first, changed, pictures
+        now = grab(region)
+        if now != before:
+            before = now
+            changed = time.monotonic()
+            first = first or changed
+            pictures += 1
+            shot(f"{name}-{int((changed - t0) * 1000):05d}ms")
+
+    t0 = time.monotonic()
+    for _ in range(abs(notches)):
+        xtest.fake_input(d, X.ButtonPress, b)
+        xtest.fake_input(d, X.ButtonRelease, b)
+        d.sync()
+        time.sleep(gap / 1000)
+        look()
+    last = time.monotonic()
+    cpu_before = cpu_ms(pid)
+    while time.monotonic() - t0 < 10.0:
+        time.sleep(0.05)
+        look()
+        cpu_now = cpu_ms(pid)
+        busy = cpu_now - cpu_before > 12
+        cpu_before = cpu_now
+        if not busy and time.monotonic() - max(changed or last, last) > 0.4:
+            break
+    said = lambda t, since: "yok" if t is None else f"{int((t - since) * 1000)} ms"
+    print(f"burst {name}: {abs(notches)} çentik {int((last - t0) * 1000)} ms; ilk değişim ilk çentikten "
+          f"{said(first, t0)} sonra; son değişim son çentikten {said(changed, last)} sonra; {pictures} değişim",
+          flush=True)
+
 def fit(title, region=None):
     # No window manager on the screen: the app's window put over the whole screen, as a maximized window is, or over
     # the region X Y W H of it (a wide screen standing for two monitors side by side).
@@ -214,6 +270,9 @@ for raw in open(sys.argv[1], encoding="utf-8"):
         for _ in range(abs(int(a[2]))):
             button(b, True); button(b, False); sync(120)
         sync(300)
+    elif word == "burst":
+        region = tuple(int(v) for v in a[5:9]) if len(a) >= 9 else None
+        burst(int(a[0]), int(a[1]), int(a[2]), int(a[3]), a[4], region)
     elif word == "key":
         key(a[0]); sync(80)
     elif word == "type":

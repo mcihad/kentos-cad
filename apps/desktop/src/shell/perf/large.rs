@@ -47,7 +47,7 @@ const BUDGET_MS: f64 = 1000.0 / 60.0;
 /// 1:200 at 96 dpi, logical pixels per metre: the near view.
 const NEAR: f64 = 1.0 / (200.0 * 0.000_264_58);
 
-fn wheel(lines: f32) -> Event {
+pub(super) fn wheel(lines: f32) -> Event {
     Event::Mouse(mouse::Event::WheelScrolled {
         delta: mouse::ScrollDelta::Lines { x: 0.0, y: lines },
     })
@@ -79,7 +79,7 @@ fn typed(ch: char) -> Vec<Event> {
 }
 
 /// UI thread and GPU apart: p50, p95, p99 and the worst, and the frames over 60 Hz's budget.
-fn stats(frames: &[Parts]) -> Value {
+pub(super) fn stats(frames: &[Parts]) -> Value {
     let ui: Vec<f64> = frames.iter().map(Parts::cpu).collect();
     let gpu: Vec<f64> = frames.iter().map(Parts::gpu_ms).collect();
     json!({
@@ -98,7 +98,7 @@ fn stats(frames: &[Parts]) -> Value {
     })
 }
 
-fn one(p: &Parts) -> Value {
+pub(super) fn one(p: &Parts) -> Value {
     json!({ "uiMs": p.cpu(), "gpuMs": p.gpu_ms(), "viewMs": p.view_ms() })
 }
 
@@ -178,7 +178,7 @@ fn view_stats(app: &App) -> Value {
 }
 
 /// The GPU the frames are drawn on, as wgpu tells it (no device is opened for it).
-fn adapter() -> Value {
+pub(super) fn adapter() -> Value {
     use iced::wgpu;
     let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
     let adapter =
@@ -197,7 +197,7 @@ fn adapter() -> Value {
 }
 
 /// The fixed trace in the view as it is: the pointer over the drawing, the wheel in and out twice, a pan.
-fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'static str, Vec<Parts>)> {
+pub(super) fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'static str, Vec<Parts>)> {
     let area = app.viewport.bounds;
     let center = area.center();
     // `KENTOS_PERF_TRACE_VIEW` (a diagnosis, docs/adr/1064 §5): what the view did for each pointer and wheel frame.

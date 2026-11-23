@@ -43,6 +43,8 @@ mod clouds;
 // Where a pointer frame's GPU time goes on the mixed drawing (docs/adr/1064 §5).
 mod cursor;
 mod file;
+// Real drawings (a project, NCZ, DXF, DWG): open, trace, wheel bursts, show everything, a click (plan/render.md RM-01).
+mod files;
 mod frame;
 // A large mixed 2D drawing: open, frames, keys, commands, cancel, memory (docs/adr/1062).
 mod large;
