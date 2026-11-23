@@ -4,6 +4,7 @@
 //! summary the count of each state; a warning not below its alarm and a confidence that is no number are said. And its
 //! pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::{Value, json};
@@ -76,7 +77,7 @@ fn typed(app: &mut App) {
         events.push(A::Trend(C::Alarm(k, alarm.into())));
     }
     for e in events {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
 }
 
@@ -86,7 +87,7 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
     let _ = app.update(Message::Run("asbuilt.check"));
     typed(&mut app);
     let r = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -116,24 +117,24 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
         ["yok".to_owned(), "Olağan".to_owned()]
     );
     // The movements' table is a choice away, and choosing it checks nothing again.
-    assert_eq!(app.map.asbuilt.trend.view, crate::asbuilt_trend::View::Line);
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::View(
+    assert_eq!(app.modules.map().asbuilt.trend.view, crate::asbuilt_trend::View::Line);
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Trend(C::View(
         crate::asbuilt_trend::View::Series,
     )))));
     assert_eq!(
-        app.map.asbuilt.trend.view,
+        app.modules.map().asbuilt.trend.view,
         crate::asbuilt_trend::View::Series
     );
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::View(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Trend(C::View(
         crate::asbuilt_trend::View::Line,
     )))));
     // A warning not below its alarm is the command's refusal, said in the window.
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Warning(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Trend(C::Warning(
         2,
         "0,06".into(),
     )))));
     let said = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -144,15 +145,15 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
         "{said}"
     );
     // A confidence that is no number is the window's.
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Warning(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Trend(C::Warning(
         2,
         "0,015".into(),
     )))));
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Confidence(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Trend(C::Confidence(
         "yüzde".into(),
     )))));
     let said = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -163,19 +164,19 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
         "{said}"
     );
     // The line off and the boxes empty: the series as before, no line, no state.
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::On(false)))));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Trend(C::On(false)))));
     for k in 0..4 {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Warning(
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::Trend(C::Warning(
             k,
             String::new(),
         )))));
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::Trend(C::Alarm(
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::Trend(C::Alarm(
             k,
             String::new(),
         )))));
     }
     let r = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()

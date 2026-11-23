@@ -10,6 +10,7 @@
 //! in the danger colour and outlined; problems whose rings would meet on the screen share one ring and one phrase
 //! (“Komşuda eksik köşe (2) · Ayrık köşe”), so their words no longer lie over each other.
 
+use crate::map::MapState;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
@@ -229,7 +230,7 @@ impl App {
     /// The graph's marks for the drawing as it is: none when nothing is shown, for another drawing, or when the
     /// parcels asked no longer read (one was deleted). Kept until the drawing changes.
     pub(crate) fn parcel_graph_marks(&self) -> Option<Arc<GraphMarks>> {
-        let shown = self.map.parcel_graph.as_ref()?;
+        let shown = self.modules.map().parcel_graph.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {
             return None;

@@ -1,12 +1,17 @@
-//! The surveying, cadastre and zoning (Harita) module's part of the shell (plan/argon-tavsiye.md ADIM 06, docs/adr/8054 §6): its
-//! windows' and panels' state in `App::map`, its messages under `Message::Map`, its windows under
-//! `Dialog::Map`. A new window of the module is added here and in its own file; `app.rs` stays as it is.
+//! The surveying, cadastre and zoning (Harita) module's part of the shell (plan/argon-tavsiye.md ADIM 06, docs/adr/8054 §6,
+//! 9199 §3.4): its windows' and panels' state among the modules' (`App::modules`, [`MapState`]), its messages as a
+//! module's (`Message::Module`, [`Event`] into a [`Message`]), its windows as a module's (`Dialog::Module`, [`dialog`]).
+//! The shell reaches them through the module's parts (parts.rs). A new window of the module is added here and in its own
+//! file; `app.rs` stays as it is.
 
 use iced::{Element, Task};
+use kentos_launch::Module;
 
-use crate::app::{App, Message};
+use crate::app::{App, Dialog, Message};
+use crate::module_parts::{ModuleDialog, ModuleEvent, ModuleStates};
 
 /// The surveying, cadastre and zoning (Harita) module's windows and panels.
+#[derive(Default)]
 pub(crate) struct MapUiState {
     pub(crate) map_work: crate::map_work_panel::PanelState,
     pub(crate) map_survey: crate::map_survey_panel::PanelState,
@@ -40,7 +45,7 @@ pub(crate) struct MapUiState {
     pub(crate) cogo: Option<crate::cogo::Window>,
 }
 
-/// The surveying, cadastre and zoning (Harita) module's messages, `Message::Map`.
+/// The surveying, cadastre and zoning (Harita) module's messages, a `Message::Module` of it.
 #[derive(Debug, Clone)]
 pub(crate) enum Event {
     MapWork(crate::map_work_panel::Event),
@@ -65,15 +70,9 @@ pub(crate) enum Event {
     CloudPlace(crate::cloud_place_window::Event),
     /// Kayıtlı ölçüleri denetle's window (cogo.rs).
     Cogo(crate::cogo::Event),
-    /// Nokta hesapla: a construction over the running command (docs/adr/0083).
-    PointCalc(kentos_interaction::point_calc::CalcKind),
-    /// Harita sistemi chosen (docs/adr/0583 §3).
-    MapCrs(crate::map_crs::Choose),
-    /// Harita sistemi's window closed (GIS-054).
-    MapCrsClose,
 }
 
-/// The surveying, cadastre and zoning (Harita) module's windows, `Dialog::Map`.
+/// The surveying, cadastre and zoning (Harita) module's windows, a `Dialog::Module` of it ([`dialog`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum MapDialogKind {
     /// GNSS baz ağı (baselines_window.rs, docs/adr/1380); its state is `MapUiState::baselines`.
@@ -110,51 +109,125 @@ pub(crate) enum MapDialogKind {
     Register,
     /// Tarama ağı dengelemesi (scan_network_window.rs, docs/adr/4720); its state is `MapUiState::scan_network`.
     ScanNetwork,
-    /// Harita sistemi (map_crs.rs, GIS-054): the systems to draw the map in.
-    MapCrs,
     /// Bulutu konumla (cloud_place_window.rs, docs/adr/5100); its state is `MapUiState::cloud_place`.
     CloudPlace,
     /// Kayıtlı ölçüleri denetle (cogo.rs, docs/adr/0180); the window is `MapUiState::cogo`.
     Cogo,
 }
 
-impl App {
-    /// A message of the module (`Message::Map`); a window's own handler is in its file.
-    pub(crate) fn map_event(&mut self, event: Event) -> Task<Message> {
-        match event {
-            Event::PointCalc(kind) => return self.start_point_calc(kind),
-            Event::MapWork(e) => return self.map_work_event(e),
-            Event::MapSurvey(e) => return self.map_survey_event(e),
-            Event::Baselines(event) => return self.baselines_event(event),
-            Event::ParcelsCheck(event) => return self.parcels_check_event(event),
-            Event::ParcelBoundaries(event) => return self.parcel_boundaries_event(event),
-            Event::ParcelRegister(event) => return self.parcel_register_event(event),
-            Event::PipesCheck(event) => return self.pipes_check_event(event),
-            Event::Asbuilt(event) => return self.asbuilt_event(event),
-            Event::SurveyNetwork(event) => return self.survey_network_event(event),
-            Event::Zoning(event) => return self.zoning_event(event),
-            Event::ZoningSymbols(event) => return self.zoning_symbols_event(event),
-            Event::ZoningDraft(event) => return self.zoning_draft_event(event),
-            Event::Readjustment(event) => return self.readjustment_event(event),
-            Event::Ortho(event) => return self.ortho_event(event),
-            Event::OrthoCompare(event) => return self.ortho_compare_event(event),
-            Event::OrthoSeamlines(event) => return self.ortho_seamlines_event(event),
-            Event::Overlap(event) => return self.overlap_event(event),
-            Event::Register(event) => return self.register_event(event),
-            Event::ScanNetwork(event) => return self.scan_network_event(event),
-            Event::CloudPlace(event) => return self.cloud_place_event(event),
-            Event::Cogo(event) => return self.cogo_event(event),
-            Event::MapCrs(choose) => self.choose_map(choose),
-            Event::MapCrsClose => {
-                if self.dialog == Some(crate::app::Dialog::Map(MapDialogKind::MapCrs)) {
-                    self.dialog = None;
-                }
-            }
+impl MapDialogKind {
+    /// Every window, in the order their numbers go (`ModuleDialog::kind`).
+    pub(crate) const ALL: [MapDialogKind; 19] = [
+        MapDialogKind::Baselines,
+        MapDialogKind::ParcelsCheck,
+        MapDialogKind::ParcelBoundaries,
+        MapDialogKind::ParcelRegister,
+        MapDialogKind::PipesCheck,
+        MapDialogKind::Asbuilt,
+        MapDialogKind::SurveyNetwork,
+        MapDialogKind::Zoning,
+        MapDialogKind::ZoningSymbols,
+        MapDialogKind::ZoningDraft,
+        MapDialogKind::Readjustment,
+        MapDialogKind::Ortho,
+        MapDialogKind::OrthoCompare,
+        MapDialogKind::OrthoSeamlines,
+        MapDialogKind::Overlap,
+        MapDialogKind::Register,
+        MapDialogKind::ScanNetwork,
+        MapDialogKind::CloudPlace,
+        MapDialogKind::Cogo,
+    ];
+
+    /// The window's number (`ModuleDialog::kind`), its place in [`Self::ALL`]; a match with no arm for the rest, so a
+    /// new window does not build without its number.
+    pub(crate) const fn number(self) -> u16 {
+        match self {
+            MapDialogKind::Baselines => 0,
+            MapDialogKind::ParcelsCheck => 1,
+            MapDialogKind::ParcelBoundaries => 2,
+            MapDialogKind::ParcelRegister => 3,
+            MapDialogKind::PipesCheck => 4,
+            MapDialogKind::Asbuilt => 5,
+            MapDialogKind::SurveyNetwork => 6,
+            MapDialogKind::Zoning => 7,
+            MapDialogKind::ZoningSymbols => 8,
+            MapDialogKind::ZoningDraft => 9,
+            MapDialogKind::Readjustment => 10,
+            MapDialogKind::Ortho => 11,
+            MapDialogKind::OrthoCompare => 12,
+            MapDialogKind::OrthoSeamlines => 13,
+            MapDialogKind::Overlap => 14,
+            MapDialogKind::Register => 15,
+            MapDialogKind::ScanNetwork => 16,
+            MapDialogKind::CloudPlace => 17,
+            MapDialogKind::Cogo => 18,
         }
-        Task::none()
     }
 
-    /// A window of the module (`Dialog::Map`).
+    /// The window of number `kind`; none for a number the module has not.
+    pub(crate) fn of(kind: u16) -> Option<Self> {
+        Self::ALL.get(usize::from(kind)).copied()
+    }
+}
+
+/// The module's window `kind` as the shell's.
+pub(crate) fn dialog(kind: MapDialogKind) -> Dialog {
+    Dialog::Module(ModuleDialog { module: Module::Map, kind: kind.number() })
+}
+
+impl From<Event> for Message {
+    fn from(event: Event) -> Self {
+        Message::Module(ModuleEvent::new(Module::Map, event))
+    }
+}
+
+/// The module's state among the modules' (`App::modules`).
+pub(crate) trait MapState {
+    fn map(&self) -> &MapUiState;
+    fn map_mut(&mut self) -> &mut MapUiState;
+}
+
+impl MapState for ModuleStates {
+    fn map(&self) -> &MapUiState {
+        // Every program with the module's parts starts its state (ModuleStates::start).
+        self.get::<MapUiState>().expect("Harita modülünün durumu başlatılmamış")
+    }
+
+    fn map_mut(&mut self) -> &mut MapUiState {
+        self.get_mut::<MapUiState>().expect("Harita modülünün durumu başlatılmamış")
+    }
+}
+
+impl App {
+    /// A message of the module; a window's own handler is in its file.
+    pub(crate) fn map_event(&mut self, event: Event) -> Task<Message> {
+        match event {
+            Event::MapWork(e) => self.map_work_event(e),
+            Event::MapSurvey(e) => self.map_survey_event(e),
+            Event::Baselines(event) => self.baselines_event(event),
+            Event::ParcelsCheck(event) => self.parcels_check_event(event),
+            Event::ParcelBoundaries(event) => self.parcel_boundaries_event(event),
+            Event::ParcelRegister(event) => self.parcel_register_event(event),
+            Event::PipesCheck(event) => self.pipes_check_event(event),
+            Event::Asbuilt(event) => self.asbuilt_event(event),
+            Event::SurveyNetwork(event) => self.survey_network_event(event),
+            Event::Zoning(event) => self.zoning_event(event),
+            Event::ZoningSymbols(event) => self.zoning_symbols_event(event),
+            Event::ZoningDraft(event) => self.zoning_draft_event(event),
+            Event::Readjustment(event) => self.readjustment_event(event),
+            Event::Ortho(event) => self.ortho_event(event),
+            Event::OrthoCompare(event) => self.ortho_compare_event(event),
+            Event::OrthoSeamlines(event) => self.ortho_seamlines_event(event),
+            Event::Overlap(event) => self.overlap_event(event),
+            Event::Register(event) => self.register_event(event),
+            Event::ScanNetwork(event) => self.scan_network_event(event),
+            Event::CloudPlace(event) => self.cloud_place_event(event),
+            Event::Cogo(event) => self.cogo_event(event),
+        }
+    }
+
+    /// A window of the module.
     pub(crate) fn map_dialog_view(&self, kind: MapDialogKind) -> Element<'_, Message> {
         match kind {
             MapDialogKind::Baselines => self.baselines_view(),
@@ -174,7 +247,6 @@ impl App {
             MapDialogKind::Overlap => self.overlap_view(),
             MapDialogKind::Register => self.register_view(),
             MapDialogKind::ScanNetwork => self.scan_network_view(),
-            MapDialogKind::MapCrs => self.map_crs_view(),
             MapDialogKind::CloudPlace => self.cloud_place_view(),
             MapDialogKind::Cogo => self.cogo_view(),
         }

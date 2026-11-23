@@ -9,7 +9,6 @@
 use crate::app::{App, Dialog, Message};
 use crate::arch;
 use crate::gis;
-use crate::map;
 use crate::road;
 
 /// A control of the open window, by its words.
@@ -243,61 +242,19 @@ impl App {
             Dialog::Gis(gis::GisDialogKind::FeaturesCode) => {
                 crate::features_window::TITLE.to_owned()
             }
-            Dialog::Map(map::MapDialogKind::Baselines) => crate::baselines_window::TITLE.to_owned(),
             Dialog::Road(road::RoadDialogKind::Grade) => crate::grade_window::TITLE.to_owned(),
             Dialog::CleanReport => crate::clean_report_window::TITLE.to_owned(),
             Dialog::OpenReport => crate::open_report_window::TITLE.to_owned(),
-            Dialog::Map(map::MapDialogKind::ParcelsCheck) => {
-                crate::parcels_check_window::TITLE.to_owned()
-            }
-            Dialog::Map(map::MapDialogKind::ParcelBoundaries) => {
-                crate::parcel_boundaries_window::TITLE.to_owned()
-            }
-            Dialog::Map(map::MapDialogKind::ParcelRegister) => {
-                crate::parcel_register_window::TITLE.to_owned()
-            }
-            Dialog::Map(map::MapDialogKind::PipesCheck) => {
-                crate::pipes_check_window::TITLE.to_owned()
-            }
             Dialog::ExchangeCheck => crate::exchange_check_window::TITLE.to_owned(),
             Dialog::OverlapLayers => crate::overlap_layers_window::TITLE.to_owned(),
-            Dialog::Map(map::MapDialogKind::Asbuilt) => crate::asbuilt_window::TITLE.to_owned(),
             Dialog::Road(road::RoadDialogKind::ProjectGraph) => {
                 crate::project_graph_window::TITLE.to_owned()
-            }
-            Dialog::Map(map::MapDialogKind::SurveyNetwork) => {
-                crate::survey_network_window::TITLE.to_owned()
             }
             Dialog::Gis(gis::GisDialogKind::FeaturesReconcile) => {
                 crate::features_reconcile_window::TITLE.to_owned()
             }
-            Dialog::Map(map::MapDialogKind::Zoning) => crate::zoning_window::TITLE.to_owned(),
-            Dialog::Map(map::MapDialogKind::ZoningSymbols) => {
-                crate::zoning_symbols_window::TITLE.to_owned()
-            }
-            Dialog::Map(map::MapDialogKind::ZoningDraft) => {
-                crate::zoning_draft_window::TITLE.to_owned()
-            }
             Dialog::Gis(gis::GisDialogKind::Impact) => crate::impact_window::TITLE.to_owned(),
-            Dialog::Map(map::MapDialogKind::Readjustment) => {
-                crate::readjustment_window::TITLE.to_owned()
-            }
-            Dialog::Map(map::MapDialogKind::Ortho) => crate::ortho_window::TITLE.to_owned(),
-            Dialog::Map(map::MapDialogKind::OrthoCompare) => {
-                crate::ortho_compare_window::TITLE.to_owned()
-            }
-            Dialog::Map(map::MapDialogKind::OrthoSeamlines) => {
-                crate::ortho_seamlines_window::TITLE.to_owned()
-            }
-            Dialog::Map(map::MapDialogKind::Overlap) => crate::overlap_window::TITLE.to_owned(),
-            Dialog::Map(map::MapDialogKind::Register) => crate::register_window::TITLE.to_owned(),
-            Dialog::Map(map::MapDialogKind::ScanNetwork) => {
-                crate::scan_network_window::TITLE.to_owned()
-            }
-            Dialog::Map(map::MapDialogKind::MapCrs) => crate::map_crs::TITLE.to_owned(),
-            Dialog::Map(map::MapDialogKind::CloudPlace) => {
-                crate::cloud_place_window::TITLE.to_owned()
-            }
+            Dialog::MapCrs => crate::map_crs::TITLE.to_owned(),
             Dialog::CatalogReport => crate::catalog_report_window::TITLE.to_owned(),
             Dialog::Road(road::RoadDialogKind::SheetContours) => {
                 crate::sheet_contours_window::TITLE.to_owned()
@@ -321,7 +278,11 @@ impl App {
             Dialog::Extract => crate::tables::extract::TITLE.to_owned(),
             Dialog::SheetDetails => crate::sheet_details_window::TITLE.to_owned(),
             Dialog::PlotStyles => crate::plot_styles_window::TITLE.to_owned(),
-            Dialog::Map(map::MapDialogKind::Cogo) => crate::cogo::COGO_TITLE.to_owned(),
+            // A module's window: its title is the module's (docs/adr/9199 §3.3).
+            Dialog::Module(d) => match crate::module_parts::parts(d.module) {
+                Some(parts) => parts.dialog_title(d.kind),
+                None => format!("{other:?}", other = Dialog::Module(d)),
+            },
             Dialog::Project if self.asking_type() => crate::project::TYPE_TITLE.to_owned(),
             Dialog::LayerStyle => self.layer_style_title(),
             other => format!("{other:?}"),
@@ -492,56 +453,18 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::FeaturesCode)) => {
                 self.features_code_control(control)
             }
-            Some(Dialog::Map(map::MapDialogKind::Baselines)) => self.baselines_control(control),
             Some(Dialog::Road(road::RoadDialogKind::Grade)) => self.grade_control(control),
             Some(Dialog::CleanReport) => self.clean_report_control(control),
             Some(Dialog::OpenReport) => self.open_report_control(control),
-            Some(Dialog::Map(map::MapDialogKind::ParcelsCheck)) => {
-                self.parcels_check_control(control)
-            }
-            Some(Dialog::Map(map::MapDialogKind::ParcelBoundaries)) => {
-                self.parcel_boundaries_control(control)
-            }
-            Some(Dialog::Map(map::MapDialogKind::ParcelRegister)) => {
-                self.parcel_register_control(control)
-            }
-            Some(Dialog::Map(map::MapDialogKind::PipesCheck)) => self.pipes_check_control(control),
             Some(Dialog::ExchangeCheck) => self.exchange_check_control(control),
-            Some(Dialog::Map(map::MapDialogKind::Asbuilt)) => self.asbuilt_control(control),
             Some(Dialog::Road(road::RoadDialogKind::ProjectGraph)) => {
                 self.project_graph_control(control)
-            }
-            Some(Dialog::Map(map::MapDialogKind::SurveyNetwork)) => {
-                self.survey_network_control(control)
             }
             Some(Dialog::Gis(gis::GisDialogKind::FeaturesReconcile)) => {
                 self.features_reconcile_control(control)
             }
-            Some(Dialog::Map(map::MapDialogKind::Zoning)) => self.zoning_control(control),
-            Some(Dialog::Map(map::MapDialogKind::ZoningSymbols)) => {
-                self.zoning_symbols_control(control)
-            }
-            Some(Dialog::Map(map::MapDialogKind::ZoningDraft)) => {
-                self.zoning_draft_control(control)
-            }
             Some(Dialog::Gis(gis::GisDialogKind::Impact)) => self.impact_control(control),
-            Some(Dialog::Map(map::MapDialogKind::Readjustment)) => {
-                self.readjustment_control(control)
-            }
-            Some(Dialog::Map(map::MapDialogKind::Ortho)) => self.ortho_control(control),
-            Some(Dialog::Map(map::MapDialogKind::OrthoCompare)) => {
-                self.ortho_compare_control(control)
-            }
-            Some(Dialog::Map(map::MapDialogKind::OrthoSeamlines)) => {
-                self.ortho_seamlines_control(control)
-            }
             Some(Dialog::Gis(gis::GisDialogKind::Reproject)) => self.reproject_control(control),
-            Some(Dialog::Map(map::MapDialogKind::Overlap)) => self.overlap_control(control),
-            Some(Dialog::Map(map::MapDialogKind::Register)) => self.register_control(control),
-            Some(Dialog::Map(map::MapDialogKind::ScanNetwork)) => {
-                self.scan_network_control(control)
-            }
-            Some(Dialog::Map(map::MapDialogKind::CloudPlace)) => self.cloud_place_control(control),
             Some(Dialog::CatalogReport) => self.catalog_report_control(control),
             Some(Dialog::Road(road::RoadDialogKind::SheetContours)) => {
                 self.sheet_contours_control(control)
@@ -556,9 +479,12 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::DataCompare)) => {
                 self.data_compare_control(control)
             }
-            Some(Dialog::Map(map::MapDialogKind::Cogo)) => self.cogo_control(control),
             Some(Dialog::TableInsert) => self.table_insert_control(control),
             Some(Dialog::TableEditor) => self.table_editor_control(control),
+            Some(Dialog::Module(d)) => match crate::module_parts::parts(d.module) {
+                Some(parts) => parts.dialog_control(self, d.kind, control),
+                None => Err(format!("{:?} penceresi izden yanıtlanamıyor", Dialog::Module(d))),
+            },
             Some(Dialog::Project) if self.asking_type() => self.project_type_control(control),
             Some(Dialog::LayerStyle) => self.layer_style_control(control),
             Some(other) => Err(format!("{other:?} penceresi izden yanıtlanamıyor")),

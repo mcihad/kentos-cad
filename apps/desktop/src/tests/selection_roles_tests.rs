@@ -4,6 +4,7 @@
 //! decision area opens Alan with İmar; a selection whose objects do not all share the role has no such panel; a CBS
 //! project none. And their pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -53,10 +54,10 @@ fn a_pipe_opens_altyapi_on_its_own_network() {
     assert_eq!(app.selection_roles().network.as_deref(), Some("su"));
     let _ = app.update(Message::Run("pipes.check"));
     assert_eq!(
-        app.map.pipes_check.network, "su",
+        app.modules.map().pipes_check.network, "su",
         "the selection's network, not the first"
     );
-    let _ = app.update(Message::Map(map::Event::PipesCheck(
+    let _ = app.update(Message::from(map::Event::PipesCheck(
         crate::pipes_check_window::Event::Close,
     )));
     // A sewer pipe and a water pipe: no one network holds both.
@@ -64,7 +65,7 @@ fn a_pipe_opens_altyapi_on_its_own_network() {
     assert!(!shown(&app).1.contains(&"Altyapı"));
     let _ = app.update(Message::Run("pipes.check"));
     assert_eq!(
-        app.map.pipes_check.network, "atiksu",
+        app.modules.map().pipes_check.network, "atiksu",
         "the first network again"
     );
 }

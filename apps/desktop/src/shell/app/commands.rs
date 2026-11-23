@@ -53,6 +53,12 @@ impl App {
         {
             return self.start_tool(tool);
         }
+        // A module's own commands (docs/adr/9199 §3.3): its parts run them.
+        for parts in crate::module_parts::all() {
+            if let Some(task) = parts.command(self, id) {
+                return task;
+            }
+        }
         // Modele dön (MODEL), as the web's: the sheet mode's own message (docs/adr/0164).
         if id == "sheet.drawingSet" {
             if self.sheets.book().sheets.is_empty() { self.warn("Önce bir pafta oluşturun."); return Task::none(); }
@@ -421,11 +427,10 @@ impl App {
             "data.unmark" => {
                 self.address_unmark();
                 self.gis.sources.extent_mark = None;
-                self.map.parcel_graph = None;
                 self.gis.impact_reach = None;
-                self.map.zoning_shown_marks = None;
-                self.map.pipes_shown_marks = None;
-                self.map.baseline_shown = None;
+                for parts in crate::module_parts::all() {
+                    parts.unmark(self);
+                }
                 return self.data_event(crate::search::Event::Unmark);
             }
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
@@ -435,38 +440,15 @@ impl App {
             "cad.inspect" => return self.open_cad_inspection(),
             "cad.flatten" => return self.open_flatten(),
             "map.featuresCode" => return self.open_features_code(),
-            "survey.baselines" => return self.open_baselines(),
             "tool.grade" => return self.open_grade(),
             "topology.cleanReport" => return self.open_clean_report(),
             "file.openReport" => self.show_open_report(),
-            "parcels.check" => return self.open_parcels_check(),
-            "pipes.check" => return self.open_pipes_check(),
             "file.exchangeCheck" => return self.open_exchange_check(),
-            "asbuilt.check" => return self.open_asbuilt(),
-            "map.survey.adjustment" => return self.open_survey_network(),
             "map.featuresReconcile" => return self.open_features_reconcile(),
-            "zoning.check" => return self.open_zoning(),
             "scenario.impact" => return self.open_impact(),
-            "readjustment.distribute" => return self.open_readjustment(),
-            "raster.accuracy" => return self.open_ortho(),
-            "raster.compare" => return self.open_ortho_compare(),
-            "raster.seamlines" => return self.open_ortho_seamlines(),
-            "pointcloud.overlap" => return self.open_overlap(),
-            "pointcloud.register" => return self.open_register(),
-            "pointcloud.network" => return self.open_scan_network(),
-            "pointcloud.place" => return self.open_cloud_place(),
             "map.catalogReport" => return self.open_catalog_report(),
             "terrain.sheetContours" => return self.open_sheet_contours(),
             "terrain.stockpile" => return self.open_stockpile(),
-            // Harita işi on a contextual tab (map_work_panel.rs, docs/adr/1201 §3).
-            "map.workSource" => {
-                self.map_work_show_source();
-                return Task::none();
-            }
-            "map.workRelease" => {
-                self.map_work_release();
-                return Task::none();
-            }
             "topology.rules" => return self.open_topology_rules(),
             // Ağlar (networks/, docs/adr/0209 §10).
             "network.manage" => return self.open_networks(),
@@ -474,16 +456,6 @@ impl App {
             "address.search" => return self.open_address_search(),
             "address.reverse" => return self.start_tool(kentos_interaction::address_reverse::ID),
             "address.data" => return self.open_address_data(),
-            // GNSS arşivi (map_survey_panel.rs, docs/adr/1340 §6).
-            "map.survey" => {
-                self.show_map_survey();
-                return Task::none();
-            }
-            "map.survey.import" => return self.map_survey_event(crate::map_survey_panel::Event::Import),
-            "map.survey.select" => {
-                self.select_accepted_points();
-                return Task::none();
-            }
             "address.compare" => return self.open_address_compare(),
             // docs/adr/0583: a layer's source system and the map's.
             "layer.crs" => return self.layer_crs_run(false),
@@ -615,11 +587,6 @@ impl App {
             "pointcloud.style" => return self.cloud_look_command(),
             "pointcloud.query" => return self.start_tool(kentos_interaction::cloud_query::ID),
             "pointcloud.vpcSave" => return self.cloud_vpc_command(),
-            // Kayıtlı ölçüler (docs/adr/0180): the check's window, and the selection's recorded values from the drawing.
-            "cogo.check" => self.open_cogo_check(),
-            "cogo.update" => {
-                self.cogo_update();
-            }
             // Genel bakış and Büyüteç over the drawing (docs/adr/0181).
             "view.overview" => self.toggle_overview(),
             "view.magnifier" => self.toggle_magnifier(),
@@ -966,6 +933,12 @@ impl App {
         if !self.offers(id) {
             return false;
         }
+        // A module's own commands (docs/adr/9199 §3.3).
+        for parts in crate::module_parts::all() {
+            if let Some(on) = parts.enabled(self, id) {
+                return on;
+            }
+        }
         let doc = self.document.as_ref().map(|doc| &doc.model);
         match id {
             "edit.undo" => {
@@ -993,7 +966,6 @@ impl App {
             "edit.deselect" => !self.selection.is_empty() || !self.gis.features.data.selected.is_empty(),
             // A data layer's selected rows are framed too (docs/adr/9133).
             "view.zoomSelection" => !self.selection.is_empty() || self.data_rows_outlined(),
-            "map.workSource" | "map.workRelease" => self.map_work_available(id),
             // An attachment goes on one object (attachments.rs, docs/adr/0225 §2), as the web's.
             "attachment.add" | "attachment.addLink" => doc.is_some() && self.selection.len() == 1,
             "edit.previousSelection" => !self.previous_selection_ids().is_empty(),
@@ -1003,11 +975,8 @@ impl App {
             "data.unmark" => {
                 self.data_mark().is_some()
                     || self.extent_mark().is_some()
-                    || self.parcel_graph_marks().is_some()
                     || self.impact_reach_marks().is_some()
-                    || self.zoning_marks().is_some()
-                    || self.pipes_marks().is_some()
-                    || self.baseline_marks().is_some()
+                    || !self.module_marks().is_empty()
             }
             // Only where there is a view to go to (docs/adr/0141).
             "view.previous" => self.view_history.can_back(),

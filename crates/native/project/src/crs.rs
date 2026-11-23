@@ -244,6 +244,23 @@ pub fn area(srid: u32) -> Option<&'static AreaOfUse> {
     areas().iter().find(|a| a.srid == srid)
 }
 
+/// The systems a project in `project` may take as another (its second system, the map's system), grouped by datum as
+/// the registry lists them: every one but the local and its own.
+pub fn others_by_datum(project: u32) -> Vec<(&'static str, Vec<&'static System>)> {
+    let mut groups: Vec<(&'static str, Vec<&'static System>)> = Vec::new();
+    for s in systems() {
+        if s.is_local() || s.srid == project {
+            continue;
+        }
+        let datum = datum_label(&s.datum);
+        match groups.iter_mut().find(|(d, _)| *d == datum) {
+            Some((_, list)) => list.push(s),
+            None => groups.push((datum, vec![s])),
+        }
+    }
+    groups
+}
+
 /// The web's `DATUM_LABEL`.
 pub fn datum_label(datum: &str) -> &str {
     match datum {
@@ -387,6 +404,17 @@ pub fn turef_zone_for(lon: f64) -> Option<&'static System> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_others_are_every_system_but_the_local_and_the_projects_own() {
+        let groups = others_by_datum(5254);
+        let names: Vec<&str> = groups.iter().map(|(d, _)| *d).collect();
+        assert_eq!(names, ["TUREF (ITRF96)", "ED50", "WGS 84"]);
+        let all: Vec<u32> = groups.iter().flat_map(|(_, list)| list.iter().map(|s| s.srid)).collect();
+        assert!(!all.contains(&5254) && !all.contains(&0));
+        assert_eq!(all.len(), systems().len() - 2);
+        assert!(all.contains(&2320) && all.contains(&4326));
+    }
 
     #[test]
     fn the_turkish_zones_read_their_polygons() {

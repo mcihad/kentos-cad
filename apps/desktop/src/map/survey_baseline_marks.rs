@@ -8,6 +8,7 @@
 //! (docs/adr/4120) is drawn at the known point's own place in the project, a triangle at that end instead of a ring.
 //! Nothing is written.
 
+use crate::map::MapState;
 use std::sync::Arc;
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
@@ -65,7 +66,7 @@ impl App {
     /// The baselines for the drawing as it is: none when nothing was asked, for another drawing, or when no line has
     /// both ends' objects still points of the drawing (a line whose end is gone is left out).
     pub(crate) fn baseline_marks(&self) -> Option<Arc<BaselineMarks>> {
-        let shown = self.map.baseline_shown.as_ref()?;
+        let shown = self.modules.map().baseline_shown.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {
             return None;

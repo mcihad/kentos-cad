@@ -4,6 +4,7 @@
 //! the drawing's ±0.2 mm at 1/5000 (within); a cell the table leaves empty is said and the table goes on without a
 //! limit. And the pictures.
 
+use crate::map::MapState;
 use crate::app::App;
 use crate::map_work_limit::LimitEvent as L;
 use crate::map_work_panel::Event as P;
@@ -37,7 +38,7 @@ fn the_shift_table_sets_each_shift_against_the_limit() {
     let mut app = opened();
     let _ = approved_then_moved_and_removed(&mut app, 0.3, 0.4);
     send(&mut app, P::Changes("is-4".into()));
-    assert_eq!(app.map.map_work.shifts[0].len(), 6, "no limit: no column");
+    assert_eq!(app.modules.map().map_work.shifts[0].len(), 6, "no limit: no column");
     limit(
         &mut app,
         vec![
@@ -46,14 +47,14 @@ fn the_shift_table_sets_each_shift_against_the_limit() {
             L::Scale("1000".into()),
         ],
     );
-    assert_eq!(app.map.map_work.shifts[0][1], "Dışında (2 köşe)");
+    assert_eq!(app.modules.map().map_work.shifts[0][1], "Dışında (2 köşe)");
     assert_eq!(tree(&app).limit.expect("the limit").metres, 0.09);
     assert_eq!(
         tree(&app).items[3].changes.clone().expect("changes").beyond,
         Some(1)
     );
     limit(&mut app, vec![L::Basis("drawing"), L::Scale("5000".into())]);
-    assert_eq!(app.map.map_work.shifts[0][1], "İçinde");
+    assert_eq!(app.modules.map().map_work.shifts[0][1], "İçinde");
     // A cell the table leaves empty: said under the row, the query without a limit.
     limit(
         &mut app,
@@ -63,9 +64,9 @@ fn the_shift_table_sets_each_shift_against_the_limit() {
             L::Scale("1000".into()),
         ],
     );
-    assert!(matches!(app.map.map_work.limit.used(), Some(Err(_))));
+    assert!(matches!(app.modules.map_mut().map_work.limit.used(), Some(Err(_))));
     assert!(tree(&app).limit.is_none());
-    assert_eq!(app.map.map_work.shifts[0].len(), 6);
+    assert_eq!(app.modules.map().map_work.shifts[0].len(), 6);
 }
 
 /// `.run/gui-evidence/kayma-siniri-5280/`:

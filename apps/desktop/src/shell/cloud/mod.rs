@@ -121,7 +121,6 @@ mod live_forms;
 
 use crate::arch;
 use crate::gis;
-use crate::map;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -1197,7 +1196,12 @@ impl App {
             Some(Dialog::TakeFrom) => self.take_from = None,
             Some(Dialog::LayerList) => self.layer_list = None,
             Some(Dialog::Gis(gis::GisDialogKind::DataCompare)) => self.gis.data_compare = None,
-            Some(Dialog::Map(map::MapDialogKind::Cogo)) => self.map.cogo = None,
+            // A module's window keeps what it opened apart from the dialog (Kayıtlı ölçüleri denetle, cogo.rs).
+            Some(Dialog::Module(d)) => {
+                if let Some(parts) = crate::module_parts::parts(d.module) {
+                    parts.dialog_closed(self, d.kind);
+                }
+            }
             // Şablon düzenleyici closes; its typing is not kept (template_editor.rs).
             Some(Dialog::Arch(arch::ArchDialogKind::TemplateEditor)) => {
                 self.arch.template_editor = None

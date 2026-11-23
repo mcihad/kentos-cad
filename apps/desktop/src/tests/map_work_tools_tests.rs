@@ -98,10 +98,10 @@ fn the_contextual_tabs_offer_the_source_and_letting_go_by_the_selections_role() 
     assert_eq!(tree(&app).derivations.len(), 2);
     // Seçimi türet: G3 (a campaign point no record names) recorded as made from the orthophoto.
     select(&mut app, &[3]);
-    let _ = app.update(Message::Map(map::Event::MapWork(P::DeriveFrom(
+    let _ = app.update(Message::from(map::Event::MapWork(P::DeriveFrom(
         "is-2".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::MapWork(P::Derive)));
+    let _ = app.update(Message::from(map::Event::MapWork(P::Derive)));
     let t = tree(&app);
     let made = t.derivations.last().expect("a new derivation");
     assert_eq!(
@@ -191,7 +191,7 @@ fn screens() {
             println!("{}", file.display());
         };
         for key in ["kind:campaign", "kind:reference", "item:is-1"] {
-            let _ = app.update(Message::Map(map::Event::MapWork(P::Fold(key.into()))));
+            let _ = app.update(Message::from(map::Event::MapWork(P::Fold(key.into()))));
         }
         // The GNSS point selected: Nokta's tab in front with Harita işi; Kaynağını göster brings the panel.
         select(&mut app, &[1]);

@@ -33,7 +33,6 @@
 //! door, Mahali böl and Mahal numarala for a room — what an architect reaches
 //! for there, before the edits every object has.
 
-use crate::map;
 use iced::{Point, Task};
 use kentos_interaction::SnapKind;
 use kentos_interaction::grip_menu::{self, GripAction, GripMenu};
@@ -711,9 +710,9 @@ impl App {
         }
         menu.item(
             "İki nokta ortası",
-            Message::Map(map::Event::PointCalc(
+            Message::PointCalc(
                 kentos_interaction::point_calc::CalcKind::Mid,
-            )),
+            ),
         )
         .icon(crate::icons::from_web(Some("calcMid")))
         .separator()

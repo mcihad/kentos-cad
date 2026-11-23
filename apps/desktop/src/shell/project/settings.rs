@@ -1599,7 +1599,7 @@ fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
                 .shown(kentos_project::systems::definition_title(def)),
         );
     }
-    for (datum, systems) in crate::second_crs::choices(d.srid) {
+    for (datum, systems) in kentos_project::crs::others_by_datum(d.srid) {
         rows.push(Pick::Header);
         list.push(Choice::header(datum));
         for c in systems {

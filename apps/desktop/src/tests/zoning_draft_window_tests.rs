@@ -3,11 +3,12 @@
 //! what m. 26 asks; Taslağı kaydet keeps what the case keeps, the decision areas untouched, in one undo step; a kept
 //! draft loads back into the form and Taslağı sil takes it out. And its pictures, with Sembolü karardan ver's switch.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::zoning_draft_window::{Event as D, Show};
 
 fn cases() -> Value {
@@ -27,7 +28,7 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("zoning.check"));
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Open)));
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Open)));
     app
 }
 
@@ -41,18 +42,18 @@ fn uid_of(decision: &str) -> String {
 fn filled() -> App {
     let mut app = opened();
     let input = &case(PARK)["steps"][0]["input"];
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Id("T-1".into()))));
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Reason(
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Id("T-1".into()))));
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Reason(
         input["reason"].as_str().expect("reason").to_owned(),
     ))));
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Area(uid_of("K1")))));
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Field(
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Area(uid_of("K1")))));
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Field(
         "Kullanim".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Value(
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Value(
         "ticaret".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Add)));
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Add)));
     app
 }
 
@@ -67,12 +68,12 @@ fn a_draft_written_in_the_form_is_the_cases() {
     let mut app = filled();
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::ZoningDraft))
+        Some(crate::map::dialog(map::MapDialogKind::ZoningDraft))
     );
-    assert_eq!(app.map.zoning_draft.plan, "UİP-1");
+    assert_eq!(app.modules.map().zoning_draft.plan, "UİP-1");
     let want = case(PARK);
     let r = app
-        .map
+        .modules.map()
         .zoning_draft
         .answer
         .clone()
@@ -85,7 +86,7 @@ fn a_draft_written_in_the_form_is_the_cases() {
         (&out["uses"], &out["findings"], &out["level"])
     );
     let before = attrs(&app);
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Save)));
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Save)));
     let kept = app
         .document
         .as_ref()
@@ -99,7 +100,7 @@ fn a_draft_written_in_the_form_is_the_cases() {
         want["steps"][0]["expect"]["settings"]["zoningPlan"]
     );
     assert_eq!(attrs(&app), before);
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Close)));
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Close)));
     let _ = app.update(Message::Run("edit.undo"));
     assert!(
         app.document
@@ -115,13 +116,13 @@ fn a_draft_written_in_the_form_is_the_cases() {
 #[test]
 fn a_kept_draft_loads_and_is_removed() {
     let mut app = filled();
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Save)));
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Open)));
-    assert_eq!(app.map.zoning_draft.id, "T-2");
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Draft(
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Save)));
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Open)));
+    assert_eq!(app.modules.map().zoning_draft.id, "T-2");
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Draft(
         "T-1".into(),
     ))));
-    let s = &app.map.zoning_draft;
+    let s = &app.modules.map().zoning_draft;
     assert_eq!(
         (s.id.as_str(), s.plan.as_str(), s.changes.len()),
         ("T-1", "UİP-1", 1)
@@ -130,7 +131,7 @@ fn a_kept_draft_loads_and_is_removed() {
         (s.changes[0].field.as_str(), s.changes[0].value.as_str()),
         ("Kullanim", "ticaret")
     );
-    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Remove)));
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Remove)));
     assert!(
         app.document
             .as_ref()
@@ -139,8 +140,8 @@ fn a_kept_draft_loads_and_is_removed() {
             .zoning_plan()
             .is_none()
     );
-    assert_eq!(app.map.zoning_draft.id, "T-1");
-    assert!(app.map.zoning_draft.changes.is_empty());
+    assert_eq!(app.modules.map().zoning_draft.id, "T-1");
+    assert!(app.modules.map().zoning_draft.changes.is_empty());
 }
 
 /// `.run/gui-evidence/plan-taslak-5040/`: İmar planı denetimi with its new button; the draft with its change; the
@@ -167,43 +168,43 @@ fn screens() {
             let _ = app.update(Message::Run("view.zoomExtents"));
             match step {
                 0 => {
-                    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Close)));
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Close)));
                     let _ = app.update(Message::Run("zoning.check"));
                 }
                 1 => {
                     let _ =
-                        app.update(Message::Map(map::Event::ZoningDraft(D::Area(uid_of("K2")))));
-                    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Field(
+                        app.update(Message::from(map::Event::ZoningDraft(D::Area(uid_of("K2")))));
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Field(
                         "KAKS".into(),
                     ))));
-                    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Value(
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Value(
                         "2.00".into(),
                     ))));
-                    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Add)));
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Add)));
                 }
                 2 | 3 => {
                     let _ =
-                        app.update(Message::Map(map::Event::ZoningDraft(D::Area(uid_of("K2")))));
-                    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Field(
+                        app.update(Message::from(map::Event::ZoningDraft(D::Area(uid_of("K2")))));
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Field(
                         "KAKS".into(),
                     ))));
-                    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Value(
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Value(
                         "2.00".into(),
                     ))));
-                    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Add)));
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Add)));
                     let show = if step == 2 {
                         Show::Uses
                     } else {
                         Show::Findings
                     };
-                    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Show(show))));
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Show(show))));
                 }
                 _ => {
                     use crate::zoning_symbols_window::{Event as Z, pairs};
-                    let _ = app.update(Message::Map(map::Event::ZoningDraft(D::Close)));
-                    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Open)));
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Close)));
+                    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Open)));
                     let r = app
-                        .map
+                        .modules.map()
                         .zoning_symbols
                         .answer
                         .clone()
@@ -213,13 +214,13 @@ fn screens() {
                         .iter()
                         .position(|p| p.usage == "konut")
                         .expect("the konut row");
-                    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Choose(at))));
-                    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Pick(
+                    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Choose(at))));
+                    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Pick(
                         "mpyy.uip.konut.gelisme-konut-alani".into(),
                     ))));
-                    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Write)));
-                    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Open)));
-                    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Choose(at))));
+                    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Write)));
+                    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Open)));
+                    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Choose(at))));
                 }
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");

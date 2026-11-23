@@ -5,12 +5,13 @@
 //! a drawing without the profile's layers offered Profili uygula, after which the layers are there. Harita and GIS
 //! offer it, Yol and Mimari do not. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::zoning_window::{Event as Z, Group};
 
 fn opened(program: Option<Module>, case: &str) -> App {
@@ -34,9 +35,9 @@ const BARE: &str = "profil katmanları yoksa söylenir";
 fn the_messy_plan_is_found_out_and_its_areas_shown() {
     let mut app = opened(Some(Module::Map), MESSY);
     let _ = app.update(Message::Run("zoning.check"));
-    assert_eq!(app.dialog, Some(Dialog::Map(map::MapDialogKind::Zoning)));
+    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Zoning)));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -51,8 +52,8 @@ fn the_messy_plan_is_found_out_and_its_areas_shown() {
         Some(&1),
         "UIP-3 lies outside UIP-1"
     );
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Areas))));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
     assert_eq!(app.dialog, None);
     // UIP-1 (uncovered), K1, K2 and K5 (the two overlaps, K5 outside).
     assert_eq!(app.selection.ids(), [Slot(5), Slot(9), Slot(6), Slot(1)]);
@@ -69,7 +70,7 @@ fn a_symbol_that_does_not_show_its_decision_is_found() {
     let mut app = opened(Some(Module::Map), SYMBOL);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -84,8 +85,8 @@ fn a_symbol_that_does_not_show_its_decision_is_found() {
         "Sembol uyuşmazlığı"
     );
     assert!(Group::Decisions.holds("symbolMismatch"));
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Decisions))));
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Decisions))));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
     assert_eq!(app.selection.ids(), [Slot(2)], "S1, the trade area");
 }
 
@@ -129,7 +130,7 @@ fn a_broken_road_and_a_plan_outside_its_upper_plan() {
     let mut app = opened(Some(Module::Map), ROAD_GAP);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -145,13 +146,13 @@ fn a_broken_road_and_a_plan_outside_its_upper_plan() {
         "{}",
         r.findings[0].message
     );
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Areas))));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
     assert_eq!(app.selection.ids().len(), 1, "the road");
     let mut app = opened(Some(Module::Map), OUTSIDE_UPPER);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -181,7 +182,7 @@ fn the_decisions_inside_a_road_s_width() {
     let mut app = opened(Some(Module::Map), ROAD_WIDTH);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -204,8 +205,8 @@ fn the_decisions_inside_a_road_s_width() {
             .message
             .starts_with("“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1”")
     );
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Areas))));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
     assert_eq!(
         app.selection.ids().len(),
         5,
@@ -222,7 +223,7 @@ fn the_parcels_inside_a_road_s_width() {
     let mut app = opened(Some(Module::Map), ROAD_PARCEL);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -246,8 +247,8 @@ fn the_parcels_inside_a_road_s_width() {
         parcels[0].message,
         "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor."
     );
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Areas))));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
     assert_eq!(
         app.selection.ids().len(),
         8,
@@ -278,7 +279,7 @@ fn a_parcel_in_two_roads_is_summed_and_the_parts_hatched() {
     assert_eq!(totals[0].1, 2, "two roads");
     assert!((totals[0].2 - 275.0).abs() < 1e-6, "{totals:?}");
     // Bulguları göster: the parts hatched, kept until İşareti kaldır.
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
     let m = app.zoning_marks().expect("hatched");
     let area: f64 = m
         .regions
@@ -303,7 +304,7 @@ fn a_road_entering_a_decision_twice_carries_two_regions() {
     let mut app = opened(Some(Module::Map), U_ROAD);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -317,7 +318,7 @@ fn a_road_entering_a_decision_twice_carries_two_regions() {
     let fmt = app.format();
     assert!(app.zoning_shown().iter().any(|x| x.regions.len() == 2));
     let cell = format!("{} (2 parça)", fmt.area(1200.0));
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Areas))));
     let shown: Vec<String> = app
         .zoning_shown()
         .into_iter()
@@ -327,7 +328,7 @@ fn a_road_entering_a_decision_twice_carries_two_regions() {
         })
         .collect();
     assert!(shown.contains(&cell), "{shown:?}");
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
     let m = app.zoning_marks().expect("hatched");
     assert_eq!(m.regions.len(), 2);
 }
@@ -357,7 +358,7 @@ fn region_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("zoning.check"));
-        let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
+        let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Areas))));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pencere-{name}.png"));
         snapshot
@@ -365,7 +366,7 @@ fn region_screens() {
             .save(&file)
             .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+        let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("cizimde-{name}.png"));
@@ -379,7 +380,7 @@ fn the_clean_plan_has_no_finding() {
     let mut app = opened(Some(Module::Map), GOOD);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -393,16 +394,16 @@ fn profili_uygula_adds_the_missing_layers() {
     let mut app = opened(Some(Module::Map), BARE);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
         .expect("an answer")
         .expect("checked");
     assert_eq!(r.counts.get("missingLayer"), Some(&2));
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::ApplyProfile)));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::ApplyProfile)));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -410,9 +411,9 @@ fn profili_uygula_adds_the_missing_layers() {
         .expect("checked");
     assert_eq!(r.counts.get("missingLayer"), None, "{:?}", r.findings);
     let _ = app.update(Message::Run("edit.undo"));
-    let _ = app.update(Message::Map(map::Event::Zoning(Z::Tolerance(0.01))));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Tolerance(0.01))));
     let r = app
-        .map
+        .modules.map()
         .zoning
         .answer
         .clone()
@@ -450,9 +451,9 @@ fn road_width_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("zoning.check"));
-            let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
+            let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Areas))));
             if show {
-                let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+                let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
@@ -528,9 +529,9 @@ fn road_parcel_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("zoning.check"));
-            let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
+            let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Areas))));
             if show {
-                let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+                let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
@@ -578,7 +579,7 @@ fn hatch_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("zoning.check"));
-        let _ = app.update(Message::Map(map::Event::Zoning(Z::Group(Group::Areas))));
+        let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Areas))));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pencere-{name}.png"));
         snapshot
@@ -586,7 +587,7 @@ fn hatch_screens() {
             .save(&file)
             .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::Map(map::Event::Zoning(Z::Show)));
+        let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("cizimde-{name}.png"));

@@ -10,6 +10,7 @@
 //! Belgeler is chosen: Onayı yaz writes its approval as given outside (a draft then becomes a document), Taslağı geri
 //! çek removes a draft. Each plan is said as the form is filled; each write is one undo step.
 
+use crate::map::MapState;
 use crate::map;
 use iced::{Element, Length, Task};
 use kentos_commands::{
@@ -22,7 +23,7 @@ use kentos_ui::widget::grow::Grows;
 use kentos_ui::widget::switch::Switch;
 use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet_chosen};
 use crate::traces::Control;
@@ -120,7 +121,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::ParcelRegister(e))
+    Message::from(map::Event::ParcelRegister(e))
 }
 
 /// A parcel's state in words.
@@ -301,7 +302,7 @@ pub fn approve_words(r: &ParcelsRecordsListed, chosen: Chosen, out: &ParcelsAppr
 
 impl App {
     fn parcel_register_input(&self) -> ParcelsRecord {
-        let s = &self.map.parcel_register;
+        let s = &self.modules.map().parcel_register;
         let text = |t: &str| (!t.trim().is_empty()).then(|| t.trim().to_owned());
         ParcelsRecord {
             document: ParcelDocumentInput { name: s.name.trim().to_owned(), kind: text(&s.kind), date: text(&s.date), note: text(&s.note) },
@@ -313,7 +314,7 @@ impl App {
     }
 
     fn parcel_approve_input(&self) -> Option<ParcelsApprove> {
-        let s = &self.map.parcel_register;
+        let s = &self.modules.map().parcel_register;
         let text = |t: &str| (!t.trim().is_empty()).then(|| t.trim().to_owned());
         let (draft, document) = match s.chosen? {
             Chosen::Draft(n) => (Some(n), None),
@@ -335,13 +336,13 @@ impl App {
     fn parcel_approve_run(&mut self) {
         let input = self.parcel_approve_input();
         let Some(input) = input.filter(|i| !i.approval.reference.is_empty()) else {
-            self.map.parcel_register.approve_plan = None;
+            self.modules.map_mut().parcel_register.approve_plan = None;
             return;
         };
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.parcel_register.approve_plan = Some(
+        self.modules.map_mut().parcel_register.approve_plan = Some(
             match parcel_drafts::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
@@ -356,21 +357,21 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return;
         };
-        self.map.parcel_register.answer = Some(parcel_register::list(
+        self.modules.map_mut().parcel_register.answer = Some(parcel_register::list(
             &doc.model,
             &ParcelsRecords { history: true },
         ));
         self.parcel_approve_run();
-        let s = &self.map.parcel_register;
+        let s = &self.modules.map().parcel_register;
         if s.name.trim().is_empty() || s.create.is_empty() && s.close.is_empty() {
-            self.map.parcel_register.plan = None;
+            self.modules.map_mut().parcel_register.plan = None;
             return;
         }
         let input = self.parcel_register_input();
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.parcel_register.plan = Some(
+        self.modules.map_mut().parcel_register.plan = Some(
             match parcel_register::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -384,10 +385,10 @@ impl App {
     /// The window after a write: the same table, the forms empty, the register read again.
     fn parcel_register_reset(&mut self) {
         let keep = (
-            self.map.parcel_register.show,
-            self.map.parcel_register.history,
+            self.modules.map().parcel_register.show,
+            self.modules.map().parcel_register.history,
         );
-        self.map.parcel_register = State {
+        self.modules.map_mut().parcel_register = State {
             show: keep.0,
             history: keep.1,
             ..State::default()
@@ -400,7 +401,7 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
-        self.map
+        self.modules.map()
             .parcel_register
             .create
             .iter()
@@ -424,22 +425,22 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.map.parcel_register = State {
-            create: self.map.parcels_check.uids.clone().unwrap_or_default(),
+        self.modules.map_mut().parcel_register = State {
+            create: self.modules.map().parcels_check.uids.clone().unwrap_or_default(),
             ..State::default()
         };
         self.parcel_register_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::ParcelRegister));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::ParcelRegister));
         Task::none()
     }
 
     pub(crate) fn parcel_register_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_parcel_register(),
-            Event::Show(v) => self.map.parcel_register.show = v,
-            Event::History(on) => self.map.parcel_register.history = on,
+            Event::Show(v) => self.modules.map_mut().parcel_register.show = v,
+            Event::History(on) => self.modules.map_mut().parcel_register.history = on,
             Event::Toggle(i) => {
-                let s = &self.map.parcel_register;
+                let s = &self.modules.map().parcel_register;
                 let Some(r) = &s.answer else { return Task::none() };
                 if s.show == Show::Documents {
                     // A document or draft pressed is chosen for its approval; pressed again, no longer.
@@ -447,7 +448,7 @@ impl App {
                         Some(d) => Some(Chosen::Document(d.number)),
                         None => r.drafts.get(i - r.documents.len()).map(|d| Chosen::Draft(d.number)),
                     };
-                    let state = &mut self.map.parcel_register;
+                    let state = &mut self.modules.map_mut().parcel_register;
                     state.chosen = if state.chosen == picked { None } else { picked };
                     self.parcel_approve_run();
                     return Task::none();
@@ -459,7 +460,7 @@ impl App {
                 let Some(n) = shown_parcels(r, s.history).get(i).filter(|p| p.closed_by.is_none()).map(|p| p.number) else {
                     return Task::none();
                 };
-                let close = &mut self.map.parcel_register.close;
+                let close = &mut self.modules.map_mut().parcel_register.close;
                 if let Some(at) = close.iter().position(|c| *c == n) {
                     close.remove(at);
                 } else {
@@ -468,44 +469,44 @@ impl App {
                 self.parcel_register_run();
             }
             Event::Name(v) => {
-                self.map.parcel_register.name = v;
+                self.modules.map_mut().parcel_register.name = v;
                 self.parcel_register_run();
             }
             Event::Kind(v) => {
-                self.map.parcel_register.kind = v;
+                self.modules.map_mut().parcel_register.kind = v;
                 self.parcel_register_run();
             }
             Event::Date(v) => {
-                self.map.parcel_register.date = v;
+                self.modules.map_mut().parcel_register.date = v;
                 self.parcel_register_run();
             }
             Event::Note(v) => {
-                self.map.parcel_register.note = v;
+                self.modules.map_mut().parcel_register.note = v;
                 self.parcel_register_run();
             }
             Event::Draft(on) => {
-                self.map.parcel_register.draft = on;
+                self.modules.map_mut().parcel_register.draft = on;
                 self.parcel_register_run();
             }
             Event::Reference(v) => {
-                self.map.parcel_register.reference = v;
+                self.modules.map_mut().parcel_register.reference = v;
                 self.parcel_approve_run();
             }
             Event::ApprovalDate(v) => {
-                self.map.parcel_register.approval_date = v;
+                self.modules.map_mut().parcel_register.approval_date = v;
                 self.parcel_approve_run();
             }
             Event::Approver(v) => {
-                self.map.parcel_register.approver = v;
+                self.modules.map_mut().parcel_register.approver = v;
                 self.parcel_approve_run();
             }
             Event::Approve => {
                 let (Some(input), Some(chosen)) =
-                    (self.parcel_approve_input(), self.map.parcel_register.chosen)
+                    (self.parcel_approve_input(), self.modules.map().parcel_register.chosen)
                 else {
                     return Task::none();
                 };
-                let before = self.map.parcel_register.answer.clone().unwrap_or_default();
+                let before = self.modules.map().parcel_register.answer.clone().unwrap_or_default();
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
                 match parcel_drafts::execute(&mut ExecutionContext::new(&mut doc.model), input.clone()) {
                     CommandResult::Completed { output, .. } => {
@@ -520,7 +521,7 @@ impl App {
                 }
             }
             Event::Withdraw => {
-                let Some(Chosen::Draft(n)) = self.map.parcel_register.chosen else {
+                let Some(Chosen::Draft(n)) = self.modules.map().parcel_register.chosen else {
                     return Task::none();
                 };
                 let Some(doc) = self.document.as_mut() else {
@@ -550,7 +551,7 @@ impl App {
             Event::Save => {
                 let input = self.parcel_register_input();
                 let made = self.parcel_register_made();
-                let before = self.map.parcel_register.answer.clone();
+                let before = self.modules.map().parcel_register.answer.clone();
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
                 match parcel_register::execute(&mut ExecutionContext::new(&mut doc.model), input.clone()) {
                     CommandResult::Completed { output, .. } => {
@@ -565,7 +566,7 @@ impl App {
                 }
             }
             Event::Close => {
-                self.map.parcel_register = State::default();
+                self.modules.map_mut().parcel_register = State::default();
                 self.dialog = None;
             }
         }
@@ -573,7 +574,7 @@ impl App {
     }
 
     pub(crate) fn parcel_register_view(&self) -> Element<'_, Message> {
-        let s = &self.map.parcel_register;
+        let s = &self.modules.map().parcel_register;
         let f = self.format();
         let mut lines = Vec::new();
         let mut table_rows = Vec::new();
@@ -779,7 +780,7 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => {
-                matches!(self.map.parcel_register.plan, Some(Ok(_))).then(|| msg(Event::Save))
+                matches!(self.modules.map().parcel_register.plan, Some(Ok(_))).then(|| msg(Event::Save))
             }
             Control::Fill(NAME, v) => Some(msg(Event::Name(v.to_owned()))),
             Control::Fill(KIND, v) => Some(msg(Event::Kind(v.to_owned()))),
@@ -790,10 +791,10 @@ impl App {
             Control::Fill(REFERENCE, v) => Some(msg(Event::Reference(v.to_owned()))),
             Control::Fill(APPROVAL_DATE, v) => Some(msg(Event::ApprovalDate(v.to_owned()))),
             Control::Fill(APPROVER, v) => Some(msg(Event::Approver(v.to_owned()))),
-            Control::Press(APPROVE) => matches!(self.map.parcel_register.approve_plan, Some(Ok(_)))
+            Control::Press(APPROVE) => matches!(self.modules.map().parcel_register.approve_plan, Some(Ok(_)))
                 .then(|| msg(Event::Approve)),
             Control::Press(WITHDRAW) => {
-                matches!(self.map.parcel_register.chosen, Some(Chosen::Draft(_)))
+                matches!(self.modules.map().parcel_register.chosen, Some(Chosen::Draft(_)))
                     .then(|| msg(Event::Withdraw))
             }
             Control::Row(n) if n > 0 => Some(msg(Event::Toggle(n - 1))),

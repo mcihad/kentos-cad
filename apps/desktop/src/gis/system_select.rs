@@ -15,7 +15,7 @@ pub(crate) fn rows(default_label: String, default_srid: Option<u32>, project: u3
     {
         rows.push((Some(project), format!("Projenin sistemi · {} (EPSG:{project})", s.name)));
     }
-    for (datum, systems) in crate::second_crs::choices(project) {
+    for (datum, systems) in kentos_project::crs::others_by_datum(project) {
         for s in systems.into_iter().filter(|s| Some(s.srid) != default_srid) {
             rows.push((Some(s.srid), format!("{datum} · {} (EPSG:{})", s.name, s.srid)));
         }

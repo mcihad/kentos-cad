@@ -11,6 +11,7 @@
 //! Buluta uygula (docs/adr/3100) selects the moving scan and opens Dönüşüm uygula (`pointcloud.transform`) with the
 //! answer's matrix: the cloud is moved only when that tool runs, into a new file beside the source.
 
+use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;
 
@@ -23,7 +24,7 @@ use kentos_ui::label;
 use kentos_ui::widget::tree_view::Check;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::calc::traverse::small_angle_text;
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
@@ -126,7 +127,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::Register(e))
+    Message::from(map::Event::Register(e))
 }
 
 fn cm(v: f64) -> String {
@@ -177,9 +178,9 @@ pub fn csv(r: &PointCloudsRegistered) -> String {
 
 impl App {
     fn register_run(&mut self) {
-        let s = &self.map.register;
+        let s = &self.modules.map().register;
         if s.fixed.is_empty() || s.moving.is_empty() {
-            self.map.register.answer = Some(Err("İki nokta bulutu seçin.".into()));
+            self.modules.map_mut().register.answer = Some(Err("İki nokta bulutu seçin.".into()));
             return;
         }
         let input = PointCloudsRegister {
@@ -202,7 +203,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.register.answer = Some(
+        self.modules.map_mut().register.answer = Some(
             match pointcloud_register::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -263,7 +264,7 @@ impl App {
             .find(|(id, n)| !id.is_empty() && ["gnss", "kontrol"].iter().any(|w| n.to_lowercase().contains(w)))
             .map(|(id, _)| id.clone())
             .unwrap_or_default();
-        self.map.register = State {
+        self.modules.map_mut().register = State {
             clouds,
             layers,
             fixed,
@@ -284,19 +285,19 @@ impl App {
             answer: None,
         };
         self.register_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::Register));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::Register));
         Task::none()
     }
 
     /// Buluta uygula (docs/adr/3100): the moving scan selected (the tool's input), Tarama kaydı closed and Dönüşüm
     /// uygula's window opened with the answer's matrix and a layer of its own. Nothing is written until that tool runs.
     pub(crate) fn register_apply(&mut self) {
-        let Some(Ok(r)) = &self.map.register.answer else {
+        let Some(Ok(r)) = &self.modules.map().register.answer else {
             return;
         };
         let matrix = matrix_text(&r.matrix);
         let slot = self.document.as_ref().and_then(|d| {
-            kentos_domain::Uuid::parse_str(&self.map.register.moving)
+            kentos_domain::Uuid::parse_str(&self.modules.map().register.moving)
                 .ok()
                 .and_then(|u| d.model.slot_of(u))
         });
@@ -305,7 +306,7 @@ impl App {
             return;
         };
         self.selection.set([slot]);
-        self.map.register = State::default();
+        self.modules.map_mut().register = State::default();
         self.dialog = None;
         let values = serde_json::from_value(serde_json::json!({
             "input": { "scope": "selection" },
@@ -318,7 +319,7 @@ impl App {
 
     /// The answer written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn register_save(&mut self, path: PathBuf) {
-        let Some(Ok(r)) = &self.map.register.answer else {
+        let Some(Ok(r)) = &self.modules.map().register.answer else {
             return;
         };
         match std::fs::write(&path, csv(r)) {
@@ -328,7 +329,7 @@ impl App {
     }
 
     pub(crate) fn register_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.map.register;
+        let s = &mut self.modules.map_mut().register;
         match event {
             Event::Fixed(v) => s.fixed = v,
             Event::Moving(v) => s.moving = v,
@@ -372,7 +373,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.map.register = State::default();
+                self.modules.map_mut().register = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -487,7 +488,7 @@ impl App {
     }
 
     pub(crate) fn register_view(&self) -> Element<'_, Message> {
-        let s = &self.map.register;
+        let s = &self.modules.map().register;
         let pick = |v: &str, on: fn(String) -> Event| container(fields::select_owned(s.clouds.clone(), v, move |x| msg(on(x)))).width(230);
         let form = Form::new()
             .label_width(120.0)

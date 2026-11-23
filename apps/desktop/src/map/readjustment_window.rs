@@ -14,6 +14,7 @@
 //! the regulation): by value the records carry a fifth column, the parcel's value before the readjustment, and
 //! Değerlerin kaynağı says who determined them; the answer says it is no rule.
 
+use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;
 
@@ -28,7 +29,7 @@ use kentos_native_application::{ExecutionContext, readjustment, readjustment_sco
 use kentos_ui::label;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::style::fields;
@@ -160,7 +161,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::Readjustment(e))
+    Message::from(map::Event::Readjustment(e))
 }
 
 /// The records of a CSV: `parsel;hak sahibi;tapu alanı;pay` a line, and by value (docs/adr/5080) a fifth column, the
@@ -347,7 +348,7 @@ fn chosen_boundary(app: &App) -> Option<String> {
 impl App {
     /// The scope's input: the boundary with the rule package's places and rounding and the piece tolerance.
     pub(crate) fn readjustment_scope_input(&self) -> Option<ReadjustmentScope> {
-        let s = &self.map.readjustment;
+        let s = &self.modules.map().readjustment;
         Some(ReadjustmentScope {
             boundary: s.boundary.clone()?,
             uids: None,
@@ -361,17 +362,17 @@ impl App {
     /// The scope of the boundary with the rule package's places and rounding.
     pub(crate) fn readjustment_scope_run(&mut self) {
         let Some(input) = self.readjustment_scope_input() else {
-            self.map.readjustment.scope = None;
+            self.modules.map_mut().readjustment.scope = None;
             return;
         };
         let Some(doc) = self.document.as_ref() else { return };
-        self.map.readjustment.scope = Some(readjustment_scope::preview(&doc.model, &input));
+        self.modules.map_mut().readjustment.scope = Some(readjustment_scope::preview(&doc.model, &input));
     }
 
     pub(crate) fn readjustment_run(&mut self) {
-        let s = &self.map.readjustment;
+        let s = &self.modules.map().readjustment;
         if s.entries.is_empty() {
-            self.map.readjustment.answer = None;
+            self.modules.map_mut().readjustment.answer = None;
             return;
         }
         let input = ReadjustmentDistribute {
@@ -381,7 +382,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.readjustment.answer = Some(
+        self.modules.map_mut().readjustment.answer = Some(
             match readjustment::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -401,12 +402,12 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.map.readjustment = State {
+        self.modules.map_mut().readjustment = State {
             boundary: chosen_boundary(self),
             ..State::default()
         };
         self.readjustment_scope_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::Readjustment));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::Readjustment));
         Task::none()
     }
 
@@ -414,20 +415,20 @@ impl App {
     pub(crate) fn readjustment_file(&mut self, path: PathBuf) {
         match std::fs::read_to_string(&path).map_err(|e| e.to_string()).and_then(|t| records(&t)) {
             Ok(entries) => {
-                self.map.readjustment.entries = entries;
-                self.map.readjustment.file =
+                self.modules.map_mut().readjustment.entries = entries;
+                self.modules.map_mut().readjustment.file =
                     path.file_name().map(|n| n.to_string_lossy().into_owned());
                 self.readjustment_run();
             }
             Err(why) => {
-                self.map.readjustment.answer =
+                self.modules.map_mut().readjustment.answer =
                     Some(Err(format!("{} okunamadı: {why}", path.display())))
             }
         }
     }
 
     pub(crate) fn readjustment_event(&mut self, event: Event) -> Task<Message> {
-        let r = &mut self.map.readjustment.rules;
+        let r = &mut self.modules.map_mut().readjustment.rules;
         match event {
             Event::Id(v) => r.id = v,
             Event::Release(v) => r.release = v.max(1.0) as u32,
@@ -444,27 +445,27 @@ impl App {
                 self.readjustment_scope_run();
             }
             Event::Tolerance(v) => {
-                self.map.readjustment.tolerance = v;
+                self.modules.map_mut().readjustment.tolerance = v;
                 self.readjustment_scope_run();
                 return Task::none();
             }
             Event::WriteSheet => self.readjustment_sheet_write(),
             Event::MakeSheets => return self.readjustment_sheets_make(),
-            Event::Numbers(t) => self.map.readjustment.numbers = t,
-            Event::NumberHeight(t) => self.map.readjustment.number_height = t,
-            Event::NumberLeader(on) => self.map.readjustment.number_leader = on,
+            Event::Numbers(t) => self.modules.map_mut().readjustment.numbers = t,
+            Event::NumberHeight(t) => self.modules.map_mut().readjustment.number_height = t,
+            Event::NumberLeader(on) => self.modules.map_mut().readjustment.number_leader = on,
             Event::Apply => {
-                if let Some(Ok(scope)) = &self.map.readjustment.scope {
+                if let Some(Ok(scope)) = &self.modules.map().readjustment.scope {
                     let scope = scope.clone();
-                    self.map.readjustment.applied =
-                        apply(&mut self.map.readjustment.entries, &scope);
+                    self.modules.map_mut().readjustment.applied =
+                        apply(&mut self.modules.map_mut().readjustment.entries, &scope);
                 }
             }
             Event::Remainder(v) => r.remainder = v,
             Event::Basis(v) => r.basis = (v != "area").then_some(v),
             Event::ValueSource(v) => r.value_source = (!v.trim().is_empty()).then_some(v),
             Event::View(v) => {
-                self.map.readjustment.view = v;
+                self.modules.map_mut().readjustment.view = v;
                 return Task::none();
             }
             Event::Pick => {
@@ -500,7 +501,7 @@ impl App {
                 );
             }
             Event::Saved(Some(path)) => {
-                if let Some(Ok(r)) = &self.map.readjustment.answer {
+                if let Some(Ok(r)) = &self.modules.map().readjustment.answer {
                     match std::fs::write(&path, csv(r)) {
                         Ok(()) => self.say(Level::Success, format!("{TITLE}: sonuç {} dosyasına yazıldı.", path.display())),
                         Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
@@ -509,7 +510,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                self.map.readjustment = State::default();
+                self.modules.map_mut().readjustment = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -519,7 +520,7 @@ impl App {
     }
 
     pub(crate) fn readjustment_view(&self) -> Element<'_, Message> {
-        let s = &self.map.readjustment;
+        let s = &self.modules.map().readjustment;
         let r = &s.rules;
         let text = |placeholder: &str, value: &str, on: fn(String) -> Event| -> text_input::TextInput<'_, Message> {
             fields::input(None, placeholder, value, false, false).on_input(move |v| msg(on(v)))

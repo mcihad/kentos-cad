@@ -93,7 +93,7 @@ impl LimitPick {
 }
 
 fn msg(e: LimitEvent) -> Message {
-    Message::Map(map::Event::MapWork(Event::Limit(e)))
+    Message::from(map::Event::MapWork(Event::Limit(e)))
 }
 
 /// A metre value as Turkish writes it.

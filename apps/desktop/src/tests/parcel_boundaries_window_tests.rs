@@ -4,11 +4,12 @@
 //! parcels; Çizimde göster leaves the graph's marks on the drawing, worked out again as it changes, until İşareti
 //! kaldır (docs/adr/2220); nothing is written to the drawing. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::parcel_boundaries_window::{Event as B, Show, rows};
 
 fn cases() -> Value {
@@ -42,9 +43,9 @@ fn an_arc_drawn_with_chords_is_one_problem_with_a_distance() {
     app.selection
         .set([kentos_domain::Slot(1), kentos_domain::Slot(3)]);
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .map
+        .modules.map()
         .parcel_boundaries
         .answer
         .clone()
@@ -57,11 +58,11 @@ fn an_arc_drawn_with_chords_is_one_problem_with_a_distance() {
             .collect::<Vec<_>>(),
         ["missingVertex"]
     );
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Tolerance(
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Tolerance(
         0.01,
     ))));
     let g = app
-        .map
+        .modules.map()
         .parcel_boundaries
         .answer
         .clone()
@@ -111,16 +112,16 @@ fn approx_screens() {
             app.selection.set([kentos_domain::Slot(1), kentos_domain::Slot(3)]);
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("parcels.check"));
-            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
-            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Tolerance(
+            let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
+            let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Tolerance(
                 0.01,
             ))));
-            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+            let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Show(
                 Show::Problems,
             ))));
             if draw {
-                let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(0))));
-                let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
+                let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Choose(0))));
+                let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Draw)));
                 app.selection.clear();
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -142,9 +143,9 @@ const MISMATCH: &str = "uyuşmayan üç sınır bir arada: her biri kendi sorunu
 fn an_arc_against_its_chord_is_listed_with_its_sliver() {
     let mut app = opened(Some(MISMATCH));
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .map
+        .modules.map()
         .parcel_boundaries
         .answer
         .clone()
@@ -179,13 +180,13 @@ fn the_clean_block_s_graph_from_the_parcel_check() {
     let mut app = opened(None);
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::ParcelBoundaries))
+        Some(crate::map::dialog(map::MapDialogKind::ParcelBoundaries))
     );
     let g = app
-        .map
+        .modules.map()
         .parcel_boundaries
         .answer
         .clone()
@@ -214,9 +215,9 @@ fn the_clean_block_s_graph_from_the_parcel_check() {
 fn the_problems_are_listed_and_their_parcels_selected() {
     let mut app = opened(Some(PROBLEMS));
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .map
+        .modules.map()
         .parcel_boundaries
         .answer
         .clone()
@@ -234,12 +235,12 @@ fn the_problems_are_listed_and_their_parcels_selected() {
             "overlap"
         ]
     );
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Show(
         Show::Problems,
     ))));
     let shown = rows(&g, Show::Problems, &app.format());
     assert_eq!(shown[0][0], "Komşuda eksik köşe");
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Select)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Select)));
     assert_eq!(app.dialog, None);
     assert_eq!(
         app.selection.ids().len(),
@@ -256,15 +257,15 @@ fn the_graph_stays_on_the_drawing_until_unmarked() {
     let mut app = opened(Some(PROBLEMS));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .map
+        .modules.map()
         .parcel_boundaries
         .answer
         .clone()
         .expect("an answer")
         .expect("read");
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Draw)));
     assert_eq!(app.dialog, None);
     let m = app.parcel_graph_marks().expect("the marks");
     assert_eq!(
@@ -294,22 +295,22 @@ fn the_graph_stays_on_the_drawing_until_unmarked() {
 fn the_chosen_row_is_brought_forward_on_the_drawing() {
     let mut app = opened(Some(PROBLEMS));
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .map
+        .modules.map()
         .parcel_boundaries
         .answer
         .clone()
         .expect("an answer")
         .expect("read");
     // The last problem (the overlap) chosen in the problems' table.
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Show(
         Show::Problems,
     ))));
     let last = g.problems.len() - 1;
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(last))));
-    assert_eq!(app.map.parcel_boundaries.chosen, Some(last));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Choose(last))));
+    assert_eq!(app.modules.map().parcel_boundaries.chosen, Some(last));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Draw)));
     let m = app.parcel_graph_marks().expect("the marks");
     let (pts, name) = m.focus.clone().expect("brought forward");
     let p = g.problems[last].at;
@@ -327,17 +328,17 @@ fn the_chosen_row_is_brought_forward_on_the_drawing() {
     assert!(b[2] - b[0] < a[2] - a[0], "{b:?} within {a:?}");
     // A boundary, chosen in the boundaries' table: along its curve; another table clears the choice.
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(0))));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Choose(0))));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Show(
         Show::Corners,
     ))));
-    assert_eq!(app.map.parcel_boundaries.chosen, None);
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+    assert_eq!(app.modules.map().parcel_boundaries.chosen, None);
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Show(
         Show::Boundaries,
     ))));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(0))));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Choose(0))));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Draw)));
     let m = app.parcel_graph_marks().expect("the marks");
     let (pts, name) = m.focus.clone().expect("brought forward");
     assert_eq!(
@@ -346,8 +347,8 @@ fn the_chosen_row_is_brought_forward_on_the_drawing() {
     );
     // Without a choice: the whole graph, nothing forward.
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Draw)));
     assert!(app.parcel_graph_marks().expect("the marks").focus.is_none());
 }
 
@@ -377,12 +378,12 @@ fn drawing_screens() {
                 app.selection.set((1..=3).map(kentos_domain::Slot).collect::<Vec<_>>());
             }
             let _ = app.update(Message::Run("parcels.check"));
-            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
-            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+            let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
+            let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Show(
                 Show::Problems,
             ))));
             if draw {
-                let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
+                let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Draw)));
                 app.selection.clear();
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -417,8 +418,8 @@ fn screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("parcels.check"));
-            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
-            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(show))));
+            let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
+            let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Show(show))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
@@ -451,12 +452,12 @@ fn mismatch_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("parcels.check"));
-            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
-            let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+            let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
+            let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Show(
                 Show::Problems,
             ))));
             if draw {
-                let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
+                let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Draw)));
                 app.selection.clear();
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -496,9 +497,9 @@ fn focus_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("parcels.check"));
-        let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+        let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
         let g = app
-            .map
+            .modules.map()
             .parcel_boundaries
             .answer
             .clone()
@@ -509,7 +510,7 @@ fn focus_screens() {
             .iter()
             .position(|b| b.bulge != 0.0)
             .expect("an arc boundary");
-        let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Choose(arc))));
+        let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Choose(arc))));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pencere-{name}.png"));
         snapshot
@@ -517,7 +518,7 @@ fn focus_screens() {
             .save(&file)
             .expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
+        let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Draw)));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("cizimde-{name}.png"));
         snapshot

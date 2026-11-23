@@ -8,10 +8,11 @@
 //! own layer in one undo step. Çapın paftaları (docs/adr/2680) makes a separation sheet for each parcel partly inside,
 //! its points on the parcel's own layer, in one undo step. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::readjustment_window::{Event as R, View, records};
 
 fn opened(program: Option<Module>) -> App {
@@ -39,7 +40,7 @@ fn filled_with(app: &mut App, csv: &str) {
         R::Effective("2026-01-01".into()),
         R::Deduction("0.40".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::Readjustment(e)));
+        let _ = app.update(Message::from(map::Event::Readjustment(e)));
     }
     // A folder of its own for each call: tests run side by side in one process, and a shared one let one test read
     // another's records or lose its file to the other's clean-up.
@@ -67,7 +68,7 @@ fn a_headerless_files_first_line_is_data() {
     let _ = app.update(Message::Run("readjustment.distribute"));
     filled_with(&mut app, "101/1;QA01;yanlış;1/1\n101/2;QA02;603.50;1/1\n");
     let said = crate::files_testing::last_said(&app);
-    let answer = app.map.readjustment.answer.clone();
+    let answer = app.modules.map().readjustment.answer.clone();
     assert!(!matches!(answer, Some(Ok(_))), "nothing kept as complete: {said}");
 }
 
@@ -79,12 +80,12 @@ fn the_records_are_read_and_the_totals_kept() {
     let _ = app.update(Message::Run("readjustment.distribute"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::Readjustment))
+        Some(crate::map::dialog(map::MapDialogKind::Readjustment))
     );
     let revision = app.document.as_ref().map(|d| d.model.revision());
     filled(&mut app);
     let a = app
-        .map
+        .modules.map()
         .readjustment
         .answer
         .clone()
@@ -95,11 +96,11 @@ fn the_records_are_read_and_the_totals_kept() {
     let p = a.parcels.iter().find(|p| p.parcel == "P").expect("P");
     assert_eq!((p.remainder.as_str(), p.remainder_to.as_slice()), ("0.01", &["K1".to_owned()][..]));
     // A rule that refuses a remainder says so, with its place.
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Remainder(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Remainder(
         "reject".into(),
     ))));
     let why = app
-        .map
+        .modules.map()
         .readjustment
         .answer
         .clone()
@@ -161,10 +162,10 @@ fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_record
     let _ = app.update(Message::Run("readjustment.distribute"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::Readjustment))
+        Some(crate::map::dialog(map::MapDialogKind::Readjustment))
     );
     let k = app
-        .map
+        .modules.map()
         .readjustment
         .scope
         .clone()
@@ -179,11 +180,11 @@ fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_record
     let statuses: Vec<&str> = k.parcels.iter().map(|p| p.status.as_str()).collect();
     let wanted: Vec<&str> = want["parcels"].as_array().expect("parcels").iter().filter_map(|p| p["status"].as_str()).collect();
     assert_eq!(statuses, wanted);
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Scope))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Scope))));
     filled_with(&mut app, SCOPE_CSV);
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Apply)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Apply)));
     let areas: Vec<&str> = app
-        .map
+        .modules.map()
         .readjustment
         .entries
         .iter()
@@ -195,7 +196,7 @@ fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_record
         "101/3 takes the part inside; 101/4 has no basis"
     );
     let lines: Vec<&str> = app
-        .map
+        .modules.map()
         .readjustment
         .applied
         .iter()
@@ -221,7 +222,7 @@ fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_record
         "{lines:?}"
     );
     let a = app
-        .map
+        .modules.map()
         .readjustment
         .answer
         .clone()
@@ -244,7 +245,7 @@ fn the_policy_and_the_tolerance_run_the_scope_again() {
     let _ = app.update(Message::Run("readjustment.distribute"));
     let status = |app: &App, name: &str| {
         let k = app
-            .map
+            .modules.map()
             .readjustment
             .scope
             .clone()
@@ -257,11 +258,11 @@ fn the_policy_and_the_tolerance_run_the_scope_again() {
             .expect("the parcel")
     };
     assert_eq!(status(&app, "101/9"), ("sliver".to_owned(), None));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Scale(0.0))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Scale(0.0))));
     assert_eq!(status(&app, "101/1"), ("finerThanPolicy".to_owned(), None));
     assert_eq!(status(&app, "101/3"), ("computed".to_owned(), Some("333".to_owned())));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Scale(2.0))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Tolerance(0.003))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Scale(2.0))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Tolerance(0.003))));
     assert_eq!(status(&app, "101/9"), ("computed".to_owned(), Some("30.00".to_owned())), "the 4 mm piece counts");
 }
 
@@ -271,9 +272,9 @@ fn the_policy_and_the_tolerance_run_the_scope_again() {
 fn the_separation_sheet_lists_the_parts_and_writes_them() {
     let mut app = bounded(true);
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
     let k = app
-        .map
+        .modules.map()
         .readjustment
         .scope
         .clone()
@@ -299,7 +300,7 @@ fn the_separation_sheet_lists_the_parts_and_writes_them() {
     let girmeyen: Vec<&str> =
         rows.iter().filter(|r| r[0] == "101/3" && r[1] == "Girmeyen").map(|r| r[2].as_str()).collect();
     assert_eq!(girmeyen, ["3", "2", "5", "6"], "the corners shared with Giren keep its numbers");
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::WriteSheet)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::WriteSheet)));
     let doc = &mut app.document.as_mut().expect("open").model;
     let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Ayırma çapı").map(|l| l.id.clone()).expect("the layer");
     let written: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
@@ -317,9 +318,9 @@ fn the_separation_sheet_lists_the_parts_and_writes_them() {
 fn the_parts_outside_take_the_typed_parcel_numbers() {
     let mut app = named();
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
     let k = app
-        .map
+        .modules.map()
         .readjustment
         .scope
         .clone()
@@ -352,17 +353,17 @@ fn the_parts_outside_take_the_typed_parcel_numbers() {
     assert_eq!(crate::readjustment_sheet::typed_numbers("  ", &k), Ok(None));
     // One number short: the command refuses, nothing written, the window stays.
     let revision = app.document.as_ref().map(|d| d.model.revision());
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/10: 101/24".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert!(app.log.last().expect("said").text.contains("2 parçası var; 1 parsel numarası verildi"));
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision);
     // Both: the sheets are made.
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/10: 101/24, 101/25".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert_eq!(app.dialog, None, "the sheets are made");
     // docs/adr/3480: on 101/10's layer of numbered pieces each part as an area with its number, and a point inside it
     // labelled with the number; the points' layer keeps the corners only (the coordinate list reads it).
@@ -400,9 +401,9 @@ fn a_separation_sheet_is_made_for_each_partial_parcel() {
     use kentos_sheet::{CoordSource, ItemKind};
     let mut app = bounded(true);
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
     let revision = app.document.as_ref().map(|d| d.model.revision());
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     let said = app.log.last().expect("said");
     assert_eq!(said.level, kentos_interaction::Level::Warn);
     assert!(
@@ -417,14 +418,14 @@ fn a_separation_sheet_is_made_for_each_partial_parcel() {
     );
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::Readjustment)),
+        Some(crate::map::dialog(map::MapDialogKind::Readjustment)),
         "the window stays"
     );
 
     let mut app = named();
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert_eq!(app.dialog, None, "the window closes on the sheets");
     let doc = &app.document.as_ref().expect("open").model;
     let book = kentos_sheet::project::read_project_sheets(doc.sheets().expect("a book")).expect("reads").0;
@@ -481,7 +482,7 @@ fn sheets_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("readjustment.distribute"));
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
+        let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -493,7 +494,7 @@ fn sheets_screens() {
             println!("{}", file.display());
         };
         shot(&mut app, "1-pencere");
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+        let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
         shot(&mut app, "2-pafta-101-3");
         let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(kentos_sheet_ui::InspectorTab::Preflight)));
         shot(&mut app, "3-on-denetim");
@@ -531,8 +532,8 @@ fn numbers_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("readjustment.distribute"));
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+        let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+        let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
             "101/10: 101/24, 101/25".into(),
         ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -546,7 +547,7 @@ fn numbers_screens() {
             println!("{}", file.display());
         };
         shot(&mut app, "1-pencere");
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+        let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
         let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(3)));
         shot(&mut app, "2-pafta-101-10");
         if name == "acik-genis" {
@@ -575,12 +576,12 @@ fn refusal_screens() {
     let _ = app.update(Message::WindowResized(size));
     let _ = app.update(Message::Run("view.zoomExtents"));
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/1: 5".into(),
     ))));
     // Çapın paftaları: the typed numbers read, the parcel's reason said.
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     let mut snapshot = Snapshot::new(size).expect("a renderer");
     let mut update = |app: &mut App, m: Message| {
         let _ = app.update(m);
@@ -611,15 +612,15 @@ fn label_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("readjustment.distribute"));
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+        let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+        let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
             "101/10: 101/24, 101/25".into(),
         ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+        let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
         let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(3)));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pafta-101-10-{name}.png"));
@@ -632,12 +633,12 @@ fn label_screens() {
 fn without_a_selected_area_there_is_no_scope() {
     let mut app = bounded(false);
     let _ = app.update(Message::Run("readjustment.distribute"));
-    assert!(app.map.readjustment.scope.is_none());
+    assert!(app.modules.map().readjustment.scope.is_none());
     filled(&mut app);
-    let before = app.map.readjustment.entries.clone();
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Apply)));
-    assert_eq!(app.map.readjustment.entries, before);
-    assert!(app.map.readjustment.applied.is_empty());
+    let before = app.modules.map().readjustment.entries.clone();
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Apply)));
+    assert_eq!(app.modules.map().readjustment.entries, before);
+    assert!(app.modules.map().readjustment.applied.is_empty());
 }
 
 #[test]
@@ -667,10 +668,10 @@ fn sheet_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("readjustment.distribute"));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
             if write {
-                let _ = app.update(Message::Map(map::Event::Readjustment(R::WriteSheet)));
-                let _ = app.update(Message::Map(map::Event::Readjustment(R::Close)));
+                let _ = app.update(Message::from(map::Event::Readjustment(R::WriteSheet)));
+                let _ = app.update(Message::from(map::Event::Readjustment(R::Close)));
                 // The other layers hidden: the sheet's parts alone.
                 let doc = &mut app.document.as_mut().expect("open").model;
                 let others: Vec<String> =
@@ -714,7 +715,7 @@ fn screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("readjustment.distribute"));
             filled(&mut app);
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::View(view))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(view))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
@@ -737,8 +738,8 @@ fn screens() {
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("readjustment.distribute"));
             filled_with(&mut app, SCOPE_CSV);
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::Apply)));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::View(view))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::Apply)));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(view))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
@@ -758,21 +759,21 @@ fn screens() {
 fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
     let mut app = named();
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/10: 101/24, 101/25".into(),
     ))));
     let revision = app.document.as_ref().map(|d| d.model.revision());
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberHeight(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::NumberHeight(
         "iki".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert!(app.log.last().expect("said").text.contains("Numara yazısı: “iki” bir sayı değil"));
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision);
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberHeight(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::NumberHeight(
         "2".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert_eq!(app.dialog, None, "the sheets are made");
     let doc = &app.document.as_ref().expect("open").model;
     let layer = doc.layers().leaves().into_iter().find(|l| l.name == "101/10 dış parçalar").map(|l| l.id.clone()).expect("101/10's pieces");
@@ -802,17 +803,17 @@ fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
 fn the_numbers_too_big_go_outside_on_leaders() {
     let mut app = named();
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/10: 101/24, 101/25".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberHeight(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::NumberHeight(
         "6".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberLeader(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::NumberLeader(
         true,
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert_eq!(app.dialog, None, "the sheets are made");
     let doc = &app.document.as_ref().expect("open").model;
     let layer = doc.layers().leaves().into_iter().find(|l| l.name == "101/10 dış parçalar").map(|l| l.id.clone()).expect("101/10's pieces");
@@ -857,17 +858,17 @@ fn a_number_that_touches_something_everywhere_is_said() {
     setup["uids"].as_array_mut().expect("uids").push(format!("0192f800-2060-7000-8000-{n:012x}").into());
     let mut app = bounded_on(setup, true);
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/10: 101/24, 101/25".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberHeight(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::NumberHeight(
         "6".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberLeader(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::NumberLeader(
         true,
     ))));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert_eq!(app.dialog, None, "the sheets are made");
     let said: Vec<String> = app.log.lines().filter(|l| l.text.contains("konamadı")).map(|l| l.text.clone()).collect();
     assert_eq!(said.len(), 2, "{said:?}");
@@ -884,23 +885,23 @@ fn by_value_the_mass_goes_by_the_values_and_says_it_is_no_rule() {
     assert_eq!(records(VALUE_CSV).expect("reads")[0].value.as_deref(), Some("2000000"));
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Basis(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Basis(
         "value".into(),
     ))));
     filled_with(&mut app, VALUE_CSV);
     let why = app
-        .map
+        .modules.map()
         .readjustment
         .answer
         .clone()
         .expect("an answer")
         .expect_err("no source");
     assert!(why.contains("rules.valueSource"), "{why}");
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::ValueSource(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::ValueSource(
         "Sentetik deneme değerleri".into(),
     ))));
     let a = app
-        .map
+        .modules.map()
         .readjustment
         .answer
         .clone()
@@ -916,11 +917,11 @@ fn by_value_the_mass_goes_by_the_values_and_says_it_is_no_rule() {
         saved.contains("Dağıtım esası;değer") && saved.contains("101/1;2000000;4/7;485.54;514.46"),
         "{saved}"
     );
-    let _ = app.update(Message::Map(map::Event::Readjustment(R::Basis(
+    let _ = app.update(Message::from(map::Event::Readjustment(R::Basis(
         "area".into(),
     ))));
     let why = app
-        .map
+        .modules.map()
         .readjustment
         .answer
         .clone()
@@ -949,14 +950,14 @@ fn clear_and_value_screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("readjustment.distribute"));
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::Basis(
+        let _ = app.update(Message::from(map::Event::Readjustment(R::Basis(
             "value".into(),
         ))));
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::ValueSource(
+        let _ = app.update(Message::from(map::Event::Readjustment(R::ValueSource(
             "Sentetik deneme değerleri; kıymet takdiri değil".into(),
         ))));
         filled_with(&mut app, VALUE_CSV);
-        let _ = app.update(Message::Map(map::Event::Readjustment(R::View(
+        let _ = app.update(Message::from(map::Event::Readjustment(R::View(
             View::Parcels,
         ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -974,18 +975,18 @@ fn clear_and_value_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("readjustment.distribute"));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
                 "101/10: 101/24, 101/25".into(),
             ))));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberHeight(
+            let _ = app.update(Message::from(map::Event::Readjustment(R::NumberHeight(
                 "6".into(),
             ))));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberLeader(
+            let _ = app.update(Message::from(map::Event::Readjustment(R::NumberLeader(
                 true,
             ))));
             if made {
-                let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+                let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
                 let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(0)));
                 // 101/10's pieces with 101/1 and 101/8 beside them: the south number east, the north one west.
                 let b = kentos_commands::Bounds { min_x: 486955.0, min_y: 4419970.0, max_x: 487040.0, max_y: 4420072.0 };
@@ -1024,18 +1025,18 @@ fn leader_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("readjustment.distribute"));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
                 "101/10: 101/24, 101/25".into(),
             ))));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberHeight(
+            let _ = app.update(Message::from(map::Event::Readjustment(R::NumberHeight(
                 "6".into(),
             ))));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberLeader(
+            let _ = app.update(Message::from(map::Event::Readjustment(R::NumberLeader(
                 true,
             ))));
             if made {
-                let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+                let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
                 let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(0)));
                 // 101/10's two 4 m pieces outside and their leaders running east.
                 let b = kentos_commands::Bounds { min_x: 486980.0, min_y: 4419970.0, max_x: 487045.0, max_y: 4420070.0 };
@@ -1074,15 +1075,15 @@ fn fit_screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("readjustment.distribute"));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::View(View::Sheet))));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::Numbers(
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
                 "101/10: 101/24, 101/25".into(),
             ))));
-            let _ = app.update(Message::Map(map::Event::Readjustment(R::NumberHeight(
+            let _ = app.update(Message::from(map::Event::Readjustment(R::NumberHeight(
                 "2".into(),
             ))));
             if made > 0 {
-                let _ = app.update(Message::Map(map::Event::Readjustment(R::MakeSheets)));
+                let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
                 let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(3)));
             }
             if made == 2 {

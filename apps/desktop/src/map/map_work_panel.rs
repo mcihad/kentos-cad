@@ -18,6 +18,7 @@
 //! docs/adr/5280: the table sets each shift against the limit Kayma sınırı picks (map_work_limit.rs); Tipli katman
 //! offers, for an item without a profile, the profile whose classes suit its kind (KentOS's or the project's own).
 
+use crate::map::MapState;
 use crate::map;
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -83,7 +84,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::MapWork(e))
+    Message::from(map::Event::MapWork(e))
 }
 
 type Read = (String, bool, String, Result<MapWorkTree, String>);
@@ -195,9 +196,9 @@ impl App {
     pub(crate) fn map_work_read(&self) -> Option<Result<MapWorkTree, String>> {
         let doc = self.document.as_ref()?;
         let revision = doc.model.revision().to_string();
-        let deep = self.map.map_work.deep;
-        let key = self.map.map_work.limit.key();
-        let mut kept = self.map.map_work.read.borrow_mut();
+        let deep = self.modules.map().map_work.deep;
+        let key = self.modules.map().map_work.limit.key();
+        let mut kept = self.modules.map().map_work.read.borrow_mut();
         if let Some((r, d, k, answer)) = kept.as_ref()
             && *r == revision
             && *d == deep
@@ -212,7 +213,7 @@ impl App {
             deep,
             drawing,
             uid: None,
-            limit: self.map.map_work.limit.holding(),
+            limit: self.modules.map().map_work.limit.holding(),
             suggest: true,
         };
         let answer = map_work::preview(&doc.model, &input);
@@ -247,24 +248,24 @@ impl App {
     }
 
     fn map_work_add(&mut self, file: Option<PathBuf>) {
-        let name = self.map.map_work.name.trim().to_owned();
+        let name = self.modules.map().map_work.name.trim().to_owned();
         let name = if name.is_empty() {
             KIND_CHOICES
                 .iter()
-                .find(|c| c.0 == self.map.map_work.kind)
+                .find(|c| c.0 == self.modules.map().map_work.kind)
                 .map_or("Öğe", |c| c.1)
                 .to_owned()
         } else {
             name
         };
         let operation = MapWorkOperation::Add {
-            kind: kind_of(self.map.map_work.kind),
+            kind: kind_of(self.modules.map().map_work.kind),
             name: name.clone(),
             layers: self.map_work_layer().into_iter().collect(),
             file: file.map(|p| p.to_string_lossy().into_owned()),
         };
         if let Some(out) = self.map_work_edit(operation) {
-            self.map.map_work.name.clear();
+            self.modules.map_mut().map_work.name.clear();
             self.say(Level::Success, format!("“{name}” harita işine eklendi ({}).", out.item.unwrap_or_default()));
         }
     }
@@ -276,7 +277,7 @@ impl App {
             return;
         };
         let Some(item) = self
-            .map
+            .modules.map()
             .map_work
             .profile_item
             .clone()
@@ -286,7 +287,7 @@ impl App {
             return;
         };
         let chosen = self
-            .map
+            .modules.map()
             .map_work
             .profile_class
             .clone()
@@ -348,7 +349,7 @@ impl App {
 
     /// docs/adr/5280: the shift table's rows read again against the limit now.
     fn map_work_shifts_again(&mut self) {
-        let Some(id) = self.map.map_work.changes_of.clone() else {
+        let Some(id) = self.modules.map().map_work.changes_of.clone() else {
             return;
         };
         let Some(Ok(tree)) = self.map_work_read() else {
@@ -364,7 +365,7 @@ impl App {
             .find(|r| r.id == id)
             .and_then(|r| r.changes.as_ref())
         {
-            self.map.map_work.shifts = shift_rows(c, decimals);
+            self.modules.map_mut().map_work.shifts = shift_rows(c, decimals);
         }
     }
 
@@ -381,8 +382,8 @@ impl App {
             Event::Derivation(id) => self.select_derivation(&id),
             Event::Changes(id) => self.select_changes(&id),
             Event::Restore(id) => self.map_work_restore(&id),
-            Event::Kind(k) => self.map.map_work.kind = k,
-            Event::Name(n) => self.map.map_work.name = n,
+            Event::Kind(k) => self.modules.map_mut().map_work.kind = k,
+            Event::Name(n) => self.modules.map_mut().map_work.name = n,
             Event::Add(false) => self.map_work_add(None),
             Event::Add(true) => return Self::pick_file("Kaynağın dosyası", Event::AddFile),
             Event::AddFile(Some(path)) => self.map_work_add(Some(path)),
@@ -417,21 +418,21 @@ impl App {
                     self.say(Level::Info, words.to_owned());
                 }
             }
-            Event::Deep(on) => self.map.map_work.deep = on,
+            Event::Deep(on) => self.modules.map_mut().map_work.deep = on,
             Event::Fold(key) => {
-                if !self.map.map_work.toggled.remove(&key) {
-                    self.map.map_work.toggled.insert(key);
+                if !self.modules.map_mut().map_work.toggled.remove(&key) {
+                    self.modules.map_mut().map_work.toggled.insert(key);
                 }
             }
-            Event::Filter(f) => self.map.map_work.filter = f,
-            Event::DeriveFrom(id) => self.map.map_work.derive_from = Some(id),
+            Event::Filter(f) => self.modules.map_mut().map_work.filter = f,
+            Event::DeriveFrom(id) => self.modules.map_mut().map_work.derive_from = Some(id),
             Event::Derive => self.map_work_derive(),
-            Event::ProfileItem(id) => self.map.map_work.profile_item = Some(id),
-            Event::ProfileClass(c) => self.map.map_work.profile_class = Some(c),
+            Event::ProfileItem(id) => self.modules.map_mut().map_work.profile_item = Some(id),
+            Event::ProfileClass(c) => self.modules.map_mut().map_work.profile_class = Some(c),
             Event::ProfileAdd => self.map_work_profile_add(),
             Event::Suggest(id) => self.map_work_suggest(&id),
             Event::Limit(e) => {
-                self.map.map_work.limit.apply(e);
+                self.modules.map_mut().map_work.limit.apply(e);
                 self.map_work_shifts_again();
             }
             Event::ProfileRemove(id) => {
@@ -487,7 +488,7 @@ impl App {
         }
         if item.is_some() {
             // Its row not hidden by a filter.
-            self.map.map_work.filter = None;
+            self.modules.map_mut().map_work.filter = None;
         }
         if self.open_panel(crate::app::Panel::MapWork) {
             if !self.right_panel_shown() {
@@ -522,7 +523,7 @@ impl App {
     /// Seçimi türet: the selected objects recorded as made from the item chosen, at its revision now.
     fn map_work_derive(&mut self) {
         let Some(source) = self
-            .map
+            .modules.map()
             .map_work
             .derive_from
             .clone()
@@ -628,7 +629,7 @@ impl App {
     /// Değişenler (docs/adr/2880 §4): the objects changed and added since the item's approval selected
     /// and shown, as the tree lists them (at most `WORK_CHANGES_LISTED`); the removed ones are gone from the drawing.
     fn select_changes(&mut self, id: &str) {
-        self.map.map_work.changes_of = Some(id.to_owned());
+        self.modules.map_mut().map_work.changes_of = Some(id.to_owned());
         let Some(Ok(tree)) = self.map_work_read() else { return };
         let Some(c) = tree.items.iter().find(|r| r.id == id).and_then(|r| r.changes.clone()) else { return };
         let Some(doc) = self.document.as_ref() else { return };
@@ -675,7 +676,7 @@ impl App {
         };
         // Docs/adr/4880: how far each moved, in the table under the tree; the largest said.
         let decimals = self.document.as_ref().map_or(3, |d| d.model.settings().length_decimals as usize);
-        self.map.map_work.shifts = shift_rows(&c, decimals);
+        self.modules.map_mut().map_work.shifts = shift_rows(&c, decimals);
         let largest = c
             .objects
             .iter()
@@ -693,7 +694,7 @@ impl App {
             self.select_slots(slots);
             format!("Onaydan sonra değişen ya da eklenen {n} nesne seçildi{first}{which}{gone}.{drawn}")
         };
-        self.map.map_work.approved = (!shapes.is_empty())
+        self.modules.map_mut().map_work.approved = (!shapes.is_empty())
             .then(|| crate::approved_layer::Approved::of(&shapes, self.selection.version()));
         self.say(Level::Info, words);
     }
@@ -711,14 +712,14 @@ impl App {
         let tools = row![
             container(crate::style::fields::select(
                 &KIND_CHOICES,
-                self.map.map_work.kind,
+                self.modules.map().map_work.kind,
                 |k| msg(Event::Kind(k))
             ))
             .width(118),
             crate::style::fields::input(
                 None,
                 "Yeni öğenin adı",
-                &self.map.map_work.name,
+                &self.modules.map().map_work.name,
                 false,
                 false
             )
@@ -733,8 +734,8 @@ impl App {
             crate::style::strip::icon_toggle(
                 Icon::Hash,
                 "Dosyaları oku: içeriklerini (SHA-256) kabul edilen revizyonla karşılaştır",
-                self.map.map_work.deep,
-                msg(Event::Deep(!self.map.map_work.deep)),
+                self.modules.map().map_work.deep,
+                msg(Event::Deep(!self.modules.map().map_work.deep)),
             ),
         ]
         .spacing(4)
@@ -746,7 +747,7 @@ impl App {
         let free = if sources.is_empty() || self.selection.len() > 10_000 { 0 } else { self.underived_uids().len() };
         if free > 0 {
             let chosen = self
-                .map
+                .modules.map()
                 .map_work
                 .derive_from
                 .clone()
@@ -775,7 +776,7 @@ impl App {
                 .map(|r| (r.id.clone(), r.name.clone()))
                 .collect();
             let item = self
-                .map
+                .modules.map()
                 .map_work
                 .profile_item
                 .clone()
@@ -783,7 +784,7 @@ impl App {
                 .unwrap_or_else(|| owners[0].0.clone());
             let classes = profile_classes();
             let class = self
-                .map
+                .modules.map()
                 .map_work
                 .profile_class
                 .clone()
@@ -846,19 +847,19 @@ impl App {
             items.push(group);
         }
         let body = StatusTree::new(items)
-            .toggled(&self.map.map_work.toggled, |key| msg(Event::Fold(key)))
-            .filter(self.map.map_work.filter, |f| msg(Event::Filter(f)))
+            .toggled(&self.modules.map().map_work.toggled, |key| msg(Event::Fold(key)))
+            .filter(self.modules.map().map_work.filter, |f| msg(Event::Filter(f)))
             .counted("Güncel değil", "Sorun")
             .empty("Harita işinde öğe yok: türünü ve adını yazıp Katmanlar'da seçili katmanla ya da dosyasıyla ekleyin.");
         let mut all = column![head, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]);
         // Docs/adr/4880: how far the objects Değişenler selected moved, while their shapes are drawn.
         if self
-            .map
+            .modules.map()
             .map_work
             .approved
             .as_ref()
             .is_some_and(|a| a.version == self.selection.version())
-            && !self.map.map_work.shifts.is_empty()
+            && !self.modules.map().map_work.shifts.is_empty()
         {
             use crate::road_dialog::{col, num};
             let mut cols = vec![
@@ -870,16 +871,16 @@ impl App {
                 num("Hausdorff (m)", 92.0),
             ];
             // docs/adr/5280: against the limit, when one holds.
-            if self.map.map_work.limit.holding().is_some() {
+            if self.modules.map().map_work.limit.holding().is_some() {
                 cols.insert(1, col("Sınır", 112.0));
             }
             all = all.push(
                 column![
                     label::caption("Onaydan sonra kaymalar"),
-                    crate::map_work_limit::view(&self.map.map_work.limit),
+                    crate::map_work_limit::view(&self.modules.map().map_work.limit),
                     crate::road_dialog::sheet(
                         cols,
-                        self.map.map_work.shifts.clone(),
+                        self.modules.map().map_work.shifts.clone(),
                         "Kayan nesne yok.",
                         160.0
                     ),

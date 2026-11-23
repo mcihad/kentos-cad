@@ -3,6 +3,7 @@
 //! beside the first); the design approved, one line moved and the other removed: Değişenler draws both shapes as
 //! approved and lists the moved line's shift, its numbers the query's. And the pictures.
 
+use crate::map::MapState;
 use kentos_commands::WorkStatus as W;
 use serde_json::json;
 
@@ -75,14 +76,14 @@ fn degisenler_lists_the_shift_and_draws_the_removed_shape() {
     assert!(shift.paired);
     send(&mut app, P::Changes("is-4".into()));
     let shown = app
-        .map
+        .modules.map()
         .map_work
         .approved
         .clone()
         .expect("the approved shapes");
     assert_eq!(shown.objects, 2, "the moved line's and the removed line's");
-    assert_eq!(app.map.map_work.shifts.len(), 1);
-    let row = &app.map.map_work.shifts[0];
+    assert_eq!(app.modules.map().map_work.shifts.len(), 1);
+    let row = &app.modules.map().map_work.shifts[0];
     let d = shift.largest.as_ref().expect("paired").d;
     assert_eq!(row[1], "2");
     assert_eq!(row[2], format!("{d:.3}"));

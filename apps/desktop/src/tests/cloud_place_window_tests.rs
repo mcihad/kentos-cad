@@ -3,12 +3,13 @@
 //! Konumla writes it (the cloud's file places, one undo step); Konumu kaldır takes a kept place away; a matrix that
 //! scales is said, nothing written; the service hands the renderer the files' places. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::cloud_place_window::{By, Event as P};
 
 fn cases() -> Value {
@@ -65,7 +66,7 @@ fn open_on(slot: u32) -> App {
     let _ = app.update(Message::Run("pointcloud.place"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::CloudPlace))
+        Some(crate::map::dialog(map::MapDialogKind::CloudPlace))
     );
     app
 }
@@ -73,14 +74,14 @@ fn open_on(slot: u32) -> App {
 #[test]
 fn a_quarter_turn_by_euler_angles_is_the_shared_case_and_konumla_writes_it() {
     let mut app = open_on(1);
-    assert_eq!(app.map.cloud_place.by, By::Euler);
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Yaw(90.0))));
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Center(
+    assert_eq!(app.modules.map().cloud_place.by, By::Euler);
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Yaw(90.0))));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Center(
         "500050 4400050 125".into(),
     ))));
     let want = case_output("Euler: Z çevresinde çeyrek");
     let got = serde_json::to_value(
-        app.map
+        app.modules.map()
             .cloud_place
             .preview
             .clone()
@@ -102,7 +103,7 @@ fn a_quarter_turn_by_euler_angles_is_the_shared_case_and_konumla_writes_it() {
             "90,0000".to_owned()
         ]]
     );
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Place)));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Place)));
     near(
         &serde_json::to_value(cloud(&app, 1).sources[0].pose.expect("placed")).expect("json"),
         &want["poses"][0],
@@ -124,7 +125,7 @@ fn a_quarter_turn_by_euler_angles_is_the_shared_case_and_konumla_writes_it() {
 fn konumu_kaldir_takes_the_kept_place_away() {
     let mut app = open_on(3);
     assert!(cloud(&app, 3).placed());
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Remove)));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Remove)));
     let c = cloud(&app, 3);
     assert_eq!(c.sources[0].pose, None);
     near(
@@ -137,19 +138,19 @@ fn konumu_kaldir_takes_the_kept_place_away() {
 #[test]
 fn a_matrix_that_scales_is_said_and_nothing_is_written() {
     let mut app = open_on(1);
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::By(By::Matrix))));
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Matrix(
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::By(By::Matrix))));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Matrix(
         "1.001 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1".into(),
     ))));
     let why = app
-        .map
+        .modules.map()
         .cloud_place
         .preview
         .clone()
         .expect("a preview")
         .expect_err("refused");
     assert!(why.contains("katı dönüşüm"), "{why}");
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Place)));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Place)));
     assert!(!cloud(&app, 1).placed(), "nothing written");
 }
 
@@ -191,15 +192,15 @@ fn screens() {
     set(&mut app, "light", wide);
     app.selection.set(vec![Slot(1)]);
     let _ = app.update(Message::Run("pointcloud.place"));
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Yaw(30.0))));
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Translation(
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Yaw(30.0))));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Translation(
         "150 0 0".into(),
     ))));
     shoot(&mut app, wide, "1-euler-acik-genis.png");
     // 2: written, the window closed: the cloud drawn where it is placed (turned 30°, 150 m east), beside the two-file
     // cloud of the same file where the file says; its file not written.
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Place)));
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Close)));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Place)));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Close)));
     app.selection.set(vec![Slot(1), Slot(2)]);
     let _ = app.update(Message::Run("view.zoomSelection"));
     // The placed cloud is a new one to the service: its index is made after the first frame asks for it.
@@ -211,8 +212,8 @@ fn screens() {
     set(&mut app, "dark", narrow);
     app.selection.set(vec![Slot(3)]);
     let _ = app.update(Message::Run("pointcloud.place"));
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::By(By::Matrix))));
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Matrix(
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::By(By::Matrix))));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Matrix(
         "1.001 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1".into(),
     ))));
     shoot(&mut app, narrow, "3-matris-ret-koyu-dar.png");
@@ -226,7 +227,7 @@ fn screens() {
     set(&mut app, "light", wide);
     app.selection.set(vec![Slot(1), Slot(2), Slot(3)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(
+    let _ = app.update(Message::from(map::Event::ScanNetwork(
         crate::scan_network_window::Event::Keep,
     )));
     shoot(&mut app, wide, "5-tarama-agi-nesnede-tut-acik-genis.png");
@@ -235,7 +236,7 @@ fn screens() {
     set(&mut app, "dark", narrow);
     app.selection.set(vec![Slot(1), Slot(2), Slot(3)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(
+    let _ = app.update(Message::from(map::Event::ScanNetwork(
         crate::scan_network_window::Event::Rounds(5.0),
     )));
     shoot(&mut app, narrow, "6-tarama-agi-dis-dongu-koyu-dar.png");
@@ -248,13 +249,13 @@ fn screens() {
 #[test]
 fn the_table_tells_the_kept_place_from_the_next_step() {
     let mut app = open_on(1);
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Translation("3 4 0".into()))));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Translation("3 4 0".into()))));
     let (_, rows) = app.cloud_place_lines();
     assert_eq!(rows[0][1..4], ["0,000".to_owned(), "5,000".to_owned(), "5,000".to_owned()], "before: kept 0, step 5, total 5");
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Place)));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Place)));
     let (_, rows) = app.cloud_place_lines();
     assert_eq!(rows[0][1..4], ["5,000".to_owned(), "5,000".to_owned(), "10,000".to_owned()], "after: kept 5, step 5, total 10");
-    let _ = app.update(Message::Map(map::Event::CloudPlace(P::Remove)));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Remove)));
     let (_, rows) = app.cloud_place_lines();
     assert_eq!(rows[0][1], "0,000", "the file's own place again");
 }

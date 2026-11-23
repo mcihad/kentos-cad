@@ -39,23 +39,6 @@ fn message(event: Event) -> Message {
     Message::Gis(gis::Event::SecondCrs(event))
 }
 
-/// The systems a project in `project` may take as its second, grouped by
-/// datum as the registry lists them: every one but the local and its own.
-pub(crate) fn choices(project: u32) -> Vec<(&'static str, Vec<&'static crs::System>)> {
-    let mut groups: Vec<(&'static str, Vec<&'static crs::System>)> = Vec::new();
-    for s in crs::systems() {
-        if s.is_local() || s.srid == project {
-            continue;
-        }
-        let datum = crs::datum_label(&s.datum);
-        match groups.iter_mut().find(|(d, _)| *d == datum) {
-            Some((_, list)) => list.push(s),
-            None => groups.push((datum, vec![s])),
-        }
-    }
-    groups
-}
-
 impl App {
     pub(crate) fn second_crs_event(&mut self, event: Event) {
         match event {
@@ -125,7 +108,7 @@ impl App {
         }
         // A datum each, the one chosen beside its name: the list stays short, Coğrafi
         // değerler in view.
-        for (datum, systems) in choices(settings.srid) {
+        for (datum, systems) in kentos_project::crs::others_by_datum(settings.srid) {
             let chosen = systems
                 .iter()
                 .find(|s| current == Some(s.srid))
@@ -274,20 +257,6 @@ impl App {
 mod tests {
     use super::*;
     use crate::files_testing::{app_with_drawing, find_text};
-
-    #[test]
-    fn the_choices_are_every_system_but_the_local_and_the_projects_own() {
-        let groups = choices(5254);
-        let names: Vec<&str> = groups.iter().map(|(d, _)| *d).collect();
-        assert_eq!(names, ["TUREF (ITRF96)", "ED50", "WGS 84"]);
-        let all: Vec<u32> = groups
-            .iter()
-            .flat_map(|(_, list)| list.iter().map(|s| s.srid))
-            .collect();
-        assert!(!all.contains(&5254) && !all.contains(&0));
-        assert_eq!(all.len(), crs::systems().len() - 2);
-        assert!(all.contains(&2320) && all.contains(&4326));
-    }
 
     #[test]
     fn choosing_sets_the_project_and_says_so() {

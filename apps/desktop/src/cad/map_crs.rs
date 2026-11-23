@@ -5,7 +5,6 @@
 //!   the registry's systems by datum);
 //! - the status bar's cell beside the coordinates: the map system's short name and the cursor in it.
 
-use crate::map;
 use iced::Element;
 use iced::widget::row;
 use kentos_commands::SettingsSet;
@@ -25,7 +24,7 @@ pub const TITLE: &str = "Harita sistemi";
 pub struct Choose(pub Option<u32>);
 
 fn message(srid: Option<u32>) -> Message {
-    Message::Map(map::Event::MapCrs(Choose(srid)))
+    Message::MapCrs(Choose(srid))
 }
 
 /// The systems a web map and a GPS speak first.
@@ -70,7 +69,7 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        self.dialog = Some(crate::app::Dialog::Map(map::MapDialogKind::MapCrs));
+        self.dialog = Some(crate::app::Dialog::MapCrs);
     }
 
     /// Harita sistemi's window: the objects' system and the map's, each named; the project's own, the web map's and
@@ -81,7 +80,7 @@ impl App {
             return iced::widget::text("").into();
         };
         let settings = doc.settings();
-        let close = Message::Map(map::Event::MapCrsClose);
+        let close = Message::MapCrsClose;
         let mut body = iced::widget::Column::new().spacing(10);
         if !settings.has_system() {
             body = body.push(words::text_line(Kind::Warn, "Yerel proje başka sistemde gösterilmez."));
@@ -119,7 +118,7 @@ impl App {
             }
         }
         body = body.push(quick);
-        let others: Vec<(u32, String)> = crate::second_crs::choices(settings.srid)
+        let others: Vec<(u32, String)> = kentos_project::crs::others_by_datum(settings.srid)
             .into_iter()
             .flat_map(|(datum, systems)| {
                 systems.into_iter().filter(|s| !FIRST.contains(&s.srid)).map(move |s| (s.srid, format!("{datum} · {} (EPSG:{})", s.name, s.srid)))
@@ -163,7 +162,7 @@ impl App {
             }
         }
         menu = menu.separator();
-        for (datum, systems) in crate::second_crs::choices(settings.srid) {
+        for (datum, systems) in kentos_project::crs::others_by_datum(settings.srid) {
             let chosen = systems
                 .iter()
                 .find(|s| current == Some(s.srid) && !FIRST.contains(&s.srid))

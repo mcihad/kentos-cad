@@ -3,10 +3,11 @@
 //! their east, north and north-east neighbours, read from its file. The window adjusts it, the χ² test passes and the
 //! summary says the network's size. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::files_testing::app_with_drawing;
 
 const W: usize = 26;
@@ -62,12 +63,12 @@ fn a_network_above_the_old_limit_is_adjusted() {
     let mut app = app_with_drawing();
     app.program = Some(Module::Map);
     let _ = app.update(Message::Run("survey.baselines"));
-    assert_eq!(app.dialog, Some(Dialog::Map(map::MapDialogKind::Baselines)));
+    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Baselines)));
     let path = network_file();
     app.baselines_file(path.clone());
     let _ = std::fs::remove_file(&path);
     let a = app
-        .map
+        .modules.map()
         .baselines
         .answer
         .clone()

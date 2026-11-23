@@ -112,7 +112,7 @@ impl App {
             menu = menu.item(format!("Kullanım alanı: {area}"), None);
         }
         // Every registry system but the local one, the project's own too: a layer may come from it.
-        let groups = crate::second_crs::choices(0);
+        let groups = kentos_project::crs::others_by_datum(0);
         let mut assign = Menu::new();
         for (datum, systems) in &groups {
             let list = systems.iter().fold(Menu::new(), |list, s| {

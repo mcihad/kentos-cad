@@ -333,7 +333,7 @@ mod features;
 mod find_replace;
 #[path = "shell/fixture_search.rs"]
 mod fixture_search;
-#[path = "map/zoning_badge.rs"]
+#[path = "shell/zoning_badge.rs"]
 mod zoning_badge;
 #[path = "arch/section_badge.rs"]
 mod section_badge;
@@ -437,9 +437,9 @@ mod haul_plan_window;
 mod sight_window;
 #[path = "shell/propose_window.rs"]
 mod propose_window;
-#[path = "cad/picture.rs"]
+#[path = "shell/picture.rs"]
 mod picture;
-#[path = "road/road_dialog.rs"]
+#[path = "shell/road_dialog.rs"]
 mod road_dialog;
 #[path = "road/swept_window.rs"]
 mod swept_window;
@@ -519,7 +519,7 @@ mod parameters_window;
 mod locks;
 #[path = "shell/log_plan.rs"]
 mod log_plan;
-#[path = "map/map_marks.rs"]
+#[path = "cad/map_marks.rs"]
 mod map_marks;
 #[path = "cad/marks.rs"]
 mod marks;
@@ -535,6 +535,10 @@ mod open_report_window;
 mod module_surfaces;
 #[path = "shell/layer_entries.rs"]
 mod layer_entries;
+#[path = "shell/module_parts.rs"]
+mod module_parts;
+#[path = "map/parts.rs"]
+mod map_parts;
 #[path = "shell/module_profile.rs"]
 mod module_profile;
 #[path = "arch/profile.rs"]
@@ -559,7 +563,7 @@ mod paragraph_editor;
 mod photo_view;
 #[path = "cad/pictures.rs"]
 mod pictures;
-#[path = "map/point_calc.rs"]
+#[path = "shell/point_calc.rs"]
 mod point_calc;
 #[path = "gis/pointclouds/mod.rs"]
 mod pointclouds;
@@ -607,7 +611,7 @@ mod screen_scale;
 mod search;
 #[path = "gis/layer_crs.rs"]
 mod layer_crs;
-#[path = "map/map_crs.rs"]
+#[path = "cad/map_crs.rs"]
 mod map_crs;
 #[path = "gis/second_crs.rs"]
 mod second_crs;

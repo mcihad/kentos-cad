@@ -4,6 +4,7 @@
 //! footprint from its pixels that are not NoData (`cad.orthophoto.footprint`, its outline or its convex hull). Each
 //! plan runs on every change and is drawn; its button writes it in one undo step and selects what it wrote.
 
+use crate::map::MapState;
 use crate::map;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{column, container, row, space};
@@ -68,7 +69,7 @@ pub enum NetEvent {
 }
 
 fn msg(e: NetEvent) -> Message {
-    Message::Map(map::Event::OrthoSeamlines(
+    Message::from(map::Event::OrthoSeamlines(
         crate::ortho_seamlines_window::Event::Net(e),
     ))
 }
@@ -83,7 +84,7 @@ fn answer<T>(r: CommandResult<T>) -> Result<T, String> {
 
 impl App {
     fn ortho_net_inputs(&self) -> (OrthophotoNetwork, OrthophotoFootprint) {
-        let s = &self.map.ortho_seamlines;
+        let s = &self.modules.map().ortho_seamlines;
         let layer = (!s.layer.is_empty()).then(|| s.layer.clone());
         let folder = self.document.as_ref().and_then(|d| d.path.as_ref()).and_then(|p| p.parent()).map(|p| p.display().to_string());
         (
@@ -95,17 +96,17 @@ impl App {
     /// The plans of the kind shown.
     pub(crate) fn ortho_net_run(&mut self) {
         let (net, foot) = self.ortho_net_inputs();
-        let mode = self.map.ortho_seamlines.net.mode;
+        let mode = self.modules.map().ortho_seamlines.net.mode;
         let Some(doc) = self.document.as_mut() else { return };
         match mode {
             Mode::Network => {
-                self.map.ortho_seamlines.net.network = Some(answer(network::plan(
+                self.modules.map_mut().ortho_seamlines.net.network = Some(answer(network::plan(
                     &ExecutionContext::new(&mut doc.model),
                     &net,
                 )));
             }
             Mode::Footprint => {
-                self.map.ortho_seamlines.net.footprint = Some(answer(outline::plan(
+                self.modules.map_mut().ortho_seamlines.net.footprint = Some(answer(outline::plan(
                     &ExecutionContext::new(&mut doc.model),
                     &foot,
                 )));
@@ -115,21 +116,16 @@ impl App {
     }
 
     pub(crate) fn ortho_net_event(&mut self, e: NetEvent) {
-        let s = &mut self.map.ortho_seamlines.net;
+        let seams = &mut self.modules.map_mut().ortho_seamlines;
+        let s = &mut seams.net;
         match e {
             NetEvent::Mode(m) => {
                 s.mode = m;
                 if s.ticked.is_empty() {
-                    s.ticked = self
-                        .map
-                        .ortho_seamlines
-                        .rasters
-                        .iter()
-                        .map(|(u, _)| u.clone())
-                        .collect();
+                    s.ticked = seams.rasters.iter().map(|(u, _)| u.clone()).collect();
                 }
                 if s.raster.is_empty() {
-                    s.raster = self.map.ortho_seamlines.first.clone();
+                    s.raster = seams.first.clone();
                 }
             }
             NetEvent::Tick(u) => match s.ticked.iter().position(|t| *t == u) {
@@ -138,13 +134,7 @@ impl App {
                 }
                 None => {
                     // In the drawing's order.
-                    let order: Vec<String> = self
-                        .map
-                        .ortho_seamlines
-                        .rasters
-                        .iter()
-                        .map(|(u, _)| u.clone())
-                        .collect();
+                    let order: Vec<String> = seams.rasters.iter().map(|(u, _)| u.clone()).collect();
                     s.ticked.push(u);
                     s.ticked.sort_by_key(|t| order.iter().position(|o| o == t));
                 }
@@ -158,7 +148,7 @@ impl App {
 
     fn ortho_net_write(&mut self) {
         let (net, foot) = self.ortho_net_inputs();
-        let mode = self.map.ortho_seamlines.net.mode;
+        let mode = self.modules.map().ortho_seamlines.net.mode;
         let Some(doc) = self.document.as_mut() else { return };
         let title = crate::ortho_seamlines_window::TITLE;
         let (uids, said) = match mode {
@@ -186,7 +176,7 @@ impl App {
 
     /// The kind's form rows, summary, button and plan (Ağ or Ayak izi).
     pub(crate) fn ortho_net_view(&self) -> Element<'_, Message> {
-        let s = &self.map.ortho_seamlines;
+        let s = &self.modules.map().ortho_seamlines;
         let mut lines = Vec::new();
         let mut form = Form::new().label_width(150.0);
         #[allow(clippy::type_complexity)]

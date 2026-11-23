@@ -45,7 +45,7 @@ fn a_picked_file_that_is_there_says_the_objects_linked_to_it() {
     use crate::processing::RunStatus;
     let mut app = crate::register_window_tests::opened(Some(kentos_launch::Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
-    let _ = app.update(Message::Map(crate::map::Event::Register(
+    let _ = app.update(Message::from(crate::map::Event::Register(
         crate::register_window::Event::Apply,
     )));
     let dir = crate::files_testing::scratch("bulut-uzerine-yazma");
@@ -82,7 +82,7 @@ fn a_picked_file_that_is_there_says_the_objects_linked_to_it() {
 fn the_line_is_on_the_screen() {
     let mut app = crate::register_window_tests::opened(Some(kentos_launch::Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
-    let _ = app.update(Message::Map(crate::map::Event::Register(
+    let _ = app.update(Message::from(crate::map::Event::Register(
         crate::register_window::Event::Apply,
     )));
     let dir = crate::files_testing::scratch("bulut-uzerine-yazma-resim");

@@ -3,10 +3,11 @@
 //! adjust again; robust estimation (docs/adr/4960) weighs B → C down without removing it; nothing is written. Harita
 //! and GIS offer it, Mimari and Yol do not. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::baselines_window::Event as B;
 use crate::files_testing::app_with_drawing;
 
@@ -25,10 +26,10 @@ fn the_blunder_is_named_and_nothing_is_written() {
     let mut app = opened(None);
     let revision = app.document.as_ref().expect("a drawing").model.revision();
     let _ = app.update(Message::Run("survey.baselines"));
-    assert_eq!(app.dialog, Some(Dialog::Map(map::MapDialogKind::Baselines)));
+    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Baselines)));
     app.baselines_file(sample());
     let a = app
-        .map
+        .modules.map()
         .baselines
         .answer
         .clone()
@@ -45,9 +46,9 @@ fn the_blunder_is_named_and_nothing_is_written() {
     );
     // The variance factor 4: m0 halves.
     let m0 = a.m0.expect("m0");
-    let _ = app.update(Message::Map(map::Event::Baselines(B::Scale(4.0))));
+    let _ = app.update(Message::from(map::Event::Baselines(B::Scale(4.0))));
     let b = app
-        .map
+        .modules.map()
         .baselines
         .answer
         .clone()
@@ -68,11 +69,11 @@ fn robust_estimation_weighs_the_blunder_down() {
     let revision = app.document.as_ref().expect("a drawing").model.revision();
     let _ = app.update(Message::Run("survey.baselines"));
     app.baselines_file(sample());
-    let _ = app.update(Message::Map(map::Event::Baselines(B::Robust(
+    let _ = app.update(Message::from(map::Event::Baselines(B::Robust(
         Robust::Huber,
     ))));
     let a = app
-        .map
+        .modules.map()
         .baselines
         .answer
         .clone()
@@ -88,9 +89,9 @@ fn robust_estimation_weighs_the_blunder_down() {
     assert_eq!(a.baselines.len(), 6, "nothing removed");
     // The constant given: B → C's factor rises; Danish weighs it down further; off, plain least squares again.
     let huber = a.baselines[1].factor.expect("a factor");
-    let _ = app.update(Message::Map(map::Event::Baselines(B::C(2.5))));
+    let _ = app.update(Message::from(map::Event::Baselines(B::C(2.5))));
     let b = app
-        .map
+        .modules.map()
         .baselines
         .answer
         .clone()
@@ -98,11 +99,11 @@ fn robust_estimation_weighs_the_blunder_down() {
         .expect("adjusted");
     assert_eq!(b.robust.as_ref().map(|r| r.c), Some(2.5));
     assert!(b.baselines[1].factor.expect("a factor") > huber);
-    let _ = app.update(Message::Map(map::Event::Baselines(B::Robust(
+    let _ = app.update(Message::from(map::Event::Baselines(B::Robust(
         Robust::Danish,
     ))));
     let d = app
-        .map
+        .modules.map()
         .baselines
         .answer
         .clone()
@@ -114,9 +115,9 @@ fn robust_estimation_weighs_the_blunder_down() {
         "the method's own constant"
     );
     assert!(d.baselines[1].factor.expect("a factor") < huber);
-    let _ = app.update(Message::Map(map::Event::Baselines(B::Robust(Robust::Off))));
+    let _ = app.update(Message::from(map::Event::Baselines(B::Robust(Robust::Off))));
     let off = app
-        .map
+        .modules.map()
         .baselines
         .answer
         .clone()
@@ -167,7 +168,7 @@ fn screens() {
             .save(&file)
             .expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::Map(map::Event::Baselines(B::Robust(
+        let _ = app.update(Message::from(map::Event::Baselines(B::Robust(
             crate::baselines_window::Robust::Huber,
         ))));
         snapshot.settle(&mut app, App::view, &mut update);

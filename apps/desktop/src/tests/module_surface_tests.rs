@@ -7,7 +7,6 @@
 //! with its tabs (docs/adr/9195 §2). Test code only; no program is started.
 
 use crate::gis;
-use crate::map;
 use std::path::{Path, PathBuf};
 
 use iced::Color;
@@ -1028,18 +1027,18 @@ fn kentos_mimari_s_point_calculator_has_no_survey_constructions() {
         has(&menu, "İki nokta ortası") && has(&menu, "Açıortay"),
         "{menu}"
     );
-    let _ = app.update(Message::Map(map::Event::PointCalc(CalcKind::Km)));
+    let _ = app.update(Message::PointCalc(CalcKind::Km));
     assert!(!app.session.nested(), "no km is asked for");
     assert_eq!(
         last_said(&app),
         "“Km ve sapma” KentOS Mimari'de yok; KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da var."
     );
-    let _ = app.update(Message::Map(map::Event::PointCalc(CalcKind::Mid)));
+    let _ = app.update(Message::PointCalc(CalcKind::Mid));
     assert!(app.session.nested(), "a construction it has runs");
     for module in [None, HARITA, GIS] {
         let mut other = drawn(module);
         let _ = other.update(Message::Run("tool.line"));
-        let _ = other.update(Message::Map(map::Event::PointCalc(CalcKind::Km)));
+        let _ = other.update(Message::PointCalc(CalcKind::Km));
         assert!(other.session.nested(), "{module:?}");
     }
 }

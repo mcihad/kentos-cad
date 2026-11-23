@@ -5,6 +5,7 @@
 //! Yönetmeliği m. 26 asks of the change. Taslağı kaydet keeps the draft in the project in one undo step and Taslağı
 //! sil takes a kept one out; the decision areas in force are never written. A draft is not an approved change.
 
+use crate::map::MapState;
 use crate::map;
 use iced::{Element, Length, Task};
 use kentos_commands::{CommandResult, DRAFT_FIELDS, ZONING_PROFILE, ZoningDraft, ZoningDraftChange, ZoningDrafted, builtin_profile};
@@ -13,7 +14,7 @@ use kentos_native_application::{ExecutionContext, zoning_draft};
 use kentos_ui::widget::grow::Grows;
 use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet_chosen};
 use crate::style::fields;
@@ -93,7 +94,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::ZoningDraft(e))
+    Message::from(map::Event::ZoningDraft(e))
 }
 
 /// A field's words.
@@ -159,7 +160,7 @@ fn asks(kind: &str) -> (&'static str, &'static str) {
 
 impl App {
     fn zoning_draft_input(&self) -> ZoningDraft {
-        let s = &self.map.zoning_draft;
+        let s = &self.modules.map().zoning_draft;
         ZoningDraft {
             id: s.id.trim().to_owned(),
             plan: s.plan.clone(),
@@ -175,7 +176,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.zoning_draft.answer = Some(
+        self.modules.map_mut().zoning_draft.answer = Some(
             match zoning_draft::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -190,7 +191,7 @@ impl App {
     fn zoning_draft_areas(&self) -> Vec<(String, String, String)> {
         self.document
             .as_ref()
-            .map(|d| zoning_draft::areas(&d.model, &self.map.zoning_draft.plan))
+            .map(|d| zoning_draft::areas(&d.model, &self.modules.map().zoning_draft.plan))
             .unwrap_or_default()
     }
 
@@ -211,19 +212,19 @@ impl App {
         let plans = zoning_draft::plans(&doc.model);
         let taken: Vec<String> = zoning_draft::drafts(&doc.model).into_iter().map(|d| d.id).collect();
         let id = (1..).map(|n| format!("T-{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
-        self.map.zoning_draft = State {
+        self.modules.map_mut().zoning_draft = State {
             id,
             plan: plans.first().map(|(id, _)| id.clone()).unwrap_or_default(),
             field: "Kullanim".to_owned(),
             ..State::default()
         };
-        self.map.zoning_draft.area = self
+        self.modules.map_mut().zoning_draft.area = self
             .zoning_draft_areas()
             .first()
             .map(|(u, _, _)| u.clone())
             .unwrap_or_default();
         self.zoning_draft_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::ZoningDraft));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::ZoningDraft));
         Task::none()
     }
 
@@ -236,7 +237,7 @@ impl App {
                 }
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
                 let Some(d) = zoning_draft::drafts(&doc.model).into_iter().find(|d| d.id == id) else { return Task::none() };
-                let s = &mut self.map.zoning_draft;
+                let s = &mut self.modules.map_mut().zoning_draft;
                 s.id = d.id;
                 s.plan = d.plan;
                 s.reason = d.reason;
@@ -247,28 +248,28 @@ impl App {
                     .collect();
                 s.chosen = None;
             }
-            Event::Id(v) => self.map.zoning_draft.id = v,
+            Event::Id(v) => self.modules.map_mut().zoning_draft.id = v,
             Event::Plan(v) => {
-                if v != self.map.zoning_draft.plan {
-                    self.map.zoning_draft.plan = v;
-                    self.map.zoning_draft.changes.clear();
-                    self.map.zoning_draft.chosen = None;
-                    self.map.zoning_draft.area = self
+                if v != self.modules.map().zoning_draft.plan {
+                    self.modules.map_mut().zoning_draft.plan = v;
+                    self.modules.map_mut().zoning_draft.changes.clear();
+                    self.modules.map_mut().zoning_draft.chosen = None;
+                    self.modules.map_mut().zoning_draft.area = self
                         .zoning_draft_areas()
                         .first()
                         .map(|(u, _, _)| u.clone())
                         .unwrap_or_default();
                 }
             }
-            Event::Reason(v) => self.map.zoning_draft.reason = v,
-            Event::Area(v) => self.map.zoning_draft.area = v,
+            Event::Reason(v) => self.modules.map_mut().zoning_draft.reason = v,
+            Event::Area(v) => self.modules.map_mut().zoning_draft.area = v,
             Event::Field(v) => {
-                self.map.zoning_draft.field = v;
-                self.map.zoning_draft.value.clear();
+                self.modules.map_mut().zoning_draft.field = v;
+                self.modules.map_mut().zoning_draft.value.clear();
             }
-            Event::Value(v) => self.map.zoning_draft.value = v,
+            Event::Value(v) => self.modules.map_mut().zoning_draft.value = v,
             Event::Add => {
-                let s = &mut self.map.zoning_draft;
+                let s = &mut self.modules.map_mut().zoning_draft;
                 if s.area.is_empty() || s.value.trim().is_empty() {
                     return Task::none();
                 }
@@ -280,15 +281,15 @@ impl App {
                 s.value.clear();
                 s.show = Show::Changes;
             }
-            Event::Choose(i) => self.map.zoning_draft.chosen = Some(i),
+            Event::Choose(i) => self.modules.map_mut().zoning_draft.chosen = Some(i),
             Event::Drop => {
-                let s = &mut self.map.zoning_draft;
+                let s = &mut self.modules.map_mut().zoning_draft;
                 if let Some(i) = s.chosen.take().filter(|i| *i < s.changes.len()) {
                     s.changes.remove(i);
                 }
             }
             Event::Show(v) => {
-                self.map.zoning_draft.show = v;
+                self.modules.map_mut().zoning_draft.show = v;
                 return Task::none();
             }
             Event::Save | Event::Remove => {
@@ -300,7 +301,7 @@ impl App {
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
                 match zoning_draft::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, .. } => {
-                        let id = self.map.zoning_draft.id.trim().to_owned();
+                        let id = self.modules.map().zoning_draft.id.trim().to_owned();
                         self.say(
                             Level::Success,
                             if remove {
@@ -323,7 +324,7 @@ impl App {
                 }
             }
             Event::Close => {
-                self.map.zoning_draft = State::default();
+                self.modules.map_mut().zoning_draft = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -333,7 +334,7 @@ impl App {
     }
 
     pub(crate) fn zoning_draft_view(&self) -> Element<'_, Message> {
-        let s = &self.map.zoning_draft;
+        let s = &self.modules.map().zoning_draft;
         let f = self.format();
         let Some(doc) = self.document.as_ref() else { return iced::widget::Space::new().into() };
         let kept = zoning_draft::drafts(&doc.model);
@@ -488,7 +489,7 @@ impl App {
     }
 
     pub(crate) fn zoning_draft_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let s = &self.map.zoning_draft;
+        let s = &self.modules.map().zoning_draft;
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => matches!(s.answer, Some(Ok(_))).then(|| msg(Event::Save)),

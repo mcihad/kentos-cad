@@ -5,12 +5,13 @@
 //! name already used is refused before anything is written. Docs/adr/5020: the ifraz kept as a draft and approved from
 //! Belgeler, a document's approval, a draft withdrawn, the stated lengths against the boundaries. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::parcel_register_window::{Chosen, Event as R, Show, rows};
 
 fn cases(file: &str) -> Value {
@@ -40,7 +41,7 @@ fn opened(setup: Value) -> App {
 fn register(app: &mut App, slots: &[u32]) {
     app.selection.set(slots.iter().map(|s| Slot(*s)));
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Open)));
 }
 
 fn saved_register(app: &App) -> Value {
@@ -60,10 +61,10 @@ fn the_first_document_writes_the_shared_case_s_register() {
     register(&mut app, &[1, 2, 3]);
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::ParcelRegister))
+        Some(crate::map::dialog(map::MapDialogKind::ParcelRegister))
     );
     assert!(
-        app.map.parcel_register.plan.is_none(),
+        app.modules.map().parcel_register.plan.is_none(),
         "no plan before a name"
     );
     let want = case("record", FIRST);
@@ -77,10 +78,10 @@ fn the_first_document_writes_the_shared_case_s_register() {
             "kind" => R::Kind(value.into()),
             _ => R::Date(value.into()),
         };
-        let _ = app.update(Message::Map(map::Event::ParcelRegister(event)));
+        let _ = app.update(Message::from(map::Event::ParcelRegister(event)));
     }
     let plan = app
-        .map
+        .modules.map()
         .parcel_register
         .plan
         .clone()
@@ -94,7 +95,7 @@ fn the_first_document_writes_the_shared_case_s_register() {
         ),
         (3, out["boundariesCreated"].as_u64().expect("n"))
     );
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Save)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Save)));
     assert_eq!(
         saved_register(&app),
         want["steps"][0]["expect"]["settings"]["parcelRegister"]
@@ -106,7 +107,7 @@ fn the_first_document_writes_the_shared_case_s_register() {
     let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(log.iter().any(|l| l.contains(&said)), "{said}\n{log:?}");
     // The window stays and shows the register: the three parcels as recorded, 101/7 the others' neighbour.
-    let r = app.map.parcel_register.answer.clone().expect("read");
+    let r = app.modules.map().parcel_register.answer.clone().expect("read");
     let f = app.format();
     let shown = rows(&r, Show::Parcels, false, &[], &f);
     assert_eq!(
@@ -126,30 +127,30 @@ fn a_parcel_pressed_in_the_table_is_closed_by_the_document() {
     let want = case("record", IFRAZ);
     let mut app = opened(want["setup"].clone());
     register(&mut app, &[11, 12]);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Toggle(0))));
-    assert_eq!(app.map.parcel_register.close, [1]);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Name(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Toggle(0))));
+    assert_eq!(app.modules.map().parcel_register.close, [1]);
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Name(
         "2026/145 ifraz".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Kind(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Kind(
         "Değişiklik".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Date(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Date(
         "2026-03-14".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Note(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Note(
         "Ölçü krokisi 2026/145.".into(),
     ))));
-    let r = app.map.parcel_register.answer.clone().expect("read");
+    let r = app.modules.map().parcel_register.answer.clone().expect("read");
     let f = app.format();
     assert_eq!(
-        rows(&r, Show::Parcels, false, &app.map.parcel_register.close, &f)[0][9],
+        rows(&r, Show::Parcels, false, &app.modules.map().parcel_register.close, &f)[0][9],
         "✓"
     );
     let words = crate::parcel_register_window::plan_words(
         Some(&r),
         &["101/13".into(), "101/14".into()],
-        &app.map
+        &app.modules.map()
             .parcel_register
             .plan
             .clone()
@@ -161,15 +162,15 @@ fn a_parcel_pressed_in_the_table_is_closed_by_the_document() {
         words,
         "Belge 2 “2026/145 ifraz”: 2 parsel oluşturur (101/13, 101/14), 1 parsel kapatır (101/7); 5 yeni sınır, 2 kayıtlı sınır paylaşılır, 2 sınır kapanır, 1 komşu sınırı yeni köşede bölünür (101/9 parçaları alır)."
     );
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Save)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Save)));
     assert_eq!(
         saved_register(&app),
         want["steps"][0]["expect"]["settings"]["parcelRegister"]
     );
     // Pressed again, a closed parcel's row does nothing.
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::History(true))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Toggle(0))));
-    assert!(app.map.parcel_register.close.is_empty());
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::History(true))));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Toggle(0))));
+    assert!(app.modules.map().parcel_register.close.is_empty());
 }
 
 /// docs/adr/4220's acceptance on the drawing: 101/7's corner moved, the window says the drawing parts from the record,
@@ -180,7 +181,7 @@ fn a_moved_corner_is_said_and_the_register_stays() {
     let mut app = opened(want["setup"].clone());
     let before = saved_register(&app);
     register(&mut app, &[]);
-    let r = app.map.parcel_register.answer.clone().expect("read");
+    let r = app.modules.map().parcel_register.answer.clone().expect("read");
     let out = &want["steps"][0]["result"]["output"];
     assert_eq!(
         (u64::from(r.changed), u64::from(r.moved)),
@@ -201,7 +202,7 @@ fn a_moved_corner_is_said_and_the_register_stays() {
     );
     assert_eq!(saved_register(&app), before);
     assert!(
-        app.map.parcel_register.plan.is_none(),
+        app.modules.map().parcel_register.plan.is_none(),
         "nothing to make or close: no plan"
     );
 }
@@ -213,11 +214,11 @@ fn a_document_name_already_used_is_refused() {
     let mut app = opened(want["setup"].clone());
     let before = saved_register(&app);
     register(&mut app, &[11]);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Name(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Name(
         "Kadastro 1985".into(),
     ))));
     let why = app
-        .map
+        .modules.map()
         .parcel_register
         .plan
         .clone()
@@ -249,7 +250,7 @@ fn a_draft_is_written_then_approved_from_belgeler() {
     let mut app = opened(want["setup"].clone());
     draft_step(&mut app);
     let plan = app
-        .map
+        .modules.map()
         .parcel_register
         .plan
         .clone()
@@ -257,7 +258,7 @@ fn a_draft_is_written_then_approved_from_belgeler() {
         .expect("plans");
     assert!(plan.draft && plan.document == 1, "{plan:?}");
     let words = crate::parcel_register_window::plan_words(
-        app.map.parcel_register.answer.as_ref(),
+        app.modules.map().parcel_register.answer.as_ref(),
         &["101/13".into(), "101/14".into()],
         &plan,
         "2026/145 ifraz",
@@ -267,7 +268,7 @@ fn a_draft_is_written_then_approved_from_belgeler() {
             && words.ends_with("Güncel kayıt değişmez."),
         "{words}"
     );
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Save)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Save)));
     assert_eq!(
         saved_register(&app),
         want["steps"][0]["expect"]["settings"]["parcelRegister"]
@@ -278,10 +279,10 @@ fn a_draft_is_written_then_approved_from_belgeler() {
         approve["setup"]["settings"]["parcelRegister"]
     );
     approve_step(&mut app);
-    assert_eq!(app.map.parcel_register.chosen, Some(Chosen::Draft(1)));
-    let words = match &app.map.parcel_register.approve_plan {
+    assert_eq!(app.modules.map().parcel_register.chosen, Some(Chosen::Draft(1)));
+    let words = match &app.modules.map().parcel_register.approve_plan {
         Some(Ok(out)) => crate::parcel_register_window::approve_words(
-            app.map.parcel_register.answer.as_ref().expect("read"),
+            app.modules.map().parcel_register.answer.as_ref().expect("read"),
             Chosen::Draft(1),
             out,
             "2026/145-K",
@@ -292,7 +293,7 @@ fn a_draft_is_written_then_approved_from_belgeler() {
         words.starts_with("Onay 2026/145-K yazılır; taslak belge olur. Belge 2 “2026/145 ifraz”"),
         "{words}"
     );
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Approve)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Approve)));
     assert_eq!(
         saved_register(&app),
         approve["steps"][0]["expect"]["settings"]["parcelRegister"]
@@ -312,19 +313,19 @@ fn a_document_s_approval_is_written_once() {
     let want = case("approve", DOCUMENT_APPROVED);
     let mut app = opened(want["setup"].clone());
     register(&mut app, &[]);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Show(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Show(
         Show::Documents,
     ))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Toggle(0))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Reference(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Toggle(0))));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Reference(
         "1985/12".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Approve)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Approve)));
     assert_eq!(
         saved_register(&app),
         want["steps"][0]["expect"]["settings"]["parcelRegister"]
     );
-    let r = app.map.parcel_register.answer.clone().expect("read");
+    let r = app.modules.map().parcel_register.answer.clone().expect("read");
     let f = app.format();
     assert_eq!(
         rows(&r, Show::Documents, false, &[], &f)[0][4],
@@ -343,17 +344,17 @@ fn a_document_s_approval_is_written_once() {
 fn a_draft_is_withdrawn() {
     let mut app = opened(case("approve", APPROVED)["setup"].clone());
     register(&mut app, &[]);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Show(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Show(
         Show::Documents,
     ))));
-    let r = app.map.parcel_register.answer.clone().expect("read");
+    let r = app.modules.map().parcel_register.answer.clone().expect("read");
     let f = app.format();
     assert_eq!(
         rows(&r, Show::Documents, false, &[], &f)[1][..5],
         ["T1", "2026/145 ifraz", "Değişiklik", "2026-03-14", "Taslak"]
     );
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Toggle(1))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Withdraw)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Toggle(1))));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Withdraw)));
     let after = saved_register(&app);
     assert!(after.get("drafts").is_none(), "{after}");
     assert_eq!(after["documents"].as_array().map(Vec::len), Some(1));
@@ -366,7 +367,7 @@ fn stated_lengths_are_checked_against_the_boundaries() {
     let want = case("records", LENGTHS);
     let mut app = opened(want["setup"].clone());
     register(&mut app, &[]);
-    let r = app.map.parcel_register.answer.clone().expect("read");
+    let r = app.modules.map().parcel_register.answer.clone().expect("read");
     assert_eq!(r.over_limit, 1);
     let f = app.format();
     let shown = rows(&r, Show::Boundaries, false, &[], &f);
@@ -433,31 +434,31 @@ fn first_step(app: &mut App) {
         R::Kind("Tapu planı".into()),
         R::Date("1985-06-12".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::ParcelRegister(e)));
+        let _ = app.update(Message::from(map::Event::ParcelRegister(e)));
     }
 }
 
 fn ifraz_step(app: &mut App) {
     register(app, &[11, 12]);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Toggle(0))));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Toggle(0))));
     for e in [
         R::Name("2026/145 ifraz".into()),
         R::Kind("Değişiklik".into()),
         R::Date("2026-03-14".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::ParcelRegister(e)));
+        let _ = app.update(Message::from(map::Event::ParcelRegister(e)));
     }
 }
 
 fn history_step(app: &mut App) {
     ifraz_step(app);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Save)));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::History(true))));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Save)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::History(true))));
 }
 
 fn lines_step(app: &mut App) {
     history_step(app);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Show(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Show(
         Show::Boundaries,
     ))));
 }
@@ -468,44 +469,44 @@ fn moved_step(app: &mut App) {
 
 fn draft_step(app: &mut App) {
     ifraz_step(app);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Note(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Note(
         "Ölçü krokisi 2026/145.".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Draft(true))));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Draft(true))));
 }
 
 /// After the draft is written: Belgeler, the draft chosen, the approval filled.
 fn approve_step(app: &mut App) {
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Show(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Show(
         Show::Documents,
     ))));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Toggle(1))));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Toggle(1))));
     for e in [
         R::Reference("2026/145-K".into()),
         R::ApprovalDate("2026-03-20".into()),
         R::Approver("Kadastro Müdürlüğü".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::ParcelRegister(e)));
+        let _ = app.update(Message::from(map::Event::ParcelRegister(e)));
     }
 }
 
 fn drafted_step(app: &mut App) {
     draft_step(app);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Save)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Save)));
     approve_step(app);
 }
 
 fn approved_step(app: &mut App) {
     drafted_step(app);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Approve)));
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Show(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Approve)));
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Show(
         Show::Documents,
     ))));
 }
 
 fn lengths_step(app: &mut App) {
     register(app, &[]);
-    let _ = app.update(Message::Map(map::Event::ParcelRegister(R::Show(
+    let _ = app.update(Message::from(map::Event::ParcelRegister(R::Show(
         Show::Boundaries,
     ))));
 }

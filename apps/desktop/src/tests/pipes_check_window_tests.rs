@@ -5,11 +5,12 @@
 //! ağ measures the clearances to the water network as the shared cases do (docs/adr/2360); with it, the profile draws
 //! the water pipes crossing the run (docs/adr/2760). And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::pipes_check_window::{Above, Event as P, Ground, Show};
 
 fn cases() -> Value {
@@ -29,7 +30,7 @@ fn opened(program: Option<Module>) -> App {
 
 fn kinds(app: &App) -> Vec<(String, u32)> {
     let r = app
-        .map
+        .modules.map()
         .pipes_check
         .answer
         .clone()
@@ -45,10 +46,10 @@ fn the_sewer_is_checked_and_limits_find_more() {
     let _ = app.update(Message::Run("pipes.check"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::PipesCheck))
+        Some(crate::map::dialog(map::MapDialogKind::PipesCheck))
     );
-    assert_eq!(app.map.pipes_check.network, "atiksu");
-    assert_eq!(app.map.pipes_check.ground, Ground::Surface);
+    assert_eq!(app.modules.map().pipes_check.network, "atiksu");
+    assert_eq!(app.modules.map().pipes_check.ground, Ground::Surface);
     // No limit: only what is wrong in any project.
     let none = kinds(&app);
     assert!(
@@ -69,9 +70,9 @@ fn the_sewer_is_checked_and_limits_find_more() {
         P::MinSlope("9".into()),
         P::MaxSlope("50".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(e)));
     }
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Catalog(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Catalog(
         "200 300 400 500".into(),
     ))));
     let want = &cases()["cases"][0]["steps"][0]["result"]["output"]["counts"];
@@ -80,8 +81,8 @@ fn the_sewer_is_checked_and_limits_find_more() {
         .map(|(k, n)| serde_json::json!({"kind": k, "count": n}))
         .collect();
     assert_eq!(&Value::from(got), want);
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Show(Show::Found))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Select)));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Show(Show::Found))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Select)));
     assert_eq!(app.dialog, None);
     assert_eq!(app.selection.ids().len(), 8, "every pipe but P1");
     assert_eq!(
@@ -95,11 +96,11 @@ fn the_sewer_is_checked_and_limits_find_more() {
 fn a_limit_that_is_no_number_is_said() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pipes.check"));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::MinCover(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::MinCover(
         "bir".into(),
     ))));
     assert_eq!(
-        app.map.pipes_check.answer,
+        app.modules.map().pipes_check.answer,
         Some(Err("En az örtü “bir” bir sayı değil.".into()))
     );
 }
@@ -108,18 +109,18 @@ fn a_limit_that_is_no_number_is_said() {
 fn the_storm_network_reads_the_structures() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pipes.check"));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Network(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Network(
         "yagmur".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::From(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::From(
         crate::pipes_check_window::From::Heights,
     ))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Ground(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Ground(
         Ground::Structures,
     ))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Unit("m".into()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Unit("m".into()))));
     let r = app
-        .map
+        .modules.map()
         .pipes_check
         .answer
         .clone()
@@ -186,9 +187,9 @@ fn screens() {
             P::MinSlope("9".into()),
             P::MaxSlope("50".into()),
         ] {
-            let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
+            let _ = app.update(Message::from(map::Event::PipesCheck(e)));
         }
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Catalog(
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::Catalog(
             "200 300 400 500".into(),
         ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -200,7 +201,7 @@ fn screens() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
         // The ribbon's place: Arazi › Drenaj.
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Close)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::Close)));
         let _ = app.update(Message::RibbonTab("terrain"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-serit-{name}.png"));
@@ -219,7 +220,7 @@ fn the_profile_of_the_run_is_drawn_in_one_step() {
     let want = &profile["cases"][0]["steps"][0]["result"]["output"];
     let p1 = want["pipes"][0]["uid"].as_str().expect("P1").to_owned();
     assert_eq!(
-        app.map.pipes_check.profile_start, p1,
+        app.modules.map().pipes_check.profile_start, p1,
         "the first pipe checked"
     );
     let before = app
@@ -227,7 +228,7 @@ fn the_profile_of_the_run_is_drawn_in_one_step() {
         .as_ref()
         .map(|d| d.model.entities().count())
         .unwrap_or(0);
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::DrawProfile)));
     let doc = app.document.as_ref().expect("a drawing");
     let drawn = want["uids"].as_array().map(Vec::len).unwrap_or(0);
     assert_eq!(
@@ -259,13 +260,13 @@ fn the_limits_typed_come_back_after_the_profile() {
         P::MaxSlope("50".into()),
         P::Catalog("200 300 400".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(e)));
     }
-    let before = app.map.pipes_check.answer.clone().expect("an answer").expect("checked");
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
+    let before = app.modules.map().pipes_check.answer.clone().expect("an answer").expect("checked");
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::DrawProfile)));
     assert_eq!(app.dialog, None);
     let _ = app.update(Message::Run("pipes.check"));
-    let s = &app.map.pipes_check;
+    let s = &app.modules.map().pipes_check;
     assert_eq!(
         (s.min_cover.as_str(), s.max_cover.as_str(), s.min_slope.as_str(), s.max_slope.as_str(), s.catalog.as_str()),
         ("0,8", "2,5", "3", "50", "200 300 400")
@@ -293,9 +294,9 @@ fn the_profile_draws_the_water_pipes_crossing_the_run() {
     let want = profile_output("Kesişen borular: içme suyu boruları atıksu hattını kesiyor");
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pipes.check"));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
     assert!(
-        app.map.pipes_check.profile_crossings,
+        app.modules.map().pipes_check.profile_crossings,
         "on when the window opens"
     );
     let before = app
@@ -303,7 +304,7 @@ fn the_profile_draws_the_water_pipes_crossing_the_run() {
         .as_ref()
         .map(|d| d.model.entities().count())
         .unwrap_or(0);
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::DrawProfile)));
     let said = crate::files_testing::last_said(&app);
     assert!(
         said.contains(", 4 kesişen boru (1 borunun orada kotu yok, çizilmedi);"),
@@ -344,11 +345,11 @@ fn the_profile_draws_the_water_pipes_crossing_the_run() {
     assert_eq!(undone.as_deref(), Some("Hat profili"));
     // Kesişen borular off: the sewer's main case.
     let _ = app.update(Message::Run("pipes.check"));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::ProfileCrossings(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::ProfileCrossings(
         false,
     ))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::DrawProfile)));
     let main = profile_output("Atıksu ana hattı P1'den çıkışa: altı boru");
     let count = app
         .document
@@ -386,7 +387,7 @@ fn crossing_profile_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("pipes.check"));
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -400,7 +401,7 @@ fn crossing_profile_screens() {
             .as_ref()
             .map(|d| d.model.entities().count())
             .unwrap_or(0);
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::DrawProfile)));
         let centres: Vec<[f64; 2]> = app
             .document
             .as_ref()
@@ -456,7 +457,7 @@ fn profile_screens() {
             .save(&file)
             .expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::DrawProfile)));
         // Framed on the profile: the objects written last.
         let doc = &app.document.as_ref().expect("a drawing").model;
         let n = doc.entities().count();
@@ -486,9 +487,9 @@ fn with_case_limits(app: &mut App) {
         P::MinSlope("9".into()),
         P::MaxSlope("50".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(e)));
     }
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Catalog(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Catalog(
         "200 300 400 500".into(),
     ))));
 }
@@ -518,19 +519,19 @@ fn the_clearances_to_the_water_network_are_the_shared_cases() {
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("pipes.check"));
     with_case_limits(&mut app);
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
     assert_eq!(
-        app.map.pipes_check.other_from,
+        app.modules.map().pipes_check.other_from,
         crate::pipes_check_window::From::Heights,
         "the water pipes have no Akar baş"
     );
-    assert_eq!(app.map.pipes_check.other_diameter, "Çap");
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Vertical(
+    assert_eq!(app.modules.map().pipes_check.other_diameter, "Çap");
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Vertical(
         "0,5".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Above(Above::Other))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Above(Above::Other))));
     let r = serde_json::to_value(
-        app.map
+        app.modules.map()
             .pipes_check
             .answer
             .clone()
@@ -545,20 +546,20 @@ fn the_clearances_to_the_water_network_are_the_shared_cases() {
         r["findings"].as_array().map(Vec::len),
         want["findings"].as_array().map(Vec::len)
     );
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Show(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Show(
         Show::Crossings,
     ))));
-    assert_eq!(app.map.pipes_check.show, Show::Crossings);
+    assert_eq!(app.modules.map().pipes_check.show, Show::Crossings);
     // The least horizontal clearance alone: the near pass of the case.
     for e in [
         P::Vertical(String::new()),
         P::Above(Above::Either),
         P::Horizontal("3".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(e)));
     }
     let r = serde_json::to_value(
-        app.map
+        app.modules.map()
             .pipes_check
             .answer
             .clone()
@@ -570,13 +571,13 @@ fn the_clearances_to_the_water_network_are_the_shared_cases() {
     same_list(&r["near"], &want["near"], "near");
     assert_eq!(r["counts"], want["counts"]);
     // No other network: no clearance, the table back to the pipes.
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Show(Show::Near))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Show(Show::Near))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(
         P::Other(String::new()),
     )));
-    assert_eq!(app.map.pipes_check.show, Show::All);
+    assert_eq!(app.modules.map().pipes_check.show, Show::All);
     let r = app
-        .map
+        .modules.map()
         .pipes_check
         .answer
         .clone()
@@ -605,16 +606,16 @@ fn the_crossings_are_marked_on_the_drawing() {
         P::Horizontal("3".into()),
         P::Above(Above::Other),
     ] {
-        let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(e)));
     }
     let r = app
-        .map
+        .modules.map()
         .pipes_check
         .answer
         .clone()
         .expect("an answer")
         .expect("checked");
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Mark)));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Mark)));
     assert_eq!(app.dialog, None, "the window closes");
     let m = app.pipes_marks().expect("marked");
     assert_eq!(m.crossings.len(), r.crossings.len());
@@ -649,19 +650,19 @@ fn the_crossings_are_marked_on_the_drawing() {
     doc.update_many(moved, "Taşı");
     assert!(app.pipes_marks().is_none(), "nothing crosses any more");
     let _ = app.update(Message::Run("data.unmark"));
-    assert!(app.map.pipes_shown_marks.is_none());
+    assert!(app.modules.map().pipes_shown_marks.is_none());
 }
 
 #[test]
 fn a_clearance_that_is_no_number_is_said() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pipes.check"));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Horizontal(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Horizontal(
         "üç".into(),
     ))));
     assert_eq!(
-        app.map.pipes_check.answer,
+        app.modules.map().pipes_check.answer,
         Some(Err("En az yatay açıklık “üç” bir sayı değil.".into()))
     );
 }
@@ -696,7 +697,7 @@ fn marks_screens() {
             P::Above(Above::Other),
             P::Show(Show::Crossings),
         ] {
-            let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
+            let _ = app.update(Message::from(map::Event::PipesCheck(e)));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -709,7 +710,7 @@ fn marks_screens() {
             .save(&file)
             .expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Mark)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::Mark)));
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-cizimde-{name}.png"));
@@ -754,7 +755,7 @@ fn clearance_screens() {
             P::Above(Above::Other),
             P::Show(Show::Crossings),
         ] {
-            let _ = app.update(Message::Map(map::Event::PipesCheck(e)));
+            let _ = app.update(Message::from(map::Event::PipesCheck(e)));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -765,7 +766,7 @@ fn clearance_screens() {
             (Show::Near, "2-yakin-gecis"),
             (Show::Found, "3-bulgulu"),
         ] {
-            let _ = app.update(Message::Map(map::Event::PipesCheck(P::Show(show))));
+            let _ = app.update(Message::from(map::Event::PipesCheck(P::Show(show))));
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
             snapshot
@@ -801,10 +802,10 @@ fn walled(program: Option<Module>) -> App {
 fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
     let mut app = walled(Some(Module::Map));
     let _ = app.update(Message::Run("pipes.check"));
-    assert_eq!(app.map.pipes_check.wall, "Et");
+    assert_eq!(app.modules.map().pipes_check.wall, "Et");
     with_case_limits(&mut app);
     let r = serde_json::to_value(
-        app.map
+        app.modules.map()
             .pipes_check
             .answer
             .clone()
@@ -825,19 +826,19 @@ fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
             }
         }
     }
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
     assert_eq!(
-        app.map.pipes_check.other_wall, "Et",
+        app.modules.map().pipes_check.other_wall, "Et",
         "the water pipes' wall guessed too"
     );
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Vertical(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Vertical(
         "0,5".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Horizontal(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Horizontal(
         "3".into(),
     ))));
     let r = serde_json::to_value(
-        app.map
+        app.modules.map()
             .pipes_check
             .answer
             .clone()
@@ -849,9 +850,9 @@ fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
     same_list(&r["crossings"], &want["crossings"], "crossings");
     same_list(&r["near"], &want["near"], "near");
     // Without the attribute: the crown again.
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Wall(String::new()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Wall(String::new()))));
     let r = app
-        .map
+        .modules.map()
         .pipes_check
         .answer
         .clone()
@@ -880,8 +881,8 @@ fn wall_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("pipes.check"));
         with_case_limits(&mut app);
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Vertical(
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::Vertical(
             "0,5".into(),
         ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -895,7 +896,7 @@ fn wall_screens() {
             println!("{}", file.display());
         };
         shot(&mut app, "1-boru-hatti");
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Show(
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::Show(
             Show::Crossings,
         ))));
         shot(&mut app, "2-kesisimler");
@@ -910,8 +911,8 @@ fn the_crossing_pipes_fill_is_chosen() {
     let want = profile_output("Etsiz kesişen boru, bütün boru taranır: iç elips");
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pipes.check"));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::ProfileHatch(
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::ProfileHatch(
         CrossingHatch::Whole,
     ))));
     let before = app
@@ -919,7 +920,7 @@ fn the_crossing_pipes_fill_is_chosen() {
         .as_ref()
         .map(|d| d.model.entities().count())
         .unwrap_or(0);
-    let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::DrawProfile)));
     let doc = &app.document.as_ref().expect("a drawing").model;
     let drawn: Vec<&Entity> = doc.entities().skip(before).collect();
     assert_eq!(
@@ -957,8 +958,8 @@ fn fill_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("pipes.check"));
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::Other("su".into()))));
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::ProfileHatch(
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::ProfileHatch(
             kentos_commands::CrossingHatch::Whole,
         ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -974,7 +975,7 @@ fn fill_screens() {
             .as_ref()
             .map(|d| d.model.entities().count())
             .unwrap_or(0);
-        let _ = app.update(Message::Map(map::Event::PipesCheck(P::DrawProfile)));
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::DrawProfile)));
         let w1 = app
             .document
             .as_ref()

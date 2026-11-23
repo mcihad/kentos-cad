@@ -27,7 +27,6 @@ mod view;
 #[cfg(test)]
 mod tests;
 
-use crate::map;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
@@ -267,7 +266,7 @@ pub(crate) fn held(message: &Message) -> Option<bool> {
         | Message::CommandSubmitted
         | Message::CommandRun(_)
         | Message::PromptOption(_)
-        | Message::Map(map::Event::PointCalc(_))
+        | Message::PointCalc(_)
         | Message::LayerVisible(_)
         | Message::LayerLocked(_)
         | Message::Layer(_)

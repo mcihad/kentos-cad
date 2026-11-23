@@ -4,6 +4,7 @@
 //! the mean (a systematic shift), the largest difference, each cloud's KOH_Z at the control points, and the notes; a
 //! choice shows the worst cells or the control points. CSV kaydet writes both.
 
+use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;
 
@@ -15,7 +16,7 @@ use kentos_native_application::{ExecutionContext, pointcloud_overlap};
 use kentos_ui::label;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::style::fields;
@@ -77,7 +78,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::Overlap(e))
+    Message::from(map::Event::Overlap(e))
 }
 
 fn cm(v: f64) -> String {
@@ -103,9 +104,9 @@ pub fn csv(r: &PointCloudsOverlapped) -> String {
 
 impl App {
     fn overlap_run(&mut self) {
-        let s = &self.map.overlap;
+        let s = &self.modules.map().overlap;
         if s.a.is_empty() || s.b.is_empty() {
-            self.map.overlap.answer = Some(Err("İki nokta bulutu seçin.".into()));
+            self.modules.map_mut().overlap.answer = Some(Err("İki nokta bulutu seçin.".into()));
             return;
         }
         let input = PointCloudsOverlap {
@@ -123,7 +124,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.overlap.answer = Some(
+        self.modules.map_mut().overlap.answer = Some(
             match pointcloud_overlap::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -184,7 +185,7 @@ impl App {
             .find(|(id, n)| !id.is_empty() && ["gnss", "kontrol"].iter().any(|w| n.to_lowercase().contains(w)))
             .map(|(id, _)| id.clone())
             .unwrap_or_default();
-        self.map.overlap = State {
+        self.modules.map_mut().overlap = State {
             clouds,
             layers,
             a,
@@ -198,13 +199,13 @@ impl App {
             answer: None,
         };
         self.overlap_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::Overlap));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::Overlap));
         Task::none()
     }
 
     /// The answer written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn overlap_save(&mut self, path: PathBuf) {
-        let Some(Ok(r)) = &self.map.overlap.answer else {
+        let Some(Ok(r)) = &self.modules.map().overlap.answer else {
             return;
         };
         match std::fs::write(&path, csv(r)) {
@@ -214,7 +215,7 @@ impl App {
     }
 
     pub(crate) fn overlap_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.map.overlap;
+        let s = &mut self.modules.map_mut().overlap;
         match event {
             Event::A(v) => s.a = v,
             Event::B(v) => s.b = v,
@@ -247,7 +248,7 @@ impl App {
             }
             Event::Saved(None) => return Task::none(),
             Event::Close => {
-                self.map.overlap = State::default();
+                self.modules.map_mut().overlap = State::default();
                 self.dialog = None;
                 return Task::none();
             }
@@ -257,7 +258,7 @@ impl App {
     }
 
     pub(crate) fn overlap_view(&self) -> Element<'_, Message> {
-        let s = &self.map.overlap;
+        let s = &self.modules.map().overlap;
         let pick = |v: &str, on: fn(String) -> Event| container(fields::select_owned(s.clouds.clone(), v, move |x| msg(on(x)))).width(230);
         let form = Form::new()
             .label_width(120.0)

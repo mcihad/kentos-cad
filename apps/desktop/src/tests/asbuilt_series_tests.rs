@@ -2,6 +2,7 @@
 //! layers, oldest first; each epoch's day is its layer's Veri kümesi bilgisi (Güncelleme günü); the answer's tracks are
 //! the shared case's, and the window's series table shows them. A name no layer has is said. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::{Value, json};
@@ -36,7 +37,7 @@ fn series(app: &mut App, epochs: &str) {
         A::Control("K1, K2".into()),
         A::Epochs(epochs.into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
 }
 
@@ -46,7 +47,7 @@ fn onceki_donemler_track_each_mark_as_the_shared_case() {
     let _ = app.update(Message::Run("asbuilt.check"));
     series(&mut app, "Birinci dönem, İkinci dönem");
     let r = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -63,13 +64,13 @@ fn onceki_donemler_track_each_mark_as_the_shared_case() {
         }
     }
     assert_eq!(
-        app.map.asbuilt.epoch_titles,
+        app.modules.map().asbuilt.epoch_titles,
         ["1. dönem", "2. dönem", "Bu dönem"]
     );
     // A name no layer has is said.
     series(&mut app, "Birinci dönem, Yok");
     let said = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()

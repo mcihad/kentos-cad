@@ -9,7 +9,7 @@ use kentos_launch::Module;
 use kentos_ui::widget::Status;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message, Panel};
+use crate::app::{App, Message, Panel};
 use crate::map_survey_network_rows::{adjustment_state, made_by};
 use crate::map_survey_panel::Event as P;
 use crate::survey_network_window::{Class, Event as N};
@@ -29,14 +29,14 @@ fn opened() -> App {
 fn accepted() -> App {
     let mut app = opened();
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Class(Class::C2))));
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(Class::C2))));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Accept)));
     app.dialog = None;
     app
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::Map(map::Event::MapSurvey(e)));
+    let _ = app.update(Message::from(map::Event::MapSurvey(e)));
 }
 
 fn tree(app: &App) -> kentos_commands::MapSurveyTree {
@@ -82,7 +82,7 @@ fn the_accepted_adjustment_selects_its_points_and_goes_out_of_date_with_a_baseli
     send(&mut app, P::Network);
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+        Some(crate::map::dialog(map::MapDialogKind::SurveyNetwork))
     );
 }
 

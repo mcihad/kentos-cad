@@ -37,7 +37,7 @@ pub(crate) fn opened() -> App {
 }
 
 pub(crate) fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::Map(map::Event::MapWork(e)));
+    let _ = app.update(Message::from(map::Event::MapWork(e)));
 }
 
 pub(crate) fn tree(app: &App) -> kentos_commands::MapWorkTree {

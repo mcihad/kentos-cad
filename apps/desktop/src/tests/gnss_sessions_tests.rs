@@ -5,12 +5,13 @@
 //! GNSS arşivi's Projeye yaz keeps the typed limits with their source, and they judge the known points' places. And the
 //! pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_commands::NetworkCorrelations;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message, Panel};
+use crate::app::{App, Message, Panel};
 use crate::map_survey_panel::Event as P;
 use crate::survey_network_window::{Event as N, View};
 
@@ -37,17 +38,17 @@ fn opened(starts: &str) -> App {
     let _ = app.update(Message::Run("map.survey.adjustment"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+        Some(crate::map::dialog(map::MapDialogKind::SurveyNetwork))
     );
     app
 }
 
 fn send(app: &mut App, e: N) {
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(e)));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(e)));
 }
 
 fn answer(app: &App) -> kentos_commands::MapSurveyNetworked {
-    app.map
+    app.modules.map()
         .survey_network
         .answer
         .clone()
@@ -102,7 +103,7 @@ fn the_limits_are_kept_with_their_source_and_judge_the_places() {
     let mut app = opened(SESSIONS);
     send(&mut app, N::Close);
     let mp = |app: &mut App, e: P| {
-        let _ = app.update(Message::Map(map::Event::MapSurvey(e)));
+        let _ = app.update(Message::from(map::Event::MapSurvey(e)));
     };
     mp(&mut app, P::LimitHorizontal("0,02".into()));
     mp(&mut app, P::LimitSave);
@@ -170,16 +171,16 @@ fn screens() {
             kentos_ui::widget::docking::Side::Right,
             vec![0.68, 0.32],
         ));
-        let _ = app.update(Message::Map(map::Event::MapSurvey(P::LimitHorizontal(
+        let _ = app.update(Message::from(map::Event::MapSurvey(P::LimitHorizontal(
             "0,02".into(),
         ))));
-        let _ = app.update(Message::Map(map::Event::MapSurvey(P::LimitVertical(
+        let _ = app.update(Message::from(map::Event::MapSurvey(P::LimitVertical(
             "0,03".into(),
         ))));
-        let _ = app.update(Message::Map(map::Event::MapSurvey(P::LimitSource(
+        let _ = app.update(Message::from(map::Event::MapSurvey(P::LimitSource(
             "İdarenin şartnamesi (örnek)".into(),
         ))));
-        let _ = app.update(Message::Map(map::Event::MapSurvey(P::LimitSave)));
+        let _ = app.update(Message::from(map::Event::MapSurvey(P::LimitSave)));
         shoot(&mut app, size, &format!("4-kabul-farki-projede-{name}.png"));
     }
 }

@@ -316,9 +316,12 @@ pub enum Dialog {
     Attachment,
     /// The photo viewer (attachments.rs, docs/adr/0225 §2); the window is `App::photo_viewer`.
     PhotoViewer,
+    /// Harita sistemi (map_crs.rs, GIS-054): the systems to draw the map in.
+    MapCrs,
     /// A discipline's own windows (docs/adr/8054 §6), drawn by its `state.rs`.
     Road(crate::road::RoadDialogKind),
-    Map(crate::map::MapDialogKind),
+    /// A module's own window (docs/adr/9199 §3.4), drawn by its parts.
+    Module(crate::module_parts::ModuleDialog),
     Gis(crate::gis::GisDialogKind),
     Arch(crate::arch::ArchDialogKind),
 }
@@ -719,9 +722,16 @@ pub enum Message {
     ScreenScale(crate::screen_scale::Event),
     /// A notice closed, by its ×, its time or Tümünü kapat (toasts.rs).
     ToastClosed(kentos_ui::widget::toast::Id),
+    /// Nokta hesapla: a construction over the running command (point_calc.rs, docs/adr/0083).
+    PointCalc(kentos_interaction::point_calc::CalcKind),
+    /// Harita sistemi chosen (map_crs.rs, docs/adr/0583 §3).
+    MapCrs(crate::map_crs::Choose),
+    /// Harita sistemi's window closed (GIS-054).
+    MapCrsClose,
     /// A discipline's own messages (docs/adr/8054 §6), handled by its `state.rs`.
     Road(crate::road::Event),
-    Map(crate::map::Event),
+    /// A module's own message (docs/adr/9199 §3.4), handled by its parts.
+    Module(crate::module_parts::ModuleEvent),
     Gis(crate::gis::Event),
     Arch(crate::arch::Event),
 }
@@ -1192,7 +1202,8 @@ pub struct App {
     /// The disciplines' own windows and panels (docs/adr/8054 §6): each module keeps its state in its
     /// `state.rs`, so a new window of one leaves this struct as it is.
     pub(crate) road: crate::road::RoadUiState,
-    pub(crate) map: crate::map::MapUiState,
+    /// The modules' own state, each as its module keeps it (docs/adr/9199 §3.4; map/state.rs `MapState`).
+    pub(crate) modules: crate::module_parts::ModuleStates,
     pub(crate) gis: crate::gis::GisUiState,
     pub(crate) arch: crate::arch::ArchUiState,
 }

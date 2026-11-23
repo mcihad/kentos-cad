@@ -5,6 +5,7 @@
 //! rejections row's angle and edges as the shared cases give them (docs/adr/2700); Buluta uygula's Dönüşüm uygula on
 //! the moving scan with the answer's matrix, after which nothing is left to fit (docs/adr/3100). And its pictures.
 
+use crate::map::MapState;
 use crate::gis;
 use crate::map;
 use kentos_domain::Slot;
@@ -44,14 +45,14 @@ fn the_weights_hold_the_fit_against_gross_mismatches() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
     let (a, e) = (
-        app.map.register.clouds[0].0.clone(),
-        app.map.register.clouds[4].0.clone(),
+        app.modules.map().register.clouds[0].0.clone(),
+        app.modules.map().register.clouds[4].0.clone(),
     );
-    let _ = app.update(Message::Map(map::Event::Register(R::Fixed(a))));
-    let _ = app.update(Message::Map(map::Event::Register(R::Moving(e))));
+    let _ = app.update(Message::from(map::Event::Register(R::Fixed(a))));
+    let _ = app.update(Message::from(map::Event::Register(R::Moving(e))));
     let same = |app: &App, name: &str| {
         let r = app
-            .map
+            .modules.map()
             .register
             .answer
             .clone()
@@ -76,14 +77,14 @@ fn the_weights_hold_the_fit_against_gross_mismatches() {
         &app,
         "kaba hatalı eşleşmeler: 0,5 m yüksekteki yama düz ICP'yi aşağı çeker",
     );
-    let _ = app.update(Message::Map(map::Event::Register(R::Weights(
+    let _ = app.update(Message::from(map::Event::Register(R::Weights(
         Weights::Huber,
     ))));
     same(&app, "Huber ağırlıkları (k 1,345) kaba hatayı bastırır");
-    let _ = app.update(Message::Map(map::Event::Register(R::Weights(
+    let _ = app.update(Message::from(map::Event::Register(R::Weights(
         Weights::Trimmed,
     ))));
-    let _ = app.update(Message::Map(map::Event::Register(R::Ratio(0.9))));
+    let _ = app.update(Message::from(map::Event::Register(R::Ratio(0.9))));
     same(&app, "kırpılmış ICP: eşleşmelerin en iyi %90'ı");
 }
 
@@ -94,7 +95,7 @@ fn the_rejections_leave_out_what_one_scan_did_not_see() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
     let clouds: Vec<String> = app
-        .map
+        .modules.map()
         .register
         .clouds
         .iter()
@@ -103,7 +104,7 @@ fn the_rejections_leave_out_what_one_scan_did_not_see() {
     assert_eq!(clouds.len(), 8, "a, b, c, d, e, f, h, i");
     let same = |app: &App, name: &str| {
         let r = app
-            .map
+            .modules.map()
             .register
             .answer
             .clone()
@@ -117,32 +118,32 @@ fn the_rejections_leave_out_what_one_scan_did_not_see() {
         let got = r.rejected.as_ref().map(|x| serde_json::json!({"edges": x.edges, "angle": x.angle}));
         assert_eq!(got.unwrap_or(Value::Null), want.get("rejected").cloned().unwrap_or(Value::Null), "{name}");
     };
-    let _ = app.update(Message::Map(map::Event::Register(R::Fixed(
+    let _ = app.update(Message::from(map::Event::Register(R::Fixed(
         clouds[0].clone(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Register(R::Moving(
+    let _ = app.update(Message::from(map::Event::Register(R::Moving(
         clouds[5].clone(),
     ))));
     same(
         &app,
         "yalnız ikinci taramada duvar: ayağı zeminle eşleşir, düz ICP kayar",
     );
-    let _ = app.update(Message::Map(map::Event::Register(R::ByAngle(true))));
+    let _ = app.update(Message::from(map::Event::Register(R::ByAngle(true))));
     same(&app, "normal açısı 30°: duvarın eşleşmeleri ayıklanır");
-    let _ = app.update(Message::Map(map::Event::Register(R::Angle(60.0))));
+    let _ = app.update(Message::from(map::Event::Register(R::Angle(60.0))));
     same(&app, "normal açısı 60°");
-    let _ = app.update(Message::Map(map::Event::Register(R::ByAngle(false))));
-    let _ = app.update(Message::Map(map::Event::Register(R::Fixed(
+    let _ = app.update(Message::from(map::Event::Register(R::ByAngle(false))));
+    let _ = app.update(Message::from(map::Event::Register(R::Fixed(
         clouds[6].clone(),
     ))));
-    let _ = app.update(Message::Map(map::Event::Register(R::Moving(
+    let _ = app.update(Message::from(map::Event::Register(R::Moving(
         clouds[7].clone(),
     ))));
     same(
         &app,
         "bordürün arkası sabit taramada gölge: kaldırım yolun kenarıyla eşleşir, düz ICP kayar",
     );
-    let _ = app.update(Message::Map(map::Event::Register(R::Edges(true))));
+    let _ = app.update(Message::from(map::Event::Register(R::Edges(true))));
     same(&app, "kenardaki eşleşmeler ayıklanınca bordür kaydırmaz");
 }
 
@@ -167,19 +168,19 @@ fn rejection_screens() {
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("pointcloud.register"));
             let (a, b) = (
-                app.map.register.clouds[pair.0].0.clone(),
-                app.map.register.clouds[pair.1].0.clone(),
+                app.modules.map().register.clouds[pair.0].0.clone(),
+                app.modules.map().register.clouds[pair.1].0.clone(),
             );
-            let _ = app.update(Message::Map(map::Event::Register(R::Fixed(a))));
-            let _ = app.update(Message::Map(map::Event::Register(R::Moving(b))));
-            let _ = app.update(Message::Map(map::Event::Register(if pair.0 == 0 {
+            let _ = app.update(Message::from(map::Event::Register(R::Fixed(a))));
+            let _ = app.update(Message::from(map::Event::Register(R::Moving(b))));
+            let _ = app.update(Message::from(map::Event::Register(if pair.0 == 0 {
                 R::ByAngle(true)
             } else {
                 R::Edges(true)
             })));
             if pair.0 != 0 {
                 // The synthetic sidewalk stands 15 cm over the control points set on the plain ground.
-                let _ = app.update(Message::Map(map::Event::Register(
+                let _ = app.update(Message::from(map::Event::Register(
                     R::Control(String::new()),
                 )));
             }
@@ -221,12 +222,12 @@ fn weights_screens() {
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("pointcloud.register"));
             let (a, e) = (
-                app.map.register.clouds[0].0.clone(),
-                app.map.register.clouds[4].0.clone(),
+                app.modules.map().register.clouds[0].0.clone(),
+                app.modules.map().register.clouds[4].0.clone(),
             );
-            let _ = app.update(Message::Map(map::Event::Register(R::Fixed(a))));
-            let _ = app.update(Message::Map(map::Event::Register(R::Moving(e))));
-            let _ = app.update(Message::Map(map::Event::Register(R::Weights(weights))));
+            let _ = app.update(Message::from(map::Event::Register(R::Fixed(a))));
+            let _ = app.update(Message::from(map::Event::Register(R::Moving(e))));
+            let _ = app.update(Message::from(map::Event::Register(R::Weights(weights))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
@@ -244,10 +245,10 @@ fn the_moved_scan_is_fitted_as_the_shared_case_says() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("pointcloud.register"));
-    assert_eq!(app.dialog, Some(Dialog::Map(map::MapDialogKind::Register)));
-    assert_eq!(app.map.register.control, "gnss");
+    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Register)));
+    assert_eq!(app.modules.map().register.control, "gnss");
     let r = app
-        .map
+        .modules.map()
         .register
         .answer
         .clone()
@@ -262,13 +263,13 @@ fn the_moved_scan_is_fitted_as_the_shared_case_says() {
     assert!(before.koh_z > 0.04 && after.koh_z < 0.01, "{} → {}", before.koh_z, after.koh_z);
     // The flat pair: the height found, the plan shift loose.
     let (c, d) = (
-        app.map.register.clouds[2].0.clone(),
-        app.map.register.clouds[3].0.clone(),
+        app.modules.map().register.clouds[2].0.clone(),
+        app.modules.map().register.clouds[3].0.clone(),
     );
-    let _ = app.update(Message::Map(map::Event::Register(R::Fixed(c))));
-    let _ = app.update(Message::Map(map::Event::Register(R::Moving(d))));
+    let _ = app.update(Message::from(map::Event::Register(R::Fixed(c))));
+    let _ = app.update(Message::from(map::Event::Register(R::Moving(d))));
     let flat = app
-        .map
+        .modules.map()
         .register
         .answer
         .clone()
@@ -299,17 +300,17 @@ fn the_fit_is_applied_to_the_moving_scan() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
     let r = app
-        .map
+        .modules.map()
         .register
         .answer
         .clone()
         .expect("an answer")
         .expect("registered");
     let (fixed, moving) = (
-        app.map.register.fixed.clone(),
-        app.map.register.moving.clone(),
+        app.modules.map().register.fixed.clone(),
+        app.modules.map().register.moving.clone(),
     );
-    let _ = app.update(Message::Map(map::Event::Register(R::Apply)));
+    let _ = app.update(Message::from(map::Event::Register(R::Apply)));
     assert_eq!(
         app.dialog,
         Some(Dialog::Gis(gis::GisDialogKind::Processing))
@@ -353,13 +354,13 @@ fn the_fit_is_applied_to_the_moving_scan() {
     let _ = app.update(Message::Run("pointcloud.register"));
     assert_eq!(
         (
-            app.map.register.fixed.as_str(),
-            app.map.register.moving.as_str()
+            app.modules.map().register.fixed.as_str(),
+            app.modules.map().register.moving.as_str()
         ),
         (fixed.as_str(), moved.as_str())
     );
     let again = app
-        .map
+        .modules.map()
         .register
         .answer
         .clone()
@@ -384,17 +385,17 @@ fn tersini_uygula_takes_the_scan_back_and_the_history_grows() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
     let r = app
-        .map
+        .modules.map()
         .register
         .answer
         .clone()
         .expect("an answer")
         .expect("registered");
     let (fixed, moving) = (
-        app.map.register.fixed.clone(),
-        app.map.register.moving.clone(),
+        app.modules.map().register.fixed.clone(),
+        app.modules.map().register.moving.clone(),
     );
-    let _ = app.update(Message::Map(map::Event::Register(R::Apply)));
+    let _ = app.update(Message::from(map::Event::Register(R::Apply)));
     let dir = crate::files_testing::scratch("tersini-uygula");
     let run = |app: &mut App, file: &str| {
         let out = dir.join(file);
@@ -455,7 +456,7 @@ fn tersini_uygula_takes_the_scan_back_and_the_history_grows() {
     app.selection.set([slot(&app, &fixed), slot(&app, &back_uid)]);
     let _ = app.update(Message::Run("pointcloud.register"));
     let again = app
-        .map
+        .modules.map()
         .register
         .answer
         .clone()
@@ -479,14 +480,14 @@ fn son_donusumu_geri_al_takes_the_last_step_back() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
     let r = app
-        .map
+        .modules.map()
         .register
         .answer
         .clone()
         .expect("an answer")
         .expect("registered");
-    let fixed = app.map.register.fixed.clone();
-    let _ = app.update(Message::Map(map::Event::Register(R::Apply)));
+    let fixed = app.modules.map().register.fixed.clone();
+    let _ = app.update(Message::from(map::Event::Register(R::Apply)));
     let dir = crate::files_testing::scratch("son-donusum");
     let run = |app: &mut App, file: &str| {
         let out = dir.join(file);
@@ -532,7 +533,7 @@ fn son_donusumu_geri_al_takes_the_last_step_back() {
     app.selection.set([slot(&app, &fixed), slot(&app, &back_uid)]);
     let _ = app.update(Message::Run("pointcloud.register"));
     let again = app
-        .map
+        .modules.map()
         .register
         .answer
         .clone()
@@ -564,7 +565,7 @@ fn undo_screens() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::WindowResized(size));
     let _ = app.update(Message::Run("pointcloud.register"));
-    let _ = app.update(Message::Map(map::Event::Register(R::Apply)));
+    let _ = app.update(Message::from(map::Event::Register(R::Apply)));
     let dir = crate::files_testing::scratch("son-donusum-resim");
     let run = |app: &mut App, file: &str| {
         let out = dir.join(file);
@@ -636,12 +637,12 @@ fn screens() {
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("pointcloud.register"));
             let (a, b) = (
-                app.map.register.clouds[pair.0].0.clone(),
-                app.map.register.clouds[pair.1].0.clone(),
+                app.modules.map().register.clouds[pair.0].0.clone(),
+                app.modules.map().register.clouds[pair.1].0.clone(),
             );
-            let _ = app.update(Message::Map(map::Event::Register(R::Fixed(a))));
-            let _ = app.update(Message::Map(map::Event::Register(R::Moving(b))));
-            let _ = app.update(Message::Map(map::Event::Register(R::View(view))));
+            let _ = app.update(Message::from(map::Event::Register(R::Fixed(a))));
+            let _ = app.update(Message::from(map::Event::Register(R::Moving(b))));
+            let _ = app.update(Message::from(map::Event::Register(R::View(view))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
@@ -673,7 +674,7 @@ fn screens() {
             println!("{}", file.display());
         };
         shot(&mut app, "1-tarama-kaydi");
-        let _ = app.update(Message::Map(map::Event::Register(R::Apply)));
+        let _ = app.update(Message::from(map::Event::Register(R::Apply)));
         shot(&mut app, "2-donusum-uygula");
         let dir = crate::files_testing::scratch(&format!("buluta-uygula-resim-{name}"));
         let out = dir.join("kayitli.laz");
@@ -748,13 +749,13 @@ fn inverse_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("pointcloud.register"));
         let r = app
-            .map
+            .modules.map()
             .register
             .answer
             .clone()
             .expect("an answer")
             .expect("registered");
-        let _ = app.update(Message::Map(map::Event::Register(R::Apply)));
+        let _ = app.update(Message::from(map::Event::Register(R::Apply)));
         let dir = crate::files_testing::scratch(&format!("tersini-uygula-resim-{name}"));
         let run = |app: &mut App, file: &str| {
             let _ = app.update(Message::Gis(gis::Event::Processing(P::Value(
@@ -916,7 +917,7 @@ fn the_actions_keep_their_row_at_the_usual_size() {
     let size = iced::Size::new(1440.0, 860.0);
     let _ = app.update(Message::WindowResized(size));
     let _ = app.update(Message::Run("pointcloud.register"));
-    assert!(matches!(app.map.register.answer, Some(Ok(_))));
+    assert!(matches!(app.modules.map().register.answer, Some(Ok(_))));
     let mut snapshot = crate::files_testing::offscreen(size);
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);

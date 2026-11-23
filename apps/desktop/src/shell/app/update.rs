@@ -4,7 +4,6 @@
 use super::*;
 use crate::arch;
 use crate::gis;
-use crate::map;
 
 impl App {
     pub fn subscription(&self) -> Subscription<Message> {
@@ -357,9 +356,9 @@ impl App {
         // Undo/Redo and script writes can arrive while the pointer rests
         // over a panel. The active tool's cached handles must follow too.
         self.with_tool(|s, cx| s.document_changed(cx));
-        // Boru hattı denetimi open: its answer read again from the network as it is now (docs/adr/4360).
-        if self.dialog == Some(crate::app::Dialog::Map(map::MapDialogKind::PipesCheck)) {
-            self.pipes_check_run();
+        // A module's window that follows the drawing reads it again (Boru hattı denetimi, docs/adr/4360).
+        for parts in crate::module_parts::all() {
+            parts.document_changed(self);
         }
     }
 
@@ -612,7 +611,14 @@ impl App {
             }
             Message::PromptOption(key) => return self.prompt_option(key),
             Message::PromptChoice(key, typed) => return self.prompt_choice(key, &typed),
-            Message::Map(inner) => return self.map_event(inner),
+            Message::PointCalc(kind) => return self.start_point_calc(kind),
+            Message::MapCrs(choose) => self.choose_map(choose),
+            Message::MapCrsClose => {
+                if self.dialog == Some(crate::app::Dialog::MapCrs) {
+                    self.dialog = None;
+                }
+            }
+            Message::Module(event) => return self.module_event(event),
             Message::Key(press) => return self.key(press),
             Message::CursorValueInput { token, text, pasted } => {
                 return self.value_field_input(token, text, pasted);

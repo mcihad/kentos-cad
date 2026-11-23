@@ -624,6 +624,26 @@ impl App {
     }
 }
 
+/// A GNSS solution's kind in words (GNSS arşivi and Öznitelikler).
+pub(crate) fn survey_kind_words(k: kentos_commands::SolutionKind) -> &'static str {
+    use kentos_commands::SolutionKind;
+    match k {
+        SolutionKind::Receiver => "Alıcı (RTK)",
+        SolutionKind::Processed => "İşlenmiş",
+        SolutionKind::Ppp => "PPP",
+    }
+}
+
+/// An accepted point's or a use's state in words (GNSS arşivi and Öznitelikler).
+pub(crate) fn survey_state_words(s: kentos_commands::SurveyState) -> &'static str {
+    use kentos_commands::SurveyState as S;
+    match s {
+        S::Current => "Güncel",
+        S::Stale => "Güncel değil",
+        S::Missing => "Nesnesi yok",
+    }
+}
+
 /// Kaynağı (docs/adr/1200 §4): the object's role in the map's work, its item, the source it was derived from, the
 /// source's revision then (its first 12 hex digits), the operation and whether it is up to date; none outside a map
 /// project's work structure.
@@ -638,7 +658,7 @@ fn survey_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
         let r = &p.result;
         out.push(rows::Row::text("İşaret", p.mark.clone()));
         out.push(rows::Row::text("Kabul edilen nokta", format!("{} · {}. revizyon", p.id, r.revision)));
-        out.push(rows::Row::text("Durum", crate::map_survey_panel::state_words(p.state)));
+        out.push(rows::Row::text("Durum", survey_state_words(p.state)));
         for why in &p.why {
             out.push(rows::Row::note(why));
         }
@@ -659,7 +679,7 @@ fn survey_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
             }
             out.push(rows::Row::text(
                 s.id.clone(),
-                format!("{} · {}", crate::map_survey_panel::kind_words(s.kind), roles.join(", ")),
+                format!("{} · {}", survey_kind_words(s.kind), roles.join(", ")),
             ));
         }
         out.push(rows::Row::text("İşaret yüksekliği", format!("{:.3} m (elipsoit)", r.height)));
@@ -680,7 +700,7 @@ fn survey_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
     }
     if let Some(u) = &found.used {
         out.push(rows::Row::text("Dayandığı kayıt", format!("{} · {}", u.id, u.operation)));
-        out.push(rows::Row::text("Güncellik", crate::map_survey_panel::state_words(u.state)));
+        out.push(rows::Row::text("Güncellik", survey_state_words(u.state)));
         for why in &u.why {
             out.push(rows::Row::note(why));
         }

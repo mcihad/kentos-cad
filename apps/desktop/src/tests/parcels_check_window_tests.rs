@@ -3,12 +3,13 @@
 //! filters the table, Dışındakileri seç selects the one outside, CSV kaydet writes the table, nothing is written to
 //! the drawing; a selection checks only its areas. Harita and GIS offer it, Yol and Mimari do not. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::parcels_check_window::{Event as C, Show};
 
 fn opened(program: Option<Module>) -> App {
@@ -29,10 +30,10 @@ fn the_parcel_layer_is_checked_and_the_ones_outside_selected() {
     let _ = app.update(Message::Run("parcels.check"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::ParcelsCheck))
+        Some(crate::map::dialog(map::MapDialogKind::ParcelsCheck))
     );
     let r = app
-        .map
+        .modules.map()
         .parcels_check
         .answer
         .clone()
@@ -49,11 +50,11 @@ fn the_parcel_layer_is_checked_and_the_ones_outside_selected() {
         (7, 3, 1, 1, 2)
     );
     assert_eq!(r.duplicates, ["Ankara/Çankaya/Merkez/101/2"]);
-    let _ = app.update(Message::Map(map::Event::ParcelsCheck(C::Show(
+    let _ = app.update(Message::from(map::Event::ParcelsCheck(C::Show(
         Show::Outside,
     ))));
-    assert_eq!(app.map.parcels_check.show, Show::Outside);
-    let _ = app.update(Message::Map(map::Event::ParcelsCheck(C::Select)));
+    assert_eq!(app.modules.map().parcels_check.show, Show::Outside);
+    let _ = app.update(Message::from(map::Event::ParcelsCheck(C::Select)));
     assert_eq!(app.dialog, None);
     assert_eq!(
         app.selection.ids(),
@@ -73,7 +74,7 @@ fn a_selection_checks_its_areas_only() {
     app.selection.set([Slot(1), Slot(8)]);
     let _ = app.update(Message::Run("parcels.check"));
     let r = app
-        .map
+        .modules.map()
         .parcels_check
         .answer
         .clone()

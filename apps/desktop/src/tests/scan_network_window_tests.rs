@@ -3,6 +3,7 @@
 //! answer; Eşit weights — the unweighted case's; the links and loops tables; Dönüşüm uygula on the chosen scan with its
 //! matrix; two scans are said and nothing opens. And its pictures.
 
+use crate::map::MapState;
 use crate::gis;
 use crate::map;
 use kentos_domain::Slot;
@@ -67,14 +68,14 @@ fn three() -> App {
     let _ = app.update(Message::Run("pointcloud.network"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::ScanNetwork))
+        Some(crate::map::dialog(map::MapDialogKind::ScanNetwork))
     );
     app
 }
 
 fn answer(app: &App) -> Value {
     serde_json::to_value(
-        app.map
+        app.modules.map()
             .scan_network
             .answer
             .clone()
@@ -87,7 +88,7 @@ fn answer(app: &App) -> Value {
 #[test]
 fn three_scans_with_hubers_weights_are_the_shared_case() {
     let app = three();
-    assert_eq!(app.map.scan_network.weights, Weights::Huber);
+    assert_eq!(app.modules.map().scan_network.weights, Weights::Huber);
     near(
         &answer(&app),
         &case_output("üç tarama, A sabit, Huber"),
@@ -101,13 +102,13 @@ fn three_scans_with_hubers_weights_are_the_shared_case() {
 #[test]
 fn equal_weights_and_the_tables() {
     let mut app = three();
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Weights(
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Weights(
         Weights::Plain,
     ))));
     near(&answer(&app), &case_output("ağırlıksız"), "plain");
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Show(Show::Links))));
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Show(Show::Links))));
     assert_eq!(app.scan_network_lines().1.len(), 3, "three links");
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Show(Show::Loops))));
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Show(Show::Loops))));
     let (_, rows) = app.scan_network_lines();
     assert_eq!(rows.len(), 1, "one loop");
     assert!(rows[0][0].contains(" → "), "{:?}", rows[0]);
@@ -117,19 +118,19 @@ fn equal_weights_and_the_tables() {
 fn donusum_uygula_takes_the_chosen_scan_with_its_matrix() {
     let mut app = three();
     let r = app
-        .map
+        .modules.map()
         .scan_network
         .answer
         .clone()
         .expect("an answer")
         .expect("adjusted");
-    let chosen = app.map.scan_network.chosen.clone();
+    let chosen = app.modules.map().scan_network.chosen.clone();
     let scan = r
         .scans
         .iter()
         .find(|s| s.uid == chosen)
         .expect("the chosen scan");
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Apply)));
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Apply)));
     assert_eq!(
         app.dialog,
         Some(Dialog::Gis(gis::GisDialogKind::Processing))
@@ -160,20 +161,20 @@ fn donusum_uygula_takes_the_chosen_scan_with_its_matrix() {
 fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
     let mut app = three();
     let r = app
-        .map
+        .modules.map()
         .scan_network
         .answer
         .clone()
         .expect("an answer")
         .expect("adjusted");
-    let chosen = app.map.scan_network.chosen.clone();
+    let chosen = app.modules.map().scan_network.chosen.clone();
     let scan = r
         .scans
         .iter()
         .find(|s| s.uid == chosen)
         .expect("the chosen scan")
         .clone();
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Keep)));
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Keep)));
     let placed = match app.document.as_ref().expect("a drawing").model.get(Slot(2)) {
         Some(kentos_commands::Entity::PointCloud(c)) => c.cloud.sources[0].pose.expect("its place"),
         other => panic!("not a cloud: {other:?}"),
@@ -184,7 +185,7 @@ fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
         "pose",
     );
     let again = app
-        .map
+        .modules.map()
         .scan_network
         .answer
         .clone()
@@ -206,7 +207,7 @@ fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
 #[test]
 fn five_rounds_are_the_shared_case() {
     let mut app = three();
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Rounds(5.0))));
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Rounds(5.0))));
     let got = answer(&app);
     let want = case_output("dış döngü: üç tarama");
     near(&got["rounds"], &want["rounds"], "rounds");
@@ -267,14 +268,14 @@ fn screens() {
     let _ = app.update(Message::Run("pointcloud.network"));
     shoot(&mut app, wide, "1-taramalar-acik-genis.png");
     // 2: its links.
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Show(Show::Links))));
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Show(Show::Links))));
     shoot(&mut app, wide, "2-baglar-acik-genis.png");
     // 3: three scans' loop, dark and narrow.
     let mut app = opened();
     set(&mut app, "dark", narrow);
     app.selection.set(vec![Slot(1), Slot(2), Slot(3)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Show(Show::Loops))));
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Show(Show::Loops))));
     shoot(&mut app, narrow, "3-donguler-koyu-dar.png");
     // 4: its place in the ribbon: a cloud selected, the point cloud tab beside Tarama kaydı.
     let mut app = opened();
@@ -290,7 +291,7 @@ fn a_disconnected_scan_is_named_by_its_file() {
     let mut app = opened();
     app.selection.set((1..=7).map(Slot));
     let _ = app.update(Message::Run("pointcloud.network"));
-    let why = match &app.map.scan_network.answer {
+    let why = match &app.modules.map().scan_network.answer {
         Some(Err(why)) => why.clone(),
         other => panic!("refused: {other:?}"),
     };
@@ -316,13 +317,13 @@ fn the_notes_name_the_scans_and_a_click_marks_the_link() {
     let mut app = opened();
     app.selection.set(vec![Slot(5), Slot(6), Slot(7)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let r = app.map.scan_network.answer.clone().expect("an answer").expect("adjusted");
-    let uids: Vec<String> = app.map.scan_network.scans.iter().map(|(u, _)| u.clone()).collect();
+    let r = app.modules.map().scan_network.answer.clone().expect("an answer").expect("adjusted");
+    let uids: Vec<String> = app.modules.map().scan_network.scans.iter().map(|(u, _)| u.clone()).collect();
     let weak: Vec<&String> = r.notes.iter().filter(|n| n.contains("zayıf")).collect();
     assert!(!weak.is_empty(), "the shared case's notes");
     // What the window shows: each note with the names in.
     let text = |app: &App| {
-        let s = &app.map.scan_network;
+        let s = &app.modules.map().scan_network;
         r.notes.iter().map(|n| s.scans.iter().fold(n.clone(), |t, (u, name)| t.replace(u.as_str(), name))).collect::<Vec<_>>()
     };
     for n in text(&app) {
@@ -333,13 +334,13 @@ fn the_notes_name_the_scans_and_a_click_marks_the_link() {
     let pair = r.notes.iter().find(|n| n.contains("bağında")).expect("a link's note");
     let named: Vec<String> = uids.iter().filter(|u| pair.contains(u.as_str())).cloned().collect();
     assert_eq!(named.len(), 2);
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Mark(named))));
-    assert_eq!(app.map.scan_network.show, Show::Links);
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Mark(named))));
+    assert_eq!(app.modules.map().scan_network.show, Show::Links);
     let (_, rows) = app.scan_network_lines();
     assert_eq!(rows.iter().filter(|r| r[0].starts_with("▸ ")).count(), 1, "{rows:?}");
     // Run again: nothing marked.
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Spacing(0.5))));
-    assert!(app.map.scan_network.marked.is_empty());
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Spacing(0.5))));
+    assert!(app.modules.map().scan_network.marked.is_empty());
 }
 
 /// Two scans whose files share a name are told apart: by their layers when those differ, else by their numbers.
@@ -359,7 +360,7 @@ fn scans_sharing_a_name_are_told_apart() {
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.selection.set(vec![Slot(5), Slot(6), Slot(7)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let names: Vec<String> = app.map.scan_network.scans.iter().map(|(_, n)| n.clone()).collect();
+    let names: Vec<String> = app.modules.map().scan_network.scans.iter().map(|(_, n)| n.clone()).collect();
     assert_eq!(names, ["ag-e.xyz #5", "ag-e.xyz #6", "ag-g.xyz"], "same layer: by number");
 }
 
@@ -369,14 +370,14 @@ fn the_named_notes_on_the_screen() {
     let mut app = opened();
     app.selection.set(vec![Slot(5), Slot(6), Slot(7)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let r = app.map.scan_network.answer.clone().expect("an answer").expect("adjusted");
-    let uids: Vec<String> = app.map.scan_network.scans.iter().map(|(u, _)| u.clone()).collect();
+    let r = app.modules.map().scan_network.answer.clone().expect("an answer").expect("adjusted");
+    let uids: Vec<String> = app.modules.map().scan_network.scans.iter().map(|(u, _)| u.clone()).collect();
     let pair = r.notes.iter().find(|n| n.contains("bağında")).expect("a link's note");
     let named: Vec<String> = uids.iter().filter(|u| pair.contains(u.as_str())).cloned().collect();
-    let _ = app.update(Message::Map(map::Event::ScanNetwork(N::Mark(named))));
+    let _ = app.update(Message::from(map::Event::ScanNetwork(N::Mark(named))));
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
     shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-    let shown = app.map.scan_network.scans.iter().fold(pair.clone(), |t, (u, n)| t.replace(u.as_str(), n));
+    let shown = app.modules.map().scan_network.scans.iter().fold(pair.clone(), |t, (u, n)| t.replace(u.as_str(), n));
     assert!(crate::files_testing::find_text(&mut shot, &app, &shown).is_some(), "{shown}");
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-037-ag-uyarilari");
 }

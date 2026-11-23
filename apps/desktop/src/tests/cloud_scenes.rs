@@ -13,7 +13,6 @@
 //! Test code only.
 
 use crate::gis;
-use crate::map;
 use std::path::PathBuf;
 
 use iced::Point;
@@ -214,9 +213,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             "bulut-harita",
             |app| {
                 opened(app, [-6.0, -4.0, 126.0, 94.0]);
-                let _ = app.update(Message::Map(map::Event::MapCrs(crate::map_crs::Choose(
+                let _ = app.update(Message::MapCrs(crate::map_crs::Choose(
                     Some(4326),
-                ))));
+                )));
             },
             clouds_made,
         ),

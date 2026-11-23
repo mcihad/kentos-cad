@@ -159,31 +159,14 @@
       "shell/view/status.rs"
     ],
     "shell->map": [
-      "shell/app/commands.rs",
-      "shell/app/start.rs",
-      "shell/app/update.rs",
-      "shell/app.rs",
-      "shell/cloud/mod.rs",
-      "shell/command_bar.rs",
-      "shell/module_profile.rs",
-      "shell/project/arch.rs",
-      "shell/project/settings.rs",
-      "shell/python/mod.rs",
-      "shell/screen_scale.rs",
-      "shell/traces/answers.rs",
-      "shell/view/status.rs"
+      "shell/module_parts.rs",
+      "shell/module_profile.rs"
     ],
     "shell->road": [
       "shell/app/start.rs",
       "shell/app/update.rs",
       "shell/app.rs",
-      "shell/catalog_report_window.rs",
-      "shell/clean_report_window.rs",
-      "shell/exchange/permit_scope.rs",
-      "shell/exchange_check_window.rs",
       "shell/module_profile.rs",
-      "shell/open_report_window.rs",
-      "shell/propose_window.rs",
       "shell/traces/answers.rs",
       "shell/view/area.rs"
     ],
@@ -228,22 +211,8 @@
       "cad/tables/mod.rs",
       "cad/views.rs"
     ],
-    "cad->map": [
-      "cad/drawing_menus.rs",
-      "cad/labels/ink.rs",
-      "cad/labels/mod.rs",
-      "cad/labels/paint.rs",
-      "cad/marks.rs",
-      "cad/properties/mod.rs",
-      "cad/properties/rows/document.rs"
-    ],
-    "cad->road": [
-      "cad/pictures.rs",
-      "cad/plot_styles_window.rs",
-      "cad/sheet_details_window.rs",
-      "cad/table_style_window.rs",
-      "cad/tables/extract.rs"
-    ],
+    "cad->map": [],
+    "cad->road": [],
     "gis->cad": [
       "gis/address/providers.rs",
       "gis/calc/convert.rs",
@@ -302,49 +271,17 @@
     ],
     "gis->arch": [],
     "gis->map": [],
-    "gis->road": [
-      "gis/data_profile_names.rs",
-      "gis/features_reconcile_window.rs",
-      "gis/impact_window.rs",
-      "gis/reproject_window.rs"
-    ],
+    "gis->road": [],
     "arch->gis": [],
     "arch->map": [],
-    "arch->road": [
-      "arch/design_check_window.rs",
-      "arch/digital_rules.rs"
-    ],
+    "arch->road": [],
     "map->gis": [
       "map/cogo.rs",
-      "map/map_crs.rs",
       "map/map_survey_panel.rs",
       "map/register_window.rs"
     ],
     "map->arch": [],
-    "map->road": [
-      "map/asbuilt_review_form.rs",
-      "map/asbuilt_trend.rs",
-      "map/asbuilt_window.rs",
-      "map/baselines_window.rs",
-      "map/cloud_place_window.rs",
-      "map/map_work_panel.rs",
-      "map/ortho_compare_window.rs",
-      "map/ortho_network_section.rs",
-      "map/ortho_seamlines_window.rs",
-      "map/ortho_window.rs",
-      "map/overlap_window.rs",
-      "map/parcel_boundaries_window.rs",
-      "map/parcel_register_window.rs",
-      "map/parcels_check_window.rs",
-      "map/pipes_check_window.rs",
-      "map/readjustment_window.rs",
-      "map/register_window.rs",
-      "map/scan_network_window.rs",
-      "map/survey_network_window.rs",
-      "map/zoning_draft_window.rs",
-      "map/zoning_symbols_window.rs",
-      "map/zoning_window.rs"
-    ],
+    "map->road": [],
     "road->gis": [],
     "road->arch": [],
     "road->map": []

@@ -66,11 +66,8 @@ impl App {
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     extent: self.extent_mark(),
                     problem: self.topology_problem().or_else(|| self.gis.networks.mark.clone()),
-                    graph: self.parcel_graph_marks(),
                     reach: self.impact_reach_marks(),
-                    zoning: self.zoning_marks(),
-                    pipes: self.pipes_marks(),
-                    baseline: self.baseline_marks(),
+                    module: self.module_marks(),
                     broken: self.broken_marks(),
                     missing: self.missing_pictures(),
                     clips: self.clip_marks(),
@@ -220,14 +217,8 @@ impl App {
                                 warning: Tokens::of(&self.theme()).warning,
                             },
                         ))
-                        // Harita işi's approved shapes of the objects whose geometry changed (approved_layer.rs,
-                        // docs/adr/4480), while Değişenler's selection stands.
-                        .extend(crate::approved_layer::layer(
-                            self.map.map_work.approved.as_ref(),
-                            self.selection.version(),
-                            &self.viewport.camera,
-                            Tokens::of(&self.theme()).warning,
-                        ))
+                        // The modules' layers over the drawing (Harita işi's approved shapes, docs/adr/4480).
+                        .extend(crate::module_parts::all().iter().flat_map(|parts| parts.area_layers(self)))
                         .extend(service_labels)
                         // The data layers' labels under the drawing's own (data_labels.rs, docs/adr/9101 §6).
                         .extend(self.data_label_layers(&format))
@@ -313,11 +304,8 @@ impl App {
             problem: self
                 .topology_problem()
                 .or_else(|| self.gis.networks.mark.clone()),
-            graph: self.parcel_graph_marks(),
             reach: self.impact_reach_marks(),
-            zoning: self.zoning_marks(),
-            pipes: self.pipes_marks(),
-            baseline: self.baseline_marks(),
+            module: self.module_marks(),
             broken: self.broken_marks(),
             missing: self.missing_pictures(),
             clips: self.clip_marks(),
@@ -448,10 +436,8 @@ impl App {
             // Gezgin: the project's tree (navigator.rs, docs/adr/0778).
             Panel::Navigator => self.navigator_view(),
             Panel::RoadProject => self.road_project_view(),
-            // Harita işi: a map project's work structure (map_work_panel.rs, docs/adr/1200 §4).
-            Panel::MapWork => self.map_work_view(),
-            // GNSS arşivi: a map project's arazi ölçümleri (map_survey_panel.rs, docs/adr/1340 §6).
-            Panel::MapSurvey => self.map_survey_view(),
+            // Harita işi and GNSS arşivi: the module's own panels (docs/adr/9199 §3.3).
+            Panel::MapWork | Panel::MapSurvey => self.module_panel_view(panel),
             Panel::Assistant => self.assistant_view(),
             Panel::Extension => self.extension_panel_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).

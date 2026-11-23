@@ -41,7 +41,7 @@ fn opened(snapshot: kentos_commands::DocumentSnapshotV2, program: Option<Module>
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::Map(map::Event::MapSurvey(e)));
+    let _ = app.update(Message::from(map::Event::MapSurvey(e)));
 }
 
 fn tree(app: &App) -> kentos_commands::MapSurveyTree {

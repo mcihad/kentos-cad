@@ -3,11 +3,12 @@
 //! symbol chosen for the open konut row fills it; Sembolleri ver writes what the case with that pick writes, the
 //! decisions untouched, in one undo step. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::zoning_symbols_window::{Event as Z, pairs, rows};
 
 fn cases() -> Value {
@@ -25,7 +26,7 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("zoning.check"));
-    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Open)));
+    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Open)));
     app
 }
 
@@ -43,10 +44,10 @@ fn the_rows_are_the_levels_and_uses_of_the_case() {
     let app = opened();
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::ZoningSymbols))
+        Some(crate::map::dialog(map::MapDialogKind::ZoningSymbols))
     );
     let r = app
-        .map
+        .modules.map()
         .zoning_symbols
         .answer
         .clone()
@@ -82,7 +83,7 @@ fn a_symbol_chosen_for_an_open_use_is_written_and_decisions_stay() {
     let mut app = opened();
     let before = symbols(&app);
     let r = app
-        .map
+        .modules.map()
         .zoning_symbols
         .answer
         .clone()
@@ -92,12 +93,12 @@ fn a_symbol_chosen_for_an_open_use_is_written_and_decisions_stay() {
         .iter()
         .position(|p| p.level == "uip" && p.usage == "konut")
         .expect("the konut row");
-    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Choose(at))));
-    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Pick(
+    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Choose(at))));
+    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Pick(
         "mpyy.uip.konut.gelisme-konut-alani".into(),
     ))));
     let r = app
-        .map
+        .modules.map()
         .zoning_symbols
         .answer
         .clone()
@@ -108,7 +109,7 @@ fn a_symbol_chosen_for_an_open_use_is_written_and_decisions_stay() {
         serde_json::to_value(&r).expect("json")["areas"],
         want["steps"][0]["result"]["output"]["areas"]
     );
-    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Write)));
+    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Write)));
     assert_eq!(app.dialog, None);
     let after = symbols(&app);
     for (slot, fields) in want["steps"][0]["expect"]["fields"]
@@ -131,9 +132,9 @@ fn a_symbol_chosen_for_an_open_use_is_written_and_decisions_stay() {
 #[test]
 fn a_kept_choice_is_read_when_the_window_opens_again() {
     let mut app = opened();
-    assert!(app.map.zoning_symbols.keep);
+    assert!(app.modules.map().zoning_symbols.keep);
     let r = app
-        .map
+        .modules.map()
         .zoning_symbols
         .answer
         .clone()
@@ -143,11 +144,11 @@ fn a_kept_choice_is_read_when_the_window_opens_again() {
         .iter()
         .position(|p| p.level == "uip" && p.usage == "konut")
         .expect("the konut row");
-    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Choose(at))));
-    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Pick(
+    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Choose(at))));
+    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Pick(
         "mpyy.uip.konut.gelisme-konut-alani".into(),
     ))));
-    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Write)));
+    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Write)));
     let kept = |app: &App| {
         app.document
             .as_ref()
@@ -162,16 +163,16 @@ fn a_kept_choice_is_read_when_the_window_opens_again() {
             serde_json::json!([{"level": "uip", "use": "konut", "symbol": "mpyy.uip.konut.gelisme-konut-alani"}])
         )
     );
-    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Open)));
+    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Open)));
     let r = app
-        .map
+        .modules.map()
         .zoning_symbols
         .answer
         .clone()
         .expect("an answer")
         .expect("plans");
     let table = kentos_commands::builtin_zoning_symbols().expect("the table");
-    let shown = rows(&r, &table, &app.map.zoning_symbols.kept);
+    let shown = rows(&r, &table, &app.modules.map().zoning_symbols.kept);
     let konut = shown
         .iter()
         .find(|row| row[1] == "Konut alanı")
@@ -180,7 +181,7 @@ fn a_kept_choice_is_read_when_the_window_opens_again() {
         (konut[2].as_str(), konut[3].as_str()),
         ("Gelişme konut alanı", "Projede")
     );
-    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Close)));
+    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Close)));
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(kept(&app), None);
 }
@@ -207,12 +208,12 @@ fn screens() {
             let _ = app.update(Message::Run("view.zoomExtents"));
             match step {
                 0 => {
-                    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Close)));
+                    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Close)));
                     let _ = app.update(Message::Run("zoning.check"));
                 }
                 2 => {
                     let r = app
-                        .map
+                        .modules.map()
                         .zoning_symbols
                         .answer
                         .clone()
@@ -222,8 +223,8 @@ fn screens() {
                         .iter()
                         .position(|p| p.usage == "konut")
                         .expect("the konut row");
-                    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Choose(at))));
-                    let _ = app.update(Message::Map(map::Event::ZoningSymbols(Z::Pick(
+                    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Choose(at))));
+                    let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Pick(
                         "mpyy.uip.konut.gelisme-konut-alani".into(),
                     ))));
                 }

@@ -15,6 +15,7 @@
 //! from a system of KentOS's rule package (the 2017 sewer and storm water regulations), each pipe's slope class and
 //! its limits in the table; the profile draws the run's own outer walls.
 
+use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;
 
@@ -31,7 +32,7 @@ use kentos_native_application::{ExecutionContext, pipes_check, pipes_profile};
 use kentos_ui::label;
 use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::style::fields;
@@ -226,7 +227,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::PipesCheck(e))
+    Message::from(map::Event::PipesCheck(e))
 }
 
 /// A finding's kind in words.
@@ -339,7 +340,7 @@ pub fn csv(r: &PipesChecked, names: &[String]) -> String {
 
 impl App {
     fn pipes_check_input(&self) -> Result<PipesCheck, String> {
-        let s = &self.map.pipes_check;
+        let s = &self.modules.map().pipes_check;
         let unit = unit_of(&s.unit);
         let slope = |t: &str, w: &str| limit(t, w).map(|v| v.map(|v| v / 1000.0));
         let clearance = if s.other.is_empty() {
@@ -401,7 +402,7 @@ impl App {
     pub(crate) fn pipes_check_run(&mut self) {
         let input = self.pipes_check_input();
         let Some(doc) = self.document.as_mut() else { return };
-        self.map.pipes_check.answer = Some(input.and_then(|input| {
+        self.modules.map_mut().pipes_check.answer = Some(input.and_then(|input| {
             match pipes_check::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
@@ -461,7 +462,7 @@ impl App {
         // The same drawing and network as last time (UR2-025: back from Hat profili every limit was empty): the
         // values typed come back, the lists read again; another network starts afresh, its own guesses shown.
         let session = Some(doc.session);
-        let kept = &self.map.pipes_check;
+        let kept = &self.modules.map().pipes_check;
         if kept.session == session && kept.network == first.0 {
             let layers: Vec<(String, String)> =
                 doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
@@ -470,12 +471,12 @@ impl App {
             again.surfaces = surfaces;
             again.layers = layers;
             again.answer = None;
-            self.map.pipes_check = again;
+            self.modules.map_mut().pipes_check = again;
             self.pipes_check_run();
-            self.dialog = Some(Dialog::Map(map::MapDialogKind::PipesCheck));
+            self.dialog = Some(crate::map::dialog(map::MapDialogKind::PipesCheck));
             return Task::none();
         }
-        self.map.pipes_check = State {
+        self.modules.map_mut().pipes_check = State {
             session,
             network: first.0.clone(),
             profile_layer,
@@ -500,11 +501,11 @@ impl App {
         };
         self.pipes_check_run();
         // The profile's first pipe: the first one checked.
-        if let Some(Ok(r)) = &self.map.pipes_check.answer {
-            self.map.pipes_check.profile_start =
+        if let Some(Ok(r)) = &self.modules.map().pipes_check.answer {
+            self.modules.map_mut().pipes_check.profile_start =
                 r.pipes.first().map(|p| p.uid.clone()).unwrap_or_default();
         }
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::PipesCheck));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::PipesCheck));
         Task::none()
     }
 
@@ -514,7 +515,7 @@ impl App {
             Ok(c) => c,
             Err(why) => return self.warn(why),
         };
-        let s = &self.map.pipes_check;
+        let s = &self.modules.map().pipes_check;
         let mut input = PipesProfile {
             network: check.network,
             start: s.profile_start.clone(),
@@ -573,7 +574,7 @@ impl App {
                 ),
             );
             // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
-            self.map.pipes_check.answer = None;
+            self.modules.map_mut().pipes_check.answer = None;
             self.dialog = None;
         }
     }
@@ -591,7 +592,7 @@ impl App {
             let outer = if has("Dış çap") { "Dış çap".to_owned() } else { String::new() };
             Some((if has("Akar baş") { From::Fields } else { From::Heights }, has("Çap"), wall, outer))
         });
-        let s = &mut self.map.pipes_check;
+        let s = &mut self.modules.map_mut().pipes_check;
         if let Some((from, diameter, wall, outer)) = guess {
             s.other_from = from;
             s.other_diameter = if diameter { "Çap".into() } else { String::new() };
@@ -605,7 +606,7 @@ impl App {
     }
 
     fn pipes_check_names(&self) -> Vec<String> {
-        match &self.map.pipes_check.answer {
+        match &self.modules.map().pipes_check.answer {
             Some(Ok(r)) => r.pipes.iter().map(|p| name_of(self, &p.uid)).collect(),
             _ => Vec::new(),
         }
@@ -614,7 +615,7 @@ impl App {
     /// The table written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn pipes_check_save(&mut self, path: PathBuf) {
         let names = self.pipes_check_names();
-        let Some(Ok(r)) = &self.map.pipes_check.answer else {
+        let Some(Ok(r)) = &self.modules.map().pipes_check.answer else {
             return;
         };
         match std::fs::write(&path, csv(r, &names)) {
@@ -624,7 +625,7 @@ impl App {
     }
 
     pub(crate) fn pipes_check_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.map.pipes_check;
+        let s = &mut self.modules.map_mut().pipes_check;
         match event {
             Event::Network(v) => s.network = v,
             Event::From(v) => s.from = v,
@@ -684,7 +685,7 @@ impl App {
             Event::Above(v) => s.above = v,
             Event::Mark => {
                 let (Ok(input), Some(Ok(r))) =
-                    (self.pipes_check_input(), &self.map.pipes_check.answer)
+                    (self.pipes_check_input(), &self.modules.map().pipes_check.answer)
                 else {
                     return Task::none();
                 };
@@ -709,16 +710,16 @@ impl App {
                     m.crossings.len(),
                     m.near.len()
                 );
-                self.map.pipes_shown_marks =
+                self.modules.map_mut().pipes_shown_marks =
                     Some(crate::pipes_marks::Shown::new(doc.session, input));
                 // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
-                self.map.pipes_check.answer = None;
+                self.modules.map_mut().pipes_check.answer = None;
                 self.dialog = None;
                 self.say(Level::Info, text);
                 return Task::none();
             }
             Event::Select => {
-                let Some(Ok(r)) = &self.map.pipes_check.answer else {
+                let Some(Ok(r)) = &self.modules.map().pipes_check.answer else {
                     return Task::none();
                 };
                 let Some(doc) = self.document.as_ref() else {
@@ -733,7 +734,7 @@ impl App {
                 let n = slots.len();
                 self.selection.set(slots);
                 // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
-                self.map.pipes_check.answer = None;
+                self.modules.map_mut().pipes_check.answer = None;
                 self.dialog = None;
                 self.say(Level::Info, format!("{TITLE}: bulgusu olan {n} boru seçildi."));
                 return Task::none();
@@ -759,7 +760,7 @@ impl App {
             Event::Saved(None) => return Task::none(),
             Event::Close => {
                 // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
-                self.map.pipes_check.answer = None;
+                self.modules.map_mut().pipes_check.answer = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -769,7 +770,7 @@ impl App {
     }
 
     pub(crate) fn pipes_check_view(&self) -> Element<'_, Message> {
-        let s = &self.map.pipes_check;
+        let s = &self.modules.map().pipes_check;
         let f = self.format();
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
             container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(width)

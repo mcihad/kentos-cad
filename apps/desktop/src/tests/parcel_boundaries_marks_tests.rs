@@ -102,14 +102,14 @@ fn drawn(name: &str, tolerance: Option<f64>) -> App {
         .unwrap_or_default();
     app.selection.set(slots);
     let _ = app.update(Message::Run("parcels.check"));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Open)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     if let Some(t) = tolerance {
-        let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Tolerance(t))));
+        let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Tolerance(t))));
     }
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Show(
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Show(
         Show::Problems,
     ))));
-    let _ = app.update(Message::Map(map::Event::ParcelBoundaries(B::Draw)));
+    let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Draw)));
     app.selection.clear();
     app
 }

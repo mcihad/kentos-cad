@@ -29,7 +29,7 @@ fn opened() -> App {
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::Map(map::Event::MapSurvey(e)));
+    let _ = app.update(Message::from(map::Event::MapSurvey(e)));
 }
 
 /// N1's place as the panel reads it: beyond or not (none: nothing judged).

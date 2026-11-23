@@ -3,11 +3,12 @@
 //! undo step and the drawing saves as `.kcad` schema 199; Dışla leaves a baseline out and Geri al takes it back; a GVX
 //! file and the known point form fill an empty archive; Harita offers it, GIS and Mimari do not. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::survey_network_window::{Class, Event as N, Field, View};
 
 fn cases() -> Value {
@@ -37,10 +38,10 @@ fn the_window_shows_the_shared_case_s_network_and_kabul_et_writes_it_in_one_step
     let _ = app.update(Message::Run("map.survey.adjustment"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+        Some(crate::map::dialog(map::MapDialogKind::SurveyNetwork))
     );
     let a = app
-        .map
+        .modules.map()
         .survey_network
         .answer
         .clone()
@@ -52,9 +53,9 @@ fn the_window_shows_the_shared_case_s_network_and_kabul_et_writes_it_in_one_step
     assert!((a.constrained.m0.expect("m0") - want["constrained"]["m0"].as_f64().expect("m0")).abs() < 1e-6, "the shared cases' tolerance");
     let marks: Vec<&str> = a.stations.iter().map(|s| s.mark.as_str()).collect();
     assert_eq!(marks, ["BN1", "N1", "BN2", "N4", "N5"]);
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Class(Class::C2))));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(Class::C2))));
     let r = app
-        .map
+        .modules.map()
         .survey_network
         .answer
         .clone()
@@ -64,7 +65,7 @@ fn the_window_shows_the_shared_case_s_network_and_kabul_et_writes_it_in_one_step
         r.rules.as_ref().map(|r| (r.class.as_str(), r.passed)),
         Some(("C2", true))
     );
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Accept)));
     let s = survey(&app);
     assert_eq!(s.adjustments.len(), 1);
     assert_eq!(s.adjustments[0].class.as_deref(), Some("C2"));
@@ -88,10 +89,10 @@ fn the_window_shows_the_shared_case_s_network_and_kabul_et_writes_it_in_one_step
 fn disla_leaves_a_baseline_out_and_geri_al_takes_it_back() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
         View::Baselines,
     ))));
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Exclude(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Exclude(
         "bz-8".into(),
     ))));
     let s = survey(&app);
@@ -102,18 +103,18 @@ fn disla_leaves_a_baseline_out_and_geri_al_takes_it_back() {
         b.excluded
     );
     let a = app
-        .map
+        .modules.map()
         .survey_network
         .answer
         .clone()
         .expect("an answer")
         .expect("adjusted");
     assert_eq!(a.baselines.len(), 7, "seven go in");
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Include(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Include(
         "bz-8".into(),
     ))));
     let a = app
-        .map
+        .modules.map()
         .survey_network
         .answer
         .clone()
@@ -129,7 +130,7 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
     let mut app = opened_with(query["setup"].clone(), Some(Module::Map));
     let _ = app.update(Message::Run("map.survey.adjustment"));
     assert!(
-        matches!(&app.map.survey_network.answer, Some(Err(_))),
+        matches!(&app.modules.map().survey_network.answer, Some(Err(_))),
         "no baselines yet"
     );
     let gvx = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -140,7 +141,7 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
     let said = app.log.lines().last().map(|l| l.text.clone()).unwrap_or_default();
     assert_eq!(said, "8 baz ve 1 baz oturumu arşive alındı.");
     let why = app
-        .map
+        .modules.map()
         .survey_network
         .answer
         .clone()
@@ -156,16 +157,16 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
         (Field::Epoch, known["epoch"].to_string()),
         (Field::Source, "TUSAGA-Aktif (örnek)".to_owned()),
     ] {
-        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Known(
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Known(
             field, value,
         ))));
     }
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::AddKnown)));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::AddKnown)));
     assert_eq!(survey(&app).known.len(), 1);
     // The GVX file's vectors carry their GPS times: the measurement epoch is 2026's, the station's coordinate 2005.0's;
     // BÖHHBÜY Madde 15(1)(a) wants it moved there, so the campaign needs its velocity grid (docs/adr/2120).
     let why = app
-        .map
+        .modules.map()
         .survey_network
         .answer
         .clone()
@@ -196,7 +197,7 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
     });
     app.survey_network_run();
     let a = app
-        .map
+        .modules.map()
         .survey_network
         .answer
         .clone()
@@ -222,13 +223,13 @@ fn a_known_point_s_sigma_is_three_numbers_or_none() {
         (Field::Height, "900"),
         (Field::Sigma(0), "0.01"),
     ] {
-        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Known(
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Known(
             field,
             value.into(),
         ))));
     }
     let before = survey(&app).known.len();
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::AddKnown)));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::AddKnown)));
     assert_eq!(survey(&app).known.len(), before, "refused, nothing written");
 }
 
@@ -258,7 +259,7 @@ fn screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("map.survey.adjustment"));
-        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Class(Class::C2))));
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(Class::C2))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -268,7 +269,7 @@ fn screens() {
             (View::Baselines, "2-bazlar"),
             (View::Known, "3-bilinen"),
         ] {
-            let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(view))));
+            let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(view))));
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
             snapshot
@@ -278,10 +279,10 @@ fn screens() {
             println!("{}", file.display());
         }
         // Kabul et, then the archive panel and the drawing.
-        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
             View::Marks,
         ))));
-        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Accept)));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("4-kabul-{name}.png"));
         snapshot
@@ -289,7 +290,7 @@ fn screens() {
             .save(&file)
             .expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Close)));
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Close)));
         let _ = app.update(Message::Run("map.survey"));
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);

@@ -2,12 +2,13 @@
 //! drawing's first two scans, the GNSS layer guessed; strip B within the interswath limit with its 4 cm shift, strip C
 //! out of it; the control points' KOH_Z; the CSV; nothing written; Harita and GIS offer it. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::overlap_window::{Event as O, View};
 
 fn opened(program: Option<Module>) -> App {
@@ -29,10 +30,10 @@ fn two_scans_are_compared_and_the_shifted_one_fails() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("pointcloud.overlap"));
-    assert_eq!(app.dialog, Some(Dialog::Map(map::MapDialogKind::Overlap)));
-    assert_eq!(app.map.overlap.control, "gnss");
+    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Overlap)));
+    assert_eq!(app.modules.map().overlap.control, "gnss");
     let r = app
-        .map
+        .modules.map()
         .overlap
         .answer
         .clone()
@@ -41,10 +42,10 @@ fn two_scans_are_compared_and_the_shifted_one_fails() {
     assert_eq!((r.cells, r.passed), (100, Some(true)));
     assert!((r.mean - 0.04).abs() < 0.005, "{}", r.mean);
     assert_eq!(r.control_a.as_ref().and_then(|c| c.passed), Some(true));
-    let c = app.map.overlap.clouds[2].0.clone();
-    let _ = app.update(Message::Map(map::Event::Overlap(O::B(c))));
+    let c = app.modules.map().overlap.clouds[2].0.clone();
+    let _ = app.update(Message::from(map::Event::Overlap(O::B(c))));
     let r = app
-        .map
+        .modules.map()
         .overlap
         .answer
         .clone()
@@ -90,9 +91,9 @@ fn screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("pointcloud.overlap"));
-            let b = app.map.overlap.clouds[second].0.clone();
-            let _ = app.update(Message::Map(map::Event::Overlap(O::B(b))));
-            let _ = app.update(Message::Map(map::Event::Overlap(O::View(view))));
+            let b = app.modules.map().overlap.clouds[second].0.clone();
+            let _ = app.update(Message::from(map::Event::Overlap(O::B(b))));
+            let _ = app.update(Message::from(map::Event::Overlap(O::View(view))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);

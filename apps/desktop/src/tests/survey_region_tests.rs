@@ -4,11 +4,12 @@
 //! with its direction as a semt in the project's angle unit; on the base case the round ellipses have no direction.
 //! And the pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::survey_network_window::{Event as N, View};
 
 const OBLONG: &str = "Bazların sapmaları 1,5 ve 4 mm, eksenleri 30° dönük: noktaların hata elipsi o yöne uzanır, yönü \
@@ -29,13 +30,13 @@ fn opened(setup: &Value) -> App {
     let _ = app.update(Message::Run("map.survey.adjustment"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+        Some(crate::map::dialog(map::MapDialogKind::SurveyNetwork))
     );
     app
 }
 
 fn answer(app: &App) -> kentos_commands::MapSurveyNetworked {
-    app.map
+    app.modules.map()
         .survey_network
         .answer
         .clone()
@@ -69,7 +70,7 @@ fn every_new_mark_has_the_case_s_confidence_region() {
         "{line}"
     );
     // Noktalar's column: the semi-axes, the direction as a semt in grads (the case's project), the height's interval.
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
         View::Marks,
     ))));
     let n5 = a
@@ -115,7 +116,7 @@ fn screens() {
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
             View::Marks,
         ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");

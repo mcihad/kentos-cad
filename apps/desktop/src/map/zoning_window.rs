@@ -7,6 +7,7 @@
 //! taslağı… opens the window that keeps a plan change draft beside the plan in force (`cad.zoning.draft`,
 //! docs/adr/5040).
 
+use crate::map::MapState;
 use crate::map;
 use iced::widget::{Column, row};
 use iced::{Center, Element, Task};
@@ -16,7 +17,7 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, profiles, zoning_check};
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::traces::Control;
@@ -91,18 +92,18 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::Zoning(e))
+    Message::from(map::Event::Zoning(e))
 }
 
 impl App {
     fn zoning_run(&mut self) {
         let input = ZoningCheck {
-            tolerance: Some(self.map.zoning.tolerance),
+            tolerance: Some(self.modules.map().zoning.tolerance),
         };
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.zoning.answer = Some(
+        self.modules.map_mut().zoning.answer = Some(
             match zoning_check::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -119,21 +120,21 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.map.zoning = State {
+        self.modules.map_mut().zoning = State {
             tolerance: 0.01,
             ..State::default()
         };
         self.zoning_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::Zoning));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::Zoning));
         Task::none()
     }
 
     pub(crate) fn zoning_shown(&self) -> Vec<&ZoningFinding> {
-        match &self.map.zoning.answer {
+        match &self.modules.map().zoning.answer {
             Some(Ok(r)) => r
                 .findings
                 .iter()
-                .filter(|f| self.map.zoning.group.holds(&f.kind))
+                .filter(|f| self.modules.map().zoning.group.holds(&f.kind))
                 .collect(),
             _ => Vec::new(),
         }
@@ -143,11 +144,11 @@ impl App {
         match event {
             Event::Tolerance(v) => {
                 if v > 0.0 {
-                    self.map.zoning.tolerance = v;
+                    self.modules.map_mut().zoning.tolerance = v;
                     self.zoning_run();
                 }
             }
-            Event::Group(g) => self.map.zoning.group = g,
+            Event::Group(g) => self.modules.map_mut().zoning.group = g,
             Event::Show => {
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
                 let mut slots: Vec<Slot> = Vec::new();
@@ -168,12 +169,12 @@ impl App {
                     .filter(|f| crate::zoning_marks::HATCHED.contains(&f.kind.as_str()))
                     .count();
                 let input = ZoningCheck {
-                    tolerance: Some(self.map.zoning.tolerance),
+                    tolerance: Some(self.modules.map().zoning.tolerance),
                 };
-                self.map.zoning_shown_marks =
+                self.modules.map_mut().zoning_shown_marks =
                     (hatched > 0).then(|| crate::zoning_marks::Shown::new(doc.session, input));
                 self.selection.set(slots);
-                self.map.zoning = State::default();
+                self.modules.map_mut().zoning = State::default();
                 self.dialog = None;
                 let words = match hatched {
                     0 => format!("{TITLE}: bulgulardaki {n} nesne seçildi."),
@@ -205,7 +206,7 @@ impl App {
                 self.zoning_run();
             }
             Event::Close => {
-                self.map.zoning = State::default();
+                self.modules.map_mut().zoning = State::default();
                 self.dialog = None;
             }
         }
@@ -215,7 +216,7 @@ impl App {
     /// The parcels that enter road widths, each with the sum of its parts in every road it enters (docs/adr/3040): its
     /// name and roads, largest first; none without such findings.
     pub(crate) fn zoning_parcel_totals(&self) -> Vec<(String, usize, f64)> {
-        let (Some(doc), Some(Ok(r))) = (self.document.as_ref(), &self.map.zoning.answer) else {
+        let (Some(doc), Some(Ok(r))) = (self.document.as_ref(), &self.modules.map().zoning.answer) else {
             return Vec::new();
         };
         let mut by: Vec<(String, String, usize, f64)> = Vec::new();
@@ -266,7 +267,7 @@ impl App {
     }
 
     pub(crate) fn zoning_view(&self) -> Element<'_, Message> {
-        let s = &self.map.zoning;
+        let s = &self.modules.map().zoning;
         let f = self.format();
         let form = Form::new().label_width(110.0).field(
             "Tolerans (m)",
@@ -358,14 +359,14 @@ impl App {
         // Sembolü karardan ver (docs/adr/4240): the decision areas' symbols from their decisions.
         frame = frame.aside(words::secondary(
             crate::zoning_symbols_window::OPEN,
-            Some(Message::Map(map::Event::ZoningSymbols(
+            Some(Message::from(map::Event::ZoningSymbols(
                 crate::zoning_symbols_window::Event::Open,
             ))),
         ));
         // Plan değişikliği taslağı (docs/adr/5040): a change drafted beside the plan in force.
         frame = frame.aside(words::secondary(
             crate::zoning_draft_window::OPEN,
-            Some(Message::Map(map::Event::ZoningDraft(
+            Some(Message::from(map::Event::ZoningDraft(
                 crate::zoning_draft_window::Event::Open,
             ))),
         ));
@@ -380,10 +381,10 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SHOW) => Some(msg(Event::Show)),
             Control::Press(APPLY_PROFILE) => Some(msg(Event::ApplyProfile)),
-            Control::Press(crate::zoning_symbols_window::OPEN) => Some(Message::Map(
+            Control::Press(crate::zoning_symbols_window::OPEN) => Some(Message::from(
                 map::Event::ZoningSymbols(crate::zoning_symbols_window::Event::Open),
             )),
-            Control::Press(crate::zoning_draft_window::OPEN) => Some(Message::Map(
+            Control::Press(crate::zoning_draft_window::OPEN) => Some(Message::from(
                 map::Event::ZoningDraft(crate::zoning_draft_window::Event::Open),
             )),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),

@@ -100,16 +100,11 @@ pub struct Marks {
     pub extent: Option<([f64; 4], String)>,
     /// The Topoloji tab's finding (docs/adr/0202 §5).
     pub problem: Option<crate::topology::ProblemMark>,
-    /// Sınır grafiği left on the drawing (docs/adr/2220).
-    pub graph: Option<std::sync::Arc<crate::parcel_boundaries_marks::GraphMarks>>,
     /// Senaryo ölçüleri's access left on the drawing (docs/adr/2260).
     pub reach: Option<std::sync::Arc<crate::impact_reach_marks::ReachMarks>>,
-    /// İmar planı denetimi's road overlaps, hatched (docs/adr/3040).
-    pub zoning: Option<std::sync::Arc<crate::zoning_marks::ZoningMarks>>,
-    /// Boru hattı denetimi's crossings and near passes (docs/adr/3160).
-    pub pipes: Option<std::sync::Arc<crate::pipes_marks::PipesMarks>>,
-    /// GNSS arşivi's baseline drawn between its ends (docs/adr/3320).
-    pub baseline: Option<std::sync::Arc<crate::survey_baseline_marks::BaselineMarks>>,
+    /// The modules' marks left on the drawing, in their order (docs/adr/9199 §3.3): Harita's road overlaps, baseline,
+    /// pipe crossings and boundary graph.
+    pub module: Vec<std::sync::Arc<dyn crate::module_parts::ModuleMarks>>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
     pub broken: Vec<Vec2>,
     /// The frames of linked pictures whose file is not read (docs/adr/0350 §3), corners in order.
@@ -228,11 +223,8 @@ impl Marks {
             && self.found.is_none()
             && self.extent.is_none()
             && self.problem.is_none()
-            && self.graph.is_none()
             && self.reach.is_none()
-            && self.zoning.is_none()
-            && self.pipes.is_none()
-            && self.baseline.is_none()
+            && self.module.is_empty()
             && self.broken.is_empty()
             && self.missing.is_empty()
             && self.clips.is_empty()
@@ -303,18 +295,8 @@ impl<Message> canvas::Program<Message> for Marks {
             let tokens = Tokens::of(theme);
             crate::impact_reach_marks::draw(&mut frame, r, &self.camera, &self.colors, &tokens);
         }
-        if let Some(z) = &self.zoning {
-            crate::zoning_marks::draw(&mut frame, z, &self.camera, &self.colors, &Tokens::of(theme));
-        }
-        if let Some(m) = &self.baseline {
-            crate::survey_baseline_marks::draw(&mut frame, m, &self.camera, &self.colors, &Tokens::of(theme));
-        }
-        if let Some(m) = &self.pipes {
-            crate::pipes_marks::draw(&mut frame, m, &self.camera, &self.colors, &Tokens::of(theme));
-        }
-        if let Some(g) = &self.graph {
-            let tokens = Tokens::of(theme);
-            crate::parcel_boundaries_marks::draw(&mut frame, g, &self.camera, &self.colors, tokens.accent, tokens.danger);
+        for m in &self.module {
+            m.draw(&mut frame, &self.camera, &self.colors, &Tokens::of(theme));
         }
         if let Some(m) = &self.problem {
             problem(

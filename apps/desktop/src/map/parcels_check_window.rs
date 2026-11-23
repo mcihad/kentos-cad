@@ -6,6 +6,7 @@
 //! opens the same parcels' boundary graph (docs/adr/2000); Parsel kayıtları… the drawing's parcel register, whose new
 //! document makes the selected areas (docs/adr/4220).
 
+use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;
 
@@ -17,7 +18,7 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, parcels_check};
 use kentos_ui::widget::{Dialog as Frame, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::traces::Control;
@@ -76,7 +77,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::ParcelsCheck(e))
+    Message::from(map::Event::ParcelsCheck(e))
 }
 
 /// A status in words.
@@ -118,13 +119,13 @@ pub fn csv(r: &ParcelsChecked) -> String {
 impl App {
     fn parcels_check_run(&mut self) {
         let input = ParcelsCheck {
-            uids: self.map.parcels_check.uids.clone(),
+            uids: self.modules.map().parcels_check.uids.clone(),
             field: None,
         };
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.parcels_check.answer = Some(
+        self.modules.map_mut().parcels_check.answer = Some(
             match parcels_check::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -149,18 +150,18 @@ impl App {
             .filter_map(|s| doc.model.uid(*s))
             .map(|u| u.to_string())
             .collect();
-        self.map.parcels_check = State {
+        self.modules.map_mut().parcels_check = State {
             uids: (!areas.is_empty()).then_some(areas),
             ..State::default()
         };
         self.parcels_check_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::ParcelsCheck));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::ParcelsCheck));
         Task::none()
     }
 
     /// The table written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn parcels_check_save(&mut self, path: PathBuf) {
-        let Some(Ok(r)) = &self.map.parcels_check.answer else {
+        let Some(Ok(r)) = &self.modules.map().parcels_check.answer else {
             return;
         };
         match std::fs::write(&path, csv(r)) {
@@ -171,9 +172,9 @@ impl App {
 
     pub(crate) fn parcels_check_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Show(show) => self.map.parcels_check.show = show,
+            Event::Show(show) => self.modules.map_mut().parcels_check.show = show,
             Event::Select => {
-                let Some(Ok(r)) = &self.map.parcels_check.answer else {
+                let Some(Ok(r)) = &self.modules.map().parcels_check.answer else {
                     return Task::none();
                 };
                 let Some(doc) = self.document.as_ref() else {
@@ -187,7 +188,7 @@ impl App {
                     .collect();
                 let n = slots.len();
                 self.selection.set(slots);
-                self.map.parcels_check = State::default();
+                self.modules.map_mut().parcels_check = State::default();
                 self.dialog = None;
                 self.say(Level::Info, format!("{TITLE}: yanılma sınırı dışındaki {n} parsel seçildi."));
             }
@@ -208,7 +209,7 @@ impl App {
             Event::Saved(Some(path)) => self.parcels_check_save(path),
             Event::Saved(None) => {}
             Event::Close => {
-                self.map.parcels_check = State::default();
+                self.modules.map_mut().parcels_check = State::default();
                 self.dialog = None;
             }
         }
@@ -216,7 +217,7 @@ impl App {
     }
 
     pub(crate) fn parcels_check_view(&self) -> Element<'_, Message> {
-        let s = &self.map.parcels_check;
+        let s = &self.modules.map().parcels_check;
         let f = self.format();
         let mut lines = Vec::new();
         let mut rows = Vec::new();
@@ -301,14 +302,14 @@ impl App {
             // Sınır grafiği (docs/adr/2000): the same parcels' boundaries as a graph.
             .aside(words::secondary(
                 crate::parcel_boundaries_window::OPEN,
-                Some(Message::Map(map::Event::ParcelBoundaries(
+                Some(Message::from(map::Event::ParcelBoundaries(
                     crate::parcel_boundaries_window::Event::Open,
                 ))),
             ))
             // Parsel kayıtları (docs/adr/4220): the register; its new document makes the selected areas.
             .aside(words::secondary(
                 crate::parcel_register_window::OPEN,
-                Some(Message::Map(map::Event::ParcelRegister(
+                Some(Message::from(map::Event::ParcelRegister(
                     crate::parcel_register_window::Event::Open,
                 ))),
             ))
@@ -322,7 +323,7 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
-            Control::Press(crate::parcel_register_window::OPEN) => Some(Message::Map(
+            Control::Press(crate::parcel_register_window::OPEN) => Some(Message::from(
                 map::Event::ParcelRegister(crate::parcel_register_window::Event::Open),
             )),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),

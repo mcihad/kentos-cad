@@ -13,7 +13,6 @@
 //! Test code only.
 
 use crate::gis;
-use crate::map;
 use std::path::PathBuf;
 
 use kentos_ui::snapshot::Snapshot;
@@ -312,9 +311,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             "raster-harita-cografi",
             |app| {
                 opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
-                let _ = app.update(Message::Map(map::Event::MapCrs(crate::map_crs::Choose(
+                let _ = app.update(Message::MapCrs(crate::map_crs::Choose(
                     Some(4326),
-                ))));
+                )));
             },
             tiles_made,
         ),
@@ -322,9 +321,9 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             "raster-harita-mercator",
             |app| {
                 opened(app, [X0 + 100.0, Y0 - 300.0, X0 + 460.0, Y0 - 80.0]);
-                let _ = app.update(Message::Map(map::Event::MapCrs(crate::map_crs::Choose(
+                let _ = app.update(Message::MapCrs(crate::map_crs::Choose(
                     Some(3857),
-                ))));
+                )));
             },
             tiles_made,
         ),

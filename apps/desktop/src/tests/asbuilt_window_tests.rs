@@ -7,11 +7,12 @@
 //! (docs/adr/2820). İzleme (docs/adr/3620) sets the second epoch against the first by name with the control points; the
 //! form drops the design parts and the result speaks of movement. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::asbuilt_window::{Event as A, Show};
 
 fn cases() -> Value {
@@ -35,7 +36,7 @@ fn limits(app: &mut App) {
         A::QualityField("Hassasiyet".into()),
         A::Quality("0,05".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
 }
 
@@ -44,19 +45,19 @@ fn the_measured_points_against_the_design() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("asbuilt.check"));
-    assert_eq!(app.dialog, Some(Dialog::Map(map::MapDialogKind::Asbuilt)));
+    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Asbuilt)));
     assert_eq!(
         (
-            app.map.asbuilt.measured.as_str(),
-            app.map.asbuilt.design.as_str(),
-            app.map.asbuilt.lines.as_str(),
-            app.map.asbuilt.surface.as_str()
+            app.modules.map().asbuilt.measured.as_str(),
+            app.modules.map().asbuilt.design.as_str(),
+            app.modules.map().asbuilt.lines.as_str(),
+            app.modules.map().asbuilt.surface.as_str()
         ),
         ("olcum", "tasarim", "bordur", "t-1")
     );
     limits(&mut app);
     let r = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -73,8 +74,8 @@ fn the_measured_points_against_the_design() {
         };
         assert_eq!(Value::from(got), want[key], "{key}");
     }
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Show(Show::Faults))));
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Select)));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Show(Show::Faults))));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Select)));
     assert_eq!(app.dialog, None);
     let faults = (r.outside + r.unmatched + r.ambiguous) as usize;
     assert_eq!(app.selection.ids().len(), faults);
@@ -85,11 +86,11 @@ fn the_measured_points_against_the_design() {
 fn a_limit_that_is_no_number_is_said() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("asbuilt.check"));
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Horizontal(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Horizontal(
         "iki".into(),
     ))));
     assert_eq!(
-        app.map.asbuilt.answer,
+        app.modules.map().asbuilt.answer,
         Some(Err("Yatay tolerans “iki” bir sayı değil.".into()))
     );
 }
@@ -119,7 +120,7 @@ fn the_field_package_is_written_from_the_form() {
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("asbuilt.check"));
     limits(&mut app);
-    app.map.asbuilt.notes = iced::widget::text_editor::Content::with_text(
+    app.modules.map_mut().asbuilt.notes = iced::widget::text_editor::Content::with_text(
         "KN1 ve KN2'den başlanır.\n\n  Kotlar TUDKA-99'a göredir.  ",
     );
     let dir = std::env::temp_dir().join(format!("kentos-saha-{}", std::process::id()));
@@ -173,7 +174,7 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("asbuilt.check"));
         limits(&mut app);
-        app.map.asbuilt.notes = iced::widget::text_editor::Content::with_text(
+        app.modules.map_mut().asbuilt.notes = iced::widget::text_editor::Content::with_text(
             "Aplikasyona KN1 ve KN2'den başlanır.\nKotlar TUDKA-99'a göredir; ölçü GNSS RTK ile.",
         );
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -185,7 +186,7 @@ fn screens() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
         // The ribbon's place: Ölçme › Saha.
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::Close)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::Close)));
         let _ = app.update(Message::RibbonTab("survey"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-serit-{name}.png"));
@@ -205,12 +206,12 @@ fn fixture(rel: &str) -> std::path::PathBuf {
 fn the_record_s_package_gives_the_digest_and_the_limits() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("asbuilt.check"));
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Search("0,5".into()))));
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::PickedPackage(Some(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Search("0,5".into()))));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::PickedPackage(Some(
         fixture("asbuilt/v1/files/saha-paketi.zip"),
     )))));
     let r = serde_json::to_value(
-        app.map
+        app.modules.map()
             .asbuilt
             .answer
             .clone()
@@ -232,11 +233,11 @@ fn the_record_s_package_gives_the_digest_and_the_limits() {
     assert_eq!(r["package"]["taken"], want["package"]["taken"]);
     assert_eq!(r["package"]["sameSystem"], true);
     assert!(r.get("designChanged").is_none_or(|v| v == false));
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::PickedPackage(Some(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::PickedPackage(Some(
         fixture("asbuilt/v1/files/eski-paket.zip"),
     )))));
     let r = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -244,9 +245,9 @@ fn the_record_s_package_gives_the_digest_and_the_limits() {
         .expect("checked");
     let p = r.package.clone().expect("the package");
     assert!(r.design_changed && !p.same_system && !p.same_epoch && !p.same_heights);
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::DropPackage)));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::DropPackage)));
     let r = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -281,9 +282,9 @@ fn package_screens() {
             A::Search("0,5".into()),
             A::QualityField("Hassasiyet".into()),
         ] {
-            let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+            let _ = app.update(Message::from(map::Event::Asbuilt(e)));
         }
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::PickedPackage(Some(
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::PickedPackage(Some(
             fixture(file),
         )))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -308,14 +309,14 @@ fn the_record_is_checked_with_its_package_s_own_design() {
         A::Search("0,5".into()),
         A::QualityField("Hassasiyet".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::PickedPackage(Some(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::PickedPackage(Some(
         fixture("asbuilt/v1/files/eski-tasarim-paketi.zip"),
     )))));
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::PackageDesign(true))));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::PackageDesign(true))));
     let r = serde_json::to_value(
-        app.map
+        app.modules.map()
             .asbuilt
             .answer
             .clone()
@@ -335,13 +336,13 @@ fn the_record_is_checked_with_its_package_s_own_design() {
         assert_eq!(r[key], want[key], "{key}");
     }
     assert_eq!(r["package"]["design"], true);
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::DropPackage)));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::DropPackage)));
     assert!(
-        !app.map.asbuilt.record_design,
+        !app.modules.map().asbuilt.record_design,
         "the box goes with the package"
     );
     let r = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -361,14 +362,14 @@ fn the_record_is_checked_with_its_package_s_own_surface() {
         A::Search("0,5".into()),
         A::QualityField("Hassasiyet".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::PickedPackage(Some(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::PickedPackage(Some(
         fixture("asbuilt/v1/files/yuzeyli-paket.zip"),
     )))));
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::PackageDesign(true))));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::PackageDesign(true))));
     let r = serde_json::to_value(
-        app.map
+        app.modules.map()
             .asbuilt
             .answer
             .clone()
@@ -392,7 +393,7 @@ fn the_record_is_checked_with_its_package_s_own_surface() {
     }
     assert_eq!(r["package"]["surface"], true);
     let checked = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -435,12 +436,12 @@ fn package_surface_screens() {
             A::Search("0,5".into()),
             A::QualityField("Hassasiyet".into()),
         ] {
-            let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+            let _ = app.update(Message::from(map::Event::Asbuilt(e)));
         }
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::PickedPackage(Some(
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::PickedPackage(Some(
             fixture("asbuilt/v1/files/yuzeyli-paket.zip"),
         )))));
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::PackageDesign(true))));
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::PackageDesign(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -475,12 +476,12 @@ fn package_design_screens() {
             A::Search("0,5".into()),
             A::QualityField("Hassasiyet".into()),
         ] {
-            let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+            let _ = app.update(Message::from(map::Event::Asbuilt(e)));
         }
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::PickedPackage(Some(
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::PickedPackage(Some(
             fixture("asbuilt/v1/files/eski-tasarim-paketi.zip"),
         )))));
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::PackageDesign(true))));
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::PackageDesign(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -504,7 +505,7 @@ fn watch(app: &mut App) {
         A::Quality("0,01".into()),
         A::Control("K1, K2".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
 }
 
@@ -515,7 +516,7 @@ fn a_monitoring_job_sets_the_second_epoch_against_the_first() {
     let _ = app.update(Message::Run("asbuilt.check"));
     watch(&mut app);
     let r = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -545,8 +546,8 @@ fn a_monitoring_job_sets_the_second_epoch_against_the_first() {
     // The design parts the window guessed stay out of a monitoring job (no surface difference, no line).
     assert_eq!(
         (
-            app.map.asbuilt.surface.as_str(),
-            app.map.asbuilt.lines.as_str()
+            app.modules.map().asbuilt.surface.as_str(),
+            app.modules.map().asbuilt.lines.as_str()
         ),
         ("t-1", "bordur")
     );
@@ -572,10 +573,10 @@ fn a_monitoring_job_sets_the_second_epoch_against_the_first() {
         A::Measured("olcum".into()),
         A::Design("tasarim".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
     let r = app
-        .map
+        .modules.map()
         .asbuilt
         .answer
         .clone()
@@ -620,7 +621,7 @@ fn monitoring_screens() {
             .save(&file)
             .expect("writes");
         println!("{}", file.display());
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::Show(Show::Faults))));
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::Show(Show::Faults))));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-hareket-edenler-{name}.png"));
         snapshot
@@ -651,11 +652,11 @@ fn the_nearest_distance_to_the_surface_is_the_shared_case_s() {
         A::Lines(crate::asbuilt_window::NONE.into()),
         A::QualityField(String::new()),
     ] {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
     let want = case("yüzeye en yakın uzaklık: her noktanın");
     let r = serde_json::to_value(
-        app.map
+        app.modules.map()
             .asbuilt
             .answer
             .clone()
@@ -676,12 +677,12 @@ fn the_nearest_distance_to_the_surface_is_the_shared_case_s() {
     let limit = case("yüzeye en yakın uzaklık: düşey sınır")["input"]["vertical"]
         .as_f64()
         .expect("a limit");
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Vertical(
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Vertical(
         limit.to_string().replace('.', ","),
     ))));
     let p3 = |app: &App| {
         let r = app
-            .map
+            .modules.map()
             .asbuilt
             .answer
             .clone()
@@ -695,7 +696,7 @@ fn the_nearest_distance_to_the_surface_is_the_shared_case_s() {
             .clone()
     };
     assert!(p3(&app).contains(&"outsideSurface".to_owned()));
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Nearest(true))));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Nearest(true))));
     assert!(!p3(&app).contains(&"outsideSurface".to_owned()));
 }
 
@@ -718,7 +719,7 @@ fn nearest_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("asbuilt.check"));
         limits(&mut app);
-        let _ = app.update(Message::Map(map::Event::Asbuilt(A::Nearest(true))));
+        let _ = app.update(Message::from(map::Event::Asbuilt(A::Nearest(true))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -737,12 +738,12 @@ fn no_tolerance_judges_no_conformity() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("asbuilt.check"));
     limits(&mut app);
-    let judged = app.map.asbuilt.answer.clone().expect("an answer").expect("checked");
+    let judged = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
     assert!(judged.within > 0 && judged.untoleranced == 0);
     for e in [A::Horizontal(String::new()), A::Vertical(String::new())] {
-        let _ = app.update(Message::Map(map::Event::Asbuilt(e)));
+        let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
-    let r = app.map.asbuilt.answer.clone().expect("an answer").expect("checked");
+    let r = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
     assert_eq!((r.within, r.outside), (0, 0), "no conformity without a tolerance");
     assert_eq!(r.untoleranced, judged.within + judged.outside, "the matched ones");
     assert!(r.points.iter().all(|p| p.status != "within"));
@@ -756,10 +757,10 @@ fn no_tolerance_judges_no_conformity() {
     crate::files_testing::evidence(&mut snapshot, &app, "ur2-026", "toleranssiz");
     let said = format!("Tolerans verilmedi: {} noktanın sapması gösterilir, uygunluğu denetlenmedi. Yatay ya da düşey toleransı yazın.", r.untoleranced);
     assert!(!crate::files_testing::find_texts(&mut snapshot, &app, &said).is_empty(), "{said}");
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Horizontal("0,02".into()))));
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Horizontal("0,02".into()))));
     snapshot.settle(&mut app, App::view, &mut update);
     assert!(!crate::files_testing::find_texts(&mut snapshot, &app, "Yalnız yatay sapma denetlendi.").is_empty());
-    let _ = app.update(Message::Map(map::Event::Asbuilt(A::Vertical("0,03".into()))));
-    let back = app.map.asbuilt.answer.clone().expect("an answer").expect("checked");
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Vertical("0,03".into()))));
+    let back = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
     assert_eq!((back.within, back.outside, back.untoleranced), (judged.within, judged.outside, 0), "the first classing again");
 }

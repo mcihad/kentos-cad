@@ -4,6 +4,7 @@
 //! Kaldır removes the review of that name. The project's reviews are listed with whether the points their job reads
 //! are still the ones reviewed. KentOS writes what the reviewer states; it checks no authority nor signature.
 
+use crate::map::MapState;
 use iced::widget::{container, row};
 use iced::{Center, Element};
 use kentos_commands::{AsbuiltReviewRow, MonitoringReviewer, ReviewPhrase, ReviewerRole, SignatureKind};
@@ -154,7 +155,7 @@ pub fn lead(list: &[AsbuiltReviewRow]) -> String {
 impl crate::app::App {
     /// The project's reviews with whether their points are today's (docs/adr/5220), read when the form changes.
     pub(crate) fn asbuilt_reviews(&mut self) {
-        self.map.asbuilt.reviews = match self.document.as_ref() {
+        self.modules.map_mut().asbuilt.reviews = match self.document.as_ref() {
             Some(doc) => kentos_native_application::asbuilt_review::rows(
                 &doc.model,
                 doc.model.monitoring_reviews(),
@@ -169,7 +170,7 @@ impl crate::app::App {
         use kentos_interaction::Level;
         use kentos_native_application::{ExecutionContext, asbuilt_review};
         const TITLE: &str = "İzleme incelemesi";
-        let name = self.map.asbuilt.review.name.trim().to_owned();
+        let name = self.modules.map().asbuilt.review.name.trim().to_owned();
         let input = if remove {
             AsbuiltReview {
                 name,
@@ -184,14 +185,14 @@ impl crate::app::App {
                 Ok(c) => c,
                 Err(why) => return self.warn(format!("{TITLE}: {why}")),
             };
-            let source = self.map.asbuilt.trend.source.trim();
+            let source = self.modules.map().asbuilt.trend.source.trim();
             let thresholds_source =
                 (check.thresholds.is_some() && !source.is_empty()).then(|| source.to_owned());
             AsbuiltReview {
                 name,
                 check: Some(check),
                 thresholds_source,
-                reviewer: Some(self.map.asbuilt.review.reviewer()),
+                reviewer: Some(self.modules.map_mut().asbuilt.review.reviewer()),
                 remove: false,
                 expected_revision: None,
             }
@@ -213,7 +214,7 @@ impl crate::app::App {
                     }
                     None => format!("“{}” kaldırıldı. Tek adımda geri alınır.", output.name),
                 };
-                self.map.asbuilt.reviews = output.reviews;
+                self.modules.map_mut().asbuilt.reviews = output.reviews;
                 self.say(Level::Success, format!("{TITLE}: {said}"));
             }
             CommandResult::Failed { error }

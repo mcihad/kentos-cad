@@ -4,11 +4,12 @@
 //! taken; the two-run case numbers each distance by its part in the table; Çizgiyi kaldır goes back to the overlap's
 //! grid; nothing is written. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::ortho_compare_window::{Event as C, Show};
 use crate::ortho_compare_window_tests::{case, close, open, with_fixtures};
 
@@ -21,7 +22,7 @@ fn seam(app: &mut App) {
         C::Search(5.0),
         C::Correlation("0,8".into()),
     ] {
-        let _ = app.update(Message::Map(map::Event::OrthoCompare(e)));
+        let _ = app.update(Message::from(map::Event::OrthoCompare(e)));
     }
 }
 
@@ -33,23 +34,23 @@ fn the_seam_is_measured_along_the_seamline_polygons_shared_boundary() {
     let _ = app.update(Message::Run("raster.compare"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::OrthoCompare))
+        Some(crate::map::dialog(map::MapDialogKind::OrthoCompare))
     );
     seam(&mut app);
     // One polygon chosen: said, nothing taken.
     app.selection.set(vec![Slot(3)]);
-    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakePolygons)));
+    let _ = app.update(Message::from(map::Event::OrthoCompare(C::TakePolygons)));
     assert!(
-        app.map.ortho_compare.seam_polygons.is_none(),
+        app.modules.map().ortho_compare.seam_polygons.is_none(),
         "one polygon: none taken"
     );
     // The two, in the case's order.
     app.selection.set(vec![Slot(3), Slot(4)]);
-    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakePolygons)));
-    assert_eq!(app.map.ortho_compare.seam_line_name, "İki mozaik elemanı");
-    assert_eq!(app.map.ortho_compare.show, Show::Seam);
+    let _ = app.update(Message::from(map::Event::OrthoCompare(C::TakePolygons)));
+    assert_eq!(app.modules.map().ortho_compare.seam_line_name, "İki mozaik elemanı");
+    assert_eq!(app.modules.map().ortho_compare.show, Show::Seam);
     let got = serde_json::to_value(
-        app.map
+        app.modules.map()
             .ortho_compare
             .answer
             .clone()
@@ -69,10 +70,10 @@ fn the_seam_is_measured_along_the_seamline_polygons_shared_boundary() {
         notes.contains("mozaik elemanlarının ortak sınırı boyunca (15.31 m, 1 parça)"),
         "{notes}"
     );
-    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::DropLine)));
-    assert!(app.map.ortho_compare.seam_polygons.is_none());
+    let _ = app.update(Message::from(map::Event::OrthoCompare(C::DropLine)));
+    assert!(app.modules.map().ortho_compare.seam_polygons.is_none());
     let got = serde_json::to_value(
-        app.map
+        app.modules.map()
             .ortho_compare
             .answer
             .clone()
@@ -98,9 +99,9 @@ fn two_runs_number_their_distances_by_part() {
     let _ = app.update(Message::Run("raster.compare"));
     seam(&mut app);
     app.selection.set(vec![Slot(3), Slot(4)]);
-    let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakePolygons)));
+    let _ = app.update(Message::from(map::Event::OrthoCompare(C::TakePolygons)));
     let got = serde_json::to_value(
-        app.map
+        app.modules.map()
             .ortho_compare
             .answer
             .clone()
@@ -143,7 +144,7 @@ fn screens() {
         app.selection.set(vec![Slot(3), Slot(4)]);
         let _ = app.update(Message::Run("raster.compare"));
         seam(&mut app);
-        let _ = app.update(Message::Map(map::Event::OrthoCompare(C::TakePolygons)));
+        let _ = app.update(Message::from(map::Event::OrthoCompare(C::TakePolygons)));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

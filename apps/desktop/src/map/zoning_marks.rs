@@ -4,6 +4,7 @@
 //! rule's own (`zoning_check::with_regions`), worked out again with the same input whenever the drawing changes, so a
 //! parcel moved off the road loses its hatch at once. Nothing is written.
 
+use crate::map::MapState;
 use std::cell::RefCell;
 use std::sync::Arc;
 
@@ -49,7 +50,7 @@ impl App {
     /// The road overlaps for the drawing as it is: none when nothing is shown, for another drawing, when the check no
     /// longer reads or finds none. Kept until the drawing changes.
     pub(crate) fn zoning_marks(&self) -> Option<Arc<ZoningMarks>> {
-        let shown = self.map.zoning_shown_marks.as_ref()?;
+        let shown = self.modules.map().zoning_shown_marks.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {
             return None;

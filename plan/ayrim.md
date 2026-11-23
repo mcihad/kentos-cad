@@ -107,7 +107,14 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     - mobilde CAD düzenleme kararı;
     - mobil uygulamanın teknolojisi.
   - AY-07'nin paketleri mobilin kullanacağı ortak crate'leri arayüzsüz tutar.
-- [ ] **AY-07 — Paketlere bölme (uzun soluklu).**
+- [~] **AY-07 — Paketlere bölme (uzun soluklu).** ([ADR 9199](../docs/adr/9199-desktop-packages.md))
   - CAD çekirdeği ayrı paket. Sonra Harita, Mimari, Yol ve CBS masaüstü paketleri, en az bağlıdan başlayarak.
   - Her adımda bağımlılık denetimi ve derleme süresi ölçülür.
   - Hepsi bir arada program bütün paketleri, modül programı yalnız kendininkini taşır.
+  - Ölçüm (ADR 9199 §1): 379 üretim modülünden 15'i `App`'e ulaşmaz; sıfırdan 72 s, tek satır 17,4 s, `App`'e yöntem
+    24,5 s. Düzenek önce Harita'da kanıtlanır; CAD çekirdeği aynı düzenekle sonra ayrılır (ADR 9199 §3.1).
+  - Adım 1 yapıldı (ADR 9199 §4.1): Harita modül arayüzünün (`ModuleParts`) arkasında; iletisi, penceresi ve durumu
+    silinen türlerle; ortak parçalar (`map_marks`, `map_crs`, `point_calc`, `zoning_badge`, `road_dialog`, `picture`)
+    çekirdekte. Taban: kabuk → Harita 13 → 2, Harita → Yol 22 → 0.
+  - Sıradaki: Harita'nın `impl App`'leri uzantı trait'i, çekirdek öğeleri `pub`, `apps/desktop-map` paketi ve
+    programların paketi.

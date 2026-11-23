@@ -9,6 +9,7 @@
 //! network adjustments (map_survey_network_rows.rs, docs/adr/2920). Harita only: GIS reads the accepted point in
 //! Öznitelikler.
 
+use crate::map::MapState;
 use crate::map;
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -17,7 +18,7 @@ use std::path::PathBuf;
 use iced::widget::{column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    AcceptMethod, MapSurveyEdit, MapSurveyOperation as Op, MapSurveyTree, SolutionKind, SurveyFileState as F,
+    AcceptMethod, MapSurveyEdit, MapSurveyOperation as Op, MapSurveyTree, SurveyFileState as F,
     SurveyMarkRow, SurveyPointRow, SurveySessionRow, SurveySolutionRow, SurveyState as S, SurveyUseRow,
 };
 use kentos_domain::{Slot, Uuid};
@@ -71,7 +72,7 @@ pub enum Event {
 }
 
 pub(crate) fn msg(e: Event) -> Message {
-    Message::Map(map::Event::MapSurvey(e))
+    Message::from(map::Event::MapSurvey(e))
 }
 
 type Read = (String, bool, Option<kentos_commands::SurveyPlaceTolerance>, Result<MapSurveyTree, String>);
@@ -103,23 +104,8 @@ pub(crate) fn glyph(name: &str) -> Icon {
     crate::icons::from_web(Some(name))
 }
 
-/// A solution's kind in words.
-pub(crate) fn kind_words(k: SolutionKind) -> &'static str {
-    match k {
-        SolutionKind::Receiver => "Alıcı (RTK)",
-        SolutionKind::Processed => "İşlenmiş",
-        SolutionKind::Ppp => "PPP",
-    }
-}
-
-/// A point's or a use's state in words.
-pub(crate) fn state_words(s: S) -> &'static str {
-    match s {
-        S::Current => "Güncel",
-        S::Stale => "Güncel değil",
-        S::Missing => "Nesnesi yok",
-    }
-}
+// A solution's kind and a point's or a use's state in words: the core's, Öznitelikler shows them too.
+use crate::properties::{survey_kind_words as kind_words, survey_state_words as state_words};
 
 /// σ in millimetres: north, east, up.
 fn sigma_mm(g: [f64; 3]) -> String {
@@ -144,8 +130,8 @@ impl App {
     pub(crate) fn map_survey_limits(&self) -> Option<kentos_commands::SurveyPlaceTolerance> {
         let read = |t: &str| crate::calc::read::read_number(t).filter(|v| v.is_finite() && *v > 0.0);
         let t = kentos_commands::SurveyPlaceTolerance {
-            horizontal: read(&self.map.map_survey.limit_horizontal),
-            vertical: read(&self.map.map_survey.limit_vertical),
+            horizontal: read(&self.modules.map().map_survey.limit_horizontal),
+            vertical: read(&self.modules.map().map_survey.limit_vertical),
         };
         (t.horizontal.is_some() || t.vertical.is_some()).then_some(t)
     }
@@ -154,9 +140,9 @@ impl App {
     pub(crate) fn map_survey_read(&self) -> Option<Result<MapSurveyTree, String>> {
         let doc = self.document.as_ref()?;
         let revision = doc.model.revision().to_string();
-        let deep = self.map.map_survey.deep;
+        let deep = self.modules.map().map_survey.deep;
         let limits = self.map_survey_limits();
-        let mut kept = self.map.map_survey.read.borrow_mut();
+        let mut kept = self.modules.map().map_survey.read.borrow_mut();
         if let Some((r, d, l, answer)) = kept.as_ref()
             && *r == revision
             && *d == deep
@@ -174,7 +160,7 @@ impl App {
     /// Docs/adr/4920: the limits typed written into the project with their source (`map.survey.edit tolerance`); none
     /// typed takes the kept ones away.
     pub(crate) fn map_survey_save_limits(&mut self) {
-        let source = self.map.map_survey.limit_source.trim().to_owned();
+        let source = self.modules.map().map_survey.limit_source.trim().to_owned();
         let Some(limits) = self.map_survey_limits() else {
             let kept = self.document.as_ref().and_then(|d| d.model.map_survey()).is_some_and(|s| s.tolerance.is_some());
             if !kept {
@@ -259,7 +245,7 @@ impl App {
                     words,
                     excluded: b.excluded.is_some(),
                 };
-                self.map.baseline_shown = Some(crate::survey_baseline_marks::Shown {
+                self.modules.map_mut().baseline_shown = Some(crate::survey_baseline_marks::Shown {
                     session,
                     lines: vec![line],
                 });
@@ -276,7 +262,7 @@ impl App {
                 }
             }
             _ => {
-                self.map.baseline_shown = None;
+                self.modules.map_mut().baseline_shown = None;
                 self.say(
                     kentos_interaction::Level::Info,
                     format!(
@@ -318,7 +304,7 @@ impl App {
         let drawn = lines.len();
         let out = lines.iter().filter(|l| l.excluded).count();
         self.select_uids(&uids);
-        self.map.baseline_shown =
+        self.modules.map_mut().baseline_shown =
             (drawn > 0).then_some(crate::survey_baseline_marks::Shown { session, lines });
         if !own.is_empty() {
             self.fit_baselines();
@@ -390,7 +376,7 @@ impl App {
 
     fn import_session(&mut self, path: PathBuf) {
         let Some(campaign) = self.survey_campaign() else { return };
-        let mark = Some(self.map.map_survey.text.trim().to_owned()).filter(|m| !m.is_empty());
+        let mark = Some(self.modules.map().map_survey.text.trim().to_owned()).filter(|m| !m.is_empty());
         let operation = Op::Session {
             campaign,
             mark,
@@ -451,18 +437,18 @@ impl App {
             }
             Event::Imported(Some(path)) => self.import_session(path),
             Event::Imported(None) => {}
-            Event::Text(t) => self.map.map_survey.text = t,
-            Event::LimitHorizontal(t) => self.map.map_survey.limit_horizontal = t,
-            Event::LimitVertical(t) => self.map.map_survey.limit_vertical = t,
-            Event::LimitSource(t) => self.map.map_survey.limit_source = t,
+            Event::Text(t) => self.modules.map_mut().map_survey.text = t,
+            Event::LimitHorizontal(t) => self.modules.map_mut().map_survey.limit_horizontal = t,
+            Event::LimitVertical(t) => self.modules.map_mut().map_survey.limit_vertical = t,
+            Event::LimitSource(t) => self.modules.map_mut().map_survey.limit_source = t,
             Event::LimitSave => self.map_survey_save_limits(),
-            Event::Deep(on) => self.map.map_survey.deep = on,
+            Event::Deep(on) => self.modules.map_mut().map_survey.deep = on,
             Event::Exclude(id) => {
-                let reason = self.map.map_survey.text.trim().to_owned();
+                let reason = self.modules.map().map_survey.text.trim().to_owned();
                 if reason.is_empty() {
                     self.say(Level::Warn, "Dışlama nedenini araç çubuğundaki kutuya yazın; çözüm silinmez, nedeniyle dışlanır.");
                 } else if self.map_survey_edit(Op::Exclude { solution: id.clone(), reason }).is_some() {
-                    self.map.map_survey.text.clear();
+                    self.modules.map_mut().map_survey.text.clear();
                     self.say(Level::Info, format!("“{id}” dışlandı; kayıtta kalır."));
                 }
             }
@@ -487,7 +473,7 @@ impl App {
                 }
             }
             Event::Antenna(session) => {
-                let text = self.map.map_survey.text.trim().to_owned();
+                let text = self.modules.map().map_survey.text.trim().to_owned();
                 let Some(height) = text.parse::<f64>().ok().filter(|h| h.is_finite()) else {
                     self.say(Level::Warn, "Anten yüksekliğini metre olarak araç çubuğundaki kutuya yazın (1.800 gibi; ARP'ye düşey).");
                     return Task::none();
@@ -513,7 +499,7 @@ impl App {
                     operator: None,
                 };
                 if self.map_survey_edit(op).is_some() {
-                    self.map.map_survey.text.clear();
+                    self.modules.map_mut().map_survey.text.clear();
                     self.say(Level::Info, format!("“{session}” oturumunun anten yüksekliği {height:.3} m (ARP'ye düşey)."));
                 }
             }
@@ -531,11 +517,11 @@ impl App {
             Event::ShowNetwork => self.show_network(),
             Event::Network => return self.open_survey_network(),
             Event::Fold(key) => {
-                if !self.map.map_survey.toggled.remove(&key) {
-                    self.map.map_survey.toggled.insert(key);
+                if !self.modules.map_mut().map_survey.toggled.remove(&key) {
+                    self.modules.map_mut().map_survey.toggled.insert(key);
                 }
             }
-            Event::Filter(f) => self.map.map_survey.filter = f,
+            Event::Filter(f) => self.modules.map_mut().map_survey.filter = f,
         }
         Task::none()
     }
@@ -559,10 +545,10 @@ impl App {
             icon_toggle(
                 glyph("gnssFiles"),
                 "Dosyaları oku: oturum dosyalarının SHA-256'sını kayıtla karşılaştır",
-                self.map.map_survey.deep,
-                msg(Event::Deep(!self.map.map_survey.deep))
+                self.modules.map().map_survey.deep,
+                msg(Event::Deep(!self.modules.map().map_survey.deep))
             ),
-            crate::style::fields::input(None, "İşaret ya da dışlama nedeni", &self.map.map_survey.text, false, false)
+            crate::style::fields::input(None, "İşaret ya da dışlama nedeni", &self.modules.map().map_survey.text, false, false)
                 .on_input(|t| msg(Event::Text(t))),
         ]
         .spacing(4)
@@ -580,8 +566,8 @@ impl App {
                     crate::style::fields::input(
                         None,
                         "yatay",
-                        &self.map.map_survey.limit_horizontal,
-                        bad(&self.map.map_survey.limit_horizontal),
+                        &self.modules.map().map_survey.limit_horizontal,
+                        bad(&self.modules.map().map_survey.limit_horizontal),
                         false
                     )
                     .on_input(|t| msg(Event::LimitHorizontal(t)))
@@ -591,8 +577,8 @@ impl App {
                     crate::style::fields::input(
                         None,
                         "düşey",
-                        &self.map.map_survey.limit_vertical,
-                        bad(&self.map.map_survey.limit_vertical),
+                        &self.modules.map().map_survey.limit_vertical,
+                        bad(&self.modules.map().map_survey.limit_vertical),
                         false
                     )
                     .on_input(|t| msg(Event::LimitVertical(t)))
@@ -612,7 +598,7 @@ impl App {
                 crate::style::fields::input(
                     None,
                     "Kaynak: yönetmelik maddesi, idare şartnamesi",
-                    &self.map.map_survey.limit_source,
+                    &self.modules.map().map_survey.limit_source,
                     false,
                     false
                 )
@@ -663,8 +649,8 @@ impl App {
             items.push(group);
         }
         let body = StatusTree::new(items)
-            .toggled(&self.map.map_survey.toggled, |key| msg(Event::Fold(key)))
-            .filter(self.map.map_survey.filter, |f| msg(Event::Filter(f)))
+            .toggled(&self.modules.map().map_survey.toggled, |key| msg(Event::Fold(key)))
+            .filter(self.modules.map().map_survey.filter, |f| msg(Event::Filter(f)))
             .counted("Dikkat", "Sorun")
             .empty("Arşivde arazi ölçümü yok: araç çubuğundan ekleyin ya da bir ölçüm oturumu dosyası seçin.");
         column![head, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]).into()

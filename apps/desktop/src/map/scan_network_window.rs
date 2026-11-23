@@ -22,6 +22,7 @@
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::map::MapState;
 use crate::map;
 use iced::widget::{button, container, row, space};
 use iced::{Center, Element, Fill, Task};
@@ -32,7 +33,7 @@ use kentos_ui::widget::grow::Grows;
 use kentos_ui::widget::tree_view::Check;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::register_window::matrix_text;
 use crate::road_dialog::{col, num, sheet};
@@ -125,7 +126,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::ScanNetwork(e))
+    Message::from(map::Event::ScanNetwork(e))
 }
 
 /// The scans' names told apart (GIS-037): scans sharing a name take their layers' names when those differ, else
@@ -184,7 +185,7 @@ impl App {
     }
 
     fn scan_network_run(&mut self) {
-        let s = &self.map.scan_network;
+        let s = &self.modules.map().scan_network;
         let input = PointCloudsNetwork {
             uids: s.scans.iter().map(|(u, _)| u.clone()).collect(),
             fixed: vec![s.fixed.clone()],
@@ -201,8 +202,8 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.scan_network.marked.clear();
-        self.map.scan_network.answer = Some(
+        self.modules.map_mut().scan_network.marked.clear();
+        self.modules.map_mut().scan_network.answer = Some(
             match pointcloud_network::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -226,7 +227,7 @@ impl App {
         }
         let fixed = scans[0].0.clone();
         let chosen = scans[1].0.clone();
-        self.map.scan_network = State {
+        self.modules.map_mut().scan_network = State {
             scans,
             fixed,
             spacing: 0.5,
@@ -238,20 +239,20 @@ impl App {
             ..Default::default()
         };
         self.scan_network_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::ScanNetwork));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::ScanNetwork));
         Task::none()
     }
 
     /// Dönüşüm uygula… (docs/adr/3100): the chosen scan selected (the tool's input), the window closed and Dönüşüm
     /// uygula opened with its matrix and a layer of its own. Nothing is written until that tool runs.
     fn scan_network_apply(&mut self) {
-        let Some(Ok(r)) = &self.map.scan_network.answer else {
+        let Some(Ok(r)) = &self.modules.map().scan_network.answer else {
             return;
         };
         let Some(scan) = r
             .scans
             .iter()
-            .find(|s| s.uid == self.map.scan_network.chosen)
+            .find(|s| s.uid == self.modules.map().scan_network.chosen)
         else {
             return;
         };
@@ -280,13 +281,13 @@ impl App {
     /// undo step; its file is not written. The network is adjusted again from there: the scan's correction is then
     /// what is left.
     fn scan_network_keep(&mut self) {
-        let Some(Ok(r)) = &self.map.scan_network.answer else {
+        let Some(Ok(r)) = &self.modules.map().scan_network.answer else {
             return;
         };
         let Some(scan) = r
             .scans
             .iter()
-            .find(|s| s.uid == self.map.scan_network.chosen)
+            .find(|s| s.uid == self.modules.map().scan_network.chosen)
         else {
             return;
         };
@@ -295,7 +296,7 @@ impl App {
             return;
         }
         let name = self
-            .map
+            .modules.map()
             .scan_network
             .scans
             .iter()
@@ -324,7 +325,7 @@ impl App {
     }
 
     pub(crate) fn scan_network_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.map.scan_network;
+        let s = &mut self.modules.map_mut().scan_network;
         match event {
             Event::Take => {
                 let scans = self.scan_network_clouds();
@@ -332,7 +333,7 @@ impl App {
                     self.warn(format!("{TITLE}: en az üç nokta bulutu seçin; seçimde {} var.", scans.len()));
                     return Task::none();
                 }
-                let s = &mut self.map.scan_network;
+                let s = &mut self.modules.map_mut().scan_network;
                 if !scans.iter().any(|(u, _)| *u == s.fixed) {
                     s.fixed = scans[0].0.clone();
                 }
@@ -380,7 +381,7 @@ impl App {
 
     /// The summary's lines and the chosen table's rows.
     pub(crate) fn scan_network_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
-        let s = &self.map.scan_network;
+        let s = &self.modules.map().scan_network;
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         let r = match &s.answer {
@@ -473,7 +474,7 @@ impl App {
     }
 
     pub(crate) fn scan_network_view(&self) -> Element<'_, Message> {
-        let s = &self.map.scan_network;
+        let s = &self.modules.map().scan_network;
         let names: Vec<String> = s.scans.iter().map(|(_, n)| n.clone()).collect();
         let free: Vec<(String, String)> = s.scans.iter().filter(|(u, _)| *u != s.fixed).cloned().collect();
         let form = Form::new()

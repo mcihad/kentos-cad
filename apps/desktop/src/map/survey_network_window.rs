@@ -17,6 +17,7 @@
 //! session`), Yeni noktaların hızı reads each new mark's velocity from the campaign's velocity grid; the summary says
 //! which correlations went in and from which grid, Noktalar the velocities, Bazlar each baseline's session.
 
+use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;
 
@@ -33,7 +34,7 @@ use kentos_ui::widget::grow::Grows;
 use kentos_ui::widget::tree_view::Check;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{self, col, num, sheet};
 use crate::style::fields;
@@ -196,7 +197,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::SurveyNetwork(e))
+    Message::from(map::Event::SurveyNetwork(e))
 }
 
 /// Metres as millimetres to a tenth; a value that rounds to nothing is 0.0, not −0.0.
@@ -357,29 +358,29 @@ fn stage_line(name: &str, st: &NetworkStage) -> (Kind, String) {
 
 impl App {
     pub(crate) fn survey_network_run(&mut self) {
-        let epoch = match number(&self.map.survey_network.epoch, "Ölçme epoku") {
+        let epoch = match number(&self.modules.map().survey_network.epoch, "Ölçme epoku") {
             Ok(e) => e,
             Err(why) => {
-                self.map.survey_network.answer = Some(Err(why));
+                self.modules.map_mut().survey_network.answer = Some(Err(why));
                 return;
             }
         };
         let input = MapSurveyNetwork {
-            class: self.map.survey_network.class.id(),
-            scale: (self.map.survey_network.scale != 1.0).then_some(self.map.survey_network.scale),
+            class: self.modules.map_mut().survey_network.class.id(),
+            scale: (self.modules.map().survey_network.scale != 1.0).then_some(self.modules.map().survey_network.scale),
             epoch,
             correlations: self
-                .map
+                .modules.map_mut()
                 .survey_network
                 .correlated
                 .then_some(NetworkCorrelations::Session),
-            velocities: self.map.survey_network.velocities,
+            velocities: self.modules.map().survey_network.velocities,
             ..MapSurveyNetwork::default()
         };
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.survey_network.answer = Some(
+        self.modules.map_mut().survey_network.answer = Some(
             match map_survey_network::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -396,13 +397,13 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.map.survey_network = State {
+        self.modules.map_mut().survey_network = State {
             scale: 1.0,
             magnify: 1000.0,
             ..State::default()
         };
         self.survey_network_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::SurveyNetwork));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::SurveyNetwork));
         Task::none()
     }
 
@@ -424,7 +425,7 @@ impl App {
     }
 
     fn survey_network_known(&mut self) {
-        let k = self.map.survey_network.known.clone();
+        let k = self.modules.map().survey_network.known.clone();
         let read = || -> Result<Op, String> {
             let need = |v: Option<f64>, words: &str| v.ok_or_else(|| format!("{words} boş; değerini yazın."));
             let lat = need(number(&k.lat, "Enlem")?, "Enlem")?;
@@ -451,7 +452,7 @@ impl App {
             Ok(op) => {
                 if let Some(out) = self.map_survey_edit(op) {
                     self.say(Level::Success, format!("“{}” bilinen nokta olarak eklendi ({}).", k.mark.trim(), out.id.unwrap_or_default()));
-                    self.map.survey_network.known = KnownForm::default();
+                    self.modules.map_mut().survey_network.known = KnownForm::default();
                 }
             }
             Err(why) => self.warn(why),
@@ -462,23 +463,23 @@ impl App {
     fn survey_network_accept(&mut self) {
         let op = Op::Network {
             campaign: None,
-            scale: (self.map.survey_network.scale != 1.0).then_some(self.map.survey_network.scale),
-            class: self.map.survey_network.class.id(),
+            scale: (self.modules.map().survey_network.scale != 1.0).then_some(self.modules.map().survey_network.scale),
+            class: self.modules.map_mut().survey_network.class.id(),
             rules: None,
             hold: None,
-            epoch: number(&self.map.survey_network.epoch, "Ölçme epoku")
+            epoch: number(&self.modules.map().survey_network.epoch, "Ölçme epoku")
                 .ok()
                 .flatten(),
             correlations: self
-                .map
+                .modules.map_mut()
                 .survey_network
                 .correlated
                 .then_some(NetworkCorrelations::Session),
-            velocities: self.map.survey_network.velocities,
+            velocities: self.modules.map().survey_network.velocities,
             layer: None,
             // On the layer chosen in Katmanlar, else the active one (docs/adr/2960).
             ellipses: self
-                .map
+                .modules.map()
                 .survey_network
                 .ellipses
                 .then(|| kentos_commands::NetworkEllipses {
@@ -488,9 +489,9 @@ impl App {
                             .map(|d| d.model.layers().active().to_owned())
                             .unwrap_or_default()
                     }),
-                    scale: self.map.survey_network.magnify,
-                    heights: self.map.survey_network.bars,
-                    labels: self.map.survey_network.labels,
+                    scale: self.modules.map().survey_network.magnify,
+                    heights: self.modules.map().survey_network.bars,
+                    labels: self.modules.map().survey_network.labels,
                     label_height: None,
                 }),
         };
@@ -499,11 +500,11 @@ impl App {
                 (0, _) => String::new(),
                 (n, 0) => format!(
                     ", {n} hata elipsi {} kat büyütülerek çizildi",
-                    self.map.survey_network.magnify
+                    self.modules.map().survey_network.magnify
                 ),
                 (n, b) => format!(
                     ", {n} hata elipsi ve {b} kot çubuğu {} kat büyütülerek çizildi",
-                    self.map.survey_network.magnify
+                    self.modules.map().survey_network.magnify
                 ),
             };
             // Docs/adr/3760: and their labels; docs/adr/4160: those moved off east, those with no free place.
@@ -527,35 +528,35 @@ impl App {
 
     pub(crate) fn survey_network_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::View(v) => self.map.survey_network.view = v,
+            Event::View(v) => self.modules.map_mut().survey_network.view = v,
             Event::Class(c) => {
-                self.map.survey_network.class = c;
+                self.modules.map_mut().survey_network.class = c;
                 self.survey_network_run();
             }
-            Event::Ellipses(on) => self.map.survey_network.ellipses = on,
-            Event::Bars(on) => self.map.survey_network.bars = on,
-            Event::Labels(on) => self.map.survey_network.labels = on,
+            Event::Ellipses(on) => self.modules.map_mut().survey_network.ellipses = on,
+            Event::Bars(on) => self.modules.map_mut().survey_network.bars = on,
+            Event::Labels(on) => self.modules.map_mut().survey_network.labels = on,
             Event::Correlated(on) => {
-                self.map.survey_network.correlated = on;
+                self.modules.map_mut().survey_network.correlated = on;
                 self.survey_network_run();
             }
             Event::Velocities(on) => {
-                self.map.survey_network.velocities = on;
+                self.modules.map_mut().survey_network.velocities = on;
                 self.survey_network_run();
             }
             Event::Magnify(v) => {
                 if v > 0.0 {
-                    self.map.survey_network.magnify = v;
+                    self.modules.map_mut().survey_network.magnify = v;
                 }
             }
             Event::Scale(v) => {
                 if v > 0.0 {
-                    self.map.survey_network.scale = v;
+                    self.modules.map_mut().survey_network.scale = v;
                     self.survey_network_run();
                 }
             }
             Event::Epoch(text) => {
-                self.map.survey_network.epoch = text;
+                self.modules.map_mut().survey_network.epoch = text;
                 self.survey_network_run();
             }
             Event::Import => {
@@ -575,7 +576,7 @@ impl App {
             Event::Imported(None) => {}
             Event::Exclude(id) => {
                 let reason = self
-                    .map.survey_network
+                    .modules.map().survey_network
                     .answer
                     .as_ref()
                     .and_then(|a| a.as_ref().ok())
@@ -594,7 +595,7 @@ impl App {
                 self.survey_network_run();
             }
             Event::Known(field, text) => {
-                let k = &mut self.map.survey_network.known;
+                let k = &mut self.modules.map_mut().survey_network.known;
                 match field {
                     Field::Mark => k.mark = text,
                     Field::Lat => k.lat = text,
@@ -610,7 +611,7 @@ impl App {
             Event::AddKnown => self.survey_network_known(),
             Event::Accept => self.survey_network_accept(),
             Event::Close => {
-                self.map.survey_network = State::default();
+                self.modules.map_mut().survey_network = State::default();
                 self.dialog = None;
             }
         }
@@ -619,7 +620,7 @@ impl App {
 
     #[allow(clippy::too_many_lines)]
     pub(crate) fn survey_network_view(&self) -> Element<'_, Message> {
-        let s = &self.map.survey_network;
+        let s = &self.modules.map().survey_network;
         let survey = self.document.as_ref().and_then(|d| d.model.map_survey());
         let (count, used) = survey.map_or((0, 0), |sv| {
             (sv.baselines.len(), sv.baselines.iter().filter(|b| b.adjust && b.excluded.is_none()).count())
@@ -1080,10 +1081,10 @@ impl App {
             Control::Press(IMPORT) => Some(msg(Event::Import)),
             Control::Press(ADD) => Some(msg(Event::AddKnown)),
             Control::Press(CORRELATED) => {
-                Some(msg(Event::Correlated(!self.map.survey_network.correlated)))
+                Some(msg(Event::Correlated(!self.modules.map().survey_network.correlated)))
             }
             Control::Press(VELOCITIES) => {
-                Some(msg(Event::Velocities(!self.map.survey_network.velocities)))
+                Some(msg(Event::Velocities(!self.modules.map().survey_network.velocities)))
             }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

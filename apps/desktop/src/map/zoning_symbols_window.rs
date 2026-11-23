@@ -9,6 +9,7 @@
 //! choices in the project in the same undo step, so the next run and the zoning check read them; Seçimi kaldır takes
 //! the pressed row's choice back to KentOS's table.
 
+use crate::map::MapState;
 use crate::map;
 use iced::{Element, Task};
 use kentos_commands::{
@@ -21,7 +22,7 @@ use kentos_ui::widget::grow::Grows;
 use kentos_ui::widget::switch::Switch;
 use kentos_ui::widget::{Dialog as Frame, Form};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet_chosen};
 use crate::style::fields;
@@ -64,7 +65,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::ZoningSymbols(e))
+    Message::from(map::Event::ZoningSymbols(e))
 }
 
 /// A level and use the drawing's decision areas have: its symbol and where it comes from, its areas and how many change.
@@ -141,13 +142,13 @@ pub fn rows(r: &ZoningSymbolized, t: &ZoningSymbols, kept: &[ZoningSymbolPick]) 
 
 impl App {
     fn zoning_symbols_input(&self) -> ZoningSymbolize {
-        let s = &self.map.zoning_symbols;
+        let s = &self.modules.map().zoning_symbols;
         ZoningSymbolize { uids: None, symbols: s.picks.clone(), keep: s.keep, expected_revision: None }
     }
 
     /// Whether Sembolleri ver has something to write: a symbol, or a choice to keep.
     fn zoning_symbols_ready(&self) -> bool {
-        let s = &self.map.zoning_symbols;
+        let s = &self.modules.map().zoning_symbols;
         matches!(&s.answer, Some(Ok(r)) if r.set > 0) || (s.keep && s.picks != s.kept && matches!(s.answer, Some(Ok(_))))
     }
 
@@ -156,7 +157,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.zoning_symbols.answer = Some(
+        self.modules.map_mut().zoning_symbols.answer = Some(
             match zoning_symbolize::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -178,58 +179,58 @@ impl App {
             .as_ref()
             .map(|d| zoning_symbolize::kept(&d.model))
             .unwrap_or_default();
-        self.map.zoning_symbols = State {
+        self.modules.map_mut().zoning_symbols = State {
             picks: kept.clone(),
             kept,
             keep: true,
             ..State::default()
         };
         self.zoning_symbols_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::ZoningSymbols));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::ZoningSymbols));
         Task::none()
     }
 
     pub(crate) fn zoning_symbols_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_zoning_symbols(),
-            Event::Choose(i) => self.map.zoning_symbols.chosen = Some(i),
+            Event::Choose(i) => self.modules.map_mut().zoning_symbols.chosen = Some(i),
             Event::Pick(id) => {
-                let Some(Ok(r)) = &self.map.zoning_symbols.answer else {
+                let Some(Ok(r)) = &self.modules.map().zoning_symbols.answer else {
                     return Task::none();
                 };
                 let Some(p) = self
-                    .map
+                    .modules.map()
                     .zoning_symbols
                     .chosen
                     .and_then(|i| pairs(r).into_iter().nth(i))
                 else {
                     return Task::none();
                 };
-                let picks = &mut self.map.zoning_symbols.picks;
+                let picks = &mut self.modules.map_mut().zoning_symbols.picks;
                 picks.retain(|k| !(k.level == p.level && k.usage == p.usage));
                 picks.push(ZoningSymbolPick { level: p.level, usage: p.usage, symbol: id });
                 self.zoning_symbols_run();
             }
             Event::Unpick => {
-                let Some(Ok(r)) = &self.map.zoning_symbols.answer else {
+                let Some(Ok(r)) = &self.modules.map().zoning_symbols.answer else {
                     return Task::none();
                 };
                 let Some(p) = self
-                    .map
+                    .modules.map()
                     .zoning_symbols
                     .chosen
                     .and_then(|i| pairs(r).into_iter().nth(i))
                 else {
                     return Task::none();
                 };
-                self.map
+                self.modules.map_mut()
                     .zoning_symbols
                     .picks
                     .retain(|k| !(k.level == p.level && k.usage == p.usage));
                 self.zoning_symbols_run();
             }
             Event::Keep(on) => {
-                self.map.zoning_symbols.keep = on;
+                self.modules.map_mut().zoning_symbols.keep = on;
                 self.zoning_symbols_run();
             }
             Event::Write => {
@@ -247,7 +248,7 @@ impl App {
                                 output.set
                             ),
                         );
-                        self.map.zoning_symbols = State::default();
+                        self.modules.map_mut().zoning_symbols = State::default();
                         self.dialog = None;
                     }
                     CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
@@ -257,7 +258,7 @@ impl App {
                 }
             }
             Event::Close => {
-                self.map.zoning_symbols = State::default();
+                self.modules.map_mut().zoning_symbols = State::default();
                 self.dialog = None;
             }
         }
@@ -265,7 +266,7 @@ impl App {
     }
 
     pub(crate) fn zoning_symbols_view(&self) -> Element<'_, Message> {
-        let s = &self.map.zoning_symbols;
+        let s = &self.modules.map().zoning_symbols;
         let table = builtin_zoning_symbols();
         let mut lines = vec![words::text_line(
             Kind::Info,

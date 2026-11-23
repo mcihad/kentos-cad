@@ -4,6 +4,7 @@
 //! factor adjust it again; robust estimation (docs/adr/4960, Huber or Danish) reweights the baselines and shows each
 //! one's factor. Nothing is written: taking the coordinates is a later, separate step.
 
+use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;
 
@@ -14,7 +15,7 @@ use kentos_native_application::{ExecutionContext, survey_baselines};
 use kentos_ui::label;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented, Switch};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::traces::Control;
@@ -95,7 +96,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::Baselines(e))
+    Message::from(map::Event::Baselines(e))
 }
 
 fn mm(v: f64) -> String {
@@ -104,32 +105,32 @@ fn mm(v: f64) -> String {
 
 impl App {
     fn baselines_run(&mut self) {
-        let Some(text) = self.map.baselines.text.clone() else {
+        let Some(text) = self.modules.map().baselines.text.clone() else {
             return;
         };
         let input = SurveyBaselines {
             text: Some(text),
-            scale: (self.map.baselines.scale != 1.0).then_some(self.map.baselines.scale),
-            datum: if self.map.baselines.minimal {
+            scale: (self.modules.map().baselines.scale != 1.0).then_some(self.modules.map().baselines.scale),
+            datum: if self.modules.map().baselines.minimal {
                 BaselineDatum::Minimal
             } else {
                 BaselineDatum::Given
             },
             robust: self
-                .map
+                .modules.map_mut()
                 .baselines
                 .robust
                 .method()
                 .map(|method| BaselineRobust {
                     method,
-                    c: (self.map.baselines.c > 0.0).then_some(self.map.baselines.c),
+                    c: (self.modules.map().baselines.c > 0.0).then_some(self.modules.map().baselines.c),
                 }),
             ..SurveyBaselines::default()
         };
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        self.map.baselines.answer = Some(
+        self.modules.map_mut().baselines.answer = Some(
             match survey_baselines::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
@@ -146,11 +147,11 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.map.baselines = State {
+        self.modules.map_mut().baselines = State {
             scale: 1.0,
             ..State::default()
         };
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::Baselines));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::Baselines));
         Task::none()
     }
 
@@ -158,19 +159,19 @@ impl App {
     pub(crate) fn baselines_file(&mut self, path: PathBuf) {
         match std::fs::read_to_string(&path) {
             Ok(text) => {
-                self.map.baselines.text = Some(text);
-                self.map.baselines.file = Some(path);
+                self.modules.map_mut().baselines.text = Some(text);
+                self.modules.map_mut().baselines.file = Some(path);
                 self.baselines_run();
             }
             Err(e) => {
-                self.map.baselines.answer = Some(Err(format!("{} okunamadı: {e}", path.display())))
+                self.modules.map_mut().baselines.answer = Some(Err(format!("{} okunamadı: {e}", path.display())))
             }
         }
     }
 
     pub(crate) fn baselines_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::View(v) => self.map.baselines.view = v,
+            Event::View(v) => self.modules.map_mut().baselines.view = v,
             Event::Pick => {
                 return Task::perform(
                     async {
@@ -187,29 +188,29 @@ impl App {
             Event::Picked(Some(path)) => self.baselines_file(path),
             Event::Picked(None) => {}
             Event::Minimal(on) => {
-                self.map.baselines.minimal = on;
+                self.modules.map_mut().baselines.minimal = on;
                 self.baselines_run();
             }
             Event::Scale(v) => {
                 if v > 0.0 {
-                    self.map.baselines.scale = v;
+                    self.modules.map_mut().baselines.scale = v;
                     self.baselines_run();
                 }
             }
             Event::Robust(r) => {
-                self.map.baselines.robust = r;
+                self.modules.map_mut().baselines.robust = r;
                 // The method's own constant, until the user gives one.
-                self.map.baselines.c = 0.0;
+                self.modules.map_mut().baselines.c = 0.0;
                 self.baselines_run();
             }
             Event::C(v) => {
                 if v > 0.0 {
-                    self.map.baselines.c = v;
+                    self.modules.map_mut().baselines.c = v;
                     self.baselines_run();
                 }
             }
             Event::Close => {
-                self.map.baselines = State::default();
+                self.modules.map_mut().baselines = State::default();
                 self.dialog = None;
             }
         }
@@ -217,7 +218,7 @@ impl App {
     }
 
     pub(crate) fn baselines_view(&self) -> Element<'_, Message> {
-        let s = &self.map.baselines;
+        let s = &self.modules.map().baselines;
         let file = s.file.as_ref().and_then(|p| p.file_name()).map_or("Dosya seçilmedi".to_owned(), |n| n.to_string_lossy().into_owned());
         // One label column, the boxes the same width (the owner: a form's fields line up).
         let head = Form::new()

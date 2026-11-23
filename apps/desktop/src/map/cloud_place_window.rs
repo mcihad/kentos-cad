@@ -20,6 +20,7 @@
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::map::MapState;
 use crate::map;
 use iced::widget::{container, row, space};
 use iced::{Center, Element, Fill, Task};
@@ -30,7 +31,7 @@ use kentos_ui::label;
 use kentos_ui::widget::grow::Grows;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::style::fields;
@@ -96,7 +97,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Map(map::Event::CloudPlace(e))
+    Message::from(map::Event::CloudPlace(e))
 }
 
 /// Numbers from text, apart by spaces, commas or semicolons; a point for the decimal.
@@ -160,7 +161,7 @@ impl App {
 
     /// The command's input for the map as the window has it.
     fn cloud_place_input(&self, remove: bool) -> Result<PointCloudsPlace, String> {
-        let s = &self.map.cloud_place;
+        let s = &self.modules.map().cloud_place;
         let place = if remove {
             CloudPlaceBy::Remove
         } else {
@@ -183,7 +184,7 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return;
         };
-        self.map.cloud_place.preview =
+        self.modules.map_mut().cloud_place.preview =
             Some(input.and_then(|i| pointcloud_place::answer_in(&doc.model, &i)));
     }
 
@@ -200,7 +201,7 @@ impl App {
             .and_then(|d| self.selection.ids().iter().find_map(|s| d.model.uid(*s).map(|u| u.to_string())))
             .filter(|u| clouds.iter().any(|(c, _)| c == u))
             .unwrap_or_else(|| clouds[0].0.clone());
-        self.map.cloud_place = State {
+        self.modules.map_mut().cloud_place = State {
             clouds,
             cloud: chosen,
             matrix: "1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1".to_owned(),
@@ -208,7 +209,7 @@ impl App {
             ..Default::default()
         };
         self.cloud_place_run();
-        self.dialog = Some(Dialog::Map(map::MapDialogKind::CloudPlace));
+        self.dialog = Some(crate::map::dialog(map::MapDialogKind::CloudPlace));
         Task::none()
     }
 
@@ -222,7 +223,7 @@ impl App {
             }
         };
         let name = self
-            .map
+            .modules.map()
             .cloud_place
             .clouds
             .iter()
@@ -257,7 +258,7 @@ impl App {
     }
 
     pub(crate) fn cloud_place_event(&mut self, event: Event) -> Task<Message> {
-        let s = &mut self.map.cloud_place;
+        let s = &mut self.modules.map_mut().cloud_place;
         match event {
             Event::Cloud(v) => s.cloud = v,
             Event::By(v) => s.by = v,
@@ -288,7 +289,7 @@ impl App {
 
     /// The summary's lines and the files' rows: where the cloud is now, and each file's place after the map.
     pub(crate) fn cloud_place_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
-        let s = &self.map.cloud_place;
+        let s = &self.modules.map().cloud_place;
         let mut lines: Vec<Element<'_, Message>> = Vec::new();
         let mut rows = Vec::new();
         let cloud = self.document.as_ref().and_then(|d| {
@@ -339,7 +340,7 @@ impl App {
     }
 
     pub(crate) fn cloud_place_view(&self) -> Element<'_, Message> {
-        let s = &self.map.cloud_place;
+        let s = &self.modules.map().cloud_place;
         let by = Segmented::new([By::Matrix, By::AxisAngle, By::Euler], s.by, |v| msg(Event::By(v)));
         let mut form = Form::new()
             .label_width(130.0)

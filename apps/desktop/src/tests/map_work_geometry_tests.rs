@@ -4,6 +4,7 @@
 //! query's answer, is drawn dashed beside it (the other's geometry did not change: not drawn), the status bar says so;
 //! another selection takes the shapes away. And the pictures.
 
+use crate::map::MapState;
 use kentos_commands::WorkStatus as W;
 use serde_json::json;
 
@@ -42,7 +43,7 @@ fn degisenler_draws_the_moved_line_s_approved_shape() {
     assert_eq!(with_shape, [moved.as_str()], "only the moved line's shape");
     send(&mut app, P::Changes("is-4".into()));
     let shown = app
-        .map
+        .modules.map()
         .map_work
         .approved
         .clone()
@@ -63,7 +64,7 @@ fn degisenler_draws_the_moved_line_s_approved_shape() {
     // Another selection: the shapes go with Değişenler's.
     app.selection.set(vec![kentos_domain::Slot(6)]);
     assert_ne!(
-        app.map.map_work.approved.as_ref().map(|a| a.version),
+        app.modules.map().map_work.approved.as_ref().map(|a| a.version),
         Some(app.selection.version())
     );
 }

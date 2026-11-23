@@ -4,12 +4,13 @@
 //! how far (Bilinen noktalar's Taşınma); a typed epoch wins; a box that is no number says so; Kabul et keeps the
 //! measurement epoch in the adjustment's record. And the pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_commands::NetworkEpochFrom;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::survey_network_window::{Event as N, View};
 
 const CASE: &str = "Ölçme epoku bazların gözlem zamanlarından (2 Kasım 2026); 2005,0'daki bilinen noktalar hız \
@@ -40,13 +41,13 @@ fn opened() -> App {
     let _ = app.update(Message::Run("map.survey.adjustment"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+        Some(crate::map::dialog(map::MapDialogKind::SurveyNetwork))
     );
     app
 }
 
 fn answer(app: &App) -> kentos_commands::MapSurveyNetworked {
-    app.map
+    app.modules.map()
         .survey_network
         .answer
         .clone()
@@ -68,7 +69,7 @@ fn the_known_points_go_to_the_measurement_epoch_and_the_record_keeps_it() {
     assert!((m.years - 21.837).abs() < 1e-3 && m.shift[0] < -0.5 && m.shift[1] > 0.15 && m.shift[2] < 0.0, "{m:?}");
     assert!(a.acceptable, "{:?}", a.why);
     // A typed epoch wins over the baselines' times.
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Epoch(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Epoch(
         "2026.5".into(),
     ))));
     let a = answer(&app);
@@ -78,11 +79,11 @@ fn the_known_points_go_to_the_measurement_epoch_and_the_record_keeps_it() {
     );
     assert!((a.moved[0].years - 21.5).abs() < 1e-9);
     // A box that is no number is said, nothing adjusted.
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Epoch(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Epoch(
         "abc".into(),
     ))));
     let why = app
-        .map
+        .modules.map()
         .survey_network
         .answer
         .clone()
@@ -90,10 +91,10 @@ fn the_known_points_go_to_the_measurement_epoch_and_the_record_keeps_it() {
         .expect_err("refused");
     assert!(why.contains("Ölçme epoku “abc” bir sayı değil"), "{why}");
     // Back to the baselines' times; Kabul et keeps the measurement epoch in the record.
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Epoch(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Epoch(
         String::new(),
     ))));
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Accept)));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Accept)));
     let survey = app
         .document
         .as_ref()
@@ -133,7 +134,7 @@ fn screens() {
             (View::Known, "1-bilinen-noktalar"),
             (View::Marks, "2-noktalar"),
         ] {
-            let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(view))));
+            let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(view))));
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
             snapshot
@@ -159,7 +160,7 @@ fn opened_case(name: &str) -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Class(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(
         crate::survey_network_window::Class::C1,
     ))));
     app
@@ -200,7 +201,7 @@ fn similarity_screens() {
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from("light"))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
             View::Known,
         ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");

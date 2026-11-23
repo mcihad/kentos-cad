@@ -7,7 +7,7 @@ use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::survey_network_window::{Event as N, View};
 
 const TRIANGLE: &str = "Bağımsız bazlar: üç alıcılı bo-1";
@@ -31,13 +31,13 @@ fn opened() -> App {
     let _ = app.update(Message::Run("map.survey.adjustment"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+        Some(crate::map::dialog(map::MapDialogKind::SurveyNetwork))
     );
     app
 }
 
 fn send(app: &mut App, e: N) {
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(e)));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(e)));
 }
 
 fn adjust_of(app: &App, id: &str) -> bool {

@@ -3,7 +3,6 @@
 //! pointer is on the map, and a layer takes its source system and moves out of it.
 
 use crate::gis;
-use crate::map;
 use kentos_domain::Slot;
 
 use crate::app::{App, Message};
@@ -54,7 +53,7 @@ fn near(app: &mut App) {
 fn a_click_on_the_map_selects_what_it_selects_in_the_project() {
     for map in [None, Some(3857), Some(4326), Some(2320)] {
         let mut app = app();
-        let _ = app.update(Message::Map(map::Event::MapCrs(Choose(map))));
+        let _ = app.update(Message::MapCrs(Choose(map)));
         assert_eq!(app.viewport.camera.map.is_some(), map.is_some(), "{map:?}");
         assert_eq!(
             app.document
@@ -94,7 +93,7 @@ fn the_map_is_a_view_the_drawing_does_not_move() {
         .entities()
         .cloned()
         .collect();
-    let _ = app.update(Message::Map(map::Event::MapCrs(Choose(Some(3857)))));
+    let _ = app.update(Message::MapCrs(Choose(Some(3857))));
     let doc = app.document.as_ref().expect("a drawing");
     let after: Vec<_> = doc.model.entities().cloned().collect();
     assert_eq!(before, after);
@@ -105,7 +104,7 @@ fn the_map_is_a_view_the_drawing_does_not_move() {
             .is_some()
     );
     // Back to the project's own: the camera's map goes.
-    let _ = app.update(Message::Map(map::Event::MapCrs(Choose(None))));
+    let _ = app.update(Message::MapCrs(Choose(None)));
     assert!(app.viewport.camera.map.is_none());
     assert_eq!(
         app.document
@@ -225,7 +224,7 @@ fn screens() {
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             open(&mut app, ground());
-            let _ = app.update(Message::Map(map::Event::MapCrs(Choose(map))));
+            let _ = app.update(Message::MapCrs(Choose(map)));
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
             let mut update = |app: &mut App, message| {
                 let _ = app.update(message);
@@ -253,7 +252,7 @@ fn screens() {
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             open(&mut app, ground());
-            let _ = app.update(Message::Map(map::Event::MapCrs(Choose(Some(3857)))));
+            let _ = app.update(Message::MapCrs(Choose(Some(3857))));
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
             let mut update = |app: &mut App, message| {
                 let _ = app.update(message);
@@ -319,22 +318,22 @@ fn screens() {
 fn the_ribbon_s_map_system_lists_the_systems_at_once() {
     let mut app = app();
     let _ = app.run("view.mapCrs");
-    assert_eq!(app.dialog, Some(crate::app::Dialog::Map(map::MapDialogKind::MapCrs)));
+    assert_eq!(app.dialog, Some(crate::app::Dialog::MapCrs));
     let own = app.document.as_ref().expect("open").settings().srid;
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
     shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
     let objects = format!("Nesnelerin saklandığı sistem: {}.", crate::crs::title_of(own));
     assert!(crate::files_testing::find_text(&mut shot, &app, &objects).is_some(), "{objects}");
     assert!(crate::files_testing::find_text(&mut shot, &app, "Harita şimdi şu sistemde çiziliyor: projenin sistemi.").is_some());
-    let _ = app.update(Message::Map(map::Event::MapCrs(Choose(Some(3857)))));
+    let _ = app.update(Message::MapCrs(Choose(Some(3857))));
     assert_eq!(app.document.as_ref().expect("open").settings().map_srid, Some(3857));
-    assert_eq!(app.dialog, Some(crate::app::Dialog::Map(map::MapDialogKind::MapCrs)), "the window stays");
+    assert_eq!(app.dialog, Some(crate::app::Dialog::MapCrs), "the window stays");
     shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
     let drawn = format!("Harita şimdi şu sistemde çiziliyor: {}.", crate::crs::title_of(3857));
     assert!(crate::files_testing::find_text(&mut shot, &app, &drawn).is_some(), "{drawn}");
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-054-harita-sistemi");
-    let _ = app.update(Message::Map(map::Event::MapCrs(Choose(None))));
+    let _ = app.update(Message::MapCrs(Choose(None)));
     assert_eq!(app.document.as_ref().expect("open").settings().map_srid, None);
-    let _ = app.update(Message::Map(map::Event::MapCrsClose));
+    let _ = app.update(Message::MapCrsClose);
     assert_eq!(app.dialog, None);
 }

@@ -2,12 +2,13 @@
 //! selected orthophoto, its layers guessed (GNSS, read on the image), KOH within BÖHHBÜY's limit at 1/1000 and out of
 //! it at 1/500, the fit points apart, the CSV, nothing written; Harita and GIS offer it. And its pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::ortho_window::Event as O;
 
 fn opened(program: Option<Module>) -> App {
@@ -28,21 +29,21 @@ fn the_orthophoto_is_checked_against_the_gnss_points() {
     let _ = app.update(Message::Run("raster.accuracy"));
     assert_ne!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::Ortho)),
+        Some(crate::map::dialog(map::MapDialogKind::Ortho)),
         "no raster selected"
     );
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("raster.accuracy"));
-    assert_eq!(app.dialog, Some(Dialog::Map(map::MapDialogKind::Ortho)));
+    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Ortho)));
     assert_eq!(
         (
-            app.map.ortho.known.as_str(),
-            app.map.ortho.observed.as_str()
+            app.modules.map().ortho.known.as_str(),
+            app.modules.map().ortho.observed.as_str()
         ),
         ("gnss", "okuma")
     );
     let r = app
-        .map
+        .modules.map()
         .ortho
         .answer
         .clone()
@@ -50,9 +51,9 @@ fn the_orthophoto_is_checked_against_the_gnss_points() {
         .expect("checked");
     assert_eq!((r.check.n, r.fit.as_ref().map(|f| f.n)), (8, Some(2)));
     assert_eq!(r.passed_xy, Some(true));
-    let _ = app.update(Message::Map(map::Event::Ortho(O::Scale(500.0))));
+    let _ = app.update(Message::from(map::Event::Ortho(O::Scale(500.0))));
     let r = app
-        .map
+        .modules.map()
         .ortho
         .answer
         .clone()
@@ -101,7 +102,7 @@ fn screens() {
             app.selection.set([Slot(1)]);
             app.follow_selection_tab();
             let _ = app.update(Message::Run("raster.accuracy"));
-            let _ = app.update(Message::Map(map::Event::Ortho(O::Scale(scale))));
+            let _ = app.update(Message::from(map::Event::Ortho(O::Scale(scale))));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);

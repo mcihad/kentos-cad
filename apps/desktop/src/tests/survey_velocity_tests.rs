@@ -4,12 +4,13 @@
 //! so and Bilinen noktalar's Taşınma names it; with the grid for one of them the summary says both ways. The known point
 //! form takes a velocity (all three components or none). And the pictures.
 
+use crate::map::MapState;
 use crate::map;
 use kentos_commands::{KnownMovedBy, MapSurveyNetworked};
 use kentos_launch::Module;
 use serde_json::Value;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::survey_network_window::{Event as N, Field, View};
 
 const OWN: &str = "Bilinen noktaların kendi hızları, arazi ölçümünün epok kararı yok: yeni noktalar ölçme epokunda \
@@ -34,13 +35,13 @@ fn opened(name: &str) -> App {
     let _ = app.update(Message::Run("map.survey.adjustment"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Map(map::MapDialogKind::SurveyNetwork))
+        Some(crate::map::dialog(map::MapDialogKind::SurveyNetwork))
     );
     app
 }
 
 fn answer(app: &App) -> MapSurveyNetworked {
-    app.map
+    app.modules.map()
         .survey_network
         .answer
         .clone()
@@ -79,7 +80,7 @@ fn own_velocities_carry_the_known_points_without_a_grid() {
         "{line}"
     );
     // Bilinen noktalar's Taşınma names the way.
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
         View::Known,
     ))));
     let mm = |v: f64| format!("{:.1}", v * 1000.0);
@@ -102,11 +103,11 @@ fn own_velocities_carry_the_known_points_without_a_grid() {
 #[test]
 fn the_known_point_form_takes_a_velocity() {
     let mut app = opened(OWN);
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
         View::Known,
     ))));
     let type_ = |app: &mut App, field: Field, text: &str| {
-        let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Known(
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Known(
             field,
             text.into(),
         ))));
@@ -128,7 +129,7 @@ fn the_known_point_form_takes_a_velocity() {
         .as_ref()
         .and_then(|d| d.model.map_survey())
         .map(|s| s.known.len());
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::AddKnown)));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::AddKnown)));
     assert_eq!(
         app.document
             .as_ref()
@@ -139,7 +140,7 @@ fn the_known_point_form_takes_a_velocity() {
     assert!(crate::files_testing::last_said(&app).contains("Hızın üç bileşenini birden yazın"));
     // The third component: added with its velocity.
     type_(&mut app, Field::Velocity(2), "0.0089");
-    let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::AddKnown)));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::AddKnown)));
     let survey = app
         .document
         .as_ref()
@@ -176,10 +177,10 @@ fn screens() {
             let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
-            let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::View(
+            let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
                 View::Known,
             ))));
-            let _ = app.update(Message::Map(map::Event::SurveyNetwork(N::Known(
+            let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Known(
                 Field::Velocity(0),
                 "-0.0123".into(),
             ))));
