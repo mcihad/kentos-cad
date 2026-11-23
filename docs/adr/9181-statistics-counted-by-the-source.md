@@ -102,7 +102,30 @@
 
   - Yedi alanın özet satırları iki yolda harfi harfine aynı (900 000 farklı ondalığın kesin toplamı
     `4599936999.99999999998873` dahil).
-  - Sürüm derlemesinde ve PostgreSQL'de ölçülmedi.
+  - Sürüm derlemesinde ölçülmedi.
+- **PostgreSQL** (23 Kasım 2026, `KENTOS_DATA_PG` ile): geçici bir PostGIS'te (PostgreSQL 18.4, PostGIS 3.6). Görüntü
+  amd64'tür ve bu Mac'te öykünmeyle çalışır.
+  - **Uygulama** (`a_postgis_table_is_counted_by_the_server_alike`): aynı denetimler sunucunun sayımıyla geçiyor.
+    - değer değer okunan satırlarla aynı, boş değer en sonda;
+    - oturumun satırları dışarıda, olmayan alan söyleniyor;
+    - anahtarlar tablonun sırasıyla geliyor, 1 200 değer parçalarla soruluyor.
+  - **Masaüstü** (`a_postgis_layer_is_counted_by_the_server_alike`): PostGIS katmanında da aynı denetimler geçiyor.
+    - Tümü'nün sayımı ve basınca seçim;
+    - Grafik;
+    - 240 satırlık ondalık ve Türkçe verinin okunan satırlarla aynılığı.
+  - **Ölçüm:** aynı bir milyon parsel `public.kentos_olcum_parsel` tablosunda, ortam yukarıdaki gibi.
+
+    | Yol | Süre | En yüksek bellek |
+    |---|---|---|
+    | Sunucunun sayımı (`GROUP BY`) | 6 572 ms | 791 MB |
+    | Satırları okuyarak (ADR 9130) | 37 134 ms | 5 536 MB |
+
+    Özet satırları GeoPackage'takilerle ve birbirleriyle harfi harfine aynı.
+  - **Aynı koşuda öbür PostgreSQL sınamaları:**
+    - sürücünün uygunluk takımı işlem kaydı denetimleriyle geçti (ADR 9175);
+    - topoloji ve sınıf sayımı durumları geçti (ADR 9124, 9110);
+    - ADR 9136'nın PostGIS histogram sınaması ilk kez koştu. Tablo sağlayıcısını kaydetmiyordu ve şemayı iki kez
+      ekliyordu; ikisi düzeldi, sınama geçiyor.
 - **Resim:** `.run/gui-evidence/kullanim-9181/01-istatistik-{light,dark}.png` (durum seçili, değerleri ve sayı satırı)
   ve `02-grafik-{light,dark}.png` (durum çubukları, acil seçili).
 
@@ -113,6 +136,5 @@
   seçilen kaynak satırları tabloda ve haritada görünür, çubukta görünmez.
 - İki alan okuyan grafiklerin birlikte gruplanması (`GROUP BY a, b`). Sürücü sözleşmesine yeni bir işlev ister;
   PostgreSQL'de sınanmadan eklenmemeli.
-- PostgreSQL'de ölçüm ve sınama (bu makinede Docker yanıt vermiyor), sürüm derlemesinde ölçüm, gerçek pencerede
-  deneme.
+- Sürüm derlemesinde ölçüm, gerçek pencerede deneme.
 - Web (TODOS.md §0.2).

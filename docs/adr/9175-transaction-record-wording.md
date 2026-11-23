@@ -60,6 +60,8 @@
 - Masaüstünde veri yazımı, Katman değişiklikleri, modül, şerit, geçmiş, katalog ve ayar sınamaları geçer (166).
 - **Çekirdek** (`tests/all/write_receipts.rs`, 2) ve veri sürücüsü sınamaları (`kentos-data`, `kentos-data-postgis`;
   28) geçer. Gerçek PostgreSQL sınaması veritabanı olmadığı için atlandı (Docker yanıt vermedi).
+- **PostgreSQL (23 Kasım 2026, ADR 9181 adımında):** geçici bir PostGIS'te (PostgreSQL 18.4, PostGIS 3.6) sürücünün
+  uygunluk takımı işlem kaydı denetimleriyle birlikte geçti (`kentos-data-postgis`, 6 sınama).
 - **Resimler** `.run/gui-evidence/kullanim-9175/` altındadır, her biri `{light,dark}.png`:
   - `01-islem-kayitli`: sonuç bilinmiyor; Kaynağa yaz işlem kaydına sorar.
   - `02-islem-kayitsiz`: Yeniden gönder.

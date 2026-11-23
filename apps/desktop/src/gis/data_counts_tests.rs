@@ -10,6 +10,9 @@
 //! - Grafik's bars by durum and bedel's histogram come from the counts as the rows read give them, a bar's press
 //!   selects its rows, and a chart reading two fields reads the rows;
 //! - a field the source leaves to the rows read sends the tab back to them; a source that cannot count says why.
+//!
+//! The counts, the presses, the chart and the sameness with the rows read hold for a PostGIS table too, counted by the
+//! server, when `KENTOS_DATA_PG` names a database (`postgresql://user@host:port/db`, its password in `PGPASSWORD`).
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -33,15 +36,12 @@ fn report() -> Vec<Row> {
     (0..6).map(|i| (format!("B0{}", i + 1), bedel[i], durum[i].to_owned())).collect()
 }
 
-/// A GeoPackage with a `bakim` table of `rows`.
-fn table(tag: &str, rows: &[Row]) -> std::path::PathBuf {
-    let path = scratch(tag).join("bakim.gpkg");
-    kentos_geopackage::GeoPackage::create(&path).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+/// A `table` of `rows` made in `source` (one there before is replaced).
+fn fill(source: &dyn kentos_data::Source, table: &str, rows: &[Row]) {
     let mut tx = source.begin().expect("begin");
     tx.create_table(
         &NewTable {
-            name: "bakim".into(),
+            name: table.into(),
             title: None,
             description: None,
             key: "fid".into(),
@@ -60,7 +60,7 @@ fn table(tag: &str, rows: &[Row]) -> std::path::PathBuf {
             spatial_index: true,
             system: None,
         },
-        false,
+        true,
     )
     .expect("table");
     let features: Vec<NewFeature> = rows
@@ -76,18 +76,32 @@ fn table(tag: &str, rows: &[Row]) -> std::path::PathBuf {
             ],
         })
         .collect();
-    tx.insert("bakim", &features).expect("rows");
+    tx.insert(table, &features).expect("rows");
     tx.commit().expect("commit");
+}
+
+/// A GeoPackage with a `bakim` table of `rows`.
+fn table(tag: &str, rows: &[Row]) -> std::path::PathBuf {
+    let path = scratch(tag).join("bakim.gpkg");
+    kentos_geopackage::GeoPackage::create(&path).expect("a file");
+    let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+    fill(source.as_ref(), "bakim", rows);
     path
 }
 
 /// A drawing with the file's `bakim` as a data layer, and the layer's id.
 fn open(path: &std::path::Path) -> (App, String) {
+    open_on(&path.display().to_string(), "bakim")
+}
+
+/// A drawing with `table` of the source at `address` as a data layer, and the layer's id.
+fn open_on(address: &str, table: &str) -> (App, String) {
     crate::data_layers::register();
     let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
-        .expect("added");
-    let layer = crate::data_layers_tests::node(&app, "bakim").expect("the layer").id.clone();
+    let described = crate::data_layers::describe(address, table).expect("described");
+    let name = described.name.clone();
+    app.add_data_layers(vec![described]).expect("added");
+    let layer = crate::data_layers_tests::node(&app, &name).expect("the layer").id.clone();
     (app, layer)
 }
 
@@ -169,22 +183,27 @@ fn without_places(d: &Detail) -> Detail {
 fn istatistik_counts_a_data_layer_in_its_source_and_reads_no_row() {
     let path = table("istatistik-sayim", &report());
     let (mut app, layer) = open(&path);
-    statistics(&mut app, &layer);
+    the_report_is_counted(&mut app, &layer);
+}
+
+/// İstatistik over the report's points (`layer`) counted by their source, the rows never read.
+fn the_report_is_counted(app: &mut App, layer: &str) {
+    statistics(app, layer);
     // Asked of the source: the tab says it counts.
     assert_eq!(app.statistics_seen().expect("the tab is open").0, "0 nesne");
-    assert_eq!(words(&app), ("Kaynak sayıyor…".to_owned(), "Kaynak sayıyor…".to_owned()));
-    counted(&mut app);
-    let bedel = summary(&app, "bedel");
+    assert_eq!(words(app), ("Kaynak sayıyor…".to_owned(), "Kaynak sayıyor…".to_owned()));
+    counted(app);
+    let bedel = summary(app, "bedel");
     // Alan | Tür | Dolu | Boş | Benzersiz | En az | En çok | Ortalama | Toplam
     assert_eq!((bedel[2].as_str(), bedel[3].as_str(), bedel[4].as_str()), ("5", "1", "4"), "{bedel:?}");
     assert_eq!((number(&bedel[5]), number(&bedel[6])), (Some(0.0), Some(250.0)), "{bedel:?}");
     assert_eq!((number(&bedel[7]), number(&bedel[8])), (Some(100.0), Some(500.0)), "{bedel:?}");
-    let durum = summary(&app, "durum");
+    let durum = summary(app, "durum");
     assert_eq!((durum[2].as_str(), durum[4].as_str()), ("6", "3"), "{durum:?}");
     assert_eq!(app.statistics_seen().expect("open").0, "6 nesne");
-    assert_eq!(words(&app).0, "6 satır, kaynakta sayıldı");
+    assert_eq!(words(app).0, "6 satır, kaynakta sayıldı");
     // durum's values: two each, a third each.
-    ev(&mut app, crate::statistics::Event::Field("durum".into()));
+    ev(app, crate::statistics::Event::Field("durum".into()));
     let _ = app.statistics_seen();
     let values: Vec<(String, usize, String)> = app.gis.charts.stats.borrow().detail.as_ref().expect("its statistics").values
         .iter()
@@ -198,21 +217,28 @@ fn istatistik_counts_a_data_layer_in_its_source_and_reads_no_row() {
     assert_eq!(app.layer_rows_from(), None);
 }
 
-#[test]
-fn a_count_by_the_source_gives_the_rows_reads_statistics() {
-    // Decimals at several scales, a value many times, empty ones; words that sort in the Turkish alphabet.
+/// 240 rows: decimals at several scales, a value many times, empty ones; words that sort in the Turkish alphabet.
+fn decimals() -> Vec<Row> {
     let bedel = [Some(12.5), Some(0.25), None, Some(-3.75), Some(1250.0), Some(12.50), Some(7.125), Some(0.0)];
     let durum = ["İnceleme", "ılık", "acil", "çalışma", "Işık", "acil", "", "Ödendi"];
-    let rows: Vec<Row> =
-        (0..240).map(|i| (format!("K{i:03}"), bedel[i % 8].map(|b| b + (i / 8) as f64 % 3.0), durum[i % 7].to_owned())).collect();
-    let path = table("istatistik-esit", &rows);
+    (0..240).map(|i| (format!("K{i:03}"), bedel[i % 8].map(|b| b + (i / 8) as f64 % 3.0), durum[i % 7].to_owned())).collect()
+}
+
+#[test]
+fn a_count_by_the_source_gives_the_rows_reads_statistics() {
+    let path = table("istatistik-esit", &decimals());
     let (mut app, layer) = open(&path);
-    statistics(&mut app, &layer);
+    the_counts_are_the_rows_reads(&mut app, &layer);
+}
+
+/// Every field's summary and statistics as the source counted them, then as the rows read give them: the same.
+fn the_counts_are_the_rows_reads(app: &mut App, layer: &str) {
+    statistics(app, layer);
     let _ = app.statistics_seen();
-    counted(&mut app);
-    let by_source = shown(&mut app);
+    counted(app);
+    let by_source = shown(app);
     assert!(app.gis.charts.stats.borrow().counted.is_some(), "counted by the source");
-    let by_rows = read(&mut app, &layer);
+    let by_rows = read(app, layer);
     assert_eq!(by_source.len(), by_rows.len());
     for ((s, d), (rs, rd)) in by_source.iter().zip(&by_rows) {
         assert_eq!(s, rs, "{}", s.key);
@@ -295,31 +321,37 @@ fn chosen(app: &App, layer: &str) -> Vec<i64> {
 fn a_press_on_a_counted_value_selects_its_rows_in_the_table() {
     let path = table("istatistik-secim", &report());
     let (mut app, layer) = open(&path);
-    statistics(&mut app, &layer);
+    presses_select_the_rows(&mut app, &layer);
+}
+
+/// A press on the report's counted values (`layer`) selects their rows in the table: Shift adds, Ctrl takes away, the
+/// empty value its row.
+fn presses_select_the_rows(app: &mut App, layer: &str) {
+    statistics(app, layer);
     let _ = app.statistics_seen();
-    counted(&mut app);
-    ev(&mut app, crate::statistics::Event::Field("durum".into()));
+    counted(app);
+    ev(app, crate::statistics::Event::Field("durum".into()));
     let _ = app.statistics_seen();
-    let acil = value_row(&app, "acil");
-    ev(&mut app, crate::statistics::Event::Value(acil));
-    assert_eq!(chosen(&app, &layer), [1, 2]);
+    let acil = value_row(app, "acil");
+    ev(app, crate::statistics::Event::Value(acil));
+    assert_eq!(chosen(app, layer), [1, 2]);
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(said.iter().any(|t| t == "“acil”: 2 satır seçildi."), "{said:#?}");
     // Shift adds tamam's; Ctrl takes acil's away.
     app.modifiers = iced::keyboard::Modifiers::SHIFT;
-    let tamam = value_row(&app, "tamam");
-    ev(&mut app, crate::statistics::Event::Value(tamam));
-    assert_eq!(chosen(&app, &layer), [1, 2, 5, 6]);
+    let tamam = value_row(app, "tamam");
+    ev(app, crate::statistics::Event::Value(tamam));
+    assert_eq!(chosen(app, layer), [1, 2, 5, 6]);
     app.modifiers = iced::keyboard::Modifiers::CTRL;
-    ev(&mut app, crate::statistics::Event::Value(acil));
-    assert_eq!(chosen(&app, &layer), [5, 6]);
+    ev(app, crate::statistics::Event::Value(acil));
+    assert_eq!(chosen(app, layer), [5, 6]);
     app.modifiers = iced::keyboard::Modifiers::default();
     // The empty bedel: the row without one.
-    ev(&mut app, crate::statistics::Event::Field("bedel".into()));
+    ev(app, crate::statistics::Event::Field("bedel".into()));
     let _ = app.statistics_seen();
-    let empty = value_row(&app, kentos_geometry_core::ops::charts::data::EMPTY);
-    ev(&mut app, crate::statistics::Event::Value(empty));
-    assert_eq!(chosen(&app, &layer), [4]);
+    let empty = value_row(app, kentos_geometry_core::ops::charts::data::EMPTY);
+    ev(app, crate::statistics::Event::Value(empty));
+    assert_eq!(chosen(app, layer), [4]);
 }
 
 /// Grafik open on `layer` with `spec`, its field counted.
@@ -346,8 +378,14 @@ fn chart_of_rows(app: &mut App, layer: &str, spec: &Spec) -> (Vec<Vec<String>>, 
 fn grafik_draws_a_one_field_chart_from_the_counts_and_selects_a_bars_rows() {
     let path = table("grafik-sayim", &report());
     let (mut app, layer) = open(&path);
+    grafik_draws_from_the_counts(&mut app, &layer);
+}
+
+/// Grafik over the report's points (`layer`): durum's bars and bedel's histogram from the counts, as the rows read give
+/// them; a bar's press selects its rows; bedel's sum by durum reads the rows.
+fn grafik_draws_from_the_counts(app: &mut App, layer: &str) {
     let bars = Spec { category: Some("durum".into()), ..Spec::new(ChartKind::Bar) };
-    chart(&mut app, &layer, bars);
+    chart(app, layer, bars);
     let seen = app.chart_seen().expect("a chart");
     assert_eq!(seen.rows, ["acil | 2", "planlı | 2", "tamam | 2"]);
     assert!(app.gis.charts.chart.borrow().counted, "counted by the source");
@@ -355,25 +393,25 @@ fn grafik_draws_a_one_field_chart_from_the_counts_and_selects_a_bars_rows() {
     // A bar's press: its rows chosen in the table.
     let acil = seen.rows.iter().position(|r| r.starts_with("acil")).expect("acil's bar") as u32;
     let task = app.update(Message::Gis(gis::Event::Charts(crate::charts::Event::Press(Some(acil)))));
-    drive(&mut app, task);
-    assert_eq!(chosen(&app, &layer), [1, 2]);
+    drive(app, task);
+    assert_eq!(chosen(app, layer), [1, 2]);
     // bedel's histogram: as the rows read give it, the empty one said.
     let histogram = Spec { value: Some("bedel".into()), ..Spec::new(ChartKind::Histogram) };
-    chart(&mut app, &layer, histogram.clone());
+    chart(app, layer, histogram);
     let (table, notes) = {
         let now = app.gis.charts.chart.borrow();
         assert!(now.counted, "counted by the source");
         (now.table.clone().expect("its numbers").rows, now.notes.clone())
     };
     let whole = app.whole_spec().expect("a spec");
-    assert_eq!(chart_of_rows(&mut app, &layer, &whole), (table, notes));
+    assert_eq!(chart_of_rows(app, layer, &whole), (table, notes));
     // bedel's sum by durum reads two fields: the rows are read for it.
     let sums = Spec { category: Some("durum".into()), value: Some("bedel".into()), aggregate: Aggregate::Sum, ..Spec::new(ChartKind::Bar) };
-    app.open_chart(Some(layer.clone()), None, Some(sums));
+    app.open_chart(Some(layer.to_owned()), None, Some(sums));
     app.chart_refresh();
     assert!(!app.gis.charts.chart.borrow().counted, "read, not counted");
     let task = app.data_rows_tasks();
-    drive(&mut app, task);
+    drive(app, task);
     let seen = app.chart_seen().expect("a chart");
     assert_eq!(seen.rows, ["acil | 2 | 100", "planlı | 2 | 250", "tamam | 2 | 150"]);
 }
@@ -405,6 +443,32 @@ fn a_field_left_to_the_rows_reads_them_and_a_source_that_cannot_count_says_why()
     let bedel = summary(&app, "bedel");
     assert_eq!((bedel[2].as_str(), number(&bedel[8])), ("5", Some(500.0)), "{bedel:?}");
     assert_eq!(words(&app).0, "6 satır, kaynaktan");
+}
+
+#[test]
+fn a_postgis_layer_is_counted_by_the_server_alike() {
+    let Some(address) = std::env::var("KENTOS_DATA_PG").ok().filter(|a| !a.is_empty()) else {
+        eprintln!("KENTOS_DATA_PG yok: PostGIS'te kaynağın sayımı atlandı");
+        return;
+    };
+    crate::data_layers::register();
+    let source = kentos_data::registry().source(&address).expect("the source");
+    let id = std::process::id();
+    let (a, b) = (format!("public.kentos_istatistik_{id}"), format!("public.kentos_istatistik_esit_{id}"));
+    fill(source.as_ref(), &a, &report());
+    fill(source.as_ref(), &b, &decimals());
+    let (mut app, layer) = open_on(&address, &a);
+    the_report_is_counted(&mut app, &layer);
+    let (mut app, layer) = open_on(&address, &a);
+    presses_select_the_rows(&mut app, &layer);
+    let (mut app, layer) = open_on(&address, &a);
+    grafik_draws_from_the_counts(&mut app, &layer);
+    let (mut app, layer) = open_on(&address, &b);
+    the_counts_are_the_rows_reads(&mut app, &layer);
+    let mut tx = source.begin().expect("begin");
+    tx.drop_table(&a).expect("drop");
+    tx.drop_table(&b).expect("drop");
+    tx.commit().expect("commit");
 }
 
 /// The pictures (`.run/gui-evidence/kullanim-9181/`): İstatistik over the report's data counted by the GeoPackage,
@@ -440,23 +504,31 @@ fn screens() {
 }
 
 /// A million parcels counted by the source and read (docs/adr/9181 §3), one way a process so that each one's peak
-/// memory is its own: `KENTOS_OLCUM_YOL` is `yapim` (the file `KENTOS_OLCUM_GPKG` made), `sayim` (İstatistik's every
-/// field counted by the source and summed up) or `okuma` (the rows read and every field summed up, docs/adr/9130).
+/// memory is its own: `KENTOS_OLCUM_YOL` is `yapim` (the table made), `sayim` (İstatistik's every field counted by the
+/// source and summed up) or `okuma` (the rows read and every field summed up, docs/adr/9130). The table is `parsel` of
+/// the file `KENTOS_OLCUM_GPKG`, or `public.kentos_olcum_parsel` of the database `KENTOS_OLCUM_PG` (its password in
+/// `PGPASSWORD`).
 #[test]
 #[ignore = "a measurement"]
 fn measure_a_million_parcels() {
     use kentos_data::Curve;
-    let path = std::path::PathBuf::from(std::env::var("KENTOS_OLCUM_GPKG").expect("KENTOS_OLCUM_GPKG"));
+    let (address, table) = match std::env::var("KENTOS_OLCUM_PG").ok().filter(|a| !a.is_empty()) {
+        Some(pg) => (pg, "public.kentos_olcum_parsel"),
+        None => (std::env::var("KENTOS_OLCUM_GPKG").expect("KENTOS_OLCUM_GPKG or KENTOS_OLCUM_PG"), "parsel"),
+    };
     let way = std::env::var("KENTOS_OLCUM_YOL").unwrap_or_default();
     const N: usize = 1_000_000;
+    crate::data_layers::register();
     if way == "yapim" {
-        let _ = std::fs::remove_file(&path);
-        kentos_geopackage::GeoPackage::create(&path).expect("a file");
-        let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+        if table == "parsel" {
+            let _ = std::fs::remove_file(&address);
+            kentos_geopackage::GeoPackage::create(std::path::Path::new(&address)).expect("a file");
+        }
+        let source = kentos_data::registry().source(&address).expect("the source");
         let mut tx = source.begin().expect("begin");
         tx.create_table(
             &NewTable {
-                name: "parsel".into(),
+                name: table.into(),
                 title: None,
                 description: None,
                 key: "fid".into(),
@@ -479,7 +551,7 @@ fn measure_a_million_parcels() {
                 spatial_index: true,
                 system: None,
             },
-            false,
+            true,
         )
         .expect("table");
         tx.commit().expect("commit");
@@ -506,17 +578,13 @@ fn measure_a_million_parcels() {
                     }
                 })
                 .collect();
-            tx.insert("parsel", &rows).expect("rows");
+            tx.insert(table, &rows).expect("rows");
             tx.commit().expect("commit");
         }
-        println!("yapıldı: {}", path.display());
+        println!("yapıldı: {table}");
         return;
     }
-    crate::data_layers::register();
-    let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "parsel").expect("described")])
-        .expect("added");
-    let layer = crate::data_layers_tests::node(&app, "parsel").expect("the layer").id.clone();
+    let (mut app, layer) = open_on(&address, table);
     let start = std::time::Instant::now();
     let summaries: Vec<String> = match way.as_str() {
         "sayim" => {

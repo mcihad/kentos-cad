@@ -246,7 +246,8 @@
   - **Kaynağın kendi sayımı** (23 Kasım, rapor 17'nin kalanı; [ADR 9181](../adr/9181-statistics-counted-by-the-source.md), VY-80): İstatistik
     Tümü'de ve tek alan okuyan grafik veri katmanının alanlarını kaynağın `GROUP BY`'ıyla sayar, satırları okumaz;
     kaynak değerleri sayar, toplamı KentOS kesin ondalıkla yapar. Değere ya da çubuğa basmak o satırları tabloda seçer.
-    Bir milyon parselde 32 s ve 5,5 GB yerine 5,7 s ve 736 MB (hata ayıklama derlemesi), aynı özetlerle.
+    Bir milyon parselde 32 s ve 5,5 GB yerine 5,7 s ve 736 MB (hata ayıklama derlemesi), aynı özetlerle; PostGIS'te
+    sınandı, 37 s yerine 6,6 s.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

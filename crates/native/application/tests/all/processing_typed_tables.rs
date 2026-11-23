@@ -92,6 +92,10 @@ fn a_histogram_goes_to_postgis_with_the_same_kinds() {
         eprintln!("KENTOS_DATA_PG yok: PostGIS sütun türleri durumu atlandı");
         return;
     };
+    // The sink writes through the table provider the hosts register, the catalogue is read through the data driver:
+    // both registered before the run.
+    kentos_postgis::register();
+    kentos_data_postgis::register();
     let schema = format!("kentos_tur_{}", std::process::id());
     let (mut doc, at) = drawing();
     let sink = json!({ "path": address, "schema": schema, "mode": "new", "tables": true });
@@ -99,9 +103,10 @@ fn a_histogram_goes_to_postgis_with_the_same_kinds() {
     assert_eq!(got["status"], "completed", "{got}");
     let table = got["output"]["sinkReport"]["tables"][0]["table"].as_str().expect("a table").to_owned();
     // The table's columns as PostgreSQL's catalogue gives them, through the data driver.
-    kentos_data_postgis::register();
     let source = kentos_data::registry().source(&address).expect("the database");
-    let fields = source.schema(&format!("{schema}.{table}")).expect("the table").fields;
+    // The report names the table with its schema.
+    let qualified = if table.contains('.') { table } else { format!("{schema}.{table}") };
+    let fields = source.schema(&qualified).expect("the table").fields;
     let kind = |name: &str| fields.iter().find(|f| f.name == name).map(|f| f.kind.clone());
     assert!(
         matches!(kind("Sayı"), Some(kentos_data::FieldKind::Int { .. })),

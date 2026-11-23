@@ -54,6 +54,11 @@
   - Değerler bağımsız başvurudan (`fixtures/raster-ops/v1/cases.json`) üreticinin kuralıyla yazıldı. Rust'ta geçiyor.
 - **PostGIS:** `KENTOS_DATA_PG` verildiğinde aynı tabloyu veritabanına yazıp sütun türlerini katalogdan okuyan sınama
   eklendi. Bu makinede Docker yanıt vermediği için koşturulmadı.
+  - 23 Kasım 2026'da (ADR 9181 adımında) geçici bir PostGIS'te (PostgreSQL 18.4, PostGIS 3.6) koşturuldu ve iki
+    sınama kusuru çıktı. Sınama, sonucu PostGIS'e yazan tablo sağlayıcısını kaydetmiyordu (“Bu ortamda PostGIS
+    sağlayıcısı yok”); `kentos-postgis` sınama bağımlılığı oldu ve sağlayıcı çalıştırmadan önce kaydediliyor. Ayrıca
+    raporun şemalı tablo adına şemayı bir kez daha ekliyordu.
+  - Düzeltilince geçiyor: Sayı tam sayı, Alt sınır gerçek sayı olarak katalogda.
 - İşlemler (masaüstü 126), işlem çekirdeği ve sonuç yeri sınamaları (15) geçiyor.
 - Görünür arayüz değişmedi; resim çekilmedi.
 
@@ -62,5 +67,4 @@
 - Öbür tablo veren araçlar (Özet istatistik, bölgesel istatistik ve diğer 30 kadarı) türlerini henüz söylemiyor;
   her biri `kinds` ve `values` ekledikçe dosyaya sayı yazar.
 - Kaydet ▾ (XLSX/ODS/CSV) hâlâ gösterilen metni yazar.
-- PostGIS sınamasının gerçek veritabanında koşturulması.
 - Web (TODOS.md §0.2).

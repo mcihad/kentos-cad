@@ -94,3 +94,6 @@ kentos-commands = { path = "../../shared/commands", default-features = false, fe
 # The processing commands' shared cases run İşlemler's tools (docs/adr/0508); the crate is above this one, so only the
 # integration tests (one copy of this crate) link it.
 kentos-processing = { path = "../processing" }
+# A tool's table written to PostGIS goes through the table provider the hosts register (docs/adr/9136); the crate is
+# above this one too, so only the integration tests link it.
+kentos-postgis = { path = "../postgis" }

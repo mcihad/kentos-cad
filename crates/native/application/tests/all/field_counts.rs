@@ -2,7 +2,8 @@
 //! 250, NULL, 50, 100; durum acil, planlı, tamam twice each). Each value comes back once with how many rows hold it,
 //! as a row read from the table reads it; the rows left out (the ones an edit session holds) are not counted; a field
 //! the table does not have is said. The keys of the rows holding some values come back in the table's order, at most
-//! as many as asked, many values asked a part at a time.
+//! as many as asked, many values asked a part at a time. The same holds for a PostGIS table, counted by the server, when
+//! `KENTOS_DATA_PG` names a database (`postgresql://user@host:port/db`, its password in `PGPASSWORD`).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -12,18 +13,12 @@ use kentos_domain::Document;
 use kentos_native_application::field_counts::{field_counts, value_keys};
 use kentos_native_application::{ExecutionContext, data_describe, data_write};
 
-/// A GeoPackage with a `bakim` table of `rows` (kod, bedel, durum); its path.
-fn table(tag: &str, rows: &[(String, Option<f64>, &str)]) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("kentos-alan-sayimi-{}-{tag}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
-    std::fs::create_dir_all(&dir).expect("a folder");
-    let path = dir.join("bakim.gpkg");
-    kentos_geopackage::GeoPackage::create(&path).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(&path.display().to_string()).expect("open");
+/// A `table` of `rows` (kod, bedel, durum) made in `source` (one there before is replaced).
+fn fill(source: &dyn kentos_data::Source, table: &str, rows: &[(String, Option<f64>, &str)]) {
     let mut tx = source.begin().expect("begin");
     tx.create_table(
         &NewTable {
-            name: "bakim".into(),
+            name: table.into(),
             title: None,
             description: None,
             key: "fid".into(),
@@ -42,7 +37,7 @@ fn table(tag: &str, rows: &[(String, Option<f64>, &str)]) -> std::path::PathBuf 
             spatial_index: true,
             system: None,
         },
-        false,
+        true,
     )
     .expect("table");
     let features: Vec<NewFeature> = rows
@@ -58,8 +53,19 @@ fn table(tag: &str, rows: &[(String, Option<f64>, &str)]) -> std::path::PathBuf 
             ],
         })
         .collect();
-    tx.insert("bakim", &features).expect("rows");
+    tx.insert(table, &features).expect("rows");
     tx.commit().expect("commit");
+}
+
+/// A GeoPackage with a `bakim` table of `rows` (kod, bedel, durum); its path.
+fn table(tag: &str, rows: &[(String, Option<f64>, &str)]) -> std::path::PathBuf {
+    let dir = std::env::temp_dir().join(format!("kentos-alan-sayimi-{}-{tag}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let path = dir.join("bakim.gpkg");
+    kentos_geopackage::GeoPackage::create(&path).expect("a file");
+    let source = kentos_data_gpkg::Gpkg.open(&path.display().to_string()).expect("open");
+    fill(source.as_ref(), "bakim", rows);
     path
 }
 
@@ -73,7 +79,11 @@ fn report() -> Vec<(String, Option<f64>, &'static str)> {
 /// A CBS project with the file's `bakim` as a data layer: the document and the layer's id.
 fn project(path: &std::path::Path) -> (Document, String) {
     kentos_data_gpkg::register();
-    let address = path.display().to_string();
+    project_on(&path.display().to_string(), "bakim")
+}
+
+/// A CBS project with `table` of the source at `address` as a data layer: the document and the layer's id.
+fn project_on(address: &str, table: &str) -> (Document, String) {
     let snapshot = kentos_project::new_project::new_project(&kentos_project::new_project::NewProject {
         name: "Sayım".into(),
         srid: 5255,
@@ -88,11 +98,11 @@ fn project(path: &std::path::Path) -> (Document, String) {
     })
     .expect("a project");
     let mut doc = Document::from_snapshot(snapshot).expect("a document");
-    let d = data_describe::describe(&address, "bakim").expect("described");
+    let d = data_describe::describe(address, table).expect("described");
     let input = LayersData {
         operation: LayerDataOperation::Add,
         layer: None,
-        name: Some("bakim".into()),
+        name: Some(table.rsplit('.').next().unwrap_or(table).into()),
         parent: None,
         index: None,
         data: Some(d.data.clone()),
@@ -114,11 +124,10 @@ fn tally(groups: impl IntoIterator<Item = (Option<String>, u64)>) -> BTreeMap<Op
     out
 }
 
-#[test]
-fn a_field_counted_by_its_source_meets_the_rows_read_value_for_value() {
-    let path = table("bulusur", &report());
-    let (doc, layer) = project(&path);
-    let node = doc.layers().get(&layer).expect("the layer");
+/// The report's points counted by their source: each field as the rows read give it, the empty value last, the
+/// rows an edit session holds left out, a field the table does not have said.
+fn the_counts_meet_the_rows(doc: &Document, layer: &str) {
+    let node = doc.layers().get(layer).expect("the layer");
     let read = data_write::all_records(node, doc.settings(), &BTreeSet::new(), &|| false).expect("read");
     assert_eq!(read.rows.len(), 6);
     for field in ["kod", "bedel", "durum"] {
@@ -143,11 +152,10 @@ fn a_field_counted_by_its_source_meets_the_rows_read_value_for_value() {
     assert!(why.contains("“yok” alanı sayılamadı"), "{why}");
 }
 
-#[test]
-fn the_keys_of_counted_values_come_in_the_tables_order() {
-    let path = table("anahtar", &report());
-    let (doc, layer) = project(&path);
-    let node = doc.layers().get(&layer).expect("the layer");
+/// The keys of the report's rows holding some values: in the table's order, the empty value's row, the rows an edit
+/// session holds left out, at most as many as asked.
+fn the_keys_come_in_order(doc: &Document, layer: &str) {
+    let node = doc.layers().get(layer).expect("the layer");
     let none = BTreeSet::new();
     let text = |t: &str| Value::Text(t.into());
     let keys = value_keys(node, "durum", &[text("tamam"), text("acil")], &none, 10, &|| false).expect("read");
@@ -159,13 +167,9 @@ fn the_keys_of_counted_values_come_in_the_tables_order() {
     assert_eq!(value_keys(node, "durum", &[text("tamam"), text("acil")], &none, 3, &|| false).expect("read"), (vec![1, 2, 5], true));
 }
 
-#[test]
-fn many_values_are_asked_a_part_at_a_time() {
-    let rows: Vec<(String, Option<f64>, &str)> =
-        (0..1200).map(|i| (format!("K{i:04}"), Some(f64::from(i % 7)), if i % 2 == 0 { "acil" } else { "tamam" })).collect();
-    let path = table("parcali", &rows);
-    let (doc, layer) = project(&path);
-    let node = doc.layers().get(&layer).expect("the layer");
+/// 1 200 rows with a value each: every value counted, the keys of all of them asked a part at a time.
+fn many_values_are_asked(doc: &Document, layer: &str) {
+    let node = doc.layers().get(layer).expect("the layer");
     let kod = field_counts(node, "kod", &BTreeSet::new()).expect("counted").expect("by the source");
     assert_eq!(kod.len(), 1200);
     let values: Vec<Value> = kod.iter().map(|g| g.value.clone()).collect();
@@ -175,4 +179,52 @@ fn many_values_are_asked_a_part_at_a_time() {
     let bedel = field_counts(node, "bedel", &BTreeSet::new()).expect("counted").expect("by the source");
     assert_eq!(bedel.iter().map(|g| g.rows).sum::<u64>(), 1200);
     assert_eq!(bedel.len(), 7);
+}
+
+/// The 1 200 rows of [`many_values_are_asked`].
+fn many() -> Vec<(String, Option<f64>, &'static str)> {
+    (0..1200).map(|i| (format!("K{i:04}"), Some(f64::from(i % 7)), if i % 2 == 0 { "acil" } else { "tamam" })).collect()
+}
+
+#[test]
+fn a_field_counted_by_its_source_meets_the_rows_read_value_for_value() {
+    let path = table("bulusur", &report());
+    let (doc, layer) = project(&path);
+    the_counts_meet_the_rows(&doc, &layer);
+}
+
+#[test]
+fn the_keys_of_counted_values_come_in_the_tables_order() {
+    let path = table("anahtar", &report());
+    let (doc, layer) = project(&path);
+    the_keys_come_in_order(&doc, &layer);
+}
+
+#[test]
+fn many_values_are_asked_a_part_at_a_time() {
+    let path = table("parcali", &many());
+    let (doc, layer) = project(&path);
+    many_values_are_asked(&doc, &layer);
+}
+
+#[test]
+fn a_postgis_table_is_counted_by_the_server_alike() {
+    let Some(address) = std::env::var("KENTOS_DATA_PG").ok().filter(|a| !a.is_empty()) else {
+        eprintln!("KENTOS_DATA_PG yok: PostGIS alan sayımı atlandı");
+        return;
+    };
+    kentos_data_postgis::register();
+    let source = kentos_data_postgis::PostGis.open(&address).expect("open");
+    let (a, b) = (format!("public.kentos_sayim_{}", std::process::id()), format!("public.kentos_sayim_cok_{}", std::process::id()));
+    fill(source.as_ref(), &a, &report());
+    fill(source.as_ref(), &b, &many());
+    let (doc, layer) = project_on(&address, &a);
+    the_counts_meet_the_rows(&doc, &layer);
+    the_keys_come_in_order(&doc, &layer);
+    let (doc, layer) = project_on(&address, &b);
+    many_values_are_asked(&doc, &layer);
+    let mut tx = source.begin().expect("begin");
+    tx.drop_table(&a).expect("drop");
+    tx.drop_table(&b).expect("drop");
+    tx.commit().expect("commit");
 }

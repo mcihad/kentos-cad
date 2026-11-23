@@ -583,8 +583,8 @@ numaraları raporunkidir.
   - Sonuçlar okunan satırlarınkiyle aynı, oturumdaki satırlar dahil. Tek alan okuyan grafik de kaynağın sayımıyla
     çizilir.
   - Bir milyon parselin yedi alanı: 31 931 ms ve 5 536 MB yerine 5 713 ms ve 736 MB (hata ayıklama derlemesi);
-    özetler harfi harfine aynı.
+    özetler harfi harfine aynı. PostGIS'te (sınandı) 37 134 ms ve 5 536 MB yerine 6 572 ms ve 791 MB.
   - Değere ya da çubuğa basmak o satırları tabloda seçer (Shift ekler, Ctrl çıkarır). Satırları okunan yoldaki
     olmayan yuva kusuru düzeldi.
-  - Kalan: Seçililer, Görünümdekiler ve iki alanlı grafiklerin kaynakta sayımı; PostgreSQL'de ve sürüm derlemesinde
-    ölçüm; gerçek pencere; web.
+  - Kalan: Seçililer, Görünümdekiler ve iki alanlı grafiklerin kaynakta sayımı; sürüm derlemesinde ölçüm; gerçek
+    pencere; web.
