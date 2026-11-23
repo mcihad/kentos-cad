@@ -347,7 +347,7 @@ async fn projects_commands_and_events_over_http() {
     );
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Ada 101", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": "Ada 101", "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let base = format!("/v1/tenants/{tenant}/projects");
     let mut req = json_req("POST", &base, &ayse, create.clone());
@@ -606,7 +606,7 @@ async fn deleting_a_project_over_http() {
     );
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Ada 101", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": "Ada 101", "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let base = format!("/v1/tenants/{tenant}/projects");
     let (status, _, body) = send(&app, json_req("POST", &base, &ayse, create)).await;
@@ -737,7 +737,7 @@ async fn the_personal_space_sharing_and_my_projects_over_http() {
     );
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Bahçe", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": "Bahçe", "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let base = format!("/v1/tenants/{}/projects", space.tenant_id);
     let (status, _, body) = send(&app, json_req("POST", &base, &ayse, create)).await;

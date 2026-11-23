@@ -42,7 +42,7 @@ async fn a_job_is_asked_run_and_downloaded_over_http() {
     );
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Ada 3", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": "Ada 3", "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let (status, _, body) = send(
         &router,
@@ -250,7 +250,7 @@ async fn a_processing_job_is_asked_checked_run_and_its_file_downloaded_over_http
     );
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Ada 3", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": "Ada 3", "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let (_, _, body) = send(
         &router,
@@ -453,7 +453,7 @@ async fn a_file_is_staged_imported_by_a_job_and_an_atlas_downloaded_over_http() 
     );
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Ada 3", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": "Ada 3", "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let (_, _, body) = send(
         &router,

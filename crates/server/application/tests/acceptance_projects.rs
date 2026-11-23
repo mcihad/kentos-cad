@@ -167,7 +167,11 @@ async fn scenario(storage: ProjectStorage) {
         sheets: None,
         arrays: Vec::new(),
         description: Some("Kabul seti".into()),
-        project_type: Some(ProjectType::LandReadjustment),
+        // A CAD type's whole project is its file; the database keeps a CBS project (docs/adr/9196 §2).
+        project_type: Some(match storage {
+            ProjectStorage::File => ProjectType::LandReadjustment,
+            ProjectStorage::Database => ProjectType::Gis,
+        }),
         tags: None,
         storage: Some(storage),
     };

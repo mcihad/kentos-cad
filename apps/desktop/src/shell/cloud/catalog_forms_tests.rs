@@ -24,9 +24,15 @@ fn form(app: &mut App, event: FormEvent) {
 
 /// The catalog on “Projelerim” with the project (kept `storage`-wise) selected.
 fn picked(storage: ProjectStorage) -> App {
+    picked_as(storage, ProjectType::Cad)
+}
+
+/// `picked` with the project's type.
+fn picked_as(storage: ProjectStorage, project_type: ProjectType) -> App {
     let mut app = signed_in();
     let mut p = owned(PROJECT, "Ada 1246 ölçü projesi");
     p.storage = storage;
+    p.project_type = project_type;
     p.description = "Kadastro çalışması".into();
     p.tags = vec!["Kadıköy".into(), "2026".into()];
     p.catalog_version = "7".into();
@@ -198,6 +204,18 @@ fn a_copy_is_the_accounts_own_and_shown_in_projelerim() {
 #[test]
 fn a_file_project_goes_to_postgis_and_the_new_project_opens() {
     let mut app = picked(ProjectStorage::File);
+    // A CAD type's file project does not go into the database (docs/adr/9196 §2): Dönüştür is closed, saying why.
+    form(&mut app, FormEvent::Convert);
+    assert!(catalog(&app).form.is_none(), "a general CAD project's file stays a file");
+    let picked_one = catalog(&app).picked().cloned().expect("picked");
+    let convert = crate::cloud::plan::detail_plan(&picked_one, false)
+        .actions
+        .into_iter()
+        .find(|a| a.id == crate::cloud::plan::DetailAction::Convert)
+        .expect("Dönüştür");
+    assert_eq!(convert.why.as_deref(), Some(crate::cloud::plan::FILE_ONLY_TEXT));
+    // A CBS project's file goes into the database.
+    let mut app = picked_as(ProjectStorage::File, ProjectType::Gis);
     form(&mut app, FormEvent::Convert);
     let Some(Form::Made(f)) = &catalog(&app).form else {
         panic!("the form");

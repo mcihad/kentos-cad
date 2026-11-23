@@ -26,7 +26,7 @@ use kentos_application::{admin, changes, identity, projects, snapshot, tenancy};
 use kentos_contracts::{
     CommandEnvelope, Entity, FeatureChange, PROJECT_CHANGES, PROJECT_PROCESSING_JOB,
     ProcessingJobInput, ProcessingJobMode, ProcessingJobResult, ProjectChanges, ProjectCreate,
-    ServerJob, ServerJobCreate, ServerJobState, SignInMethod, TenantRole,
+    ProjectType, ServerJob, ServerJobCreate, ServerJobState, SignInMethod, TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use processing_job::ChildProcessor;
@@ -146,7 +146,8 @@ async fn project_of(
             sheets: doc.sheets.clone(),
             arrays: Vec::new(),
             description: None,
-            project_type: None,
+            // A database project is a CBS project's (docs/adr/9196 §2).
+            project_type: Some(ProjectType::Gis),
             tags: None,
             storage: None,
         },

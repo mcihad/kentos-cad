@@ -2648,6 +2648,8 @@ Liste:
   (`catalog/v1/modules.json`) okur; CBS verisi veritabanında, CAD projesi proje dosyasında; görüntüleyici yazmaz.
   Ortak izlerde şablonla çizilen CBS çoklu çizgisi artık Genişlik sormaz (AY-02, `template-draw`, `template-group`).
   Katman menüsü modül ve katman türüyle kesilir (AY-03, ADR 9195 §5): web'in katman menüsü aynı tabloyu izlesin.
+  CAD türünün projesi bulutta yalnız dosyadır (AY-06, ADR 9196 §4): web'in Buluta yükle penceresi CAD türünde yalnız
+  dosyayı sunsun, “PostGIS'e aktar” CAD'de kapalı olsun; `ProjectCreate.ts` yeniden üretildi.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

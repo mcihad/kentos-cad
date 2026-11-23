@@ -88,6 +88,68 @@
   yüklenmesi, örnekler.
 - **AY-06:** sunucu CAD türlerinde veritabanı biçimini reddeder; masaüstünde yükleme ve dönüşüm; Python ve MCP.
 
-## §4 Kalan
+## §4 AY-06: CAD projesi bulutta yalnız dosya revizyonu (23 Kasım 2026)
 
-AY-05 ve AY-06. Her madde kanıtıyla bu ADR'ye ya da kendi ADR'sine yazılır.
+Araştırma §1'dedir; bu madde kararı sunucuda ve istemcilerde uygular.
+
+**Kuralın kaynağı:** ortak modül tanımı (`kentos_launch::Module::storage`, ADR 9195 §6).
+
+- Sunucu proje türünü modüle çevirir (`Module::of_project_type`) ve saklama türünü oradan alır
+  (`kentos_application::projects::storage_of_type`).
+- `scripts/arch/deps.mjs`'te sunucu grubunun bağımlılıklarına `launch` eklendi; `kentos-launch` yalnız serde'dir.
+
+**Sunucu** (`crates/server/application`):
+
+- **`project.create`:**
+  - Saklama biçimi verilmezse türünkü kullanılır: CAD türleri dosya, CBS veritabanı. Önceden her tür veritabanıydı.
+  - CAD türünde veritabanı istenirse `storage` alanıyla reddedilir. İleti, ör. Yol için: “Yol” türündeki bir
+    projenin tamamı proje dosyasındadır; bulutta yalnız dosya revizyonu olarak saklanır. Saklama biçimini dosya seçin.
+  - Türün adı Bulut projeleri'nin adıdır (Genel CAD, 18 uygulaması, İmar planı, İfraz / tevhit, Yol, Mimari).
+- **`project.convert`:** CAD türündeki dosya projesinin veritabanına dönüştürülmesi `to` alanıyla, aynı nedenle
+  reddedilir. Veritabanındaki eski bir CAD projesi dosyaya dönüştürülebilir; çıkış yolu açık kalır.
+- **`project.metadata.update`:** veritabanındaki bir projenin türü CAD türüne çevrilmez; `projectType` alanıyla
+  reddedilir ve önce dosya projesine çevirmeyi söyler. Tür artık saklamadan bağımsız bir etiket değildir
+  (`ProjectSummary.project_type`'ın belgesi).
+- **Kopya ve geri yükleme** kaynağın biçimini korur. Eski CAD veritabanı projeleri olduğu gibi kalır; taşıma yolu
+  yazılmaz (§2.4).
+- **Sözleşme:** `ProjectCreate.storage`'ın açıklaması kuralı söyler. TS türü, komut kataloğu, OpenAPI ve Python
+  SDK'sı yeniden üretildi.
+
+**Masaüstü:**
+
+- **Buluta yükle:**
+  - CAD türünde yalnız Dosya seçeneği vardır; altında neden yazar.
+  - Tür CAD'e çevrilince saklama dosyaya döner. Pencere veritabanı istense de CAD türünde dosyayla açılır
+    (`cloud::kinds::storages_of`).
+- **Bulut projeleri:** CAD türündeki dosya projesinde “PostGIS'e aktar…” kapalıdır ve nedenini söyler.
+
+**Python ve MCP:** sunucunun kuralı onlara da uygulanır. SDK'nın `storage` belgesi kuralı söyler.
+
+**Kanıt:**
+
+- **Sunucu sınamaları:**
+  - Yeni: `project_convert::a_cad_types_project_is_kept_as_its_file`. Altı CAD türü saklamasız dosya olur,
+    veritabanında `storage` ile reddedilir; CBS veritabanıdır; Yol'un dosya projesi veritabanına dönüştürülmez.
+  - Veritabanı biçimine dayanan sınamaların projesi CBS projesi oldu: ortak `new_project` ve altı sınama dosyası.
+    Kabul setinin veritabanı koşusu da CBS projesiyle yapılır.
+  - `project_convert`'in dosya projeleri CBS projesidir.
+  - Katalog sınamaları genel CAD türünde dosya projesiyle kurar (`new_cad_project`); veritabanındaki CBS projesinin
+    Yol türüne çevrilmesi reddedilir.
+- **API sınamaları:** veritabanı projesi kuran 19 istek `"projectType": "gis"` ile kurar; sunucu işlerinin sınaması
+  (`job_run_db`) da CBS projesiyle.
+- **Masaüstü sınamaları:**
+  - `kinds_tests`: Mimari'nin yüklemesi dosyadır, veritabanı seçilemez.
+  - `drafts` ve `renaming`: genel CAD çiziminin yüklemesi dosyayla açılır; veritabanı yüklemesi CBS türüyle yapılır.
+  - `catalog_forms_tests`: genel CAD dosya projesinde Dönüştür kapalıdır ve nedenini söyler; CBS dosya projesi
+    veritabanına aktarılır.
+  - Web'le ortak bölme örneği (`fixtures/cloud/v1/catalog.json`): imar planının dosya projesinde “PostGIS'e aktar…”
+    nedeniyle kapalı; yeni “file-project-cbs” durumunda açık.
+  - Canlı sınamaların yardımcısı da veritabanında CBS türünü seçer.
+- **Ortama bağlı kalan:** `kentos-api`'nin üç sunucu denetim işi sınaması (`job_run::audit*`) macOS'ta denetim kutusu
+  kurulamadığı için düşer (“Landlock yalnız Linux'ta”); saklama kuralıyla ilgisizdir.
+
+## §5 Kalan
+
+AY-05: CBS'nin sihirbazı, tabloları, içe alma, kayıt kuralı. Bulutta CBS'nin yalnız veritabanı biçimi olması da
+AY-05'tedir: buluta yüklemenin veri katmanlarının satırlarını aktarması gerekir. Her madde kanıtıyla bu ADR'ye ya da
+kendi ADR'sine yazılır.

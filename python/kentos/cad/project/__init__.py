@@ -312,7 +312,10 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             home_view: Unit: length.
             project_type: Absent: the general type (`cad`).
             sheets: The project's sheet book and its pictures (docs/adr/0251); absent: none.
-            storage: How the project is kept, for good (docs/adr/0031); absent: object by
+            storage: How the project is kept, for good (docs/adr/0031); absent: its type's
+                (docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,
+                `landReadjustment`, `subdivision`, `road`) whole project is its file
+                (`file`), refused in the database; a CBS project's is object by
                 object in PostGIS (`database`). A `file` project gets its content
                 from its first committed revision.
             tags:

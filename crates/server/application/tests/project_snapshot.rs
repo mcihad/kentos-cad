@@ -12,7 +12,7 @@ use common::{a_point, envelope, member, new_project, open};
 use kentos_application::{AppError, admin, changes, projects, snapshot};
 use kentos_contracts::{
     DocumentSnapshotV2, EntityId, FeatureChange, GrantRole, LayerNode, ProjectChanges,
-    ProjectCreate, ProjectId, ProjectPatch, ProjectStorage, TenantRole,
+    ProjectCreate, ProjectId, ProjectPatch, ProjectStorage, TenantRole, ProjectType,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::Value;
@@ -58,7 +58,7 @@ fn create_input(source: &DocumentSnapshotV2, name: &str, layers: Vec<LayerNode>)
         sheets: None,
         arrays: Vec::new(),
         description: None,
-        project_type: None,
+        project_type: Some(ProjectType::Gis),
         tags: None,
         storage: None,
     }

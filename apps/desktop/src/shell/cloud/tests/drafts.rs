@@ -241,7 +241,8 @@ fn the_upload_offers_only_workspaces_where_projects_can_be_opened() {
     let u = app.cloud.upload.as_ref().expect("the window");
     assert_eq!(u.tenants.len(), 1);
     assert_eq!(u.tenants[0].tenant_id, PERSONAL);
-    assert_eq!(u.storage, ProjectStorage::Database, "the web's default");
+    // The type's storage (docs/adr/9196 §2): a general CAD drawing's project is its file.
+    assert_eq!(u.storage, ProjectStorage::File, "a general CAD project's file");
 
     cloud(&mut app, Event::UploadName("  ".into()));
     cloud(&mut app, Event::UploadSubmit);
@@ -438,6 +439,8 @@ fn a_drawing_changed_while_it_went_up_stays_as_it_is() {
         crate::files_testing::drawing(0),
     )))));
     let _ = app.run("cloud.upload");
+    // The database keeps a CBS project alone (docs/adr/9196 §2).
+    cloud(&mut app, Event::UploadType(kentos_commands::ProjectType::Gis));
     cloud(&mut app, Event::UploadStorage(ProjectStorage::Database));
     cloud(&mut app, Event::UploadName("Pafta 12".into()));
     let _ = app.update(crate::cloud::msg(Event::UploadSubmit));

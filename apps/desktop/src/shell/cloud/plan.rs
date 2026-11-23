@@ -150,6 +150,10 @@ fn may(p: &ProjectSummary, permission: ProjectPermission) -> bool {
     p.access.permissions.contains(&permission)
 }
 
+/// Why a CAD type's file project does not go into the database (docs/adr/9196 §2).
+pub const FILE_ONLY_TEXT: &str =
+    "Bu türdeki projenin tamamı proje dosyasındadır; bulutta dosya revizyonu olarak saklanır, veritabanına aktarılmaz.";
+
 /// The selected project's pane: `open` when it is the project open here.
 pub fn detail_plan(p: &ProjectSummary, open: bool) -> DetailPlan {
     let trashed = p.state == ProjectState::Trashed;
@@ -216,7 +220,12 @@ pub fn detail_plan(p: &ProjectSummary, open: bool) -> DetailPlan {
                     A::Convert,
                     "PostGIS'e aktar…",
                     "server",
-                    needs(P::Download, "dönüştürme"),
+                    // A CAD type's project is its file (docs/adr/9196 §2): it does not go into the database.
+                    if crate::cloud::kinds::storages_of(p.project_type).contains(&ProjectStorage::Database) {
+                        needs(P::Download, "dönüştürme")
+                    } else {
+                        Some(FILE_ONLY_TEXT.to_owned())
+                    },
                     false,
                 )
             } else {

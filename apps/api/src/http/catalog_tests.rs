@@ -211,15 +211,14 @@ async fn catalog_routes_answer_404_alike_and_check_every_permission() {
     assert_eq!(status, StatusCode::OK);
     let archived: ProjectCatalogChange = serde_json::from_slice(&body).unwrap();
     assert_eq!(archived.project.state, ProjectState::Archived);
-    let point = json!({ "features": [{ "op": "create", "id": uuid::Uuid::new_v4().to_string(),
-        "entity": { "kind": "point", "id": 1, "layerId": "cizim", "attrs": {}, "p": { "x": 1.0, "y": 2.0 } } }] });
+    // A zoning plan's project is its file (docs/adr/9196 §2): the write tried is the catalog's own.
     let (status, _, body) = send(
         &router,
         json_req(
             "POST",
             &format!("{uri}/commands"),
             &ayse,
-            envelope(&t, &project, "project.changes", point),
+            envelope(&t, &project, "project.metadata.update", json!({ "tags": ["arşiv"] })),
         ),
     )
     .await;

@@ -49,7 +49,7 @@ async fn a_projects_times_and_scenarios_are_checked_and_kept_over_http() {
     };
     let settings = json!({ "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 });
     let create = |layers: Value| {
-        json!({ "name": "Zamanlı parseller", "settings": settings, "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": layers,
+        json!({ "name": "Zamanlı parseller", "projectType": "gis", "settings": settings, "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": layers,
             "activeLayer": "parsel", "styles": { "items": [], "categories": [] } })
     };
     let refused = |body: &[u8], words: &str| {

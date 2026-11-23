@@ -75,11 +75,15 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07. ADR'ler
   - Kayıt, açıklama dışında nesneli katmanı proje dosyasına yazmaz.
   - Bulutta CBS yalnız veritabanı biçimi. Buluta yükleme veri katmanlarının satırlarını aktarır.
   - Örnekler ve sınamalar kurala çevrilir; tablo kurma ve içe alma ortak durumları.
-- [ ] **AY-06 — CAD projesinin tamamı proje dosyasında.**
-  - Sunucu CAD türlerinde (`cad`, `architecture`, `zoningPlan`, `landReadjustment`, `subdivision`, `road`) veritabanı
-    biçimini oluşturmada ve dönüşümde nedenini söyleyerek reddeder.
-  - Masaüstünde Buluta yükle ve katalogdaki “PostGIS'e aktar…” CAD'de sunulmaz. Python ve MCP aynı kurala uyar.
-  - Harita ve Yol CBS tablolarını salt okunur altlık olarak gösterebilir.
+- [x] **AY-06 — CAD projesinin tamamı proje dosyasında.** ([ADR 9196](../docs/adr/9196-storage-by-project-kind.md) §4)
+  - Sunucu saklama türünü ortak modül tanımından alır (`kentos_launch::Module::storage`). CAD türleri saklamasız
+    dosya olur; veritabanı oluşturmada (`storage`) ve dönüşümde (`to`) nedenini söyleyerek reddedilir. Veritabanındaki
+    projenin türü CAD türüne çevrilmez (`projectType`).
+  - Masaüstü: Buluta yükle CAD türünde yalnız dosyayı sunar; “PostGIS'e aktar…” CAD'de kapalıdır ve nedenini söyler.
+    Python ve MCP sunucunun kuralına uyar; SDK'nın belgesi yenilendi.
+  - Harita ve Yol'da CBS tablosu salt okunur altlıktır: düzenleme oturumu menüde yalnız CBS'dedir (AY-03).
+  - Sınamalar: sunucuda kural sınaması, veritabanı biçimine dayanan sunucu ve API sınamaları CBS projesiyle.
+  - Kalan: bulutta CBS'nin yalnız veritabanı biçimi AY-05'te (satır aktarımıyla).
 - [ ] **AY-07 — Paketlere bölme (uzun soluklu).**
   - CAD çekirdeği ayrı paket. Sonra Harita, Mimari, Yol ve CBS masaüstü paketleri, en az bağlıdan başlayarak.
   - Her adımda bağımlılık denetimi ve derleme süresi ölçülür.

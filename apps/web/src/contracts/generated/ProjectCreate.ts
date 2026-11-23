@@ -45,7 +45,10 @@ description?: string,
  */
 projectType?: ProjectType, tags?: Array<string>, 
 /**
- * How the project is kept, for good (docs/adr/0031); absent: object by
+ * How the project is kept, for good (docs/adr/0031); absent: its type's
+ * (docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,
+ * `landReadjustment`, `subdivision`, `road`) whole project is its file
+ * (`file`), refused in the database; a CBS project's is object by
  * object in PostGIS (`database`). A `file` project gets its content
  * from its first committed revision.
  */

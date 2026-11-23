@@ -11,7 +11,7 @@ use kentos_application::{AppError, admin, changes, events, listing, projects, sh
 use kentos_contracts::{
     CommandEnvelope, ConflictReason, DocumentSnapshotV1, Entity, FeatureChange, FeatureOp,
     GrantRole, PROJECT_CHANGES, PROJECT_SHARE, ProjectChanges, ProjectCreate, ProjectPatch,
-    SignInMethod, TenantRole,
+    SignInMethod, TenantRole, ProjectType,
 };
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;
@@ -70,7 +70,7 @@ async fn new_project(db: &TestDb, who: &Access) -> Uuid {
         sheets: None,
         arrays: Vec::new(),
         description: None,
-        project_type: None,
+        project_type: Some(ProjectType::Gis),
         tags: None,
         storage: None,
     };

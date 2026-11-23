@@ -8,8 +8,8 @@
 mod common;
 
 use common::{
-    a_point, account, catalog_envelope, changed, envelope, member, new_project, open, personal,
-    revoke, run, share,
+    a_point, account, catalog_envelope, changed, envelope, member, new_cad_project, new_project, open,
+    personal, revoke, run, share,
 };
 use kentos_application::commands::{self, CatalogPolicy};
 use kentos_application::identity::Actor;
@@ -60,7 +60,7 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
         .unwrap();
     let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
     let editor = member(&db, "buro", "editor", TenantRole::Editor).await;
-    let project = new_project(&db, &pm, "Ada 101").await;
+    let project = new_cad_project(&db, &pm, "Ada 101").await;
     let owner = open(&db, &pm, project).await;
     share(&db, &owner, &editor.actor, GrantRole::Editor).await;
 
@@ -116,6 +116,15 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
     assert_eq!(done.project.description, "18. madde");
     assert_eq!(done.project.tags, ["Kadıköy", "DOP %40"]);
     assert_eq!(done.project.catalog_version, "2");
+    // A project kept in the database is a CBS project's: it does not become a CAD type (docs/adr/9196 §2).
+    let cbs = open(&db, &pm, new_project(&db, &pm, "Kent").await).await;
+    match run(&db, &cbs, PROJECT_METADATA_UPDATE, json!({ "projectType": "road" })).await {
+        Err(e @ AppError::Invalid { .. }) => {
+            assert_eq!(e.path(), Some("projectType"));
+            assert!(e.to_string().contains("“Yol” türündeki"), "{e}");
+        }
+        other => panic!("{other:?}"),
+    }
     let info = projects::info(&db.app, &owner).await.unwrap();
     assert_eq!(
         info.meta_version, "1",
@@ -262,11 +271,11 @@ async fn views_are_searched_sorted_paged_and_counted_after_the_access_check() {
         (&space, "ifraz notlarım"),
         (&space, "Bahçe"),
     ] {
-        made.push((name, new_project(&db, who, name).await));
+        made.push((name, new_cad_project(&db, who, name).await));
     }
-    let shared = new_project(&db, &other_pm, "Ifraz komşu").await;
-    let unshared = new_project(&db, &other_pm, "İfraz gizli").await;
-    let foreign = new_project(&db, &stranger, "İfraz yabancı").await;
+    let shared = new_cad_project(&db, &other_pm, "Ifraz komşu").await;
+    let unshared = new_cad_project(&db, &other_pm, "İfraz gizli").await;
+    let foreign = new_cad_project(&db, &stranger, "İfraz yabancı").await;
     share(
         &db,
         &open(&db, &other_pm, shared).await,
@@ -496,8 +505,8 @@ async fn recents_and_favourites_are_a_persons_own() {
         .unwrap();
     let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
     let editor = member(&db, "buro", "editor", TenantRole::Editor).await;
-    let a = new_project(&db, &pm, "Ada 1").await;
-    let b = new_project(&db, &pm, "Ada 2").await;
+    let a = new_cad_project(&db, &pm, "Ada 1").await;
+    let b = new_cad_project(&db, &pm, "Ada 2").await;
     for p in [a, b] {
         share(
             &db,
@@ -625,7 +634,7 @@ async fn details_give_the_counts_and_the_exact_extent() {
         .await
         .unwrap();
     let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
-    let project = new_project(&db, &pm, "Ada 101").await;
+    let project = new_cad_project(&db, &pm, "Ada 101").await;
     let owner = open(&db, &pm, project).await;
     // No objects: no extent.
     let empty = listing::details(&db.app, &owner).await.unwrap();

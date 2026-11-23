@@ -26,6 +26,9 @@ kentos-sheet = { path = "../../shared/sheet", default-features = false }
 kentos-forms = { path = "../../shared/forms" }
 kentos-expression = { path = "../../shared/expression" }
 kentos-project = { path = "../../native/project" }
+# The modules' shared definition (docs/adr/9195 §6, 9196): a project type's storage, a CAD type's whole project in
+# its file revisions.
+kentos-launch = { path = "../../native/launch" }
 # E-signing a dossier's files (docs/adr/9004): the signing service's wire types, the server's side of its signed
 # requests (Ed25519, feature `issue`) and the check of a delivery against the server's own request.
 kentos-imza-domain = { path = "../../imza/domain" }

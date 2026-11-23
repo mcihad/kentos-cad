@@ -85084,7 +85084,10 @@ class ProjectCreate(_Model):
         home_view: Unit: length.
         project_type: Absent: the general type (`cad`).
         sheets: The project's sheet book and its pictures (docs/adr/0251); absent: none.
-        storage: How the project is kept, for good (docs/adr/0031); absent: object by
+        storage: How the project is kept, for good (docs/adr/0031); absent: its type's
+            (docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,
+            `landReadjustment`, `subdivision`, `road`) whole project is its file
+            (`file`), refused in the database; a CBS project's is object by
             object in PostGIS (`database`). A `file` project gets its content
             from its first committed revision.
     """
@@ -86343,7 +86346,8 @@ class ProjectSummary(_Model):
         updated_at: RFC 3339.
         owner_name: The owner's name ("Benimle paylaşılanlar" says whose it is); empty
             when the caller cannot see the owner (one who left the organisation).
-        project_type: What kind of work it is: a label, not a claim of compliance, independent of `storage`.
+        project_type: What kind of work it is: a label, not a claim of compliance. A CAD type's project is kept as its file
+            (docs/adr/9196 §2).
         catalog_version: Counts changes of its name, description, type and tags; a catalog edit
             sends it as `expectedVersions["@catalog"]`. Decimal text.
         created_at: RFC 3339.

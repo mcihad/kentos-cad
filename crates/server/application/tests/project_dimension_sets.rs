@@ -6,7 +6,7 @@ mod common;
 use common::{envelope, member, open};
 use kentos_application::{admin, changes, projects, snapshot};
 use kentos_contracts::{
-    DocumentSnapshotV2, FeatureChange, ProjectChanges, ProjectCreate, ProjectPatch, TenantRole,
+    DocumentSnapshotV2, FeatureChange, ProjectChanges, ProjectCreate, ProjectPatch, TenantRole, ProjectType,
 };
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;
@@ -33,7 +33,7 @@ fn create(source: &DocumentSnapshotV2) -> ProjectCreate {
         casework: Vec::new(),
         constraints: Default::default(),
         description: None,
-        project_type: None,
+        project_type: Some(ProjectType::Gis),
         tags: None,
         storage: None,
     }

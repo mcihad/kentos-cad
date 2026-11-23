@@ -2881,6 +2881,7 @@ dependencies = [
  "kentos-imza-security",
  "kentos-imza-signature",
  "kentos-kcad",
+ "kentos-launch",
  "kentos-postgres",
  "kentos-project",
  "kentos-sheet",

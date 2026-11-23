@@ -141,7 +141,7 @@ pub async fn update(
     apply(db, access, envelope, checked(update)?).await
 }
 
-type Current = (String, String, String, Vec<String>, i64);
+type Current = (String, String, String, Vec<String>, i64, String);
 
 async fn apply(
     db: &kentos_postgres::Db,
@@ -179,8 +179,8 @@ async fn apply(
     if now.archived {
         return Err(archived(&now.name));
     }
-    let (name, description, project_type, tags, version): Current = sqlx::query_as(
-        "select name, description, project_type, tags, catalog_version from kentos.project where tenant_id = $1 and id = $2",
+    let (name, description, project_type, tags, version, storage): Current = sqlx::query_as(
+        "select name, description, project_type, tags, catalog_version, storage from kentos.project where tenant_id = $1 and id = $2",
     )
     .bind(now.tenant)
     .bind(now.project)
@@ -209,6 +209,21 @@ async fn apply(
         .project_type
         .filter(|t| t.name() != project_type)
         .map(|t| t.name());
+    // A type keeps its storage (docs/adr/9196 §2): a project in the database does not become a CAD type's.
+    if let Some(t) = patch.project_type.filter(|t| t.name() != project_type)
+        && crate::projects::storage_of(&storage) == kentos_contracts::ProjectStorage::Database
+        && crate::projects::storage_of_type(t) == kentos_contracts::ProjectStorage::File
+    {
+        return Err(AppError::invalid_at(
+            "projectType",
+            format!(
+                "“{}” veritabanında saklanıyor; “{}” türündeki bir projenin tamamı proje dosyasındadır. Türü \
+                 değiştirmek için önce projeyi dosya projesine çevirin.",
+                now.name,
+                crate::projects::type_words(t)
+            ),
+        ));
+    }
     let new_tags = patch.tags.filter(|t| *t != tags);
     let mut detail = serde_json::Map::new();
     if let Some(n) = &new_name {

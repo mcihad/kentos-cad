@@ -12,7 +12,7 @@ use kentos_application::{admin, projects, sharing};
 use kentos_contracts::{
     CommandEnvelope, DocumentSnapshotV1, Entity, FeatureChange, GrantRole, PROJECT_ACCESS_REVOKE,
     PROJECT_CHANGES, PROJECT_SHARE, ProjectAccessChange, ProjectAccessRevoke, ProjectChanges,
-    ProjectCreate, ProjectShare, SignInMethod, TenantRole,
+    ProjectCreate, ProjectShare, SignInMethod, TenantRole, ProjectType,
 };
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;
@@ -51,8 +51,18 @@ pub async fn personal(db: &TestDb, actor: &Actor) -> Access {
     tenancy::access(&db.app, actor, id).await.unwrap()
 }
 
-/// A project with one unlocked layer, `cizim`, owned by `who`.
+/// A project with one unlocked layer, `cizim`, owned by `who`: a CBS project, kept in the database (docs/adr/9196 §2).
 pub async fn new_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
+    made(db, who, name, Some(ProjectType::Gis)).await
+}
+
+/// A general CAD project, kept as its file (docs/adr/9196 §2): a catalog's row whose type is the server's default.
+#[allow(dead_code)]
+pub async fn new_cad_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
+    made(db, who, name, None).await
+}
+
+async fn made(db: &TestDb, who: &Access, name: &str, project_type: Option<ProjectType>) -> Uuid {
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
         dimension_sets: Vec::new(),
@@ -69,7 +79,7 @@ pub async fn new_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
         sheets: None,
         arrays: Vec::new(),
         description: None,
-        project_type: None,
+        project_type,
         tags: None,
         storage: None,
     };

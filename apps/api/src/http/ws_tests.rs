@@ -106,7 +106,7 @@ async fn a_cursor_older_than_the_kept_events_must_reopen() {
     let ayse = signed_in(&router, "ayse").await;
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Ada 101", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": "Ada 101", "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let base = format!("/v1/tenants/{tenant}/projects");
     let (_, _, body) = send(&router, json_req("POST", &base, &ayse, create)).await;
@@ -220,7 +220,7 @@ async fn taking_a_grant_away_ends_the_live_subscription() {
     );
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Ada 101", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": "Ada 101", "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let base = format!("/v1/tenants/{tenant}/projects");
     let (_, _, body) = send(&router, json_req("POST", &base, &ayse, create)).await;

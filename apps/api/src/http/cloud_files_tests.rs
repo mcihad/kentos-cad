@@ -78,7 +78,7 @@ async fn offices(db: &TestDb) -> (axum::Router, uuid::Uuid, String, String, kent
 async fn new_project(router: &axum::Router, tenant: uuid::Uuid, token: &str, storage: &str) -> String {
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": format!("Ada 7 ({storage})"), "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": format!("Ada 7 ({storage})"), "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] },
         "storage": storage });
     let (status, _, body) =

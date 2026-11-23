@@ -107,13 +107,14 @@ pub async fn convert(
     let text = idempotency::request_text(&envelope);
     let mut tx = db.scoped(access.scope()).await?;
     crate::projects::require_whole_copy(&mut tx, access).await?;
-    let storage: String =
-        sqlx::query_scalar("select storage from kentos.project where tenant_id = $1 and id = $2")
-            .bind(access.tenant)
-            .bind(access.project)
-            .fetch_optional(&mut *tx)
-            .await?
-            .ok_or_else(crate::access::not_found)?;
+    let (storage, project_type): (String, String) = sqlx::query_as(
+        "select storage, project_type from kentos.project where tenant_id = $1 and id = $2",
+    )
+    .bind(access.tenant)
+    .bind(access.project)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or_else(crate::access::not_found)?;
     let newest = files::newest(&mut tx, access.tenant, access.project).await?;
     tx.commit().await?;
     if storage_of(&storage) == to {
@@ -128,6 +129,11 @@ pub async fn convert(
                 }
             ),
         ));
+    }
+    // A CAD type's whole project is its file (docs/adr/9196 §2): a database project of one goes back to a file, never
+    // the other way.
+    if let Some(t) = kentos_contracts::ProjectType::from_name(&project_type) {
+        crate::projects::check_storage(t, Some(to), "to")?;
     }
     let name = name
         .map(|n| n.trim().to_string())

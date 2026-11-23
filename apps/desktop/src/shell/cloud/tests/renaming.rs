@@ -32,7 +32,15 @@ fn buluta_dosya_olarak_kaydet_opens_the_upload_on_file_storage() {
         ProjectStorage::File
     );
     cloud(&mut app, Event::Close);
+    // Buluta yükle opens on the database, the web's default, where the type keeps it: a general CAD drawing's
+    // project is its file (docs/adr/9196 §2); a CBS project's may be the database's.
     let _ = app.run("cloud.upload");
+    assert_eq!(
+        app.cloud.upload.as_ref().expect("the window").storage,
+        ProjectStorage::File
+    );
+    cloud(&mut app, Event::UploadType(kentos_commands::ProjectType::Gis));
+    cloud(&mut app, Event::UploadStorage(ProjectStorage::Database));
     assert_eq!(
         app.cloud.upload.as_ref().expect("the window").storage,
         ProjectStorage::Database

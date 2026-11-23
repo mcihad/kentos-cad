@@ -133,10 +133,10 @@ const GROUPS = [
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native', 'imza'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   // The forms' guard (docs/adr/0411 §4) reads a project's `@` values as the desktop's document does: the pure
   // project model (`project`, over shared and domain) is the server's to use too.
-  { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server', 'imza'], forbid: [...BROWSER, ...DESKTOP] },
+  { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server', 'imza', 'launch'], forbid: [...BROWSER, ...DESKTOP] },
   // The tool of a processing job runs in `jobrun`, a program of its own, so the server carries none of it (docs/adr/0559 §3).
   // An audit release's Python environment is made with the desktop's machinery (`python-env`, docs/adr/8057 §66).
-  { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server', 'python-env', 'imza'], forbid: [...BROWSER, ...DESKTOP] },
+  { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server', 'python-env', 'imza', 'launch'], forbid: [...BROWSER, ...DESKTOP] },
   // The process that runs one İşlemler tool for a server job (docs/adr/0559 §3): the headless host and the tools over
   // one project file; no database, no server framework. Listed before `native`'s catch-all like the headless host.
   // kentos, the command line (plan/eklenti.md ADIM 16): the extension packages' inspector and packer over the file

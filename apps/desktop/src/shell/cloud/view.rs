@@ -194,13 +194,13 @@ impl App {
             .on_input_maybe((!working).then_some(|t| cloud(Event::UploadName(t))))
             .on_submit(cloud(Event::UploadSubmit));
         let name = name;
-        // The storage mode, for good (docs/adr/0031): each option says what it means.
-        let storage = [ProjectStorage::Database, ProjectStorage::File]
-            .into_iter()
-            .fold(
-                RadioGroup::new(u.storage, |s| cloud(Event::UploadStorage(s))),
-                |g, s| g.option(s, words::storage_title(s), words::storage_detail(s)),
-            );
+        // The storage mode, for good (docs/adr/0031): each option says what it means; a CAD type's project is its file
+        // alone (docs/adr/9196 §2), said under it.
+        let storages = crate::cloud::kinds::storages_of(u.project_type);
+        let storage = storages.iter().copied().fold(
+            RadioGroup::new(u.storage, |s| cloud(Event::UploadStorage(s))),
+            |g, s| g.option(s, words::storage_title(s), words::storage_detail(s)),
+        );
         // A module's program offers its own module's types alone (kinds.rs, docs/adr/0802).
         let types = self.cloud_types();
         let choices: Vec<Choice> = types.iter().map(|t| Choice::new(type_label(*t))).collect();
@@ -232,7 +232,16 @@ impl App {
         form = form
             .field("Proje adı", name)
             .row(label::body("Saklama biçimi (sonradan değişmez)").font(typography::ui_strong()))
-            .row(storage)
+            .row(storage);
+        if storages.len() == 1 {
+            form = form.row(
+                label::caption(
+                    "Bu türdeki projenin tamamı proje dosyasındadır; bulutta dosya revizyonu olarak saklanır.",
+                )
+                .style(style::text::muted),
+            );
+        }
+        form = form
             .field(fields::TYPE, kind)
             .row(
                 label::caption(crate::cloud::kinds::type_hint(self.program))

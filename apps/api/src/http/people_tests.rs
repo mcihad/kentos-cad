@@ -51,7 +51,7 @@ async fn the_share_dialog_routes_answer_only_who_may_share() {
     );
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Ada 101", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": "Ada 101", "projectType": "gis", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
     let base = format!("/v1/tenants/{tenant}/projects");
     let (status, _, body) = send(&router, json_req("POST", &base, &ayse, create)).await;

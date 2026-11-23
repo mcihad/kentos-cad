@@ -404,7 +404,8 @@ pub struct ProjectSummary {
     pub owner_name: String,
     pub access: ProjectAccessView,
     // The catalog (docs/adr/0028).
-    /// What kind of work it is: a label, not a claim of compliance, independent of `storage`.
+    /// What kind of work it is: a label, not a claim of compliance. A CAD type's project is kept as its file
+    /// (docs/adr/9196 §2).
     pub project_type: ProjectType,
     pub description: String,
     pub tags: Vec<String>,
@@ -518,7 +519,10 @@ pub struct ProjectCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub tags: Option<Vec<String>>,
-    /// How the project is kept, for good (docs/adr/0031); absent: object by
+    /// How the project is kept, for good (docs/adr/0031); absent: its type's
+    /// (docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,
+    /// `landReadjustment`, `subdivision`, `road`) whole project is its file
+    /// (`file`), refused in the database; a CBS project's is object by
     /// object in PostGIS (`database`). A `file` project gets its content
     /// from its first committed revision.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -40,7 +40,7 @@ async fn a_projects_networks_are_checked_and_kept_over_http() {
     let layer = json!({ "id": "yol", "name": "Yol", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
     let create = |networks: Value| {
-        json!({ "name": "Yol ağı", "settings": settings(networks), "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer],
+        json!({ "name": "Yol ağı", "projectType": "gis", "settings": settings(networks), "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer],
             "activeLayer": "yol", "styles": { "items": [], "categories": [] } })
     };
     let refused = |body: &[u8], path: &str| {

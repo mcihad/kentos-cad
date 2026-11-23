@@ -40,7 +40,7 @@ async fn a_projects_address_data_is_checked_and_kept_over_http() {
     let layer = json!({ "id": "kapi", "name": "Kapı", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
     let create = |locators: Value| {
-        json!({ "name": "Numarataj", "settings": settings(locators), "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer],
+        json!({ "name": "Numarataj", "projectType": "gis", "settings": settings(locators), "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer],
             "activeLayer": "kapi", "styles": { "items": [], "categories": [] } })
     };
     let refused = |body: &[u8], path: &str| {

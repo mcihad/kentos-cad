@@ -439,6 +439,26 @@
           {"id": "edit", "label": "Bilgileri düzenle…", "icon": "edit", "why": null, "danger": false},
           {"id": "download", "label": ".kcad olarak indir", "icon": "export", "why": null, "danger": false},
           {"id": "duplicate", "label": "Kopyasını oluştur…", "icon": "copy", "why": null, "danger": false},
+          {"id": "convert", "label": "PostGIS'e aktar…", "icon": "server", "why": "Bu türdeki projenin tamamı proje dosyasındadır; bulutta dosya revizyonu olarak saklanır, veritabanına aktarılmaz.", "danger": false},
+          {"id": "archive", "label": "Arşivle…", "icon": "archive", "why": null, "danger": false},
+          {"id": "trash", "label": "Çöpe taşı…", "icon": "trash", "why": null, "danger": true}
+        ]
+      }
+    },
+    {
+      "id": "file-project-cbs",
+      "project": {"storage": "file", "projectType": "gis"},
+      "open": false,
+      "expect": {
+        "favorite": "Favorilere ekle",
+        "chips": ["CBS"],
+        "tabs": ["Bilgiler", "Geçmiş"],
+        "facts": ["Çalışma alanı", "Sahibi", "Rolünüz", "Koordinat sistemi", "Alan birimi", "Nesne", "Kapsam", "Oluşturan", "Son değişiklik", "Revizyon", "Saklama"],
+        "actions": [
+          {"id": "share", "label": "Paylaş…", "icon": "share", "why": null, "danger": false},
+          {"id": "edit", "label": "Bilgileri düzenle…", "icon": "edit", "why": null, "danger": false},
+          {"id": "download", "label": ".kcad olarak indir", "icon": "export", "why": null, "danger": false},
+          {"id": "duplicate", "label": "Kopyasını oluştur…", "icon": "copy", "why": null, "danger": false},
           {"id": "convert", "label": "PostGIS'e aktar…", "icon": "server", "why": null, "danger": false},
           {"id": "archive", "label": "Arşivle…", "icon": "archive", "why": null, "danger": false},
           {"id": "trash", "label": "Çöpe taşı…", "icon": "trash", "why": null, "danger": true}

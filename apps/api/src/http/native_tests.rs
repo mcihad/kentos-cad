@@ -63,6 +63,14 @@ async fn signed_in(base: &str, login: &str) -> Cloud {
     cloud
 }
 
+
+/// A drawing's project kept in the database: a CBS project's, the type kept there (docs/adr/9196 §2).
+fn in_database(doc: &kentos_domain::Document, name: &str) -> kentos_contracts::ProjectCreate {
+    let mut create = project_create(doc, name, ProjectStorage::Database);
+    create.project_type = Some(kentos_contracts::ProjectType::Gis);
+    create
+}
+
 fn sample() -> Document {
     Document::from_snapshot(DocumentSnapshotV1::from_json(SAMPLE).unwrap()).unwrap()
 }
@@ -153,7 +161,7 @@ async fn the_desktop_signs_in_with_its_own_header_and_forgets_the_session() {
     let made = cloud
         .create_project(
             tenant,
-            project_create(&sample(), "Ada 1", ProjectStorage::Database),
+            in_database(&sample(), "Ada 1"),
             Uuid::new_v4(),
         )
         .await
@@ -354,7 +362,7 @@ async fn a_drawing_becomes_a_database_project_and_edits_go_back_object_by_object
     let (info, uploaded) = upload_new(
         &ayse,
         tenant,
-        project_create(&drawing, "Ada 102", ProjectStorage::Database),
+        in_database(&drawing, "Ada 102"),
         kcad(&drawing),
         Uuid::new_v4(),
     )
@@ -434,7 +442,7 @@ async fn two_editors_of_one_object_meet_in_a_conflict() {
     let (info, _) = upload_new(
         &ayse,
         tenant,
-        project_create(&drawing, "Ada 103", ProjectStorage::Database),
+        in_database(&drawing, "Ada 103"),
         kcad(&drawing),
         Uuid::new_v4(),
     )
@@ -495,7 +503,7 @@ async fn a_drawing_the_server_does_not_keep_leaves_no_project() {
     let refused = upload_new(
         &ayse,
         tenant,
-        project_create(&extreme, "Uç değerler", ProjectStorage::Database),
+        in_database(&extreme, "Uç değerler"),
         DRAWING.to_vec(),
         Uuid::new_v4(),
     )
@@ -531,7 +539,7 @@ async fn other_editors_changes_come_in_by_following_the_events() {
     let (info, _) = upload_new(
         &ayse,
         tenant,
-        project_create(&drawing, "Ada 104", ProjectStorage::Database),
+        in_database(&drawing, "Ada 104"),
         kcad(&drawing),
         Uuid::new_v4(),
     )
@@ -654,7 +662,7 @@ async fn block_definitions_go_between_two_desktops_through_the_server() {
     let (info, _) = upload_new(
         &ayse,
         tenant,
-        project_create(&drawing, "Ada 107", ProjectStorage::Database),
+        in_database(&drawing, "Ada 107"),
         kcad(&drawing),
         Uuid::new_v4(),
     )
@@ -792,7 +800,7 @@ async fn a_layer_someone_drew_on_is_given_back_when_its_removal_is_refused() {
     let (info, _) = upload_new(
         &ayse,
         tenant,
-        project_create(&drawing, "Ada 105", ProjectStorage::Database),
+        in_database(&drawing, "Ada 105"),
         kcad(&drawing),
         Uuid::new_v4(),
     )
@@ -900,7 +908,7 @@ async fn a_lost_answer_survives_the_program_ending_through_the_device_draft() {
     let (info, _) = upload_new(
         &ayse,
         tenant,
-        project_create(&drawing, "Ada 105", ProjectStorage::Database),
+        in_database(&drawing, "Ada 105"),
         kcad(&drawing),
         Uuid::new_v4(),
     )
@@ -968,7 +976,7 @@ async fn a_project_goes_on_offline_and_catches_up_when_the_connection_returns() 
     let (info, _) = upload_new(
         &ayse,
         tenant,
-        project_create(&drawing, "Ada 106", ProjectStorage::Database),
+        in_database(&drawing, "Ada 106"),
         kcad(&drawing),
         Uuid::new_v4(),
     )
@@ -1126,7 +1134,7 @@ async fn a_long_offline_spell_past_the_kept_events_reopens_and_loses_nothing() {
     let (info, _) = upload_new(
         &ayse,
         tenant,
-        project_create(&drawing, "Ada 107", ProjectStorage::Database),
+        in_database(&drawing, "Ada 107"),
         kcad(&drawing),
         Uuid::new_v4(),
     )
@@ -1370,7 +1378,7 @@ async fn a_waiting_request_answers_as_soon_as_another_editor_commits() {
     let (info, _) = upload_new(
         &ayse,
         tenant,
-        project_create(&drawing, "Ada 109", ProjectStorage::Database),
+        in_database(&drawing, "Ada 109"),
         kcad(&drawing),
         Uuid::new_v4(),
     )
@@ -1584,7 +1592,7 @@ async fn opening_a_large_project_measured() {
         let (info, _) = upload_new(
             &ayse,
             tenant,
-            project_create(&doc, &format!("Ölçüm {n}"), ProjectStorage::Database),
+            in_database(&doc, &format!("Ölçüm {n}")),
             bytes,
             Uuid::new_v4(),
         )

@@ -473,6 +473,11 @@ fn the_upload_and_the_projects_form_offer_the_programs_types() {
     app.open_upload(ProjectStorage::Database);
     let u = app.cloud.upload.as_ref().expect("Buluta yükle");
     assert_eq!(u.project_type, ProjectType::Architecture);
+    // A building's project is its file (docs/adr/9196 §2): asked for the database, it goes up as a file, and the
+    // database is not taken.
+    assert_eq!(u.storage, ProjectStorage::File);
+    cloud(&mut app, Event::UploadStorage(ProjectStorage::Database));
+    assert_eq!(app.cloud.upload.as_ref().map(|u| u.storage), Some(ProjectStorage::File));
     cloud(&mut app, Event::UploadType(ProjectType::Gis));
     assert_eq!(
         app.cloud.upload.as_ref().map(|u| u.project_type),

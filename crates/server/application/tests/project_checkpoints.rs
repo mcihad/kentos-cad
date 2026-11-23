@@ -18,7 +18,7 @@ use kentos_contracts::{
     CheckpointChange, CheckpointKind, CommandEnvelope, DocumentSnapshotV1, EntityId, FeatureChange,
     FileUploadBegin, GrantRole, PROJECT_ARCHIVE, PROJECT_CHECKPOINT_CREATE,
     PROJECT_CHECKPOINT_DELETE, PROJECT_CHECKPOINT_RESTORE, PROJECT_FILE_COMMIT, ProjectChanges,
-    ProjectCreate, ProjectDuplicated, ProjectPatch, ProjectStorage, TenantRole,
+    ProjectCreate, ProjectDuplicated, ProjectPatch, ProjectStorage, TenantRole, ProjectType,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::json;
@@ -567,7 +567,8 @@ async fn a_database_checkpoint_is_restored_as_a_new_project() {
         sheets: None,
         arrays: Vec::new(),
         description: Some("İfraz dosyası".into()),
-        project_type: None,
+        // A database project is a CBS project's (docs/adr/9196 §2).
+        project_type: Some(ProjectType::Gis),
         tags: Some(vec!["ifraz".into()]),
         storage: None,
     };

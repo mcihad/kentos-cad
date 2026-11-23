@@ -341,6 +341,10 @@ pub(super) fn upload_document(
     r.send(Message::Opened(Some(Ok(Box::new(doc)))));
     r.send(Message::Run("cloud.upload"));
     r.cloud(Event::UploadName(name.into()));
+    // The database keeps a CBS project alone (docs/adr/9196 §2): a CAD type's project is its file.
+    if storage == ProjectStorage::Database {
+        r.cloud(Event::UploadType(kentos_commands::ProjectType::Gis));
+    }
     r.cloud(Event::UploadStorage(storage));
     if let Some(shot) = shot {
         r.shot(shot);

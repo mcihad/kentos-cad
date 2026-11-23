@@ -16,7 +16,7 @@
 
 use kentos_contracts::{
     FeaturePage, FeatureRecord, LayerNode, LayerNodeType, ProjectCreate, ProjectInfo,
-    ProjectStorage,
+    ProjectStorage, ProjectType,
 };
 use kentos_expression::pushdown::{Dialect, Param};
 use kentos_forms::reach::{Caller, Reach};
@@ -463,6 +463,47 @@ pub fn storage_name(storage: ProjectStorage) -> &'static str {
     }
 }
 
+/// The storage a project type keeps (docs/adr/9196 §2, CLAUDE.md §25 rule 5), from the modules' shared definition: a
+/// CAD type's (`cad`, `architecture`, `zoningPlan`, `landReadjustment`, `subdivision`, `road`) whole project is its
+/// file's revisions; a CBS project's is the database's. A type no module has keeps the database's, as before.
+pub fn storage_of_type(project_type: ProjectType) -> ProjectStorage {
+    match kentos_launch::Module::of_project_type(project_type.name()).map(kentos_launch::Module::storage) {
+        Some(kentos_launch::Storage::File) => ProjectStorage::File,
+        Some(kentos_launch::Storage::Database) | None => ProjectStorage::Database,
+    }
+}
+
+/// The storage a new or converted project of `project_type` is kept in: the one asked for, else its type's; a CAD type
+/// in the database is refused with the reason (docs/adr/9196 §2).
+pub fn check_storage(project_type: ProjectType, asked: Option<ProjectStorage>, path: &str) -> AppResult<ProjectStorage> {
+    let own = storage_of_type(project_type);
+    match asked {
+        None => Ok(own),
+        Some(ProjectStorage::Database) if own == ProjectStorage::File => Err(AppError::invalid_at(
+            path,
+            format!(
+                "“{}” türündeki bir projenin tamamı proje dosyasındadır; bulutta yalnız dosya revizyonu olarak \
+                 saklanır. Saklama biçimini dosya seçin.",
+                type_words(project_type)
+            ),
+        )),
+        Some(storage) => Ok(storage),
+    }
+}
+
+/// A project type as Bulut projeleri names it.
+pub(crate) fn type_words(project_type: ProjectType) -> &'static str {
+    match project_type {
+        ProjectType::Cad => "Genel CAD",
+        ProjectType::Gis => "CBS",
+        ProjectType::LandReadjustment => "18 uygulaması",
+        ProjectType::ZoningPlan => "İmar planı",
+        ProjectType::Subdivision => "İfraz / tevhit",
+        ProjectType::Road => "Yol",
+        ProjectType::Architecture => "Mimari",
+    }
+}
+
 /// A stored storage mode; anything else is the database's (the column's check allows no other).
 pub fn storage_of(name: &str) -> ProjectStorage {
     if name == "file" {
@@ -583,6 +624,9 @@ pub async fn create(
         crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
     let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;
     let project_type = input.project_type.unwrap_or_default();
+    // A CAD type's whole project is its file (docs/adr/9196 §2): kept as one unless asked otherwise, refused in the
+    // database.
+    let storage = check_storage(project_type, input.storage, "storage")?;
     let id = Uuid::now_v7();
     // The new project is in scope from the start: its audit and command log rows belong to it.
     let mut tx = db
@@ -622,7 +666,7 @@ pub async fn create(
     .bind(&description)
     .bind(project_type.name())
     .bind(&tags)
-    .bind(storage_name(input.storage.unwrap_or(ProjectStorage::Database)))
+    .bind(storage_name(storage))
     .bind(input.sheets.as_ref().map(json).transpose()?)
     .bind(arrays_value(&input.arrays)?)
     .bind(constraints_value(&input.constraints)?)
@@ -637,7 +681,7 @@ pub async fn create(
         .bind(serde_json::json!({
             "name": input.name.trim(),
             "projectType": project_type.name(),
-            "storage": storage_name(input.storage.unwrap_or(ProjectStorage::Database)),
+            "storage": storage_name(storage),
         }))
         .execute(&mut *tx)
         .await?;

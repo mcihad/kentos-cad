@@ -138,6 +138,12 @@ impl App {
             .filter(|k| types.contains(k))
             .or_else(|| types.first().copied())
             .unwrap_or_default();
+        // A CAD type's project is its file (docs/adr/9196 §2): asked for the database, it goes up as a file.
+        let storage = if crate::cloud::kinds::storages_of(project_type).contains(&storage) {
+            storage
+        } else {
+            ProjectStorage::File
+        };
         self.cloud.upload = Some(Upload {
             tenants,
             tenant,
@@ -173,8 +179,11 @@ impl App {
                     u.changed();
                 }
             }
+            // A storage the type keeps (docs/adr/9196 §2): a CAD type's file alone.
             Event::UploadStorage(storage) => {
-                if let Some(u) = self.cloud.upload.as_mut().filter(|u| !u.working()) {
+                if let Some(u) = self.cloud.upload.as_mut().filter(|u| !u.working())
+                    && crate::cloud::kinds::storages_of(u.project_type).contains(&storage)
+                {
                     u.storage = storage;
                     u.changed();
                 }
@@ -184,6 +193,10 @@ impl App {
             Event::UploadType(kind) if self.cloud_types().contains(&kind) => {
                 if let Some(u) = self.cloud.upload.as_mut().filter(|u| !u.working()) {
                     u.project_type = kind;
+                    // A CAD type's project is its file (docs/adr/9196 §2).
+                    if !crate::cloud::kinds::storages_of(kind).contains(&u.storage) {
+                        u.storage = ProjectStorage::File;
+                    }
                     u.changed();
                 }
             }

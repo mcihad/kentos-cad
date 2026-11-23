@@ -14,7 +14,7 @@ use kentos_application::tenancy::Access;
 use kentos_application::{AppError, admin, changes, events, projects};
 use kentos_contracts::{
     CommitResult, ConflictReason, DocumentSnapshotV1, Entity, FeatureChange, FeatureOp, GrantRole,
-    LayerNode, PROJECT_CHANGES, ProjectChanges, ProjectCreate, TenantRole, v1_identities,
+    LayerNode, PROJECT_CHANGES, ProjectChanges, ProjectCreate, TenantRole, v1_identities, ProjectType,
 };
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;
@@ -99,7 +99,7 @@ async fn sample_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
         sheets: None,
         arrays: Vec::new(),
         description: None,
-        project_type: None,
+        project_type: Some(ProjectType::Gis),
         tags: None,
         storage: None,
     };

@@ -14,7 +14,7 @@ use kentos_application::{AppError, admin, changes, files, listing, projects, sna
 use kentos_contracts::{
     CommandEnvelope, DocumentSnapshotV1, DocumentSnapshotV2, EntityId, FileUploadBegin, GrantRole,
     PROJECT_CONVERT, PROJECT_FILE_COMMIT, ProjectCreate, ProjectDuplicated, ProjectStorage,
-    TenantRole,
+    TenantRole, ProjectType,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::{Value, json};
@@ -52,7 +52,12 @@ fn by_uid(doc: &DocumentSnapshotV2) -> BTreeMap<EntityId, Value> {
         .collect()
 }
 
-async fn file_project(db: &TestDb, who: &kentos_application::tenancy::Access, name: &str) -> Uuid {
+async fn file_project(
+    db: &TestDb,
+    who: &kentos_application::tenancy::Access,
+    name: &str,
+    project_type: ProjectType,
+) -> Uuid {
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
         dimension_sets: Vec::new(),
@@ -68,7 +73,8 @@ async fn file_project(db: &TestDb, who: &kentos_application::tenancy::Access, na
         sheets: None,
         arrays: Vec::new(),
         description: None,
-        project_type: None,
+        // A CBS project's file: the type kept in the database (docs/adr/9196 §2); a CAD type's goes nowhere else.
+        project_type: Some(project_type),
         tags: None,
         storage: Some(ProjectStorage::File),
     };
@@ -137,7 +143,7 @@ async fn a_file_project_goes_into_postgis_as_a_new_project() {
         .await
         .unwrap();
     let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
-    let project = file_project(&db, &ayse, "Ada 5 dosyası").await;
+    let project = file_project(&db, &ayse, "Ada 5 dosyası", ProjectType::Gis).await;
     let by = open(&db, &ayse, project).await;
     let store = blobs();
     let bytes = keepable();
@@ -182,7 +188,7 @@ async fn a_file_the_database_does_not_keep_is_refused_by_its_place() {
         .await
         .unwrap();
     let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
-    let project = file_project(&db, &ayse, "Uç değerler").await;
+    let project = file_project(&db, &ayse, "Uç değerler", ProjectType::Gis).await;
     let by = open(&db, &ayse, project).await;
     let store = blobs();
     save_first(&db, &store, &by, DRAWING).await;
@@ -305,7 +311,7 @@ async fn a_database_project_becomes_a_file_project_of_one_moment() {
         Err(AppError::Forbidden(_))
     ));
     // A file project with nothing saved has nothing to convert.
-    let empty = file_project(&db, &ayse, "Boş dosya").await;
+    let empty = file_project(&db, &ayse, "Boş dosya", ProjectType::Gis).await;
     let e = open(&db, &ayse, empty).await;
     assert!(matches!(
         convert(
@@ -317,5 +323,88 @@ async fn a_database_project_becomes_a_file_project_of_one_moment() {
         .await,
         Err(AppError::Invalid { .. })
     ));
+    db.close().await;
+}
+
+/// A CAD type's whole project is its file (docs/adr/9196 §2, CLAUDE.md §25 rule 5): made without a storage it is a file
+/// project; asked for the database it is refused with the reason, by `storage`; its file never goes into the database,
+/// refused by `to`. A CBS project is the database's.
+#[tokio::test]
+async fn a_cad_types_project_is_kept_as_its_file() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 3)
+        .await
+        .unwrap();
+    let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
+    let input = |name: &str, project_type: ProjectType, storage: Option<ProjectStorage>| {
+        let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
+        ProjectCreate {
+            dimension_sets: Vec::new(),
+            casework: Vec::new(),
+            constraints: Default::default(),
+            name: name.into(),
+            settings: s.settings,
+            origin: s.origin,
+            home_view: s.home_view,
+            layers: s.layers,
+            active_layer: s.active_layer,
+            styles: s.styles,
+            sheets: None,
+            arrays: Vec::new(),
+            description: None,
+            project_type: Some(project_type),
+            tags: None,
+            storage,
+        }
+    };
+    for t in [
+        ProjectType::Cad,
+        ProjectType::LandReadjustment,
+        ProjectType::ZoningPlan,
+        ProjectType::Subdivision,
+        ProjectType::Road,
+        ProjectType::Architecture,
+    ] {
+        let made = projects::create(&db.app, &ayse, input(t.name(), t, None), None)
+            .await
+            .unwrap();
+        assert_eq!(made.storage, ProjectStorage::File, "{t:?}");
+        match projects::create(
+            &db.app,
+            &ayse,
+            input("Veritabanında", t, Some(ProjectStorage::Database)),
+            None,
+        )
+        .await
+        {
+            Err(e @ AppError::Invalid { .. }) => {
+                assert_eq!(e.path(), Some("storage"), "{t:?}");
+                assert!(
+                    e.to_string().contains("tamamı proje dosyasındadır"),
+                    "{t:?}: {e}"
+                );
+            }
+            other => panic!("{t:?}: {other:?}"),
+        }
+    }
+    let cbs = projects::create(&db.app, &ayse, input("Kent", ProjectType::Gis, None), None)
+        .await
+        .unwrap();
+    assert_eq!(cbs.storage, ProjectStorage::Database);
+    // A road's file project does not go into the database.
+    let project = file_project(&db, &ayse, "Çevre yolu", ProjectType::Road).await;
+    let by = open(&db, &ayse, project).await;
+    let store = blobs();
+    save_first(&db, &store, &by, &keepable()).await;
+    let asked = catalog_envelope(&by, PROJECT_CONVERT, json!({ "to": "database" }), &[]);
+    match convert(&db, &store, asked, &by).await {
+        Err(e @ AppError::Invalid { .. }) => {
+            assert_eq!(e.path(), Some("to"));
+            assert!(e.to_string().contains("“Yol” türündeki"), "{e}");
+        }
+        other => panic!("{other:?}"),
+    }
     db.close().await;
 }

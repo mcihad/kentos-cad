@@ -426,7 +426,7 @@
                 "type": "null"
               }
             ],
-            "description": "How the project is kept, for good (docs/adr/0031); absent: object by\nobject in PostGIS (`database`). A `file` project gets its content\nfrom its first committed revision."
+            "description": "How the project is kept, for good (docs/adr/0031); absent: its type's\n(docs/adr/9196 §2). A CAD type's (`cad`, `architecture`, `zoningPlan`,\n`landReadjustment`, `subdivision`, `road`) whole project is its file\n(`file`), refused in the database; a CBS project's is object by\nobject in PostGIS (`database`). A `file` project gets its content\nfrom its first committed revision."
           },
           "styles": {
             "$ref": "#/$defs/ProjectStyles"
@@ -199788,7 +199788,7 @@
         },
         "projectType": {
           "$ref": "#/$defs/ProjectType",
-          "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+          "description": "What kind of work it is: a label, not a claim of compliance. A CAD type's project is kept as its file\n(docs/adr/9196 §2)."
         },
         "purgeAfter": {
           "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
