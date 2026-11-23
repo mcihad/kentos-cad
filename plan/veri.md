@@ -613,3 +613,11 @@ numaraları raporunkidir.
     kendi işi gelmez; CAD projesi reddedilir.
   - GeoPackage ya da PostgreSQL seçilince proje hiçbir yere yazılmaz; ilk Kaydet Veri kaynağı'nı o yerle ve adıyla açar.
   - Kalan: betikte amaç ve şablon, şablonun paftaları, gerçek pencere, web.
+- [x] **VY-84 — CBS'nin görünürlüğü katmana ve seçime göre; alt şeritte CAD terimi yok (rapor 12'nin kalanı).**
+  ([ADR 9185](../docs/adr/9185-cbs-visibility-by-layer-and-selection.md))
+  - Seçim yokken etkin katman bağlamsal sekmeyi açar: raster, nokta bulutu, ağın katmanı (yeni Ağ sekmesi, CBS).
+    Seçim önce gelir; sekme öne kendiliğinden geçmez, başka katmanda kapanır.
+  - CBS'nin alt şeridinde Kalınlık lambası yok (Çizgi kalınlığı Görünüm'de); çizimin sekmesi “Harita”.
+  - Görünürlük matrisi: boş CBS, nokta, çizgi, alan, raster, nokta bulutu, ağ, salt okunur tablo, oturumdaki tablo,
+    karışık seçim; CAD'den CBS'ye dönüş; IFC CBS'de erişilmez, binanın CAD projesinde erişilir.
+  - Kalan: yetki ve sağlayıcıya göre şeridin kendisi, CBS'ye özgü panel düzeni, gerçek pencere, web.

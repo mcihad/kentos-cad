@@ -381,11 +381,13 @@ fn each_program_has_its_own_status_cells() {
                 "{program:?} {cell:?}"
             );
         }
-        // The lamps follow: every other drafting aid is every program's.
+        // The lamps follow: every other drafting aid is every program's but Kalınlık, whose lamp a CBS project has not
+        // (docs/adr/9185; a program without a drawing shows its own type).
         for (id, _) in crate::view::STATUS_AIDS {
             let own = match id {
                 "draft.topology" => cells.contains(&Topology),
                 "draft.overlap" => cells.contains(&Overlap),
+                "view.lineWeights" => app.work_mode() != Workspace::Gis,
                 _ => true,
             };
             assert_eq!(app.shows_aid(id), own, "{program:?} {id}");
@@ -1018,7 +1020,8 @@ fn the_status_bar_shows_the_lamps_at_1440() {
             "{word}"
         );
         let first = in_bar(&mut shot, &app, "Kenet");
-        let last = in_bar(&mut shot, &app, "Kalınlık");
+        // A CBS project's last lamp is Oto. seçim: it has no Kalınlık (docs/adr/9185).
+        let last = in_bar(&mut shot, &app, if kind == Workspace::Gis { "Oto. seçim" } else { "Kalınlık" });
         // From the first lamp's left (its padding, lamp and gap before the name) to the last's padding and the
         // row's spacing (kentos-ui's `Toggle`).
         let compact = fit >= 7;

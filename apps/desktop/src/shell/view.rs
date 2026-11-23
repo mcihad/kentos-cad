@@ -102,8 +102,11 @@ impl App {
                     // Zaman sürgüsü's bar while it is open (temporal/bar.rs, docs/adr/0210 §10).
                     self.time_bar(self.viewport.bounds.width),
                     // Blok düzenleyici's bar in the tabs' place while it is open (block_editor.rs).
-                    self.block_editor_bar()
-                        .unwrap_or_else(|| self.sheets.tabs().map(Message::Sheet)),
+                    self.block_editor_bar().unwrap_or_else(|| {
+                        // A CBS project's drawing is its Harita (docs/adr/9185).
+                        let model = kentos_sheet_ui::status::model_name(Some(self.work_mode()));
+                        self.sheets.tabs_named(model).map(Message::Sheet)
+                    }),
                     self.bottom()
                 ],
                 ribbon_shade()

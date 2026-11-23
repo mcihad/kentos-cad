@@ -2614,6 +2614,9 @@ Liste:
   kursun (ad, amaç, il ve sistem, saklama aynı sayfada; `fixtures/project/v1/wizard.json`'ın ray notları gösterilen
   adımlara göredir); kurum şablonundan katmanları, stilleri ve kurum ayarlarını alsın, GeoPackage ya da veritabanı
   seçilen projenin ilk kaydı Veri kaynağı'nı açsın.
+- [ ] Katmanın bağlamsal sekmesi (ADR 9185, 23 Kasım 2026): web'in şeridi de seçim yokken etkin katmanın sekmesini
+  açsın (raster, nokta bulutu, ağın katmanı: `ctx.network`); CBS'nin durum çubuğunda Kalınlık olmasın, çizimin sekmesi
+  “Harita” olsun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

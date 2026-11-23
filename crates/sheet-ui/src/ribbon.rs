@@ -219,11 +219,16 @@ impl Designer {
                                 .body("[% @ad %] ile yazılan değerler: paftanın ve projenin."),
                         ),
                 )
-                .tool(
-                    Button::small(icons::MODEL, "Model")
+                .tool({
+                    // A CBS project's map is its Harita (docs/adr/9185).
+                    let (name, back) = match self.model_name() {
+                        "Harita" => ("Harita", "Haritaya dön"),
+                        _ => ("Model", "Modele dön"),
+                    };
+                    Button::small(icons::MODEL, name)
                         .on_press(wrap(Message::Model))
-                        .tip(Tip::new("Modele dön").body("Çizim alanı öne gelir; paftalar sekmelerinde kalır.")),
-                ),
+                        .tip(Tip::new(back).body("Çizim alanı öne gelir; paftalar sekmelerinde kalır."))
+                }),
         );
 
         for g in &self.profile.groups {

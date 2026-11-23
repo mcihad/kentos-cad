@@ -279,6 +279,11 @@
     "id": "ctx.pointcloud",
     "label": "Nokta bulutu",
     "contextual": true
+   },
+   {
+    "id": "ctx.network",
+    "label": "Ağ",
+    "contextual": true
    }
   ]
  },

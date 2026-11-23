@@ -104,6 +104,39 @@ impl App {
         self.contextual_tabs().find(|t| t.id == id)
     }
 
+    /// The contextual tab the active layer opens while nothing is selected (docs/adr/9185): a layer of rasters the
+    /// Raster tab, a layer of point clouds the Nokta bulutu tab, a network's line or point layer the Ağ tab; any other
+    /// layer none. A vector layer is told at its first object, so a large one costs nothing.
+    pub(crate) fn layer_tab(&self) -> Option<&'static Tab> {
+        if !self.selection.is_empty() {
+            return None;
+        }
+        let doc = self.document.as_ref()?;
+        let layer = doc.model.layers().active();
+        let in_network = doc.settings().networks.iter().any(|n| {
+            n.edges.iter().any(|e| e.layer == layer) || n.junctions.iter().any(|j| j.layer == layer)
+        });
+        let kind = if in_network {
+            "network"
+        } else {
+            let mut objects = doc.model.by_layer(layer);
+            let first = crate::selection_fit::tab_kind(objects.next()?);
+            if !matches!(first, "raster" | "pointcloud")
+                || !objects.all(|e| crate::selection_fit::tab_kind(e) == first)
+            {
+                return None;
+            }
+            first
+        };
+        let id = catalog().contextual_for(self.work_mode(), self.ribbon_work(), &[kind])?.id;
+        self.contextual_tabs().find(|t| t.id == id)
+    }
+
+    /// The contextual tab beside the others: the selection's, else the active layer's (docs/adr/9185).
+    pub(crate) fn context_tab(&self) -> Option<&'static Tab> {
+        self.selection_tab().or_else(|| self.layer_tab())
+    }
+
     /// The selection tab's name: the line tab, which several kinds share, by the kind when every selected object is
     /// one kind (a lone arc's tab says Yay, not Çizgi); every other tab by its own name.
     pub(crate) fn selection_tab_label(&self, tab: &'static Tab) -> &'static str {
@@ -129,6 +162,10 @@ impl App {
     /// front (docs/adr/0622 §4), one cleared
     /// takes it away and the chosen tab shows again.
     pub(crate) fn follow_selection_tab(&mut self) {
+        // The active layer's tab closes when another layer is made active (docs/adr/9185).
+        if self.ribbon_context && self.context_tab().is_none() {
+            self.ribbon_context = false;
+        }
         let stamp = self.document.as_ref().map(|d| (d.session, self.selection.version()));
         if stamp == self.ribbon_follows {
             return;
@@ -153,7 +190,7 @@ impl App {
     /// something is selected, else the chosen tab ([`App::regular_tab`]).
     pub(crate) fn shown_tab(&self) -> &'static str {
         if self.ribbon_context
-            && let Some(tab) = self.selection_tab()
+            && let Some(tab) = self.context_tab()
         {
             return tab.id;
         }
@@ -165,7 +202,7 @@ impl App {
     /// becomes the chosen one.
     pub(crate) fn choose_tab(&mut self, id: &'static str) {
         if self.contextual_tabs().any(|t| t.id == id) {
-            self.ribbon_context = !self.selection.is_empty();
+            self.ribbon_context = self.context_tab().is_some_and(|t| t.id == id);
         } else {
             self.tab = id;
             self.ribbon_context = false;
@@ -416,3 +453,7 @@ mod tab_label_tests {
         assert_eq!(label(&app), Some("Çizgi"));
     }
 }
+
+#[cfg(test)]
+#[path = "../tests/gis_visibility_tests.rs"]
+mod gis_visibility_tests;

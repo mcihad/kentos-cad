@@ -98,6 +98,20 @@ impl App {
                 tab.id == shown,
                 Message::RibbonTab(tab.id),
             );
+        } else if let Some(tab) = self.layer_tab() {
+            // The active layer's tab (docs/adr/9185): its name where the selection's count stands.
+            tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
+            let layer = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.layers().get(d.model.layers().active()).map(|n| n.name.clone()))
+                .unwrap_or_default();
+            ribbon = ribbon.contextual_tab(
+                tab.label,
+                typography::elide(&layer, typography::caption(), typography::scaled(120.0)).into_owned(),
+                tab.id == shown,
+                Message::RibbonTab(tab.id),
+            );
         }
         if self.sheets.is_active() {
             tab_tips.push(None);

@@ -114,7 +114,7 @@ impl App {
     /// The tab and panel a command lives in: the tabs other than Giriş
     /// first, then Giriş (the web's `where` and `reveal`).
     fn home_of(&self, id: &str) -> Option<(&'static str, &'static str, &Panel)> {
-        let tabs: Vec<_> = self.ribbon_tabs().chain(self.selection_tab()).collect();
+        let tabs: Vec<_> = self.ribbon_tabs().chain(self.context_tab()).collect();
         let order = tabs
             .iter()
             .filter(|tab| tab.id != "home")

@@ -838,8 +838,9 @@ mod tests {
         app.say(kentos_interaction::Level::Success, line.to_owned());
         assert!(!app.command_expanded);
         shot.settle(&mut app, App::view, &mut update);
-        // The message's cell: after the cursor's coordinates, on the bar's line.
-        let at = iced::Point::new(400.0, size.height - 14.0);
+        // The message's cell: after the cursor's coordinates, on the bar's line. A CBS project has no Kalınlık
+        // (docs/adr/9185), so the bar has room for the mode's name and the message's cell ends sooner: near its start.
+        let at = iced::Point::new(250.0, size.height - 14.0);
         shot.input(&mut app, App::view, &mut update, Input::Click(at));
         assert!(app.command_expanded, "the panel opens");
         assert_eq!(app.bottom_tab, BottomTab::History);

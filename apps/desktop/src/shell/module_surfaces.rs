@@ -533,8 +533,12 @@ impl App {
         self.surfaces().is_none_or(|s| s.cells.contains(&cell))
     }
 
-    /// Whether the status bar shows the drafting aid `id`'s lamp here.
+    /// Whether the status bar shows the drafting aid `id`'s lamp here. A CBS project's bar has no Kalınlık lamp, a CAD
+    /// drawing's habit: its Çizgi kalınlığı stays in Görünüm (docs/adr/9185).
     pub(crate) fn shows_aid(&self, id: &str) -> bool {
+        if id == "view.lineWeights" && self.work_mode() == Workspace::Gis {
+            return false;
+        }
         aid_cell(id).is_none_or(|cell| self.shows_cell(cell))
     }
 

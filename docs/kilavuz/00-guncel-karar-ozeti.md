@@ -259,6 +259,10 @@
     (Dosya, GeoPackage içinde, PostgreSQL veritabanında) aynı sayfada, her biri sonucunu bir cümleyle söyler. Kurum
     şablonundan katmanlar, stiller ve kurum ayarları gelir, nesneler gelmez. GeoPackage ya da veritabanı seçilen
     projenin ilk Kaydet'i Veri kaynağı'nı o yerle açar (`Source::Wanted`).
+  - **Katmanın bağlamsal sekmesi** (23 Kasım, rapor 12'nin kalanı; [ADR 9185](../adr/9185-cbs-visibility-by-layer-and-selection.md), VY-84):
+    seçim yokken etkin katman sekmeyi açar: raster katmanı Raster'ı, nokta bulutu katmanı Nokta bulutu'nu, ağın
+    katmanı yeni Ağ sekmesini (CBS). Seçim önce gelir. CBS'nin alt şeridinde Kalınlık lambası yok, çizimin sekmesi
+    “Harita”. Görünürlük matrisi sınandı.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

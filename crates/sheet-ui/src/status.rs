@@ -15,20 +15,36 @@ use crate::designer::Designer;
 use crate::icons;
 use crate::message::{InspectorTab, Message};
 
+/// The drawing's tab's name by the project's type: Harita for a CBS project, Model for any other (docs/adr/9185).
+pub fn model_name(workspace: Option<kentos_contracts::Workspace>) -> &'static str {
+    if workspace == Some(kentos_contracts::Workspace::Gis) { "Harita" } else { "Model" }
+}
+
 /// Millimetres with one decimal, by the display rule (ADR 0149: a point, as the web's `fixed`).
 fn mm1(um: f64) -> String {
     kentos_geometry_core::display::fixed(um / 1000.0, 1)
 }
 
 impl Designer {
+    /// The drawing's tab's name: a CBS project's map is its Harita, a CAD drawing's its Model (docs/adr/9185).
+    pub fn model_name(&self) -> &'static str {
+        model_name(self.ctx.workspace)
+    }
+
     /// “Model | Pafta 1 | Pafta 2 | +”: the model first, never closed.
     pub fn tabs(&self) -> Element<'_, Message> {
+        self.tabs_named(self.model_name())
+    }
+
+    /// [`Designer::tabs`] with the drawing's tab named as the host says it: “Harita | Pafta 1 | +” in a CBS project
+    /// (the host knows its project's type before the sheet mode follows it).
+    pub fn tabs_named(&self, model: &'static str) -> Element<'_, Message> {
         let active = self
             .open
             .as_deref()
             .and_then(|id| self.book.sheet_index(id))
             .map_or(0, |i| i + 1);
-        let tabs = std::iter::once(Tab::new("Model").icon(Icon::Layers).closable(false)).chain(
+        let tabs = std::iter::once(Tab::new(model).icon(Icon::Layers).closable(false)).chain(
             self.book
                 .sheets
                 .iter()

@@ -6926,6 +6926,63 @@
    ]
   },
   {
+   "id": "ctx.network",
+   "label": "Ağ",
+   "kinds": [
+    "network"
+   ],
+   "modes": [
+    "gis"
+   ],
+   "panels": [
+    {
+     "label": "Ağ analizi",
+     "icon": "networks",
+     "items": [
+      {
+       "command": "network.manage",
+       "size": "large"
+      },
+      {
+       "command": "tool.netRoute",
+       "size": "small"
+      },
+      {
+       "command": "tool.netServiceArea",
+       "size": "small"
+      },
+      {
+       "command": "tool.netTrace",
+       "size": "small"
+      }
+     ],
+     "overflow": [
+      "pipes.check",
+      "network.subnetworks",
+      "linearRef.eventLinks"
+     ]
+    },
+    {
+     "label": "Katman",
+     "icon": "layers",
+     "items": [
+      {
+       "command": "data.featureTable",
+       "size": "small"
+      },
+      {
+       "command": "style.layerStyle",
+       "size": "small"
+      },
+      {
+       "command": "layer.filter",
+       "size": "small"
+      }
+     ]
+    }
+   ]
+  },
+  {
    "id": "ctx.wall",
    "label": "Duvar",
    "kinds": [

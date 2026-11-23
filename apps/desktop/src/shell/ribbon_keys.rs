@@ -155,7 +155,7 @@ impl App {
                     .filter(|id| usable(self, id))
                     .collect();
                 let mut tabs: Vec<&'static Tab> = self.ribbon_tabs().collect();
-                if let Some(tab) = self.selection_tab() {
+                if let Some(tab) = self.context_tab() {
                     tabs.push(tab);
                 }
                 let labels: Vec<&str> = tabs.iter().map(|t| t.label).collect();
