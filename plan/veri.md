@@ -537,3 +537,7 @@ numaraları raporunkidir.
   ([ADR 9173](../docs/adr/9173-style-file-losses-one-by-one.md))
   - QML ve SLD'nin yazma ve almasında başlık ve sayı, ardından her kayıp numaralı satırda; birleşik uyarı yinelenmez.
   - Kalan: planlı→kontrol uçtan uca sınaması, kayıpların pencerede tablosu, web.
+- [~] **VY-73 — Masaüstü formu yayımlama iznini tasarlama izninden ayırır (rapor 8'in kalanı).**
+  ([ADR 9174](../docs/adr/9174-the-publish-right-on-the-desktop.md))
+  - `forms.publish` yoksa Yayınla kapalı ve nedeni rolün adıyla; taslak, yayından kaldırma ve kurallar tasarım izniyle.
+  - Kalan: yol formunda bütün sınama, tasarlayıp yayımlamayan hazır rol (sahibin kararı), web.

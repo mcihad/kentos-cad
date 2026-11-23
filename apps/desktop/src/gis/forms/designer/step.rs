@@ -1344,6 +1344,11 @@ impl App {
                 let anyway = matches!(ev, Event::PublishAnyway);
                 w.breaking = None;
                 self.gis.forms_window = Some(w);
+                // A role that designs but does not publish (docs/adr/9174): nothing is written, said why.
+                if let Some(why) = self.forms_publish_locked() {
+                    self.warn(why);
+                    return Task::none();
+                }
                 if !self.save_form() {
                     return Task::none();
                 }

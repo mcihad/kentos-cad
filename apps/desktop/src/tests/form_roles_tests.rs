@@ -104,3 +104,53 @@ fn screens() {
         });
     }
 }
+
+/// The 8th item's publisher (docs/adr/9174): a role that designs forms but may not publish them (`forms.design`
+/// without `forms.publish`, as the server tells them apart) keeps its draft and is refused Yayınla with its role's
+/// name, nothing published; given `forms.publish`, Yayınla is open.
+#[test]
+fn a_role_that_designs_but_does_not_publish_is_refused_yayinla_with_why() {
+    use crate::forms::designer::Event as D;
+    let mut app = App::boot(None).0;
+    buildings(&mut app, true);
+    let designs = vec![
+        ProjectPermission::Read,
+        ProjectPermission::Edit,
+        ProjectPermission::FormsDesign,
+        ProjectPermission::FormsUse,
+    ];
+    as_role(&mut app, ProjectRole::Manager, designs.clone(), ProjectState::Active);
+    assert!(app.forms_locked().is_none(), "it designs");
+    let why = app.forms_publish_locked().expect("it does not publish");
+    assert!(why.contains("formu yayınlamaz") && why.contains("taslağı kaydedebilirsiniz"), "{why}");
+    run(&mut app, "data.forms");
+    let releases = |app: &App| app.chosen_form().map(|f| f.releases.len());
+    let before = releases(&app);
+    assert!(before.is_some(), "a form chosen");
+    let _ = app.update(crate::app::Message::Gis(crate::gis::Event::Forms(D::Publish)));
+    assert_eq!(releases(&app), before, "nothing published");
+    assert!(said(&app).iter().any(|l| l.contains("formu yayınlamaz")), "{:#?}", said(&app));
+    // Given forms.publish: open.
+    let mut publishes = designs;
+    publishes.push(ProjectPermission::FormsPublish);
+    as_role(&mut app, ProjectRole::Manager, publishes, ProjectState::Active);
+    assert!(app.forms_publish_locked().is_none());
+}
+
+/// The picture (`.run/gui-evidence/kullanim-9174/`): Formlar for a role that designs and does not publish.
+#[test]
+#[ignore = "pictures for the owner"]
+fn publisher_screens() {
+    crate::files_testing::usage_shots("9174", "01-yayinlamayan-rol", || {
+        let mut app = App::boot(None).0;
+        buildings(&mut app, true);
+        as_role(
+            &mut app,
+            ProjectRole::Manager,
+            vec![ProjectPermission::Read, ProjectPermission::Edit, ProjectPermission::FormsDesign, ProjectPermission::FormsUse],
+            ProjectState::Active,
+        );
+        run(&mut app, "data.forms");
+        app
+    });
+}

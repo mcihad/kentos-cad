@@ -135,6 +135,23 @@ impl App {
         self.tree_locked().map(|_| FORMS_LOCKED)
     }
 
+    /// Why the open drawing's forms may not be published from here (docs/adr/9174): the design's own lock first, then a
+    /// cloud project's role without `forms.publish`, which the server refuses a release without too; none when it may.
+    /// Designing and keeping the draft is another right (`forms.design`).
+    pub(crate) fn forms_publish_locked(&self) -> Option<String> {
+        if let Some(why) = self.forms_locked() {
+            return Some(why.to_owned());
+        }
+        let source = self.document.as_ref()?.cloud_source()?;
+        if source.info.access.permissions.contains(&kentos_commands::ProjectPermission::FormsPublish) {
+            return None;
+        }
+        Some(format!(
+            "Bu projedeki rolünüz ({}) formu yayınlamaz: taslağı kaydedebilirsiniz, yayını form yayımlama izni olan bir proje yöneticisi yapar.",
+            crate::cloud::words::role(source.info.access.role)
+        ))
+    }
+
     /// Why the open drawing's records may not be written through a published form (docs/adr/9125), or none. Writing a
     /// record is not designing a form: a cloud project's Veri girişi writes records (`forms.use`, `feature.write`)
     /// though it may not change the project (`project.edit`). An archived project and a role that may only read say

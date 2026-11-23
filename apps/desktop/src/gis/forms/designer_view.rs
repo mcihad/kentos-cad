@@ -780,10 +780,15 @@ impl App {
         };
         // What keeps it from a release, kind by kind (docs/adr/9161): an empty form is one too.
         let blockers = kentos_forms::publish_blockers(issues);
+        // A role that designs but does not publish (docs/adr/9174).
+        let publish_locked = self.forms_publish_locked().filter(|_| self.forms_locked().is_none());
         let mut status = format!("Taslak {}. sürüm", form.draft.revision);
         match form.releases.last() {
             Some(r) => status.push_str(&format!(" · son yayın {}", r.version)),
             None => status.push_str(" · yayınlanmadı"),
+        }
+        if publish_locked.is_some() {
+            status.push_str(" · rolünüz yayınlamaz");
         }
         if !blockers.is_empty() {
             let kinds: Vec<String> = blockers
@@ -864,7 +869,7 @@ impl App {
             words::secondary(CANCEL, Some(msg(Event::Cancel))),
             words::secondary(
                 PUBLISH,
-                (editable && blockers.is_empty()).then(|| msg(Event::Publish))
+                (editable && blockers.is_empty() && publish_locked.is_none()).then(|| msg(Event::Publish))
             ),
             words::primary(SAVE, editable.then(|| msg(Event::Save))),
         ]
