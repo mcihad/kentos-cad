@@ -533,3 +533,7 @@ numaraları raporunkidir.
   ([ADR 9172](../docs/adr/9172-catalog-schema-tree-and-favourites.md))
   - Şemalar açılıp kapanır, arama eşleşenleri açar; yıldızlı tablolar başta, bağlantının adıyla cihazda saklanır.
   - Kalan: ilişkili öznitelik tabloları, geometri sütunu adı ve kapsam, canlı sınamalar, web.
+- [~] **VY-72 — Stil dosyası alışverişinde her kayıp ayrı satırda söylenir (rapor 10'un kalanı).**
+  ([ADR 9173](../docs/adr/9173-style-file-losses-one-by-one.md))
+  - QML ve SLD'nin yazma ve almasında başlık ve sayı, ardından her kayıp numaralı satırda; birleşik uyarı yinelenmez.
+  - Kalan: planlı→kontrol uçtan uca sınaması, kayıpların pencerede tablosu, web.

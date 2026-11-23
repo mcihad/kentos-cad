@@ -1,7 +1,7 @@
 //! A layer's look as a QML layer style file (docs/adr/0555, plan/gis.md CBS-17): Katmanlar's menu writes it with
 //! `file.export.qml` (what the QML cannot say told in the command line) and takes a QML's look with `file.import.qml`,
-//! one undo step “Katman stili” (what KentOS cannot take told). The path is asked; tests give it through
-//! `Picker::File`. The SLD's twin is `layer_sld.rs`.
+//! one undo step “Katman stili” (what KentOS cannot take told, one line each: docs/adr/9173). The path is asked; tests
+//! give it through `Picker::File`. The SLD's twin is `layer_sld.rs`.
 
 use std::path::PathBuf;
 
@@ -94,9 +94,7 @@ impl App {
                         None => format!("{} yazıldı: {} sınıf ya da kural.", out.path, out.rules),
                     },
                 );
-                for w in warnings {
-                    self.say(Level::Warn, w.message);
-                }
+                self.say_losses("QML", true, &out.lost, warnings);
             }
             Err(e) => self.announce(Level::Error, format!("QML yazılamadı. {}", e.message)),
         }
@@ -125,14 +123,44 @@ impl App {
                     },
                     text,
                 );
-                for w in warnings {
-                    self.say(Level::Warn, w.message);
-                }
+                self.say_losses("QML", false, &output.lost, warnings);
             }
             CommandResult::Failed { error } | CommandResult::Conflict { error } => {
                 self.announce(Level::Error, format!("QML alınamadı. {}", error.message));
             }
             _ => {}
+        }
+    }
+}
+
+impl App {
+    /// A style file's losses said one by one (docs/adr/9173): a headline with how many, then a numbered line each, so
+    /// none hides in a long sentence; the warning that only gathers them is not said again, the others are.
+    pub(crate) fn say_losses(
+        &mut self,
+        file: &str,
+        writing: bool,
+        lost: &[String],
+        warnings: Vec<kentos_commands::CommandWarning>,
+    ) {
+        let gathers = |code: &str| code == kentos_commands::codes::IMPORT_LOSSES || code == kentos_commands::codes::EXPORT_LOSSES;
+        for w in warnings {
+            if lost.is_empty() || !gathers(&w.code) {
+                self.say(Level::Warn, w.message);
+            }
+        }
+        if lost.is_empty() {
+            return;
+        }
+        let whose = match (file, writing) {
+            ("SLD", true) => "SLD'nin söyleyemediği",
+            (_, true) => "QML'in söyleyemediği",
+            ("SLD", false) => "SLD'den alınamayan",
+            (_, false) => "QML'den alınamayan",
+        };
+        self.say(Level::Warn, format!("{whose} {} özellik:", lost.len()));
+        for (i, l) in lost.iter().enumerate() {
+            self.say(Level::Warn, format!("{}. {l}", i + 1));
         }
     }
 }
@@ -178,3 +206,7 @@ pub(crate) fn taken_text(
         look_words(kind, rules, labels)
     )
 }
+
+#[cfg(test)]
+#[path = "layer_qml_tests.rs"]
+mod layer_qml_tests;

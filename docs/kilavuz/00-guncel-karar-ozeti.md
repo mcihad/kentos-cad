@@ -220,6 +220,9 @@
   - **PostGIS kataloğunda şema ağacı ve yıldız** (23 Kasım, rapor 7'nin kalanı;
     [ADR 9172](../adr/9172-catalog-schema-tree-and-favourites.md), VY-71): şemalar açılıp kapanır; yıldızlı tablolar
     “Sık kullanılanlar” altında başta durur.
+  - **Stil dosyası kayıpları satır satır** (23 Kasım, rapor 10'un kalanı;
+    [ADR 9173](../adr/9173-style-file-losses-one-by-one.md), VY-72): QML/SLD alışverişinde her kayıp numaralı ayrı
+    satırda söylenir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

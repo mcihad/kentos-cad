@@ -2588,6 +2588,8 @@ Liste:
   kaynağının değiştiğini görsün ve tam denetimi önersin.
 - [ ] PostGIS kataloğunda şema ağacı ve yıldız (ADR 9172, 23 Kasım 2026): web'in PostGIS penceresi şemaları açıp
   kapatsın ve bağlantının yıldızlı tablolarını başta göstersin.
+- [ ] Stil dosyası kayıpları satır satır (ADR 9173, 23 Kasım 2026): web'in QML/SLD alışverişi `lost` listesini başlık
+  ve numaralı satırlarla söylesin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

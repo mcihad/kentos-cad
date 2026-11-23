@@ -92,9 +92,7 @@ impl App {
                         None => format!("{} yazıldı: {} kural.", out.path, out.rules),
                     },
                 );
-                for w in warnings {
-                    self.say(Level::Warn, w.message);
-                }
+                self.say_losses("SLD", true, &out.lost, warnings);
             }
             Err(e) => self.announce(Level::Error, format!("SLD yazılamadı. {}", e.message)),
         }
@@ -128,9 +126,7 @@ impl App {
                     },
                     text,
                 );
-                for w in warnings {
-                    self.say(Level::Warn, w.message);
-                }
+                self.say_losses("SLD", false, &output.lost, warnings);
             }
             CommandResult::Failed { error } | CommandResult::Conflict { error } => {
                 self.announce(Level::Error, format!("SLD alınamadı. {}", error.message));
