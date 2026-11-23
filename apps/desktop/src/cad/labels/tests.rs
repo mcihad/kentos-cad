@@ -31,6 +31,30 @@ fn the_labels_wait_for_the_view_to_settle() {
     );
 }
 
+/// A wheel turn the last placing serves (a quarter's zoom at most), then the view settling where it stopped: the labels
+/// are placed again at the same camera, and their picture is drawn for that placing (docs/adr/9202). Its key held only
+/// the camera and the look, so the picture of the placing made for the view the wheel started from, its grown texts at
+/// that view's sizes, stayed until the next move; RM-02's truth check found it on 4 of 4 settled frames of a
+/// million-object project.
+#[test]
+fn a_settled_wheel_draws_the_placing_made_where_it_stopped() {
+    let mut app = crate::files_testing::app_with_drawing();
+    let _ = app.view();
+    let first = app.label_spots.placing().expect("placed");
+    app.viewport.update(
+        crate::viewport::Event::Zoomed { factor: 1.1, at: iced::Point::new(300.0, 300.0) },
+        None,
+    );
+    assert!(app.viewport.moving());
+    let _ = app.view();
+    assert_eq!(app.label_spots.placing(), Some(first), "the last placing serves while the wheel turns");
+    let camera = app.viewport.camera;
+    app.viewport.update(crate::viewport::Event::Settled, None);
+    let _ = app.view();
+    assert_eq!(app.viewport.camera, camera, "the view did not move");
+    assert_eq!(app.label_spots.placing(), Some(first + 1), "placed again where it stopped");
+}
+
 /// A zoom out while the view still moves places the labels for the larger view at once: the last placing served
 /// whatever the view outside true sizes, and the edges a zoom out showed stayed without labels until the view stopped
 /// (14 November 2026, the owner: "zoom yaparken bazen kayboluyor").

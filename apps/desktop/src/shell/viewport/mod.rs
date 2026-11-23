@@ -346,6 +346,10 @@ pub struct Viewport {
     zoomed_at: Option<Instant>,
     /// The view's last move, a pan or the wheel: the labels keep their placing until it settles (docs/adr/0597).
     moved_at: Option<Instant>,
+    /// Every frame drawn afresh (plan/render.md RM-02, docs/adr/9202): no picture kept, moved or scaled from an
+    /// earlier frame and no labels kept while the view moves. The truth a frame with them is compared with; set by
+    /// the measurements only.
+    pub(crate) fresh: bool,
     /// A view of a split area that is not the active one, its place among them (split_view.rs, docs/adr/0285 §3,
     /// 0637 §1): its events come as `Message::OtherViewport`.
     pub(crate) other: Option<usize>,
@@ -561,6 +565,8 @@ struct Program {
     moving: bool,
     /// What the picture shows apart from the camera (`FrameInput::drawing`, docs/adr/1068).
     drawing: Option<u64>,
+    /// A picture of an earlier frame may serve (`FrameInput::keep_picture`); off for `Viewport::fresh`.
+    keep: bool,
     /// The inactive view of a split area (docs/adr/0285 §3).
     other: Option<usize>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
@@ -702,6 +708,7 @@ impl shader::Program<Message> for Program {
             lens: false,
             moving: self.moving,
             drawing: self.drawing,
+            keep: self.keep,
         }
     }
 
@@ -905,6 +912,8 @@ pub struct Frame {
     moving: bool,
     /// What the picture shows apart from the camera (`FrameInput::drawing`, docs/adr/1068); none in Büyüteç's window.
     drawing: Option<u64>,
+    /// A picture of an earlier frame may serve (`FrameInput::keep_picture`).
+    keep: bool,
 }
 
 impl fmt::Debug for Frame {
@@ -965,7 +974,7 @@ impl shader::Primitive for Frame {
                         // Iced draws the window again for any event; the drawing is
                         // drawn again only when it changed. The hovered object (the
                         // last part) goes over it (kentos-render-wgpu, renderer.rs).
-                        keep_picture: true,
+                        keep_picture: self.keep,
                         overlays: 1,
                         moving: self.moving,
                         drawing: self.drawing,
@@ -1072,6 +1081,7 @@ impl shader::Program<Message> for Lens {
             lens: true,
             moving: false,
             drawing: None,
+            keep: true,
         }
     }
 }

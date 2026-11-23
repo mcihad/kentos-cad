@@ -27,6 +27,7 @@ impl Viewport {
             phasings: RefCell::new(None),
             zoomed_at: None,
             moved_at: None,
+            fresh: false,
             other: None,
             passive: false,
             theme: None,
@@ -322,7 +323,7 @@ impl Viewport {
             (palette.background.0, accent.0, settings.samples, settings.hi_dpi).hash(&mut h);
             settings.highlight_width.to_bits().hash(&mut h);
             styling.map(|s| (s.screen_symbols, s.line_weights)).hash(&mut h);
-            (graphics.zoom_scaled && ZOOM_SCALED.with(std::cell::Cell::get)).then(|| h.finish())
+            (!self.fresh && graphics.zoom_scaled && ZOOM_SCALED.with(std::cell::Cell::get)).then(|| h.finish())
         };
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
@@ -343,6 +344,7 @@ impl Viewport {
                 .max(self.moved_until()),
             moving: self.moving(),
             drawing,
+            keep: !self.fresh,
             other: self.other,
             passive: self.passive,
         })
@@ -634,7 +636,7 @@ impl Viewport {
     /// Whether the view is moving (a pan or the wheel within the last [`SYMBOLS_SETTLE`]): the labels keep their
     /// placing meanwhile (docs/adr/0597).
     pub fn moving(&self) -> bool {
-        self.moved_until().is_some()
+        !self.fresh && self.moved_until().is_some()
     }
 
     /// When the view's move settles and the labels are placed again, while it has not.

@@ -57,9 +57,10 @@ mod parts_tests;
 #[derive(Default)]
 pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>);
 
-/// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only), and the
-/// view's scale they were placed at.
-type Kept = (u64, u64, Shown, Option<Bounds>, f64);
+/// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only), the
+/// view's scale they were placed at, and which placing they are: a count of placings, which the labels' picture is
+/// drawn again for (docs/adr/9202).
+type Kept = (u64, u64, Shown, Option<Bounds>, f64, u64);
 
 /// A view's box in the world.
 type Bounds = kentos_geometry_core::geometry::Bounds;
@@ -71,7 +72,7 @@ impl Spots {
     /// The labels last placed (this frame's, once the labels' layer was built):
     /// a mask's shapes (docs/adr/0226 §3).
     pub fn last(&self) -> Option<Shown> {
-        self.0.borrow().as_ref().map(|(_, _, spots, _, _)| spots.clone())
+        self.0.borrow().as_ref().map(|(_, _, spots, _, _, _)| spots.clone())
     }
 
     /// The bands its labels' parts were painted as (docs/adr/0786 §3).
@@ -82,13 +83,20 @@ impl Spots {
     /// The key the kept labels were asked for (a test's).
     #[cfg(test)]
     pub(crate) fn key(&self) -> Option<u64> {
-        self.0.borrow().as_ref().map(|(key, _, _, _, _)| *key)
+        self.0.borrow().as_ref().map(|(key, _, _, _, _, _)| *key)
+    }
+
+    /// Which placing the kept labels are (a test's): one more each time they are placed.
+    #[cfg(test)]
+    pub(crate) fn placing(&self) -> Option<u64> {
+        self.0.borrow().as_ref().map(|k| k.5)
     }
 
     /// The labels for `key` (the drawing and the view), asked when not known; while `moving`, the last ones asked for
     /// the same drawing (`content`, the key without the view). Asked for `wide`, a box round the view (true sizes,
     /// docs/adr/0626 §7), the last ones serve while the view moves inside it and are asked again, moving or not,
-    /// once it leaves it: a text coming into view is never missing. With them, the view's scale they were placed at.
+    /// once it leaves it: a text coming into view is never missing. With them, the view's scale they were placed at
+    /// and which placing they are.
     fn get(
         &self,
         key: u64,
@@ -96,7 +104,7 @@ impl Spots {
         moving: bool,
         (view, wide, scale): (Bounds, Option<Bounds>, f64),
         ask: impl FnOnce(Bounds) -> LabelParts,
-    ) -> (Shown, f64) {
+    ) -> (Shown, f64, u64) {
         let mut kept = self.0.borrow_mut();
         let inside = |asked: &Option<Bounds>| {
             asked.is_none_or(|b| {
@@ -110,20 +118,21 @@ impl Spots {
         // that, the old places were drawn over a view they no longer fitted until the view stopped).
         let near = |at: f64| at > 0.0 && scale > 0.0 && (scale / at).max(at / scale) <= 1.25;
         match kept.as_ref() {
-            Some((known, _, spots, _, at)) if *known == key => (spots.clone(), *at),
-            Some((_, same, spots, asked, at))
+            Some((known, _, spots, _, at, placing)) if *known == key => (spots.clone(), *at, *placing),
+            Some((_, same, spots, asked, at, placing))
                 if moving
                     && *same == content
                     && inside(asked)
                     && near(*at)
                     && (!spots.survey_names || *at == scale) =>
             {
-                (spots.clone(), *at)
+                (spots.clone(), *at, *placing)
             }
             _ => {
+                let placing = kept.as_ref().map_or(0, |k| k.5) + 1;
                 let spots = Rc::new(ask(wide.unwrap_or(view)));
-                *kept = Some((key, content, spots.clone(), wide, scale));
-                (spots, scale)
+                *kept = Some((key, content, spots.clone(), wide, scale, placing));
+                (spots, scale, placing)
             }
         }
     }
@@ -369,7 +378,7 @@ fn build<'a>(
         })
     };
     let placed_scale = camera.scale;
-    let (spots, placed_at) = kept.get(key.finish(), content, engine.moving, (view, wide, placed_scale), |view| {
+    let (spots, placed_at, placing) = kept.get(key.finish(), content, engine.moving, (view, wide, placed_scale), |view| {
         let mut spots = spatial.label_parts(
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
@@ -422,6 +431,11 @@ fn build<'a>(
     format!("{format:?}").hash(&mut look);
     let look = look.finish();
     look.hash(&mut key);
+    // Which placing is drawn, and whether a moving view holds its texts' sizes (docs/adr/9202). The view stopping
+    // places the labels again at the same camera: without these the picture kept the placing made for the view the
+    // wheel started from, its texts at that view's sizes, until the next move. A million-object project's labels
+    // stayed so after every wheel gesture (RM-02's truth check: 4 of 4 settled frames).
+    (placing, engine.moving).hash(&mut key);
     // What an object's bands are painted with besides it and its layer's colour (docs/adr/0786 §3): the view, the
     // colours, the typeface, the number formats and the faint level.
     let mut band_key = DefaultHasher::new();
