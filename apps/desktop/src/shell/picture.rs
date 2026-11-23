@@ -15,7 +15,7 @@ use kentos_ui::widget::picture::{Picture, Saved};
 use crate::app::{App, Message};
 
 /// A window's drawing as a picture: zoomed, panned and saved under `name` (the saved file's name), in the field's box.
-pub(crate) fn picture<'a>(content: impl Into<Element<'a, Message>>, name: impl Into<String>) -> Element<'a, Message> {
+pub fn picture<'a>(content: impl Into<Element<'a, Message>>, name: impl Into<String>) -> Element<'a, Message> {
     container(Picture::new(content).name(name).on_save(Message::SavePicture))
         .padding(1)
         .width(Fill)

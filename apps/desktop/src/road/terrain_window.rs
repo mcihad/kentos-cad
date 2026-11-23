@@ -107,7 +107,7 @@ pub struct Window {
 
 impl Window {
     /// The chosen surface's definition as the window has it.
-    pub(crate) fn chosen_def(&self) -> Option<&TerrainSurfaceDef> {
+    pub fn chosen_def(&self) -> Option<&TerrainSurfaceDef> {
         self.chosen.and_then(|i| self.rows.get(i)).map(|r| &r.def)
     }
 

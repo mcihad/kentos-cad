@@ -1,0 +1,39 @@
+[package]
+name = "kentos-cad"
+description = "KentOS CAD programları: masaüstü çekirdeği ve modül paketleri; kentos-cad hepsini, bir modülün programı yalnız kendininkini kaydeder (docs/adr/0801, 9199)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+default-run = "kentos-cad"
+
+[lints.rust]
+linker_messages = "allow"
+
+# The one program file (docs/adr/0802 §1): every module at once as `kentos-cad`, and KentOS Mimari, KentOS Harita and
+# KentOS GIS under their own names (`kentos-mimari` …, links made by scripts/desktop/module_links.py) or with
+# `--modul`. The modules' packages register their parts before the window starts (docs/adr/9199 §3.1).
+[[bin]]
+name = "kentos-cad"
+path = "src/main.rs"
+test = false
+
+[dependencies]
+kentos-desktop = { path = "../desktop" }
+kentos-desktop-map = { path = "../desktop-map" }
+
+# The programs' tests (tests/programs, docs/adr/9199 §4.2): every module registered, the core with its test helpers.
+[dev-dependencies]
+kentos-desktop = { path = "../desktop", features = ["testing"] }
+kentos-commands = { path = "../../crates/shared/commands", default-features = false }
+kentos-launch = { path = "../../crates/native/launch" }
+kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }
+kentos-interaction = { path = "../../crates/native/interaction" }
+kentos-project = { path = "../../crates/native/project" }
+kentos-postgis = { path = "../../crates/native/postgis" }
+kentos-domain = { path = "../../crates/native/domain" }
+kentos-render-wgpu = { path = "../../crates/render/wgpu" }
+kentos-native-style = { path = "../../crates/native/style" }
+iced = { workspace = true, features = ["canvas", "svg", "image-without-codecs"] }
+serde_json = { workspace = true }
+ctor = { version = "0.10.1", default-features = false }

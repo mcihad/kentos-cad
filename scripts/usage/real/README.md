@@ -32,7 +32,7 @@ sınar ([ADR 8000](../../../docs/adr/8000-real-window-acceptance.md)).
 ## Çalıştırma
 
 ```sh
-scripts/dev/svc.sh heavy cargo build -p kentos-desktop --bin kentos-cad
+scripts/dev/svc.sh heavy cargo build -p kentos-cad --bin kentos-cad
 scripts/usage/real/session.sh fixtures/interaction/real/daire-2p1.txt .run/gui-evidence/gercek-2p1 --modul mimari
 python3 scripts/usage/real/count.py fixtures/interaction/real/daire-2p1.txt
 ```

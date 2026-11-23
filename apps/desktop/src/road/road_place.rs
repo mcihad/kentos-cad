@@ -30,7 +30,7 @@ impl App {
     /// The lower left of a view that reaches `up` drawing units over it (its frame, the rows over the frame), so that
     /// its top stays `GAP_MM` of paper under the box of everything drawn, from the box's left edge; on an empty drawing
     /// under the origin.
-    pub(crate) fn under_drawing(&mut self, up: f64) -> [f64; 2] {
+    pub fn under_drawing(&mut self, up: f64) -> [f64; 2] {
         let Some(doc) = &self.document else {
             return [0.0, -up];
         };

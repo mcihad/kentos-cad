@@ -41,7 +41,7 @@ pub struct Answer {
 
 impl App {
     /// Servis bilgisi: a point is asked for on the drawing.
-    pub(crate) fn start_service_info(&mut self) {
+    pub fn start_service_info(&mut self) {
         // A program without the tab says where it is (module_surfaces.rs).
         if !self.open_bottom_tab(crate::bottom::BottomTab::ServiceInfo) {
             return;

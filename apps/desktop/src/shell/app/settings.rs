@@ -7,7 +7,7 @@ impl App {
     /// Puts the settings in use (docs/adr/0023): the tool session's drafting
     /// aids and value field, the theme; the drawing area reads `graphics()`
     /// each frame. Called after every change.
-    pub(crate) fn apply_settings(&mut self) {
+    pub fn apply_settings(&mut self) {
         let s = &self.settings;
         self.draft = Draft {
             ortho: s.bool("drafting.ortho"),
@@ -237,7 +237,7 @@ impl App {
     /// project's copy written whole and let go), and so are the tool's draft,
     /// the selection and the geometry store, which belong to the drawing they
     /// were made on.
-    pub(crate) fn show_document(&mut self, doc: Document) {
+    pub fn show_document(&mut self, doc: Document) {
         self.close_cloud_project();
         self.leave_document_interaction();
         // A point template's names go on in the drawing they were drawn in:

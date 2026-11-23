@@ -360,7 +360,7 @@ pub struct Window {
     /// The saved volumes compared with the chosen one (docs/adr/0943), and the comparison with each one's alignment
     /// drawn in plan.
     pub(crate) alternatives: Vec<String>,
-    pub(crate) comparison: Option<Result<(kentos_commands::VolumesCompared, Vec<CommandWarning>), String>>,
+    pub comparison: Option<Result<(kentos_commands::VolumesCompared, Vec<CommandWarning>), String>>,
     pub(crate) traces: Vec<kentos_native_application::road_volumes_compare::Trace>,
     /// The ledger asked (docs/adr/0949): the km step, by regions instead, the rounding's decimals; read while shown.
     pub(crate) ledger_step: String,

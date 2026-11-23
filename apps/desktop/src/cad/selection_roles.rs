@@ -90,7 +90,7 @@ fn roles_of(doc: &Document, picked: &[(String, String)]) -> Roles {
 
 impl App {
     /// The selection's roles (docs/adr/2480), worked out again only when the selection or the drawing changes.
-    pub(crate) fn selection_roles(&self) -> Roles {
+    pub fn selection_roles(&self) -> Roles {
         let Some(doc) = self.document.as_ref() else { return Roles::default() };
         let key = (doc.session, self.selection.version(), doc.model.generation());
         if let Some((k, roles)) = self.selection_roles.0.borrow().as_ref()

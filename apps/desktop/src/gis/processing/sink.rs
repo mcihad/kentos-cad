@@ -31,7 +31,7 @@ use crate::app::{App, Message};
 
 /// Where the result goes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(crate) enum Place {
+pub enum Place {
     #[default]
     Drawing,
     File,

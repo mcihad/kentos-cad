@@ -75,7 +75,7 @@ impl Part {
 
 /// What a making gives: the viewer's input, the models in it, what the status bar says of the drawing's model.
 #[derive(Clone)]
-pub(crate) struct Made {
+pub struct Made {
     input: Input,
     parts: Vec<Part>,
     facts: Vec<(String, String)>,
@@ -417,7 +417,7 @@ impl App {
         b.made_with = shown_ids(&shown);
         b.underlays = shown.clone();
         // A test runs no task: the model is made here and now, as its thread would give it.
-        if cfg!(test) {
+        if cfg!(any(test, feature = "testing")) {
             return match make(&copy, &shown, &stop) {
                 Some(result) => self.building3d_made(id, result.map(Arc::new)),
                 None => Task::none(),

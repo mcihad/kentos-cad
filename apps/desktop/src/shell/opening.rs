@@ -378,7 +378,7 @@ fn describe(stage: &Stage) -> (String, f32) {
 impl App {
     /// Starts opening `path` on a thread of its own; the window shows if it
     /// takes a moment. An open still running gives way to this one.
-    pub(crate) fn start_opening(&mut self, path: PathBuf, purpose: Purpose) -> Task<Message> {
+    pub fn start_opening(&mut self, path: PathBuf, purpose: Purpose) -> Task<Message> {
         self.start_opening_unit(path, purpose, None)
     }
 

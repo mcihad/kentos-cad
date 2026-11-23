@@ -65,7 +65,7 @@ const SHOWN: usize = 2000;
 
 /// The builder's two views of one text (docs/adr/0101).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ViewMode {
+pub enum ViewMode {
     /// The editor.
     Text,
     /// The same expression as nodes.
@@ -200,7 +200,7 @@ struct Picking {
 
 /// What the builder asks for.
 #[derive(Clone, Debug)]
-pub(crate) enum Event {
+pub enum Event {
     /// The processing window's ε beside the expression parameter of this name.
     OpenProcessing(String),
     /// The editor's action: typing, moving, selecting, scrolling.

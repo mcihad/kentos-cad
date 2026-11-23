@@ -60,7 +60,7 @@ pub(crate) fn now_ms() -> u64 {
 /// project's journal on this device, so a project opened again still asks before it writes.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Uncertain {
+pub struct Uncertain {
     /// The receipt that went in with the rows; none when the source keeps no receipts and cannot be asked.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub receipt: Option<String>,
@@ -72,7 +72,7 @@ pub(crate) struct Uncertain {
 /// What one layer of an uncertain write sent: its new rows by object id, its changed rows, its deleted keys.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Sent {
+pub struct Sent {
     pub layer: String,
     pub table: String,
     #[serde(default)]

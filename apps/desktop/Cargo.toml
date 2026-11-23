@@ -5,8 +5,6 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
-# `cargo run -p kentos-desktop` is kentos-cad; the module programs are built beside it.
-default-run = "kentos-cad"
 
 # The macOS linker's note that this package's programs' __eh_frame passes 16 MB (docs/adr/1136): their unwind
 # tables in DWARF mode, past what the compact table points to; unwinding still works. The note alone is quiet.
@@ -22,13 +20,7 @@ name = "kentos_desktop"
 path = "src/lib.rs"
 doctest = false
 
-# The one program file (docs/adr/0802 §1): every module at once as `kentos-cad`, and KentOS Mimari, KentOS Harita and
-# KentOS GIS under their own names (`kentos-mimari` …, links made by scripts/desktop/module_links.py) or with
-# `--modul`. Four copies of the same code were 4 × 255 MB.
-[[bin]]
-name = "kentos-cad"
-path = "src/main.rs"
-test = false
+# The programs are their own package (apps/kentos-cad, docs/adr/9199 §3.1): the core with the modules' packages.
 
 [dependencies]
 kentos-postgis = { path = "../../crates/native/postgis" }
@@ -151,6 +143,9 @@ objc2-foundation = { version = "=0.3.2", default-features = false, features = ["
 raw-window-handle = "=0.6.2"
 
 [features]
+# The core as its own tests see it, for a module package's tests (docs/adr/9199 §3.6): the test helpers
+# (files_testing …) and the switches that keep a test off the device's keychain, the network and the e-signature card.
+testing = []
 # The e-signature's software test card and in-process test server for demos and the real-window acceptance
 # (docs/adr/9002 §6): KENTOS_IMZA_DENEME_KARTI=1 and KENTOS_IMZA_DENEME_SUNUCU=1 pick them. Never in a release build.
 esign-mock = ["kentos-imza-signature/mock-token", "kentos-imza-security/issue"]

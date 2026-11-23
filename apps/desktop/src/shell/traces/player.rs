@@ -32,7 +32,7 @@ use super::keyboard::{Stroke, Variant, chord_stroke, stroke_for};
 /// Where the drawing area is in the test runner's window (logical pixels): the
 /// place a 1440 × 900 window gives it, with an odd size and a half-pixel
 /// top so pixel rounding is exercised.
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 pub const AREA: Rectangle = Rectangle {
     x: 0.0,
     y: 123.5,

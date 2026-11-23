@@ -113,7 +113,7 @@ impl App {
     /// The project as the sheet mode sees it: its mode and type, whether it
     /// has a coordinate system and attributes, its plot scale, its name, the
     /// user and today, and where the drawing area looks.
-    pub(crate) fn sheet_context(&self) -> Context {
+    pub fn sheet_context(&self) -> Context {
         let doc = self.document.as_ref();
         let settings = doc.map(Document::settings);
         let srid = settings.map_or(0, |s| s.srid);

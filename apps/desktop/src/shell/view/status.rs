@@ -184,7 +184,7 @@ impl App {
 
     /// The narrow-window steps the status bar takes at `width` (`status_bar`), and whether the second system's
     /// values show.
-    pub(crate) fn status_fit(&self, width: f32) -> (u8, bool) {
+    pub fn status_fit(&self, width: f32) -> (u8, bool) {
         // A short message: ten letters' room and more (what the bar left it before its
         // estimate counted the drafting aids' lamps right, docs/adr/0167 §2).
         let least = 10.0 * kentos_ui::theme::typography::body();
@@ -620,7 +620,7 @@ impl App {
     /// and the row's spacing (kentos-ui's `Toggle`: 9 px a side and a 6 px gap, 6 and 4 compact). The program's own
     /// lamps alone (module_surfaces.rs). Guessed from their letters the names came out some 40 px too wide at 13 px,
     /// and KentOS Harita's bar folded its lamps into Yardımcılar at 1440 px where they fit (docs/adr/0802).
-    pub(crate) fn status_aids_width(&self, compact: bool) -> f32 {
+    pub fn status_aids_width(&self, compact: bool) -> f32 {
         let size = kentos_ui::theme::typography::body();
         let (pad, gap) = if compact { (6.0, 4.0) } else { (9.0, 6.0) };
         STATUS_AIDS

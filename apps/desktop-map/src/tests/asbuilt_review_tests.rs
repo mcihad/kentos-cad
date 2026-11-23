@@ -30,7 +30,7 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     for (layer, day) in [("donem1", "2026-01-15"), ("donem2", "2026-04-15"), ("donem3", "2026-07-15")] {
-        crate::program_scenes::command(&mut app, "cad.datasets.edit", json!({"layer": layer, "dataset": {"updated": day}}));
+        crate::files_testing::command(&mut app, "cad.datasets.edit", json!({"layer": layer, "dataset": {"updated": day}}));
     }
     app
 }
@@ -107,7 +107,7 @@ fn the_review_kept_from_the_window_is_the_case_s() {
             .map(|e| doc.model.uid(kentos_domain::Slot(e.base().id)).expect("a uid").to_string())
             .expect("M1")
     };
-    crate::program_scenes::command(
+    crate::files_testing::command(
         &mut app,
         "cad.entities.transform",
         json!({"uids": [m1], "transform": {"kind": "move", "dx": 0.004, "dy": 0.0}}),

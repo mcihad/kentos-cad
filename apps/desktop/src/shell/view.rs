@@ -538,7 +538,7 @@ pub(crate) fn checklist_of(
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).
-pub(crate) const STATUS_AIDS: [(&str, &str); 11] = [
+pub const STATUS_AIDS: [(&str, &str); 11] = [
     ("draft.snap", "Kenet"),
     ("draft.grid", "Izgara"),
     ("draft.ortho", "Orto"),

@@ -59,7 +59,7 @@ pub(crate) const KINDS: [(&str, &str); 8] = [
 
 /// The columns the window offers, in the order they are written.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Col {
+pub enum Col {
     Drawing,
     Kind,
     Block,

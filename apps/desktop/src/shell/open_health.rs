@@ -24,7 +24,7 @@ const KEPT: usize = 16;
 
 /// What makes an answer reusable: the file as it is on disk and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct Key {
+pub struct Key {
     path: PathBuf,
     len: u64,
     modified: Option<SystemTime>,

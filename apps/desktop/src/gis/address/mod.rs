@@ -297,7 +297,7 @@ impl App {
 
     /// `address.search`: the panel open on its Adres tab, grown when it is short, the keyboard in the box; on it
     /// already, the panel closes.
-    pub(crate) fn open_address_search(&mut self) -> Task<Message> {
+    pub fn open_address_search(&mut self) -> Task<Message> {
         // A program without the tab says where it is (module_surfaces.rs).
         if !self.open_bottom_tab(BottomTab::Address) {
             return Task::none();

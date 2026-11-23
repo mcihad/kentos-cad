@@ -10,7 +10,7 @@ impl App {
     /// (rename, add, copy, merge) and Sil. Each entry shows where the active module has it and the layer's kind is one
     /// it is about (layer_entries.rs, docs/adr/9195 §5): a data layer has its edit session and no freeze, a service's
     /// its own items, a raster's and a cloud's look is their tab's.
-    pub(crate) fn layer_menu(&self, node: &LayerNode, active: bool) -> Menu<Message> {
+    pub fn layer_menu(&self, node: &LayerNode, active: bool) -> Menu<Message> {
         let id = node.id.clone();
         let event = |e: Event| Message::Layer(e);
         let is_layer = node.kind == LayerNodeType::Layer;

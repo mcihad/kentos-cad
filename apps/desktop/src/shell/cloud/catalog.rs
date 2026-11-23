@@ -283,7 +283,7 @@ impl App {
 
     /// Opens the window on the last list (on this device's copies without a
     /// session) and asks for its first page.
-    pub(crate) fn open_catalog(&mut self) -> Task<Message> {
+    pub fn open_catalog(&mut self) -> Task<Message> {
         self.open_catalog_at(None)
     }
 

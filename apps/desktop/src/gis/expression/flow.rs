@@ -21,7 +21,7 @@ pub(crate) const READABLE: f32 = 0.8;
 
 /// Where the world is on the canvas: a world point `p` is at `p * k + (x, y)`.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct View {
+pub struct View {
     pub x: f32,
     pub y: f32,
     pub k: f32,
@@ -65,7 +65,7 @@ pub(crate) struct FlowState {
 
 /// What the flow's canvas and inspector ask for.
 #[derive(Clone, Debug)]
-pub(crate) enum FlowEvent {
+pub enum FlowEvent {
     Select(Option<String>),
     Connect {
         from: String,

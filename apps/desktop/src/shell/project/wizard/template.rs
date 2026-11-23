@@ -16,7 +16,7 @@ use crate::document::Document;
 
 /// A template read: what a new project takes of it, and what the page says it brings.
 #[derive(Debug, Clone)]
-pub(crate) struct Template {
+pub struct Template {
     pub path: PathBuf,
     /// The template without its objects.
     snapshot: Box<DocumentSnapshotV2>,

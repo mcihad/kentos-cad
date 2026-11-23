@@ -357,7 +357,7 @@ cat <<'EOT'
 Sonraki adımlar:
   1. Oturumu kapatıp açın (docker grubu, PATH: ~/.cargo/bin, ~/.local/bin).
   2. cd ~/Projects/kentos-cad && make            # komut listesi
-  3. cargo build -p kentos-desktop && python3 scripts/desktop/module_links.py target/debug
+  3. cargo build -p kentos-cad && python3 scripts/desktop/module_links.py target/debug
   4. pnpm py:test                                # Python SDK'sını derler ve sınar
   5. Yedekten geri koyun: .env.local, ~/.config/kentos-cad, ~/.local/share/kentos-cad,
      ~/.claude (bellek), veritabanı dökümü (pg_restore).

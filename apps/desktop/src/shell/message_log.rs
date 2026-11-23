@@ -35,7 +35,7 @@ const ICON_SIZE: f32 = 14.0;
 
 /// The status bar's message: its line, and when it came and goes.
 #[derive(Debug, Clone)]
-pub(crate) struct Flash {
+pub struct Flash {
     pub level: Level,
     pub text: String,
     /// The web's icon name.
@@ -71,7 +71,7 @@ impl Flash {
 
 /// What the log's views follow between messages.
 #[derive(Debug)]
-pub(crate) struct Follow {
+pub struct Follow {
     /// The status bar's message.
     pub flash: Option<Flash>,
     /// The newest line the status bar has looked at.
@@ -110,7 +110,7 @@ impl App {
     /// A line in the log, with the web's level: commands and what the user
     /// typed, information, success, warnings, errors. Said while Uyarılar is
     /// on screen, it is seen (the web's badge).
-    pub(crate) fn say(&mut self, level: Level, text: impl Into<String>) {
+    pub fn say(&mut self, level: Level, text: impl Into<String>) {
         // UR-002: the shortcuts a message names as this platform shows them (⌘S on macOS).
         let text = crate::keys::shown(&text.into());
         self.log.push(level, text, crate::cloud::now_ms());
@@ -139,11 +139,11 @@ impl App {
         }
     }
 
-    pub(crate) fn output(&mut self, text: impl Into<String>) {
+    pub fn output(&mut self, text: impl Into<String>) {
         self.say(Level::Info, text);
     }
 
-    pub(crate) fn warn(&mut self, text: impl Into<String>) {
+    pub fn warn(&mut self, text: impl Into<String>) {
         self.say(Level::Warn, text);
     }
 

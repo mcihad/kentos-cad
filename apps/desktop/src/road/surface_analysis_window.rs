@@ -148,8 +148,8 @@ const HEIGHTS_CHOICE: &str = "“Kotları aynı say › Var”";
 #[derive(Debug, Clone)]
 pub struct Window {
     pub(crate) mode: Mode,
-    pub(crate) surface: Option<String>,
-    pub(crate) comparison: Option<String>,
+    pub surface: Option<String>,
+    pub comparison: Option<String>,
     /// The two surfaces' heights taken as one vertical system when not shown to be (docs/adr/1029).
     pub(crate) assume_heights: bool,
     pub(crate) measure: usize,

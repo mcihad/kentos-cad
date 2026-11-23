@@ -414,8 +414,8 @@ impl App {
     }
 
     /// The commands of İçe aktar (`export`: Dışa aktar) this program lists, in their order (the tests read them).
-    #[cfg(test)]
-    pub(crate) fn listed_formats(&self, export: bool) -> Vec<&'static str> {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn listed_formats(&self, export: bool) -> Vec<&'static str> {
         let formats: &[Format] = if export { &EXPORTS } else { &IMPORTS };
         self.shown_formats(formats).map(|f| f.id).collect()
     }

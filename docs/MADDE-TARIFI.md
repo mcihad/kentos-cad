@@ -344,7 +344,7 @@ sütunu yapılır.
 5. **Push:** `main`'de çalışan ana ajan
    `GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push -q origin main` ile gönderir.
    Paralel ajan kendi dalını gönderir ve PR açar (§14).
-6. **Masaüstü ikilisi:** `cargo build -p kentos-desktop` (`target/debug/kentos-cad`). Sahip ikiliyi doğrudan çalıştırır; testler
+6. **Masaüstü ikilisi:** `cargo build -p kentos-cad` (`target/debug/kentos-cad`; ADR 9199: programlar kendi paketinde). Sahip ikiliyi doğrudan çalıştırır; testler
    onu yeniden derlemez.
 7. **Rapor:** sahibe Türkçe ve kısa.
    - Commit, ne yapıldı (kullanıcının gözüyle), seçilen ikonlar.

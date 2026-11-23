@@ -2,6 +2,8 @@
 //! parts and its tests take them all with `use crate::map_ext::*;`. A file's methods stay its own; this only names
 //! them.
 
+pub(crate) use crate::asbuilt_chart::AsbuiltChartApp;
+pub(crate) use crate::asbuilt_review_form::AsbuiltReviewFormApp;
 pub(crate) use crate::asbuilt_window::AsbuiltWindowApp;
 pub(crate) use crate::baselines_window::BaselinesWindowApp;
 pub(crate) use crate::cloud_place_window::CloudPlaceWindowApp;

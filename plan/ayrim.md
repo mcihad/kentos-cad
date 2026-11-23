@@ -116,5 +116,7 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
   - Adım 1 yapıldı (ADR 9199 §4.1): Harita modül arayüzünün (`ModuleParts`) arkasında; iletisi, penceresi ve durumu
     silinen türlerle; ortak parçalar (`map_marks`, `map_crs`, `point_calc`, `zoning_badge`, `road_dialog`, `picture`)
     çekirdekte. Taban: kabuk → Harita 13 → 2, Harita → Yol 22 → 0.
-  - Sıradaki: Harita'nın `impl App`'leri uzantı trait'i, çekirdek öğeleri `pub`, `apps/desktop-map` paketi ve
-    programların paketi.
+  - Adım 2 yapıldı (ADR 9199 §4.2): Harita kendi paketinde (`apps/desktop-map`), program `apps/kentos-cad`'de;
+    kayıt dinamik, `impl App`'ler uzantı trait'i, sınamalar üç yerde (çekirdek 2837, Harita 191, programlar 34). Harita'da
+    tek satır 17,4 s → 3,7 s. Kabuk → Harita 0.
+  - Sıradaki: Harita → CBS (3 dosya), sonra Yol, Mimari, CBS paketleri; CAD çekirdeğinin kabuktan ayrılması.

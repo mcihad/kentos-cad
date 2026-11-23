@@ -29,11 +29,11 @@ pub(crate) mod plan_notes;
 mod custom_crs;
 pub(crate) mod hand_over;
 mod scale;
-pub(crate) mod settings;
+pub mod settings;
 mod survey;
 mod unit_change;
 mod variables;
-pub(crate) mod wizard;
+pub mod wizard;
 
 use iced::widget::{Column, Row, button, column, container, row, text};
 use iced::{Center, Element, Fill, Task};
@@ -88,7 +88,7 @@ pub(crate) fn settings_message(e: SettingsEvent) -> Message {
 pub const COMMANDS: [&str; 4] = ["file.new", "file.settings", "crs.set", "arch.settings"];
 
 impl App {
-    pub(crate) fn project_command(&mut self, id: &'static str) -> Task<Message> {
+    pub fn project_command(&mut self, id: &'static str) -> Task<Message> {
         match id {
             "file.new" => {
                 let state = wizard::State::new(self);

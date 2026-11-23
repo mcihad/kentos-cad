@@ -61,7 +61,7 @@ impl App {
     /// The contextual tab the selection opens (docs/adr/0622 §4): its
     /// objects' kind's (Çizgi, Alan, Raster …), Seçim for a mixed selection;
     /// none without a selection. Kept until the selection or the drawing changes.
-    pub(crate) fn selection_tab(&self) -> Option<&'static Tab> {
+    pub fn selection_tab(&self) -> Option<&'static Tab> {
         let doc = self.document.as_ref()?;
         if self.selection.is_empty() {
             return None;
@@ -155,7 +155,7 @@ impl App {
     /// After a message: a selection made or changed brings its tab to the
     /// front (docs/adr/0622 §4), one cleared
     /// takes it away and the chosen tab shows again.
-    pub(crate) fn follow_selection_tab(&mut self) {
+    pub fn follow_selection_tab(&mut self) {
         // The active layer's tab closes when another layer is made active (docs/adr/9185).
         if self.ribbon_context && self.context_tab().is_none() {
             self.ribbon_context = false;

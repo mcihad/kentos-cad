@@ -42,7 +42,7 @@ pub(crate) enum Work {
 }
 
 /// What a check found.
-pub(crate) enum Ran {
+pub enum Ran {
     Checked {
         g: Gathered,
         found: core::Checked,
@@ -135,7 +135,7 @@ pub(crate) fn compute(work: &Work, doc: &Document, watch: &dyn Watch) -> Option<
 }
 
 /// A check going on its own thread.
-pub(crate) struct Running {
+pub struct Running {
     pub id: u64,
     /// The drawing (its session) and the state of it the check saw, with its journal's mark (docs/adr/9146).
     pub session: u64,

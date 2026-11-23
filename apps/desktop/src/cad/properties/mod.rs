@@ -49,7 +49,7 @@ use kentos_ui::widget::property_grid::{self, PropertySheet};
 use kentos_ui::widget::{EditCell, Menu};
 use kentos_ui::icon::{Icon, icon};
 
-pub(crate) use rows::{Choice, Editor, Panel, Row, Summary};
+pub use rows::{Choice, Editor, Panel, Row, Summary};
 
 use crate::app::{App, Message};
 use crate::document::Document;
@@ -625,7 +625,7 @@ impl App {
 }
 
 /// A GNSS solution's kind in words (GNSS arşivi and Öznitelikler).
-pub(crate) fn survey_kind_words(k: kentos_commands::SolutionKind) -> &'static str {
+pub fn survey_kind_words(k: kentos_commands::SolutionKind) -> &'static str {
     use kentos_commands::SolutionKind;
     match k {
         SolutionKind::Receiver => "Alıcı (RTK)",
@@ -635,7 +635,7 @@ pub(crate) fn survey_kind_words(k: kentos_commands::SolutionKind) -> &'static st
 }
 
 /// An accepted point's or a use's state in words (GNSS arşivi and Öznitelikler).
-pub(crate) fn survey_state_words(s: kentos_commands::SurveyState) -> &'static str {
+pub fn survey_state_words(s: kentos_commands::SurveyState) -> &'static str {
     use kentos_commands::SurveyState as S;
     match s {
         S::Current => "Güncel",

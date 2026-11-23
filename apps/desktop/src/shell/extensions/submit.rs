@@ -46,7 +46,7 @@ pub(crate) struct Submit {
 
 /// The window's controls.
 #[derive(Clone, Debug)]
-pub(crate) enum SubmitEvent {
+pub enum SubmitEvent {
     Open(String),
     Catalog(usize),
     Note(String),

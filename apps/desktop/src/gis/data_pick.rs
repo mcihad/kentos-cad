@@ -26,7 +26,7 @@ pub(crate) struct DataPick {
 
 /// What a layer gave for an ask.
 #[derive(Debug, Clone)]
-pub(crate) enum Got {
+pub enum Got {
     /// A layer being edited: its rows, to be taken.
     Rows(String, Vec<(i64, Entity)>),
     /// A layer not being edited: the keys to select in its table.

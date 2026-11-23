@@ -104,7 +104,50 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
   4 → 3, kabuk → Yol 12 → 6, cad/CBS/Mimari/Harita → Yol 5/4/2/22 → 0.
 - **Sınama:** masaüstü 3061 geçti; `kentos-project`'in `others_by_datum` sınaması.
 
+### §4.2 Adım 2: Harita kendi paketinde
+
+- **Uzantı trait'leri:** Harita'nın 30 `impl App` bloğu `impl <Dosya>App for App` oldu (betikle; gövdeler aynı); hepsi
+  `ext.rs`'te adlanır, dosyalar `use crate::map_ext::*;` ile alır. Çekirdeğin `road_dialog::Col`'una eklenen yardımcı
+  yerel işleve döndü.
+- **Paketler:**
+  - `apps/desktop-map` (`kentos-desktop-map`): Harita'nın 37 modülü ve 51 sınama dosyası. Kökü çekirdeğin modüllerini
+    kendi adlarıyla alır (`use kentos_desktop::*;`), dosyalar çekirdekte yazıldıkları gibi kalır.
+  - `apps/kentos-cad` (`kentos-cad`): program; `main` önce `kentos_desktop_map::register()`'ı çağırır. Programı derleyen
+    betikler (`module_links.py`, `pgo.sh`, `rebuild-times.sh`, `ubuntu.sh`, gerçek pencere kılavuzu) `-p kentos-cad`.
+  - Çekirdek modül paketini adıyla anmaz: kayıt dinamiktir (`module_parts::register`, ilk sorulunca modüllerin
+    sırasıyla sabitlenir); profil de parçalardan gelir (`ModuleParts::profile`).
+- **Görünürlük:** Harita'nın ve sınamalarının kullandığı çekirdek modüller `pub mod`, öğeler `pub` oldu; derleyicinin
+  görünürlük hatalarından betikle (tanımın yeri notta; alanda yapı çekirdekte bulunur), yalnız gerekenler.
+- **Sınamalar üç yerde:**
+  - çekirdek kendi sınamalarını koşar (2837); Harita'yı tanımaz;
+  - Harita'nın paketi kendi pencerelerini ve Harita projesindeki davranışı sınar (191): kayıt `ctor`'un bildirimsel
+    biçimiyle sınamalardan önce (geliştirme bağımlılığı, çalışma alanının kilit dosyasında zaten var; Apache-2.0/MIT;
+    macOS, Linux, Windows); çekirdeğin sınama yardımcıları `testing` özelliğiyle açılır (`files_testing`, `Log::last`,
+    `said`, `Keeper::open`/`kept`, `listed_formats`, `Service::settle`/`members`, `document::write`,
+    `sheet_pdf::open_with_viewer`; anahtar zinciri, çevrimiçi adres, 3B bina, sihirbaz ve gösterge dalları);
+  - programlar arası sınamalar `apps/kentos-cad/tests/programs`'ta, her modül kayıtlı (34): yüzey matrisi, katman
+    menüsü, her komutun işleyicisi, her kullanım izi, Yeni proje'de iki modül.
+  - Rust'ta çekirdeğin birim sınaması modül paketine bağlanamaz (geliştirme bağımlılığı çevriminde crate'in iki kopyası
+    olur), bu yüzden modülü gereken sınama ya modülün ya programların paketindedir. Mimari menüsünün sınaması ikiye
+    bölündü: Mimari'nin yarısı çekirdekte, Harita'nın yarısı Harita'nın paketinde.
+- **Bağımlılık tabanı:** kabuk → Harita 2 → 0. Harita → CBS 3 dosya kalır (CBS çekirdekteyken derlenir; CBS ayrılmadan
+  sıfırlanmalı). `module_deps.py` modül paketlerini de okur (`PACKAGES`).
+- **Derleme süresi** (§1'in yöntemi; sınama ikilisi `--no-run -j 10`):
+
+| Durum | Önce | Sonra |
+|---|---|---|
+| Harita dosyasında tek satır | 17,4 s (bütün masaüstü) | **3,7 s** (Harita'nın sınamaları); program 3,5 s |
+| Çekirdek sıfırdan | 72 s | 69 s |
+| `App`'e yeni yöntem | 24,5 s | 23,6 s (çekirdeğin sınamaları) |
+
+  Kazanç modülün kendi işindedir; çekirdek değişikliği çekirdeği yeniden derletir, modül paketleri onun üstüne gelir.
+- **Sınama:** çekirdek 2837, Harita 191, programlar 34 geçti (önce 3061; Mimari sınaması ikiye bölündü); yok sayılanlar
+  (resimler) 664 + 92 + 5 = 761, önceki gibi.
+
 ## §5 Kalan
 
-- Harita'dan sonra Yol, Mimari ve CBS paketleri.
-- Modül programlarının ayrı ikilileri ve paketlemesi.
+- Harita → CBS (3 dosya: `cogo`, `map_survey_panel`, `register_window`) ortak çekirdeğe ya da kancaya.
+- Yol, Mimari ve CBS paketleri (en az bağlıdan); her biri aynı düzenle: ortak parçalar çekirdeğe, `ModuleParts`,
+  silinen türler, uzantı trait'leri, paket, sınamaların yeri.
+- CAD çekirdeğinin kabuktan ayrılması (§3.1): kabuk → cad 77, CBS → cad 54 dosya.
+- Modül programlarının ayrı ikilileri ve paketlemesi: bir modülün programı yalnız kendi paketini kaydeder.

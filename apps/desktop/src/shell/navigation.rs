@@ -130,7 +130,7 @@ impl App {
 
     /// Runs a navigation: a change of the view whose old view the history
     /// keeps, when the change moved it (docs/adr/0141).
-    pub(crate) fn navigating<T>(&mut self, navigate: impl FnOnce(&mut Self) -> T) -> T {
+    pub fn navigating<T>(&mut self, navigate: impl FnOnce(&mut Self) -> T) -> T {
         let before = self.viewpoint();
         let out = navigate(self);
         if self.viewpoint() != before {

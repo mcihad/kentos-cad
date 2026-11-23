@@ -196,7 +196,7 @@ fn key_of(n: &RoadNode) -> String {
 impl App {
     /// A dock pane's title: the road project's tree is “Proje ağacı” in KentOS Harita (its surfaces and what was drawn
     /// from them, docs/adr/1720), “Yol projesi” elsewhere.
-    pub(crate) fn panel_title(&self, panel: crate::app::Panel) -> &'static str {
+    pub fn panel_title(&self, panel: crate::app::Panel) -> &'static str {
         if panel == crate::app::Panel::RoadProject && self.program == Some(kentos_launch::Module::Map) {
             "Proje ağacı"
         } else {
@@ -205,7 +205,7 @@ impl App {
     }
 
     /// The tree as the drawing is now, read again when its revision or the depth changed.
-    pub(crate) fn road_project_read(&self) -> Option<Result<RoadProjectTree, String>> {
+    pub fn road_project_read(&self) -> Option<Result<RoadProjectTree, String>> {
         let doc = self.document.as_ref()?;
         let revision = doc.model.revision().to_string();
         let deep = self.road.road_project.deep;

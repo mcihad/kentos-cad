@@ -29,7 +29,7 @@ pub(crate) fn module_of(s: &ProjectSettings) -> Option<Module> {
 }
 
 /// The CAD works a module's projects are drawn for, the one its new projects start with first.
-pub(crate) fn works_of(m: Module) -> Vec<CadWork> {
+pub fn works_of(m: Module) -> Vec<CadWork> {
     m.cad_works()
         .iter()
         .filter_map(|id| CadWork::from_id(id))
@@ -51,7 +51,7 @@ pub(crate) fn module_of_project_type(t: ProjectType) -> Option<Module> {
 }
 
 /// The type a module's projects have.
-pub(crate) fn type_of(m: Module) -> Workspace {
+pub fn type_of(m: Module) -> Workspace {
     match m.project_type() {
         "gis" => Workspace::Gis,
         _ => Workspace::Cad,
@@ -262,7 +262,7 @@ impl App {
     /// type and work. A project whose module is not decided yet (no type, a CAD drawing not asked its work, the old
     /// hybrid type, an announced type: plan3d …) leaves kentos-cad none, every surface as before, until its type and
     /// work are given; every new project has them (the wizard, Python, MCP). None in kentos-cad with nothing open.
-    pub(crate) fn active_module(&self) -> Option<Module> {
+    pub fn active_module(&self) -> Option<Module> {
         self.program.or_else(|| self.document_module())
     }
 
@@ -293,7 +293,7 @@ impl App {
     /// kentos-cad alike (Komut ara, the command line, the shortcuts, the quick access bar, F1 and the drawing's menus
     /// find nothing else; `App::run` refuses it, `App::available` is false); every one in kentos-cad with nothing
     /// open. kentos-cad keeps its own too, the ribbon's commands no module has (the project type's switch).
-    pub(crate) fn offers(&self, id: &str) -> bool {
+    pub fn offers(&self, id: &str) -> bool {
         match self.active_module() {
             None => true,
             Some(m) => {
@@ -348,7 +348,7 @@ impl App {
     }
 
     /// The program's name in the window's title and on the start screen.
-    pub(crate) fn program_title(&self) -> &'static str {
+    pub fn program_title(&self) -> &'static str {
         self.program.map_or("KentOS CAD", Module::title)
     }
 

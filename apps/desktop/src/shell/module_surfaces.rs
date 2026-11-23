@@ -35,7 +35,7 @@ use crate::settings_sections::Section as SettingsSection;
 
 /// A status bar cell only some programs show.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Cell {
+pub enum Cell {
     /// Harita sistemi (map_crs.rs, docs/adr/0583 §3); the coordinate system's Harita sistemi ▸ too.
     MapCrs,
     /// İkinci sistem's values (second_crs.rs, docs/adr/0167 §2); the coordinate system's İkinci sistem ▸ and
@@ -56,7 +56,7 @@ pub(crate) enum Cell {
 
 /// An entry of Uygulama ayarları only some programs show.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum AppSetting {
+pub enum AppSetting {
     /// Görünüm › Koordinatlar: Coğrafi koordinatlar (`display.geographic`).
     Geographic,
     /// Görünüm › Şerit ve fare: Çizilen nesnenin formu (`drafting.formOnCreate`).
@@ -71,7 +71,7 @@ pub(crate) enum AppSetting {
 
 /// The application menu's İçe aktar and Dışa aktar formats a program lists.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Formats {
+pub enum Formats {
     /// Drawings alone: DWG, DXF, NCZ and PDF.
     Drawings,
     /// Every one: GIS files and coordinate lists too.
@@ -81,7 +81,7 @@ pub(crate) enum Formats {
 /// A section of Kaynaklar only some programs show (Klasörler, the recent and the favourite sources and KentOS
 /// are every one's that shows Kaynaklar).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum SourceSection {
+pub enum SourceSection {
     /// Veritabanları and its header's Bağlantı ekle (docs/adr/0623).
     Databases,
     /// Servisler and its header's Servis ekle (docs/adr/0599 §4).
@@ -91,7 +91,7 @@ pub(crate) enum SourceSection {
 /// Rows of Öznitelikler only some programs show (Etkin aracın ayarları' Kat row is `Cell::Level`'s; a polyline's
 /// Genişlik is `ToolOption::Widths`'s).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum PropertyRows {
+pub enum PropertyRows {
     /// Çizim's Koordinat sistemi and SRID with nothing selected.
     Crs,
     /// Servis katmanı and Veri kaynağı of the layer chosen (docs/adr/0208 §14).
@@ -197,7 +197,7 @@ impl App {
 
     /// Whether the bottom panel has `tab` here: Eklenti denetimi only while an extension offers this module an audit
     /// rule or a rule's run is on it, an agent's too (docs/adr/9195 §5).
-    pub(crate) fn shows_bottom_tab(&self, tab: BottomTab) -> bool {
+    pub fn shows_bottom_tab(&self, tab: BottomTab) -> bool {
         if tab == BottomTab::ExtAudit && self.extensions.audit.is_none() && !self.offers_ext_audits() {
             return false;
         }
@@ -205,7 +205,7 @@ impl App {
     }
 
     /// The bottom panel's tabs here, in their order.
-    pub(crate) fn bottom_tabs(&self) -> Vec<BottomTab> {
+    pub fn bottom_tabs(&self) -> Vec<BottomTab> {
         BottomTab::ALL
             .into_iter()
             .filter(|t| self.shows_bottom_tab(*t))
@@ -213,18 +213,18 @@ impl App {
     }
 
     /// Whether the dock has `panel` here.
-    pub(crate) fn shows_panel(&self, panel: Panel) -> bool {
+    pub fn shows_panel(&self, panel: Panel) -> bool {
         self.surfaces().is_none_or(|s| s.panel(panel))
     }
 
     /// Whether the status bar shows `cell` here (and what goes with it, see [`Cell`]).
-    pub(crate) fn shows_cell(&self, cell: Cell) -> bool {
+    pub fn shows_cell(&self, cell: Cell) -> bool {
         self.surfaces().is_none_or(|s| s.cell(cell))
     }
 
     /// Whether the status bar shows the drafting aid `id`'s lamp here: the profile's cells say (a CBS project's bar
     /// has no Kalınlık lamp, docs/adr/9185).
-    pub(crate) fn shows_aid(&self, id: &str) -> bool {
+    pub fn shows_aid(&self, id: &str) -> bool {
         aid_cell(id).is_none_or(|cell| self.shows_cell(cell))
     }
 
@@ -234,7 +234,7 @@ impl App {
     }
 
     /// Proje ayarları' sections here, in their order.
-    pub(crate) fn project_sections(&self) -> Vec<ProjectSection> {
+    pub fn project_sections(&self) -> Vec<ProjectSection> {
         ProjectSection::ALL
             .into_iter()
             .filter(|s| self.shows_project_section(*s))
@@ -242,22 +242,22 @@ impl App {
     }
 
     /// Whether Uygulama ayarları shows `setting` here.
-    pub(crate) fn shows_setting(&self, setting: AppSetting) -> bool {
+    pub fn shows_setting(&self, setting: AppSetting) -> bool {
         self.surfaces().is_none_or(|s| s.setting(setting))
     }
 
     /// Whether Uygulama ayarları has `section` here: Yeni projeler is the one only some programs have.
-    pub(crate) fn shows_settings_section(&self, section: SettingsSection) -> bool {
+    pub fn shows_settings_section(&self, section: SettingsSection) -> bool {
         section != SettingsSection::NewProjects || self.shows_setting(AppSetting::NewProjects)
     }
 
     /// Whether the active module's layer menu has `entry`, whatever the layer (its kind decides too, layer_entries.rs).
-    pub(crate) fn shows_layer_entry(&self, entry: LayerEntry) -> bool {
+    pub fn shows_layer_entry(&self, entry: LayerEntry) -> bool {
         self.surfaces().is_none_or(|s| s.layer_entry(entry))
     }
 
     /// Whether the application menu lists the format whose command is `id`.
-    pub(crate) fn shows_format(&self, id: &str) -> bool {
+    pub fn shows_format(&self, id: &str) -> bool {
         match self.surfaces().map(|s| s.formats()) {
             Some(Formats::Drawings) => DRAWING_FORMATS.contains(&id),
             Some(Formats::All) | None => true,
@@ -265,33 +265,33 @@ impl App {
     }
 
     /// Whether Kaynaklar has `section` here.
-    pub(crate) fn shows_source_section(&self, section: SourceSection) -> bool {
+    pub fn shows_source_section(&self, section: SourceSection) -> bool {
         self.surfaces().is_none_or(|s| s.source_section(section))
     }
 
     /// Whether Öznitelikler shows `rows` here.
-    pub(crate) fn shows_property_rows(&self, rows: PropertyRows) -> bool {
+    pub fn shows_property_rows(&self, rows: PropertyRows) -> bool {
         self.surfaces().is_none_or(|s| s.rows(rows))
     }
 
     /// Whether the hover card shows an object's parcel rows.
-    pub(crate) fn shows_parcel_rows(&self) -> bool {
+    pub fn shows_parcel_rows(&self) -> bool {
         self.surfaces().is_none_or(|s| s.parcels())
     }
 
     /// Whether the tools here offer `option` (Draft::offers), and what goes with it outside them: Şablon
     /// düzenleyici's Blok ekle with Blocks, Öznitelikler' Genişlik of a polyline with Widths.
-    pub(crate) fn offers_tool_option(&self, option: ToolOption) -> bool {
+    pub fn offers_tool_option(&self, option: ToolOption) -> bool {
         tool_offers_in(self.active_module()).has(option)
     }
 
     /// Whether Katman stili lists the thematic renderers (docs/adr/0213).
-    pub(crate) fn shows_thematic_renderers(&self) -> bool {
+    pub fn shows_thematic_renderers(&self) -> bool {
         self.surfaces().is_none_or(|s| s.thematic())
     }
 
     /// The system style library's branches Stil yöneticisi and the symbol pickers leave out here.
-    pub(crate) fn library_hidden(&self) -> &'static [&'static str] {
+    pub fn library_hidden(&self) -> &'static [&'static str] {
         self.surfaces().map_or(&[], |s| s.library_hidden())
     }
 
@@ -302,22 +302,22 @@ impl App {
     }
 
     /// The project type the sheet mode ranks its templates by; none in kentos-cad (the drawing's type).
-    pub(crate) fn sheet_project_type(&self) -> Option<ProjectType> {
+    pub fn sheet_project_type(&self) -> Option<ProjectType> {
         self.surfaces().map(|s| s.sheet())
     }
 
     /// The type Bulut projeleri lists at first; none: every type.
-    pub(crate) fn cloud_kind(&self) -> Option<ProjectType> {
+    pub fn cloud_kind(&self) -> Option<ProjectType> {
         self.surfaces().and_then(|s| s.cloud())
     }
 
     /// The type Buluta yükle offers first.
-    pub(crate) fn upload_kind(&self) -> ProjectType {
+    pub fn upload_kind(&self) -> ProjectType {
         self.surfaces().map_or(ProjectType::Cad, |s| s.upload())
     }
 
     /// Nokta hesapla's constructions this program has not (its menus leave them out).
-    pub(crate) fn hidden_point_calcs(&self) -> &'static [CalcKind] {
+    pub fn hidden_point_calcs(&self) -> &'static [CalcKind] {
         self.surfaces().map_or(&[], |s| s.hidden_calc())
     }
 
@@ -361,7 +361,7 @@ impl App {
     }
 
     /// Whether this program has `panel`, said when it has not: an opener asks first.
-    pub(crate) fn open_panel(&mut self, panel: Panel) -> bool {
+    pub fn open_panel(&mut self, panel: Panel) -> bool {
         if self.shows_panel(panel) {
             return true;
         }

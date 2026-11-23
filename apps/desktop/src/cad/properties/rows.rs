@@ -49,7 +49,7 @@ use crate::ribbon_panels::{DRAW_COLORS, LINE_WEIGHTS, weight_text as weight_labe
 
 /// The panel's content.
 #[derive(Clone)]
-pub(crate) struct Panel {
+pub struct Panel {
     pub summary: Summary,
     /// The header's meta: `#12`, `3 nesne`.
     pub meta: Option<String>,
@@ -62,7 +62,7 @@ pub(crate) struct Panel {
 
 /// Over the grid: the object's kind and label and its layer, or the selection's size and kinds.
 #[derive(Clone)]
-pub(crate) enum Summary {
+pub enum Summary {
     /// Nothing selected: “Seçili nesne yok” and how to select.
     Empty,
     One {
@@ -79,7 +79,7 @@ pub(crate) enum Summary {
 
 /// A section of the grid; its id keeps it closed while the app runs.
 #[derive(Clone)]
-pub(crate) struct Section {
+pub struct Section {
     pub id: Cow<'static, str>,
     /// Its heading; a count in some (“Yazılar (3)”).
     pub title: Cow<'static, str>,
@@ -88,7 +88,7 @@ pub(crate) struct Section {
 
 /// A row: its name, its value as shown, and how it is edited, if it is.
 #[derive(Clone)]
-pub(crate) struct Row {
+pub struct Row {
     pub label: Cow<'static, str>,
     pub value: String,
     /// Figures: tabular.
@@ -113,7 +113,7 @@ pub(crate) struct Row {
 
 /// An attachment's picture in its row.
 #[derive(Clone)]
-pub(crate) struct Thumb {
+pub struct Thumb {
     /// The photo's key in the store (`attachments::photo_key`); none: the icon.
     pub key: Option<String>,
     pub icon: &'static str,
@@ -124,7 +124,7 @@ pub(crate) struct Thumb {
 
 /// How a row is edited.
 #[derive(Clone)]
-pub(crate) enum Editor {
+pub enum Editor {
     SurveyNavigation { previous: Option<Slot>, next: Option<Slot> },
     /// A text cell: the committed text goes to the field.
     Text(Field),
@@ -178,7 +178,7 @@ pub(super) fn survey_identity_section(doc: &Document, selected: &[Slot], active:
 
 /// One entry of a drop-down.
 #[derive(Clone)]
-pub(crate) enum Choice {
+pub enum Choice {
     /// One of a group; a colour value for its swatch, or a web icon's name
     /// (a text's alignment); not enabled when locked.
     Pick {

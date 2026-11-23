@@ -357,7 +357,7 @@ impl Service {
     }
 
     /// Every file of every cloud (the tests wait on their openings).
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn members(&self) -> Vec<Arc<Member>> {
         self.shared
             .clouds
@@ -447,7 +447,7 @@ impl Service {
     }
 
     /// Waits until nothing asked for waits, at most `limit` (tests and pictures).
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn settle(&self, limit: std::time::Duration) {
         let start = std::time::Instant::now();
         loop {

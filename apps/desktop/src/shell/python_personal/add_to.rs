@@ -70,7 +70,7 @@ impl Developed {
 
 /// What adding did, for the notice.
 #[derive(Clone, Debug)]
-pub(crate) struct Added {
+pub struct Added {
     id: String,
     name: String,
     folder: PathBuf,

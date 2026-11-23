@@ -1425,7 +1425,7 @@ fn cihaza_gonder_is_where_the_program_offers_it() {
 /// A program's window on a road (a polyline), a parcel and two points, its drawing of the program's own type
 /// (KentOS Mimari's on its own coordinates, the others' in TUREF / TM36), 1440×900, `theme`.
 fn ground(program: Option<Module>, theme: &str) -> App {
-    use crate::tools_scenes::{E, N, Objects, open_edited};
+    use crate::scenes::{E, N, Objects, open_edited};
     let mut app = started(program);
     let _ = app.settings.choose(&[
         ("appearance.theme", json!(theme)),
@@ -1468,7 +1468,7 @@ fn ground(program: Option<Module>, theme: &str) -> App {
         },
         24.0,
     );
-    crate::tools_scenes::hover(&mut app, [8.0, -6.0]);
+    crate::scenes::hover(&mut app, [8.0, -6.0]);
     app
 }
 
@@ -1510,8 +1510,8 @@ fn shoot_after(
 #[ignore = "pictures for the owner, run by hand"]
 fn pictures_of_the_options() {
     use crate::app_menu::{Event as MenuEvent, Pane};
-    use crate::tools_scenes::{at, click, run};
-    use crate::tools_screens::press_caption;
+    use crate::scenes::{at, click, run};
+    use crate::scenes::press_caption;
     for (theme, suffix) in [("dark", ""), ("light", "-acik")] {
         // The window as it opens: the status bar's lamps, KentOS Harita's too.
         for (program, word) in [(MIMARI, "mimari"), (HARITA, "harita"), (GIS, "gis")] {
@@ -1550,7 +1550,7 @@ fn pictures_of_the_options() {
         shoot_after(&mut gis, "ayrim2-gis-bol", |_, _| {});
         run(&mut gis, "tool.polyline");
         click(&mut gis, [2.0, -6.0]);
-        crate::tools_scenes::hover(&mut gis, [12.0, -6.0]);
+        crate::scenes::hover(&mut gis, [12.0, -6.0]);
         shoot_after(&mut gis, "ayrim2-gis-coklu-cizgi", |_, _| {});
         gis.cancel();
         // The road's edge's grip menu and Öznitelikler: KentOS Harita's with widths, KentOS GIS's without.

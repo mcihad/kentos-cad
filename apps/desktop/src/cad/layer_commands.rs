@@ -14,7 +14,7 @@ use crate::app::App;
 
 impl App {
     /// The answer's output, its warnings said; its refusal said and none.
-    pub(crate) fn answered<T>(&mut self, result: CommandResult<T>) -> Option<T> {
+    pub fn answered<T>(&mut self, result: CommandResult<T>) -> Option<T> {
         match result {
             CommandResult::Completed { output, warnings } => {
                 for w in warnings {
@@ -100,7 +100,7 @@ impl App {
 
     /// Mobilde ▸ (docs/adr/9198): the node's place on the mobile clients; a choice its kind has not is the command's to
     /// refuse, in its words.
-    pub(crate) fn set_layer_mobile(&mut self, id: &str, mobile: kentos_commands::LayerMobile) {
+    pub fn set_layer_mobile(&mut self, id: &str, mobile: kentos_commands::LayerMobile) {
         let mut input = LayersSet::new(LayerSetOperation::Mobile, Some(id.to_owned()));
         input.mobile = Some(mobile);
         self.set_layers(input);

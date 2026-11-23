@@ -32,7 +32,7 @@ fn ev(e: Event) -> Message {
 }
 
 /// The form's scrollable: scrolled to its end after a run that gave a table.
-pub(super) const FORM: &str = "islem-formu";
+pub const FORM: &str = "islem-formu";
 /// The window's size (the web's: 940 px wide, at most 660 tall).
 const WIDTH: f32 = 940.0;
 const HEIGHT: f32 = 660.0;

@@ -58,7 +58,7 @@ pub(crate) struct Preview {
 
 #[derive(Debug, Clone)]
 pub struct Window {
-    pub(crate) surface: Option<String>,
+    pub surface: Option<String>,
     pub(crate) fields: [String; 9],
     pub(crate) avoid: Vec<String>,
     pub(crate) layer: Option<String>,

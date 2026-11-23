@@ -55,7 +55,7 @@ impl std::fmt::Debug for IfcWindow {
 
 /// A file read: its bytes, the model, the viewer's input and what the status bar says of it.
 #[derive(Debug)]
-pub(crate) struct Read {
+pub struct Read {
     pub(crate) bytes: Arc<Vec<u8>>,
     pub(crate) model: Arc<Model>,
     pub(crate) input: Input,

@@ -106,7 +106,7 @@ def main() -> int:
     args.out.mkdir(parents=True, exist_ok=True)
     if args.kentos:
         if not args.kentos.is_file():
-            print(f"{args.kentos}: KentOS programı yok; önce cargo build --release -p kentos-desktop", file=sys.stderr)
+            print(f"{args.kentos}: KentOS programı yok; önce cargo build --release -p kentos-cad", file=sys.stderr)
             return 1
         if screenshots(args.kentos, args.out) is None:
             return 1

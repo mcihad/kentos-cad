@@ -625,7 +625,7 @@ where
 /// Traces of web features the desktop does not have yet, by id, with why.
 /// They are left out of [`Trace::all`] and said as skipped, never passed;
 /// the entry goes with the port (a test fails once one would play).
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 pub const PENDING: &[(&str, &str)] = &[];
 
 impl Trace {
@@ -641,7 +641,7 @@ impl Trace {
     }
 
     /// Every trace of the folder, by file name, but the [`PENDING`] ones.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn all() -> Result<Vec<Self>, String> {
         let dir = folder();
         let mut paths: Vec<std::path::PathBuf> = std::fs::read_dir(&dir)
@@ -666,7 +666,7 @@ impl Trace {
 /// Sıradakini seç's chip as a trace sees it: the candidate chosen, from 0, of how many.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(crate) struct CycleSeen {
+pub struct CycleSeen {
     pub(crate) index: usize,
     pub(crate) count: usize,
 }

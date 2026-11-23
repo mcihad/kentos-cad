@@ -552,7 +552,7 @@ impl App {
     /// tool drops the object it picked, docs/adr/0047); otherwise it leaves and
     /// its draft is dropped: nothing reaches the drawing. With no command
     /// running, it clears the selection (the web's `ToolManager.exit`).
-    pub(crate) fn cancel(&mut self) {
+    pub fn cancel(&mut self) {
         self.field = None;
         // The snap marker belongs to the command (the web drops it when the tool changes).
         self.snap = None;

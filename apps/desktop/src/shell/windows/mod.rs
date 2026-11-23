@@ -31,7 +31,7 @@ pub(crate) use surface::{OwnWindow, apart_button, placed};
 
 /// What a secondary window shows: one name per window that can be taken out of the main window.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub(crate) enum Surface {
+pub enum Surface {
     /// İşlemler's tool window (gis/processing/apart.rs), its Toplu çalıştır table too.
     ProcessingTool,
     /// 3B görünüm (scene3d_view.rs): the building or the road project in 3D, beside the plan.
@@ -105,7 +105,7 @@ pub(crate) struct Windows {
 
 /// What the windows say.
 #[derive(Debug, Clone)]
-pub(crate) enum Event {
+pub enum Event {
     /// A secondary window was made by the platform.
     Opened(window::Id),
     /// Its close button: its surface's Kapat.

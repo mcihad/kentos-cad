@@ -70,7 +70,7 @@ pub enum Panel {
 
 impl Panel {
     /// Every panel, in the dock's order at start (a module's program docks its own, module_surfaces.rs).
-    pub(crate) const ALL: [Panel; 12] = [
+    pub const ALL: [Panel; 12] = [
         Panel::Layers,
         Panel::Processing,
         Panel::Blocks,
@@ -815,7 +815,7 @@ pub struct App {
     pub(crate) db_removing: Option<String>,
     /// The database connections this window lists: the device's (`kentos_postgis::connections::store`), whose saved
     /// passwords the bound layers' commands find; a test's app keeps its own in memory.
-    pub(crate) db_store: &'static kentos_postgis::connections::ConnectionStore,
+    pub db_store: &'static kentos_postgis::connections::ConnectionStore,
     /// The connection PostGIS'e bağlan listed last, chosen when it opens again.
     pub(crate) postgis_last: Option<String>,
     /// Blok öznitelikleri's window, while it is open or away for a point (block_attributes.rs).
@@ -870,27 +870,27 @@ pub struct App {
     /// Servisten veri al, while it is open (services/feed_window.rs, docs/adr/0208 §10).
     pub(crate) feed_window: Option<crate::services::feed_window::Window>,
     /// Servis bilgisi's point and answers (services/info.rs, docs/adr/0208 §11).
-    pub(crate) service_info: crate::services::info::Info,
+    pub service_info: crate::services::info::Info,
     /// The last left press's object with no command running, and when (a double click edits a text).
     pub(crate) last_click: Option<(kentos_domain::Slot, Instant)>,
     /// The log (message_log.rs): every line said, 500 at most, with its time
     /// and level; the bottom panel lists it, the status bar shows its newest.
-    pub(crate) log: crate::log_plan::Log,
+    pub log: crate::log_plan::Log,
     /// The commands' calls Komut geçmişi lists beside the log (history/, docs/adr/0284).
     pub(crate) history: crate::history::History,
     /// What was typed in the command line: its ↑ brings them back.
     pub(crate) typed: Vec<Entry>,
     /// What the log's views follow: the status bar's message, the list's end.
-    pub(crate) follow: crate::message_log::Follow,
+    pub follow: crate::message_log::Follow,
     /// The layout kept between runs (layout.rs) and the window's size it is shown in.
-    pub(crate) layout: crate::layout::Keeper,
+    pub layout: crate::layout::Keeper,
     /// Where the windows' sizes are written (docs/adr/0746).
     pub(crate) dialog_sizes: crate::dialog_sizes::Keeper,
     /// The main window and the windows of their own beside it (windows/, docs/adr/8060).
     pub(crate) windows: crate::windows::Windows,
     /// The rows round the bound layers' parts, asked for and arrived (band_ghosts.rs, docs/adr/0578 §1).
     pub(crate) bands: crate::band_ghosts::Bands,
-    pub(crate) window_size: iced::Size,
+    pub window_size: iced::Size,
     pub command_input: String,
     pub command_expanded: bool,
     /// The bottom panel's tab (bottom.rs).
@@ -1016,7 +1016,7 @@ pub struct App {
     /// Blok düzenleyici, while it is open (block_editor.rs, docs/adr/0316 §1).
     pub(crate) block_editor: Option<crate::block_editor::BlockEditor>,
     /// The drawings set aside in their tabs (doc_tabs.rs, docs/adr/0351 §3).
-    pub(crate) doc_tabs: crate::doc_tabs::DocTabs,
+    pub doc_tabs: crate::doc_tabs::DocTabs,
     /// Kırp's frames shown on the screen (clip_frames.rs, docs/adr/0351 §1).
     pub(crate) clip_frames: crate::clip_frames::ClipFrames,
     /// Bilgi's card: the object it shows and the drawing's point it was clicked at (info_card.rs).
@@ -1155,7 +1155,7 @@ pub struct App {
     /// The window fills the screen (`view.fullscreen`, view_commands.rs).
     pub fullscreen: bool,
     /// The side panels' layout while F4 hides them, put back as it was.
-    pub(crate) hidden_docks: Option<Docks<Panel>>,
+    pub hidden_docks: Option<Docks<Panel>>,
     /// The panels closed because the active module does not show them (module_surfaces.rs, docs/adr/9195 §2): they
     /// come back where they were with a project whose module shows them. One the user closed is not here.
     pub(crate) surface_closed: Vec<Panel>,
@@ -1196,15 +1196,15 @@ pub struct App {
     pub(crate) toasts: kentos_ui::widget::Toasts<Message>,
     /// The module this program works as (docs/adr/0801): KentOS Mimari, Harita or GIS; none in kentos-cad, every
     /// module at once.
-    pub(crate) program: Option<kentos_launch::Module>,
+    pub program: Option<kentos_launch::Module>,
     /// Starts the program a file belongs to (program.rs); a test puts one of its own here.
-    pub(crate) hand_over: fn(kentos_launch::Module, &std::path::Path) -> Result<String, String>,
+    pub hand_over: fn(kentos_launch::Module, &std::path::Path) -> Result<String, String>,
     /// The disciplines' own windows and panels (docs/adr/8054 §6): each module keeps its state in its
     /// `state.rs`, so a new window of one leaves this struct as it is.
-    pub(crate) road: crate::road::RoadUiState,
+    pub road: crate::road::RoadUiState,
     /// The modules' own state, each as its module keeps it (docs/adr/9199 §3.4; map/state.rs `MapState`).
-    pub(crate) modules: crate::module_parts::ModuleStates,
-    pub(crate) gis: crate::gis::GisUiState,
+    pub modules: crate::module_parts::ModuleStates,
+    pub gis: crate::gis::GisUiState,
     pub(crate) arch: crate::arch::ArchUiState,
 }
 
@@ -1248,7 +1248,7 @@ impl App {
 
     /// How the open drawing's numbers read (its units and its type's axes);
     /// a new project's without a drawing.
-    pub(crate) fn format(&self) -> kentos_interaction::Format {
+    pub fn format(&self) -> kentos_interaction::Format {
         self.document
             .as_ref()
             .map_or_else(kentos_interaction::Format::default, |d| {

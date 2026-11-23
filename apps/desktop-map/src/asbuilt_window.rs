@@ -21,6 +21,7 @@
 //! the thresholds' source and the reviewer's statement; the project's reviews listed, those whose points changed since
 //! said to belong to the earlier result. Grafik draws one mark's movement against time.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;

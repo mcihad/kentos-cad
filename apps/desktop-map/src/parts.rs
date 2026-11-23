@@ -26,6 +26,10 @@ impl ModuleParts for Map {
         Module::Map
     }
 
+    fn profile(&self) -> &'static dyn crate::module_profile::ModuleProfile {
+        &crate::map_profile::Map
+    }
+
     fn state(&self) -> Box<dyn Any> {
         Box::new(MapUiState::default())
     }

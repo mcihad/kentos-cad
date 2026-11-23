@@ -120,7 +120,7 @@ pub(crate) fn flash_of(level: Level, text: &str) -> Option<Shown> {
 
 /// One line of the log.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Line {
+pub struct Line {
     /// Grows from 1 for the program's run, across Geçmişi temizle too.
     pub id: u64,
     pub level: Level,
@@ -131,7 +131,7 @@ pub(crate) struct Line {
 
 /// The log: its lines (500 at most) and what the Uyarılar badge has seen.
 #[derive(Debug, Default)]
-pub(crate) struct Log {
+pub struct Log {
     lines: VecDeque<Line>,
     last: u64,
     /// The newest id seen while the Uyarılar tab was on screen.
@@ -175,7 +175,7 @@ impl Log {
             .count()
     }
 
-    pub(crate) fn lines(&self) -> impl DoubleEndedIterator<Item = &Line> {
+    pub fn lines(&self) -> impl DoubleEndedIterator<Item = &Line> {
         self.lines.iter()
     }
 
@@ -195,14 +195,14 @@ impl Log {
     }
 
     /// The newest line.
-    #[cfg(test)]
-    pub(crate) fn last(&self) -> Option<&Line> {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn last(&self) -> Option<&Line> {
         self.lines.back()
     }
 
     /// Whether a line of this level says `part`.
-    #[cfg(test)]
-    pub(crate) fn said(&self, level: Level, part: &str) -> bool {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn said(&self, level: Level, part: &str) -> bool {
         self.lines
             .iter()
             .any(|l| l.level == level && l.text.contains(part))

@@ -167,7 +167,7 @@ impl App {
 
 /// Opens a file in the system's viewer, or an address in the browser (no package: the
 /// platform's own opener), its process waited on beside the app.
-#[cfg(not(test))]
+#[cfg(not(any(test, feature = "testing")))]
 pub(crate) fn open_with_viewer(path: &Path) -> std::io::Result<()> {
     use std::process::Command;
     #[cfg(target_os = "windows")]
@@ -195,13 +195,13 @@ pub(crate) fn open_with_viewer(path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 thread_local! {
     /// The files the tests' app opened in the viewer (none is launched in a test).
     pub(crate) static OPENED: std::cell::RefCell<Vec<std::path::PathBuf>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 pub(crate) fn open_with_viewer(path: &Path) -> std::io::Result<()> {
     OPENED.with(|o| o.borrow_mut().push(path.to_owned()));
     Ok(())

@@ -2896,6 +2896,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-cad"
+version = "0.1.0"
+dependencies = [
+ "ctor",
+ "iced",
+ "kentos-commands",
+ "kentos-desktop",
+ "kentos-desktop-map",
+ "kentos-domain",
+ "kentos-interaction",
+ "kentos-launch",
+ "kentos-native-style",
+ "kentos-postgis",
+ "kentos-project",
+ "kentos-render-wgpu",
+ "kentos-ui",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-cli"
 version = "0.1.0"
 dependencies = [
@@ -3046,6 +3066,33 @@ dependencies = [
  "tokio",
  "unicode-segmentation",
  "zune-jpeg 0.5.15",
+]
+
+[[package]]
+name = "kentos-desktop-map"
+version = "0.1.0"
+dependencies = [
+ "ctor",
+ "iced",
+ "iced_runtime",
+ "kentos-commands",
+ "kentos-desktop",
+ "kentos-domain",
+ "kentos-formats",
+ "kentos-geometry-core",
+ "kentos-interaction",
+ "kentos-kcad",
+ "kentos-launch",
+ "kentos-native-application",
+ "kentos-plot",
+ "kentos-processing",
+ "kentos-render-wgpu",
+ "kentos-sheet",
+ "kentos-sheet-ui",
+ "kentos-ui",
+ "rfd",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

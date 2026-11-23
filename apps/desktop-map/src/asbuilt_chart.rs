@@ -15,7 +15,7 @@ use kentos_ui::label;
 use kentos_ui::widget::Segmented;
 use kentos_ui::theme::Tokens;
 
-use crate::app::Message;
+use crate::app::{App, Message};
 
 /// The part of the movement drawn.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -253,9 +253,14 @@ pub fn chosen<'a>(r: &'a AsbuiltChecked, mark: &str) -> Option<&'a AsbuiltTrack>
         .or_else(|| r.tracks.first())
 }
 
-impl crate::app::App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait AsbuiltChartApp {
+    fn asbuilt_chart<'a>(&'a self, r: &'a AsbuiltChecked) -> Element<'a, Message>;
+}
+
+impl AsbuiltChartApp for App {
     /// Grafik (docs/adr/5220): the mark and the part chosen above the chart; the thresholds as typed.
-    pub(crate) fn asbuilt_chart<'a>(&'a self, r: &'a AsbuiltChecked) -> Element<'a, Message> {
+    fn asbuilt_chart<'a>(&'a self, r: &'a AsbuiltChecked) -> Element<'a, Message>{
         use crate::asbuilt_trend::Change;
         use crate::asbuilt_window::Event;
         let s = &self.modules.map().asbuilt;

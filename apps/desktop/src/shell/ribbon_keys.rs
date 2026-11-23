@@ -122,7 +122,7 @@ pub(crate) fn away_events(
 impl App {
     /// The open tab's panels as the ribbon shows them, each with its
     /// panel (none for Görünüm's own look, appearance.rs).
-    pub(crate) fn tab_groups(
+    pub fn tab_groups(
         &self,
         tab: &'static Tab,
     ) -> Vec<(Option<&'static RibbonPanel>, Group<'static, Message>)> {

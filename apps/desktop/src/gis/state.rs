@@ -7,7 +7,7 @@ use iced::{Element, Task};
 use crate::app::{App, Message};
 
 /// The GIS (CBS) module's windows and panels.
-pub(crate) struct GisUiState {
+pub struct GisUiState {
     /// Kaynaklar (sources/, docs/adr/0199 §7): its folders, what is open and read.
     pub(crate) sources: crate::sources::SourcesPanel,
     /// The data layers' edit sessions' saves and question (data_edits.rs, docs/adr/9103 §5).
@@ -55,7 +55,7 @@ pub(crate) struct GisUiState {
     /// Nokta bulutu ekle and Nokta bulutu stili (pointclouds/, docs/adr/0207 §9).
     pub(crate) clouds: crate::pointclouds::Windows,
     /// The bottom panel's Noktalar tab: its query and rows (points/, docs/adr/0153).
-    pub(crate) points: crate::points::PointsPanel,
+    pub points: crate::points::PointsPanel,
     /// The bottom panel's Tablo tab: its choices and rows (features/, docs/adr/0199 §4).
     pub(crate) features: crate::features::FeaturesPanel,
     /// The İstatistik and Grafik tabs: their choices and what was worked out (charts/, docs/adr/0227).
@@ -63,7 +63,7 @@ pub(crate) struct GisUiState {
     /// Alanlar, while it is open (layer_fields.rs, docs/adr/0199 §3).
     pub(crate) layer_fields: Option<crate::layer_fields::Window>,
     /// The bottom panel's Topoloji tab: the last check, the chosen rows and the filter (topology/, docs/adr/0202 §5).
-    pub(crate) topology: crate::topology::TopologyPanel,
+    pub topology: crate::topology::TopologyPanel,
     /// Topoloji kuralları, while it is open (topology/rules.rs, docs/adr/0202 §6).
     pub(crate) topology_rules: Option<crate::topology::rules::Window>,
     /// The Hesap windows' fields, kept while the app runs (calc/).
@@ -148,7 +148,7 @@ pub(crate) struct GisUiState {
 // `EventLinks` is a window's name (Olay bağlantıları), not this enum's.
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone)]
-pub(crate) enum Event {
+pub enum Event {
     /// Data layers (data_layers.rs, docs/adr/9101): tables described off the interface's thread, then added.
     DataLayers(crate::data_layers::Event),
     /// Bilgi's asks of the data layers (data_info.rs, docs/adr/9101 §6).
@@ -270,7 +270,7 @@ pub(crate) enum Event {
 
 /// The GIS (CBS) module's windows, `Dialog::Gis`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum GisDialogKind {
+pub enum GisDialogKind {
     /// A data layer's changes asked about: Kaydet, Kaydetme, Vazgeç (data_edits.rs); the question is
     /// `GisUiState::data_edits.asking`.
     DataEdits,

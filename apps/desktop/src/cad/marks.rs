@@ -699,7 +699,7 @@ fn extent_frame(
 }
 
 /// An edge as points along it on the screen (arcs every 7.5° at most).
-pub(crate) fn edge_points(e: &kentos_geometry_core::geom::intersect::Edge, camera: &Camera) -> Vec<Point> {
+pub fn edge_points(e: &kentos_geometry_core::geom::intersect::Edge, camera: &Camera) -> Vec<Point> {
     use kentos_geometry_core::geom::intersect::Edge;
     let screen = |x: f64, y: f64| {
         let s = camera.world_to_screen(Vec2::new(x, y));

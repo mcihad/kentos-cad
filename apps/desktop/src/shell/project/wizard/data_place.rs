@@ -41,7 +41,7 @@ pub(crate) enum After {
 
 /// The folder a new GeoPackage is offered in: the open drawing's, else the documents folder; a test's own scratch.
 pub(crate) fn default_folder(open: Option<&Path>) -> PathBuf {
-    if cfg!(test) {
+    if cfg!(any(test, feature = "testing")) {
         // Each wizard of a test its own folder: no project of another test or run is in the way.
         static MADE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let n = MADE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);

@@ -19,7 +19,7 @@ pub(crate) const GO_ON: &str = "Sürdür";
 
 /// A question a source refused: the command's code and words.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Refused {
+pub struct Refused {
     pub code: String,
     pub why: String,
 }

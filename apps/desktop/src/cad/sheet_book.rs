@@ -44,7 +44,7 @@ fn same(a: Option<&Arc<ProjectSheets>>, b: Option<&Arc<ProjectSheets>>) -> bool 
 impl App {
     /// After every message: the designer shows the drawing's book, the
     /// drawing keeps the designer's (see the module's comment).
-    pub(crate) fn follow_sheet_book(&mut self) {
+    pub fn follow_sheet_book(&mut self) {
         let session = self.document.as_ref().map(|d| d.session);
         let opened = session != self.sheet_session;
         self.sheet_session = session;

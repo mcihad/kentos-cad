@@ -102,7 +102,7 @@ fn measure_span(e: &Entity) -> Option<(f64, f64)> {
 /// What a card shows: its title, the object's layer and colour, its rows
 /// (label, value, whether the value is a number).
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Card {
+pub struct Card {
     pub title: String,
     pub layer: Option<(String, Color)>,
     pub rows: Vec<(&'static str, String, bool)>,
@@ -121,7 +121,7 @@ pub(crate) fn card(
 
 /// The card for `e`, its parcel rows with `parcels` (Ada, Mahalle, Nitelik, the deed's area and the parcel's number
 /// in the title: a map's programs and kentos-cad, module_surfaces.rs).
-pub(crate) fn card_with(
+pub fn card_with(
     e: &Entity,
     model: &Model,
     format: &Format,

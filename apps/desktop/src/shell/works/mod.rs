@@ -58,7 +58,7 @@ impl By {
 
 /// Which work, for its buttons.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum Key {
+pub enum Key {
     /// A processing run, by its id.
     Processing(u64),
     /// An extension's command, by the extension (one runs at a time in its process).
@@ -167,7 +167,7 @@ impl JobStart {
 
 /// The list's buttons.
 #[derive(Clone, Debug)]
-pub(crate) enum Event {
+pub enum Event {
     Stop(Key),
     Show(Key),
 }

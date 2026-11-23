@@ -285,7 +285,7 @@ pub(crate) fn source_text(p: &ProjectAccessHolder, zone: &Zone) -> String {
 /// One person's row in Kişiler: sharing.ts's `PersonRow` with the view's
 /// letters, second line, the role's note and the lock's reason.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct PersonRow {
+pub struct PersonRow {
     pub user_id: String,
     pub name: String,
     pub email: Option<String>,
@@ -462,7 +462,7 @@ pub(crate) fn revoked_text(name: &str) -> String {
 
 /// A question the window asks before it acts.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Question {
+pub struct Question {
     pub title: &'static str,
     pub message: String,
     pub details: Vec<String>,
@@ -724,7 +724,7 @@ pub(crate) fn invite_rules(personal: bool) -> &'static str {
 /// What the panel says of a new invitation: with its link (shown once) the
 /// warning that it is shown only now; without it how to get one.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Invited {
+pub struct Invited {
     pub what: String,
     pub warn: String,
     pub link: bool,

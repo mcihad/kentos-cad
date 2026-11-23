@@ -10,7 +10,7 @@ use iced::widget::{container, row};
 use iced::{Center, Element};
 use kentos_commands::{AsbuiltReviewRow, MonitoringReviewer, ReviewPhrase, ReviewerRole, SignatureKind};
 
-use crate::app::Message;
+use crate::app::{App, Message};
 use crate::road_dialog::{col, num};
 use crate::style::fields;
 
@@ -153,9 +153,15 @@ pub fn lead(list: &[AsbuiltReviewRow]) -> String {
     said
 }
 
-impl crate::app::App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait AsbuiltReviewFormApp {
+    fn asbuilt_reviews(&mut self);
+    fn asbuilt_review(&mut self, remove: bool);
+}
+
+impl AsbuiltReviewFormApp for App {
     /// The project's reviews with whether their points are today's (docs/adr/5220), read when the form changes.
-    pub(crate) fn asbuilt_reviews(&mut self) {
+    fn asbuilt_reviews(&mut self){
         self.modules.map_mut().asbuilt.reviews = match self.document.as_ref() {
             Some(doc) => kentos_native_application::asbuilt_review::rows(
                 &doc.model,
@@ -166,7 +172,7 @@ impl crate::app::App {
     }
 
     /// Projede sakla (keeps the job checked now under the review's name) or İncelemeyi kaldır, as one undo step.
-    pub(crate) fn asbuilt_review(&mut self, remove: bool) {
+    fn asbuilt_review(&mut self, remove: bool){
         use kentos_commands::{AsbuiltReview, CommandResult};
         use kentos_interaction::Level;
         use kentos_native_application::{ExecutionContext, asbuilt_review};

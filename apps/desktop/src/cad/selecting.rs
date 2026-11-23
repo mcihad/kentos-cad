@@ -137,7 +137,7 @@ impl App {
 
     /// The view on the box of these objects (by slot), as large as it fits,
     /// 96 px in from the edges: Seçime yakınlaştır's and Katmana yakınlaştır's.
-    pub(crate) fn zoom_to_objects(&mut self, ids: &[f64]) {
+    pub fn zoom_to_objects(&mut self, ids: &[f64]) {
         let Some(doc) = &self.document else {
             return;
         };

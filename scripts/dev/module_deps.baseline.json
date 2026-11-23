@@ -158,10 +158,7 @@
       "shell/traces/command_line.rs",
       "shell/view/status.rs"
     ],
-    "shell->map": [
-      "shell/module_parts.rs",
-      "shell/module_profile.rs"
-    ],
+    "shell->map": [],
     "shell->road": [
       "shell/app/start.rs",
       "shell/app/update.rs",
@@ -276,9 +273,9 @@
     "arch->map": [],
     "arch->road": [],
     "map->gis": [
-      "map/cogo.rs",
-      "map/map_survey_panel.rs",
-      "map/register_window.rs"
+      "desktop-map/cogo.rs",
+      "desktop-map/map_survey_panel.rs",
+      "desktop-map/register_window.rs"
     ],
     "map->arch": [],
     "map->road": [],

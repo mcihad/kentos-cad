@@ -30,7 +30,7 @@ use crate::layout_plan::{self as plan, BOTTOM_HEIGHT, DOCK_WIDTH, LAYERS_FRACTIO
 use crate::processing::panel::Tab as ProcessingTab;
 
 /// The layout's file, beside `ayarlar.json`: kentos-cad's.
-pub(crate) const FILE_NAME: &str = "yerlesim.json";
+pub const FILE_NAME: &str = "yerlesim.json";
 
 /// The layout file of `program` (docs/adr/0802): kentos-cad's `yerlesim.json`, a module's
 /// `yerlesim-mimari.json`, `yerlesim-harita.json`, `yerlesim-cbs.json`.
@@ -43,7 +43,7 @@ pub(crate) fn file_name(program: Option<kentos_launch::Module>) -> String {
 
 /// The kept layout and when it is to be written.
 #[derive(Debug)]
-pub(crate) struct Keeper {
+pub struct Keeper {
     path: Option<PathBuf>,
     kept: Map<String, Value>,
     due: Option<Instant>,
@@ -60,8 +60,8 @@ impl Keeper {
     }
 
     /// The layout kept in `folder`: what the file holds and its rules take (kentos-cad's file; the tests').
-    #[cfg(test)]
-    pub(crate) fn open(folder: &Path) -> Self {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn open(folder: &Path) -> Self {
         Self::open_for(folder, None)
     }
 
@@ -180,8 +180,8 @@ impl Keeper {
         let _ = write_whole(path, &text);
     }
 
-    #[cfg(test)]
-    pub(crate) fn kept(&self) -> &Map<String, Value> {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn kept(&self) -> &Map<String, Value> {
         &self.kept
     }
 }
@@ -262,7 +262,7 @@ impl App {
 
     /// The kept layout on screen (at start, and when the window changes size
     /// for the sizes).
-    pub(crate) fn apply_layout(&mut self) {
+    pub fn apply_layout(&mut self) {
         let keeper = &self.layout;
         let ribbon_tab = keeper.text("ribbonTab").to_owned();
         // A tab of either type's ribbon: the drawing's type, once open, keeps it or gives Giriş.

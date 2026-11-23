@@ -97,7 +97,7 @@ mod table_points_tests;
 pub(crate) mod tests;
 #[cfg(test)]
 mod transfer_tests;
-mod window;
+pub mod window;
 
 use crate::gis;
 use iced::Task;
@@ -415,7 +415,7 @@ impl App {
 
     /// Opens a tool's or a model's window with these values, else with its
     /// last ones (the web's `openToolDialog`).
-    pub(crate) fn open_processing(&mut self, id: &str, values: Option<Values>) {
+    pub fn open_processing(&mut self, id: &str, values: Option<Values>) {
         let Some(tool) = self.gis.processing.registry.get(id) else {
             // The web's words: a model gone is likely deleted (ToolDialog.ts).
             self.error(match id.strip_prefix(MODEL_PREFIX) {

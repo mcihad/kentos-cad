@@ -17,7 +17,7 @@ use crate::viewport::MarkColors;
 
 /// A panel's picked places: each shape's points and whether it closes (an area, a rectangle, a circle), each point.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct Picked {
+pub struct Picked {
     pub(crate) shapes: Vec<(Vec<Vec2>, bool)>,
     pub(crate) points: Vec<Vec2>,
 }

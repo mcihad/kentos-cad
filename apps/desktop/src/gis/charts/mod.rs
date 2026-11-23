@@ -346,7 +346,7 @@ impl App {
     }
 
     /// İstatistik for a layer (Katmanlar's menu names one), else as it was.
-    pub(crate) fn open_statistics(&mut self, layer: Option<String>) {
+    pub fn open_statistics(&mut self, layer: Option<String>) {
         // A program without the tab says where it is (module_surfaces.rs).
         if !self.open_bottom_tab(BottomTab::Statistics) {
             return;
@@ -361,7 +361,7 @@ impl App {
     }
 
     /// Grafik for a layer, with a kind (its columns chosen by the tab) or a spec.
-    pub(crate) fn open_chart(
+    pub fn open_chart(
         &mut self,
         layer: Option<String>,
         kind: Option<ChartKind>,

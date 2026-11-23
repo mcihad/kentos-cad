@@ -16,7 +16,7 @@ pub(crate) struct Window {
     notice: Option<String>,
 }
 #[derive(Clone, Debug)]
-pub(crate) enum Event {
+pub enum Event {
     Mode {
         session: u64,
         mode: TemplateSettingsMode,

@@ -6,7 +6,7 @@ use kentos_ui::widget::Menu;
 impl App {
     /// The narrow status bar's Yardımcılar: the aids the wide one shows as lamps, the program's own
     /// (Topoloji and Çakışma are a map's, docs/adr/0802).
-    pub(crate) fn compact_aids_menu(&self) -> Menu<Message> {
+    pub fn compact_aids_menu(&self) -> Menu<Message> {
         let mut menu = Menu::new().header("Çizim yardımcıları");
         for (id, name) in crate::view::STATUS_AIDS {
             if !self.shows_aid(id) {
@@ -251,10 +251,7 @@ mod tests {
         ] {
             assert!(text.contains(label), "{label}: {text}");
         }
-        // A map's program has them.
-        app.program = Some(kentos_launch::Module::Map);
-        let text = format!("{:?}", app.compact_aids_menu());
-        assert!(text.contains("Çakışma seçenekleri"), "{text}");
+        // A map's program has them: the map package's map_aids_tests.rs (docs/adr/9199 §4.2).
     }
 
     #[test]

@@ -17,7 +17,7 @@ use crate::module_surfaces::{AppSetting, Cell, Formats, PropertyRows, SourceSect
 use crate::project::settings::Section as ProjectSection;
 
 /// What a module shows of the window: each surface yes or no, and the values its windows start with.
-pub(crate) trait ModuleProfile: Sync {
+pub trait ModuleProfile: Sync {
     /// Whether the bottom panel has `tab`.
     fn bottom(&self, tab: BottomTab) -> bool;
     /// Whether the dock has `panel`.
@@ -54,13 +54,14 @@ pub(crate) trait ModuleProfile: Sync {
     fn library_hidden(&self) -> &'static [&'static str];
 }
 
-/// `module`'s profile, from its own folder.
-pub(crate) fn profile(module: Module) -> &'static dyn ModuleProfile {
+/// `module`'s profile, from its own folder; a module that is a package of its own gives it with its parts
+/// (module_parts.rs), and one not in this program shows the shell's own ([`NoProject`]).
+pub fn profile(module: Module) -> &'static dyn ModuleProfile {
     match module {
         Module::Architecture => &crate::arch_profile::Architecture,
-        Module::Map => &crate::map_profile::Map,
         Module::Road => &crate::road_profile::Road,
         Module::Gis => &crate::gis_profile::Gis,
+        Module::Map => crate::module_parts::parts(module).map_or(&NoProject as &dyn ModuleProfile, |p| p.profile()),
     }
 }
 

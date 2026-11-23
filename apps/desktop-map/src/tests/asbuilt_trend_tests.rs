@@ -54,7 +54,7 @@ fn opened() -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     for (layer, day) in [("donem1", "2026-01-15"), ("donem2", "2026-04-15"), ("donem3", "2026-07-15"), ("donem4", "2026-10-15")] {
-        crate::program_scenes::command(&mut app, "cad.datasets.edit", json!({"layer": layer, "dataset": {"updated": day}}));
+        crate::files_testing::command(&mut app, "cad.datasets.edit", json!({"layer": layer, "dataset": {"updated": day}}));
     }
     app
 }

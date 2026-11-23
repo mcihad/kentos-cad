@@ -26,7 +26,7 @@ type Ghost = kentos_native_application::sources::Ghost;
 
 /// The answer of one band's read.
 #[derive(Clone, Debug)]
-pub(crate) struct Read {
+pub struct Read {
     /// The drawing it was asked for (its session): another drawing's answer is not this one's.
     session: u64,
     layer: String,

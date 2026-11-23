@@ -20,7 +20,7 @@ use crate::app::{App, Message};
 
 /// A recipe planned and shown, bound to the drawing's state it was planned on.
 #[derive(Clone, Debug)]
-pub(crate) struct Recipe {
+pub struct Recipe {
     pub input: TopologyRepair,
     pub planned: TopologyRepaired,
     pub session: u64,

@@ -18,5 +18,5 @@ cat <<SAY
 
 Hazır. KentOS GIS'i örnek çizimle açmak için:
   KENTOS_EXTENSIONS_CATALOG=$out/katalog KENTOS_EXTENSIONS_DIR=$out/eklentiler \\
-    cargo run -p kentos-desktop --bin kentos-cad -- --modul cbs $here/vitrin.kcad
+    cargo run -p kentos-cad --bin kentos-cad -- --modul cbs $here/vitrin.kcad
 SAY

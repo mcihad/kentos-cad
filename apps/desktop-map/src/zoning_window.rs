@@ -355,7 +355,7 @@ impl ZoningWindowApp for App {
             .collect();
         let groups = [Group::All, Group::Plans, Group::Decisions, Group::Areas, Group::Notes];
         let table = sheet(
-            vec![col("Bulgu", 140.0), col("Nesne", 100.0), num("Alan", 160.0), Col::rest("Açıklama")],
+            vec![col("Bulgu", 140.0), col("Nesne", 100.0), num("Alan", 160.0), rest("Açıklama")],
             rows,
             "Bu grupta bulgu yok.",
             300.0,
@@ -406,9 +406,7 @@ impl ZoningWindowApp for App {
 
 use crate::road_dialog::Col;
 
-impl Col<'_> {
-    /// A column that takes the rest of the width.
-    fn rest(title: &str) -> Col<'_> {
-        Col { title, width: None, number: false }
-    }
+/// A column that takes the rest of the width.
+fn rest(title: &str) -> Col<'_> {
+    Col { title, width: None, number: false }
 }

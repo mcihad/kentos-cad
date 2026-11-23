@@ -64,7 +64,7 @@ pub(crate) struct EnvState {
 
 /// What the section's controls ask, each for an extension (its id).
 #[derive(Debug, Clone)]
-pub(crate) enum EnvEvent {
+pub enum EnvEvent {
     Found(String, Result<Option<Box<Ready>>, String>),
     /// An optional feature (its extra) ticked or not.
     Extra(String, String, bool),

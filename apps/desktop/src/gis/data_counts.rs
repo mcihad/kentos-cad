@@ -63,7 +63,7 @@ pub(crate) struct DataCounts {
 
 /// How a press changes the table's selection: replaced, added to (Shift), taken from (Ctrl, ⌘).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Pick {
+pub enum Pick {
     Replace,
     Add,
     Remove,

@@ -24,7 +24,7 @@ use crate::app::Message;
 
 /// Where the analysis area comes from.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(crate) enum AreaFrom {
+pub enum AreaFrom {
     /// The tool's own grid, whole.
     #[default]
     Whole,

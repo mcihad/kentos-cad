@@ -106,7 +106,7 @@ pub(crate) struct AuditRead {
 
 /// A rule's run, ended in the background.
 #[derive(Clone, Debug)]
-pub(crate) struct AuditDone {
+pub struct AuditDone {
     pub(crate) ext: String,
     pub(crate) local: String,
     pub(crate) answer: Result<Value, String>,

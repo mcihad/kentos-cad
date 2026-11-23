@@ -266,7 +266,7 @@ impl App {
 
     /// Etkin kat's row in a drawing tool's settings while the project has levels: its name and the status bar's
     /// menu.
-    pub(crate) fn level_setting(&self, tool: &str) -> Option<iced::Element<'_, Message>> {
+    pub fn level_setting(&self, tool: &str) -> Option<iced::Element<'_, Message>> {
         if !Self::ON_LEVEL.contains(&tool) {
             return None;
         }
@@ -318,7 +318,7 @@ impl App {
     }
 
     /// The Kat cell's words while the project has levels: “Kat: Zemin kat”, “Kat: Katsız”.
-    pub(crate) fn level_words(&self) -> Option<String> {
+    pub fn level_words(&self) -> Option<String> {
         // A building's (module_surfaces.rs): the Kat cell and Etkin aracın ayarları' Kat row go with it.
         if !self.shows_cell(crate::module_surfaces::Cell::Level) {
             return None;

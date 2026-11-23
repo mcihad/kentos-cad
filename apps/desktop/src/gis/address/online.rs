@@ -54,7 +54,7 @@ pub struct Online {
 
 fn config_folder() -> Option<PathBuf> {
     // The tests' app keeps its providers in memory, as its secrets.
-    if cfg!(test) {
+    if cfg!(any(test, feature = "testing")) {
         return None;
     }
     crate::settings::Settings::config_dir()
@@ -62,7 +62,7 @@ fn config_folder() -> Option<PathBuf> {
 
 /// `$XDG_CACHE_HOME/kentos-cad/adres`, else `~/.cache/kentos-cad/adres`.
 fn cache_folder() -> Option<PathBuf> {
-    if cfg!(test) {
+    if cfg!(any(test, feature = "testing")) {
         return None;
     }
     crate::services::cache::folder().and_then(|f| f.parent().map(|p| p.join("adres")))

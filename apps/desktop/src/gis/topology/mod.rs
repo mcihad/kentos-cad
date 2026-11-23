@@ -21,7 +21,7 @@
 //! A check of many objects goes to its own thread (docs/adr/0756, `running.rs`): the bar under the tab's bar moves on
 //! smoothly as it goes and Durdur ends it; the drawing is not held meanwhile.
 
-pub(crate) mod object;
+pub mod object;
 mod plan;
 mod review;
 pub(crate) mod rules;
@@ -65,7 +65,7 @@ use running::{Ran, Reply, Running, Work};
 /// A finding shown over the drawing: its regions filled, its edges bold, its
 /// place marked with the problem's name (marks.rs).
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct ProblemMark {
+pub struct ProblemMark {
     pub at: Vec2,
     pub label: String,
     pub regions: Vec<Area>,
@@ -75,7 +75,7 @@ pub(crate) struct ProblemMark {
 /// The last check: its findings and what they were made of (the drawing's objects and the rows read round bound
 /// parts, docs/adr/0589), when.
 #[derive(Clone, Debug)]
-pub(crate) struct Checked {
+pub struct Checked {
     pub findings: Arc<Vec<Finding>>,
     pub g: Arc<Gathered>,
     /// The drawing (its session) and the state of it the check saw.
@@ -91,7 +91,7 @@ pub(crate) struct Checked {
 
 impl Checked {
     /// A finding's lasting key (docs/adr/0524 §1).
-    pub(crate) fn key(&self, f: &Finding) -> String {
+    pub fn key(&self, f: &Finding) -> String {
         self.g.key(f)
     }
 
@@ -113,7 +113,7 @@ type StaleKey = (u64, u64, u64, u64);
 
 /// The tab's state for as long as the app lives.
 #[derive(Default)]
-pub(crate) struct TopologyPanel {
+pub struct TopologyPanel {
     pub checked: Option<Checked>,
     /// The chosen rows, as places in the findings.
     pub selected: Vec<usize>,
@@ -162,7 +162,7 @@ pub fn marks_ticks() -> impl iced::futures::Stream<Item = Message> {
 
 /// What follows a check's answer.
 #[derive(Clone, Debug)]
-pub(crate) enum Then {
+pub enum Then {
     /// Denetle: the rows unchosen; what it found said unless quiet.
     Check { quiet: bool },
     /// Değişenleri denetle: the chosen rows follow their keys; said unless quiet.
@@ -231,7 +231,7 @@ impl App {
     }
 
     /// The last check, if it is the open drawing's.
-    pub(crate) fn topology_checked(&self) -> Option<&Checked> {
+    pub fn topology_checked(&self) -> Option<&Checked> {
         let doc = self.document.as_ref()?;
         self.gis
             .topology
@@ -577,7 +577,7 @@ impl App {
     }
 
     /// `topology.check`: the tab open and the check run (said when the project has no rules).
-    pub(crate) fn open_topology_check(&mut self) -> Task<Message> {
+    pub fn open_topology_check(&mut self) -> Task<Message> {
         // A program without the tab says where it is (module_surfaces.rs).
         if !self.open_bottom_tab(BottomTab::Topology) {
             return Task::none();

@@ -324,7 +324,7 @@ fn msg(event: Event) -> Message {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) enum Event {
+pub enum Event {
     Part(Part),
     Choose(String),
     /// An extension's Python environment (environment.rs).

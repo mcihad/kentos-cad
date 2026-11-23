@@ -22,7 +22,7 @@ fn now_ms() -> i64 {
 
 /// Where a step parameter's list is set to.
 #[derive(Clone, Debug)]
-pub(crate) enum SourceChoice {
+pub enum SourceChoice {
     ToolDefault,
     Fixed,
     From(ValueSource),
@@ -32,7 +32,7 @@ pub(crate) enum SourceChoice {
 
 /// A model input's field in the settings.
 #[derive(Clone, Debug)]
-pub(crate) enum InputField {
+pub enum InputField {
     Label(String),
     Description(String),
     Optional(bool),
@@ -54,7 +54,7 @@ pub(crate) enum InputField {
 
 /// What the window asks for.
 #[derive(Clone, Debug)]
-pub(crate) enum Event {
+pub enum Event {
     // The diagram.
     Select(Option<NodeRef>),
     Move {

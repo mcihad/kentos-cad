@@ -43,7 +43,7 @@ work() {
 
 case "${1:-}" in
   build)
-    cargo build --release -p kentos-desktop --target-dir "$ROOT/target/pgo" "${PROFILING[@]}"
+    cargo build --release -p kentos-cad --target-dir "$ROOT/target/pgo" "${PROFILING[@]}"
     ;;
   record)
     shift
@@ -76,7 +76,7 @@ case "${1:-}" in
     [ -s "$OUT/kentos-cad.prof" ] || { echo "önce: pgo.sh profile" >&2; exit 2; }
     # The profile's loader reads the code's lines: line tables in the build, stripped from the program as in release.
     RUSTFLAGS="-Cprofile-sample-use=$OUT/kentos-cad.prof" \
-      cargo build --release -p kentos-desktop --target-dir "$ROOT/target/pgo-use" --config 'profile.release.debug="line-tables-only"'
+      cargo build --release -p kentos-cad --target-dir "$ROOT/target/pgo-use" --config 'profile.release.debug="line-tables-only"'
     ;;
   measure)
     shift

@@ -15,7 +15,7 @@ use crate::bottom::BottomTab;
 use crate::catalog::catalog;
 use crate::files_testing::{app_with_drawing, drive};
 use crate::layer_entries::{LayerEntry, LayerKind};
-use crate::tools_scenes::{Objects, layer, open_edited};
+use crate::scenes::{Objects, layer, open_edited};
 
 /// The table of docs/adr/9195 §5: each entry, the words its presence is read by, the modules that have it (M Mimari,
 /// H Harita, Y Yol, C CBS) and the kinds of layer it is about (d çizim, a açıklama, v veri tablosu, b bağlı,
@@ -435,10 +435,10 @@ fn the_phone_menu_pictures() {
             let _ = app.update(message);
         };
         snapshot.settle(&mut app, App::view, &mut update);
-        crate::tools_screens::press_caption(&mut snapshot, &mut app, name, true, false);
+        crate::scenes::press_caption(&mut snapshot, &mut app, name, true, false);
         snapshot.settle(&mut app, App::view, &mut update);
         for caption in ["Görünürlük", "Mobilde"] {
-            let item = crate::tools_screens::caption_at(&mut snapshot, &app, caption, false);
+            let item = crate::scenes::caption_at(&mut snapshot, &app, caption, false);
             snapshot.input(&mut app, App::view, &mut update, Input::Click(item));
             snapshot.settle(&mut app, App::view, &mut update);
             snapshot.input(&mut app, App::view, &mut update, Input::Move(Point::new(item.x + 4.0, item.y)));
@@ -470,10 +470,10 @@ fn picture(
         let _ = app.update(message);
     };
     snapshot.settle(&mut app, App::view, &mut update);
-    crate::tools_screens::press_caption(&mut snapshot, &mut app, name, true, false);
+    crate::scenes::press_caption(&mut snapshot, &mut app, name, true, false);
     snapshot.settle(&mut app, App::view, &mut update);
     if let Some(caption) = submenu {
-        let item = crate::tools_screens::caption_at(&mut snapshot, &app, caption, false);
+        let item = crate::scenes::caption_at(&mut snapshot, &app, caption, false);
         snapshot.input(&mut app, App::view, &mut update, Input::Click(item));
         snapshot.settle(&mut app, App::view, &mut update);
         snapshot.input(

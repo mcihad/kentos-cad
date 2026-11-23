@@ -72,7 +72,7 @@ pub(crate) struct ArchUiState {
 
 /// The architecture (Mimari) module's messages, `Message::Arch`.
 #[derive(Debug, Clone)]
-pub(crate) enum Event {
+pub enum Event {
     /// The Denetim tab (arch_audit.rs, docs/adr/0703).
     ArchAudit(crate::arch_audit::Event),
     /// The NTv2 grids the project names, looked for in the device's library (grids.rs).
@@ -121,7 +121,7 @@ pub(crate) enum Event {
 
 /// The architecture (Mimari) module's windows, `Dialog::Arch`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ArchDialogKind {
+pub enum ArchDialogKind {
     /// Read-only architectural package preview, followed by an explicit semantic apply.
     ArchTemplate,
     /// Şablonlar → Sil (templates_panel.rs); the template is the panel's `deleting`.

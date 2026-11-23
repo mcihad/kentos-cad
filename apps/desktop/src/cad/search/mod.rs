@@ -432,7 +432,7 @@ impl App {
     /// `data.search`: the panel open on its Arama tab, grown to the height
     /// the results want when it is shorter, the keyboard in the box with
     /// its words chosen.
-    pub(crate) fn open_data_search(&mut self) -> Task<Message> {
+    pub fn open_data_search(&mut self) -> Task<Message> {
         // A program without the tab says where it is (module_surfaces.rs).
         if !self.open_bottom_tab(BottomTab::Search) {
             return Task::none();

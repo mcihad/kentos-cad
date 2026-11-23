@@ -20,11 +20,11 @@ use crate::app::Message;
 
 /// The approved shapes in the world (polylines and points) and the selection's version they go with.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct Approved {
-    pub(crate) lines: Vec<Vec<[f64; 2]>>,
+pub struct Approved {
+    pub lines: Vec<Vec<[f64; 2]>>,
     pub(crate) points: Vec<[f64; 2]>,
-    pub(crate) objects: usize,
-    pub(crate) version: u64,
+    pub objects: usize,
+    pub version: u64,
 }
 
 /// An arc's chords: none longer than a thousandth of its radius off it (a picture's tolerance, not a measure's).
@@ -34,7 +34,7 @@ fn arc_line(c: kentos_geometry_core::Vec2, r: f64, a0: f64, sweep: f64) -> Vec<[
 
 impl Approved {
     /// The outlines of `shapes` (objects as approved), for the selection's version `version`.
-    pub(crate) fn of(shapes: &[Entity], version: u64) -> Self {
+    pub fn of(shapes: &[Entity], version: u64) -> Self {
         let mut out = Approved { objects: shapes.len(), version, ..Approved::default() };
         for e in shapes {
             if let Entity::Point(p) = e {
@@ -54,7 +54,7 @@ impl Approved {
 }
 
 /// The layer while `approved` goes with the selection's version `version`; none otherwise.
-pub(crate) fn layer<'a>(approved: Option<&'a Approved>, version: u64, camera: &Camera, color: Color) -> Option<Element<'a, Message>> {
+pub fn layer<'a>(approved: Option<&'a Approved>, version: u64, camera: &Camera, color: Color) -> Option<Element<'a, Message>> {
     let approved = approved.filter(|a| a.version == version && a.objects > 0)?;
     Some(canvas::Canvas::new(Layer { approved, camera: *camera, color }).width(Fill).height(Fill).into())
 }

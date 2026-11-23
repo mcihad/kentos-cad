@@ -78,7 +78,7 @@ pub enum BottomTab {
 
 impl BottomTab {
     /// Every tab in the web's order; a module's program shows its own of them (module_surfaces.rs).
-    pub(crate) const ALL: [BottomTab; 16] = [
+    pub const ALL: [BottomTab; 16] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
@@ -334,7 +334,7 @@ impl App {
     /// screen has its lines seen. A tab this program does not have opens
     /// Komut geçmişi instead (module_surfaces.rs; F2 on a tab another program
     /// left in the shared layout).
-    pub(crate) fn show_bottom(&mut self, tab: BottomTab) {
+    pub fn show_bottom(&mut self, tab: BottomTab) {
         let tab = if self.shows_bottom_tab(tab) {
             tab
         } else {
@@ -351,7 +351,7 @@ impl App {
     }
 
     /// `view.bottomPanel` (F2): opens or closes the panel.
-    pub(crate) fn toggle_bottom(&mut self) {
+    pub fn toggle_bottom(&mut self) {
         if self.command_expanded {
             if self.gis.points.editing() {
                 let _ = self.finish_cell(None);

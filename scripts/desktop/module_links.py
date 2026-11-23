@@ -39,7 +39,7 @@ def main() -> int:
     args = parser.parse_args()
     program = args.folder / exe("kentos-cad")
     if not program.is_file():
-        print(f"{program} yok: önce derleyin (cargo build -p kentos-desktop).", file=sys.stderr)
+        print(f"{program} yok: önce derleyin (cargo build -p kentos-cad).", file=sys.stderr)
         return 2
     missing = []
     for name in MODULES:

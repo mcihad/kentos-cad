@@ -39,7 +39,7 @@ const PICTURE: f32 = 72.0;
 
 /// Where a new template goes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Where {
+pub enum Where {
     User,
     Project,
 }
@@ -123,7 +123,7 @@ fn msg(event: Event) -> Message {
 
 /// The tools a template draws with, as the select lists them: Blok ekle where the program has blocks (KentOS GIS
 /// has none, docs/adr/0802), and the template's own tool whatever it is.
-pub(crate) fn tool_choices(blocks: bool, current: &str) -> Vec<(&'static str, &'static str)> {
+pub fn tool_choices(blocks: bool, current: &str) -> Vec<(&'static str, &'static str)> {
     TEMPLATE_TOOLS
         .iter()
         .filter(|(id, _)| blocks || *id != "blockInsert" || *id == current)

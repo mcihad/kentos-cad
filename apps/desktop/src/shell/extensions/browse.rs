@@ -18,7 +18,7 @@ const SEEN: &str = "katalog-gorulen.json";
 
 /// What the list shows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Part {
+pub enum Part {
     Installed,
     Available,
     Updates,

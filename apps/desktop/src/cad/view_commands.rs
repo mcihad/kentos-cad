@@ -45,7 +45,7 @@ impl App {
     /// `view.rightPanel` (F4): the layers and properties panels go away
     /// together and come back as they were: their sides, tabs, sizes and
     /// floating windows (the web hides its right panel whole).
-    pub(crate) fn toggle_right_panel(&mut self) {
+    pub fn toggle_right_panel(&mut self) {
         // Katman paneli (UR-019): open with another tab in front (Bloklar, İşlemler…), it brings the layer list forward
         // where it is docked rather than closing; with the list in front it closes as before.
         let layers = self.shows_panel(Panel::Layers);
@@ -102,7 +102,7 @@ impl App {
     }
 
     /// Whether either side panel is on screen (the command's check mark).
-    pub(crate) fn right_panel_shown(&self) -> bool {
+    pub fn right_panel_shown(&self) -> bool {
         SIDE_PANELS
             .iter()
             .any(|p| self.shows_panel(*p) && self.docks.is_shown(*p))

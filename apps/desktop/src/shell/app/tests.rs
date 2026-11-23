@@ -1,17 +1,4 @@
 use super::*;
-use crate::catalog::PORTED;
-
-#[test]
-fn every_ported_command_has_a_handler() {
-    for id in PORTED {
-        let (mut app, _) = App::boot(None);
-        let _ = app.run(id);
-        assert!(
-            !app.log.said(Level::Error, "işleyicisi eksik"),
-            "{id} is listed as ported but has no handler"
-        );
-    }
-}
 
 #[test]
 fn a_command_not_ported_says_so_and_changes_nothing() {

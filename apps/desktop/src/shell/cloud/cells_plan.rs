@@ -62,7 +62,7 @@ impl DatabaseState {
 
 /// A file project's Kaydet state (the web's `FileSaveState`, docs/adr/0038).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum FileState {
+pub enum FileState {
     Saved,
     Pending,
     Encoding,

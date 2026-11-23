@@ -14,7 +14,7 @@ pub(super) const ARCH_TAB: &str = "arch";
 pub(super) const COMMAND_LINE: &str = "accessibility.command-line";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Tool {
+pub enum Tool {
     Room,
     Door,
 }
@@ -54,7 +54,7 @@ struct Node {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) enum Event {
+pub enum Event {
     Ready,
     Activate(Tool),
     OpenArchTab,
@@ -64,7 +64,7 @@ pub(crate) enum Event {
 }
 
 #[derive(Clone, Debug, Default)]
-pub(crate) struct Layout {
+pub struct Layout {
     tab: Option<Rectangle>,
     tools: [Option<Rectangle>; 2],
     line: Option<Rectangle>,

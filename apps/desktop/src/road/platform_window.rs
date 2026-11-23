@@ -79,7 +79,7 @@ pub(crate) struct Preview {
 #[derive(Debug, Clone)]
 pub struct Window {
     pub(crate) chosen: Option<String>,
-    pub(crate) surface: Option<String>,
+    pub surface: Option<String>,
     pub(crate) fields: [String; 15],
     pub(crate) layer: Option<String>,
     pub(crate) preview: Preview,

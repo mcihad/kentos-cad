@@ -138,6 +138,8 @@ members = [
     "crates/model-view-ui",
     "apps/ui-showcase",
     "apps/desktop",
+    "apps/desktop-map",
+    "apps/kentos-cad",
     # KentOS Launcher (docs/adr/0800): KentOS's programs and others from their manifests, in one window.
     "apps/launcher",
     # The desktop's own wgpu drawing pipeline (docs/adr/0019); desktop-only like the above.

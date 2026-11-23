@@ -20,7 +20,7 @@ use crate::app::{App, Dialog, Message};
 impl App {
     /// Opens Stil yöneticisi (`style.manager`), or in pick mode over Katman
     /// stili or for the selection; the search field takes the keyboard.
-    pub(crate) fn open_style_manager(
+    pub fn open_style_manager(
         &mut self,
         pick: Option<super::Pick>,
         select: Option<String>,

@@ -267,3 +267,18 @@ impl iced::advanced::widget::Operation for SnapDown {
         });
     }
 }
+
+/// Runs the product command `name` with `input` on the drawing on screen, as a script would; its answer must be
+/// `completed`.
+pub fn command(app: &mut App, name: &str, input: serde_json::Value) -> serde_json::Value {
+    let doc = app.document.as_mut().expect("a drawing");
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        name,
+        kentos_commands::CallOp::Execute,
+        input,
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{name}: {answer}");
+    answer
+}

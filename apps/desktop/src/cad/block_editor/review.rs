@@ -37,7 +37,7 @@ impl Drop for Pending {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct Review {
+pub struct Review {
     pub summary: CommandSummary,
     pub direct: usize,
     pub nested: usize,

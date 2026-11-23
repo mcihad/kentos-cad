@@ -16,7 +16,7 @@ impl App {
     }
 
     /// The panel's content for the selection now.
-    pub(crate) fn properties_panel(&self, doc: &Document) -> Panel {
+    pub fn properties_panel(&self, doc: &Document) -> Panel {
         // An empty panel includes live source/file state. A single complex polyline/block is
         // expensive too: cache its geometric rows just like a large multi-selection.
         if self.selection.is_empty() {

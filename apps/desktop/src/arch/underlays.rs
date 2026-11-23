@@ -20,7 +20,7 @@ use crate::app::{App, Message};
 use crate::arch;
 
 /// One body placed in the drawing's metres: its object (an index into the file's objects), its corners, its triangles.
-pub(crate) struct Body {
+pub struct Body {
     pub owner: u32,
     pub positions: Arc<Vec<[f64; 3]>>,
     pub triangles: Vec<[u32; 3]>,
@@ -29,7 +29,7 @@ pub(crate) struct Body {
 /// An underlay's file as read: its digest and schema, the model and its bytes (an object's details are read from
 /// them when asked), the bodies placed, the objects with a shape that have no body and why, how long the read took,
 /// and the bodies' box in the drawing (x, y, z from, x, y, z to).
-pub(crate) struct Loaded {
+pub struct Loaded {
     pub sha256: String,
     pub schema: String,
     pub model: Model,
@@ -87,7 +87,7 @@ pub(crate) enum State {
 /// What an underlay was read for: its file, digest and placement and the project's system; a change of any reads it
 /// again.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Key {
+pub struct Key {
     pub file: String,
     pub sha256: String,
     pub placement: UnderlayPlacement,

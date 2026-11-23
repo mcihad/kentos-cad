@@ -19,7 +19,7 @@ use super::local_time::{Zone, when};
 /// A newer revision than the drawing's: its number, who saved it and when,
 /// as far as the server said.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct NewerRevision {
+pub struct NewerRevision {
     pub revision: String,
     /// Who saved it; empty when not known (a refused Kaydet names only the number).
     pub by: String,
@@ -46,7 +46,7 @@ pub(crate) enum SaveStage {
 
 /// Why nothing more is saved to the project.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Ended {
+pub enum Ended {
     Deleted,
     Revoked,
     Archived,
@@ -412,7 +412,7 @@ pub(crate) fn resync_step(a: &ProjectAnswer) -> ResyncStep {
 
 /// What an answer does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum AnswerDoes {
+pub enum AnswerDoes {
     /// The upload window on file storage, named “<name> (kopya)”: the
     /// drawing becomes a new file project (its revision 1) and the open
     /// one; this project stays as it is.
@@ -429,7 +429,7 @@ pub(crate) enum AnswerDoes {
 /// What an answer does to the drawing's unsaved changes (their recovery
 /// copy, and a save kept on this device, docs/adr/0043).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum AnswerWork {
+pub enum AnswerWork {
     /// Written by it (into the copy, or the local file): saved once that is written.
     Saved,
     /// Dropped on purpose: their recovery copy (a kept save) goes too.
@@ -442,7 +442,7 @@ pub(crate) enum AnswerWork {
 
 /// An answer's value, as the web names it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Answer {
+pub enum Answer {
     Copy,
     Local,
     Latest,
@@ -470,14 +470,14 @@ impl Answer {
 
 /// How an answer's button looks: the one amber button (Enter), or one that removes something.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum AnswerKind {
+pub enum AnswerKind {
     Primary,
     Danger,
 }
 
 /// One answer of a question.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct RevisionAnswer {
+pub struct RevisionAnswer {
     pub value: Answer,
     pub label: &'static str,
     pub kind: Option<AnswerKind>,
@@ -489,7 +489,7 @@ pub(crate) struct RevisionAnswer {
 
 /// Which question.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum QuestionId {
+pub enum QuestionId {
     Conflict,
     Unsaved,
     Newest,
@@ -509,7 +509,7 @@ impl QuestionId {
 
 /// A question about the open file project's revisions.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct RevisionQuestion {
+pub struct RevisionQuestion {
     pub id: QuestionId,
     pub title: &'static str,
     pub message: String,

@@ -7,10 +7,10 @@ use iced::{Element, Task};
 use crate::app::{App, Message};
 
 /// The road design (Yol) module's windows and panels.
-pub(crate) struct RoadUiState {
-    pub(crate) road_project: crate::road_project_panel::PanelState,
+pub struct RoadUiState {
+    pub road_project: crate::road_project_panel::PanelState,
     /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
-    pub(crate) terrain_window: Option<crate::terrain_window::Window>,
+    pub terrain_window: Option<crate::terrain_window::Window>,
     /// Güzergâh (alignment_window.rs, plan/road.md Y3).
     pub(crate) alignment_window: Option<crate::alignment_window::Window>,
     /// Boykesit (profile_window.rs, plan/road.md Y4).
@@ -49,7 +49,7 @@ pub(crate) struct RoadUiState {
     /// Araç izi (swept_window.rs, plan/road.md Y17.3).
     pub(crate) swept_window: Option<Box<crate::swept_window::Window>>,
     /// Yüzey analizi (surface_analysis_window.rs, plan/road.md Y18.5).
-    pub(crate) surface_analysis_window: Option<Box<crate::surface_analysis_window::Window>>,
+    pub surface_analysis_window: Option<Box<crate::surface_analysis_window::Window>>,
     /// Görüş mesafesi (sight_window.rs, plan/road.md Y20).
     pub(crate) sight_window: Option<Box<crate::sight_window::Window>>,
     /// Platform suyu (platform_water_window.rs, plan/road.md Y22).
@@ -64,14 +64,14 @@ pub(crate) struct RoadUiState {
     pub(crate) junction_window: Option<Box<crate::junction_window::Window>>,
     pub(crate) grade: crate::grade_window::State,
     pub(crate) project_graph: crate::project_graph_window::State,
-    pub(crate) sheet_contours: crate::sheet_contours_window::State,
+    pub sheet_contours: crate::sheet_contours_window::State,
     pub(crate) section_check: crate::section_check_window::State,
     pub(crate) stockpile: crate::stockpile_window::State,
 }
 
 /// The road design (Yol) module's messages, `Message::Road`.
 #[derive(Debug, Clone)]
-pub(crate) enum Event {
+pub enum Event {
     RoadProject(crate::road_project_panel::Event),
     /// An event of Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4).
     Terrains(crate::terrain_window::Event),
@@ -135,7 +135,7 @@ pub(crate) enum Event {
 
 /// The road design (Yol) module's windows, `Dialog::Road`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum RoadDialogKind {
+pub enum RoadDialogKind {
     /// Arazi yüzeyleri (terrain_window.rs, plan/road.md Y2.4); the window is `RoadUiState::terrain_window`.
     Terrains,
     /// Güzergâh (alignment_window.rs, plan/road.md Y3); the window is `RoadUiState::alignment_window`.

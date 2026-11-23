@@ -40,7 +40,7 @@ use crate::document::Document;
 pub mod batch;
 #[cfg(test)]
 mod batch_tests;
-mod batch_view;
+pub mod batch_view;
 pub(crate) mod cell;
 pub mod edit;
 #[cfg(test)]
@@ -298,7 +298,7 @@ pub(crate) struct Rows {
 type Key = (u64, u64, u64, u64);
 
 /// The tab's state, kept for as long as the app lives.
-pub(crate) struct PointsPanel {
+pub struct PointsPanel {
     search: String,
     layer: Option<String>,
     only_selected: bool,
@@ -309,7 +309,7 @@ pub(crate) struct PointsPanel {
     /// The last click without Shift, in the order shown.
     anchor: Option<usize>,
     /// The cell edited and the editor's text.
-    editing: Option<(Target, EditColumn)>,
+    pub editing: Option<(Target, EditColumn)>,
     text: String,
     draft: Option<Draft>,
     /// An operation's window, while it is open.
@@ -371,7 +371,7 @@ impl PointsPanel {
     }
 
     /// Whether a cell is being edited: Tab is its key then.
-    pub(crate) fn editing(&self) -> bool {
+    pub fn editing(&self) -> bool {
         self.editing.is_some()
     }
 

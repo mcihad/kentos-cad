@@ -140,7 +140,7 @@ fn wire(p: kentos_geometry_core::Vec2) -> kentos_commands::Vec2 {
 pub use kentos_native_application::elevation::with_paths;
 
 /// A command's refusal: its error, when it wrote nothing.
-pub(crate) fn refusal<T>(result: CommandResult<T>) -> Option<kentos_commands::CommandError> {
+pub fn refusal<T>(result: CommandResult<T>) -> Option<kentos_commands::CommandError> {
     match result {
         CommandResult::Failed { error }
         | CommandResult::Conflict { error }
@@ -150,7 +150,7 @@ pub(crate) fn refusal<T>(result: CommandResult<T>) -> Option<kentos_commands::Co
 }
 
 /// Runs `write` as one undo step named `label`; a refusal is rolled back and returned.
-pub(crate) fn in_step(
+pub fn in_step(
     doc: &mut Document,
     label: &str,
     write: impl FnOnce(&mut Document) -> Option<String>,

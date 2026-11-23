@@ -115,7 +115,7 @@ fn the_check_is_read_again_when_the_network_changes_while_it_is_open() {
     };
     let before = slope(&app);
     // A script lowers P1's lower invert by 30 cm (97.5 to 97.2); the next message the app takes reads the answer again.
-    crate::program_scenes::command(&mut app, "cad.entities.set", json!({"uids": [P1], "attrs": {"Akar son": "97.20"}, "operation": "attributes"}));
+    crate::files_testing::command(&mut app, "cad.entities.set", json!({"uids": [P1], "attrs": {"Akar son": "97.20"}, "operation": "attributes"}));
     assert_eq!(slope(&app), before, "not read yet");
     let _ = app.update(Message::WindowResized(iced::Size::new(1440.0, 900.0)));
     let after = slope(&app);

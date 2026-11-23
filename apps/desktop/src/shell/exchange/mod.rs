@@ -98,7 +98,7 @@ pub(crate) mod shp_export;
 #[cfg(test)]
 mod tests;
 mod wgs84_export;
-pub(crate) mod words;
+pub mod words;
 
 pub(crate) use coord_export::TableRows;
 pub(crate) use dxf_export::dimension_text;
@@ -704,7 +704,7 @@ impl App {
     }
 
     /// Fit measurable geometry at its own size; only a lone point needs surrounding context.
-    pub(crate) fn zoom_to_bounds(&mut self, b: &kentos_commands::Bounds) {
+    pub fn zoom_to_bounds(&mut self, b: &kentos_commands::Bounds) {
         // A real extent determines its own zoom; a single point uses the project unit for context.
         let span=(b.max_x-b.min_x).max(b.max_y-b.min_y);
         let minimum=if span>0. {span*1e-6}else{self.document.as_ref().map_or(20.,|d|20.*kentos_commands::units::Scale::from_unit(d.model.settings().unit()).factor())};

@@ -135,9 +135,10 @@ Bir pencereyi katmak:
 
 CLAUDE.md §25'in sekizinci kuralının tarifidir. Kararın gerekçesi [ADR 9195](../adr/9195-module-separation.md) ve
 [ADR 9196](../adr/9196-storage-by-project-kind.md), işin sırası [plan/ayrim.md](../../plan/ayrim.md)'dedir.
-Kayıt `apps/desktop/src/shell/module_profile.rs`'tedir (`ModuleProfile`, `profile`). Bağımlılık denetimi
-`scripts/dev/module_deps.py --check`, ortak katalog `catalog/v1/modules.json`'dur; ikisini de masaüstü sınamaları koşar
-(`module_catalog_tests`).
+Kayıt `apps/desktop/src/shell/module_profile.rs`'tedir (`ModuleProfile`, `profile`); kendi paketindeki modül profilini
+ve kabuğun ona dokunduğu her yeri modül arayüzüyle verir (`apps/desktop/src/shell/module_parts.rs`, `ModuleParts`, ADR
+9199). Bağımlılık denetimi `scripts/dev/module_deps.py --check`, ortak katalog `catalog/v1/modules.json`'dur; ikisini de
+masaüstü sınamaları koşar (`module_catalog_tests`).
 
 **Yeni yüzey** (panel, alt sekme, durum hücresi, ayar bölümü, katman menüsü öğesi):
 
@@ -164,10 +165,15 @@ Kayıt `apps/desktop/src/shell/module_profile.rs`'tedir (`ModuleProfile`, `profi
 4. **Komut kümesi:** şeridin verisinde (`scripts/ui/ribbon.py`) komutların `works`'ü; modüle özgü komutların
    çekirdekteki disiplini (`kentos_native_application::registry::discipline_of`).
 5. **Bulut:** proje türleri ve saklama biçimi. CBS türü veritabanı, CAD türü dosya revizyonudur.
-6. **Matris sınaması:** `apps/desktop/src/tests/module_surface_tests.rs`'in matrisi yeni modülün her yüzeyini sınar.
-   Hepsi bir arada programda o türün yüzeyleri modülün programındakiyle aynıdır.
+6. **Matris sınaması:** `apps/kentos-cad/tests/programs/module_surface_tests.rs`'in matrisi yeni modülün her yüzeyini
+   sınar. Hepsi bir arada programda o türün yüzeyleri modülün programındakiyle aynıdır.
 7. **Bağımlılık:** modül yalnız ortak çekirdeğe ve sözleşmeye bağlanır. `scripts/dev/module_deps.py`'nin `FOLDERS` ve
    `TRACKED` listelerine modülün klasörü girer; `--check` yeşil kalır, taban yalnız azalır.
+   - **Kendi paketi** (ADR 9199, örneği `apps/desktop-map`): `apps/desktop-<modül>` (`kentos-desktop-<modül>`) yalnız
+     çekirdeğe bağlanır; `ModuleParts`'ı uygular, `register()`'ı programların `main`'inde çağrılır, sınamalarında
+     `ctor` ile çağrılır. Durumu `App.modules`'te, iletisi `Message::Module`, penceresi `Dialog::Module`'dür;
+     `impl App`'leri uzantı trait'idir (`ext.rs`). `module_deps.py`'nin `PACKAGES`'ına girer. Programlar arası
+     sınamalar `apps/kentos-cad/tests/programs`'tadır.
 8. **Resim:** modülün penceresi, her katman türünün menüsü ve sihirbazı.
 
 **Yeni istemci** (ör. mobil görüntüleyici ya da düzenleyici; karar [ADR 9197](../adr/9197-mobile-clients.md)):

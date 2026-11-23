@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Modüllerin bağımlılık denetimi (ADR 9195 §6, CLAUDE.md §25 kural 3).
 
-Masaüstünün kaynağında (apps/desktop/src) her dosyanın başka klasördeki modüllere bağlarını ve modül adına göre
-dallarını sayar.
+Masaüstünün kaynağında her dosyanın başka klasördeki modüllere bağlarını ve modül adına göre dallarını sayar: çekirdeğin
+paketi (apps/desktop/src) ve kendi paketine ayrılmış modüller (ADR 9199: Harita apps/desktop-map/src). Bir modül
+paketinin dosyası o modülün klasörüdür; çekirdek modül paketlerine Cargo'nun kuralıyla da bağlanamaz.
 
 - Klasörler: shell (kabuk), cad (CAD çekirdeği), gis, arch, map, road (modüller). Sınama dosyaları sayılmaz: tests/,
   *_tests.rs, tests.rs, sahneler ve resimler.
@@ -28,6 +29,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "apps" / "desktop" / "src"
+# The modules that are packages of their own (docs/adr/9199): each its source folder.
+PACKAGES = {"map": ROOT / "apps" / "desktop-map" / "src"}
 BASELINE = Path(__file__).resolve().parent / "module_deps.baseline.json"
 
 MODULES = ("gis", "arch", "map", "road")
@@ -52,12 +55,17 @@ BLOCK_COMMENT = re.compile(r"/\*.*?\*/", re.S)
 
 
 def declared() -> dict[str, str]:
-    """Every top-level module of the desktop crate and its file, from lib.rs and test_suites.rs."""
+    """Every top-level module of the desktop's packages and its folder: the core's from lib.rs and test_suites.rs (the
+    file's first folder), a module package's from its lib.rs (the module's folder; `tests` for its tests)."""
     names: dict[str, str] = {}
     for file in ("lib.rs", "test_suites.rs"):
         text = (SRC / file).read_text(encoding="utf-8")
         for path, name in DECL.findall(text):
-            names[name] = path
+            names[name] = path.split("/")[0]
+    for module, src in PACKAGES.items():
+        text = (src / "lib.rs").read_text(encoding="utf-8")
+        for path, name in DECL.findall(text):
+            names[name] = "tests" if path.startswith("tests/") else module
     return names
 
 
@@ -108,14 +116,18 @@ def references(text: str) -> set[str]:
 
 def survey() -> tuple[dict[str, list[str]], dict[str, int]]:
     """Each tracked direction's files, and the branches by module name in the shell and the CAD core."""
-    owner = {name: path.split("/")[0] for name, path in declared().items()}
+    owner = declared()
     edges: dict[str, list[str]] = {f"{a}->{b}": [] for a, b in TRACKED}
     branches: dict[str, int] = {"shell": 0, "cad": 0}
-    for folder in FOLDERS:
-        for file in sorted((SRC / folder).rglob("*.rs")):
-            rel = file.relative_to(SRC).as_posix()
-            if is_test(rel):
+    sources = [(folder, SRC / folder, SRC) for folder in FOLDERS if folder not in PACKAGES]
+    sources += [(module, src, src) for module, src in PACKAGES.items()]
+    for folder, top, base in sources:
+        for file in sorted(top.rglob("*.rs")):
+            rel = file.relative_to(base).as_posix()
+            if is_test(rel) or (base != SRC and rel == "lib.rs"):
                 continue
+            if base != SRC:
+                rel = f"{base.parent.name}/{rel}"
             text = file.read_text(encoding="utf-8")
             targets = {owner[n] for n in references(text) if n in owner}
             for target in sorted(targets):

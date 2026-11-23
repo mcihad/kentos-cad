@@ -83,7 +83,7 @@ pub struct State {
     draft: Draft,
     /// A module's program makes its own projects only (docs/adr/0801): its type, and a CAD module's works.
     limit: Option<kentos_launch::Module>,
-    pub(crate) step: Step,
+    pub step: Step,
     /// The province search, kept while the wizard is open.
     query: String,
     /// Why the step could not be left forward, said in the footer.

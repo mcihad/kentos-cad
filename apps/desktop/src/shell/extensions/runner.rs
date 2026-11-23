@@ -156,7 +156,7 @@ pub(crate) fn shape_json(shape: &kentos_interaction::capture::Shape) -> Value {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct Launch {
+pub struct Launch {
     kind: &'static str,
     handler: String,
     title: String,

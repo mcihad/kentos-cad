@@ -200,9 +200,9 @@ mod elevation_tests;
 #[cfg(test)]
 #[path = "tests/explode_scenes.rs"]
 mod explode_scenes;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "shell/files_testing.rs"]
-mod files_testing;
+pub mod files_testing;
 #[cfg(test)]
 #[path = "tests/hatch_scenes.rs"]
 mod hatch_scenes;
@@ -291,41 +291,11 @@ mod road_project_panel_tests;
 #[path = "tests/road_project_regional_tests.rs"]
 mod road_project_regional_tests;
 #[cfg(test)]
-#[path = "tests/map_work_panel_tests.rs"]
-mod map_work_panel_tests;
-#[cfg(test)]
-#[path = "tests/independent_baselines_tests.rs"]
-mod independent_baselines_tests;
-#[cfg(test)]
 #[path = "tests/catalog_carry_tests.rs"]
 mod catalog_carry_tests;
 #[cfg(test)]
-#[path = "tests/map_work_limit_tests.rs"]
-mod map_work_limit_tests;
-#[cfg(test)]
-#[path = "tests/map_work_tools_tests.rs"]
-mod map_work_tools_tests;
-#[cfg(test)]
-#[path = "tests/map_work_stamps_tests.rs"]
-mod map_work_stamps_tests;
-#[cfg(test)]
-#[path = "tests/map_work_changes_tests.rs"]
-mod map_work_changes_tests;
-#[cfg(test)]
-#[path = "tests/map_work_restore_tests.rs"]
-mod map_work_restore_tests;
-#[cfg(test)]
-#[path = "tests/map_work_geometry_tests.rs"]
-mod map_work_geometry_tests;
-#[cfg(test)]
-#[path = "tests/map_work_profile_tests.rs"]
-mod map_work_profile_tests;
-#[cfg(test)]
 #[path = "tests/survey_heights_tests.rs"]
 mod survey_heights_tests;
-#[cfg(test)]
-#[path = "tests/survey_epoch_tests.rs"]
-mod survey_epoch_tests;
 #[cfg(test)]
 #[path = "tests/features_reconcile_areas_tests.rs"]
 mod features_reconcile_areas_tests;
@@ -335,12 +305,6 @@ mod scale_summary_tests;
 #[cfg(test)]
 #[path = "tests/features_window_tests.rs"]
 mod features_window_tests;
-#[cfg(test)]
-#[path = "tests/baselines_window_tests.rs"]
-mod baselines_window_tests;
-#[cfg(test)]
-#[path = "tests/baselines_large_tests.rs"]
-mod baselines_large_tests;
 #[cfg(test)]
 #[path = "tests/grade_reference_tests.rs"]
 mod grade_reference_tests;
@@ -357,38 +321,8 @@ mod grade_window_tests;
 #[path = "tests/clean_report_window_tests.rs"]
 mod clean_report_window_tests;
 #[cfg(test)]
-#[path = "tests/parcels_check_window_tests.rs"]
-mod parcels_check_window_tests;
-#[cfg(test)]
-#[path = "tests/parcel_boundaries_marks_tests.rs"]
-mod parcel_boundaries_marks_tests;
-#[cfg(test)]
-#[path = "tests/parcel_boundaries_window_tests.rs"]
-mod parcel_boundaries_window_tests;
-#[cfg(test)]
-#[path = "tests/parcel_register_window_tests.rs"]
-mod parcel_register_window_tests;
-#[cfg(test)]
-#[path = "tests/pipes_check_window_tests.rs"]
-mod pipes_check_window_tests;
-#[cfg(test)]
 #[path = "tests/exchange_check_window_tests.rs"]
 mod exchange_check_window_tests;
-#[cfg(test)]
-#[path = "tests/asbuilt_window_tests.rs"]
-mod asbuilt_window_tests;
-#[cfg(test)]
-#[path = "tests/asbuilt_series_tests.rs"]
-mod asbuilt_series_tests;
-#[cfg(test)]
-#[path = "tests/asbuilt_trend_tests.rs"]
-mod asbuilt_trend_tests;
-#[cfg(test)]
-#[path = "tests/asbuilt_review_tests.rs"]
-mod asbuilt_review_tests;
-#[cfg(test)]
-#[path = "tests/ortho_network_tests.rs"]
-mod ortho_network_tests;
 #[cfg(test)]
 #[path = "tests/project_graph_window_tests.rs"]
 mod project_graph_window_tests;
@@ -402,9 +336,6 @@ mod recipe_layer_fields_tests;
 #[path = "tests/recipe_layer_rules_tests.rs"]
 mod recipe_layer_rules_tests;
 #[cfg(test)]
-#[path = "tests/survey_network_window_tests.rs"]
-mod survey_network_window_tests;
-#[cfg(test)]
 #[path = "tests/features_reconcile_window_tests.rs"]
 mod features_reconcile_window_tests;
 #[cfg(test)]
@@ -413,15 +344,6 @@ mod features_reconcile_fill_tests;
 #[cfg(test)]
 #[path = "tests/features_reconcile_reapply_tests.rs"]
 mod features_reconcile_reapply_tests;
-#[cfg(test)]
-#[path = "tests/zoning_window_tests.rs"]
-mod zoning_window_tests;
-#[cfg(test)]
-#[path = "tests/zoning_symbols_window_tests.rs"]
-mod zoning_symbols_window_tests;
-#[cfg(test)]
-#[path = "tests/zoning_draft_window_tests.rs"]
-mod zoning_draft_window_tests;
 #[cfg(test)]
 #[path = "tests/impact_window_tests.rs"]
 mod impact_window_tests;
@@ -435,44 +357,11 @@ mod impact_slope_classes_tests;
 #[path = "tests/impact_network_record_tests.rs"]
 mod impact_network_record_tests;
 #[cfg(test)]
-#[path = "tests/readjustment_window_tests.rs"]
-mod readjustment_window_tests;
-#[cfg(test)]
 #[path = "tests/brand_tests.rs"]
 mod brand_tests;
 #[cfg(test)]
-#[path = "tests/ortho_compare_window_tests.rs"]
-mod ortho_compare_window_tests;
-#[cfg(test)]
-#[path = "tests/ortho_seamlines_window_tests.rs"]
-mod ortho_seamlines_window_tests;
-#[cfg(test)]
-#[path = "tests/ortho_seam_polygons_tests.rs"]
-mod ortho_seam_polygons_tests;
-#[cfg(test)]
 #[path = "tests/reproject_window_tests.rs"]
 mod reproject_window_tests;
-#[cfg(test)]
-#[path = "tests/survey_velocity_tests.rs"]
-mod survey_velocity_tests;
-#[cfg(test)]
-#[path = "tests/survey_region_tests.rs"]
-mod survey_region_tests;
-#[cfg(test)]
-#[path = "tests/ortho_window_tests.rs"]
-mod ortho_window_tests;
-#[cfg(test)]
-#[path = "tests/overlap_window_tests.rs"]
-mod overlap_window_tests;
-#[cfg(test)]
-#[path = "tests/register_window_tests.rs"]
-mod register_window_tests;
-#[cfg(test)]
-#[path = "tests/scan_network_window_tests.rs"]
-mod scan_network_window_tests;
-#[cfg(test)]
-#[path = "tests/cloud_place_window_tests.rs"]
-mod cloud_place_window_tests;
 #[cfg(test)]
 #[path = "tests/catalog_report_window_tests.rs"]
 mod catalog_report_window_tests;
@@ -488,21 +377,6 @@ mod stockpile_window_tests;
 #[cfg(test)]
 #[path = "tests/map_menus_tests.rs"]
 mod map_menus_tests;
-#[cfg(test)]
-#[path = "tests/map_survey_panel_tests.rs"]
-mod map_survey_panel_tests;
-#[cfg(test)]
-#[path = "tests/map_survey_network_rows_tests.rs"]
-mod map_survey_network_rows_tests;
-#[cfg(test)]
-#[path = "tests/map_survey_limits_tests.rs"]
-mod map_survey_limits_tests;
-#[cfg(test)]
-#[path = "tests/gnss_sessions_tests.rs"]
-mod gnss_sessions_tests;
-#[cfg(test)]
-#[path = "tests/network_ellipses_tests.rs"]
-mod network_ellipses_tests;
 #[cfg(test)]
 #[path = "tests/route_window_tests.rs"]
 mod route_window_tests;
@@ -554,12 +428,6 @@ mod material_zones_tests;
 #[cfg(test)]
 #[path = "tests/compare_sections_tests.rs"]
 mod compare_sections_tests;
-#[cfg(test)]
-#[path = "tests/pipes_profile_walls_tests.rs"]
-mod pipes_profile_walls_tests;
-#[cfg(test)]
-#[path = "tests/pipes_rules_tests.rs"]
-mod pipes_rules_tests;
 #[cfg(test)]
 #[path = "tests/dxf_attribute_names_tests.rs"]
 mod dxf_attribute_names_tests;
@@ -717,12 +585,6 @@ mod selection_fit_tests;
 #[path = "tests/module_screens.rs"]
 mod module_screens;
 #[cfg(test)]
-#[path = "tests/module_surface_tests.rs"]
-mod module_surface_tests;
-#[cfg(test)]
-#[path = "tests/layer_menu_tests.rs"]
-mod layer_menu_tests;
-#[cfg(test)]
 #[path = "tests/module_catalog_tests.rs"]
 mod module_catalog_tests;
 #[cfg(test)]
@@ -776,9 +638,6 @@ mod screens;
 #[cfg(test)]
 #[path = "tests/segment_scenes.rs"]
 mod segment_scenes;
-#[cfg(test)]
-#[path = "tests/selection_roles_tests.rs"]
-mod selection_roles_tests;
 #[cfg(test)]
 #[path = "tests/selection_scenes.rs"]
 mod selection_scenes;

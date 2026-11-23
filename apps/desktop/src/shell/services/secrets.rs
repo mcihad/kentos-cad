@@ -42,7 +42,7 @@ pub struct Secrets {
 
 fn folder() -> Option<PathBuf> {
     // The tests' app keeps its secrets in memory, as its settings: never the user's file.
-    if cfg!(test) {
+    if cfg!(any(test, feature = "testing")) {
         return None;
     }
     crate::settings::Settings::config_dir()

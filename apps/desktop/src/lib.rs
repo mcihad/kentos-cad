@@ -93,8 +93,6 @@ mod flatten_window;
 mod reproject_window;
 #[path = "gis/features_window.rs"]
 mod features_window;
-#[path = "map/baselines_window.rs"]
-mod baselines_window;
 #[path = "road/grade_reference.rs"]
 mod grade_reference;
 #[path = "road/grade_surface.rs"]
@@ -103,74 +101,20 @@ mod grade_surface;
 mod grade_window;
 #[path = "shell/clean_report_window.rs"]
 mod clean_report_window;
-#[path = "map/parcels_check_window.rs"]
-mod parcels_check_window;
 #[path = "gis/impact_reach_marks.rs"]
 mod impact_reach_marks;
-#[path = "map/parcel_boundaries_marks.rs"]
-mod parcel_boundaries_marks;
-#[path = "map/readjustment_sheet.rs"]
-mod readjustment_sheet;
-#[path = "map/parcel_boundaries_window.rs"]
-mod parcel_boundaries_window;
-#[path = "map/parcel_register_window.rs"]
-mod parcel_register_window;
-#[path = "map/pipes_check_window.rs"]
-mod pipes_check_window;
-#[path = "map/pipes_check_rules.rs"]
-mod pipes_check_rules;
 #[path = "shell/exchange_check_window.rs"]
 mod exchange_check_window;
 #[path = "shell/overlap_layers_window.rs"]
 mod overlap_layers_window;
-#[path = "map/asbuilt_window.rs"]
-mod asbuilt_window;
-#[path = "map/asbuilt_trend.rs"]
-mod asbuilt_trend;
-#[path = "map/asbuilt_chart.rs"]
-mod asbuilt_chart;
-#[path = "map/ortho_network_section.rs"]
-mod ortho_network_section;
-#[path = "map/asbuilt_review_form.rs"]
-mod asbuilt_review_form;
 #[path = "road/project_graph_window.rs"]
 mod project_graph_window;
-#[path = "map/survey_network_window.rs"]
-mod survey_network_window;
 #[path = "gis/features_reconcile_window.rs"]
 mod features_reconcile_window;
 #[path = "gis/features_reconcile_fill.rs"]
 mod features_reconcile_fill;
-#[path = "map/zoning_window.rs"]
-mod zoning_window;
-#[path = "map/zoning_symbols_window.rs"]
-mod zoning_symbols_window;
-#[path = "map/zoning_draft_window.rs"]
-mod zoning_draft_window;
-#[path = "map/zoning_marks.rs"]
-mod zoning_marks;
-#[path = "map/pipes_marks.rs"]
-mod pipes_marks;
-#[path = "map/survey_baseline_marks.rs"]
-mod survey_baseline_marks;
 #[path = "gis/impact_window.rs"]
 mod impact_window;
-#[path = "map/readjustment_window.rs"]
-mod readjustment_window;
-#[path = "map/ortho_compare_window.rs"]
-mod ortho_compare_window;
-#[path = "map/ortho_seamlines_window.rs"]
-mod ortho_seamlines_window;
-#[path = "map/ortho_window.rs"]
-mod ortho_window;
-#[path = "map/overlap_window.rs"]
-mod overlap_window;
-#[path = "map/register_window.rs"]
-mod register_window;
-#[path = "map/scan_network_window.rs"]
-mod scan_network_window;
-#[path = "map/cloud_place_window.rs"]
-mod cloud_place_window;
 #[path = "shell/catalog_report_window.rs"]
 mod catalog_report_window;
 #[path = "road/section_check_window.rs"]
@@ -202,7 +146,7 @@ mod wall_styles;
 #[path = "cad/table_style_window.rs"]
 mod table_style_window;
 #[path = "shell/app.rs"]
-mod app;
+pub mod app;
 // Asistan: the user's own AI agent (docs/adr/8056 §4).
 #[path = "shell/assistant/mod.rs"]
 mod assistant;
@@ -217,14 +161,12 @@ mod works;
 #[path = "arch/state.rs"]
 mod arch;
 #[path = "gis/state.rs"]
-mod gis;
-#[path = "map/state.rs"]
-mod map;
+pub mod gis;
 #[path = "road/state.rs"]
-mod road;
+pub mod road;
 
 #[path = "shell/app_menu/mod.rs"]
-mod app_menu;
+pub mod app_menu;
 #[path = "shell/appearance.rs"]
 mod appearance;
 #[path = "cad/constraint_relax.rs"]
@@ -264,29 +206,19 @@ mod blocks_panel;
 #[path = "shell/navigator.rs"]
 mod navigator;
 #[path = "road/road_project_panel.rs"]
-mod road_project_panel;
-#[path = "map/map_work_panel.rs"]
-mod map_work_panel;
-#[path = "map/map_work_limit.rs"]
-mod map_work_limit;
-#[path = "map/map_survey_panel.rs"]
-mod map_survey_panel;
-#[path = "map/map_survey_network_rows.rs"]
-mod map_survey_network_rows;
+pub mod road_project_panel;
 #[path = "shell/bottom.rs"]
-mod bottom;
+pub mod bottom;
 #[path = "gis/calc/mod.rs"]
-mod calc;
+pub mod calc;
 #[path = "shell/catalog.rs"]
-mod catalog;
+pub mod catalog;
 #[path = "gis/charts/mod.rs"]
 mod charts;
 #[path = "cad/clipboard.rs"]
 mod clipboard;
 #[path = "shell/cloud/mod.rs"]
 mod cloud;
-#[path = "map/cogo.rs"]
-mod cogo;
 #[path = "shell/command_bar.rs"]
 mod command_bar;
 #[path = "cad/crs.rs"]
@@ -298,7 +230,7 @@ mod clip_frames;
 #[path = "shell/doc_tabs.rs"]
 mod doc_tabs;
 #[path = "shell/document.rs"]
-mod document;
+pub mod document;
 #[path = "cad/draw_order.rs"]
 mod draw_order;
 #[path = "cad/drawing_exchange.rs"]
@@ -306,7 +238,7 @@ mod drawing_exchange;
 #[path = "cad/drawing_fonts.rs"]
 mod drawing_fonts;
 #[path = "cad/drawing_menus.rs"]
-mod drawing_menus;
+pub mod drawing_menus;
 #[path = "gis/data_profile.rs"]
 mod data_profile;
 #[path = "gis/data_profile_names.rs"]
@@ -324,7 +256,7 @@ mod review_window;
 #[path = "shell/standard_install.rs"]
 mod standard_install;
 #[path = "shell/exchange/mod.rs"]
-mod exchange;
+pub mod exchange;
 #[path = "gis/expression/mod.rs"]
 mod expression;
 #[path = "gis/features/mod.rs"]
@@ -342,15 +274,15 @@ mod grids;
 #[path = "cad/history/mod.rs"]
 mod history;
 #[path = "cad/hover_card.rs"]
-mod hover_card;
+pub mod hover_card;
 #[path = "shell/icons.rs"]
-mod icons;
+pub mod icons;
 #[path = "cad/info_card.rs"]
 mod info_card;
 #[path = "shell/input.rs"]
 mod input;
 #[path = "shell/keys.rs"]
-mod keys;
+pub mod keys;
 #[path = "shell/keytips.rs"]
 mod keytips;
 #[path = "cad/label_picture.rs"]
@@ -372,7 +304,7 @@ mod dialog_sizes;
 #[path = "gis/layer_info.rs"]
 mod layer_info;
 #[path = "cad/layer_list.rs"]
-mod layer_list;
+pub mod layer_list;
 #[path = "cad/font_report.rs"]
 mod font_report;
 #[path = "cad/text_tools.rs"]
@@ -388,7 +320,7 @@ mod event_links_window;
 #[path = "road/alignment_layer.rs"]
 mod alignment_layer;
 #[path = "shell/approved_layer.rs"]
-mod approved_layer;
+pub mod approved_layer;
 #[path = "road/alignment_window.rs"]
 mod alignment_window;
 #[path = "road/profile_lengths_window.rs"]
@@ -438,9 +370,9 @@ mod sight_window;
 #[path = "shell/propose_window.rs"]
 mod propose_window;
 #[path = "shell/picture.rs"]
-mod picture;
+pub mod picture;
 #[path = "shell/road_dialog.rs"]
-mod road_dialog;
+pub mod road_dialog;
 #[path = "road/swept_window.rs"]
 mod swept_window;
 #[path = "road/surface_analysis_window.rs"]
@@ -506,7 +438,7 @@ mod layer_types;
 #[path = "cad/layering.rs"]
 mod layering;
 #[path = "shell/layout.rs"]
-mod layout;
+pub mod layout;
 #[path = "shell/layout_plan.rs"]
 mod layout_plan;
 #[path = "cad/hatch_patterns_window.rs"]
@@ -522,7 +454,7 @@ mod log_plan;
 #[path = "cad/map_marks.rs"]
 mod map_marks;
 #[path = "cad/marks.rs"]
-mod marks;
+pub mod marks;
 #[path = "shell/message_log.rs"]
 mod message_log;
 #[path = "shell/modes.rs"]
@@ -532,21 +464,15 @@ mod selection_fit;
 #[path = "shell/open_report_window.rs"]
 mod open_report_window;
 #[path = "shell/module_surfaces.rs"]
-mod module_surfaces;
+pub mod module_surfaces;
 #[path = "shell/layer_entries.rs"]
-mod layer_entries;
+pub mod layer_entries;
 #[path = "shell/module_parts.rs"]
-mod module_parts;
-#[path = "map/parts.rs"]
-mod map_parts;
-#[path = "map/ext.rs"]
-mod map_ext;
+pub mod module_parts;
 #[path = "shell/module_profile.rs"]
-mod module_profile;
+pub mod module_profile;
 #[path = "arch/profile.rs"]
 mod arch_profile;
-#[path = "map/profile.rs"]
-mod map_profile;
 #[path = "road/profile.rs"]
 mod road_profile;
 #[path = "gis/profile.rs"]
@@ -558,7 +484,7 @@ mod navigation_cards;
 #[path = "cad/object_info.rs"]
 mod object_info;
 #[path = "shell/opening.rs"]
-mod opening;
+pub mod opening;
 #[path = "cad/paragraph_editor.rs"]
 mod paragraph_editor;
 #[path = "cad/photo_view.rs"]
@@ -566,21 +492,21 @@ mod photo_view;
 #[path = "cad/pictures.rs"]
 mod pictures;
 #[path = "shell/point_calc.rs"]
-mod point_calc;
+pub mod point_calc;
 #[path = "gis/pointclouds/mod.rs"]
-mod pointclouds;
+pub mod pointclouds;
 #[path = "gis/points/mod.rs"]
-mod points;
+pub mod points;
 #[path = "shell/preview.rs"]
 mod preview;
 #[path = "gis/processing/mod.rs"]
-mod processing;
+pub mod processing;
 #[path = "arch/program.rs"]
-mod program;
+pub mod program;
 #[path = "shell/project/mod.rs"]
-mod project;
+pub mod project;
 #[path = "cad/properties/mod.rs"]
-mod properties;
+pub mod properties;
 #[path = "shell/python/mod.rs"]
 mod python;
 #[path = "shell/python_personal.rs"]
@@ -594,7 +520,7 @@ mod rasters;
 #[path = "shell/recent.rs"]
 mod recent;
 #[path = "shell/recovery.rs"]
-mod recovery;
+pub mod recovery;
 #[path = "shell/ribbon_bar.rs"]
 mod ribbon_bar;
 #[path = "shell/ribbon_keys.rs"]
@@ -616,9 +542,9 @@ mod layer_crs;
 #[path = "cad/map_crs.rs"]
 mod map_crs;
 #[path = "gis/second_crs.rs"]
-mod second_crs;
+pub mod second_crs;
 #[path = "cad/selecting.rs"]
-mod selecting;
+pub mod selecting;
 #[path = "cad/selection_chip.rs"]
 mod selection_chip;
 #[path = "cad/selection_roles.rs"]
@@ -626,11 +552,11 @@ mod selection_roles;
 #[path = "cad/selection_commands.rs"]
 mod selection_commands;
 #[path = "shell/settings.rs"]
-mod settings;
+pub mod settings;
 #[path = "shell/settings_look.rs"]
 mod settings_look;
 #[path = "shell/settings_sections.rs"]
-mod settings_sections;
+pub mod settings_sections;
 #[path = "shell/settings_view.rs"]
 mod settings_view;
 #[path = "cad/style_impact.rs"]
@@ -664,7 +590,7 @@ mod snap_menu;
 #[path = "shell/snapshot.rs"]
 mod snapshot;
 #[path = "gis/data_layers.rs"]
-mod data_layers;
+pub mod data_layers;
 #[path = "gis/data_view.rs"]
 mod data_view;
 #[path = "gis/data_info.rs"]
@@ -708,7 +634,7 @@ mod layer_migrate;
 #[path = "gis/db_connections.rs"]
 mod db_connections;
 #[path = "gis/sources/mod.rs"]
-mod sources;
+pub mod sources;
 #[path = "shell/split_revision/mod.rs"]
 mod split_revision;
 #[path = "cad/split_view.rs"]
@@ -718,13 +644,13 @@ mod start;
 #[path = "gis/statistics/mod.rs"]
 mod statistics;
 #[path = "cad/style/mod.rs"]
-mod style;
+pub mod style;
 #[path = "cad/table_write.rs"]
 mod table_write;
 #[path = "cad/tables/mod.rs"]
 mod tables;
 #[path = "arch/template_editor.rs"]
-mod template_editor;
+pub mod template_editor;
 #[path = "arch/template_members.rs"]
 mod template_members;
 #[path = "arch/templates.rs"]
@@ -740,9 +666,9 @@ mod text_file;
 #[path = "shell/toasts.rs"]
 mod toasts;
 #[path = "gis/topology/mod.rs"]
-mod topology;
+pub mod topology;
 #[path = "shell/traces/mod.rs"]
-mod traces;
+pub mod traces;
 #[path = "cad/tracking.rs"]
 mod tracking;
 #[path = "shell/usage.rs"]
@@ -750,11 +676,11 @@ mod usage;
 #[path = "cad/vertices/mod.rs"]
 mod vertices;
 #[path = "shell/view.rs"]
-mod view;
+pub mod view;
 #[path = "cad/view_commands.rs"]
 mod view_commands;
 #[path = "shell/viewport/mod.rs"]
-mod viewport;
+pub mod viewport;
 #[path = "cad/views.rs"]
 mod views;
 #[path = "arch/views_recipe.rs"]

@@ -1,0 +1,47 @@
+[package]
+name = "kentos-desktop-map"
+description = "KentOS Harita'nın masaüstü paketi: ölçme, kadastro, imar ve ortofoto pencereleri, Harita işi ve GNSS arşivi; çekirdeğe (kentos-desktop) modül arayüzüyle bağlanır (docs/adr/9199)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# The module's own warnings are the core's (docs/adr/1136): the macOS linker's note on a large __eh_frame is quiet.
+[lints.rust]
+linker_messages = "allow"
+
+# A module of the desktop (docs/adr/9199 §3.1): it reaches the core alone, never another module's package. Its tests
+# link the core with its test helpers (`testing`) and register the module's parts before they run.
+[lib]
+name = "kentos_desktop_map"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+kentos-desktop = { path = "../desktop" }
+kentos-launch = { path = "../../crates/native/launch" }
+kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }
+kentos-commands = { path = "../../crates/shared/commands", default-features = false }
+kentos-domain = { path = "../../crates/native/domain" }
+kentos-render-wgpu = { path = "../../crates/render/wgpu" }
+kentos-sheet-ui = { path = "../../crates/sheet-ui" }
+kentos-interaction = { path = "../../crates/native/interaction" }
+kentos-native-application = { path = "../../crates/native/application" }
+kentos-geometry-core = { path = "../../crates/shared/geometry-core" }
+iced = { workspace = true, features = ["canvas", "svg", "image-without-codecs"] }
+rfd = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+kentos-desktop = { path = "../desktop", features = ["testing"] }
+# What the module's tests read and write besides the module: drawings, sheets, processing runs, files.
+kentos-kcad = { path = "../../crates/shared/kcad" }
+kentos-sheet = { path = "../../crates/shared/sheet", default-features = false }
+kentos-processing = { path = "../../crates/native/processing" }
+kentos-formats = { path = "../../crates/shared/formats" }
+kentos-plot = { path = "../../crates/native/plot" }
+iced_runtime = { workspace = true }
+# The module's parts registered before its tests run, as a program registers them in main (docs/adr/9199 §4.2):
+# the workspace's own ctor (already in the lock file), its declarative form, no proc macro.
+ctor = { version = "0.10.1", default-features = false }

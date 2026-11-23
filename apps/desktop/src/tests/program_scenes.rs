@@ -43,18 +43,7 @@ use crate::wall_scenes::opened;
 /// Where the upper floor is drawn: beside the ground floor.
 const UP: f64 = 16.0;
 
-pub(crate) fn command(app: &mut App, name: &str, input: Value) -> Value {
-    let doc = app.document.as_mut().expect("a drawing");
-    let answer = kentos_native_application::registry::run(
-        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-        name,
-        kentos_commands::CallOp::Execute,
-        input,
-    )
-    .expect("runs");
-    assert_eq!(answer["status"], "completed", "{name}: {answer}");
-    answer
-}
+pub(crate) use crate::files_testing::command;
 
 fn p(x: f64, y: f64) -> Value {
     json!({"x": E + x, "y": N + y})

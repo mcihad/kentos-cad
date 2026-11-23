@@ -146,7 +146,7 @@ impl App {
     /// The coordinate system cell's right-click menu: Koordinat sistemi…
     /// and İkinci sistem ▸; a map's programs have Harita sistemi ▸ too, and
     /// KentOS Mimari Koordinat sistemi… alone (module_surfaces.rs).
-    pub(crate) fn crs_cell_menu(&self) -> Menu<Message> {
+    pub fn crs_cell_menu(&self) -> Menu<Message> {
         use crate::module_surfaces::Cell;
         let set = crate::catalog::catalog().get("crs.set");
         let mut menu = Menu::new().item(
@@ -197,7 +197,7 @@ impl App {
     /// The status bar's cell of the second system, when the project has one:
     /// its name and the cursor's values; a click lists İkinci sistem, the
     /// tip says how sure the values are (§5).
-    pub(crate) fn second_cell(&self, cursor: Option<Vec2>) -> Option<Element<'_, Message>> {
+    pub fn second_cell(&self, cursor: Option<Vec2>) -> Option<Element<'_, Message>> {
         // A map's programs' (module_surfaces.rs).
         if !self.shows_cell(crate::module_surfaces::Cell::SecondCrs) {
             return None;
@@ -231,7 +231,7 @@ impl App {
     /// and its values (view.rs `status_width`), the drawing's origin's
     /// values, so it does not change as the cursor comes and goes; none
     /// without a second system.
-    pub(crate) fn second_width(&self) -> f32 {
+    pub fn second_width(&self) -> f32 {
         if !self.shows_cell(crate::module_surfaces::Cell::SecondCrs) {
             return 0.0;
         }

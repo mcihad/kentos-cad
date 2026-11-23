@@ -16,7 +16,7 @@ use crate::bottom::BottomTab;
 /// One finding of the object as its words say it: its problem, its rule, its place in its life cycle (with the
 /// reason), its measure, and its lasting key.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct ObjectFinding {
+pub struct ObjectFinding {
     pub problem: String,
     pub rule: String,
     pub state: String,
@@ -30,7 +30,7 @@ pub(crate) struct ObjectFinding {
 /// The findings of several objects (docs/adr/4600): the objects a rule names, the findings naming any of them (each
 /// once) by state (not reviewed, errors, exceptions, to review again), and whether the drawing changed since the check.
 #[derive(Clone, Debug, PartialEq, Default)]
-pub(crate) struct SelectionFindings {
+pub struct SelectionFindings {
     pub objects: usize,
     pub open: usize,
     pub errors: usize,
@@ -40,7 +40,7 @@ pub(crate) struct SelectionFindings {
 }
 
 impl SelectionFindings {
-    pub(crate) fn total(&self) -> usize {
+    pub fn total(&self) -> usize {
         self.open + self.errors + self.exceptions + self.lapsed
     }
 }
@@ -48,14 +48,14 @@ impl SelectionFindings {
 /// What can be said of the object: no check of the drawing yet, or the last check's findings naming it (`old` when
 /// the drawing changed since).
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum ObjectFindings {
+pub enum ObjectFindings {
     NotChecked,
     Checked { findings: Vec<ObjectFinding>, old: bool },
 }
 
 impl App {
     /// The object's findings; none when no rule of the project names its layer (the object is not checked at all).
-    pub(crate) fn object_findings(&self, slot: Slot) -> Option<ObjectFindings> {
+    pub fn object_findings(&self, slot: Slot) -> Option<ObjectFindings> {
         let doc = self.document.as_ref()?;
         let layer = doc.model.get(slot)?.base().layer_id.clone();
         let named = |id: &str| id == layer;
@@ -86,7 +86,7 @@ impl App {
 
     /// The findings of several selected objects (docs/adr/4600): none when no rule names the layer of any of them;
     /// `Some(None)` when the drawing was not checked. One pass over the findings, whatever the selection's size.
-    pub(crate) fn selection_findings(&self, slots: &[Slot]) -> Option<Option<SelectionFindings>> {
+    pub fn selection_findings(&self, slots: &[Slot]) -> Option<Option<SelectionFindings>> {
         let doc = self.document.as_ref()?;
         let rules = &self.topology_settings()?.rules;
         let named: HashSet<&str> = rules.iter().flat_map(|r| std::iter::once(r.layer.as_str()).chain(r.other.as_deref())).collect();

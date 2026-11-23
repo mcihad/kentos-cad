@@ -140,7 +140,7 @@ pub(crate) fn parse_tags(text: &str) -> Vec<String> {
 
 /// A project's catalog information as a form shows it.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Metadata {
+pub struct Metadata {
     pub name: String,
     pub project_type: ProjectType,
     pub description: String,
@@ -185,7 +185,7 @@ pub(crate) fn duplicate_savable(places: usize, name: &str) -> bool {
 
 /// A workspace a form offers: its tenant and its name in the list.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Place {
+pub struct Place {
     pub tenant_id: String,
     pub label: String,
 }
@@ -211,7 +211,7 @@ pub(crate) fn creatable_places(memberships: &[MembershipView], first: &str) -> V
 
 /// What the form converting a project to the other storage mode says (docs/adr/0039).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct ConvertForm {
+pub struct ConvertForm {
     pub to: ProjectStorage,
     pub title: &'static str,
     pub lead: String,

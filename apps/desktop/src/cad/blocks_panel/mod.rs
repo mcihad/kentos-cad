@@ -236,7 +236,7 @@ impl App {
     }
 
     /// `block.panel`: the dock shows the Bloklar tab; KentOS GIS has none (module_surfaces.rs), and says so.
-    pub(crate) fn show_blocks_panel(&mut self) {
+    pub fn show_blocks_panel(&mut self) {
         if !self.open_panel(Panel::Blocks) {
             return;
         }

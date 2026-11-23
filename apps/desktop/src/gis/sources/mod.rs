@@ -85,7 +85,7 @@ pub(crate) const SAMPLE_COLUMNS: usize = 4;
 /// Where a previewed table is (docs/adr/0599 §2): a GeoPackage of a folder. A database's tables are Veritabanları's,
 /// by their connection (docs/adr/0623).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub(crate) enum Origin {
+pub enum Origin {
     File(PathBuf),
 }
 
@@ -248,7 +248,7 @@ pub(crate) type Projects = (Vec<ProjectSummary>, u64);
 
 /// A project's drawing as downloaded, and how many objects each layer has.
 #[derive(Debug)]
-pub(crate) struct ProjectDrawing {
+pub struct ProjectDrawing {
     pub(crate) drawing: DocumentSnapshotV2,
     pub(crate) counts: HashMap<String, usize>,
 }
@@ -446,7 +446,7 @@ fn drawing_of(bytes: &[u8]) -> Result<Arc<ProjectDrawing>, String> {
 
 impl App {
     /// `data.sources`: the dock shows the Kaynaklar tab; KentOS Mimari has none (module_surfaces.rs), and says so.
-    pub(crate) fn show_sources(&mut self) {
+    pub fn show_sources(&mut self) {
         if !self.open_panel(Panel::Sources) {
             return;
         }
@@ -457,7 +457,7 @@ impl App {
             .update(kentos_ui::widget::docking::Event::Selected(Panel::Sources));
     }
 
-    pub(crate) fn sources_event(&mut self, event: Event) -> Task<Message> {
+    pub fn sources_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::AddFolder => {
                 return Task::perform(

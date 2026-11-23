@@ -19,7 +19,7 @@ use crate::viewport::MarkColors;
 
 /// The marks and, by constraint, the parts each names.
 #[derive(Debug, Default)]
-pub(crate) struct ConstraintMarks {
+pub struct ConstraintMarks {
     pub glyphs: Vec<Glyph>,
     pub bounds: Vec<Vec<Bond>>,
 }

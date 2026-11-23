@@ -10,11 +10,11 @@ use crate::app::App;
 
 /// What a layer is, for its menu: the modules' shared kinds (docs/adr/9195 §5). A raster's and a cloud's look and
 /// system are their contextual tab's.
-pub(crate) use kentos_launch::LayerKind;
+pub use kentos_launch::LayerKind;
 
 /// An entry of a layer's right-click menu (cad/layering/menus.rs), placed by module and by layer kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum LayerEntry {
+pub enum LayerEntry {
     /// Etkin katman yap.
     Activate,
     /// Düzenlemeyi başlat or bitir, Değişiklikleri kaydet, geri al and incele, Bütün katmanları kaydet and geri al
@@ -107,7 +107,7 @@ pub(crate) enum LayerEntry {
 
 impl LayerEntry {
     /// Every entry, in the menu's order.
-    pub(crate) const ALL: [LayerEntry; 43] = [
+    pub const ALL: [LayerEntry; 43] = [
         LayerEntry::Activate,
         LayerEntry::EditSession,
         LayerEntry::Visibility,
@@ -155,7 +155,7 @@ impl LayerEntry {
 
     /// The kinds of layer the entry is about (docs/adr/9195 §5). No arm stands for the rest: a new entry is placed
     /// before the program builds.
-    pub(crate) fn kinds(self) -> &'static [LayerKind] {
+    pub fn kinds(self) -> &'static [LayerKind] {
         use LayerKind::{Annotation, Bound, Data, Drawing, Group, PointCloud, Raster, Service};
         match self {
             // What every node has: shown, ordered, printed or not, on the phone or not, renamed, removed.
@@ -221,7 +221,7 @@ impl LayerEntry {
 impl App {
     /// What `node` is, for its menu: the shared answer (`kentos_native_application::layer_kind`, docs/adr/9197 §2.4)
     /// every client and the CBS project's save ask.
-    pub(crate) fn layer_kind(&self, node: &LayerNode) -> LayerKind {
+    pub fn layer_kind(&self, node: &LayerNode) -> LayerKind {
         match &self.document {
             Some(doc) => kentos_native_application::layer_kind::of(&doc.model, node),
             None if node.kind == LayerNodeType::Group => LayerKind::Group,
@@ -236,7 +236,7 @@ impl App {
     }
 
     /// Whether a layer of `kind`'s menu has `entry` here: the active module has it and it is about that kind.
-    pub(crate) fn layer_entry_on(&self, entry: LayerEntry, kind: LayerKind) -> bool {
+    pub fn layer_entry_on(&self, entry: LayerEntry, kind: LayerKind) -> bool {
         entry.kinds().contains(&kind) && self.shows_layer_entry(entry)
     }
 }

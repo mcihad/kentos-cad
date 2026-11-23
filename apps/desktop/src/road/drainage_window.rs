@@ -52,7 +52,7 @@ pub(crate) const FIELDS: [&str; 6] = [
 
 #[derive(Debug, Clone)]
 pub struct Window {
-    pub(crate) surface: Option<String>,
+    pub surface: Option<String>,
     pub(crate) culvert: Option<String>,
     pub(crate) fields: [String; 6],
     pub(crate) layer: Option<String>,

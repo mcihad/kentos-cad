@@ -118,7 +118,7 @@ impl Tally {
 }
 
 /// Tables bound one after another, one job at a time (`App::binding`).
-pub(crate) struct Binding {
+pub struct Binding {
     ask: Ask,
     left: VecDeque<Table>,
     /// The table bound now and its job.

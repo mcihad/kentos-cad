@@ -205,7 +205,7 @@ impl LayerProps {
 
 /// A property of Süzgeç ▾, turned over.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Prop {
+pub enum Prop {
     Shown,
     Hidden,
     Frozen,

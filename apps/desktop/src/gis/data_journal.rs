@@ -115,7 +115,7 @@ impl Journals {
 
 /// A project's journal as an open drawing keeps it in step with its tables.
 #[derive(Debug, Clone, Default, PartialEq)]
-pub(crate) struct Kept {
+pub struct Kept {
     /// The project's place: its file, or its project in a data source.
     pub place: String,
     /// The rows its file left out when it was saved or opened, less what was written or let go since.

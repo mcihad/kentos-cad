@@ -68,7 +68,7 @@ pub struct Window {
     /// The area's id and its corners' count.
     pub(crate) area: Option<(String, usize)>,
     /// A project's surface by its id; none: a new one named by the last field.
-    pub(crate) surface: Option<String>,
+    pub surface: Option<String>,
     pub(crate) layer: Option<String>,
     pub(crate) fields: [String; 4],
     pub(crate) preview: Option<Result<TerrainsFromCloudWritten, String>>,

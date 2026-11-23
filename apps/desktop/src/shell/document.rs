@@ -342,7 +342,7 @@ impl Document {
 /// previous file as it was and removes the temporary one. At once; the app
 /// saves off its UI thread with a panel and a stop (saving.rs); tests and
 /// measurements write with this.
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 pub fn write(snapshot: &DocumentSnapshotV2, path: &Path) -> Result<(), String> {
     use crate::saving::{self, SaveError};
     saving::write_watched(

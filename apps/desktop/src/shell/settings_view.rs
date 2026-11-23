@@ -182,7 +182,7 @@ impl App {
     }
 
     /// Opens the window on a section (Proje ayarları's “Uygulama ayarlarını aç”: Yeni projeler).
-    pub(crate) fn open_settings_at(&mut self, section: Section) {
+    pub fn open_settings_at(&mut self, section: Section) {
         let values: BTreeMap<&'static str, Value> = KEYS
             .iter()
             .map(|&k| (k, self.settings.requested(k)))

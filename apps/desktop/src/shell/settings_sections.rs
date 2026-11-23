@@ -699,7 +699,7 @@ const GIS_GRID: GridTitles = [
 
 impl App {
     /// Karelaj's spacings' titles and helps here (module_surfaces.rs `cad_axes`).
-    pub(crate) fn grid_titles(&self) -> GridTitles {
+    pub fn grid_titles(&self) -> GridTitles {
         if self.cad_axes() { CAD_GRID } else { GIS_GRID }
     }
 }

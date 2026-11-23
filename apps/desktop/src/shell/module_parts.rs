@@ -1,12 +1,12 @@
-//! A module's parts the shell reaches (docs/adr/9199 §3.3–3.4; CLAUDE.md §25 rule 3): its messages, windows, commands,
-//! marks over the drawing, panels, and what it does when the drawing changes or the marks are cleared. The shell names
-//! no module's types: a module's state is in [`ModuleStates`], its messages are [`ModuleEvent`]s, its windows
-//! [`ModuleDialog`]s, and each module gives its [`ModuleParts`]. [`all`] is the shell's one list of them
-//! (scripts/dev/module_deps.py allows the module names here alone).
+//! A module's parts the shell reaches (docs/adr/9199 §3.3–3.4; CLAUDE.md §25 rule 3): its profile, messages, windows,
+//! commands, marks over the drawing, panels, and what it does when the drawing changes or the marks are cleared. The
+//! shell names no module's types: a module's state is in [`ModuleStates`], its messages are [`ModuleEvent`]s, its
+//! windows [`ModuleDialog`]s, and each module package gives its [`ModuleParts`] to [`register`] before the window
+//! starts (a program in its `main`, the package's tests before they run). [`all`] is the shell's one list of them.
 
 use std::any::Any;
 use std::fmt;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use iced::widget::canvas;
 use iced::{Element, Task};
@@ -90,6 +90,8 @@ pub trait ModuleMarks: Send + Sync {
 pub trait ModuleParts: Sync {
     /// The module these parts are of.
     fn module(&self) -> Module;
+    /// What the module shows of the window (module_profile.rs).
+    fn profile(&self) -> &'static dyn crate::module_profile::ModuleProfile;
     /// The module's state as a new window starts it (`ModuleStates`).
     fn state(&self) -> Box<dyn Any>;
     /// A message of the module.
@@ -118,9 +120,32 @@ pub trait ModuleParts: Sync {
     fn panel_view<'a>(&self, app: &'a App, panel: Panel) -> Option<Element<'a, Message>>;
 }
 
+/// The parts registered so far, before [`all`] is first asked.
+static REGISTERED: Mutex<Vec<&'static dyn ModuleParts>> = Mutex::new(Vec::new());
+/// The parts of this program, fixed when first asked: in the modules' order (`Module::ALL`), one per module.
+static ALL: OnceLock<Vec<&'static dyn ModuleParts>> = OnceLock::new();
+
+/// Puts a module package's parts among the program's; a module registered twice is kept once. A program registers its
+/// modules in `main` before the window starts; registering after [`all`] was first asked changes nothing and says so.
+pub fn register(parts: &'static dyn ModuleParts) -> bool {
+    if ALL.get().is_some() {
+        return false;
+    }
+    let mut registered = REGISTERED.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if !registered.iter().any(|p| p.module() == parts.module()) {
+        registered.push(parts);
+    }
+    true
+}
+
 /// The modules' parts in this program.
 pub fn all() -> &'static [&'static dyn ModuleParts] {
-    &[&crate::map_parts::Map]
+    ALL.get_or_init(|| {
+        let registered = REGISTERED.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut list: Vec<&'static dyn ModuleParts> = registered.clone();
+        list.sort_by_key(|p| Module::ALL.iter().position(|m| *m == p.module()));
+        list
+    })
 }
 
 /// `module`'s parts; none when it is not in this program (or not yet a module of its own, docs/adr/9199 §4).

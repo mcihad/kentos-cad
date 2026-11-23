@@ -139,23 +139,6 @@ fn map_app() -> App {
     app
 }
 
-#[test]
-fn a_map_project_s_tree_shows_its_zero_line_stale_and_draws_it_again() {
-    let mut app = map_app();
-    assert_eq!(app.panel_title(Panel::RoadProject), "Proje ağacı");
-    assert!(app.shows_panel(Panel::RoadProject), "Harita has the tree");
-    let t = tree(&app);
-    let zero = t.nodes.iter().find(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).expect("the zero line");
-    assert_eq!(zero.state, S::Stale, "{zero:?}");
-    assert_eq!(zero.why, ["“Tümsek” yüzeyi çizildiğinden beri değişti."]);
-    rebuild(&mut app, P::Rebuild(None, false));
-    let t = tree(&app);
-    assert!(t.nodes.iter().filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).all(|d| d.state == S::Current));
-    let doc = app.document.as_ref().expect("a drawing");
-    let bytes = kentos_kcad::encode(&doc.model.to_snapshot_v2());
-    assert!(bytes.is_ok(), "a map project with its drawings saves: {:?}", bytes.err());
-}
-
 /// docs/adr/1840: cut and fill zones drawn in a Harita project are kept with both surfaces; one of Tümsek's heights set
 /// makes them stale, Hepsini yeniden üret draws them again (the zones as many), and the project saves (schema 205).
 #[test]

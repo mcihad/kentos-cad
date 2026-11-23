@@ -170,7 +170,7 @@ pub(crate) struct PanelOrigin {
 
 /// What a panel is told by the user.
 #[derive(Clone, Debug)]
-pub(crate) enum PanelEvent {
+pub enum PanelEvent {
     Text(String, String),
     Check(String, bool),
     Choose(String, String),
