@@ -1654,6 +1654,10 @@ mod paint;
 
 mod placed;
 
+/// A label as its style draws it, for the Etiketler window (docs/adr/9186).
+mod example;
+pub use example::example;
+
 mod ink;
 use ink::*;
 

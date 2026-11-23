@@ -74,7 +74,7 @@ pub(crate) fn close(s: &mut Snapshot, app: &mut App) {
 /// Etiketler over a layer, a class chosen and a tab open.
 fn window(app: &mut App, layer: &str, class: usize, tab: Tab) {
     opened(app);
-    app.open_labelling(Some(layer.to_owned()));
+    let _ = app.open_labelling(Some(layer.to_owned()));
     let _ = app.update(Message::Gis(gis::Event::Labelling(Window::Class(class))));
     let _ = app.update(Message::Gis(gis::Event::Labelling(Window::Tab(tab))));
 }

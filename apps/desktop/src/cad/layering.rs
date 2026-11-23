@@ -260,10 +260,7 @@ impl App {
             return self.open_layer_fields(&id);
         }
         match event {
-            Event::Labels(id) => {
-                self.open_labelling(Some(id));
-                return Task::none();
-            }
+            Event::Labels(id) => return self.open_labelling(Some(id)),
             Event::Filter(id) => return self.open_layer_filter(Some(id)),
             Event::FilterFromSelection(id) => {
                 self.filter_from_selection(Some(id));

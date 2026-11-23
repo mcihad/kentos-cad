@@ -25,7 +25,7 @@ fn named() -> App {
     let mut e = doc.model.get(second).cloned().expect("it");
     e.base_mut().attrs.insert("Ad".into(), LONG.into());
     assert!(doc.model.update(second, e));
-    app.open_labelling(Some("cizim".into()));
+    let _ = app.open_labelling(Some("cizim".into()));
     let _ = app.update(Message::Gis(gis::Event::Labelling(Event::Type(Key::Template, "{Ad}".into()))));
     app
 }

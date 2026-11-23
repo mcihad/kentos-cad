@@ -582,7 +582,7 @@ impl App {
             "layer.dataset" => return self.open_dataset_info(None),
             "attachment.add" | "attachment.addLink" => return self.attachment_command(id),
             // Etiketler (labelling/, docs/adr/0212 §4): the active layer's; Katmanlar's menu names its layer.
-            "layer.labels" => self.open_labelling(None),
+            "layer.labels" => return self.open_labelling(None),
             // Veri karşılaştır (docs/adr/0179).
             "data.compare" => self.open_data_compare(),
             // Harita servisleri (services/, docs/adr/0208 §14).

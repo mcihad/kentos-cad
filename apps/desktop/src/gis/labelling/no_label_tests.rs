@@ -27,7 +27,7 @@ fn on_parcels() -> App {
     let area = iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0));
     let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(area)));
     let _ = app.update(Message::Run("view.zoomExtents"));
-    app.open_labelling(Some("parsel".into()));
+    let _ = app.open_labelling(Some("parsel".into()));
     app
 }
 

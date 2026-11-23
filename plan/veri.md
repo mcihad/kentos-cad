@@ -621,3 +621,10 @@ numaraları raporunkidir.
   - Görünürlük matrisi: boş CBS, nokta, çizgi, alan, raster, nokta bulutu, ağ, salt okunur tablo, oturumdaki tablo,
     karışık seçim; CAD'den CBS'ye dönüş; IFC CBS'de erişilmez, binanın CAD projesinde erişilir.
   - Kalan: yetki ve sağlayıcıya göre şeridin kendisi, CBS'ye özgü panel düzeni, gerçek pencere, web.
+- [x] **VY-85 — Etiketler örneği haritanın biçimiyle çizer; veri katmanında örnekler ve Denetle (rapor 13'ün kalanı).**
+  ([ADR 9186](../docs/adr/9186-label-example-and-data-layer-labelling.md))
+  - “Haritada böyle görünür” şeridi ilk metni stilin rengi, halesi, zemini, gölgesi ve yazısıyla çizer; görünüş
+    haritanın yerleşen etiketleriyle ortak işlevdendir (`placed_look`).
+  - Veri katmanında örnekler tablonun ilk 64 satırından, arayüzü bekletmeden okunur; özet katmanı nesne saymaz.
+  - Denetle veri katmanının etiketlerini görünümün okuduğu satırlarda sayar; okuma yokken nedenini söyler.
+  - Kalan: şeritte eğri ve çok satırlı etiket, gerçek pencere, web.

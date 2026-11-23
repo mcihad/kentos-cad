@@ -17,9 +17,12 @@
 mod candidates;
 mod examples;
 pub(crate) mod form;
+mod rows;
 
 use crate::gis;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, Row, button, column, container, row, scrollable, text, text_editor};
 use iced::{Bottom, Center, Element, Fill, Length, Task};
@@ -116,7 +119,19 @@ pub struct Window {
     report_at: usize,
     /// The fields the template's picker offers (docs/adr/9145): the layer's declared ones, then its objects' attributes.
     fields: Vec<String>,
+    /// A data layer's first rows read from its source (docs/adr/9186), the examples' objects; why not; none while read.
+    rows: Option<Result<Arc<kentos_domain::Document>, String>>,
+    /// The read asked last: an earlier one's late answer is dropped.
+    rows_asked: u64,
+    /// The examples' first text: the preview draws it in the style (docs/adr/9186).
+    sample: Option<String>,
 }
+
+/// The data layers' row reads asked, one number each.
+static ROWS_ASKED: AtomicU64 = AtomicU64::new(1);
+
+/// The preview's caption.
+const PREVIEW: &str = "Haritada böyle görünür (gerçek boyunda)";
 
 /// A scale and ground Denetle counts at: its words, the paper scale (none: the view's) and the ground (none: the view).
 pub(crate) struct ReportScope {
@@ -152,6 +167,8 @@ pub enum Event {
     ReportAt(usize),
     /// Alan ekle: the picker's field at this place written into the template (docs/adr/9145).
     Field(usize),
+    /// A data layer's first rows read off the interface's thread (docs/adr/9186), by the read asked.
+    Rows(u64, Result<Arc<kentos_domain::Document>, String>),
     Cancel,
 }
 
@@ -326,21 +343,49 @@ impl App {
             ready: false,
             report_at: self.gis.labelling_report_at,
             fields,
+            rows: None,
+            rows_asked: 0,
+            sample: None,
         };
         w.rebuild(false);
         self.labelling_check(&mut w);
         w
     }
 
-    /// Etiketler (`layer.labels`): the window over `layer`, else the active layer.
-    pub(crate) fn open_labelling(&mut self, layer: Option<String>) {
+    /// A data layer's first rows asked of its source off the interface's thread (docs/adr/9186); nothing for a drawing
+    /// layer, whose objects are in the drawing.
+    fn ask_rows(&self, w: &mut Window) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let Some(node) = doc.model.layers().get(&w.layer).filter(|n| n.data.is_some()).cloned() else {
+            return Task::none();
+        };
+        let asked = ROWS_ASKED.fetch_add(1, Ordering::Relaxed);
+        w.rows_asked = asked;
+        w.rows = None;
+        let settings = doc.model.settings().clone();
+        let styles = doc.model.styles().clone();
+        iced_runtime::task::blocking(move |mut out: iced::futures::channel::mpsc::Sender<Message>| {
+            let read = rows::read(&node, &settings, &styles).map(Arc::new);
+            let done = msg(Event::Rows(asked, read));
+            let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, done));
+        })
+    }
+
+    /// Etiketler (`layer.labels`): the window over `layer`, else the active layer; a data layer's first rows asked for
+    /// its examples.
+    pub(crate) fn open_labelling(&mut self, layer: Option<String>) -> Task<Message> {
         let Some(id) = self.label_layer_at_hand(layer) else {
             self.warn(NO_LAYER);
-            return;
+            return Task::none();
         };
-        let w = self.labelling_window(id, Tab::Text);
+        let mut w = self.labelling_window(id, Tab::Text);
+        let task = self.ask_rows(&mut w);
+        self.labelling_check(&mut w);
         self.gis.labelling = Some(w);
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Labelling));
+        task
     }
 
     /// The labelling checked as the contract does (its rules, its expressions); Kaydet and Uygula follow it.
@@ -383,6 +428,7 @@ impl App {
             return;
         };
         let n = doc.model.by_layer(&w.layer).count();
+        let bound = doc.model.layers().get(&w.layer).is_some_and(|l| l.data.is_some());
         let what = match w.mode {
             LabelsMode::Rules => format!("{} sınıf", w.classes.len()),
             LabelsMode::Off => "etiketsiz".to_owned(),
@@ -398,16 +444,41 @@ impl App {
             .layers()
             .get(&w.layer)
             .map_or_else(|| w.layer.clone(), |n| n.name.clone());
-        let mut lines = vec![(Kind::Ok, format!("{name}: {n} nesne, {what}{obstacle}."))];
+        // A data layer's rows are in its source: the drawing holds none of them (docs/adr/9186).
+        let mut lines = vec![(
+            Kind::Ok,
+            if bound {
+                format!("{name}: veri katmanı, satırları kaynağında; {what}{obstacle}.")
+            } else {
+                format!("{name}: {n} nesne, {what}{obstacle}.")
+            },
+        )];
+        w.sample = None;
         // The text the layer's first objects take as typed, and a template's field the layer does not have
         // (docs/adr/9145).
         if w.mode != LabelsMode::Off
             && let Some(node) = self.draft_layer(w)
         {
             // The examples on the same data (docs/adr/9164): the first and the longest text, the empty ones, the scales
-            // it shows at with the view's, its letters on paper.
+            // it shows at with the view's, its letters on paper. A data layer's on its source's first rows (docs/adr/9186).
             let scale = self.viewport.camera.upright().scale;
-            lines.extend(examples::example_lines(&doc.model, &node, n, scale));
+            if bound {
+                match &w.rows {
+                    None => lines.push((Kind::Info, "Örnekler için kaynağın ilk satırları okunuyor…".to_owned())),
+                    Some(Err(why)) => lines.push((Kind::Warn, format!("Örnek satırlar okunamadı: {why}"))),
+                    Some(Ok(sample)) => {
+                        let mut plain = node.clone();
+                        plain.data = None;
+                        let read = sample.by_layer(&node.id).count();
+                        lines.push((Kind::Info, format!("Örnekler tablonun ilk {read} satırından.")));
+                        lines.extend(examples::example_lines(sample, &plain, read, scale));
+                        w.sample = examples::texts(sample, &plain).first.map(|(text, _)| text);
+                    }
+                }
+            } else {
+                lines.extend(examples::example_lines(&doc.model, &node, n, scale));
+                w.sample = examples::texts(&doc.model, &node).first.map(|(text, _)| text);
+            }
             let unknown = candidates::unknown_fields(&doc.model, &node);
             if !unknown.is_empty() {
                 lines.push((Kind::Warn, candidates::unknown_words(&unknown, &w.fields)));
@@ -438,6 +509,15 @@ impl App {
             Event::Layer(i) => {
                 if let Some(id) = self.label_layers().get(i).cloned() {
                     w = self.labelling_window(id, w.tab);
+                    let task = self.ask_rows(&mut w);
+                    self.labelling_check(&mut w);
+                    self.gis.labelling = Some(w);
+                    return task;
+                }
+            }
+            Event::Rows(asked, read) => {
+                if asked == w.rows_asked {
+                    w.rows = Some(read);
                 }
             }
             Event::Mode(mode) => {
@@ -651,14 +731,41 @@ impl App {
             | CommandResult::NeedsInput { error } => return vec![(Kind::Warn, error.message)],
             _ => return Vec::new(),
         };
-        // The bands round the parts are the ones the drawing is drawn with: no file is read on this thread.
-        let bands = self.bands.given(&doc.model);
+        // A data layer's labels are placed on the rows the view read, in a document of their own (data_labels.rs,
+        // docs/adr/9186): counted there, the layer without its binding. Before the view holds them, the window says so
+        // and its examples' rows give the candidates.
+        let bound = draft_node.data.is_some();
+        let mut draft_node = draft_node;
+        draft_node.data = None;
+        let target: &mut kentos_domain::Document = if bound {
+            match self.gis.data_labels.iter_mut().find(|d| d.layer == w.layer) {
+                Some(d) => d.doc_mut(),
+                None => {
+                    let mut lines = vec![(
+                        Kind::Info,
+                        "Veri katmanının etiketleri görünümün okuduğu satırlara yerleşir; görünüm satırları okuyunca Denetle \
+                         onları sayar. Etiketleme kapalıysa önce Uygula ile açın."
+                            .to_owned(),
+                    )];
+                    if let Some(Ok(sample)) = &w.rows {
+                        let found = candidates::count(sample, &draft_node, window, scale);
+                        lines.extend(candidates::lines(&found, scale, true, 0));
+                    }
+                    return lines;
+                }
+            }
+        } else {
+            &mut doc.model
+        };
+        // The bands round the parts are the ones the drawing is drawn with: no file is read on this thread. A data
+        // layer's read has none.
+        let bands = if bound { Vec::new() } else { self.bands.given(target) };
         let draft = labels_report::Draft {
             layer: Some(&draft_node),
             texts: Some(texts),
         };
         let mut lines = match labels_report::execute_with(
-            &mut ExecutionContext::new(&mut doc.model),
+            &mut ExecutionContext::new(target),
             input,
             &bands,
             draft,
@@ -691,7 +798,7 @@ impl App {
                     ),
                 ));
                 // The candidates before the engine, a sample of their text and each reason apart (docs/adr/9145).
-                let found = candidates::count(&doc.model, &draft_node, window, scale);
+                let found = candidates::count(target, &draft_node, window, scale);
                 lines.extend(candidates::lines(
                     &found,
                     scale,
@@ -916,9 +1023,23 @@ impl App {
             .iter()
             .map(|(kind, line)| words::text_line(*kind, line.clone()))
             .collect();
-        Frame::new(TITLE)
-            .push(head)
-            .fill(body)
+        let mut frame = Frame::new(TITLE).push(head).fill(body);
+        // The example as the map draws it (docs/adr/9186): the first object's text in the current class's look.
+        if let Some(text) = w.sample.clone().filter(|_| w.mode != LabelsMode::Off) {
+            let colors = crate::labels::colors(self.canvas(), &crate::viewport::palette(self.canvas()))
+                .in_mode(self.color_mode());
+            let font = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.settings().drawing_font)
+                .unwrap_or(kentos_commands::DrawingFont::Barlow);
+            frame = frame.push(words::field(
+                PREVIEW,
+                crate::labels::example(text, w.current().clone(), colors, font),
+                None,
+            ));
+        }
+        frame
             .push(labelling_obstacle(w))
             .push(words::summary(lines))
             .action(words::secondary(REPORT, Some(msg(Event::Report))))
@@ -1110,3 +1231,7 @@ fn labelling_obstacle(w: &Window) -> Element<'_, Message> {
 #[cfg(test)]
 #[path = "no_label_tests.rs"]
 mod no_label_tests;
+
+#[cfg(test)]
+#[path = "data_tests.rs"]
+mod data_tests;

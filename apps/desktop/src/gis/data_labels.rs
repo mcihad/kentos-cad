@@ -21,6 +21,27 @@ pub struct DataLabels {
     labelled: bool,
 }
 
+impl DataLabels {
+    /// The read rows' document the labels are placed on: Denetle counts them there (docs/adr/9186).
+    pub(crate) fn doc_mut(&mut self) -> &mut kentos_domain::Document {
+        &mut self.doc
+    }
+
+    /// A layer's labels on `doc`, as a read of the view would hold them (the tests of Denetle on a data layer).
+    #[cfg(test)]
+    pub(crate) fn of(layer: &str, doc: kentos_domain::Document) -> Self {
+        let spatial = Spatial::of(&doc);
+        Self {
+            layer: layer.to_owned(),
+            read: 0,
+            doc: Box::new(doc),
+            spatial,
+            spots: crate::labels::Spots::default(),
+            labelled: true,
+        }
+    }
+}
+
 impl App {
     /// After the data layers' reads said something: the labels of the reads drawn now, the others let go.
     pub(crate) fn sync_data_labels(&mut self) {

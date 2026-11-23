@@ -79,83 +79,7 @@ impl Labels<'_> {
                 .and_then(|l| l.style.label.clone())
                 .or_else(|| default_label(entity.kind()))?,
         };
-        let named = |c: &str| match c {
-            "label" => Some(self.colors.label),
-            other => self.colors.named(other),
-        };
-        let unplaced = state & UNPLACED != 0;
-        let mut color = if unplaced {
-            Color::from_rgb8(0xef, 0x6b, 0x61)
-        } else {
-            match (&style.color, style.ink) {
-                (Some(c), _) => named(c).unwrap_or(self.colors.label),
-                (None, Some(LabelInk::Fg)) => self.colors.fg,
-                (None, Some(LabelInk::FgDim)) => self.colors.fg_dim,
-                (None, _) => self.colors.label,
-            }
-        };
-        let faint = state & HIDDEN != 0;
-        if faint {
-            color.a *= 0.35;
-        }
-        let masked = state & MASKED != 0;
-        let background = match &style.background {
-            Some(b) => Some(Backdrop {
-                shape: b.shape,
-                fill: b.fill.as_deref().and_then(named),
-                stroke: b.stroke.as_deref().and_then(named),
-                pad: b.padding.unwrap_or(2.0) as f32,
-            }),
-            None if masked => Some(Backdrop {
-                shape: kentos_commands::LabelShape::Rect,
-                fill: Some(self.colors.halo),
-                stroke: None,
-                pad: 1.0,
-            }),
-            None => None,
-        };
-        let halo = match &style.halo {
-            Some(h) if h.width <= 0.0 => None,
-            Some(h) => Some((
-                h.width as f32,
-                h.color
-                    .as_deref()
-                    .and_then(named)
-                    .unwrap_or(self.colors.halo),
-            )),
-            None => Some((HALO, self.colors.halo)),
-        };
-        let shadow = style.shadow.as_ref().filter(|_| !unplaced).map(|h| {
-            let mut c = h.color.as_deref().and_then(named).unwrap_or(Color::BLACK);
-            c.a *= h.opacity.unwrap_or(0.5) as f32;
-            (h.dx as f32, -h.dy as f32, c)
-        });
-        Some(Placed {
-            slot,
-            color,
-            halo: if background.as_ref().is_some_and(|b| b.fill.is_some()) {
-                None
-            } else {
-                halo
-            },
-            font: drawing_fonts::font(
-                self.font,
-                style.weight.unwrap_or(500),
-                style.italic == Some(true),
-            ),
-            shadow,
-            background,
-            callout: style
-                .callout
-                .as_ref()
-                .and_then(|c| c.color.as_deref().and_then(named))
-                .unwrap_or(color),
-            manhattan: style
-                .callout
-                .as_ref()
-                .is_some_and(|c| c.kind == kentos_commands::CalloutKind::Manhattan),
-            pinned: self.pinned && state & PINNED != 0,
-        })
+        Some(placed_look(&self.colors, self.font, &style, state, slot, self.pinned))
     }
 
     /// A placed label's backdrop: its background or a contour's mask, `w`
@@ -172,79 +96,7 @@ impl Labels<'_> {
         h: f32,
         letter: bool,
     ) {
-        let m = self.screen(at);
-        let a = -(angle.to_radians() as f32);
-        let quad = |dx: f32, dy: f32, hw: f32, hh: f32| {
-            let (s, cs) = a.sin_cos();
-            let at =
-                |u: f32, v: f32| Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs);
-            [at(-hw, -hh), at(hw, -hh), at(hw, hh), at(-hw, hh)]
-        };
-        if let Some(b) = &c.background {
-            let (hw, hh) = (w / 2.0 + b.pad, h / 2.0 + b.pad);
-            // A rectangle as a quadrilateral (a sheet's PDF takes it as a mask); a round one or an ellipse as a ring.
-            let ring = |dx: f32, dy: f32| -> Vec<Point> {
-                let (s, cs) = a.sin_cos();
-                let at = |u: f32, v: f32| {
-                    Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs)
-                };
-                match b.shape {
-                    kentos_commands::LabelShape::Ellipse => (0..32)
-                        .map(|i| {
-                            let t = i as f32 / 32.0 * std::f32::consts::TAU;
-                            at(
-                                hw * std::f32::consts::SQRT_2 * t.cos(),
-                                hh * std::f32::consts::SQRT_2 * t.sin(),
-                            )
-                        })
-                        .collect(),
-                    _ => {
-                        let r = (hh).min(6.0).min(hw);
-                        let mut pts = Vec::with_capacity(24);
-                        for (cx, cy, from) in [
-                            (hw - r, hh - r, 0.0f32),
-                            (-hw + r, hh - r, 90.0),
-                            (-hw + r, -hh + r, 180.0),
-                            (hw - r, -hh + r, 270.0),
-                        ] {
-                            for k in 0..=5 {
-                                let t = (from + k as f32 * 18.0).to_radians();
-                                pts.push(at(cx + r * t.cos(), cy + r * t.sin()));
-                            }
-                        }
-                        pts
-                    }
-                }
-            };
-            let round = b.shape != kentos_commands::LabelShape::Rect;
-            if let Some((dx, dy, sc)) = c.shadow
-                && b.fill.is_some()
-            {
-                if round {
-                    frame.fill_ring(&ring(dx, dy), sc, Some(c.slot));
-                } else {
-                    frame.fill_ring(&quad(dx, dy, hw, hh), sc, Some(c.slot));
-                }
-            }
-            if let Some(f) = b.fill {
-                if round {
-                    frame.fill_ring(&ring(0.0, 0.0), f, Some(c.slot));
-                } else {
-                    frame.fill_ring(&quad(0.0, 0.0, hw, hh), f, Some(c.slot));
-                }
-            }
-            if let Some(st) = b.stroke {
-                if round {
-                    frame.stroke_line(&ring(0.0, 0.0), true, st, Some(c.slot));
-                } else {
-                    frame.stroke_line(&quad(0.0, 0.0, hw, hh), true, st, Some(c.slot));
-                }
-            }
-        }
-        if c.pinned && !letter {
-            let q = quad(0.0, 0.0, w / 2.0 + 3.0, h / 2.0 + 3.0);
-            frame.stroke_line(&q, true, self.colors.accent(), None);
-        }
+        backdrop_at(frame, c, self.screen(at), angle, w, h, letter, self.colors.accent());
     }
 
     /// One line or letter of a placed label: its shadow, then itself in its halo.
@@ -257,28 +109,209 @@ impl Labels<'_> {
         angle: f64,
         size: f32,
     ) {
-        let s = self.screen(at);
-        let piece = |at: Point, color: Color| Piece {
-            text,
-            at,
-            angle: -(angle.to_radians() as f32),
-            size,
-            font: c.font,
-            anchor: Anchor::CenterMiddle,
-            color,
-            width_factor: 1.0,
-            mask: 0.0,
-            underline: 0.0,
-            lean: 0.0,
+        text_at(frame, c, text, self.screen(at), angle, size);
+    }
+}
+
+/// A placed label's backdrop at `m` on the screen (logical pixels), `w` × `h` px turned `angle` degrees: its
+/// background with its shadow, a pinned label's outline in `accent`.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn backdrop_at(
+    frame: &mut impl Ink,
+    c: &Placed,
+    m: Point,
+    angle: f64,
+    w: f32,
+    h: f32,
+    letter: bool,
+    accent: Color,
+) {
+    let a = -(angle.to_radians() as f32);
+    let quad = |dx: f32, dy: f32, hw: f32, hh: f32| {
+        let (s, cs) = a.sin_cos();
+        let at =
+            |u: f32, v: f32| Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs);
+        [at(-hw, -hh), at(hw, -hh), at(hw, hh), at(-hw, hh)]
+    };
+    if let Some(b) = &c.background {
+        let (hw, hh) = (w / 2.0 + b.pad, h / 2.0 + b.pad);
+        // A rectangle as a quadrilateral (a sheet's PDF takes it as a mask); a round one or an ellipse as a ring.
+        let ring = |dx: f32, dy: f32| -> Vec<Point> {
+            let (s, cs) = a.sin_cos();
+            let at = |u: f32, v: f32| {
+                Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs)
+            };
+            match b.shape {
+                kentos_commands::LabelShape::Ellipse => (0..32)
+                    .map(|i| {
+                        let t = i as f32 / 32.0 * std::f32::consts::TAU;
+                        at(
+                            hw * std::f32::consts::SQRT_2 * t.cos(),
+                            hh * std::f32::consts::SQRT_2 * t.sin(),
+                        )
+                    })
+                    .collect(),
+                _ => {
+                    let r = (hh).min(6.0).min(hw);
+                    let mut pts = Vec::with_capacity(24);
+                    for (cx, cy, from) in [
+                        (hw - r, hh - r, 0.0f32),
+                        (-hw + r, hh - r, 90.0),
+                        (-hw + r, -hh + r, 180.0),
+                        (hw - r, -hh + r, 270.0),
+                    ] {
+                        for k in 0..=5 {
+                            let t = (from + k as f32 * 18.0).to_radians();
+                            pts.push(at(cx + r * t.cos(), cy + r * t.sin()));
+                        }
+                    }
+                    pts
+                }
+            }
         };
-        if let Some((dx, dy, sc)) = c.shadow {
-            frame.piece(
-                &piece(Point::new(s.x + dx, s.y + dy), sc),
-                Color::TRANSPARENT,
-                Some(c.slot),
-            );
+        let round = b.shape != kentos_commands::LabelShape::Rect;
+        if let Some((dx, dy, sc)) = c.shadow
+            && b.fill.is_some()
+        {
+            if round {
+                frame.fill_ring(&ring(dx, dy), sc, Some(c.slot));
+            } else {
+                frame.fill_ring(&quad(dx, dy, hw, hh), sc, Some(c.slot));
+            }
         }
-        let halo = c.halo.map_or(Color::TRANSPARENT, |(_, h)| h);
-        frame.piece(&piece(s, c.color), halo, Some(c.slot));
+        if let Some(f) = b.fill {
+            if round {
+                frame.fill_ring(&ring(0.0, 0.0), f, Some(c.slot));
+            } else {
+                frame.fill_ring(&quad(0.0, 0.0, hw, hh), f, Some(c.slot));
+            }
+        }
+        if let Some(st) = b.stroke {
+            if round {
+                frame.stroke_line(&ring(0.0, 0.0), true, st, Some(c.slot));
+            } else {
+                frame.stroke_line(&quad(0.0, 0.0, hw, hh), true, st, Some(c.slot));
+            }
+        }
+    }
+    if c.pinned && !letter {
+        let q = quad(0.0, 0.0, w / 2.0 + 3.0, h / 2.0 + 3.0);
+        frame.stroke_line(&q, true, accent, None);
+    }
+}
+
+/// One line or letter of a placed label at `s` on the screen: its shadow, then itself in its halo.
+pub(super) fn text_at(frame: &mut impl Ink, c: &Placed, text: &str, s: Point, angle: f64, size: f32) {
+    let piece = |at: Point, color: Color| Piece {
+        text,
+        at,
+        angle: -(angle.to_radians() as f32),
+        size,
+        font: c.font,
+        anchor: Anchor::CenterMiddle,
+        color,
+        width_factor: 1.0,
+        mask: 0.0,
+        underline: 0.0,
+        lean: 0.0,
+    };
+    if let Some((dx, dy, sc)) = c.shadow {
+        frame.piece(
+            &piece(Point::new(s.x + dx, s.y + dy), sc),
+            Color::TRANSPARENT,
+            Some(c.slot),
+        );
+    }
+    let halo = c.halo.map_or(Color::TRANSPARENT, |(_, h)| h);
+    frame.piece(&piece(s, c.color), halo, Some(c.slot));
+}
+
+/// The look of a label drawn with `style` (docs/adr/0212 §3.8) on a canvas of `colors`: its colour by its state, its
+/// halo, background, shadow, callout and letters in the project's typeface. The map's placed labels and the Etiketler
+/// window's example (docs/adr/9186) are drawn with it alike.
+pub(super) fn placed_look(
+    colors: &Colors,
+    font: DrawingFont,
+    style: &kentos_commands::LabelStyle,
+    state: u32,
+    slot: Slot,
+    pinned_view: bool,
+) -> Placed {
+    let named = |c: &str| match c {
+        "label" => Some(colors.label),
+        other => colors.named(other),
+    };
+    let unplaced = state & UNPLACED != 0;
+    let mut color = if unplaced {
+        Color::from_rgb8(0xef, 0x6b, 0x61)
+    } else {
+        match (&style.color, style.ink) {
+            (Some(c), _) => named(c).unwrap_or(colors.label),
+            (None, Some(LabelInk::Fg)) => colors.fg,
+            (None, Some(LabelInk::FgDim)) => colors.fg_dim,
+            (None, _) => colors.label,
+        }
+    };
+    let faint = state & HIDDEN != 0;
+    if faint {
+        color.a *= 0.35;
+    }
+    let masked = state & MASKED != 0;
+    let background = match &style.background {
+        Some(b) => Some(Backdrop {
+            shape: b.shape,
+            fill: b.fill.as_deref().and_then(named),
+            stroke: b.stroke.as_deref().and_then(named),
+            pad: b.padding.unwrap_or(2.0) as f32,
+        }),
+        None if masked => Some(Backdrop {
+            shape: kentos_commands::LabelShape::Rect,
+            fill: Some(colors.halo),
+            stroke: None,
+            pad: 1.0,
+        }),
+        None => None,
+    };
+    let halo = match &style.halo {
+        Some(h) if h.width <= 0.0 => None,
+        Some(h) => Some((
+            h.width as f32,
+            h.color
+                .as_deref()
+                .and_then(named)
+                .unwrap_or(colors.halo),
+        )),
+        None => Some((HALO, colors.halo)),
+    };
+    let shadow = style.shadow.as_ref().filter(|_| !unplaced).map(|h| {
+        let mut c = h.color.as_deref().and_then(named).unwrap_or(Color::BLACK);
+        c.a *= h.opacity.unwrap_or(0.5) as f32;
+        (h.dx as f32, -h.dy as f32, c)
+    });
+    Placed {
+        slot,
+        color,
+        halo: if background.as_ref().is_some_and(|b| b.fill.is_some()) {
+            None
+        } else {
+            halo
+        },
+        font: drawing_fonts::font(
+            font,
+            style.weight.unwrap_or(500),
+            style.italic == Some(true),
+        ),
+        shadow,
+        background,
+        callout: style
+            .callout
+            .as_ref()
+            .and_then(|c| c.color.as_deref().and_then(named))
+            .unwrap_or(color),
+        manhattan: style
+            .callout
+            .as_ref()
+            .is_some_and(|c| c.kind == kentos_commands::CalloutKind::Manhattan),
+        pinned: pinned_view && state & PINNED != 0,
     }
 }

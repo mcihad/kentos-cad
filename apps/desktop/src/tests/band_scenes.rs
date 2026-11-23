@@ -1,4 +1,4 @@
-//! The rows round a part (docs/adr/0578 §1) in pictures and in a test: the table `qgis.gpkg`'s parcels (the first, a
+//! The rows round a part (docs/adr/0578 §1) in pictures and in a test: the GeoPackage fixture's parcels (the first, a
 //! hundred metres wide with its hole, and the second ten metres wide a metre or two past the part's east edge), a part
 //! holding only the first, survey points named just inside the part's east edge. The second parcel is no object of the
 //! layer, but the layer blocks the labels (it is an obstacle layer): with the band read, the names keep off it;
@@ -36,7 +36,7 @@ fn command(doc: &mut kentos_domain::Document, name: &str, input: Value) -> Value
 
 /// The drawing: survey points along the part's east edge, the part of the table bound, its layer an obstacle layer.
 pub(crate) fn world(tag: &str) -> Document {
-    let file = scratch(tag).join("qgis.gpkg");
+    let file = scratch(tag).join("parseller.gpkg");
     std::fs::copy(
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/geopackage/v1/qgis.gpkg"),
@@ -143,7 +143,7 @@ pub(crate) fn sides(app: &App) -> Vec<(i64, i64)> {
 
 /// Etiketler over the bound layer, Denetle pressed: what the band and the parked pins mean for its labels.
 fn report(app: &mut App) {
-    app.open_labelling(Some("import-parsel".to_owned()));
+    let _ = app.open_labelling(Some("import-parsel".to_owned()));
     let _ = app.update(Message::Gis(gis::Event::Labelling(
         crate::labelling::Event::Report,
     )));
