@@ -11,6 +11,7 @@ import type { PageNumber } from "./PageNumber";
 import type { ProjectInfo } from "./ProjectInfo";
 import type { RenderMode } from "./RenderMode";
 import type { TableInput } from "./TableInput";
+import type { UnreachableLayer } from "./UnreachableLayer";
 
 export type RenderInputs = { 
 /**
@@ -37,4 +38,9 @@ assets?: Array<string>,
 /**
  * The export's resolution (the preflight's pictures); none: the sheet's.
  */
-dpi?: number, };
+dpi?: number, 
+/**
+ * The layers the drawing's maps would draw that the host cannot reach now (docs/adr/9187): a map service
+ * offline, a data layer's source gone. The preflight says each; the sheet prints without them.
+ */
+unreachable?: Array<UnreachableLayer>, };
