@@ -521,3 +521,7 @@ numaraları raporunkidir.
   - Katmanlar panelinde Düzenlemeyi başlat/bitir; salt okunur bağlantıda kapalı, ipucunda nedeni.
   - İki açık oturumda alan yalnız hedefe gidiyor (sınama).
   - Kalan: iki oturumun PostGIS'te denenmesi, bulut rolünün gerekçesi, web.
+- [~] **VY-69 — Seçimi kaldır veri tablosunun seçimini de temizler; tablo zinciri uçtan uca sınanır (rapor 9'un kalanı).**
+  ([ADR 9170](../docs/adr/9170-deselect-data-rows-and-the-table-chain.md))
+  - Seç→kart→form→süz→temizle zincirinde katman ve anahtar korunur; 0 değerdir, NULL ve boş metin dilin tek boşudur; Türkçe sıra ve arama.
+  - Kalan: kodlu değer, NULL/boş metin işareti (29), PostGIS'te zincir, web.

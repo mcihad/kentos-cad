@@ -211,6 +211,9 @@
   - **Düzenle sekmesinde oturum** (23 Kasım, rapor 4'ün kalanı;
     [ADR 9169](../adr/9169-session-in-the-edit-tab.md), VY-68): Katmanlar paneli çizilen veri katmanının
     Düzenlemeyi başlat/bitir düğmesini gösterir; salt okunurda kapalıdır.
+  - **Seçimi kaldır ve tablo zinciri** (23 Kasım, rapor 9'un kalanı;
+    [ADR 9170](../adr/9170-deselect-data-rows-and-the-table-chain.md), VY-69): Seçimi kaldır veri tablosunun seçimini de
+    temizler; seç→kart→form→süz→temizle zinciri ve örnek değerler sınanır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

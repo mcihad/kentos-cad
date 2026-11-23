@@ -245,6 +245,11 @@ impl DataTable {
         self.selected_of.as_deref()
     }
 
+    /// Seçimi kaldır (docs/adr/9170): no row chosen; the table stays on its layer.
+    pub(crate) fn clear_selection(&mut self) {
+        self.selected.clear();
+    }
+
     /// The rows İfadeyle seç chose on a data layer (processing/data_select.rs): the table's selection, of that layer.
     pub(crate) fn choose_rows(&mut self, layer: &str, keys: BTreeSet<i64>) {
         self.selected_of = Some(layer.to_owned());

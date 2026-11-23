@@ -364,7 +364,11 @@ impl App {
             "view.symbols.plot" | "view.symbols.screen" => self.choose_symbol_size(id),
             // Selecting (docs/adr/0029): the pointer selects while no command runs.
             "tool.select" => self.leave_tool(),
-            "edit.deselect" => self.selection.clear(),
+            // A data layer's rows chosen in its table go too (docs/adr/9170): Seçimi kaldır clears every selection.
+            "edit.deselect" => {
+                self.selection.clear();
+                self.gis.features.data.clear_selection();
+            }
             "edit.selectAll" => self.select_all(),
             crate::scene_browse::COMMAND => return self.toggle_scene_browse(),
             "edit.invertSelection" => self.invert_selection(),
@@ -986,7 +990,7 @@ impl App {
             "draft.lock.clear" => self.session.lock_reference().is_some() && self.locks.any(),
             "view.isolateObjects" => doc.is_some() && !self.selection.is_empty() && !self.session.is_running(),
             "view.endObjectIsolation" => doc.is_some_and(kentos_domain::Document::objects_isolated) && !self.session.is_running(),
-            "edit.deselect" => !self.selection.is_empty(),
+            "edit.deselect" => !self.selection.is_empty() || !self.gis.features.data.selected.is_empty(),
             // A data layer's selected rows are framed too (docs/adr/9133).
             "view.zoomSelection" => !self.selection.is_empty() || self.data_rows_outlined(),
             "map.workSource" | "map.workRelease" => self.map_work_available(id),

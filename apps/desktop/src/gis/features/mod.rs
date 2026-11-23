@@ -36,6 +36,8 @@ use crate::document::Document;
 use crate::points::{click_pick, focus_field};
 
 pub(crate) mod conditions;
+#[cfg(test)]
+mod chain_tests;
 pub(crate) mod data;
 pub(crate) mod data_bar;
 pub(crate) mod joins;

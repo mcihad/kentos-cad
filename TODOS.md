@@ -2582,6 +2582,8 @@ Liste:
   silinen, yeniden yazılan ve yeni tabloları söyleyip sorsun.
 - [ ] Düzenle sekmesinde oturum (ADR 9169, 23 Kasım 2026): web'in şeridinde çizilen veri katmanının Düzenlemeyi
   başlat/bitir düğmesi Katmanlar panelinde dursun.
+- [ ] Seçimi kaldır veri satırlarını da (ADR 9170, 23 Kasım 2026): web'in Seçimi kaldır'ı veri tablosunda seçilen
+  satırları da temizlesin, yalnız veri satırı seçiliyken açık olsun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de
