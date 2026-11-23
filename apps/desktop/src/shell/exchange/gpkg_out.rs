@@ -1,6 +1,8 @@
 //! GeoPackage dışa aktar's window (gis-usage-report GIS-007, docs/adr/1073): before the file is asked, what goes in —
 //! Seçili nesneler, Etkin katman or Tüm proje — each with its objects and layers counted, so a field team sent one park
-//! gets one park. Dışa aktar… asks where and writes through `file.export.gpkg` (its `uids` or `layers`).
+//! gets one park. Dışa aktar… asks where and writes through `file.export.gpkg` (its `uids` or `layers`). A file that is
+//! there is written over whole: before it is, the window says which of its tables go, which are written again and which
+//! are new, and asks (docs/adr/9168).
 
 use std::collections::BTreeSet;
 use std::fmt;
@@ -45,6 +47,19 @@ pub struct State {
     /// Tüm proje's empty layers whose type or fields make a table (a field template), written empty (GIS-010).
     pub empty: bool,
     pub status: Option<(bool, String)>,
+    /// The file chosen when it is there, asked about before it is written over (docs/adr/9168).
+    pub confirm: Option<Confirm>,
+}
+
+/// The table the layers' styles go in, written with every export (docs/adr/9139).
+const STYLES_TABLE: &str = kentos_geopackage::styles::STYLES_TABLE;
+
+/// A file that is there, chosen to be written over (docs/adr/9168): its place and the tables it holds now (none: it
+/// does not read as a GeoPackage).
+#[derive(Debug, Clone)]
+pub struct Confirm {
+    pub path: PathBuf,
+    pub tables: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -53,6 +68,10 @@ pub enum Event {
     Empty,
     Save,
     Picked(Option<PathBuf>),
+    /// Üstüne yaz: the file that is there written over.
+    Confirm,
+    /// Geri: back to what goes in, nothing written.
+    Back,
 }
 
 fn event(e: Event) -> Message {
@@ -144,7 +163,7 @@ impl App {
     /// File › GeoPackage dışa aktar: the window, Seçili nesneler first when something is selected.
     pub(super) fn gpkg_out_open(&mut self) -> Task<Message> {
         let scope = if self.selection.ids().is_empty() { Scope::All } else { Scope::Selection };
-        self.open_window(Window::GpkgOut(State { scope, empty: true, status: None }));
+        self.open_window(Window::GpkgOut(State { scope, empty: true, status: None, confirm: None }));
         Task::none()
     }
 
@@ -186,45 +205,149 @@ impl App {
                 )
             }
             Event::Picked(None) => Task::none(),
-            Event::Picked(Some(path)) => {
-                let Some(Window::GpkgOut(s)) = &self.exchange else {
-                    return Task::none();
+            // A file that is there: what writing over it drops and what goes in, asked first (docs/adr/9168).
+            Event::Picked(Some(path)) if path.exists() => {
+                let tables = kentos_geopackage::GeoPackage::open(&path, false)
+                    .ok()
+                    .and_then(|gp| gp.layers().ok())
+                    .map(|l| l.into_iter().map(|t| t.name).collect());
+                if let Some(Window::GpkgOut(s)) = &mut self.exchange {
+                    s.confirm = Some(Confirm { path, tables });
+                    s.status = None;
+                }
+                Task::none()
+            }
+            Event::Picked(Some(path)) => self.gpkg_out_write(path),
+            Event::Confirm => {
+                let path = match &mut self.exchange {
+                    Some(Window::GpkgOut(s)) => s.confirm.take().map(|c| c.path),
+                    _ => None,
                 };
-                let scope = s.scope;
-                let empty = s.empty && scope == Scope::All;
-                let Some(doc) = &self.document else {
-                    return Task::none();
-                };
-                let model = &doc.model;
-                let (layers, uids) = match scope {
-                    Scope::All => (Vec::new(), Vec::new()),
-                    Scope::Active => (vec![model.layers().active().to_owned()], Vec::new()),
-                    Scope::Selection => (
-                        Vec::new(),
-                        self.selection
-                            .ids()
-                            .iter()
-                            .filter_map(|s| model.uid(*s))
-                            .map(|u| u.to_string())
-                            .collect(),
-                    ),
-                };
-                let input = ExportGpkg {
-                    path: path.display().to_string(),
-                    layers,
-                    uids,
-                    empty_layers: empty,
-                    overwrite: true,
-                    time: self.export_time(),
-                };
-                if self.gpkg_write(&path, &input) {
-                    self.exchange = None;
-                } else if let Some(Window::GpkgOut(s)) = &mut self.exchange {
-                    s.status = self.log.lines().last().map(|l| (true, l.text.clone()));
+                match path {
+                    Some(path) => self.gpkg_out_write(path),
+                    None => Task::none(),
+                }
+            }
+            Event::Back => {
+                if let Some(Window::GpkgOut(s)) = &mut self.exchange {
+                    s.confirm = None;
                 }
                 Task::none()
             }
         }
+    }
+
+    /// The file written as the window says (its scope, its empty layers).
+    fn gpkg_out_write(&mut self, path: PathBuf) -> Task<Message> {
+        let Some(Window::GpkgOut(s)) = &self.exchange else {
+            return Task::none();
+        };
+        let scope = s.scope;
+        let empty = s.empty && scope == Scope::All;
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let model = &doc.model;
+        let (layers, uids) = match scope {
+            Scope::All => (Vec::new(), Vec::new()),
+            Scope::Active => (vec![model.layers().active().to_owned()], Vec::new()),
+            Scope::Selection => (
+                Vec::new(),
+                self.selection
+                    .ids()
+                    .iter()
+                    .filter_map(|s| model.uid(*s))
+                    .map(|u| u.to_string())
+                    .collect(),
+            ),
+        };
+        let input = ExportGpkg {
+            path: path.display().to_string(),
+            layers,
+            uids,
+            empty_layers: empty,
+            overwrite: true,
+            time: self.export_time(),
+        };
+        if self.gpkg_write(&path, &input) {
+            self.exchange = None;
+        } else if let Some(Window::GpkgOut(s)) = &mut self.exchange {
+            s.status = self.log.lines().last().map(|l| (true, l.text.clone()));
+        }
+        Task::none()
+    }
+
+    /// The names of the tables a scope writes: its layers' and, with them, the empty templates'.
+    fn gpkg_out_names(&self, s: &State) -> Vec<(String, usize)> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        let mut reach = self.gpkg_reach(s.scope);
+        if s.scope == Scope::All && s.empty {
+            reach.layers.extend(self.gpkg_template_ids());
+        }
+        reach
+            .layers
+            .iter()
+            .filter_map(|id| {
+                let name = doc.model.layers().get(id)?.name.clone();
+                Some((name, reach.per_layer.get(id).copied().unwrap_or(0)))
+            })
+            .collect()
+    }
+
+    /// What writing over a file that is there does (docs/adr/9168): its tables that go, those written again, the new
+    /// ones, and what goes in.
+    pub(crate) fn gpkg_out_confirm_lines(&self, s: &State, c: &Confirm) -> Vec<(bool, String)> {
+        let file = c.path.file_name().map_or_else(|| c.path.display().to_string(), |n| n.to_string_lossy().into_owned());
+        let names = self.gpkg_out_names(s);
+        let mut lines = vec![(true, format!("“{file}” zaten var; Üstüne yaz dosyanın yerine yenisini yazar."))];
+        match &c.tables {
+            None => lines.push((true, "Dosya GeoPackage olarak okunamadı; içindekiler yerine yazılan dosyayla gider.".to_owned())),
+            Some(tables) => {
+                // The layers' styles go in their own table every time (docs/adr/9139): written again, not lost.
+                let styles = tables.iter().any(|t| t == STYLES_TABLE);
+                let tables: Vec<String> = tables.iter().filter(|t| *t != STYLES_TABLE).cloned().collect();
+                let written = |t: &String| names.iter().any(|(n, _)| n == t);
+                let gone: Vec<&String> = tables.iter().filter(|t| !written(t)).collect();
+                let again: Vec<&String> = tables.iter().filter(|t| written(t)).collect();
+                if !gone.is_empty() {
+                    lines.push((
+                        true,
+                        format!(
+                            "Dosyadan silinen tablolar ({}): {}.",
+                            gone.len(),
+                            gone.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(", ")
+                        ),
+                    ));
+                }
+                if !again.is_empty() {
+                    lines.push((
+                        false,
+                        format!(
+                            "Yeniden yazılan tablolar: {}.",
+                            again.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(", ")
+                        ),
+                    ));
+                }
+                let new: Vec<&str> =
+                    names.iter().filter(|(n, _)| !tables.contains(n)).map(|(n, _)| n.as_str()).collect();
+                if !new.is_empty() {
+                    lines.push((false, format!("Yeni tablolar: {}.", new.join(", "))));
+                }
+                if styles {
+                    lines.push((false, format!("Katmanların stilleri ({STYLES_TABLE}) yeniden yazılır.")));
+                }
+            }
+        }
+        lines.push((
+            false,
+            format!(
+                "Yazılan: {}.",
+                names.iter().map(|(n, k)| format!("{n} ({k} nesne)")).collect::<Vec<_>>().join(", ")
+            ),
+        ));
+        lines
     }
 
     /// The summary's lines: what is written (each layer with its objects), what goes into the file with it and what
@@ -277,6 +400,22 @@ impl App {
     }
 
     pub(super) fn gpkg_out_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
+        // A file that is there: what writing over it does, asked (docs/adr/9168).
+        if let Some(c) = &s.confirm {
+            let lines = self
+                .gpkg_out_confirm_lines(s, c)
+                .into_iter()
+                .map(|(warn, text)| words::text_line(if warn { Line::Warn } else { Line::Info }, text))
+                .collect::<Vec<_>>();
+            return overlay::blocking(
+                Dialog::new("GeoPackage dışa aktar")
+                    .push(words::summary(lines))
+                    .action(words::secondary("Geri", Some(event(Event::Back))))
+                    .action(words::primary("Üstüne yaz", Some(event(Event::Confirm))))
+                    .width(640.0)
+                    .on_close(Some(event(Event::Back))),
+            );
+        }
         let counted = |scope| Counted(scope, self.gpkg_reach(scope).objects);
         let selected = !self.selection.ids().is_empty();
         let mut body = Column::new().spacing(12).push(words::field(

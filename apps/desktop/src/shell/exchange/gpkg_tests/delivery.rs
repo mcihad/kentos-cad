@@ -67,13 +67,27 @@ fn a_turkish_layer_name_is_its_table_and_a_file_that_cannot_be_written_is_left_a
     if let Some(keep) = std::env::var_os("KENTOS_KEEP_DELIVERY") {
         std::fs::copy(&out, keep).expect("kept");
     }
-    // A file that cannot be written: refused, the file as it was.
+    // The file there now: before it is written over, the window says what goes and what goes in (docs/adr/9168).
+    run(&mut app, "file.export.gpkg");
+    send(&mut app, Event::GpkgOut(super::super::gpkg_out::Event::Scope(super::super::gpkg_out::Scope::All)));
+    send(&mut app, Event::GpkgOut(super::super::gpkg_out::Event::Save));
+    let Some(super::super::Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
+    let confirm = state.confirm.clone().expect("asked before writing over");
+    let lines: Vec<String> = app.gpkg_out_confirm_lines(state, &confirm).into_iter().map(|(_, l)| l).collect();
+    assert!(lines[0].starts_with("“teslim.gpkg” zaten var; Üstüne yaz"), "{lines:#?}");
+    assert!(lines.iter().any(|l| l.starts_with("Yeniden yazılan tablolar: ") && l.contains("Yol ekseni çğüşıö")), "{lines:#?}");
+    assert!(!lines.iter().any(|l| l.starts_with("Dosyadan silinen")), "every table of it is written again: {lines:#?}");
+    // Geri: nothing written, back to what goes in.
+    send(&mut app, Event::GpkgOut(super::super::gpkg_out::Event::Back));
+    let Some(super::super::Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
+    assert!(state.confirm.is_none());
+    // A file that cannot be written: asked, written over, refused, the file as it was.
     let before = std::fs::read(&out).expect("the file");
     let mut perms = std::fs::metadata(&out).expect("the file").permissions();
     perms.set_readonly(true);
     std::fs::set_permissions(&out, perms.clone()).expect("read only");
-    run(&mut app, "file.export.gpkg");
     send(&mut app, Event::GpkgOut(super::super::gpkg_out::Event::Save));
+    send(&mut app, Event::GpkgOut(super::super::gpkg_out::Event::Confirm));
     assert_eq!(std::fs::read(&out).expect("the file"), before, "left as it was");
     #[allow(clippy::permissions_set_readonly_false)]
     perms.set_readonly(false);

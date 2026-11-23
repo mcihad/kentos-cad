@@ -992,3 +992,78 @@ fn a_conflict_s_row_names_the_key_and_the_layer() {
     assert!(titles.iter().any(|t| t.starts_with("parsel_no 6") && t.ends_with(&format!("({layer})"))), "{titles:?}");
     assert!(titles.iter().filter(|t| t.starts_with("parsel_no ")).count() >= 2, "{titles:?}");
 }
+
+/// Writing over a GeoPackage that is there (docs/adr/9168): the window says which of its tables go (another file's
+/// table that this export does not write) before Üstüne yaz; Geri writes nothing; Üstüne yaz writes the new file.
+#[test]
+fn writing_over_a_geopackage_says_which_of_its_tables_go() {
+    use kentos_data::Driver as _;
+    let dir = scratch("gpkg-uzerine");
+    let out = dir.join("var-olan.gpkg");
+    // A file there with a table of its own.
+    kentos_geopackage::GeoPackage::create(&out).expect("a file");
+    let source = kentos_data_gpkg::Gpkg.open(out.to_str().expect("utf-8")).expect("open");
+    crate::data_layers_tests::point_table(
+        &*source,
+        "eski_tablo",
+        &[("ad", kentos_data::FieldKind::Text { max: Some(8) })],
+        &[vec![kentos_data::Value::Text("A".into())]],
+    );
+    drop(source);
+    kentos_data::registry().forget(out.to_str().expect("utf-8"));
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(out.clone());
+    run(&mut app, "file.export.gpkg");
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)));
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
+    let Some(super::Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
+    let confirm = state.confirm.clone().expect("asked before writing over");
+    assert_eq!(confirm.tables.as_deref(), Some(&["eski_tablo".to_owned()][..]));
+    let lines: Vec<String> = app.gpkg_out_confirm_lines(state, &confirm).into_iter().map(|(_, l)| l).collect();
+    assert!(lines.iter().any(|l| l == "Dosyadan silinen tablolar (1): eski_tablo."), "{lines:#?}");
+    assert!(lines.iter().any(|l| l.starts_with("Yeni tablolar: ")), "{lines:#?}");
+    assert!(lines.iter().any(|l| l.starts_with("Yazılan: ")), "{lines:#?}");
+    // Geri: the file as it was.
+    let before = std::fs::read(&out).expect("the file");
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Back));
+    assert_eq!(std::fs::read(&out).expect("the file"), before);
+    // Üstüne yaz: the new file, without the old table.
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Confirm));
+    assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    let gp = kentos_geopackage::GeoPackage::open(&out, false).expect("opens");
+    let names: Vec<String> = gp.layers().expect("tables").into_iter().map(|t| t.name).collect();
+    assert!(!names.contains(&"eski_tablo".to_owned()), "{names:?}");
+    assert!(!names.is_empty());
+    drop(gp);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The picture (`.run/gui-evidence/kullanim-9168/`): writing over a GeoPackage that is there, asked.
+#[test]
+#[ignore = "pictures for the owner"]
+fn writing_over_screens() {
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    use kentos_data::Driver as _;
+    crate::files_testing::usage_shots("9168", "01-uzerine-yaz", || {
+        let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let dir = scratch(&format!("gpkg-uzerine-resim-{n}"));
+        let out = dir.join("teslim.gpkg");
+        kentos_geopackage::GeoPackage::create(&out).expect("a file");
+        let source = kentos_data_gpkg::Gpkg.open(out.to_str().expect("utf-8")).expect("open");
+        crate::data_layers_tests::point_table(
+            &*source,
+            "eski_tablo",
+            &[("ad", kentos_data::FieldKind::Text { max: Some(8) })],
+            &[vec![kentos_data::Value::Text("A".into())]],
+        );
+        drop(source);
+        kentos_data::registry().forget(out.to_str().expect("utf-8"));
+        let mut app = app_with_drawing();
+        app.picker = Picker::File(out);
+        run(&mut app, "file.export.gpkg");
+        send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)));
+        send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
+        app
+    });
+}

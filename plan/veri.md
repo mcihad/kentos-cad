@@ -512,3 +512,7 @@ numaraları raporunkidir.
   ([ADR 9167](../docs/adr/9167-objects-and-data-rows-counted-together.md))
   - Nesnenin yanında veri katmanlarının satırları da sorulur; “1 nesne, 1 veri satırı · 1/2”, Sonraki satırlara geçer.
   - Kalan: etiket önizlemesinin biçimi, veri katmanında etiket, bir katmandan birden çok satır, web.
+- [~] **VY-67 — Var olan GeoPackage'ın üstüne yazmadan önce silinen ve yazılan tablolar söylenir (rapor 6'nın kalanı).**
+  ([ADR 9168](../docs/adr/9168-writing-over-a-geopackage-asks.md))
+  - Seçilen dosya varsa onay: silinen, yeniden yazılan ve yeni tablolar, stil tablosu, yazılan sayılar; Geri ya da Üstüne yaz.
+  - Kalan: yalnız hedef tablolara yazmak ya da eklemek, yarıda kesme sınaması, web.

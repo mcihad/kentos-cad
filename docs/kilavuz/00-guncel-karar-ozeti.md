@@ -205,6 +205,9 @@
   - **Nesne ve veri satırı birlikte** (23 Kasım, rapor 13'ün kalanı;
     [ADR 9167](../adr/9167-objects-and-data-rows-counted-together.md), VY-66): Bilgi kartı “Bu noktada 1 nesne, 1 veri
     satırı · 1/2” der; Sonraki satırın kartına geçer.
+  - **Var olan GeoPackage'a yazarken onay** (23 Kasım, rapor 6'nın kalanı;
+    [ADR 9168](../adr/9168-writing-over-a-geopackage-asks.md), VY-67): dosyadan silinen, yeniden yazılan ve yeni
+    tablolar söylenir; Geri hiçbir şey yazmaz.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

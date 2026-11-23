@@ -2578,6 +2578,8 @@ Liste:
   sırada göstersin; çalışmayanlar kapalı, ipucunda neden ve sonraki adım.
 - [ ] Nesne ve veri satırı birlikte (ADR 9167, 23 Kasım 2026): web'in Bilgi'si nesnenin yanında veri katmanlarının
   satırlarını da sorup kartta birlikte saysın.
+- [ ] Var olan GeoPackage'a yazarken onay (ADR 9168, 23 Kasım 2026): web'in GeoPackage dışa aktarması var olan dosyada
+  silinen, yeniden yazılan ve yeni tabloları söyleyip sorsun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de
