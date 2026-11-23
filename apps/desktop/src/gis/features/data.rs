@@ -654,14 +654,23 @@ impl App {
         ))
     }
 
-    /// The table's rows: a page's cells when it is read, else a row waiting for it.
-    pub(crate) fn data_table_view(&self, node: &LayerNode) -> Element<'_, Message> {
+    /// The fields the table shows: the page's (else the layer's), less those Sütunlar hides, as on a drawing layer's
+    /// table (docs/adr/9166).
+    pub(crate) fn data_shown_fields(&self, node: &LayerNode) -> Vec<String> {
         let data = &self.gis.features.data;
+        let hidden = self.hidden_columns(Some(&node.id));
         let fields: Vec<String> = if data.fields.is_empty() {
             node.fields.iter().map(|f| f.name.clone()).collect()
         } else {
             data.fields.clone()
         };
+        fields.into_iter().filter(|f| !hidden.contains(f)).collect()
+    }
+
+    /// The table's rows: a page's cells when it is read, else a row waiting for it.
+    pub(crate) fn data_table_view(&self, node: &LayerNode) -> Element<'_, Message> {
+        let data = &self.gis.features.data;
+        let fields = self.data_shown_fields(node);
         // Wide enough for a key with its mark (“22 kaynakta silinmiş”) when the source lost a taken row (docs/adr/9152).
         let marked = self.gis.data_edits.gone.get(&node.id).is_some_and(|k| !k.is_empty());
         let key_width = if marked { 160.0 } else { 80.0 };

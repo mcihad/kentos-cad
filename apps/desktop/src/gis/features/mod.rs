@@ -37,6 +37,7 @@ use crate::points::{click_pick, focus_field};
 
 pub(crate) mod conditions;
 pub(crate) mod data;
+pub(crate) mod data_bar;
 pub(crate) mod joins;
 #[cfg(test)]
 mod joins_tests;
@@ -843,6 +844,11 @@ impl App {
             Event::AddRecord => return self.feature_add_record(),
             Event::Duplicate => return self.duplicate_selected(),
             Event::Pane(pane) => {
+                // A data layer's row opens its form with Formla düzenle (docs/adr/9166): the table stays, said why.
+                if pane == Pane::Form && self.data_table_layer().is_some() {
+                    self.say(kentos_interaction::Level::Info, data_bar::off::FORM);
+                    return Task::none();
+                }
                 if pane != Pane::Form && !self.docked_form_may_leave() {
                     return Task::none();
                 }

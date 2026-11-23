@@ -199,6 +199,9 @@
   - **İlişkili liste kaynaktan** (23 Kasım, rapor 22'nin kalanı;
     [ADR 9165](../adr/9165-related-rows-from-the-source.md), VY-64): M1'in formu bakımlarını kaynaktan okur, alınmış
     olanı bir kez, düzenlendiği haliyle sayar; kaynak satırları gösterilir, yazılmaz.
+  - **Veri tablosunun çubuğu** (23 Kasım, rapor 9'un kalanı;
+    [ADR 9166](../adr/9166-data-table-bar-like-the-drawings.md), VY-65): çizim tablosunun araçları aynı sırada;
+    çalışmayan araç kapalı, ipucu nedeni ve yerine yapılacağı söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

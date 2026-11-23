@@ -504,3 +504,7 @@ numaraları raporunkidir.
   ([ADR 9165](../docs/adr/9165-related-rows-from-the-source.md))
   - Üst anahtarla bağlı veri katmanı öğesi kaynaktan okunur; satırlar `kaynak:<anahtar>` ile dünyaya girer.
   - Kalan: kaynak satırının formunu listeden açmak, 500'den çok satırda sayfalı okuma, silmenin gerçek pencerede denenmesi, web.
+- [~] **VY-65 — Veri katmanının tablo çubuğu çizim katmanınınkiyle aynı düzendedir (rapor 9'un kalanı).**
+  ([ADR 9166](../docs/adr/9166-data-table-bar-like-the-drawings.md))
+  - Aynı araçlar aynı sırada; Sütunlar, Dışa aktar, İncele, Alanlar çalışır; öbürleri kapalı, ipucunda neden ve sonraki adım.
+  - Kalan: uçtan uca zincir ve örnek değer sınaması, veri katmanında Form bölmesi ve kopyalama, web.

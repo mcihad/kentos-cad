@@ -29,7 +29,7 @@ fn msg(e: Event) -> Message {
 }
 
 /// A bar button: its icon alone, without a frame; its words and hint above it.
-fn bar_button<'a>(
+pub(super) fn bar_button<'a>(
     glyph: &str,
     words: &'a str,
     hint: &'a str,
@@ -66,7 +66,7 @@ pub(super) fn bar_menu<'a>(
 }
 
 /// A thin upright line between the bar's groups.
-fn bar_gap<'a>() -> Element<'a, Message> {
+pub(super) fn bar_gap<'a>() -> Element<'a, Message> {
     container(kentos_ui::widget::vertical_divider())
         .height(Length::Fixed(18.0))
         .padding([0, 4])
@@ -211,49 +211,6 @@ impl App {
     }
 
     /// A data layer's bar: Katman ▾, Ara, Göster and İfade süzgeci (data.rs).
-    fn data_layer_bar<'a>(&self, rows: &Rows) -> Element<'a, Message> {
-        let panel = &self.gis.features;
-        // Asked with Enter: a million rows are not searched at every letter (data.rs).
-        let apply = msg(Event::Data(super::data::DataEvent::Apply));
-        let search = kentos_ui::widget::text_field(super::data::words::SEARCH, &panel.search)
-            .on_input(|t| msg(Event::Search(t)))
-            .on_submit(apply.clone());
-        let show = Select::new(
-            Show::ALL.iter().map(|s| Choice::new(s.label())),
-            Show::ALL.iter().position(|s| *s == panel.show),
-            |i| msg(Event::Show(Show::ALL[i])),
-        )
-        .prefix(texts::SHOW);
-        let filter = kentos_ui::widget::text_field(super::data::words::FILTER, &panel.filter)
-            .on_input(|t| msg(Event::Filter(t)))
-            .on_submit(apply);
-        let zoom = tip(
-            button(icon(from_web(Some("zoomSelection"))).size(16.0))
-                .style(style::button::subtle)
-                .padding(kentos_ui::theme::metrics::icon_small(16.0))
-                .on_press_maybe(
-                    (!panel.data.selected.is_empty()).then(|| msg(Event::Data(super::data::DataEvent::Zoom))),
-                ),
-            Tip::new(texts::ZOOM).body(texts::ZOOM_HINT),
-            iced::widget::tooltip::Position::Top,
-        );
-        // The layer drawn on, when the table shows another (docs/adr/9129): both are read, neither is taken for the other.
-        let target = self.table_target_words(rows);
-        let mut bar = row![
-            container(self.layer_select(rows)).width(Length::Fixed(250.0)),
-            container(search).width(Length::Fixed(170.0)),
-            container(show).width(Length::Fixed(170.0)),
-            container(filter).width(Length::Fixed(260.0)),
-            zoom,
-        ]
-        .spacing(8)
-        .align_y(Center);
-        if let Some(t) = target {
-            bar = bar.push(kentos_ui::label::caption(t).style(kentos_ui::style::text::muted));
-        }
-        container(bar.wrap().vertical_spacing(6)).padding([4, 8]).into()
-    }
-
     fn features_bar<'a>(&self, rows: &Rows, width: f32) -> Element<'a, Message> {
         let panel = &self.gis.features;
         let layer = self.layer_select(rows);
