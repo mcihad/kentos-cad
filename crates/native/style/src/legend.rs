@@ -59,6 +59,12 @@ pub struct LegendLayer<'a> {
 /// What the legend reads besides the layers: their objects and the library.
 pub trait LegendSources {
     fn entities(&self, layer: &str) -> Vec<&Entity>;
+    /// The geometry classes a layer is drawn as when its objects are not the drawing's to say it: a data layer's rows
+    /// are its source's (docs/adr/9101, 9177), see [`crate::classify::data_layer_present`]. None for a layer of the
+    /// drawing.
+    fn declared(&self, _layer: &str) -> Option<crate::classify::Present> {
+        None
+    }
     /// A library symbol by id.
     fn symbol(&self, id: &str) -> Option<Value>;
     /// A library item's name by id.
@@ -84,7 +90,7 @@ pub fn legend_of(layers: &[LegendLayer<'_>], src: &impl LegendSources) -> Vec<Le
     let mut out = Vec::new();
     for layer in layers {
         let entities = src.entities(layer.id);
-        let present = classes_present(&entities);
+        let present = src.declared(layer.id).unwrap_or_else(|| classes_present(&entities));
         let classes: Vec<GeometryClass> =
             ORDER.into_iter().filter(|c| present.of(*c) > 0).collect();
         if classes.is_empty() {

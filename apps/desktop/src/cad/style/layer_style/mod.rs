@@ -438,7 +438,8 @@ impl LayerStyleWindow {
             .filter(|n| n.kind == kentos_commands::LayerNodeType::Layer)
             .ok_or("Katman stili yalnızca katmanlar için açılır; bir grup seçili.")?;
         let entities: Vec<&Entity> = doc.by_layer(id).collect();
-        let present = classes_present(&entities);
+        // A data layer's rows are its source's: its table's geometry says what they are drawn as (docs/adr/9177).
+        let present = kentos_native_style::classify::data_layer_present(node).unwrap_or_else(|| classes_present(&entities));
         let classes = present.classes();
         let current = node.style.renderer.clone();
         let compose = node.compose.clone();

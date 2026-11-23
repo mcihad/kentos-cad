@@ -553,3 +553,9 @@ numaraları raporunkidir.
   - Listede Aç, tabloda ve kartta aç simgesi; alt katmanın formu üst kaydın formunun üstünde açılır.
   - Alt katman düzenleniyor ve öğe izin veriyorsa satır oturuma alınır; değilse gösterilir, form nedenini söyler.
   - Kalan: 500'den çok alt kayıtta sayfalı okuma, gösterilen kayıttan oturumu başlatıp yazılabilir açmak, web.
+- [x] **VY-76 — Yolun planlı → kontrol geçişinde sayaç, harita, kâğıt, tablo ve lejant tek kuralı izler (rapor 10'un
+  kalanı).** ([ADR 9177](../docs/adr/9177-one-rule-when-a-value-changes.md))
+  - Veri katmanının geometri sınıfı tablosundan: lejant (pencere ve pafta) veri katmanını gösterir, Katman stili yalnız
+    uyan sembolü sunar.
+  - Uçtan uca sınama: sayaç, ekran, kâğıt, tablo ve lejant Diğer değerler kapalı ve açıkken aynı şeyi söyler.
+  - Kalan: gerçek pencerede ve PostGIS'te deneme; web (TODOS.md §0.2).

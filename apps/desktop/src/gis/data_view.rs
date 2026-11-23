@@ -688,3 +688,7 @@ mod tests {
         assert_eq!(attribute(&Value::Null), None);
     }
 }
+
+#[cfg(test)]
+#[path = "style_policy_tests.rs"]
+mod style_policy_tests;

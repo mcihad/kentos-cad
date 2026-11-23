@@ -246,6 +246,11 @@ impl LegendSources for Sources<'_> {
             .collect()
     }
 
+    /// A data layer's rows are its source's: its table's geometry says what they are drawn as (docs/adr/9177).
+    fn declared(&self, layer: &str) -> Option<kentos_native_style::classify::Present> {
+        self.doc.layers().get(layer).and_then(kentos_native_style::classify::data_layer_present)
+    }
+
     fn symbol(&self, id: &str) -> Option<Value> {
         self.library.symbol(id).cloned()
     }

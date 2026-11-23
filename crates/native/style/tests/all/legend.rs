@@ -210,3 +210,67 @@ fn a_layer_with_texts_only_or_an_unreadable_renderer_has_no_rows_of_its_own() {
     assert_eq!(groups[0].entries.len(), 1);
     assert_eq!(groups[0].entries[0].label, "Kendi çizgim");
 }
+
+/// A data layer's rows are its source's, not the drawing's (docs/adr/9177): with no object of it in the drawing, its
+/// legend rows still come, from its table's geometry: a categorized road layer's planlı and, when on, Diğer değerler. A
+/// layer of the drawing with no objects gives none, as before.
+#[test]
+fn a_data_layers_rows_come_from_its_tables_geometry() {
+    use kentos_native_style::classify::{Present, data_layer_present};
+    struct Data {
+        node: kentos_contracts::LayerNode,
+    }
+    impl LegendSources for Data {
+        fn entities(&self, _: &str) -> Vec<&Entity> {
+            Vec::new()
+        }
+        fn declared(&self, layer: &str) -> Option<Present> {
+            (layer == self.node.id).then(|| data_layer_present(&self.node)).flatten()
+        }
+        fn symbol(&self, _: &str) -> Option<Value> {
+            None
+        }
+        fn item_name(&self, _: &str) -> Option<String> {
+            None
+        }
+    }
+    let line = |c: &str| json!({ "line": { "type": "line", "layers": [{ "id": "l", "type": "simple", "color": c }] } });
+    let style = |other: Option<Value>| -> LayerStyle {
+        serde_json::from_value(json!({
+            "color": "ink", "lineType": "continuous", "lineWeight": 0.25,
+            "renderer": { "type": "categorized", "expr": "durum", "other": other,
+                          "categories": [{ "value": "planlı", "label": "planlı", "symbols": line("#c0392b") }] }
+        }))
+        .expect("a style")
+    };
+    let node = |type_name: Option<&str>| -> kentos_contracts::LayerNode {
+        let mut data = json!({ "driver": "gpkg", "address": "Yollar.gpkg", "table": "yollar", "key": "fid" });
+        if let Some(t) = type_name {
+            data["geometry"] = json!({ "column": "geom", "typeName": t, "srid": 5256 });
+        }
+        serde_json::from_value(json!({
+            "id": "y", "name": "Yollar", "type": "layer", "visible": true, "locked": false, "expanded": true,
+            "style": style(None), "children": [], "data": data
+        }))
+        .expect("a data layer")
+    };
+    let rows = |src: &Data, style: &LayerStyle| -> Vec<String> {
+        let layer = LegendLayer { id: "y", name: "Yollar", style };
+        legend_of(&[layer], src).into_iter().flat_map(|g| g.entries).map(|e| e.label).collect()
+    };
+    let roads = Data { node: node(Some("LINESTRING")) };
+    assert_eq!(rows(&roads, &style(None)), ["planlı"], "Diğer değerler off: no row for what no category takes");
+    assert_eq!(rows(&roads, &style(Some(line("#888888")))), ["planlı", "Diğer değerler"]);
+    // The classes each table's type draws as; a table without geometry draws nothing.
+    let of = |t: Option<&str>| data_layer_present(&node(t)).expect("a data layer");
+    assert_eq!(of(Some("MULTILINESTRING")), Present { fill: 0, line: 1, marker: 0 });
+    assert_eq!(of(Some("POINT Z")), Present { fill: 0, line: 0, marker: 1 });
+    assert_eq!(of(Some("MULTIPOLYGON")), Present { fill: 1, line: 0, marker: 0 });
+    assert_eq!(of(None), Present::default());
+    assert_eq!(rows(&Data { node: node(None) }, &style(None)), Vec::<String>::new());
+    // A layer of the drawing says nothing beyond its objects.
+    let mut drawing = node(Some("LINESTRING"));
+    drawing.data = None;
+    assert_eq!(data_layer_present(&drawing), None);
+    assert_eq!(rows(&Data { node: drawing }, &style(None)), Vec::<String>::new());
+}

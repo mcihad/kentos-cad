@@ -268,7 +268,7 @@ pub(crate) fn read_whole_as(
 }
 
 /// The read drawn with the look of the model screen (`hold`: paper widths held, docs/adr/0793 §1) or of paper.
-fn read_with(
+pub(crate) fn read_with(
     view: &crate::data_view::DataView,
     app: &crate::app::App,
     layer: &LayerNode,

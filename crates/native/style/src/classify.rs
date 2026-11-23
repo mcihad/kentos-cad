@@ -511,6 +511,34 @@ pub fn geometry_class(e: &Entity) -> Option<GeometryClass> {
 }
 
 /// `classesPresent`.
+/// The geometry classes a data layer's rows are drawn as, from its table's geometry type, else the layer's (docs/adr/9101,
+/// 9177): its rows are its source's, not the drawing's, so the drawing's objects cannot say it. A table without
+/// geometry draws nothing; a mixed one (`GEOMETRY`, a collection) may draw any. None for a layer of the drawing.
+pub fn data_layer_present(node: &kentos_contracts::LayerNode) -> Option<Present> {
+    use kentos_contracts::LayerGeometry as G;
+    let data = node.data.as_ref()?;
+    let one = |fill: usize, line: usize, marker: usize| Present { fill, line, marker };
+    let by_layer = || match node.geometry {
+        Some(G::Point) => one(0, 0, 1),
+        Some(G::Line) => one(0, 1, 0),
+        Some(G::Area) => one(1, 0, 0),
+        Some(G::Annotation) | None => one(1, 1, 1),
+    };
+    let Some(geometry) = data.geometry.as_ref() else {
+        return Some(Present::default());
+    };
+    let name = geometry.type_name.to_ascii_uppercase();
+    // A dimension written onto the name (`POINTZ`, `LINESTRING ZM`) says nothing of the class.
+    let name = name.trim_end_matches(['Z', 'M', ' ']);
+    Some(match name {
+        "POINT" | "MULTIPOINT" => one(0, 0, 1),
+        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVE" | "MULTICURVE" => one(0, 1, 0),
+        "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "SURFACE" | "MULTISURFACE" | "TRIANGLE" | "TIN"
+        | "POLYHEDRALSURFACE" => one(1, 0, 0),
+        _ => by_layer(),
+    })
+}
+
 pub fn classes_present(list: &[&Entity]) -> Present {
     let mut out = Present::default();
     for e in list {
