@@ -280,6 +280,7 @@ pub fn end_model(
         records_in: 0,
         records_out: 0,
         steps: Vec::new(),
+        words: Vec::new(),
     });
     Outcome::Stopped {
         status,
@@ -377,6 +378,7 @@ pub fn run_model_with(
             records_in,
             records_out,
             steps,
+            words: Vec::new(),
         })
     };
     let problems = check_model(model, lookup);

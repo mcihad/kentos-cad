@@ -83,6 +83,10 @@ pub struct RunRecord {
     pub records_out: u64,
     /// A model's steps as they ran, in order (docs/adr/0529 §2); empty for a tool.
     pub steps: Vec<StepRecord>,
+    /// The run in words as it was prepared (docs/adr/9179): each features input as it resolved (the selection named
+    /// by its layer), each number with its unit, each choice as its option says it and each layer it wrote, new or
+    /// there already. Empty when it never got that far.
+    pub words: Vec<String>,
 }
 
 /// One step of a model as it ran: the tool, what flowed through it and how long it took.
@@ -172,6 +176,47 @@ struct NewLayerPlan {
 }
 
 impl Job {
+    /// The run in words as it was prepared ([`RunRecord::words`]).
+    fn words(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        for p in &self.tool.parameters {
+            let given = self.values.get(&p.name).cloned().or_else(|| match &p.default {
+                Some(crate::types::DefaultValue::Value(v)) => Some(v.clone()),
+                _ => None,
+            });
+            match &p.kind {
+                ParamKind::Features { .. } => {
+                    if let Some(i) = self.inputs.get(&p.name) {
+                        out.push(format!("{}: {}", p.label, i.description));
+                    }
+                }
+                ParamKind::Number { unit, .. } => {
+                    if let Some(n) = given.as_ref().and_then(serde_json::Value::as_f64) {
+                        let unit = if unit.is_empty() { String::new() } else { format!(" {unit}") };
+                        out.push(format!("{}: {}{unit}", p.label, crate::text::js_number(n)));
+                    }
+                }
+                ParamKind::Choice { options, .. } => {
+                    if let Some(o) = given
+                        .as_ref()
+                        .and_then(serde_json::Value::as_str)
+                        .and_then(|v| options.iter().find(|o| o.value == v))
+                    {
+                        out.push(format!("{}: {}", p.label, o.label));
+                    }
+                }
+                ParamKind::Layer { .. } => {
+                    if let Some(t) = self.layers.get(&p.name).filter(|t| !t.name.is_empty()) {
+                        let how = if t.is_new { "yeni katman" } else { "var olan katmana yazıldı" };
+                        out.push(format!("{}: “{}” ({how})", p.label, t.name));
+                    }
+                }
+                _ => {}
+            }
+        }
+        out
+    }
+
     /// Objects the features inputs resolved to: the web's input size, from
     /// which [`WORKER_THRESHOLD`] sends a job to the background.
     pub fn size(&self) -> usize {
@@ -604,6 +649,7 @@ impl Runner {
         touched: Vec<Slot>,
         target: Option<Target>,
         records_in: u64,
+        words: Vec<String>,
     ) -> RunRecord {
         let records_out = distinct(added.iter().chain(touched.iter()).copied()).len() as u64;
         let r = RunRecord {
@@ -621,6 +667,7 @@ impl Runner {
             records_in,
             records_out,
             steps: Vec::new(),
+            words,
         };
         if silent { r } else { self.add_record(r) }
     }
@@ -845,6 +892,7 @@ impl Runner {
                 Vec::new(),
                 None,
                 0,
+                Vec::new(),
             );
             return Prepared::Done(Outcome::Stopped {
                 status: Status::Error,
@@ -1040,6 +1088,7 @@ impl Runner {
 
     /// A job ended without changing anything.
     fn end(&mut self, job: Job, status: Status, message: String) -> Outcome {
+        let words = job.words();
         let record = self.record(
             job.silent,
             &job.tool,
@@ -1051,6 +1100,7 @@ impl Runner {
             Vec::new(),
             Some(job.target),
             job.size() as u64,
+            words,
         );
         Outcome::Stopped {
             status,
@@ -1075,6 +1125,7 @@ impl Runner {
             return self.stop(job);
         }
         let records_in = job.size() as u64;
+        let words = job.words();
         let Job {
             tool,
             target,
@@ -1108,6 +1159,7 @@ impl Runner {
                 Vec::new(),
                 target,
                 records_in,
+                words.clone(),
             );
             return Outcome::Stopped {
                 status: Status::Error,
@@ -1162,6 +1214,7 @@ impl Runner {
                     Vec::new(),
                     target,
                     records_in,
+                    words.clone(),
                 );
                 return Outcome::Stopped {
                     status: Status::Error,
@@ -1208,6 +1261,7 @@ impl Runner {
             touched.clone(),
             target,
             records_in,
+            words,
         );
         release(owned);
         let updated = {

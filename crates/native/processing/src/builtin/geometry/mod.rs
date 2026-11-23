@@ -138,6 +138,35 @@ pub fn input_notes(
     }
 }
 
+/// The note about inputs whose geometry is invalid as written (docs/adr/9179): they are taken as drawn, nothing is
+/// repaired, and the run says how many, what is wrong with them and where to look, so a result made from them is not
+/// trusted unawares.
+pub fn invalid_note(feedback: &mut dyn Feedback, inputs: &[&Entity], what: &str) {
+    use kentos_geometry_core::ops::geoprocess::validity::{Kind, problems};
+    let mut kinds: Vec<Kind> = Vec::new();
+    let mut count = 0;
+    for s in shapes(inputs) {
+        let found = problems(&s);
+        if found.is_empty() {
+            continue;
+        }
+        count += 1;
+        for p in found {
+            if !kinds.contains(&p.kind) {
+                kinds.push(p.kind);
+            }
+        }
+    }
+    if count > 0 {
+        let kinds: Vec<String> = kinds.iter().map(|k| crate::text::tr_lower(k.text())).collect();
+        feedback.warn(format!(
+            "{count} nesnenin geometrisi geçersiz ({}): {what} çizildiği hâliyle alındı, onarılmadı. Geçerliliği \
+             denetle ile yerlerini görün; gerekiyorsa Onar ile düzeltip yeniden çalıştırın.",
+            kinds.join(", ")
+        ));
+    }
+}
+
 /// The note about objects whose result is nothing (§1).
 pub fn empty_note(count: usize, feedback: &mut dyn Feedback) {
     if count > 0 {

@@ -565,3 +565,9 @@ numaraları raporunkidir.
   - Üstüne yaz onayı silinecek tabloların altında katmanın kendi dışa aktarmasını (Katmanı değiştir, Katmana ekle)
     söylüyor.
   - Kalan: teslimde “yalnız bu tablolar” ve “ekle” (komut girdisi), uzun teslimin Durdur'u, web.
+- [~] **VY-78 — Tampon'un durumları ayrı sınanır; iş kaydı çalıştırmayı sözle tutar (rapor 11'in kalanı).**
+  ([ADR 9179](../docs/adr/9179-buffer-cases-and-the-run-in-words.md))
+  - `RunRecord::words`: girdi çözüldüğü gibi, sayı birimiyle, seçenek adıyla, yazılan katman yeni ya da var olan;
+    Geçmiş kartında.
+  - Tampon geçersiz girdiyi söyler, onarmaz; metre, coğrafi, Durdur, papyon ve var olan ad ayrı sınanıyor.
+  - Kalan: girdiden türetilen sonuç adı (ortak durumlarla), geçersiz girdi sözünün öbür araçlara yayılması, web.

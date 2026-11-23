@@ -238,6 +238,8 @@
   - **Kesilen GeoPackage teslimi** (23 Kasım, rapor 6'nın kalanı; [ADR 9178](../adr/9178-a-killed-geopackage-delivery-stays-whole.md), VY-77): süreç
     öldürülse de adın altında bütün dosya kalır (sınandı); Üstüne yaz onayı öbür tabloları katmanın kendi dışa
     aktarmasıyla korumanın yolunu söyler.
+  - **Tampon'un durumları ve iş kaydı** (23 Kasım, rapor 11'in kalanı; [ADR 9179](../adr/9179-buffer-cases-and-the-run-in-words.md), VY-78): iş kaydı
+    girdiyi, sayıyı birimiyle ve yazılan katmanı (yeni ya da var olan) tutar; Tampon geçersiz girdiyi söyler, onarmaz.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

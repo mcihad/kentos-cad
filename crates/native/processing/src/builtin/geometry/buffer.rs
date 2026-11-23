@@ -12,7 +12,7 @@ use kentos_geometry_core::ops::geoprocess::calls::buffer_run;
 use serde_json::{Value, json};
 
 use super::{
-    GEO_KINDS, empty_note, features_param, geo_scopes, input_notes, layer_param, new_object, shapes,
+    GEO_KINDS, empty_note, features_param, geo_scopes, input_notes, invalid_note, layer_param, new_object, shapes,
 };
 use crate::builtin::queries::attr;
 use crate::text::{js_number, js_trim};
@@ -181,6 +181,7 @@ fn run(v: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> 
     let dissolve = v.flag("dissolve");
     let side = Side::from_key(v.text("side")).unwrap_or(Side::Both);
     input_notes(feedback, input, &[], false);
+    invalid_note(feedback, input, "tamponları");
     feedback.progress(0.0, "Tamponlar çiziliyor");
     let r = buffer_run(&shapes(input), &distances, side, rings, dissolve);
     if !r.unread.is_empty() {

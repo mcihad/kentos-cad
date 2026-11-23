@@ -1363,3 +1363,6 @@ fn without_kind_narrowing(mut values: Values) -> Values {
 #[cfg(test)]
 #[path = "result_name_tests.rs"]
 mod result_name_tests;
+#[cfg(test)]
+#[path = "buffer_cases_tests.rs"]
+mod buffer_cases_tests;

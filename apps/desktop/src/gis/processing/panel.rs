@@ -357,6 +357,10 @@ impl App {
         // What flowed through it (docs/adr/0529 §2): the objects it read and the ones it made, changed or chose, and for
         // a model each step's share and time.
         let mut body = column![head, label::caption(r.summary.clone())].spacing(4);
+        // The run in words (docs/adr/9179): its inputs as they resolved, its numbers with their units, where it wrote.
+        for w in &r.words {
+            body = body.push(label::caption(w.clone()).style(style::text::muted));
+        }
         if r.status == Status::Ok && (r.records_in > 0 || r.records_out > 0) {
             body = body.push(
                 label::caption(format!("{} → {} kayıt", r.records_in, r.records_out))
