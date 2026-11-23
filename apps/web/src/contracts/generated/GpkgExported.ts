@@ -19,6 +19,10 @@ approximated: number,
  */
 relations?: Array<GpkgRelationExported>, 
 /**
- * Feature tables given their layer's look as QGIS's default style (`layer_styles`, docs/adr/0627 §7).
+ * Feature tables given their layer's look as their default style (`layer_styles`, docs/adr/0627 §7).
  */
-styles?: number, };
+styles?: number, 
+/**
+ * The file's tables left as they were (`write: tables` or `append`, docs/adr/9191).
+ */
+kept?: Array<string>, };

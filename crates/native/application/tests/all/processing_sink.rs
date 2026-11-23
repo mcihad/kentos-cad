@@ -112,8 +112,8 @@ pub(super) fn buffer_to(path: &std::path::Path, mode: &str) -> Value {
         "sink": { "path": path.display().to_string(), "mode": mode } })
 }
 
-/// QGIS's file in a folder of its own.
-pub(super) fn qgis_copy(name: &str) -> (PathBuf, PathBuf) {
+/// Another program's file (the shared sample) in a folder of its own.
+pub(super) fn sample_copy(name: &str) -> (PathBuf, PathBuf) {
     let dir = std::env::temp_dir().join(format!("kentos-sink-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("a folder");
@@ -157,7 +157,7 @@ fn names_of(list: &Value) -> Vec<String> {
 
 #[test]
 fn tables_are_added_to_a_file_that_is_there_and_no_table_of_it_is_touched() {
-    let (dir, path) = qgis_copy("add");
+    let (dir, path) = sample_copy("add");
     let before = contents(&path);
     let mut doc = drawing();
     let got = run(&mut doc, buffer_to(&path, "addTables"));
@@ -226,7 +226,7 @@ fn tables_are_added_to_a_file_that_is_there_and_no_table_of_it_is_touched() {
 
 #[test]
 fn a_file_that_cannot_take_tables_is_refused_and_left_alone() {
-    let (dir, path) = qgis_copy("refuse");
+    let (dir, path) = sample_copy("refuse");
     let mut doc = drawing();
     let missing = dir.join("yok.gpkg");
     let got = run(&mut doc, buffer_to(&missing, "addTables"));
@@ -275,7 +275,7 @@ fn a_run_stopped_at_any_point_leaves_the_file_and_the_drawing_as_they_were() {
     let mut finished = false;
     for mode in ["addTables", "replaceTables", "new"] {
         for n in 1..=12 {
-            let (dir, path) = qgis_copy("stop");
+            let (dir, path) = sample_copy("stop");
             let before = std::fs::read(&path).expect("reads");
             let mut doc = drawing();
             let revision = doc.revision();
@@ -410,7 +410,8 @@ fn a_table_output_is_written_as_an_attribute_table_when_the_sink_asks_for_it() {
             .collect::<Vec<_>>(),
         columns
     );
-    // The file holds it as text, as the tool shows it, under the output's label.
+    // The file holds it under the output's label, with the tool's own values (docs/adr/9158): its counts whole
+    // numbers, its measures real ones, its group text; as the tool gives them, not as it shows them.
     let gp = kentos_geopackage::GeoPackage::open(&path, false).expect("opens");
     let layers = gp.layers().expect("layers");
     assert_eq!(layers.len(), 1);
@@ -421,12 +422,26 @@ fn a_table_output_is_written_as_an_attribute_table_when_the_sink_asks_for_it() {
         .rows(&layers[0], &kentos_geopackage::Query::default())
         .expect("rows");
     assert_eq!(stored.len(), rows.len());
-    for (s, r) in stored.iter().zip(rows) {
+    let kinds: Vec<&str> = shown["kinds"]
+        .as_array()
+        .expect("kinds")
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
+    let values = shown["values"].as_array().expect("values");
+    assert_eq!(values.len(), rows.len());
+    for (s, r) in stored.iter().zip(values) {
         let want: Vec<kentos_geopackage::Value> = r
             .as_array()
             .expect("a row")
             .iter()
-            .map(|c| kentos_geopackage::Value::Text(c.as_str().unwrap_or("").to_owned()))
+            .zip(&kinds)
+            .map(|(c, k)| match (c, *k) {
+                (Value::Null, _) => kentos_geopackage::Value::Null,
+                (c, "integer") => kentos_geopackage::Value::Integer(c.as_i64().expect("a whole number")),
+                (c, "real") => kentos_geopackage::Value::Real(c.as_f64().expect("a number")),
+                (c, _) => kentos_geopackage::Value::Text(c.as_str().unwrap_or("").to_owned()),
+            })
             .collect();
         assert_eq!(s.values, want);
     }
@@ -448,7 +463,7 @@ fn a_table_output_is_written_as_an_attribute_table_when_the_sink_asks_for_it() {
 
 #[test]
 fn a_table_output_is_added_to_a_file_that_is_there_and_replaced_by_name() {
-    let (dir, path) = qgis_copy("table");
+    let (dir, path) = sample_copy("table");
     let before = contents(&path);
     let mut doc = drawing();
     let got = run(&mut doc, summary_to(&path, "addTables", true));
@@ -480,7 +495,7 @@ fn a_table_output_is_added_to_a_file_that_is_there_and_replaced_by_name() {
     kentos_processing::command::register();
     let host = tools().expect("the tools are registered");
     for n in 1..=8 {
-        let (d2, p2) = qgis_copy("table-stop");
+        let (d2, p2) = sample_copy("table-stop");
         let was = std::fs::read(&p2).expect("reads");
         let mut doc = drawing();
         let input: kentos_commands::ProcessingRun =

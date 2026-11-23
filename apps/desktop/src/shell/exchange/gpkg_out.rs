@@ -1,8 +1,10 @@
 //! GeoPackage dışa aktar's window (gis-usage-report GIS-007, docs/adr/1073): before the file is asked, what goes in —
 //! Seçili nesneler, Etkin katman or Tüm proje — each with its objects and layers counted, so a field team sent one park
-//! gets one park. Dışa aktar… asks where and writes through `file.export.gpkg` (its `uids` or `layers`). A file that is
-//! there is written over whole: before it is, the window says which of its tables go, which are written again and which
-//! are new, and asks (docs/adr/9168).
+//! gets one park. Dışa aktar… asks where and writes through `file.export.gpkg` (its `uids` or `layers`). Before a file
+//! that is there is written, the window asks how (docs/adr/9168, 9191): only these tables written again (the file's
+//! others kept), the rows added to its tables, or a new file in its place; and says for the way chosen which of its
+//! tables go, which are written again or added to, which are new and which stay. The write runs off the interface's
+//! thread: the foot says how far it is and Durdur stops it, the file as it was (gpkg_out_run.rs).
 
 use std::collections::BTreeSet;
 use std::fmt;
@@ -10,7 +12,8 @@ use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_commands::ExportGpkg;
+use kentos_commands::{ExportGpkg, GpkgWrite};
+use kentos_ui::widget::radio::RadioGroup;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::{Dialog, overlay};
 
@@ -49,23 +52,48 @@ pub struct State {
     pub status: Option<(bool, String)>,
     /// The file chosen when it is there, asked about before it is written over (docs/adr/9168).
     pub confirm: Option<Confirm>,
+    /// How a file that is there is written (docs/adr/9191): only these tables again at first, the file's others kept.
+    pub write: GpkgWrite,
+    /// The write under way (gpkg_out_run.rs).
+    pub running: Option<super::gpkg_out_run::Running>,
 }
 
 /// The table the layers' styles go in, written with every export (docs/adr/9139).
 const STYLES_TABLE: &str = kentos_geopackage::styles::STYLES_TABLE;
 
-/// How the file's other tables are kept (docs/adr/9178): a layer's own export writes only its table in a file that is
-/// there, again or with rows added.
-pub(crate) const KEEP_TABLES: &str = "Öbür tabloları korumak için Geri'ye basın ve katmanları tek tek yazın: katmanın \
-     menüsündeki Dışa aktar ▸ Farklı kaydet… bu dosyada yalnız o tabloyu yeniden yazar (Katmanı değiştir) ya da satır \
-     ekler (Katmana ekle).";
+/// How the file's other tables are kept (docs/adr/9178, 9191).
+pub(crate) const KEEP_TABLES: &str = "Öbür tabloları korumak için “Yalnız bu tabloları yeniden yaz”ı seçin.";
+
+/// The ways a file that is there is written, as the confirmation offers them (docs/adr/9191): the way, its name, what
+/// it does, the button that does it.
+pub(crate) const WAYS: [(GpkgWrite, &str, &str, &str); 3] = [
+    (
+        GpkgWrite::Tables,
+        "Yalnız bu tabloları yeniden yaz",
+        "Dosyanın öbür tabloları, stilleri ve ilişkileri kalır.",
+        "Tabloları yeniden yaz",
+    ),
+    (
+        GpkgWrite::Append,
+        "Tablolara ekle",
+        "Satırlar aynı adlı tabloların sonuna eklenir.",
+        "Ekle",
+    ),
+    (
+        GpkgWrite::File,
+        "Dosyanın yerine yaz",
+        "Dosya baştan yazılır; öbür tabloları silinir.",
+        "Üstüne yaz",
+    ),
+];
 
 /// A file that is there, chosen to be written over (docs/adr/9168): its place and the tables it holds now (none: it
-/// does not read as a GeoPackage).
+/// does not read as a GeoPackage), with their rows.
 #[derive(Debug, Clone)]
 pub struct Confirm {
     pub path: PathBuf,
     pub tables: Option<Vec<String>>,
+    pub rows: std::collections::BTreeMap<String, u64>,
 }
 
 #[derive(Debug, Clone)]
@@ -74,10 +102,18 @@ pub enum Event {
     Empty,
     Save,
     Picked(Option<PathBuf>),
-    /// Üstüne yaz: the file that is there written over.
+    /// How the file that is there is written (docs/adr/9191).
+    Write(GpkgWrite),
+    /// The confirmation's button: the file that is there written as chosen.
     Confirm,
     /// Geri: back to what goes in, nothing written.
     Back,
+    /// Durdur: the write stops, the file as it was.
+    Stop,
+    /// How far a write is: its number, rows written, rows in all.
+    Progress(u64, u64, u64),
+    /// A write back: its number and its answer.
+    Done(u64, Box<super::gpkg_out_run::Answer>),
 }
 
 fn event(e: Event) -> Message {
@@ -169,7 +205,14 @@ impl App {
     /// File › GeoPackage dışa aktar: the window, Seçili nesneler first when something is selected.
     pub(super) fn gpkg_out_open(&mut self) -> Task<Message> {
         let scope = if self.selection.ids().is_empty() { Scope::All } else { Scope::Selection };
-        self.open_window(Window::GpkgOut(State { scope, empty: true, status: None, confirm: None }));
+        self.open_window(Window::GpkgOut(State {
+            scope,
+            empty: true,
+            status: None,
+            confirm: None,
+            write: GpkgWrite::Tables,
+            running: None,
+        }));
         Task::none()
     }
 
@@ -211,40 +254,69 @@ impl App {
                 )
             }
             Event::Picked(None) => Task::none(),
-            // A file that is there: what writing over it drops and what goes in, asked first (docs/adr/9168).
+            // A file that is there: how to write it and what that does, asked first (docs/adr/9168, 9191).
             Event::Picked(Some(path)) if path.exists() => {
-                let tables = kentos_geopackage::GeoPackage::open(&path, false)
-                    .ok()
-                    .and_then(|gp| gp.layers().ok())
-                    .map(|l| l.into_iter().map(|t| t.name).collect());
+                let read = kentos_geopackage::GeoPackage::open(&path, false).ok().and_then(|gp| {
+                    let side = gp.side_tables().unwrap_or_default();
+                    let layers = gp.layers().ok()?;
+                    let rows = layers.iter().map(|t| (t.name.clone(), gp.count(t).unwrap_or(0))).collect();
+                    Some((layers.into_iter().map(|t| t.name).filter(|n| !side.contains(n)).collect(), rows))
+                });
+                let (tables, rows) = match read {
+                    Some((tables, rows)) => (Some(tables), rows),
+                    None => (None, Default::default()),
+                };
                 if let Some(Window::GpkgOut(s)) = &mut self.exchange {
-                    s.confirm = Some(Confirm { path, tables });
+                    s.confirm = Some(Confirm { path, tables, rows });
                     s.status = None;
                 }
                 Task::none()
             }
-            Event::Picked(Some(path)) => self.gpkg_out_write(path),
+            Event::Picked(Some(path)) => self.gpkg_out_write(path, GpkgWrite::File),
+            Event::Write(way) => {
+                if let Some(Window::GpkgOut(s)) = &mut self.exchange {
+                    s.write = way;
+                    s.status = None;
+                }
+                Task::none()
+            }
             Event::Confirm => {
-                let path = match &mut self.exchange {
-                    Some(Window::GpkgOut(s)) => s.confirm.take().map(|c| c.path),
+                let asked = match &self.exchange {
+                    Some(Window::GpkgOut(s)) if s.running.is_none() => s.confirm.as_ref().map(|c| (c.path.clone(), s.write)),
                     _ => None,
                 };
-                match path {
-                    Some(path) => self.gpkg_out_write(path),
+                match asked {
+                    Some((path, way)) => self.gpkg_out_write(path, way),
                     None => Task::none(),
                 }
             }
             Event::Back => {
-                if let Some(Window::GpkgOut(s)) = &mut self.exchange {
+                if let Some(Window::GpkgOut(s)) = &mut self.exchange
+                    && s.running.is_none()
+                {
                     s.confirm = None;
+                    s.status = None;
                 }
+                Task::none()
+            }
+            Event::Stop => {
+                self.gpkg_out_stop();
+                Task::none()
+            }
+            Event::Progress(run, done, total) => {
+                self.gpkg_out_progress(run, done, total);
+                Task::none()
+            }
+            Event::Done(run, answer) => {
+                self.gpkg_out_done(run, *answer);
                 Task::none()
             }
         }
     }
 
-    /// The file written as the window says (its scope, its empty layers).
-    fn gpkg_out_write(&mut self, path: PathBuf) -> Task<Message> {
+    /// The file written as the window says (its scope, its empty layers; a file that is there the way chosen), off the
+    /// interface's thread.
+    fn gpkg_out_write(&mut self, path: PathBuf, write: GpkgWrite) -> Task<Message> {
         let Some(Window::GpkgOut(s)) = &self.exchange else {
             return Task::none();
         };
@@ -273,14 +345,10 @@ impl App {
             uids,
             empty_layers: empty,
             overwrite: true,
+            write,
             time: self.export_time(),
         };
-        if self.gpkg_write(&path, &input) {
-            self.exchange = None;
-        } else if let Some(Window::GpkgOut(s)) = &mut self.exchange {
-            s.status = self.log.lines().last().map(|l| (true, l.text.clone()));
-        }
-        Task::none()
+        self.gpkg_out_start(path, input)
     }
 
     /// The names of the tables a scope writes: its layers' and, with them, the empty templates'.
@@ -302,11 +370,14 @@ impl App {
             .collect()
     }
 
-    /// What writing over a file that is there does (docs/adr/9168): its tables that go, those written again, the new
-    /// ones, and what goes in.
+    /// What writing a file that is there the way chosen does (docs/adr/9168, 9191): its tables that go, those written
+    /// again or added to, the new ones, those that stay, and what goes in.
     pub(crate) fn gpkg_out_confirm_lines(&self, s: &State, c: &Confirm) -> Vec<(bool, String)> {
         let file = c.path.file_name().map_or_else(|| c.path.display().to_string(), |n| n.to_string_lossy().into_owned());
         let names = self.gpkg_out_names(s);
+        if s.write != GpkgWrite::File {
+            return self.gpkg_out_keep_lines(s.write, &file, &names, c);
+        }
         let mut lines = vec![(true, format!("“{file}” zaten var; Üstüne yaz dosyanın yerine yenisini yazar."))];
         match &c.tables {
             None => lines.push((true, "Dosya GeoPackage olarak okunamadı; içindekiler yerine yazılan dosyayla gider.".to_owned())),
@@ -326,7 +397,7 @@ impl App {
                             gone.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(", ")
                         ),
                     ));
-                    // The way to keep them (docs/adr/9178): a layer written alone touches its own table only.
+                    // The way to keep them (docs/adr/9191).
                     lines.push((false, KEEP_TABLES.to_owned()));
                 }
                 if !again.is_empty() {
@@ -355,6 +426,72 @@ impl App {
                 names.iter().map(|(n, k)| format!("{n} ({k} nesne)")).collect::<Vec<_>>().join(", ")
             ),
         ));
+        lines
+    }
+
+    /// What only these tables written again, or the rows added, does to a file that is there (docs/adr/9191): which of
+    /// its tables are written again or added to (with the rows each has), which are new, which stay as they are.
+    fn gpkg_out_keep_lines(&self, way: GpkgWrite, file: &str, names: &[(String, usize)], c: &Confirm) -> Vec<(bool, String)> {
+        let mut lines = vec![(
+            false,
+            match way {
+                GpkgWrite::Append => format!("“{file}” zaten var; Ekle satırları dosyanın aynı adlı tablolarına ekler."),
+                _ => format!("“{file}” zaten var; yalnız bu dışa aktarmanın tabloları yeniden yazılır, öbürleri kalır."),
+            },
+        )];
+        let Some(tables) = &c.tables else {
+            lines.push((
+                true,
+                "Dosya GeoPackage olarak okunamadı; tablolarına yazılamaz. Dosyanın yerine yazmayı seçin ya da Geri'ye basıp başka bir dosya seçin.".to_owned(),
+            ));
+            return lines;
+        };
+        let same = |t: &String, n: &String| t.eq_ignore_ascii_case(n);
+        let met: Vec<(&String, usize)> = names
+            .iter()
+            .filter_map(|(n, k)| tables.iter().find(|t| same(t, n)).map(|t| (t, *k)))
+            .collect();
+        let new: Vec<&str> =
+            names.iter().filter(|(n, _)| !tables.iter().any(|t| same(t, n))).map(|(n, _)| n.as_str()).collect();
+        let stay: Vec<&str> = tables
+            .iter()
+            .filter(|t| !names.iter().any(|(n, _)| same(t, n)) && t.as_str() != STYLES_TABLE)
+            .map(String::as_str)
+            .collect();
+        if !met.is_empty() {
+            let rows = |t: &String| c.rows.get(t).copied().unwrap_or(0);
+            lines.push((
+                false,
+                match way {
+                    GpkgWrite::Append => format!(
+                        "Satır eklenen tablolar: {}.",
+                        met.iter()
+                            .map(|(t, k)| format!("{t} (dosyada {} satır, en çok {k} eklenir)", rows(t)))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ),
+                    _ => format!(
+                        "Yeniden yazılan tablolar: {}.",
+                        met.iter()
+                            .map(|(t, k)| format!("{t} (dosyada {} satır, yerine {k})", rows(t)))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ),
+                },
+            ));
+        }
+        if !new.is_empty() {
+            lines.push((false, format!("Yeni tablolar: {}.", new.join(", "))));
+        }
+        if !stay.is_empty() {
+            lines.push((false, format!("Olduğu gibi kalan tablolar ({}): {}.", stay.len(), stay.join(", "))));
+        }
+        if way == GpkgWrite::Append {
+            lines.push((
+                false,
+                "Tabloda sütunu olmayan alanlar yazılmaz; tablonun kalıcı kimliğini tuttuğu nesne yeniden eklenmez. Tablonun geometrisi, sistemi ya da boş geçilemez bir sütunu uymazsa hiçbir şey yazılmaz.".to_owned(),
+            ));
+        }
         lines
     }
 
@@ -408,20 +545,41 @@ impl App {
     }
 
     pub(super) fn gpkg_out_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        // A file that is there: what writing over it does, asked (docs/adr/9168).
+        // A file that is there: how to write it and what that does, asked (docs/adr/9168, 9191).
         if let Some(c) = &s.confirm {
             let lines = self
                 .gpkg_out_confirm_lines(s, c)
                 .into_iter()
                 .map(|(warn, text)| words::text_line(if warn { Line::Warn } else { Line::Info }, text))
                 .collect::<Vec<_>>();
+            let running = s.running.is_some();
+            let mut ways = RadioGroup::new(s.write, |w| event(Event::Write(w)));
+            for (way, name, what, _) in WAYS {
+                ways = if running { ways.disabled(way, name) } else { ways.option(way, name, what) };
+            }
+            let button = WAYS.iter().find(|w| w.0 == s.write).map_or("Üstüne yaz", |w| w.3);
+            let body = Column::new()
+                .spacing(12)
+                .push(kentos_ui::label::body("Dosyaya nasıl yazılsın?"))
+                .push(ways)
+                .push(words::summary(lines));
+            let mut dialog = Dialog::new("GeoPackage dışa aktar").scroll(body);
+            dialog = match &s.running {
+                Some(r) => dialog
+                    .status(super::gpkg_out_run::foot(r))
+                    .action(words::secondary("Durdur", (!r.stopping).then(|| event(Event::Stop))))
+                    .action(words::primary(button, None)),
+                None => {
+                    if let Some((error, text)) = &s.status {
+                        dialog = dialog.status(words::text_line(if *error { Line::Error } else { Line::Info }, text.clone()));
+                    }
+                    dialog
+                        .action(words::secondary("Geri", Some(event(Event::Back))))
+                        .action(words::primary(button, Some(event(Event::Confirm))))
+                }
+            };
             return overlay::blocking(
-                Dialog::new("GeoPackage dışa aktar")
-                    .push(words::summary(lines))
-                    .action(words::secondary("Geri", Some(event(Event::Back))))
-                    .action(words::primary("Üstüne yaz", Some(event(Event::Confirm))))
-                    .width(640.0)
-                    .on_close(Some(event(Event::Back))),
+                dialog.width(680.0).max_height(720.0).on_close((!running).then(|| event(Event::Back))),
             );
         }
         let counted = |scope| Counted(scope, self.gpkg_reach(scope).objects);
@@ -463,18 +621,24 @@ impl App {
             .map(|(warn, text)| words::text_line(if warn { Line::Warn } else { Line::Info }, text))
             .collect::<Vec<_>>();
         body = body.push(words::summary(lines));
-        if let Some((error, text)) = &s.status {
+        if s.running.is_none()
+            && let Some((error, text)) = &s.status
+        {
             body = body.push(words::text_line(if *error { Line::Error } else { Line::Info }, text.clone()));
         }
-        overlay::blocking(
-            Dialog::new("GeoPackage dışa aktar")
-                .scroll(body)
+        let dialog = Dialog::new("GeoPackage dışa aktar").scroll(body);
+        // The foot while it writes: how far, and Durdur (gpkg_out_run.rs).
+        let dialog = match &s.running {
+            Some(r) => dialog
+                .status(super::gpkg_out_run::foot(r))
+                .action(words::secondary("Durdur", (!r.stopping).then(|| event(Event::Stop))))
+                .action(words::primary("Dışa aktar…", None)),
+            None => dialog
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-                .action(words::primary("Dışa aktar…", (!reach.layers.is_empty()).then(|| event(Event::Save))))
-                .width(640.0)
-                .max_height(720.0)
-                .on_close(Some(message(Exchange::Close))),
-        )
+                .action(words::primary("Dışa aktar…", (!reach.layers.is_empty()).then(|| event(Event::Save)))),
+        };
+        let running = s.running.is_some();
+        overlay::blocking(dialog.width(640.0).max_height(720.0).on_close((!running).then(|| message(Exchange::Close))))
     }
 }
 

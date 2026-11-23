@@ -7,7 +7,7 @@ use kentos_commands::{CallAnswer, CallEnvelope, CallOp, CommandResult};
 use kentos_domain::Document;
 use serde_json::{Value, json};
 
-use super::processing_sink::{buffer_to, drawing, no_stray, qgis_copy};
+use super::processing_sink::{buffer_to, drawing, no_stray, sample_copy};
 
 /// The run sent as a request named `request`.
 fn sent(doc: &mut Document, input: &Value, request: &str) -> CallAnswer {
@@ -40,7 +40,7 @@ fn code(answer: &CallAnswer) -> String {
 
 #[test]
 fn a_request_sent_again_is_answered_as_before_and_applied_once() {
-    let (dir, path) = qgis_copy("again");
+    let (dir, path) = sample_copy("again");
     let mut doc = drawing();
     let revision = doc.revision();
     let input = buffer_to(&path, "addTables");
@@ -90,7 +90,7 @@ fn a_request_sent_again_is_answered_as_before_and_applied_once() {
 
 #[test]
 fn a_request_sent_again_does_not_overwrite_what_is_there_now() {
-    let (dir, _) = qgis_copy("again-new");
+    let (dir, _) = sample_copy("again-new");
     let mut doc = drawing();
     let path = dir.join("yeni.gpkg");
     let mut input = buffer_to(&path, "new");
@@ -124,7 +124,7 @@ fn rights(path: &std::path::Path, mode: u32) {
 #[cfg(unix)]
 #[test]
 fn a_file_that_takes_no_write_is_refused_and_left_as_it_was() {
-    let (dir, path) = qgis_copy("readonly");
+    let (dir, path) = sample_copy("readonly");
     let mut doc = drawing();
     let revision = doc.revision();
     let before = std::fs::read(&path).expect("reads");
@@ -156,7 +156,7 @@ fn a_file_that_takes_no_write_is_refused_and_left_as_it_was() {
 #[cfg(unix)]
 #[test]
 fn a_folder_that_takes_no_file_is_refused_and_nothing_is_made() {
-    let (dir, _) = qgis_copy("readonly-folder");
+    let (dir, _) = sample_copy("readonly-folder");
     let mut doc = drawing();
     let path = dir.join("yeni.gpkg");
     let mut input = buffer_to(&path, "new");

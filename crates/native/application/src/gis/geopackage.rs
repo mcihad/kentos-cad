@@ -1199,6 +1199,13 @@ pub struct TableWritten {
     pub replaced: bool,
     /// The layer's indexes written over it (docs/adr/0758 §5).
     pub indexes: u32,
+    /// A table of the file's the rows were added to (`Clash::Append`, docs/adr/9191): its columns, style and
+    /// relations are the file's.
+    pub appended: bool,
+    /// Objects not added because the table has their lasting id already (`Clash::Append`).
+    pub already: u32,
+    /// The layer's attributes the table has no column for, left out (`Clash::Append`).
+    pub left_out: Vec<String>,
 }
 
 /// What [`write`] wrote.
@@ -1219,6 +1226,8 @@ pub struct Written {
     pub index_notes: Vec<String>,
     /// What the written objects break of their fields' rules, a line a field (docs/adr/1075).
     pub rule_notes: Vec<String>,
+    /// The tables of a file written into that the write did not touch (docs/adr/9191; `gpkg_into::write_into` only).
+    pub kept: Vec<String>,
 }
 
 fn c2(p: &kentos_commands::Vec2, z: Option<f64>, m: Option<f64>) -> Coord {
@@ -1306,13 +1315,13 @@ fn rings_of(
 
 /// What an object becomes: a geometry, a row without one (a record), or nothing (its kind), and whether it was
 /// written as chords.
-enum Row {
+pub(crate) enum Row {
     Geometry(Geometry, bool),
     Record,
     Left(&'static str),
 }
 
-fn row_of(e: &Entity) -> Row {
+pub(crate) fn row_of(e: &Entity) -> Row {
     use kentos_commands::Entity as E;
     match e {
         E::Record(_) => Row::Record,
@@ -1571,6 +1580,11 @@ pub enum Clash {
     /// The feature or attribute table of that name is taken out of the file and written again; no other table is
     /// touched.
     Replace,
+    /// A layer's rows are added to the feature or attribute table of that name, its columns, style and relations
+    /// kept (docs/adr/9191): the layer's attributes it has no column for are left out, an object whose lasting id it
+    /// has is not added again. Refused when the table cannot hold the rows (another geometry family, system, Z or M,
+    /// a NOT NULL column the layer does not fill). A tool's table is never added to: it is refused as taken.
+    Append,
 }
 
 /// What a write asks of its host between batches: whether to stop, and where it has come to (rows done of rows).
@@ -1605,6 +1619,9 @@ pub enum WriteStop {
     Taken { table: String, replaceable: bool },
     /// The file's spatial reference system of the id is another one than the drawing's.
     Srs(String),
+    /// A table of the file the rows cannot go into (`Clash::Append`, docs/adr/9191): the refusal's code
+    /// (`geometry_mismatch`, `crs_mismatch`, `source_not_null`) and why.
+    Unfit { code: &'static str, message: String },
     /// SQLite, or the file, said no.
     Failed(String),
 }
@@ -1768,8 +1785,13 @@ struct Plan {
     columns: Vec<gpkg::Column>,
     /// The attribute each column reads.
     keys: Vec<String>,
+    /// The rows written: with `append`, the objects the table does not have yet.
     rows: u32,
     replaces: bool,
+    /// The file's table the rows are added to (`Clash::Append`, docs/adr/9191).
+    append: Option<crate::gpkg_into::Append>,
+    /// The objects not added because the table has their lasting id.
+    already: u32,
 }
 
 /// The layer's indexes over the table just written (docs/adr/0758 §5): each over the columns its fields went to, how
@@ -1841,17 +1863,31 @@ fn write_indexes(
 
 /// Writes the layers (by id; every layer with objects when empty) to a new GeoPackage at `path`.
 pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, String> {
-    let mut gp = GeoPackage::create(path).map_err(|e| e.0)?;
-    let session = gp.session().map_err(|e| e.0)?;
-    let out =
-        write_in(doc, layers, &session, None, BATCH_ROWS, &Flow::none()).map_err(
-            |stop| match stop {
-                WriteStop::Failed(why) | WriteStop::Srs(why) => why,
-                WriteStop::Cancelled => "yazma durduruldu".to_owned(),
-                WriteStop::Taken { table, .. } => format!("“{table}” tablosu var"),
-            },
-        )?;
-    session.commit().map_err(|e| e.0)?;
+    write_flow(doc, layers, path, &Flow::none()).map_err(|stop| stop_words(&stop))
+}
+
+/// What a stopped write says.
+pub fn stop_words(stop: &WriteStop) -> String {
+    match stop {
+        WriteStop::Failed(why) | WriteStop::Srs(why) => why.clone(),
+        WriteStop::Unfit { message, .. } => message.clone(),
+        WriteStop::Cancelled => "yazma durduruldu".to_owned(),
+        WriteStop::Taken { table, .. } => format!("“{table}” tablosu var"),
+    }
+}
+
+/// [`write`], asking `flow` before each batch (docs/adr/9191): stopped, the file at `path` is left part written for
+/// its owner to throw away.
+pub fn write_flow(
+    doc: &Document,
+    layers: &[String],
+    path: &Path,
+    flow: &Flow<'_>,
+) -> Result<Written, WriteStop> {
+    let mut gp = GeoPackage::create(path)?;
+    let session = gp.session()?;
+    let out = write_in(doc, layers, &session, None, BATCH_ROWS, flow)?;
+    session.commit()?;
     let mut out = out;
     // The project's relations between the tables and the layers' looks as `layer_styles`' defaults (docs/adr/0627).
     out.profile = crate::gpkg_profile::write_profile(
@@ -1859,8 +1895,9 @@ pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, 
         &out.tables,
         &mut gp,
         &crate::gis_derive::utc_now(),
-    )?;
-    gp.close().map_err(|e| e.0)?;
+    )
+    .map_err(WriteStop::Failed)?;
+    gp.close()?;
     Ok(out)
 }
 
@@ -1913,25 +1950,36 @@ pub fn write_with_tables(
         if p.replaces {
             session.drop_table(&p.table)?;
         }
-        let def = gpkg::TableDef {
-            name: p.table.clone(),
-            data_type: if p.type_name.is_some() {
-                DataType::Features
-            } else {
-                DataType::Attributes
-            },
-            identifier: Some(p.table.clone()),
-            description: None,
-            srs_id: p.type_name.as_ref().map(|_| srs.id),
-            geometry: p.type_name.clone().map(|t| gpkg::GeometryColumn {
-                name: "geom".into(),
-                type_name: t,
-                z: p.z,
-                m: p.m,
-            }),
-            columns: p.columns.clone(),
+        // A table of the file's the rows are added to (docs/adr/9191): its columns and its geometry column's type.
+        let (mut w, columns, keys, type_name) = match &p.append {
+            Some(a) => (
+                session.continue_table(&a.have, a.columns.clone())?,
+                &a.columns,
+                &a.keys,
+                a.have.geometry.as_ref().map(|g| g.type_name.to_ascii_uppercase()),
+            ),
+            None => {
+                let def = gpkg::TableDef {
+                    name: p.table.clone(),
+                    data_type: if p.type_name.is_some() {
+                        DataType::Features
+                    } else {
+                        DataType::Attributes
+                    },
+                    identifier: Some(p.table.clone()),
+                    description: None,
+                    srs_id: p.type_name.as_ref().map(|_| srs.id),
+                    geometry: p.type_name.clone().map(|t| gpkg::GeometryColumn {
+                        name: "geom".into(),
+                        type_name: t,
+                        z: p.z,
+                        m: p.m,
+                    }),
+                    columns: p.columns.clone(),
+                };
+                (session.start_table(&def)?, &p.columns, &p.keys, p.type_name.clone())
+            }
         };
-        let mut w = session.start_table(&def)?;
         let mut rows: Vec<gpkg::NewRow> = Vec::with_capacity(batch.min(p.rows as usize));
         let mut uids: Vec<String> = Vec::with_capacity(rows.capacity());
         let mut objects = doc.by_layer_with_uids(&p.layer);
@@ -1939,8 +1987,12 @@ pub fn write_with_tables(
             rows.clear();
             uids.clear();
             for (uid, e) in objects.by_ref() {
+                // An object the table has already (its lasting id) is not added again.
+                if p.append.as_ref().is_some_and(|a| a.uids.contains(&uid.to_string())) {
+                    continue;
+                }
                 let geometry = match row_of(e) {
-                    Row::Geometry(g, _) => Some(match &p.type_name {
+                    Row::Geometry(g, _) => Some(match &type_name {
                         Some(name) => conform(g, name),
                         None => g,
                     }),
@@ -1950,10 +2002,9 @@ pub fn write_with_tables(
                 rows.push(gpkg::NewRow {
                     fid: None,
                     geometry,
-                    values: p
-                        .columns
+                    values: columns
                         .iter()
-                        .zip(&p.keys)
+                        .zip(keys)
                         .map(|(c, k)| cell(e.base().attrs.get(k), &c.kind))
                         .collect(),
                 });
@@ -1974,23 +2025,29 @@ pub fn write_with_tables(
             (flow.progress)(done, total);
         }
         session.finish_table(w)?;
-        let indexes = write_indexes(doc, p, session, &mut out.index_notes)?;
+        // An appended table's indexes are the file's.
+        let indexes = match &p.append {
+            Some(_) => 0,
+            None => write_indexes(doc, p, session, &mut out.index_notes)?,
+        };
+        let geometry = p.append.as_ref().map_or_else(
+            || p.type_name.clone().map(|t| (t, p.z, p.m)),
+            |a| a.have.geometry.as_ref().map(|g| (g.type_name.clone(), g.z, g.m)),
+        );
         out.tables.push(TableWritten {
-            table: p.table.clone(),
+            table: p.append.as_ref().map_or_else(|| p.table.clone(), |a| a.have.name.clone()),
             layer: Some(p.layer.clone()),
             output: None,
             rows: p.rows,
-            geometry: p.type_name.clone(),
-            z: p.z,
-            m: p.m,
-            columns: p
-                .keys
-                .iter()
-                .zip(&p.columns)
-                .map(|(k, c)| (k.clone(), c.name.clone()))
-                .collect(),
+            z: geometry.as_ref().map_or(0, |g| g.1),
+            m: geometry.as_ref().map_or(0, |g| g.2),
+            geometry: geometry.map(|g| g.0),
+            columns: keys.iter().zip(columns).map(|(k, c)| (k.clone(), c.name.clone())).collect(),
             replaced: p.replaces,
             indexes,
+            appended: p.append.is_some(),
+            already: p.already,
+            left_out: p.append.as_ref().map(|a| a.left_out.clone()).unwrap_or_default(),
         });
     }
     for (p, t) in text_plans.iter().zip(tables) {
@@ -2054,6 +2111,9 @@ pub fn write_with_tables(
                 .collect(),
             replaced: p.replaces,
             indexes: 0,
+            appended: false,
+            already: 0,
+            left_out: Vec::new(),
         });
     }
     Ok(out)
@@ -2178,27 +2238,57 @@ fn plan(
                 c.not_null = true;
             }
         }
-        let (table, replaces) = table_name(&node.name, "katman", &mut names, session, clash)?;
+        let (table, meet) = table_name(&node.name, "katman", &mut names, session, clash)?;
+        let type_name = fams.type_name().or_else(|| match node.geometry {
+            Some(LayerGeometry::Point) => Some("POINT".into()),
+            Some(LayerGeometry::Line) => Some("LINESTRING".into()),
+            Some(LayerGeometry::Area) => Some("POLYGON".into()),
+            _ => None,
+        });
+        let (z, m) = (flag(z, all_z), flag(m, all_m));
+        // Rows added to the file's table (docs/adr/9191): checked against it before anything is written; its own
+        // column names, so none of the layer's renamings is said.
+        let (append, already) = match meet {
+            Meet::Append => {
+                // Only the rows' own geometries have to fit: a layer of records alone has none.
+                let rows_type = fams.type_name();
+                let (a, already) = crate::gpkg_into::append_plan(
+                    session,
+                    doc,
+                    &id,
+                    &table,
+                    rows_type.as_deref(),
+                    z,
+                    m,
+                    &columns,
+                    &keys,
+                    srs_of(doc).id,
+                )?;
+                out.renamed.retain(|(t, _, _)| *t != node.name);
+                (Some(a), already)
+            }
+            _ => (None, 0),
+        };
         plans.push(Plan {
             layer: id.clone(),
             table,
-            type_name: fams.type_name().or_else(|| match node.geometry {
-                Some(LayerGeometry::Point) => Some("POINT".into()),
-                Some(LayerGeometry::Line) => Some("LINESTRING".into()),
-                Some(LayerGeometry::Area) => Some("POLYGON".into()),
-                _ => None,
-            }),
-            z: flag(z, all_z),
-            m: flag(m, all_m),
+            type_name,
+            z,
+            m,
             columns,
             keys,
-            rows,
-            replaces,
+            rows: rows - already,
+            replaces: meet == Meet::Replace,
+            append,
+            already,
         });
     }
     let mut text_plans = Vec::new();
     for t in tables {
-        let (table, replaces) = table_name(&t.label, "tablo", &mut names, session, clash)?;
+        // A tool's table is never added to (docs/adr/9191): one the file has is refused as taken.
+        let clash = clash.map(|c| if c == Clash::Append { Clash::Refuse } else { c });
+        let (table, meet) = table_name(&t.label, "tablo", &mut names, session, clash)?;
+        let replaces = meet == Meet::Replace;
         // Each header's column: SQLite's names are one whatever their case, so a repeated header (or `fid`) gets
         // `_2`, `_3` …; an empty one is `sutun_N`.
         let mut taken: BTreeSet<String> = ["fid".to_owned()].into();
@@ -2241,16 +2331,24 @@ fn plan(
     Ok((plans, text_plans))
 }
 
+/// How a write meets a name the file has (docs/adr/0549 §1, 9191).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Meet {
+    Free,
+    Replace,
+    Append,
+}
+
 /// A table's name: the wanted one (`prefix_` in front when it is empty or reserved), made one the write has not given
-/// yet (`_2`, `_3` …), and how the file meets it: free, taken by a feature or attribute table the write replaces, or
-/// refused (docs/adr/0549 §1).
+/// yet (`_2`, `_3` …), and how the file meets it: free, taken by a feature or attribute table the write replaces or
+/// adds to, or refused (docs/adr/0549 §1).
 fn table_name(
     wanted: &str,
     prefix: &str,
     names: &mut BTreeSet<String>,
     session: &gpkg::Session<'_>,
     clash: Option<Clash>,
-) -> Result<(String, bool), WriteStop> {
+) -> Result<(String, Meet), WriteStop> {
     let mut table = wanted.trim().to_owned();
     if table.is_empty()
         || table.to_ascii_lowercase().starts_with("gpkg_")
@@ -2264,11 +2362,12 @@ fn table_name(
         table = format!("{base}_{k}");
         k += 1;
     }
-    let mut replaces = false;
+    let mut meet = Meet::Free;
     if let Some(clash) = clash {
         match session.taken(&table)? {
             gpkg::Taken::Free => {}
-            gpkg::Taken::Data(_) if clash == Clash::Replace => replaces = true,
+            gpkg::Taken::Data(_) if clash == Clash::Replace => meet = Meet::Replace,
+            gpkg::Taken::Data(_) if clash == Clash::Append => meet = Meet::Append,
             gpkg::Taken::Data(_) => {
                 return Err(WriteStop::Taken {
                     table,
@@ -2283,7 +2382,7 @@ fn table_name(
             }
         }
     }
-    Ok((table, replaces))
+    Ok((table, meet))
 }
 
 // ── One object against a table (docs/adr/0503) ─────────────────────────────

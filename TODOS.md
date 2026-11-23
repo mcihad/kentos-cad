@@ -2630,6 +2630,9 @@ Liste:
   “Yol ekseni — tampon 10 m” diye önersin; yazılan ad ve bilerek verilen değerler kalsın.
 - [ ] Hücrelerden türlenen tablolar (ADR 9190, 23 Kasım 2026): web'in işlem sonucu dosyaya yazılırken türünü söylemeyen
   aracın sütunları da hücrelerden türlensin (`table_kinds::read`'in kuralı; WASM ya da aynı kural).
+- [ ] Var olan GeoPackage'a teslim (ADR 9191, 23 Kasım 2026): web'in GeoPackage dışa aktarması da var olan dosyada üç
+  yolu sorsun (`write`: `tables` önce, `append`, `file`), seçilen yola göre kalan, yeniden yazılan, eklenen tabloları
+  söylesin; uzun teslim ilerlemeyi göstersin ve Durdur'la dursun (TS türleri yeniden üretildi).
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

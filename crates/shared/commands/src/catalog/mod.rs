@@ -1118,7 +1118,9 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             summary: "Katmanları (layers boşsa nesnesi olan bütün katmanları; grup katmanlarını verir) path'e yeni bir GeoPackage olarak yazar: her katman bir tablo, her nesne bir satır; katmanın alanları türleriyle, öbür öznitelikler metin sütunu olarak; nesnenin kalıcı kimliği kentos_uids uzantısında (geri alınınca aynı kimlikle gelir). \
                       Nokta ve çok nokta, çizgi ve çoklu çizgi (yaylar dairesel eğri olarak kesin), alan delikleri ve parçalarıyla, daire eğri alan, yay dairesel eğri olarak yazılır; Z ve M taşınır; elips, eğri ve NURBS 0,1 mm'lik kirişlerle yazılır, geometrisiz kayıt geometrisiz satırdır. \
                       Yazı, ölçü, blok, tarama, tablo, resim ve rasterin GeoPackage'da geometrisi yoktur: yazılmaz, export_losses türlerine göre sayar. Tabloların sistemi projeninkidir (EPSG kodu ve WKT'si; yerel proje tanımsız kartezyen). \
-                      Dosya bütün yazılır ya da hiç: geçici adla yazılır, geri okunur, tek adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. plan dosyayı yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                      Dosya bütün yazılır ya da hiç: geçici adla yazılır, geri okunur, tek adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. \
+                      Var olan dosyaya write söyler: file (varsayılan) yerine yeni dosya yazar, öbür tabloları gider; tables yalnız yazılan tabloları yeniden yazar, öbür tablolar, stilleri ve ilişkileri kalır; append satırları dosyanın aynı adlı tablolarına ekler (tablonun sütunları, stili ve ilişkileri kalır; sütunu olmayan alan yazılmaz, tablonun kalıcı kimliğini tuttuğu nesne yeniden eklenmez; geometri ailesi, çok parça, yay, Z, M ya da sistem uymayan ve boş geçilemez sütunu doldurulmayan tablo reddedilir). \
+                      plan dosyayı yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir."
                 .into(),
             aliases: vec!["gpkg".into(), "gpkgout".into()],
             effect: CommandEffect::Query,
@@ -1135,6 +1137,10 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             examples: vec![CommandExample {
                 title: "Parsel ve yol katmanları".into(),
                 input: json!({ "path": "/veri/teslim.gpkg", "layers": ["parsel", "yol"], "overwrite": true }),
+                output: None,
+            }, CommandExample {
+                title: "Yeni duraklar teslim dosyasındaki tabloya eklenir, öbür tablolar kalır".into(),
+                input: json!({ "path": "/veri/teslim.gpkg", "layers": ["durak"], "overwrite": true, "write": "append" }),
                 output: None,
             }],
         },

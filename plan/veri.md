@@ -658,3 +658,13 @@ numaraları raporunkidir.
   - Bölgesel istatistik ve uzaklık matrisi GeoPackage'da ve PostGIS'te türlü; `"Ortalama" > 100` ve sayısal sıra
     doğru. Toplu çalıştırma ve pencerenin Kaydet ▾'i aynı okumayı kullanır.
   - Kalan: araçların yuvarlanmamış kendi değerleri, web.
+- [x] **VY-90 — Var olan GeoPackage'a yalnız bu tablolar ya da ekleme; teslimin Durdur'u (rapor 6'nın kalanı).**
+  ([ADR 9191](../docs/adr/9191-geopackage-delivery-into-a-file-that-is-there.md))
+  - `file.export.gpkg`'nin `write`'ı: `file` (yerine yeni dosya), `tables` (yalnız yazılan tablolar; öbürleri, stilleri,
+    ilişkileri kalır), `append` (satırlar aynı adlı tablolara; kalıcı kimliği olan nesne yeniden eklenmez, sütunu
+    olmayan alan yazılmaz; geometri, Z/M, sistem ya da NOT NULL uymazsa ret).
+  - Yazım SQLite'ın çevrimiçi yedeğiyle alınan kopyada yapılır, sonda yerine konur; Durdur ve ret dosyayı olduğu gibi
+    bırakır.
+  - Masaüstü teslimi ayrı iş parçacığında, ilerleme ve Durdur'la; onay üç yolu sorar, “Yalnız bu tabloları yeniden yaz”
+    önce.
+  - Kalan: eklerken yeni alan, eklenen tabloların ilişki eşlemesi, web.

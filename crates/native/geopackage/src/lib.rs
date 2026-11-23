@@ -499,131 +499,15 @@ impl GeoPackage {
 
     /// The tables of `gpkg_contents`, in its order, with their columns.
     pub fn layers(&self) -> Result<Vec<Layer>> {
-        let mut st = self.conn.prepare(
-            "SELECT table_name, data_type, identifier, description, min_x, min_y, max_x, max_y, srs_id
-             FROM gpkg_contents ORDER BY rowid",
-        )?;
-        let base: Vec<_> = st
-            .query_map([], |r| {
-                let b: [Option<f64>; 4] = [r.get(4)?, r.get(5)?, r.get(6)?, r.get(7)?];
-                Ok((
-                    r.get::<_, String>(0)?,
-                    r.get::<_, String>(1)?,
-                    r.get::<_, Option<String>>(2)?,
-                    r.get::<_, Option<String>>(3)?,
-                    match b {
-                        [Some(a), Some(b), Some(c), Some(d)] => Some([a, b, c, d]),
-                        _ => None,
-                    },
-                    r.get::<_, Option<i32>>(8)?,
-                ))
-            })?
-            .collect::<rusqlite::Result<_>>()?;
-        let mut out = Vec::with_capacity(base.len());
-        for (name, data_type, identifier, description, bounds, srs_id) in base {
-            let geometry = self
-                .conn
-                .query_row(
-                    "SELECT column_name, geometry_type_name, z, m FROM gpkg_geometry_columns WHERE table_name = ?1",
-                    [&name],
-                    |r| {
-                        Ok(GeometryColumn {
-                            name: r.get(0)?,
-                            type_name: r.get(1)?,
-                            z: r.get(2)?,
-                            m: r.get(3)?,
-                        })
-                    },
-                )
-                .ok();
-            let mut fid = String::new();
-            let mut columns = Vec::new();
-            // `table_xinfo` says generated columns too (`hidden` 2 virtual, 3 stored; 1 a virtual table's hidden
-            // column, left out); their expression is in the table's text (docs/adr/0754 §1).
-            let mut info = self
-                .conn
-                .prepare(&format!("PRAGMA table_xinfo({})", quote(&name)))?;
-            let cols: Vec<(String, String, bool, Option<String>, i64, i64)> = info
-                .query_map([], |r| {
-                    Ok((
-                        r.get(1)?,
-                        r.get(2)?,
-                        r.get::<_, i64>(3)? != 0,
-                        r.get(4)?,
-                        r.get(5)?,
-                        r.get(6)?,
-                    ))
-                })?
-                .collect::<rusqlite::Result<_>>()?;
-            let create: Option<String> = if cols.iter().any(|c| matches!(c.5, 2 | 3)) {
-                self.conn
-                    .query_row(
-                        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?1",
-                        [&name],
-                        |r| r.get(0),
-                    )
-                    .ok()
-            } else {
-                None
-            };
-            for (col, decl, not_null, default, pk, hidden) in cols {
-                let default = match hidden {
-                    0 => default,
-                    2 | 3 => Some(made::generated_clause(
-                        create
-                            .as_deref()
-                            .and_then(|c| made::generation_of(c, &col))
-                            .as_deref(),
-                        hidden == 3,
-                    )),
-                    _ => continue,
-                };
-                if pk == 1 && fid.is_empty() && ColumnKind::read(&decl) == ColumnKind::Integer {
-                    fid = col;
-                } else if geometry
-                    .as_ref()
-                    .is_some_and(|g| g.name.eq_ignore_ascii_case(&col))
-                {
-                } else {
-                    columns.push(Column {
-                        name: col,
-                        kind: ColumnKind::read(&decl),
-                        decl,
-                        not_null,
-                        default,
-                    });
-                }
-            }
-            if fid.is_empty() {
-                fid = "rowid".into();
-            }
-            let indexed = match &geometry {
-                Some(g) => self.has_index(&name, &g.name)?,
-                None => false,
-            };
-            out.push(Layer {
-                name,
-                data_type: DataType::read(&data_type),
-                identifier,
-                description,
-                bounds,
-                srs_id,
-                geometry,
-                fid,
-                columns,
-                indexed,
-            });
-        }
-        Ok(out)
+        layers_in(&self.conn)
     }
 
-    fn has_index(&self, table: &str, column: &str) -> Result<bool> {
-        let n: i64 = self.conn.query_row(
-            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
-            [format!("rtree_{table}_{column}")],
-            |r| r.get(0),
-        )?;
-        Ok(n > 0)
+    /// The file copied whole to `to` (a file not there) by SQLite's online backup (docs/adr/9191): page for page, what
+    /// another program holds in a write-ahead log in it too, every table's rows with their ids as they are.
+    pub fn copy_to(&self, to: &Path) -> Result<()> {
+        self.conn
+            .backup(rusqlite::MAIN_DB, to, rusqlite::backup::NO_PROGRESS)?;
+        Ok(())
     }
 
     /// A spatial reference system by its id.
@@ -1496,7 +1380,7 @@ impl GeoPackage {
 }
 
 /// The spatial index of a table's geometry column (§F.3): GeoPackage 1.3's triggers in a file of its own, the file's
-/// own edition's in an older or newer one (1.4 has `update2`, `4`, `5`, `6` and `7`; a table added to QGIS's 1.4 file
+/// own edition's in an older or newer one (1.4 has `update2`, `4`, `5`, `6` and `7`; a table added to another writer's 1.4 file
 /// gets the triggers its validator wants, docs/adr/0549).
 fn index(conn: &Connection, table: &str, column: &str) -> Result<()> {
     let t = quote(table);
@@ -1564,6 +1448,11 @@ fn index(conn: &Connection, table: &str, column: &str) -> Result<()> {
 #[derive(Debug)]
 pub struct TableWrite {
     def: TableDef,
+    /// Its integer primary key: `fid` for a table started here, the file's own for one continued.
+    fid: String,
+    /// A table of the file's the rows are added to (docs/adr/9191): its spatial index is the file's, kept by its
+    /// triggers, and its box grows.
+    existing: bool,
     bounds: Option<[f64; 4]>,
     /// The non-linear geometry types its rows were written as, each registered once the rows are in.
     curved: std::collections::BTreeSet<&'static str>,
@@ -1651,6 +1540,54 @@ impl Session<'_> {
         start_in(&self.tx, def)
     }
 
+    /// The feature or attribute table of that name (case aside), as the file has it; none when it has none.
+    pub fn table(&self, name: &str) -> Result<Option<Layer>> {
+        Ok(layers_in(&self.tx)?
+            .into_iter()
+            .find(|l| l.name.eq_ignore_ascii_case(name)))
+    }
+
+    /// KentOS's lasting ids of a table's rows (the `kentos_uids` extension; none when the file lacks it).
+    pub fn uids(&self, table: &str) -> Result<std::collections::HashSet<String>> {
+        let have: i64 = self.tx.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'kentos_uids'",
+            [],
+            |r| r.get(0),
+        )?;
+        if have == 0 {
+            return Ok(Default::default());
+        }
+        let mut st = self
+            .tx
+            .prepare("SELECT uid FROM kentos_uids WHERE table_name = ?1 COLLATE NOCASE")?;
+        let uids = st
+            .query_map([table], |r| r.get::<_, String>(0))?
+            .collect::<rusqlite::Result<_>>()?;
+        Ok(uids)
+    }
+
+    /// Goes on with a table the file has (docs/adr/9191): rows follow with [`Session::append`], each with `columns`'
+    /// values (columns of `table`, in their order; the others take their defaults), the fid the next. Its spatial index
+    /// is kept by the file's own triggers; [`Session::finish_table`] grows its box.
+    pub fn continue_table(&self, table: &Layer, columns: Vec<Column>) -> Result<TableWrite> {
+        Ok(TableWrite {
+            def: TableDef {
+                name: table.name.clone(),
+                data_type: table.data_type.clone(),
+                identifier: table.identifier.clone(),
+                description: table.description.clone(),
+                srs_id: table.srs_id,
+                geometry: table.geometry.clone(),
+                columns,
+            },
+            fid: table.fid.clone(),
+            existing: true,
+            bounds: table.bounds,
+            curved: Default::default(),
+            rows: 0,
+        })
+    }
+
     /// Appends a batch of rows to a table started here, with each row's lasting id when `uids` is given. Returns the
     /// rows' fids in their order.
     pub fn append(
@@ -1690,6 +1627,132 @@ impl Session<'_> {
         self.tx.rollback()?;
         Ok(())
     }
+}
+
+/// The tables of `gpkg_contents` on `conn`, in its order, with their columns: [`GeoPackage::layers`], inside a
+/// transaction too.
+pub fn layers_in(conn: &Connection) -> Result<Vec<Layer>> {
+    let mut st = conn.prepare(
+        "SELECT table_name, data_type, identifier, description, min_x, min_y, max_x, max_y, srs_id
+         FROM gpkg_contents ORDER BY rowid",
+    )?;
+    let base: Vec<_> = st
+        .query_map([], |r| {
+            let b: [Option<f64>; 4] = [r.get(4)?, r.get(5)?, r.get(6)?, r.get(7)?];
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, Option<String>>(2)?,
+                r.get::<_, Option<String>>(3)?,
+                match b {
+                    [Some(a), Some(b), Some(c), Some(d)] => Some([a, b, c, d]),
+                    _ => None,
+                },
+                r.get::<_, Option<i32>>(8)?,
+            ))
+        })?
+        .collect::<rusqlite::Result<_>>()?;
+    let mut out = Vec::with_capacity(base.len());
+    for (name, data_type, identifier, description, bounds, srs_id) in base {
+        let geometry = conn
+            .query_row(
+                "SELECT column_name, geometry_type_name, z, m FROM gpkg_geometry_columns WHERE table_name = ?1",
+                [&name],
+                |r| {
+                    Ok(GeometryColumn {
+                        name: r.get(0)?,
+                        type_name: r.get(1)?,
+                        z: r.get(2)?,
+                        m: r.get(3)?,
+                    })
+                },
+            )
+            .ok();
+        let mut fid = String::new();
+        let mut columns = Vec::new();
+        // `table_xinfo` says generated columns too (`hidden` 2 virtual, 3 stored; 1 a virtual table's hidden
+        // column, left out); their expression is in the table's text (docs/adr/0754 §1).
+        let mut info = conn.prepare(&format!("PRAGMA table_xinfo({})", quote(&name)))?;
+        let cols: Vec<(String, String, bool, Option<String>, i64, i64)> = info
+            .query_map([], |r| {
+                Ok((
+                    r.get(1)?,
+                    r.get(2)?,
+                    r.get::<_, i64>(3)? != 0,
+                    r.get(4)?,
+                    r.get(5)?,
+                    r.get(6)?,
+                ))
+            })?
+            .collect::<rusqlite::Result<_>>()?;
+        let create: Option<String> = if cols.iter().any(|c| matches!(c.5, 2 | 3)) {
+            conn.query_row(
+                "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?1",
+                [&name],
+                |r| r.get(0),
+            )
+            .ok()
+        } else {
+            None
+        };
+        for (col, decl, not_null, default, pk, hidden) in cols {
+            let default = match hidden {
+                0 => default,
+                2 | 3 => Some(made::generated_clause(
+                    create
+                        .as_deref()
+                        .and_then(|c| made::generation_of(c, &col))
+                        .as_deref(),
+                    hidden == 3,
+                )),
+                _ => continue,
+            };
+            if pk == 1 && fid.is_empty() && ColumnKind::read(&decl) == ColumnKind::Integer {
+                fid = col;
+            } else if geometry
+                .as_ref()
+                .is_some_and(|g| g.name.eq_ignore_ascii_case(&col))
+            {
+            } else {
+                columns.push(Column {
+                    name: col,
+                    kind: ColumnKind::read(&decl),
+                    decl,
+                    not_null,
+                    default,
+                });
+            }
+        }
+        if fid.is_empty() {
+            fid = "rowid".into();
+        }
+        let indexed = match &geometry {
+            Some(g) => has_index_in(conn, &name, &g.name)?,
+            None => false,
+        };
+        out.push(Layer {
+            name,
+            data_type: DataType::read(&data_type),
+            identifier,
+            description,
+            bounds,
+            srs_id,
+            geometry,
+            fid,
+            columns,
+            indexed,
+        });
+    }
+    Ok(out)
+}
+
+fn has_index_in(conn: &Connection, table: &str, column: &str) -> Result<bool> {
+    let n: i64 = conn.query_row(
+        "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
+        [format!("rtree_{table}_{column}")],
+        |r| r.get(0),
+    )?;
+    Ok(n > 0)
 }
 
 /// Takes a feature or attribute table out of the file, with everything of it (see [`Session::drop_table`]), inside the
@@ -1743,6 +1806,14 @@ pub fn drop_table_in(conn: &Connection, name: &str) -> Result<()> {
     }
     if has("kentos_uids")? {
         conn.execute("DELETE FROM kentos_uids WHERE table_name = ?1", [&exact])?;
+    }
+    // Its columns' shown names and rules (the schema extension, docs/adr/9191): a table written again under the name
+    // has columns of its own.
+    if has("gpkg_data_columns")? {
+        conn.execute(
+            "DELETE FROM gpkg_data_columns WHERE table_name = ?1",
+            [&exact],
+        )?;
     }
     if has("gpkg_ogr_contents")? {
         conn.execute(
@@ -1875,6 +1946,8 @@ fn start_in(conn: &Connection, def: &TableDef) -> Result<TableWrite> {
     }
     Ok(TableWrite {
         def: def.clone(),
+        fid: "fid".to_owned(),
+        existing: false,
         bounds: None,
         curved: Default::default(),
         rows: 0,
@@ -1890,7 +1963,7 @@ fn append_in(
     let def = &w.def;
     let t = quote(&def.name);
     let srs = def.srs_id.unwrap_or(-1);
-    let mut names = vec!["\"fid\"".to_owned()];
+    let mut names = vec![quote(&w.fid)];
     if let Some(g) = &def.geometry {
         names.push(quote(&g.name));
     }
@@ -1964,8 +2037,32 @@ fn finish_in(conn: &Connection, w: TableWrite) -> Result<()> {
             params![def.name, b[0], b[1], b[2], b[3]],
         )?;
     }
+    if w.existing {
+        // A table rows were added to (docs/adr/9191): changed now, and GDAL's count of its rows, when the file keeps
+        // one, the rows it has.
+        conn.execute(
+            "UPDATE gpkg_contents SET last_change = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE table_name = ?1",
+            [&def.name],
+        )?;
+        let counted: i64 = conn.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'gpkg_ogr_contents'",
+            [],
+            |r| r.get(0),
+        )?;
+        if counted > 0 {
+            conn.execute(
+                &format!(
+                    "UPDATE gpkg_ogr_contents SET feature_count = (SELECT count(*) FROM {}) WHERE table_name = ?1 COLLATE NOCASE",
+                    quote(&def.name)
+                ),
+                [&def.name],
+            )?;
+        }
+    }
     if let Some(g) = &def.geometry {
-        index(conn, &def.name, &g.name)?;
+        if !w.existing {
+            index(conn, &def.name, &g.name)?;
+        }
         // Each non-linear type written, by its own name (GeoPackage Annex F.1): a GEOMETRY column of arcs registers
         // gpkg_geom_CIRCULARSTRING and its kin, never gpkg_geom_GEOMETRY, which no reader knows.
         if !w.curved.is_empty() {

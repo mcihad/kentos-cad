@@ -76,6 +76,7 @@ mod gnss_import;
 mod gnss_tests;
 pub(crate) mod gpkg;
 pub(crate) mod gpkg_out;
+pub(crate) mod gpkg_out_run;
 pub(crate) mod pdf_import;
 #[cfg(test)]
 mod gpkg_tests;

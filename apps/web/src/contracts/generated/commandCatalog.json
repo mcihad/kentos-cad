@@ -94667,7 +94667,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -94786,7 +94786,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -104125,7 +104125,7 @@
       "id": "file.export.gpkg",
       "version": 1,
       "title": "GeoPackage dışa aktar",
-      "summary": "Katmanları (layers boşsa nesnesi olan bütün katmanları; grup katmanlarını verir) path'e yeni bir GeoPackage olarak yazar: her katman bir tablo, her nesne bir satır; katmanın alanları türleriyle, öbür öznitelikler metin sütunu olarak; nesnenin kalıcı kimliği kentos_uids uzantısında (geri alınınca aynı kimlikle gelir). Nokta ve çok nokta, çizgi ve çoklu çizgi (yaylar dairesel eğri olarak kesin), alan delikleri ve parçalarıyla, daire eğri alan, yay dairesel eğri olarak yazılır; Z ve M taşınır; elips, eğri ve NURBS 0,1 mm'lik kirişlerle yazılır, geometrisiz kayıt geometrisiz satırdır. Yazı, ölçü, blok, tarama, tablo, resim ve rasterin GeoPackage'da geometrisi yoktur: yazılmaz, export_losses türlerine göre sayar. Tabloların sistemi projeninkidir (EPSG kodu ve WKT'si; yerel proje tanımsız kartezyen). Dosya bütün yazılır ya da hiç: geçici adla yazılır, geri okunur, tek adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. plan dosyayı yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "summary": "Katmanları (layers boşsa nesnesi olan bütün katmanları; grup katmanlarını verir) path'e yeni bir GeoPackage olarak yazar: her katman bir tablo, her nesne bir satır; katmanın alanları türleriyle, öbür öznitelikler metin sütunu olarak; nesnenin kalıcı kimliği kentos_uids uzantısında (geri alınınca aynı kimlikle gelir). Nokta ve çok nokta, çizgi ve çoklu çizgi (yaylar dairesel eğri olarak kesin), alan delikleri ve parçalarıyla, daire eğri alan, yay dairesel eğri olarak yazılır; Z ve M taşınır; elips, eğri ve NURBS 0,1 mm'lik kirişlerle yazılır, geometrisiz kayıt geometrisiz satırdır. Yazı, ölçü, blok, tarama, tablo, resim ve rasterin GeoPackage'da geometrisi yoktur: yazılmaz, export_losses türlerine göre sayar. Tabloların sistemi projeninkidir (EPSG kodu ve WKT'si; yerel proje tanımsız kartezyen). Dosya bütün yazılır ya da hiç: geçici adla yazılır, geri okunur, tek adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. Var olan dosyaya write söyler: file (varsayılan) yerine yeni dosya yazar, öbür tabloları gider; tables yalnız yazılan tabloları yeniden yazar, öbür tablolar, stilleri ve ilişkileri kalır; append satırları dosyanın aynı adlı tablolarına ekler (tablonun sütunları, stili ve ilişkileri kalır; sütunu olmayan alan yazılmaz, tablonun kalıcı kimliğini tuttuğu nesne yeniden eklenmez; geometri ailesi, çok parça, yay, Z, M ya da sistem uymayan ve boş geçilemez sütunu doldurulmayan tablo reddedilir). plan dosyayı yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
       "aliases": [
         "gpkg",
         "gpkgout"
@@ -104143,7 +104143,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.gpkg` v1: the layers (all with objects when none), or only the objects named, as tables of a\nnew GeoPackage, each object a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's\ncoordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,\n`entity_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves\nwritten as chords).",
+        "description": "Input of `file.export.gpkg` v1: the layers (all with objects when none), or only the objects named, as tables of a\nnew GeoPackage, each object a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's\ncoordinate system as the tables'. A file that is there is written as `write` says (docs/adr/9191). Refusals, in\norder: `invalid_file_path`, `file_exists`, `layer_not_found`, `entity_not_found`, `nothing_to_export`,\n`geometry_mismatch`, `crs_mismatch`, `source_not_null` (rows a table of the file cannot hold, `write: append`),\n`file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves written as chords,\nfields an appended table has no column for, objects it has already).",
         "properties": {
           "emptyLayers": {
             "description": "With no `layers` and no `uids`: also every layer without objects whose type (point, line, area) or fields make\na table, written empty with its columns (a field team's template, docs/adr/1076).",
@@ -104182,6 +104182,10 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "write": {
+            "$ref": "#/$defs/GpkgWrite",
+            "description": "How a file that is there is written (with `overwrite`; docs/adr/9191): `file` (the default) a new file in its\nplace, `tables` only the tables written again, `append` the rows added to its tables. A file not there is made\nnew whatever it says."
           }
         },
         "required": [
@@ -104207,6 +104211,13 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "kept": {
+            "description": "The file's tables left as they were (`write: tables` or `append`, docs/adr/9191).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "left": {
             "additionalProperties": {
               "format": "uint32",
@@ -104231,7 +104242,7 @@
             "type": "string"
           },
           "styles": {
-            "description": "Feature tables given their layer's look as QGIS's default style (`layer_styles`, docs/adr/0627 §7).",
+            "description": "Feature tables given their layer's look as their default style (`layer_styles`, docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -104271,6 +104282,13 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "kept": {
+            "description": "The file's tables left as they were (`write: tables` or `append`, docs/adr/9191).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "left": {
             "additionalProperties": {
               "format": "uint32",
@@ -104295,7 +104313,7 @@
             "type": "string"
           },
           "styles": {
-            "description": "Feature tables given their layer's look as QGIS's default style (`layer_styles`, docs/adr/0627 §7).",
+            "description": "Feature tables given their layer's look as their default style (`layer_styles`, docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -104324,6 +104342,10 @@
           "file_exists",
           "layer_not_found",
           "nothing_to_export",
+          "geometry_mismatch",
+          "crs_mismatch",
+          "source_not_null",
+          "cancelled",
           "file_unwritable"
         ],
         "warnings": [
@@ -104340,6 +104362,17 @@
             ],
             "overwrite": true,
             "path": "/veri/teslim.gpkg"
+          }
+        },
+        {
+          "title": "Yeni duraklar teslim dosyasındaki tabloya eklenir, öbür tablolar kalır",
+          "input": {
+            "layers": [
+              "durak"
+            ],
+            "overwrite": true,
+            "path": "/veri/teslim.gpkg",
+            "write": "append"
           }
         }
       ]
@@ -105249,7 +105282,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -105368,7 +105401,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -105897,7 +105930,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -106016,7 +106049,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -106449,7 +106482,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -106568,7 +106601,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -108788,7 +108821,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -108907,7 +108940,7 @@
             "x-unit": "epsg"
           },
           "styles": {
-            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "description": "Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -157357,6 +157390,13 @@
           "type": "integer",
           "x-unit": "bytes"
         },
+        "kept": {
+          "description": "The file's tables left as they were (`write: tables` or `append`, docs/adr/9191).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "left": {
           "additionalProperties": {
             "format": "uint32",
@@ -157381,7 +157421,7 @@
           "type": "string"
         },
         "styles": {
-          "description": "Feature tables given their layer's look as QGIS's default style (`layer_styles`, docs/adr/0627 §7).",
+          "description": "Feature tables given their layer's look as their default style (`layer_styles`, docs/adr/0627 §7).",
           "format": "uint32",
           "minimum": 0,
           "type": "integer",
@@ -157435,6 +157475,17 @@
     "GpkgTableExported": {
       "description": "A table written.",
       "properties": {
+        "already": {
+          "description": "Objects not added because the table has their lasting id already (`write: append`).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "appended": {
+          "description": "The file's table of this name, its `rows` added to it (`write: append`); its columns, style and relations are\nthe file's.",
+          "type": "boolean"
+        },
         "geometry": {
           "description": "Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.",
           "type": [
@@ -157451,6 +157502,10 @@
         },
         "layer": {
           "type": "string"
+        },
+        "replaced": {
+          "description": "The file's table of this name, written again (`write: tables`, docs/adr/9191).",
+          "type": "boolean"
         },
         "rows": {
           "format": "uint32",
@@ -157700,6 +157755,26 @@
         {
           "const": "add",
           "description": "The table is added to the GeoPackage that is there, in one transaction; a table of the name is refused.",
+          "type": "string"
+        }
+      ]
+    },
+    "GpkgWrite": {
+      "description": "How `file.export.gpkg` writes a file that is there (docs/adr/9191).",
+      "oneOf": [
+        {
+          "const": "file",
+          "description": "A new file in its place: the file's other tables go.",
+          "type": "string"
+        },
+        {
+          "const": "tables",
+          "description": "Only the tables written are written again (a table the file lacks is made); the file's other tables, their\nstyles and relations stay. A relation the file declares on a table written again goes with its old rows.",
+          "type": "string"
+        },
+        {
+          "const": "append",
+          "description": "The rows are added to the file's tables of the same names (a table the file lacks is made); their columns,\nstyles and relations stay. A field a table has no column for is left out, an object whose lasting id the table\nhas is not added again; a table that cannot hold the rows (another geometry family, multi-part or curves its\ncolumn does not take, Z or M, another system, a NOT NULL column the layer does not fill) is refused.",
           "type": "string"
         }
       ]

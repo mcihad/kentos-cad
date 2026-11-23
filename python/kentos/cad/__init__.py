@@ -1559,6 +1559,8 @@ __all__ = [
     "GpkgTileZoom",
     "GpkgTilesMode",
     "GpkgTilesModeName",
+    "GpkgWrite",
+    "GpkgWriteName",
     "GradeLimit",
     "GradeLimitName",
     "GradePointKind",

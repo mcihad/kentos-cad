@@ -30,7 +30,7 @@ layers: Array<ImportedLayer>, group?: string,
  */
 relations?: Array<string>, 
 /**
- * Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).
+ * Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).
  */
 styles?: number, 
 /**

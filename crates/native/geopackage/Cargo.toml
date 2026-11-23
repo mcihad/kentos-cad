@@ -11,7 +11,9 @@ publish.workspace = true
 # The product commands turn its rows into a drawing's objects; the GeoPackage data driver reads and writes over it.
 [dependencies]
 kentos-data = { path = "../data" }
-rusqlite = { workspace = true }
+# `backup`: SQLite's online backup, the bundled library's own (docs/adr/9191): a file copied page for page, every
+# table's rows with their ids as they are (VACUUM INTO may give a table without an integer key new ROWIDs).
+rusqlite = { workspace = true, features = ["backup"] }
 
 
 [dev-dependencies]

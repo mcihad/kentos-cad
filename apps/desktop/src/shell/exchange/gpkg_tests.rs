@@ -12,6 +12,7 @@ use crate::app::{App, Message, Picker};
 use crate::files_testing::{app_with_drawing, scratch};
 
 mod delivery;
+mod write_into;
 mod neighbours;
 mod reconcile;
 mod status;
@@ -59,11 +60,11 @@ fn a_geopackage_goes_in_as_one_undo_step_with_its_tables_as_layers() {
     assert_eq!(count(&app), before);
 }
 
-/// QGIS's relation and default style come in with the tables (docs/adr/0627 §6, §7); the mapping and style tables
+/// Another program's relation and default style come in with the tables (docs/adr/0627 §6, §7); the mapping and style tables
 /// are not listed as layers, and the announcement counts them. The sample drawing's own “Parsel” layer takes the
-/// parcels and keeps its look; a layer the import makes takes QGIS's.
+/// parcels and keeps its look; a layer the import makes takes the file's.
 #[test]
-fn a_geopackage_brings_its_relation_and_qgis_style() {
+fn a_geopackage_brings_its_relation_and_default_style() {
     let parcels = |app: &App| {
         app.document
             .as_ref()
@@ -99,7 +100,7 @@ fn a_geopackage_brings_its_relation_and_qgis_style() {
     assert_eq!(parcels(&app), Some((id.clone(), look)), "its own look kept");
     let doc = app.document.as_ref().expect("a drawing");
     assert_eq!(doc.model.settings().relations.len(), 1);
-    // Without a layer of the table's name the import makes one, and it takes QGIS's style.
+    // Without a layer of the table's name the import makes one, and it takes the file's style.
     let mut app = app_with_drawing();
     app.document
         .as_mut()
@@ -406,8 +407,8 @@ fn screens() {
             picture(&mut app, &format!("gpkg-{mode}-8-alan"));
             send(&mut app, Event::Gpkg(G::Run));
             picture(&mut app, &format!("gpkg-{mode}-9-alan-bagli"));
-            // The relation and style profile (docs/adr/0627 §6, §7): QGIS's file taken with its relation and the
-            // layers' default QGIS style (the sample's own “Parsel” layer renamed, so the import makes the parcels').
+            // The relation and style profile (docs/adr/0627 §6, §7): another program's file taken with its relation and
+            // the layers' default style (the sample's own “Parsel” layer renamed, so the import makes the parcels').
             let mut app = fresh();
             let doc = app.document.as_mut().expect("a drawing");
             let id = doc
@@ -500,8 +501,8 @@ fn a_part_of_a_table_is_bound_from_the_view() {
     );
 }
 
-/// Two layers of one file moved (docs/adr/0740 §2): relinking one relinks the other to the same new place, as QGIS's
-/// and ArcGIS Pro's repair of a data source mends every layer of the moved file; one step each, said once.
+/// Two layers of one file moved (docs/adr/0740 §2): relinking one relinks the other to the same new place, as a desktop
+/// GIS's repair of a data source mends every layer of the moved file; one step each, said once.
 #[test]
 fn the_layers_of_a_moved_file_are_bound_again_together() {
     use kentos_commands::CallOp;
@@ -993,8 +994,9 @@ fn a_conflict_s_row_names_the_key_and_the_layer() {
     assert!(titles.iter().filter(|t| t.starts_with("parsel_no ")).count() >= 2, "{titles:?}");
 }
 
-/// Writing over a GeoPackage that is there (docs/adr/9168): the window says which of its tables go (another file's
-/// table that this export does not write) before Üstüne yaz; Geri writes nothing; Üstüne yaz writes the new file.
+/// Writing over a GeoPackage that is there (docs/adr/9168, 9191): the window asks how, “Yalnız bu tabloları yeniden
+/// yaz” first, and says for the way chosen which of its tables stay or go (another file's table that this export does
+/// not write); Geri writes nothing; Tabloları yeniden yaz keeps that table, Üstüne yaz writes the new file without it.
 #[test]
 fn writing_over_a_geopackage_says_which_of_its_tables_go() {
     use kentos_data::Driver as _;
@@ -1019,9 +1021,17 @@ fn writing_over_a_geopackage_says_which_of_its_tables_go() {
     let Some(super::Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
     let confirm = state.confirm.clone().expect("asked before writing over");
     assert_eq!(confirm.tables.as_deref(), Some(&["eski_tablo".to_owned()][..]));
+    // Only these tables, first: the file's own table stays.
+    assert_eq!(state.write, kentos_commands::GpkgWrite::Tables);
+    let lines: Vec<String> = app.gpkg_out_confirm_lines(state, &confirm).into_iter().map(|(_, l)| l).collect();
+    assert!(lines.iter().any(|l| l == "Olduğu gibi kalan tablolar (1): eski_tablo."), "{lines:#?}");
+    assert!(lines.iter().any(|l| l.starts_with("Yeni tablolar: ")), "{lines:#?}");
+    assert!(!lines.iter().any(|l| l.starts_with("Dosyadan silinen")), "{lines:#?}");
+    // A new file in its place: the table goes, and the way to keep it is said.
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Write(kentos_commands::GpkgWrite::File)));
+    let Some(super::Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
     let lines: Vec<String> = app.gpkg_out_confirm_lines(state, &confirm).into_iter().map(|(_, l)| l).collect();
     assert!(lines.iter().any(|l| l == "Dosyadan silinen tablolar (1): eski_tablo."), "{lines:#?}");
-    // The way to keep the table that goes (docs/adr/9178).
     assert!(lines.iter().any(|l| l == super::gpkg_out::KEEP_TABLES), "{lines:#?}");
     assert!(lines.iter().any(|l| l.starts_with("Yeni tablolar: ")), "{lines:#?}");
     assert!(lines.iter().any(|l| l.starts_with("Yazılan: ")), "{lines:#?}");
@@ -1029,15 +1039,28 @@ fn writing_over_a_geopackage_says_which_of_its_tables_go() {
     let before = std::fs::read(&out).expect("the file");
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Back));
     assert_eq!(std::fs::read(&out).expect("the file"), before);
-    // Üstüne yaz: the new file, without the old table.
+    let names = |out: &std::path::Path| -> Vec<String> {
+        let gp = kentos_geopackage::GeoPackage::open(out, false).expect("opens");
+        gp.layers().expect("tables").into_iter().map(|t| t.name).collect()
+    };
+    // Tabloları yeniden yaz: the delivery's tables in, the old table kept.
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Write(kentos_commands::GpkgWrite::Tables)));
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Confirm));
     assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
-    let gp = kentos_geopackage::GeoPackage::open(&out, false).expect("opens");
-    let names: Vec<String> = gp.layers().expect("tables").into_iter().map(|t| t.name).collect();
-    assert!(!names.contains(&"eski_tablo".to_owned()), "{names:?}");
-    assert!(!names.is_empty());
-    drop(gp);
+    let kept = names(&out);
+    assert!(kept.contains(&"eski_tablo".to_owned()) && kept.len() > 1, "{kept:?}");
+    assert!(said(&app, "“var-olan.gpkg” yazıldı: "), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    // Üstüne yaz: the new file, without the old table.
+    run(&mut app, "file.export.gpkg");
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)));
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Write(kentos_commands::GpkgWrite::File)));
+    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Confirm));
+    assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    let written = names(&out);
+    assert!(!written.contains(&"eski_tablo".to_owned()), "{written:?}");
+    assert!(!written.is_empty());
     let _ = std::fs::remove_dir_all(&dir);
 }
 

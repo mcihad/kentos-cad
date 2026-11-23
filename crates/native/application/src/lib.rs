@@ -221,6 +221,8 @@ pub mod sources;
 pub mod geopackage;
 #[path = "gis/gpkg_fields.rs"]
 pub mod gpkg_fields;
+#[path = "gis/gpkg_into.rs"]
+pub mod gpkg_into;
 #[path = "core/import_merge.rs"]
 pub mod import_merge;
 #[path = "core/blocks_library.rs"]

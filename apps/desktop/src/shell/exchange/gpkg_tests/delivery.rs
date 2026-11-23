@@ -74,7 +74,8 @@ fn a_turkish_layer_name_is_its_table_and_a_file_that_cannot_be_written_is_left_a
     let Some(super::super::Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
     let confirm = state.confirm.clone().expect("asked before writing over");
     let lines: Vec<String> = app.gpkg_out_confirm_lines(state, &confirm).into_iter().map(|(_, l)| l).collect();
-    assert!(lines[0].starts_with("“teslim.gpkg” zaten var; Üstüne yaz"), "{lines:#?}");
+    // Only these tables first (docs/adr/9191).
+    assert!(lines[0].starts_with("“teslim.gpkg” zaten var; yalnız bu dışa aktarmanın tabloları"), "{lines:#?}");
     assert!(lines.iter().any(|l| l.starts_with("Yeniden yazılan tablolar: ") && l.contains("Yol ekseni çğüşıö")), "{lines:#?}");
     assert!(!lines.iter().any(|l| l.starts_with("Dosyadan silinen")), "every table of it is written again: {lines:#?}");
     // Geri: nothing written, back to what goes in.

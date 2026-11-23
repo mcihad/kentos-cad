@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Fill, Task};
-use kentos_commands::{CallOp, CommandResult, ExportGpkg, GpkgImported, MergeReport};
+use kentos_commands::{CallOp, CommandResult, GpkgImported, MergeReport};
 use kentos_domain::Slot;
 use kentos_geopackage::{DataType, GeoPackage};
 use kentos_interaction::Level;
@@ -456,42 +456,52 @@ impl App {
         }
     }
 
-    /// Writes the file `input` names (GeoPackage dışa aktar's window, `gpkg_out.rs`); whether it was written.
-    pub(super) fn gpkg_write(&mut self, path: &std::path::Path, input: &ExportGpkg) -> bool {
-        let Some(doc) = &self.document else {
-            return false;
-        };
-        match kentos_headless::file_commands::export_gpkg(&doc.model, input) {
-            Ok((output, warnings)) => {
-                let rows: u32 = output.tables.iter().map(|t| t.rows).sum();
-                let name = path.file_name().map_or_else(
-                    || path.display().to_string(),
-                    |n| n.to_string_lossy().into_owned(),
-                );
-                self.announce(
-                    if warnings.is_empty() {
-                        Level::Success
+    /// What a GeoPackage written says: the file, its tables and rows; a file written into (docs/adr/9191), which of its
+    /// tables had rows added, were written again or are new, and how many stayed as they were.
+    pub(super) fn gpkg_written(
+        &mut self,
+        path: &std::path::Path,
+        output: &kentos_commands::GpkgExported,
+        warnings: Vec<kentos_commands::CommandWarning>,
+    ) {
+        let rows: u32 = output.tables.iter().map(|t| t.rows).sum();
+        let name = path.file_name().map_or_else(
+            || path.display().to_string(),
+            |n| n.to_string_lossy().into_owned(),
+        );
+        let profile = profile_words(output.relations.len(), output.styles);
+        let into = !output.kept.is_empty() || output.tables.iter().any(|t| t.appended || t.replaced);
+        let text = if into {
+            let mut parts: Vec<String> = output
+                .tables
+                .iter()
+                .map(|t| {
+                    if t.appended {
+                        format!("“{}” tablosuna {} satır eklendi", t.table, t.rows)
+                    } else if t.replaced {
+                        format!("“{}” yeniden yazıldı ({} satır)", t.table, t.rows)
                     } else {
-                        Level::Warn
-                    },
-                    format!(
-                        "“{name}” yazıldı. {} tablo, {rows} satır{}.",
-                        output.tables.len(),
-                        profile_words(output.relations.len(), output.styles)
-                    ),
-                );
-                for w in warnings {
-                    self.say(Level::Warn, w.message);
-                }
-                true
+                        format!("“{}” yeni tablo ({} satır)", t.table, t.rows)
+                    }
+                })
+                .collect();
+            if !output.kept.is_empty() {
+                parts.push(format!("{} tablo olduğu gibi kaldı", output.kept.len()));
             }
-            Err(error) => {
-                self.announce(
-                    Level::Error,
-                    format!("GeoPackage yazılamadı. {}", error.message),
-                );
-                false
-            }
+            format!("“{name}” yazıldı: {}{profile}.", parts.join("; "))
+        } else {
+            format!("“{name}” yazıldı. {} tablo, {rows} satır{profile}.", output.tables.len())
+        };
+        self.announce(
+            if warnings.is_empty() {
+                Level::Success
+            } else {
+                Level::Warn
+            },
+            text,
+        );
+        for w in warnings {
+            self.say(Level::Warn, w.message);
         }
     }
 

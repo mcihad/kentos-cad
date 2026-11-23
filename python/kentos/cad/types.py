@@ -3272,6 +3272,22 @@ GpkgTilesModeName = Literal["new", "add"]
 """The names of :class:`GpkgTilesMode`, for a plain string."""
 
 
+class GpkgWrite(_StrEnum):
+    """How `file.export.gpkg` writes a file that is there (docs/adr/9191).
+
+    - ``file``: A new file in its place: the file's other tables go.
+    - ``tables``: Only the tables written are written again (a table the file lacks is made); the file's other tables, their
+    - ``append``: The rows are added to the file's tables of the same names (a table the file lacks is made); their columns,
+    """
+    FILE = "file"
+    TABLES = "tables"
+    APPEND = "append"
+
+
+GpkgWriteName = Literal["file", "tables", "append"]
+"""The names of :class:`GpkgWrite`, for a plain string."""
+
+
 class GradeLimit(_StrEnum):
     """Whether a proposed grade is at the most rise or fall."""
     RISE = "rise"
@@ -41347,9 +41363,11 @@ class ExportGml(_Model):
 class ExportGpkg(_Model):
     """Input of `file.export.gpkg` v1: the layers (all with objects when none), or only the objects named, as tables of a
     new GeoPackage, each object a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
-    coordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,
-    `entity_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves
-    written as chords).
+    coordinate system as the tables'. A file that is there is written as `write` says (docs/adr/9191). Refusals, in
+    order: `invalid_file_path`, `file_exists`, `layer_not_found`, `entity_not_found`, `nothing_to_export`,
+    `geometry_mismatch`, `crs_mismatch`, `source_not_null` (rows a table of the file cannot hold, `write: append`),
+    `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves written as chords,
+    fields an appended table has no column for, objects it has already).
     Attributes:
         path: The file to write, an absolute path (`.gpkg`).
         empty_layers: With no `layers` and no `uids`: also every layer without objects whose type (point, line, area) or fields make
@@ -41361,6 +41379,9 @@ class ExportGpkg(_Model):
         uids: Only these objects, by persistent id (Seçili nesneler, docs/adr/1073): each on its layer's table, the other
             objects of those layers and the other layers left out; with `layers`, only those of them on the given layers.
             Refused `entity_not_found` for an id the drawing does not have.
+        write: How a file that is there is written (with `overwrite`; docs/adr/9191): `file` (the default) a new file in its
+            place, `tables` only the tables written again, `append` the rows added to its tables. A file not there is made
+            new whatever it says.
     """
     path: str
     empty_layers: bool | Unset = UNSET
@@ -41368,6 +41389,7 @@ class ExportGpkg(_Model):
     overwrite: bool = False
     time: QueryTime | None | Unset = UNSET
     uids: list[str] | Unset = UNSET
+    write: GpkgWrite | GpkgWriteName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -41381,6 +41403,8 @@ class ExportGpkg(_Model):
             out["time"] = None if self.time is None else self.time.to_json()
         if self.uids is not UNSET:
             out["uids"] = list(self.uids)
+        if self.write is not UNSET:
+            out["write"] = _enum_out(self.write)
         return out
 
     @classmethod
@@ -41392,6 +41416,7 @@ class ExportGpkg(_Model):
             overwrite=data["overwrite"] if "overwrite" in data else False,
             time=UNSET if "time" not in data else None if data["time"] is None else QueryTime.from_json(data["time"]),
             uids=list(data["uids"]) if "uids" in data else UNSET,
+            write=_enum_in(GpkgWrite, data["write"]) if "write" in data else UNSET,
         )
 
 
@@ -46915,15 +46940,17 @@ class GpkgExported(_Model):
     Attributes:
         bytes: Unit: bytes.
         approximated: Curves (ellipses, splines, NURBS) written as chords within 0.1 mm. Unit: count.
+        kept: The file's tables left as they were (`write: tables` or `append`, docs/adr/9191).
         left: Objects not written, by kind. Unit: count.
         relations: The project's relations between the tables written (docs/adr/0627 §6).
-        styles: Feature tables given their layer's look as QGIS's default style (`layer_styles`, docs/adr/0627 §7). Unit: count.
+        styles: Feature tables given their layer's look as their default style (`layer_styles`, docs/adr/0627 §7). Unit: count.
     """
     path: str
     bytes: int
     sha256: str
     tables: list[GpkgTableExported]
     approximated: int
+    kept: list[str] | Unset = UNSET
     left: dict[str, int] | Unset = UNSET
     relations: list[GpkgRelationExported] | Unset = UNSET
     styles: int | Unset = UNSET
@@ -46935,6 +46962,8 @@ class GpkgExported(_Model):
         out["sha256"] = self.sha256
         out["tables"] = [e0.to_json() for e0 in self.tables]
         out["approximated"] = self.approximated
+        if self.kept is not UNSET:
+            out["kept"] = list(self.kept)
         if self.left is not UNSET:
             out["left"] = dict(self.left)
         if self.relations is not UNSET:
@@ -46951,6 +46980,7 @@ class GpkgExported(_Model):
             sha256=data["sha256"],
             tables=[GpkgTableExported.from_json(e0) for e0 in data["tables"]],
             approximated=data["approximated"],
+            kept=list(data["kept"]) if "kept" in data else UNSET,
             left=dict(data["left"]) if "left" in data else UNSET,
             relations=[GpkgRelationExported.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             styles=data.get("styles", UNSET),
@@ -46974,7 +47004,7 @@ class GpkgImported(_Model):
         relations: The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another
             writer's many-to-many relations as multi-valued reference fields; their ids.
         srid: The EPSG code the tables declare, none for an undefined system. Unit: epsg.
-        styles: Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7). Unit: count.
+        styles: Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7). Unit: count.
     """
     file: str
     bytes: int
@@ -47080,24 +47110,37 @@ class GpkgTableExported(_Model):
     """A table written.
     Attributes:
         rows: Unit: count.
+        already: Objects not added because the table has their lasting id already (`write: append`). Unit: count.
+        appended: The file's table of this name, its `rows` added to it (`write: append`); its columns, style and relations are
+            the file's.
         geometry: Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.
         indexes: The layer's indexes written over it (docs/adr/0758 §5). Unit: count.
+        replaced: The file's table of this name, written again (`write: tables`, docs/adr/9191).
     """
     table: str
     layer: str
     rows: int
+    already: int | Unset = UNSET
+    appended: bool | Unset = UNSET
     geometry: str | None | Unset = UNSET
     indexes: int | Unset = UNSET
+    replaced: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["table"] = self.table
         out["layer"] = self.layer
         out["rows"] = self.rows
+        if self.already is not UNSET:
+            out["already"] = self.already
+        if self.appended is not UNSET:
+            out["appended"] = self.appended
         if self.geometry is not UNSET:
             out["geometry"] = self.geometry
         if self.indexes is not UNSET:
             out["indexes"] = self.indexes
+        if self.replaced is not UNSET:
+            out["replaced"] = self.replaced
         return out
 
     @classmethod
@@ -47106,8 +47149,11 @@ class GpkgTableExported(_Model):
             table=data["table"],
             layer=data["layer"],
             rows=data["rows"],
+            already=data.get("already", UNSET),
+            appended=data.get("appended", UNSET),
             geometry=data.get("geometry", UNSET),
             indexes=data.get("indexes", UNSET),
+            replaced=data.get("replaced", UNSET),
         )
 
 
@@ -149151,6 +149197,8 @@ __all__ = [
     "GpkgTileZoom",
     "GpkgTilesMode",
     "GpkgTilesModeName",
+    "GpkgWrite",
+    "GpkgWriteName",
     "GradeLimit",
     "GradeLimitName",
     "GradePointKind",

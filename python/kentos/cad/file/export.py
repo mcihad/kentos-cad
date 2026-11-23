@@ -54,6 +54,8 @@ from ..types import (  # noqa: F401
     GltfExported,
     GmlExported,
     GpkgExported,
+    GpkgWrite,
+    GpkgWriteName,
     IfcExported,
     LandxmlExported,
     MaplibreExported,
@@ -1658,8 +1660,14 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
     export_losses türlerine göre sayar. Tabloların sistemi projeninkidir (EPSG kodu ve
     WKT'si; yerel proje tanımsız kartezyen). Dosya bütün yazılır ya da hiç: geçici adla
     yazılır, geri okunur, tek adımla yerine konur; var olan dosyanın üzerine yalnız
-    overwrite ile yazılır. plan dosyayı yazmadan yazılacak olanı söyler. Çizimi
-    değiştirmez ve geri alma adımı değildir.
+    overwrite ile yazılır. Var olan dosyaya write söyler: file (varsayılan) yerine yeni
+    dosya yazar, öbür tabloları gider; tables yalnız yazılan tabloları yeniden yazar,
+    öbür tablolar, stilleri ve ilişkileri kalır; append satırları dosyanın aynı adlı
+    tablolarına ekler (tablonun sütunları, stili ve ilişkileri kalır; sütunu olmayan
+    alan yazılmaz, tablonun kalıcı kimliğini tuttuğu nesne yeniden eklenmez; geometri
+    ailesi, çok parça, yay, Z, M ya da sistem uymayan ve boş geçilemez sütunu
+    doldurulmayan tablo reddedilir). plan dosyayı yazmadan yazılacak olanı söyler.
+    Çizimi değiştirmez ve geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.export.gpkg"
@@ -1681,6 +1689,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         overwrite: bool = False,
         time: QueryTime | None | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
+        write: GpkgWrite | GpkgWriteName | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> GpkgExported:
@@ -1695,7 +1704,13 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         rasterin GeoPackage'da geometrisi yoktur: yazılmaz, export_losses türlerine göre
         sayar. Tabloların sistemi projeninkidir (EPSG kodu ve WKT'si; yerel proje tanımsız
         kartezyen). Dosya bütün yazılır ya da hiç: geçici adla yazılır, geri okunur, tek
-        adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. plan
+        adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. Var
+        olan dosyaya write söyler: file (varsayılan) yerine yeni dosya yazar, öbür tabloları
+        gider; tables yalnız yazılan tabloları yeniden yazar, öbür tablolar, stilleri ve
+        ilişkileri kalır; append satırları dosyanın aynı adlı tablolarına ekler (tablonun
+        sütunları, stili ve ilişkileri kalır; sütunu olmayan alan yazılmaz, tablonun kalıcı
+        kimliğini tuttuğu nesne yeniden eklenmez; geometri ailesi, çok parça, yay, Z, M ya
+        da sistem uymayan ve boş geçilemez sütunu doldurulmayan tablo reddedilir). plan
         dosyayı yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı
         değildir.
 
@@ -1711,6 +1726,9 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             uids: Only these objects, by persistent id (Seçili nesneler, docs/adr/1073): each on its layer's table, the other
                 objects of those layers and the other layers left out; with `layers`, only those of them on the given layers.
                 Refused `entity_not_found` for an id the drawing does not have.
+            write: How a file that is there is written (with `overwrite`; docs/adr/9191): `file` (the default) a new file in its
+                place, `tables` only the tables written again, `append` the rows added to its tables. A file not there is made
+                new whatever it says.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1730,6 +1748,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             overwrite=overwrite,
             time=time,
             uids=_opt(uids, lambda x: list(x)),
+            write=write,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -1743,6 +1762,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         overwrite: bool = False,
         time: QueryTime | None | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
+        write: GpkgWrite | GpkgWriteName | Unset = UNSET,
     ) -> GpkgExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -1754,6 +1774,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             overwrite=overwrite,
             time=time,
             uids=_opt(uids, lambda x: list(x)),
+            write=write,
         ))
 
     def validate(
@@ -1767,6 +1788,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         overwrite: bool = False,
         time: QueryTime | None | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
+        write: GpkgWrite | GpkgWriteName | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -1778,6 +1800,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             overwrite=overwrite,
             time=time,
             uids=_opt(uids, lambda x: list(x)),
+            write=write,
         ))
 
     def answer(
@@ -1791,6 +1814,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
         overwrite: bool = False,
         time: QueryTime | None | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
+        write: GpkgWrite | GpkgWriteName | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1807,6 +1831,7 @@ class _FileExportGpkg(LocalCommand[ExportGpkg, GpkgExported, GpkgExported]):
             overwrite=overwrite,
             time=time,
             uids=_opt(uids, lambda x: list(x)),
+            write=write,
         ), op=op, request_id=request_id, expected=expected)
 
 

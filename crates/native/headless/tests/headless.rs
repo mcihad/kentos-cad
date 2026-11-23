@@ -3183,3 +3183,6 @@ mod save_crash;
 
 #[path = "headless/gpkg_export_crash.rs"]
 mod gpkg_export_crash;
+
+#[path = "headless/gpkg_write_into.rs"]
+mod gpkg_write_into;

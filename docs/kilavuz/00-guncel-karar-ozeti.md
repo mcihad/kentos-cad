@@ -280,6 +280,10 @@
   - **Hücrelerden türlenen tablolar** (23 Kasım, rapor 23'ün kalanı; [ADR 9190](../adr/9190-table-kinds-read-from-the-cells.md), VY-89):
     türünü söylemeyen aracın tablosu (bölgesel istatistik, matrisler…) dosyaya ve PostGIS'e gösterdiği hücrelerden
     türlenerek yazılır: tam sayı INTEGER, sabit basamaklı ondalık REAL, öbürü metin (`kentos_processing::table_kinds`).
+  - **Var olan GeoPackage'a teslim** (23 Kasım, rapor 6'nın kalanı; [ADR 9191](../adr/9191-geopackage-delivery-into-a-file-that-is-there.md), VY-90):
+    `file.export.gpkg`'nin `write`'ı `file`, `tables` ya da `append`. Yazım SQLite'ın çevrimiçi yedeğiyle alınan kopyada
+    yapılır, sonda yerine konur. Masaüstü teslimi ayrı iş parçacığında, ilerleme ve Durdur'la koşar; var olan dosyada
+    “Yalnız bu tabloları yeniden yaz” önce gelir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

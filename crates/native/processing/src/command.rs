@@ -2349,12 +2349,16 @@ fn sink_answer(
                 rows: t.rows,
                 geometry: t.geometry,
                 indexes: t.indexes,
+                replaced: t.replaced,
+                appended: t.appended,
+                already: t.already,
             })
             .collect(),
         left: written.left,
         approximated: written.approximated,
         relations: Vec::new(),
         styles: 0,
+        kept: Vec::new(),
     };
     (exported, report, warnings)
 }
@@ -2448,6 +2452,8 @@ fn write_tables(
             Some("sink.path".to_owned()),
         )),
         WriteStop::Srs(why) => Stop::Refused(refused(codes::CRS_MISMATCH, why, Some("sink.path".to_owned()))),
+        // Rows added to a table of the file's (docs/adr/9191): a sink never asks it.
+        WriteStop::Unfit { code, message } => Stop::Refused(refused(code, message, Some("sink.path".to_owned()))),
         WriteStop::Failed(why) => unwritable(why),
     })?;
     if written.tables.is_empty() {

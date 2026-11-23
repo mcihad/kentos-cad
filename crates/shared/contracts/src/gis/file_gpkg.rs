@@ -111,7 +111,7 @@ pub struct GpkgImported {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub relations: Vec<String>,
-    /// Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).
+    /// Layers the import made with their table's default style (`layer_styles`) as their look (docs/adr/0627 §7).
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -144,9 +144,11 @@ fn is_zero(n: &u32) -> bool {
 
 /// Input of `file.export.gpkg` v1: the layers (all with objects when none), or only the objects named, as tables of a
 /// new GeoPackage, each object a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
-/// coordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,
-/// `entity_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves
-/// written as chords).
+/// coordinate system as the tables'. A file that is there is written as `write` says (docs/adr/9191). Refusals, in
+/// order: `invalid_file_path`, `file_exists`, `layer_not_found`, `entity_not_found`, `nothing_to_export`,
+/// `geometry_mismatch`, `crs_mismatch`, `source_not_null` (rows a table of the file cannot hold, `write: append`),
+/// `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves written as chords,
+/// fields an appended table has no column for, objects it has already).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -173,11 +175,43 @@ pub struct ExportGpkg {
     /// Write over a file that is there.
     #[serde(default)]
     pub overwrite: bool,
+    /// How a file that is there is written (with `overwrite`; docs/adr/9191): `file` (the default) a new file in its
+    /// place, `tables` only the tables written again, `append` the rows added to its tables. A file not there is made
+    /// new whatever it says.
+    #[serde(default, skip_serializing_if = "GpkgWrite::is_file")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<GpkgWrite>", optional))]
+    pub write: GpkgWrite,
     /// Only the objects of a valid time and a day known (docs/adr/0646 §2), by `cad.time.query`'s rules: of each
     /// written layer with time settings (of every one when `fields` names them); a layer without them whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<crate::temporal::QueryTime>,
+}
+
+/// How `file.export.gpkg` writes a file that is there (docs/adr/9191).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum GpkgWrite {
+    /// A new file in its place: the file's other tables go.
+    #[default]
+    File,
+    /// Only the tables written are written again (a table the file lacks is made); the file's other tables, their
+    /// styles and relations stay. A relation the file declares on a table written again goes with its old rows.
+    Tables,
+    /// The rows are added to the file's tables of the same names (a table the file lacks is made); their columns,
+    /// styles and relations stay. A field a table has no column for is left out, an object whose lasting id the table
+    /// has is not added again; a table that cannot hold the rows (another geometry family, multi-part or curves its
+    /// column does not take, Z or M, another system, a NOT NULL column the layer does not fill) is refused.
+    Append,
+}
+
+impl GpkgWrite {
+    pub fn is_file(&self) -> bool {
+        *self == GpkgWrite::File
+    }
 }
 
 /// A table written.
@@ -200,6 +234,20 @@ pub struct GpkgTableExported {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub indexes: u32,
+    /// The file's table of this name, written again (`write: tables`, docs/adr/9191).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub replaced: bool,
+    /// The file's table of this name, its `rows` added to it (`write: append`); its columns, style and relations are
+    /// the file's.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub appended: bool,
+    /// Objects not added because the table has their lasting id already (`write: append`).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub already: u32,
 }
 
 /// A project relation written as an OGC 18-000 related table (docs/adr/0627 §6).
@@ -242,9 +290,13 @@ pub struct GpkgExported {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<GpkgRelationExported>>", optional))]
     pub relations: Vec<GpkgRelationExported>,
-    /// Feature tables given their layer's look as QGIS's default style (`layer_styles`, docs/adr/0627 §7).
+    /// Feature tables given their layer's look as their default style (`layer_styles`, docs/adr/0627 §7).
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub styles: u32,
+    /// The file's tables left as they were (`write: tables` or `append`, docs/adr/9191).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub kept: Vec<String>,
 }

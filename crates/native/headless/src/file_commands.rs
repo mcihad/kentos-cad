@@ -530,6 +530,21 @@ fn only_objects(doc: &Document, uids: &[String]) -> Result<Option<Document>, Ref
 }
 
 fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
+    gpkg_flow(
+        doc,
+        input,
+        &kentos_native_application::geopackage::Flow::none(),
+    )
+}
+
+/// [`gpkg`], asking `flow` before each batch of rows (docs/adr/9191).
+fn gpkg_flow(
+    doc: &Document,
+    input: &ExportGpkg,
+    flow: &kentos_native_application::geopackage::Flow<'_>,
+) -> Result<GpkgMade, Refused> {
+    use kentos_native_application::geopackage::{Clash, WriteStop};
+    use kentos_native_application::{geopackage, gpkg_into};
     use std::sync::atomic::{AtomicU64, Ordering};
     static NEXT: AtomicU64 = AtomicU64::new(0);
     let (path, exists) = target(&input.path, input.overwrite)?;
@@ -577,16 +592,51 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
         std::process::id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));
-    let _ = std::fs::remove_file(&tmp);
-    let written = kentos_native_application::geopackage::write(doc, &ids, &tmp);
+    // The part and SQLite's files beside it, thrown away whatever happens.
+    let clean = |tmp: &Path| {
+        for end in ["", "-wal", "-shm", "-journal"] {
+            let _ = std::fs::remove_file(format!("{}{end}", tmp.display()));
+        }
+    };
+    clean(&tmp);
+    // A file that is there, written as asked (docs/adr/9191): only these tables again, or rows added to its tables,
+    // in a copy of it that takes its place at the end.
+    let into = match (exists, input.write) {
+        (true, kentos_commands::GpkgWrite::Tables) => Some(Clash::Replace),
+        (true, kentos_commands::GpkgWrite::Append) => Some(Clash::Append),
+        _ => None,
+    };
+    let written = match into {
+        None => geopackage::write_flow(doc, &ids, &tmp, flow),
+        Some(clash) => match gpkg_into::copy(&path, &tmp) {
+            Ok(()) => gpkg_into::write_into(doc, &ids, &tmp, clash, flow),
+            Err(why) => {
+                clean(&tmp);
+                return Err(refuse(
+                    codes::FILE_UNWRITABLE,
+                    format!(
+                        "{} GeoPackage olarak okunamadı ({why}); yalnız tabloları yeniden yazmak ya da tablolara eklemek için var olan bir GeoPackage gerekir. Dosyanın yerine yazmayı seçin (write: file) ya da başka bir dosya verin.",
+                        path.display()
+                    ),
+                    "write",
+                ));
+            }
+        },
+    };
     let bytes = std::fs::read(&tmp);
-    let _ = std::fs::remove_file(&tmp);
-    let written = written.map_err(|why| {
-        refuse(
-            codes::FILE_UNWRITABLE,
-            format!("GeoPackage yazılamadı: {why}"),
+    clean(&tmp);
+    let written = written.map_err(|stop| match stop {
+        WriteStop::Cancelled => refuse(
+            codes::CANCELLED,
+            "Dışa aktarma durduruldu; dosyaya hiçbir şey yazılmadı.",
             "path",
-        )
+        ),
+        WriteStop::Unfit { code, message } => refuse(code, message, "write"),
+        other => refuse(
+            codes::FILE_UNWRITABLE,
+            format!("GeoPackage yazılamadı: {}", geopackage::stop_words(&other)),
+            "path",
+        ),
     })?;
     let bytes = bytes.map_err(|e| {
         refuse(
@@ -662,6 +712,30 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
             path: Some("layers".into()),
         });
     }
+    // An appended table's own columns and lasting ids (docs/adr/9191): what was not written into it, and why.
+    for t in written.tables.iter().filter(|t| t.appended) {
+        if !t.left_out.is_empty() {
+            warnings.push(CommandWarning {
+                code: codes::EXPORT_LOSSES.into(),
+                message: format!(
+                    "“{}” tablosunda sütunu olmayan alanlar yazılmadı: {}.",
+                    t.table,
+                    t.left_out.join(", ")
+                ),
+                path: Some("write".into()),
+            });
+        }
+        if t.already > 0 {
+            warnings.push(CommandWarning {
+                code: codes::EXPORT_LOSSES.into(),
+                message: format!(
+                    "“{}” tablosunda {} nesne zaten vardı (aynı kalıcı kimlik); yeniden eklenmedi.",
+                    t.table, t.already
+                ),
+                path: Some("write".into()),
+            });
+        }
+    }
     // What of the relations and looks the file could not carry (docs/adr/0627 §6, §7).
     if !written.profile.left.is_empty() {
         warnings.push(CommandWarning {
@@ -686,6 +760,9 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
                 rows: t.rows,
                 geometry: t.geometry,
                 indexes: t.indexes,
+                replaced: t.replaced,
+                appended: t.appended,
+                already: t.already,
             })
             .collect(),
         left: written.left,
@@ -702,6 +779,7 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
             })
             .collect(),
         styles: written.profile.styles,
+        kept: written.kept,
     };
     warnings.extend(kentos_native_application::time_export::left_out_warning(left));
     Ok((path, exists, bytes, output, warnings))
@@ -1221,7 +1299,21 @@ pub fn export_gpkg(
     doc: &Document,
     input: &ExportGpkg,
 ) -> Result<(GpkgExported, Vec<CommandWarning>), Refused> {
-    let (path, _, bytes, output, warnings) = gpkg(doc, input)?;
+    export_gpkg_flow(
+        doc,
+        input,
+        &kentos_native_application::geopackage::Flow::none(),
+    )
+}
+
+/// [`export_gpkg`], asking `flow` before each batch of rows and telling it how far it has come (docs/adr/9191): a
+/// write `flow` stops is refused `cancelled`, the file as it was.
+pub fn export_gpkg_flow(
+    doc: &Document,
+    input: &ExportGpkg,
+    flow: &kentos_native_application::geopackage::Flow<'_>,
+) -> Result<(GpkgExported, Vec<CommandWarning>), Refused> {
+    let (path, _, bytes, output, warnings) = gpkg_flow(doc, input, flow)?;
     write(&path, &bytes)?;
     Ok((output, warnings))
 }

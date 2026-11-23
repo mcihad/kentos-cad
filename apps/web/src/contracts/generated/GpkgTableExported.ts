@@ -11,4 +11,17 @@ geometry?: string,
 /**
  * The layer's indexes written over it (docs/adr/0758 §5).
  */
-indexes?: number, };
+indexes?: number, 
+/**
+ * The file's table of this name, written again (`write: tables`, docs/adr/9191).
+ */
+replaced?: boolean, 
+/**
+ * The file's table of this name, its `rows` added to it (`write: append`); its columns, style and relations are
+ * the file's.
+ */
+appended?: boolean, 
+/**
+ * Objects not added because the table has their lasting id already (`write: append`).
+ */
+already?: number, };
