@@ -37,13 +37,17 @@
   - sonra düğme “Düzenlemeyi bitir”; basınca, değişiklik yokken soru sormadan kapanıyor;
   - salt okunur bağlantıda düğme kapalı “Salt okunur”, ipucunda nedeni;
   - çizim katmanında oturum düğmesi yok.
+- **İki açık oturum** (`gis/layer_target_tests.rs`, 4. maddenin son denetimi): iki GeoPackage dosyasının parsel
+  tabloları iki veri katmanı, ikisinde de oturum açık.
+  - Hedef A iken komut satırına yazılan üç köşeyle çizilen kapalı alan yalnız A'ya yeni satır oluyor (A 1, B 0).
+  - Hedef B yapılınca sonraki alan B'ye gidiyor (A 1, B 1).
+  - Çizimin öbür katmanlarının nesne sayısı değişmiyor; hiçbir şey sessizce başka katmana düşmüyor.
 - Şerit, şerit panelleri ve modül sınamaları geçiyor (45).
 - **Resim:** `.run/gui-evidence/kullanim-9169/01-duzenle-oturum-{light,dark}.png`. Düzenle sekmesinde Katmanlar
   panelinde “parseller” ve “Düzenlemeyi başlat”. Oturum kapalı olduğu için Oluştur araçları soluk.
 
 ## §4 Kalan
 
-- İki açık düzenleme oturumunda başka katmana yanlış yazım ve sessizce Taslak'a düşmenin sınanması (4. maddenin
-  kalanı).
+- İki oturumun aynı denetimi PostGIS katmanlarıyla gerçek sunucuda.
 - Bulut projesinde rolün yazmadığı katmanda düğmenin gerekçesi.
 - Web (TODOS.md §0.2).

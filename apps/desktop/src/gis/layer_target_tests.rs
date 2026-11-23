@@ -69,3 +69,48 @@ fn a_data_layer_is_drawn_on_only_in_its_session_and_with_its_geometry() {
     let why = app.why_disabled("tool.point").expect("why");
     assert!(why.contains("alan katmanı") && why.contains("nokta"), "{why}");
 }
+
+/// Two edit sessions open (docs/adr/9169, the 4th item's last check): Kapalı alan draws on the target alone, the
+/// other session's layer and the drawing's own layers untouched; the target changed, the next area goes to the new
+/// one; nothing falls to another layer quietly.
+#[test]
+fn with_two_sessions_open_an_area_goes_to_the_target_alone() {
+    crate::data_layers::register();
+    let first = parcels("iki-oturum-a", 3).display().to_string();
+    let second = parcels("iki-oturum-b", 3).display().to_string();
+    let mut app = app_with_drawing();
+    let _ = app.update(Message::Run("workspace.gis"));
+    let ids = app
+        .add_data_layers(vec![
+            crate::data_layers::describe(&first, "parseller").expect("described"),
+            crate::data_layers::describe(&second, "parseller").expect("described"),
+        ])
+        .expect("added");
+    let (a, b) = (ids[0].clone(), ids[1].clone());
+    for id in [&a, &b] {
+        let _ = app.data_edits_event(crate::data_edits::Event::Start(id.clone()));
+    }
+    let others = |app: &App| -> usize {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        doc.entities().filter(|e| e.base().layer_id != a && e.base().layer_id != b).count()
+    };
+    let added = |app: &App, id: &str| app.document.as_ref().expect("a drawing").model.data_changes(id).added.len();
+    let before = others(&app);
+    // An area of three typed corners, Enter closing it.
+    let area = |app: &mut App, x: f64| {
+        let _ = app.update(Message::Run("tool.polygon"));
+        for (dx, dy) in [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)] {
+            let _ = app.submit_line(&format!("{},{}", x + dx, 4_420_300.0 + dy));
+        }
+        let _ = app.submit_line("");
+    };
+    app.layer_pressed(a.clone());
+    assert_eq!(active(&app), a);
+    area(&mut app, 486_600.0);
+    assert_eq!((added(&app, &a), added(&app, &b)), (1, 0), "the target's alone");
+    app.layer_pressed(b.clone());
+    assert_eq!(active(&app), b);
+    area(&mut app, 486_700.0);
+    assert_eq!((added(&app, &a), added(&app, &b)), (1, 1), "the new target's");
+    assert_eq!(others(&app), before, "no other layer took one");
+}

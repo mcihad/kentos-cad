@@ -519,4 +519,5 @@ numaraları raporunkidir.
 - [~] **VY-68 — Düzenle sekmesi çizilen veri katmanının oturumunu sürekli gösterir (rapor 4'ün kalanı).**
   ([ADR 9169](../docs/adr/9169-session-in-the-edit-tab.md))
   - Katmanlar panelinde Düzenlemeyi başlat/bitir; salt okunur bağlantıda kapalı, ipucunda nedeni.
-  - Kalan: iki oturumda yanlış yazım sınaması, bulut rolünün gerekçesi, web.
+  - İki açık oturumda alan yalnız hedefe gidiyor (sınama).
+  - Kalan: iki oturumun PostGIS'te denenmesi, bulut rolünün gerekçesi, web.
