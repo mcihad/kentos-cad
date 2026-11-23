@@ -57,6 +57,9 @@
 ## §4 Kalan
 
 - İlişkili öznitelik tablolarının (yabancı anahtarla bağlı) ağaçta ayrı gösterilmesi.
+  **Yapıldı (23 Kasım 2026):** seçilen tablonun altında düğmeyle, [ADR 9183](9183-catalog-column-extent-and-related-tables.md).
 - Kimlikte geometri sütununun adı ve tablonun kapsamı: katalog sorgusu bunları okumuyor.
+  **Yapıldı (23 Kasım 2026):** [ADR 9183](9183-catalog-column-extent-and-related-tables.md).
 - Canlı sınamalar: ayrı bir sınama veritabanında rol, kesinti ve çakışma (Docker yanıt vermedi).
+  **Yapıldı (23 Kasım 2026):** [ADR 9182](9182-postgresql-remainders-on-a-real-server.md), [ADR 9183](9183-catalog-column-extent-and-related-tables.md).
 - Web (TODOS.md §0.2).

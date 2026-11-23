@@ -596,4 +596,11 @@ numaraları raporunkidir.
     yetkisiz hesap).
   - 14: `Source::change_mark` (PostGIS'te tablonun istatistik sayaçları); topoloji sonucu dışarıdaki yazımla
     eskiyor, işaret sekme açıkken arka planda soruluyor.
-  - Kalan: 7 (katalog), öykünmesiz bağımsız sunucuda yineleme.
+  - Kalan: öykünmesiz bağımsız sunucuda yineleme (7 → VY-82).
+- [x] **VY-82 — PostGIS kataloğu seçilen tablonun geometri sütununu, kapsamını ve ilişkili tablolarını söyler (rapor
+  7'nin kalanı).** ([ADR 9183](../docs/adr/9183-catalog-column-extent-and-related-tables.md))
+  - Katalog geometri sütununun adını ve yabancı anahtarla bağlı tabloları okur; seçilen tablonun kimliği bunları ve
+    arayüzü bekletmeden sorulan kapsamı söyler.
+  - İlişkili tablolar seçilen tablonun altında düğmeyle seçilir, geometrisiz tablolar listelenmiyorken de.
+  - Gerçek PostgreSQL'de sınandı: anahtarsız görünüm, salt okunur hesap, kesinti ve yeniden listeleme.
+  - Kalan: gerçek pencerede deneme, web.

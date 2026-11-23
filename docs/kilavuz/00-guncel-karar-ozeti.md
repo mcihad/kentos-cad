@@ -251,6 +251,9 @@
   - **PostgreSQL kalanları gerçek sunucuda** (23 Kasım; [ADR 9182](../adr/9182-postgresql-remainders-on-a-real-server.md), VY-81): sınamalar
     geçici PostGIS'te; aktarıcı COMMIT'i keserek gerçek kesinti yapar. Onayı kaybolan kayıt, çevrimdışı açılış, iki
     oturumlu çakışma, ekleme yetkisiz hesap, formla düzenleme, on geçiş ve çizim hedefi gerçek sunucuda geçti.
+  - **Katalogda sütun, kapsam ve ilişkili tablolar** (23 Kasım, rapor 7'nin kalanı; [ADR 9183](../adr/9183-catalog-column-extent-and-related-tables.md), VY-82): seçilen
+    tablonun kimliği geometri sütununu ve kapsamını söyler; yabancı anahtarla bağlı tablolar altında düğmeyle seçilir.
+    Topoloji sonucu PostGIS tablosu dışarıda yazılınca da eskir (`Source::change_mark`, ADR 9182).
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

@@ -38,6 +38,8 @@
 
 - **Katalog.** Şema ağacı (aç/kapa), ilişkili öznitelik tabloları ve sık kullanılanlar.
 - **Kimlik.** Geometri sütununun adı ve tablonun kapsamı: katalog sorgusu bunları okumuyor.
+  **Yapıldı (23 Kasım 2026):** [ADR 9183](9183-catalog-column-extent-and-related-tables.md).
 - **Canlı sınamalar.** Ayrı bir sınama veritabanında salt okunur rol, yetkili rol, anahtarsız görünüm, ağ kesintisi,
   ikinci istemci çakışması ve yeniden bağlanma. Bu makinede Docker yanıt vermediği için koşturulamadı.
+  **Yapıldı (23 Kasım 2026):** [ADR 9182](9182-postgresql-remainders-on-a-real-server.md), [ADR 9183](9183-catalog-column-extent-and-related-tables.md).
 - Web (TODOS.md §0.2).

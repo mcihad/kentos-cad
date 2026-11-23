@@ -5,7 +5,8 @@
 //! draws. A query layer is a data layer too, read live and read-only (postgis_query.rs, docs/adr/9113 §3). A server asking for a password KentOS does not know opens
 //! the password question. Nobody types an address: the one a layer keeps is built from the connection's fields and
 //! carries no password. The list is a tree of schemas, each opened and closed, with the connection's starred tables
-//! first under Sık kullanılanlar (docs/adr/9172).
+//! first under Sık kullanılanlar (docs/adr/9172). A chosen table says its geometry column and its extent (asked of the
+//! database off the interface's thread) and offers the tables a foreign key ties to it (docs/adr/9183).
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -53,6 +54,9 @@ pub struct State {
     pub status: Option<(bool, String)>,
     /// The schemas closed in the list (docs/adr/9172); a search shows every schema with a match open.
     pub closed: BTreeSet<String>,
+    /// The chosen tables' extents as the database gave them (docs/adr/9183), by `schema.name`: none for a table without
+    /// geometry or an empty one; why, when it could not.
+    pub extents: std::collections::HashMap<String, Result<Option<[f64; 4]>, String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -84,6 +88,8 @@ pub enum Event {
     Schema(String),
     /// A table starred as the connection's favourite, or its star taken away (docs/adr/9172).
     Favorite(String),
+    /// A chosen table's extent as the database gave it, or why not (docs/adr/9183).
+    Extent(String, Result<Option<[f64; 4]>, String>),
 }
 
 /// An empty drawing for the listing: describing a database reads no drawing.
@@ -288,6 +294,8 @@ impl App {
                     Ok(catalog) => {
                         s.chosen
                             .retain(|t| catalog.relations.iter().any(|r| r.table() == *t));
+                        // Listed again: the extents are asked again.
+                        s.extents.clear();
                         s.status = Some((false, format!("Bağlandı: {}", catalog.facts.line())));
                         s.catalog = Some(catalog);
                     }
@@ -306,8 +314,12 @@ impl App {
             Event::Filter(f) => s.filter = f,
             Event::Toggle(t) => {
                 if !s.chosen.remove(&t) {
-                    s.chosen.insert(t);
+                    s.chosen.insert(t.clone());
+                    return self.postgis_extent(t);
                 }
+            }
+            Event::Extent(t, extent) => {
+                s.extents.insert(t, extent);
             }
             Event::All(all) => {
                 let Some(catalog) = &s.catalog else {
@@ -347,6 +359,35 @@ impl App {
     /// Bağla: the chosen tables, views and materialized views added as data layers (docs/adr/9101): their rows stay in
     /// the database and the view reads them as it draws; the window closes at once and the catalogue is read on a thread
     /// of its own. A query is a data layer too, read live and read-only (docs/adr/9113 §3).
+    /// A chosen table's extent asked of the database off the interface's thread (docs/adr/9183): the catalogue's estimate,
+    /// measured when there is none; nothing for a table without geometry or one already asked.
+    fn postgis_extent(&mut self, table: String) -> Task<Message> {
+        let Some(Window::Postgis(s)) = &self.exchange else {
+            return Task::none();
+        };
+        let spatial = s
+            .catalog
+            .as_ref()
+            .and_then(|c| c.relations.iter().find(|r| r.table() == table))
+            .is_some_and(|r| r.geometry.is_some());
+        if !spatial || s.extents.contains_key(&table) {
+            return Task::none();
+        }
+        let Some(address) = s.connection.as_deref().and_then(|n| self.db_store.get(n)).map(|c| c.address()) else {
+            return Task::none();
+        };
+        let asked = table.clone();
+        crate::db_connections::off_thread(
+            move || {
+                kentos_data::registry()
+                    .source(&address)
+                    .and_then(|source| source.extent(&asked, true))
+                    .map_err(|e| e.to_string())
+            },
+            move |extent| event(Event::Extent(table, extent)),
+        )
+    }
+
     fn postgis_bind(&mut self) -> Task<Message> {
         let Some(Window::Postgis(s)) = &self.exchange else {
             return Task::none();
@@ -555,7 +596,26 @@ impl App {
             // written.
             let chosen: Vec<&Relation> = catalog.relations.iter().filter(|r| s.chosen.contains(&r.table())).collect();
             if !chosen.is_empty() {
-                let lines = chosen.into_iter().map(|r| words::text_line(Line::Info, identity(r))).collect::<Vec<_>>();
+                // Each with its extent (docs/adr/9183) and the tables a foreign key ties to it, one press to choose.
+                let mut lines: Vec<Element<'a, Message>> = Vec::new();
+                for r in chosen {
+                    let extent = extent_words(r, s.extents.get(&r.table()));
+                    let text = match extent {
+                        Some(e) => format!("{} · {e}", identity(r)),
+                        None => identity(r),
+                    };
+                    lines.push(words::text_line(Line::Info, text));
+                    let ties: Vec<&String> =
+                        r.related.iter().filter(|t| catalog.relations.iter().any(|x| x.table() == **t)).collect();
+                    if !ties.is_empty() {
+                        let mut tie_row = row![label::caption(RELATED)].spacing(6).align_y(Center);
+                        for t in ties {
+                            let on = s.chosen.contains(t);
+                            tie_row = tie_row.push(words::ghost(t.clone(), (!on).then(|| event(Event::Toggle(t.clone())))));
+                        }
+                        lines.push(tie_row.wrap().into());
+                    }
+                }
                 body = body.push(words::field("Seçilen tablolar", words::summary(lines), None));
             }
             other = catalog.relations.iter().any(|r| {
@@ -639,7 +699,32 @@ const LIST_HEIGHT: f32 = 280.0;
 pub(crate) fn identity(r: &Relation) -> String {
     let key = r.key.as_deref().map_or_else(|| "anahtar yok".to_owned(), |k| format!("anahtar {k}"));
     let right = if r.writable { "yazılabilir" } else { "salt okunur (yazma yetkisi yok ya da görünüm)" };
-    format!("{} · {key} · {} · {right}", r.table(), describe(r))
+    // The geometry column the layer draws (docs/adr/9183): the first of several.
+    let column = match (&r.geometry_column, r.geometry_columns) {
+        (Some(c), n) if n > 1 => format!(" · geometri sütunu {c} ({n} sütundan ilki)"),
+        (Some(c), _) => format!(" · geometri sütunu {c}"),
+        (None, _) => String::new(),
+    };
+    format!("{}{column} · {key} · {} · {right}", r.table(), describe(r))
+}
+
+/// The words before a chosen table's related tables (docs/adr/9183).
+const RELATED: &str = "İlişkili tablolar:";
+
+/// A chosen table's extent as the database gave it (docs/adr/9183), in the table's own system, east (Y) before north
+/// (X); while it is asked, so said; none for a table without geometry.
+pub(crate) fn extent_words(r: &Relation, extent: Option<&Result<Option<[f64; 4]>, String>>) -> Option<String> {
+    r.geometry.as_ref()?;
+    Some(match extent {
+        None => "kapsam okunuyor…".to_owned(),
+        Some(Ok(None)) => "kapsam yok (tabloda geometri yok)".to_owned(),
+        Some(Err(why)) => format!("kapsam okunamadı: {why}"),
+        Some(Ok(Some([a, b, c, d]))) => {
+            // Degrees for a geographic system's values, else metres (shown only, the extent is not used further).
+            let n = if [a, b, c, d].iter().all(|v| v.abs() <= 360.0) { 6 } else { 2 };
+            format!("kapsam Y {a:.n$}–{c:.n$}, X {b:.n$}–{d:.n$}")
+        }
+    })
 }
 
 pub(crate) fn describe(r: &Relation) -> String {

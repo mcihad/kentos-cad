@@ -107,6 +107,8 @@ pub struct Relation {
     pub kind: RelationKind,
     /// The first geometry column's type (`MULTIPOLYGON`), none without one.
     pub geometry: Option<String>,
+    /// The first geometry column's name (`geom`), none without one (docs/adr/9183).
+    pub geometry_column: Option<String>,
     pub srid: Option<u32>,
     /// How many geometry columns it has (the first is read).
     pub geometry_columns: usize,
@@ -119,6 +121,9 @@ pub struct Relation {
     pub readable: bool,
     /// Whether the user may insert, update and delete its rows (a view never).
     pub writable: bool,
+    /// The tables a foreign key ties to it, either way, as `schema.table` in the catalogue's order: its related
+    /// attribute tables (docs/adr/9183).
+    pub related: Vec<String>,
 }
 
 impl Relation {
@@ -417,23 +422,40 @@ async fn relations(conn: &mut PgConnection, postgis: bool) -> Result<Vec<Relatio
     .fetch_all(&mut *conn)
     .await?;
     // The geometry and geography columns, first by each table (PostGIS's catalogs: none without it; docs/adr/0745).
-    let mut columns: std::collections::HashMap<(String, String), (String, Option<u32>, usize)> =
+    let mut columns: std::collections::HashMap<(String, String), (String, Option<u32>, usize, String)> =
         std::collections::HashMap::new();
     if postgis {
-        let geometry: Vec<(String, String, String, i32)> = sqlx::query_as(
-            "SELECT f_table_schema::text, f_table_name::text, type::text, srid FROM geometry_columns
+        let geometry: Vec<(String, String, String, i32, String)> = sqlx::query_as(
+            "SELECT f_table_schema::text, f_table_name::text, type::text, srid, f_geometry_column::text FROM geometry_columns
              UNION ALL
-             SELECT f_table_schema::text, f_table_name::text, type::text, srid FROM geography_columns
-              ORDER BY 1, 2",
+             SELECT f_table_schema::text, f_table_name::text, type::text, srid, f_geography_column::text
+               FROM geography_columns
+              ORDER BY 1, 2, 5",
         )
         .fetch_all(&mut *conn)
         .await?;
-        for (schema, table, kind, srid) in geometry {
+        for (schema, table, kind, srid, column) in geometry {
             columns
                 .entry((schema, table))
                 .and_modify(|e| e.2 += 1)
-                .or_insert((kind, u32::try_from(srid).ok().filter(|&s| s > 0), 1));
+                .or_insert((kind, u32::try_from(srid).ok().filter(|&s| s > 0), 1, column));
         }
+    }
+    // The foreign keys between the listed tables, either way: each table's related attribute tables (docs/adr/9183).
+    let keys: Vec<(String, String)> = sqlx::query_as(
+        "SELECT cn.nspname || '.' || c.relname, fn.nspname || '.' || f.relname
+           FROM pg_constraint k
+           JOIN pg_class c ON c.oid = k.conrelid JOIN pg_namespace cn ON cn.oid = c.relnamespace
+           JOIN pg_class f ON f.oid = k.confrelid JOIN pg_namespace fn ON fn.oid = f.relnamespace
+          WHERE k.contype = 'f' AND k.conrelid <> k.confrelid
+          ORDER BY 1, 2",
+    )
+    .fetch_all(&mut *conn)
+    .await?;
+    let mut related: std::collections::HashMap<String, std::collections::BTreeSet<String>> = std::collections::HashMap::new();
+    for (from, to) in keys {
+        related.entry(from.clone()).or_default().insert(to.clone());
+        related.entry(to).or_default().insert(from);
     }
     let mut out = Vec::with_capacity(rows.len());
     for row in rows {
@@ -462,8 +484,11 @@ async fn relations(conn: &mut PgConnection, postgis: bool) -> Result<Vec<Relatio
         };
         let geometry = columns.get(&(schema.clone(), name.clone()));
         let view = matches!(kind, RelationKind::View | RelationKind::MaterializedView);
+        let ties = related.remove(&format!("{schema}.{name}")).map(|t| t.into_iter().collect()).unwrap_or_default();
         out.push(Relation {
             geometry: geometry.map(|g| g.0.to_ascii_uppercase()),
+            geometry_column: geometry.map(|g| g.3.clone()),
+            related: ties,
             srid: geometry.and_then(|g| g.1),
             geometry_columns: geometry.map_or(0, |g| g.2),
             estimate: (!matches!(kind, RelationKind::View) && tuples >= 0.0).then(|| tuples.round() as u64),
@@ -592,6 +617,8 @@ mod tests {
             name: name.into(),
             kind: RelationKind::Table,
             geometry: geometry.then(|| "MULTIPOLYGON".to_owned()),
+            geometry_column: geometry.then(|| "geom".to_owned()),
+            related: Vec::new(),
             srid: geometry.then_some(5256),
             geometry_columns: usize::from(geometry),
             estimate: Some(10),

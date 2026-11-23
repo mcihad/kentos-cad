@@ -40,11 +40,12 @@ fn db(app: &mut App, e: Db) {
     let _ = app.update(Message::Gis(gis::Event::Db(e)));
 }
 
-/// A connection of the test's own name (the store is the process's, shared by the tests).
+/// A connection of the test's own name (the store is the process's, shared by the tests). Its server is a reserved
+/// name no resolver finds (`.invalid`): a chosen table's extent asked of it fails at once.
 fn connection(name: &str) -> DbConnection {
     DbConnection {
         name: name.into(),
-        host: "veri.belediye.local".into(),
+        host: "veri.belediye.invalid".into(),
         database: "kent".into(),
         user: "cbs".into(),
         ..DbConnection::default()
@@ -57,6 +58,8 @@ fn relation(schema: &str, name: &str, geometry: Option<&str>, srid: Option<u32>,
         name: name.into(),
         kind: RelationKind::Table,
         geometry: geometry.map(str::to_owned),
+        geometry_column: geometry.map(|_| "geom".to_owned()),
+        related: Vec::new(),
         srid,
         geometry_columns: usize::from(geometry.is_some()),
         estimate: Some(1240),
@@ -725,10 +728,103 @@ fn a_chosen_table_says_its_key_geometry_system_and_right() {
     let parcel = relation("kadastro", "parsel", Some("MULTIPOLYGON"), Some(5256), Some("fid"));
     assert_eq!(
         super::postgis::identity(&parcel),
-        "kadastro.parsel · anahtar fid · çok parçalı alan · ≈1.240 satır · EPSG:5256 · yazılabilir"
+        "kadastro.parsel · geometri sütunu geom · anahtar fid · çok parçalı alan · ≈1.240 satır · EPSG:5256 · yazılabilir"
     );
     let read_only = Relation { writable: false, ..relation("imar", "plan_notu", Some("POINT"), Some(4326), Some("id")) };
     assert!(super::postgis::identity(&read_only).ends_with("salt okunur (yazma yetkisi yok ya da görünüm)"));
+}
+
+/// A chosen table's extent (docs/adr/9183): said while it is asked, in the table's own system east before north once
+/// given (degrees for a geographic system), or why not; none for a table without geometry.
+#[test]
+fn a_chosen_tables_extent_is_said_as_the_database_gives_it() {
+    use super::postgis::extent_words;
+    let parcel = relation("kadastro", "parsel", Some("MULTIPOLYGON"), Some(5256), Some("fid"));
+    assert_eq!(extent_words(&parcel, None).as_deref(), Some("kapsam okunuyor…"));
+    let given = Ok(Some([486_500.0, 4_420_200.0, 486_900.25, 4_420_300.5]));
+    assert_eq!(extent_words(&parcel, Some(&given)).as_deref(), Some("kapsam Y 486500.00–486900.25, X 4420200.00–4420300.50"));
+    let point = relation("kadastro", "yer", Some("POINT"), Some(4326), Some("fid"));
+    let degrees = Ok(Some([32.5, 39.75, 32.875, 39.9]));
+    assert_eq!(
+        extent_words(&point, Some(&degrees)).as_deref(),
+        Some("kapsam Y 32.500000–32.875000, X 39.750000–39.900000")
+    );
+    let why = Err("bağlantı kesildi".to_owned());
+    assert_eq!(extent_words(&parcel, Some(&why)).as_deref(), Some("kapsam okunamadı: bağlantı kesildi"));
+    let owners = relation("kadastro", "malik", None, None, Some("id"));
+    assert_eq!(extent_words(&owners, None), None);
+}
+
+/// On a real PostgreSQL (the usage report's 7th item, docs/adr/9183): a schema of the test's own with parcels (geometry,
+/// a key), their owners (no geometry, a foreign key to the parcels) and a view without a key. The catalogue says the
+/// parcels' geometry column and ties the two tables; the view cannot be bound and says why. In the window the chosen
+/// parcels say their extent, their owners are one press away though tables without geometry are not listed. An
+/// account that may only read sees the parcels read only. Through a relay the connection is cut: listing fails and
+/// says why; the relay open again, Yenile lists again.
+#[test]
+fn on_postgresql_the_catalogue_says_a_tables_column_extent_and_related_tables() {
+    let Some(pg) = crate::pg_testing::pg("PostgreSQL'de katalog") else {
+        return;
+    };
+    crate::data_layers::register();
+    kentos_postgis::register();
+    let id = std::process::id();
+    let schema = format!("kentos_katalog_{id}");
+    let parcels = format!("{schema}.parsel");
+    crate::pg_testing::sql(&pg, &[&format!("CREATE SCHEMA {schema}")]);
+    crate::data_layers_tests::parcels_in(kentos_data::registry().source(&pg).expect("the database").as_ref(), &parcels, 3);
+    crate::pg_testing::sql(
+        &pg,
+        &[
+            &format!("CREATE TABLE {schema}.malik (id serial PRIMARY KEY, ad text, parsel integer REFERENCES {parcels}(fid))"),
+            &format!("CREATE VIEW {schema}.parsel_ozeti AS SELECT kullanim, count(*) AS adet FROM {parcels} GROUP BY kullanim"),
+            &format!("ANALYZE {parcels}"),
+        ],
+    );
+    let mut c = connections::parse(&pg).expect("the address").connection;
+    c.name = format!("Katalog sınaması {id}");
+    let catalog = kentos_postgis::probe::browse(&c, None).expect("listed");
+    let find = |t: &str| catalog.relations.iter().find(|r| r.table() == t).cloned().expect("listed");
+    let parcel = find(&parcels);
+    assert_eq!(parcel.geometry_column.as_deref(), Some("geom"));
+    assert_eq!(parcel.related, [format!("{schema}.malik")]);
+    assert_eq!(find(&format!("{schema}.malik")).related, [parcels.clone()]);
+    let view = find(&format!("{schema}.parsel_ozeti"));
+    assert!(view.why_not().is_some(), "a view without a key cannot be bound");
+    // The window: the parcels chosen say their extent; their owners one press away.
+    let mut app = app_with_drawing();
+    keep_connection(&app, &c);
+    run(&mut app, "source.postgis");
+    let at = app.db_store.list().iter().position(|x| x.name == c.name).expect("listed");
+    send(&mut app, Event::Postgis(P::Choose(at)));
+    send(&mut app, Event::Postgis(P::Listed(c.name.clone(), Ok(Arc::new(catalog)), true)));
+    send(&mut app, Event::Postgis(P::Toggle(parcels.clone())));
+    let extent = window(&app).extents.get(&parcels).cloned().expect("asked").expect("given").expect("an extent");
+    let close = |a: f64, b: f64| (a - b).abs() < 1.0;
+    assert!(close(extent[0], 486_500.0) && close(extent[2], 486_585.0), "{extent:?}");
+    let words = super::postgis::extent_words(&parcel, window(&app).extents.get(&parcels)).expect("its extent");
+    assert!(words.starts_with("kapsam Y 486500"), "{words}");
+    send(&mut app, Event::Postgis(P::Toggle(format!("{schema}.malik"))));
+    assert!(window(&app).chosen.contains(&format!("{schema}.malik")), "the related table chosen");
+    // An account that may only read: the parcels read only.
+    let name = format!("kentos_katalog_okur_{id}");
+    let reader = crate::pg_testing::account(&pg, &name, &parcels, "SELECT");
+    let mut r = connections::parse(&reader).expect("the address").connection;
+    r.name = format!("Okur {id}");
+    let seen = kentos_postgis::probe::browse(&r, None).expect("listed");
+    let theirs = seen.relations.iter().find(|x| x.table() == parcels).expect("listed");
+    assert!(!theirs.writable && super::postgis::identity(theirs).ends_with("salt okunur (yazma yetkisi yok ya da görünüm)"));
+    // Cut, then joined again.
+    let relay = crate::pg_testing::Relay::over(&pg);
+    let mut through = connections::parse(&relay.address).expect("the address").connection;
+    through.name = format!("Aktarıcı {id}");
+    relay.set_open(false);
+    let refused = kentos_postgis::probe::browse(&through, None).expect_err("the connection cut");
+    assert!(!refused.message.is_empty(), "said why");
+    relay.set_open(true);
+    assert!(kentos_postgis::probe::browse(&through, None).is_ok(), "listed again");
+    let _ = app.db_store.remove(&c.name);
+    crate::pg_testing::sql(&pg, &[&format!("DROP OWNED BY {name}"), &format!("DROP ROLE {name}"), &format!("DROP SCHEMA {schema} CASCADE")]);
 }
 
 /// Pictures (docs/adr/9140), light at 1440×900 and dark at 1100×760: the catalogue with every table and searched for
@@ -758,6 +854,33 @@ fn catalog_screens() {
     };
     crate::files_testing::usage_shots("9140", "01-tumu", prepare(""));
     crate::files_testing::usage_shots("9140", "02-park", prepare("park"));
+}
+
+/// The picture (`.run/gui-evidence/kullanim-9183/`): the parcels chosen, their identity with the geometry column and the
+/// extent the database gave, and their owners' table one press away under İlişkili tablolar.
+#[test]
+#[ignore = "pictures for the owner"]
+fn related_screens() {
+    crate::files_testing::usage_shots("9183", "01-katalog-iliskili", || {
+        let mut app = app_with_drawing();
+        let name = "Belediye CBS".to_owned();
+        keep_connection(&app, &DbConnection { host: "veri.belediye.local".into(), ..connection(&name) });
+        run(&mut app, "source.postgis");
+        let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+        send(&mut app, Event::Postgis(P::Choose(at)));
+        let mut relations = catalog().relations.clone();
+        for r in &mut relations {
+            match r.name.as_str() {
+                "parsel" => r.related = vec!["kadastro.malik".into()],
+                "malik" => r.related = vec!["kadastro.parsel".into()],
+                _ => {}
+            }
+        }
+        send(&mut app, Event::Postgis(P::Listed(name.clone(), Ok(Arc::new(Catalog { relations, ..(*catalog()).clone() })), true)));
+        send(&mut app, Event::Postgis(P::Toggle("kadastro.parsel".into())));
+        send(&mut app, Event::Postgis(P::Extent("kadastro.parsel".into(), Ok(Some([486_500.0, 4_420_200.0, 486_585.0, 4_420_225.0])))));
+        app
+    });
 }
 
 /// The 7th item's catalogue (docs/adr/9172): a tree of schemas each opened and closed, a search opening every schema
