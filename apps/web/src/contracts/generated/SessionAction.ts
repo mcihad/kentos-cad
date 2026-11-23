@@ -3,4 +3,4 @@
 /**
  * What `cad.layers.session` does.
  */
-export type SessionAction = "start" | "save" | "rollback" | "cancel" | "stop" | "take" | "delete" | "status";
+export type SessionAction = "start" | "save" | "rollback" | "cancel" | "stop" | "take" | "delete" | "status" | "conflicts";

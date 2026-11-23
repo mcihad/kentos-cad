@@ -626,6 +626,8 @@ codes! {
     DATA_EDITS_UNSAVED = "data_edits_unsaved", Failed, false, "Katmanda kaydedilmemiş değişiklik var; düzenlemeyi bitirmeden önce kaydedin ya da geri alın.";
     /// A save over rows someone else changed or deleted since they were taken (docs/adr/9104 §3): nothing written.
     ROWS_CHANGED = "rows_changed", Conflict, true, "Başkası satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş; hiçbir şey yazılmadı. Satırları yeniden alın ya da üstüne yazın.";
+    /// A save's choice no clash asks for (docs/adr/9193): its row, field, shape or deleted row's way.
+    CLASH_CHOICE = "clash_choice", Failed, false, "Çakışma seçimi kaydetmenin karşılaştığı bir çakışmaya uymuyor: satırı, alanı ya da yolu çakışmada yok; çakışmaları conflicts ile yeniden okuyun.";
     /// A class switched on or off on a layer whose look has none (docs/adr/9105 §3).
     NO_CLASSES = "no_classes", Failed, false, "Katmanın görünüşünde sınıf yok: kategorili, aralıklı ya da kurallı bir stil verin.";
     /// A class id the layer's style does not have.

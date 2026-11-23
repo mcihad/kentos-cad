@@ -2636,6 +2636,9 @@ Liste:
 - [ ] Tek kaynak kataloğu (ADR 9192, 23 Kasım 2026): web'in `.kcad` okuyucusu ve yazıcısı katmanın `origin`'ini (CBS
   verisi 7) taşısın; web'in içe alması kaynağı yazsın; web'in kaynak penceresi Kaynaklar'ı (veri katmanı, bağlı katman,
   alınmış kopya, dosyanın değişip değişmediği) göstersin. TS türleri (`LayerNode`, `LayerOrigin`) yeniden üretildi.
+- [ ] Çakışma seçimi (ADR 9193, 23 Kasım 2026): web'in düzenleme oturumu da `cad.layers.session`'ın `conflicts`'ini ve
+  `save`'in `choices`'ını kullansın; web'in çakışma penceresi seçimi aynı kuralla uygulasın. TS türleri (`ClashChoice`,
+  `RowConflict`, `FieldConflict`, `ClashSide`, `ClashDeleted`) yeniden üretildi.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

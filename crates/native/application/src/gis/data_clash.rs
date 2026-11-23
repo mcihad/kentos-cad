@@ -232,3 +232,95 @@ mod tests {
         assert_eq!(m.base().id, mine.base().id);
     }
 }
+
+/// What settling clashes did (docs/adr/9193): the rows no longer the source's (let go, or written again as new ones),
+/// by their layer and key, and what could not be done.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Settled {
+    pub dropped: Vec<(String, i64)>,
+    pub problems: Vec<String>,
+}
+
+/// The clashing rows settled as `picks` say, a row's picks as its clash asks them (its fields, then its shape; one for a
+/// row deleted on one side), `true` the side here (docs/adr/9148 §4, 9193):
+/// - a row changed on both sides is made of the choice against the table's row, as one undo step `label`, and is
+///   compared from now on with the table's row as read;
+/// - a row deleted here that the table changed is deleted still against the table's row, or forgotten;
+/// - a row deleted in the table is written again as a new row (where the connection may add rows), or let go.
+///
+/// The desktop's Seçilenleri kaydet and `cad.layers.session`'s `choices` both; the save that follows writes it.
+pub fn settle(
+    doc: &mut kentos_domain::Document,
+    rows: &[RowClash],
+    picks: &[Vec<bool>],
+    label: &str,
+) -> Result<Settled, String> {
+    let mut updates: Vec<(kentos_domain::Slot, Entity)> = Vec::new();
+    let mut rebase: Vec<(String, Uuid, Entity)> = Vec::new();
+    let mut untake: Vec<(String, Uuid)> = Vec::new();
+    let mut let_go: Vec<(String, Uuid)> = Vec::new();
+    for (r, picks) in rows.iter().zip(picks) {
+        let first = picks.first().copied().unwrap_or(false);
+        match (&r.mine, &r.theirs) {
+            (Some(_), Some(theirs)) => {
+                // The object as it is now (it may have changed since the save), merged with the table's row.
+                let Some(slot) = doc.slot_of(r.uid) else {
+                    continue;
+                };
+                let Some(now) = doc.get(slot).cloned() else {
+                    continue;
+                };
+                let take: std::collections::HashSet<&str> = r
+                    .fields
+                    .iter()
+                    .zip(picks)
+                    .filter(|(_, p)| !**p)
+                    .map(|(f, _)| f.field.as_str())
+                    .collect();
+                let geometry_theirs = r.geometry && picks.get(r.fields.len()) == Some(&false);
+                let made = merged(&r.first, &now, theirs, &|n| take.contains(n), geometry_theirs);
+                if made != now {
+                    updates.push((slot, made));
+                }
+                rebase.push((r.layer.clone(), r.uid, theirs.clone()));
+            }
+            // Deleted here, changed in the table: deleted still against the table's row, or forgotten.
+            (None, Some(theirs)) if first => rebase.push((r.layer.clone(), r.uid, theirs.clone())),
+            (None, Some(_)) => untake.push((r.layer.clone(), r.uid)),
+            // Deleted in the table: written again as a new row where the connection may add one, or let go.
+            (Some(_), None) if first && r.may_add => untake.push((r.layer.clone(), r.uid)),
+            (_, None) => let_go.push((r.layer.clone(), r.uid)),
+        }
+    }
+    if !updates.is_empty() {
+        doc.transact(label, |d| {
+            d.update_many(updates.clone(), label);
+            Ok::<(), kentos_domain::Refusal>(())
+        })
+        .map_err(|why| why.0)?;
+    }
+    let mut out = Settled::default();
+    for (layer, uid, row) in rebase {
+        if let Err(why) = doc.data_rebase(&layer, uid, row) {
+            out.problems.push(why);
+        }
+    }
+    for (layer, uid) in untake {
+        doc.data_untake(&layer, uid);
+    }
+    for (layer, uid) in let_go {
+        if let Some(key) = doc.taken_key(&layer, uid) {
+            out.dropped.push((layer.clone(), key));
+        }
+        if let Err(why) = doc.data_let_go(&layer, uid) {
+            out.problems.push(why);
+        }
+    }
+    // A row let go or written again as a new one is no longer the source's row.
+    for r in rows.iter().filter(|r| r.gone()) {
+        if !out.dropped.contains(&(r.layer.clone(), r.key)) {
+            out.dropped.push((r.layer.clone(), r.key));
+        }
+    }
+    Ok(out)
+}

@@ -2,7 +2,11 @@
 //! wait in the drawing and are written to its table in one transaction (Kaydet), let go (Geri al) or let go as it closes
 //! (Vazgeç); a layer without changes closes (Düzenlemeyi bitir). Python and the assistants edit a data layer with it and
 //! the object commands: a new row is an object drawn on the layer; a row taken by its key (`take`) is an object the
-//! object commands change, move or delete; `delete` deletes rows by key without taking them.
+//! object commands change, move or delete; `delete` deletes rows by key without taking them. A save that meets rows
+//! others changed since they were taken says them field by field (`conflicts`) and is settled by `choices`, a field,
+//! the shape and a deleted row at a time (docs/adr/9193).
+
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -37,6 +41,112 @@ pub enum SessionAction {
     /// Says each layer's session; writes nothing.
     #[default]
     Status,
+    /// Says the clashes a save would meet now (docs/adr/9193): the taken rows others changed or deleted since, field by
+    /// field with the three values; reads the tables in a transaction that writes nothing.
+    Conflicts,
+}
+
+/// Which side of a clash stays (docs/adr/9193).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ClashSide {
+    /// The value, shape or change here.
+    Mine,
+    /// The table's.
+    Theirs,
+}
+
+/// How a save settles one clashing row (docs/adr/9193): by its layer and key, the side each clashing field keeps, the
+/// side the shape keeps, and for a row deleted on one side what is done with it (`mine`: a row deleted in the table is
+/// written again as a new row, a row deleted here is deleted still; `theirs`: the change here is let go, the row kept).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ClashChoice {
+    pub layer: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub key: i64,
+    /// Each field both sides changed, and the side it keeps.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<BTreeMap<String, ClashSide>>"))]
+    pub fields: BTreeMap<String, ClashSide>,
+    /// The shape moved on both sides: the side it keeps.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shape: Option<ClashSide>,
+    /// A row deleted on one side: what is done with it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub row: Option<ClashSide>,
+}
+
+/// Where a clashing row was deleted (docs/adr/9193).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ClashDeleted {
+    /// In the table, the row changed here.
+    Theirs,
+    /// Here, the row changed in the table.
+    Here,
+}
+
+/// A field both sides changed to different values, with its three values (none: empty).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldConflict {
+    pub field: String,
+    /// As the row was taken.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub first: Option<String>,
+    /// Here.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mine: Option<String>,
+    /// In the table now.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub theirs: Option<String>,
+}
+
+/// A taken row a save cannot write as it is (docs/adr/9193): its layer, key and object, the fields that clash, whether
+/// the shape does, where it was deleted; whether the table takes it again as a new row (the connection's right).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RowConflict {
+    pub layer: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub key: i64,
+    /// The object's persistent id.
+    pub uid: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<FieldConflict>>"))]
+    pub fields: Vec<FieldConflict>,
+    /// The shape moved on both sides.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub shape: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub deleted: Option<ClashDeleted>,
+    /// A row deleted in the table: whether it can be written again as a new one.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub may_add: bool,
 }
 
 /// Input of `cad.layers.session` v1.
@@ -49,7 +159,8 @@ pub enum SessionAction {
 /// could not be read or opened; the message says why), `data_save_failed` (the table refused the writes: nothing of the
 /// layers written together was written, their changes wait; with several groups, a warning of those not written while
 /// the others were), `rows_changed` (a row taken was changed or deleted by someone else since: nothing written; `force`
-/// writes over it).
+/// writes over it, `choices` settle it field by field; a clash `choices` leaves unchosen), `clash_choice` (a choice no
+/// clash of the save asks for: its row, field or way).
 ///
 /// The project's edit grouping (`settings.editGrouping`, docs/adr/9104 §2) widens `start`, `save`, `rollback`, `cancel`,
 /// `stop` and `status` of a named layer to the layers of its source, or to every data layer; `save` then writes a
@@ -75,6 +186,13 @@ pub struct LayersSession {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub force: Option<bool>,
+    /// `save`: how each clash the save meets is settled (docs/adr/9193), as `conflicts` says them: every clashing
+    /// field, shape and deleted row chosen. The rows are made as chosen (one undo step, “Çakışmayı çöz”) and written,
+    /// the table checked once more. A clash not chosen is a `rows_changed`; a choice no clash asks for a
+    /// `clash_choice`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub choices: Option<Vec<ClashChoice>>,
 }
 
 /// A layer's session after the action.
@@ -120,5 +238,9 @@ pub struct LayersSessionDone {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<Option<String>>>"))]
     pub objects: Vec<Option<String>>,
+    /// `conflicts`: the clashes a save would meet now; `save` with `choices`: the clashes it settled.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<RowConflict>>"))]
+    pub conflicts: Vec<RowConflict>,
     pub revision: String,
 }

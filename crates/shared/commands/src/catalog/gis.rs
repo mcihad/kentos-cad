@@ -440,7 +440,8 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                       Değişiklikler kaydedilene kadar çizimde bekler: katmana çizilen nesne yeni satırdır; take ile anahtarından alınan satır, nesne komutlarıyla değiştirilen, taşınan ya da silinen bir nesne olur; delete satırları anahtarlarıyla, almadan siler (bir geri alma adımı). \
                       action: start (düzenlemeye aç; düzenleme değildir), save (her katmanın değişikliklerini tablosuna tek işlemle yazar, katman açık kalır), rollback (değişiklikleri bırakır, katman açık kalır), cancel (bırakır ve kapatır), stop (değişikliği olmayan katmanı kapatır), take, delete, status (oturumu söyler, hiçbir şey yazmaz). \
                       layers verilmezse düzenlenen bütün katmanlar (save, rollback, cancel, stop, status); start en az bir, take ve delete tek bir katman ister; keys 1–10 000 anahtar. \
-                      Tablonun reddettiği kayıtta o katmana hiçbir şey yazılmaz, değişiklikleri bekler; birkaç katman kaydedilirken yazılamayanlar uyarıyla söylenir. Kaydedilen satır buradan geri alınmaz."
+                      Tablonun reddettiği kayıtta o katmana hiçbir şey yazılmaz, değişiklikleri bekler; birkaç katman kaydedilirken yazılamayanlar uyarıyla söylenir. Kaydedilen satır buradan geri alınmaz. \
+                      Başkasının aldığınızdan sonra değiştirdiği ya da sildiği satır kaydı durdurur (rows_changed): conflicts kaydetmenin karşılaşacağı çakışmaları alan alan ilk, sizin ve tablodaki değerleriyle söyler, hiçbir şey yazmaz; save'in choices'ı her çakışmayı seçer (alan ve şekil için mine ya da theirs, bir yanda silinmiş satır için row), satırlar seçildiği gibi kurulur (bir geri alma adımı, Çakışmayı çöz) ve yazılır, tablo bir kez daha denetlenir. Seçilmeyen çakışma rows_changed, çakışmayan seçim clash_choice; force hepsinin üstüne yazar."
                 .into(),
             aliases: vec!["duzenlemeoturumu".into(), "verikaydet".into(), "duzenlemeyibaslat".into()],
             effect: CommandEffect::Document,
@@ -468,6 +469,18 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 CommandExample {
                     title: "Düzenlenen bütün katmanları kaydet".into(),
                     input: json!({ "action": "save" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kaydetmenin karşılaşacağı çakışmaları alan alan oku".into(),
+                    input: json!({ "action": "conflicts", "layers": ["parseller"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kullanım benim değerim, alan tablodaki kalsın; sonra kaydet".into(),
+                    input: json!({ "action": "save", "layers": ["parseller"], "choices": [
+                        { "layer": "parseller", "key": 492776, "fields": { "kullanim": "mine", "alan": "theirs" } }
+                    ] }),
                     output: None,
                 },
             ],

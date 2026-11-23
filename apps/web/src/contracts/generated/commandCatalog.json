@@ -77809,7 +77809,7 @@
       "id": "cad.layers.session",
       "version": 1,
       "title": "Veri katmanının düzenleme oturumu",
-      "summary": "Bir veri katmanını düzenlemeye açar, değişikliklerini tablosuna yazar, geri alır ya da düzenlemeyi bitirir. Değişiklikler kaydedilene kadar çizimde bekler: katmana çizilen nesne yeni satırdır; take ile anahtarından alınan satır, nesne komutlarıyla değiştirilen, taşınan ya da silinen bir nesne olur; delete satırları anahtarlarıyla, almadan siler (bir geri alma adımı). action: start (düzenlemeye aç; düzenleme değildir), save (her katmanın değişikliklerini tablosuna tek işlemle yazar, katman açık kalır), rollback (değişiklikleri bırakır, katman açık kalır), cancel (bırakır ve kapatır), stop (değişikliği olmayan katmanı kapatır), take, delete, status (oturumu söyler, hiçbir şey yazmaz). layers verilmezse düzenlenen bütün katmanlar (save, rollback, cancel, stop, status); start en az bir, take ve delete tek bir katman ister; keys 1–10 000 anahtar. Tablonun reddettiği kayıtta o katmana hiçbir şey yazılmaz, değişiklikleri bekler; birkaç katman kaydedilirken yazılamayanlar uyarıyla söylenir. Kaydedilen satır buradan geri alınmaz.",
+      "summary": "Bir veri katmanını düzenlemeye açar, değişikliklerini tablosuna yazar, geri alır ya da düzenlemeyi bitirir. Değişiklikler kaydedilene kadar çizimde bekler: katmana çizilen nesne yeni satırdır; take ile anahtarından alınan satır, nesne komutlarıyla değiştirilen, taşınan ya da silinen bir nesne olur; delete satırları anahtarlarıyla, almadan siler (bir geri alma adımı). action: start (düzenlemeye aç; düzenleme değildir), save (her katmanın değişikliklerini tablosuna tek işlemle yazar, katman açık kalır), rollback (değişiklikleri bırakır, katman açık kalır), cancel (bırakır ve kapatır), stop (değişikliği olmayan katmanı kapatır), take, delete, status (oturumu söyler, hiçbir şey yazmaz). layers verilmezse düzenlenen bütün katmanlar (save, rollback, cancel, stop, status); start en az bir, take ve delete tek bir katman ister; keys 1–10 000 anahtar. Tablonun reddettiği kayıtta o katmana hiçbir şey yazılmaz, değişiklikleri bekler; birkaç katman kaydedilirken yazılamayanlar uyarıyla söylenir. Kaydedilen satır buradan geri alınmaz. Başkasının aldığınızdan sonra değiştirdiği ya da sildiği satır kaydı durdurur (rows_changed): conflicts kaydetmenin karşılaşacağı çakışmaları alan alan ilk, sizin ve tablodaki değerleriyle söyler, hiçbir şey yazmaz; save'in choices'ı her çakışmayı seçer (alan ve şekil için mine ya da theirs, bir yanda silinmiş satır için row), satırlar seçildiği gibi kurulur (bir geri alma adımı, Çakışmayı çöz) ve yazılır, tablo bir kez daha denetlenir. Seçilmeyen çakışma rows_changed, çakışmayan seçim clash_choice; force hepsinin üstüne yazar.",
       "aliases": [
         "duzenlemeoturumu",
         "verikaydet",
@@ -77829,10 +77829,20 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.layers.session` v1.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (`start`, `take` or `delete` without a layer),\n`one_layer` (`take` or `delete` naming more than one), `no_keys` (`take` or `delete` without keys),\n`invalid_count` (more than 10 000 keys), `layer_not_found`, `not_a_data_layer`, `data_layer_read_only` (`start` of a\nlayer kept read-only), `data_layer_not_editing` (any other action naming a layer not being edited),\n`data_edits_unsaved` (`stop` of a layer with changes, or of one that stops with it), `source_unreachable` (the table\ncould not be read or opened; the message says why), `data_save_failed` (the table refused the writes: nothing of the\nlayers written together was written, their changes wait; with several groups, a warning of those not written while\nthe others were), `rows_changed` (a row taken was changed or deleted by someone else since: nothing written; `force`\nwrites over it).\n\nThe project's edit grouping (`settings.editGrouping`, docs/adr/9104 §2) widens `start`, `save`, `rollback`, `cancel`,\n`stop` and `status` of a named layer to the layers of its source, or to every data layer; `save` then writes a\nsource's layers in one transaction.",
+        "description": "Input of `cad.layers.session` v1.\n\nRefusals (`CommandError.code`), checked in this order: `no_layer` (`start`, `take` or `delete` without a layer),\n`one_layer` (`take` or `delete` naming more than one), `no_keys` (`take` or `delete` without keys),\n`invalid_count` (more than 10 000 keys), `layer_not_found`, `not_a_data_layer`, `data_layer_read_only` (`start` of a\nlayer kept read-only), `data_layer_not_editing` (any other action naming a layer not being edited),\n`data_edits_unsaved` (`stop` of a layer with changes, or of one that stops with it), `source_unreachable` (the table\ncould not be read or opened; the message says why), `data_save_failed` (the table refused the writes: nothing of the\nlayers written together was written, their changes wait; with several groups, a warning of those not written while\nthe others were), `rows_changed` (a row taken was changed or deleted by someone else since: nothing written; `force`\nwrites over it, `choices` settle it field by field; a clash `choices` leaves unchosen), `clash_choice` (a choice no\nclash of the save asks for: its row, field or way).\n\nThe project's edit grouping (`settings.editGrouping`, docs/adr/9104 §2) widens `start`, `save`, `rollback`, `cancel`,\n`stop` and `status` of a named layer to the layers of its source, or to every data layer; `save` then writes a\nsource's layers in one transaction.",
         "properties": {
           "action": {
             "$ref": "#/$defs/SessionAction"
+          },
+          "choices": {
+            "description": "`save`: how each clash the save meets is settled (docs/adr/9193), as `conflicts` says them: every clashing\nfield, shape and deleted row chosen. The rows are made as chosen (one undo step, “Çakışmayı çöz”) and written,\nthe table checked once more. A clash not chosen is a `rows_changed`; a choice no clash asks for a\n`clash_choice`.",
+            "items": {
+              "$ref": "#/$defs/ClashChoice"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "force": {
             "description": "`save`: write over the rows others changed or deleted since they were taken (a `rows_changed` otherwise).",
@@ -77874,6 +77884,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.layers.session` v1.",
         "properties": {
+          "conflicts": {
+            "description": "`conflicts`: the clashes a save would meet now; `save` with `choices`: the clashes it settled.",
+            "items": {
+              "$ref": "#/$defs/RowConflict"
+            },
+            "type": "array"
+          },
           "layers": {
             "description": "The layers acted on, in the tree's order.",
             "items": {
@@ -77906,6 +77923,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.layers.session` v1.",
         "properties": {
+          "conflicts": {
+            "description": "`conflicts`: the clashes a save would meet now; `save` with `choices`: the clashes it settled.",
+            "items": {
+              "$ref": "#/$defs/RowConflict"
+            },
+            "type": "array"
+          },
           "layers": {
             "description": "The layers acted on, in the tree's order.",
             "items": {
@@ -77947,7 +77971,8 @@
           "data_edits_unsaved",
           "source_unreachable",
           "data_save_failed",
-          "rows_changed"
+          "rows_changed",
+          "clash_choice"
         ],
         "warnings": [
           "data_save_failed"
@@ -77980,6 +78005,34 @@
           "title": "Düzenlenen bütün katmanları kaydet",
           "input": {
             "action": "save"
+          }
+        },
+        {
+          "title": "Kaydetmenin karşılaşacağı çakışmaları alan alan oku",
+          "input": {
+            "action": "conflicts",
+            "layers": [
+              "parseller"
+            ]
+          }
+        },
+        {
+          "title": "Kullanım benim değerim, alan tablodaki kalsın; sonra kaydet",
+          "input": {
+            "action": "save",
+            "choices": [
+              {
+                "fields": {
+                  "alan": "theirs",
+                  "kullanim": "mine"
+                },
+                "key": 492776,
+                "layer": "parseller"
+              }
+            ],
+            "layers": [
+              "parseller"
+            ]
           }
         }
       ]
@@ -114436,6 +114489,12 @@
       "meaning": "Başkası satırları siz aldıktan sonra tabloda değiştirmiş ya da silmiş; hiçbir şey yazılmadı. Satırları yeniden alın ya da üstüne yazın."
     },
     {
+      "code": "clash_choice",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çakışma seçimi kaydetmenin karşılaştığı bir çakışmaya uymuyor: satırı, alanı ya da yolu çakışmada yok; çakışmaları conflicts ile yeniden okuyun."
+    },
+    {
       "code": "no_classes",
       "kind": "failed",
       "retryable": false,
@@ -135402,6 +135461,84 @@
       ],
       "type": "object"
     },
+    "ClashChoice": {
+      "additionalProperties": false,
+      "description": "How a save settles one clashing row (docs/adr/9193): by its layer and key, the side each clashing field keeps, the\nside the shape keeps, and for a row deleted on one side what is done with it (`mine`: a row deleted in the table is\nwritten again as a new row, a row deleted here is deleted still; `theirs`: the change here is let go, the row kept).",
+      "properties": {
+        "fields": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ClashSide"
+          },
+          "description": "Each field both sides changed, and the side it keeps.",
+          "type": "object"
+        },
+        "key": {
+          "format": "int64",
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "row": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClashSide"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A row deleted on one side: what is done with it."
+        },
+        "shape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClashSide"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The shape moved on both sides: the side it keeps."
+        }
+      },
+      "required": [
+        "layer",
+        "key"
+      ],
+      "type": "object"
+    },
+    "ClashDeleted": {
+      "description": "Where a clashing row was deleted (docs/adr/9193).",
+      "oneOf": [
+        {
+          "const": "theirs",
+          "description": "In the table, the row changed here.",
+          "type": "string"
+        },
+        {
+          "const": "here",
+          "description": "Here, the row changed in the table.",
+          "type": "string"
+        }
+      ]
+    },
+    "ClashSide": {
+      "description": "Which side of a clash stays (docs/adr/9193).",
+      "oneOf": [
+        {
+          "const": "mine",
+          "description": "The value, shape or change here.",
+          "type": "string"
+        },
+        {
+          "const": "theirs",
+          "description": "The table's.",
+          "type": "string"
+        }
+      ]
+    },
     "CleanupIgnore": {
       "description": "A property two objects may differ in and still be the same (AutoCAD's OVERKILL “Ignore object property”).",
       "enum": [
@@ -153910,6 +154047,39 @@
           "description": "The table the column's foreign key refers to (docs/adr/0753 §1): the field's values are that table's rows, read\nagain with every reading of the table."
         }
       },
+      "type": "object"
+    },
+    "FieldConflict": {
+      "description": "A field both sides changed to different values, with its three values (none: empty).",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "first": {
+          "description": "As the row was taken.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mine": {
+          "description": "Here.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "theirs": {
+          "description": "In the table now.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "field"
+      ],
       "type": "object"
     },
     "FieldCount": {
@@ -207960,6 +208130,53 @@
       ],
       "type": "object"
     },
+    "RowConflict": {
+      "description": "A taken row a save cannot write as it is (docs/adr/9193): its layer, key and object, the fields that clash, whether\nthe shape does, where it was deleted; whether the table takes it again as a new row (the connection's right).",
+      "properties": {
+        "deleted": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClashDeleted"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldConflict"
+          },
+          "type": "array"
+        },
+        "key": {
+          "format": "int64",
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "mayAdd": {
+          "description": "A row deleted in the table: whether it can be written again as a new one.",
+          "type": "boolean"
+        },
+        "shape": {
+          "description": "The shape moved on both sides.",
+          "type": "boolean"
+        },
+        "uid": {
+          "description": "The object's persistent id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer",
+        "key",
+        "uid"
+      ],
+      "type": "object"
+    },
     "RowsChecked": {
       "description": "Where a question's filter was checked.",
       "oneOf": [
@@ -210848,6 +211065,11 @@
         {
           "const": "status",
           "description": "Says each layer's session; writes nothing.",
+          "type": "string"
+        },
+        {
+          "const": "conflicts",
+          "description": "Says the clashes a save would meet now (docs/adr/9193): the taken rows others changed or deleted since, field by\nfield with the three values; reads the tables in a transaction that writes nothing.",
           "type": "string"
         }
       ]

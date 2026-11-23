@@ -93,7 +93,7 @@ fn project_with_a_new_point(path: &std::path::Path) -> (Document, String) {
     };
     let started = kentos_native_application::layers_session::execute(
         &mut ExecutionContext::new(&mut doc),
-        LayersSession { action: SessionAction::Start, layers: Some(vec![layer.clone()]), keys: None, force: None },
+        LayersSession { action: SessionAction::Start, layers: Some(vec![layer.clone()]), keys: None, force: None, choices: None },
     );
     assert!(matches!(started, CommandResult::Completed { .. }), "{started:?}");
     let input = serde_json::from_value(serde_json::json!({

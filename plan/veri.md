@@ -675,3 +675,9 @@ numaraları raporunkidir.
   - Kaynak durumu'nda Kaynaklar: her fiziksel kaynağın altında veri katmanı, bağlı katman ve alınmış kopya; kopya
     alındığı zamanı ve dosyanın sonra değişip değişmediğini söyler.
   - Kalan: Shapefile, GeoJSON, KML ve veritabanı kopyalarının kaynağı; kaynaktan tazele; web.
+- [x] **VY-92 — Python ve MCP çakışmaları alan alan okur ve seçimle kaydeder (rapor 26'nın kalanı).**
+  ([ADR 9193](../docs/adr/9193-clash-choices-in-python-and-mcp.md))
+  - `cad.layers.session`'ın `conflicts`'i kaydetmenin karşılaşacağı çakışmaları alan alan söyler, yazmaz.
+  - `save`'in `choices`'ı alan, şekil ve silinmiş satır için tarafı seçer; satırlar masaüstüyle aynı adımla kurulur
+    (`data_clash::settle`) ve yazılır. Seçilmeyen çakışma `rows_changed`, çakışmayan seçim `clash_choice`.
+  - Kalan: web.

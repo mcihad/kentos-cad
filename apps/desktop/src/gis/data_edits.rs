@@ -227,6 +227,7 @@ impl App {
             layers: (!layers.is_empty()).then_some(layers),
             keys: None,
             force: None,
+            choices: None,
         };
         match layers_session::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => Ok(output),

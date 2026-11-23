@@ -288,6 +288,9 @@
     katman düğümünün `origin`'i (`.kcad` CBS verisi 7) içe alınan kopyanın kaynağını taşır. Kaynak durumu'nun
     Kaynaklar'ı her dosya ya da veritabanının altında veri katmanını, bağlı katmanı ve kopyayı gösterir; kopya dosyanın
     alındıktan sonra değişip değişmediğini söyler.
+  - **Çakışma seçimi Python ve MCP'de** (23 Kasım, rapor 26'nın kalanı; [ADR 9193](../adr/9193-clash-choices-in-python-and-mcp.md), VY-92):
+    `cad.layers.session`'ın `conflicts`'i çakışmaları alan alan üç değeriyle söyler; `save`'in `choices`'ı alan, şekil
+    ve silinmiş satır için `mine` ya da `theirs` seçer. Seçimi uygulayan adım masaüstüyle ortaktır (`data_clash::settle`).
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

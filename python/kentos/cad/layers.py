@@ -13,6 +13,7 @@ from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     BlendMode,
     BlendModeName,
+    ClashChoice,
     CreateGeometry,
     CreateGeometryName,
     CreateTarget,
@@ -3437,7 +3438,13 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
     stop, status); start en az bir, take ve delete tek bir katman ister; keys 1–10 000
     anahtar. Tablonun reddettiği kayıtta o katmana hiçbir şey yazılmaz, değişiklikleri
     bekler; birkaç katman kaydedilirken yazılamayanlar uyarıyla söylenir. Kaydedilen
-    satır buradan geri alınmaz.
+    satır buradan geri alınmaz. Başkasının aldığınızdan sonra değiştirdiği ya da sildiği
+    satır kaydı durdurur (rows_changed): conflicts kaydetmenin karşılaşacağı çakışmaları
+    alan alan ilk, sizin ve tablodaki değerleriyle söyler, hiçbir şey yazmaz; save'in
+    choices'ı her çakışmayı seçer (alan ve şekil için mine ya da theirs, bir yanda
+    silinmiş satır için row), satırlar seçildiği gibi kurulur (bir geri alma adımı,
+    Çakışmayı çöz) ve yazılır, tablo bir kez daha denetlenir. Seçilmeyen çakışma
+    rows_changed, çakışmayan seçim clash_choice; force hepsinin üstüne yazar.
     """
     __slots__ = ()
     id = "cad.layers.session"
@@ -3454,6 +3461,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         /,
         *,
         action: SessionAction | SessionActionName,
+        choices: Sequence[ClashChoice] | None | Unset = UNSET,
         force: bool | None | Unset = UNSET,
         keys: Sequence[int] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
@@ -3473,11 +3481,21 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         stop, status); start en az bir, take ve delete tek bir katman ister; keys 1–10 000
         anahtar. Tablonun reddettiği kayıtta o katmana hiçbir şey yazılmaz, değişiklikleri
         bekler; birkaç katman kaydedilirken yazılamayanlar uyarıyla söylenir. Kaydedilen
-        satır buradan geri alınmaz.
+        satır buradan geri alınmaz. Başkasının aldığınızdan sonra değiştirdiği ya da sildiği
+        satır kaydı durdurur (rows_changed): conflicts kaydetmenin karşılaşacağı çakışmaları
+        alan alan ilk, sizin ve tablodaki değerleriyle söyler, hiçbir şey yazmaz; save'in
+        choices'ı her çakışmayı seçer (alan ve şekil için mine ya da theirs, bir yanda
+        silinmiş satır için row), satırlar seçildiği gibi kurulur (bir geri alma adımı,
+        Çakışmayı çöz) ve yazılır, tablo bir kez daha denetlenir. Seçilmeyen çakışma
+        rows_changed, çakışmayan seçim clash_choice; force hepsinin üstüne yazar.
 
         Args:
             doc: The drawing it works on.
             action:
+            choices: `save`: how each clash the save meets is settled (docs/adr/9193), as `conflicts` says them: every clashing
+                field, shape and deleted row chosen. The rows are made as chosen (one undo step, “Çakışmayı çöz”) and written,
+                the table checked once more. A clash not chosen is a `rows_changed`; a choice no clash asks for a
+                `clash_choice`.
             force: `save`: write over the rows others changed or deleted since they were taken (a `rows_changed` otherwise).
             keys: `take`, `delete`: the rows' keys, 1–10 000. Unit: id.
             layers: The data layers (their ids). None: every layer being edited (`save`, `rollback`, `cancel`, `stop`, `status`).
@@ -3496,6 +3514,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         """
         return self.execute_input(doc, LayersSession(
             action=action,
+            choices=_opt(choices, lambda x: list(x)),
             force=force,
             keys=_opt(keys, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
@@ -3507,6 +3526,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         /,
         *,
         action: SessionAction | SessionActionName,
+        choices: Sequence[ClashChoice] | None | Unset = UNSET,
         force: bool | None | Unset = UNSET,
         keys: Sequence[int] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
@@ -3516,6 +3536,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         """
         return self.plan_input(doc, LayersSession(
             action=action,
+            choices=_opt(choices, lambda x: list(x)),
             force=force,
             keys=_opt(keys, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
@@ -3527,6 +3548,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         /,
         *,
         action: SessionAction | SessionActionName,
+        choices: Sequence[ClashChoice] | None | Unset = UNSET,
         force: bool | None | Unset = UNSET,
         keys: Sequence[int] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
@@ -3536,6 +3558,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         """
         return self.validate_input(doc, LayersSession(
             action=action,
+            choices=_opt(choices, lambda x: list(x)),
             force=force,
             keys=_opt(keys, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
@@ -3547,6 +3570,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         /,
         *,
         action: SessionAction | SessionActionName,
+        choices: Sequence[ClashChoice] | None | Unset = UNSET,
         force: bool | None | Unset = UNSET,
         keys: Sequence[int] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
@@ -3561,6 +3585,7 @@ class _LayersSession(LocalCommand[LayersSession, LayersSessionDone, LayersSessio
         """
         return self.answer_input(doc, LayersSession(
             action=action,
+            choices=_opt(choices, lambda x: list(x)),
             force=force,
             keys=_opt(keys, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),

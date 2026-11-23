@@ -263,20 +263,17 @@ pub fn write_group(
     write_group_receipted(group, settings, force, None)
 }
 
-/// [`write_group`] with a receipt (docs/adr/9126): where the source keeps write receipts, the receipt goes in with the
-/// rows, in the same transaction, saying the keys the new rows got. A commit whose answer is lost is
-/// [`WriteFailure::Uncertain`], never a refusal: with the receipt's id when it went in, so the source can be asked.
-pub fn write_group_receipted(
-    group: &[LayerWrites],
+/// The group's writes worked out against its source: each layer's schema, system, new rows (their keys where the
+/// table does not make them) and changed rows; refused for a row the table cannot take.
+fn plan_group<'a>(
+    group: &'a [LayerWrites],
     settings: &ProjectSettings,
-    force: bool,
-    receipting: Option<&Receipting>,
-) -> Result<Vec<Vec<i64>>, WriteFailure> {
-    let Some(first) = group.first() else {
-        return Ok(Vec::new());
-    };
+) -> Result<(std::sync::Arc<dyn kentos_data::Source>, Vec<Planned<'a>>), WriteFailure> {
     let unreachable = |w: &LayerWrites, e: DataError| {
         WriteFailure::Unreachable(format!("“{}” tablosu açılamadı: {e}", w.data.table))
+    };
+    let Some(first) = group.first() else {
+        return Err(WriteFailure::Unreachable("yazılacak katman yok".to_owned()));
     };
     let source = kentos_data::registry()
         .source(&first.data.address)
@@ -324,6 +321,48 @@ pub fn write_group_receipted(
             may_add: caps.insert,
         });
     }
+    Ok((source, planned))
+}
+
+/// The clashes a save of `group` would meet now (docs/adr/9193): the taken rows others changed or deleted since they
+/// were taken, read as the save reads them, in a transaction that writes nothing and is let go.
+pub fn clashes_of_group(
+    group: &[LayerWrites],
+    settings: &ProjectSettings,
+) -> Result<Vec<crate::data_clash::RowClash>, WriteFailure> {
+    let Some(first) = group.first() else {
+        return Ok(Vec::new());
+    };
+    let (source, planned) = plan_group(group, settings)?;
+    let mut tx = source
+        .begin()
+        .map_err(|e| WriteFailure::Unreachable(format!("“{}” tablosu açılamadı: {e}", first.data.table)))?;
+    let found = conflicts(tx.as_mut(), &planned, crate::data_text::default_height(settings));
+    let _ = tx.rollback();
+    match found {
+        Ok(None) => Ok(Vec::new()),
+        Ok(Some(WriteFailure::Conflict(_, _, rows))) => Ok(rows),
+        Ok(Some(other)) => Err(other),
+        Err((w, e)) => Err(refused(w, &e.to_string(), None)),
+    }
+}
+
+/// [`write_group`] with a receipt (docs/adr/9126): where the source keeps write receipts, the receipt goes in with the
+/// rows, in the same transaction, saying the keys the new rows got. A commit whose answer is lost is
+/// [`WriteFailure::Uncertain`], never a refusal: with the receipt's id when it went in, so the source can be asked.
+pub fn write_group_receipted(
+    group: &[LayerWrites],
+    settings: &ProjectSettings,
+    force: bool,
+    receipting: Option<&Receipting>,
+) -> Result<Vec<Vec<i64>>, WriteFailure> {
+    let Some(first) = group.first() else {
+        return Ok(Vec::new());
+    };
+    let unreachable = |w: &LayerWrites, e: DataError| {
+        WriteFailure::Unreachable(format!("“{}” tablosu açılamadı: {e}", w.data.table))
+    };
+    let (source, planned) = plan_group(group, settings)?;
     // A receipt where the source keeps them; a source that keeps none writes as before.
     let scope = receipt_scope(&first.data);
     let receipting = match receipting {

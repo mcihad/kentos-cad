@@ -579,6 +579,108 @@ def cases():
                 completed(done([layer_state(changed=1)])), {"ids": []}),
         rows_of([3], rows_answer([dict(BY_KEY[3], kullanim="Pazar", mahalle="Yeni")])),
     ])
+    # The same clash read field by field and settled as chosen (docs/adr/9193): conflicts writes nothing; mine
+    # writes Pazar and keeps the table's other change (mahalle Yeni); theirs leaves nothing to write.
+    def clash_setup(k):
+        return [
+            copy(k), add_layer(k), add_layer(k, "layer-2", "Parseller B"),
+            start(("layer-1", "layer-2")),
+            session({"action": "take", "layers": ["layer-1"], "keys": [3]},
+                    completed(done([layer_state()], ["$uidOf:1"]))),
+            session({"action": "take", "layers": ["layer-2"], "keys": [3]},
+                    completed(done([layer_state("layer-2")], ["$uidOf:2"]))),
+            {"op": "execute", "command": "cad.fields.write",
+             "input": {"layer": "layer-2", "write": {"kind": "calculate", "field": "kullanim", "expression": "'Okul'"}},
+             "result": any_result()},
+            {"op": "execute", "command": "cad.fields.write",
+             "input": {"layer": "layer-2", "write": {"kind": "calculate", "field": "mahalle", "expression": "'Yeni'"}},
+             "result": any_result()},
+            session({"action": "save", "layers": ["layer-2"]}, completed(done([layer_state("layer-2", changed=1)]))),
+            {"op": "execute", "command": "cad.fields.write",
+             "input": {"layer": "layer-1", "write": {"kind": "calculate", "field": "kullanim", "expression": "'Pazar'"}},
+             "result": any_result()},
+        ]
+
+    clash3 = {"field": "kullanim", "mine": "Pazar", "theirs": "Okul"}
+    if BY_KEY[3]["kullanim"]:
+        clash3["first"] = BY_KEY[3]["kullanim"]
+    row3 = {"layer": "layer-1", "key": 3, "uid": "$uidOf:1", "fields": [clash3]}
+
+    def with_conflicts(layers, conflicts):
+        out = done(layers)
+        out["conflicts"] = conflicts
+        return out
+
+    k = next(n)
+    case("Çakışmalar alan alan okunur, hiçbir şey yazılmaz; benimkini seçip kaydetmek tablonun öbür değişikliğini korur",
+         clash_setup(k) + [
+             session({"action": "conflicts", "layers": ["layer-1"]},
+                     completed(with_conflicts([layer_state(changed=1)], [row3])), {"ids": [1]}),
+             rows_of([3], rows_answer([dict(BY_KEY[3], kullanim="Okul", mahalle="Yeni")])),
+             # Written, the object leaves the drawing: its id is the clash's, said as it was.
+             session({"action": "save", "layers": ["layer-1"],
+                      "choices": [{"layer": "layer-1", "key": 3, "fields": {"kullanim": "mine"}}]},
+                     completed(with_conflicts([layer_state(changed=1)], [dict(row3, uid="$any")])), {"ids": []}),
+             rows_of([3], rows_answer([dict(BY_KEY[3], kullanim="Pazar", mahalle="Yeni")])),
+         ])
+    k = next(n)
+    case("Tablodakini seçmek: satır tablodaki gibi kalır, yazılacak bir şey kalmaz",
+         clash_setup(k) + [
+             session({"action": "save", "layers": ["layer-1"],
+                      "choices": [{"layer": "layer-1", "key": 3, "fields": {"kullanim": "theirs"}}]},
+                     completed(with_conflicts([layer_state()], [row3])), {"ids": [1]}),
+             rows_of([3], rows_answer([dict(BY_KEY[3], kullanim="Okul", mahalle="Yeni")])),
+         ])
+    k = next(n)
+    first3_words = f"“{BY_KEY[3]['kullanim']}”" if BY_KEY[3]["kullanim"] else "boş"
+    clash3_words = ("Başkası aynı satırların aynı alanlarını siz aldıktan sonra değiştirmiş ya da satırı silmiş "
+                    f"(satır 3: kullanim (ilk {first3_words}, sizinki “Pazar”, tablodaki “Okul”)); hiçbir şey yazılmadı.")
+    unchosen3 = clash3_words + (" Seçilmeyen: satır 3 kullanim. Çakışmaları okuyun (action: conflicts) ve her birini "
+                                "choices'ta seçin.")
+    case("Seçilmeyen çakışma kaydı durdurur; çakışmayan alan ya da satır seçilemez",
+         clash_setup(k) + [
+             session({"action": "save", "layers": ["layer-1"], "choices": []},
+                     {"status": "conflict", "error": {"code": "rows_changed", "message": unchosen3, "path": "choices",
+                                                      "uids": ["$uidOf:1"], "retryable": True}},
+                     {"ids": [1]}),
+             session({"action": "save", "layers": ["layer-1"],
+                      "choices": [{"layer": "layer-1", "key": 3, "fields": {"mahalle": "mine"}}]},
+                     failed("clash_choice",
+                            "“Parseller” katmanının 3 anahtarlı satırının “mahalle” alanı çakışmıyor; çakışmaları "
+                            "okuyun (action: conflicts) ve yalnız onları seçin.",
+                            "choices[0]"),
+                     {"ids": [1]}),
+             session({"action": "save", "layers": ["layer-1"],
+                      "choices": [{"layer": "layer-1", "key": 5, "fields": {"kullanim": "mine"}}]},
+                     failed("clash_choice",
+                            "“Parseller” katmanının 5 anahtarlı satırı çakışmıyor; çakışmaları okuyun "
+                            "(action: conflicts) ve yalnız onları seçin.",
+                            "choices[0]"),
+                     {"ids": [1]}),
+             rows_of([3], rows_answer([dict(BY_KEY[3], kullanim="Okul", mahalle="Yeni")])),
+         ])
+    k = next(n)
+    case("Başkasının sildiği satır yeni satır olarak yazılır (row: mine)", [
+        copy(k), add_layer(k), add_layer(k, "layer-2", "Parseller B"),
+        start(("layer-1", "layer-2")),
+        session({"action": "take", "layers": ["layer-1"], "keys": [4]},
+                completed(done([layer_state()], ["$uidOf:1"]))),
+        session({"action": "delete", "layers": ["layer-2"], "keys": [4]},
+                completed(done([layer_state("layer-2", deleted=1)]))),
+        session({"action": "save", "layers": ["layer-2"]}, completed(done([layer_state("layer-2", deleted=1)]))),
+        {"op": "execute", "command": "cad.fields.write",
+         "input": {"layer": "layer-1", "write": {"kind": "calculate", "field": "mahalle", "expression": "'Geri'"}},
+         "result": any_result()},
+        session({"action": "conflicts", "layers": ["layer-1"]},
+                completed(with_conflicts([layer_state(changed=1)], [
+                    {"layer": "layer-1", "key": 4, "uid": "$uidOf:1", "deleted": "theirs", "mayAdd": True}])),
+                {"ids": [1]}),
+        session({"action": "save", "layers": ["layer-1"], "choices": [{"layer": "layer-1", "key": 4, "row": "mine"}]},
+                completed(with_conflicts([layer_state(added=1, keys=[11])], [
+                    {"layer": "layer-1", "key": 4, "uid": "$any", "deleted": "theirs", "mayAdd": True}])),
+                {"ids": []}),
+        rows_of([4, 11], rows_answer([dict(BY_KEY[4], fid=11, mahalle="Geri")])),
+    ])
     k = next(n)
     gone4 = ("Başkası aynı satırların aynı alanlarını siz aldıktan sonra değiştirmiş ya da satırı silmiş "
              "(satır 4: tabloda silinmiş, sizde değişmiş); hiçbir şey yazılmadı. " + AGAIN)

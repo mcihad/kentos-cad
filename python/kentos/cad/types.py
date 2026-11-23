@@ -1491,6 +1491,34 @@ CheckpointKindName = Literal["snapshot", "revision"]
 """The names of :class:`CheckpointKind`, for a plain string."""
 
 
+class ClashDeleted(_StrEnum):
+    """Where a clashing row was deleted (docs/adr/9193).
+
+    - ``theirs``: In the table, the row changed here.
+    - ``here``: Here, the row changed in the table.
+    """
+    THEIRS = "theirs"
+    HERE = "here"
+
+
+ClashDeletedName = Literal["theirs", "here"]
+"""The names of :class:`ClashDeleted`, for a plain string."""
+
+
+class ClashSide(_StrEnum):
+    """Which side of a clash stays (docs/adr/9193).
+
+    - ``mine``: The value, shape or change here.
+    - ``theirs``: The table's.
+    """
+    MINE = "mine"
+    THEIRS = "theirs"
+
+
+ClashSideName = Literal["mine", "theirs"]
+"""The names of :class:`ClashSide`, for a plain string."""
+
+
 class CleanupIgnore(_StrEnum):
     """A property two objects may differ in and still be the same (AutoCAD's OVERKILL “Ignore object property”)."""
     LAYER = "layer"
@@ -7734,6 +7762,7 @@ class SessionAction(_StrEnum):
     - ``take``: Takes rows of the layer into the drawing by key, as objects the object commands change.
     - ``delete``: Deletes rows of the layer by key, as one undo step.
     - ``status``: Says each layer's session; writes nothing.
+    - ``conflicts``: Says the clashes a save would meet now (docs/adr/9193): the taken rows others changed or deleted since, field by
     """
     START = "start"
     SAVE = "save"
@@ -7743,9 +7772,10 @@ class SessionAction(_StrEnum):
     TAKE = "take"
     DELETE = "delete"
     STATUS = "status"
+    CONFLICTS = "conflicts"
 
 
-SessionActionName = Literal["start", "save", "rollback", "cancel", "stop", "take", "delete", "status"]
+SessionActionName = Literal["start", "save", "rollback", "cancel", "stop", "take", "delete", "status", "conflicts"]
 """The names of :class:`SessionAction`, for a plain string."""
 
 
@@ -25818,6 +25848,46 @@ class CirclePlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ClashChoice(_Model):
+    """How a save settles one clashing row (docs/adr/9193): by its layer and key, the side each clashing field keeps, the
+    side the shape keeps, and for a row deleted on one side what is done with it (`mine`: a row deleted in the table is
+    written again as a new row, a row deleted here is deleted still; `theirs`: the change here is let go, the row kept).
+    Attributes:
+        key: Unit: id.
+        fields: Each field both sides changed, and the side it keeps.
+        row: A row deleted on one side: what is done with it.
+        shape: The shape moved on both sides: the side it keeps.
+    """
+    layer: str
+    key: int
+    fields: dict[str, ClashSide | ClashSideName] | Unset = UNSET
+    row: ClashSide | ClashSideName | None | Unset = UNSET
+    shape: ClashSide | ClashSideName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["key"] = self.key
+        if self.fields is not UNSET:
+            out["fields"] = {k0: _enum_out(e0) for k0, e0 in self.fields.items()}
+        if self.row is not UNSET:
+            out["row"] = None if self.row is None else _enum_out(self.row)
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else _enum_out(self.shape)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClashChoice:
+        return cls(
+            layer=data["layer"],
+            key=data["key"],
+            fields={k0: _enum_in(ClashSide, e0) for k0, e0 in data["fields"].items()} if "fields" in data else UNSET,
+            row=UNSET if "row" not in data else None if data["row"] is None else _enum_in(ClashSide, data["row"]),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ClashSide, data["shape"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CleanupReport(_Model):
     """What Çizimi temizle found.
     Attributes:
@@ -42999,6 +43069,40 @@ class FieldColumn(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldConflict(_Model):
+    """A field both sides changed to different values, with its three values (none: empty).
+    Attributes:
+        first: As the row was taken.
+        mine: Here.
+        theirs: In the table now.
+    """
+    field: str
+    first: str | None | Unset = UNSET
+    mine: str | None | Unset = UNSET
+    theirs: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        if self.first is not UNSET:
+            out["first"] = self.first
+        if self.mine is not UNSET:
+            out["mine"] = self.mine
+        if self.theirs is not UNSET:
+            out["theirs"] = self.theirs
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldConflict:
+        return cls(
+            field=data["field"],
+            first=data.get("first", UNSET),
+            mine=data.get("mine", UNSET),
+            theirs=data.get("theirs", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldCount(_Model):
     """A field and how many records.
     Attributes:
@@ -59517,18 +59621,24 @@ class LayersSession(_Model):
     could not be read or opened; the message says why), `data_save_failed` (the table refused the writes: nothing of the
     layers written together was written, their changes wait; with several groups, a warning of those not written while
     the others were), `rows_changed` (a row taken was changed or deleted by someone else since: nothing written; `force`
-    writes over it).
+    writes over it, `choices` settle it field by field; a clash `choices` leaves unchosen), `clash_choice` (a choice no
+    clash of the save asks for: its row, field or way).
 
     The project's edit grouping (`settings.editGrouping`, docs/adr/9104 §2) widens `start`, `save`, `rollback`, `cancel`,
     `stop` and `status` of a named layer to the layers of its source, or to every data layer; `save` then writes a
     source's layers in one transaction.
     Attributes:
+        choices: `save`: how each clash the save meets is settled (docs/adr/9193), as `conflicts` says them: every clashing
+            field, shape and deleted row chosen. The rows are made as chosen (one undo step, “Çakışmayı çöz”) and written,
+            the table checked once more. A clash not chosen is a `rows_changed`; a choice no clash asks for a
+            `clash_choice`.
         force: `save`: write over the rows others changed or deleted since they were taken (a `rows_changed` otherwise).
         keys: `take`, `delete`: the rows' keys, 1–10 000. Unit: id.
         layers: The data layers (their ids). None: every layer being edited (`save`, `rollback`, `cancel`, `stop`, `status`).
             `start` names at least one; `take` and `delete` exactly one.
     """
     action: SessionAction | SessionActionName
+    choices: list[ClashChoice] | None | Unset = UNSET
     force: bool | None | Unset = UNSET
     keys: list[int] | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
@@ -59536,6 +59646,8 @@ class LayersSession(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["action"] = _enum_out(self.action)
+        if self.choices is not UNSET:
+            out["choices"] = None if self.choices is None else [e0.to_json() for e0 in self.choices]
         if self.force is not UNSET:
             out["force"] = self.force
         if self.keys is not UNSET:
@@ -59548,6 +59660,7 @@ class LayersSession(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> LayersSession:
         return cls(
             action=_enum_in(SessionAction, data["action"]),
+            choices=UNSET if "choices" not in data else None if data["choices"] is None else [ClashChoice.from_json(e0) for e0 in data["choices"]],
             force=data.get("force", UNSET),
             keys=UNSET if "keys" not in data else None if data["keys"] is None else list(data["keys"]),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
@@ -59559,16 +59672,20 @@ class LayersSessionDone(_Model):
     """Output of `cad.layers.session` v1.
     Attributes:
         layers: The layers acted on, in the tree's order.
+        conflicts: `conflicts`: the clashes a save would meet now; `save` with `choices`: the clashes it settled.
         objects: `take`: the objects' persistent ids for the keys, in order; none for a row deleted or not in the table.
     """
     layers: list[SessionLayer]
     revision: str
+    conflicts: list[RowConflict] | Unset = UNSET
     objects: list[str | None] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["layers"] = [e0.to_json() for e0 in self.layers]
         out["revision"] = self.revision
+        if self.conflicts is not UNSET:
+            out["conflicts"] = [e0.to_json() for e0 in self.conflicts]
         if self.objects is not UNSET:
             out["objects"] = list(self.objects)
         return out
@@ -59578,6 +59695,7 @@ class LayersSessionDone(_Model):
         return cls(
             layers=[SessionLayer.from_json(e0) for e0 in data["layers"]],
             revision=data["revision"],
+            conflicts=[RowConflict.from_json(e0) for e0 in data["conflicts"]] if "conflicts" in data else UNSET,
             objects=list(data["objects"]) if "objects" in data else UNSET,
         )
 
@@ -95629,6 +95747,52 @@ class RoutesFind(_Model):
             climb=float(data["climb"]),
             avoid=list(data["avoid"]) if "avoid" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RowConflict(_Model):
+    """A taken row a save cannot write as it is (docs/adr/9193): its layer, key and object, the fields that clash, whether
+    the shape does, where it was deleted; whether the table takes it again as a new row (the connection's right).
+    Attributes:
+        key: Unit: id.
+        uid: The object's persistent id.
+        may_add: A row deleted in the table: whether it can be written again as a new one.
+        shape: The shape moved on both sides.
+    """
+    layer: str
+    key: int
+    uid: str
+    deleted: ClashDeleted | ClashDeletedName | None | Unset = UNSET
+    fields: list[FieldConflict] | Unset = UNSET
+    may_add: bool | Unset = UNSET
+    shape: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["key"] = self.key
+        out["uid"] = self.uid
+        if self.deleted is not UNSET:
+            out["deleted"] = None if self.deleted is None else _enum_out(self.deleted)
+        if self.fields is not UNSET:
+            out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.may_add is not UNSET:
+            out["mayAdd"] = self.may_add
+        if self.shape is not UNSET:
+            out["shape"] = self.shape
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RowConflict:
+        return cls(
+            layer=data["layer"],
+            key=data["key"],
+            uid=data["uid"],
+            deleted=UNSET if "deleted" not in data else None if data["deleted"] is None else _enum_in(ClashDeleted, data["deleted"]),
+            fields=[FieldConflict.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            may_add=data.get("mayAdd", UNSET),
+            shape=data.get("shape", UNSET),
         )
 
 
@@ -148346,6 +148510,11 @@ __all__ = [
     "CircleThreePointsCurveConstruction",
     "CircleTwoPointsCurveConstruction",
     "CircumscribedRegularFrame",
+    "ClashChoice",
+    "ClashDeleted",
+    "ClashDeletedName",
+    "ClashSide",
+    "ClashSideName",
     "ClassIfcChange",
     "CleanupIgnore",
     "CleanupIgnoreName",
@@ -149064,6 +149233,7 @@ __all__ = [
     "FieldChange",
     "FieldChoice",
     "FieldColumn",
+    "FieldConflict",
     "FieldCount",
     "FieldDomain",
     "FieldEdit",
@@ -151242,6 +151412,7 @@ __all__ = [
     "RoutesDraw",
     "RoutesDrawn",
     "RoutesFind",
+    "RowConflict",
     "RowHeightTableEdit",
     "RowOffsetDimensionSetEdit",
     "RowsChecked",

@@ -15263,7 +15263,7 @@
       ]
     },
     {
-      "name": "Başkasının sildiği satır: çakışma söylenir, hiçbir şey yazılmaz",
+      "name": "Çakışmalar alan alan okunur, hiçbir şey yazılmaz; benimkini seçip kaydetmek tablonun öbür değişikliğini korur",
       "steps": [
         {
           "op": "copyFile",
@@ -15328,6 +15328,1596 @@
             "data": {
               "driver": "gpkg",
               "address": "$tmp:oturum/27.gpkg",
+              "table": "parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POLYGON",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              },
+              {
+                "name": "kullanim",
+                "kind": "text"
+              },
+              {
+                "name": "alan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-2",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "start",
+            "layers": [
+              "layer-1",
+              "layer-2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                },
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "take",
+            "layers": [
+              "layer-1"
+            ],
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "objects": [
+                "$uidOf:1"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "take",
+            "layers": [
+              "layer-2"
+            ],
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "objects": [
+                "$uidOf:2"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-2",
+            "write": {
+              "kind": "calculate",
+              "field": "kullanim",
+              "expression": "'Okul'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-2",
+            "write": {
+              "kind": "calculate",
+              "field": "mahalle",
+              "expression": "'Yeni'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 1,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-1",
+            "write": {
+              "kind": "calculate",
+              "field": "kullanim",
+              "expression": "'Pazar'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "conflicts",
+            "layers": [
+              "layer-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 1,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "conflicts": [
+                {
+                  "layer": "layer-1",
+                  "key": 3,
+                  "uid": "$uidOf:1",
+                  "fields": [
+                    {
+                      "field": "kullanim",
+                      "mine": "Pazar",
+                      "theirs": "Okul",
+                      "first": "Ticaret"
+                    }
+                  ]
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ]
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.rows",
+          "input": {
+            "layer": "layer-1",
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "fields": [
+                "ada",
+                "parsel",
+                "mahalle",
+                "kullanim",
+                "alan"
+              ],
+              "rows": [
+                {
+                  "key": 3,
+                  "attrs": {
+                    "ada": "200",
+                    "parsel": "3",
+                    "mahalle": "Yeni",
+                    "kullanim": "Okul",
+                    "alan": "484"
+                  }
+                }
+              ],
+              "offset": 0,
+              "checked": "source"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-1"
+            ],
+            "choices": [
+              {
+                "layer": "layer-1",
+                "key": 3,
+                "fields": {
+                  "kullanim": "mine"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 1,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "conflicts": [
+                {
+                  "layer": "layer-1",
+                  "key": 3,
+                  "uid": "$any",
+                  "fields": [
+                    {
+                      "field": "kullanim",
+                      "mine": "Pazar",
+                      "theirs": "Okul",
+                      "first": "Ticaret"
+                    }
+                  ]
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.rows",
+          "input": {
+            "layer": "layer-1",
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "fields": [
+                "ada",
+                "parsel",
+                "mahalle",
+                "kullanim",
+                "alan"
+              ],
+              "rows": [
+                {
+                  "key": 3,
+                  "attrs": {
+                    "ada": "200",
+                    "parsel": "3",
+                    "mahalle": "Yeni",
+                    "kullanim": "Pazar",
+                    "alan": "484"
+                  }
+                }
+              ],
+              "offset": 0,
+              "checked": "source"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tablodakini seçmek: satır tablodaki gibi kalır, yazılacak bir şey kalmaz",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/oturum.gpkg",
+          "to": "$tmp:oturum/28.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Parseller",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:oturum/28.gpkg",
+              "table": "parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POLYGON",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              },
+              {
+                "name": "kullanim",
+                "kind": "text"
+              },
+              {
+                "name": "alan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Parseller B",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:oturum/28.gpkg",
+              "table": "parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POLYGON",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              },
+              {
+                "name": "kullanim",
+                "kind": "text"
+              },
+              {
+                "name": "alan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-2",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "start",
+            "layers": [
+              "layer-1",
+              "layer-2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                },
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "take",
+            "layers": [
+              "layer-1"
+            ],
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "objects": [
+                "$uidOf:1"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "take",
+            "layers": [
+              "layer-2"
+            ],
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "objects": [
+                "$uidOf:2"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-2",
+            "write": {
+              "kind": "calculate",
+              "field": "kullanim",
+              "expression": "'Okul'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-2",
+            "write": {
+              "kind": "calculate",
+              "field": "mahalle",
+              "expression": "'Yeni'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 1,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-1",
+            "write": {
+              "kind": "calculate",
+              "field": "kullanim",
+              "expression": "'Pazar'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-1"
+            ],
+            "choices": [
+              {
+                "layer": "layer-1",
+                "key": 3,
+                "fields": {
+                  "kullanim": "theirs"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "conflicts": [
+                {
+                  "layer": "layer-1",
+                  "key": 3,
+                  "uid": "$uidOf:1",
+                  "fields": [
+                    {
+                      "field": "kullanim",
+                      "mine": "Pazar",
+                      "theirs": "Okul",
+                      "first": "Ticaret"
+                    }
+                  ]
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ]
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.rows",
+          "input": {
+            "layer": "layer-1",
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "fields": [
+                "ada",
+                "parsel",
+                "mahalle",
+                "kullanim",
+                "alan"
+              ],
+              "rows": [
+                {
+                  "key": 3,
+                  "attrs": {
+                    "ada": "200",
+                    "parsel": "3",
+                    "mahalle": "Yeni",
+                    "kullanim": "Okul",
+                    "alan": "484"
+                  }
+                }
+              ],
+              "offset": 0,
+              "checked": "source"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seçilmeyen çakışma kaydı durdurur; çakışmayan alan ya da satır seçilemez",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/oturum.gpkg",
+          "to": "$tmp:oturum/29.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Parseller",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:oturum/29.gpkg",
+              "table": "parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POLYGON",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              },
+              {
+                "name": "kullanim",
+                "kind": "text"
+              },
+              {
+                "name": "alan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Parseller B",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:oturum/29.gpkg",
+              "table": "parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POLYGON",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              },
+              {
+                "name": "kullanim",
+                "kind": "text"
+              },
+              {
+                "name": "alan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-2",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "start",
+            "layers": [
+              "layer-1",
+              "layer-2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                },
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "take",
+            "layers": [
+              "layer-1"
+            ],
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "objects": [
+                "$uidOf:1"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "take",
+            "layers": [
+              "layer-2"
+            ],
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "objects": [
+                "$uidOf:2"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-2",
+            "write": {
+              "kind": "calculate",
+              "field": "kullanim",
+              "expression": "'Okul'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-2",
+            "write": {
+              "kind": "calculate",
+              "field": "mahalle",
+              "expression": "'Yeni'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 1,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-1",
+            "write": {
+              "kind": "calculate",
+              "field": "kullanim",
+              "expression": "'Pazar'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-1"
+            ],
+            "choices": []
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "rows_changed",
+              "message": "Başkası aynı satırların aynı alanlarını siz aldıktan sonra değiştirmiş ya da satırı silmiş (satır 3: kullanim (ilk “Ticaret”, sizinki “Pazar”, tablodaki “Okul”)); hiçbir şey yazılmadı. Seçilmeyen: satır 3 kullanim. Çakışmaları okuyun (action: conflicts) ve her birini choices'ta seçin.",
+              "path": "choices",
+              "uids": [
+                "$uidOf:1"
+              ],
+              "retryable": true
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ]
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-1"
+            ],
+            "choices": [
+              {
+                "layer": "layer-1",
+                "key": 3,
+                "fields": {
+                  "mahalle": "mine"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "clash_choice",
+              "message": "“Parseller” katmanının 3 anahtarlı satırının “mahalle” alanı çakışmıyor; çakışmaları okuyun (action: conflicts) ve yalnız onları seçin.",
+              "path": "choices[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ]
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-1"
+            ],
+            "choices": [
+              {
+                "layer": "layer-1",
+                "key": 5,
+                "fields": {
+                  "kullanim": "mine"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "clash_choice",
+              "message": "“Parseller” katmanının 5 anahtarlı satırı çakışmıyor; çakışmaları okuyun (action: conflicts) ve yalnız onları seçin.",
+              "path": "choices[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ]
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.rows",
+          "input": {
+            "layer": "layer-1",
+            "keys": [
+              3
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "fields": [
+                "ada",
+                "parsel",
+                "mahalle",
+                "kullanim",
+                "alan"
+              ],
+              "rows": [
+                {
+                  "key": 3,
+                  "attrs": {
+                    "ada": "200",
+                    "parsel": "3",
+                    "mahalle": "Yeni",
+                    "kullanim": "Okul",
+                    "alan": "484"
+                  }
+                }
+              ],
+              "offset": 0,
+              "checked": "source"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başkasının sildiği satır yeni satır olarak yazılır (row: mine)",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/oturum.gpkg",
+          "to": "$tmp:oturum/30.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Parseller",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:oturum/30.gpkg",
+              "table": "parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POLYGON",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              },
+              {
+                "name": "kullanim",
+                "kind": "text"
+              },
+              {
+                "name": "alan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Parseller B",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:oturum/30.gpkg",
+              "table": "parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POLYGON",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              },
+              {
+                "name": "kullanim",
+                "kind": "text"
+              },
+              {
+                "name": "alan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-2",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "start",
+            "layers": [
+              "layer-1",
+              "layer-2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                },
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "take",
+            "layers": [
+              "layer-1"
+            ],
+            "keys": [
+              4
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "objects": [
+                "$uidOf:1"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "delete",
+            "layers": [
+              "layer-2"
+            ],
+            "keys": [
+              4
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 1
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-2",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 0,
+                  "deleted": 1
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.fields.write",
+          "input": {
+            "layer": "layer-1",
+            "write": {
+              "kind": "calculate",
+              "field": "mahalle",
+              "expression": "'Geri'"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "conflicts",
+            "layers": [
+              "layer-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 0,
+                  "changed": 1,
+                  "deleted": 0
+                }
+              ],
+              "revision": "$current",
+              "conflicts": [
+                {
+                  "layer": "layer-1",
+                  "key": 4,
+                  "uid": "$uidOf:1",
+                  "deleted": "theirs",
+                  "mayAdd": true
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ]
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "action": "save",
+            "layers": [
+              "layer-1"
+            ],
+            "choices": [
+              {
+                "layer": "layer-1",
+                "key": 4,
+                "row": "mine"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layers": [
+                {
+                  "layer": "layer-1",
+                  "editing": true,
+                  "added": 1,
+                  "changed": 0,
+                  "deleted": 0,
+                  "keys": [
+                    11
+                  ]
+                }
+              ],
+              "revision": "$current",
+              "conflicts": [
+                {
+                  "layer": "layer-1",
+                  "key": 4,
+                  "uid": "$any",
+                  "deleted": "theirs",
+                  "mayAdd": true
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.rows",
+          "input": {
+            "layer": "layer-1",
+            "keys": [
+              4,
+              11
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "fields": [
+                "ada",
+                "parsel",
+                "mahalle",
+                "kullanim",
+                "alan"
+              ],
+              "rows": [
+                {
+                  "key": 11,
+                  "attrs": {
+                    "ada": "200",
+                    "parsel": "4",
+                    "mahalle": "Geri",
+                    "alan": "529"
+                  }
+                }
+              ],
+              "offset": 0,
+              "checked": "source"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başkasının sildiği satır: çakışma söylenir, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:data/v1/oturum.gpkg",
+          "to": "$tmp:oturum/31.gpkg"
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Parseller",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:oturum/31.gpkg",
+              "table": "parseller",
+              "key": "fid",
+              "geometry": {
+                "column": "geom",
+                "typeName": "POLYGON",
+                "srid": 5256
+              }
+            },
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "integer"
+              },
+              {
+                "name": "parsel",
+                "kind": "integer"
+              },
+              {
+                "name": "mahalle",
+                "kind": "text"
+              },
+              {
+                "name": "kullanim",
+                "kind": "text"
+              },
+              {
+                "name": "alan",
+                "kind": "decimal"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "layer-1",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.data",
+          "input": {
+            "operation": "add",
+            "name": "Parseller B",
+            "data": {
+              "driver": "gpkg",
+              "address": "$tmp:oturum/31.gpkg",
               "table": "parseller",
               "key": "fid",
               "geometry": {
@@ -15538,7 +17128,7 @@
         {
           "op": "copyFile",
           "from": "$fixture:data/v1/oturum.gpkg",
-          "to": "$tmp:oturum/28.gpkg"
+          "to": "$tmp:oturum/32.gpkg"
         },
         {
           "op": "execute",
@@ -15548,7 +17138,7 @@
             "name": "Parseller",
             "data": {
               "driver": "gpkg",
-              "address": "$tmp:oturum/28.gpkg",
+              "address": "$tmp:oturum/32.gpkg",
               "table": "parseller",
               "key": "fid",
               "geometry": {

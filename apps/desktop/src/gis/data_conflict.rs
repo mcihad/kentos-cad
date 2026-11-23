@@ -10,7 +10,7 @@
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Fill, Length};
-use kentos_native_application::data_clash::{RowClash, merged, value_words};
+use kentos_native_application::data_clash::{RowClash, value_words};
 use kentos_ui::label;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::Dialog as Frame;
@@ -221,82 +221,22 @@ impl App {
         }
         let c = self.gis.data_edits.conflict.take()?;
         let doc = self.document.as_mut()?;
-        let label = "Çakışmayı çöz";
-        let mut updates: Vec<(kentos_domain::Slot, kentos_commands::Entity)> = Vec::new();
-        let mut rebase: Vec<(String, kentos_domain::Uuid, kentos_commands::Entity)> = Vec::new();
-        let mut untake: Vec<(String, kentos_domain::Uuid)> = Vec::new();
-        let mut let_go: Vec<(String, kentos_domain::Uuid)> = Vec::new();
-        for (r, picks) in c.rows.iter().zip(&c.chosen) {
-            let first = picks.first().copied().flatten().unwrap_or(false);
-            match (&r.mine, &r.theirs) {
-                (Some(_), Some(theirs)) => {
-                    // The object as it is now (it may have changed since the save), merged with the table's row.
-                    let Some(slot) = doc.model.slot_of(r.uid) else {
-                        continue;
-                    };
-                    let Some(now) = doc.model.get(slot).cloned() else {
-                        continue;
-                    };
-                    let take: std::collections::HashSet<&str> = r
-                        .fields
-                        .iter()
-                        .zip(picks)
-                        .filter(|(_, p)| **p == Some(false))
-                        .map(|(f, _)| f.field.as_str())
-                        .collect();
-                    let geometry_theirs = r.geometry && picks.get(r.fields.len()).copied().flatten() == Some(false);
-                    let made = merged(&r.first, &now, theirs, &|n| take.contains(n), geometry_theirs);
-                    if made != now {
-                        updates.push((slot, made));
-                    }
-                    rebase.push((r.layer.clone(), r.uid, theirs.clone()));
-                }
-                // Deleted here, changed in the table: deleted still against the table's row, or forgotten.
-                (None, Some(theirs)) if first => rebase.push((r.layer.clone(), r.uid, theirs.clone())),
-                (None, Some(_)) => untake.push((r.layer.clone(), r.uid)),
-                // Deleted in the table: written again as a new row where the connection may add one, or let go.
-                (Some(_), None) if first && r.may_add => untake.push((r.layer.clone(), r.uid)),
-                (_, None) => let_go.push((r.layer.clone(), r.uid)),
-            }
-        }
-        if !updates.is_empty() {
-            let done = doc.model.transact(label, |d| {
-                d.update_many(updates.clone(), label);
-                Ok::<(), kentos_domain::Refusal>(())
-            });
-            if let Err(why) = done {
-                let why = why.0;
+        // The shared settling (docs/adr/9193), as cad.layers.session's choices settle.
+        let picks: Vec<Vec<bool>> =
+            c.chosen.iter().map(|r| r.iter().map(|p| p.unwrap_or(false)).collect()).collect();
+        let settled = match kentos_native_application::data_clash::settle(&mut doc.model, &c.rows, &picks, "Çakışmayı çöz") {
+            Ok(s) => s,
+            Err(why) => {
                 self.warn(why);
                 return None;
             }
-        }
-        let mut problems = Vec::new();
-        for (layer, uid, row) in rebase {
-            if let Err(why) = doc.model.data_rebase(&layer, uid, row) {
-                problems.push(why);
-            }
-        }
-        for (layer, uid) in untake {
-            doc.model.data_untake(&layer, uid);
-        }
-        let mut dropped_keys: Vec<(String, i64)> = Vec::new();
-        for (layer, uid) in let_go {
-            if let Some(key) = doc.model.taken_key(&layer, uid) {
-                dropped_keys.push((layer.clone(), key));
-            }
-            if let Err(why) = doc.model.data_let_go(&layer, uid) {
-                problems.push(why);
-            }
-        }
-        // A row let go or written again as a new one is no longer the source's gone row.
-        for r in c.rows.iter().filter(|r| r.gone()) {
-            dropped_keys.push((r.layer.clone(), r.key));
-        }
-        for (layer, key) in dropped_keys {
+        };
+        for (layer, key) in settled.dropped {
             if let Some(keys) = self.gis.data_edits.gone.get_mut(&layer) {
                 keys.remove(&key);
             }
         }
+        let problems = settled.problems;
         for why in problems {
             self.warn(why);
         }

@@ -208,7 +208,7 @@ pub(super) const ENTRIES: &[Entry] = &[
             &["no_layer", "one_layer", "no_keys", "invalid_count"],
             &["layer_not_found", "not_a_data_layer", "data_layer_read_only"],
             &["data_layer_not_editing", "data_edits_unsaved"],
-            &["source_unreachable", "data_save_failed", "rows_changed"],
+            &["source_unreachable", "data_save_failed", "rows_changed", "clash_choice"],
         ],
         warnings: &["data_save_failed"],
         targets: none,
