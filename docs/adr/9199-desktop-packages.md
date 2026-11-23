@@ -169,6 +169,10 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 - **Yol'a özgü:** eksen, boykesit, enkesit ve şablon, dever, koridor ve şev planı, hacim, taşıma ve plan, aplikasyon,
   yol paftaları ve görünüşleri, çizgiden eksen ve boykesit, korkuluk, menfez, istinat, süpürme, görüş, platform suyu,
   hakediş, güzergâh, kavşak, LandXML/IFC/glTF.
+- **Düğüm:** ortak pencerelerin kapanışı Yol'un neredeyse tamamını çeker (31,5 bin satırın 30,8 bini): hepsi Yol'un
+  merkezine (`road`: `RoadUiState`, `road::Event`, `RoadDialogKind`) bağlı, merkez de her Yol penceresini sayar. Önce
+  ortak pencerelere çekirdekte kendi merkezleri verilir (durum, ileti, pencere türü; Harita'daki düzenin çekirdek içi
+  benzeri), Yol'un merkezine bağları kalkar; `road_project_panel`'in `project_graph_window` bağı da çözülür.
 
 - Yol, Mimari ve CBS paketleri (en az bağlıdan); her biri aynı düzenle: ortak parçalar çekirdeğe, `ModuleParts`,
   silinen türler, uzantı trait'leri, paket, sınamaların yeri.
