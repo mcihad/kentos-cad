@@ -689,6 +689,14 @@ impl App {
                     self.selection.set_hover(None);
                 }
             }
+            // The view moved under a still pointer (the wheel, a pan, Tümünü göster): the object it rested on is no
+            // longer under it. Its highlight and rollover card go until the pointer moves (docs/adr/9204); they stayed
+            // and named the object under the pointer before the wheel turned, over an empty part of the drawing.
+            viewport::Event::Zoomed { .. } | viewport::Event::Panned { .. } | viewport::Event::Extents => {
+                if !self.session.is_running() {
+                    self.selection.set_hover(None);
+                }
+            }
             // Held, a menu; a quick click, Enter or the idle menu (drawing_menus.rs).
             viewport::Event::RightPressed(at) => self.right_pressed(at),
             viewport::Event::RightHeld(at) => self.right_held(at),

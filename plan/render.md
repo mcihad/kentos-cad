@@ -54,16 +54,30 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - “Tümünü göster” NCZ'de x'i −4,1 M ile +4,7 M arasına açıyor.
     - DWG açılışı 22,6 s.
   - **Planda olmayan:** GPU süresi zaman damgası sorgusuyla değil, geri okumayla ölçüldü. Sorgu RM-07'ye kaldı.
-- [ ] **RM-02 — Doğruluk denetçisi.**
-  - Sınama kipinde, ekrana konan her kare aynı kamerayla taze çizilen kareyle piksel piksel karşılaştırılır.
-  - Fark çıkarsa hangi yeniden kullanma yolunun ve hangi anahtarın yol açtığı yazılır.
-  - “Ekrana yapışma” jest senaryolarıyla yeniden üretilir ve kökü bulunur.
-- [ ] **RM-03 — Tek kapsam kuralı.**
-  - Bugün “Tümünü göster” büyük NCZ'yi ve DWG'yi ekranda bir noktaya indiriyor, çünkü 0,0'ı da içine alıyor.
-  - Açılıştaki sığdırma başka bir kutu kullanıyor.
-  - Sıfır noktasındaki nesne bulunacak, iki yol tek kurala inecek.
-- [ ] **RM-04 — Gezinme kartı.** Kart yakınlaştırma boyunca ekranda sabit kalıyor ve artık imlecin altında olmayan
-  nesneyi gösteriyor. Kaydırma ve yakınlaştırmada gizlenecek ya da yenilenecek.
+- [x] **RM-02 — Doğruluk denetçisi; durmuş görünümde eski yazılar.**
+  ([ADR 9202](../docs/adr/9202-truth-check-and-settled-labels.md))
+  - **Denetçi (`perf::oracle`):**
+    - Aynı dosya iki uygulamada açılır; biri her kareyi taze çizer (`Viewport::fresh`). İkisi aynı girdiyi alır:
+      imleç, tekerlek, patlama, kaydırma, “Tümünü göster”, dönük görünüm.
+    - Her kareden sonra çizim alanları bir piksel komşulukla karşılaştırılır. Farklı karenin üç resmi kaydedilir:
+      kısayollu, taze ve fark.
+  - **Bulgu, yapışmanın bir kökü:**
+    - sivas.kcad'de görünüm durduktan sonra yazılar, tekerleğin başladığı görünümün yerleşiminde ve yazı boylarında
+      kalıyordu (dört dinlenme karesinin dördü).
+    - Sebep: yazı resminin anahtarı yerleşimi içermiyordu. Durunca aynı kamerada yeniden yerleşen yazılar
+      çizilmiyordu.
+    - Düzeltme: yerleşim sayacı ve hareket bayrağı anahtara katıldı.
+    - Ölçü: durmuş görünümde fark 4/4 → 0/4. DXF, NCZ ve DWG'de 174 karenin hiçbiri farklı değil.
+  - **Kalan:** tekerlek dönerken yazıların eski yerleşimi (0597, tasarım gereği; sivas.kcad'de 32 kare). Yazılar GPU'ya
+    geçince (RM-13) kalkar.
+- [x] **RM-03 — Tek kapsam kuralı.** ([ADR 9203](../docs/adr/9203-show-everything-without-far-objects.md))
+  - “Tümünü göster” ile saklı görünümü olmayan bir çizimin açılışı aynı kutuyu kullanır (`extents_box`).
+  - Kapsam denetiminin kuralıyla çizimin geri kalanından çok uzakta kalan nesneler kutuya girmez ve sayıları söylenir:
+    “… görünüme alınmadı. Kapsam denetimi onları seçer.”
+  - Bugüne kadar büyük NCZ'yi 8 800 km'ye, DWG'yi 0,0'a kadar açan nesneler artık görünümü bozmuyor.
+- [x] **RM-04 — Gezinme kartı.** ([ADR 9204](../docs/adr/9204-hover-card-follows-the-view.md))
+  - Görünüm imlecin altında kımıldayınca (tekerlek, kaydırma, “Tümünü göster”) vurgu ve kart gider.
+  - İmleç kıpırdayınca her zamanki gibi geri gelir.
 
 ### F1 — Tuval arayüzden ayrılır
 
