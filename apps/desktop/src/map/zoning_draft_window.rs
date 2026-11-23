@@ -158,7 +158,19 @@ fn asks(kind: &str) -> (&'static str, &'static str) {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ZoningDraftWindowApp {
+    fn zoning_draft_input(&self) -> ZoningDraft;
+    fn zoning_draft_run(&mut self);
+    fn zoning_draft_areas(&self) -> Vec<(String, String, String)>;
+    fn zoning_draft_name(&self, uid: &str) -> String;
+    fn open_zoning_draft(&mut self) -> Task<Message>;
+    fn zoning_draft_event(&mut self, event: Event) -> Task<Message>;
+    fn zoning_draft_view(&self) -> Element<'_, Message>;
+    fn zoning_draft_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ZoningDraftWindowApp for App {
     fn zoning_draft_input(&self) -> ZoningDraft {
         let s = &self.modules.map().zoning_draft;
         ZoningDraft {
@@ -204,7 +216,7 @@ impl App {
     }
 
     /// Plan değişikliği taslağı from İmar planı denetimi: a new draft of the drawing's first plan, its first area's use.
-    pub(crate) fn open_zoning_draft(&mut self) -> Task<Message> {
+    fn open_zoning_draft(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -228,7 +240,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn zoning_draft_event(&mut self, event: Event) -> Task<Message> {
+    fn zoning_draft_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_zoning_draft(),
             Event::Draft(id) => {
@@ -333,7 +345,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn zoning_draft_view(&self) -> Element<'_, Message> {
+    fn zoning_draft_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().zoning_draft;
         let f = self.format();
         let Some(doc) = self.document.as_ref() else { return iced::widget::Space::new().into() };
@@ -488,7 +500,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn zoning_draft_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn zoning_draft_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let s = &self.modules.map().zoning_draft;
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),

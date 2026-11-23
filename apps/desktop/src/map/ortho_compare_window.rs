@@ -203,7 +203,18 @@ pub fn csv(r: &OrthophotoCompared) -> String {
     out
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait OrthoCompareWindowApp {
+    fn ortho_compare_run(&mut self);
+    fn open_ortho_compare(&mut self) -> Task<Message>;
+    fn ortho_compare_save(&mut self, path: PathBuf);
+    fn ortho_compare_event(&mut self, event: Event) -> Task<Message>;
+    fn ortho_compare_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>);
+    fn ortho_compare_view(&self) -> Element<'_, Message>;
+    fn ortho_compare_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl OrthoCompareWindowApp for App {
     fn ortho_compare_run(&mut self) {
         let s = &self.modules.map().ortho_compare;
         let correlation = s.correlation.trim().replace(',', ".");
@@ -258,7 +269,7 @@ impl App {
     /// Ortofoto karşılaştırması (`raster.compare`): the drawing's rasters, the selected two first (in the drawing's
     /// order); the ground's layer guessed from its name (GNSS), each image's reading layer by the year in its file's
     /// name, else the other point layers in order.
-    pub(crate) fn open_ortho_compare(&mut self) -> Task<Message> {
+    fn open_ortho_compare(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -349,7 +360,7 @@ impl App {
     }
 
     /// The shifts written to `path` as CSV (a test or a trace gives it here, the picker in the app).
-    pub(crate) fn ortho_compare_save(&mut self, path: PathBuf) {
+    fn ortho_compare_save(&mut self, path: PathBuf) {
         let Some(Ok(r)) = &self.modules.map().ortho_compare.answer else {
             return;
         };
@@ -359,7 +370,7 @@ impl App {
         }
     }
 
-    pub(crate) fn ortho_compare_event(&mut self, event: Event) -> Task<Message> {
+    fn ortho_compare_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.modules.map_mut().ortho_compare;
         match event {
             Event::First(v) => s.first = v,
@@ -476,7 +487,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn ortho_compare_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
+    fn ortho_compare_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         let Some(answer) = &self.modules.map().ortho_compare.answer else {
@@ -646,7 +657,7 @@ impl App {
         (lines, rows)
     }
 
-    pub(crate) fn ortho_compare_view(&self) -> Element<'_, Message> {
+    fn ortho_compare_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().ortho_compare;
         let caption = |text: &'static str| container(label::caption(text)).width(120);
         let mut grounds = vec![(NONE.to_owned(), NONE.to_owned())];
@@ -791,7 +802,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn ortho_compare_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn ortho_compare_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),

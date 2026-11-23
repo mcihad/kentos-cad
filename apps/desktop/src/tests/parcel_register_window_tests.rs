@@ -5,6 +5,7 @@
 //! name already used is refused before anything is written. Docs/adr/5020: the ifraz kept as a draft and approved from
 //! Belgeler, a document's approval, a draft withdrawn, the stated lengths against the boundaries. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;

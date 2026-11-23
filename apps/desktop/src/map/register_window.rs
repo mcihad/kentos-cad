@@ -176,7 +176,19 @@ pub fn csv(r: &PointCloudsRegistered) -> String {
     out
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait RegisterWindowApp {
+    fn register_run(&mut self);
+    fn open_register(&mut self) -> Task<Message>;
+    fn register_apply(&mut self);
+    fn register_save(&mut self, path: PathBuf);
+    fn register_event(&mut self, event: Event) -> Task<Message>;
+    fn register_lines(&self, r: &PointCloudsRegistered) -> Vec<Element<'_, Message>>;
+    fn register_view(&self) -> Element<'_, Message>;
+    fn register_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl RegisterWindowApp for App {
     fn register_run(&mut self) {
         let s = &self.modules.map().register;
         if s.fixed.is_empty() || s.moving.is_empty() {
@@ -216,7 +228,7 @@ impl App {
 
     /// Tarama kaydı (`pointcloud.register`): the two selected clouds (the first fixed), else the drawing's first two;
     /// a control layer guessed from its name.
-    pub(crate) fn open_register(&mut self) -> Task<Message> {
+    fn open_register(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -291,7 +303,7 @@ impl App {
 
     /// Buluta uygula (docs/adr/3100): the moving scan selected (the tool's input), Tarama kaydı closed and Dönüşüm
     /// uygula's window opened with the answer's matrix and a layer of its own. Nothing is written until that tool runs.
-    pub(crate) fn register_apply(&mut self) {
+    fn register_apply(&mut self) {
         let Some(Ok(r)) = &self.modules.map().register.answer else {
             return;
         };
@@ -318,7 +330,7 @@ impl App {
     }
 
     /// The answer written to `path` as CSV (a test or a trace gives it here, the picker in the app).
-    pub(crate) fn register_save(&mut self, path: PathBuf) {
+    fn register_save(&mut self, path: PathBuf) {
         let Some(Ok(r)) = &self.modules.map().register.answer else {
             return;
         };
@@ -328,7 +340,7 @@ impl App {
         }
     }
 
-    pub(crate) fn register_event(&mut self, event: Event) -> Task<Message> {
+    fn register_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.modules.map_mut().register;
         match event {
             Event::Fixed(v) => s.fixed = v,
@@ -487,7 +499,7 @@ impl App {
         lines
     }
 
-    pub(crate) fn register_view(&self) -> Element<'_, Message> {
+    fn register_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().register;
         let pick = |v: &str, on: fn(String) -> Event| container(fields::select_owned(s.clouds.clone(), v, move |x| msg(on(x)))).width(230);
         let form = Form::new()
@@ -608,7 +620,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn register_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn register_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),

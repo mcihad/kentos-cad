@@ -3,6 +3,7 @@
 //! undo step and the drawing saves as `.kcad` schema 199; Dışla leaves a baseline out and Geri al takes it back; a GVX
 //! file and the known point form fill an empty archive; Harita offers it, GIS and Mimari do not. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;

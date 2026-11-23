@@ -231,10 +231,20 @@ fn msg(event: Event) -> Message {
     Message::from(map::Event::Cogo(event))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait CogoApp {
+    fn open_cogo_check(&mut self);
+    fn run_cogo_check(&mut self);
+    fn cogo_update(&mut self) -> bool;
+    fn cogo_event(&mut self, event: Event) -> Task<Message>;
+    fn cogo_view(&self) -> Element<'_, Message>;
+    fn cogo_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl CogoApp for App {
     /// Kayıtlı ölçüleri denetle (`cogo.check`): the window, the selection
     /// checked when there is one, else the whole drawing; checked at once.
-    pub(crate) fn open_cogo_check(&mut self) {
+    fn open_cogo_check(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -282,7 +292,7 @@ impl App {
     /// decimals, lengths with 3; an arc's radius and arc length too), one undo
     /// step “Kayıtlı ölçüleri yaz”; one on a locked layer is left out and
     /// said. Whether anything was written.
-    pub(crate) fn cogo_update(&mut self) -> bool {
+    fn cogo_update(&mut self) -> bool {
         let slots = self.selection.ids().to_vec();
         let Some(doc) = self.document.as_mut() else {
             self.output("Açık çizim yok.");
@@ -367,7 +377,7 @@ impl App {
         written > 0
     }
 
-    pub(crate) fn cogo_event(&mut self, event: Event) -> Task<Message> {
+    fn cogo_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Scope(s) => {
                 if let Some(w) = self.modules.map_mut().cogo.as_mut() {
@@ -469,7 +479,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn cogo_view(&self) -> Element<'_, Message> {
+    fn cogo_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.map().cogo else {
             return text("").into();
         };
@@ -571,7 +581,7 @@ impl App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    pub(crate) fn cogo_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn cogo_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.map().cogo else {
             return Err(format!("{COGO_TITLE} penceresi açık değil"));
         };

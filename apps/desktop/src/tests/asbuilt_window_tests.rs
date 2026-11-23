@@ -7,6 +7,7 @@
 //! (docs/adr/2820). İzleme (docs/adr/3620) sets the second epoch against the first by name with the control points; the
 //! form drops the design parts and the result speaks of movement. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;

@@ -14,6 +14,7 @@
 //! the regulation): by value the records carry a fifth column, the parcel's value before the readjustment, and
 //! Değerlerin kaynağı says who determined them; the answer says it is no rule.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;
@@ -345,9 +346,21 @@ fn chosen_boundary(app: &App) -> Option<String> {
     matches!(doc.model.get(*slot)?, Entity::Polygon(_)).then(|| doc.model.uid(*slot).map(|u| u.to_string())).flatten()
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ReadjustmentWindowApp {
+    fn readjustment_scope_input(&self) -> Option<ReadjustmentScope>;
+    fn readjustment_scope_run(&mut self);
+    fn readjustment_run(&mut self);
+    fn open_readjustment(&mut self) -> Task<Message>;
+    fn readjustment_file(&mut self, path: PathBuf);
+    fn readjustment_event(&mut self, event: Event) -> Task<Message>;
+    fn readjustment_view(&self) -> Element<'_, Message>;
+    fn readjustment_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ReadjustmentWindowApp for App {
     /// The scope's input: the boundary with the rule package's places and rounding and the piece tolerance.
-    pub(crate) fn readjustment_scope_input(&self) -> Option<ReadjustmentScope> {
+    fn readjustment_scope_input(&self) -> Option<ReadjustmentScope> {
         let s = &self.modules.map().readjustment;
         Some(ReadjustmentScope {
             boundary: s.boundary.clone()?,
@@ -360,7 +373,7 @@ impl App {
     }
 
     /// The scope of the boundary with the rule package's places and rounding.
-    pub(crate) fn readjustment_scope_run(&mut self) {
+    fn readjustment_scope_run(&mut self) {
         let Some(input) = self.readjustment_scope_input() else {
             self.modules.map_mut().readjustment.scope = None;
             return;
@@ -369,7 +382,7 @@ impl App {
         self.modules.map_mut().readjustment.scope = Some(readjustment_scope::preview(&doc.model, &input));
     }
 
-    pub(crate) fn readjustment_run(&mut self) {
+    fn readjustment_run(&mut self) {
         let s = &self.modules.map().readjustment;
         if s.entries.is_empty() {
             self.modules.map_mut().readjustment.answer = None;
@@ -397,7 +410,7 @@ impl App {
     }
 
     /// Düzenleme dağıtım taslağı (`readjustment.distribute`).
-    pub(crate) fn open_readjustment(&mut self) -> Task<Message> {
+    fn open_readjustment(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -412,7 +425,7 @@ impl App {
     }
 
     /// The records read from `path` (a test or a trace gives it here, the picker in the app).
-    pub(crate) fn readjustment_file(&mut self, path: PathBuf) {
+    fn readjustment_file(&mut self, path: PathBuf) {
         match std::fs::read_to_string(&path).map_err(|e| e.to_string()).and_then(|t| records(&t)) {
             Ok(entries) => {
                 self.modules.map_mut().readjustment.entries = entries;
@@ -427,7 +440,7 @@ impl App {
         }
     }
 
-    pub(crate) fn readjustment_event(&mut self, event: Event) -> Task<Message> {
+    fn readjustment_event(&mut self, event: Event) -> Task<Message> {
         let r = &mut self.modules.map_mut().readjustment.rules;
         match event {
             Event::Id(v) => r.id = v,
@@ -519,7 +532,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn readjustment_view(&self) -> Element<'_, Message> {
+    fn readjustment_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().readjustment;
         let r = &s.rules;
         let text = |placeholder: &str, value: &str, on: fn(String) -> Event| -> text_input::TextInput<'_, Message> {
@@ -872,7 +885,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn readjustment_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn readjustment_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(OPEN) => Some(msg(Event::Pick)),

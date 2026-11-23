@@ -3,6 +3,7 @@
 //! answer; Eşit weights — the unweighted case's; the links and loops tables; Dönüşüm uygula on the chosen scan with its
 //! matrix; two scans are said and nothing opens. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::gis;
 use crate::map;

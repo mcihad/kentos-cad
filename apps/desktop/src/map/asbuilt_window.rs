@@ -360,8 +360,23 @@ fn package_lines(p: &kentos_commands::AsbuiltPackage, f: &kentos_interaction::Fo
     out
 }
 
-impl App {
-    pub(crate) fn asbuilt_input(&self) -> Result<AsbuiltCheck, String> {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait AsbuiltWindowApp {
+    fn asbuilt_input(&self) -> Result<AsbuiltCheck, String>;
+    fn layer_day(&self, id: &str) -> Option<String>;
+    fn asbuilt_epochs(&self) -> Result<Vec<kentos_commands::AsbuiltEpoch>, String>;
+    fn asbuilt_package_input(&self, path: &std::path::Path) -> Result<FieldPackage, String>;
+    fn asbuilt_package(&mut self, path: PathBuf);
+    fn asbuilt_run(&mut self);
+    fn open_asbuilt(&mut self) -> Task<Message>;
+    fn asbuilt_save(&mut self, path: PathBuf);
+    fn asbuilt_event(&mut self, event: Event) -> Task<Message>;
+    fn asbuilt_view(&self) -> Element<'_, Message>;
+    fn asbuilt_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl AsbuiltWindowApp for App {
+    fn asbuilt_input(&self) -> Result<AsbuiltCheck, String> {
         let s = &self.modules.map().asbuilt;
         // A monitoring job (docs/adr/3620) sets the earlier epoch's marks by name: the design's other parts stay out.
         let watch = s.kind == 2;
@@ -443,7 +458,7 @@ impl App {
     }
 
     /// Saha paketi yaz…'s file chosen: the package written by `cad.field.package`.
-    pub(crate) fn asbuilt_package(&mut self, mut path: PathBuf) {
+    fn asbuilt_package(&mut self, mut path: PathBuf) {
         if path.extension().is_none() {
             path.set_extension("zip");
         }
@@ -509,7 +524,7 @@ impl App {
 
     /// Uygulama kontrolü (`asbuilt.check`): the layers guessed by their names (a measured layer, a design layer, a
     /// kerb's lines), the first surface; no limit.
-    pub(crate) fn open_asbuilt(&mut self) -> Task<Message> {
+    fn open_asbuilt(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -567,7 +582,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn asbuilt_save(&mut self, path: PathBuf) {
+    fn asbuilt_save(&mut self, path: PathBuf) {
         let Some(Ok(r)) = &self.modules.map().asbuilt.answer else {
             return;
         };
@@ -577,7 +592,7 @@ impl App {
         }
     }
 
-    pub(crate) fn asbuilt_event(&mut self, event: Event) -> Task<Message> {
+    fn asbuilt_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.modules.map_mut().asbuilt;
         match event {
             Event::Measured(v) => s.measured = v,
@@ -711,7 +726,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn asbuilt_view(&self) -> Element<'_, Message> {
+    fn asbuilt_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().asbuilt;
         let f = self.format();
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
@@ -1082,7 +1097,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn asbuilt_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn asbuilt_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),

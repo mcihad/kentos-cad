@@ -2,6 +2,7 @@
 //! windows and their usage-trace answers, its ribbon commands, its marks and layers over the drawing, its two dock
 //! panels (Harita işi, GNSS arşivi) and what it does when the drawing changes or the marks are cleared.
 
+use crate::map_ext::*;
 use std::any::Any;
 use std::sync::Arc;
 

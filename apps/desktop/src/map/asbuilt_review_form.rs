@@ -4,6 +4,7 @@
 //! Kaldır removes the review of that name. The project's reviews are listed with whether the points their job reads
 //! are still the ones reviewed. KentOS writes what the reviewer states; it checks no authority nor signature.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use iced::widget::{container, row};
 use iced::{Center, Element};

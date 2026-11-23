@@ -140,7 +140,18 @@ pub fn rows(r: &ZoningSymbolized, t: &ZoningSymbols, kept: &[ZoningSymbolPick]) 
         .collect()
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ZoningSymbolsWindowApp {
+    fn zoning_symbols_input(&self) -> ZoningSymbolize;
+    fn zoning_symbols_ready(&self) -> bool;
+    fn zoning_symbols_run(&mut self);
+    fn open_zoning_symbols(&mut self) -> Task<Message>;
+    fn zoning_symbols_event(&mut self, event: Event) -> Task<Message>;
+    fn zoning_symbols_view(&self) -> Element<'_, Message>;
+    fn zoning_symbols_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ZoningSymbolsWindowApp for App {
     fn zoning_symbols_input(&self) -> ZoningSymbolize {
         let s = &self.modules.map().zoning_symbols;
         ZoningSymbolize { uids: None, symbols: s.picks.clone(), keep: s.keep, expected_revision: None }
@@ -169,7 +180,7 @@ impl App {
     }
 
     /// Sembolü karardan ver from İmar planı denetimi.
-    pub(crate) fn open_zoning_symbols(&mut self) -> Task<Message> {
+    fn open_zoning_symbols(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -190,7 +201,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn zoning_symbols_event(&mut self, event: Event) -> Task<Message> {
+    fn zoning_symbols_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_zoning_symbols(),
             Event::Choose(i) => self.modules.map_mut().zoning_symbols.chosen = Some(i),
@@ -265,7 +276,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn zoning_symbols_view(&self) -> Element<'_, Message> {
+    fn zoning_symbols_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().zoning_symbols;
         let table = builtin_zoning_symbols();
         let mut lines = vec![words::text_line(
@@ -347,7 +358,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn zoning_symbols_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn zoning_symbols_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(WRITE) => self.zoning_symbols_ready().then(|| msg(Event::Write)),

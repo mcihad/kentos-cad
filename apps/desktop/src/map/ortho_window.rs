@@ -81,7 +81,17 @@ pub fn csv(r: &OrthophotoChecked) -> String {
     out
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait OrthoWindowApp {
+    fn ortho_run(&mut self);
+    fn open_ortho(&mut self) -> Task<Message>;
+    fn ortho_save(&mut self, path: PathBuf);
+    fn ortho_event(&mut self, event: Event) -> Task<Message>;
+    fn ortho_view(&self) -> Element<'_, Message>;
+    fn ortho_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl OrthoWindowApp for App {
     fn ortho_run(&mut self) {
         let s = &self.modules.map().ortho;
         let input = OrthophotoCheck {
@@ -108,7 +118,7 @@ impl App {
 
     /// Ortofoto doğruluğu (`raster.accuracy`): the one selected raster; the layers guessed from their names (a GNSS
     /// layer, a layer read on the image), else the first two point layers.
-    pub(crate) fn open_ortho(&mut self) -> Task<Message> {
+    fn open_ortho(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -156,7 +166,7 @@ impl App {
     }
 
     /// The points written to `path` as CSV (a test or a trace gives it here, the picker in the app).
-    pub(crate) fn ortho_save(&mut self, path: PathBuf) {
+    fn ortho_save(&mut self, path: PathBuf) {
         let Some(Ok(r)) = &self.modules.map().ortho.answer else {
             return;
         };
@@ -166,7 +176,7 @@ impl App {
         }
     }
 
-    pub(crate) fn ortho_event(&mut self, event: Event) -> Task<Message> {
+    fn ortho_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Known(v) => self.modules.map_mut().ortho.known = v,
             Event::Observed(v) => self.modules.map_mut().ortho.observed = v,
@@ -201,7 +211,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn ortho_view(&self) -> Element<'_, Message> {
+    fn ortho_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().ortho;
         let form = Form::new()
             .label_width(130.0)
@@ -305,7 +315,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn ortho_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn ortho_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),

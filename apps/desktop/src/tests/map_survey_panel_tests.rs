@@ -6,6 +6,7 @@
 //! KentOS Harita docks the panel, KentOS GIS reads the accepted point in Öznitelikler, Mimari and Yol show neither.
 //! And its pictures.
 
+use crate::map_ext::*;
 use crate::map;
 use kentos_commands::{MapSurveyOperation as Op, SurveyAntenna, SurveyState as S};
 use kentos_domain::Slot;

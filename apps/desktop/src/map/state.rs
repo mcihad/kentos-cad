@@ -4,6 +4,7 @@
 //! The shell reaches them through the module's parts (parts.rs). A new window of the module is added here and in its own
 //! file; `app.rs` stays as it is.
 
+use crate::map_ext::*;
 use iced::{Element, Task};
 use kentos_launch::Module;
 
@@ -199,9 +200,15 @@ impl MapState for ModuleStates {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait StateApp {
+    fn map_event(&mut self, event: Event) -> Task<Message>;
+    fn map_dialog_view(&self, kind: MapDialogKind) -> Element<'_, Message>;
+}
+
+impl StateApp for App {
     /// A message of the module; a window's own handler is in its file.
-    pub(crate) fn map_event(&mut self, event: Event) -> Task<Message> {
+    fn map_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::MapWork(e) => self.map_work_event(e),
             Event::MapSurvey(e) => self.map_survey_event(e),
@@ -228,7 +235,7 @@ impl App {
     }
 
     /// A window of the module.
-    pub(crate) fn map_dialog_view(&self, kind: MapDialogKind) -> Element<'_, Message> {
+    fn map_dialog_view(&self, kind: MapDialogKind) -> Element<'_, Message> {
         match kind {
             MapDialogKind::Baselines => self.baselines_view(),
             MapDialogKind::ParcelsCheck => self.parcels_check_view(),

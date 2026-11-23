@@ -4,6 +4,7 @@
 //! recorded as made from the design (Seçimi türet offers it, never for the design's own lines) and goes out of date
 //! when the design changes. And the pictures.
 
+use crate::map_ext::*;
 use crate::map;
 use kentos_commands::{WorkState as S, WorkStatus as W};
 use kentos_domain::Slot;

@@ -2,6 +2,7 @@
 //! drawing's first two scans, the GNSS layer guessed; strip B within the interswath limit with its 4 cm shift, strip C
 //! out of it; the control points' KOH_Z; the CSV; nothing written; Harita and GIS offer it. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;

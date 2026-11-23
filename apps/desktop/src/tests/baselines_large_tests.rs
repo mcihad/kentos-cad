@@ -3,6 +3,7 @@
 //! their east, north and north-east neighbours, read from its file. The window adjusts it, the χ² test passes and the
 //! summary says the network's size. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;

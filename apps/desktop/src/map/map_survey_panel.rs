@@ -9,6 +9,7 @@
 //! network adjustments (map_survey_network_rows.rs, docs/adr/2920). Harita only: GIS reads the accepted point in
 //! Öznitelikler.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use std::cell::RefCell;
@@ -125,9 +126,29 @@ fn end_of(tree: &MapSurveyTree, mark: &str) -> Option<crate::survey_baseline_mar
         .find_map(|k| tree.known_places.iter().find(|p| p.id == k.id).and_then(|p| Some(End::Known([p.x?, p.y?], mark.to_owned()))))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait MapSurveyPanelApp {
+    fn map_survey_limits(&self) -> Option<kentos_commands::SurveyPlaceTolerance>;
+    fn map_survey_read(&self) -> Option<Result<MapSurveyTree, String>>;
+    fn map_survey_save_limits(&mut self);
+    fn map_survey_edit(&mut self, operation: Op) -> Option<kentos_commands::MapSurveyEdited>;
+    fn show_map_survey(&mut self);
+    fn select_accepted_points(&mut self);
+    fn show_baseline(&mut self, id: &str);
+    fn show_network(&mut self);
+    fn fit_baselines(&mut self);
+    fn select_uids(&mut self, uids: &[String]);
+    fn survey_campaign(&mut self) -> Option<String>;
+    fn add_survey_campaign(&mut self) -> Option<String>;
+    fn import_session(&mut self, path: PathBuf);
+    fn accept_mark(&mut self, mark: &str);
+    fn map_survey_event(&mut self, event: Event) -> Task<Message>;
+    fn map_survey_view(&self) -> Element<'_, Message>;
+}
+
+impl MapSurveyPanelApp for App {
     /// Docs/adr/4520: the limits typed, each a length above 0 (another text: not a limit); none when neither is.
-    pub(crate) fn map_survey_limits(&self) -> Option<kentos_commands::SurveyPlaceTolerance> {
+    fn map_survey_limits(&self) -> Option<kentos_commands::SurveyPlaceTolerance> {
         let read = |t: &str| crate::calc::read::read_number(t).filter(|v| v.is_finite() && *v > 0.0);
         let t = kentos_commands::SurveyPlaceTolerance {
             horizontal: read(&self.modules.map().map_survey.limit_horizontal),
@@ -137,7 +158,7 @@ impl App {
     }
 
     /// The tree as the drawing is now, read again when its revision, the depth or the limits changed.
-    pub(crate) fn map_survey_read(&self) -> Option<Result<MapSurveyTree, String>> {
+    fn map_survey_read(&self) -> Option<Result<MapSurveyTree, String>> {
         let doc = self.document.as_ref()?;
         let revision = doc.model.revision().to_string();
         let deep = self.modules.map().map_survey.deep;
@@ -159,7 +180,7 @@ impl App {
 
     /// Docs/adr/4920: the limits typed written into the project with their source (`map.survey.edit tolerance`); none
     /// typed takes the kept ones away.
-    pub(crate) fn map_survey_save_limits(&mut self) {
+    fn map_survey_save_limits(&mut self) {
         let source = self.modules.map().map_survey.limit_source.trim().to_owned();
         let Some(limits) = self.map_survey_limits() else {
             let kept = self.document.as_ref().and_then(|d| d.model.map_survey()).is_some_and(|s| s.tolerance.is_some());
@@ -180,7 +201,7 @@ impl App {
         }
     }
 
-    pub(crate) fn map_survey_edit(&mut self, operation: Op) -> Option<kentos_commands::MapSurveyEdited> {
+    fn map_survey_edit(&mut self, operation: Op) -> Option<kentos_commands::MapSurveyEdited> {
         let doc = self.document.as_mut()?;
         let input = MapSurveyEdit { operation, expected_revision: None };
         let result = map_survey_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
@@ -188,7 +209,7 @@ impl App {
     }
 
     /// `map.survey`: the panel in front.
-    pub(crate) fn show_map_survey(&mut self) {
+    fn show_map_survey(&mut self) {
         if !self.open_panel(Panel::MapSurvey) {
             return;
         }
@@ -199,7 +220,7 @@ impl App {
     }
 
     /// `map.survey.select`: every accepted point's object selected and shown (Harita and GIS).
-    pub(crate) fn select_accepted_points(&mut self) {
+    fn select_accepted_points(&mut self) {
         let Some(doc) = self.document.as_ref() else { return };
         let uids: Vec<String> = match map_survey::preview(&doc.model, false, None, false) {
             Ok(tree) => tree.points.iter().map(|p| p.uid.clone()).collect(),
@@ -353,7 +374,7 @@ impl App {
     }
 
     /// The arazi ölçümü a new session (or a baseline file, docs/adr/1740) goes to: the last one, made when there is none.
-    pub(crate) fn survey_campaign(&mut self) -> Option<String> {
+    fn survey_campaign(&mut self) -> Option<String> {
         let last = self
             .document
             .as_ref()
@@ -418,7 +439,7 @@ impl App {
         }
     }
 
-    pub(crate) fn map_survey_event(&mut self, event: Event) -> Task<Message> {
+    fn map_survey_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Campaign => {
                 self.add_survey_campaign();
@@ -526,7 +547,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn map_survey_view(&self) -> Element<'_, Message> {
+    fn map_survey_view(&self) -> Element<'_, Message> {
         let Some(read) = self.map_survey_read() else {
             return container(label::caption("Açık çizim yok.")).padding([8, 12]).into();
         };

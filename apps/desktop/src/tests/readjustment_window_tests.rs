@@ -8,6 +8,7 @@
 //! own layer in one undo step. Çapın paftaları (docs/adr/2680) makes a separation sheet for each parcel partly inside,
 //! its points on the parcel's own layer, in one undo step. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;

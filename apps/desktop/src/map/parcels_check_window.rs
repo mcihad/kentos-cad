@@ -116,7 +116,17 @@ pub fn csv(r: &ParcelsChecked) -> String {
     out
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ParcelsCheckWindowApp {
+    fn parcels_check_run(&mut self);
+    fn open_parcels_check(&mut self) -> Task<Message>;
+    fn parcels_check_save(&mut self, path: PathBuf);
+    fn parcels_check_event(&mut self, event: Event) -> Task<Message>;
+    fn parcels_check_view(&self) -> Element<'_, Message>;
+    fn parcels_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ParcelsCheckWindowApp for App {
     fn parcels_check_run(&mut self) {
         let input = ParcelsCheck {
             uids: self.modules.map().parcels_check.uids.clone(),
@@ -137,7 +147,7 @@ impl App {
     }
 
     /// Parsel alan denetimi (`parcels.check`): the selected areas, else the parcel layer's.
-    pub(crate) fn open_parcels_check(&mut self) -> Task<Message> {
+    fn open_parcels_check(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -160,7 +170,7 @@ impl App {
     }
 
     /// The table written to `path` as CSV (a test or a trace gives it here, the picker in the app).
-    pub(crate) fn parcels_check_save(&mut self, path: PathBuf) {
+    fn parcels_check_save(&mut self, path: PathBuf) {
         let Some(Ok(r)) = &self.modules.map().parcels_check.answer else {
             return;
         };
@@ -170,7 +180,7 @@ impl App {
         }
     }
 
-    pub(crate) fn parcels_check_event(&mut self, event: Event) -> Task<Message> {
+    fn parcels_check_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Show(show) => self.modules.map_mut().parcels_check.show = show,
             Event::Select => {
@@ -216,7 +226,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn parcels_check_view(&self) -> Element<'_, Message> {
+    fn parcels_check_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().parcels_check;
         let f = self.format();
         let mut lines = Vec::new();
@@ -318,7 +328,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn parcels_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn parcels_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),

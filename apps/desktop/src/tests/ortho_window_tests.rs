@@ -2,6 +2,7 @@
 //! selected orthophoto, its layers guessed (GNSS, read on the image), KOH within BÖHHBÜY's limit at 1/1000 and out of
 //! it at 1/500, the fit points apart, the CSV, nothing written; Harita and GIS offer it. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;

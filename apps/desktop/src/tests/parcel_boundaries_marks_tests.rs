@@ -3,6 +3,7 @@
 //! area the case's strip; problems whose rings would meet on the screen share one ring and one phrase. And the
 //! pictures.
 
+use crate::map_ext::*;
 use crate::map;
 use iced::Point;
 use kentos_commands::ParcelsBounded;

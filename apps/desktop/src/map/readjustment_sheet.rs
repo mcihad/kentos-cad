@@ -5,6 +5,7 @@
 //! area. The write is one undo step “Ayırma çapı” through `cad.entities.create`. Çapın paftaları makes a separation sheet
 //! for each parcel through `cad.readjustment.sheets` (docs/adr/2680).
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use std::collections::BTreeMap;
 
@@ -126,10 +127,16 @@ pub fn typed_numbers(text: &str, scope: &ReadjustmentScoped) -> Result<Option<st
     Ok((!out.is_empty()).then_some(out))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ReadjustmentSheetApp {
+    fn readjustment_sheets_make(&mut self) -> Task<Message>;
+    fn readjustment_sheet_write(&mut self);
+}
+
+impl ReadjustmentSheetApp for App {
     /// Çapın paftaları (docs/adr/2680): `cad.readjustment.sheets` over the window's boundary, places, rounding and piece
     /// tolerance with KentOS's separation sheet; one undo step. The window closes and the sheets are shown.
-    pub(crate) fn readjustment_sheets_make(&mut self) -> Task<Message> {
+    fn readjustment_sheets_make(&mut self) -> Task<Message> {
         let Some(scope) = self.readjustment_scope_input() else { return Task::none() };
         // The parts outside's parcel numbers as typed (docs/adr/3080).
         let numbers = match &self.modules.map().readjustment.scope {
@@ -184,7 +191,7 @@ impl App {
     }
 
     /// Çapı çizime yaz: the scope's parts as areas on “Ayırma çapı”, one undo step; the layer made when missing.
-    pub(crate) fn readjustment_sheet_write(&mut self) {
+    fn readjustment_sheet_write(&mut self) {
         let f = self.format();
         let Some(Ok(scope)) = self.modules.map().readjustment.scope.clone() else {
             return;

@@ -163,7 +163,20 @@ fn cloud_name(e: &Entity) -> Option<String> {
     ))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ScanNetworkWindowApp {
+    fn scan_network_clouds(&self) -> Vec<(String, String)>;
+    fn scan_network_run(&mut self);
+    fn open_scan_network(&mut self) -> Task<Message>;
+    fn scan_network_apply(&mut self);
+    fn scan_network_keep(&mut self);
+    fn scan_network_event(&mut self, event: Event) -> Task<Message>;
+    fn scan_network_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>);
+    fn scan_network_view(&self) -> Element<'_, Message>;
+    fn scan_network_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ScanNetworkWindowApp for App {
     /// The point clouds selected, in the selection's order; none selected: every cloud of the drawing.
     fn scan_network_clouds(&self) -> Vec<(String, String)> {
         let Some(doc) = self.document.as_ref() else { return Vec::new() };
@@ -215,7 +228,7 @@ impl App {
     }
 
     /// Tarama ağı dengelemesi (`pointcloud.network`): the selected clouds (else every cloud), the first held.
-    pub(crate) fn open_scan_network(&mut self) -> Task<Message> {
+    fn open_scan_network(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -324,7 +337,7 @@ impl App {
         self.scan_network_run();
     }
 
-    pub(crate) fn scan_network_event(&mut self, event: Event) -> Task<Message> {
+    fn scan_network_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.modules.map_mut().scan_network;
         match event {
             Event::Take => {
@@ -380,7 +393,7 @@ impl App {
     }
 
     /// The summary's lines and the chosen table's rows.
-    pub(crate) fn scan_network_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
+    fn scan_network_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
         let s = &self.modules.map().scan_network;
         let mut lines = Vec::new();
         let mut rows = Vec::new();
@@ -473,7 +486,7 @@ impl App {
         (lines, rows)
     }
 
-    pub(crate) fn scan_network_view(&self) -> Element<'_, Message> {
+    fn scan_network_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().scan_network;
         let names: Vec<String> = s.scans.iter().map(|(_, n)| n.clone()).collect();
         let free: Vec<(String, String)> = s.scans.iter().filter(|(u, _)| *u != s.fixed).cloned().collect();
@@ -553,7 +566,7 @@ impl App {
         Frame::new(TITLE).scroll(body).action(words::secondary(CLOSE, Some(msg(Event::Close)))).width(960.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn scan_network_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn scan_network_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(TAKE) => Some(msg(Event::Take)),

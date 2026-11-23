@@ -3,6 +3,7 @@
 //! adjust again; robust estimation (docs/adr/4960) weighs B → C down without removing it; nothing is written. Harita
 //! and GIS offer it, Mimari and Yol do not. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;

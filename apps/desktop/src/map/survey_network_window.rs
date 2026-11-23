@@ -17,6 +17,7 @@
 //! session`), Yeni noktaların hızı reads each new mark's velocity from the campaign's velocity grid; the summary says
 //! which correlations went in and from which grid, Noktalar the velocities, Bazlar each baseline's session.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use std::path::PathBuf;
@@ -356,8 +357,20 @@ fn stage_line(name: &str, st: &NetworkStage) -> (Kind, String) {
     (kind, format!("{name} ({held} sabit): {test}; {blunders}."))
 }
 
-impl App {
-    pub(crate) fn survey_network_run(&mut self) {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait SurveyNetworkWindowApp {
+    fn survey_network_run(&mut self);
+    fn open_survey_network(&mut self) -> Task<Message>;
+    fn survey_network_file(&mut self, path: PathBuf);
+    fn survey_network_known(&mut self);
+    fn survey_network_accept(&mut self);
+    fn survey_network_event(&mut self, event: Event) -> Task<Message>;
+    fn survey_network_view(&self) -> Element<'_, Message>;
+    fn survey_network_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl SurveyNetworkWindowApp for App {
+    fn survey_network_run(&mut self) {
         let epoch = match number(&self.modules.map().survey_network.epoch, "Ölçme epoku") {
             Ok(e) => e,
             Err(why) => {
@@ -392,7 +405,7 @@ impl App {
     }
 
     /// GNSS ağ dengelemesi (`map.survey.adjustment`): the window over the project's network.
-    pub(crate) fn open_survey_network(&mut self) -> Task<Message> {
+    fn open_survey_network(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -408,7 +421,7 @@ impl App {
     }
 
     /// A baseline file brought into the last arazi ölçümü (a test or a trace gives it here, the picker in the app).
-    pub(crate) fn survey_network_file(&mut self, path: PathBuf) {
+    fn survey_network_file(&mut self, path: PathBuf) {
         let Some(campaign) = self.survey_campaign() else { return };
         let operation = Op::Baselines { campaign, file: path.to_string_lossy().into_owned() };
         if let Some(out) = self.map_survey_edit(operation) {
@@ -526,7 +539,7 @@ impl App {
         self.survey_network_run();
     }
 
-    pub(crate) fn survey_network_event(&mut self, event: Event) -> Task<Message> {
+    fn survey_network_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::View(v) => self.modules.map_mut().survey_network.view = v,
             Event::Class(c) => {
@@ -619,7 +632,7 @@ impl App {
     }
 
     #[allow(clippy::too_many_lines)]
-    pub(crate) fn survey_network_view(&self) -> Element<'_, Message> {
+    fn survey_network_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().survey_network;
         let survey = self.document.as_ref().and_then(|d| d.model.map_survey());
         let (count, used) = survey.map_or((0, 0), |sv| {
@@ -1074,7 +1087,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn survey_network_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn survey_network_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(ACCEPT) => Some(msg(Event::Accept)),

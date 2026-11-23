@@ -3,6 +3,7 @@
 //! filters the table, Dışındakileri seç selects the one outside, CSV kaydet writes the table, nothing is written to
 //! the drawing; a selection checks only its areas. Harita and GIS offer it, Yol and Mimari do not. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;

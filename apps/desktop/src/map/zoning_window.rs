@@ -95,7 +95,19 @@ fn msg(e: Event) -> Message {
     Message::from(map::Event::Zoning(e))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ZoningWindowApp {
+    fn zoning_run(&mut self);
+    fn open_zoning(&mut self) -> Task<Message>;
+    fn zoning_shown(&self) -> Vec<&ZoningFinding>;
+    fn zoning_event(&mut self, event: Event) -> Task<Message>;
+    fn zoning_parcel_totals(&self) -> Vec<(String, usize, f64)>;
+    fn zoning_names(&self, f: &ZoningFinding) -> String;
+    fn zoning_view(&self) -> Element<'_, Message>;
+    fn zoning_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ZoningWindowApp for App {
     fn zoning_run(&mut self) {
         let input = ZoningCheck {
             tolerance: Some(self.modules.map().zoning.tolerance),
@@ -115,7 +127,7 @@ impl App {
     }
 
     /// İmar planı denetimi (`zoning.check`).
-    pub(crate) fn open_zoning(&mut self) -> Task<Message> {
+    fn open_zoning(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -129,7 +141,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn zoning_shown(&self) -> Vec<&ZoningFinding> {
+    fn zoning_shown(&self) -> Vec<&ZoningFinding> {
         match &self.modules.map().zoning.answer {
             Some(Ok(r)) => r
                 .findings
@@ -140,7 +152,7 @@ impl App {
         }
     }
 
-    pub(crate) fn zoning_event(&mut self, event: Event) -> Task<Message> {
+    fn zoning_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Tolerance(v) => {
                 if v > 0.0 {
@@ -215,7 +227,7 @@ impl App {
 
     /// The parcels that enter road widths, each with the sum of its parts in every road it enters (docs/adr/3040): its
     /// name and roads, largest first; none without such findings.
-    pub(crate) fn zoning_parcel_totals(&self) -> Vec<(String, usize, f64)> {
+    fn zoning_parcel_totals(&self) -> Vec<(String, usize, f64)> {
         let (Some(doc), Some(Ok(r))) = (self.document.as_ref(), &self.modules.map().zoning.answer) else {
             return Vec::new();
         };
@@ -266,7 +278,7 @@ impl App {
         names.join(", ")
     }
 
-    pub(crate) fn zoning_view(&self) -> Element<'_, Message> {
+    fn zoning_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().zoning;
         let f = self.format();
         let form = Form::new().label_width(110.0).field(
@@ -376,7 +388,7 @@ impl App {
         frame.action(words::primary(CLOSE, Some(msg(Event::Close)))).width(1000.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn zoning_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn zoning_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SHOW) => Some(msg(Event::Show)),

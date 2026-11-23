@@ -5,6 +5,7 @@
 //! undo step and selects them, and Ortofoto karşılaştırması's Seçili mozaik elemanlarını al then measures along their
 //! shared boundary, which is the line. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;

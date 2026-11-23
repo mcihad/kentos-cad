@@ -539,6 +539,8 @@ mod layer_entries;
 mod module_parts;
 #[path = "map/parts.rs"]
 mod map_parts;
+#[path = "map/ext.rs"]
+mod map_ext;
 #[path = "shell/module_profile.rs"]
 mod module_profile;
 #[path = "arch/profile.rs"]

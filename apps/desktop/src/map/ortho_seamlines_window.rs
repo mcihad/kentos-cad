@@ -24,6 +24,7 @@
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use iced::widget::canvas::{self, Path, Stroke, Text};
@@ -169,9 +170,23 @@ fn raster_name(r: &RasterFields) -> String {
     format!("{source} · {:.1} cm", gsd * 100.0)
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait OrthoSeamlinesWindowApp {
+    fn ortho_seamlines_input(&self) -> Result<OrthophotoSeamlines, String>;
+    fn ortho_seamlines_run(&mut self);
+    fn open_ortho_seamlines(&mut self) -> Task<Message>;
+    fn ortho_seamlines_take(&mut self);
+    fn ortho_seamlines_write(&mut self) -> Task<Message>;
+    fn ortho_seamlines_event(&mut self, event: Event) -> Task<Message>;
+    fn ortho_seamlines_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>);
+    fn ortho_seamlines_view(&self) -> Element<'_, Message>;
+    fn ortho_seamlines_avoided(&self) -> Vec<Vec<[f64; 2]>>;
+    fn ortho_seamlines_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl OrthoSeamlinesWindowApp for App {
     /// The window's input as it stands.
-    pub(crate) fn ortho_seamlines_input(&self) -> Result<OrthophotoSeamlines, String> {
+    fn ortho_seamlines_input(&self) -> Result<OrthophotoSeamlines, String> {
         let s = &self.modules.map().ortho_seamlines;
         let footprints = match s.prints {
             Prints::Bounds => None,
@@ -222,7 +237,7 @@ impl App {
 
     /// Mozaik birleşme çizgisi (`raster.seamlines`): the drawing's rasters, the selected two first (in the drawing's order);
     /// written on the mosaic elements' layer when the drawing has it, else on it made new.
-    pub(crate) fn open_ortho_seamlines(&mut self) -> Task<Message> {
+    fn open_ortho_seamlines(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -340,7 +355,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn ortho_seamlines_event(&mut self, event: Event) -> Task<Message> {
+    fn ortho_seamlines_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.modules.map_mut().ortho_seamlines;
         match event {
             Event::First(v) => s.first = v,
@@ -381,7 +396,7 @@ impl App {
     }
 
     /// The summary's lines and the seam's points (number, east, north, distance along the seam).
-    pub(crate) fn ortho_seamlines_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
+    fn ortho_seamlines_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         match &self.modules.map().ortho_seamlines.answer {
@@ -406,7 +421,7 @@ impl App {
         (lines, rows)
     }
 
-    pub(crate) fn ortho_seamlines_view(&self) -> Element<'_, Message> {
+    fn ortho_seamlines_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().ortho_seamlines;
         let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let mut avoids = vec![(NONE.to_owned(), NONE.to_owned())];
@@ -536,7 +551,7 @@ impl App {
             .collect()
     }
 
-    pub(crate) fn ortho_seamlines_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn ortho_seamlines_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SWAP) => Some(msg(Event::Swap)),

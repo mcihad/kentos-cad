@@ -103,7 +103,17 @@ fn mm(v: f64) -> String {
     format!("{:.1}", v * 1000.0)
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait BaselinesWindowApp {
+    fn baselines_run(&mut self);
+    fn open_baselines(&mut self) -> Task<Message>;
+    fn baselines_file(&mut self, path: PathBuf);
+    fn baselines_event(&mut self, event: Event) -> Task<Message>;
+    fn baselines_view(&self) -> Element<'_, Message>;
+    fn baselines_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl BaselinesWindowApp for App {
     fn baselines_run(&mut self) {
         let Some(text) = self.modules.map().baselines.text.clone() else {
             return;
@@ -142,7 +152,7 @@ impl App {
     }
 
     /// GNSS baz ağı (`survey.baselines`): the window, then the file.
-    pub(crate) fn open_baselines(&mut self) -> Task<Message> {
+    fn open_baselines(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -156,7 +166,7 @@ impl App {
     }
 
     /// The file read and adjusted (a test or a trace gives it here, the picker in the app).
-    pub(crate) fn baselines_file(&mut self, path: PathBuf) {
+    fn baselines_file(&mut self, path: PathBuf) {
         match std::fs::read_to_string(&path) {
             Ok(text) => {
                 self.modules.map_mut().baselines.text = Some(text);
@@ -169,7 +179,7 @@ impl App {
         }
     }
 
-    pub(crate) fn baselines_event(&mut self, event: Event) -> Task<Message> {
+    fn baselines_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::View(v) => self.modules.map_mut().baselines.view = v,
             Event::Pick => {
@@ -217,7 +227,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn baselines_view(&self) -> Element<'_, Message> {
+    fn baselines_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().baselines;
         let file = s.file.as_ref().and_then(|p| p.file_name()).map_or("Dosya seçilmedi".to_owned(), |n| n.to_string_lossy().into_owned());
         // One label column, the boxes the same width (the owner: a form's fields line up).
@@ -344,7 +354,7 @@ impl App {
         Frame::new(TITLE).push(body).action(words::primary(CLOSE, Some(msg(Event::Close)))).width(680.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn baselines_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn baselines_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(OPEN) => Some(msg(Event::Pick)),

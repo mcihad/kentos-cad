@@ -102,7 +102,17 @@ pub fn csv(r: &PointCloudsOverlapped) -> String {
     out
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait OverlapWindowApp {
+    fn overlap_run(&mut self);
+    fn open_overlap(&mut self) -> Task<Message>;
+    fn overlap_save(&mut self, path: PathBuf);
+    fn overlap_event(&mut self, event: Event) -> Task<Message>;
+    fn overlap_view(&self) -> Element<'_, Message>;
+    fn overlap_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl OverlapWindowApp for App {
     fn overlap_run(&mut self) {
         let s = &self.modules.map().overlap;
         if s.a.is_empty() || s.b.is_empty() {
@@ -137,7 +147,7 @@ impl App {
 
     /// Tarama uyumu (`pointcloud.overlap`): the two selected clouds, else the drawing's first two; a control layer
     /// guessed from its name.
-    pub(crate) fn open_overlap(&mut self) -> Task<Message> {
+    fn open_overlap(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -204,7 +214,7 @@ impl App {
     }
 
     /// The answer written to `path` as CSV (a test or a trace gives it here, the picker in the app).
-    pub(crate) fn overlap_save(&mut self, path: PathBuf) {
+    fn overlap_save(&mut self, path: PathBuf) {
         let Some(Ok(r)) = &self.modules.map().overlap.answer else {
             return;
         };
@@ -214,7 +224,7 @@ impl App {
         }
     }
 
-    pub(crate) fn overlap_event(&mut self, event: Event) -> Task<Message> {
+    fn overlap_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.modules.map_mut().overlap;
         match event {
             Event::A(v) => s.a = v,
@@ -257,7 +267,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn overlap_view(&self) -> Element<'_, Message> {
+    fn overlap_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().overlap;
         let pick = |v: &str, on: fn(String) -> Event| container(fields::select_owned(s.clouds.clone(), v, move |x| msg(on(x)))).width(230);
         let form = Form::new()
@@ -373,7 +383,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn overlap_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn overlap_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),

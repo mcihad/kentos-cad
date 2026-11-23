@@ -82,7 +82,16 @@ fn answer<T>(r: CommandResult<T>) -> Result<T, String> {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait OrthoNetworkSectionApp {
+    fn ortho_net_inputs(&self) -> (OrthophotoNetwork, OrthophotoFootprint);
+    fn ortho_net_run(&mut self);
+    fn ortho_net_event(&mut self, e: NetEvent);
+    fn ortho_net_write(&mut self);
+    fn ortho_net_view(&self) -> Element<'_, Message>;
+}
+
+impl OrthoNetworkSectionApp for App {
     fn ortho_net_inputs(&self) -> (OrthophotoNetwork, OrthophotoFootprint) {
         let s = &self.modules.map().ortho_seamlines;
         let layer = (!s.layer.is_empty()).then(|| s.layer.clone());
@@ -94,7 +103,7 @@ impl App {
     }
 
     /// The plans of the kind shown.
-    pub(crate) fn ortho_net_run(&mut self) {
+    fn ortho_net_run(&mut self) {
         let (net, foot) = self.ortho_net_inputs();
         let mode = self.modules.map().ortho_seamlines.net.mode;
         let Some(doc) = self.document.as_mut() else { return };
@@ -115,7 +124,7 @@ impl App {
         }
     }
 
-    pub(crate) fn ortho_net_event(&mut self, e: NetEvent) {
+    fn ortho_net_event(&mut self, e: NetEvent) {
         let seams = &mut self.modules.map_mut().ortho_seamlines;
         let s = &mut seams.net;
         match e {
@@ -175,7 +184,7 @@ impl App {
     }
 
     /// The kind's form rows, summary, button and plan (Ağ or Ayak izi).
-    pub(crate) fn ortho_net_view(&self) -> Element<'_, Message> {
+    fn ortho_net_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().ortho_seamlines;
         let mut lines = Vec::new();
         let mut form = Form::new().label_width(150.0);

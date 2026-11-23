@@ -46,10 +46,15 @@ pub struct ZoningMarks {
     pub regions: Vec<Area>,
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ZoningMarksApp {
+    fn zoning_marks(&self) -> Option<Arc<ZoningMarks>>;
+}
+
+impl ZoningMarksApp for App {
     /// The road overlaps for the drawing as it is: none when nothing is shown, for another drawing, when the check no
     /// longer reads or finds none. Kept until the drawing changes.
-    pub(crate) fn zoning_marks(&self) -> Option<Arc<ZoningMarks>> {
+    fn zoning_marks(&self) -> Option<Arc<ZoningMarks>> {
         let shown = self.modules.map().zoning_shown_marks.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {

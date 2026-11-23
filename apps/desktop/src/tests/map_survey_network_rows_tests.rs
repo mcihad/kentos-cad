@@ -4,6 +4,7 @@
 //! reason turns the adjustment out of date and Geri al takes it back; a known point leaves and comes back the same way;
 //! the adjustment's button opens Ağ dengelemesi. And the pictures.
 
+use crate::map_ext::*;
 use crate::map;
 use kentos_launch::Module;
 use kentos_ui::widget::Status;

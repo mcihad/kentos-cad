@@ -142,7 +142,20 @@ fn turn_and_shift(m: &[f64], b: &[f64; 6]) -> (f64, f64) {
     (angle, ((q[0] - c[0]).powi(2) + (q[1] - c[1]).powi(2) + (q[2] - c[2]).powi(2)).sqrt())
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait CloudPlaceWindowApp {
+    fn cloud_place_clouds(&self) -> Vec<(String, String)>;
+    fn cloud_place_input(&self, remove: bool) -> Result<PointCloudsPlace, String>;
+    fn cloud_place_run(&mut self);
+    fn open_cloud_place(&mut self) -> Task<Message>;
+    fn cloud_place_write(&mut self, remove: bool);
+    fn cloud_place_event(&mut self, event: Event) -> Task<Message>;
+    fn cloud_place_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>);
+    fn cloud_place_view(&self) -> Element<'_, Message>;
+    fn cloud_place_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl CloudPlaceWindowApp for App {
     /// The drawing's point clouds (id, name).
     fn cloud_place_clouds(&self) -> Vec<(String, String)> {
         let Some(doc) = self.document.as_ref() else { return Vec::new() };
@@ -189,7 +202,7 @@ impl App {
     }
 
     /// Bulutu konumla (`pointcloud.place`): the selection's first cloud, else the drawing's first.
-    pub(crate) fn open_cloud_place(&mut self) -> Task<Message> {
+    fn open_cloud_place(&mut self) -> Task<Message> {
         let clouds = self.cloud_place_clouds();
         if clouds.is_empty() {
             self.warn("Bulutu konumla: çizimde nokta bulutu yok.");
@@ -257,7 +270,7 @@ impl App {
         self.cloud_place_run();
     }
 
-    pub(crate) fn cloud_place_event(&mut self, event: Event) -> Task<Message> {
+    fn cloud_place_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.modules.map_mut().cloud_place;
         match event {
             Event::Cloud(v) => s.cloud = v,
@@ -288,7 +301,7 @@ impl App {
     }
 
     /// The summary's lines and the files' rows: where the cloud is now, and each file's place after the map.
-    pub(crate) fn cloud_place_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
+    fn cloud_place_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
         let s = &self.modules.map().cloud_place;
         let mut lines: Vec<Element<'_, Message>> = Vec::new();
         let mut rows = Vec::new();
@@ -339,7 +352,7 @@ impl App {
         (lines, rows)
     }
 
-    pub(crate) fn cloud_place_view(&self) -> Element<'_, Message> {
+    fn cloud_place_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().cloud_place;
         let by = Segmented::new([By::Matrix, By::AxisAngle, By::Euler], s.by, |v| msg(Event::By(v)));
         let mut form = Form::new()
@@ -423,7 +436,7 @@ impl App {
         Frame::new(TITLE).scroll(body).action(words::secondary(CLOSE, Some(msg(Event::Close)))).width(820.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn cloud_place_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn cloud_place_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(PLACE) => Some(msg(Event::Place)),

@@ -5,6 +5,7 @@
 //! rejections row's angle and edges as the shared cases give them (docs/adr/2700); Buluta uygula's Dönüşüm uygula on
 //! the moving scan with the answer's matrix, after which nothing is left to fit (docs/adr/3100). And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::gis;
 use crate::map;

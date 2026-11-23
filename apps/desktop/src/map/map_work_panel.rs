@@ -191,9 +191,36 @@ fn derivation_words(s: S) -> &'static str {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait MapWorkPanelApp {
+    fn map_work_read(&self) -> Option<Result<MapWorkTree, String>>;
+    fn map_work_edit(&mut self, operation: MapWorkOperation) -> Option<kentos_commands::MapWorkEdited>;
+    fn map_work_restore(&mut self, id: &str);
+    fn map_work_layer(&self) -> Option<String>;
+    fn map_work_add(&mut self, file: Option<PathBuf>);
+    fn map_work_profile_add(&mut self);
+    fn map_work_suggest(&mut self, item: &str);
+    fn map_work_shifts_again(&mut self);
+    fn pick_file(title: &'static str, then: impl FnOnce(Option<PathBuf>) -> Event + Send + 'static) -> Task<Message>;
+    fn map_work_event(&mut self, event: Event) -> Task<Message>;
+    fn selected_uids(&self) -> Vec<String>;
+    fn selected_sources(&self) -> Vec<kentos_commands::WorkObjectSource>;
+    fn map_work_show_source(&mut self);
+    fn map_work_release(&mut self);
+    fn map_work_derive(&mut self);
+    fn underived_uids(&self) -> Vec<String>;
+    fn source_items(&self) -> Vec<(String, String)>;
+    fn map_work_available(&self, id: &str) -> bool;
+    fn select_slots(&mut self, slots: Vec<Slot>);
+    fn select_item(&mut self, id: &str);
+    fn select_derivation(&mut self, id: &str);
+    fn select_changes(&mut self, id: &str);
+    fn map_work_view(&self) -> Element<'_, Message>;
+}
+
+impl MapWorkPanelApp for App {
     /// The tree as the drawing is now, read again when its revision or the depth changed.
-    pub(crate) fn map_work_read(&self) -> Option<Result<MapWorkTree, String>> {
+    fn map_work_read(&self) -> Option<Result<MapWorkTree, String>> {
         let doc = self.document.as_ref()?;
         let revision = doc.model.revision().to_string();
         let deep = self.modules.map().map_work.deep;
@@ -376,7 +403,7 @@ impl App {
         )
     }
 
-    pub(crate) fn map_work_event(&mut self, event: Event) -> Task<Message> {
+    fn map_work_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Item(id) => self.select_item(&id),
             Event::Derivation(id) => self.select_derivation(&id),
@@ -459,7 +486,7 @@ impl App {
 
     /// `map.workSource` (docs/adr/1201 §3): one selected object's source said, its item's layer chosen in Katmanlar
     /// and Harita işi brought to the front: the way from what is selected to where it came from.
-    pub(crate) fn map_work_show_source(&mut self) {
+    fn map_work_show_source(&mut self) {
         let Some(src) = self.selected_sources().into_iter().next() else {
             self.say(Level::Warn, "Seçili nesne harita işinin bir öğesinde değil.");
             return;
@@ -500,7 +527,7 @@ impl App {
     }
 
     /// `map.workRelease` (docs/adr/1201 §3): the selected derived objects let go of their derivations, one step.
-    pub(crate) fn map_work_release(&mut self) {
+    fn map_work_release(&mut self) {
         let uids: Vec<String> = self
             .selected_sources()
             .into_iter()
@@ -560,7 +587,7 @@ impl App {
 
     /// The items the selection can be recorded as made from, by id and name: those with a file, and those without
     /// one (a design, by its content revision; docs/adr/2080 §2) that hold none of the selected objects.
-    pub(crate) fn source_items(&self) -> Vec<(String, String)> {
+    fn source_items(&self) -> Vec<(String, String)> {
         let Some(doc) = self.document.as_ref() else { return Vec::new() };
         let Some(work) = doc.model.map_work() else { return Vec::new() };
         let mut holding: HashSet<&str> = HashSet::new();
@@ -580,7 +607,7 @@ impl App {
 
     /// Whether `map.workSource` and `map.workRelease` have something to work on (`App::available`): roles only, nothing
     /// worked out (the ribbon asks every frame).
-    pub(crate) fn map_work_available(&self, id: &str) -> bool {
+    fn map_work_available(&self, id: &str) -> bool {
         if self.selection.is_empty() || self.selection.len() > 10_000 {
             return false;
         }
@@ -699,7 +726,7 @@ impl App {
         self.say(Level::Info, words);
     }
 
-    pub(crate) fn map_work_view(&self) -> Element<'_, Message> {
+    fn map_work_view(&self) -> Element<'_, Message> {
         let Some(read) = self.map_work_read() else {
             return container(label::caption("Açık çizim yok.")).padding([8, 12]).into();
         };

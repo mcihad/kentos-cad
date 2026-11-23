@@ -102,10 +102,15 @@ pub fn of(r: &PipesChecked) -> Option<PipesMarks> {
     (!crossings.is_empty() || !near.is_empty()).then_some(PipesMarks { crossings, near })
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait PipesMarksApp {
+    fn pipes_marks(&self) -> Option<Arc<PipesMarks>>;
+}
+
+impl PipesMarksApp for App {
     /// The crossings for the drawing as it is: none when nothing is shown, for another drawing, when the check no
     /// longer reads or finds none. Kept until the drawing changes.
-    pub(crate) fn pipes_marks(&self) -> Option<Arc<PipesMarks>> {
+    fn pipes_marks(&self) -> Option<Arc<PipesMarks>> {
         let shown = self.modules.map().pipes_shown_marks.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {

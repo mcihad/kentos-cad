@@ -3,6 +3,7 @@
 //! Konumla writes it (the cloud's file places, one undo step); Konumu kaldır takes a kept place away; a matrix that
 //! scales is said, nothing written; the service hands the renderer the files' places. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;

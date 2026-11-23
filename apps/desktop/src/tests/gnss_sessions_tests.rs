@@ -5,6 +5,7 @@
 //! GNSS arşivi's Projeye yaz keeps the typed limits with their source, and they judge the known points' places. And the
 //! pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_commands::NetworkCorrelations;

@@ -4,6 +4,7 @@
 //! own line leaves both off; KentOS GIS, Mimari and Yol offer neither. A project saved with its campaign beside it and
 //! moved with its folder finds the file again by its relative path. And the pictures.
 
+use crate::map_ext::*;
 use crate::map;
 use kentos_commands::{WorkFileState as F, WorkObjectRole};
 use kentos_domain::Slot;

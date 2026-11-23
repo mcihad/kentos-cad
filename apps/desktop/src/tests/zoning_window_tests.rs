@@ -5,6 +5,7 @@
 //! a drawing without the profile's layers offered Profili uygula, after which the layers are there. Harita and GIS
 //! offer it, Yol and Mimari do not. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;

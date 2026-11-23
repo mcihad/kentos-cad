@@ -62,10 +62,15 @@ pub struct BaselineMarks {
     pub lines: Vec<BaselineMark>,
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait SurveyBaselineMarksApp {
+    fn baseline_marks(&self) -> Option<Arc<BaselineMarks>>;
+}
+
+impl SurveyBaselineMarksApp for App {
     /// The baselines for the drawing as it is: none when nothing was asked, for another drawing, or when no line has
     /// both ends' objects still points of the drawing (a line whose end is gone is left out).
-    pub(crate) fn baseline_marks(&self) -> Option<Arc<BaselineMarks>> {
+    fn baseline_marks(&self) -> Option<Arc<BaselineMarks>> {
         let shown = self.modules.map().baseline_shown.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {

@@ -4,6 +4,7 @@
 //! up of its accepted point). The panel reads the places judged against the limits typed: 5 mm horizontally, N1 is
 //! beyond and its row says so; 1 cm, it is within; a text that is no length above 0 is not a limit. And the pictures.
 
+use crate::map_ext::*;
 use crate::map;
 use kentos_launch::Module;
 use serde_json::Value;

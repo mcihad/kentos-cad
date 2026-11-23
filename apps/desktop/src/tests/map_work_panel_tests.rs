@@ -4,6 +4,7 @@
 //! panel and approved; saved and opened again (and read by someone who only reads) the relation is the same; KentOS
 //! Mimari and KentOS GIS show neither the panel nor the rows. And its pictures.
 
+use crate::map_ext::*;
 use crate::map;
 use kentos_commands::{WorkObjectRole, WorkState as S, WorkStatus as W};
 use kentos_domain::Slot;

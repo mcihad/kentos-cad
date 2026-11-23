@@ -4,6 +4,7 @@
 //! taken; the two-run case numbers each distance by its part in the table; Çizgiyi kaldır goes back to the overlap's
 //! grid; nothing is written. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;

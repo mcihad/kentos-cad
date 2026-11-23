@@ -5,6 +5,7 @@
 //! drawing is not enough; the CSV; nothing written; Harita and GIS offer it. Kayıklık ölçümü gives the shared seam case's
 //! places (docs/adr/2460). And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_domain::Slot;

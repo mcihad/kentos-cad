@@ -338,7 +338,21 @@ pub fn csv(r: &PipesChecked, names: &[String]) -> String {
     out
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait PipesCheckWindowApp {
+    fn pipes_check_input(&self) -> Result<PipesCheck, String>;
+    fn pipes_check_run(&mut self);
+    fn open_pipes_check(&mut self) -> Task<Message>;
+    fn pipes_profile_draw(&mut self);
+    fn pipes_check_other(&mut self, id: String);
+    fn pipes_check_names(&self) -> Vec<String>;
+    fn pipes_check_save(&mut self, path: PathBuf);
+    fn pipes_check_event(&mut self, event: Event) -> Task<Message>;
+    fn pipes_check_view(&self) -> Element<'_, Message>;
+    fn pipes_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl PipesCheckWindowApp for App {
     fn pipes_check_input(&self) -> Result<PipesCheck, String> {
         let s = &self.modules.map().pipes_check;
         let unit = unit_of(&s.unit);
@@ -399,7 +413,7 @@ impl App {
         })
     }
 
-    pub(crate) fn pipes_check_run(&mut self) {
+    fn pipes_check_run(&mut self) {
         let input = self.pipes_check_input();
         let Some(doc) = self.document.as_mut() else { return };
         self.modules.map_mut().pipes_check.answer = Some(input.and_then(|input| {
@@ -415,7 +429,7 @@ impl App {
 
     /// Boru hattı denetimi (`pipes.check`): the first utility network, the attributes guessed from the pipes' own
     /// (Akar baş/son, Çap; else the vertices' heights), the first surface (else Kapak kotu, else no ground), no limit.
-    pub(crate) fn open_pipes_check(&mut self) -> Task<Message> {
+    fn open_pipes_check(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -613,7 +627,7 @@ impl App {
     }
 
     /// The table written to `path` as CSV (a test or a trace gives it here, the picker in the app).
-    pub(crate) fn pipes_check_save(&mut self, path: PathBuf) {
+    fn pipes_check_save(&mut self, path: PathBuf) {
         let names = self.pipes_check_names();
         let Some(Ok(r)) = &self.modules.map().pipes_check.answer else {
             return;
@@ -624,7 +638,7 @@ impl App {
         }
     }
 
-    pub(crate) fn pipes_check_event(&mut self, event: Event) -> Task<Message> {
+    fn pipes_check_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.modules.map_mut().pipes_check;
         match event {
             Event::Network(v) => s.network = v,
@@ -769,7 +783,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn pipes_check_view(&self) -> Element<'_, Message> {
+    fn pipes_check_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().pipes_check;
         let f = self.format();
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
@@ -1091,7 +1105,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn pipes_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn pipes_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),

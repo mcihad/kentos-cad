@@ -300,7 +300,21 @@ pub fn approve_words(r: &ParcelsRecordsListed, chosen: Chosen, out: &ParcelsAppr
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ParcelRegisterWindowApp {
+    fn parcel_register_input(&self) -> ParcelsRecord;
+    fn parcel_approve_input(&self) -> Option<ParcelsApprove>;
+    fn parcel_approve_run(&mut self);
+    fn parcel_register_run(&mut self);
+    fn parcel_register_reset(&mut self);
+    fn parcel_register_made(&self) -> Vec<String>;
+    fn open_parcel_register(&mut self) -> Task<Message>;
+    fn parcel_register_event(&mut self, event: Event) -> Task<Message>;
+    fn parcel_register_view(&self) -> Element<'_, Message>;
+    fn parcel_register_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ParcelRegisterWindowApp for App {
     fn parcel_register_input(&self) -> ParcelsRecord {
         let s = &self.modules.map().parcel_register;
         let text = |t: &str| (!t.trim().is_empty()).then(|| t.trim().to_owned());
@@ -420,7 +434,7 @@ impl App {
     }
 
     /// Parsel kayıtları from Parsel alan denetimi: the new document makes its selected areas.
-    pub(crate) fn open_parcel_register(&mut self) -> Task<Message> {
+    fn open_parcel_register(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -434,7 +448,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn parcel_register_event(&mut self, event: Event) -> Task<Message> {
+    fn parcel_register_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_parcel_register(),
             Event::Show(v) => self.modules.map_mut().parcel_register.show = v,
@@ -573,7 +587,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn parcel_register_view(&self) -> Element<'_, Message> {
+    fn parcel_register_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().parcel_register;
         let f = self.format();
         let mut lines = Vec::new();
@@ -776,7 +790,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn parcel_register_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn parcel_register_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => {

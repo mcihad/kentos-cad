@@ -4,6 +4,7 @@
 //! parcels; Çizimde göster leaves the graph's marks on the drawing, worked out again as it changes, until İşareti
 //! kaldır (docs/adr/2220); nothing is written to the drawing. And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;

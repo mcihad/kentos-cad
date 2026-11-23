@@ -5,6 +5,7 @@
 //! ağ measures the clearances to the water network as the shared cases do (docs/adr/2360); with it, the profile draws
 //! the water pipes crossing the run (docs/adr/2760). And its pictures.
 
+use crate::map_ext::*;
 use crate::map::MapState;
 use crate::map;
 use kentos_launch::Module;

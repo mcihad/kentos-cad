@@ -226,10 +226,15 @@ pub fn gathered(problems: &[(Point, &str)]) -> Vec<(Point, String)> {
         .collect()
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ParcelBoundariesMarksApp {
+    fn parcel_graph_marks(&self) -> Option<Arc<GraphMarks>>;
+}
+
+impl ParcelBoundariesMarksApp for App {
     /// The graph's marks for the drawing as it is: none when nothing is shown, for another drawing, or when the
     /// parcels asked no longer read (one was deleted). Kept until the drawing changes.
-    pub(crate) fn parcel_graph_marks(&self) -> Option<Arc<GraphMarks>> {
+    fn parcel_graph_marks(&self) -> Option<Arc<GraphMarks>> {
         let shown = self.modules.map().parcel_graph.as_ref()?;
         let doc = self.document.as_ref()?;
         if doc.session != shown.session {

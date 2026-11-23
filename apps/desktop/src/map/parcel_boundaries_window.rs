@@ -166,7 +166,16 @@ pub fn rows(g: &ParcelsBounded, show: Show, f: &kentos_interaction::Format) -> V
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ParcelBoundariesWindowApp {
+    fn parcel_boundaries_run(&mut self);
+    fn open_parcel_boundaries(&mut self) -> Task<Message>;
+    fn parcel_boundaries_event(&mut self, event: Event) -> Task<Message>;
+    fn parcel_boundaries_view(&self) -> Element<'_, Message>;
+    fn parcel_boundaries_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ParcelBoundariesWindowApp for App {
     fn parcel_boundaries_run(&mut self) {
         let s = &self.modules.map().parcel_boundaries;
         let input = ParcelsBoundaries { uids: s.uids.clone(), arc_tolerance: (s.tolerance > 0.0).then_some(s.tolerance) };
@@ -175,7 +184,7 @@ impl App {
     }
 
     /// Sınır grafiği from Parsel alan denetimi: its parcels.
-    pub(crate) fn open_parcel_boundaries(&mut self) -> Task<Message> {
+    fn open_parcel_boundaries(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -189,7 +198,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn parcel_boundaries_event(&mut self, event: Event) -> Task<Message> {
+    fn parcel_boundaries_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_parcel_boundaries(),
             Event::Show(v) => {
@@ -268,7 +277,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn parcel_boundaries_view(&self) -> Element<'_, Message> {
+    fn parcel_boundaries_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().parcel_boundaries;
         let f = self.format();
         let mut lines = Vec::new();
@@ -357,7 +366,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn parcel_boundaries_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn parcel_boundaries_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
