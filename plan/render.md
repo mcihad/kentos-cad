@@ -140,13 +140,22 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     pikselinden çıkmıyor.
   - **sivas.kcad:** çizilen öğe 3,19 M → 1,56 M, tekerlek karesinde GPU 104 → 85 ms.
   - **NCZ:** öğe 4,17 M → 0,90 M, ama süre değişmedi (87 ms).
-  - Atlama deneyleri NCZ'de sürenin çizgi toplu çizimlerinde, öğe sayısından bağımsız ve çizim çağrısıyla birlikte
-    gittiğini gösterdi. Kare yakalama ya da zaman damgasıyla sürdürülecek.
+  - Düzey zorlama ölçümü: GPU süresi çizilen örnekle doğru orantılı (örnek başına ~90 ns). NCZ'nin kalan 0,9 M örneği
+    uzak düzey almayan eğri ve uzun çizgi düzeylerinde: binlerce küçük daire en kaba eğri düzeyinde bile kirişlerle
+    çiziliyor.
+  - **Sıradaki:** uzak düzeyler eğri ve uzun çizgi düzeylerinin ardına da eklenecek (`Lod`'un tavanları genişler).
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.
   - Hazır olmayan döşemenin yerinde ebeveyni gösterilir; ekran boş kalmaz.
-- [ ] **RM-11 — Örnekli işaret ve simgeler.** İşaret ve simgeler GPU'da örnekli (instanced) çizilir; yol başına 50 000
+- [ ] **RM-11 — Örnekli işaret ve simgeler.** **Öne alındı (23 Kasım, sahibin bildirimi):** “SVG çizgileri, stil
+  çizgileri çok zoom yapınca testere gibi.”
+  - Neden: SVG semboller ve desen karoları 2048×2048'lik tek bir atlasa en çok 512 px'lik bitmap olarak
+    rasterleştiriliyor. Sayfa dolunca bu sınır yarıya iniyor. Yakında büyütülen bitmap'in çapraz kenarları
+    basamaklanıyor.
+  - Yapılacak: SVG yolları bir kez tanım ağına (dolgu üçgenleri, çizgi kenarları) çevrilecek ve blok örneklemesinin
+    boru hatlarıyla (`StrokeInstanced`, `SolidInstanced`, ADR 1063) her yerleşimde vektör olarak çizilecek.
+  - Asıl madde: İşaret ve simgeler GPU'da örnekli (instanced) çizilir; yol başına 50 000
   işaret sınırı kalkar.
 - [ ] **RM-12 — Veri katmanları aynı döşemelere geçer.**
   - PostGIS ve GeoPackage döşeme başına sorgulanır.

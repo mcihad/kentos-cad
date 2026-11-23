@@ -170,6 +170,27 @@ const MARKER_ATTRIBUTES: [wgpu::VertexAttribute; 2] =
     wgpu::vertex_attr_array![0 => Float32x4, 1 => Float32];
 const RASTER_ATTRIBUTES: [wgpu::VertexAttribute; 1] = wgpu::vertex_attr_array![0 => Float32x4];
 
+/// `KENTOS_DIAG_LEVEL=print` (a measurement's): the first far-levelled batch's scale and level, once a frame.
+fn print_level(scale: f64, lod: &kentos_native_style::batches::Lod, level: usize) {
+    static ASKED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    static FRAME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
+    if *ASKED.get_or_init(|| std::env::var("KENTOS_DIAG_LEVEL").is_ok_and(|v| v == "print")) {
+        let now = DRAWN_INSTANCES.load(std::sync::atomic::Ordering::Relaxed);
+        if FRAME.swap(now, std::sync::atomic::Ordering::Relaxed) != now {
+            eprintln!("DÜZEY ölçek {scale:.5} tavanlar {:?} düzey {level} / {}", lod.ceilings, lod.levels.len());
+        }
+    }
+}
+
+fn forced_level() -> Option<usize> {
+    static LEVEL: std::sync::OnceLock<Option<usize>> = std::sync::OnceLock::new();
+    *LEVEL.get_or_init(|| std::env::var("KENTOS_DIAG_LEVEL").ok().and_then(|v| v.parse().ok()))
+}
+
+/// Instances (strokes, marks) the draws were given since this was last read: a measurement's count of what reached
+/// the GPU (plan/render.md F3).
+pub static DRAWN_INSTANCES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Floats per stroke segment, fill vertex and marker (the contract's strides).
 pub const STROKE_FLOATS: usize = 6;
 pub const AREA_FLOATS: usize = 2;
@@ -911,6 +932,15 @@ impl StyledGpu {
                     g.level = b.lod.as_ref().map_or(0, |lod| {
                         lod.level(frame.scale, b.instances.as_ref().map_or(1.0, |i| i.scale))
                     });
+                    // `KENTOS_DIAG_LEVEL` (a measurement's, plan/render.md F3): every batch with levels at this one.
+                    if let Some(forced) = forced_level()
+                        && let Some(lod) = &b.lod
+                    {
+                        g.level = forced.min(lod.levels.len().saturating_sub(1));
+                    }
+                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings == kentos_native_style::far_levels::FAR_CEILINGS) {
+                        print_level(frame.scale, lod, g.level);
+                    }
                     g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
@@ -1151,6 +1181,15 @@ impl StyledGpu {
                     g.level = b.lod.as_ref().map_or(0, |lod| {
                         lod.level(frame.scale, b.instances.as_ref().map_or(1.0, |i| i.scale))
                     });
+                    // `KENTOS_DIAG_LEVEL` (a measurement's, plan/render.md F3): every batch with levels at this one.
+                    if let Some(forced) = forced_level()
+                        && let Some(lod) = &b.lod
+                    {
+                        g.level = forced.min(lod.levels.len().saturating_sub(1));
+                    }
+                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings == kentos_native_style::far_levels::FAR_CEILINGS) {
+                        print_level(frame.scale, lod, g.level);
+                    }
                     g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
@@ -1608,11 +1647,15 @@ impl StyledGpu {
                         for r in lod.ranges(level) {
                             let (a, z) = ((r.start / floats) as u32, (r.end / floats) as u32);
                             if z > a {
+                                DRAWN_INSTANCES.fetch_add(u64::from(z - a), std::sync::atomic::Ordering::Relaxed);
                                 pass.draw(0..6, a..z);
                             }
                         }
                     }
-                    (_, true) => pass.draw(0..6, 0..b.count),
+                    (_, true) => {
+                        DRAWN_INSTANCES.fetch_add(u64::from(b.count), std::sync::atomic::Ordering::Relaxed);
+                        pass.draw(0..6, 0..b.count)
+                    }
                     // A solid fill's far level (kentos_native_style::far_levels, docs/adr/9207): the level's vertices.
                     (Some(lod), false) if end == i => {
                         for r in lod.ranges(level) {
@@ -1636,7 +1679,20 @@ impl StyledGpu {
             let asked = ASKED.get_or_init(|| std::env::var("KENTOS_DIAG_SKIP").unwrap_or_default());
             !asked.is_empty()
                 && match g.pipe {
-                    Pipe::Stroke | Pipe::StrokeInstanced => asked.contains("stroke"),
+                    Pipe::Stroke | Pipe::StrokeInstanced => {
+                        // Halves of the strokes: dashed or not, small batches or large, wide or blurred (style units).
+                        let f = &g.block.f;
+                        asked.split(',').any(|w| match w {
+                            "stroke" => true,
+                            "stroke-dash" => f[21] > 0.0,
+                            "stroke-plain" => f[21] <= 0.0,
+                            "stroke-small" => g.count < 2000,
+                            "stroke-big" => g.count >= 2000,
+                            "stroke-wide" => f[20] > 1.0,
+                            "stroke-blur" => f[24] > 1.0,
+                            _ => false,
+                        })
+                    }
                     Pipe::Solid | Pipe::SolidInstanced => asked.contains("solid"),
                     Pipe::Hatch => asked.contains("hatch"),
                     Pipe::Pattern | Pipe::Tile | Pipe::Gradient => asked.contains("pattern"),

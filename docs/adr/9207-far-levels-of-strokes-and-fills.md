@@ -107,7 +107,26 @@ NCZ'de öğe sayısı beşte bire indi ama kare süresi değişmedi. Neyin pahal
 - CPU'nun çoğu GPU'yu bekliyor. Görünen pay `memmove`/`realloc` ve iced'in üçgen katmanının her karede yeniden
   hazırlanması (%3,7).
 
-**Sonraki adım (RM-10'un devamı):** hangi çizgi toplu çizimlerinin pahalı olduğu kare yakalama ya da GPU zaman
+**Düzey zorlama ölçümü** (`KENTOS_DIAG_LEVEL`): süre örnek sayısıyla doğru orantılı, örnek başına ~90 ns (UHD 770).
+
+| Bütün düzeyli toplu çizimler bu düzeyde | Çizilen örnek | Kare |
+|---|---|---|
+| 0 | 2 500 145 | 237 ms |
+| 1 | 1 428 486 | 136 ms |
+| 2 | 1 096 518 | 106 ms |
+| 3 | 901 651 | 89 ms |
+
+**Kendi seçiminde** uzak düzeyli toplu çizimler doğru düzeydedir: 0,042 px/m'de düzey 1, yani 8 m
+(`KENTOS_DIAG_LEVEL=print`). Kalan 0,9 M örneğin çoğu uzak düzey almayan toplu çizimlerde: eğrilerin (1063) ve uzun
+çizgilerin (1064) düzeyleri. NCZ'de on binlerce küçük daire ve yay var; piksel altında kalanlar bile en kaba eğri
+düzeyinde tur başına birkaç kirişle çiziliyor.
+
+**Sonraki adım (RM-10'un devamı):**
+
+- Uzak düzeyler eğri ve uzun çizgi düzeylerinin ardına da eklenecek. Düzeyin en kaba hâli ızgarada kümelenecek.
+- `Lod`'un sabit üç tavanı (`[f64; 3]`) bunun için genişleyecek.
+
+Ayrıca hangi çizgi toplu çizimlerinin pahalı olduğu kare yakalama ya da GPU zaman
 damgasıyla bulunacak. Adaylar:
 
 - çok geniş dörtgenler (kalınlık ya da bulanıklık dünya biriminde);
@@ -123,7 +142,11 @@ Gölgelendirici bir çizgi örneğini en az 4 piksel genişliğinde bir dörtgen
 - `crates/render/wgpu/src/{renderer.rs,stats.rs}`: `FrameStats::styled_items`.
 - `apps/desktop/src/shell/perf/files.rs`: açılış görünümünün sayıları (`drawn`), `KENTOS_PERF_SETTINGS`.
 - **Tanı:**
+  - `KENTOS_DIAG_LEVEL` (`styled/gpu.rs`: bir sayı bütün düzeyli toplu çizimleri o düzeye zorlar, `print` seçileni
+    yazar);
+  - `DRAWN_INSTANCES` (karede GPU'ya verilen örnekler);
   - `KENTOS_DIAG_SKIP` (`renderer.rs`: `styled`, `plain`; `styled/gpu.rs`: `stroke`, `solid`, `hatch`, `pattern`,
-    `marker`, `raster`; `view/area.rs`: `labels`);
+    `marker`, `raster`; çizgilerin yarıları `stroke-dash`, `stroke-plain`, `stroke-small`, `stroke-big`, `stroke-wide`,
+    `stroke-blur`; `view/area.rs`: `labels`);
   - `perf::million`'ın `wheel` kipi;
   - `perf::large`'ın tekerlek dökümünde stillenmiş öğe sayısı ve ölçek.

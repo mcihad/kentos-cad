@@ -241,6 +241,11 @@ pub(super) fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'stat
                         s.styled_items,
                         app.viewport.live.camera().scale
                     );
+                    // What the draws gave the GPU in this frame and its read back (two draws of the frame).
+                    println!(
+                        "   çizilen örnek {}",
+                        kentos_render_wgpu::styled::gpu::DRAWN_INSTANCES.swap(0, std::sync::atomic::Ordering::Relaxed)
+                    );
                 }
                 wheels.push(f);
             }
