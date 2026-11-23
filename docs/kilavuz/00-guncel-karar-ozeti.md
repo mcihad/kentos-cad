@@ -193,6 +193,9 @@
   - **Son doğrulama zamanı** (23 Kasım, rapor 31'in kalanı;
     [ADR 9163](../adr/9163-last-verification-of-pending-rows.md), VY-62): kaynağı okunamayan tablo bekleyen satırların
     yanında “son doğrulama: 22.11.2026 14:32” der; zaman günlükle gider.
+  - **Etiket örnekleri** (23 Kasım, rapor 10'un kalanı;
+    [ADR 9164](../adr/9164-label-examples-on-the-same-data.md), VY-63): pencere ilk ve en uzun metni, boşları,
+    görünür ölçekleri ve kâğıttaki yazı yüksekliğini söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

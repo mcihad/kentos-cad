@@ -496,3 +496,7 @@ numaraları raporunkidir.
   ([ADR 9163](../docs/adr/9163-last-verification-of-pending-rows.md))
   - Sayfa okunduğunda ve kaynağa yazıldığında zaman tutulur; günlükle gider, çevrimdışı açılışta “son doğrulama” der.
   - Kalan: gerçek PostgreSQL kesintisi, satır başına alma anı, kaynak hatalarının Türkçesi, web.
+- [~] **VY-63 — Etiket penceresi aynı veriden örnekler gösterir (rapor 10'un kalanı).**
+  ([ADR 9164](../docs/adr/9164-label-examples-on-the-same-data.md))
+  - İlk ve en uzun metin, boş sayısı, görünür ölçekler ve şimdiki görünüm, kâğıtta yazı yüksekliği.
+  - Kalan: QML kayıpları, planlı→kontrol sınaması, kendi biçimiyle önizleme, kurallı sınıfların aralığı, web.

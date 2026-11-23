@@ -15,6 +15,7 @@
 //!   not change (app.rs).
 
 mod candidates;
+mod examples;
 pub(crate) mod form;
 
 use crate::gis;
@@ -403,18 +404,10 @@ impl App {
         if w.mode != LabelsMode::Off
             && let Some(node) = self.draft_layer(w)
         {
-            match candidates::sample(&doc.model, &node) {
-                Some((text, 0)) => lines.push((Kind::Info, format!("Örnek metin (ilk nesne): “{text}”."))),
-                Some((text, before)) => lines.push((
-                    Kind::Info,
-                    format!("Örnek metin: “{text}”; ilk {before} nesnenin metni boş."),
-                )),
-                None if n > 0 => lines.push((
-                    Kind::Warn,
-                    format!("İlk {} nesnenin etiket metni boş.", n.min(candidates::SAMPLE_OBJECTS)),
-                )),
-                None => {}
-            }
+            // The examples on the same data (docs/adr/9164): the first and the longest text, the empty ones, the scales
+            // it shows at with the view's, its letters on paper.
+            let scale = self.viewport.camera.upright().scale;
+            lines.extend(examples::example_lines(&doc.model, &node, n, scale));
             let unknown = candidates::unknown_fields(&doc.model, &node);
             if !unknown.is_empty() {
                 lines.push((Kind::Warn, candidates::unknown_words(&unknown, &w.fields)));

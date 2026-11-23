@@ -70,7 +70,7 @@ pub(super) fn template_fields(template: &str) -> Vec<String> {
 }
 
 /// The styles of a draft layer's classes, in the engine's order: the rules' or the single label's.
-fn class_styles(node: &LayerNode) -> Vec<&LabelStyle> {
+pub(super) fn class_styles(node: &LayerNode) -> Vec<&LabelStyle> {
     match node.style.labels.as_ref() {
         Some(l) if l.mode == LabelsMode::Rules => l.classes.iter().map(|c| &c.style).collect(),
         _ => node.style.label.iter().collect(),
@@ -109,7 +109,7 @@ fn value_of<'e>(e: &'e Entity, name: &str) -> Option<&'e str> {
 }
 
 /// The label texts of `list` as `node` labels them (the engine's texts, from the same code).
-fn texts_of(doc: &kentos_domain::Document, node: &LayerNode, list: &[&Entity]) -> Vec<Vec<(u16, String)>> {
+pub(super) fn texts_of(doc: &kentos_domain::Document, node: &LayerNode, list: &[&Entity]) -> Vec<Vec<(u16, String)>> {
     let shapes: Vec<Shape> = list.iter().map(|e| shape(e)).collect();
     let t = layer_texts(Some(node), reading_unit(doc.settings()));
     let names = |id: &str| doc.layers().get(id).map_or_else(|| id.to_owned(), |n| n.name.clone());
@@ -117,7 +117,7 @@ fn texts_of(doc: &kentos_domain::Document, node: &LayerNode, list: &[&Entity]) -
 }
 
 /// A sample cut to its first [`SAMPLE_CHARS`] letters, on one line.
-fn cut(text: &str) -> String {
+pub(super) fn cut(text: &str) -> String {
     let one: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
     if one.chars().count() > SAMPLE_CHARS {
         format!("{}…", one.chars().take(SAMPLE_CHARS).collect::<String>())
@@ -192,16 +192,6 @@ pub(super) fn count(doc: &kentos_domain::Document, node: &LayerNode, window: [f6
         }
     }
     c
-}
-
-/// The first text the layer's first objects take as `node` labels them, and how many before it had none: the
-/// window's sample as the template or expression is typed.
-pub(super) fn sample(doc: &kentos_domain::Document, node: &LayerNode) -> Option<(String, usize)> {
-    let list: Vec<&Entity> = doc.by_layer(&node.id).take(SAMPLE_OBJECTS).collect();
-    texts_of(doc, node, &list)
-        .iter()
-        .enumerate()
-        .find_map(|(i, texts)| texts.iter().find(|(_, t)| !t.is_empty()).map(|(_, t)| (cut(t), i)))
 }
 
 /// The template's fields the layer neither declares nor any of its first objects holds: the engine writes them as
