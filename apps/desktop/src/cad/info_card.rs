@@ -112,16 +112,17 @@ pub(crate) fn card_body<'a>(
         let rows = card.rows.iter().fold(
             Pairs::new().spacing_x(10.0).spacing_y(2.0),
             |rows, (k, v)| {
-                rows.push(
-                    label::caption(k.clone()).wrapping(Wrapping::None),
-                    label::body(if v.is_empty() {
-                        "—".to_owned()
-                    } else {
-                        v.clone()
-                    })
-                    .size(size)
-                    .wrapping(Wrapping::WordOrGlyph),
-                )
+                // A value never written, muted as the table draws it (docs/adr/9188).
+                let null = v == crate::features::texts::NULL;
+                let value = label::body(if v.is_empty() {
+                    "—".to_owned()
+                } else {
+                    v.clone()
+                })
+                .size(size)
+                .wrapping(Wrapping::WordOrGlyph);
+                let value = if null { value.style(style::text::muted) } else { value };
+                rows.push(label::caption(k.clone()).wrapping(Wrapping::None), value)
             },
         );
         body = body.push(rows);

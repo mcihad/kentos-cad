@@ -322,12 +322,25 @@ impl App {
             };
         }
         if template.is_none_or(|c| c.fields.is_empty()) {
+            // A field never written says NULL, a code its label; the role's unread fields are left out and named
+            // (docs/adr/9150, 9188).
             let attrs = &found.object.base().attrs;
+            let withheld = self.withheld_fields(&node.id);
             card.rows = node
                 .fields
                 .iter()
-                .map(|f| (f.name.clone(), attrs.get(&f.name).cloned().unwrap_or_default()))
+                .filter(|f| !withheld.contains(&f.name))
+                .map(|f| {
+                    let v = match attrs.get(&f.name) {
+                        Some(raw) => crate::features::pending_rows::shown_value(Some(f), raw.clone()),
+                        None => crate::features::texts::NULL.to_owned(),
+                    };
+                    (f.name.clone(), v)
+                })
                 .collect();
+            if !withheld.is_empty() {
+                card.rows.push(("Rolünüz okumuyor".to_owned(), withheld.join(", ")));
+            }
         }
         // The layer too: a card template's title may not name it (docs/adr/9145).
         card.source = Some((

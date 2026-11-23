@@ -94,6 +94,14 @@ pub mod texts {
     pub const NONE: &str = "Katmanda nesne yok.";
     pub const NO_MATCH: &str = "Süzgece uyan nesne yok.";
     pub const EMPTY: &str = "—";
+    /// A value never written (docs/adr/9188): apart from an empty text, which shows empty.
+    pub const NULL: &str = "NULL";
+}
+
+/// How a value never written (NULL) is drawn in a table (docs/adr/9188): muted, so an empty text (drawn empty) and a
+/// text that says “NULL” are told apart from it.
+pub(crate) fn null_cell<'a>() -> kentos_ui::widget::elided::Elided<'a> {
+    kentos_ui::widget::table::text(texts::NULL).style(kentos_ui::style::text::muted)
 }
 
 /// Göster's choices (the core's `show`).
@@ -1422,3 +1430,7 @@ impl App {
         self.open_entry_docked(slot, &form)
     }
 }
+
+#[cfg(test)]
+#[path = "null_tests.rs"]
+mod null_tests;

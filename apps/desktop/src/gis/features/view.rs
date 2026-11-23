@@ -615,6 +615,10 @@ impl App {
                         continue;
                     }
                     let problem = problems.get(&(at, j)).cloned();
+                    // A value never written apart from an empty text (docs/adr/9188): the object has no such key.
+                    let null = value.is_empty()
+                        && problem.is_none()
+                        && c.key.as_ref().is_some_and(|k| model.get(slot).is_some_and(|e| !e.base().attrs.contains_key(k)));
                     let number = c.order == "number";
                     let face = Face {
                         muted: c.key.is_none(),
@@ -623,6 +627,7 @@ impl App {
                     // What the cell says and the ground the rules or a refused value give it.
                     let look = look_of(j + 1).filter(|l| !l.is_plain() && problem.is_none());
                     let (shown, ground) = match (&problem, look) {
+                        (None, _) if null => (super::null_cell().into(), None),
                         // A value its field refuses (an empty required one too): the warning tint over the
                         // cell, as the web's `ftable__bad`.
                         (Some(_), _) => (

@@ -2623,6 +2623,9 @@ Liste:
 - [ ] Resimli kapsam ve yeniden basım (ADR 9187, 23 Kasım 2026): web'in Yeni pafta penceresi de Kapsam'ı resimle
   göstersin, sorusuz ama ana haritalı şablonda yalnız Kapsam'ı sorsun; web `RenderInputs.unreachable`'ı doldursun
   (TS türü yeniden üretilmeli), ön denetim `layer_unreachable` uyarısını göstersin.
+- [ ] NULL, boş metin ve kod ayrı (ADR 9188, 23 Kasım 2026): web'in öznitelik tablosu ve kartı da hiç yazılmamış değeri
+  soluk “NULL”, boş metni boş göstersin; veri katmanının kodlu alanını etiketiyle göstersin; rolün okumadığı alanları
+  veri katmanının tablosundan da çıkarsın.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

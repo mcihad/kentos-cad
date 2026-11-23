@@ -81,7 +81,8 @@ fn choose_card_form_filter_clear_keep_the_layer_and_the_key() {
     // Seç: NULL is its own.
     assert_eq!(choose(&mut app, &bakim, "bedel IS NULL"), BTreeSet::from([4]));
     assert_eq!(app.gis.features.data.selected_of_for_test(), Some(bakim.as_str()));
-    // Kart: the chosen row under Bilgi: its layer, its file's table and its key; NULL an empty cell, the code kept.
+    // Kart: the chosen row under Bilgi: its layer, its file's table and its key; NULL said so (docs/adr/9188), the code
+    // kept.
     let n = node(&app, "bakim").expect("bakim").clone();
     let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
     let input = kentos_commands::LayersRows { layer: bakim.clone(), keys: Some(vec![4]), geometry: Some(true), ..Default::default() };
@@ -95,7 +96,7 @@ fn choose_card_form_filter_clear_keep_the_layer_and_the_key() {
     let (card, _, _) = app.data_card().expect("its card");
     assert!(card.source.as_ref().is_some_and(|(l, _)| l.ends_with("› bakim · fid 4")), "{:?}", card.source);
     let cell = |name: &str| card.rows.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone());
-    assert_eq!(cell("bedel").as_deref(), Some(""), "NULL is no value");
+    assert_eq!(cell("bedel").as_deref(), Some("NULL"), "a value never written says so, apart from an empty text");
     assert_eq!(cell("mahalle").as_deref(), Some("M2"));
     // Form: the chosen row's form, by its key.
     let body = json!({ "revision": 1, "items": [{ "type": "field", "id": "kod", "field": "kod" }] });

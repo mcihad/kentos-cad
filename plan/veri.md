@@ -637,3 +637,10 @@ numaraları raporunkidir.
     söyler; pafta yine basılır.
   - Yüz sayfalık atlas tek PDF; `pdfinfo` ve `gdalinfo` ile sayfa sayısı ve sayfaların yer bilgisi sınandı.
   - Kalan: servisin önbellekteki karolarla basımının ayrımı, resimde dönüş ve genel bakış, gerçek pencere, web.
+- [x] **VY-87 — Hiç yazılmamış değer, boş metin ve kodlu değer ayrı görünür; veri katmanında rolün alan süzgeci (rapor 9
+  ve 29'un kalanı).** ([ADR 9188](../docs/adr/9188-null-empty-text-and-codes-told-apart.md))
+  - NULL tabloda soluk “NULL”, kartta “NULL”; boş metin boş, kartta “—”. Şablonsuz kart katmanın bildirdiği alanları
+    da listeler.
+  - Veri katmanının değer listeli alanı tabloda ve kartta etiketiyle görünür.
+  - Formlar üzerinden çalışan çağıranın okumadığı alanlar veri katmanının tablosundan ve kartından çıkar, adıyla söylenir.
+  - Kalan: 29'un bulutta üç hesapla kabulü (25 ile), web.

@@ -63,11 +63,31 @@ pub(crate) fn cell_value(
     page: &std::collections::BTreeMap<String, String>,
     field: &str,
 ) -> String {
+    cell_raw(local, page, field).unwrap_or_default()
+}
+
+/// [`cell_value`], none for a value never written (NULL, docs/adr/9188): a page keeps no key for it.
+pub(crate) fn cell_raw(
+    local: Option<(&kentos_commands::Entity, &kentos_commands::Entity)>,
+    page: &std::collections::BTreeMap<String, String>,
+    field: &str,
+) -> Option<String> {
     match local {
         Some((now, row)) if now.base().attrs.get(field) != row.base().attrs.get(field) => {
-            now.base().attrs.get(field).cloned().unwrap_or_default()
+            now.base().attrs.get(field).cloned()
         }
-        _ => page.get(field).cloned().unwrap_or_default(),
+        _ => page.get(field).cloned(),
+    }
+}
+
+/// A data row's value as its field shows it (docs/adr/9188): a code of a value list by its label, as a drawing layer's
+/// table shows it; any other as the source gives it.
+pub(crate) fn shown_value(field: Option<&kentos_commands::LayerField>, raw: String) -> String {
+    match field {
+        Some(f) if f.values.as_ref().is_some_and(|v| !v.is_empty()) && !raw.is_empty() => {
+            kentos_commands::display_value(f, &raw)
+        }
+        _ => raw,
     }
 }
 

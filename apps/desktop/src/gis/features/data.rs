@@ -670,16 +670,17 @@ impl App {
     }
 
     /// The fields the table shows: the page's (else the layer's), less those Sütunlar hides, as on a drawing layer's
-    /// table (docs/adr/9166).
+    /// table (docs/adr/9166), and less those the caller's role does not read (docs/adr/9150, 9188).
     pub(crate) fn data_shown_fields(&self, node: &LayerNode) -> Vec<String> {
         let data = &self.gis.features.data;
         let hidden = self.hidden_columns(Some(&node.id));
+        let withheld = self.withheld_fields(&node.id);
         let fields: Vec<String> = if data.fields.is_empty() {
             node.fields.iter().map(|f| f.name.clone()).collect()
         } else {
             data.fields.clone()
         };
-        fields.into_iter().filter(|f| !hidden.contains(f)).collect()
+        fields.into_iter().filter(|f| !hidden.contains(f) && !withheld.contains(f)).collect()
     }
 
     /// The table's rows: a page's cells when it is read, else a row waiting for it.
@@ -707,6 +708,9 @@ impl App {
         let pages = &data.pages;
         let selected = &data.selected;
         let shown = fields.clone();
+        // The fields' rules, by name: a code shows its label (docs/adr/9188).
+        let rules: HashMap<String, kentos_commands::LayerField> =
+            node.fields.iter().map(|f| (f.name.clone(), f.clone())).collect();
         // An edit session's rows (docs/adr/9103 §5): a taken one shows its object's values, a deleted one fades.
         let model = self.document.as_ref().map(|d| &d.model);
         let editing_layer = model.is_some_and(|m| m.editing(&node.id));
@@ -822,16 +826,23 @@ impl App {
                                 ));
                                 continue;
                             }
-                            let value = super::pending_rows::cell_value(
+                            // A value never written apart from an empty text, a code by its label (docs/adr/9188).
+                            let raw = super::pending_rows::cell_raw(
                                 changed_by_key.get(&key).map(|(now, row)| (&**now, &**row)),
                                 &r.attrs,
                                 f,
                             );
-                            let face = kentos_ui::widget::table::text(value);
-                            let face: Element<'_, Message> = if gone {
-                                face.style(kentos_ui::style::text::muted).into()
-                            } else {
-                                face.into()
+                            let face: Element<'_, Message> = match raw {
+                                None => super::null_cell().into(),
+                                Some(raw) => {
+                                    let value = super::pending_rows::shown_value(rules.get(f), raw);
+                                    let face = kentos_ui::widget::table::text(value);
+                                    if gone {
+                                        face.style(kentos_ui::style::text::muted).into()
+                                    } else {
+                                        face.into()
+                                    }
+                                }
                             };
                             // The whole cell takes the double click, an empty value too; its press selects the row as
                             // the row's own does (a cell that takes a press keeps it from the row).
@@ -909,13 +920,15 @@ impl App {
                 session.unwrap_or_default()
             )),
         };
-        column![
-            container(table).width(Fill).height(Fill),
-            row![status].align_y(Center).padding([2, 8]),
-        ]
-        .width(Fill)
-        .height(Fill)
-        .into()
+        // The fields the caller's role does not read, named (docs/adr/9150, 9188).
+        let withheld = self.withheld_fields(&node.id);
+        let mut foot = row![status].align_y(Center).padding([2, 8]).spacing(12);
+        if !withheld.is_empty() {
+            foot = foot.push(
+                label::caption(super::role_fields::withheld_words(&withheld)).style(kentos_ui::style::text::muted),
+            );
+        }
+        column![container(table).width(Fill).height(Fill), foot].width(Fill).height(Fill).into()
     }
 }
 

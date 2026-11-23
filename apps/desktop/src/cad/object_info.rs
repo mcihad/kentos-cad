@@ -248,15 +248,30 @@ impl App {
                 title
             });
         let body = text(card.and_then(|c| c.text.as_ref()), "Kartın metni");
+        // The card's fields, else the layer's declared ones in their order and then the object's other keys: a field
+        // never written says NULL, an empty text shows empty (docs/adr/9188).
         let fields: Vec<String> = match card.map(|c| &c.fields) {
             Some(f) if !f.is_empty() => f.clone(),
-            _ => base.attrs.keys().cloned().collect(),
+            _ => {
+                let declared: Vec<String> = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| d.model.layers().get(&base.layer_id))
+                    .map(|n| n.fields.iter().map(|f| f.name.clone()).collect())
+                    .unwrap_or_default();
+                let others = base.attrs.keys().filter(|k| !declared.contains(*k)).cloned();
+                declared.iter().cloned().chain(others).collect()
+            }
         };
         let mut rows: Vec<(String, String)> = fields
             .into_iter()
             .filter(|f| !withheld.contains(f))
             .map(|f| {
-                let v = base.attrs.get(&f).cloned().unwrap_or_default();
+                let v = base
+                    .attrs
+                    .get(&f)
+                    .cloned()
+                    .unwrap_or_else(|| crate::features::texts::NULL.to_owned());
                 (f, v)
             })
             .collect();

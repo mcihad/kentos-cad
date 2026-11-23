@@ -271,6 +271,9 @@
     haritalı şablon yalnız Kapsam'ı sorar. Ön denetim ulaşılamayan katmanı (dosyası olmayan GeoPackage, okunamayan
     kaynak, yanıt vermeyen servis) uyarı olarak söyler (`RenderInputs.unreachable`). Yüz sayfalık atlas bağımsız
     okuyucularla sınandı.
+  - **NULL, boş metin ve kod ayrı** (23 Kasım, rapor 9 ve 29'un kalanı; [ADR 9188](../adr/9188-null-empty-text-and-codes-told-apart.md), VY-87):
+    hiç yazılmamış değer tabloda soluk “NULL”, kartta “NULL”; boş metin boş (kartta “—”). Veri katmanının kodlu alanı
+    etiketiyle görünür. Rolün okumadığı alanlar veri katmanının tablosundan ve kartından da çıkar, adıyla söylenir.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
