@@ -451,6 +451,20 @@ pub struct Instances {
     /// instead of the rest where `extent` (definition units) times the view's logical px a metre times `scale` is at
     /// most [`BLOCK_PROXY_PX`]; none without one.
     pub proxy: Option<Proxy>,
+    /// A symbol's vectors in its marker batch's place (docs/adr/9208); none for a block's definition.
+    pub mark: Option<Mark>,
+}
+
+/// What a symbol drawn by its vectors keeps of its marker batch (docs/adr/9208): it draws among the marks, where its
+/// markers drew, and gives their boxes to a mask (docs/adr/0226 §3) as the marker shader placed them.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Mark {
+    /// The marker box's anchor, as the marker batch had it.
+    pub anchor: [f64; 2],
+    /// The box's height over its width: the symbol's own.
+    pub aspect: f64,
+    /// The symbol's first colour gives the boxes; its other colours, drawn over it, have the same.
+    pub boxes: bool,
 }
 
 /// An instanced batch's far proxy (docs/adr/1065 §2).
@@ -509,6 +523,7 @@ fn instances_of(d: &Value) -> Option<Instances> {
         count,
         scale: inst.get("k").and_then(Value::as_f64).unwrap_or(1.0),
         proxy,
+        mark: None,
     })
 }
 
@@ -1418,6 +1433,9 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
     // The model screen's far levels of plain strokes and solid fills (far_levels.rs, docs/adr/9207); paper and the PDF
     // draw every edge.
     if o.hold_weights {
+        // Ground-sized SVG symbols as vectors (svg_marks.rs, docs/adr/9208): a bitmap magnified close up turned their
+        // slanted edges into steps.
+        crate::svg_marks::add(&mut layer);
         crate::far_levels::add(&mut layer);
     }
     Ok(layer)
@@ -1653,9 +1671,11 @@ fn dash_period(dash: &[f64]) -> f64 {
     crate::uniform::normalized_dashes(dash).iter().sum()
 }
 
-/// Where a batch's kind draws within its level: fills, then lines, then marks (the core's `Kind`).
-fn kind_rank(kind: &BatchKind) -> u8 {
-    match kind {
+/// Where a batch's kind draws within its level: fills, then lines, then marks (the core's `Kind`). A symbol drawn by
+/// its vectors draws where its marker batch did (docs/adr/9208).
+fn kind_rank(b: &StyledBatch) -> u8 {
+    match &b.kind {
+        BatchKind::Fill { .. } if b.instances.as_ref().is_some_and(|i| i.mark.is_some()) => 2,
         BatchKind::Fill { .. } => 0,
         BatchKind::Stroke { .. } => 1,
         BatchKind::Marker { .. } => 2,
@@ -1688,7 +1708,7 @@ pub fn merged_order(parts: &[&StyledLayer]) -> Vec<(usize, usize)> {
         a.level
             .total_cmp(&b.level)
             .then(a.group.cmp(&b.group))
-            .then(kind_rank(&a.kind).cmp(&kind_rank(&b.kind)))
+            .then(kind_rank(a).cmp(&kind_rank(b)))
             .then(first[&a.key].cmp(&first[&b.key]))
             .then(pa.cmp(&pb))
     });

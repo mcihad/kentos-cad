@@ -43,6 +43,8 @@ pub mod cpu;
 pub mod designer;
 // Far levels of plain strokes and solid fills on the model screen (plan/render.md RM-10).
 pub mod far_levels;
+// SVG symbols as vectors on the model screen (plan/render.md RM-11).
+pub mod svg_marks;
 pub mod legend;
 pub mod line_types;
 pub mod phases;

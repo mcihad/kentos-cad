@@ -2106,6 +2106,26 @@ impl ViewStyled {
         {
             let data = &layer.source.layer.data;
             for (g, b) in layer.batches.iter().zip(&layer.source.layer.batches) {
+                // A symbol drawn by its vectors gives the boxes its markers had (docs/adr/9208).
+                if b.instances.as_ref().is_some_and(|i| i.mark.is_some()) {
+                    if !g.visible || g.count == 0 {
+                        continue;
+                    }
+                    let tile = [centre[0] - b.origin[0], centre[1] - b.origin[1]];
+                    for (middle, size, turn) in kentos_native_style::svg_marks::boxes(&layer.source.layer, b) {
+                        let (w, h) = (size[0] * px_per_m, size[1] * px_per_m);
+                        let (dx, dy) = ((middle[0] - tile[0]) * px_per_m, (middle[1] - tile[1]) * px_per_m);
+                        let (u, v) = (dx * tc + dy * ts, dy * tc - dx * ts);
+                        let (x, y) = (vw / 2.0 + u, vh / 2.0 - v);
+                        let reach = w.max(h) + f64::from(grow) + 2.0;
+                        if x < -reach || y < -reach || x > vw + reach || y > vh + reach {
+                            continue;
+                        }
+                        let (sa, ca) = (turn - twist).sin_cos();
+                        out.push([x as f32, y as f32, (w / 2.0) as f32, (h / 2.0) as f32, ca as f32, -sa as f32, grow]);
+                    }
+                    continue;
+                }
                 let BatchKind::Marker {
                     unit,
                     look,
