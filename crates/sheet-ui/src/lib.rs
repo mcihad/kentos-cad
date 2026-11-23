@@ -37,6 +37,8 @@ pub mod library;
 mod level_sheets;
 pub mod message;
 pub mod new_extent;
+/// Yeni pafta's extent as a picture (docs/adr/9187).
+mod extent_picture;
 mod print_preview;
 pub mod paint;
 pub mod painter;

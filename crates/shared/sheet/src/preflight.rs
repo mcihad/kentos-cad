@@ -679,6 +679,20 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
         let it = scene.item(&n.item);
         note(&mut out, n, it);
     }
+    // A layer the drawing's maps would draw that cannot be reached now (docs/adr/9187): a reprint while a map service is
+    // offline or a data layer's source is gone prints the map without it.
+    if let Some(map) = maps.iter().find(|m| matches!(&m.kind, ItemKind::Map(k) if k.source.is_drawing())) {
+        for u in &inputs.unreachable {
+            out.add(
+                Severity::Warning,
+                "layer_unreachable",
+                Some(map),
+                format!("“{}” katmanı basılamıyor: {}. Haritada boş kalır.", u.name, u.why),
+                "Bağlantı gelince yeniden basın ya da katmanı gizleyip basın.",
+                Vec::new(),
+            );
+        }
+    }
     if has_text {
         out.add(
             Severity::Info,

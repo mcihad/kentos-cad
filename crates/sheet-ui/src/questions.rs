@@ -31,6 +31,10 @@ pub mod texts {
             "“{name}” şablonu bunları soruyor. Boş bıraktıklarınız paftada ‹ad?› diye yazılır ve ön denetim hatırlatır; sonra Değişkenler'den doldurabilirsiniz."
         )
     }
+    /// A template that asks nothing: only where its main map looks (docs/adr/9187).
+    pub fn intro_extent(name: &str) -> String {
+        format!("“{name}” şablonu bir şey sormuyor; ana haritasının nereye bakacağını seçin.")
+    }
     pub const MAKE: &str = "Paftayı oluştur";
     pub const CANCEL: &str = "Vazgeç";
     pub const EMPTY: &str = "boş";
@@ -60,6 +64,8 @@ pub struct QuestionsDialog {
     pub extent: Option<crate::new_extent::Extent>,
     pub layer: Option<usize>,
     pub placed: (crate::new_extent::Placement, String),
+    /// The placement's picture: the page, the main map's frame and the boxes it shows (docs/adr/9187).
+    pub picture: Option<crate::new_extent::Picture>,
 }
 
 #[derive(Clone, Debug)]
@@ -108,15 +114,16 @@ impl Designer {
         }
     }
 
-    /// Kullan and Yeni pafta: the template's questions first; a template that asks nothing makes
-    /// its sheet straight away (the gallery closes once it is made).
+    /// Kullan and Yeni pafta: the template's questions first, with where its main map looks; a template that asks
+    /// nothing and has no main map to place (a print calibration sheet) makes its sheet straight away (the gallery
+    /// closes once it is made). One that asks nothing but has a main map asks Kapsam alone (docs/adr/9187).
     pub(crate) fn ask_then_use(
         &mut self,
         t: &Template,
         paper: Option<PaperChoice>,
         label: String,
     ) -> Vec<Effect> {
-        if t.variables.is_empty() {
+        if t.variables.is_empty() && !crate::new_extent::has_main_map(t) {
             if self.use_template_with(t, paper, &label, Vec::new()) {
                 self.gallery = None;
                 return vec![Effect::ShowSheet];
@@ -149,6 +156,7 @@ impl Designer {
             extent: crate::new_extent::has_main_map(t).then_some(crate::new_extent::Extent::Fixed),
             layer: None,
             placed: (crate::new_extent::Placement::default(), String::new()),
+            picture: None,
         })));
         self.questions_place();
         Vec::new()
@@ -162,6 +170,7 @@ impl Designer {
         };
         if let Some(extent) = d.extent {
             d.placed = crate::new_extent::place(&d.template, d.paper, &ctx, extent, d.layer);
+            d.picture = crate::new_extent::picture(&d.template, d.paper, &ctx, extent, d.layer, d.placed.0);
         }
     }
 
@@ -297,7 +306,18 @@ impl Designer {
                     .placeholder(texts::LAYER),
             );
         }
-        col.push(label::body(d.placed.1.as_str())).into()
+        // The words beside the picture of what they say (docs/adr/9187).
+        let words = label::body(d.placed.1.as_str());
+        match &d.picture {
+            Some(p) => col
+                .push(
+                    iced::widget::row![crate::extent_picture::picture(p), iced::widget::container(words).width(Fill)]
+                        .spacing(12)
+                        .align_y(iced::Center),
+                )
+                .into(),
+            None => col.push(words).into(),
+        }
     }
 
     pub(crate) fn questions_view<'a>(&'a self, d: &'a QuestionsDialog) -> Element<'a, Message> {
@@ -344,7 +364,13 @@ impl Designer {
             list = list
                 .push(column![label::caption(title).style(style::text::muted), input].spacing(2));
         }
-        let mut body = column![label::body(texts::intro(&d.template.meta.name)).style(style::text::muted)].spacing(12);
+        // A template that asks nothing asks Kapsam alone (docs/adr/9187).
+        let intro = if d.template.variables.is_empty() {
+            texts::intro_extent(&d.template.meta.name)
+        } else {
+            texts::intro(&d.template.meta.name)
+        };
+        let mut body = column![label::body(intro).style(style::text::muted)].spacing(12);
         // Kapsam: where the main map looks, with what it gives (docs/adr/9147).
         if let Some(extent) = d.extent {
             body = body.push(self.extent_view(d, extent));
@@ -372,3 +398,7 @@ impl Designer {
             .into()
     }
 }
+
+#[cfg(test)]
+#[path = "questions_tests.rs"]
+mod questions_tests;

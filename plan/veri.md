@@ -628,3 +628,12 @@ numaraları raporunkidir.
   - Veri katmanında örnekler tablonun ilk 64 satırından, arayüzü bekletmeden okunur; özet katmanı nesne saymaz.
   - Denetle veri katmanının etiketlerini görünümün okuduğu satırlarda sayar; okuma yokken nedenini söyler.
   - Kalan: şeritte eğri ve çok satırlı etiket, gerçek pencere, web.
+- [x] **VY-86 — Yeni paftanın resimli kapsamı, sorusuz şablon, erişilemeyen katmanla yeniden basım, çok sayfalı atlas
+  (rapor 15'in kalanı).** ([ADR 9187](../docs/adr/9187-sheet-extent-picture-reprint-and-atlas-acceptance.md))
+  - Kapsam'ın resmi kâğıdı, ana haritanın çerçevesini, çizimin ve seçilen kutuyu haritanın göstereceği yerde çizer;
+    sabit ölçekte kırpma görünür.
+  - Sorusuz ama ana haritalı şablon yalnız Kapsam'ı sorar; haritasız ve sorusuz şablon hemen yapılır.
+  - Ön denetim dosyası olmayan GeoPackage'ı, okunamayan kaynağı ve yanıt vermeyen servisi `layer_unreachable` uyarısıyla
+    söyler; pafta yine basılır.
+  - Yüz sayfalık atlas tek PDF; `pdfinfo` ve `gdalinfo` ile sayfa sayısı ve sayfaların yer bilgisi sınandı.
+  - Kalan: servisin önbellekteki karolarla basımının ayrımı, resimde dönüş ve genel bakış, gerçek pencere, web.

@@ -362,6 +362,11 @@ impl App {
         for (id, e) in kentos_plot::inputs::extents_of(self.sheets.display_list()) {
             (id, e.map(f64::to_bits)).hash(&mut h);
         }
+        // The layers out of reach now (docs/adr/9187): their state changes what the preflight says.
+        let unreachable = self.sheet_unreachable();
+        for u in &unreachable {
+            (&u.name, &u.why).hash(&mut h);
+        }
         let key = h.finish();
         if self.sheet_data_key == Some(key) {
             return;
@@ -389,9 +394,22 @@ impl App {
             legends: data.legends,
             // Each map's own survey quality (docs/adr/2800).
             map_surveys: data.surveys,
+            unreachable,
             ..kentos_sheet_ui::empty_inputs()
         };
         self.sheets.set_data(inputs);
+    }
+
+    /// The shown layers a sheet's map would draw that cannot be reached now (docs/adr/9187): a data layer whose
+    /// GeoPackage is gone or whose last read failed, a map service that failed. A reprint says them before it prints.
+    pub(crate) fn sheet_unreachable(&self) -> Vec<kentos_sheet::display::UnreachableLayer> {
+        let view = crate::data_view::service();
+        let hub = crate::services::hub();
+        unreachable_layers(
+            self.document.as_ref().map(|d| &d.model),
+            &|id| view.failure(id),
+            &|key| hub.failure(key),
+        )
     }
 
     /// The boxes of the drawing's layers that hold objects, in the layer tree's order, as the paper fits them
@@ -782,4 +800,47 @@ impl App {
             }
         }
     }
+}
+
+/// The shown layers of `doc` out of reach (docs/adr/9187), each its name and why: a data layer of a GeoPackage that is
+/// no longer there, or whose last read failed (`data_failure`, by the layer's id); a map service that failed
+/// (`service_failure`, by its key).
+pub(crate) fn unreachable_layers(
+    doc: Option<&kentos_domain::Document>,
+    data_failure: &dyn Fn(&str) -> Option<String>,
+    service_failure: &dyn Fn(&str) -> Option<String>,
+) -> Vec<kentos_sheet::display::UnreachableLayer> {
+    let Some(doc) = doc else {
+        return Vec::new();
+    };
+    let layers = doc.layers();
+    let settings = doc.settings();
+    layers
+        .leaves()
+        .into_iter()
+        .filter(|n| layers.is_visible(&n.id))
+        .filter_map(|n| {
+            let why = if let Some(data) = &n.data {
+                let file = (data.driver == "gpkg").then(|| data.address.trim_start_matches("gpkg:").to_owned());
+                match file {
+                    // The file by its name: the print check's line stays readable; the layer's binding has the path.
+                    Some(f) if !std::path::Path::new(&f).exists() => {
+                        let name = std::path::Path::new(&f).file_name().map_or(f.clone(), |n| n.to_string_lossy().into_owned());
+                        Some(format!("kaynağı olan “{name}” dosyası yok"))
+                    }
+                    _ => data_failure(&n.id).map(|w| format!("kaynağına ulaşılamıyor ({w})")),
+                }
+            } else if let Some(service) = &n.service {
+                let connection = service
+                    .connection
+                    .as_ref()
+                    .and_then(|c| settings.connections.iter().find(|k| &k.id == c));
+                service_failure(&crate::services::key_of(service, connection))
+                    .map(|w| format!("harita servisi yanıt vermiyor ({w})"))
+            } else {
+                None
+            }?;
+            Some(kentos_sheet::display::UnreachableLayer { name: n.name.clone(), why })
+        })
+        .collect()
 }

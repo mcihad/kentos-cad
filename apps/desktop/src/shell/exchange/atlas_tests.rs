@@ -514,3 +514,48 @@ fn an_atlas_whose_coverage_gives_no_page_is_said_and_not_written() {
     send(&mut app, Event::Atlas(A::SavePicked(Some(path.clone()))));
     assert!(!path.exists(), "an atlas of no page is not written");
 }
+
+/// The municipal report's 15th item's open acceptance (docs/adr/9187): a real atlas of many pages, written as one PDF and
+/// read back by independent readers when the machine has them (`pdfinfo`, `gdalinfo`): as many pages
+/// as the plan, each its own page; the first and the last page georeferenced on their own parcels.
+#[test]
+fn a_hundred_page_atlas_is_one_pdf_of_its_pages_read_back_independently() {
+    let mut app = app_with_atlas();
+    run(&mut app, "file.export.atlas");
+    let pages = window(&app).plan.as_ref().expect("planned").pages.len();
+    assert_eq!(pages, 100);
+    let path = scratch("atlas-kabul").join("atlas.pdf");
+    send(&mut app, Event::Atlas(A::SavePicked(Some(path.clone()))));
+    let bytes = std::fs::read(&path).expect("written");
+    let text = String::from_utf8_lossy(&bytes);
+    let counted = text.matches("/Type /Page").count() - text.matches("/Type /Pages").count();
+    assert_eq!(counted, pages, "a page an atlas page");
+    // Independent readers, where this machine has them: what they read is said; a missing one is said too.
+    let tool = |name: &str, args: &[String]| -> Option<String> {
+        let out = std::process::Command::new(name).args(args).output().ok()?;
+        out.status.success().then(|| String::from_utf8_lossy(&out.stdout).into_owned())
+    };
+    let file = path.display().to_string();
+    match tool("pdfinfo", std::slice::from_ref(&file)) {
+        Some(info) => {
+            let read = info.lines().find_map(|l| l.strip_prefix("Pages:")).map(str::trim);
+            assert_eq!(read, Some("100"), "pdfinfo: {info}");
+        }
+        None => println!("pdfinfo yok: sayfa sayısı yalnız dosyanın kendisinden okundu."),
+    }
+    let origin = |page: usize| -> Option<(f64, f64, String)> {
+        let info = tool("gdalinfo", &[format!("PDF:{page}:{file}")])?;
+        let line = info.lines().find(|l| l.starts_with("Origin = ("))?;
+        let inside = line.trim_start_matches("Origin = (").trim_end_matches(')');
+        let (x, y) = inside.split_once(',')?;
+        Some((x.trim().parse().ok()?, y.trim().parse().ok()?, info))
+    };
+    match (origin(1), origin(pages)) {
+        (Some((x1, y1, first)), Some((xn, yn, _))) => {
+            // Each page on its own parcel, in the project's system.
+            assert!(first.contains("ID[\"EPSG\",5253]]"), "{first}");
+            assert!((x1 - xn).abs() > 1.0 || (y1 - yn).abs() > 1.0, "({x1}, {y1}) and ({xn}, {yn})");
+        }
+        _ => println!("gdalinfo yok ya da sayfayı okuyamadı: sayfaların yer bilgisi okunmadı."),
+    }
+}

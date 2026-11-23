@@ -119,6 +119,68 @@ fn the_legend_carries_the_shown_layers_by_name() {
     assert!(rows.iter().all(|(id, label)| label != id), "names, not ids: {rows:?}");
 }
 
+/// A reprint with a data layer's source gone (docs/adr/9187): the print check says the layer out of reach on the map,
+/// the PDF is still written (without its rows); the file back, nothing is said.
+#[test]
+fn a_reprint_with_a_data_layers_source_gone_says_it_and_prints_once_back() {
+    crate::data_layers::register();
+    let path = crate::data_layers_tests::parcels("yeniden-basim", 4);
+    let mut app = app_with_drawing();
+    app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described")])
+        .expect("added");
+    let _ = app.update(Message::Sheet(Sheet::NewSheet));
+    ask(&mut app, QuestionsMessage::Extent(Extent::Drawing));
+    ask(&mut app, QuestionsMessage::Make);
+    let unreachable = |app: &App| -> Vec<String> {
+        app.sheets.findings().iter().filter(|f| f.code == "layer_unreachable").map(|f| f.message.clone()).collect()
+    };
+    assert!(unreachable(&app).is_empty(), "{:?}", unreachable(&app));
+    // The source moved away: said, as a warning on the map.
+    let away = path.with_extension("tasindi");
+    std::fs::rename(&path, &away).expect("moved");
+    app.follow_sheet_data();
+    let said = unreachable(&app);
+    assert_eq!(said.len(), 1, "{said:?}");
+    assert!(
+        said[0].starts_with("“parseller” katmanı basılamıyor: kaynağı olan “") && said[0].ends_with("” dosyası yok. Haritada boş kalır."),
+        "{said:?}"
+    );
+    let file = crate::files_testing::scratch("yeniden-basim-pdf").join("pafta.pdf");
+    app.sheet_export_to(kentos_sheet_ui::ExportKind::Pdf, Some(file.clone()));
+    assert!(std::fs::read(&file).expect("still printed").starts_with(b"%PDF-"));
+    // Back: nothing said.
+    std::fs::rename(&away, &path).expect("moved back");
+    app.follow_sheet_data();
+    assert!(unreachable(&app).is_empty(), "{:?}", unreachable(&app));
+}
+
+/// An offline map service (docs/adr/9187): a shown basemap whose service failed is out of reach, said with why; a
+/// hidden one is not, nor one that answers.
+#[test]
+fn an_offline_map_service_is_out_of_reach_while_shown() {
+    let mut app = app_with_drawing();
+    let _ = app.update(Message::Run("basemap.osmStandard"));
+    let doc = &app.document.as_ref().expect("open").model;
+    let offline = super::mode::unreachable_layers(Some(doc), &|_| None, &|_| Some("çevrimdışı".into()));
+    assert_eq!(
+        offline.iter().map(|u| (u.name.as_str(), u.why.as_str())).collect::<Vec<_>>(),
+        [("OSM Standart", "harita servisi yanıt vermiyor (çevrimdışı)")]
+    );
+    assert!(super::mode::unreachable_layers(Some(doc), &|_| None, &|_| None).is_empty(), "answering");
+    let id = doc.layers().leaves().iter().find(|n| n.service.is_some()).map(|n| n.id.clone()).expect("the basemap");
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let mut node = doc.layers().get(&id).expect("it").clone();
+    node.visible = false;
+    let mut snapshot = doc.to_snapshot_v2();
+    for n in &mut snapshot.layers {
+        if n.id == id {
+            *n = node.clone();
+        }
+    }
+    let hidden = kentos_domain::Document::from_snapshot_v2(snapshot).expect("reads");
+    assert!(super::mode::unreachable_layers(Some(&hidden), &|_| None, &|_| Some("çevrimdışı".into())).is_empty(), "hidden");
+}
+
 /// The new sheet window's pictures (`.run/gui-evidence/kullanim-9147/`): the fixed scale saying the cut and what the
 /// whole drawing needs, and Katman choosing the parcels' box.
 #[test]
@@ -136,3 +198,40 @@ fn screens() {
         app
     });
 }
+
+/// Pictures for the owner (`.run/gui-evidence/kullanim-9187/`): the new sheet's picture at the fixed scale (the cut) and
+/// with the whole drawing fitted; the print check of a reprint whose data layer's source is gone.
+#[test]
+#[ignore = "pictures for the owner"]
+fn extent_picture_screens() {
+    crate::files_testing::usage_shots("9187", "1-sabit-olcek-resim", || {
+        let mut app = zoomed_in();
+        let _ = app.update(Message::Sheet(Sheet::NewSheet));
+        app
+    });
+    crate::files_testing::usage_shots("9187", "2-cizimin-tamami-resim", || {
+        let mut app = zoomed_in();
+        let _ = app.update(Message::Sheet(Sheet::NewSheet));
+        ask(&mut app, QuestionsMessage::Extent(Extent::Drawing));
+        app
+    });
+    crate::data_layers::register();
+    let path = crate::data_layers_tests::parcels("yeniden-basim-resim", 4);
+    let away = path.with_extension("tasindi");
+    crate::files_testing::usage_shots("9187", "3-yeniden-basim-kaynak-yok", || {
+        if away.exists() {
+            std::fs::rename(&away, &path).expect("back");
+        }
+        let mut app = app_with_drawing();
+        app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described")])
+            .expect("added");
+        let _ = app.update(Message::Sheet(Sheet::NewSheet));
+        ask(&mut app, QuestionsMessage::Extent(Extent::Drawing));
+        ask(&mut app, QuestionsMessage::Make);
+        std::fs::rename(&path, &away).expect("moved");
+        app.follow_sheet_data();
+        let _ = app.update(Message::Sheet(Sheet::InspectorTab(kentos_sheet_ui::message::InspectorTab::Preflight)));
+        app
+    });
+}
+

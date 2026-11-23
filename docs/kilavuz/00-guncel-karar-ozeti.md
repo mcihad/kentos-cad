@@ -266,6 +266,11 @@
   - **Etiket örneği ve veri katmanı** (23 Kasım, rapor 13'ün kalanı; [ADR 9186](../adr/9186-label-example-and-data-layer-labelling.md), VY-85):
     Etiketler ilk metni haritanın biçimiyle çizer (`placed_look` harita ile ortak). Veri katmanında örnekler kaynağın
     ilk 64 satırından okunur; Denetle görünümün okuduğu satırlarda sayar, okuma yokken nedenini söyler.
+  - **Resimli kapsam ve yeniden basım** (23 Kasım, rapor 15'in kalanı; [ADR 9187](../adr/9187-sheet-extent-picture-reprint-and-atlas-acceptance.md), VY-86):
+    Yeni paftanın Kapsam'ı kâğıdı, ana haritanın çerçevesini ve çizimin kutusunu resimle gösterir. Sorusuz ama ana
+    haritalı şablon yalnız Kapsam'ı sorar. Ön denetim ulaşılamayan katmanı (dosyası olmayan GeoPackage, okunamayan
+    kaynak, yanıt vermeyen servis) uyarı olarak söyler (`RenderInputs.unreachable`). Yüz sayfalık atlas bağımsız
+    okuyucularla sınandı.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

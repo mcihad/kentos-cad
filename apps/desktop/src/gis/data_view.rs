@@ -453,6 +453,11 @@ impl DataView {
     }
 
     /// The read drawn for a layer, by its id.
+    /// Why a layer's last read failed, while it has not been read since (docs/adr/9187: a sheet printed without it).
+    pub fn failure(&self, layer: &str) -> Option<String> {
+        self.layers.lock().unwrap_or_else(PoisonError::into_inner).get(layer).and_then(|l| l.failed.clone())
+    }
+
     pub fn drawn_read(&self, layer: &str) -> Option<u64> {
         let layers = self.layers.lock().unwrap_or_else(PoisonError::into_inner);
         layers.get(layer).and_then(|l| l.drawn.as_ref()).map(|r| r.id)

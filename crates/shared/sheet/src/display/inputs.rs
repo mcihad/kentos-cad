@@ -446,4 +446,21 @@ pub struct RenderInputs {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub dpi: Option<u16>,
+    /// The layers the drawing's maps would draw that the host cannot reach now (docs/adr/9187): a map service
+    /// offline, a data layer's source gone. The preflight says each; the sheet prints without them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<UnreachableLayer>>"))]
+    pub unreachable: Vec<UnreachableLayer>,
+}
+
+/// A layer a map would draw that cannot be reached now (docs/adr/9187).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct UnreachableLayer {
+    /// The layer's name as the layer tree says it.
+    pub name: String,
+    /// Why, in words: “harita servisi yanıt vermiyor (…)”, “kaynağına ulaşılamıyor (…)”.
+    pub why: String,
 }

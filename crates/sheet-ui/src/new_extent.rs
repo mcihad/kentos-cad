@@ -53,9 +53,64 @@ pub fn scale_words(scale: u32) -> String {
     out
 }
 
+/// What the window's picture shows (docs/adr/9187), in millimetres from the page's top left: the page, the main map's
+/// frame on it, and the drawing's box and the chosen box (the drawing area's or the layer's) as the map would show
+/// them: a box past the frame is the cut.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Picture {
+    pub page: [f64; 2],
+    /// Left, top, width, height.
+    pub frame: [f64; 4],
+    pub drawing: Option<[f64; 4]>,
+    pub chosen: Option<[f64; 4]>,
+}
+
+/// The picture of `placement` (docs/adr/9187): the template's main map at `paper` looking where the placement says.
+pub fn picture(
+    t: &Template,
+    paper: Option<PaperChoice>,
+    ctx: &Context,
+    extent: Extent,
+    layer: Option<usize>,
+    placement: Placement,
+) -> Option<Picture> {
+    let (item, page) = made_main_map(t, paper, placement)?;
+    let (center, scale) = match &item.kind {
+        ItemKind::Map(m) => match &m.view {
+            MapView::Fixed(v) => (v.center?, v.scale),
+            _ => return None,
+        },
+        _ => return None,
+    };
+    if scale == 0 {
+        return None;
+    }
+    let mm = |um: kentos_sheet::units::Um| f64::from(um) / 1000.0;
+    let frame = [mm(item.frame.left), mm(item.frame.top), mm(item.frame.width), mm(item.frame.height)];
+    // A metre of ground at 1:N is 1000 / N millimetres of paper; the paper's y runs down.
+    let k = 1000.0 / f64::from(scale);
+    let (cx, cy) = (frame[0] + frame[2] / 2.0, frame[1] + frame[3] / 2.0);
+    let on_paper = |b: [f64; 4]| [cx + (b[0] - center.x) * k, cy - (b[3] - center.y) * k, (b[2] - b[0]) * k, (b[3] - b[1]) * k];
+    Some(Picture {
+        page: [mm(page.width), mm(page.height)],
+        frame,
+        drawing: ctx.drawing_bounds.map(on_paper),
+        chosen: bounds_of(ctx, extent, layer).map(on_paper),
+    })
+}
+
 /// The template's main map as the sheet would have it at `paper`, looking at `center` at `scale` (none: the
 /// template's): its first fixed map of the drawing that is no overview.
 fn main_map(t: &Template, paper: Option<PaperChoice>, place: Placement) -> Option<Item> {
+    made_main_map(t, paper, place).map(|(item, _)| item)
+}
+
+/// [`main_map`] and the page it is on.
+fn made_main_map(
+    t: &Template,
+    paper: Option<PaperChoice>,
+    place: Placement,
+) -> Option<(Item, kentos_sheet::units::RectUm)> {
     let ids = InstanceIds {
         sheet: "yeni".into(),
         master: t.master.as_ref().map(|_| "ana".into()),
@@ -76,10 +131,15 @@ fn main_map(t: &Template, paper: Option<PaperChoice>, place: Placement) -> Optio
         values: Vec::new(),
     };
     let made = kentos_sheet::template::instantiate(t, &ids, &options).ok()?;
-    made.sheet.items.into_iter().find(|it| {
-        matches!(&it.kind, ItemKind::Map(m)
-            if matches!(m.view, MapView::Fixed(_)) && m.overview_of.is_none() && m.source.is_drawing())
-    })
+    let page = made.sheet.page.rect();
+    made.sheet
+        .items
+        .into_iter()
+        .find(|it| {
+            matches!(&it.kind, ItemKind::Map(m)
+                if matches!(m.view, MapView::Fixed(_)) && m.overview_of.is_none() && m.source.is_drawing())
+        })
+        .map(|item| (item, page))
 }
 
 /// Whether the template has a main map to place.

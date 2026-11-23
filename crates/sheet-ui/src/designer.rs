@@ -917,5 +917,6 @@ pub fn empty_inputs() -> RenderInputs {
         fonts: None,
         assets: None,
         dpi: None,
+        unreachable: Vec::new(),
     }
 }

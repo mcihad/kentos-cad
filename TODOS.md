@@ -2620,6 +2620,9 @@ Liste:
 - [ ] Etiket örneği ve veri katmanı (ADR 9186, 23 Kasım 2026): web'in Etiketler penceresi de ilk metni haritanın
   biçimiyle çizsin; veri katmanında örnekleri kaynağın ilk satırlarından alsın, Denetle'yi görünümün okuduğu satırlarda
   saysın.
+- [ ] Resimli kapsam ve yeniden basım (ADR 9187, 23 Kasım 2026): web'in Yeni pafta penceresi de Kapsam'ı resimle
+  göstersin, sorusuz ama ana haritalı şablonda yalnız Kapsam'ı sorsun; web `RenderInputs.unreachable`'ı doldursun
+  (TS türü yeniden üretilmeli), ön denetim `layer_unreachable` uyarısını göstersin.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de
