@@ -478,6 +478,21 @@ impl Catalog {
         true
     }
 
+    /// The ribbon's commands a module's program offers, sorted: the module catalog's list (catalog/v1/modules.json,
+    /// docs/adr/9195 §6). A command no ribbon holds is every module's and is not listed.
+    pub fn module_command_list(&self, module: kentos_launch::Module) -> Vec<&'static str> {
+        let mut ids: Vec<&'static str> = self
+            .module_commands
+            .iter()
+            .filter(|(m, _)| *m == module)
+            .flat_map(|(_, ids)| ids.iter().copied())
+            .filter(|id| self.ribbon_commands.contains(id))
+            .collect();
+        ids.sort_unstable();
+        ids.dedup();
+        ids
+    }
+
     /// The contextual tabs of a project type cut to a CAD work (docs/adr/0802), as `tabs_for` cuts the others.
     pub fn contextual_for_work(
         &self,

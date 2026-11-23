@@ -8,55 +8,9 @@ use kentos_commands::{LayerGeometry, LayerNode, LayerNodeType};
 
 use crate::app::App;
 
-/// What a layer is, for its menu (docs/adr/9195 §5).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum LayerKind {
-    /// Objects kept in the project file: a CAD drawing's layer; a CBS project's, to be moved into a table
-    /// (docs/adr/9196 §2).
-    Drawing,
-    /// Texts, dimensions and sheets kept in the project file: a layer typed Açıklama (docs/adr/0622 §5, 9196 §2).
-    Annotation,
-    /// A table of a GeoPackage or a database drawn as it is now, its rows in their source (docs/adr/9101).
-    Data,
-    /// Objects in the project bound to a table they are written to (docs/adr/0503).
-    Bound,
-    /// Drawn from a map service, holding no objects (docs/adr/0208).
-    Service,
-    /// Rasters alone (docs/adr/0204): their look and their system are the Raster tab's.
-    Raster,
-    /// Point clouds alone: their look and their placing are the Nokta bulutu tab's.
-    PointCloud,
-    /// A group of layers.
-    Group,
-}
-
-impl LayerKind {
-    /// Every kind, in the order the ADR's table lists them.
-    pub(crate) const ALL: [LayerKind; 8] = [
-        LayerKind::Drawing,
-        LayerKind::Annotation,
-        LayerKind::Data,
-        LayerKind::Bound,
-        LayerKind::Service,
-        LayerKind::Raster,
-        LayerKind::PointCloud,
-        LayerKind::Group,
-    ];
-
-    /// The kind's name in a sentence and in the ADR's table.
-    pub(crate) fn title(self) -> &'static str {
-        match self {
-            LayerKind::Drawing => "çizim",
-            LayerKind::Annotation => "açıklama",
-            LayerKind::Data => "veri tablosu",
-            LayerKind::Bound => "bağlı",
-            LayerKind::Service => "servis",
-            LayerKind::Raster => "raster",
-            LayerKind::PointCloud => "nokta bulutu",
-            LayerKind::Group => "grup",
-        }
-    }
-}
+/// What a layer is, for its menu: the modules' shared kinds (docs/adr/9195 §5). A raster's and a cloud's look and
+/// system are their contextual tab's.
+pub(crate) use kentos_launch::LayerKind;
 
 /// An entry of a layer's right-click menu (cad/layering/menus.rs), placed by module and by layer kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

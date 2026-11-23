@@ -13,8 +13,10 @@
   - CBS: veri ve öznitelikler veritabanında; proje dosyası yapıyı, stilleri, ayarları ve açıklamaları tutar ve dosyaya,
     veritabanına ya da buluta kaydedilir. CAD (Mimari, Harita, Yol): tamamı proje dosyasında; dosyaya ya da buluta
     (yalnız dosya revizyonu). Eski projelere taşıma yazılmaz (uygulama geliştirmede).
-  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır. AY-02 ve AY-03 bitti: ekran açık projeyi
-    izler; katman menüsü modül × katman türü tablosundandır (ADR 9195 §5, `layer_entries.rs`).
+  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır. AY-02, AY-03 ve AY-04 bitti: ekran açık
+    projeyi izler; katman menüsü modül × katman türü tablosundandır (ADR 9195 §5, `layer_entries.rs`); her modülün
+    profili kendi klasöründedir, ortak katalog `catalog/v1/modules.json`, bağımlılık denetimi
+    `scripts/dev/module_deps.py --check` (ADR 9195 §6).
 
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
   [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),
@@ -2655,12 +2657,14 @@
   kalktı; yerel CAD Mimari'nindir). Yeni proje: Mimari sihirbazsız, Harita ve GIS türsüz iki adım. Modülün komutları
   (`Catalog::module_has`, `App::offers`): Komut ara, komut satırı, kısayollar, `App::run`, hızlı erişim, F1, menüler;
   başka modülün komutu `not_offered`'ın cümlesiyle reddedilir; kabuk komutları da modüle göre (`ribbon.json`'un
-  `modules`'ü). Modülün yüzeyleri (`module_surfaces.rs`): alt panelin sekmeleri, sağ panelin bölmeleri, durum çubuğu,
-  ayar pencerelerinin bölümleri, katman menüsü, uygulama menüsünün biçimleri, Kaynaklar, bırakılan dosyalar.
+  `modules`'ü). Modülün yüzeyleri (`module_surfaces.rs`; her modülün profili kendi klasöründe, ADR 9195 §6): alt panelin
+  sekmeleri, sağ panelin bölmeleri, durum çubuğu, ayar pencerelerinin bölümleri, katman menüsü, uygulama menüsünün
+  biçimleri, Kaynaklar, bırakılan dosyalar.
   Araçların seçenekleri `Draft.offers`'tan (`ToolOption`: Mimari'de Semt, nokta adları, kayıtlı ölçü yok; GIS'te blok ve
   genişlik yok). Her programın kendi yerleşim dosyası (`yerlesim-<modül>.json`) ve ajan soketi (`masaustu-<modül>.sock`,
   MCP `desktop.attach`'ın `program`'ı); bulut kataloğu, kurtarma kopyaları ve pafta galerisi programa göre. CBS analizi
-  GIS'in, çizim standardı Mimari'nin; Mimari'de Ölçme sekmesi yok (sorgu Görünüm'de). `kentos-cad` her şeyi sunar.
+  GIS'in, çizim standardı Mimari'nin; Mimari'de Ölçme sekmesi yok (sorgu Görünüm'de). `kentos-cad` açık projenin
+  modülünü sunar (ADR 9195).
 
 - **KentOS Launcher ve ayrı modül programları (30 Ekim 2026; [ADR 0800](../../docs/adr/0800-kentos-launcher.md), [ADR 0801](../../docs/adr/0801-kentos-modules-and-their-programs.md)).**
   Sahibin isteği: görseldeki gibi bir launcher, Mimari CAD, Harita CAD ve GIS ayrı programlar, ileride Rust olmayan

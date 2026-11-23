@@ -316,11 +316,12 @@ Ayrıntı [ADR 9195](docs/adr/9195-module-separation.md), [ADR 9196](docs/adr/91
 3. **Kabuk modülü tanımaz.** Kabuk ve istemciler yüzey için modül adına göre dallanmaz; modülün kaydettiği profili
    sorar.
    - Modül başka modüle doğrudan bağlanmaz; ortak çekirdeğe ve sözleşmeye bağlanır.
-   - Bağımlılık denetimi (`scripts/dev/module_deps.py --check`, AY-04'te kurulur) yeşil kalmadan iş bitmez; tabanı
-     yalnız azalır.
+   - Bağımlılık denetimi (`scripts/dev/module_deps.py --check`; masaüstü sınamaları da koşar) yeşil kalmadan iş
+     bitmez; tabanı yalnız azalır. Kabuk yüzeyi modülün profiline sorar (`apps/desktop/src/shell/module_profile.rs`).
 4. **Modülün tanımı ortaktır.** Modülün kimliği, proje türleri, işleri, saklama türü, komut kümesi ve katman türleri
-   paylaşılan sözleşmededir (`kentos-launch`; ortak katalog `catalog/v1/modules.json`, AY-04'te üretilir). Masaüstü,
-   mobil ve web aynı tanımı okur; istemci başına modül mantığı çatallanmaz.
+   paylaşılan sözleşmededir (`kentos-launch`; ortak katalog `catalog/v1/modules.json`, üretici
+   `KENTOS_WRITE_MODULES=1 cargo test -p kentos-desktop --lib module_catalog`). Masaüstü, mobil ve web aynı tanımı
+   okur; istemci başına modül mantığı çatallanmaz.
 5. **Saklama modeli proje türündendir.**
    - **CBS:** katman verisi ve öznitelikler veritabanındadır (GeoPackage, PostgreSQL, KentOS Bulut). Proje dosyası
      yapıyı, stilleri, ayarları ve açıklamaları (yazı, ölçü, pafta) tutar; dosyaya, veritabanına ya da buluta

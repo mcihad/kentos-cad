@@ -5,27 +5,12 @@
 //! and the cloud start with, the tools' options, Katman stili's renderers and the style library's branches.
 //! The active module decides (CLAUDE.md §25): the open project's, else the program's (`App::active_module`), in a
 //! module's program and in kentos-cad alike; kentos-cad with nothing open shows the common surfaces alone
-//! (`NO_PROJECT`), and switches as its tabs' projects do:
-//!
-//! - KentOS Mimari, a building on its own coordinates: Komut geçmişi, Koordinat listesi, Arama (Veride ara
-//!   finds the texts of a building too), Denetim, Uyarılar and Python; Katmanlar, Öznitelikler, Bloklar and
-//!   Şablonlar; the Kat cell; Mimari in Proje ayarları;
-//!   drawings (KCAD, DWG, DXF, NCZ, PDF) in and out; no survey's tool options (Ölçülendirme's Semt, Nokta's Ad,
-//!   Kod and its question, Çizgi's recorded measurements) and no zoning plan's legends (the library's MPYY).
-//! - KentOS Harita, a map on real coordinates: every tab but Grafik and Denetim; every panel; the map system,
-//!   the second system, Topoloji and Çakışma; Kotlar ve epok and Ölçme; GIS files, sources and services; its
-//!   new projects in metres.
-//! - KentOS Yol, a road on real coordinates (plan/road.md ROAD-MOD): the map's survey and coordinate surfaces
-//!   (Koordinat listesi, Noktalar, Harita sistemi, İkinci sistem, Kotlar ve epok, Ölçme) and CAD denetimi, no parcel
-//!   rows, zoning legends, addresses, topology or overlap lamps; its sheets and its cloud projects are a road's.
-//! - KentOS GIS: every tab but Denetim and CAD denetimi; every panel but Bloklar, Gezgin and the map's and road's
-//!   own; Senaryo too; time, scenarios and typed layers;
-//!   Katman stili's thematic renderers; no blocks and no polyline widths in the tools (Böl's Blok, Çoklu
-//!   çizgi's Genişlik, the grip menu's Kenar genişliği…), nor a polyline's Genişlik and an area's Maske in
-//!   Öznitelikler; its new projects in metres.
+//! (`NoProject`), and switches as its tabs' projects do. What each module shows is its profile's, in its own folder
+//! (module_profile.rs: arch/profile.rs, map/profile.rs, road/profile.rs, gis/profile.rs); this file asks the profile
+//! and never a module by name.
 //!
 //! Eklenti denetimi shows only while an extension offers the module an audit rule, or a run is on it. The layer menu's
-//! entries are placed here by module and in layer_entries.rs by layer kind (docs/adr/9195 §5).
+//! entries are placed by the profile by module and in layer_entries.rs by layer kind (docs/adr/9195 §5).
 //!
 //! The commands a program offers are catalog.rs's (`App::offers`). Each program keeps its own layout
 //! (layout.rs: kentos-cad's yerlesim.json, a module's yerlesim-<modül>.json, the first run starting from
@@ -42,6 +27,7 @@ use kentos_launch::Module;
 
 use crate::app::{App, Message, Panel};
 use crate::bottom::BottomTab;
+use crate::module_profile::{ModuleProfile, NoProject, profile};
 // The layer menu's entries, placed by module here and by layer kind there (docs/adr/9195 §5).
 pub(crate) use crate::layer_entries::LayerEntry;
 use crate::project::settings::Section as ProjectSection;
@@ -125,478 +111,16 @@ pub(crate) enum PropertyRows {
     Topology,
 }
 
-/// What one module's program shows.
-#[derive(Debug)]
-pub(crate) struct Surfaces {
-    /// The bottom panel's tabs.
-    pub bottom: &'static [BottomTab],
-    /// The dock's panels.
-    pub panels: &'static [Panel],
-    pub cells: &'static [Cell],
-    /// Proje ayarları' sections.
-    pub project: &'static [ProjectSection],
-    pub settings: &'static [AppSetting],
-    /// The layer menu's entries the module has; each one shows on the kinds of layer it is about (layer_entries.rs).
-    pub layer_menu: &'static [LayerEntry],
-    pub formats: Formats,
-    pub sources: &'static [SourceSection],
-    pub rows: &'static [PropertyRows],
-    /// The hover card's parcel rows: Ada, Mahalle, Nitelik, the deed's area and Parsel's title.
-    pub parcels: bool,
-    /// The project type the sheet mode ranks its templates by (docs/sheet/design.md §4).
-    pub sheet: ProjectType,
-    /// The type Bulut projeleri lists at first; none: every type (a map's projects carry five).
-    pub cloud: Option<ProjectType>,
-    /// The type Buluta yükle offers first.
-    pub upload: ProjectType,
-    /// Nokta hesapla's constructions it has not: a survey's (a route's km, a named point) in a building's.
-    pub hidden_calc: &'static [CalcKind],
-    /// The tools' options it leaves out (Draft::offers): a survey's in a building's, blocks' and a polyline's
-    /// widths in a GIS.
-    pub left_out: &'static [ToolOption],
-    /// Katman stili's thematic renderers (docs/adr/0213): a GIS's analysis; a layer drawn with one keeps it
-    /// everywhere.
-    pub thematic: bool,
-    /// The system style library's branches Stil yöneticisi and the symbol pickers leave out: a zoning plan's
-    /// legends (MPYY) in a building's.
-    pub library_hidden: &'static [&'static str],
-}
-
-/// KentOS Mimari: a building on its own coordinates.
-const ARCHITECTURE: Surfaces = Surfaces {
-    bottom: &[
-        BottomTab::History,
-        BottomTab::Coords,
-        BottomTab::Search,
-        BottomTab::Audit,
-        // An extension's audit rules' findings, in every program (docs/adr/8057 §17).
-        BottomTab::ExtAudit,
-        BottomTab::CadInspection,
-        BottomTab::Works,
-        BottomTab::Messages,
-        BottomTab::Python,
-    ],
-    panels: &[
-        Panel::Layers,
-        Panel::Blocks,
-        Panel::Templates,
-        Panel::Navigator,
-        // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
-        Panel::Assistant,
-        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
-        Panel::Extension,
-        Panel::Properties,
-    ],
-    cells: &[Cell::Level, Cell::LineWeights],
-    project: &[
-        ProjectSection::General,
-        ProjectSection::Units,
-        ProjectSection::Crs,
-        ProjectSection::Variables,
-        ProjectSection::Arch,
-    ],
-    settings: &[],
-    // A drawing's: no feature data, styles of other programs, services or sources.
-    layer_menu: &[
-        LayerEntry::Activate,
-        LayerEntry::Visibility,
-        LayerEntry::Lock,
-        LayerEntry::Freeze,
-        LayerEntry::Plot,
-        LayerEntry::Order,
-        LayerEntry::SelectObjects,
-        LayerEntry::ZoomTo,
-        LayerEntry::Color,
-        LayerEntry::LineType,
-        LayerEntry::LineWeight,
-        LayerEntry::Style,
-        LayerEntry::Impact,
-        LayerEntry::Snap,
-        LayerEntry::Rename,
-        LayerEntry::Add,
-        LayerEntry::Duplicate,
-        LayerEntry::Merge,
-        LayerEntry::Remove,
-    ],
-    formats: Formats::Drawings,
-    sources: &[],
-    rows: &[PropertyRows::Mask, PropertyRows::Separators],
-    parcels: false,
-    sheet: ProjectType::Architecture,
-    cloud: Some(ProjectType::Architecture),
-    upload: ProjectType::Architecture,
-    hidden_calc: &[CalcKind::Km, CalcKind::Name],
-    left_out: &[
-        ToolOption::Bearing,
-        ToolOption::PointNames,
-        ToolOption::Recorded,
-    ],
-    thematic: false,
-    library_hidden: &["MPYY"],
-};
-
-/// KentOS Harita: a map on real coordinates; GIS's sources and services, not its time, scenarios and charts.
-const MAP: Surfaces = Surfaces {
-    bottom: &[
-        BottomTab::History,
-        BottomTab::CadInspection,
-        BottomTab::Coords,
-        BottomTab::Points,
-        BottomTab::Table,
-        BottomTab::Statistics,
-        BottomTab::Search,
-        BottomTab::Address,
-        BottomTab::Topology,
-        BottomTab::ExtAudit,
-        BottomTab::ServiceInfo,
-        BottomTab::Works,
-        BottomTab::Messages,
-        BottomTab::Python,
-    ],
-    panels: &[
-        Panel::Layers,
-        Panel::Processing,
-        Panel::Blocks,
-        Panel::Templates,
-        Panel::Sources,
-        Panel::MapWork,
-        Panel::MapSurvey,
-        // A map project's tree (docs/adr/1720): its surfaces, pads and what was drawn from them, stale or current.
-        Panel::RoadProject,
-        // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
-        Panel::Assistant,
-        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
-        Panel::Extension,
-        Panel::Properties,
-    ],
-    cells: &[
-        Cell::MapCrs,
-        Cell::SecondCrs,
-        Cell::Topology,
-        Cell::Overlap,
-        Cell::LineWeights,
-    ],
-    project: &[
-        ProjectSection::General,
-        ProjectSection::Units,
-        ProjectSection::Crs,
-        ProjectSection::Heights,
-        ProjectSection::Survey,
-        ProjectSection::Variables,
-    ],
-    settings: &[
-        AppSetting::Geographic,
-        AppSetting::FormOnCreate,
-        AppSetting::NewProjects,
-    ],
-    // A map's: its features' data, forms and style files; no time, scenarios, typed layers or counts.
-    layer_menu: &[
-        LayerEntry::Activate,
-        LayerEntry::Visibility,
-        LayerEntry::Lock,
-        LayerEntry::Freeze,
-        LayerEntry::Plot,
-        LayerEntry::Order,
-        LayerEntry::Service,
-        LayerEntry::Refresh,
-        LayerEntry::SelectObjects,
-        LayerEntry::ZoomTo,
-        LayerEntry::Export,
-        LayerEntry::Color,
-        LayerEntry::LineType,
-        LayerEntry::LineWeight,
-        LayerEntry::Style,
-        LayerEntry::Labels,
-        LayerEntry::StyleFiles,
-        LayerEntry::Sld,
-        LayerEntry::Qml,
-        LayerEntry::MapLibre,
-        LayerEntry::Impact,
-        LayerEntry::Fields,
-        LayerEntry::Forms,
-        LayerEntry::Info,
-        LayerEntry::Dataset,
-        LayerEntry::Filter,
-        LayerEntry::Statistics,
-        LayerEntry::Crs,
-        LayerEntry::Source,
-        LayerEntry::Snap,
-        LayerEntry::Rename,
-        LayerEntry::Add,
-        LayerEntry::Duplicate,
-        LayerEntry::Merge,
-        LayerEntry::Remove,
-    ],
-    formats: Formats::All,
-    sources: &[SourceSection::Databases, SourceSection::Services],
-    rows: &[
-        PropertyRows::Crs,
-        PropertyRows::Services,
-        PropertyRows::Mask,
-        PropertyRows::MapWork,
-        PropertyRows::Survey,
-        PropertyRows::Topology,
-    ],
-    parcels: true,
-    sheet: ProjectType::ZoningPlan,
-    cloud: None,
-    upload: ProjectType::Cad,
-    hidden_calc: &[],
-    left_out: &[],
-    thematic: false,
-    library_hidden: &[],
-};
-
-/// KentOS Yol (plan/road.md ROAD-MOD): a road on real coordinates; the map's survey surfaces, no zoning,
-/// addresses, topology or overlap.
-const ROAD: Surfaces = Surfaces {
-    bottom: &[
-        BottomTab::History,
-        BottomTab::Coords,
-        BottomTab::Points,
-        BottomTab::Table,
-        BottomTab::Search,
-        // An extension's audit rules' findings, in every program (docs/adr/8057 §17).
-        BottomTab::ExtAudit,
-        // A drawing's quality, the CAD programs' (docs/adr/9195 §5).
-        BottomTab::CadInspection,
-        BottomTab::Works,
-        BottomTab::Messages,
-        BottomTab::Python,
-    ],
-    panels: &[
-        Panel::Layers,
-        Panel::Processing,
-        Panel::Blocks,
-        Panel::Templates,
-        Panel::Sources,
-        Panel::RoadProject,
-        // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
-        Panel::Assistant,
-        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
-        Panel::Extension,
-        Panel::Properties,
-    ],
-    // Harita sistemi as a map's: its commands are a road's too (catalog/reading.rs, docs/adr/9195 §5).
-    cells: &[Cell::MapCrs, Cell::SecondCrs, Cell::LineWeights],
-    project: &[
-        ProjectSection::General,
-        ProjectSection::Units,
-        ProjectSection::Crs,
-        ProjectSection::Heights,
-        ProjectSection::Survey,
-    ],
-    settings: &[AppSetting::Geographic, AppSetting::NewProjects],
-    // A road's: a map's layers and services, without forms, cards, statistics and style files.
-    layer_menu: &[
-        LayerEntry::Activate,
-        LayerEntry::Visibility,
-        LayerEntry::Lock,
-        LayerEntry::Freeze,
-        LayerEntry::Plot,
-        LayerEntry::Order,
-        LayerEntry::Service,
-        LayerEntry::Refresh,
-        LayerEntry::SelectObjects,
-        LayerEntry::ZoomTo,
-        LayerEntry::Export,
-        LayerEntry::Color,
-        LayerEntry::LineType,
-        LayerEntry::LineWeight,
-        LayerEntry::Style,
-        LayerEntry::Labels,
-        LayerEntry::Impact,
-        LayerEntry::Dataset,
-        LayerEntry::Filter,
-        LayerEntry::Crs,
-        LayerEntry::Source,
-        LayerEntry::Snap,
-        LayerEntry::Rename,
-        LayerEntry::Add,
-        LayerEntry::Duplicate,
-        LayerEntry::Merge,
-        LayerEntry::Remove,
-    ],
-    formats: Formats::All,
-    sources: &[SourceSection::Services],
-    rows: &[PropertyRows::Crs, PropertyRows::Services],
-    parcels: false,
-    sheet: ProjectType::Road,
-    cloud: Some(ProjectType::Road),
-    upload: ProjectType::Road,
-    hidden_calc: &[],
-    left_out: &[],
-    thematic: false,
-    library_hidden: &[],
-};
-
-/// KentOS GIS: no blocks and no architectural audit.
-const GIS: Surfaces = Surfaces {
-    bottom: &[
-        BottomTab::History,
-        BottomTab::Coords,
-        BottomTab::Points,
-        BottomTab::Table,
-        BottomTab::Statistics,
-        BottomTab::Chart,
-        BottomTab::Search,
-        BottomTab::Address,
-        BottomTab::Topology,
-        BottomTab::ExtAudit,
-        BottomTab::ServiceInfo,
-        BottomTab::Works,
-        BottomTab::Messages,
-        BottomTab::Python,
-    ],
-    panels: &[
-        Panel::Layers,
-        Panel::Processing,
-        Panel::Templates,
-        Panel::Sources,
-        // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
-        Panel::Assistant,
-        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
-        Panel::Extension,
-        Panel::Properties,
-    ],
-    cells: &[
-        Cell::MapCrs,
-        Cell::SecondCrs,
-        Cell::Topology,
-        Cell::Overlap,
-        Cell::Scenario,
-    ],
-    project: &[
-        ProjectSection::General,
-        ProjectSection::Units,
-        ProjectSection::Crs,
-        ProjectSection::Heights,
-        ProjectSection::Survey,
-        ProjectSection::Variables,
-    ],
-    settings: &[
-        AppSetting::Geographic,
-        AppSetting::FormOnCreate,
-        AppSetting::NewProjects,
-    ],
-    // A CBS's: every one, the data's edit session, the move into a table, counts, time, types and scenarios too.
-    layer_menu: &[
-        LayerEntry::Activate,
-        LayerEntry::EditSession,
-        LayerEntry::Visibility,
-        LayerEntry::Lock,
-        LayerEntry::Freeze,
-        LayerEntry::Plot,
-        LayerEntry::Order,
-        LayerEntry::Service,
-        LayerEntry::Refresh,
-        LayerEntry::SelectObjects,
-        LayerEntry::ZoomTo,
-        LayerEntry::Export,
-        LayerEntry::Migrate,
-        LayerEntry::Counts,
-        LayerEntry::Color,
-        LayerEntry::LineType,
-        LayerEntry::LineWeight,
-        LayerEntry::Style,
-        LayerEntry::Labels,
-        LayerEntry::StyleFiles,
-        LayerEntry::Sld,
-        LayerEntry::Qml,
-        LayerEntry::MapLibre,
-        LayerEntry::Impact,
-        LayerEntry::Fields,
-        LayerEntry::Forms,
-        LayerEntry::Info,
-        LayerEntry::Dataset,
-        LayerEntry::Filter,
-        LayerEntry::Time,
-        LayerEntry::Statistics,
-        LayerEntry::Chart,
-        LayerEntry::Kind,
-        LayerEntry::Crs,
-        LayerEntry::Source,
-        LayerEntry::Snap,
-        LayerEntry::Scenario,
-        LayerEntry::Rename,
-        LayerEntry::Add,
-        LayerEntry::Duplicate,
-        LayerEntry::Merge,
-        LayerEntry::Remove,
-    ],
-    formats: Formats::All,
-    sources: &[SourceSection::Databases, SourceSection::Services],
-    rows: &[PropertyRows::Crs, PropertyRows::Services, PropertyRows::Survey, PropertyRows::Topology],
-    parcels: true,
-    sheet: ProjectType::Gis,
-    cloud: Some(ProjectType::Gis),
-    upload: ProjectType::Gis,
-    hidden_calc: &[],
-    left_out: &[ToolOption::Blocks, ToolOption::Widths],
-    thematic: true,
-    library_hidden: &[],
-};
-
-/// kentos-cad with nothing open (docs/adr/9195 §2): the surfaces every module shares, no module's own. A project
-/// opened brings its module's.
-const NO_PROJECT: Surfaces = Surfaces {
-    bottom: &[
-        BottomTab::History,
-        BottomTab::Works,
-        BottomTab::Messages,
-        BottomTab::Python,
-    ],
-    panels: &[
-        Panel::Layers,
-        // Asistan, the user's own AI agent, in every program (docs/adr/8056 §4).
-        Panel::Assistant,
-        // An extension's panel, in every program an extension's tab shows in (docs/adr/8057 §24).
-        Panel::Extension,
-        Panel::Properties,
-    ],
-    cells: &[],
-    project: &[],
-    settings: &[
-        AppSetting::Geographic,
-        AppSetting::FormOnCreate,
-        AppSetting::NewProjects,
-        AppSetting::NewProjectType,
-        AppSetting::NewProjectUnit,
-    ],
-    layer_menu: &[],
-    formats: Formats::All,
-    sources: &[SourceSection::Databases, SourceSection::Services],
-    rows: &[],
-    parcels: false,
-    sheet: ProjectType::Cad,
-    cloud: None,
-    upload: ProjectType::Cad,
-    hidden_calc: &[],
-    left_out: &[],
-    thematic: false,
-    library_hidden: &[],
-};
-
-/// What `module`'s program shows.
-pub(crate) fn surfaces(module: Module) -> &'static Surfaces {
-    match module {
-        Module::Architecture => &ARCHITECTURE,
-        Module::Map => &MAP,
-        Module::Gis => &GIS,
-        Module::Road => &ROAD,
-    }
-}
-
 /// Whether `program` (none: kentos-cad, every module's) may show `panel`: the dock is laid out by it before the app
 /// is; what the active module does not show is closed after (`App::keep_own_surfaces`).
 pub(crate) fn shows_panel_in(program: Option<Module>, panel: Panel) -> bool {
-    program.is_none_or(|m| surfaces(m).panels.contains(&panel))
+    program.is_none_or(|m| profile(m).panel(panel))
 }
 
 /// The tools' options `module` (none: kentos-cad with nothing open, every one) offers: what the drafting aids give
 /// the tools (app.rs fills them with the settings).
 pub(crate) fn tool_offers_in(module: Option<Module>) -> Offers {
-    module.map_or(Offers::ALL, |m| Offers::without(surfaces(m).left_out))
+    module.map_or(Offers::ALL, |m| Offers::without(profile(m).left_out()))
 }
 
 /// Whether a style library item from `source` at `path` shows with the system branches `hidden` left out
@@ -663,10 +187,10 @@ fn joined(modules: &[Module]) -> String {
 impl App {
     /// The active module's profile (docs/adr/9195 §2): the open project's module's, else the program's; the common
     /// surfaces in kentos-cad with nothing open; none for an announced type (plan3d …), which shows every one.
-    fn surfaces(&self) -> Option<&'static Surfaces> {
+    fn surfaces(&self) -> Option<&'static dyn ModuleProfile> {
         match self.active_module() {
-            Some(m) => Some(surfaces(m)),
-            None if self.document.is_none() => Some(&NO_PROJECT),
+            Some(m) => Some(profile(m)),
+            None if self.document.is_none() => Some(&NoProject),
             None => None,
         }
     }
@@ -677,7 +201,7 @@ impl App {
         if tab == BottomTab::ExtAudit && self.extensions.audit.is_none() && !self.offers_ext_audits() {
             return false;
         }
-        self.surfaces().is_none_or(|s| s.bottom.contains(&tab))
+        self.surfaces().is_none_or(|s| s.bottom(tab))
     }
 
     /// The bottom panel's tabs here, in their order.
@@ -690,12 +214,12 @@ impl App {
 
     /// Whether the dock has `panel` here.
     pub(crate) fn shows_panel(&self, panel: Panel) -> bool {
-        self.surfaces().is_none_or(|s| s.panels.contains(&panel))
+        self.surfaces().is_none_or(|s| s.panel(panel))
     }
 
     /// Whether the status bar shows `cell` here (and what goes with it, see [`Cell`]).
     pub(crate) fn shows_cell(&self, cell: Cell) -> bool {
-        self.surfaces().is_none_or(|s| s.cells.contains(&cell))
+        self.surfaces().is_none_or(|s| s.cell(cell))
     }
 
     /// Whether the status bar shows the drafting aid `id`'s lamp here: the profile's cells say (a CBS project's bar
@@ -706,7 +230,7 @@ impl App {
 
     /// Whether Proje ayarları has `section` here.
     pub(crate) fn shows_project_section(&self, section: ProjectSection) -> bool {
-        self.surfaces().is_none_or(|s| s.project.contains(&section))
+        self.surfaces().is_none_or(|s| s.project_section(section))
     }
 
     /// Proje ayarları' sections here, in their order.
@@ -719,8 +243,7 @@ impl App {
 
     /// Whether Uygulama ayarları shows `setting` here.
     pub(crate) fn shows_setting(&self, setting: AppSetting) -> bool {
-        self.surfaces()
-            .is_none_or(|s| s.settings.contains(&setting))
+        self.surfaces().is_none_or(|s| s.setting(setting))
     }
 
     /// Whether Uygulama ayarları has `section` here: Yeni projeler is the one only some programs have.
@@ -730,13 +253,12 @@ impl App {
 
     /// Whether the active module's layer menu has `entry`, whatever the layer (its kind decides too, layer_entries.rs).
     pub(crate) fn shows_layer_entry(&self, entry: LayerEntry) -> bool {
-        self.surfaces()
-            .is_none_or(|s| s.layer_menu.contains(&entry))
+        self.surfaces().is_none_or(|s| s.layer_entry(entry))
     }
 
     /// Whether the application menu lists the format whose command is `id`.
     pub(crate) fn shows_format(&self, id: &str) -> bool {
-        match self.surfaces().map(|s| s.formats) {
+        match self.surfaces().map(|s| s.formats()) {
             Some(Formats::Drawings) => DRAWING_FORMATS.contains(&id),
             Some(Formats::All) | None => true,
         }
@@ -744,17 +266,17 @@ impl App {
 
     /// Whether Kaynaklar has `section` here.
     pub(crate) fn shows_source_section(&self, section: SourceSection) -> bool {
-        self.surfaces().is_none_or(|s| s.sources.contains(&section))
+        self.surfaces().is_none_or(|s| s.source_section(section))
     }
 
     /// Whether Öznitelikler shows `rows` here.
     pub(crate) fn shows_property_rows(&self, rows: PropertyRows) -> bool {
-        self.surfaces().is_none_or(|s| s.rows.contains(&rows))
+        self.surfaces().is_none_or(|s| s.rows(rows))
     }
 
     /// Whether the hover card shows an object's parcel rows.
     pub(crate) fn shows_parcel_rows(&self) -> bool {
-        self.surfaces().is_none_or(|s| s.parcels)
+        self.surfaces().is_none_or(|s| s.parcels())
     }
 
     /// Whether the tools here offer `option` (Draft::offers), and what goes with it outside them: Şablon
@@ -765,12 +287,12 @@ impl App {
 
     /// Whether Katman stili lists the thematic renderers (docs/adr/0213).
     pub(crate) fn shows_thematic_renderers(&self) -> bool {
-        self.surfaces().is_none_or(|s| s.thematic)
+        self.surfaces().is_none_or(|s| s.thematic())
     }
 
     /// The system style library's branches Stil yöneticisi and the symbol pickers leave out here.
     pub(crate) fn library_hidden(&self) -> &'static [&'static str] {
-        self.surfaces().map_or(&[], |s| s.library_hidden)
+        self.surfaces().map_or(&[], |s| s.library_hidden())
     }
 
     /// Whether the program names the axes as a CAD does, X east and Y north (KentOS Mimari, KentOS Harita,
@@ -781,22 +303,22 @@ impl App {
 
     /// The project type the sheet mode ranks its templates by; none in kentos-cad (the drawing's type).
     pub(crate) fn sheet_project_type(&self) -> Option<ProjectType> {
-        self.surfaces().map(|s| s.sheet)
+        self.surfaces().map(|s| s.sheet())
     }
 
     /// The type Bulut projeleri lists at first; none: every type.
     pub(crate) fn cloud_kind(&self) -> Option<ProjectType> {
-        self.surfaces().and_then(|s| s.cloud)
+        self.surfaces().and_then(|s| s.cloud())
     }
 
     /// The type Buluta yükle offers first.
     pub(crate) fn upload_kind(&self) -> ProjectType {
-        self.surfaces().map_or(ProjectType::Cad, |s| s.upload)
+        self.surfaces().map_or(ProjectType::Cad, |s| s.upload())
     }
 
     /// Nokta hesapla's constructions this program has not (its menus leave them out).
     pub(crate) fn hidden_point_calcs(&self) -> &'static [CalcKind] {
-        self.surfaces().map_or(&[], |s| s.hidden_calc)
+        self.surfaces().map_or(&[], |s| s.hidden_calc())
     }
 
     /// Whether Nokta hesapla has `kind` here, said when it has not: the menus and its typed alias ask first.
@@ -804,7 +326,7 @@ impl App {
         if !self.hidden_point_calcs().contains(&kind) {
             return true;
         }
-        let others = self.others_showing(|s| !s.hidden_calc.contains(&kind));
+        let others = self.others_showing(|s| !s.hidden_calc().contains(&kind));
         let here = self.here_words();
         let title = CalcDef::of(kind).label;
         self.warn(format!("“{title}” {here} yok; {} var.", joined(&others)));
@@ -812,11 +334,11 @@ impl App {
     }
 
     /// The modules other than the active one that show what `shows` says, in the launcher's order.
-    fn others_showing(&self, shows: impl Fn(&Surfaces) -> bool) -> Vec<Module> {
+    fn others_showing(&self, shows: impl Fn(&dyn ModuleProfile) -> bool) -> Vec<Module> {
         let here = self.active_module();
         Module::ALL
             .into_iter()
-            .filter(|m| Some(*m) != here && shows(surfaces(*m)))
+            .filter(|m| Some(*m) != here && shows(profile(*m)))
             .collect()
     }
 
@@ -826,7 +348,7 @@ impl App {
         if self.shows_bottom_tab(tab) {
             return true;
         }
-        let others = self.others_showing(|s| s.bottom.contains(&tab));
+        let others = self.others_showing(|s| s.bottom(tab));
         let here = self.here_words();
         let title = tab.title();
         self.output(if others.is_empty() {
@@ -843,7 +365,7 @@ impl App {
         if self.shows_panel(panel) {
             return true;
         }
-        let others = self.others_showing(|s| s.panels.contains(&panel));
+        let others = self.others_showing(|s| s.panel(panel));
         let here = self.here_words();
         let title = panel.title();
         self.output(if others.is_empty() {
@@ -973,7 +495,7 @@ impl App {
             None => "Bu proje çizimleri (KCAD, DWG, DXF, NCZ) açar, PDF'i içe aktarır.".to_owned(),
         };
         let here = self.here_words();
-        let others = self.others_showing(|s| s.panels.contains(&Panel::Sources));
+        let others = self.others_showing(|s| s.panel(Panel::Sources));
         let said = match kentos_interaction::sources::source_kind(&name) {
             Some(kind) if !others.is_empty() => format!(
                 "“{name}” {here} açılmaz: {takes} {} {} açılır.",

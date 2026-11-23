@@ -11,4 +11,4 @@ mod module;
 pub mod programs;
 pub mod recent;
 
-pub use module::Module;
+pub use module::{LayerKind, Module, Storage};

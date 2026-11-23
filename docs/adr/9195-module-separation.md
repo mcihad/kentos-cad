@@ -106,7 +106,7 @@ Ayrıntı [plan/ayrim.md](../../plan/ayrim.md)'de:
 - **AY-02:** etkin modül; yerleşim modül başına; Yeni proje'nin bütün menüleri getirmesi.
 - **AY-03:** yüzey matrisi; katman menüsü modül ve katman türüyle. Matris bu ADR'nin §5'idir.
 - **AY-04:** profilin modüllere taşınması, `ModuleProfile` kaydı, bağımlılık denetimi, joker kolsuz tablolar, ortak
-  modül kataloğu.
+  modül kataloğu. Bu ADR'nin §6'sı.
 - **AY-07:** paketlere bölme.
 
 ## §4 AY-02: ekran açık projeyi izliyor (23 Kasım 2026)
@@ -348,6 +348,96 @@ Ayarlar ve biçimler:
   - `menu-<modül>.png`: modül başına tek sayfa;
   - `menu-alt-menuler.png`: Görünüş ▸ ve Veri ▸ açık dört resim.
 
-## §6 Kalan
+## §6 AY-04: modül profili kaydı, ortak katalog ve bağımlılık denetimi (23 Kasım 2026)
 
-AY-04 ve sonrası. Her madde kanıtıyla bu ADR'ye ya da kendi ADR'sine yazılır.
+**Araştırma** (23 Kasım 2026'da okundu):
+
+- **ArchUnit, *User Guide* §8.6 “Freezing Arch Rules”:** büyümüş bir kod tabanında kural konunca var olan ihlaller bir
+  depoya yazılır. Sonraki koşular yalnız yeni ihlali bildirir; düzeltilen ihlal depodan kendiliğinden düşer, geri dönüş
+  olmaz. Depo düz metin dosyasıdır, sürüm denetimine girer.
+  <https://www.archunit.org/userguide/html/000_Index.html>
+- **The Rust Programming Language, §6.2 “Matches Are Exhaustive”:** eşleşme bütün durumları kapsamazsa program
+  derlenmez. Joker kolu olmayan eşleşmede yeni değer her eşleşmede yerini bulmadan derlenmez.
+  <https://doc.rust-lang.org/book/ch06-02-match.html>
+
+**KentOS kararı:**
+
+- Profil, joker kolsuz eşleşmelerle modülün klasöründedir.
+- Bağımlılık bir tabanla dondurulur; taban yalnız azalır.
+- Ortak tanım `kentos-launch`'tadır, katalog oradan üretilir.
+
+**Profil kaydı** (`apps/desktop/src/shell/module_profile.rs`):
+
+- `ModuleProfile`: alt sekme, panel, durum hücresi, proje ayarının bölümü, uygulama ayarı, katman menüsünün öğesi,
+  Kaynaklar'ın bölümü ve Öznitelikler'in satırları için birer sorgu. Ayrıca biçimler, pafta ve bulut türleri, araç
+  seçenekleri, Nokta hesapla'nın yapıları, tematik çiziciler ve kitaplık dalları.
+- Her modülün profili kendi klasöründedir: `arch/profile.rs`, `map/profile.rs`, `road/profile.rs`, `gis/profile.rs`.
+  Sorguların her biri joker kolsuz eşleşmedir.
+- Kabuk yalnız kayda sorar (`profile`, kabuğun modül adına göre tek dalı). `kentos-cad` projesizken kabuğun kendi
+  profili `NoProject`'tir. `module_surfaces.rs`'in tabloları kalktı; dosya artık hiçbir modülü adıyla anmaz.
+
+**Ortak tanım** (`crates/native/launch`):
+
+- `Module::storage()`: CBS `Storage::Database`, Mimari, Harita ve Yol `Storage::File` (ADR 9196).
+- `Module::layer_kinds()` (ADR 9196 §2):
+  - CBS: açıklama, veri tablosu, servis, raster, nokta bulutu, grup. Çizim ve bağlı katmanı yoktur.
+  - Mimari: çizim, raster, nokta bulutu, grup.
+  - Harita ve Yol: sekiz türün hepsi; CBS tablosu salt okunur altlıktır.
+- `LayerKind` masaüstünden buraya taşındı; katman menüsü aynı türü kullanır.
+
+**Ortak katalog** (`catalog/v1/modules.json`):
+
+- Her modülün kimliği, başlığı, programı, notu, proje türü, işleri, bulut türleri, saklama türü, katman türleri ve
+  şeridin ona verdiği komutlar. Komut sayıları: Mimari 489, Harita 592, CBS 551, Yol 564.
+- Hiçbir şeridin tutmadığı komut her modülündür ve listelenmez.
+- Üretici bir masaüstü sınamasıdır (`module_catalog_tests::the_module_catalog_is_current`): katalog eskiyse düşer,
+  `KENTOS_WRITE_MODULES=1` yeniden yazar. Komut kümesini masaüstünün şerit okuyucusu hesaplar (`Catalog::module_command_list`).
+- Web (dönünce), mobil istemciler ve bulut portalı bu dosyayı okur.
+
+**Bağımlılık denetimi** (`scripts/dev/module_deps.py`, taban `scripts/dev/module_deps.baseline.json`):
+
+- Masaüstünün kaynağında sınama dışı her dosyanın klasörler arası bağlarını sayar (`crate::` yolları, yorumlar hariç).
+- İzlenen yönler:
+  - kabuktan CAD çekirdeğine ve modüllere;
+  - CAD çekirdeğinden modüllere;
+  - CBS'den CAD çekirdeğine;
+  - modülden öbür modüllere.
+- Serbest yönler: her dosyanın kabuğa bağı, CAD modüllerinin (Mimari, Harita, Yol) CAD çekirdeğine bağı.
+- Modül adına göre dal (`Module::Architecture` …): kabukta ve çekirdekte, kaydın dışında sayılır.
+- Bugünkü taban (dosya sayısı):
+
+  | Yön | Dosya | Yön | Dosya |
+  |---|---|---|---|
+  | kabuk → cad | 77 | cad → gis | 30 |
+  | kabuk → gis | 44 | cad → arch | 7 |
+  | kabuk → arch | 28 | cad → map | 7 |
+  | kabuk → map | 13 | cad → road | 5 |
+  | kabuk → road | 12 | gis → cad | 54 |
+  | gis → road | 4 | arch → road | 2 |
+  | map → gis | 4 | map → road | 22 |
+
+  Modül adına göre dal: kabukta 36, çekirdekte 7. Öbür yönler sıfırdır.
+- Planın sayıları (kabuk → cad 227 …) sınama dosyaları ve yorumlarla sayılmıştı. Taban, betiğin saydığıdır.
+- `--check` taban aşılırsa düşer: hangi yönde, hangi yeni dosyada olduğunu ve çözümü söyler. Azalanı söyler; `--write`
+  tabanı indirir, aşılıyorsa yazmaz.
+- Masaüstü sınaması denetimi koşar (`module_catalog_tests::the_modules_keep_to_their_dependency_baseline`).
+
+**Kural sınaması** (bilerek bozuldu, sonra geri alındı):
+
+- `BottomTab`'a profile yerleşmeyen `Deneme` sekmesi eklendi: program derlenmedi. `E0004` hataları beş profilin
+  hepsinde (`NoProject`, Mimari, Harita, Yol, CBS) ve sekmenin kendi eşleşmelerinde geldi.
+- `arch/profile.rs`'e `use crate::map_profile::Map;` eklendi: denetim düştü (“arch → map: 0 dosyadan 1 dosyaya çıktı;
+  yeni bağ: arch/profile.rs …”).
+- `shell/modes.rs`'e `Module::Gis` eklendi: denetim düştü (“shell: modül adına göre dal sayısı arttı (taban 36, şimdi
+  37) …”).
+
+**Kalan:**
+
+- Kabuk hâlâ modüllere bağlı (taban) ve 36 yerde modül adına göre dallanıyor. Taban AY-07'nin paketlere bölmesiyle
+  azalır.
+- `arch/program.rs` programın kimliğini ve bütün modüllerin dallarını tutar. Yeri kabuk ya da `kentos-launch`'tır;
+  taşınması dal sayısını kabuğa ekleyeceği için `kentos-launch`'a doğru yapılır.
+
+## §7 Kalan
+
+AY-05 ve sonrası. Her madde kanıtıyla bu ADR'ye ya da kendi ADR'sine yazılır.

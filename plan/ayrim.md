@@ -54,16 +54,18 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07. ADR'ler
     - şeritte karşılığı olan 18 öğe modülün komut kümesini izler.
   - Sınama: `layer_menu_tests` (9 × 8 × 42 hücre, komut kümesi). Masaüstü: 3053 sınama geçti.
   - Resim: `.run/gui-evidence/kullanim-9195/menu-*` (4 modül × 8 tür, modül başına sayfa, alt menüler).
-- [ ] **AY-04 — Modül profili kaydı ve bağımlılık denetimi.**
-  - Her modülün profili kendi klasöründe (`apps/desktop/src/<modül>/profile.rs`), ortak `ModuleProfile` kaydıyla.
-    Kabuk yüzey için modül adına göre dallanmaz.
-  - Joker kolsuz profil tabloları: yeni yüzey her modüle yerleşmeden derlenmez.
-  - `scripts/dev/module_deps.py --check`: bugünkü bağlar taban, yalnız azalır; kabuktan modülün içine, modülden
-    modüle yeni bağ ve kaydın dışında modül adına göre dal reddedilir.
-  - Ortak modül kataloğu: `kentos-launch`'tan `catalog/v1/modules.json` (`--check`'li üretici). Kimlik, proje türleri,
-    işler, saklama türü, komut kümesi, katman türleri.
-  - Kural sınaması: profile eklenmeyen yeni bir sekmenin derlenmediği ve modülden modüle eklenen bir bağın denetimde
-    düştüğü bilerek denenir.
+- [x] **AY-04 — Modül profili kaydı ve bağımlılık denetimi.** ([ADR 9195](../docs/adr/9195-module-separation.md) §6)
+  - Her modülün profili kendi klasöründe (`arch/`, `map/`, `road/`, `gis/` altında `profile.rs`), ortak
+    `ModuleProfile` kaydıyla (`shell/module_profile.rs`). `module_surfaces.rs` hiçbir modülü adıyla anmaz.
+  - Joker kolsuz profil tabloları: alt sekme, panel, durum hücresi, proje ve uygulama ayarı, katman menüsü,
+    Kaynaklar, Öznitelikler.
+  - `scripts/dev/module_deps.py --check` ve tabanı: kabuk → cad 77, gis 44, arch 28, map 13, road 12 dosya;
+    gis → cad 54, cad → gis 30; kabukta 36 dal. Masaüstü sınaması koşar.
+  - Ortak katalog `catalog/v1/modules.json`: `kentos-launch`'ın `Storage`'ı ve `LayerKind`'ı, şeridin komut kümesi;
+    üretici `KENTOS_WRITE_MODULES=1` ile sınama.
+  - Kural sınaması yapıldı: yerleşmeyen `Deneme` sekmesi beş profilde derlenmedi; `arch → map` bağı ve kabukta
+    `Module::Gis` denetimde düştü.
+  - Kalan: taban AY-07'de azalır; `arch/program.rs` `kentos-launch`'a doğru taşınır.
 - [ ] **AY-05 — CBS verisi veritabanında.**
   - Sihirbaz iki şey sorar: verinin yeri (GeoPackage öntanımlı, PostgreSQL, KentOS Bulut) ve proje dosyasının yeri
     (`.kcad`, veritabanının içinde, bulut).

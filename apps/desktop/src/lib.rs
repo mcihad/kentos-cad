@@ -535,6 +535,16 @@ mod open_report_window;
 mod module_surfaces;
 #[path = "shell/layer_entries.rs"]
 mod layer_entries;
+#[path = "shell/module_profile.rs"]
+mod module_profile;
+#[path = "arch/profile.rs"]
+mod arch_profile;
+#[path = "map/profile.rs"]
+mod map_profile;
+#[path = "road/profile.rs"]
+mod road_profile;
+#[path = "gis/profile.rs"]
+mod gis_profile;
 #[path = "shell/navigation.rs"]
 mod navigation;
 #[path = "shell/navigation_cards.rs"]

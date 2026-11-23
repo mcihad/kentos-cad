@@ -720,6 +720,9 @@ mod module_surface_tests;
 #[path = "tests/layer_menu_tests.rs"]
 mod layer_menu_tests;
 #[cfg(test)]
+#[path = "tests/module_catalog_tests.rs"]
+mod module_catalog_tests;
+#[cfg(test)]
 #[path = "tests/module_tests.rs"]
 mod module_tests;
 #[cfg(test)]

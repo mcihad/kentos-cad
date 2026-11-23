@@ -151,6 +151,118 @@ impl Module {
             _ => None,
         }
     }
+
+    /// Where its projects keep their data (docs/adr/9196, CLAUDE.md §25 rule 5): a CBS project's layers in a database,
+    /// a CAD project whole in its project file.
+    pub const fn storage(self) -> Storage {
+        match self {
+            Module::Gis => Storage::Database,
+            Module::Architecture | Module::Map | Module::Road => Storage::File,
+        }
+    }
+
+    /// The kinds of layer its projects hold (docs/adr/9195 §5, 9196 §2), in [`LayerKind::ALL`]'s order:
+    /// - a CBS project's data is a database's tables; the project file keeps the annotation alone, no drawing or bound
+    ///   layer;
+    /// - KentOS Mimari's a building's drawing on its own coordinates, no map service, table or bound layer;
+    /// - KentOS Harita's and Yol's every kind a drawing has on real coordinates, a CBS table as a read-only underlay.
+    pub const fn layer_kinds(self) -> &'static [LayerKind] {
+        use LayerKind::{Annotation, Bound, Data, Drawing, Group, PointCloud, Raster, Service};
+        match self {
+            Module::Gis => &[Annotation, Data, Service, Raster, PointCloud, Group],
+            Module::Architecture => &[Drawing, Raster, PointCloud, Group],
+            Module::Map | Module::Road => {
+                &[Drawing, Annotation, Data, Bound, Service, Raster, PointCloud, Group]
+            }
+        }
+    }
+}
+
+/// Where a module's projects keep their data (docs/adr/9196 §2): the two kinds a module chooses from; a third needs an
+/// ADR.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Storage {
+    /// Every layer's objects and attributes are a database's table (GeoPackage, PostgreSQL, KentOS Bulut); the project
+    /// file keeps the structure, the styles, the settings and the annotation, and is saved to a file, a database or the
+    /// cloud. In the cloud, a database project only.
+    Database,
+    /// The whole project is its project file, saved to a file or to the cloud as the file's revisions.
+    File,
+}
+
+impl Storage {
+    /// Its name as the module catalog writes it (`catalog/v1/modules.json`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            Storage::Database => "database",
+            Storage::File => "file",
+        }
+    }
+}
+
+/// What a layer is (docs/adr/9195 §5): the kinds a layer's menu is cut by, and a module's projects hold.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LayerKind {
+    /// Objects kept in the project file: a CAD drawing's layer.
+    Drawing,
+    /// Texts, dimensions and sheets kept in the project file: a layer typed Açıklama.
+    Annotation,
+    /// A table of a GeoPackage or a database drawn as it is now, its rows in their source.
+    Data,
+    /// Objects in the project bound to a table they are written to.
+    Bound,
+    /// Drawn from a map service, holding no objects.
+    Service,
+    /// Rasters alone.
+    Raster,
+    /// Point clouds alone.
+    PointCloud,
+    /// A group of layers.
+    Group,
+}
+
+impl LayerKind {
+    /// Every kind, in the order the tables list them.
+    pub const ALL: [LayerKind; 8] = [
+        LayerKind::Drawing,
+        LayerKind::Annotation,
+        LayerKind::Data,
+        LayerKind::Bound,
+        LayerKind::Service,
+        LayerKind::Raster,
+        LayerKind::PointCloud,
+        LayerKind::Group,
+    ];
+
+    /// Its name as the module catalog writes it.
+    pub const fn id(self) -> &'static str {
+        match self {
+            LayerKind::Drawing => "drawing",
+            LayerKind::Annotation => "annotation",
+            LayerKind::Data => "data",
+            LayerKind::Bound => "bound",
+            LayerKind::Service => "service",
+            LayerKind::Raster => "raster",
+            LayerKind::PointCloud => "pointCloud",
+            LayerKind::Group => "group",
+        }
+    }
+
+    /// Its name in a sentence.
+    pub const fn title(self) -> &'static str {
+        match self {
+            LayerKind::Drawing => "çizim",
+            LayerKind::Annotation => "açıklama",
+            LayerKind::Data => "veri tablosu",
+            LayerKind::Bound => "bağlı",
+            LayerKind::Service => "servis",
+            LayerKind::Raster => "raster",
+            LayerKind::PointCloud => "nokta bulutu",
+            LayerKind::Group => "grup",
+        }
+    }
 }
 
 #[cfg(test)]
@@ -267,6 +379,31 @@ mod tests {
         assert_eq!(named("kentos-cad"), None, "every module at once");
         assert_eq!(named("kentos-launcher"), None);
         assert_eq!(named(""), None);
+    }
+
+    #[test]
+    fn a_modules_storage_and_layers_follow_its_project_type() {
+        for m in Module::ALL {
+            // CBS keeps its data in a database, CAD its whole project in the file (docs/adr/9196).
+            let cbs = m.project_type() == "gis";
+            assert_eq!(m.storage() == Storage::Database, cbs, "{m:?}");
+            let kinds = m.layer_kinds();
+            // A database project holds no layer whose objects are in the file but its annotation; a file project
+            // always draws.
+            assert_eq!(kinds.contains(&LayerKind::Drawing), !cbs, "{m:?}");
+            assert_eq!(kinds.contains(&LayerKind::Bound), !cbs && m != Module::Architecture, "{m:?}");
+            assert!(kinds.contains(&LayerKind::Group));
+            // In the tables' order, each once.
+            let order: Vec<usize> = kinds
+                .iter()
+                .map(|k| LayerKind::ALL.iter().position(|a| a == k).expect("known"))
+                .collect();
+            assert!(order.windows(2).all(|w| w[0] < w[1]), "{m:?}");
+        }
+        assert_eq!(serde_json::to_string(&Storage::Database).expect("json"), "\"database\"");
+        for k in LayerKind::ALL {
+            assert_eq!(serde_json::to_string(&k).expect("json"), format!("\"{}\"", k.id()));
+        }
     }
 
     #[test]

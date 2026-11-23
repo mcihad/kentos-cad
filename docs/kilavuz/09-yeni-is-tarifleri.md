@@ -135,29 +135,45 @@ Bir pencereyi katmak:
 
 CLAUDE.md §25'in sekizinci kuralının tarifidir. Kararın gerekçesi [ADR 9195](../adr/9195-module-separation.md) ve
 [ADR 9196](../adr/9196-storage-by-project-kind.md), işin sırası [plan/ayrim.md](../../plan/ayrim.md)'dedir.
-`ModuleProfile`, `scripts/dev/module_deps.py` ve `catalog/v1/modules.json` AY-04'te kurulur. O güne dek yeni yüzey
-`apps/desktop/src/shell/module_surfaces.rs`'in tablolarına her modül için açıkça yazılır.
+Kayıt `apps/desktop/src/shell/module_profile.rs`'tedir (`ModuleProfile`, `profile`). Bağımlılık denetimi
+`scripts/dev/module_deps.py --check`, ortak katalog `catalog/v1/modules.json`'dur; ikisini de masaüstü sınamaları koşar
+(`module_catalog_tests`).
+
+**Yeni yüzey** (panel, alt sekme, durum hücresi, ayar bölümü, katman menüsü öğesi):
+
+1. Türün enum'una değer eklenir; program dört modülün profilinde ve `NoProject`'te yerleşmeden derlenmez.
+2. Katman menüsünün öğesi ayrıca katman türleriyle yerleşir (`LayerEntry::kinds`, `apps/desktop/src/shell/layer_entries.rs`)
+   ve matris sınamasının tablosuna yazılır (`layer_menu_tests`).
+3. Şeritte karşılığı olan öğe modülün komut kümesini izler; sınama bunu denetler.
 
 **Yeni modül** (ör. altyapı, kentsel dönüşüm):
 
-1. **Modül tanımı:** `crates/native/launch/src/module.rs`'e modül, proje türleri, CAD işi, program adı ve saklama türü.
-   Saklama türü ya **CBS** (veri veritabanında, proje dosyası yapı, stil, ayar ve açıklama tutar) ya da **CAD**
-   (projenin tamamı proje dosyasında) olur; üçüncüsü ADR ister. Sunucu proje türünün saklama kuralını buradan alır.
-2. **Profil:** modülün kendi klasöründe (`apps/desktop/src/<modül>/profile.rs`) şerit sekmeleri, paneller, alt
-   sekmeler, durum hücreleri, ayar bölümleri, biçimler, katman menüsünün satırları (katman türüyle) ve araç
-   seçenekleri. Joker kolsuz tablolar her yüzey için var ya da yok der; kabuğa modülün adı yazılmaz.
+1. **Modül tanımı:** `crates/native/launch/src/module.rs`'e modül, proje türleri, CAD işi, program adı, saklama türü
+   (`Module::storage`) ve katman türleri (`Module::layer_kinds`).
+   - Saklama türü ya **CBS** (`Storage::Database`: veri veritabanında, proje dosyası yapı, stil, ayar ve açıklama
+     tutar) ya da **CAD** (`Storage::File`: projenin tamamı proje dosyasında) olur; üçüncüsü ADR ister.
+   - Sunucu proje türünün saklama kuralını buradan alır.
+   - Ortak katalog yeniden yazılır: `KENTOS_WRITE_MODULES=1 cargo test -p kentos-desktop --lib module_catalog`.
+2. **Profil:** modülün kendi klasöründe (`apps/desktop/src/<modül>/profile.rs`), `ModuleProfile`'ı uygulayan tek bir
+   tür; kayda (`module_profile.rs`'in `profile`'ı) bir satır.
+   - Paneller, alt sekmeler, durum hücreleri, proje ve uygulama ayarları, katman menüsü, Kaynaklar ve Öznitelikler
+     satırları joker kolsuz eşleşmedir: her değer için var ya da yok.
+   - Biçimler, pafta ve bulut türleri, araç seçenekleri, tematik çiziciler ve kitaplık dalları da profildedir.
+   - Kabuğa modülün adı yazılmaz.
 3. **Sihirbaz:** modülün yeni projesi neyi sorar, neyle açılır; modülün programı yalnız kendi türünü sunar.
 4. **Komut kümesi:** şeridin verisinde (`scripts/ui/ribbon.py`) komutların `works`'ü; modüle özgü komutların
    çekirdekteki disiplini (`kentos_native_application::registry::discipline_of`).
 5. **Bulut:** proje türleri ve saklama biçimi. CBS türü veritabanı, CAD türü dosya revizyonudur.
 6. **Matris sınaması:** `apps/desktop/src/tests/module_surface_tests.rs`'in matrisi yeni modülün her yüzeyini sınar.
    Hepsi bir arada programda o türün yüzeyleri modülün programındakiyle aynıdır.
-7. **Bağımlılık:** modül yalnız ortak çekirdeğe ve sözleşmeye bağlanır; denetim yeşil kalır.
+7. **Bağımlılık:** modül yalnız ortak çekirdeğe ve sözleşmeye bağlanır. `scripts/dev/module_deps.py`'nin `FOLDERS` ve
+   `TRACKED` listelerine modülün klasörü girer; `--check` yeşil kalır, taban yalnız azalır.
 8. **Resim:** modülün penceresi, her katman türünün menüsü ve sihirbazı.
 
 **Yeni istemci** (ör. mobil görüntüleyici ya da düzenleyici):
 
-1. Modülleri ve proje türlerini ortak katalogdan okur; modül mantığını kendi içinde yeniden yazmaz.
+1. Modülleri, proje türlerini, saklama türünü, katman türlerini ve komut kümesini ortak katalogdan
+   (`catalog/v1/modules.json`) okur; modül mantığını kendi içinde yeniden yazmaz.
 2. Projeyi sözleşmeyle açar: bulut API'si ya da `.kcad`. CBS verisini veri katmanının kaynağından, rolün okuduğu
    biçimde alır (sunucuda `form_guard`, istemcide `kentos_forms::reach`).
 3. **Görüntüleyici** yalnız okur. Rolün okumadığı alanı göstermez, adını söyler.
