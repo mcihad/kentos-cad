@@ -182,6 +182,22 @@ async fn a_veri_girisi_reads_counts_and_writes_only_its_scope() {
     assert_eq!(page(&ed).await, sorted(&[&ids[0], &ids[1], &ids[2]]));
     assert_eq!(page(&ali_p).await, sorted(&[&ids[0], &ids[2]]));
     assert_eq!(page(&ayse_p).await, sorted(&[&ids[1]]));
+    // The first page says the scope narrows the layer for a Veri girişi, not for the editor (docs/adr/9194).
+    let narrowed = |by: &kentos_application::access::ProjectAccess| {
+        let by = by.clone();
+        let db = &db;
+        async move {
+            projects::features(&db.app, &by, None, 100)
+                .await
+                .unwrap()
+                .layers
+                .iter()
+                .map(|l| (l.id.clone(), l.narrowed))
+                .collect::<Vec<_>>()
+        }
+    };
+    assert_eq!(narrowed(&ali_p).await, [("cizim".to_owned(), true)]);
+    assert_eq!(narrowed(&ed).await, [("cizim".to_owned(), false)]);
     // Counting tells nothing of the others.
     assert_eq!(
         projects::info(&db.app, &ed).await.unwrap().feature_count,

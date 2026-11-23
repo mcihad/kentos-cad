@@ -66,6 +66,13 @@ export type { StatisticsKindRow } from '../../../web/src/contracts/generated/Sta
 export type { StatisticsMonthRow } from '../../../web/src/contracts/generated/StatisticsMonthRow';
 export type { LiveProjectView } from '../../../web/src/contracts/generated/LiveProjectView';
 export type { DossierLiveProjectSet } from '../../../web/src/contracts/generated/DossierLiveProjectSet';
+export type { AccessSource } from '../../../web/src/contracts/generated/AccessSource';
+export type { FeatureLayer } from '../../../web/src/contracts/generated/FeatureLayer';
+export type { FeaturePage } from '../../../web/src/contracts/generated/FeaturePage';
+export type { FeatureRecord } from '../../../web/src/contracts/generated/FeatureRecord';
+export type { LayerField } from '../../../web/src/contracts/generated/LayerField';
+export type { ProjectAccessView } from '../../../web/src/contracts/generated/ProjectAccessView';
+export type { ProjectRole } from '../../../web/src/contracts/generated/ProjectRole';
 export type { FileRevision } from '../../../web/src/contracts/generated/FileRevision';
 export type { FileRevisions } from '../../../web/src/contracts/generated/FileRevisions';
 export type { KindOption } from '../../../web/src/contracts/generated/KindOption';

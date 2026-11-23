@@ -95,8 +95,8 @@ impl Drop for Server {
 }
 
 /// The app with its tasks run on threads, as Iced's executor would run them.
-struct Runner {
-    app: App,
+pub(super) struct Runner {
+    pub(super) app: App,
     snapshot: Snapshot,
     tx: mpsc::Sender<Message>,
     rx: mpsc::Receiver<Message>,
@@ -104,7 +104,7 @@ struct Runner {
 }
 
 impl Runner {
-    fn new(app: App) -> Self {
+    pub(super) fn new(app: App) -> Self {
         let (tx, rx) = mpsc::channel();
         let snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
         let mut runner = Self {
@@ -134,17 +134,17 @@ impl Runner {
         });
     }
 
-    fn send(&mut self, message: Message) {
+    pub(super) fn send(&mut self, message: Message) {
         let task = self.app.update(message);
         self.spawn(task);
     }
 
-    fn cloud(&mut self, event: Event) {
+    pub(super) fn cloud(&mut self, event: Event) {
         self.send(msg(event));
     }
 
     /// Runs the app until `done`, answering its tasks and ticking its clock.
-    fn until(&mut self, what: &str, limit: Duration, done: impl Fn(&App) -> bool) {
+    pub(super) fn until(&mut self, what: &str, limit: Duration, done: impl Fn(&App) -> bool) {
         let end = Instant::now() + limit;
         loop {
             if done(&self.app) {
@@ -172,7 +172,7 @@ impl Runner {
     }
 
     /// Runs the app for a while (answers arriving, the clock ticking).
-    fn run_for(&mut self, time: Duration) {
+    pub(super) fn run_for(&mut self, time: Duration) {
         let end = Instant::now() + time;
         self.until("süre", time + Duration::from_secs(1), |_| {
             Instant::now() >= end
@@ -188,10 +188,15 @@ impl Runner {
 
     /// The window as it is now, into `.run/shots/bulut-<name>.png`.
     fn shot(&mut self, name: &str) {
+        self.shot_to(&run_dir().join("shots").join(format!("bulut-{name}.png")));
+    }
+
+    /// The window as it is now, into `path`.
+    pub(super) fn shot_to(&mut self, path: &Path) {
         self.settle();
         let _ = self.snapshot.render(self.app.view(), &self.app.theme());
         self.app.sync_device();
-        let path = run_dir().join("shots").join(format!("bulut-{name}.png"));
+        let path = path.to_path_buf();
         self.snapshot
             .render(self.app.view(), &self.app.theme())
             .save(&path)
@@ -200,7 +205,7 @@ impl Runner {
     }
 }
 
-fn said(app: &App) -> Vec<String> {
+pub(super) fn said(app: &App) -> Vec<String> {
     app.log.lines().map(|l| l.text.clone()).collect()
 }
 
@@ -222,7 +227,7 @@ fn web(server: &Server, args: &[&str]) -> serde_json::Value {
 }
 
 /// A new app with this run's folders for copies and drafts, and `server` as its address.
-fn app(dir: &Path, server: &str) -> App {
+pub(super) fn app(dir: &Path, server: &str) -> App {
     let (mut app, _) = App::boot(None);
     let _ = app
         .settings
@@ -233,8 +238,13 @@ fn app(dir: &Path, server: &str) -> App {
 }
 
 fn sign_in(r: &mut Runner, password: &str, shot: Option<&str>) {
+    sign_in_as(r, "ayse", password, shot);
+}
+
+/// Signs in as `login` through the sign-in window, as a person types it.
+pub(super) fn sign_in_as(r: &mut Runner, login: &str, password: &str, shot: Option<&str>) {
     r.send(Message::Run("cloud.signIn"));
-    r.cloud(Event::SignInLogin("ayse".into()));
+    r.cloud(Event::SignInLogin(login.into()));
     r.cloud(Event::SignInPassword(password.into()));
     if let Some(name) = shot {
         r.shot(name);
@@ -295,12 +305,12 @@ fn state(app: &App) -> Option<SaveState> {
     app.cloud.live.as_ref().map(|l| l.sync.state())
 }
 
-fn saved(app: &App) -> bool {
+pub(super) fn saved(app: &App) -> bool {
     app.cloud.live.as_ref().is_some_and(|l| l.sync.all_sent())
         && state(app) == Some(SaveState::Saved)
 }
 
-fn ids(app: &App) -> (String, String) {
+pub(super) fn ids(app: &App) -> (String, String) {
     let s = app
         .document
         .as_ref()
@@ -318,7 +328,7 @@ fn upload(r: &mut Runner, name: &str, storage: ProjectStorage, shot: Option<&str
 }
 
 /// Uploads `doc` as a new project kept `storage`-wise; it opens from the server.
-fn upload_document(
+pub(super) fn upload_document(
     r: &mut Runner,
     name: &str,
     storage: ProjectStorage,

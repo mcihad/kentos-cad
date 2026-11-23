@@ -1,5 +1,6 @@
 // A cloud project's page (docs/adr/9000 §15): its drawing as the server draws it, the files kept beside it and, for a
-// file project, its revisions; what a browser or a phone shows of a project without a CAD view.
+// file project, its revisions; for a database project its records as the caller's role reads them, and the caller's
+// access (docs/adr/9194); what a browser or a phone shows of a project without a CAD view.
 import { sendFile } from '../api/files';
 import { cloud } from '../api/portal';
 import type { AttachmentView, FileRevisions, ProjectDetails } from '../api/types';
@@ -12,12 +13,24 @@ import { button, empty, facts, pageHeader, panel, table, twoLine } from '../ui/k
 import { toast } from '../ui/toast';
 import { scanBadge, uploadRow } from '../ui/uploads';
 import type { PageFn } from './page';
+import { accessView, recordsPanel, throughForms } from './project-records';
 
 function kindIcon(media: string, name: string): IconName {
   if (media === 'application/pdf') return 'pdf';
   if (media.startsWith('image/') || media.startsWith('video/')) return 'image';
   if (name.toLowerCase().endsWith('.kcad')) return 'project';
   return 'file';
+}
+
+/** The server's own words in a refusal's body (an `ApiError`), when it gives them. */
+async function refusal(res: Response): Promise<string | null> {
+  try {
+    const body: unknown = await res.json();
+    const message = (body as { message?: unknown } | null)?.message;
+    return typeof message === 'string' ? message : null;
+  } catch {
+    return null;
+  }
 }
 
 /** The drawing: fetched with the session, its counts read from the answer, shown as a picture. */
@@ -29,9 +42,12 @@ function drawing(tenant: string, project: string): HTMLElement {
     try {
       const res = await fetch(cloud.previewUrl(tenant, project, 1600), { credentials: 'same-origin' });
       if (!res.ok) {
-        const why = res.status === 404 ? 'Projede henüz kaydedilmiş bir çizim yok.' : 'Çizim şu an gösterilemiyor.';
+        // A refusal says why in the server's words (a Veri girişi reads the records, not the drawing); a missing
+        // drawing and a server that cannot draw now are said apart.
+        const refused = res.status === 403 ? await refusal(res) : null;
+        const why = refused ?? (res.status === 404 ? 'Projede henüz kaydedilmiş bir çizim yok.' : 'Çizim şu an gösterilemiyor.');
         frame.classList.remove('is-loading');
-        replaceChildren(frame, empty('image', 'Çizim yok', why));
+        replaceChildren(frame, empty('image', refused ? 'Çizim size kapalı' : 'Çizim yok', why));
         return;
       }
       const drawn = Number(res.headers.get('x-kentos-drawn') ?? 0);
@@ -192,7 +208,7 @@ export const projectPage: PageFn = async ({ params, reload }) => {
   const p = d.project;
   // A file project's objects are in its revisions, not in the database: its newest revision says how many.
   const r = p.storage === 'file' ? await cloud.revisions(p.tenantId, p.id) : null;
-  const revisions = await revisionsPanel(d, r);
+  const [revisions, records] = await Promise.all([revisionsPanel(d, r), recordsPanel(p)]);
   const objects = r ? (r.revisions[0]?.objects ?? '—') : String(d.featureCount);
   const where = p.tenantKind === 'personal' ? 'Kişisel alan' : p.tenantName;
   const body = h(
@@ -201,12 +217,13 @@ export const projectPage: PageFn = async ({ params, reload }) => {
     pageHeader({
       title: p.name,
       lead: p.description || `${where}. ${p.storage === 'file' ? 'Dosya olarak saklanan proje.' : 'Nesneleri veritabanında saklanan proje.'}`,
-      actions: [button('Çizimi indir (SVG)', { icon: 'download', href: cloud.previewUrl(p.tenantId, p.id, 2400) })],
+      // One who reads the records through forms alone (a Veri girişi) is not given the drawing.
+      actions: throughForms(p.access) ? [] : [button('Çizimi indir (SVG)', { icon: 'download', href: cloud.previewUrl(p.tenantId, p.id, 2400) })],
     }),
     h(
       'div',
       { class: 'project-grid' },
-      h('div', { class: 'stack' }, panel('Çizim', drawing(p.tenantId, p.id)), attachmentsPanel(d, attachments, reload)),
+      h('div', { class: 'stack' }, panel('Çizim', drawing(p.tenantId, p.id)), records, attachmentsPanel(d, attachments, reload)),
       h(
         'div',
         { class: 'stack' },
@@ -220,6 +237,7 @@ export const projectPage: PageFn = async ({ params, reload }) => {
             ['Koordinat sistemi', p.srid ? h('span', { class: 'num' }, `EPSG:${p.srid}`) : 'Yerel (atanmamış)'],
             ['Son değişiklik', moment(p.updatedAt)],
             ['Sahibi', p.ownerName],
+            ['Erişiminiz', accessView(p.access)],
           ]),
         ),
         revisions,

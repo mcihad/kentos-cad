@@ -263,15 +263,21 @@ impl App {
                 declared.iter().cloned().chain(others).collect()
             }
         };
+        // A code of a value list by its label, as the attribute table shows it (docs/adr/9188, 9194).
+        let field_of = |name: &str| {
+            self.document
+                .as_ref()
+                .and_then(|d| d.model.layers().get(&base.layer_id))
+                .and_then(|n| n.fields.iter().find(|f| f.name == name))
+        };
         let mut rows: Vec<(String, String)> = fields
             .into_iter()
             .filter(|f| !withheld.contains(f))
             .map(|f| {
-                let v = base
-                    .attrs
-                    .get(&f)
-                    .cloned()
-                    .unwrap_or_else(|| crate::features::texts::NULL.to_owned());
+                let v = match base.attrs.get(&f) {
+                    Some(raw) => crate::features::pending_rows::shown_value(field_of(&f), raw.clone()),
+                    None => crate::features::texts::NULL.to_owned(),
+                };
                 (f, v)
             })
             .collect();

@@ -52,6 +52,8 @@ fn a_field_the_role_does_not_read_is_named_not_shown_empty() {
     let card = app.slot_card(Slot(2)).expect("its card");
     assert!(!card.rows.iter().any(|(k, _)| k == "Not"), "{:?}", card.rows);
     assert!(card.rows.iter().any(|(k, v)| k == "Rolünüz okumuyor" && v == "Not"), "{:?}", card.rows);
+    // A code of the value list by its label, as the table shows it (docs/adr/9194).
+    assert!(card.rows.iter().any(|(k, v)| k == "Durum" && v == "İyi"), "{:?}", card.rows);
 }
 
 /// The picture (`.run/gui-evidence/kullanim-9150/`): a Veri girişi's attribute table with no Not column, its foot

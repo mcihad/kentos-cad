@@ -115,6 +115,9 @@ pub(crate) mod tests;
 // Against a real server (apps/desktop/scripts/cloud-live.sh), ignored otherwise.
 #[cfg(test)]
 mod live_run;
+// The forms' roles against a real server on a throwaway database (apps/desktop/scripts/forms-roles-live.sh).
+#[cfg(test)]
+mod live_forms;
 
 use crate::arch;
 use crate::gis;

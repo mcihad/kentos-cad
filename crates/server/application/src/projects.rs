@@ -1153,6 +1153,16 @@ pub async fn features(
         opened(&mut tx, access.tenant, access.project, access.actor.user_id).await?;
     }
     let reading = reading_for(&mut tx, access).await?;
+    // The first page says how the caller reads the layers (docs/adr/9194): with the reading that cuts the records, or,
+    // for one who reads every field, the project's own.
+    let layers = match (after, reading.as_ref()) {
+        (Some(_), _) => Vec::new(),
+        (None, Some(r)) => crate::form_guard::layers_read(&r.tree, &r.reach),
+        (None, None) => {
+            let r = reading_of(&mut tx, access).await?;
+            crate::form_guard::layers_read(&r.tree, &r.reach)
+        }
+    };
     let (features, next) = match reading.as_ref().filter(|r| r.narrows()) {
         Some(reading) => reached_page(&mut tx, access, reading, after, limit).await?,
         None => {
@@ -1179,7 +1189,11 @@ pub async fn features(
     };
     tx.commit().await?;
     let features = as_read(features, reading.as_ref());
-    Ok(FeaturePage { features, next })
+    Ok(FeaturePage {
+        features,
+        next,
+        layers,
+    })
 }
 
 /// A page of a Veri girişi whose forms narrow its records (docs/adr/0738 §2): in id order after `after`, the

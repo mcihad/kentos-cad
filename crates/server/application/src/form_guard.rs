@@ -293,6 +293,38 @@ pub fn cut(mut e: Entity, reach: &Reach) -> Entity {
     e
 }
 
+/// The layers of `tree` that have fields, in the tree's order, as the caller of `reach` reads them (docs/adr/9194): the
+/// fields it reads and, by name, the ones it does not (a Veri girişi's outside the layer's live forms; anyone else's:
+/// none). What a records page sends a client with no layer tree, by the rule `projected` cuts the records with.
+pub fn layers_read(tree: &[LayerNode], reach: &Reach) -> Vec<kentos_contracts::FeatureLayer> {
+    fn walk(
+        nodes: &[LayerNode],
+        reach: &Reach,
+        limited: &[String],
+        out: &mut Vec<kentos_contracts::FeatureLayer>,
+    ) {
+        for n in nodes {
+            if !n.fields.is_empty() {
+                let (read, withheld): (Vec<&LayerField>, Vec<&LayerField>) = n
+                    .fields
+                    .iter()
+                    .partition(|f| reach.level(&n.id, &f.name).readable());
+                out.push(kentos_contracts::FeatureLayer {
+                    id: n.id.clone(),
+                    name: n.name.clone(),
+                    fields: read.into_iter().cloned().collect(),
+                    withheld: withheld.into_iter().map(|f| f.name.clone()).collect(),
+                    narrowed: limited.contains(&n.id),
+                });
+            }
+            walk(&n.children, reach, limited, out);
+        }
+    }
+    let mut out = Vec::new();
+    walk(tree, reach, &reach.limited_layers(), &mut out);
+    out
+}
+
 /// A Veri girişi's `after` with what it does not read kept from `stored` (docs/adr/0411 §6): the
 /// attributes its layer's forms do not show come from the stored copy; the ones they show are the
 /// writer's.

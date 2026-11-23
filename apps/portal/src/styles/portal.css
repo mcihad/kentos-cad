@@ -2174,6 +2174,52 @@ textarea.input {
   font-size: 12px;
 }
 
+/* ── A database project's records (docs/adr/9194) ──────────────────────── */
+
+.records-layer + .records-layer {
+  border-top: 1px solid var(--c-line);
+}
+
+.records-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 12px 16px 8px;
+}
+
+.records-head h3 {
+  flex: 1;
+  font-size: var(--fs-sm);
+}
+
+.records-layer .table-wrap {
+  border-top: 1px solid var(--c-line-soft);
+}
+
+.records-layer .table-empty {
+  padding: 4px 16px 14px;
+  align-items: flex-start;
+  border: 0;
+}
+
+.records-note {
+  padding: 8px 16px;
+  border-top: 1px solid var(--c-line-soft);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+
+/* A value never written (NULL): muted, in the code face, apart from an empty text and from a text that says “NULL”. */
+.null-value {
+  color: var(--c-text-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+.access .field-hint {
+  margin-top: 2px;
+}
+
 /* Inside a panel's body, which has its own padding: text and sections line up with its edge. */
 .panel-text {
   margin: 0 0 10px;

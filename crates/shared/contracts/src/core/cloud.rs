@@ -652,6 +652,36 @@ pub struct FeaturePage {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub next: Option<String>,
+    /// On the first page only (no cursor, no `ids`): the layers that have fields, in the tree's order, as the caller
+    /// reads them (docs/adr/9194). A client with no layer tree (a browser's project page) shows the records with it
+    /// and names the fields the caller's role does not read, so one left out is never taken for an empty one.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FeatureLayer>>", optional))]
+    pub layers: Vec<FeatureLayer>,
+}
+
+/// A layer of [`FeaturePage::layers`]: its fields the caller reads and, by name, the ones it does not.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FeatureLayer {
+    pub id: String,
+    pub name: String,
+    /// The fields the caller reads, in the layer's order; a record's attribute of one of them that is absent is a
+    /// value never written (NULL), apart from an empty text.
+    pub fields: Vec<crate::fields::LayerField>,
+    /// The fields the caller's role does not read, by name (a Veri girişi's outside the layer's live forms): the
+    /// server sends their values not at all.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub withheld: Vec<String>,
+    /// The caller reads only some of the layer's records (a Veri girişi's form scope, or a layer whose forms are all
+    /// withdrawn): the others are on no page. Written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub narrowed: bool,
 }
 
 // ── The project.changes command ──────────────────────────────────────────

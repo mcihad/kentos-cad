@@ -302,13 +302,14 @@ numaraları raporunkidir.
     aynı sonuç).
   - Kalan: PostGIS durumu gerçek veritabanında koşturulmadı (Docker yanıt vermedi); kaynaktaki satırı kendiliğinden
     alarak düzeltme; web.
-- [~] **VY-24 — Formla kayıt yazmak rolün kayıt iznine bağlı (rapor 25, P0).**
+- [x] **VY-24 — Formla kayıt yazmak rolün kayıt iznine bağlı (rapor 25, P0).**
   ([ADR 9125](../docs/adr/9125-records-written-by-role-not-by-design-right.md))
   - `records_locked`: bulut projesinde `forms.use` ya da `feature.write`; arşiv ve izinsiz rol nedenini rolün adıyla
     söyler. Tasarım ve yayın `forms_locked`'ta (project.edit) kaldı.
   - Salt okunur form nedenini söyler (rol, arşiv, katman kilidi). Kaydet, iş akışı adımı, çoklu kayıt, alt kayıtlar
     aynı karardan geçer.
-  - Kalan: iki gerçek hesapla bulut sunucusunda kabul (sunucu sınamaları veritabanı ister, Docker yanıt vermedi); web.
+  - Bulutta kabul VY-93'te ([ADR 9194](../docs/adr/9194-form-roles-accepted-in-the-cloud.md)): gerçek sunucu, üç hesap.
+  - Kalan: web.
 - [~] **VY-25 — Yazımın işlem kaydı; yanıtı kaybolan COMMIT sorulur (rapor 30, P0).**
   ([ADR 9126](../docs/adr/9126-write-receipts-and-uncertain-commits.md); terim [ADR 9175](../docs/adr/9175-transaction-record-wording.md))
   - `DataError::Uncertain`: PostGIS'te sunucudan gelmeyen COMMIT hatası; uygulamada `WriteFailure::Uncertain`, asla ret
@@ -442,10 +443,12 @@ numaraları raporunkidir.
   - `forms/row_target.rs`: alınmışsa o nesne, düzenleniyorsa okunup alınır, kapalıysa Düzenlemeyi başlat, salt okunur söylenir.
   - Form başlığında anahtar; işlem aracında seçim yalnız ilk nesne girdisinin (ADR 9144 daraltıldı).
   - Kalan: salt okunur satırın formda gösterilmesi, PostGIS sınaması, web.
-- [~] **VY-49 — Rolün okumadığı alan boş gösterilmez, adıyla söylenir (rapor 29, P2).**
+- [x] **VY-49 — Rolün okumadığı alan boş gösterilmez, adıyla söylenir (rapor 29, P2).**
   ([ADR 9150](../docs/adr/9150-fields-the-role-does-not-read.md))
   - `features/role_fields.rs`: `withheld_fields` ortak çözümleyiciden; tabloda sütun yok, alt satır adını söylüyor; kartta satır yok.
-  - Kalan: NULL ile boş metnin ayrı görünmesi, veri katmanı tablosunda rol süzgeci, bulutta üç hesapla kabul, web.
+  - NULL ile boş metin ve veri katmanının rol süzgeci VY-87'de; bulutta üç hesapla kabul VY-93'te
+    ([ADR 9194](../docs/adr/9194-form-roles-accepted-in-the-cloud.md)).
+  - Kalan: web.
 - [~] **VY-50 — Kaynak okunamazken tablo bekleyen değişiklikleri gösterir (rapor 31, P1).**
   ([ADR 9151](../docs/adr/9151-pending-rows-when-the-source-is-unread.md))
   - `features/pending_rows.rs`: değişen satır yerel ve önceki değerle, silinen anahtarıyla; “doğrulanmadı” sözü.
@@ -681,3 +684,14 @@ numaraları raporunkidir.
   - `save`'in `choices`'ı alan, şekil ve silinmiş satır için tarafı seçer; satırlar masaüstüyle aynı adımla kurulur
     (`data_clash::settle`) ve yazılır. Seçilmeyen çakışma `rows_changed`, çakışmayan seçim `clash_choice`.
   - Kalan: web.
+- [x] **VY-93 — Formların rolleri bulutta üç hesapla; proje sayfası rolü ve kayıtları gösterir (rapor 25 ve 29'un
+  kalanı).** ([ADR 9194](../docs/adr/9194-form-roles-accepted-in-the-cloud.md))
+  - Gerçek sunucu, geçici veritabanı, üç deneme hesabı (`apps/desktop/scripts/forms-roles-live.sh`): Veri girişi
+    kapsamındaki kayıtlarda yalnız formun alanlarını okur ve yazar; boş zorunlu değer, salt okunur alan (403) ve kapsam
+    dışı kayıt (404) reddedilir; Görüntüleyici formu salt okunur açar; sahibin ikinci sürümü iki tarafta görünür;
+    gizli not korunur.
+  - Kayıtların ilk sayfası (`FeaturePage.layers`) katmanları çağıranın okuduğu gibi verir: okunan alanlar, okunmayanların
+    adı (`withheld`), kapsamın daraltması (`narrowed`).
+  - Bulut portalının proje sayfasında Erişiminiz ve Kayıtlar; reddedilen çizim gerekçesiyle. Bilgi kartı kodu
+    etiketiyle yazar.
+  - Kalan: portalda sayfalama, süzgeç ve formla yazma; önizlemenin küçük noktaları; gerçek pencerede deneme; web.

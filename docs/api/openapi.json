@@ -6701,6 +6701,160 @@
         ],
         "type": "object"
       },
+      "DataGeometry": {
+        "additionalProperties": false,
+        "description": "The geometry column of a data layer's table as last read.",
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "m": {
+            "description": "Its positions have M; only `true` is written.",
+            "type": "boolean"
+          },
+          "srid": {
+            "description": "Its system's EPSG code; absent: undefined.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "typeName": {
+            "description": "OGC's name of its type, upper case (`MULTIPOLYGON`, `POINT`, `GEOMETRY` …).",
+            "type": "string"
+          },
+          "z": {
+            "description": "Its positions have Z; only `true` is written.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "column",
+          "typeName"
+        ],
+        "type": "object"
+      },
+      "DataLayer": {
+        "additionalProperties": false,
+        "description": "Where a data layer's rows are.",
+        "properties": {
+          "address": {
+            "description": "A GeoPackage's absolute path; a database's `postgresql://user@host:port/database` (no password).",
+            "type": "string"
+          },
+          "driver": {
+            "description": "The driver's id: `gpkg` or `postgis`.",
+            "type": "string"
+          },
+          "extent": {
+            "description": "The table's box as its catalogue last said it (minimum east, north, maximum east, north, in the table's system):\nwhat Katmana yakınlaş and Tümünü göster frame without asking the source.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DataGeometry"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The geometry column; absent: a table of records without geometry."
+          },
+          "key": {
+            "description": "The integer key column.",
+            "type": "string"
+          },
+          "readOnly": {
+            "description": "The layer is not edited even where the source allows it (the user's choice); only `true` is written.",
+            "type": "boolean"
+          },
+          "relative": {
+            "description": "A GeoPackage's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving\nwhen the file lies on the same disk; read when `address` is not there.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "table": {
+            "description": "The table: its name in a file, `schema.table` in a database.",
+            "type": "string"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DataText"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its rows are texts (docs/adr/9114 §1): which columns hold their words, height, angle, alignment and width\nfactor. Drawn as the drawing's texts are; absent: its rows are drawn by its style."
+          }
+        },
+        "required": [
+          "driver",
+          "address",
+          "table",
+          "key"
+        ],
+        "type": "object"
+      },
+      "DataText": {
+        "additionalProperties": false,
+        "description": "Which columns of a data layer's rows make its texts.",
+        "properties": {
+          "align": {
+            "description": "The column of the alignment: Yazı's names (“sol alt”, “orta”, “sağ üst” …) or the contract's (`bottomLeft`);\nabsent, empty or another word: the left of the baseline.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "angle": {
+            "description": "The column of the angle, degrees counter-clockwise from east; absent or empty: 0.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "height": {
+            "description": "The column of the height, metres; absent, or empty or not over 0 in a row: the project's text height.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "description": "The column of the words.",
+            "type": "string"
+          },
+          "width": {
+            "description": "The column of the width factor; absent, empty, 1 or out of (0, 100]: none (1).",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
       "DatasetDim": {
         "description": "One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the\nindex shown, its values (coordinates; moments in milliseconds since 1970\nwhen `time`) and units.",
         "properties": {
@@ -10184,6 +10338,26 @@
         ],
         "type": "object"
       },
+      "EditGrouping": {
+        "description": "How the project's data layers' edit sessions go together (docs/adr/9104 §2): which layers open, save, let go and\nclose together, and which are written in one transaction.",
+        "oneOf": [
+          {
+            "const": "layer",
+            "description": "Each layer alone: its changes in a transaction of their own.",
+            "type": "string"
+          },
+          {
+            "const": "source",
+            "description": "The layers of a source (a GeoPackage, a database) together: opened and closed together, written in one\ntransaction.",
+            "type": "string"
+          },
+          {
+            "const": "all",
+            "description": "Every editable data layer together: opened and closed together, written in one transaction a source.",
+            "type": "string"
+          }
+        ]
+      },
       "ElementRef": {
         "additionalProperties": false,
         "description": "A part of an object by the object's persistent id.",
@@ -11740,6 +11914,41 @@
         ],
         "type": "object"
       },
+      "FeatureLayer": {
+        "description": "A layer of [`FeaturePage::layers`]: its fields the caller reads and, by name, the ones it does not.",
+        "properties": {
+          "fields": {
+            "description": "The fields the caller reads, in the layer's order; a record's attribute of one of them that is absent is a\nvalue never written (NULL), apart from an empty text.",
+            "items": {
+              "$ref": "#/components/schemas/LayerField"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "narrowed": {
+            "description": "The caller reads only some of the layer's records (a Veri girişi's form scope, or a layer whose forms are all\nwithdrawn): the others are on no page. Written only as `true`.",
+            "type": "boolean"
+          },
+          "withheld": {
+            "description": "The fields the caller's role does not read, by name (a Veri girişi's outside the layer's live forms): the\nserver sends their values not at all.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "fields"
+        ],
+        "type": "object"
+      },
       "FeatureOp": {
         "enum": [
           "create",
@@ -11754,6 +11963,13 @@
           "features": {
             "items": {
               "$ref": "#/components/schemas/FeatureRecord"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "On the first page only (no cursor, no `ids`): the layers that have fields, in the tree's order, as the caller\nreads them (docs/adr/9194). A client with no layer tree (a browser's project page) shows the records with it\nand names the fields the caller's role does not read, so one left out is never taken for an empty one.",
+            "items": {
+              "$ref": "#/components/schemas/FeatureLayer"
             },
             "type": "array"
           },
@@ -18254,6 +18470,13 @@
             },
             "type": "array"
           },
+          "classCounts": {
+            "description": "Nesne sayısını göster (docs/adr/9105 §4): the layer tree says how many objects the layer and each of its style's\nclasses hold. Only a layer has it, never a group; only `true` is written.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "compose": {
             "anyOf": [
               {
@@ -18271,6 +18494,17 @@
               "$ref": "#/components/schemas/FieldGroup"
             },
             "type": "array"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DataLayer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A data layer (docs/adr/9101 §2): drawn from a table of a GeoPackage or a database as it is now, its rows asked\nof the source, never copied into the drawing; it holds no objects. Only a layer has it, never a group, and\nnever with a service or a feed."
           },
           "dataset": {
             "anyOf": [
@@ -18327,7 +18561,7 @@
             "description": "The layer's filter (docs/adr/0211 §2): only the objects that pass it\nare shown, picked and given to its tools. Only a layer has it, never a\ngroup or a layer drawn from a service."
           },
           "frozen": {
-            "description": "Dondur (AutoCAD's freeze, DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
+            "description": "Dondur (DXF's 70 bit 1; docs/adr/0311 §1): absent,\nthawed; `true`, frozen: neither drawn, picked, snapped to nor counted\nin the drawing's extent, and Hepsini göster leaves it frozen; the\nactive layer is never frozen. A group's covers what it holds. Only\n`true` is written.",
             "type": [
               "boolean",
               "null"
@@ -18360,8 +18594,19 @@
           "name": {
             "type": "string"
           },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LayerOrigin"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the layer's objects were copied from (docs/adr/9192): the file's or database's table an import read. The\nobjects are the project's own; the source is not bound, nothing is written back to it. Only a layer has it,\nnever a group."
+          },
           "plot": {
-            "description": "Yazdır: absent, it is printed; `false`, it is drawn on screen but not\non a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;\ndocs/adr/0260 §4). A group's covers what it holds. Only `false` is written.",
+            "description": "Yazdır: absent, it is printed; `false`, it is drawn on screen but not\non a sheet, its PDF or a print (DXF's 290;\ndocs/adr/0260 §4). A group's covers what it holds. Only `false` is written.",
             "type": [
               "boolean",
               "null"
@@ -18483,6 +18728,44 @@
         ],
         "type": "string"
       },
+      "LayerOrigin": {
+        "additionalProperties": false,
+        "description": "Where a layer's objects were copied from (docs/adr/9192): what the import read, and when.",
+        "properties": {
+          "address": {
+            "description": "The file, an absolute path, or the database's address without a password.",
+            "type": "string"
+          },
+          "at": {
+            "description": "When it was read, UTC (`2026-11-23T09:30:00Z`).",
+            "type": "string"
+          },
+          "driver": {
+            "description": "The format read, as the data drivers name it: `gpkg`, `shp`, `geojson`, `csv`, `kml`, `fgb`, `gml`, `parquet`,\n`postgis`.",
+            "type": "string"
+          },
+          "sha256": {
+            "description": "The file's SHA-256 when it was read, 64 lowercase hexadecimal digits; none for a database.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "table": {
+            "description": "The table or layer read; none for a file of one.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "driver",
+          "address",
+          "at"
+        ],
+        "type": "object"
+      },
       "LayerRule": {
         "additionalProperties": false,
         "description": "A record rule of a layer.",
@@ -18589,7 +18872,7 @@
         "type": "object"
       },
       "LayerState": {
-        "description": "A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's\nlayer states): the tree's nodes as they were when it was saved, their\nvisibility and, when it was saved with them, their locks and the layers'\nstyles. The project keeps them (`ProjectSettings::layer_states`).",
+        "description": "A named layer state (docs/adr/0177 §4): the tree's nodes as they were\nwhen it was saved, their visibility and, when it was saved with them,\ntheir locks and the layers' styles. The project keeps them\n(`ProjectSettings::layer_states`).",
         "properties": {
           "id": {
             "description": "One of its kind among the project's states.",
@@ -26573,14 +26856,14 @@
       },
       "ProjectRelation": {
         "additionalProperties": false,
-        "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id.",
+        "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id, or, with a parent key (docs/adr/9135), the value of that parent field: an institution's own code.",
         "properties": {
           "child": {
             "description": "The child layer's id.",
             "type": "string"
           },
           "field": {
-            "description": "The child field's key that holds the parent's persistent id.",
+            "description": "The child field's key that holds the parent's persistent id (or its key's value).",
             "type": "string"
           },
           "id": {
@@ -26597,6 +26880,13 @@
           "parent": {
             "description": "The parent layer's id.",
             "type": "string"
+          },
+          "parentKey": {
+            "description": "The parent field's key whose value the child field holds (docs/adr/9135): a code such as a neighbourhood's\n`M1`; none: the parent's persistent id. Written only when given.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -26770,6 +27060,17 @@
               }
             ],
             "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+          },
+          "editGrouping": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EditGrouping"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the data layers' edit sessions go together (docs/adr/9104 §2); absent: each layer alone."
           },
           "forms": {
             "description": "The project's forms, in the order they were made (docs/adr/0401).",

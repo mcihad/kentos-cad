@@ -164,6 +164,7 @@ pub async fn features(
             return Ok(FeaturePage {
                 features,
                 next: None,
+                layers: Vec::new(),
             });
         }
         let after = q

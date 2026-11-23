@@ -15,6 +15,7 @@ import type {
   DossierList,
   DossierMessageView,
   DossierSignatureView,
+  FeaturePage,
   FeeAssess,
   FeeAssessment,
   FeeDefinition,
@@ -178,6 +179,9 @@ export const cloud = {
   revisionUrl: (tenant: string, project: string, revision: string) => `/v1/tenants/${tenant}/projects/${project}/files/${revision}`,
   previewUrl: (tenant: string, project: string, width = 1200) => `/v1/tenants/${tenant}/projects/${project}/preview.svg?width=${width}`,
   attachments: (tenant: string, project: string) => get<AttachmentView[]>(`/v1/tenants/${tenant}/projects/${project}/attachments`),
+  /** A database project's first page of records as the caller reads them, with its layers (docs/adr/9194). */
+  records: (tenant: string, project: string, limit: number) =>
+    get<FeaturePage>(`/v1/tenants/${tenant}/projects/${project}/features${query({ limit })}`),
   attach: (tenant: string, project: string, uploadId: string, note: string | null) =>
     post<AttachmentView>(`/v1/tenants/${tenant}/projects/${project}/attachments`, { uploadId, note }),
   attachmentUrl: (tenant: string, project: string, id: string, inline = false) =>

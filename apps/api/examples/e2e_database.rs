@@ -3,7 +3,9 @@
 //! `kentos_cad_test_*` database with every migration of this build applied
 //! (as the server tests make them, `kentos_postgres::testing`) and the
 //! development accounts of `kentosd dev-seed` (organisation `ornek-buro`;
-//! ayse, mehmet, zeynep) with the password in `KENTOS_DEV_PASSWORD`. The
+//! ayse, mehmet, zeynep), and elif, an editor of the organisation who is no
+//! administrator (a project's viewer in the forms' acceptance, docs/adr/9194),
+//! with the password in `KENTOS_DEV_PASSWORD`. The
 //! development database `kentos_cad` is never touched, so a migration can be
 //! tried end to end before it is applied there.
 //!
@@ -35,6 +37,7 @@ async fn main() {
         ("ayse", "Ayşe Yılmaz", TenantRole::ProjectManager),
         ("mehmet", "Mehmet Demir", TenantRole::Editor),
         ("zeynep", "Zeynep Kaya", TenantRole::Admin),
+        ("elif", "Elif Şahin", TenantRole::Editor),
     ] {
         admin::create_local_user(&db.owner, login, name, None, &password)
             .await

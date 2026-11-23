@@ -175,6 +175,44 @@ async fn the_forms_are_designed_published_and_guarded_on_the_server() {
         read(&ed).await.get("Not").map(String::as_str),
         Some("Yalnız ofis görür.")
     );
+    // The first page says how each reads the layer (docs/adr/9194): the Veri girişi the form's fields and, by name,
+    // the one it does not read; the editor every field, none withheld; a later page and `ids` say nothing of it.
+    let layers = |by: &kentos_application::access::ProjectAccess, after: Option<Uuid>| {
+        let by = by.clone();
+        let db = &db;
+        async move {
+            kentos_application::projects::features(&db.app, &by, after, 10)
+                .await
+                .unwrap()
+                .layers
+                .into_iter()
+                .map(|l| {
+                    let fields: Vec<String> = l.fields.into_iter().map(|f| f.name).collect();
+                    (l.id, l.name, fields, l.withheld)
+                })
+                .collect::<Vec<_>>()
+        }
+    };
+    let named = |v: &[&str]| v.iter().map(|s| (*s).to_owned()).collect::<Vec<String>>();
+    assert_eq!(
+        layers(&entry, None).await,
+        [(
+            "cizim".to_owned(),
+            "Çizim".to_owned(),
+            named(&["Durum", "Kat"]),
+            named(&["Not"])
+        )]
+    );
+    assert_eq!(
+        layers(&ed, None).await,
+        [(
+            "cizim".to_owned(),
+            "Çizim".to_owned(),
+            named(&["Durum", "Kat", "Not"]),
+            Vec::new()
+        )]
+    );
+    assert!(layers(&ed, Some(Uuid::nil())).await.is_empty());
     // Published and enforced: a write that breaks the rules is not taken, from anyone.
     let refused = changes::commit(
         &db.app,

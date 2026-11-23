@@ -291,6 +291,10 @@
   - **Çakışma seçimi Python ve MCP'de** (23 Kasım, rapor 26'nın kalanı; [ADR 9193](../adr/9193-clash-choices-in-python-and-mcp.md), VY-92):
     `cad.layers.session`'ın `conflicts`'i çakışmaları alan alan üç değeriyle söyler; `save`'in `choices`'ı alan, şekil
     ve silinmiş satır için `mine` ya da `theirs` seçer. Seçimi uygulayan adım masaüstüyle ortaktır (`data_clash::settle`).
+  - **Formların rolleri bulutta** (23 Kasım, rapor 25 ve 29'un kalanı; [ADR 9194](../adr/9194-form-roles-accepted-in-the-cloud.md), VY-93):
+    üç deneme hesabıyla gerçek sunucuda kabul edildi (`apps/desktop/scripts/forms-roles-live.sh`). Kayıtların ilk
+    sayfası (`FeaturePage.layers`) katmanları çağıranın okuduğu gibi verir: okunan alanlar, okunmayanların adı, kapsamın
+    daraltması. Bulut portalının proje sayfası rolü (Erişiminiz) ve kayıtları gösterir; NULL ile boş metin ayrıdır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
