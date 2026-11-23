@@ -46,6 +46,8 @@
    - Kural, kayıtları kesen ortak çözümleyicidir (`kentos_forms::reach`; sunucuda `form_guard::layers_read`).
    - Sonraki sayfalar ve `ids` ile okuma katman taşımaz.
 2. **Bulut portalının proje sayfası** (`apps/portal/src/pages/project-records.ts`, `lib/records.ts`).
+   - **Projeler listesi** her projede çağıranın rolünü yazar (“Rolünüz”), masaüstünün Benimle paylaşılanlar listesi
+     gibi.
    - **Erişiminiz** (Künye'de): rol, nereden geldiği (projenin sahibi, paylaşımla, kurumun kuralıyla), bir satırda ne
      yapabildiği. Sözler masaüstünün paylaşım penceresinin sözleridir.
    - **Kayıtlar** (veritabanı projesinde): her katman için okunan alanların tablosu.
@@ -69,7 +71,8 @@
    - **Sunucu:** boş bir kapıda `kentosd` açılır.
    - **Masaüstü:** canlı sınama koşar (`shell/cloud/live_forms.rs`, `#[ignore]`). Sınama, `live_run.rs`'in modül içinde
      açılan koşucusunu kullanır (`sign_in_as`, `shot_to`).
-   - **Portal:** aynı sunucuya bağlanır; resim betiği koşar (`apps/portal/scripts/forms-shots.mjs`).
+   - **Portal:** aynı sunucuya bağlanır; resim betiği koşar (`apps/portal/scripts/forms-shots.mjs`). Her hesap bulut
+     sunucusuna giriş sayfasından klavyeyle girer, yan çubuktan Projeler'e gider, projeyi listeden tıklayarak açar.
    - **Kapanış:** sunucu ve portal durur, veritabanı silinir.
    - **Parola:** betikte üretilir, `.run/cloud-forms/password`'ta (600) durur, yazdırılmaz.
 
@@ -104,7 +107,10 @@
   - İkinci sürümü yayımlar: Durum'un etiketi “Saha durumu” olur.
   - Kendi formunda yeni etiket ve salt okunur Bolge görünür; Mehmet'in formunda da öyle.
   - Mehmet'in ikinci yazımında not yine korunur.
-- **Portal.** Üç hesap giriş sayfasından klavyeyle girer. Her sayfanın söyledikleri betikte denetlenir.
+- **Giriş.** Mehmet masaüstünün Buluta giriş penceresinden (sunucu, giriş adı, maskeli parola) girer. Portalda üç hesap
+  bulut sunucusunun giriş sayfasından girer: parola alanı maskeli; oturum açılınca kurumun genel bakışı; Projeler'de
+  “Saha denetimleri” her birinin rolüyle (Veri girişi, Görüntüleyici, Sahip); satıra tıklayınca projenin sayfası.
+- **Portal.** Her sayfanın söyledikleri betikte denetlenir.
   - **Mehmet:** Erişiminiz “Veri girişi · paylaşımla”.
     - Kayıtlar'da yalnız D-1 ve D-3; sütunlar Durum ve Bolge.
     - Kapsam ve okunmayan alanlar tablonun altında söylenir.
@@ -123,8 +129,8 @@
 - **Masaüstü sınamaları** geçiyor:
   - kart, rol alanları, NULL, ekler, veri katmanı ve GeoPackage durumu: 32;
   - ortak, form, bulut ve tablo: 418.
-- **Resim.** `.run/gui-evidence/kullanim-9194` içinde 16 resim var: 13'ü masaüstünden, 3'ü portaldan. Resimler Git'e
-  girmez.
+- **Resim.** `.run/gui-evidence/kullanim-9194` içinde 20 resim var: 14'ü masaüstünden (Buluta giriş dahil), 6'sı
+  portaldan (giriş, açılış, Projeler ve üç rolün proje sayfası). Resimler Git'e girmez.
 
 ## §4 Kalan
 

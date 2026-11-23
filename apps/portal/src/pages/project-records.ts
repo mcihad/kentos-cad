@@ -32,6 +32,11 @@ const VIA: Record<ProjectAccessView['via'], string> = {
   policy: 'kurumun kuralıyla',
 };
 
+/** A role's name, as the projects' list and the project's page say it. */
+export function roleName(role: ProjectRole): string {
+  return ROLES[role][0];
+}
+
 /** Whether the caller reads and writes the records through forms alone (a Veri girişi), as the server decides it. */
 export function throughForms(a: ProjectAccessView): boolean {
   return a.permissions.includes('forms.use') && !a.permissions.includes('feature.write');

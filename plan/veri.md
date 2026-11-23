@@ -692,6 +692,6 @@ numaraları raporunkidir.
     gizli not korunur.
   - Kayıtların ilk sayfası (`FeaturePage.layers`) katmanları çağıranın okuduğu gibi verir: okunan alanlar, okunmayanların
     adı (`withheld`), kapsamın daraltması (`narrowed`).
-  - Bulut portalının proje sayfasında Erişiminiz ve Kayıtlar; reddedilen çizim gerekçesiyle. Bilgi kartı kodu
-    etiketiyle yazar.
+  - Bulut portalında üç hesap giriş sayfasından girer, projeyi Projeler listesinden (rolüyle) açar; proje sayfasında
+    Erişiminiz ve Kayıtlar; reddedilen çizim gerekçesiyle. Bilgi kartı kodu etiketiyle yazar.
   - Kalan: portalda sayfalama, süzgeç ve formla yazma; önizlemenin küçük noktaları; gerçek pencerede deneme; web.

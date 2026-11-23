@@ -1,5 +1,5 @@
-// The cloud projects of a place (docs/adr/9000 §15): an organisation's, or a professional's own; each opens its page
-// with its drawing and its attachments.
+// The cloud projects of a place (docs/adr/9000 §15): an organisation's, or a professional's own, each with the caller's
+// role in it (docs/adr/9194); each opens its page with its drawing, its records and its attachments.
 import { portal } from '../api/portal';
 import type { ProjectSummary } from '../api/types';
 import { orgBySlug } from '../app/state';
@@ -8,6 +8,7 @@ import { moment } from '../lib/format';
 import { icon } from '../ui/icons';
 import { empty, pageHeader, table, twoLine } from '../ui/kit';
 import type { PageFn } from './page';
+import { roleName } from './project-records';
 
 export function projectHref(p: ProjectSummary): string {
   return `#/proje/${p.tenantId}/${p.id}`;
@@ -23,6 +24,7 @@ export function projectsTable(projects: ProjectSummary[], none: HTMLElement): HT
       },
       { label: 'Çalışma alanı', cell: (p) => (p.tenantKind === 'personal' ? 'Kişisel' : p.tenantName) },
       { label: 'Saklama', cell: (p) => (p.storage === 'file' ? 'Dosya' : 'Veritabanı'), class: 'narrow' },
+      { label: 'Rolünüz', cell: (p) => roleName(p.access.role), class: 'narrow' },
       { label: 'Son değişiklik', cell: (p) => h('span', { class: 'muted num' }, moment(p.updatedAt)), class: 'narrow' },
     ],
     projects,
@@ -37,7 +39,7 @@ export const orgProjects: PageFn = async ({ params }) => {
   const body = h(
     'div',
     { class: 'page' },
-    pageHeader({ title: 'Projeler', lead: 'Kurumun buluttaki projeleri. Bir projeyi açınca çizimini, eklerini ve revizyonlarını görürsünüz; masaüstü ve mobil aynı dosyalara bakar.' }),
+    pageHeader({ title: 'Projeler', lead: 'Kurumun buluttaki projeleri ve her birinde rolünüz. Bir projeyi açınca çizimini, kayıtlarını, eklerini ve revizyonlarını görürsünüz; masaüstü ve mobil aynı projelere bakar.' }),
     projectsTable(page.projects, empty('folder', 'Bulutta proje yok', 'KentOS masaüstünden buluta kaydedilen ya da bir başvurudan açılan projeler burada görünür.')),
   );
   return { crumbs: [{ label: org.tenantName, href: `#/kurum/${org.tenantSlug}` }, { label: 'Projeler' }], body };

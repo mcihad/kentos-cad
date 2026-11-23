@@ -15,9 +15,10 @@
 //!   label with `Bolge` read only; so does Mehmet's.
 //!
 //! `apps/desktop/scripts/forms-roles-live.sh` makes the database and the server and runs this test with
-//! `KENTOS_E2E_SERVER` and `KENTOS_E2E_PASSWORD` (never printed), then pictures the project's page in the cloud
-//! portal for the three accounts (`apps/portal/scripts/forms-shots.mjs`), from the ids this test writes to
-//! `.run/cloud-forms/project.json`. The pictures go to `.run/gui-evidence/kullanim-9194/` (never in Git).
+//! `KENTOS_E2E_SERVER` and `KENTOS_E2E_PASSWORD` (never printed), then signs the three accounts in to the cloud
+//! portal and pictures their way to the project's page (`apps/portal/scripts/forms-shots.mjs`), from the ids this test
+//! writes to `.run/cloud-forms/project.json`. Mehmet's sign-in window is pictured filled in, the password masked. The
+//! pictures go to `.run/gui-evidence/kullanim-9194/` (never in Git).
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -127,12 +128,12 @@ fn attrs(app: &App, bolge: &str) -> BTreeMap<String, String> {
     doc.model.get(slot).map(|e| e.base().attrs.clone().into_iter().collect()).unwrap_or_default()
 }
 
-/// A device of `login`, signed in through the sign-in window.
-fn device(login: &str, api: &str, password: &str) -> Runner {
+/// A device of `login`, signed in through the sign-in window (pictured filled in as `shot`).
+fn device(login: &str, api: &str, password: &str, shot: Option<&str>) -> Runner {
     let dir = repo().join(".run/cloud-forms/devices").join(login);
     let _ = std::fs::remove_dir_all(&dir);
     let mut r = Runner::new(app(&dir, api));
-    sign_in_as(&mut r, login, password, None);
+    sign_in_as(&mut r, login, password, shot.map(evidence).as_deref());
     r
 }
 
@@ -216,9 +217,9 @@ fn forms_roles_live() {
     let password = env("KENTOS_E2E_PASSWORD");
 
     // The three accounts.
-    let mut ayse = device("ayse", &api, &password);
-    let mut mehmet = device("mehmet", &api, &password);
-    let mut elif = device("elif", &api, &password);
+    let mut ayse = device("ayse", &api, &password, None);
+    let mut mehmet = device("mehmet", &api, &password, Some("00-buluta-giris"));
+    let mut elif = device("elif", &api, &password, None);
     let (mehmet_id, elif_id) = (user_id(&mehmet), user_id(&elif));
 
     // 1. Ayşe's project: the layer, two inspections, the form published and enforced; kept in the database.

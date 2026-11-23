@@ -238,16 +238,17 @@ pub(super) fn app(dir: &Path, server: &str) -> App {
 }
 
 fn sign_in(r: &mut Runner, password: &str, shot: Option<&str>) {
-    sign_in_as(r, "ayse", password, shot);
+    let path = shot.map(|name| run_dir().join("shots").join(format!("bulut-{name}.png")));
+    sign_in_as(r, "ayse", password, path.as_deref());
 }
 
-/// Signs in as `login` through the sign-in window, as a person types it.
-pub(super) fn sign_in_as(r: &mut Runner, login: &str, password: &str, shot: Option<&str>) {
+/// Signs in as `login` through the sign-in window, as a person types it; the window filled in is pictured into `shot`.
+pub(super) fn sign_in_as(r: &mut Runner, login: &str, password: &str, shot: Option<&Path>) {
     r.send(Message::Run("cloud.signIn"));
     r.cloud(Event::SignInLogin(login.into()));
     r.cloud(Event::SignInPassword(password.into()));
-    if let Some(name) = shot {
-        r.shot(name);
+    if let Some(path) = shot {
+        r.shot_to(path);
     }
     r.cloud(Event::SignInSubmit);
     r.until("giriş", Duration::from_secs(15), |a| a.cloud.me.is_some());
