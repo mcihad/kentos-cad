@@ -22,10 +22,39 @@ pub(crate) struct RuleChoice {
 }
 
 impl App {
+    /// Whether an extension offers the active module an audit rule, as [`App::ext_audit_choices`] would list one:
+    /// Eklenti denetimi shows only then (docs/adr/9195 §5). The bottom panel asks it every frame, so it lists nothing.
+    pub(crate) fn offers_ext_audits(&self) -> bool {
+        let (Some(registry), Some(module)) = (self.extensions.registry.as_ref(), self.active_module()) else {
+            return false;
+        };
+        registry
+            .contributions()
+            .iter()
+            .filter(|c| c.kind == ContributionKind::Audit)
+            .any(|c| {
+                let ext = c.lease.extension.as_str();
+                let local = c
+                    .id
+                    .strip_prefix("ext.")
+                    .and_then(|rest| rest.strip_prefix(ext))
+                    .and_then(|rest| rest.strip_prefix('.'));
+                local.is_some_and(|local| {
+                    registry.manifest(ext).is_some_and(|m| {
+                        m.entrypoints
+                            .audits
+                            .iter()
+                            .any(|a| a.id == local && a.domain.id() == module.id())
+                    })
+                })
+            })
+    }
+
     /// The audit rules registered here (the extension running, `audit.provider` granted, as an agent's `audits` lists
     /// them) that join this program's audit, in the registry's order.
     pub(crate) fn ext_audit_choices(&self) -> Vec<RuleChoice> {
-        let (Some(registry), Some(program)) = (self.extensions.registry.as_ref(), self.program)
+        // The open project's module's rules, in kentos-cad too (docs/adr/9195 §2).
+        let (Some(registry), Some(program)) = (self.extensions.registry.as_ref(), self.active_module())
         else {
             return Vec::new();
         };

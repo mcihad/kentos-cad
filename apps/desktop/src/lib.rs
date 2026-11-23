@@ -533,6 +533,8 @@ mod selection_fit;
 mod open_report_window;
 #[path = "shell/module_surfaces.rs"]
 mod module_surfaces;
+#[path = "shell/layer_entries.rs"]
+mod layer_entries;
 #[path = "shell/navigation.rs"]
 mod navigation;
 #[path = "shell/navigation_cards.rs"]

@@ -21,7 +21,7 @@ use crate::app::{App, Message, Panel};
 use crate::bottom::BottomTab;
 use crate::files_testing::{app_with_drawing, drawing, drive, last_said, scratch};
 use crate::layout::{FILE_NAME, Keeper};
-use crate::module_surfaces::{AppSetting, Cell, LayerEntry, PropertyRows, SourceSection};
+use crate::module_surfaces::{AppSetting, Cell, PropertyRows, SourceSection};
 use crate::project::settings::Section as ProjectSection;
 use crate::recovery::Recovery;
 use crate::settings::Settings;
@@ -132,19 +132,7 @@ fn surfaces_of(app: &App) -> Vec<String> {
     for row in [AppSetting::Geographic, AppSetting::FormOnCreate, AppSetting::NewProjects, AppSetting::NewProjectType, AppSetting::NewProjectUnit] {
         out.push(format!("{row:?} {}", app.shows_setting(row)));
     }
-    for entry in [
-        LayerEntry::Time,
-        LayerEntry::Scenario,
-        LayerEntry::Crs,
-        LayerEntry::StyleFiles,
-        LayerEntry::Sld,
-        LayerEntry::Qml,
-        LayerEntry::MapLibre,
-        LayerEntry::Dataset,
-        LayerEntry::Kind,
-        LayerEntry::Service,
-        LayerEntry::Source,
-    ] {
+    for entry in crate::layer_entries::LayerEntry::ALL {
         out.push(format!("{entry:?} {}", app.shows_layer_entry(entry)));
     }
     for section in [SourceSection::Databases, SourceSection::Services] {
@@ -266,19 +254,10 @@ fn each_program_has_its_own_bottom_tabs() {
     use BottomTab::*;
     // kentos-cad with nothing open: the common tabs alone (docs/adr/9195 §2).
     assert_eq!(started(None).bottom_tabs(), [History, Works, Messages, Python]);
+    // Eklenti denetimi shows only while an extension offers the module an audit rule (docs/adr/9195 §5): none here.
     assert_eq!(
         started(MIMARI).bottom_tabs(),
-        [
-            History,
-            Coords,
-            Search,
-            Audit,
-            ExtAudit,
-            CadInspection,
-            Works,
-            Messages,
-            Python
-        ]
+        [History, Coords, Search, Audit, CadInspection, Works, Messages, Python]
     );
     assert_eq!(
         started(HARITA).bottom_tabs(),
@@ -291,7 +270,6 @@ fn each_program_has_its_own_bottom_tabs() {
             Search,
             Address,
             Topology,
-            ExtAudit,
             CadInspection,
             ServiceInfo,
             Works,
@@ -299,10 +277,15 @@ fn each_program_has_its_own_bottom_tabs() {
             Python
         ]
     );
-    // CAD denetimi (the hatch boundary diagnosis, 183defaa6) is the CAD programs', not a GIS's.
+    // CAD denetimi (the hatch boundary diagnosis, 183defaa6) is the CAD programs', KentOS Yol's too, not a GIS's.
+    assert_eq!(
+        started(Some(Module::Road)).bottom_tabs(),
+        [History, Coords, Points, Table, Search, CadInspection, Works, Messages, Python]
+    );
     let gis = started(GIS).bottom_tabs();
-    assert_eq!(gis.len(), BottomTab::ALL.len() - 2);
-    assert!(!gis.contains(&Audit) && !gis.contains(&CadInspection) && gis.contains(&Chart));
+    assert_eq!(gis.len(), BottomTab::ALL.len() - 3);
+    assert!(!gis.contains(&Audit) && !gis.contains(&CadInspection) && !gis.contains(&ExtAudit));
+    assert!(gis.contains(&Chart));
     // Komut geçmişi, Koordinat listesi, Çalışan işler, Uyarılar and Python are every module's.
     for program in [MIMARI, HARITA, GIS] {
         let app = started(program);
@@ -660,75 +643,7 @@ fn a_settings_window_opens_on_a_section_the_program_has() {
     );
 }
 
-/// The layer menu's entries a program shows: the special ones by the profile, the rest everywhere.
-#[test]
-fn each_program_has_its_own_layer_menu() {
-    let special = [
-        ("Zaman ayarları…", Some(LayerEntry::Time)),
-        ("Koordinat sistemi", Some(LayerEntry::Crs)),
-        ("Stil yükle…", Some(LayerEntry::StyleFiles)),
-        ("Görünüşü SLD olarak kaydet…", Some(LayerEntry::Sld)),
-        ("QML'den görünüş al…", Some(LayerEntry::Qml)),
-        ("MapLibre stilinden görünüş al…", Some(LayerEntry::MapLibre)),
-        ("Veri kümesi bilgisi…", Some(LayerEntry::Dataset)),
-        ("Katman türü", Some(LayerEntry::Kind)),
-        // Every program's.
-        ("Alanlar…", None),
-        ("Formlar…", None),
-        ("Süzgeç…", None),
-        ("Etiketler…", None),
-        ("Katman stili…", None),
-        ("Değişikliğin etkisi…", None),
-        ("Kenet", None),
-        ("Yeniden adlandır", None),
-    ];
-    for program in PROGRAMS {
-        let app = drawn(program);
-        let doc = app.document.as_ref().expect("a drawing");
-        let layers = doc.model.layers();
-        let node = layers
-            .get(layers.active())
-            .expect("the active layer")
-            .clone();
-        let menu = menu_text(&app.layer_menu(&node, true));
-        for (label, entry) in special {
-            let own = entry.is_none_or(|e| app.shows_layer_entry(e));
-            assert_eq!(has(&menu, label), own, "{program:?} {label}");
-        }
-        // İstatistik and Grafik as the bottom panel's tabs.
-        assert_eq!(
-            has(&menu, "İstatistik"),
-            app.shows_bottom_tab(BottomTab::Statistics),
-            "{program:?}"
-        );
-        assert_eq!(has(&menu, "Grafik"), app.shows_bottom_tab(BottomTab::Chart));
-    }
-    // The profiles: KentOS Mimari none, Harita no time, scenarios or layer kinds, GIS all.
-    let mimari = started(MIMARI);
-    let harita = started(HARITA);
-    let gis = started(GIS);
-    for entry in [
-        LayerEntry::Time,
-        LayerEntry::Scenario,
-        LayerEntry::Crs,
-        LayerEntry::StyleFiles,
-        LayerEntry::Sld,
-        LayerEntry::Qml,
-        LayerEntry::MapLibre,
-        LayerEntry::Dataset,
-        LayerEntry::Kind,
-        LayerEntry::Service,
-        LayerEntry::Source,
-    ] {
-        assert!(!mimari.shows_layer_entry(entry), "{entry:?}");
-        assert!(gis.shows_layer_entry(entry), "{entry:?}");
-        let map = !matches!(
-            entry,
-            LayerEntry::Time | LayerEntry::Scenario | LayerEntry::Kind
-        );
-        assert_eq!(harita.shows_layer_entry(entry), map, "{entry:?}");
-    }
-}
+// The layer menu by module and by layer kind: layer_menu_tests.rs (docs/adr/9195 §5).
 
 #[test]
 fn each_program_lists_its_own_file_formats() {

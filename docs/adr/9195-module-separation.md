@@ -104,7 +104,7 @@ izler. Modüller, ileride ayrı yazılımlara bölünebilecek kadar gevşek bağ
 Ayrıntı [plan/ayrim.md](../../plan/ayrim.md)'de:
 
 - **AY-02:** etkin modül; yerleşim modül başına; Yeni proje'nin bütün menüleri getirmesi.
-- **AY-03:** yüzey matrisi; katman menüsü modül ve katman türüyle. Bu ADR'ye §4 olarak matris eklenir.
+- **AY-03:** yüzey matrisi; katman menüsü modül ve katman türüyle. Matris bu ADR'nin §5'idir.
 - **AY-04:** profilin modüllere taşınması, `ModuleProfile` kaydı, bağımlılık denetimi, joker kolsuz tablolar, ortak
   modül kataloğu.
 - **AY-07:** paketlere bölme.
@@ -158,6 +158,196 @@ Ayrıntı [plan/ayrim.md](../../plan/ayrim.md)'de:
     - `source_size_tests` (`lib.rs` 2010 satır).
   - **Resim:** `.run/gui-evidence/kullanim-9195`: projesiz, CBS, Mimari, Harita ve Yol; açık ve koyu.
 
-## §5 Kalan
+## §5 AY-03: yüzey matrisi ve katman menüsü (23 Kasım 2026)
 
-AY-03 ve sonrası. Her madde kanıtıyla bu ADR'ye ya da kendi ADR'sine yazılır.
+**Araştırma** (23 Kasım 2026'da okundu):
+
+- **QGIS, *General Tools › Layers Panel › Overview of the context menu of the Layers panel*** (3.44): katman
+  panelinin bağlam menüsü, her öğesinin grup, vektör, raster, örgü, nokta bulutu ve 3B katmanda çıkıp çıkmadığını
+  söyleyen bir tablodur. Örnekler:
+  - nesne sayısı ve öznitelik tablosu yalnız vektörde;
+  - düzenlemeyi aç/kapat vektörde ve örgüde;
+  - katmanın kopyası grupta yok;
+  - grubun koordinat sistemi yalnız grupta.
+  <https://docs.qgis.org/latest/en/docs/user_manual/introduction/general_tools.html>
+- **Esri, *ArcGIS Pro: Contents pane*:** katmanın bağlam menüsündeki komutlar katmanın türüne göre değişir.
+  <https://pro.arcgis.com/en/pro-app/latest/help/mapping/map-authoring/contents-pane.htm>
+
+**KentOS kararı:** katman menüsünün her öğesi iki boyutla yerleşir.
+
+- **Modül:** profilin listesi (`Surfaces::layer_menu`, `apps/desktop/src/shell/module_surfaces.rs`).
+- **Katmanın türü:** joker kolsuz eşleşme (`LayerEntry::kinds`, `apps/desktop/src/shell/layer_entries.rs`); yeni öğe
+  türlere yerleşmeden derlenmez.
+- Öğe ikisi de evet derse çıkar (`App::layer_entry_on`). Modülü belirlenmemiş proje `kentos-cad`'de türün bütün
+  öğelerini gösterir.
+- Eklentinin eklediği öğeleri eklentinin bildirimi yerleştirir.
+
+**Katmanın türü** (`App::layer_kind`), sırayla:
+
+1. grup;
+2. servis (`service`);
+3. veri tablosu (`data`);
+4. bağlı (`settings.sources`);
+5. açıklama (türü Açıklama);
+6. raster ya da nokta bulutu: yalnız onları tutan katman; etkin katmanın bağlamsal sekmesiyle aynı sorgu
+   (`layer_holds_alone`), çizgi katmanında bir nesneye bakar;
+7. öbürü çizim.
+
+**Tablo.** Kısaltmalar:
+
+- Modüller: M Mimari, H Harita, Y Yol, C CBS.
+- Türler: ç çizim, a açıklama, v veri tablosu, b bağlı, s servis, r raster, n nokta bulutu, g grup.
+
+| Öğe | Modül | Tür |
+|---|---|---|
+| Etkin katman yap | MHYC | ç a v b r n |
+| Düzenleme oturumu (başlat/bitir, kaydet, geri al, incele) | C | v |
+| Gizle, Yalnızca bunu göster, Tüm katmanları göster | MHYC | hepsi |
+| Kilitle | MHYC | ç a v b r n g |
+| Dondur, Bütün katmanları çöz | MHYC | ç a b r n g |
+| Yazdır | MHYC | hepsi |
+| Sıra ▸ | MHYC | hepsi |
+| Servis öğeleri (ayarlar, yükle, önbellek, kapsam, saydamlık) | HYC | s |
+| Yenile (servisten beslenen katman) | HYC | ç |
+| Nesnelerini seç | MHYC | ç a b r n g |
+| Katmana / Gruba yakınlaştır | MHYC | ç a v b r n g |
+| Dışa aktar ▸ | HYC | ç v b |
+| Veri kaynağına taşı… | C | ç |
+| Nesne sayısını göster | C | ç v b |
+| Görünüş ▸ Renk | MHYC | ç a v b |
+| Görünüş ▸ Çizgi tipi, Kalınlık | MHYC | ç a b |
+| Görünüş ▸ Katman stili…, Etiketler… | MHYC; Etiketler HYC | ç v b |
+| Görünüş ▸ Stil yükle/kaydet, SLD, QML, MapLibre | HC | ç v b |
+| Görünüş ▸ Değişikliğin etkisi… | MHYC | ç a v b |
+| Veri ▸ Alanlar…, Formlar…, Bilgi kartı ve eylemler… | HC | ç v b |
+| Veri ▸ Veri kümesi bilgisi… | HYC | ç v b |
+| Veri ▸ Süzgeç…, Seçimden süzgeç, Süzgeci kaldır | HYC | ç v b |
+| Veri ▸ Zaman ayarları… | C | ç v b |
+| Veri ▸ İstatistik | HC | ç v b |
+| Veri ▸ Grafik | C | ç v b |
+| Katman türü ▸ | C | ç a |
+| Koordinat sistemi ▸ | HYC | ç a b |
+| Kaynak ▸ | HYC | b |
+| Kenet ▸ | MHYC | ç a v b g |
+| Senaryo ▸ | C | g |
+| Yeniden adlandır, Sil | MHYC | hepsi |
+| Yanına / İçine yeni katman | MHYC | ç a v b r n g |
+| Kopyasını oluştur, Başka katmanlarla birleştir… | MHYC | ç a b r n |
+
+**Türün gerekçeleri:**
+
+- **Veri tablosu:** satırları kaynağındadır.
+  - Dondur, Nesnelerini seç, Kopyasını oluştur ve birleştirme yoktur. Seçecek nesnesi yoktur; kopyası boş bir çizim
+    katmanı olurdu (`cad.layers.edit`'in kopyası nesneleri taşır).
+  - Çizgi tipi ve Kalınlık yoktur; görünüşü Katman stili'ndedir.
+  - Katman türü ve Koordinat sistemi tablonundur.
+  - Düzenleme oturumu yalnız CBS'dedir: Harita ve Yol'da CBS tablosu salt okunur altlıktır (ADR 9196 §2.3). Öbür
+    yollar AY-06'da kapanır.
+  - Kenet kalır: çizim araçları veri katmanının satırlarına da kenetlenir (ADR 9103 §5).
+- **Açıklama:** yazı, ölçü ve pafta, proje dosyasında kalır (ADR 9196 §2).
+  - Katman stili, Etiketler, Veri ▸, Dışa aktar ve Veri kaynağına taşı yoktur.
+  - Renk, Çizgi tipi ve Kalınlık nesnelerin katmana göre görünüşü için kalır.
+- **Bağlı:** Kaynak ▸ yalnız onda; Katman türü yoktur, tür tablonundur.
+- **Servis:** nesne tutmaz. Kendi öğeleri, görünürlük, yazdırma, sıra, ad ve sil.
+- **Raster ve nokta bulutu:** görünüşü ve yerleştirmesi kendi bağlamsal sekmesindedir (`raster.style`,
+  `raster.georef`, `pointcloud.style`, `pointcloud.register`). Bu yüzden Görünüş ▸, Veri ▸ ve Koordinat sistemi
+  yoktur. Kenet de yoktur: kenet bunlara bağlanmaz.
+- **Grup:** grubun öğeleri; Senaryo ▸ yalnız senaryo grubunda ve CBS'de.
+
+**Modülün sütunu komut kümesinden:**
+
+- Şeritte karşılığı olan 18 öğe, modülün komut kümesi ne diyorsa odur (`catalog().module_has`). Sınama her modülde
+  bunu denetler.
+- İstatistik ve Grafik, alt panelin sekmeleriyle gelir.
+- Bunun gösterdikleri:
+  - CBS'nin şeridinin taşmalarında Dondur (`tool.layerFreeze`, `layer.thawAll`), Çizgi tipleri (`lineTypes.manage`)
+    ve Değişikliğin etkisi (`layer.impact`) vardır. Menü de onları sunar; veri tablosunda türü yine keser.
+  - Yol'un kümesinde Veri kümesi bilgisi vardır (`layer.dataset`, haritanın komutları).
+- Mimari'de bulunmayanlar:
+  - Dışa aktar (Mimari'nin biçimleri yalnız çizimdir);
+  - Veri ▸ bütünüyle;
+  - Etiketler, stil dosyaları, Koordinat sistemi, Kaynak ve servis öğeleri.
+- Yalnız CBS'de olanlar: düzenleme oturumu, Veri kaynağına taşı, Nesne sayısını göster, Zaman, Grafik, Katman türü,
+  Senaryo.
+
+**Yüzey matrisi** (modülün profili, `module_surfaces.rs`; ✓ var, – yok):
+
+| Panel | Mimari | Harita | Yol | CBS |
+|---|---|---|---|---|
+| Katmanlar, Asistan, Eklenti, Öznitelikler | ✓ | ✓ | ✓ | ✓ |
+| İşlemler, Kaynaklar | – | ✓ | ✓ | ✓ |
+| Bloklar | ✓ | ✓ | ✓ | – |
+| Şablonlar | ✓ | ✓ | ✓ | ✓ |
+| Gezgin | ✓ | – | – | – |
+| Yol projesi | – | ✓ | ✓ | – |
+| Harita işi, GNSS arşivi | – | ✓ | – | – |
+
+| Alt sekme | Mimari | Harita | Yol | CBS |
+|---|---|---|---|---|
+| Komut geçmişi, Koordinat listesi, Arama, Çalışan işler, Uyarılar, Python | ✓ | ✓ | ✓ | ✓ |
+| Noktalar, Tablo | – | ✓ | ✓ | ✓ |
+| İstatistik, Adres, Topoloji, Servis bilgisi | – | ✓ | – | ✓ |
+| Grafik | – | – | – | ✓ |
+| Denetim (bina) | ✓ | – | – | – |
+| CAD denetimi | ✓ | ✓ | ✓ | – |
+| Eklenti denetimi (yalnız kuralı olan eklenti ya da koşu varken) | ✓ | ✓ | ✓ | ✓ |
+
+| Durum hücresi | Mimari | Harita | Yol | CBS |
+|---|---|---|---|---|
+| Harita sistemi, İkinci sistem | – | ✓ | ✓ | ✓ |
+| Topoloji ve Çakışma lambası | – | ✓ | – | ✓ |
+| Senaryo | – | – | – | ✓ |
+| Kat | ✓ | – | – | – |
+| Kalınlık lambası | ✓ | ✓ | ✓ | – (Görünüm'de, ADR 9185) |
+
+Ayarlar ve biçimler:
+
+- **Proje ayarları:** Genel, Birimler ve Koordinat sistemi her modülde. Kotlar ve epok ile Ölçme Harita, Yol ve
+  CBS'de. Değişkenler Mimari, Harita ve CBS'de. Mimari bölümü yalnız Mimari'de.
+- **Uygulama ayarları:**
+  - Coğrafi koordinatlar ve Yeni projeler: Harita, Yol, CBS.
+  - Çizilen nesnenin formu: Harita ve CBS.
+  - Yeni projelerin türü ve birimi: yalnız `kentos-cad` projesizken.
+- **Kaynaklar:** Veritabanları Harita ve CBS'de, Servisler Harita, Yol ve CBS'de.
+- **Dosya menüsünün biçimleri:** Mimari'de yalnız çizim biçimleri (DWG, DXF, NCZ, PDF), öbürlerinde hepsi.
+- **Şerit:** AY-02'den beri modülün komut kümesinden gelir (`offers`).
+
+**Bu maddede değişen yüzeyler:**
+
+- **Yol:**
+  - CAD denetimi: CAD programlarınındır.
+  - Eklenti denetimi.
+  - Harita sistemi hücresi: komutları (`view.mapCrs`, `layer.crs`, `layer.reproject`) Yol'un kümesindedir.
+- **Eklenti denetimi:**
+  - Yalnız eklenti etkin modüle bir denetim kuralı sunuyorsa ya da bir kuralın koşusu sekmedeyse görünür
+    (`offers_ext_audits`, her karede liste kurmadan). Ajanın koşusu da buna dahildir.
+  - Kural seçicisi etkin modülün kurallarını sunar. Önceden programınkileri sunuyordu: `kentos-cad`'de boştu.
+- **Şablonlar CBS'de kalır.** Planın örneği (“Bloklar, Şablonlar ve Gezgin CBS'de yok”) Şablonlar için düzeltildi:
+  - nesne şablonu (ADR 0176 §4) yeni nesnenin türünü, görünüşünü ve özniteliklerini hazır verir; CBS'nin öğe
+    şablonudur;
+  - şablon izleri CBS projesinde koşar.
+- **Katman menüsü:** iki dosyaya bölündü. `cad/layering/menus.rs` menünün kendisi, `submenus.rs` Görünüş ▸ ve
+  Veri ▸. Servis katmanının ayrı erken dönüşü kalktı; servis aynı tablodan geçer.
+
+**Kanıt:**
+
+- **Yeni sınamalar** (`apps/desktop/src/tests/layer_menu_tests.rs`):
+  - `each_modules_layer_menu_has_its_entries_on_each_kind_of_layer`:
+    - her modülün projesi `kentos-cad`'de ve modülün kendi programında, ayrıca modülü belirsiz proje;
+    - sekiz türün katmanı, 42 öğe: tablo ve menüdeki sözcük (9 × 8 × 42 hücre);
+    - beklenen değerler ADR'nin tablosundan ayrıca yazılıdır;
+    - durum koşulu tek: Veri kaynağına taşı yalnız CBS projesinin nesnelerini taşır.
+  - `the_layer_menu_follows_the_command_set_and_the_tabs`: 18 öğe komut kümesiyle, İstatistik ve Grafik sekmeleriyle;
+    her öğenin türleri tabloyla.
+- **Yeni kurala çevrilen sınamalar:**
+  - `module_surface_tests::each_program_has_its_own_bottom_tabs`: Eklenti denetimi kuralsız görünmez, Yol'un sekmeleri;
+  - `surfaces_of`: 42 öğenin hepsini karşılaştırır.
+  - Eski `each_program_has_its_own_layer_menu` yeni matrise taşındı.
+- **Resim:** `.run/gui-evidence/kullanim-9195`:
+  - `menu-<modül>-<tür>.png`: 4 modül × 8 tür, açık tema;
+  - `menu-<modül>.png`: modül başına tek sayfa;
+  - `menu-alt-menuler.png`: Görünüş ▸ ve Veri ▸ açık dört resim.
+
+## §6 Kalan
+
+AY-04 ve sonrası. Her madde kanıtıyla bu ADR'ye ya da kendi ADR'sine yazılır.

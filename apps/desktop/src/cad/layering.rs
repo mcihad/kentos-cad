@@ -1001,6 +1001,8 @@ mod tests;
 
 #[path = "layering/menus.rs"]
 mod menus;
+#[path = "layering/submenus.rs"]
+mod submenus;
 
 #[cfg(test)]
 #[path = "layering/screens.rs"]

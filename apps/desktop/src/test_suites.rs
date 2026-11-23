@@ -717,6 +717,9 @@ mod module_screens;
 #[path = "tests/module_surface_tests.rs"]
 mod module_surface_tests;
 #[cfg(test)]
+#[path = "tests/layer_menu_tests.rs"]
+mod layer_menu_tests;
+#[cfg(test)]
 #[path = "tests/module_tests.rs"]
 mod module_tests;
 #[cfg(test)]

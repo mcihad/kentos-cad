@@ -16,12 +16,16 @@
 //!   the second system, Topoloji and Çakışma; Kotlar ve epok and Ölçme; GIS files, sources and services; its
 //!   new projects in metres.
 //! - KentOS Yol, a road on real coordinates (plan/road.md ROAD-MOD): the map's survey and coordinate surfaces
-//!   (Koordinat listesi, Noktalar, İkinci sistem, Kotlar ve epok, Ölçme), no parcel rows, zoning legends,
-//!   addresses, topology or overlap lamps; its sheets and its cloud projects are a road's.
-//! - KentOS GIS: every tab but Denetim; every panel but Bloklar; Senaryo too; time, scenarios and typed layers;
+//!   (Koordinat listesi, Noktalar, Harita sistemi, İkinci sistem, Kotlar ve epok, Ölçme) and CAD denetimi, no parcel
+//!   rows, zoning legends, addresses, topology or overlap lamps; its sheets and its cloud projects are a road's.
+//! - KentOS GIS: every tab but Denetim and CAD denetimi; every panel but Bloklar, Gezgin and the map's and road's
+//!   own; Senaryo too; time, scenarios and typed layers;
 //!   Katman stili's thematic renderers; no blocks and no polyline widths in the tools (Böl's Blok, Çoklu
 //!   çizgi's Genişlik, the grip menu's Kenar genişliği…), nor a polyline's Genişlik and an area's Maske in
 //!   Öznitelikler; its new projects in metres.
+//!
+//! Eklenti denetimi shows only while an extension offers the module an audit rule, or a run is on it. The layer menu's
+//! entries are placed here by module and in layer_entries.rs by layer kind (docs/adr/9195 §5).
 //!
 //! The commands a program offers are catalog.rs's (`App::offers`). Each program keeps its own layout
 //! (layout.rs: kentos-cad's yerlesim.json, a module's yerlesim-<modül>.json, the first run starting from
@@ -38,6 +42,8 @@ use kentos_launch::Module;
 
 use crate::app::{App, Message, Panel};
 use crate::bottom::BottomTab;
+// The layer menu's entries, placed by module here and by layer kind there (docs/adr/9195 §5).
+pub(crate) use crate::layer_entries::LayerEntry;
 use crate::project::settings::Section as ProjectSection;
 use crate::settings_sections::Section as SettingsSection;
 
@@ -75,34 +81,6 @@ pub(crate) enum AppSetting {
     NewProjectType,
     /// Yeni projeler › Çizim birimi (`newProjects.drawingUnit`): a map's works are in metres (docs/adr/0802).
     NewProjectUnit,
-}
-
-/// An entry of a layer's right-click menu only some programs show. İstatistik and Grafik follow the bottom
-/// panel's tabs; the rest is every program's.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum LayerEntry {
-    /// Veri ▸ Zaman ayarları… (docs/adr/0210 §10).
-    Time,
-    /// Senaryo ▸ on a scenario group (docs/adr/0210 §10).
-    Scenario,
-    /// Koordinat sistemi ▸: Tanımla, Dönüştür (docs/adr/0583).
-    Crs,
-    /// Görünüş ▸ Stil yükle…, Stili kaydet… (docs/adr/0635 §9).
-    StyleFiles,
-    /// Görünüş ▸ SLD (docs/adr/0516).
-    Sld,
-    /// Görünüş ▸ QML (docs/adr/0555).
-    Qml,
-    /// Görünüş ▸ MapLibre (docs/adr/0560).
-    MapLibre,
-    /// Veri ▸ Veri kümesi bilgisi… (docs/adr/0633).
-    Dataset,
-    /// Katman türü ▸ (docs/adr/0622 §5).
-    Kind,
-    /// A map service layer's own items and a fed layer's Yenile (docs/adr/0208).
-    Service,
-    /// Kaynak ▸ on a bound layer (docs/adr/0503).
-    Source,
 }
 
 /// The application menu's İçe aktar and Dışa aktar formats a program lists.
@@ -158,6 +136,7 @@ pub(crate) struct Surfaces {
     /// Proje ayarları' sections.
     pub project: &'static [ProjectSection],
     pub settings: &'static [AppSetting],
+    /// The layer menu's entries the module has; each one shows on the kinds of layer it is about (layer_entries.rs).
     pub layer_menu: &'static [LayerEntry],
     pub formats: Formats,
     pub sources: &'static [SourceSection],
@@ -217,7 +196,28 @@ const ARCHITECTURE: Surfaces = Surfaces {
         ProjectSection::Arch,
     ],
     settings: &[],
-    layer_menu: &[],
+    // A drawing's: no feature data, styles of other programs, services or sources.
+    layer_menu: &[
+        LayerEntry::Activate,
+        LayerEntry::Visibility,
+        LayerEntry::Lock,
+        LayerEntry::Freeze,
+        LayerEntry::Plot,
+        LayerEntry::Order,
+        LayerEntry::SelectObjects,
+        LayerEntry::ZoomTo,
+        LayerEntry::Color,
+        LayerEntry::LineType,
+        LayerEntry::LineWeight,
+        LayerEntry::Style,
+        LayerEntry::Impact,
+        LayerEntry::Snap,
+        LayerEntry::Rename,
+        LayerEntry::Add,
+        LayerEntry::Duplicate,
+        LayerEntry::Merge,
+        LayerEntry::Remove,
+    ],
     formats: Formats::Drawings,
     sources: &[],
     rows: &[PropertyRows::Mask, PropertyRows::Separators],
@@ -289,15 +289,43 @@ const MAP: Surfaces = Surfaces {
         AppSetting::FormOnCreate,
         AppSetting::NewProjects,
     ],
+    // A map's: its features' data, forms and style files; no time, scenarios, typed layers or counts.
     layer_menu: &[
-        LayerEntry::Crs,
+        LayerEntry::Activate,
+        LayerEntry::Visibility,
+        LayerEntry::Lock,
+        LayerEntry::Freeze,
+        LayerEntry::Plot,
+        LayerEntry::Order,
+        LayerEntry::Service,
+        LayerEntry::Refresh,
+        LayerEntry::SelectObjects,
+        LayerEntry::ZoomTo,
+        LayerEntry::Export,
+        LayerEntry::Color,
+        LayerEntry::LineType,
+        LayerEntry::LineWeight,
+        LayerEntry::Style,
+        LayerEntry::Labels,
         LayerEntry::StyleFiles,
         LayerEntry::Sld,
         LayerEntry::Qml,
         LayerEntry::MapLibre,
+        LayerEntry::Impact,
+        LayerEntry::Fields,
+        LayerEntry::Forms,
+        LayerEntry::Info,
         LayerEntry::Dataset,
-        LayerEntry::Service,
+        LayerEntry::Filter,
+        LayerEntry::Statistics,
+        LayerEntry::Crs,
         LayerEntry::Source,
+        LayerEntry::Snap,
+        LayerEntry::Rename,
+        LayerEntry::Add,
+        LayerEntry::Duplicate,
+        LayerEntry::Merge,
+        LayerEntry::Remove,
     ],
     formats: Formats::All,
     sources: &[SourceSection::Databases, SourceSection::Services],
@@ -328,6 +356,10 @@ const ROAD: Surfaces = Surfaces {
         BottomTab::Points,
         BottomTab::Table,
         BottomTab::Search,
+        // An extension's audit rules' findings, in every program (docs/adr/8057 §17).
+        BottomTab::ExtAudit,
+        // A drawing's quality, the CAD programs' (docs/adr/9195 §5).
+        BottomTab::CadInspection,
         BottomTab::Works,
         BottomTab::Messages,
         BottomTab::Python,
@@ -345,7 +377,8 @@ const ROAD: Surfaces = Surfaces {
         Panel::Extension,
         Panel::Properties,
     ],
-    cells: &[Cell::SecondCrs, Cell::LineWeights],
+    // Harita sistemi as a map's: its commands are a road's too (catalog/reading.rs, docs/adr/9195 §5).
+    cells: &[Cell::MapCrs, Cell::SecondCrs, Cell::LineWeights],
     project: &[
         ProjectSection::General,
         ProjectSection::Units,
@@ -354,7 +387,36 @@ const ROAD: Surfaces = Surfaces {
         ProjectSection::Survey,
     ],
     settings: &[AppSetting::Geographic, AppSetting::NewProjects],
-    layer_menu: &[LayerEntry::Crs, LayerEntry::Service, LayerEntry::Source],
+    // A road's: a map's layers and services, without forms, cards, statistics and style files.
+    layer_menu: &[
+        LayerEntry::Activate,
+        LayerEntry::Visibility,
+        LayerEntry::Lock,
+        LayerEntry::Freeze,
+        LayerEntry::Plot,
+        LayerEntry::Order,
+        LayerEntry::Service,
+        LayerEntry::Refresh,
+        LayerEntry::SelectObjects,
+        LayerEntry::ZoomTo,
+        LayerEntry::Export,
+        LayerEntry::Color,
+        LayerEntry::LineType,
+        LayerEntry::LineWeight,
+        LayerEntry::Style,
+        LayerEntry::Labels,
+        LayerEntry::Impact,
+        LayerEntry::Dataset,
+        LayerEntry::Filter,
+        LayerEntry::Crs,
+        LayerEntry::Source,
+        LayerEntry::Snap,
+        LayerEntry::Rename,
+        LayerEntry::Add,
+        LayerEntry::Duplicate,
+        LayerEntry::Merge,
+        LayerEntry::Remove,
+    ],
     formats: Formats::All,
     sources: &[SourceSection::Services],
     rows: &[PropertyRows::Crs, PropertyRows::Services],
@@ -417,18 +479,50 @@ const GIS: Surfaces = Surfaces {
         AppSetting::FormOnCreate,
         AppSetting::NewProjects,
     ],
+    // A CBS's: every one, the data's edit session, the move into a table, counts, time, types and scenarios too.
     layer_menu: &[
-        LayerEntry::Time,
-        LayerEntry::Scenario,
-        LayerEntry::Crs,
+        LayerEntry::Activate,
+        LayerEntry::EditSession,
+        LayerEntry::Visibility,
+        LayerEntry::Lock,
+        LayerEntry::Freeze,
+        LayerEntry::Plot,
+        LayerEntry::Order,
+        LayerEntry::Service,
+        LayerEntry::Refresh,
+        LayerEntry::SelectObjects,
+        LayerEntry::ZoomTo,
+        LayerEntry::Export,
+        LayerEntry::Migrate,
+        LayerEntry::Counts,
+        LayerEntry::Color,
+        LayerEntry::LineType,
+        LayerEntry::LineWeight,
+        LayerEntry::Style,
+        LayerEntry::Labels,
         LayerEntry::StyleFiles,
         LayerEntry::Sld,
         LayerEntry::Qml,
         LayerEntry::MapLibre,
+        LayerEntry::Impact,
+        LayerEntry::Fields,
+        LayerEntry::Forms,
+        LayerEntry::Info,
         LayerEntry::Dataset,
+        LayerEntry::Filter,
+        LayerEntry::Time,
+        LayerEntry::Statistics,
+        LayerEntry::Chart,
         LayerEntry::Kind,
-        LayerEntry::Service,
+        LayerEntry::Crs,
         LayerEntry::Source,
+        LayerEntry::Snap,
+        LayerEntry::Scenario,
+        LayerEntry::Rename,
+        LayerEntry::Add,
+        LayerEntry::Duplicate,
+        LayerEntry::Merge,
+        LayerEntry::Remove,
     ],
     formats: Formats::All,
     sources: &[SourceSection::Databases, SourceSection::Services],
@@ -577,8 +671,12 @@ impl App {
         }
     }
 
-    /// Whether the bottom panel has `tab` here.
+    /// Whether the bottom panel has `tab` here: Eklenti denetimi only while an extension offers this module an audit
+    /// rule or a rule's run is on it, an agent's too (docs/adr/9195 §5).
     pub(crate) fn shows_bottom_tab(&self, tab: BottomTab) -> bool {
+        if tab == BottomTab::ExtAudit && self.extensions.audit.is_none() && !self.offers_ext_audits() {
+            return false;
+        }
         self.surfaces().is_none_or(|s| s.bottom.contains(&tab))
     }
 
@@ -630,7 +728,7 @@ impl App {
         section != SettingsSection::NewProjects || self.shows_setting(AppSetting::NewProjects)
     }
 
-    /// Whether a layer's right-click menu has `entry` here.
+    /// Whether the active module's layer menu has `entry`, whatever the layer (its kind decides too, layer_entries.rs).
     pub(crate) fn shows_layer_entry(&self, entry: LayerEntry) -> bool {
         self.surfaces()
             .is_none_or(|s| s.layer_menu.contains(&entry))

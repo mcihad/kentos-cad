@@ -119,14 +119,8 @@ impl App {
         let kind = if in_network {
             "network"
         } else {
-            let mut objects = doc.model.by_layer(layer);
-            let first = crate::selection_fit::tab_kind(objects.next()?);
-            if !matches!(first, "raster" | "pointcloud")
-                || !objects.all(|e| crate::selection_fit::tab_kind(e) == first)
-            {
-                return None;
-            }
-            first
+            // The layer's kind as its menu tells it (layer_entries.rs).
+            self.layer_holds_alone(layer)?
         };
         let id = catalog().contextual_for(self.work_mode(), self.ribbon_work(), &[kind])?.id;
         self.contextual_tabs().find(|t| t.id == id)

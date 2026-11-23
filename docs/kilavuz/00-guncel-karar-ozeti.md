@@ -13,7 +13,8 @@
   - CBS: veri ve öznitelikler veritabanında; proje dosyası yapıyı, stilleri, ayarları ve açıklamaları tutar ve dosyaya,
     veritabanına ya da buluta kaydedilir. CAD (Mimari, Harita, Yol): tamamı proje dosyasında; dosyaya ya da buluta
     (yalnız dosya revizyonu). Eski projelere taşıma yazılmaz (uygulama geliştirmede).
-  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır.
+  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır. AY-02 ve AY-03 bitti: ekran açık projeyi
+    izler; katman menüsü modül × katman türü tablosundandır (ADR 9195 §5, `layer_entries.rs`).
 
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
   [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),

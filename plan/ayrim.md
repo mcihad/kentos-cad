@@ -42,12 +42,18 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07. ADR'ler
   - Yeni proje'de bütün menülerin gelmesi sınamayla yeniden üretilir ve düzeltilir.
   - Sınama: hepsi bir arada programda her türün yüzeyleri, modülün programındakiyle bire bir aynı; sekme değişimi.
   - Resim: dört türün penceresi.
-- [ ] **AY-03 — Yüzey matrisi ve katman menüsü.**
-  - Her panel (12), alt sekme (16), durum hücresi, ayar bölümü, Dosya menüsü satırı ve şerit artığı modüle göre
-    gözden geçirilir; tablo ADR 9195 §4'e yazılır.
-  - Katman menüsü modül × katman türü (çizim, açıklama, veri tablosu, bağlı, servis, raster, nokta bulutu, grup) ile
-    kesilir; `LayerEntry` tabloya genişler.
-  - Matrisin her hücresinin sınaması; her modülde her katman türünün menüsünün resmi.
+- [x] **AY-03 — Yüzey matrisi ve katman menüsü.** ([ADR 9195](../docs/adr/9195-module-separation.md) §5)
+  - Panel (12), alt sekme (16), durum hücresi, ayar bölümü, Kaynaklar ve Dosya menüsünün biçimleri modüle göre
+    tabloda. Şerit AY-02'den beri komut kümesinden gelir.
+  - Değişen yüzeyler:
+    - Yol'a CAD denetimi, Eklenti denetimi ve Harita sistemi hücresi eklendi.
+    - Eklenti denetimi yalnız modüle kural sunan eklenti ya da koşu varken görünür.
+    - Şablonlar CBS'de kalır: nesne şablonu CBS'nin öğe şablonudur; planın örneği düzeltildi.
+  - Katman menüsü modül × katman türü (`apps/desktop/src/shell/layer_entries.rs`):
+    - 42 öğe; türler joker kolsuz eşleşme, modüller profilin listesi;
+    - şeritte karşılığı olan 18 öğe modülün komut kümesini izler.
+  - Sınama: `layer_menu_tests` (9 × 8 × 42 hücre, komut kümesi). Masaüstü: 3053 sınama geçti.
+  - Resim: `.run/gui-evidence/kullanim-9195/menu-*` (4 modül × 8 tür, modül başına sayfa, alt menüler).
 - [ ] **AY-04 — Modül profili kaydı ve bağımlılık denetimi.**
   - Her modülün profili kendi klasöründe (`apps/desktop/src/<modül>/profile.rs`), ortak `ModuleProfile` kaydıyla.
     Kabuk yüzey için modül adına göre dallanmaz.
