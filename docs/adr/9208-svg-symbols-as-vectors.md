@@ -5,8 +5,9 @@
   ardından “Svg çizgileri / Stil çizgilerini”.
 - **Sözleşmeler:**
   - Ortak çekirdek (`kentos-style-core`) ve web değişmedi.
-  - Yerel stilin çözümü (`kentos_native_style::batches::decode`), model ekranında yere ölçülü SVG işaretlerini örnekli
-    düz dolgulara çevirir. `Instances` yeni bir alan aldı: `mark`.
+  - Yerel stilin çözümü (`kentos_native_style::batches::decode`), model ekranında yere ölçülü SVG işaretlerinin ardına
+    örnekli düz dolgular ekler. Yeni alanlar: `Instances.mark` ve `BatchKind::Marker.vectors`.
+  - Hangisinin çizileceğine `StyledBatch::legible` karar verir.
   - Çizici, maske kutularını bu örneklerden de üretir.
 - **Bağımlılık:** ADR 1063 §2 (örnekli bloklar, `SolidInstanced`), 0226 §3 (maskeler), 0285 §2 (görünümün dönüşü),
   0793 §1 (model ekranı).
@@ -35,7 +36,8 @@ yakınlaştırılınca simgenin kenarı yaklaşık 300 piksel genişliğinde bir
   - Yakında daha büyük bitmap: 512 px sınırı ve tek sayfa yüzünden yetmez. Simge ekrandan büyüdükçe bellek de büyür.
   - MSDF: köşeleri keskin tutar. Ama ince çizgilerde ve çok renkli simgelerde zayıftır, piksel başına doku okuması da
     sürer.
-  - **Vektör örnekleme:** her yakınlıkta kesin kenar verir. Kenar yumuşatmayı çizimin MSAA'sı yapar. Seçildi.
+  - **Vektör örnekleme:** her yakınlıkta kesin kenar verir. Kenar yumuşatmayı çizimin MSAA'sı yapar. Seçildi, ama
+    yalnız simge büyüdüğünde (aşağıda “Küçükken bitmap”).
 
 ## §3 Karar
 
@@ -54,6 +56,15 @@ yakınlaştırılınca simgenin kenarı yaklaşık 300 piksel genişliğinde bir
   - Çizgiler tiny-skia'nın kalınlaştırıcısıyla dış hatta çevrilir ve sarım kuralıyla üçgenlenir.
   - Eğriler, simgenin büyük kenarının 1/8000'i içinde düzleştirilir: 8 000 px boyundaki simgede bile sapma bir
     pikselin altında kalır.
+- **Küçükken bitmap, büyüyünce vektör:**
+  - İşaret toplu çizimi yerinde kalır (`vectors: true`); vektörler hemen ardından gelir.
+  - Simge ekranda en çok 128 cihaz pikseli genişken bitmap'i çizilir, daha genişken vektörleri
+    (`svg_marks::VECTORS_FROM_PX`, `legible`). İkisi hiçbir zaman birlikte çizilmez.
+  - Sebep, ilk sürümün ölçümü: her boyda vektör çizildiğinde genel görünümde 24 piksellik şerarenin 0,5 piksellik
+    çizgisi 4× örneklemede kesik kesik görünüyordu. Bitmap aynı çizgiyi soluk ama sürekli çiziyor.
+  - 128 pikselde atlasın bitmap'i keskindir (512'ye kadar çizer, yalnız sayfası dolarsa yarıya iner). Şerarenin çizgisi
+    burada 2,8 pikseldir ve örneklemeye yeter.
+  - Sonuç: genel görünüm öncekiyle piksel piksel aynı.
 - **Toplu çizimler:** renk başına bir tane, SVG'de ilk görüldükleri sırayla. Her işaret bir örnektir:
   - doğrusal parça: işaretin dönüşü ve boyu;
   - öteleme: yeri ve dönen ötelenmesi.
@@ -65,19 +76,19 @@ yakınlaştırılınca simgenin kenarı yaklaşık 300 piksel genişliğinde bir
     formülünü bağımsız bir ikiz olarak kullanıyor.
 - **Duyarlılık:** öteleme çift duyarlıkta hesaplanır. Artığı, işaretin yerinde olduğu gibi katmanın düşük akışına
   (`low`) yazılır; örnek gölgelendiricisi onu `toPxLow` ile ekler.
-- **Çizim sırası:** simgenin toplu çizimleri işaretin yerini alır. Parça parça kurulan büyük katmanda
+- **Çizim sırası:** simgenin toplu çizimleri işaret toplu çiziminin hemen ardındadır. Parça parça kurulan büyük katmanda
   (`merged_order`) da işaretlerin sırasında kalırlar (`Instances.mark`, `kind_rank` 2). Bu olmasaydı dolgu sayılıp
   çizgilerin altına inerlerdi.
 - **Maske** (ADR 0226 §3): simgenin ilk rengi işaretlerin kutularını verir (`svg_marks::boxes`). Çizici bu kutuları
   işaret kutularıyla aynı biçimde ekrana çevirir.
-- **Kenar yumuşatma:** çizimin MSAA'sı (öntanımlı 4×).
+- **Kenar yumuşatma:** vektörlerde çizimin MSAA'sı (öntanımlı 4×).
 - **Bilinen sınır:** SVG'de aynı rengin başka bir renkle bölünmüş parçaları tek toplu çizimde birleşir; çizim sırası
   renk sırasına göre olur. BÖHHBÜY simgeleri tek renklidir.
 - Pafta, PDF ve CPU yolu değişmedi; onlarda `hold_weights` kapalı.
 
 ## §4 Kanıt
 
-**Sınamalar** (`svg_marks::tests`, 6):
+**Sınamalar** (`svg_marks::tests`, 7):
 
 - bir SVG işaret örnekli üçgenlere döner; çeyrek dönüş yerde saat yönünün tersine çeyrek dönüştür;
 - delikli halka ve çizgi renk renk dolgu olur; alanları doğrudur;
@@ -85,14 +96,17 @@ yakınlaştırılınca simgenin kenarı yaklaşık 300 piksel genişliğinde bir
 - gölgelendiricinin ikizi: 20 × 10'luk simgenin bir köşesi, çapa, ötelenme ve 30° dönüşle tam gölgelendiricinin
   koyduğu yerde. Maske kutusunun ortası, boyu ve dönüşü de aynı;
 - iki renkli simge: renk başına toplu çizim, ötelemenin artığı düşük akışta, parçalı katmanda çizginin ardından;
+- küçük simge bitmap'ini, 128 pikseli geçen simge vektörlerini gösterir; ikisi birlikte hiçbir boyda çizilmez
+  (yüksek DPI dahil);
 - ekran ölçülü ve okunamayan simgeler bitmap'te kalır.
 
-Yerel stilin (53 + 51 + 4), çizicinin (98) ve plot'un (22) bütün sınamaları geçti.
+Yerel stilin (55 + 51 + 4), çizicinin (98) ve plot'un (22) bütün sınamaları geçti.
 
 **Gerçek pencere** (Xvfb, lavapipe, `.run/gui-evidence/render/rm11/{once,sonra}`): sınama çizimi 380 m'lik bir 0807
 hattı. Önce tümü gösterildi, ardından ortadaki şerareye 8, 4, 4 ve 8 çentik yakınlaşıldı.
 
-- **Yer:** parlak piksellerin ağırlık merkezi önce ve sonra en çok 0,12 piksel ayrı (02–04).
+- **Tümü** (simge ~24 px): önce ve sonra piksel piksel aynı, 0 fark.
+- **Yer:** vektörlü yakınlıklarda parlak piksellerin ağırlık merkezi önce ve sonra en çok 0,12 piksel ayrı (02–04).
 - **Kenar:** “önce” yakınlaştıkça bulanıklaşıp basamaklanıyor. “Sonra” her yakınlıkta keskin; kenar pikselleri zemin
   ile beyazın tam %25, %50 ve %75 karışımı (82, 140, 198), yani 4× MSAA.
 
@@ -100,8 +114,10 @@ Karşılaştırma sayfası: `.run/gui-evidence/render/rm11/rm11-karsilastirma.pn
 
 **Ölçüm** (UHD 770, release, `perf::files`): büyük örnek dosyaların (sivas.kcad, NCZ, DWG, DXF) hiçbirinde SVG işaret
 yok, onlarda dönüşüm hiçbir şey yapmadan döner. Maliyet yapay bir çizimde ölçüldü: 0807 stilli 20 000 hat, 380'er m.
+Tablonun “sonra”sı **ilk sürümün**, yani simgeyi her boyda vektörle çizen sürümün ölçümüdür (b41e253a5). Karma yolun
+ölçümü için sürüm derlemesi 24 Kasım'da bellek azaldığı için durduruldu; ölçüm sahibin onayıyla yinelenecek.
 
-| | Önce | Sonra |
+| | Önce | Sonra (ilk sürüm, her boyda vektör) |
 |---|---|---|
 | Tekerlek karesinde GPU (p50 / p95) | 15,8 / 24,0 ms | 16,3 / 20,2 ms |
 | Kaydırma karesinde GPU (p50) | 12,7 ms | 13,0 ms |
@@ -116,6 +132,7 @@ rasterleştirilmemesi. İki neden de ayrıca ölçülmedi. Yazı işaretleri (EN
 
 ## Uygulama
 
-- `crates/native/style/src/svg_marks.rs` (yeni), `batches.rs` (`Instances.mark`, `Mark`, `kind_rank`, `decode`),
-  `lib.rs`, `Cargo.toml` (`resvg`).
+- `crates/native/style/src/svg_marks.rs` (yeni), `batches.rs` (`Instances.mark`, `Mark`, `BatchKind::Marker.vectors`,
+  `legible`, `kind_rank`, `decode`), `lib.rs`, `Cargo.toml` (`resvg`).
+- Sınamaların işaret kurulumu: `cpu.rs`, `crates/render/wgpu/tests/gpu/precision.rs`.
 - `crates/render/wgpu/src/styled/gpu.rs` (`marker_boxes`).

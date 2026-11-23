@@ -154,8 +154,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     rasterleştiriliyor. Sayfa dolunca bu sınır yarıya iniyor. Yakında büyütülen bitmap'in çapraz kenarları
     basamaklanıyor.
   - [x] İlk adım ([ADR 9208](../docs/adr/9208-svg-symbols-as-vectors.md)): model ekranında yere ölçülü SVG işaretleri
-    bir kez üçgenlenip her yerleşimde vektör olarak çiziliyor (`kentos_native_style::svg_marks`, `SolidInstanced`).
-    Kenar her yakınlıkta keskin; yer, çizim sırası ve maske kutuları işaretinkiyle aynı.
+    bir kez üçgenleniyor. Simge ekranda 128 pikseli geçince her yerleşimde vektör olarak çiziliyor
+    (`kentos_native_style::svg_marks`, `SolidInstanced`); daha küçükken eski bitmap'i. Kenar her yakınlıkta keskin;
+    yer, çizim sırası ve maske kutuları işaretinkiyle aynı.
   - [ ] Desen karoları (tarama ve dolgu desenleri) aynı yoldan: karonun SVG'si tanım ağı, dolgu içinde örnekleme.
   - [ ] Yazı işaretleri RM-13'ün glif atlasına (MSDF) geçecek.
   - [ ] Asıl madde: İşaret ve simgeler GPU'da örnekli (instanced) çizilir; yol başına 50 000 işaret sınırı kalkar.

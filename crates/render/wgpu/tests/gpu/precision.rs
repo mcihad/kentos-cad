@@ -71,6 +71,7 @@ fn scene(center: Vec2, kind: usize, id: u64) -> StyledScene {
                 anchor: [0.; 2],
                 opacity: 1.,
                 extent: [0.0006, 0.0005],
+                vectors: false,
             },
             vec![
                 center.x - origin[0],

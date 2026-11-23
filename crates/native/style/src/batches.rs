@@ -358,6 +358,9 @@ pub enum BatchKind {
         opacity: f64,
         /// Largest width and height among the instances, in `unit`.
         extent: [f64; 2],
+        /// Its symbol is also drawn by its vectors (docs/adr/9208): this bitmap only while the symbol is at most
+        /// [`crate::svg_marks::VECTORS_FROM_PX`] device pixels wide, the vectors past it.
+        vectors: bool,
     },
 }
 
@@ -1403,6 +1406,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                         anchor: anchor_of(s(common, "anchor")),
                         opacity: n(common, "opacity"),
                         extent: [dw, dh],
+                        vectors: false,
                     },
                     level,
                     key,
@@ -1779,8 +1783,16 @@ impl StyledBatch {
         }
     }
 
-    /// False for a text batch too small to read at this zoom (`batchLegible`).
+    /// False for a text batch too small to read at this zoom (`batchLegible`). A symbol drawn both ways (docs/adr/9208)
+    /// shows its bitmap while it is at most [`crate::svg_marks::VECTORS_FROM_PX`] device pixels wide and its vectors
+    /// past that, never both.
     pub fn legible(&self, px_per_m: f64, dpr: f64) -> bool {
+        if let Some(i) = self.instances.as_ref().filter(|i| i.mark.is_some()) {
+            return i.scale * px_per_m > crate::svg_marks::VECTORS_FROM_PX;
+        }
+        if let BatchKind::Marker { vectors: true, .. } = self.kind {
+            return self.image_px(px_per_m, dpr) <= crate::svg_marks::VECTORS_FROM_PX;
+        }
         match self.image() {
             Some(AtlasImage::Text { .. }) => self.image_px(px_per_m, dpr) >= MIN_TEXT_PX * dpr,
             _ => true,
@@ -1858,6 +1870,7 @@ impl StyledLayer {
                 anchor,
                 opacity,
                 extent,
+                ..
             } => json!({
                 "kind": "marker",
                 "instances": f32s(data),

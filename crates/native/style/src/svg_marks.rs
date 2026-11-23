@@ -11,8 +11,12 @@
 //! turn and size, its translation the marker's place. The marker shader's own placing is followed exactly: the box
 //! centred on the place, the anchor and the offset in it, the turn counter-clockwise in its pixels (y up, as the
 //! ground's: `markerVertex` turns before `pxToClip`, which does not flip), so the vector symbol lies where the bitmap
-//! lay. Only ground-sized markers are turned (`Unit::World`): a screen-sized one never grows
-//! past its bitmap. An SVG that does not parse, a gradient-only or empty one keeps its bitmap.
+//! lay. Only ground-sized markers are turned (`Unit::World`): a screen-sized one never grows past its bitmap. An SVG
+//! that does not parse, a gradient-only or empty one keeps its bitmap.
+//!
+//! The marker batch stays and draws while the symbol is small: there its bitmap is the SVG rasterized at its size, a
+//! stroke thinner than a pixel a faint continuous line, where the vectors' samples would break it into beads. Past
+//! [`VECTORS_FROM_PX`] the vectors draw instead (`StyledBatch::legible`), never both.
 
 use std::collections::BTreeMap;
 
@@ -29,8 +33,13 @@ use crate::batches::{
 const MARKER: usize = 5;
 /// Curves are flattened within this share of the symbol's larger side: a symbol 8 000 px wide strays under a pixel.
 const FLATTEN: f64 = 1.0 / 8000.0;
+/// Device pixels a symbol's width must pass for its vectors to draw instead of its bitmap. The atlas draws a bitmap up
+/// to 512 px and halves that only when its page is full, so the bitmap is sharp up to here; and the serare's 2.22 %
+/// stroke is 2.8 px here, wide enough for the drawing's 4× samples (at 24 px it was 0.5 px and broke into beads).
+pub const VECTORS_FROM_PX: f64 = 128.0;
 
-/// The vector batches of every ground-sized SVG marker batch, in its place in the draw order.
+/// The vector batches of every ground-sized SVG marker batch, right after it in the draw order; the marker batch keeps
+/// drawing its bitmap while the symbol is small.
 pub fn add(layer: &mut StyledLayer) {
     if !layer.batches.iter().any(|b| svg_of(b).is_some()) {
         return;
@@ -47,6 +56,10 @@ pub fn add(layer: &mut StyledLayer) {
             batches.push(b);
             continue;
         };
+        let mut bitmap = b.clone();
+        if let BatchKind::Marker { vectors, .. } = &mut bitmap.kind {
+            *vectors = true;
+        }
         let at = |i: usize| {
             f64::from(layer.data[b.range.start + i]) + if has_low { f64::from(layer.low[b.range.start + i]) } else { 0.0 }
         };
@@ -74,6 +87,7 @@ pub fn add(layer: &mut StyledLayer) {
             batches.push(b);
             continue;
         }
+        batches.push(bitmap);
         for (k, (rgba, triangles)) in meshes.fills.iter().enumerate() {
             // The mesh in the symbol's own units (its width 1), y up, its anchor already in it: the shader's
             // `local - anchor * (w, h)`, the image's top row (v 0) at local y +h/2.
@@ -387,6 +401,7 @@ mod tests {
                     anchor: [0.0, 0.0],
                     opacity: 1.0,
                     extent: [2.0, 2.0],
+                    vectors: false,
                 },
                 level: 0.0,
                 key: 7,
@@ -417,8 +432,9 @@ mod tests {
         // Two markers 2 m wide at (5, 1) and (8, 3), the second turned a quarter.
         let mut layer = marker_batch(SQUARE, &[[5.0, 1.0, 0.0, 2.0, 0.0], [8.0, 3.0, std::f32::consts::FRAC_PI_2, 2.0, 0.0]]);
         add(&mut layer);
-        assert_eq!(layer.batches.len(), 1, "one colour, one batch");
-        let b = &layer.batches[0];
+        assert_eq!(layer.batches.len(), 2, "the marker batch, then one batch a colour");
+        assert!(matches!(layer.batches[0].kind, BatchKind::Marker { vectors: true, .. }), "it keeps its bitmap");
+        let b = &layer.batches[1];
         assert!(matches!(b.kind, BatchKind::Fill { paint: FillPaintBatch::Solid { color } } if color == [1.0, 0.0, 0.0, 1.0]));
         let inst = b.instances.as_ref().expect("instanced");
         assert_eq!((inst.count, inst.scale), (2, 2.0));
@@ -460,7 +476,7 @@ mod tests {
             *offset = [1.0, 2.0];
         }
         add(&mut layer);
-        let b = &layer.batches[0];
+        let b = &layer.batches[1];
         let inst = b.instances.as_ref().expect("instanced");
         let numbers = &layer.data[b.range.clone()];
         let (mesh, placed) = numbers.split_at(inst.mesh);
@@ -499,9 +515,9 @@ mod tests {
         let mut layer = marker_batch(svg, &[[40_000.0, 30_000.0, 0.0, 2.0, 0.0]]);
         layer.low = vec![0.001_25, -0.000_75, 0.0, 0.0, 0.0];
         add(&mut layer);
-        assert_eq!(layer.batches.len(), 2, "a batch a colour");
+        assert_eq!(layer.batches.len(), 3, "the marker batch, then a batch a colour");
         assert_eq!(layer.low.len(), layer.data.len());
-        for (k, b) in layer.batches.iter().enumerate() {
+        for (k, b) in layer.batches[1..].iter().enumerate() {
             let inst = b.instances.as_ref().expect("instanced");
             let mark = inst.mark.expect("a symbol's");
             assert_eq!(mark.boxes, k == 0, "the first colour gives the boxes");
@@ -510,7 +526,8 @@ mod tests {
             let y = f64::from(layer.data[t + 1]) + f64::from(layer.low[t + 1]);
             assert!((x - 40_000.001_25).abs() < 1e-6 && (y - 29_999.999_25).abs() < 1e-6, "{x} {y}");
         }
-        assert_eq!(boxes(&layer, &layer.batches[1]).count(), 0);
+        assert_eq!(boxes(&layer, &layer.batches[1]).count(), 1);
+        assert_eq!(boxes(&layer, &layer.batches[2]).count(), 0);
         // Built in parts, the symbol keeps its marks' place after the lines.
         let mut line = layer.clone();
         line.batches.truncate(1);
@@ -526,7 +543,21 @@ mod tests {
         line.batches[0].instances = None;
         line.batches[0].key = 1;
         let order = crate::batches::merged_order(&[&layer, &line]);
-        assert_eq!(order, vec![(1, 0), (0, 0), (0, 1)], "the line, then the symbol's colours");
+        assert_eq!(order, vec![(1, 0), (0, 0), (0, 1), (0, 2)], "the line, then the symbol's bitmap and colours");
+    }
+
+    #[test]
+    fn a_small_symbol_shows_its_bitmap_and_a_grown_one_its_vectors() {
+        // 2 m wide: VECTORS_FROM_PX device px at half as many px a metre.
+        let mut layer = marker_batch(SQUARE, &[[5.0, 1.0, 0.0, 2.0, 0.0]]);
+        add(&mut layer);
+        let (bitmap, vectors) = (&layer.batches[0], &layer.batches[1]);
+        let at = VECTORS_FROM_PX / 2.0;
+        for (ppm, dpr) in [(at * 0.5, 1.0), (at, 1.0), (at * 1.01, 1.0), (at * 8.0, 2.0)] {
+            let big = 2.0 * ppm > VECTORS_FROM_PX;
+            assert_eq!(bitmap.legible(ppm, dpr), !big, "bitmap at {ppm} px/m");
+            assert_eq!(vectors.legible(ppm, dpr), big, "vectors at {ppm} px/m");
+        }
     }
 
     #[test]
