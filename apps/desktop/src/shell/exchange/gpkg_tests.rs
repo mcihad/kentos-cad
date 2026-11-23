@@ -1021,6 +1021,8 @@ fn writing_over_a_geopackage_says_which_of_its_tables_go() {
     assert_eq!(confirm.tables.as_deref(), Some(&["eski_tablo".to_owned()][..]));
     let lines: Vec<String> = app.gpkg_out_confirm_lines(state, &confirm).into_iter().map(|(_, l)| l).collect();
     assert!(lines.iter().any(|l| l == "Dosyadan silinen tablolar (1): eski_tablo."), "{lines:#?}");
+    // The way to keep the table that goes (docs/adr/9178).
+    assert!(lines.iter().any(|l| l == super::gpkg_out::KEEP_TABLES), "{lines:#?}");
     assert!(lines.iter().any(|l| l.starts_with("Yeni tablolar: ")), "{lines:#?}");
     assert!(lines.iter().any(|l| l.starts_with("Yazılan: ")), "{lines:#?}");
     // Geri: the file as it was.
@@ -1039,13 +1041,14 @@ fn writing_over_a_geopackage_says_which_of_its_tables_go() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The picture (`.run/gui-evidence/kullanim-9168/`): writing over a GeoPackage that is there, asked.
+/// The picture (`.run/gui-evidence/kullanim-9178/`, first taken for docs/adr/9168): writing over a GeoPackage that is
+/// there, asked, with the way to keep the table that goes.
 #[test]
 #[ignore = "pictures for the owner"]
 fn writing_over_screens() {
     static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     use kentos_data::Driver as _;
-    crate::files_testing::usage_shots("9168", "01-uzerine-yaz", || {
+    crate::files_testing::usage_shots("9178", "01-uzerine-yaz", || {
         let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let dir = scratch(&format!("gpkg-uzerine-resim-{n}"));
         let out = dir.join("teslim.gpkg");

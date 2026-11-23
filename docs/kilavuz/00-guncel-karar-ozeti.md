@@ -235,6 +235,9 @@
   - **Değer değişiminde tek kural** (23 Kasım, rapor 10'un kalanı; [ADR 9177](../adr/9177-one-rule-when-a-value-changes.md), VY-76): veri katmanının
     geometri sınıfı tablosundan okunur; lejant veri katmanını gösterir, Katman stili yalnız uyan sembolü sunar.
     Kategorisiz değer sayaçta, ekranda, kâğıtta, tabloda ve lejantta aynı kuralla görünür.
+  - **Kesilen GeoPackage teslimi** (23 Kasım, rapor 6'nın kalanı; [ADR 9178](../adr/9178-a-killed-geopackage-delivery-stays-whole.md), VY-77): süreç
+    öldürülse de adın altında bütün dosya kalır (sınandı); Üstüne yaz onayı öbür tabloları katmanın kendi dışa
+    aktarmasıyla korumanın yolunu söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

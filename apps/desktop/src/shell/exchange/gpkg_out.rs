@@ -54,6 +54,12 @@ pub struct State {
 /// The table the layers' styles go in, written with every export (docs/adr/9139).
 const STYLES_TABLE: &str = kentos_geopackage::styles::STYLES_TABLE;
 
+/// How the file's other tables are kept (docs/adr/9178): a layer's own export writes only its table in a file that is
+/// there, again or with rows added.
+pub(crate) const KEEP_TABLES: &str = "Öbür tabloları korumak için Geri'ye basın ve katmanları tek tek yazın: katmanın \
+     menüsündeki Dışa aktar ▸ Farklı kaydet… bu dosyada yalnız o tabloyu yeniden yazar (Katmanı değiştir) ya da satır \
+     ekler (Katmana ekle).";
+
 /// A file that is there, chosen to be written over (docs/adr/9168): its place and the tables it holds now (none: it
 /// does not read as a GeoPackage).
 #[derive(Debug, Clone)]
@@ -320,6 +326,8 @@ impl App {
                             gone.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(", ")
                         ),
                     ));
+                    // The way to keep them (docs/adr/9178): a layer written alone touches its own table only.
+                    lines.push((false, KEEP_TABLES.to_owned()));
                 }
                 if !again.is_empty() {
                     lines.push((

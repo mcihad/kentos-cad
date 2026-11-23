@@ -559,3 +559,9 @@ numaraları raporunkidir.
     uyan sembolü sunar.
   - Uçtan uca sınama: sayaç, ekran, kâğıt, tablo ve lejant Diğer değerler kapalı ve açıkken aynı şeyi söyler.
   - Kalan: gerçek pencerede ve PostGIS'te deneme; web (TODOS.md §0.2).
+- [~] **VY-77 — GeoPackage teslimi yarıda kesilince dosya bütün kalır; öbür tabloları korumanın yolu söylenir (rapor
+  6'nın kalanı).** ([ADR 9178](../docs/adr/9178-a-killed-geopackage-delivery-stays-whole.md))
+  - Gerçek süreç ölümüyle sınama: on SIGKILL'in her birinde adın altında bütün bir GeoPackage kalıyor.
+  - Üstüne yaz onayı silinecek tabloların altında katmanın kendi dışa aktarmasını (Katmanı değiştir, Katmana ekle)
+    söylüyor.
+  - Kalan: teslimde “yalnız bu tablolar” ve “ekle” (komut girdisi), uzun teslimin Durdur'u, web.

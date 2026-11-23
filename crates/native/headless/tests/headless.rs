@@ -3180,3 +3180,6 @@ fn nested_dynamic_exports_keep_default_visibility_values_transforms_and_reuse_st
 
 #[path = "headless/save_crash.rs"]
 mod save_crash;
+
+#[path = "headless/gpkg_export_crash.rs"]
+mod gpkg_export_crash;
