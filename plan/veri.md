@@ -588,3 +588,10 @@ numaraları raporunkidir.
     olmayan yuva kusuru düzeldi.
   - Kalan: Seçililer, Görünümdekiler ve iki alanlı grafiklerin kaynakta sayımı; sürüm derlemesinde ölçüm; gerçek
     pencere; web.
+- [~] **VY-81 — Değerlendirmenin PostgreSQL kalanları gerçek sunucuda sınanır.**
+  ([ADR 9182](../docs/adr/9182-postgresql-remainders-on-a-real-server.md))
+  - Sınama düzeneği `pg_testing.rs`: sınamanın tablosu ve hesabı, ikinci okuyucu; COMMIT'i sunucuya ulaşmadan ya da
+    ulaştıktan sonra kesen ve kapanınca sunucuyu ulaşılmaz yapan bir aktarıcı (gerçek kesinti).
+  - Geçti: 4, 16, 23 (iki sınama kusuru düzeldi), 26 (iki oturum), 27, 28, 30 (yeniden açılış dahil), 31, 32 (ekleme
+    yetkisiz hesap).
+  - Kalan: 14 (PostGIS'in dışarıdaki yazımı), 7 (katalog), öykünmesiz bağımsız sunucuda yineleme.

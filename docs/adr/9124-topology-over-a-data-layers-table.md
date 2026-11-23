@@ -79,6 +79,7 @@
 ## §4 Kalan
 
 - PostGIS durumunun gerçek bir veritabanında koşturulması (izole şema, `KENTOS_DATA_PG`).
+  **Yapıldı (23 Kasım 2026):** gerçek PostgreSQL'de sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md).
 - Kaynaktaki satırı düzeltmenin, satırı düzenleme oturumuna kendiliğinden alarak yapılması (bugün elle alınır).
 - Kalıcı bir hata işareti bulgunun satırları alınınca kimlik değiştirir (çizimin kimliğine geçer). İşaretin yeniden
   konması gerekir.

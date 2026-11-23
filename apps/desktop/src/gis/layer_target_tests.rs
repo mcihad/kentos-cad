@@ -1,6 +1,7 @@
 //! The layer drawn on (docs/adr/9128): in a CBS project one press on a layer row makes it the target (a CAD drawing
 //! keeps the double click); a data layer is drawn on only in its edit session and only with its table's geometry,
-//! the drawing tools saying why not and offering Düzenlemeyi başlat.
+//! the drawing tools saying why not and offering Düzenlemeyi başlat. On a real PostgreSQL (`KENTOS_DATA_PG`) the same,
+//! a binding through an account that may only read refused by the server's own right.
 
 use crate::app::{App, Message};
 use crate::data_layers_tests::{node, parcels};
@@ -113,4 +114,67 @@ fn with_two_sessions_open_an_area_goes_to_the_target_alone() {
     area(&mut app, 486_700.0);
     assert_eq!((added(&app, &a), added(&app, &b)), (1, 1), "the new target's");
     assert_eq!(others(&app), before, "no other layer took one");
+}
+
+/// On real PostgreSQL tables (the usage report's 4th item): a database's layer is drawn on only in its session and with
+/// its table's geometry; a binding through an account that may only read is read-only by the server's right and its
+/// session does not open; with two sessions open an area goes to the target alone, and each table takes its own row.
+#[test]
+fn on_postgresql_a_layer_is_drawn_on_only_in_its_session_and_two_sessions_keep_their_targets() {
+    let Some(pg) = crate::pg_testing::pg("PostgreSQL'de çizim hedefi") else {
+        return;
+    };
+    crate::data_layers::register();
+    let (ta, tb) = (crate::pg_testing::table("hedef_a"), crate::pg_testing::table("hedef_b"));
+    let owner = kentos_data::registry().source(&pg).expect("the database");
+    crate::data_layers_tests::parcels_in(owner.as_ref(), &ta, 3);
+    crate::data_layers_tests::parcels_in(owner.as_ref(), &tb, 3);
+    let name = format!("kentos_hedef_okur_{}", std::process::id());
+    let reader = crate::pg_testing::account(&pg, &name, &ta, "SELECT");
+    let mut app = app_with_drawing();
+    let _ = app.update(Message::Run("workspace.gis"));
+    let ids = app
+        .add_data_layers(vec![
+            crate::data_layers::describe(&pg, &ta).expect("described"),
+            crate::data_layers::describe(&pg, &tb).expect("described"),
+            crate::data_layers::describe(&reader, &ta).expect("described"),
+        ])
+        .expect("added");
+    let (a, b, r) = (ids[0].clone(), ids[1].clone(), ids[2].clone());
+    // The session closed: Kapalı alan is off and says why.
+    app.layer_pressed(a.clone());
+    assert!(!app.available("tool.polygon"));
+    let why = app.why_disabled("tool.polygon").expect("why");
+    assert!(why.contains("düzenlemeye kapalı") && why.contains("Düzenlemeyi başlat"), "{why}");
+    // The reader's binding: read-only by the server's right, its session not opened.
+    let read_only = |app: &App, id: &str| {
+        app.document.as_ref().and_then(|d| d.model.layers().get(id)).and_then(|n| n.data.as_ref()).is_some_and(|d| d.read_only)
+    };
+    assert!(read_only(&app, &r) && !read_only(&app, &a));
+    let _ = app.data_edits_event(crate::data_edits::Event::Start(r.clone()));
+    assert!(!app.document.as_ref().expect("a drawing").model.editing(&r), "a read-only binding is not edited");
+    // Two sessions: an area to each target alone; each table takes its own row.
+    for id in [&a, &b] {
+        let _ = app.data_edits_event(crate::data_edits::Event::Start(id.clone()));
+    }
+    assert!(!app.available("tool.point"), "an area table takes no point");
+    let added = |app: &App, id: &str| app.document.as_ref().expect("a drawing").model.data_changes(id).added.len();
+    let area = |app: &mut App, x: f64| {
+        let _ = app.update(Message::Run("tool.polygon"));
+        for (dx, dy) in [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)] {
+            let _ = app.submit_line(&format!("{},{}", x + dx, 4_420_300.0 + dy));
+        }
+        let _ = app.submit_line("");
+    };
+    app.layer_pressed(a.clone());
+    area(&mut app, 486_600.0);
+    app.layer_pressed(b.clone());
+    area(&mut app, 486_700.0);
+    assert_eq!((added(&app, &a), added(&app, &b)), (1, 1));
+    let task = app.data_edits_event(crate::data_edits::Event::Save(vec![a.clone(), b.clone()]));
+    crate::files_testing::drive(&mut app, task);
+    assert_eq!((crate::pg_testing::rows(&pg, &ta), crate::pg_testing::rows(&pg, &tb)), (4, 4), "each table its own row");
+    crate::pg_testing::drop_table(&pg, &ta);
+    crate::pg_testing::drop_table(&pg, &tb);
+    crate::pg_testing::sql(&pg, &[&format!("DROP OWNED BY {name}"), &format!("DROP ROLE {name}")]);
 }

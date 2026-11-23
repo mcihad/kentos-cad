@@ -94,6 +94,7 @@
 
 - Gerçek PostgreSQL'de iki kesinti (COMMIT öncesi ve sonrası) ve yeniden açılış. Değerlendirmenin deney düzeni yerel test
   servisleriyle yinelenmeli.
+  **Yapıldı (23 Kasım 2026):** gerçek PostgreSQL'de sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md).
 - Python ve MCP'nin `cad.layers.session` kaydı makbuz vermez: belirsiz kaydı ayrı sözlerle reddeder, yeniden denemeyi
   çağırana bırakır.
 - Alan bazında çakışma kararı (rapor 26), silinmiş satırla sağlam satır (rapor 32), çevrimdışı bekleyenler (rapor 31)

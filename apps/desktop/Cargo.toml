@@ -165,3 +165,6 @@ kentos-imza-security = { path = "../../crates/imza/security", features = ["issue
 parking_lot = "=0.13.0"
 # Inflating the PDF's streams in the acceptance test's own reader (the plotter's tests/support/files.rs).
 miniz_oxide = { workspace = true }
+# The tests on a real PostgreSQL make their accounts and rights in SQL (gis/pg_testing.rs); both are the workspace's.
+sqlx = { workspace = true }
+tokio = { workspace = true }

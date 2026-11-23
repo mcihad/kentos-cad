@@ -248,6 +248,9 @@
     kaynak değerleri sayar, toplamı KentOS kesin ondalıkla yapar. Değere ya da çubuğa basmak o satırları tabloda seçer.
     Bir milyon parselde 32 s ve 5,5 GB yerine 5,7 s ve 736 MB (hata ayıklama derlemesi), aynı özetlerle; PostGIS'te
     sınandı, 37 s yerine 6,6 s.
+  - **PostgreSQL kalanları gerçek sunucuda** (23 Kasım; [ADR 9182](../adr/9182-postgresql-remainders-on-a-real-server.md), VY-81): sınamalar
+    geçici PostGIS'te; aktarıcı COMMIT'i keserek gerçek kesinti yapar. Onayı kaybolan kayıt, çevrimdışı açılış, iki
+    oturumlu çakışma, ekleme yetkisiz hesap, formla düzenleme, on geçiş ve çizim hedefi gerçek sunucuda geçti.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

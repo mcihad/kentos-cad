@@ -1506,6 +1506,10 @@ mod data_layers;
 #[cfg(test)]
 #[path = "gis/data_layers_tests.rs"]
 mod data_layers_tests;
+// What the tests on a real PostgreSQL share: its address, a table of their own, a relay that cuts a COMMIT.
+#[cfg(test)]
+#[path = "gis/pg_testing.rs"]
+mod pg_testing;
 #[cfg(test)]
 #[path = "gis/data_edits_tests.rs"]
 mod data_edits_tests;

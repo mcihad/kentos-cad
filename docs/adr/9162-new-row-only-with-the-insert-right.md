@@ -59,5 +59,6 @@
 ## §4 Kalan
 
 - Gerçek PostgreSQL'de yalnız SELECT ve UPDATE yetkili ikinci hesapla deneme.
+  **Yapıldı (23 Kasım 2026):** gerçek PostgreSQL'de sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md).
 - Sütun düzeyinde verilen INSERT ve UPDATE yetkileri; bu karar tablo düzeyindekini okur.
 - Web (TODOS.md §0.2).

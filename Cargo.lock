@@ -3040,7 +3040,9 @@ dependencies = [
  "roxmltree 0.21.2",
  "serde",
  "serde_json",
+ "sqlx",
  "tiny-skia",
+ "tokio",
  "unicode-segmentation",
  "zune-jpeg 0.5.15",
 ]

@@ -89,10 +89,17 @@ pub(crate) fn parcels(name: &str, n: usize) -> PathBuf {
     let _ = std::fs::remove_file(&path);
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
     let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+    parcels_in(source.as_ref(), "parseller", n);
+    path
+}
+
+/// The same `n` parcels as a `table` of `source` (a table there before replaced): a PostGIS table for the tests on a
+/// real PostgreSQL (pg_testing.rs).
+pub(crate) fn parcels_in(source: &dyn kentos_data::Source, table: &str, n: usize) {
     let mut tx = source.begin().expect("begin");
     tx.create_table(
         &NewTable {
-            name: "parseller".into(),
+            name: table.into(),
             title: None,
             description: None,
             key: "fid".into(),
@@ -111,7 +118,7 @@ pub(crate) fn parcels(name: &str, n: usize) -> PathBuf {
             spatial_index: true,
             system: None,
         },
-        false,
+        true,
     )
     .expect("table");
     let rows: Vec<NewFeature> = (0..n)
@@ -134,9 +141,8 @@ pub(crate) fn parcels(name: &str, n: usize) -> PathBuf {
             }
         })
         .collect();
-    tx.insert("parseller", &rows).expect("rows");
+    tx.insert(table, &rows).expect("rows");
     tx.commit().expect("commit");
-    path
 }
 
 pub(crate) fn node<'a>(app: &'a crate::app::App, name: &str) -> Option<&'a LayerNode> {

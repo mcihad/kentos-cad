@@ -89,6 +89,7 @@
 
 - **Gerçek PostgreSQL.** İki oturumlu deneme gerçek PostGIS'te koşturulmadı (Docker yanıt vermedi). Yazma yolu
   ortaktır ama satır kilidi altında okuma orada sınanmalı.
+  **Yapıldı (23 Kasım 2026):** gerçek PostgreSQL'de sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md).
 - **Python ve MCP.** `cad.layers.session` çakışmayı yeni sözle söylüyor; alan alan seçim orada `force` ya da
   rollback/take ile yapılıyor, seçim işlemi yok.
 - **Uzun metin.** Çok uzun değerler hücrede kısaltılmadan yazılıyor.

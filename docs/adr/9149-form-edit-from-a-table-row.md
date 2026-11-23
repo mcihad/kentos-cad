@@ -61,4 +61,5 @@
   açılıyor, oturumsuz satır için görüntüleme yolu yok.
 - **Görünür alan dışı ve PostGIS.** Satır anahtarla okunduğundan görünüm önemsizdir; PostGIS'te gerçek sunucuyla
   sınanmadı (Docker).
+  **Yapıldı (23 Kasım 2026):** gerçek PostgreSQL'de sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md).
 - Web (TODOS.md §0.2).

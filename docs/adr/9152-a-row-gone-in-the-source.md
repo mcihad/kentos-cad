@@ -49,5 +49,6 @@
 
 - **Gerçek PostgreSQL.** Çevrimdışı açılış, başka personelin silmesi ve UPDATE'in etkilediği satır sayısı gerçek
   sunucuda koşturulmadı (Docker). Sağlayıcı silinmiş satırda etkilenen satır sayısını denetliyor (ADR 9104).
+  **Yapıldı (23 Kasım 2026):** gerçek PostgreSQL'de sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md).
 - **Yeni kayıt yetkisi.** “Yeni satır olarak ekle” ekleme yetkisini ayrıca sormuyor; yetkisizse kaynak yazımı reddeder.
 - Web (TODOS.md §0.2).

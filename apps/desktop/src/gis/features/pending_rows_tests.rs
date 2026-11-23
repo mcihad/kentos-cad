@@ -2,7 +2,7 @@
 //! session's rows still: the new one, the changed one by its key with its local value and the value it had, the
 //! deleted one by its key; the line says they wait unverified and when the source last answered (docs/adr/9163), kept
 //! with the project's journal. Read again, the source's rows come back with the taken one over them; saved, nothing
-//! waits.
+//! waits. On a real PostgreSQL (`KENTOS_DATA_PG`) the outage is real: a relay between the program and the server closed.
 
 use std::sync::Arc;
 
@@ -164,6 +164,106 @@ fn the_last_verification_goes_with_the_journal_and_comes_back() {
     let words = pending_words(c.added.len(), c.changed.len(), c.deleted.len(), app.gis.data_edits.verified.get(&id).copied());
     assert!(words.ends_with(&format!("(son doğrulama: {stamp})")), "{words}");
     let _ = std::fs::remove_file(&path);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// On a real PostgreSQL (the usage report's 31st item): the 22nd row changed in the session waits in the project's
+/// journal. The project is opened again while the server cannot be reached (the relay closed): the table's question
+/// fails for real, and it lists the changed row with its value and the one it had, its line saying when the server last
+/// answered. The server back, the rows are read again and the save writes the row: a second reader sees it, nothing
+/// waits.
+#[test]
+fn on_postgresql_an_offline_opening_lists_the_waiting_row_and_writes_it_when_back() {
+    use crate::app::{Picker, Then};
+    use crate::data_edits::Answer;
+    let Some(pg) = crate::pg_testing::pg("PostgreSQL kesintisinde bekleyen satırlar") else {
+        return;
+    };
+    crate::data_layers::register();
+    let table = crate::pg_testing::table("bekleyen");
+    let direct = kentos_data::registry().source(&pg).expect("the database");
+    crate::data_layers_tests::parcels_in(direct.as_ref(), &table, 30);
+    let relay = crate::pg_testing::Relay::over(&pg);
+    let dir = crate::files_testing::scratch("bekleyen-pg");
+    let journals = crate::data_journal::Journals::at(&dir.join("veri-oturumlari"));
+    let file = dir.join("proje.kcad");
+    let mut app = app_with_drawing();
+    app.gis.data_journal = journals.clone();
+    let described = crate::data_layers::describe(&relay.address, &table).expect("described");
+    let name = described.name.clone();
+    app.add_data_layers(vec![described]).expect("added");
+    let layer = node(&app, &name).expect("the layer").clone();
+    let id = layer.id.clone();
+    let _ = app.data_edits_event(Event::Start(id.clone()));
+    let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+    let rows = data_write::rows_to_take(&layer, &settings, &[22], &|| false).expect("read");
+    let doc = app.document.as_mut().expect("a drawing");
+    let uid = doc.model.take_data_rows(&id, rows).expect("taken")[0].expect("22");
+    let slot = doc.model.slot_of(uid).expect("its object");
+    let mut e = doc.model.get(slot).cloned().expect("22");
+    e.base_mut().attrs.insert("kullanim".into(), "Okul".into());
+    assert!(doc.model.update(slot, e));
+    // The table reads its pages: the server answered, its last verification.
+    app.gis.features.layer = Some(id.clone());
+    app.command_expanded = true;
+    app.bottom_tab = crate::bottom::BottomTab::Table;
+    let _ = app.data_table_event(DataEvent::Range(0, 12));
+    answer_pages(&mut app);
+    let verified = *app.gis.data_edits.verified.get(&id).expect("checked");
+    // Saved with the row waiting, closed keeping the draft.
+    app.picker = Picker::File(file.clone());
+    let task = app.run("file.save");
+    drive(&mut app, task);
+    let _ = app.leave(Then::CloseTab);
+    let _ = app.data_edits_event(Event::Answer(Answer::Keep));
+    assert!(app.document.is_none(), "closed");
+    app.gis.data_edits.verified.clear();
+    // The server unreachable: opened again, its table asks for real and is refused.
+    relay.set_open(false);
+    app.command_expanded = false;
+    app.picker = Picker::File(file.clone());
+    let task = app.run("file.open");
+    drive(&mut app, task);
+    assert_eq!(app.gis.data_edits.verified.get(&id), Some(&verified));
+    app.gis.features.layer = Some(id.clone());
+    app.command_expanded = true;
+    app.bottom_tab = crate::bottom::BottomTab::Table;
+    let _ = app.data_table_event(DataEvent::Range(0, 12));
+    answer_pages(&mut app);
+    assert!(app.gis.features.data.error().is_some(), "the server unreachable");
+    let changes = app.document.as_ref().expect("opened").model.data_changes(&id);
+    let fields: Vec<String> = layer.fields.iter().map(|f| f.name.clone()).collect();
+    let lines = pending_lines(&changes, &fields);
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0].key, 22);
+    let at = fields.iter().position(|f| f == "kullanim").expect("kullanim");
+    assert_eq!(lines[0].cells[at], "Okul (önce: Park)");
+    let stamp = crate::cloud::local_time::stamp(verified, crate::cloud::local_time::Zone::system());
+    let words = pending_words(changes.added.len(), changes.changed.len(), changes.deleted.len(), Some(verified));
+    assert!(words.ends_with(&format!("doğrulanmadı (son doğrulama: {stamp})")), "{words}");
+    // The server back: read again, written; a second reader sees the row, nothing waits.
+    relay.set_open(true);
+    let _ = app.data_table_event(DataEvent::Apply);
+    answer_pages(&mut app);
+    assert!(app.gis.features.data.error().is_none(), "read again");
+    let task = app.data_edits_event(Event::Save(vec![id.clone()]));
+    drive(&mut app, task);
+    assert!(app.document.as_ref().expect("opened").model.data_changes(&id).is_empty(), "nothing waits");
+    let mut seen = None;
+    let request = kentos_data::Request {
+        condition: Some(kentos_data::Condition::Fids(vec![22])),
+        columns: Some(vec!["kullanim".into()]),
+        geometry: false,
+        ..kentos_data::Request::default()
+    };
+    direct
+        .features(&table, &request, &kentos_data::Cancel::new(), &mut |part| {
+            seen = part.first().and_then(|f| f.values.first().cloned());
+            true
+        })
+        .expect("read");
+    assert_eq!(seen, Some(kentos_data::Value::Text("Okul".into())));
+    crate::pg_testing::drop_table(&pg, &table);
     let _ = std::fs::remove_dir_all(&dir);
 }
 

@@ -3,7 +3,8 @@
 //! source's transaction records (the interface's “işlem kaydı”, docs/adr/9175) by the write's receipt and takes the row
 //! it finds out of the drawing, so one drawn row stays one row, with the program closed and the project opened again
 //! too; a source without them is not written again by itself, only by Yeniden gönder; İşlem kaydı tablosunu oluştur
-//! makes their table; two objects drawn on the same place on purpose are two rows.
+//! makes their table; two objects drawn on the same place on purpose are two rows. On a real PostgreSQL
+//! (`KENTOS_DATA_PG`), a relay cuts the write's COMMIT after the server made it and before it: the same answers.
 
 use kentos_data::lossy::{self, Loss};
 use kentos_native_application::ExecutionContext;
@@ -13,6 +14,7 @@ use crate::data_journal::Journals;
 use crate::data_layers_tests::{node, parcels};
 use crate::data_pending::{Event as Pending, SET_UP};
 use crate::files_testing::{app_with_drawing, drive, scratch};
+use crate::pg_testing::{Cut, Relay};
 
 /// The rows of `parseller` as a reader of its own counts them.
 fn rows(path: &std::path::Path) -> i64 {
@@ -179,6 +181,75 @@ fn as_a_database_without_records(app: &mut App, layer: &str) {
     let known = kentos_native_application::data_write::receipts_ready(&data);
     assert_eq!(known, Ok(false), "no table yet");
     let _ = app.data_pending_event(Pending::Receipts(layer.to_owned(), known));
+}
+
+/// A drawing with `table` of the database at `address` as a data layer being edited, its transaction records set up:
+/// the app, the layer's id, the journals and the project's file.
+fn app_over_database(tag: &str, address: &str, table: &str) -> (App, String, Journals, std::path::PathBuf) {
+    crate::data_layers::register();
+    let mut app = app_with_drawing();
+    let dir = scratch(tag);
+    let journals = Journals::at(&dir.join("veri-oturumlari"));
+    app.gis.data_journal = journals.clone();
+    let described = crate::data_layers::describe(address, table).expect("described");
+    let name = described.name.clone();
+    app.add_data_layers(vec![described]).expect("added");
+    let layer = node(&app, &name).expect("the layer").id.clone();
+    let _ = app.data_edits_event(crate::data_edits::Event::Start(layer.clone()));
+    let data = node(&app, &name).and_then(|n| n.data.clone()).expect("a data layer");
+    kentos_native_application::data_write::set_up_receipts(&data).expect("set up");
+    (app, layer, journals, dir.join("proje.kcad"))
+}
+
+/// On a real PostgreSQL (the usage report's 30th item, docs/adr/9126): a relay between the program and the server cuts
+/// the write's connection at its COMMIT. Cut after the server made it, before its answer came back: the row is in the
+/// table once and the status bar says the result is not known; the project saved, the program closed and the project
+/// opened again, Kaynağa yaz asks the transaction records and writes nothing twice. Cut before the COMMIT reached the
+/// server: nothing is written, the next try writes the row once.
+#[test]
+fn on_postgresql_a_commit_cut_at_the_server_is_asked_by_its_receipt() {
+    let Some(pg) = crate::pg_testing::pg("PostgreSQL kesinti deneyi") else {
+        return;
+    };
+    crate::data_layers::register();
+    let table = crate::pg_testing::table("kesinti");
+    let direct = kentos_data::registry().source(&pg).expect("the database");
+    crate::data_layers_tests::parcels_in(direct.as_ref(), &table, 3);
+    let relay = Relay::over(&pg);
+    let (mut app, layer, journals, file) = app_over_database("kesinti-pg", &relay.address, &table);
+    let rows = || crate::pg_testing::rows(&pg, &table);
+    draw(&mut app, &layer, 486_400.0, 4_420_100.0);
+    relay.cut(Cut::AfterCommit);
+    kaynaga_yaz(&mut app);
+    assert_eq!(rows(), 4, "the commit was made");
+    assert!(app.gis.data_edits.uncertain.get(&layer).is_some_and(|u| u.receipt.is_some()), "{:#?}", said(&app));
+    assert_eq!(
+        app.data_pending_words(0).map(|w| w.0).as_deref(),
+        Some("Yazımın sonucu bilinmiyor: 1 katmanda 1 satır"),
+        "neither success nor failure"
+    );
+    // The project saved with the uncertain write, the program closed, the project opened again.
+    app.picker = Picker::File(file.clone());
+    let task = app.update(Message::Run("file.save"));
+    drive(&mut app, task);
+    drop(app);
+    let mut app = app_with_drawing();
+    app.gis.data_journal = journals;
+    let doc = crate::document::Document::read(&file).expect("the file reads");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    assert!(!app.gis.data_edits.uncertain.is_empty(), "the question comes back: {:#?}", said(&app));
+    kaynaga_yaz(&mut app);
+    assert_eq!(rows(), 4, "one row");
+    assert!(app.data_pending_words(0).is_none(), "nothing waits: {:#?}", said(&app));
+    assert!(said(&app).iter().any(|t| t.starts_with("Önceki yazım kaynağa ulaşmıştı")), "{:#?}", said(&app));
+    draw(&mut app, &layer, 486_450.0, 4_420_100.0);
+    relay.cut(Cut::BeforeCommit);
+    kaynaga_yaz(&mut app);
+    assert_eq!(rows(), 4, "nothing written");
+    kaynaga_yaz(&mut app);
+    assert_eq!(rows(), 5, "written once, on the next try");
+    assert!(app.data_pending_words(0).is_none(), "{:#?}", said(&app));
+    crate::pg_testing::drop_table(&pg, &table);
 }
 
 /// Pictures (docs/adr/9126, 9175): Katman değişiklikleri after a lost answer, with transaction records (the next

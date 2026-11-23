@@ -55,5 +55,6 @@
 ## §4 Kalan
 
 - On geçişin iki PostGIS bağlantısıyla gerçek sunucuda sınanması.
+  **Yapıldı (23 Kasım 2026):** gerçek PostgreSQL'de sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md).
 - Salt okunur satırın formunda ilişkili kayıtlar (veri katmanı formunun ilişkili listesi, 22. maddenin kalanı).
 - Web (TODOS.md §0.2).

@@ -49,5 +49,6 @@
 ## §4 Kalan
 
 - İki oturumun aynı denetimi PostGIS katmanlarıyla gerçek sunucuda.
+  **Yapıldı (23 Kasım 2026):** gerçek PostgreSQL'de sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md).
 - Bulut projesinde rolün yazmadığı katmanda düğmenin gerekçesi.
 - Web (TODOS.md §0.2).

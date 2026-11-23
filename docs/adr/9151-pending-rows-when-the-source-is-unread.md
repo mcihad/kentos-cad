@@ -52,4 +52,5 @@
 
 - **Son doğrulama zamanı.** Satırın kaynakla en son ne zaman doğrulandığı (alındığı an) gösterilmiyor.
 - **Gerçek kesinti.** PostgreSQL bağlantısının kesildiği gerçek deneme koşturulmadı (Docker).
+  **Yapıldı (23 Kasım 2026):** gerçek PostgreSQL'de sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md).
 - Web (TODOS.md §0.2).
