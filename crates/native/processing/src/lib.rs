@@ -27,6 +27,8 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+/// A table's columns' kinds read from the cells a tool shows (docs/adr/9190).
+pub mod table_kinds;
 pub mod address;
 pub mod audit_facts;
 pub mod audit_job;

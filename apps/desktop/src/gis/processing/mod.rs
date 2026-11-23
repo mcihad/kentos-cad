@@ -599,15 +599,24 @@ impl App {
                     return Task::none();
                 };
                 let label = window.tool.label.clone();
-                // A tool's table has no field kinds: a plain number is written as a number, anything else as text.
+                // The columns read as a file's table reads them (docs/adr/9190): a column of numbers a number, any
+                // other text (a code “007” stays “007”).
+                let (kinds, _) = kentos_processing::table_kinds::read(&table.rows);
                 let sheet = kentos_commands::WorkbookSheet {
                     name: label.clone(),
                     columns: table
                         .columns
                         .iter()
-                        .map(|name| kentos_commands::WorkbookColumn {
+                        .enumerate()
+                        .map(|(j, name)| kentos_commands::WorkbookColumn {
                             name: name.clone(),
-                            kind: kentos_commands::CellKind::Auto,
+                            kind: match kinds.get(j) {
+                                Some(kentos_native_application::geopackage::CellKind::Text) => {
+                                    kentos_commands::CellKind::Text
+                                }
+                                Some(_) => kentos_commands::CellKind::Number,
+                                None => kentos_commands::CellKind::Auto,
+                            },
                             decimals: None,
                         })
                         .collect(),

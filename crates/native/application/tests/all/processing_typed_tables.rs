@@ -155,3 +155,138 @@ fn a_summary_goes_to_a_geopackage_as_numbers() {
     drop(gp);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// The column kinds SQLite holds for `columns` of `table`, one each (an all-NULL column says null).
+fn kinds_of(gp: &kentos_geopackage::GeoPackage, table: &str, columns: &[&str]) -> Vec<Vec<String>> {
+    columns
+        .iter()
+        .map(|c| {
+            let mut st = gp
+                .connection()
+                .prepare(&format!(r#"SELECT DISTINCT typeof("{c}") FROM "{table}" WHERE "{c}" IS NOT NULL"#))
+                .expect("a query");
+            st.query_map([], |r| r.get(0)).expect("rows").map(|r| r.expect("a row")).collect()
+        })
+        .collect()
+}
+
+/// The tools that give neither kinds nor plain values (docs/adr/9190) go to a file typed from the cells they show:
+/// Bölgesel istatistik's count INTEGER, its sum, mean and spread REAL, the zone without cells NULL; Uzaklık matrisi's
+/// rank INTEGER and distance REAL; the names text. SQLite filters and orders them as numbers.
+#[test]
+fn zonal_statistics_and_a_distance_matrix_go_to_a_geopackage_typed_from_their_cells() {
+    let dir = std::env::temp_dir().join(format!("kentos-typed-tables-zonal-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    // Bölgesel istatistik over the shared raster drawing's zones.
+    let path = dir.join("bolgesel.gpkg");
+    let (mut doc, at) = drawing();
+    let got = run(
+        &mut doc,
+        json!({
+            "tool": "raster.zonalStatistics",
+            "parameters": {
+                "input": { "scope": "layer", "layerId": "bolge" },
+                "zones": { "scope": "layer", "layerId": "bolgeler" },
+                "stat": "mean",
+                "output": "",
+            },
+            "sink": { "path": path.display().to_string(), "mode": "new", "tables": true },
+            "drawing": at.display().to_string(),
+        }),
+    );
+    assert_eq!(got["status"], "completed", "{got}");
+    let table = got["output"]["sinkReport"]["tables"][0]["table"].as_str().expect("a table").to_owned();
+    let gp = kentos_geopackage::GeoPackage::open(&path, false).expect("opens");
+    let db = gp.connection();
+    let columns = ["Nesne", "Sayı", "Toplam", "Ortalama", "En küçük", "En büyük", "Standart sapma"];
+    assert_eq!(
+        kinds_of(&gp, &table, &columns),
+        [["text"], ["integer"], ["real"], ["real"], ["real"], ["real"], ["real"]].map(|k| k.map(str::to_owned).to_vec())
+    );
+    let over: i64 = db
+        .query_row(&format!(r#"SELECT count(*) FROM "{table}" WHERE "Ortalama" > 100"#), [], |r| r.get(0))
+        .expect("a count");
+    assert_eq!(over, 3, "B1, B2 and B3 over 100; B4 has none");
+    let empty: i64 = db
+        .query_row(&format!(r#"SELECT count(*) FROM "{table}" WHERE "Ortalama" IS NULL"#), [], |r| r.get(0))
+        .expect("a count");
+    assert_eq!(empty, 1, "the zone without cells is NULL, not an empty text");
+    let mut st = db.prepare(&format!(r#"SELECT "Sayı" FROM "{table}" ORDER BY "Sayı" DESC"#)).expect("a query");
+    let counts: Vec<i64> = st.query_map([], |r| r.get(0)).expect("rows").map(|r| r.expect("a row")).collect();
+    assert_eq!(counts, [35, 30, 23, 0]);
+    drop(st);
+    drop(gp);
+    // Uzaklık matrisi, Liste: the parcels' two nearest stops.
+    let path = dir.join("matris.gpkg");
+    let text = std::fs::read_to_string(fixtures().join("processing/v1/proximity.kcad")).expect("reads");
+    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&text).expect("a drawing")).expect("opens");
+    let got = run(
+        &mut doc,
+        json!({
+            "tool": "proximity.matrix",
+            "parameters": {
+                "input": { "scope": "layer", "layerId": "parsel" },
+                "targets": { "scope": "layer", "layerId": "durak" },
+                "measure": "edges", "k": 2, "max": 0, "form": "list", "name": "Ad", "targetName": "Ad",
+            },
+            "sink": { "path": path.display().to_string(), "mode": "new", "tables": true },
+        }),
+    );
+    assert_eq!(got["status"], "completed", "{got}");
+    let table = got["output"]["sinkReport"]["tables"][0]["table"].as_str().expect("a table").to_owned();
+    let gp = kentos_geopackage::GeoPackage::open(&path, false).expect("opens");
+    let db = gp.connection();
+    assert_eq!(
+        kinds_of(&gp, &table, &["Kaynak", "Hedef", "Sıra", "Uzaklık"]),
+        [["text"], ["text"], ["integer"], ["real"]].map(|k| k.map(str::to_owned).to_vec())
+    );
+    let firsts: i64 = db
+        .query_row(&format!(r#"SELECT count(*) FROM "{table}" WHERE "Sıra" = 1"#), [], |r| r.get(0))
+        .expect("a count");
+    assert_eq!(firsts, 7, "one nearest stop for each of the seven parcels");
+    drop(gp);
+    if let Some(keep) = std::env::var_os("KENTOS_KEEP_TYPED") {
+        let keep = std::path::PathBuf::from(keep);
+        std::fs::copy(dir.join("bolgesel.gpkg"), keep.with_extension("bolgesel.gpkg")).expect("kept");
+        std::fs::copy(dir.join("matris.gpkg"), keep.with_extension("matris.gpkg")).expect("kept");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Bölgesel istatistik's table typed from its cells goes to PostGIS with the same kinds (docs/adr/9190): the count an
+/// integer, the mean a real in PostgreSQL's catalogue. Skipped without `KENTOS_DATA_PG`.
+#[test]
+fn zonal_statistics_go_to_postgis_typed_from_their_cells() {
+    let Some(address) = std::env::var("KENTOS_DATA_PG").ok().filter(|a| !a.is_empty()) else {
+        eprintln!("KENTOS_DATA_PG yok: bölgesel istatistiğin PostGIS sütun türleri atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    kentos_data_postgis::register();
+    let schema = format!("kentos_tur_bolge_{}", std::process::id());
+    let (mut doc, at) = drawing();
+    let got = run(
+        &mut doc,
+        json!({
+            "tool": "raster.zonalStatistics",
+            "parameters": {
+                "input": { "scope": "layer", "layerId": "bolge" },
+                "zones": { "scope": "layer", "layerId": "bolgeler" },
+                "stat": "mean",
+                "output": "",
+            },
+            "sink": { "path": address, "schema": schema, "mode": "new", "tables": true },
+            "drawing": at.display().to_string(),
+        }),
+    );
+    assert_eq!(got["status"], "completed", "{got}");
+    let table = got["output"]["sinkReport"]["tables"][0]["table"].as_str().expect("a table").to_owned();
+    let source = kentos_data::registry().source(&address).expect("the database");
+    let qualified = if table.contains('.') { table } else { format!("{schema}.{table}") };
+    let fields = source.schema(&qualified).expect("the table").fields;
+    let kind = |name: &str| fields.iter().find(|f| f.name == name).map(|f| f.kind.clone());
+    assert!(matches!(kind("Sayı"), Some(kentos_data::FieldKind::Int { .. })), "{:?}", kind("Sayı"));
+    assert!(matches!(kind("Ortalama"), Some(kentos_data::FieldKind::Real)), "{:?}", kind("Ortalama"));
+    assert!(matches!(kind("Nesne"), Some(kentos_data::FieldKind::Text { .. })), "{:?}", kind("Nesne"));
+}

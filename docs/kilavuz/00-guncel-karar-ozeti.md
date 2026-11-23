@@ -277,6 +277,9 @@
   - **Girdiden türetilmiş ad** (23 Kasım, rapor 11'in kalanı; [ADR 9189](../adr/9189-result-named-after-its-input.md), VY-88): işlem
     penceresi yeni katmanı kişi ad yazmadıkça “Yol ekseni — tampon 10 m” diye adlandırır (girdinin katmanı, araç,
     birimli ilk ölçü). Bilerek verilen değerler ve betik aracın adını korur.
+  - **Hücrelerden türlenen tablolar** (23 Kasım, rapor 23'ün kalanı; [ADR 9190](../adr/9190-table-kinds-read-from-the-cells.md), VY-89):
+    türünü söylemeyen aracın tablosu (bölgesel istatistik, matrisler…) dosyaya ve PostGIS'e gösterdiği hücrelerden
+    türlenerek yazılır: tam sayı INTEGER, sabit basamaklı ondalık REAL, öbürü metin (`kentos_processing::table_kinds`).
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

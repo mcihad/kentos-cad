@@ -2628,6 +2628,8 @@ Liste:
   veri katmanının tablosundan da çıkarsın.
 - [ ] Girdiden türetilmiş ad (ADR 9189, 23 Kasım 2026): web'in işlem penceresi de yeni katmanı kişi ad yazmadıkça
   “Yol ekseni — tampon 10 m” diye önersin; yazılan ad ve bilerek verilen değerler kalsın.
+- [ ] Hücrelerden türlenen tablolar (ADR 9190, 23 Kasım 2026): web'in işlem sonucu dosyaya yazılırken türünü söylemeyen
+  aracın sütunları da hücrelerden türlensin (`table_kinds::read`'in kuralı; WASM ya da aynı kural).
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

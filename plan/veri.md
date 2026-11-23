@@ -651,3 +651,10 @@ numaraları raporunkidir.
   - Yazılan ad, seçilen katman ve bilerek verilen değerler (Yeniden aç, model, toplu satır) türetilmez.
   - Betik ve MCP aracın adını kullanır; ortak durumlar değişmedi.
   - Kalan: web.
+- [x] **VY-89 — Türünü söylemeyen aracın tablosu gösterdiği hücrelerden türlenir (rapor 23'ün kalanı).**
+  ([ADR 9190](../docs/adr/9190-table-kinds-read-from-the-cells.md))
+  - Her hücresi tam sayı olan sütun INTEGER, her hücresi aynı basamakta ondalık olan sütun REAL, öbürü metin; boş hücre
+    NULL. Gruplu sayı, birim, tire, ondalık virgülü metin kalır.
+  - Bölgesel istatistik ve uzaklık matrisi GeoPackage'da ve PostGIS'te türlü; `"Ortalama" > 100` ve sayısal sıra
+    doğru. Toplu çalıştırma ve pencerenin Kaydet ▾'i aynı okumayı kullanır.
+  - Kalan: araçların yuvarlanmamış kendi değerleri, web.

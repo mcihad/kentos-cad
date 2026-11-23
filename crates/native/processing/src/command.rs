@@ -1646,16 +1646,22 @@ pub(crate) fn text_tables(
                 .map(|r| r.as_array().map(|r| r.iter().map(text).collect()))
                 .collect::<Option<_>>()?;
             // The columns' kinds and the cells' plain values, when the tool gives them (docs/adr/9136).
-            let kinds = v
+            let kinds: Vec<CellKind> = v
                 .get("kinds")
                 .and_then(Value::as_array)
                 .map(|k| k.iter().map(|w| CellKind::of(w.as_str().unwrap_or_default())).collect())
                 .unwrap_or_default();
-            let values = v
+            let values: Vec<Vec<Value>> = v
                 .get("values")
                 .and_then(Value::as_array)
                 .map(|rs| rs.iter().filter_map(|r| r.as_array().cloned()).collect())
                 .unwrap_or_default();
+            // A tool that says neither (docs/adr/9190): its columns read from the cells it shows, strictly.
+            let (kinds, values) = if kinds.is_empty() && values.is_empty() {
+                crate::table_kinds::read(&rows)
+            } else {
+                (kinds, values)
+            };
             Some(TextTable {
                 output: name.clone(),
                 label: labels
