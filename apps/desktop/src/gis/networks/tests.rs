@@ -121,6 +121,7 @@ fn en_yakin_tesis_writes_a_way_for_each_school_in_one_step() {
         &mut app,
         Message::Run("processing.run.network.closestFacility"),
     );
+    app.keep_tool_names();
     value(
         &mut app,
         "network",
@@ -154,6 +155,7 @@ fn hizmet_alanlari_says_what_cuts_the_area_off() {
         &mut app,
         Message::Run("processing.run.network.serviceAreas"),
     );
+    app.keep_tool_names();
     value(
         &mut app,
         "network",
@@ -341,6 +343,7 @@ fn screens() {
                             &mut app,
                             Message::Run("processing.run.network.closestFacility"),
                         );
+                        app.keep_tool_names();
                         value(
                             &mut app,
                             "network",
@@ -353,6 +356,7 @@ fn screens() {
                     }
                     "matris" => {
                         send(&mut app, Message::Run("processing.run.network.odMatrix"));
+                        app.keep_tool_names();
                         value(
                             &mut app,
                             "network",
@@ -368,6 +372,7 @@ fn screens() {
                             &mut app,
                             Message::Run("processing.run.network.serviceAreas"),
                         );
+                        app.keep_tool_names();
                         value(
                             &mut app,
                             "network",

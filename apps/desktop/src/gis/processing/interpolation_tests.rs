@@ -39,6 +39,7 @@ fn value(app: &mut App, name: &str, v: Value) {
 /// Opens `tool`'s window on `layer`, its result to be written at `out`.
 fn open(app: &mut App, tool: &'static str, layer: &str, out: &std::path::Path) {
     let _ = app.update(Message::Run(tool));
+    app.keep_tool_names();
     value(app, "input", json!({ "scope": "layer", "layerId": layer }));
     value(app, "output", json!(out.to_string_lossy()));
 }

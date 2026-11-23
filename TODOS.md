@@ -2626,6 +2626,8 @@ Liste:
 - [ ] NULL, boş metin ve kod ayrı (ADR 9188, 23 Kasım 2026): web'in öznitelik tablosu ve kartı da hiç yazılmamış değeri
   soluk “NULL”, boş metni boş göstersin; veri katmanının kodlu alanını etiketiyle göstersin; rolün okumadığı alanları
   veri katmanının tablosundan da çıkarsın.
+- [ ] Girdiden türetilmiş ad (ADR 9189, 23 Kasım 2026): web'in işlem penceresi de yeni katmanı kişi ad yazmadıkça
+  “Yol ekseni — tampon 10 m” diye önersin; yazılan ad ve bilerek verilen değerler kalsın.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

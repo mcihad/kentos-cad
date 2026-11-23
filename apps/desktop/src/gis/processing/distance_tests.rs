@@ -52,6 +52,7 @@ fn ok(app: &mut App) -> String {
 
 fn window(app: &mut App, tool: &'static str, values: &[(&str, Value)]) {
     let _ = app.update(Message::Run(tool));
+    app.keep_tool_names();
     for (name, v) in values {
         value(app, name, v.clone());
     }

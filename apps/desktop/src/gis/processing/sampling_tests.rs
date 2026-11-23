@@ -59,6 +59,7 @@ fn fill(app: &mut App, c: &Value) {
     let tool = c["run"]["tool"].as_str().expect("a tool");
     let command: &'static str = Box::leak(format!("processing.run.{tool}").into_boxed_str());
     let _ = app.update(Message::Run(command));
+    app.keep_tool_names();
     let values = c["values"].as_object().expect("values");
     let first = ["shape", "mode"];
     for name in first {

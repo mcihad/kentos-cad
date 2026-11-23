@@ -450,6 +450,15 @@ impl App {
         self.show_processing();
     }
 
+    /// The open window's new layers keep the tool's own names (a test replaying a shared case, docs/adr/9189).
+    #[cfg(test)]
+    pub(crate) fn keep_tool_names(&mut self) {
+        if let Some(w) = self.gis.processing.dialog.as_mut() {
+            w.keep_tool_names();
+        }
+        self.refresh_processing();
+    }
+
     /// The window's live parts again: problems, what the inputs resolve to, previews.
     pub(crate) fn refresh_processing(&mut self) {
         let variables = self.expression_variables();
@@ -463,6 +472,8 @@ impl App {
             view: Some(self.viewport.camera.visible_bounds()),
             variables,
         };
+        // The new layer named after what the run reads, while no name was typed (docs/adr/9189).
+        window.derive_names(&doc.model, &self.selection);
         window.refresh(&self.gis.processing.runner, &look);
         window
             .sink

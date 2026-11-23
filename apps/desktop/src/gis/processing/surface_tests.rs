@@ -61,6 +61,7 @@ pub(crate) fn run(app: &mut App) -> RunStatus {
 /// Opens `tool`'s window on the elevation model, its result to be written at `out`.
 pub(crate) fn open_on_dem(app: &mut App, tool: &'static str, out: &std::path::Path) {
     let _ = app.update(Message::Run(tool));
+    app.keep_tool_names();
     value(app, "input", json!({ "scope": "layer", "layerId": "dem" }));
     value(app, "output", json!(out.to_string_lossy()));
 }
@@ -185,6 +186,7 @@ fn the_terrain_commands_open_the_surface_tools() {
         ("analysis.slope", "surface.slope"),
     ] {
         let _ = app.update(Message::Run(command));
+        app.keep_tool_names();
         let open = app
             .gis
             .processing
@@ -295,6 +297,7 @@ fn an_automatic_result_file_never_writes_over_an_earlier_one() {
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let slope = |app: &mut App, unit: &str| {
         let _ = app.update(Message::Run("processing.run.surface.slope"));
+        app.keep_tool_names();
         value(app, "input", json!({ "scope": "layer", "layerId": "dem" }));
         value(app, "unit", json!(unit));
         let s = run(app);

@@ -45,6 +45,7 @@ fn a_run_writes_one_undo_step_named_after_the_tool_and_the_window_stays() {
     let mut app = app_with_parcels();
     app.selection.set([Slot(1), Slot(2), Slot(7)]);
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    app.keep_tool_names();
     assert_eq!(
         app.dialog,
         Some(Dialog::Gis(gis::GisDialogKind::Processing))
@@ -91,6 +92,7 @@ fn a_run_in_the_background_does_what_it_does_here_in_one_undo_step() {
     let mut app = app_with_parcels();
     app.selection.set([Slot(1), Slot(2), Slot(7)]);
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    app.keep_tool_names();
     event(&mut app, Event::Target("worker".into()));
     assert_eq!(
         app.gis.processing.memory.target("annotation.edgeLengths"),
@@ -160,6 +162,7 @@ fn durdur_ends_a_background_run_at_once_and_its_late_answer_is_dropped() {
     let mut app = app_with_parcels();
     app.selection.set([Slot(1), Slot(2), Slot(7)]);
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    app.keep_tool_names();
     event(&mut app, Event::Target("worker".into()));
     let before = app.document.as_ref().map_or(0, |d| d.model.len());
     let task = app.update(Message::Gis(gis::Event::Processing(Event::Run)));
@@ -190,6 +193,7 @@ fn otomatik_sends_two_thousand_objects_to_the_background_with_the_same_answer() 
     let drawing = crate::files_testing::drawing(2100);
     let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing)))));
     let _ = app.update(Message::Run("processing.run.selection.byExpression"));
+    app.keep_tool_names();
     // The points are on Çizim, a hidden layer: the layer's objects, not the shown ones.
     event(
         &mut app,
@@ -239,6 +243,7 @@ fn parcel_sheet(worker: bool, meanwhile: impl FnOnce(&mut App)) -> App {
     let mut app = app_with_parcels();
     app.selection.set([Slot(1), Slot(2), Slot(7)]);
     let _ = app.update(Message::Run("processing.model.builtin.parcelSheet"));
+    app.keep_tool_names();
     let place = if worker { "worker" } else { "client" };
     event(&mut app, Event::Target(place.into()));
     let task = app.update(Message::Gis(gis::Event::Processing(Event::Run)));
@@ -321,6 +326,7 @@ fn a_model_whose_drawing_changed_meanwhile_runs_again_on_it() {
     change(&mut here);
     here.selection.set([Slot(1), Slot(2)]);
     let _ = here.update(Message::Run("processing.model.builtin.parcelSheet"));
+    here.keep_tool_names();
     event(&mut here, Event::Target("client".into()));
     event(&mut here, Event::Run);
     assert!(
@@ -338,6 +344,7 @@ fn a_model_whose_drawing_changed_meanwhile_runs_again_on_it() {
 fn with_nothing_selected_the_problem_shows_under_the_field() {
     let mut app = app_with_parcels();
     let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    app.keep_tool_names();
     let window = app.gis.processing.dialog.as_ref().expect("open");
     assert!(
         window.issue_of("input").is_none(),
@@ -375,6 +382,7 @@ fn a_start_point_is_shown_on_the_drawing_and_the_window_comes_back_with_it() {
     let mut app = app_with_parcels();
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    app.keep_tool_names();
     event(&mut app, Event::Value("start".into(), json!("point")));
     event(&mut app, Event::Pick("startPoint".into()));
     assert_eq!(app.dialog, None, "the window steps aside");
@@ -415,6 +423,7 @@ fn the_start_vertex_is_picked_on_the_drawing_from_beside_its_choice() {
     let mut app = app_with_parcels();
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    app.keep_tool_names();
     // Sahneden seç beside Başlangıç köşesi: the point, and the choice it gives.
     event(&mut app, Event::PickChoice("start".into()));
     assert_eq!(app.dialog, None, "the window steps aside");
@@ -445,6 +454,7 @@ fn input_objects_are_picked_on_the_drawing_of_the_fields_kinds() {
     let mut app = objects();
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    app.keep_tool_names();
     event(&mut app, Event::PickObjects("input".into()));
     assert_eq!(app.dialog, None, "the window steps aside");
     assert!(app.selection.is_empty(), "a fresh pick");
@@ -490,6 +500,7 @@ fn input_objects_are_picked_from_another_layer_with_otomatik_secim_off() {
     click(&mut app, -18.0, 9.0);
     assert!(app.selection.is_empty());
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    app.keep_tool_names();
     event(&mut app, Event::PickObjects("input".into()));
     assert_eq!(app.dialog, None, "the window steps aside");
     click(&mut app, -18.0, 9.0);
@@ -514,6 +525,7 @@ fn a_remembered_kind_narrowing_does_not_refuse_a_picked_area() {
 
     let mut app = objects();
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    app.keep_tool_names();
     event(
         &mut app,
         Event::Value(
@@ -556,6 +568,7 @@ fn a_remembered_kind_narrowing_does_not_come_back() {
         .memory
         .remember("annotation.edgeLengths", &last);
     let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    app.keep_tool_names();
     let window = app.gis.processing.dialog.as_ref().expect("open");
     // The input is the drawing's now, the tool's own default (docs/adr/9144): neither the last layer nor its narrowing.
     assert!(window.values.get("input").is_some_and(|v| v.get("kinds").is_none()), "{:?}", window.values.get("input"));
@@ -630,6 +643,7 @@ fn screens() {
                     app.selection.set([Slot(1), Slot(2), Slot(7)]);
                 }
                 let _ = app.update(Message::Run(command));
+                app.keep_tool_names();
                 match name {
                     "numara" => {
                         event(&mut app, Event::Value("start".into(), json!("point")));
@@ -734,6 +748,7 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     // A run goes to Geçmiş; Yeniden aç brings its values back, n nesneyi seç what it made.
     app.selection.set([Slot(3)]);
     let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    app.keep_tool_names();
     event(&mut app, Event::Value("prefix".into(), json!("K")));
     event(&mut app, Event::Run);
     event(&mut app, Event::Close);
@@ -789,6 +804,7 @@ fn panel_screens() {
                     ] {
                         app.selection.set(ids);
                         let _ = app.update(Message::Run(command));
+                        app.keep_tool_names();
                         event(&mut app, Event::Run);
                         event(&mut app, Event::Close);
                     }
@@ -817,6 +833,7 @@ fn panel_screens() {
 fn a_changed_advanced_setting_is_said_while_its_section_is_closed() {
     let mut app = app_with_parcels();
     let _ = app.update(Message::Run("processing.run.selection.byExpression"));
+    app.keep_tool_names();
     let changed = |app: &App| app.gis.processing.dialog.as_ref().expect("the window").advanced_changed();
     assert!(changed(&app).is_empty());
     event(&mut app, Event::Value("cadFilter".into(), json!(true)));
@@ -832,6 +849,7 @@ fn changed_advanced_screens() {
     crate::files_testing::usage_shots("064", "ifadeyle-sec-suzgec-acik", || {
         let mut app = app_with_parcels();
         let _ = app.update(Message::Run("processing.run.selection.byExpression"));
+        app.keep_tool_names();
         event(&mut app, Event::Value("cadFilter".into(), json!(true)));
         app
     });
@@ -877,6 +895,7 @@ fn metres_in_a_geographic_project_are_refused_before_the_run() {
     };
     let issue = |app: &mut App, tool: &'static str, values: &[(&str, serde_json::Value)]| -> Option<String> {
         let _ = app.update(Message::Run(tool));
+        app.keep_tool_names();
         for (k, v) in values {
             let _ = app.update(Message::Gis(gis::Event::Processing(super::Event::Value((*k).into(), v.clone()))));
         }

@@ -274,6 +274,9 @@
   - **NULL, boş metin ve kod ayrı** (23 Kasım, rapor 9 ve 29'un kalanı; [ADR 9188](../adr/9188-null-empty-text-and-codes-told-apart.md), VY-87):
     hiç yazılmamış değer tabloda soluk “NULL”, kartta “NULL”; boş metin boş (kartta “—”). Veri katmanının kodlu alanı
     etiketiyle görünür. Rolün okumadığı alanlar veri katmanının tablosundan ve kartından da çıkar, adıyla söylenir.
+  - **Girdiden türetilmiş ad** (23 Kasım, rapor 11'in kalanı; [ADR 9189](../adr/9189-result-named-after-its-input.md), VY-88): işlem
+    penceresi yeni katmanı kişi ad yazmadıkça “Yol ekseni — tampon 10 m” diye adlandırır (girdinin katmanı, araç,
+    birimli ilk ölçü). Bilerek verilen değerler ve betik aracın adını korur.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

@@ -58,6 +58,7 @@ fn scene(name: &str) -> (App, PathBuf) {
     .expect("runs");
     assert_eq!(answer["status"], "completed", "{answer}");
     let _ = app.update(Message::Run("processing.run.convert.toPoints"));
+    app.keep_tool_names();
     event(
         &mut app,
         Event::Value(

@@ -189,6 +189,8 @@ pub struct ToolDialog {
     /// A raster's name typed before Ekle adds its row (docs/adr/0237 §9), by parameter.
     pub(super) drafts: BTreeMap<String, String>,
     touched: BTreeSet<String>,
+    /// The new layers whose names the person typed (or history gave): their names are no longer derived (docs/adr/9189).
+    named: BTreeSet<String>,
     /// After Çalıştır every problem shows, not only those of touched fields.
     attempted: bool,
     pub(super) advanced_open: bool,
@@ -232,12 +234,24 @@ impl ToolDialog {
                         .and_then(|s| s.get(&p.name))
                         .is_some_and(|v| Some(v) != base.get(&p.name))
             });
+        // Values given on purpose (history's Yeniden aç, a model's step, a batch row, a shared case) are what is run:
+        // their new layers keep the names they give, or the tool's own (docs/adr/9189).
+        let named = if explicit {
+            tool.parameters
+                .iter()
+                .filter(|p| matches!(p.kind, ParamKind::Layer { .. }))
+                .map(|p| p.name.clone())
+                .collect()
+        } else {
+            BTreeSet::new()
+        };
         Self {
             tool,
             values,
             numbers: BTreeMap::new(),
             drafts: BTreeMap::new(),
             touched: BTreeSet::new(),
+            named,
             attempted: false,
             advanced_open,
             server_sink: false,
@@ -340,6 +354,46 @@ impl ToolDialog {
         }
     }
 
+    /// The new layers' names while none was typed (docs/adr/9189): “Yol ekseni — tampon 10 m”, the first input's layer,
+    /// the tool's name and its first measure with its unit. A name typed (or given by history) is the person's; an
+    /// existing layer chosen keeps its name; an input of no one layer (the view, the drawing, a file) leaves the
+    /// tool's own name.
+    pub fn derive_names(&mut self, doc: &kentos_domain::Document, selection: &kentos_interaction::Selection) {
+        let Some(name) = derived_name(&self.tool, &self.values, doc, selection) else {
+            return;
+        };
+        for p in &self.tool.parameters {
+            if !matches!(p.kind, ParamKind::Layer { .. }) || self.named.contains(&p.name) {
+                continue;
+            }
+            if self.values.get(&p.name).and_then(|v| v.get("newName")).is_none() {
+                continue;
+            }
+            self.values.insert(p.name.clone(), json!({ "newName": name }));
+        }
+    }
+
+    /// Its new layers keep the tool's own names: a test that replays a shared case through the window runs what the
+    /// case runs (docs/adr/9189).
+    #[cfg(test)]
+    pub(crate) fn keep_tool_names(&mut self) {
+        self.named = self
+            .tool
+            .parameters
+            .iter()
+            .filter(|p| matches!(p.kind, ParamKind::Layer { .. }))
+            .map(|p| p.name.clone())
+            .collect();
+        for p in &self.tool.parameters {
+            if matches!(p.kind, ParamKind::Layer { .. })
+                && let Some(kentos_processing::types::DefaultValue::Value(v)) = &p.default
+                && self.values.get(&p.name).and_then(|x| x.get("newName")).is_some()
+            {
+                self.values.insert(p.name.clone(), v.clone());
+            }
+        }
+    }
+
     /// Varsayılanlar: every field back to its default.
     pub fn reset(&mut self, defaults: &Defaults) {
         // It waits while a run is going (the web's footer disables it).
@@ -428,6 +482,10 @@ impl ToolDialog {
         match e {
             Event::Value(name, value) => {
                 self.drafts.remove(&name);
+                // A layer chosen or named on purpose is the person's: its name is no longer derived (docs/adr/9189).
+                if self.tool.parameters.iter().any(|p| p.name == name && matches!(p.kind, ParamKind::Layer { .. })) {
+                    self.named.insert(name.clone());
+                }
                 self.set(name, value)
             }
             Event::Draft(name, text) => {
@@ -463,7 +521,11 @@ impl ToolDialog {
                 }
                 self.set(name, Value::String(text));
             }
-            Event::LayerName(name, text) => self.set(name, json!({ "newName": text })),
+            Event::LayerName(name, text) => {
+                // A name typed is the person's: it is no longer derived (docs/adr/9189).
+                self.named.insert(name.clone());
+                self.set(name, json!({ "newName": text }));
+            }
             Event::Advanced => self.advanced_open = !self.advanced_open,
             Event::Kind(name, kind) => self.toggle_kind(name, &kind),
             Event::Insert(name, text) => {
@@ -698,3 +760,46 @@ impl ToolDialog {
         self.tool.preview.and_then(|p| p(&self.values))
     }
 }
+
+/// A new layer's name from what the run reads (docs/adr/9189): “Yol ekseni — tampon 10 m”. The first objects input's
+/// layer (a selection of one layer's objects: that layer's; of several: “Seçim”), the tool's name in small letters,
+/// and its first shown measure with its unit (a distance, an area, an angle); none for an input of no one layer.
+pub(super) fn derived_name(
+    tool: &Tool,
+    values: &Values,
+    doc: &kentos_domain::Document,
+    selection: &kentos_interaction::Selection,
+) -> Option<String> {
+    let input = tool.parameters.iter().find(|p| matches!(p.kind, ParamKind::Features { .. }))?;
+    let v = values.get(&input.name)?;
+    let source = match v.get("scope").and_then(Value::as_str)? {
+        "layer" => doc.layers().get(v.get("layerId")?.as_str()?)?.name.clone(),
+        "selection" => {
+            let layers: BTreeSet<&str> =
+                selection.ids().iter().filter_map(|s| doc.get(*s)).map(|e| e.base().layer_id.as_str()).collect();
+            match (layers.len(), layers.first()) {
+                (1, Some(id)) => doc.layers().get(id)?.name.clone(),
+                (0, _) => return None,
+                _ => "Seçim".to_owned(),
+            }
+        }
+        _ => return None,
+    };
+    let what = kentos_interaction::lower_tr(&tool.label);
+    let measure = tool
+        .parameters
+        .iter()
+        .filter(|p| !p.advanced && kentos_processing::parameters::is_visible(p, values))
+        .find_map(|p| match &p.kind {
+            ParamKind::Number { unit, .. } if !unit.is_empty() && unit != "adet" => {
+                let n = values.get(&p.name)?.as_f64().filter(|n| n.is_finite())?;
+                Some(format!("{} {unit}", kentos_project::new_project::js_number(n)))
+            }
+            _ => None,
+        });
+    Some(match measure {
+        Some(m) => format!("{source} — {what} {m}"),
+        None => format!("{source} — {what}"),
+    })
+}
+

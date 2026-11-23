@@ -57,6 +57,7 @@ fn the_parcels_burn_below_their_layer_in_one_step() {
     let (mut app, _) = App::boot(None);
     super::surface_tests::open_valley(&mut app);
     let _ = app.update(Message::Run("processing.run.raster.rasterize"));
+    app.keep_tool_names();
     value(
         &mut app,
         "input",
@@ -96,6 +97,7 @@ fn the_parcels_burn_below_their_layer_in_one_step() {
 fn a_contour_is_captured_and_given_its_elevation() {
     let mut app = scanned();
     let _ = app.update(Message::Run("processing.run.scan.captureLine"));
+    app.keep_tool_names();
     value(
         &mut app,
         "input",
@@ -136,6 +138,7 @@ fn a_contour_is_captured_and_given_its_elevation() {
 fn the_curves_take_their_elevations_in_one_step() {
     let mut app = scanned();
     let _ = app.update(Message::Run("processing.run.raster.toLines"));
+    app.keep_tool_names();
     value(
         &mut app,
         "input",
@@ -148,6 +151,7 @@ fn the_curves_take_their_elevations_in_one_step() {
     assert!(matches!(s, RunStatus::Ok { .. }), "{s:?}");
     let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     let _ = app.update(Message::Run("processing.run.scan.contourElevations"));
+    app.keep_tool_names();
     value(
         &mut app,
         "curves",

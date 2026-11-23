@@ -64,6 +64,7 @@ fn layer(id: &str) -> serde_json::Value {
 fn buffer_rings_go_to_a_layer_of_their_own_in_one_step() {
     let mut app = app_with_geometry();
     let _ = app.update(Message::Run("processing.run.geometry.buffer"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("agac"));
     value(&mut app, "distance", json!(2));
     value(&mut app, "rings", json!(2));
@@ -98,6 +99,7 @@ fn a_gis_buffers_layer_is_an_area_layer_that_turns_the_point_tool_off() {
     let mut app = app_with_geometry();
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
     let _ = app.update(Message::Run("processing.run.geometry.buffer"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("parsel"));
     value(&mut app, "distance", json!(10));
     event(&mut app, Event::Run);
@@ -130,6 +132,7 @@ fn a_gis_buffers_layer_is_an_area_layer_that_turns_the_point_tool_off() {
 fn the_validity_check_shows_its_table_selects_and_changes_nothing() {
     let mut app = app_with_geometry();
     let _ = app.update(Message::Run("processing.run.geometry.validity"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("hatali"));
     event(&mut app, Event::Run);
     let RunStatus::Ok { text, table, .. } = status(&app) else {
@@ -162,6 +165,7 @@ fn the_validity_check_shows_its_table_selects_and_changes_nothing() {
 fn the_topology_rules_from_the_toolbox_give_the_commands_findings() {
     let mut app = app_with(TOPOLOGY);
     let _ = app.update(Message::Run("processing.run.topology.check"));
+    app.keep_tool_names();
     event(&mut app, Event::Run);
     let RunStatus::Ok { text, table, .. } = status(&app) else {
         panic!("{:?}", status(&app));
@@ -184,6 +188,7 @@ fn the_topology_rules_from_the_toolbox_give_the_commands_findings() {
 fn the_findings_go_to_an_error_layer_in_one_step() {
     let mut app = app_with(TOPOLOGY);
     let _ = app.update(Message::Run("processing.run.topology.check"));
+    app.keep_tool_names();
     value(&mut app, "write", json!(true));
     event(&mut app, Event::Run);
     let RunStatus::Ok { text, table, .. } = status(&app) else {
@@ -225,6 +230,7 @@ fn the_findings_go_to_an_error_layer_in_one_step() {
 fn the_zoning_regions_go_to_an_error_layer_in_one_step() {
     let mut app = app_with(ZONING);
     let _ = app.update(Message::Run("processing.run.zoning.check"));
+    app.keep_tool_names();
     value(&mut app, "write", json!(true));
     event(&mut app, Event::Run);
     let RunStatus::Ok { text, table, .. } = status(&app) else {
@@ -261,6 +267,7 @@ fn the_zoning_error_layer_goes_to_a_geopackage() {
     use super::sink::{Place, SinkEvent, run_to_sink};
     let mut app = app_with(ZONING);
     let _ = app.update(Message::Run("processing.run.zoning.check"));
+    app.keep_tool_names();
     value(&mut app, "write", json!(true));
     let dir = crate::files_testing::scratch("imar-bulgulari-gpkg");
     let out = dir.join("imar-bulgulari.gpkg");
@@ -310,6 +317,7 @@ fn zoning_screens() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let _ = app.update(Message::Run("processing.run.zoning.check"));
+    app.keep_tool_names();
     value(&mut app, "write", json!(true));
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("1-pencere-acik-genis.png");
@@ -340,6 +348,7 @@ fn zoning_screens() {
 fn the_scenario_s_areas_are_joined_to_the_line_in_one_step() {
     let mut app = app_with(LINKS);
     let _ = app.update(Message::Run("processing.run.scenarios.links"));
+    app.keep_tool_names();
     value(&mut app, "scenario", json!("Alternatif A"));
     value(&mut app, "infrastructure", layer("altyapi"));
     value(&mut app, "distance", json!(40));
@@ -383,6 +392,7 @@ fn links_screens() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let _ = app.update(Message::Run("processing.run.scenarios.links"));
+    app.keep_tool_names();
     value(&mut app, "scenario", json!("Alternatif A"));
     value(&mut app, "infrastructure", layer("altyapi"));
     value(&mut app, "distance", json!(40));
@@ -409,6 +419,7 @@ fn links_screens() {
 fn reprojecting_from_the_projects_own_system_is_refused() {
     let mut app = app_with_geometry();
     let _ = app.update(Message::Run("processing.run.geometry.reproject"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("eski"));
     value(&mut app, "source", json!("5254"));
     event(&mut app, Event::Run);
@@ -471,6 +482,7 @@ fn screens() {
                 match name {
                     "tampon" | "tampon-cizim" => {
                         let _ = app.update(Message::Run("processing.run.geometry.buffer"));
+                        app.keep_tool_names();
                         value(&mut app, "input", layer("yol"));
                         value(&mut app, "distance", json!(3));
                         value(&mut app, "rings", json!(2));
@@ -479,6 +491,7 @@ fn screens() {
                     }
                     "kesisim" | "kesisim-cizim" => {
                         let _ = app.update(Message::Run("processing.run.geometry.intersection"));
+                        app.keep_tool_names();
                         value(&mut app, "input", layer("parsel"));
                         value(&mut app, "overlay", layer("imar"));
                         value(&mut app, "prefix", json!("İmar "));
@@ -487,33 +500,39 @@ fn screens() {
                     }
                     "gecerlilik" => {
                         let _ = app.update(Message::Run("processing.run.geometry.validity"));
+                        app.keep_tool_names();
                         value(&mut app, "input", layer("hatali"));
                         event(&mut app, Event::Run);
                     }
                     "onar" => {
                         let _ = app.update(Message::Run("processing.run.geometry.repair"));
+                        app.keep_tool_names();
                         value(&mut app, "input", layer("hatali"));
                         event(&mut app, Event::Run);
                     }
                     "topoloji" => {
                         let _ = app.update(Message::Run("view.zoomExtents"));
                         let _ = app.update(Message::Run("processing.run.topology.check"));
+                        app.keep_tool_names();
                         event(&mut app, Event::Run);
                     }
                     "topoloji-hata" | "topoloji-hata-cizim" => {
                         let _ = app.update(Message::Run("view.zoomExtents"));
                         let _ = app.update(Message::Run("processing.run.topology.check"));
+                        app.keep_tool_names();
                         value(&mut app, "write", json!(true));
                         event(&mut app, Event::Run);
                     }
                     "sadelestir" => {
                         let _ = app.update(Message::Run("processing.run.geometry.simplify"));
+                        app.keep_tool_names();
                         value(&mut app, "input", layer("sinir"));
                         value(&mut app, "tolerance", json!(0.05));
                         event(&mut app, Event::Run);
                     }
                     _ => {
                         let _ = app.update(Message::Run("processing.run.geometry.reproject"));
+                        app.keep_tool_names();
                         value(&mut app, "input", layer("eski"));
                         value(&mut app, "source", json!("2320"));
                         event(&mut app, Event::Run);
@@ -597,6 +616,7 @@ fn an_inward_buffer_result_goes_above_its_source() {
         kentos_commands::CommandResult::Completed { .. }
     ));
     let _ = app.update(Message::Run("processing.run.geometry.buffer"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("parsel"));
     value(&mut app, "distance", json!(-1));
     event(&mut app, Event::Run);

@@ -113,6 +113,7 @@ fn fill(app: &mut App, c: &Value) {
 fn open(app: &mut App, tool: &str, values: &Value, files: &[(&str, &[u8])]) {
     let command: &'static str = Box::leak(format!("processing.run.{tool}").into_boxed_str());
     let _ = app.update(Message::Run(command));
+    app.keep_tool_names();
     let values = values.as_object().expect("values");
     let rest = values.keys().filter(|k| !FIRST.contains(&k.as_str()));
     for name in FIRST.iter().copied().chain(rest.map(String::as_str)) {

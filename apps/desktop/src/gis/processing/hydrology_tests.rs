@@ -45,6 +45,7 @@ fn layer_named(app: &App, name: &str) -> (String, usize) {
 
 fn open(app: &mut App, tool: &'static str) {
     let _ = app.update(Message::Run(tool));
+    app.keep_tool_names();
     value(app, "input", json!({ "scope": "layer", "layerId": "dem" }));
 }
 

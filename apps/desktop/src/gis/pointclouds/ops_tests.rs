@@ -170,6 +170,7 @@ fn the_tools_write_the_references_answers() {
 
     // Alan sorgusu: the three areas' figures, a table; the drawing does not change.
     let _ = app.update(Message::Run("processing.run.pointcloud.areaStats"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("koy"));
     value(&mut app, "areas", layer("alanlar"));
     let s = run(&mut app);
@@ -189,6 +190,7 @@ fn the_tools_write_the_references_answers() {
 
     // Seyrelt, Hücreyle 1 m: the cells' nearest points, as LAZ beside nothing else.
     let _ = app.update(Message::Run("processing.run.pointcloud.thin"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("koy"));
     value(&mut app, "size", json!(1.0));
     let out = dir.join("seyrek.laz");
@@ -225,6 +227,7 @@ fn the_tools_write_the_references_answers() {
 
     // Zemin süzgeci: the reference's classes.
     let _ = app.update(Message::Run("processing.run.pointcloud.ground"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("koy"));
     let out = dir.join("zemin.laz");
     value(&mut app, "output", json!(out.to_string_lossy()));
@@ -236,6 +239,7 @@ fn the_tools_write_the_references_answers() {
 
     // Yüksekliğe göre sınıfla, every class but ground.
     let _ = app.update(Message::Run("processing.run.pointcloud.classify"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("koy"));
     value(&mut app, "all", json!(true));
     let out = dir.join("sinifli.las");
@@ -248,6 +252,7 @@ fn the_tools_write_the_references_answers() {
 
     // Kırp: inside the three areas.
     let _ = app.update(Message::Run("processing.run.pointcloud.clip"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("koy"));
     value(&mut app, "areas", layer("alanlar"));
     let out = dir.join("kirpik.laz");
@@ -257,6 +262,7 @@ fn the_tools_write_the_references_answers() {
 
     // Birleştir: the village and the second cloud, the latter's 0.4 mm grid rounded onto mm … the finest.
     let _ = app.update(Message::Run("processing.run.pointcloud.merge"));
+    app.keep_tool_names();
     app.selection.set(
         app.document
             .as_ref()
@@ -276,6 +282,7 @@ fn the_tools_write_the_references_answers() {
 
     // Karola 50 m with its virtual cloud.
     let _ = app.update(Message::Run("processing.run.pointcloud.tile"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("koy"));
     value(&mut app, "size", json!(50.0));
     value(
@@ -304,6 +311,7 @@ fn the_tools_write_the_references_answers() {
 
     // Rasterleştir: the least heights in 2 m cells, a GeoTIFF and its raster.
     let _ = app.update(Message::Run("processing.run.pointcloud.rasterize"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("koy"));
     value(&mut app, "cell", json!(2.0));
     let out = dir.join("dem.tif");
@@ -324,6 +332,7 @@ fn the_tools_write_the_references_answers() {
 
     // Sınır çıkar on the pattern: six parts, two with a hole.
     let _ = app.update(Message::Run("processing.run.pointcloud.boundary"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("sinir"));
     value(&mut app, "cell", json!(1.0));
     value(&mut app, "least", json!(2));
@@ -342,6 +351,7 @@ fn the_area_query_writes_its_table_to_a_geopackage() {
     let _ = std::fs::remove_file(&out);
     let mut app = app();
     let _ = app.update(Message::Run("processing.run.pointcloud.areaStats"));
+    app.keep_tool_names();
     value(&mut app, "input", layer("koy"));
     value(&mut app, "areas", layer("alanlar"));
     let sink = |app: &mut App, e: SinkEvent| {

@@ -69,9 +69,10 @@ pub(crate) fn layer(id: &str) -> Value {
     json!({ "scope": "layer", "layerId": id })
 }
 
-/// `tool`'s window with `values`.
+/// `tool`'s window with `values`, its new layers under the tool's own names (what the cases run, docs/adr/9189).
 pub(crate) fn window(app: &mut App, tool: &'static str, values: &[(&str, Value)]) {
     let _ = app.update(Message::Run(tool));
+    app.keep_tool_names();
     for (name, v) in values {
         let _ = app.update(Message::Gis(gis::Event::Processing(Event::Value(
             (*name).into(),

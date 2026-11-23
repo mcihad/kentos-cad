@@ -644,3 +644,10 @@ numaraları raporunkidir.
   - Veri katmanının değer listeli alanı tabloda ve kartta etiketiyle görünür.
   - Formlar üzerinden çalışan çağıranın okumadığı alanlar veri katmanının tablosundan ve kartından çıkar, adıyla söylenir.
   - Kalan: 29'un bulutta üç hesapla kabulü (25 ile), web.
+- [x] **VY-88 — İşlemin yeni katmanı okuduğu girdiyle adlanır (rapor 11'in kalanı).**
+  ([ADR 9189](../docs/adr/9189-result-named-after-its-input.md))
+  - Ad kişi yazmadıkça “girdinin katmanı — araç ölçü”dür; seçim birkaç katmanınsa “Seçim”, tek katman olmayan girdide
+    ad değişmez.
+  - Yazılan ad, seçilen katman ve bilerek verilen değerler (Yeniden aç, model, toplu satır) türetilmez.
+  - Betik ve MCP aracın adını kullanır; ortak durumlar değişmedi.
+  - Kalan: web.
