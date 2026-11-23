@@ -102,7 +102,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - **Planda olmayan:**
     - `Message::Viewport` kalkmadı, çünkü imleç ve tıklama araçların iletisi olarak kalıyor;
     - durum çubuğundaki ölçek görünüm durunca değişiyor.
-- [ ] **RM-06 — Seçim ve gezinme vurgusu motora geçer.** Seçim değişince yalnız ilgili panel değişir.
+- [x] **RM-06 — Seçim arayüzü yeniden kurmanın bedelini taşımaz.**
+  ([ADR 9206](../docs/adr/9206-selection-without-whole-drawing-scans.md))
+  - Profil (`perf`, simgeli release, 150 tık): DWG'de tıklamanın görünüm payının çoğu Öznitelikler'in “Bu değer nereden
+    geliyor?” sayımındaydı. Sayım, belgenin bütün nesnelerini üç kez tarıyordu.
+  - Sayım artık nesnenin katmanında ve tek geçişte (`Document::by_layer`).
+  - **Ölçü:** tıklama karesi UI 103,4 → 40,7 ms, görünüm 64,9 → 2,3 ms.
+  - Seçim ve gezinme vurgusu zaten GPU parçası; arayüzün geri kalanına `lazy` gerekmedi.
+  - **Kalan:** en uzak görünümde isabet sorgusu 37 ms → RM-08.
 
 ### F2 — Çizim iş parçacığı
 
@@ -114,6 +121,8 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 ### F3 — Döşeme, ayıklama, LOD
 
 - [ ] **RM-08 — Dünya döşemeleri ve görünüm ayıklaması.** Çizim sırası korunur.
+  - En uzak görünümde tıklamanın isabet sorgusu (RM-06'dan) en yakını önce arayacak. Bugün aday kutusu nesnelerin
+    sekizde birini geçince bütün nesneler belge sırasıyla geziliyor: 601 619 nesnede 37 ms.
 - [ ] **RM-09 — Eğriler görünüme göre çizilir.** Daireler, yaylar ve elipsler GPU'da ya da döşeme başına görünüme göre
   çizilir. Bütün çizime yayılan 1 M kiriş bütçesi kalkar; yakında daire köşeli görünmez.
 - [ ] **RM-10 — Düzey sadeleştirme.**
