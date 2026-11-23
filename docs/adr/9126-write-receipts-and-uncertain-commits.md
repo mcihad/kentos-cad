@@ -1,6 +1,9 @@
 # ADR 9126: Yazım makbuzları; yanıtı kaybolan COMMIT yeniden yazmadan önce sorulur
 
 - **Durum:** kabul edildi (2026-11-22); adım VY-25. Plan: [plan/veri.md](../../plan/veri.md) VY-25.
+- **Terim** (23 Kasım 2026, [ADR 9175](9175-transaction-record-wording.md)): arayüz bu kaydı artık “yazım makbuzu” değil **işlem kaydı** diye anar;
+  tabloyu yapan düğme “Yazım makbuzlarını kur” değil **“İşlem kaydı tablosunu oluştur”**dur. Aşağıdaki “makbuz”
+  sözleri kararın ilk metnidir; kodun İngilizce adları (`receipt`) değişmedi.
 - **İstek:** sahibin sözü (22 Kasım 2026): “gis-finish dosyasındaki maddeleri yap”. Belediye kullanım değerlendirmesinin
   30. maddesi (P0):
   - PostGIS'e bir nokta yazılırken bağlantı, sunucu COMMIT'i tamamladıktan sonra ama yanıt istemciye ulaşmadan kesildi;

@@ -129,7 +129,7 @@ fn the_database_keeps_projects_in_a_schema() {
 #[test]
 fn a_receipt_commits_with_its_rows_and_only_with_them() {
     let Some(address) = address() else {
-        eprintln!("KENTOS_DATA_PG yok: PostGIS yazım makbuzları atlandı");
+        eprintln!("KENTOS_DATA_PG yok: PostGIS işlem kayıtları atlandı");
         return;
     };
     let source = PostGis.open(&address).expect("open");

@@ -309,15 +309,17 @@ numaraları raporunkidir.
   - Salt okunur form nedenini söyler (rol, arşiv, katman kilidi). Kaydet, iş akışı adımı, çoklu kayıt, alt kayıtlar
     aynı karardan geçer.
   - Kalan: iki gerçek hesapla bulut sunucusunda kabul (sunucu sınamaları veritabanı ister, Docker yanıt vermedi); web.
-- [~] **VY-25 — Yazım makbuzları; yanıtı kaybolan COMMIT sorulur (rapor 30, P0).**
-  ([ADR 9126](../docs/adr/9126-write-receipts-and-uncertain-commits.md))
+- [~] **VY-25 — Yazımın işlem kaydı; yanıtı kaybolan COMMIT sorulur (rapor 30, P0).**
+  ([ADR 9126](../docs/adr/9126-write-receipts-and-uncertain-commits.md); terim [ADR 9175](../docs/adr/9175-transaction-record-wording.md))
   - `DataError::Uncertain`: PostGIS'te sunucudan gelmeyen COMMIT hatası; uygulamada `WriteFailure::Uncertain`, asla ret
     değil.
-  - Makbuz satırlarla aynı işlemde `kentos_writes`'a (PostGIS şemada, GeoPackage dosyada); kurulum sahibin düğmesiyle.
-  - Yanıt kaybında yazım ve gönderilenin anlık görüntüsü tutulur, günlüğe yazılır; sonraki Kaynağa yaz makbuzu sorar,
-    bulunursa yazılanı çizimden çıkarır, bulunmazsa yazar. Makbuzsuzda kendiliğinden göndermez, Yeniden gönder…
+  - İşlem kaydı satırlarla aynı işlemde `kentos_writes`'a (PostGIS şemada, GeoPackage dosyada); tabloyu sahibin
+    “İşlem kaydı tablosunu oluştur” düğmesi oluşturur.
+  - Yanıt kaybında yazım ve gönderilenin anlık görüntüsü tutulur, günlüğe yazılır; sonraki Kaynağa yaz yazımı işlem
+    kaydına sorar, bulunursa yazılanı çizimden çıkarır, bulunmazsa yazar. İşlem kaydı tutmayan kaynakta kendiliğinden
+    göndermez, Yeniden gönder…
   - Kayıp yanıtlı sınama kaynağı (`kentos_data::lossy`) ile çekirdek ve masaüstü sınamaları.
-  - Kalan: gerçek PostgreSQL'de kesintiler (Docker yanıt vermedi), Python/MCP'de makbuz, web.
+  - Kalan: gerçek PostgreSQL'de kesintiler (Docker yanıt vermedi), Python/MCP'de işlem kaydı, web.
 - [~] **VY-26 — CBS projesi binanın komutlarını sunmaz (rapor 12'nin sızıntısı, P1).**
   ([ADR 9127](../docs/adr/9127-cbs-project-offers-no-building-commands.md))
   - kentos-cad'de CBS projesi açıkken yalnız Mimari'nin şeridindeki komut aramada çıkmaz, çalıştırılınca nedeniyle
@@ -541,3 +543,8 @@ numaraları raporunkidir.
   ([ADR 9174](../docs/adr/9174-the-publish-right-on-the-desktop.md))
   - `forms.publish` yoksa Yayınla kapalı ve nedeni rolün adıyla; taslak, yayından kaldırma ve kurallar tasarım izniyle.
   - Kalan: yol formunda bütün sınama, tasarlayıp yayımlamayan hazır rol (sahibin kararı), web.
+- [x] **VY-74 — Yazımın kaynaktaki izi “işlem kaydı”dır; düğme “İşlem kaydı tablosunu oluştur” (sahibin sözü).**
+  ([ADR 9175](../docs/adr/9175-transaction-record-wording.md))
+  - “Yazım makbuzu” ve “Yazım makbuzlarını kur” bırakıldı: makbuz ödeme ve teslim belgesidir, tablo oluşturulur.
+  - Tablonun adı (`kentos_writes`) ve kodun İngilizce adları aynı; masaüstü sınaması düğmeyi ve tablonun oluşmasını
+    denetler. Web: TODOS.md §0.2.

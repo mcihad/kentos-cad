@@ -114,7 +114,7 @@ pub fn receipt_keys(data: &DataLayer, id: &str) -> Result<Option<ReceiptKeys>, S
         return Ok(None);
     };
     let value: serde_json::Value =
-        serde_json::from_str(&receipt.written).map_err(|e| format!("yazım makbuzu okunamadı: {e}"))?;
+        serde_json::from_str(&receipt.written).map_err(|e| format!("işlem kaydı okunamadı: {e}"))?;
     let mut out = std::collections::BTreeMap::new();
     for (table, w) in value.as_object().into_iter().flatten() {
         let keys = w["added"]
@@ -404,7 +404,7 @@ pub fn write_group_receipted(
         };
         if let Err(e) = tx.receipt(&scope, &receipt) {
             let _ = tx.rollback();
-            return Err(refused(first, &format!("yazım makbuzu yazılamadı: {e}"), None));
+            return Err(refused(first, &format!("işlem kaydı yazılamadı: {e}"), None));
         }
     }
     tx.commit().map_err(|e| match e {

@@ -25,6 +25,10 @@ use kentos_ui::{label, theme::Tokens};
 use crate::app::{App, Dialog as AppDialog, Message};
 use crate::exchange::words;
 
+/// The button that makes the transaction records' table in a source that keeps none (docs/adr/9126, 9175): each write
+/// to the source records its id there in the same transaction, so a write whose answer was lost can be asked about.
+pub(crate) const SET_UP: &str = "İşlem kaydı tablosunu oluştur";
+
 /// A data layer with rows its source does not have yet.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Waiting {
@@ -79,7 +83,7 @@ pub enum Event {
     ResendCancelled,
     /// Whether the layer's source keeps write receipts, as asked off the interface's thread.
     Receipts(String, Result<bool, String>),
-    /// Yazım makbuzlarını kur: the receipts' table made in the layer's source.
+    /// İşlem kaydı tablosunu oluştur: the transaction records' table made in the layer's source (docs/adr/9175).
     SetUpReceipts(String),
     SetUp(String, Result<(), String>),
     Close,
@@ -368,7 +372,7 @@ impl App {
                     self.say(
                         kentos_interaction::Level::Success,
                         format!(
-                            "Yazım makbuzları “{name}” katmanının kaynağında kuruldu (kentos_writes tablosu; öbür tablolar \
+                            "“{name}” katmanının kaynağında işlem kaydı tablosu oluşturuldu (kentos_writes; öbür tablolar \
                              değişmedi). Bundan sonraki yazımların sonucu bağlantı kopsa da kaynağa sorulabilir."
                         ),
                     );
@@ -376,7 +380,7 @@ impl App {
                         w.receipts.insert(layer, Ok(true));
                     }
                 }
-                Err(why) => self.warn(format!("Yazım makbuzları kurulamadı: {why}")),
+                Err(why) => self.warn(format!("İşlem kaydı tablosu oluşturulamadı: {why}")),
             },
             Event::Resend(layer) => {
                 if let Some(w) = self.gis.data_pending.as_mut() {
@@ -513,14 +517,14 @@ impl App {
             (Some(true), _) => {
                 c = c.push(words::text_line(
                     words::Kind::Warn,
-                    "Önceki yazımın sonucu bilinmiyor: bağlantı yazım bitmek üzereyken koptu. Kaynağa yaz önce kaynağa bu \
-                     yazımın makbuzunu sorar; yazılmışsa satırlar ikinci kez yazılmaz.",
+                    "Önceki yazımın sonucu bilinmiyor: bağlantı yazım bitmek üzereyken koptu. Kaynağa yaz önce kaynaktaki \
+                     işlem kaydına bu yazımı sorar; yazılmışsa satırlar ikinci kez yazılmaz.",
                 ));
             }
             (Some(false), _) => {
                 c = c.push(words::text_line(
                     words::Kind::Error,
-                    "Önceki yazımın sonucu bilinmiyor ve bu kaynak yazım makbuzu tutmuyor: kayıt kendiliğinden yeniden \
+                    "Önceki yazımın sonucu bilinmiyor ve bu kaynak işlem kaydı tutmuyor: kayıt kendiliğinden yeniden \
                      gönderilmez. Kaynakta satırları denetleyin; yazılmamışsa Yeniden gönder, yazılmışsa Değişiklikleri \
                      geri al.",
                 ));
@@ -540,16 +544,16 @@ impl App {
                     row![
                         words::text_line(
                             words::Kind::Info,
-                            "Bu veritabanı yazım makbuzu tutmuyor: bağlantı yazım sırasında koparsa sonucu sorulamaz.",
+                            "Bu veritabanı işlem kaydı tutmuyor: bağlantı yazım sırasında koparsa sonucu sorulamaz.",
                         ),
-                        words::secondary("Yazım makbuzlarını kur", Some(message(Event::SetUpReceipts(w.layer.clone())))),
+                        words::secondary(SET_UP, Some(message(Event::SetUpReceipts(w.layer.clone())))),
                     ]
                     .spacing(8)
                     .align_y(iced::Alignment::Center),
                 );
             }
             Some(Err(why)) => {
-                c = c.push(words::text_line(words::Kind::Info, format!("Yazım makbuzları sorulamadı: {why}")));
+                c = c.push(words::text_line(words::Kind::Info, format!("İşlem kaydı sorulamadı: {why}")));
             }
             _ => {}
         }

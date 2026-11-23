@@ -12,7 +12,7 @@ use kentos_native_application::{ExecutionContext, data_describe};
 
 /// A GeoPackage with a `nokta` table of two points; its path.
 fn points(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("kentos-makbuz-{}-{tag}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("kentos-islem-kaydi-{}-{tag}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("a folder");
     let path = dir.join("nokta.gpkg");
@@ -148,7 +148,7 @@ fn a_lost_answer_after_the_commit_is_found_by_its_receipt_and_one_before_it_wrot
 fn a_source_without_receipts_gives_no_id_to_ask_by() {
     kentos_data_gpkg::register();
     lossy::register();
-    let path = points("makbuzsuz");
+    let path = points("kayitsiz");
     let (doc, layer) = project_with_a_new_point(&path);
     let writes = data_write::writes_of(&doc, &layer).expect("being edited");
     assert!(!data_write::receipts_ready(&writes.data).expect("asked"), "never set up by itself");

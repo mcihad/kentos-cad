@@ -146,12 +146,12 @@ pub trait Source: Send + Sync {
     /// Makes the write receipts' table in `scope`, if it is not there; the source's other tables stay as they are.
     fn set_up_receipts(&self, scope: &str) -> Result<(), DataError> {
         let _ = scope;
-        Err(DataError::Unsupported("Bu kaynak yazım makbuzu tutmaz.".to_owned()))
+        Err(DataError::Unsupported("Bu kaynak işlem kaydı tutmaz.".to_owned()))
     }
     /// The receipt of the write `id` in `scope`, read outside any transaction; none when no such write committed.
     fn receipt(&self, scope: &str, id: &str) -> Result<Option<Receipt>, DataError> {
         let _ = (scope, id);
-        Err(DataError::Unsupported("Bu kaynak yazım makbuzu tutmaz.".to_owned()))
+        Err(DataError::Unsupported("Bu kaynak işlem kaydı tutmaz.".to_owned()))
     }
     /// Where it keeps projects with its data (docs/adr/9107); none for a source that cannot keep them.
     fn project_store(&self) -> Option<&dyn ProjectStore> {
@@ -194,7 +194,7 @@ pub trait Transaction: Send {
     /// at all (docs/adr/9126). A receipt of the same id already there is refused (its primary key).
     fn receipt(&mut self, scope: &str, receipt: &Receipt) -> Result<(), DataError> {
         let _ = (scope, receipt);
-        Err(DataError::Unsupported("Bu kaynak yazım makbuzu tutmaz.".to_owned()))
+        Err(DataError::Unsupported("Bu kaynak işlem kaydı tutmaz.".to_owned()))
     }
     /// Writes it all.
     fn commit(self: Box<Self>) -> Result<(), DataError>;

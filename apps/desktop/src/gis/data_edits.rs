@@ -514,7 +514,7 @@ impl App {
                 let Some(receipt) = u.receipt.clone() else {
                     let names: Vec<String> = u.layers().iter().map(|l| self.data_layer_name(l)).collect();
                     self.warn(format!(
-                        "{} için önceki yazımın sonucu bilinmiyor ve bu kaynak yazım makbuzu tutmuyor: kayıt kendiliğinden \
+                        "{} için önceki yazımın sonucu bilinmiyor ve bu kaynak işlem kaydı tutmuyor: kayıt kendiliğinden \
                          yeniden gönderilmedi, yeni satırlar ikinci kez eklenebilirdi. Kaynakta satırları denetleyin, sonra \
                          Katman değişiklikleri'nde Yeniden gönder'i ya da Değişiklikleri geri al'ı seçin.",
                         names.join(", ")
@@ -565,11 +565,11 @@ impl App {
         }
         self.gis.data_edits.after = None;
         let next = if u.receipt.is_some() {
-            "Değişiklikler katmanda duruyor; bir dahaki Kaynağa yaz önce kaynağa bu yazımın makbuzunu sorar, yazılmışsa ikinci \
-             kez yazmaz."
+            "Değişiklikler katmanda duruyor; bir dahaki Kaynağa yaz önce kaynaktaki işlem kaydına bu yazımı sorar, yazılmışsa \
+             ikinci kez yazmaz."
         } else {
-            "Değişiklikler katmanda duruyor. Bu kaynak yazım makbuzu tutmadığı için kayıt kendiliğinden yeniden gönderilmez: \
-             kaynakta satırları denetleyin; makbuzları Katman değişiklikleri'nden kurabilirsiniz."
+            "Değişiklikler katmanda duruyor. Bu kaynak işlem kaydı tutmadığı için kayıt kendiliğinden yeniden gönderilmez: \
+             kaynakta satırları denetleyin; işlem kaydı tablosunu Katman değişiklikleri'nden oluşturabilirsiniz."
         };
         self.warn(format!("{} {next}", u.words));
         self.journal_uncertain();
@@ -613,13 +613,13 @@ impl App {
                         self.say(
                             kentos_interaction::Level::Success,
                             format!(
-                                "Önceki yazım kaynağa ulaşmıştı (makbuzu bulundu): {}. İkinci kez yazılmadı.",
+                                "Önceki yazım kaynağa ulaşmıştı (işlem kaydında bulundu): {}. İkinci kez yazılmadı.",
                                 said.join("; ")
                             ),
                         );
                     }
                     None => self.output(
-                        "Önceki yazım kaynağa ulaşmamıştı (makbuzu yok): değişiklikler şimdi yazılıyor.",
+                        "Önceki yazım kaynağa ulaşmamıştı (işlem kaydında yok): değişiklikler şimdi yazılıyor.",
                     ),
                 }
                 self.journal_uncertain();

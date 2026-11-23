@@ -81,10 +81,11 @@
     [ADR 9125](../adr/9125-records-written-by-role-not-by-design-right.md), VY-24): `records_locked` `forms.use` ya da
     `feature.write` arar; Veri girişi yazar, Görüntüleyici formu rolü söylenerek salt okunur açar. Tasarım ve yayın
     `forms_locked`'tadır.
-  - **Yazım makbuzları** (22 Kasım, değerlendirmenin 30. maddesi;
-    [ADR 9126](../adr/9126-write-receipts-and-uncertain-commits.md), VY-25): yanıtı kaybolan COMMIT `Uncertain`'dır;
-    makbuz satırlarla aynı işlemde `kentos_writes`'a yazılır (kurulum sahibin düğmesiyle); sonraki Kaynağa yaz önce
-    makbuzu sorar, makbuzsuzda kendiliğinden yeniden göndermez.
+  - **Yazımın işlem kaydı** (22 Kasım, değerlendirmenin 30. maddesi;
+    [ADR 9126](../adr/9126-write-receipts-and-uncertain-commits.md), VY-25; terim ADR 9175): yanıtı kaybolan COMMIT
+    `Uncertain`'dır; işlem kaydı satırlarla aynı işlemde `kentos_writes`'a yazılır (tabloyu sahibin “İşlem kaydı
+    tablosunu oluştur” düğmesi oluşturur); sonraki Kaynağa yaz önce yazımı işlem kaydına sorar, işlem kaydı tutmayan
+    kaynakta kendiliğinden yeniden göndermez.
   - **CBS projesi binanın komutlarını sunmaz** (22 Kasım, değerlendirmenin 12. maddesi;
     [ADR 9127](../adr/9127-cbs-project-offers-no-building-commands.md), VY-26): kentos-cad'de `building_only_here`
     yalnız Mimari'nin şeridindeki komutu CBS projesinde sunmaz; CBS şeridinde IFC, UCS ve Analiz'de nokta bulutu yok.
@@ -226,6 +227,8 @@
   - **Yayımlama izni ayrı** (23 Kasım, rapor 8'in kalanı;
     [ADR 9174](../adr/9174-the-publish-right-on-the-desktop.md), VY-73): `forms.publish` olmayan rolde Yayınla kapalı,
     taslak kaydedilir.
+  - **İşlem kaydı, makbuz değil** (23 Kasım, sahibin sözü; [ADR 9175](../adr/9175-transaction-record-wording.md), VY-74): yazımın kaynaktaki
+    izi “işlem kaydı”, düğme “İşlem kaydı tablosunu oluştur”; “makbuz” ödeme ve teslim belgesinde kalır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

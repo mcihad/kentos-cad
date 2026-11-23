@@ -2491,8 +2491,9 @@ Liste:
 - [ ] Formla kayıt yazmak rolün izniyle (ADR 9125, 22 Kasım 2026): web'in giriş formu kaydı `forms.use` ya da
   `feature.write` ile yazsın; `project.edit` yalnız tasarım ve yayın için; salt okunur form nedenini rolün adıyla
   söylesin.
-- [ ] Yazım makbuzları (ADR 9126, 22 Kasım 2026): web'in veri katmanı yazımı geldiğinde yanıtı kaybolan COMMIT'i
-  ret saymasın, makbuzu sorsun; makbuzsuz kaynakta kendiliğinden yeniden göndermesin.
+- [ ] Yazımın işlem kaydı (ADR 9126, 9175; 22–23 Kasım 2026): web'in veri katmanı yazımı geldiğinde yanıtı kaybolan
+  COMMIT'i ret saymasın, yazımı kaynaktaki işlem kaydına sorsun; işlem kaydı tutmayan kaynakta kendiliğinden yeniden
+  göndermesin. Arayüz “işlem kaydı” der, düğme “İşlem kaydı tablosunu oluştur”dur (“makbuz” değil).
 - [ ] CBS projesi binanın komutlarını sunmaz (ADR 9127, 22 Kasım 2026): web'in komut araması ve çalıştırması CBS
   projesinde yalnız Mimari'nin şeridindeki komutu sunmasın; web'in CBS şeridi `catalog/v1/ribbon.json`'daki gibi IFC,
   UCS ve Analiz'de nokta bulutu taşımasın.
