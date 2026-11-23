@@ -147,6 +147,8 @@ pub fn relation_layers(
                     id: r.id.clone(),
                     name: r.name.clone(),
                     field: r.field.clone(),
+                    // A relation by the parent's own code (docs/adr/9135): the parent field its children hold.
+                    by: r.parent_key.clone(),
                 },
             )
         })

@@ -2277,6 +2277,7 @@ mod overlay_tests {
                 id: "bina-malik".into(),
                 name: "Malikler".into(),
                 field: "bina".into(),
+                by: None,
             },
         );
         let row = |layer: &str, id: &str, ad: &str| {
