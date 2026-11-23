@@ -240,6 +240,9 @@
     aktarmasıyla korumanın yolunu söyler.
   - **Tampon'un durumları ve iş kaydı** (23 Kasım, rapor 11'in kalanı; [ADR 9179](../adr/9179-buffer-cases-and-the-run-in-words.md), VY-78): iş kaydı
     girdiyi, sayıyı birimiyle ve yazılan katmanı (yeni ya da var olan) tutar; Tampon geçersiz girdiyi söyler, onarmaz.
+  - **Yol formu baştan sona** (23 Kasım, rapor 8'in kalanı; [ADR 9180](../adr/9180-the-road-form-end-to-end.md), VY-79): değer listesi, koşullu
+    alan, alt kayıtlar, rol ve sürüm yükseltmesi tek yolda sınanır; formdan eklenen alt kayıt ilişkinin üst anahtarının
+    değerini (kodu) alır, kimliği değil.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik

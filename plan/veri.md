@@ -571,3 +571,8 @@ numaraları raporunkidir.
     Geçmiş kartında.
   - Tampon geçersiz girdiyi söyler, onarmaz; metre, coğrafi, Durdur, papyon ve var olan ad ayrı sınanıyor.
   - Kalan: girdiden türetilen sonuç adı (ortak durumlarla), geçersiz girdi sözünün öbür araçlara yayılması, web.
+- [x] **VY-79 — Yol formu aynı veride baştan sona sınanır; yeni alt kayıt üst kaydın kodunu alır (rapor 8'in
+  kalanı).** ([ADR 9180](../docs/adr/9180-the-road-form-end-to-end.md))
+  - Değer listesi, koşullu alan, alt bakım kayıtları, rol kısıtı ve sürüm yükseltmesi tek yolda birlikte sınanıyor.
+  - Kusur: Yeni alt kayıt kimlik yazıyordu; artık ilişkinin üst anahtarının değerini (yolun kodu) yazıyor.
+  - Kalan: kısıtın kaynakta da uygulanması (GeoPackage, PostgreSQL), web (TODOS.md §0.2).

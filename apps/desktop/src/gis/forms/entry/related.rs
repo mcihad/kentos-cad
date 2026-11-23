@@ -168,7 +168,15 @@ impl App {
             return Task::none();
         };
         let anchor = e.screen.object.measured.anchor;
-        let record = e.uid.clone();
+        // What the new child holds of the record (docs/adr/9135, 9180): its persistent id, or the code a project
+        // relation ties them by (a road's “Y1”), as every way of following the relation reads it.
+        let record = match self.child_code(&e.screen.layer, &layer, &field, &e.uid) {
+            Ok(code) => code,
+            Err(why) => {
+                self.say(Level::Warn, why);
+                return Task::none();
+            }
+        };
         let Some(name) = self
             .layer_fields_of(&layer)
             .iter()
@@ -355,6 +363,35 @@ impl App {
                 );
                 Task::none()
             }
+        }
+    }
+
+    /// What a new child on `child`'s `field` holds of the record `uid` on `parent` (docs/adr/9135, 9180): the code its
+    /// project relation ties by when the relation has a parent key, else the record's persistent id; why not when the
+    /// record's key is empty or the key names a field the parent layer lacks.
+    fn child_code(&self, parent: &str, child: &str, field: &str, uid: &str) -> Result<String, String> {
+        let Some(doc) = self.document.as_ref() else {
+            return Ok(uid.to_owned());
+        };
+        let model = &doc.model;
+        let Some(r) = model.settings().relations.iter().find(|r| r.parent == parent && r.child == child && r.field == field)
+        else {
+            return Ok(uid.to_owned());
+        };
+        let key = model.parent_key(r);
+        let entity = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| Some((u, model.get(model.slot_of(u)?)?)));
+        match (entity, &key) {
+            (Some((u, e)), _) => key.code_of(u, e).ok_or_else(|| match &key {
+                kentos_domain::ParentKey::Field(name) => format!(
+                    "Kaydın “{name}” alanı boş: alt kayıtlar bu alanın değeriyle bağlanır; önce alanı doldurup kaydedin."
+                ),
+                _ => format!(
+                    "“{}” ilişkisinin üst anahtarı “{}” katmanda yok; ilişkiyi İlişkiler penceresinde düzeltin.",
+                    r.name,
+                    r.parent_key.clone().unwrap_or_default()
+                ),
+            }),
+            (None, _) => Ok(uid.to_owned()),
         }
     }
 

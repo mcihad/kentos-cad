@@ -26,6 +26,9 @@ mod related_actions_tests;
 #[cfg(test)]
 #[path = "../../tests/form_roles_tests.rs"]
 mod form_roles_tests;
+#[cfg(test)]
+#[path = "../../tests/road_form_tests.rs"]
+mod road_form_tests;
 pub mod package;
 pub mod relations;
 pub mod row_target;
