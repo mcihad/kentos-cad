@@ -636,6 +636,36 @@ mod tests {
     }
 
     #[test]
+    fn show_everything_leaves_out_an_object_fallen_to_zero_and_says_so() {
+        let mut app = open();
+        viewport(&mut app, Event::Extents);
+        let before = app.viewport.camera;
+        // A point fallen to zero made the sample's few metres a dot over 4 400 km (docs/adr/9203).
+        let far = add_point(&mut app, "parsel", 0.0, 0.0);
+        viewport(&mut app, Event::Extents);
+        let shown = app.viewport.camera.visible_bounds();
+        assert!(shown.min_x > 1_000.0 && shown.min_y > 1_000.0, "the origin is out of the view: {shown:?}");
+        assert!(
+            (app.viewport.camera.scale / before.scale - 1.0).abs() < 1e-9 && app.viewport.camera.center == before.center,
+            "the same view as without it"
+        );
+        assert_eq!(
+            last_said(&app),
+            "1 nesne çizimin geri kalanından çok uzakta; görünüme alınmadı. Kapsam denetimi onları seçer."
+        );
+        assert_eq!(app.last_level, Some(Level::Warn));
+        run(&mut app, "view.extentCheck");
+        assert_eq!(app.selection.ids(), [far], "Kapsam denetimi selects what was left out");
+        // Deleted, nothing is left out and nothing is said.
+        app.selection.set([far]);
+        run(&mut app, "tool.erase");
+        let said = last_said(&app);
+        viewport(&mut app, Event::Extents);
+        assert_eq!(last_said(&app), said, "nothing more is said");
+        assert_eq!(app.viewport.camera.center, before.center);
+    }
+
+    #[test]
     fn extent_check_has_no_drawing_to_check_without_one() {
         let (mut app, _) = App::boot(None);
         assert!(!app.available("view.extentCheck"));

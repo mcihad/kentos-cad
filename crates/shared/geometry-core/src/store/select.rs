@@ -174,10 +174,28 @@ impl Store {
     /// can be far and still be found. Fewer than four objects have no core;
     /// infinite lines are left out.
     pub fn extent_outliers(&self) -> Vec<f64> {
+        self.far_from_rest(|it| self.pickable(it))
+    }
+
+    /// The objects of `ids` (every object when none, hidden ones too) lying far from the rest of them, by
+    /// [`Store::extent_outliers`]'s rule: what Tümünü göster leaves out of its box and says it left
+    /// (docs/adr/9203). A drawing shown as a dot because of one object fallen to zero seems to have lost its data.
+    pub fn extent_outliers_of(&self, ids: Option<&[f64]>) -> Vec<f64> {
+        match ids {
+            Some(ids) => {
+                let among: std::collections::HashSet<u64> = ids.iter().map(|id| id.to_bits()).collect();
+                self.far_from_rest(|it| among.contains(&it.id.to_bits()))
+            }
+            None => self.far_from_rest(|_| true),
+        }
+    }
+
+    /// The objects `among` takes, infinite lines aside, whose box lies wholly beyond the reach of their core box.
+    fn far_from_rest(&self, among: impl Fn(&super::Item) -> bool) -> Vec<f64> {
         let items: Vec<_> = self
             .all_items()
             .into_iter()
-            .filter(|it| self.pickable(it) && !infinite(&it.shape))
+            .filter(|it| among(it) && !infinite(&it.shape))
             .collect();
         if items.len() < 4 {
             return Vec::new();
