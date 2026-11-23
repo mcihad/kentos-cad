@@ -627,6 +627,77 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none", rename = "classCounts")]
     #[cfg_attr(feature = "ts", ts(optional, rename = "classCounts"))]
     pub class_counts: Option<bool>,
+    /// Where the layer's objects were copied from (docs/adr/9192): the file's or database's table an import read. The
+    /// objects are the project's own; the source is not bound, nothing is written back to it. Only a layer has it,
+    /// never a group.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub origin: Option<LayerOrigin>,
+}
+
+/// Where a layer's objects were copied from (docs/adr/9192): what the import read, and when.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayerOrigin {
+    /// The format read, as the data drivers name it: `gpkg`, `shp`, `geojson`, `csv`, `kml`, `fgb`, `gml`, `parquet`,
+    /// `postgis`.
+    pub driver: String,
+    /// The file, an absolute path, or the database's address without a password.
+    pub address: String,
+    /// The table or layer read; none for a file of one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub table: Option<String>,
+    /// The file's SHA-256 when it was read, 64 lowercase hexadecimal digits; none for a database.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sha256: Option<String>,
+    /// When it was read, UTC (`2026-11-23T09:30:00Z`).
+    pub at: String,
+}
+
+/// What is wrong with a layer's origin (docs/adr/9192); none when it holds.
+pub fn layer_origin_problem(o: &LayerOrigin) -> Option<String> {
+    let word = |t: &str| !t.is_empty() && t.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit());
+    if !word(&o.driver) {
+        return Some("Katmanın kaynağının biçimi küçük harflerle bir sözcük olur (gpkg, shp, postgis…).".into());
+    }
+    if o.address.trim().is_empty() || o.address.trim() != o.address {
+        return Some("Katmanın kaynağının adresi boş ya da baş veya sonda boşluklu olamaz.".into());
+    }
+    if o.address.contains("password=") || o.address.split_once("://").is_some_and(|(_, rest)| {
+        rest.split('/').next().is_some_and(|auth| auth.contains('@') && auth.split('@').next().is_some_and(|u| u.contains(':')))
+    }) {
+        return Some("Katmanın kaynağının adresi parola taşımaz.".into());
+    }
+    if o.table.as_deref().is_some_and(|t| t.trim().is_empty()) {
+        return Some("Katmanın kaynağının tablosu boş olamaz; tek tablolu dosyada yazılmaz.".into());
+    }
+    if o.sha256.as_deref().is_some_and(|d| d.len() != 64 || !d.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))) {
+        return Some("Katmanın kaynağının özeti 64 küçük onaltılık rakamlı bir SHA-256 olur.".into());
+    }
+    let at = o.at.as_bytes();
+    let digits = |r: std::ops::Range<usize>| at.get(r).is_some_and(|s| s.iter().all(u8::is_ascii_digit));
+    if !(o.at.len() == 20
+        && digits(0..4)
+        && at[4] == b'-'
+        && digits(5..7)
+        && at[7] == b'-'
+        && digits(8..10)
+        && at[10] == b'T'
+        && digits(11..13)
+        && at[13] == b':'
+        && digits(14..16)
+        && at[16] == b':'
+        && digits(17..19)
+        && at[19] == b'Z')
+    {
+        return Some("Katmanın kaynağının okunduğu zaman UTC olarak 2026-11-23T09:30:00Z biçiminde yazılır.".into());
+    }
+    None
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

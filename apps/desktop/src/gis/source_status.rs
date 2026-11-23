@@ -2,8 +2,12 @@
 //! says it (the source, whether it can be written, how much of the table the layer holds, its system, what waits on
 //! either side) and the one way out the state asks for (`next`): Kaynağa yaz, Kaynaktan oku, Uzlaştır… or Yeniden
 //! bağla…, run by the same events as Katmanlar's Kaynak ▸. The states are read again after each. The project's data
-//! layers are listed beside them with their tables' real row counts (source_status_data.rs, docs/adr/9129).
+//! layers are listed beside them with their tables' real row counts (source_status_data.rs, docs/adr/9129). Above both,
+//! Kaynaklar puts every layer under its physical source, the copies imports took with them (source_catalog.rs,
+//! docs/adr/9192).
 
+#[path = "source_catalog.rs"]
+mod catalog;
 #[path = "source_status_data.rs"]
 mod data;
 
@@ -36,6 +40,8 @@ pub struct Window {
     chosen: Option<usize>,
     /// The data layers' tables' row counts as their sources answered (docs/adr/9129).
     counts: data::Counts,
+    /// The copies' files' SHA-256 now, as read (docs/adr/9192).
+    digests: catalog::Digests,
 }
 
 #[derive(Debug, Clone)]
@@ -46,6 +52,10 @@ pub enum Event {
     Refresh,
     /// A data layer's table counted by its source, or why not.
     Counted(String, Result<u64, String>),
+    /// A copy's file read again: its SHA-256 now, or why not (docs/adr/9192).
+    Hashed(String, Result<String, String>),
+    /// A layer of Kaynaklar pressed: chosen in Katmanlar.
+    PickLayer(String),
     /// Yeniden bağla… on a data layer whose file was not read (docs/adr/9155), and the file picked.
     RelinkData(String),
     RelinkDataPicked(String, Option<std::path::PathBuf>),
@@ -103,10 +113,11 @@ impl App {
             states: Err(String::new()),
             chosen: None,
             counts: data::Counts::new(),
+            digests: catalog::Digests::new(),
         });
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::SourceStatus));
         self.refresh_source_status();
-        self.count_data_layers()
+        Task::batch([self.count_data_layers(), self.hash_copy_sources()])
     }
 
     /// The states read again (after a write, a read, a relink), while the window is open.
@@ -167,11 +178,22 @@ impl App {
             }
             Event::Refresh => {
                 w.counts.clear();
+                w.digests.clear();
                 self.refresh_source_status();
-                self.count_data_layers()
+                Task::batch([self.count_data_layers(), self.hash_copy_sources()])
             }
             Event::Counted(layer, counted) => {
                 w.counts.insert(layer, counted);
+                Task::none()
+            }
+            Event::Hashed(address, hashed) => {
+                w.digests.insert(address, hashed);
+                Task::none()
+            }
+            Event::PickLayer(id) => {
+                self.selected_layer = Some(id.clone());
+                self.layers_follow = false;
+                self.layer_reveal = Some(id);
                 Task::none()
             }
             Event::RelinkData(layer) => {
@@ -239,6 +261,14 @@ impl App {
                 vec![words::text_line(
                     Kind::Info,
                     "Projede bağlı katman yok; verisi aşağıdaki veri katmanlarında, kaynaklarında.".to_owned(),
+                )],
+                Vec::new(),
+            ),
+            // Copies an import took (docs/adr/9192): their sources are said, never that the project has none.
+            Ok(s) if s.is_empty() && !self.source_catalog().is_empty() => (
+                vec![words::text_line(
+                    Kind::Info,
+                    "Projede bağlı katman yok; alınmış kopyaların kaynakları Kaynaklar'da.".to_owned(),
                 )],
                 Vec::new(),
             ),
@@ -352,15 +382,18 @@ impl App {
             "Satıra basınca katmanı Katmanlar'da seçilir, durumunun tamamı burada yazar. Sağdaki düğme durumun istediği tek işi yapar."
                 .to_owned()
         });
-        let mut body = Column::new()
-            .spacing(12)
-            .push(words::summary(lines))
-            .push(words::field("Bağlı katmanlar", table, Some(hint)));
+        let mut body = Column::new().spacing(12).push(words::summary(lines));
+        if let Some(catalog) = self.source_catalog_view(&w.digests) {
+            body = body.push(catalog);
+        }
+        let body = body.push(words::field("Bağlı katmanlar", table, Some(hint)));
+        let mut body = body;
         if let Some(data) = self.source_data_view(&w.counts) {
             body = body.push(data);
         }
         Frame::new(STATUS_TITLE)
-            .push(body)
+            .scroll(body)
+            .max_height(820.0)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(REFRESH, Some(msg(Event::Refresh))))
             .width(900.0)

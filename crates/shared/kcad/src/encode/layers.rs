@@ -245,10 +245,11 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.geometry.is_some())
                 + usize::from(n.dataset.is_some())
                 + usize::from(n.derivation.is_some())
-                + usize::from(n.class_counts.is_some()),
+                + usize::from(n.class_counts.is_some())
+                + usize::from(n.origin.is_some()),
             true,
         )?;
-        // id (2), card data feed name plot snap time type (4), rules style (5), fields filter frozen locked (6),
+        // id (2), card data feed name plot snap time type (4), rules style (5), fields filter frozen locked origin (6),
         // actions compose dataset indexes service visible (7), children expanded geometry replaces scenario
         // subtypes (8), sourceCrs (9), derivation (10), classCounts contingents tableStyles (11).
         if usize::from(n.service.is_some()) + usize::from(n.feed.is_some()) + usize::from(n.data.is_some()) > 1 {
@@ -360,6 +361,20 @@ impl<'d> Encoder<'d> {
         }
         self.key("locked");
         self.w.bool(n.locked);
+        // GIS data 7 (docs/adr/9192): where the layer's objects were copied from, as its JSON, only by a layer.
+        if let Some(o) = &n.origin {
+            self.key("origin");
+            self.at(Seg::Name("origin"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(Code::BadValue, "grubun kaynağı olmaz; yalnız katmanın olur"));
+                }
+                if let Some(problem) = kentos_contracts::layer_origin_problem(o) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(o).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
         if !n.actions.is_empty() {
             self.key("actions");
             self.at(Seg::Name("actions"), |e| {

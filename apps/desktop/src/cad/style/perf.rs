@@ -59,6 +59,7 @@ fn layer(id: &str, style: LayerStyle) -> LayerNode {
         dataset: None,
         derivation: None,
         class_counts: None,
+        origin: None,
     }
 }
 

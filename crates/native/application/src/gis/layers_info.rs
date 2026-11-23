@@ -39,6 +39,7 @@ fn info_of(input: &LayersInfo, node: &LayerNode) -> LayerInfo {
         card: input.card.clone().filter(|c| *c != InfoCard::default()),
         dataset: node.dataset.clone(),
         derivation: node.derivation.clone(),
+        origin: node.origin.clone(),
     }
 }
 

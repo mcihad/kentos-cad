@@ -190,6 +190,7 @@ fn opened(n: usize) -> Opened {
         dataset: None,
         derivation: None,
         class_counts: None,
+        origin: None,
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {

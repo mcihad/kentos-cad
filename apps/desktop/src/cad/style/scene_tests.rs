@@ -72,6 +72,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         dataset: None,
         derivation: None,
         class_counts: None,
+        origin: None,
     }
 }
 

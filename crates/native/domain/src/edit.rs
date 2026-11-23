@@ -636,11 +636,14 @@ impl Document {
                 return Err(Refusal(format!("Katmanın eylemleri ve kartı: {problem}.")));
             }
         }
-        if next.dataset.is_some() || next.derivation.is_some() {
+        if next.dataset.is_some() || next.derivation.is_some() || next.origin.is_some() {
             if node.kind == LayerNodeType::Group {
                 return Err(Refusal(format!(
-                    "“{name}” bir grup; veri kümesi bilgisi ve türetim kaydı yalnız katmanın olur."
+                    "“{name}” bir grup; veri kümesi bilgisi, türetim kaydı ve kaynağı yalnız katmanın olur."
                 )));
+            }
+            if let Some(problem) = next.origin.as_ref().and_then(kentos_contracts::layer_origin_problem) {
+                return Err(Refusal(problem));
             }
             if let Some(problem) = next
                 .dataset
@@ -660,6 +663,7 @@ impl Document {
             card: node.card.clone(),
             dataset: node.dataset.clone(),
             derivation: node.derivation.clone(),
+            origin: node.origin.clone(),
         };
         if before == next {
             return Ok(false);
@@ -1570,6 +1574,7 @@ fn followed_ops(node: &kentos_contracts::LayerNode, next: &kentos_contracts::Lay
         || node.card != next.card
         || node.dataset != next.dataset
         || node.derivation != next.derivation
+        || node.origin != next.origin
     {
         ops.push(Op::LayerInfo {
             layer: layer.clone(),
@@ -1578,12 +1583,14 @@ fn followed_ops(node: &kentos_contracts::LayerNode, next: &kentos_contracts::Lay
                 card: node.card.clone(),
                 dataset: node.dataset.clone(),
                 derivation: node.derivation.clone(),
+                origin: node.origin.clone(),
             }),
             after: Box::new(crate::history::LayerInfo {
                 actions: next.actions.clone(),
                 card: next.card.clone(),
                 dataset: next.dataset.clone(),
                 derivation: next.derivation.clone(),
+                origin: next.origin.clone(),
             }),
         });
     }

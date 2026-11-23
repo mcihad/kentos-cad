@@ -56839,6 +56839,9 @@ class LayerNode(_Model):
             has it, never a group.
         indexes: Dizinler (docs/adr/0758): what the records are looked up by; a unique one is the layer's key. Only a layer
             holding objects has them.
+        origin: Where the layer's objects were copied from (docs/adr/9192): the file's or database's table an import read. The
+            objects are the project's own; the source is not bound, nothing is written back to it. Only a layer has it,
+            never a group.
         plot: Yazdır: absent, it is printed; `false`, it is drawn on screen but not
             on a sheet, its PDF or a print (DXF's 290;
             docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
@@ -56880,6 +56883,7 @@ class LayerNode(_Model):
     frozen: bool | None | Unset = UNSET
     geometry: LayerGeometry | LayerGeometryName | None | Unset = UNSET
     indexes: list[LayerIndex] | Unset = UNSET
+    origin: LayerOrigin | None | Unset = UNSET
     plot: bool | None | Unset = UNSET
     replaces: str | None | Unset = UNSET
     rules: list[LayerRule] | Unset = UNSET
@@ -56929,6 +56933,8 @@ class LayerNode(_Model):
             out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
         if self.indexes is not UNSET:
             out["indexes"] = [e0.to_json() for e0 in self.indexes]
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else self.origin.to_json()
         if self.plot is not UNSET:
             out["plot"] = self.plot
         if self.replaces is not UNSET:
@@ -56976,6 +56982,7 @@ class LayerNode(_Model):
             frozen=data.get("frozen", UNSET),
             geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometry, data["geometry"]),
             indexes=[LayerIndex.from_json(e0) for e0 in data["indexes"]] if "indexes" in data else UNSET,
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else LayerOrigin.from_json(data["origin"]),
             plot=data.get("plot", UNSET),
             replaces=data.get("replaces", UNSET),
             rules=[LayerRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
@@ -56986,6 +56993,45 @@ class LayerNode(_Model):
             subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
             table_styles=[TableStyle.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerOrigin(_Model):
+    """Where a layer's objects were copied from (docs/adr/9192): what the import read, and when.
+    Attributes:
+        driver: The format read, as the data drivers name it: `gpkg`, `shp`, `geojson`, `csv`, `kml`, `fgb`, `gml`, `parquet`,
+            `postgis`.
+        address: The file, an absolute path, or the database's address without a password.
+        at: When it was read, UTC (`2026-11-23T09:30:00Z`).
+        sha256: The file's SHA-256 when it was read, 64 lowercase hexadecimal digits; none for a database.
+        table: The table or layer read; none for a file of one.
+    """
+    driver: str
+    address: str
+    at: str
+    sha256: str | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["driver"] = self.driver
+        out["address"] = self.address
+        out["at"] = self.at
+        if self.sha256 is not UNSET:
+            out["sha256"] = self.sha256
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerOrigin:
+        return cls(
+            driver=data["driver"],
+            address=data["address"],
+            at=data["at"],
+            sha256=data.get("sha256", UNSET),
+            table=data.get("table", UNSET),
         )
 
 
@@ -149591,6 +149637,7 @@ __all__ = [
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
+    "LayerOrigin",
     "LayerPaperCoordSource",
     "LayerPaperTableSource",
     "LayerRow",

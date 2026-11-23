@@ -110,6 +110,7 @@ fn write_execute(
         card: node.card.clone(),
         dataset: kept(&input),
         derivation: node.derivation.clone(),
+        origin: node.origin.clone(),
     };
     let doc = &mut *cx.doc;
     match doc.set_layer_info(&input.layer, info, LABEL) {

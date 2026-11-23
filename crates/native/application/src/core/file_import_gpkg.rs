@@ -450,6 +450,49 @@ fn take_profile(
     out.revision = doc.revision().to_string();
 }
 
+/// Each layer the import made, told where its objects were copied from (docs/adr/9192), in the import's step: the
+/// format (`word`, as the data drivers name it), the file, its table (in a GeoPackage, or a file of several), the file's
+/// SHA-256, now. A layer of the drawing the rows went onto keeps what it had.
+fn stamp_origins(
+    doc: &mut Document,
+    path: &str,
+    read: &Read,
+    tables: &[GpkgTableImported],
+    made: &[(String, String)],
+    word: &str,
+) {
+    let driver = match word {
+        "GeoPackage" => "gpkg",
+        "GeoParquet" => "parquet",
+        "CSV" => "csv",
+        "FlatGeobuf" => "fgb",
+        "GML" => "gml",
+        _ => return,
+    };
+    let container = driver == "gpkg" || read.tables.len() > 1;
+    let now = crate::gis_derive::utc_now();
+    // To the second, as the record keeps it.
+    let at = format!("{}Z", now.get(..19).unwrap_or(&now));
+    if !Path::new(path).is_absolute() {
+        return;
+    }
+    let address = path.to_owned();
+    for t in tables.iter().filter(|t| made.iter().any(|(id, _)| *id == t.layer)) {
+        let Some(mut info) = doc.layers().info_of(&t.layer) else {
+            continue;
+        };
+        info.origin = Some(kentos_commands::LayerOrigin {
+            driver: driver.to_owned(),
+            address: address.clone(),
+            table: container.then(|| t.table.clone()),
+            sha256: Some(read.sha256.clone()),
+            at: at.clone(),
+        });
+        // A record that does not hold (a digest of another form) is left out rather than failing the import.
+        let _ = doc.set_layer_info(&t.layer, info, "Kaynağı");
+    }
+}
+
 /// A file's tables, read already (a GeoPackage, a CSV: docs/adr/0522), taken into the drawing: `name` the undo step's
 /// word and the file's extension its group's name drops. With `merge` a table going onto a layer of the drawing meets
 /// its objects (docs/adr/0628 §5); `write` writes the rows refused to `rejects` (`execute`).
@@ -697,7 +740,7 @@ pub(crate) fn run_read(
             path: Some("path".into()),
         });
     }
-    let tables = read
+    let tables: Vec<GpkgTableImported> = read
         .tables
         .iter()
         .filter(|t| fresh || !t.objects.is_empty())
@@ -717,6 +760,7 @@ pub(crate) fn run_read(
             skipped: t.skipped.len() as u32,
         })
         .collect();
+    stamp_origins(doc, &input.path, &read, &tables, &applied.made, word);
     Ok((
         GpkgImported {
             file: read.file.clone(),

@@ -2633,6 +2633,9 @@ Liste:
 - [ ] Var olan GeoPackage'a teslim (ADR 9191, 23 Kasım 2026): web'in GeoPackage dışa aktarması da var olan dosyada üç
   yolu sorsun (`write`: `tables` önce, `append`, `file`), seçilen yola göre kalan, yeniden yazılan, eklenen tabloları
   söylesin; uzun teslim ilerlemeyi göstersin ve Durdur'la dursun (TS türleri yeniden üretildi).
+- [ ] Tek kaynak kataloğu (ADR 9192, 23 Kasım 2026): web'in `.kcad` okuyucusu ve yazıcısı katmanın `origin`'ini (CBS
+  verisi 7) taşısın; web'in içe alması kaynağı yazsın; web'in kaynak penceresi Kaynaklar'ı (veri katmanı, bağlı katman,
+  alınmış kopya, dosyanın değişip değişmediği) göstersin. TS türleri (`LayerNode`, `LayerOrigin`) yeniden üretildi.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

@@ -1958,6 +1958,7 @@ __all__ = [
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
+    "LayerOrigin",
     "LayerPaperCoordSource",
     "LayerPaperTableSource",
     "LayerRow",

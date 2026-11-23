@@ -289,6 +289,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         dataset: None,
         derivation: None,
         class_counts: None,
+        origin: None,
     }];
     doc.entities = vec![Entity::Line(LineEntity {
         ma: None,

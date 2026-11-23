@@ -40,6 +40,8 @@ pub struct LayerInfo {
     pub card: Option<kentos_contracts::InfoCard>,
     pub dataset: Option<kentos_contracts::DatasetInfo>,
     pub derivation: Option<kentos_contracts::LayerDerivation>,
+    /// Where its objects were copied from (docs/adr/9192).
+    pub origin: Option<kentos_contracts::LayerOrigin>,
 }
 
 /// A binding as its undo step keeps it (docs/adr/0636 §5): the link and the base it was last reconciled from.

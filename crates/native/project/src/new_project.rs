@@ -361,6 +361,7 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         dataset: None,
         derivation: None,
         class_counts: None,
+        origin: None,
     }
 }
 

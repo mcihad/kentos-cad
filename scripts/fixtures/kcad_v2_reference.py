@@ -1497,6 +1497,8 @@ def layer_entries(n):
                 "data": (opaque, False),
                 # GIS data 4 (docs/adr/9105 §4): Nesne sayısını göster; only `true` is written.
                 "classCounts": (lambda b: boolean(b) if b is True else None, False),
+                # GIS data 7 (docs/adr/9192): where the layer's objects were copied from, as its JSON.
+                "origin": (opaque, False),
                 # Schema 102 (docs/adr/0622 §5): what the layer holds.
                 "geometry": (enum(("point", "line", "area", "annotation")), False),
                 "type": (enum(("group", "layer")), True),
@@ -3020,8 +3022,12 @@ def document(d):
     # GIS data 6 (docs/adr/9135): a relation by a parent key.
     def keyed_relations(settings):
         return any("parentKey" in r for r in (settings or {}).get("relations", []))
+    # GIS data 7 (docs/adr/9192): where a layer's objects were copied from.
+    def origins(nodes):
+        return any("origin" in n or origins(n.get("children", [])) for n in nodes)
     # GIS data 3 (docs/adr/9104 §2): the data layers' edit grouping.
-    gis = (6 if keyed_relations(d.get("settings")) else 5 if text_tables(d["layers"]) else 4 if counted(d["layers"])
+    gis = (7 if origins(d["layers"]) else 6 if keyed_relations(d.get("settings")) else 5 if text_tables(d["layers"])
+           else 4 if counted(d["layers"])
            else 3 if "editGrouping" in d.get("settings", {})
            else 2 if data_layers(d["layers"]) else 1 if extended(d["layers"]) else 0)
     # Architecture data 18 (docs/adr/8101 §2): the underlay models (`settings.arch.underlays`), the one version-gated
@@ -5850,6 +5856,24 @@ def build():
     blank_key = copy.deepcopy(load("relation-keys.json"))
     blank_key["settings"]["relations"][0]["parentKey"] = " "
     out["broken/relation-key-blank.kcad"] = container(document(blank_key))
+    # A copied layer's origin (docs/adr/9192): GIS data 7; under GIS data 6 an unknown field; on a group, with a password
+    # in its address or a digest of another form, a bad value.
+    out["layer-origins.kcad"] = container(document(load("layer-origins.json")))
+    origins_payload = document(load("layer-origins.json"))
+    with_gis7 = head(5, 4) + text("format") + text("kentos.document") + text("modules") + cmap({"gis": uint(7)})
+    assert origins_payload.startswith(with_gis7), "a layer's origin raises the GIS data's version to 7"
+    out["broken/layer-origin-in-gis-6.kcad"] = container(with_gis6 + origins_payload[len(with_gis7):])
+
+    def origins_broken(change):
+        d = copy.deepcopy(load("layer-origins.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/layer-origin-on-group.kcad"] = origins_broken(
+        lambda d: d["layers"][2].update(origin=dict(d["layers"][0]["origin"])))
+    out["broken/layer-origin-password.kcad"] = origins_broken(lambda d: d["layers"][0]["origin"].update(
+        driver="postgis", address="postgresql://kbs:gizli@db.ornek.bel.tr:5432/kent"))
+    out["broken/layer-origin-digest.kcad"] = origins_broken(lambda d: d["layers"][0]["origin"].update(sha256="9F2B"))
     # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
     # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
     # two columns of one name, an unknown way, an empty list of columns.

@@ -707,13 +707,15 @@ GIS_WITH_CLASS_COUNTS = 4
 GIS_WITH_TEXT_TABLES = 5
 # GIS data 6 (docs/adr/9135): a relation by a parent key (`parentKey` of a relation).
 GIS_WITH_RELATION_KEYS = 6
+# GIS data 7 (docs/adr/9192): where a layer's objects were copied from (`origin` of a layer node).
+GIS_WITH_LAYER_ORIGINS = 7
 ARCH_WITH_BLOCK_ELEMENTS = 2
 ARCH_WITH_COVERINGS = 5
 ARCH_WITH_SLAB_EDGE_BINDINGS = 36
 ARCH_WITH_CEILING_RECIPE = 37
 ARCH_WITH_ELECTRIC_APPLIANCES = 38
 ARCH_WITH_CASEWORK_PLACEMENT = 39
-MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_RELATION_KEYS), "map": ("harita", 0),
+MODULE_VERSIONS = {"arch": ("mimari", ARCH_WITH_CASEWORK_PLACEMENT), "gis": ("CBS", GIS_WITH_LAYER_ORIGINS), "map": ("harita", 0),
                    "road": ("yol", 0)}
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
@@ -5355,6 +5357,8 @@ class _Schema:
                 **({"data": (self.data_layer_, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_DATA_LAYERS else {}),
                 # GIS data 4 (docs/adr/9105 §4): Nesne sayısını göster, only true.
                 **({"classCounts": (self.only_true, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_CLASS_COUNTS else {}),
+                # GIS data 7 (docs/adr/9192): where the layer's objects were copied from.
+                **({"origin": (self.layer_origin_, False)} if getattr(self, "gis_version", 0) >= GIS_WITH_LAYER_ORIGINS else {}),
                 # Schema 102 (docs/adr/0622 §5): what the layer holds.
                 **({"geometry": (self.enum(("point", "line", "area", "annotation")), False)} if self.layer_geometry else {}),
                 "type": (self.enum(("group", "layer")), True),
@@ -5397,6 +5401,8 @@ class _Schema:
             self.fail("bad_value", "grubun veri tablosu olmaz; yalnız katmanın olur")
         if "classCounts" in n and n["type"] == "group":
             self.fail("bad_value", "grubun nesne sayısı gösterilmez; yalnız katmanınki gösterilir")
+        if "origin" in n and n["type"] == "group":
+            self.fail("bad_value", "grubun kaynağı olmaz; yalnız katmanın olur")
         if sum(k in n for k in ("service", "feed", "data")) > 1:
             self.fail("bad_value", "katman tek bir yerden gelir: bir harita servisinden, bir servisin nesnelerinden ya da bir veri tablosundan")
         if "sourceCrs" in n and n["type"] == "group":
@@ -5622,6 +5628,45 @@ class _Schema:
             if d["key"] in columns or d["geometry"]["column"] in columns:
                 self.fail("bad_value", "yazı sütunu anahtar ya da geometri olamaz")
         return d
+
+    def layer_origin_(self, v):
+        """GIS data 7 (docs/adr/9192): where a layer's objects were copied from: the format, the file or database address
+        (no password), the table, the file's SHA-256 and when it was read (UTC, to the second)."""
+        def word(x):
+            t = self.text(x)
+            if not t or any(c not in "abcdefghijklmnopqrstuvwxyz0123456789" for c in t):
+                self.fail("bad_value", "kaynağın biçimi küçük harflerle bir sözcük olur")
+            return t
+
+        def address(x):
+            t = self.text(x)
+            if not t.strip() or t.strip() != t:
+                self.fail("bad_value", "kaynağın adresi boş ya da baş veya sonda boşluklu olamaz")
+            auth = t.split("://", 1)[1].split("/", 1)[0] if "://" in t else ""
+            if "password=" in t or ("@" in auth and ":" in auth.split("@", 1)[0]):
+                self.fail("bad_value", "kaynağın adresi parola taşımaz")
+            return t
+
+        def table(x):
+            t = self.text(x)
+            if not t.strip():
+                self.fail("bad_value", "kaynağın tablosu boş olamaz")
+            return t
+
+        def hex64(x):
+            t = self.text(x)
+            if len(t) != 64 or any(c not in "0123456789abcdef" for c in t):
+                self.fail("bad_value", "kaynağın özeti 64 haneli küçük harfli SHA-256 olur")
+            return t
+
+        def instant(x):
+            t = self.text(x)
+            if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z", t):
+                self.fail("bad_value", "kaynağın okunduğu zaman 2026-11-23T09:30:00Z biçiminde olur")
+            return t
+
+        return self.fields({"driver": (word, True), "address": (address, True), "table": (table, False),
+                            "sha256": (hex64, False), "at": (instant, True)})(v)
 
     def derivation_(self, v):
         """Schema 106 (docs/adr/0633 §2): what a processing tool made the layer from."""

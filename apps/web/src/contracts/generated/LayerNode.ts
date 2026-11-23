@@ -12,6 +12,7 @@ import type { LayerFilter } from "./LayerFilter";
 import type { LayerGeometry } from "./LayerGeometry";
 import type { LayerIndex } from "./LayerIndex";
 import type { LayerNodeType } from "./LayerNodeType";
+import type { LayerOrigin } from "./LayerOrigin";
 import type { LayerRule } from "./LayerRule";
 import type { LayerSnap } from "./LayerSnap";
 import type { LayerSourceCrs } from "./LayerSourceCrs";
@@ -150,4 +151,10 @@ derivation?: LayerDerivation,
  * Nesne sayısını göster (docs/adr/9105 §4): the layer tree says how many objects the layer and each of its style's
  * classes hold. Only a layer has it, never a group; only `true` is written.
  */
-classCounts?: boolean, };
+classCounts?: boolean, 
+/**
+ * Where the layer's objects were copied from (docs/adr/9192): the file's or database's table an import read. The
+ * objects are the project's own; the source is not bound, nothing is written back to it. Only a layer has it,
+ * never a group.
+ */
+origin?: LayerOrigin, };

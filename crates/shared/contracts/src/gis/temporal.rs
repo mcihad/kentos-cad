@@ -342,6 +342,7 @@ mod tests {
             dataset: None,
             derivation: None,
             class_counts: None,
+            origin: None,
         }
     }
 

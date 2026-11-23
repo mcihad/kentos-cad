@@ -989,7 +989,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
     ("arch", "mimari", ARCH_WITH_CASEWORK_PLACEMENT),
-    ("gis", "CBS", GIS_WITH_RELATION_KEYS),
+    ("gis", "CBS", GIS_WITH_LAYER_ORIGINS),
     ("map", "harita", 0),
     ("road", "yol", 0),
 ];
@@ -1624,6 +1624,9 @@ pub const GIS_WITH_TEXT_TABLES: u16 = 5;
 /// GIS data version 6 (docs/adr/9135): a relation by a parent key (`parentKey` of a relation: the parent field whose
 /// value the child field holds). The document schema stays as it is.
 pub const GIS_WITH_RELATION_KEYS: u16 = 6;
+/// GIS data version 7 (docs/adr/9192): where a layer's objects were copied from (`origin` of a layer node: the format,
+/// file or database address, table, the file's SHA-256 and when an import read it). The document schema stays as it is.
+pub const GIS_WITH_LAYER_ORIGINS: u16 = 7;
 
 /// A payload root's `modules` (schema 254): the versions above 0 of each module's and each `.kek` extension's data.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

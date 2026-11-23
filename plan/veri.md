@@ -668,3 +668,10 @@ numaraları raporunkidir.
   - Masaüstü teslimi ayrı iş parçacığında, ilerleme ve Durdur'la; onay üç yolu sorar, “Yalnız bu tabloları yeniden yaz”
     önce.
   - Kalan: eklerken yeni alan, eklenen tabloların ilişki eşlemesi, web.
+- [x] **VY-91 — Tek kaynak kataloğu: veri katmanı, bağlı katman ve alınmış kopya aynı dosyanın altında (rapor 5'in
+  kalanı).** ([ADR 9192](../docs/adr/9192-one-source-catalog.md))
+  - Katman düğümünün `origin`'i (`.kcad` CBS verisi 7): içe almanın okuduğu biçim, dosya ya da adres, tablo, SHA-256,
+    zaman. GeoPackage, CSV, FlatGeobuf, GML ve GeoParquet içe alması yazar, geri alma adımının içinde.
+  - Kaynak durumu'nda Kaynaklar: her fiziksel kaynağın altında veri katmanı, bağlı katman ve alınmış kopya; kopya
+    alındığı zamanı ve dosyanın sonra değişip değişmediğini söyler.
+  - Kalan: Shapefile, GeoJSON, KML ve veritabanı kopyalarının kaynağı; kaynaktan tazele; web.

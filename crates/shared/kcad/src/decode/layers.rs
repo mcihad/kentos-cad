@@ -23,9 +23,31 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
     let mut rules: Option<(usize, Vec<kentos_contracts::LayerRule>)> = None;
     let mut indexes: Option<(usize, Vec<kentos_contracts::LayerIndex>)> = None;
     let mut class_counts: Option<bool> = None;
+    let mut origin: Option<kentos_contracts::LayerOrigin> = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
+            // GIS data 7 (docs/adr/9192): where the layer's objects were copied from; before it an unknown field.
+            "origin" if has.gis >= crate::GIS_WITH_LAYER_ORIGINS => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let read: kentos_contracts::LayerOrigin = serde_json::from_value(value.clone()).map_err(|e| {
+                    let words = e.to_string();
+                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
+                    r.fail_at(code, at, &format!("katmanın kaynağı okunamadı: {words}"))
+                })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "katmanın kaynağı yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::layer_origin_problem(&read) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                origin = Some(read);
+            }
             // GIS data 4 (docs/adr/9105 §4): Nesne sayısını göster; before it an unknown field.
             "classCounts" if has.gis >= crate::GIS_WITH_CLASS_COUNTS => {
                 if !r.bool()? {
@@ -481,11 +503,15 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
             "grubun veri kümesi bilgisi ve türetim kaydı olmaz; yalnız katmanın olur",
         ));
     }
+    if origin.is_some() && kind == Some(LayerNodeType::Group) {
+        return Err(r.fail(Code::BadValue, "grubun kaynağı olmaz; yalnız katmanın olur"));
+    }
     Ok(LayerNode {
         data,
         dataset,
         derivation,
         class_counts,
+        origin,
         source_crs,
         geometry,
         rules: rules.map(|(_, c)| c).unwrap_or_default(),

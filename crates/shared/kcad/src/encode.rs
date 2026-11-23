@@ -118,9 +118,16 @@ fn modules_of(doc: &DocumentSnapshotV2, objects: Objs<'_>) -> ModuleVersions {
     fn texts(nodes: &[kentos_contracts::LayerNode]) -> bool {
         nodes.iter().any(|n| n.data.as_ref().is_some_and(|d| d.text.is_some()) || texts(&n.children))
     }
+    // GIS 7 (docs/adr/9192): where a layer's objects were copied from.
+    fn origins(nodes: &[kentos_contracts::LayerNode]) -> bool {
+        nodes.iter().any(|n| n.origin.is_some() || origins(&n.children))
+    }
     // GIS 3 (docs/adr/9104 §2): the data layers' edit grouping.
     // GIS 6 (docs/adr/9135): a relation by a parent key.
-    if doc.settings.relations.iter().any(|r| r.parent_key.is_some()) {
+    if origins(&doc.layers) {
+        out.modules
+            .push(("gis".to_owned(), crate::GIS_WITH_LAYER_ORIGINS));
+    } else if doc.settings.relations.iter().any(|r| r.parent_key.is_some()) {
         out.modules
             .push(("gis".to_owned(), crate::GIS_WITH_RELATION_KEYS));
     } else if texts(&doc.layers) {

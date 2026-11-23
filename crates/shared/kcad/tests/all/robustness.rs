@@ -360,6 +360,7 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         dataset: None,
         derivation: None,
         class_counts: None,
+        origin: None,
     }
 }
 
@@ -414,6 +415,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             dataset: None,
             derivation: None,
             class_counts: None,
+            origin: None,
         });
     }
     let mut entities = Vec::new();

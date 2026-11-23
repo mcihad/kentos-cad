@@ -166989,6 +166989,17 @@
         "name": {
           "type": "string"
         },
+        "origin": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayerOrigin"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the layer's objects were copied from (docs/adr/9192): the file's or database's table an import read. The\nobjects are the project's own; the source is not bound, nothing is written back to it. Only a layer has it,\nnever a group."
+        },
         "plot": {
           "description": "Yazdır: absent, it is printed; `false`, it is drawn on screen but not\non a sheet, its PDF or a print (DXF's 290;\ndocs/adr/0260 §4). A group's covers what it holds. Only `false` is written.",
           "type": [
@@ -167111,6 +167122,44 @@
         "layer"
       ],
       "type": "string"
+    },
+    "LayerOrigin": {
+      "additionalProperties": false,
+      "description": "Where a layer's objects were copied from (docs/adr/9192): what the import read, and when.",
+      "properties": {
+        "address": {
+          "description": "The file, an absolute path, or the database's address without a password.",
+          "type": "string"
+        },
+        "at": {
+          "description": "When it was read, UTC (`2026-11-23T09:30:00Z`).",
+          "type": "string"
+        },
+        "driver": {
+          "description": "The format read, as the data drivers name it: `gpkg`, `shp`, `geojson`, `csv`, `kml`, `fgb`, `gml`, `parquet`,\n`postgis`.",
+          "type": "string"
+        },
+        "sha256": {
+          "description": "The file's SHA-256 when it was read, 64 lowercase hexadecimal digits; none for a database.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table": {
+          "description": "The table or layer read; none for a file of one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "driver",
+        "address",
+        "at"
+      ],
+      "type": "object"
     },
     "LayerRow": {
       "description": "A row of a data layer.",

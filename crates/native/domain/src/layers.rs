@@ -669,6 +669,7 @@ impl LayerTree {
             card: n.card.clone(),
             dataset: n.dataset.clone(),
             derivation: n.derivation.clone(),
+            origin: n.origin.clone(),
         })
     }
 
@@ -679,6 +680,7 @@ impl LayerTree {
             node.card.clone_from(&info.card);
             node.dataset.clone_from(&info.dataset);
             node.derivation.clone_from(&info.derivation);
+            node.origin.clone_from(&info.origin);
         }
     }
 
@@ -822,6 +824,7 @@ impl LayerTree {
             dataset: None,
             derivation: None,
             class_counts: None,
+            origin: None,
         }
     }
 

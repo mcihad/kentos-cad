@@ -231,6 +231,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             dataset: None,
             derivation: None,
             class_counts: None,
+            origin: None,
         }],
         active_layer: "parsel".into(),
         entities,

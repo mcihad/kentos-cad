@@ -245,6 +245,14 @@ Yük, üç (şema 254'ten beri en çok dört) anahtarlı bir haritadır (anahtar
   ilişkide varsa yazıcı `modules`'e `gis: 6` yazar. CBS verisi sürüm 5'in yükünde bilinmeyen alandır (`unknown_field`,
   `broken/relation-key-in-gis-5.kcad`); boş anahtar `bad_value`'dur (`broken/relation-key-blank.kcad`). Örnek dosya
   `relation-keys.kcad`.
+- **CBS verisi sürüm 7** ([ADR 9192](../adr/9192-one-source-catalog.md)): katman düğümünün `origin`'i, katmanın
+  nesnelerinin kopyalandığı kaynak: biçim (`driver`: `gpkg`, `shp`, `postgis`…), dosyanın tam yolu ya da veritabanının
+  parolasız adresi (`address`), okunan tablo (`table`, tek tablolu dosyada yazılmaz), dosyanın okunduğundaki SHA-256'sı
+  (`sha256`, veritabanında yazılmaz) ve okunduğu zaman (`at`, UTC, saniyesiyle). Kaynak bağlı değildir, ona bir şey
+  yazılmaz. Yalnız katmanın olur; bir katmanda varsa yazıcı `modules`'e `gis: 7` yazar. CBS verisi sürüm 6'nın yükünde
+  bilinmeyen alandır (`unknown_field`, `broken/layer-origin-in-gis-6.kcad`); grupta olması
+  (`broken/layer-origin-on-group.kcad`), parolalı adres (`broken/layer-origin-password.kcad`) ve başka biçimde özet
+  (`broken/layer-origin-digest.kcad`) `bad_value`'dur. Örnek dosya `layer-origins.kcad`.
 - Yazıcı `modules`'ü yalnız bir modül sürümünü yükselttiğinde, şema en az `254` olarak yazar; başka her çizim eskisiyle bayt bayt aynıdır.
 
 **Şema 255, araç katmanları** (kullanım incelemesi UR-003): ayarların `toolLayers`'ı, ölçü (`dimension`), yazı (`text`) ve taramanın (`hatch`) çizildiği katmanın kimliğidir; boş liste yazılmaz, bir araç bir kez, katman kimliği boş olmaz (`bad_value`; `broken/tool-layers-tool-twice.kcad`, `tool-layers-blank-layer.kcad`); şema 254'te bilinmeyen alandır (`broken/tool-layers-in-schema-254.kcad`). Örnek `tool-layers.kcad`. Verilmezse araçlar etkin katmana çizer.

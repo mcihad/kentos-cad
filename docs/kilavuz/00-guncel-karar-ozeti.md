@@ -284,6 +284,10 @@
     `file.export.gpkg`'nin `write`'ı `file`, `tables` ya da `append`. Yazım SQLite'ın çevrimiçi yedeğiyle alınan kopyada
     yapılır, sonda yerine konur. Masaüstü teslimi ayrı iş parçacığında, ilerleme ve Durdur'la koşar; var olan dosyada
     “Yalnız bu tabloları yeniden yaz” önce gelir.
+  - **Tek kaynak kataloğu** (23 Kasım, rapor 5'in kalanı; [ADR 9192](../adr/9192-one-source-catalog.md), VY-91):
+    katman düğümünün `origin`'i (`.kcad` CBS verisi 7) içe alınan kopyanın kaynağını taşır. Kaynak durumu'nun
+    Kaynaklar'ı her dosya ya da veritabanının altında veri katmanını, bağlı katmanı ve kopyayı gösterir; kopya dosyanın
+    alındıktan sonra değişip değişmediğini söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
