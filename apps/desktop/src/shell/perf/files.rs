@@ -118,6 +118,9 @@ fn select(app: &mut App, h: &mut Harness) -> Value {
 
 fn measure(file: &Path) -> Value {
     let (mut app, _) = App::boot(None);
+    // `KENTOS_PERF_SETTINGS` and `KENTOS_PERF_SHORTCUTS` as `perf::large` reads them: a diagnosis's settings.
+    super::large::settings_from_env(&mut app);
+    super::large::shortcuts_from_env(&mut app);
     let mut h = Harness::new();
     h.settle(&mut app);
     let (boot, _) = memory();
@@ -125,6 +128,9 @@ fn measure(file: &Path) -> Value {
     let (resident, _) = memory();
     let objects = app.document.as_ref().map_or(0, |d| d.model.entities().count());
     let fit = app.viewport.camera.visible_bounds();
+    // What the GPU draws for the opened view (plan/render.md F3): the work a far view's frame is made of.
+    h.frame(&mut app, &[]);
+    let drawn = scene_stats(&app);
     let shown = everything(&mut app, &mut h);
     let frames: Vec<(&str, Vec<Parts>)> = trace(&mut app, &mut h, 60);
     let frames: Value = frames
@@ -142,12 +148,24 @@ fn measure(file: &Path) -> Value {
         "objects": objects,
         "open": opened,
         "openFit": [fit.min_x, fit.min_y, fit.max_x, fit.max_y],
+        "drawn": drawn,
         "everything": shown,
         "frames": frames,
         "burst": { "in": inward, "out": outward },
         "select": selection,
         "memory": { "residentBootMb": boot, "residentOpenMb": resident, "residentEndMb": end, "peakMb": peak },
         "onGpu": h.on_gpu(),
+    })
+}
+
+/// The drawing area's last frame as the renderer counted it: pieces, triangles, marks, draw calls and the bytes the
+/// view holds on the GPU.
+fn scene_stats(app: &App) -> Value {
+    let s = app.viewport.status().stats;
+    json!({
+        "segments": s.segments, "triangles": s.triangles, "markers": s.markers, "styledItems": s.styled_items,
+        "drawCalls": s.draw_calls,
+        "residentBytes": s.resident_bytes, "pictureKept": s.picture_kept,
     })
 }
 

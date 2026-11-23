@@ -10,6 +10,9 @@ pub struct FrameStats {
     pub triangles: u64,
     /// Point marks drawn.
     pub markers: u64,
+    /// The styled layers' vertices (fills) and instances (strokes, marks) drawn: the drawing's own objects
+    /// (plan/render.md F3). The counts above are the plain parts': the grid, the underlay, the highlights.
+    pub styled_items: u64,
     /// Draw calls issued, the background included.
     pub draw_calls: u32,
     /// Buffer bytes uploaded while preparing the frame: the frame uniform, plus

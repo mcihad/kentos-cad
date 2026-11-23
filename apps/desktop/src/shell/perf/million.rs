@@ -54,6 +54,16 @@ fn million() {
                 let gpu: Vec<f64> = frames.iter().map(|p| p.gpu_ms()).collect();
                 println!("{n} kaydırma {round}: GPU p50 {:.1} ms", percentile(&gpu, 0.5));
             }
+            // `wheel`: a notch in and a notch out at the area's middle, the frames a wheel gesture draws (plan/render.md F3).
+            "wheel" => {
+                let center = app.viewport.bounds.center();
+                let mut gpu = Vec::new();
+                for lines in [1.0, -1.0] {
+                    let p = h.frame(&mut app, &[super::frame::moved(center), super::large::wheel(lines)]);
+                    gpu.push(p.gpu_ms());
+                }
+                println!("{n} tekerlek {round}: GPU {:.1} / {:.1} ms", gpu[0], gpu[1]);
+            }
             // `click`: one object selected with a click at the area's middle, then Esc (plan/render.md RM-06).
             "click" => {
                 // Tümünü göster first, as `perf::files` clicks after it: the middle of the drawing, not of its open view.

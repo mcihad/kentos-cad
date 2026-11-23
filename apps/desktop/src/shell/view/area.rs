@@ -249,7 +249,8 @@ impl App {
                         .extend(self.data_selection_layer(crate::view::rgba_color(accent)))
                         // The edited data layers' rows not saved yet, whatever their style draws (data_edits.rs).
                         .extend(self.data_edits_layer(Tokens::of(&self.theme()).warning))
-                        .push(labels);
+                        // `KENTOS_DIAG_SKIP=labels`: a measurement's frame without the drawing's texts (plan/render.md F3).
+                        .extend((!std::env::var("KENTOS_DIAG_SKIP").is_ok_and(|s| s.contains("labels"))).then_some(labels));
                 let still = |e| following(built, live, Follows::Still, e);
                 let active: Element<'_, Message> = ContextMenu::controlled(
                     stack![area, following(built, live, Follows::Moved, drawn.into())]

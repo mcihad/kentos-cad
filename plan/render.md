@@ -113,6 +113,15 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F2 — Çizim iş parçacığı
 
+> **Sıra değişti (23 Kasım, ölçüye göre):** F3, F2'den önce yapılır.
+>
+> - RM-05'ten sonra jest karelerinde arayüz 0,2 ms. Kalan bedel uzak görünümün GPU'su (sivas.kcad 105 ms, NCZ
+>   87 ms) ve dinlenme karesinin yeniden üretimi (25–193 ms).
+> - wgpu'da kuyruk tek: ayrı bir çizim iş parçacığı GPU'nun sırasını değiştirmez, süresini düşürmez.
+> - Yeniden üretimi arayüz iş parçacığından çıkarmak döşeme ve düzeylerin (RM-08..10) kurulduğu arka plan işinin
+>   parçasıdır.
+> - RM-07, F3'ten sonra ölçülerek yeniden değerlendirilecek.
+
 - [ ] **RM-07 — Ayrı iş parçacığında çizim.**
   - Tuval kendi dokularına üçlü tamponla çizer. Her doku, çizildiği kamerayla damgalanır.
   - Yeni kare hazır değilse son doku, damgadaki kameradan şimdiki kameraya dönüştürülerek gösterilir.
@@ -125,7 +134,15 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     sekizde birini geçince bütün nesneler belge sırasıyla geziliyor: 601 619 nesnede 37 ms.
 - [ ] **RM-09 — Eğriler görünüme göre çizilir.** Daireler, yaylar ve elipsler GPU'da ya da döşeme başına görünüme göre
   çizilir. Bütün çizime yayılan 1 M kiriş bütçesi kalkar; yakında daire köşeli görünmez.
-- [ ] **RM-10 — Düzey sadeleştirme.**
+- [~] **RM-10 — Düzey sadeleştirme.** İlk adım yapıldı:
+  [ADR 9207](../docs/adr/9207-far-levels-of-strokes-and-fills.md).
+  - Model ekranında düz çizgilerin ve düz dolguların uzak düzeyleri (8/32/128 m ızgara, piksel kümeleme). Hiçbir nesne
+    pikselinden çıkmıyor.
+  - **sivas.kcad:** çizilen öğe 3,19 M → 1,56 M, tekerlek karesinde GPU 104 → 85 ms.
+  - **NCZ:** öğe 4,17 M → 0,90 M, ama süre değişmedi (87 ms).
+  - Atlama deneyleri NCZ'de sürenin çizgi toplu çizimlerinde, öğe sayısından bağımsız ve çizim çağrısıyla birlikte
+    gittiğini gösterdi. Kare yakalama ya da zaman damgasıyla sürdürülecek.
+  - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.
   - Hazır olmayan döşemenin yerinde ebeveyni gösterilir; ekran boş kalmaz.

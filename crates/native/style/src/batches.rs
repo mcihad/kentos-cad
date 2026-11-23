@@ -1408,13 +1408,19 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         };
         batches.push(batch);
     }
-    Ok(StyledLayer {
+    let mut layer = StyledLayer {
         data: out.data,
         low: out.low,
         batches,
         pictures: out.pictures,
         dropped: out.dropped,
-    })
+    };
+    // The model screen's far levels of plain strokes and solid fills (far_levels.rs, docs/adr/9207); paper and the PDF
+    // draw every edge.
+    if o.hold_weights {
+        crate::far_levels::add(&mut layer);
+    }
+    Ok(layer)
 }
 
 /// A batch's level and key (`StyledBatch::level`, `key`) from the core's

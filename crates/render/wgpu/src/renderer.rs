@@ -71,6 +71,22 @@ pub type ViewId = u64;
 
 /// Largest buffer the scene cache makes; a larger part is split.
 const MAX_CHUNK_BYTES: u64 = 64 << 20;
+/// What a measurement leaves undrawn to find where a frame's GPU time goes (`KENTOS_DIAG_SKIP`: `styled`, `plain`,
+/// comma separated; plan/render.md F3). Never set outside a measurement.
+#[derive(Clone, Copy, Default)]
+struct Skips {
+    styled: bool,
+    plain: bool,
+}
+
+fn diagnosis_skips() -> Skips {
+    static SKIPS: std::sync::OnceLock<Skips> = std::sync::OnceLock::new();
+    *SKIPS.get_or_init(|| {
+        let asked = std::env::var("KENTOS_DIAG_SKIP").unwrap_or_default();
+        Skips { styled: asked.contains("styled"), plain: asked.contains("plain") }
+    })
+}
+
 /// Frames a view may go undrawn before its buffers are released.
 pub const KEEP_IDLE_FRAMES: u32 = 2;
 
@@ -573,6 +589,7 @@ impl Renderer {
             (styled.zoom_key(&mut zoomed) && !needs_compose(styled)).then(|| zoomed.finish())
         });
         state.stats.draw_calls += drawn;
+        state.stats.styled_items = styled.items();
         state.stats.resident_bytes += bytes;
         // Composed layers and effect groups (docs/adr/0226): planned now, recorded in render.
         state.compose = None;
@@ -1522,15 +1539,23 @@ impl View {
         pass.set_pipeline(&pipes.background);
         pass.draw(0..layout::BACKGROUND.vertex_count.unwrap_or(3), 0..1);
         let all = 0..end.min(self.parts.len());
+        let skip = diagnosis_skips();
         match (styled, &self.styled) {
             (Some((gpu, samples)), Some(view)) if !view.layers.is_empty() => {
                 let under = view.under.min(self.parts.len());
-                self.draw_parts(pass, pipes, 0..under);
-                gpu.draw(pass, view, samples);
+                if !skip.plain {
+                    self.draw_parts(pass, pipes, 0..under);
+                }
+                if !skip.styled {
+                    gpu.draw(pass, view, samples);
+                }
                 // The highlights, at their width.
                 pass.set_bind_group(0, &self.highlight.1, &[]);
-                self.draw_parts(pass, pipes, under..all.end);
+                if !skip.plain {
+                    self.draw_parts(pass, pipes, under..all.end);
+                }
             }
+            _ if skip.plain => {}
             _ => self.draw_parts(pass, pipes, all),
         }
     }

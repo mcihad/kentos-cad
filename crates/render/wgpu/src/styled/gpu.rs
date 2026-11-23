@@ -1613,6 +1613,15 @@ impl StyledGpu {
                         }
                     }
                     (_, true) => pass.draw(0..6, 0..b.count),
+                    // A solid fill's far level (kentos_native_style::far_levels, docs/adr/9207): the level's vertices.
+                    (Some(lod), false) if end == i => {
+                        for r in lod.ranges(level) {
+                            let (a, z) = ((r.start / AREA_FLOATS) as u32, (r.end / AREA_FLOATS) as u32);
+                            if z > a {
+                                pass.draw(a..z, 0..1);
+                            }
+                        }
+                    }
                     (_, false) => pass.draw(0..count, 0..1),
                 }
             }
@@ -1621,7 +1630,22 @@ impl StyledGpu {
             }
         };
         // A service's vector tiles are drawn where its batch is (docs/adr/0208 §9).
+        // `KENTOS_DIAG_SKIP` (a measurement's, plan/render.md F3): the styled batches of these pipes left undrawn.
+        let skipped = |g: &GpuBatch| {
+            static ASKED: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+            let asked = ASKED.get_or_init(|| std::env::var("KENTOS_DIAG_SKIP").unwrap_or_default());
+            !asked.is_empty()
+                && match g.pipe {
+                    Pipe::Stroke | Pipe::StrokeInstanced => asked.contains("stroke"),
+                    Pipe::Solid | Pipe::SolidInstanced => asked.contains("solid"),
+                    Pipe::Hatch => asked.contains("hatch"),
+                    Pipe::Pattern | Pipe::Tile | Pipe::Gradient => asked.contains("pattern"),
+                    Pipe::Marker => asked.contains("marker"),
+                    Pipe::Image | Pipe::Raster | Pipe::Cloud => asked.contains("raster"),
+                }
+        };
         let mut draw = |layer: &GpuLayer, i: usize| match layer.batches.get(i) {
+            Some(g) if skipped(g) => {}
             Some(g) if !g.vector.is_empty() => {
                 for id in &g.vector {
                     if let Some((tile, _)) = view.vector_layers.get(id) {
@@ -2103,6 +2127,32 @@ impl ViewStyled {
             u.viewport,
             self.twist,
         )
+    }
+
+    /// The vertices (fills) and instances (strokes, marks) of the batches drawn in the last frame: the styled layers'
+    /// share of a frame's work (plan/render.md F3).
+    pub fn items(&self) -> u64 {
+        let mut n = 0u64;
+        for layer in &self.layers {
+            for (g, b) in layer.batches.iter().zip(&layer.source.layer.batches) {
+                if !g.visible {
+                    continue;
+                }
+                // A batch with levels draws one of them (docs/adr/1063 §3, 9207).
+                n += match (&b.lod, &b.instances) {
+                    (Some(lod), None) => {
+                        let floats = match b.kind {
+                            BatchKind::Stroke { .. } => STROKE_FLOATS,
+                            BatchKind::Marker { .. } => MARKER_FLOATS,
+                            _ => AREA_FLOATS,
+                        };
+                        lod.ranges(g.level).iter().map(|r| (r.len() / floats) as u64).sum()
+                    }
+                    _ => u64::from(g.count),
+                };
+            }
+        }
+        n
     }
 
     /// Batches drawn in the last frame, and the bytes the layers hold on the GPU.

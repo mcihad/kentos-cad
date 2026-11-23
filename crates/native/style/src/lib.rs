@@ -41,6 +41,8 @@ pub mod classify;
 pub mod color;
 pub mod cpu;
 pub mod designer;
+// Far levels of plain strokes and solid fills on the model screen (plan/render.md RM-10).
+pub mod far_levels;
 pub mod legend;
 pub mod line_types;
 pub mod phases;
