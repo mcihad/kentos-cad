@@ -4,11 +4,10 @@
 //! On no object of the drawing the first raster's cell is the card; on an object or a data layer's row the card offers
 //! the raster's value beside it and back. A click outside every shown raster is said.
 
-use iced::Task;
 use kentos_commands::Entity;
 use kentos_interaction::Vec2;
 
-use crate::app::{App, Message};
+use crate::app::App;
 
 /// A raster's cell under a click.
 #[derive(Clone, Debug, PartialEq)]
@@ -127,22 +126,6 @@ impl App {
             ..Default::default()
         };
         Some((card, cell.at))
-    }
-
-    /// Bilgi's click on an object: the rasters under it asked too, for the card to offer their value beside it.
-    pub(crate) fn raster_cells_beside(&mut self, at: Vec2) -> Task<Message> {
-        let (wanted, _) = self.rasters_under(at);
-        self.gis.data_info.cells.clear();
-        self.gis.data_info.showing_raster = false;
-        if wanted.is_empty() {
-            return Task::none();
-        }
-        self.gis.data_info.asked += 1;
-        let asked = self.gis.data_info.asked;
-        crate::db_connections::off_thread(
-            move || read(wanted, at),
-            move |cells| Message::Gis(crate::gis::Event::DataInfo(crate::data_info::Event::Cells(asked, cells))),
-        )
     }
 }
 

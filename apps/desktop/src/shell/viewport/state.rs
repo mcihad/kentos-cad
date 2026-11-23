@@ -837,7 +837,7 @@ impl Viewport {
             | ViewChange::Network(_)
             | ViewChange::Command(_)
             | ViewChange::InfoCard(_)
-            | ViewChange::InfoHits(_)
+            | ViewChange::InfoHits(..)
             | ViewChange::AddressAt(_)
             | ViewChange::LayerLeftOut
             | ViewChange::PlaceTable(..) => {}

@@ -157,9 +157,11 @@ pub enum ViewChange {
     /// Bilgi's card (docs/adr/0225 §5): the object it shows and the drawing's
     /// point it was clicked at, or none (closed).
     InfoCard(Option<(kentos_domain::Slot, Vec2)>),
-    /// The objects under Bilgi's click, the card's first (docs/adr/9145): the card says how many and goes to the next
-    /// with [`Tool::info_shown`]. Pushed before the click's [`ViewChange::InfoCard`].
-    InfoHits(Vec<kentos_domain::Slot>),
+    /// The objects under Bilgi's click, the card's first (docs/adr/9145), and the click's reach (world units): the card
+    /// says how many and goes to the next with [`Tool::info_shown`]; the host asks the shown data layers' rows under the
+    /// same click within the reach, counted with them (docs/adr/9167). Pushed before the click's
+    /// [`ViewChange::InfoCard`].
+    InfoHits(Vec<kentos_domain::Slot>, f64),
     /// Bilgi's click on no object of the drawing (docs/adr/9101 §6): the host
     /// asks the shown data layers' tables for the row under `at` within
     /// `reach` (world units), shows its card and gives the row back with

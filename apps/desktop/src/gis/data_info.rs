@@ -38,8 +38,14 @@ pub struct State {
     pub asked: u64,
     /// The row whose card is shown.
     pub card: Option<Found>,
-    /// Bilgi's clicks on an object: the rasters under it asked after the update (docs/adr/9137).
-    pub beside: Vec<Vec2>,
+    /// Bilgi's clicks on an object and their reach: the rasters and the shown data layers' rows under them asked after
+    /// the update (docs/adr/9137, 9167).
+    pub beside: Vec<(Vec2, f64)>,
+    /// The last click's reach (world units), as the tool gave it with its hits.
+    pub reach: f64,
+    /// The shown data layers' rows under the last click on an object, the top layer's first (docs/adr/9167): counted
+    /// with the objects under it, the card goes on to them after the objects.
+    pub rows: Vec<Found>,
     /// The shown rasters' cells under the last click, the top one first.
     pub cells: Vec<crate::rasters::cell_info::Cell>,
     /// The card shows the first cell, not the object or the row.
@@ -54,8 +60,9 @@ pub enum Event {
     /// The answer to an ask: the row found, if any, the tables that could not be asked, the rasters' cells under the
     /// point and whether a shown raster was there at all.
     Answered(u64, Option<Box<Found>>, Vec<String>, Vec<crate::rasters::cell_info::Cell>, bool),
-    /// The rasters' cells under a click on an object.
-    Cells(u64, Vec<crate::rasters::cell_info::Cell>),
+    /// What lies beside a click on an object (docs/adr/9137, 9167): the rasters' cells under it, the shown data layers'
+    /// rows under it and the tables that could not be asked.
+    Beside(u64, Vec<crate::rasters::cell_info::Cell>, Vec<Found>, Vec<String>),
 }
 
 fn message(event: Event) -> Message {
@@ -171,30 +178,81 @@ pub fn ask(
     (None, said)
 }
 
-impl App {
-    /// Bilgi's last click on no object of the drawing: the shown data layers asked off the thread, the top one first.
-    pub(crate) fn data_info_tasks(&mut self) -> Task<Message> {
-        // A click on an object: only the rasters under it, for the card to offer (docs/adr/9137).
-        let beside = self.gis.data_info.beside.drain(..).next_back();
-        if let Some(at) = beside {
-            return self.raster_cells_beside(at);
+/// The row under `at` of each of `nodes` (the shown data layers, the top one first), counted with the objects under a
+/// click (docs/adr/9167); a table that could not be asked is said and the next one asked.
+pub fn ask_all(nodes: &[LayerNode], settings: &ProjectSettings, at: Vec2, reach: f64) -> (Vec<Found>, Vec<String>) {
+    let mut rows = Vec::new();
+    let mut said = Vec::new();
+    for node in nodes {
+        match row_at(node, settings, at, reach) {
+            Ok(Some((key, object))) => rows.push(Found { layer: node.id.clone(), key, object, at }),
+            Ok(None) => {}
+            Err(why) => said.push(format!("“{}” sorulamadı: {why}", node.name)),
         }
-        let Some((at, reach)) = self.gis.data_info.wanted.drain(..).next_back() else {
-            return Task::none();
-        };
-        let (rasters, any_raster) = self.rasters_under(at);
+    }
+    (rows, said)
+}
+
+impl App {
+    /// The shown data layers with a geometry, the top one first: what Bilgi asks of a click.
+    fn info_data_layers(&self) -> Vec<LayerNode> {
         let Some(doc) = &self.document else {
-            return Task::none();
+            return Vec::new();
         };
         let mut nodes: Vec<LayerNode> = kentos_plot::layers::shown_layers(doc.model.layers().nodes())
             .into_iter()
             .filter(|n| n.data.as_ref().is_some_and(|d| d.geometry.is_some()))
             .cloned()
             .collect();
+        nodes.reverse();
+        nodes
+    }
+
+    /// Beside Bilgi's click on an object: the rasters under it and the shown data layers' rows under it, read off the
+    /// thread (docs/adr/9137, 9167).
+    fn info_beside(&mut self, at: Vec2, reach: f64) -> Task<Message> {
+        let (rasters, _) = self.rasters_under(at);
+        self.gis.data_info.cells.clear();
+        self.gis.data_info.showing_raster = false;
+        self.gis.data_info.rows.clear();
+        let nodes = self.info_data_layers();
+        if rasters.is_empty() && nodes.is_empty() {
+            return Task::none();
+        }
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        self.gis.data_info.asked += 1;
+        let asked = self.gis.data_info.asked;
+        let settings = doc.model.settings().clone();
+        crate::db_connections::off_thread(
+            move || {
+                let (rows, said) = ask_all(&nodes, &settings, at, reach);
+                (crate::rasters::cell_info::read(rasters, at), rows, said)
+            },
+            move |(cells, rows, said)| message(Event::Beside(asked, cells, rows, said)),
+        )
+    }
+
+    /// Bilgi's last click on no object of the drawing: the shown data layers asked off the thread, the top one first.
+    pub(crate) fn data_info_tasks(&mut self) -> Task<Message> {
+        // A click on an object: the rasters and the data layers' rows under it, for the card to offer and count
+        // (docs/adr/9137, 9167).
+        let beside = self.gis.data_info.beside.drain(..).next_back();
+        if let Some((at, reach)) = beside {
+            return self.info_beside(at, reach);
+        }
+        let Some((at, reach)) = self.gis.data_info.wanted.drain(..).next_back() else {
+            return Task::none();
+        };
+        let (rasters, any_raster) = self.rasters_under(at);
+        let nodes = self.info_data_layers();
         if nodes.is_empty() && !any_raster {
             return Task::none();
         }
-        nodes.reverse();
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
         self.gis.data_info.asked += 1;
         let asked = self.gis.data_info.asked;
         let settings = doc.model.settings().clone();
@@ -227,9 +285,13 @@ impl App {
                 self.gis.data_info.card = found.map(|f| *f);
                 self.with_tool(|s, cx| s.data_found(object.as_ref(), cx));
             }
-            Event::Cells(asked, cells) => {
+            Event::Beside(asked, cells, rows, said) => {
                 if asked == self.gis.data_info.asked {
+                    for why in said {
+                        self.warn(why);
+                    }
                     self.gis.data_info.cells = cells;
+                    self.gis.data_info.rows = rows;
                 }
             }
         }

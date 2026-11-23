@@ -41,13 +41,22 @@ pub enum Event {
     Copy(String),
     /// The raster's value under the click shown (true), or the object or the row again (docs/adr/9137).
     Raster(bool),
-    /// Sonraki: the next of the objects under the click (docs/adr/9145).
+    /// Sonraki: the next of the objects and the data layers' rows under the click (docs/adr/9145, 9167).
     Next,
 }
 
 /// The words of the hits under a click: how many, and which is shown.
 pub(crate) fn hits_words(shown: usize, count: usize) -> String {
     format!("Bu noktada {count} nesne · {shown}/{count}")
+}
+
+/// The words of the objects and the data layers' rows under a click (docs/adr/9167): how many of each, and which of
+/// them all is shown.
+pub(crate) fn place_words(shown: usize, objects: usize, rows: usize) -> String {
+    if rows == 0 {
+        return hits_words(shown, objects);
+    }
+    format!("Bu noktada {objects} nesne, {rows} veri satırı · {shown}/{}", objects + rows)
 }
 
 fn msg(e: Event) -> Message {
@@ -259,30 +268,12 @@ impl App {
                 let views = self.attachment_views(slot);
                 let count = views.len();
                 let body = card_body(self, &card, Shown::Object(slot, views), &actions, count);
-                // Overlapping objects under the click: how many, which, and the next (docs/adr/9145).
-                let hits = &self.gis.data_info.hits;
-                let body: Element<'_, Message> = match hits.iter().position(|s| *s == slot) {
-                    Some(i) if hits.len() > 1 => column![
-                        body,
-                        row![
-                            container(label::caption(hits_words(i + 1, hits.len()))).width(Fill),
-                            button(label::caption("Sonraki"))
-                                .on_press(msg(Event::Next))
-                                .padding(kentos_ui::theme::metrics::action_small())
-                                .style(style::button::secondary),
-                        ]
-                        .spacing(8)
-                        .align_y(Center),
-                    ]
-                    .spacing(8)
-                    .into(),
-                    _ => body,
-                };
-                (body, at)
+                // Overlapping objects and data rows under the click: how many, which, and the next (docs/adr/9145, 9167).
+                (self.with_place(body), at)
             }
             (None, None) => {
                 let (card, actions, at) = self.data_card()?;
-                (card_body(self, &card, Shown::Row, &actions, 0), at)
+                (self.with_place(card_body(self, &card, Shown::Row, &actions, 0)), at)
             }
         };
         // Beside an object or a row, a raster under the same click offers its value.
@@ -304,23 +295,72 @@ impl App {
         ))
     }
 
+    /// Where the card is among the click's objects and the data layers' rows under it (docs/adr/9145, 9167): its place
+    /// from 0 and how many there are; none when it is none of them.
+    pub(crate) fn info_place(&self) -> Option<(usize, usize)> {
+        let hits = &self.gis.data_info.hits;
+        let rows = &self.gis.data_info.rows;
+        let total = hits.len() + rows.len();
+        match (self.info_card, &self.gis.data_info.card) {
+            (Some((slot, _)), _) => hits.iter().position(|s| *s == slot).map(|i| (i, total)),
+            (None, Some(f)) => {
+                rows.iter().position(|r| r.layer == f.layer && r.key == f.key).map(|j| (hits.len() + j, total))
+            }
+            (None, None) => None,
+        }
+    }
+
+    /// `body` with the card's place under it and Sonraki, when the click has more than it (docs/adr/9145, 9167).
+    fn with_place<'a>(&self, body: Element<'a, Message>) -> Element<'a, Message> {
+        let Some((i, total)) = self.info_place().filter(|(_, t)| *t > 1) else {
+            return body;
+        };
+        let objects = self.gis.data_info.hits.len();
+        column![
+            body,
+            row![
+                container(label::caption(place_words(i + 1, objects, total - objects))).width(Fill),
+                button(label::caption("Sonraki"))
+                    .on_press(msg(Event::Next))
+                    .padding(kentos_ui::theme::metrics::action_small())
+                    .style(style::button::secondary),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        ]
+        .spacing(8)
+        .into()
+    }
+
     pub(crate) fn info_card_event(&mut self, e: Event) -> iced::Task<Message> {
         match e {
             Event::Raster(to) => self.gis.data_info.showing_raster = to && !self.gis.data_info.cells.is_empty(),
             Event::Next => {
-                // The next hit that is still in the drawing, round to the first.
-                let next = self.info_card.and_then(|(slot, at)| {
-                    let hits = &self.gis.data_info.hits;
-                    let i = hits.iter().position(|s| *s == slot)?;
-                    let doc = self.document.as_ref()?;
-                    (1..hits.len())
-                        .map(|k| hits[(i + k) % hits.len()])
-                        .find(|s| doc.model.get(*s).is_some())
-                        .map(|s| (s, at))
-                });
-                if let Some((slot, at)) = next {
-                    self.info_card = Some((slot, at));
-                    self.with_tool(|s, cx| s.info_shown(slot, cx));
+                // The next of the objects still in the drawing and the rows, round to the first (docs/adr/9167).
+                let Some((i, total)) = self.info_place() else {
+                    return iced::Task::none();
+                };
+                let hits = self.gis.data_info.hits.clone();
+                let rows = self.gis.data_info.rows.clone();
+                let at = self.info_card.map(|(_, at)| at).or_else(|| self.gis.data_info.card.as_ref().map(|f| f.at));
+                for k in 1..total {
+                    let p = (i + k) % total;
+                    if let Some(slot) = hits.get(p).copied() {
+                        if self.document.as_ref().is_some_and(|d| d.model.get(slot).is_some())
+                            && let Some(at) = at
+                        {
+                            self.info_card = Some((slot, at));
+                            self.gis.data_info.card = None;
+                            self.with_tool(|s, cx| s.info_shown(slot, cx));
+                            break;
+                        }
+                    } else if let Some(row) = rows.get(p - hits.len()) {
+                        let object = row.object.clone();
+                        self.info_card = None;
+                        self.gis.data_info.card = Some(row.clone());
+                        self.with_tool(|s, cx| s.data_found(Some(&object), cx));
+                        break;
+                    }
                 }
             }
             Event::Close => {
@@ -330,6 +370,7 @@ impl App {
                 self.gis.data_info.cells.clear();
                 self.gis.data_info.showing_raster = false;
                 self.gis.data_info.hits.clear();
+                self.gis.data_info.rows.clear();
                 if row {
                     self.with_tool(|s, cx| s.data_found(None, cx));
                 }

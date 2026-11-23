@@ -508,3 +508,7 @@ numaraları raporunkidir.
   ([ADR 9166](../docs/adr/9166-data-table-bar-like-the-drawings.md))
   - Aynı araçlar aynı sırada; Sütunlar, Dışa aktar, İncele, Alanlar çalışır; öbürleri kapalı, ipucunda neden ve sonraki adım.
   - Kalan: uçtan uca zincir ve örnek değer sınaması, veri katmanında Form bölmesi ve kopyalama, web.
+- [~] **VY-66 — Bilgi aynı tıklamadaki nesneleri ve veri satırlarını birlikte sayar (rapor 13'ün kalanı).**
+  ([ADR 9167](../docs/adr/9167-objects-and-data-rows-counted-together.md))
+  - Nesnenin yanında veri katmanlarının satırları da sorulur; “1 nesne, 1 veri satırı · 1/2”, Sonraki satırlara geçer.
+  - Kalan: etiket önizlemesinin biçimi, veri katmanında etiket, bir katmandan birden çok satır, web.

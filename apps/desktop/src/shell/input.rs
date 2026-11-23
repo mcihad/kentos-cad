@@ -352,9 +352,11 @@ impl App {
                 ViewChange::PlaceTable(table, label) => self.place_table(*table, label),
                 // Bilgi's card moves to the object clicked, or closes (info_card.rs, docs/adr/0225 §5).
                 ViewChange::InfoCard(card) => {
-                    // The rasters under the object asked too, for the card to offer their value (docs/adr/9137).
+                    // The rasters under the object asked too, for the card to offer their value (docs/adr/9137), and
+                    // the shown data layers' rows, counted with the objects (docs/adr/9167).
+                    self.gis.data_info.rows.clear();
                     if let Some((_, at)) = card {
-                        self.gis.data_info.beside.push(at);
+                        self.gis.data_info.beside.push((at, self.gis.data_info.reach));
                     } else {
                         self.gis.data_info.cells.clear();
                         self.gis.data_info.showing_raster = false;
@@ -364,7 +366,10 @@ impl App {
                     self.gis.data_info.card = None;
                 }
                 // The objects under Bilgi's click: the card counts them and goes to the next (docs/adr/9145).
-                ViewChange::InfoHits(hits) => self.gis.data_info.hits = hits,
+                ViewChange::InfoHits(hits, reach) => {
+                    self.gis.data_info.hits = hits;
+                    self.gis.data_info.reach = reach;
+                }
                 // Bilgi's click on no object of the drawing: the data layers asked after the update (data_info.rs).
                 ViewChange::DataInfo { at, reach } => self.gis.data_info.wanted.push((at, reach)),
                 // Seç's click on no object, or its box: the data layers asked after the update (data_pick.rs).

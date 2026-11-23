@@ -123,6 +123,50 @@ fn a_data_rows_card_is_titled_with_its_layers_name_and_its_own() {
     assert_eq!(card.title, "mahalleler · Çınar");
 }
 
+/// The sample drawing with Bilgi on and the parcels' table bound as a data layer; a click inside the drawing's parcel
+/// and the table's first row (x 486 500–486 525, y 4 420 200–4 420 225) with what lies beside it read.
+fn clicked_over_both(tag: &str) -> App {
+    crate::data_layers::register();
+    let address = crate::data_layers_tests::parcels(tag, 40).display().to_string();
+    let mut app = identifying();
+    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
+        .expect("added");
+    click(&mut app, [486_520.0 - E, 4_420_210.0 - N]);
+    // The click's work beside the object, as the update after it starts it (the helper drops its tasks).
+    let at = app.info_card.map(|(_, at)| at).expect("the object's card");
+    app.gis.data_info.beside.push((at, app.gis.data_info.reach));
+    let task = app.data_info_tasks();
+    crate::files_testing::drive(&mut app, task);
+    app
+}
+
+/// The 13th item's last count (docs/adr/9167): a click over a drawing's object and a data layer's row counts them
+/// together; Sonraki goes from the object to the row's card and round to the object.
+#[test]
+fn a_click_counts_the_objects_and_the_data_rows_under_it_together() {
+    let mut app = clicked_over_both("bilgi-birlikte");
+    let parcel = shown(&app).expect("the drawing's parcel first");
+    assert_eq!(app.gis.data_info.hits, [parcel]);
+    let rows: Vec<i64> = app.gis.data_info.rows.iter().map(|r| r.key).collect();
+    assert_eq!(rows, [1], "the table's first row under the same click");
+    assert_eq!(app.info_place(), Some((0, 2)));
+    assert_eq!(crate::info_card::place_words(1, 1, 1), "Bu noktada 1 nesne, 1 veri satırı · 1/2");
+    // Sonraki: the row's card.
+    let _ = app.update(Message::InfoCard(crate::info_card::Event::Next));
+    assert_eq!(shown(&app), None);
+    assert_eq!(app.gis.data_info.card.as_ref().map(|f| f.key), Some(1));
+    assert_eq!(app.info_place(), Some((1, 2)));
+    let (card, _, _) = app.data_card().expect("the row's card");
+    assert_eq!(card.title, "parseller");
+    // Round to the object.
+    let _ = app.update(Message::InfoCard(crate::info_card::Event::Next));
+    assert_eq!(shown(&app), Some(parcel));
+    assert!(app.gis.data_info.card.is_none());
+    // Closed: nothing kept.
+    let _ = app.update(Message::InfoCard(crate::info_card::Event::Close));
+    assert!(app.gis.data_info.rows.is_empty() && app.gis.data_info.hits.is_empty());
+}
+
 /// Bilgi's card over the circle and the arc (`.run/gui-evidence/kullanim-9145/`): the layer and key line, how many
 /// objects are under the click and Sonraki.
 #[test]
@@ -157,6 +201,24 @@ fn layer_info_screens() {
         let mut app = app_with_drawing();
         named_building(&mut app);
         let _ = app.open_layer_info(Some("bina".to_owned()));
+        app
+    });
+}
+
+/// Bilgi's card over the drawing's parcel and the table's first row (`.run/gui-evidence/kullanim-9167/`): one object
+/// and one data row counted together, then the row's card.
+#[test]
+#[ignore = "pictures for the owner"]
+fn together_screens() {
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    crate::files_testing::usage_shots("9167", "01-nesne-ve-satir", || {
+        let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        clicked_over_both(&format!("bilgi-birlikte-resim-{n}"))
+    });
+    crate::files_testing::usage_shots("9167", "02-satirin-karti", || {
+        let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let mut app = clicked_over_both(&format!("bilgi-birlikte-resim-{n}"));
+        let _ = app.update(Message::InfoCard(crate::info_card::Event::Next));
         app
     });
 }

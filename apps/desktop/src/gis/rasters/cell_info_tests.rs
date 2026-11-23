@@ -83,7 +83,7 @@ fn beside_an_object_the_card_offers_the_rasters_value_and_back() {
     let slot = app.document.as_ref().expect("open").model.entities().map(|e| kentos_domain::Slot(e.base().id)).next().expect("an object");
     let at = kentos_interaction::Vec2::new(500_001.0, 4_419_999.0);
     app.info_card = Some((slot, at));
-    app.gis.data_info.beside.push(at);
+    app.gis.data_info.beside.push((at, 0.5));
     let task = app.data_info_tasks();
     drive(&mut app, task);
     assert!(!app.gis.data_info.showing_raster, "the object's card first");
