@@ -2580,6 +2580,8 @@ Liste:
   satırlarını da sorup kartta birlikte saysın.
 - [ ] Var olan GeoPackage'a yazarken onay (ADR 9168, 23 Kasım 2026): web'in GeoPackage dışa aktarması var olan dosyada
   silinen, yeniden yazılan ve yeni tabloları söyleyip sorsun.
+- [ ] Düzenle sekmesinde oturum (ADR 9169, 23 Kasım 2026): web'in şeridinde çizilen veri katmanının Düzenlemeyi
+  başlat/bitir düğmesi Katmanlar panelinde dursun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

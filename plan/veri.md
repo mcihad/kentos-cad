@@ -516,3 +516,7 @@ numaraları raporunkidir.
   ([ADR 9168](../docs/adr/9168-writing-over-a-geopackage-asks.md))
   - Seçilen dosya varsa onay: silinen, yeniden yazılan ve yeni tablolar, stil tablosu, yazılan sayılar; Geri ya da Üstüne yaz.
   - Kalan: yalnız hedef tablolara yazmak ya da eklemek, yarıda kesme sınaması, web.
+- [~] **VY-68 — Düzenle sekmesi çizilen veri katmanının oturumunu sürekli gösterir (rapor 4'ün kalanı).**
+  ([ADR 9169](../docs/adr/9169-session-in-the-edit-tab.md))
+  - Katmanlar panelinde Düzenlemeyi başlat/bitir; salt okunur bağlantıda kapalı, ipucunda nedeni.
+  - Kalan: iki oturumda yanlış yazım sınaması, bulut rolünün gerekçesi, web.

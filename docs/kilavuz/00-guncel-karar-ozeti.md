@@ -208,6 +208,9 @@
   - **Var olan GeoPackage'a yazarken onay** (23 Kasım, rapor 6'nın kalanı;
     [ADR 9168](../adr/9168-writing-over-a-geopackage-asks.md), VY-67): dosyadan silinen, yeniden yazılan ve yeni
     tablolar söylenir; Geri hiçbir şey yazmaz.
+  - **Düzenle sekmesinde oturum** (23 Kasım, rapor 4'ün kalanı;
+    [ADR 9169](../adr/9169-session-in-the-edit-tab.md), VY-68): Katmanlar paneli çizilen veri katmanının
+    Düzenlemeyi başlat/bitir düğmesini gösterir; salt okunurda kapalıdır.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
