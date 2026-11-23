@@ -265,6 +265,72 @@ fn a_data_layers_file_written_outside_or_bound_elsewhere_makes_the_findings_old(
     assert!(app.topology_stale(), "bound elsewhere: old");
 }
 
+/// On a real PostgreSQL (the usage report's 14th item, docs/adr/9182): a check over a database's table keeps its
+/// counters of rows added, changed and deleted. Asked off the interface's thread they stay while nothing is written;
+/// another program's fourth parcel moves them and the findings are old, said as the source's change; checked again,
+/// current.
+#[test]
+fn on_postgresql_a_write_outside_makes_the_findings_old() {
+    let Some(pg) = crate::pg_testing::pg("PostgreSQL'de dışarıdaki yazım") else {
+        return;
+    };
+    crate::data_layers::register();
+    let t = crate::pg_testing::table("topoloji");
+    let source = kentos_data::registry().source(&pg).expect("the database");
+    let mut tx = source.begin().expect("begin");
+    tx.create_table(
+        &NewTable {
+            name: t.clone(),
+            title: None,
+            description: None,
+            key: "fid".into(),
+            fields: vec![Field::new("ad", FieldKind::Text { max: Some(8) })],
+            geometry: Some(GeometryField {
+                name: "geom".into(),
+                type_name: "POLYGON".into(),
+                z: false,
+                m: false,
+                srid: Some(5256),
+            }),
+            spatial_index: true,
+            system: None,
+        },
+        true,
+    )
+    .expect("table");
+    tx.commit().expect("made");
+    // The parcels written by another program in SQL, its statistics flushed at once (a server flushes them by itself
+    // within seconds).
+    let insert = |name: &str, (x, y): (f64, f64)| {
+        let (x2, y2) = (x + 100.0, y + 100.0);
+        format!("INSERT INTO {t} (ad, geom) VALUES ('{name}', ST_GeomFromText('POLYGON(({x} {y}, {x2} {y}, {x2} {y2}, {x} {y2}, {x} {y}))', 5256))")
+    };
+    let mut statements: Vec<String> = OVERLAPPING.iter().zip(["P1", "P2", "P3"]).map(|(c, n)| insert(n, *c)).collect();
+    statements.push("SELECT pg_stat_force_next_flush()".into());
+    crate::pg_testing::sql(&pg, &statements.iter().map(String::as_str).collect::<Vec<_>>());
+    let mut app = app_with_drawing();
+    let described = crate::data_layers::describe(&pg, &t).expect("described");
+    let name = described.name.clone();
+    app.add_data_layers(vec![described]).expect("added");
+    let id = crate::data_layers_tests::node(&app, &name).expect("the layer").id.clone();
+    rule_on(&mut app, &id);
+    check(&mut app);
+    let c = app.topology_checked().expect("checked");
+    assert_eq!(c.findings.len(), 1, "the overlap found in the database's table: {:?}", said(&app));
+    assert!(c.g.sources_read[0].fingerprint.is_some(), "its counters kept");
+    app.topology_ask_marks();
+    assert!(!app.topology_stale(), "nothing written: current");
+    crate::pg_testing::sql(&pg, &[&insert("P4", (487_000.0, 4_420_200.0)), "SELECT pg_stat_force_next_flush()"]);
+    app.topology_ask_marks();
+    assert!(app.topology_stale(), "written outside: old");
+    assert_eq!(app.topology_sources_changed(), [name.clone()], "said as the source's change");
+    check(&mut app);
+    app.topology_ask_marks();
+    assert!(!app.topology_stale(), "checked again: current");
+    assert!(app.topology_sources_changed().is_empty());
+    crate::pg_testing::drop_table(&pg, &t);
+}
+
 /// The picture (`.run/gui-evidence/kullanim-9171/`): the Topoloji tab after the data layer's file was written outside.
 #[test]
 #[ignore = "pictures for the owner"]

@@ -204,6 +204,28 @@ impl Source for PgSource {
         })
     }
 
+    /// The table's counters of the rows added, changed and deleted (`pg_stat_all_tables`). Any session's write moves
+    /// them once that session's statistics are flushed: at its transaction's end when a second has passed since its
+    /// last flush, else within about ten seconds of idling. A view or a query keeps none.
+    fn change_mark(&self, table: &str) -> Result<Option<String>, DataError> {
+        let s = self.shape(table)?;
+        if s.query {
+            return Ok(None);
+        }
+        runtime()?.block_on(async {
+            let mut conn = self.pool.acquire().await.map_err(error_of)?;
+            let row: Option<(i64, i64, i64)> = sqlx::query_as(
+                "SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE schemaname = $1 AND relname = $2",
+            )
+            .bind(&s.namespace)
+            .bind(&s.relation)
+            .fetch_optional(&mut *conn)
+            .await
+            .map_err(error_of)?;
+            Ok(row.map(|(added, changed, deleted)| format!("{added}:{changed}:{deleted}")))
+        })
+    }
+
     fn features(
         &self,
         table: &str,

@@ -52,6 +52,8 @@
 
 - PostGIS kaynağının dışarıdaki yazımı: veritabanının değişiklik sayacıyla (örneğin tablonun istatistikleri) gerçek
   sunucuda.
+  **Yapıldı (23 Kasım 2026):** `Source::change_mark` (PostGIS'te `pg_stat_all_tables` sayaçları), sekme açıkken
+  arka planda sorulur; gerçek sunucuda sınandı, [ADR 9182](9182-postgresql-remainders-on-a-real-server.md) §2.4.
 - Kendi kaynağa yazımlarını dışarıdakinden ayırıp sonucu gereksiz eskitmemek.
 - Kurumun gerçek eşik değerleri (ADR 9146 §4).
 - Web (TODOS.md §0.2).

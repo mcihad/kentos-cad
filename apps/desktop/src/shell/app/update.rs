@@ -110,6 +110,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // A database table's mark asked every few seconds while Topoloji shows a check that read one (docs/adr/9182).
+            if self.topology_watches_marks() {
+                Subscription::run(crate::topology::marks_ticks)
+            } else {
+                Subscription::none()
+            },
             // The loaded external references' files, looked at every few seconds (xrefs_watch.rs, docs/adr/0349 §3).
             if self.xrefs_watching() {
                 Subscription::run(crate::xrefs_watch::ticks)
@@ -240,6 +246,8 @@ impl App {
             self.data_rows_tasks(),
             // The data layers' fields İstatistik and Grafik count, counted by their sources (data_counts.rs, docs/adr/9181).
             self.data_counts_tasks(),
+            // A database table's mark asked while Topoloji shows a check that read one (topology/, docs/adr/9182).
+            self.topology_marks_tasks(),
             // Seç's clicks and boxes on the data layers, asked of their sources (data_pick.rs, docs/adr/9103 §5).
             self.data_pick_tasks(),
             // The counted layers' class counts, asked again when their style or data changed (layer_classes.rs).

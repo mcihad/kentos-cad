@@ -594,4 +594,6 @@ numaraları raporunkidir.
     ulaştıktan sonra kesen ve kapanınca sunucuyu ulaşılmaz yapan bir aktarıcı (gerçek kesinti).
   - Geçti: 4, 16, 23 (iki sınama kusuru düzeldi), 26 (iki oturum), 27, 28, 30 (yeniden açılış dahil), 31, 32 (ekleme
     yetkisiz hesap).
-  - Kalan: 14 (PostGIS'in dışarıdaki yazımı), 7 (katalog), öykünmesiz bağımsız sunucuda yineleme.
+  - 14: `Source::change_mark` (PostGIS'te tablonun istatistik sayaçları); topoloji sonucu dışarıdaki yazımla
+    eskiyor, işaret sekme açıkken arka planda soruluyor.
+  - Kalan: 7 (katalog), öykünmesiz bağımsız sunucuda yineleme.

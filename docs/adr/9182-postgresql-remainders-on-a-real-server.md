@@ -31,6 +31,17 @@
      (ADR 9126'nın “sonucu bilinmiyor” durumu).
    - Kapanınca bütün bağlantıları keser ve yenisini almaz: sunucuya ulaşılamaz. Açılınca yeniden geçirir.
 3. Her maddenin senaryosu bir PostGIS tablosunda koşar (madde madde §3).
+4. **Veritabanının değişiklik işareti** (14. madde). Topoloji sonucu dosya kaynağında dosyanın boyu ve son yazılma
+   anıyla eskiyordu (ADR 9171); veritabanının böyle bir işareti yoktu.
+   - Sürücü sözleşmesine `Source::change_mark` eklendi. Varsayılanı “işaret yok”tur. PostGIS'te tablonun
+     `pg_stat_all_tables` sayaçlarıdır: eklenen, değişen ve silinen satır. Görünüm ve sorgu katmanının işareti yoktur.
+   - Denetim okuduğu anın işaretini saklar (denetim kendi iş parçacığındadır).
+   - Masaüstü işareti sorarken arayüzü bekletmez. Topoloji sekmesi açık ve denetim bir veritabanı tablosu okumuşken
+     işaret üç saniyede bir, arka planda sorulur (kendi iş parçacığında uyuyan bir abonelik). Eskime son sorulan
+     işaretle karşılaştırılır; sorulmadan eskimiş sayılmaz.
+   - **Gecikme:** bir oturumun yazımı sayaçlara o oturumun istatistikleri boşaltılınca yansır. İşlemin sonunda, son
+     boşaltmadan bir saniye geçmişse hemen olur; yoksa boşta kalınca on saniye içinde. Kendi yazımlarımız da sayaçları
+     yürütür: sonuç temkinli olarak eskir (dosyada da öyledir).
 
 ## §3 Kanıt
 
@@ -81,7 +92,15 @@
   - yalnız okuyabilen hesabın bağlantısı sunucunun yetkisinden salt okunur, oturumu açılmıyor;
   - iki oturum açıkken her alan yalnız hedefe gidiyor; kaydedilince her tablo kendi satırını alıyor.
 
+- **14 · Dışarıdaki yazım** (ADR 9171; `on_postgresql_a_write_outside_makes_the_findings_old`): PostGIS tablosundaki
+  üç parselde denetim bir çakışma buldu ve sayaçları sakladı.
+  - İşaret arka planda sorulunca, bir şey yazılmamışken sonuç güncel kaldı.
+  - Başka bir program SQL ile dördüncü parseli yazdı: sonuç eskidi ve tablonun kaynağının değiştiği söylendi.
+  - Yeniden denetlenince sonuç güncel oldu.
+  - Topoloji sınamalarının hepsi geçiyor (32).
+
 ## §4 Kalan
 
 - Değerlendirmenin deney düzeninin bağımsız bir sunucuda (öykünmesiz) yinelenmesi.
-- 26'nın Python ve MCP'de alan alan seçimi; 23'ün öbür tablo veren araçlarının türleri (PostgreSQL'e bağlı değil).
+- 26'nın Python ve MCP'de alan alan seçimi; 23'ün öbür tablo veren araçlarının türleri; 14'ün kurumun gerçek eşik
+  değerleri (PostgreSQL'e bağlı değil).

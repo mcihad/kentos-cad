@@ -71,8 +71,8 @@ pub struct SourceRows {
     /// The source and table read (docs/adr/9171): a layer bound to another since makes the findings old.
     pub address: String,
     pub table: String,
-    /// The source's file as it was read, its size and last write ([`data_fingerprint`]); none for a source that says
-    /// nothing of its changes (a database).
+    /// The source as it was read: a file's size and last write ([`data_fingerprint`]), a database table's counters of
+    /// rows added, changed and deleted ([`database_mark`], docs/adr/9182); none for a source that keeps neither.
     pub fingerprint: Option<String>,
     /// Rows the source gave.
     pub read: usize,
@@ -372,9 +372,20 @@ pub fn rules_digest(doc: &Document, only: Option<&[String]>) -> String {
     sixteen(kentos_commands::canonical::canonical_json(&v).as_bytes())
 }
 
+/// A database table's mark asked of its server (docs/adr/9182): its counters of rows added, changed and deleted, which
+/// any session's write moves (after the server's own short delay). A round trip: off the interface's thread. None for
+/// a file (its mark is [`data_fingerprint`]'s), a view or query, or a server that cannot be asked.
+pub fn database_mark(data: &kentos_commands::DataLayer) -> Option<String> {
+    if data.driver == "gpkg" {
+        return None;
+    }
+    let source = kentos_data::registry().source(&data.address).ok()?;
+    source.change_mark(&data.table).ok().flatten()
+}
+
 /// A data layer's file as it stands (docs/adr/9171): its size and last write, with its write-ahead log's when it has
 /// one (a GeoPackage written but not yet folded in), so any write to it changes this; none for a source that is not a
-/// file (a database), which says nothing of its changes this way.
+/// file (a database), whose mark is [`database_mark`]'s.
 pub fn data_fingerprint(data: &kentos_commands::DataLayer) -> Option<String> {
     if data.driver != "gpkg" {
         return None;
@@ -399,8 +410,9 @@ fn source_rows(doc: &Document, node: &kentos_commands::LayerNode, g: &mut Gather
     };
     let held = doc.data_hidden(&node.id);
     let drawn = g.layers.iter().take(g.drawn).filter(|l| **l == node.id).count();
-    // The file as it is before it is read: a write after the read makes the findings old (docs/adr/9171).
-    let fingerprint = data_fingerprint(data);
+    // The source as it is before it is read: a write after the read makes the findings old (docs/adr/9171); a
+    // database's counters asked of its server, the check being off the interface's thread (docs/adr/9182).
+    let fingerprint = data_fingerprint(data).or_else(|| database_mark(data));
     match crate::data_write::all_rows(node, doc.settings(), &held, &|| false) {
         Ok(read) => {
             let kept = read.rows.len();

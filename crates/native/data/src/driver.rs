@@ -80,6 +80,13 @@ pub trait Source: Send + Sync {
     /// How many rows the request keeps (its box and condition; its page and order are not asked). `estimate` without
     /// a box and a condition answers from the catalog's statistics.
     fn count(&self, table: &str, request: &Request, estimate: bool) -> Result<u64, DataError>;
+    /// A mark of the table's rows that moves when anyone writes them (docs/adr/9182 §2): a database's own counters of
+    /// the rows added, changed and deleted. None for a source that keeps none: a file says its changes by its size and
+    /// last write, which the caller reads. A mark may follow a write by the source's own delay.
+    fn change_mark(&self, table: &str) -> Result<Option<String>, DataError> {
+        let _ = table;
+        Ok(None)
+    }
     /// The rows the request asks for, in its order, handed `request.chunk` at a time to `sink` until the end, until
     /// `sink` returns false, or until `cancel` is flipped (checked between parts).
     fn features(

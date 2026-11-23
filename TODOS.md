@@ -2606,6 +2606,8 @@ Liste:
 - [ ] Kaynağın kendi sayımı (ADR 9181, 23 Kasım 2026): web'in İstatistik ve Grafik'i veri katmanının alanlarını
   kaynağın `GROUP BY`'ıyla saysın (her değer bir hücre, yeri satır sayısı kadar tekrarlı); değere ya da çubuğa
   basmak o satırları tabloda seçsin.
+- [ ] Veritabanının değişiklik işareti (ADR 9182, 23 Kasım 2026): web'in topoloji sonucu da veritabanı tablosunun
+  sayaçlarıyla (PostGIS'te `pg_stat_all_tables`) eskisin; işaret arayüzü bekletmeden, sekme açıkken arada bir sorulsun.
 - [ ] Genel sembol kitaplığı ve Kent dalı (ADR 9118, 9119; 22 Kasım 2026): web'in sistem kitaplığı
   `crates/native/style/assets/general-library.kstil`'i de yüklesin (kaynağı `scripts/style/general_library.py`).
   Kent'in gerçek boylu sembolleri (`unit: "m"`) ve Taç, Açı, Hız alanlarından okunan değerler web'in çiziminde de

@@ -134,6 +134,30 @@ pub(crate) struct TopologyPanel {
     pub reason: String,
     /// The repair recipe planned and shown (docs/adr/1260 §4).
     pub recipe: Option<review::Recipe>,
+    /// The database tables' marks as last asked off the thread, by layer (docs/adr/9182), when they were asked and
+    /// whether an ask goes on.
+    pub(crate) marks: std::collections::HashMap<String, Option<String>>,
+    marks_asked: Option<std::time::Instant>,
+    marks_running: bool,
+}
+
+/// How often a database table's mark is asked while the tab shows a check that read one (docs/adr/9182).
+const MARKS_EVERY: std::time::Duration = std::time::Duration::from_secs(3);
+
+/// While the tab watches a database table's mark, a tick every [`MARKS_EVERY`] from a thread of its own (docs/adr/9182):
+/// the ask goes after it (`topology_marks_tasks`).
+pub fn marks_ticks() -> impl iced::futures::Stream<Item = Message> {
+    let (mut out, ticks) = iced::futures::channel::mpsc::channel(1);
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(MARKS_EVERY);
+            let tick = Message::Gis(gis::Event::Topology(Event::MarksTick));
+            if iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, tick)).is_err() {
+                break;
+            }
+        }
+    });
+    ticks
 }
 
 /// What follows a check's answer.
@@ -193,6 +217,9 @@ pub enum Event {
     /// A finding's state chosen in Öznitelikler (docs/adr/4600): its lasting key and the mark, with Gerekçe's words; the
     /// tab's chosen rows stay as they are.
     Review(String, TopologyExceptionOperation),
+    /// The database tables' marks asked off the thread, by layer (docs/adr/9182); the wait before the next ask over.
+    Marks(Vec<(String, Option<String>)>),
+    MarksTick,
 }
 
 impl App {
@@ -219,7 +246,67 @@ impl App {
         let (Some(doc), Some(c)) = (self.document.as_ref(), self.topology_checked()) else {
             return Vec::new();
         };
-        data_sources_changed(&doc.model, c).iter().map(|l| self.topology_layer_name(l)).collect()
+        data_sources_changed(&doc.model, c, &self.gis.topology.marks).iter().map(|l| self.topology_layer_name(l)).collect()
+    }
+
+    /// The database tables the check read and kept a mark of, with their bindings (docs/adr/9182).
+    fn topology_database_sources(&self) -> Vec<(String, kentos_commands::DataLayer)> {
+        let (Some(doc), Some(c)) = (self.document.as_ref(), self.topology_checked()) else {
+            return Vec::new();
+        };
+        c.g.sources_read
+            .iter()
+            .filter(|s| s.fingerprint.is_some())
+            .filter_map(|s| {
+                let data = doc.model.layers().get(&s.layer)?.data.clone()?;
+                (data.driver != "gpkg" && data.address == s.address && data.table == s.table).then(|| (s.layer.clone(), data))
+            })
+            .collect()
+    }
+
+    /// Whether the tab watches a database table's mark: it is shown, over a check that read one (docs/adr/9182).
+    pub(crate) fn topology_watches_marks(&self) -> bool {
+        self.command_expanded && self.bottom_tab == BottomTab::Topology && !self.topology_database_sources().is_empty()
+    }
+
+    /// After every message: while the tab watches them, the database tables' marks asked off the interface's thread,
+    /// at most every [`MARKS_EVERY`] (docs/adr/9182).
+    pub(crate) fn topology_marks_tasks(&mut self) -> Task<Message> {
+        let t = &self.gis.topology;
+        if t.marks_running || t.marks_asked.is_some_and(|at| at.elapsed() < MARKS_EVERY) || !self.topology_watches_marks() {
+            return Task::none();
+        }
+        let sources = self.topology_database_sources();
+        self.gis.topology.marks_running = true;
+        self.gis.topology.marks_asked = Some(std::time::Instant::now());
+        crate::db_connections::off_thread(
+            move || sources.iter().map(|(layer, data)| (layer.clone(), topology_check::database_mark(data))).collect(),
+            |marks| Message::Gis(gis::Event::Topology(Event::Marks(marks))),
+        )
+    }
+
+    /// The marks heard: kept.
+    fn marks_heard(&mut self, marks: Vec<(String, Option<String>)>) -> Task<Message> {
+        self.gis.topology.marks_running = false;
+        self.gis.topology.marks.extend(marks);
+        Task::none()
+    }
+
+    /// A new check's marks are its own: the ones asked before it are let go.
+    fn forget_marks(&mut self) {
+        self.gis.topology.marks.clear();
+        self.gis.topology.marks_asked = None;
+    }
+
+    /// The database tables' marks asked at once, on this thread (the tests ask them so).
+    #[cfg(test)]
+    pub(crate) fn topology_ask_marks(&mut self) {
+        let marks: Vec<(String, Option<String>)> = self
+            .topology_database_sources()
+            .iter()
+            .map(|(layer, data)| (layer.clone(), topology_check::database_mark(data)))
+            .collect();
+        self.gis.topology.marks.extend(marks);
     }
 
     /// Whether what the check read changed since (docs/adr/9146): its rules, tolerance, exceptions or profile; an
@@ -230,8 +317,8 @@ impl App {
             return false;
         };
         // A data layer's source changed outside the drawing (docs/adr/9171): asked each time, a file's facts are cheap
-        // and no change of the drawing says it.
-        if !data_sources_changed(&doc.model, c).is_empty() {
+        // and no change of the drawing says it; a database's marks are the last asked off the thread (docs/adr/9182).
+        if !data_sources_changed(&doc.model, c, &self.gis.topology.marks).is_empty() {
             return true;
         }
         if c.generation == doc.model.generation() && c.revision == doc.model.revision() {
@@ -386,6 +473,7 @@ impl App {
                     .filter(|f| !f.exception && checked.g.lapsed(f))
                     .count();
                 self.gis.topology.checked = Some(checked);
+                self.forget_marks();
                 self.gis.topology.selected.clear();
                 self.gis.topology.anchor = None;
                 self.gis.topology.previews.clear();
@@ -443,6 +531,7 @@ impl App {
                     .map(|(i, _)| i)
                     .collect();
                 self.gis.topology.checked = Some(checked);
+                self.forget_marks();
                 self.gis.topology.selected = selected;
                 self.gis.topology.anchor = None;
                 self.topology_previews();
@@ -541,6 +630,9 @@ impl App {
             Event::Check => return self.topology_check(false),
             Event::Recheck => return self.topology_recheck(false),
             Event::Ran(id, reply) => self.topology_heard(id, reply),
+            Event::Marks(marks) => return self.marks_heard(marks),
+            // The wait over: the next ask goes after this message (topology_marks_tasks).
+            Event::MarksTick => {}
             Event::Stop => self.topology_stop(),
             Event::Frame => {
                 if let Some(r) = self.gis.topology.running.as_mut() {
@@ -945,18 +1037,31 @@ impl App {
 }
 
 /// Whether a data layer check `c` read changed outside the drawing (docs/adr/9171): bound to another table since, gone,
-/// or its file written since (its size or its last write); a source that says nothing of its changes (a database) is
-/// not taken as changed.
-fn data_sources_changed(doc: &kentos_domain::Document, c: &Checked) -> Vec<String> {
+/// its file written since (its size or its last write), or a database table's counters moved (`marks`, the last asked
+/// off the thread, docs/adr/9182). A source that keeps no mark is not taken as changed; nor is a database's until its
+/// mark is asked.
+fn data_sources_changed(
+    doc: &kentos_domain::Document,
+    c: &Checked,
+    marks: &std::collections::HashMap<String, Option<String>>,
+) -> Vec<String> {
     c.g.sources_read
         .iter()
         .filter(|s| {
             let Some(data) = doc.layers().get(&s.layer).and_then(|n| n.data.as_ref()) else {
                 return true;
             };
-            data.address != s.address
-                || data.table != s.table
-                || (s.fingerprint.is_some() && topology_check::data_fingerprint(data) != s.fingerprint)
+            if data.address != s.address || data.table != s.table {
+                return true;
+            }
+            let Some(was) = &s.fingerprint else {
+                return false;
+            };
+            if data.driver == "gpkg" {
+                topology_check::data_fingerprint(data).as_ref() != Some(was)
+            } else {
+                marks.get(&s.layer).is_some_and(|now| now.as_ref() != Some(was))
+            }
         })
         .map(|s| s.layer.clone())
         .collect()
