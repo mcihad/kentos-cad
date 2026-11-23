@@ -11,7 +11,7 @@ sınırlarını izleyin.
 ## Kılavuzun haritası
 
 Bölüm numaraları korunur: koddaki ve ADR'lerdeki “CLAUDE.md §N” atıfları aşağıdaki dosyayı gösterir. Bu dosyada kalan
-bölümler (3, 5–8, 11, 13–15, 18–20, 23) aşağıdadır.
+bölümler (3, 5–8, 11, 13–15, 18–20, 23, 25) aşağıdadır.
 
 | § | Dosya | Ne zaman okunur |
 |---|---|---|
@@ -19,7 +19,7 @@ bölümler (3, 5–8, 11, 13–15, 18–20, 23) aşağıdadır.
 | 1 | [Ürün ve mevcut durum](docs/kilavuz/01-urun-ve-durum.md) | Ürünün kapsamı, modüller, neyin var neyin hedef olduğu |
 | 2 | [Çalıştırma](docs/kilavuz/02-calistirma.md) | Bir komutun, testin, ortak durum betiğinin, resim testinin tam satırı |
 | 4 | [Web mimarisi](docs/kilavuz/04-web-mimarisi.md) | Web'e dönüşte (web duruyor, ADR 0228); katmanlar, AppContext, durum kapsamları, komut, araç, çizim hattı |
-| 9 | [Yeni iş ekleme tarifleri](docs/kilavuz/09-yeni-is-tarifleri.md) | Komut, araç (§9.2: araç = komut), ayar, test, render, processing aracı, dosya biçimi, ayrı işletim sistemi penceresi (§9.8) eklerken |
+| 9 | [Yeni iş ekleme tarifleri](docs/kilavuz/09-yeni-is-tarifleri.md) | Komut, araç (§9.2: araç = komut), ayar, test, render, processing aracı, dosya biçimi, ayrı işletim sistemi penceresi (§9.8), yeni modül ve yeni istemci (§9.9) eklerken |
 | 10 | [Yol haritası](docs/kilavuz/10-yol-haritasi.md) | Devir notu ve faz geçmişi |
 | 12 | [Dosya haritası](docs/kilavuz/12-dosya-haritasi.md) | Hangi iş hangi dizinde |
 | 16 | [Tenant, proje yetkisi ve paylaşım](docs/kilavuz/16-tenant-yetki-paylasim.md) | Yetki, rol, paylaşım |
@@ -45,6 +45,8 @@ satıra (749 KB) büyüdüğü için bölündü.
 ## Çalışırken
 
 - **Masaüstü ve bulut önce:** web'e ara verildi (ADR 0228); web'e ait adımlar atlanır, gerekenleri TODOS.md §0.2'ye yazılır.
+- **Modül ve istemci ayrımı (kesin kural, 23 Kasım 2026):** §25'in sekiz kuralı her değişiklikte uygulanır; yeni
+  panel, sekme, menü öğesi, komut, modül ya da istemci onlarla eklenir.
 - **Ağır iş tek tek:** derleme, test ve ölçüm `scripts/dev/svc.sh heavy <komut>` ile ortak kilidin altında koşar
   (`scripts/dev/svc.sh heavy cargo test -p kentos-desktop --lib …`); ikincisi bekler, masaüstü aç kalmaz.
 - **Masaüstü testleri** `RUST_MIN_STACK=67108864` ister. Pencere resimleri `#[ignore]` `screens` testleridir:
@@ -294,3 +296,43 @@ revision, numeric policy ve dönüşüm provenance'ı sonucu yeniden üretilebil
 Mevcut toleransı büyütmek veya beklenen fixture'ı hataya göre yenilemek yasaktır.
 Ayrıntı: ADR 0004/0008, TODOS.md §3/§20 ve [docs/specs/numeric-policy.md](docs/specs/numeric-policy.md) (dört tür sayı, toleranslar,
 büyük koordinatta küçük ayrıntının testleri).
+
+## 25. Modül ve istemci ayrımı (kesin kurallar)
+
+Modüller (bugün CBS, Mimari, Harita, Yol; yarın başkaları) ve istemciler (masaüstü, mobil görüntüleyici ve
+düzenleyici, web) ayrı programlara bölünebilecek kadar gevşek bağlıdır. Bu kuralları çiğneyen iş bitmiş sayılmaz.
+Ayrıntı [ADR 9195](docs/adr/9195-module-separation.md), [ADR 9196](docs/adr/9196-storage-by-project-kind.md), tarif
+§9.9, sıra [plan/ayrim.md](plan/ayrim.md).
+
+1. **Ekranı projenin modülü belirler.** Şerit, paneller, alt sekmeler, katman menüsü, ayarlar, biçimler ve sihirbaz
+   açık projenin modülünün profilinden gelir. Bu her programda ve her istemcide böyledir; hepsi bir arada program
+   (`kentos-cad`) da istisna değildir.
+2. **Her yüzey açıkça yerleşir.** Yeni panel, sekme, menü öğesi, ayar ya da komut her modül için ayrı ayrı var/yok
+   kararıyla eklenir; "her yerde" öntanımlısı yoktur.
+   - Profil tabloları joker kolsuz eşleşmedir: yeni değer, her modüle yerleşmeden derlenmez.
+   - Matris sınaması her hücreyi sınar.
+   - Katman menüsünün öğesi modülle ve katmanın türüyle (çizim, açıklama, veri tablosu, bağlı, servis, raster, nokta
+     bulutu, grup) yerleşir.
+3. **Kabuk modülü tanımaz.** Kabuk ve istemciler yüzey için modül adına göre dallanmaz; modülün kaydettiği profili
+   sorar.
+   - Modül başka modüle doğrudan bağlanmaz; ortak çekirdeğe ve sözleşmeye bağlanır.
+   - Bağımlılık denetimi (`scripts/dev/module_deps.py --check`, AY-04'te kurulur) yeşil kalmadan iş bitmez; tabanı
+     yalnız azalır.
+4. **Modülün tanımı ortaktır.** Modülün kimliği, proje türleri, işleri, saklama türü, komut kümesi ve katman türleri
+   paylaşılan sözleşmededir (`kentos-launch`; ortak katalog `catalog/v1/modules.json`, AY-04'te üretilir). Masaüstü,
+   mobil ve web aynı tanımı okur; istemci başına modül mantığı çatallanmaz.
+5. **Saklama modeli proje türündendir.**
+   - **CBS:** katman verisi ve öznitelikler veritabanındadır (GeoPackage, PostgreSQL, KentOS Bulut). Proje dosyası
+     yapıyı, stilleri, ayarları ve açıklamaları (yazı, ölçü, pafta) tutar; dosyaya, veritabanına ya da buluta
+     kaydedilir. Bulutta yalnız veritabanı biçimi vardır.
+   - **CAD (Mimari, Harita, Yol):** projenin tamamı proje dosyasındadır; dosyaya ya da buluta kaydedilir (yalnız dosya
+     revizyonu).
+   - Yeni modül bu iki türden birini seçer; üçüncü bir biçim ADR ister.
+6. **Veri yalnız komutla değişir.** Masaüstü, mobil düzenleyici, Python ya da MCP fark etmez: çizim ve veri komutla
+   yazılır, CBS verisi düzenleme oturumuyla ya da sunucu komutuyla. İstemci kuralı atlayarak dosyaya ya da
+   veritabanına yazmaz. Rol ve form kuralları (ortak çözümleyici `kentos_forms::reach`, sunucuda `form_guard`) her
+   istemcide aynıdır.
+7. **Görüntüleyici yazmaz.** Mobil ya da web görüntüleyici yalnız okur. Rolün okumadığı alanı göstermez, adını
+   söyler.
+8. **Yeni modül ya da istemci tarifle eklenir** (§9.9). Tarif sırasıyla: modül tanımı, profil, sihirbaz, komut
+   kümesi, saklama türü, bulut türleri, matris sınaması, bağımlılık denetimi, resim.

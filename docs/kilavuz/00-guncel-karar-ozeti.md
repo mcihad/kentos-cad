@@ -4,6 +4,17 @@
 
 ## 0. Güncel karar özeti
 
+- **Modül ve istemci ayrımı, saklama modeli (23 Kasım 2026, sahibin isteği; [ADR 9195](../adr/9195-module-separation.md),
+  [ADR 9196](../adr/9196-storage-by-project-kind.md), [plan/ayrim.md](../../plan/ayrim.md), CLAUDE.md §25).**
+  - Ekranı (şerit, paneller, alt sekmeler, katman menüsü, ayarlar, biçimler, sihirbaz) açık projenin modülü belirler;
+    hepsi bir arada program da öyle. Her yüzey her modül için açıkça yerleşir; katman menüsü katmanın türüne de bakar.
+  - Modüller ve istemciler (masaüstü, mobil görüntüleyici ve düzenleyici, web) ayrı yazılımlara bölünebilecek kadar
+    gevşek bağlıdır: kabuk modülü tanımaz, modül tanımı ortaktır, bağımlılık denetimi yeni bağı reddeder.
+  - CBS: veri ve öznitelikler veritabanında; proje dosyası yapıyı, stilleri, ayarları ve açıklamaları tutar ve dosyaya,
+    veritabanına ya da buluta kaydedilir. CAD (Mimari, Harita, Yol): tamamı proje dosyasında; dosyaya ya da buluta
+    (yalnız dosya revizyonu). Eski projelere taşıma yazılmaz (uygulama geliştirmede).
+  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır.
+
 - **Veri sürücüleri ve canlı veri katmanı (20 Kasım 2026, sahibin isteği; [ADR 9100](../adr/9100-data-drivers.md),
   [ADR 9101](../adr/9101-data-layers.md), [ADR 9102](../adr/9102-data-table.md), [ADR 9103](../adr/9103-edit-session.md),
   [ADR 9104](../adr/9104-transactions.md), [ADR 9105](../adr/9105-layer-classes.md),

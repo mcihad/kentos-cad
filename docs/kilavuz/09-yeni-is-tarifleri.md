@@ -130,3 +130,37 @@ Bir pencereyi katmak:
    penceredeki Esc ve kapatma düğmesi, izin yanıtı ve seçimin hatırlanması da sınanır. Örnekler
    `gis/processing/apart_tests.rs` ve `tests/scene3d_window_tests.rs`'tedir. Sözleşmenin kendi sınaması
    (`windows::tests::every_surface_fulfils_the_contract_with_a_name_of_its_own`) yeni pencereyi kendiliğinden kapsar.
+
+### 9.9 Yeni modül ve yeni istemci
+
+CLAUDE.md §25'in sekizinci kuralının tarifidir. Kararın gerekçesi [ADR 9195](../adr/9195-module-separation.md) ve
+[ADR 9196](../adr/9196-storage-by-project-kind.md), işin sırası [plan/ayrim.md](../../plan/ayrim.md)'dedir.
+`ModuleProfile`, `scripts/dev/module_deps.py` ve `catalog/v1/modules.json` AY-04'te kurulur. O güne dek yeni yüzey
+`apps/desktop/src/shell/module_surfaces.rs`'in tablolarına her modül için açıkça yazılır.
+
+**Yeni modül** (ör. altyapı, kentsel dönüşüm):
+
+1. **Modül tanımı:** `crates/native/launch/src/module.rs`'e modül, proje türleri, CAD işi, program adı ve saklama türü.
+   Saklama türü ya **CBS** (veri veritabanında, proje dosyası yapı, stil, ayar ve açıklama tutar) ya da **CAD**
+   (projenin tamamı proje dosyasında) olur; üçüncüsü ADR ister. Sunucu proje türünün saklama kuralını buradan alır.
+2. **Profil:** modülün kendi klasöründe (`apps/desktop/src/<modül>/profile.rs`) şerit sekmeleri, paneller, alt
+   sekmeler, durum hücreleri, ayar bölümleri, biçimler, katman menüsünün satırları (katman türüyle) ve araç
+   seçenekleri. Joker kolsuz tablolar her yüzey için var ya da yok der; kabuğa modülün adı yazılmaz.
+3. **Sihirbaz:** modülün yeni projesi neyi sorar, neyle açılır; modülün programı yalnız kendi türünü sunar.
+4. **Komut kümesi:** şeridin verisinde (`scripts/ui/ribbon.py`) komutların `works`'ü; modüle özgü komutların
+   çekirdekteki disiplini (`kentos_native_application::registry::discipline_of`).
+5. **Bulut:** proje türleri ve saklama biçimi. CBS türü veritabanı, CAD türü dosya revizyonudur.
+6. **Matris sınaması:** `apps/desktop/src/tests/module_surface_tests.rs`'in matrisi yeni modülün her yüzeyini sınar.
+   Hepsi bir arada programda o türün yüzeyleri modülün programındakiyle aynıdır.
+7. **Bağımlılık:** modül yalnız ortak çekirdeğe ve sözleşmeye bağlanır; denetim yeşil kalır.
+8. **Resim:** modülün penceresi, her katman türünün menüsü ve sihirbazı.
+
+**Yeni istemci** (ör. mobil görüntüleyici ya da düzenleyici):
+
+1. Modülleri ve proje türlerini ortak katalogdan okur; modül mantığını kendi içinde yeniden yazmaz.
+2. Projeyi sözleşmeyle açar: bulut API'si ya da `.kcad`. CBS verisini veri katmanının kaynağından, rolün okuduğu
+   biçimde alır (sunucuda `form_guard`, istemcide `kentos_forms::reach`).
+3. **Görüntüleyici** yalnız okur. Rolün okumadığı alanı göstermez, adını söyler.
+4. **Düzenleyici** her değişikliği komutla yazar: CBS verisini düzenleme oturumuyla ya da sunucu komutuyla (formun
+   kuralları ve kapsamı), CAD projesini proje dosyasının revizyonuyla. Kuralı atlayan doğrudan yazma yoktur.
+5. Ekranı açık projenin modülü belirler; istemci bir modülün yüzeyini başka modülün projesinde göstermez.
