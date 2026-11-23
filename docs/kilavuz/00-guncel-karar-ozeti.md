@@ -4,6 +4,13 @@
 
 ## 0. Güncel karar özeti
 
+- **Render motoru (23 Kasım 2026, sahibin isteği; [ADR 9200](../adr/9200-render-engine-research.md),
+  [plan/render.md](../../plan/render.md), dal `render-motoru`).**
+  - Çizim alanı arayüzden bağımsız bir motor olur: kamera, jestler ve bütün çizim içeriği motorda; kamera olayı
+    `App::view`'ı çağırmaz; tuval kendi iş parçacığında kendi dokularına çizer, iced yalnız son dokuyu koyar.
+  - Geçici resim tek kurala iner (kamera damgalı doku, dönüşümle gösterilir); bugünkü beş yeniden kullanma yolu kalkar.
+  - Döşeme, görünüm ayıklaması ve LOD; görüntüde hiçbir nesne sessizce düşmez. NCZ ve DWG alımı aynı planda.
+
 - **Modül ve istemci ayrımı, saklama modeli (23 Kasım 2026, sahibin isteği; [ADR 9195](../adr/9195-module-separation.md),
   [ADR 9196](../adr/9196-storage-by-project-kind.md), [plan/ayrim.md](../../plan/ayrim.md), CLAUDE.md §25).**
   - Ekranı (şerit, paneller, alt sekmeler, katman menüsü, ayarlar, biçimler, sihirbaz) açık projenin modülü belirler;
