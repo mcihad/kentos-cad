@@ -3,6 +3,8 @@
 //! being edited is read from its source off the interface's thread, taken into the edit session and opened, so the form
 //! and the session share one pending change; a layer not being edited says so with Düzenlemeyi başlat one press away.
 //! A read-only connection's row is read the same way and shown in its form for reading, not taken (docs/adr/9159).
+//! A related item's row its source holds opens the same way over the record's form, which waits under it
+//! (docs/adr/9176).
 
 use iced::Task;
 
@@ -19,6 +21,12 @@ pub struct RowTaken {
     pub form: String,
     pub rows: Result<Vec<(i64, kentos_commands::Entity)>, String>,
     pub shown: bool,
+    /// The record's form a related row opens over ([`crate::forms::entry::Entry::identity`]): that form waits under
+    /// it and comes back when it closes; an answer for a form closed or changed meanwhile is dropped. None for a
+    /// table's row.
+    pub over: Option<String>,
+    /// Why the row's form only reads it ([`crate::forms::entry::Entry::read_why`]).
+    pub read_why: Option<String>,
 }
 
 impl App {
@@ -77,6 +85,8 @@ impl App {
                     form,
                     rows,
                     shown,
+                    over: None,
+                    read_why: None,
                 })))
             },
         )
@@ -85,6 +95,12 @@ impl App {
     /// The row read: taken into the edit session and its record opened.
     pub(crate) fn form_row_taken(&mut self, t: RowTaken) -> Task<Message> {
         if t.asked != self.gis.form_row_asked {
+            return Task::none();
+        }
+        // A related row's form opens over the record's: that one closed or another opened meanwhile, stale.
+        if let Some(over) = &t.over
+            && self.gis.form_entry.as_ref().map(|e| e.identity()).as_ref() != Some(over)
+        {
             return Task::none();
         }
         let rows = match t.rows {
@@ -99,10 +115,13 @@ impl App {
             }
         };
         if t.shown {
-            return match rows.iter().find(|(k, _)| *k == t.key) {
-                Some((_, e)) => self.open_entry_row(&t.layer, t.key, e, &t.form),
-                None => Task::none(),
+            let Some((_, e)) = rows.iter().find(|(k, _)| *k == t.key) else {
+                return Task::none();
             };
+            let nested = self.nest_over(t.over.is_some());
+            let task = self.open_entry_row(&t.layer, t.key, e, &t.form);
+            self.read_why_of_opened(nested, t.read_why);
+            return task;
         }
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
@@ -115,8 +134,36 @@ impl App {
             }
         };
         match uid.and_then(|u| doc.model.slot_of(u)) {
-            Some(slot) => self.open_entry(slot, &t.form),
+            Some(slot) => {
+                if self.nest_over(t.over.is_some()) {
+                    self.selection.set([slot]);
+                }
+                self.open_entry(slot, &t.form)
+            }
             None => Task::none(),
+        }
+    }
+
+    /// The record's form put under the one about to open, when `over`: it waits there and comes back when that one
+    /// closes (docs/adr/0440 §7). Whether it did.
+    pub(crate) fn nest_over(&mut self, over: bool) -> bool {
+        if !over {
+            return false;
+        }
+        match self.gis.form_entry.take() {
+            Some(parent) => {
+                self.gis.form_stack.push(parent);
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// The form just opened only reads its record, and why, when it opened over another.
+    fn read_why_of_opened(&mut self, nested: bool, why: Option<String>) {
+        if let Some(e) = self.gis.form_entry.as_mut().filter(|_| nested) {
+            e.read_only = true;
+            e.read_why = why;
         }
     }
 }

@@ -219,10 +219,10 @@ impl App {
         if let Some(why) = self.read_only_source_words(&e.screen.layer) {
             body = body.push(words::summary(vec![words::text_line(Kind::Info, why)]));
         } else if e.read_only {
-            body = body.push(words::summary(vec![words::text_line(
-                Kind::Info,
-                "İlişkili kayıtlar öğesi bu alt kaydı yalnız okumaya açıyor: kayıt görüntülenir, değiştirilmez.",
-            )]));
+            let why = e.read_why.clone().unwrap_or_else(|| {
+                "İlişkili kayıtlar öğesi bu alt kaydı yalnız okumaya açıyor: kayıt görüntülenir, değiştirilmez.".to_owned()
+            });
+            body = body.push(words::summary(vec![words::text_line(Kind::Info, why)]));
         } else if let Some(why) = self.entry_lock_words(e).filter(|_| locked) {
             // Which of them it is (docs/adr/9125): the role, the archive, the layer's lock.
             body = body.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
@@ -478,7 +478,7 @@ impl App {
             return Some(why);
         }
         if e.read_only {
-            return Some("Kayıt yalnız okumaya açıldı.".into());
+            return Some(e.read_why.clone().unwrap_or_else(|| "Kayıt yalnız okumaya açıldı.".into()));
         }
         if let Some(why) = self.records_locked() {
             return Some(why);

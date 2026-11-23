@@ -548,3 +548,8 @@ numaraları raporunkidir.
   - “Yazım makbuzu” ve “Yazım makbuzlarını kur” bırakıldı: makbuz ödeme ve teslim belgesidir, tablo oluşturulur.
   - Tablonun adı (`kentos_writes`) ve kodun İngilizce adları aynı; masaüstü sınaması düğmeyi ve tablonun oluşmasını
     denetler. Web: TODOS.md §0.2.
+- [~] **VY-75 — Kaynaktaki alt kayıt ilişkili listeden kendi formuyla açılır (rapor 22'nin kalanı).**
+  ([ADR 9176](../docs/adr/9176-open-a-source-row-from-the-related-list.md))
+  - Listede Aç, tabloda ve kartta aç simgesi; alt katmanın formu üst kaydın formunun üstünde açılır.
+  - Alt katman düzenleniyor ve öğe izin veriyorsa satır oturuma alınır; değilse gösterilir, form nedenini söyler.
+  - Kalan: 500'den çok alt kayıtta sayfalı okuma, gösterilen kayıttan oturumu başlatıp yazılabilir açmak, web.

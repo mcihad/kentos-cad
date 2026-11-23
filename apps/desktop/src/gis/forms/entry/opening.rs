@@ -293,6 +293,7 @@ impl App {
             issue_at: 0,
             asking_close: false,
             read_only: false,
+            read_why: None,
             row: None,
             source_rows: Default::default(),
             source_rows_asked: 0,

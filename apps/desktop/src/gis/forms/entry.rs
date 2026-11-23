@@ -199,6 +199,10 @@ pub struct Entry {
     /// Opened from a related item that offers reading its children, not changing them
     /// (docs/adr/0762 §1): nothing is written.
     pub(crate) read_only: bool,
+    /// Why the record is only read when the item's offer is not the reason (docs/adr/9176): a related row of a layer
+    /// not being edited, or of a record that is itself only read. Said where the form says it is read-only and when a
+    /// write is refused.
+    pub(crate) read_why: Option<String>,
     /// The source row shown and not taken (a read-only connection's: docs/adr/9159): its key field and key. The record
     /// is not in the drawing; nothing of it is written.
     pub(crate) row: Option<(String, i64)>,
@@ -346,6 +350,13 @@ const TWO_COLUMNS: f32 = 880.0;
 
 fn msg(event: Event) -> Message {
     Message::Gis(gis::Event::FormEntry(event))
+}
+
+impl Entry {
+    /// Which record's form this is, told from another's (docs/adr/9176): its form, its object and its source row.
+    pub(crate) fn identity(&self) -> String {
+        format!("{}\u{1f}{}\u{1f}{:?}", self.form, self.uid, self.row)
+    }
 }
 
 impl Entry {
@@ -820,6 +831,18 @@ impl Entry {
     #[cfg(test)]
     pub(crate) fn tab_for_tests(&self) -> usize {
         self.tab
+    }
+
+    /// The form's id.
+    #[cfg(test)]
+    pub(crate) fn form_for_tests(&self) -> &str {
+        &self.form
+    }
+
+    /// The record's value of `field` as the form shows it before anything is typed.
+    #[cfg(test)]
+    pub(crate) fn shown_for_tests(&self, field: &str) -> Option<String> {
+        self.screen.attrs.get(field).cloned()
     }
 
     #[cfg(test)]

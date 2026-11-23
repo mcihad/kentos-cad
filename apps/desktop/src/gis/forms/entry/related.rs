@@ -320,6 +320,10 @@ impl App {
             );
             return Task::none();
         }
+        // A row its data layer's source holds (docs/adr/9165, 9176): read from there and opened by its layer's form.
+        if let Some(key) = source_key(uid) {
+            return self.open_related_row(item, key);
+        }
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -352,6 +356,85 @@ impl App {
                 Task::none()
             }
         }
+    }
+
+    /// A related item's row its data layer's source holds (docs/adr/9176), opened by its layer's form over the
+    /// record's, which waits under it. Taken into the edit session when the item lets the child be changed and the
+    /// layer is being edited, so the form and the session share one pending change; else read and shown for reading,
+    /// the form saying why. A row taken meanwhile opens as the drawing's object.
+    fn open_related_row(&mut self, item: &str, key: i64) -> Task<Message> {
+        let Some(e) = self.gis.form_entry.as_ref() else {
+            return Task::none();
+        };
+        let Some(FormItem::Related { layer, .. }) = crate::forms::designer::find(&e.body.items, item) else {
+            return Task::none();
+        };
+        let layer = layer.clone();
+        let over = e.identity();
+        let update = self.related_offers(e, item).into_iter().find(|o| o.action == RelatedAction::Update);
+        // A record only read keeps its children only read too; said from the child's form.
+        let parent_only_read = (e.read_only || self.read_only_source(&e.screen.layer).is_some()).then(|| {
+            format!("Altta bekleyen “{}” yalnız okumaya açık; ondan açılan bu kayıt da değiştirilmez.", e.name)
+        });
+        let Some(form) = self.form_of_layer(&layer) else {
+            self.say(
+                Level::Warn,
+                "İlişkili nesnenin katmanının formu yok; Formlar penceresinden bir form oluşturun.",
+            );
+            return Task::none();
+        };
+        if self.withdrawn_said(&form) {
+            return Task::none();
+        }
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
+        };
+        if let Some(uid) = doc.model.taken_uid(&layer, key) {
+            return self.open_related(item, &uid.to_string());
+        }
+        let Some(node) = doc.model.layers().get(&layer).cloned() else {
+            return Task::none();
+        };
+        // Whether it is only shown, and why when the read-only connection's own words (docs/adr/9159) or the item's
+        // (it offers reading its children only) do not say it: changing the child refused, or its layer not being
+        // edited.
+        let (shown, read_why) = if node.data.as_ref().is_some_and(|d| d.read_only) {
+            (true, None)
+        } else {
+            match update {
+                None => (true, None),
+                Some(o) => match o.refused {
+                    Some(why) => (true, Some(parent_only_read.unwrap_or(why))),
+                    None if !doc.model.editing(&layer) => (
+                        true,
+                        Some(format!(
+                            "“{}” düzenlemeye açık değil: kayıt kaynaktan okunup gösteriliyor, değiştirilmez. \
+                             Değiştirmek için katmanın düzenleme oturumunu başlatıp kaydı listeden yeniden açın.",
+                            node.name
+                        )),
+                    ),
+                    None => (false, None),
+                },
+            }
+        };
+        self.gis.form_row_asked += 1;
+        let asked = self.gis.form_row_asked;
+        let settings = doc.model.settings().clone();
+        crate::db_connections::off_thread(
+            move || kentos_native_application::data_write::rows_to_take(&node, &settings, &[key], &|| false),
+            move |rows| {
+                Message::Gis(gis::Event::FormRow(Box::new(crate::forms::row_target::RowTaken {
+                    asked,
+                    layer,
+                    key,
+                    form,
+                    rows,
+                    shown,
+                    over: Some(over),
+                    read_why,
+                })))
+            },
+        )
     }
 
     /// A related item (docs/adr/0404 §4): the objects referring to the record, each opened by its own
@@ -520,7 +603,7 @@ impl App {
                     Some(v) => format!("{v} · satır {key} (kaynakta)"),
                     None => format!("Satır {key} (kaynakta)"),
                 };
-                col = col.push(related_row(e, id, uid, words, false, &offers));
+                col = col.push(related_row(e, id, uid, words, !e.preview, &offers));
                 continue;
             }
             let words = doc
@@ -608,7 +691,8 @@ impl App {
             kentos_forms::ChildEntry::of(&reach, layer, &layer_name(layer), &name)
         });
         let permits = kentos_forms::ChildPermits {
-            saved: !e.preview && !e.uid.is_empty(),
+            // A source row shown for reading is a record its source holds, saved (docs/adr/9159, 9176).
+            saved: !e.preview && (!e.uid.is_empty() || e.row.is_some()),
             record_locked,
             child_locked: doc
                 .is_some_and(|d| d.model.layers().is_locked(layer))
@@ -784,8 +868,7 @@ pub(super) fn open_offer(offers: &[kentos_forms::Offer]) -> Option<&kentos_forms
 }
 
 /// A related child in the list: its words and the actions its item offers; Sil asks in the row.
-/// A related child's tools, or for a row its data layer's source holds (docs/adr/9165), where it is: it is shown, not
-/// written.
+/// A related child's tools, or for a row its data layer's source holds (docs/adr/9165, 9176) its Aç and where it is.
 pub(super) fn source_or_tools<'a>(
     e: &'a Entry,
     id: &str,
@@ -794,7 +877,12 @@ pub(super) fn source_or_tools<'a>(
     offers: &[kentos_forms::Offer],
 ) -> Element<'a, Message> {
     if source_key(uid).is_some() {
-        return label::caption("kaynakta").style(muted).into();
+        // Only Aç (docs/adr/9176): the row is not in the drawing to be shown, unlinked or deleted from here.
+        let open: Vec<kentos_forms::Offer> = open_offer(offers).into_iter().cloned().collect();
+        return row![related_tools(e, id, uid, !e.preview, &open), label::caption("kaynakta").style(muted)]
+            .spacing(4)
+            .align_y(Center)
+            .into();
     }
     related_tools(e, id, uid, live, offers).into()
 }
@@ -845,6 +933,9 @@ pub(super) fn related_row<'a>(
     if !live {
         return line.into();
     }
+    // A row its source holds offers only Aç (docs/adr/9176): it is not in the drawing to be shown, unlinked or
+    // deleted from here.
+    let source = source_key(uid).is_some();
     let pairs = [
         (RelatedAction::Show, Event::ShowObject(uid.to_owned())),
         (
@@ -856,7 +947,7 @@ pub(super) fn related_row<'a>(
             Event::DeleteRelated(id.to_owned(), uid.to_owned()),
         ),
     ];
-    for (action, event) in pairs {
+    for (action, event) in pairs.into_iter().filter(|_| !source) {
         if let Some(b) = offered_word(offers, action, e.msg(event), words::ghost) {
             line = line.push(b);
         }

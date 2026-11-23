@@ -229,6 +229,9 @@
     taslak kaydedilir.
   - **İşlem kaydı, makbuz değil** (23 Kasım, sahibin sözü; [ADR 9175](../adr/9175-transaction-record-wording.md), VY-74): yazımın kaynaktaki
     izi “işlem kaydı”, düğme “İşlem kaydı tablosunu oluştur”; “makbuz” ödeme ve teslim belgesinde kalır.
+  - **Kaynaktaki alt kayıt kendi formuyla** (23 Kasım, rapor 22'nin kalanı; [ADR 9176](../adr/9176-open-a-source-row-from-the-related-list.md), VY-75):
+    ilişkili listede kaynaktaki satırın Aç'ı alt katmanın formunu üst kaydınkinin üstünde açar; alt katman
+    düzenleniyorsa satır oturuma alınır, değilse gösterilir ve form nedenini söyler.
 
 - **Genel sembol kitaplığı (22 Kasım 2026, sahibin isteği; [ADR 9118](../adr/9118-general-symbol-library.md)).**
   Sistem kitaplığında Temel ve MPYY'nin yanında Genel dalı vardır: 197 sembol (nokta 87, çizgi 59, alan 51), 25 tematik
