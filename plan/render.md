@@ -211,8 +211,17 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 - [ ] **RM-20 — Akışlı DXF okuyucu.** Bellek sınırlı kalır; 256 MiB sınırı kalkar.
 - [ ] **RM-21 — DWG doğrudan eşleme.** DWG kod çözücüsünün nesneleri doğrudan KentOS nesnelerine çevrilir. Bellekteki
   DXF metin köprüsü (270–463 MB) kalkar.
-- [ ] **RM-22 — Alınmayanlar.** SİVAS AVM'de 8 051 öğe alınmıyor:
-  - “görünmez” bayrağı doğrulanacak (6 328 LWPOLYLINE, 513 LINE, 437 ATTDEF, 437 ATTRIB);
+- [~] **RM-22 — Alınmayanlar.** SİVAS AVM'de 8 051 öğe alınmıyor:
+  - [x] “Görünmez” bayrağı doğrulandı (24 Kasım), doğru okunuyor:
+    - **2 katlı ev:** DWG ve DXF'inde düz nesnelerden hiçbiri görünmez sayılmıyor.
+    - **İLBANK İÇMESUYU:** DWG ve DXF birebir aynı (3 472 nesne).
+    - **2 katlı evin 20 nesnelik farkı:** DXF'te fazladan iki adsız blok yerleştirmesi var; içleri ölçü kalıntısı
+      (12 çizgi, 2 yazı, 6 tanım noktası) ve çizimin uzağında. Kod çözücü 133 ölçünün hepsini okuyor, köprü DXF'i de
+      hepsini taşıyor; köprü yalnız 70. gruba 32 bitini ekliyor, tür okumasını etkilemiyor.
+    - **AVM'nin görünmezleri:** 6 328 LWPOLYLINE ile 513 LINE “0” katmanında; ATTDEF ve ATTRIB mülk no ile oda alanı
+      katmanlarında (A_ANNO_TXT_PRPRTY_NO, A_ANNO_TXT_RM_AREA). Bilinçli gizlenmiş yardımcı nesnelere benziyorlar.
+  - [ ] WIPEOUT maskesi: “paper” renginde dolgu olabilir. Ama katman içinde dolgular çizgilerden önce çizildiği için
+    çizim sırası kararı ister (RM-15).
   - WIPEOUT, IMAGE ve REGION;
   - okunamayan tarama sınırları;
   - boş ATTRIB'ler.
