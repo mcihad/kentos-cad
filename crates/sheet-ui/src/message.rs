@@ -200,6 +200,9 @@ pub enum Message {
     ZoomReal,
     /// Seçime yakınlaş: the chosen items fill the stage.
     ZoomSelection,
+    /// Yakınlaştır and Uzaklaştır (+ and −): the next zoom step about the stage's middle (`View::stepped`).
+    ZoomIn,
+    ZoomOut,
 
     // ── The chosen items ──
     Select(Vec<ItemId>),

@@ -170,6 +170,8 @@ impl Designer {
                     self.reset_caches();
                 }
             }
+            Message::ZoomIn => self.zoom_step(true),
+            Message::ZoomOut => self.zoom_step(false),
 
             Message::Select(ids) => self.select(ids),
             Message::TreeClick(id, add) => {
@@ -1252,6 +1254,9 @@ impl Designer {
                             .map(|i| i.id.clone())
                             .collect(),
                     ),
+                    // Yakınlaştır and Uzaklaştır, as the drawing's + and − (Shift gives + on some keyboards).
+                    (false, _, "+") => Message::ZoomIn,
+                    (false, _, "-") => Message::ZoomOut,
                     (false, _, "v") => Message::Tool(Tool::Select),
                     (false, _, "h") => Message::Tool(Tool::Hand),
                     (false, _, "m") => self.add_tool("map")?,
@@ -1262,6 +1267,14 @@ impl Designer {
             }
             _ => return None,
         })
+    }
+
+    /// Yakınlaştır or Uzaklaştır: the next zoom step about the stage's middle, the paper drawn again at it.
+    fn zoom_step(&mut self, closer: bool) {
+        if let Some(page) = self.open_sheet().map(|s| s.page.size) {
+            self.view = self.view.stepped(closer, self.stage, page);
+            self.reset_caches();
+        }
     }
 
     /// A tool of the profile by its id, if the mode shows it and it is on.

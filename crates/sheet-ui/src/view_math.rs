@@ -13,6 +13,11 @@ pub const REAL: f64 = 96.0 / 25.4;
 const ROOM: f64 = 28.0;
 pub const MIN_ZOOM: f64 = REAL * 0.05;
 pub const MAX_ZOOM: f64 = REAL * 16.0;
+/// The steps Yakınlaştır and Uzaklaştır (and the + and − keys) go through, as shares of the real size, the least and
+/// the largest zoom's among them (the web's `ZOOM_STEPS`).
+pub const ZOOM_STEPS: [f64; 17] = [
+    0.05, 0.1, 0.125, 0.25, 0.33, 0.5, 0.67, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0, 16.0,
+];
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct View {
@@ -122,6 +127,23 @@ impl View {
         let f = REAL / self.zoom_on(stage, paper);
         self.zoomed(f, px, stage, paper)
     }
+
+    /// The next of [`ZOOM_STEPS`] in (`closer`) or out from the zoom now, the stage's middle kept: an A3 page fitted
+    /// at 57 % goes in to 67 %, out to 50 %; past the last step the least or the largest zoom.
+    pub fn stepped(&self, closer: bool, stage: Size, paper: SizeUm) -> View {
+        let now = self.zoom_on(stage, paper);
+        let share = now / REAL;
+        // A zoom a hair off a step (a wheel's, a fitted page's) is not that step.
+        const NEAR: f64 = 1e-6;
+        let next = if closer {
+            ZOOM_STEPS.iter().copied().find(|s| *s > share + NEAR)
+        } else {
+            ZOOM_STEPS.iter().rev().copied().find(|s| *s < share - NEAR)
+        };
+        let to = next.map_or(if closer { MAX_ZOOM } else { MIN_ZOOM }, |s| s * REAL);
+        let px = Point::new(stage.width / 2.0, stage.height / 2.0);
+        self.zoomed(to / now, px, stage, paper)
+    }
 }
 
 #[cfg(test)]
@@ -188,5 +210,36 @@ mod tests {
             (moved.x - 310.0).abs() < 0.01 && (moved.y - 195.0).abs() < 0.01,
             "{moved:?}"
         );
+    }
+
+    /// Yakınlaştır and Uzaklaştır go through the steps about the stage's middle: the fitted A3 page's 57 % in to 67 %,
+    /// 75 % and 100 %, out to 50 %; a zoom on a step goes to the next one, and the ends stay where they are.
+    #[test]
+    fn the_zoom_steps_keep_the_stage_s_middle() {
+        let stage = Size::new(1000.0, 700.0);
+        let v = View::default();
+        assert_eq!(v.percent(stage, A3), 57);
+        let mid = Point::new(500.0, 350.0);
+        let under = v.xf(stage, A3).paper(mid);
+        let mut z = v;
+        let mut seen = Vec::new();
+        for _ in 0..3 {
+            z = z.stepped(true, stage, A3);
+            seen.push(z.percent(stage, A3));
+        }
+        assert_eq!(seen, [67, 75, 100]);
+        let back = z.xf(stage, A3).p(under[0], under[1]);
+        assert!(
+            (back.x - mid.x).abs() < 0.01 && (back.y - mid.y).abs() < 0.01,
+            "{back:?}"
+        );
+        assert_eq!(z.stepped(false, stage, A3).percent(stage, A3), 75);
+        assert_eq!(v.stepped(false, stage, A3).percent(stage, A3), 50);
+        let at = |zoom: f64| View {
+            zoom: Some(zoom),
+            center: [210.0, 148.5],
+        };
+        assert_eq!(at(MAX_ZOOM).stepped(true, stage, A3).zoom, Some(MAX_ZOOM));
+        assert_eq!(at(MIN_ZOOM).stepped(false, stage, A3).zoom, Some(MIN_ZOOM));
     }
 }

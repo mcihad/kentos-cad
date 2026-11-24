@@ -1283,6 +1283,31 @@ fn a_ribbon_zoom_draws_the_paper_again() {
     }
 }
 
+/// Yakınlaştır and Uzaklaştır go a step in or out about the stage's middle and draw the paper again: the A3 page
+/// fitted at 57 % goes in to 67 %, then out to 50 % and 33 %. The + and − keys are theirs.
+#[test]
+fn the_zoom_steps_go_in_and_out() {
+    use iced::keyboard::{Key, Modifiers};
+    let mut d = designer();
+    assert_eq!(d.zoom_percent(), Some(57));
+    let mut seen = Vec::new();
+    for m in [Message::ZoomIn, Message::ZoomOut, Message::ZoomOut] {
+        let before = d.paper_resets();
+        d.update(m.clone());
+        assert!(d.paper_resets() > before, "{m:?} empties the paper's caches");
+        seen.push(d.zoom_percent().unwrap_or_default());
+    }
+    assert_eq!(seen, [67, 50, 33]);
+    assert!(matches!(
+        d.key(&Key::Character("+".into()), Modifiers::SHIFT),
+        Some(Message::ZoomIn)
+    ));
+    assert!(matches!(
+        d.key(&Key::Character("-".into()), Modifiers::empty()),
+        Some(Message::ZoomOut)
+    ));
+}
+
 /// A north arrow's declination in the inspector (design §8a; the web's `northSection`): what the
 /// paper writes and from what (the core's `north_info`), the date it is for and where that comes
 /// from; “Sapmayı elle gir” starts from the model's value to the minute when nothing was typed,
