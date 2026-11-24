@@ -14,7 +14,7 @@ road_alignment_cases.py's 40-digit reference. No KentOS code. The wall's sizes a
 
 import copy
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 from pathlib import Path
 

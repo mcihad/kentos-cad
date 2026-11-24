@@ -35,7 +35,7 @@ is where two rounded corners meet: x = face − √(R² − (w/2)²)).
 import argparse
 import copy
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 from pathlib import Path
 
 from shapely.geometry import LineString, Point, Polygon

@@ -2,7 +2,7 @@
 
 A reference must not depend on the platform's mathematics library. CPython's `math.sin`, `cos`, `tan`, `atan2`,
 `exp`, `log`, `pow`… (and the float `**`) call the C library, and the libraries round differently: the same
-generator gave different last digits on Linux (glibc), on macOS 26 and on macOS 27 (ADR 9303 §1). These functions
+generator gave different last digits on Linux (glibc), on macOS 26 and on macOS 27 (ADR 9303, Bağlam). These functions
 give, for every finite input, the double nearest to the exact value (ties to even): mpmath computes it at 256 bits,
 far past the hardest cases of double precision, and Python's exact integer division rounds it once.
 
@@ -12,7 +12,7 @@ constants, isclose, isfinite… Special inputs keep the C library's (C99 Annex F
 sign, infinities, NaN, a domain error's ValueError, an overflow's OverflowError.
 
 A generator that uses this module also writes `x * x` for `x ** 2` and `math.pow(x, y)` for another float power:
-the float `**` calls the C library's pow, and macOS 27's is not exact even for the square (ADR 9303 §1).
+the float `**` calls the C library's pow, and macOS 27's is not exact even for the square (ADR 9303, Bağlam).
 """
 
 from __future__ import annotations
@@ -36,30 +36,24 @@ def _nearest(v) -> float:
     return -x if sign else x
 
 
-def _arg(x):
-    """The argument as mpmath reads it exactly: an int as it is, anything else as the float CPython would take."""
-    if isinstance(x, int) and not isinstance(x, bool):
-        return _ctx.mpf(x)
-    return _ctx.mpf(float(x))
-
-
 @_cache(maxsize=None)
 def _one(name: str, x: float) -> float:
     return _nearest(getattr(_ctx, name)(_ctx.mpf(x)))
 
 
-def _unary(name: str, mp_name: str | None = None):
+def _unary(name: str, whole_int: bool = False):
+    """The function `name` correctly rounded; `whole_int`: an int argument is taken whole, as CPython's log and log10
+    take it (an int may be past the floats); every other function takes the float the int rounds to, as CPython does."""
     libm = getattr(_m, name)
-    mp_name = mp_name or name
 
     def f(x):
         r = libm(x)  # the C library's domain checks, errors and special values
         if r == 0.0 or not _m.isfinite(r):
             return r
-        if isinstance(x, int) and not isinstance(x, bool):  # an int may be past the floats (CPython's log takes it)
-            return _nearest(getattr(_ctx, mp_name)(_ctx.mpf(x)))
+        if whole_int and isinstance(x, int) and not isinstance(x, bool):
+            return _nearest(getattr(_ctx, name)(_ctx.mpf(x)))
         x = float(x)
-        return _one(mp_name, x) if _m.isfinite(x) else r
+        return _one(name, x) if _m.isfinite(x) else r
 
     f.__name__ = name
     f.__doc__ = f"{name}(x), correctly rounded (crmath)."
@@ -81,7 +75,7 @@ atanh = _unary("atanh")
 exp = _unary("exp")
 expm1 = _unary("expm1")
 log1p = _unary("log1p")
-log10 = _unary("log10")
+log10 = _unary("log10", whole_int=True)
 cbrt = _unary("cbrt")
 erf = _unary("erf")
 erfc = _unary("erfc")
@@ -116,7 +110,7 @@ def exp2(x):
     return _exp2(float(x))
 
 
-_ln = _unary("log")
+_ln = _unary("log", whole_int=True)
 
 
 def log(x, base=None):
@@ -158,7 +152,7 @@ def pow(x, y):  # noqa: A001  (the math module's name)
 
 
 def _self_test() -> None:
-    """A few values whose correctly rounded result is known (checked against mpmath at 1000 bits)."""
+    """A few values whose correctly rounded result is known."""
     assert tan(_m.pi / 8) == 0.41421356237309503  # macOS 27's libm gives 0.4142135623730951
     assert sin(0.0) == 0.0 and _m.copysign(1.0, sin(-0.0)) == -1.0
     assert atan2(-0.0, 1.0) == 0.0 and _m.copysign(1.0, atan2(-0.0, 1.0)) == -1.0
