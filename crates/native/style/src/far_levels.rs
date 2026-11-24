@@ -44,6 +44,9 @@ const STROKE: usize = 6;
 const TRIANGLE: usize = 6;
 /// Both caps of a segment (`push_segments`' flags): a dot is a short segment drawn with its caps.
 const BOTH_CAPS: f64 = 3.0;
+/// A path's far simplification, in cells: an end moved to its cell's middle strays at most half the cell's diagonal
+/// (0.354 of the level's ceiling pixel), so the simplification takes at most the 0.146 px left of half a pixel.
+const SIMPLIFY_SHARE: f64 = 0.29;
 
 /// A small multiply-rotate hasher for cell keys: the levels hash millions of them.
 #[derive(Default)]
@@ -98,7 +101,11 @@ pub fn add(layer: &mut StyledLayer) {
                 .map(|ceiling| {
                     let grid = GRID_PX / ceiling;
                     match b.kind {
-                        BatchKind::Stroke { .. } => strokes(n, &at, grid),
+                        BatchKind::Stroke { .. } => {
+                            // Paths simplified first, within what the grid leaves of half a pixel (§7).
+                            let lines = simplified(n, &at, grid * SIMPLIFY_SHARE);
+                            strokes(lines.len() / STROKE, &|i| lines[i], grid)
+                        }
                         _ => fills(n, &at, grid),
                     }
                 })
@@ -181,6 +188,84 @@ fn strokes(n: usize, at: &impl Fn(usize) -> f64, grid: f64) -> Vec<f64> {
         out.extend([ax, ay, bx, by, 0.0, BOTH_CAPS]);
     }
     out
+}
+
+/// `n` segments read through `at` as paths, each simplified within `tolerance` (Douglas–Peucker, its ends kept): a
+/// segment continues the one before it when it starts where that one ended and has no start cap. A path keeps its
+/// first segment's start cap and its last one's end cap, and each segment its length along the path where it starts.
+fn simplified(n: usize, at: &impl Fn(usize) -> f64, tolerance: f64) -> Vec<f64> {
+    let mut out = Vec::with_capacity(n * STROKE / 2);
+    let mut points: Vec<[f64; 2]> = Vec::new();
+    let mut along: Vec<f64> = Vec::new();
+    let mut caps = (0u32, 0u32);
+    let flush = |points: &mut Vec<[f64; 2]>, along: &mut Vec<f64>, caps: (u32, u32), out: &mut Vec<f64>| {
+        if points.len() >= 2 {
+            let kept = peucker(points, tolerance);
+            let last = kept.len().saturating_sub(2);
+            for (k, w) in kept.windows(2).enumerate() {
+                let (a, b) = (points[w[0]], points[w[1]]);
+                let flags = if k == 0 { caps.0 } else { 0 } | if k == last { caps.1 } else { 0 };
+                out.extend([a[0], a[1], b[0], b[1], along[w[0]], f64::from(flags)]);
+            }
+        }
+        points.clear();
+        along.clear();
+    };
+    for s in 0..n {
+        let i = s * STROKE;
+        let (a, b) = ([at(i), at(i + 1)], [at(i + 2), at(i + 3)]);
+        let ends = at(i + 5).max(0.0) as u32;
+        if points.last() != Some(&a) || ends & 1 != 0 {
+            flush(&mut points, &mut along, caps, &mut out);
+            points.push(a);
+            along.push(at(i + 4));
+            caps.0 = ends & 1;
+        }
+        let start = *along.last().unwrap_or(&0.0);
+        points.push(b);
+        along.push(start + (b[0] - a[0]).hypot(b[1] - a[1]));
+        caps.1 = ends & 2;
+    }
+    flush(&mut points, &mut along, caps, &mut out);
+    out
+}
+
+/// The points Douglas–Peucker keeps of `points` within `tolerance`, in order; the ends always.
+fn peucker(points: &[[f64; 2]], tolerance: f64) -> Vec<usize> {
+    let n = points.len();
+    let mut keep = vec![false; n];
+    keep[0] = true;
+    keep[n - 1] = true;
+    let limit = tolerance * tolerance;
+    let mut stack = vec![(0usize, n - 1)];
+    while let Some((a, b)) = stack.pop() {
+        if b <= a + 1 {
+            continue;
+        }
+        let (mut far, mut at) = (0.0, a);
+        for k in a + 1..b {
+            let d = distance2(points[k], points[a], points[b]);
+            if d > far {
+                (far, at) = (d, k);
+            }
+        }
+        if far > limit {
+            keep[at] = true;
+            stack.push((a, at));
+            stack.push((at, b));
+        }
+    }
+    (0..n).filter(|&k| keep[k]).collect()
+}
+
+/// Squared distance from `p` to the segment `a`–`b` (to `a` when it is a point): a closed path's chord is a point.
+fn distance2(p: [f64; 2], a: [f64; 2], b: [f64; 2]) -> f64 {
+    let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
+    let (px, py) = (p[0] - a[0], p[1] - a[1]);
+    let len2 = dx * dx + dy * dy;
+    let t = if len2 > 0.0 { ((px * dx + py * dy) / len2).clamp(0.0, 1.0) } else { 0.0 };
+    let (ex, ey) = (px - t * dx, py - t * dy);
+    ex * ex + ey * ey
 }
 
 /// `n` triangles read through `at` on a grid: each triangle that keeps an area, once, by its cells; the cells of one
@@ -339,6 +424,34 @@ mod tests {
         for s in numbers[..main].chunks(STROKE).chain(numbers[coarsest].chunks(STROKE)) {
             assert!(drawn.contains(&(cell(s[0], grid), cell(s[1], grid))), "a touched cell is left out");
         }
+    }
+
+    #[test]
+    fn paths_are_simplified_before_the_grid_and_keep_their_caps() {
+        // An open path of 100 points along a gentle wave (amplitude 0.5 m), then a separate segment with its own caps.
+        let mut v = Vec::new();
+        let mut along = 0.0;
+        for k in 0..99 {
+            let (x0, x1) = (k as f64 * 3.0, (k + 1) as f64 * 3.0);
+            let (y0, y1) = ((x0 / 9.0).sin() * 0.5, (x1 / 9.0).sin() * 0.5);
+            let caps = if k == 0 { 1.0 } else if k == 98 { 2.0 } else { 0.0 };
+            v.extend([x0, y0, x1, y1, along, caps]);
+            along += (x1 - x0).hypot(y1 - y0);
+        }
+        v.extend([500.0, 500.0, 501.0, 500.0, 0.0, 3.0]);
+        let out = simplified(v.len() / STROKE, &read(&v), 2.0);
+        let segs: Vec<&[f64]> = out.chunks(STROKE).collect();
+        // The wave within 2 m is one segment from end to end; the separate one stays.
+        assert_eq!(segs.len(), 2, "{out:?}");
+        assert_eq!(&segs[0][..4], &[0.0, 0.0, 297.0, (297.0f64 / 9.0).sin() * 0.5]);
+        assert_eq!(segs[0][5], 3.0, "the path's start and end caps");
+        assert_eq!(&segs[1][..4], &[500.0, 500.0, 501.0, 500.0]);
+        assert_eq!(segs[1][5], 3.0);
+        // A turn is kept: an L of two long legs keeps its corner.
+        let l = [0.0, 0.0, 100.0, 0.0, 0.0, 1.0, 100.0, 0.0, 100.0, 100.0, 100.0, 2.0];
+        let out = simplified(2, &read(&l), 2.0);
+        assert_eq!(out.len(), 2 * STROKE, "{out:?}");
+        assert_eq!(out[STROKE + 4], 100.0, "the second leg starts 100 m along");
     }
 
     #[test]

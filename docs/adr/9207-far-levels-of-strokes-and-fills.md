@@ -213,9 +213,65 @@ Yerel stilin (56 + 51 + 4), çizicinin (98) ve plot'un (22) sınamaları geçti.
 - Ayrıca çizgi örneği başına ~90 ns'nin (§5) nereden geldiği ölçülecek. Bu maliyet yalnız uzak görünümü değil her
   görünümü etkiliyor.
 
+## §7 Uzak düzeyde yolların sadeleştirilmesi ve MSAA'nın payı (24 Kasım 2026)
+
+**Karar:** bir çizgi toplu çiziminin uzak düzeyi, ızgaraya oturtulmadan önce yollarını sadeleştirir (Douglas–Peucker,
+uçlar kalır; `far_levels::simplified`).
+
+- **Yolu kurmak:** ardışık iki parça, ikincisi birincinin bittiği yerde başlıyorsa ve başlangıç başlığı yoksa aynı
+  yoldandır. Yol, ilk parçasının başlangıç başlığını, son parçasının bitiş başlığını ve her parçanın yol boyundaki
+  uzunluğunu korur.
+- **Tolerans:** ızgaranın 0,29'u (`SIMPLIFY_SHARE`).
+  - Hücrenin ortasına taşınan bir uç en çok hücre köşegeninin yarısı kadar kayar: düzeyin tavanında 0,354 piksel.
+  - Yarım piksel kuralının kalanı 0,146 piksel sadeleştirmeye gider.
+  - İlk uzak düzeyde 2,3 m, sonrakilerde 9,3 ve 37 m.
+
+**Öğeler** (`KENTOS_DIAG_ITEMS`, açılış görünümü):
+
+| Dosya | §6 | §7 |
+|---|---|---|
+| İmar planı NCZ | 831 268 | **701 712** (−%16); uzak düzey alan eğri toplu çizimi 24 → 61 |
+| sivas.kcad | 1 382 830 | 1 347 255 (−%2,6) |
+
+**GPU** (UHD 770, release, tekerlek karesi p50; ham sonuçlar `docs/perf/files-desktop-rm10b-dp-2026-11-24.json`):
+
+| Dosya | §6 | §7 | GPU belleği |
+|---|---|---|---|
+| İmar planı NCZ | 81,5 ms | **74,9 ms** (−%8) | 222 → 233 MB |
+| sivas.kcad | 69,9 ms | **67,3 ms** (−%4) | 154 → 161 MB |
+| SİVAS AVM DWG, Suşehri DXF | 21,6 ve 49,9 ms | 21,5 ve 50,2 ms | aynı |
+
+**Gerçek pencere** (`.run/gui-evidence/render/rm10b/dp-{ncz,sivas}`):
+
+- §6'ya göre NCZ'nin kent görünümünde 738 840 pikselin 3 797'si (%0,5) 20'den büyük farkla değişti; daha uzakta 713,
+  sivas.kcad'de 344.
+- Farklar yoğun alanlarda dağınık tek pikseller; gözle ayrılmıyor.
+- Ortalama parlaklık %0,7 azaldı: üst üste binen çizgilerin bir kısmı artık bir kez çiziliyor.
+
+**Neden az:** yarım piksel kuralı içinde sadeleştirmeye kalan pay dar. Asıl kayıp düzeylerin 4 kat aralığında:
+
+- Bir düzey tavanında yarım pikseldir. Tavandan uzakta çizildikçe gereğinden incedir: 32 m/piksel görünüm, 16 m/piksel
+  için kurulan düzeyi çiziyor.
+- Sivas.kcad'in kalan işi çoğunlukla parsel dolgusunun köşeleri (624 bin). Sadeleştirme dolguya uygulanmıyor; dolgu
+  üçgenlerinin halkası çözümde kayboluyor.
+
+**MSAA'nın payı** (§6'nın ikilisi, `KENTOS_PERF_SETTINGS=graphics.msaa=1` ile 4 karşılaştırıldı; tekerlek karesinde
+GPU p50; `docs/perf/files-desktop-msaa{1,4}-2026-11-24.json`):
+
+| Dosya | 4× MSAA | MSAA kapalı |
+|---|---|---|
+| İmar planı NCZ | 81,2 ms | **54,6 ms** (−%33) |
+| sivas.kcad | 69,9 ms | **41,8 ms** (−%40) |
+
+- Çizgiler kenarlarını gölgelendiricide yumuşatır, MSAA'ya ihtiyaçları yoktur.
+- Buna karşın yoğun uzak görünümde her kaplanan piksel dört örnekte karıştırılıyor. Uzak görünümün işinin üçte biri
+  bu.
+- MSAA yalnız dolgu kenarları ve SVG simgelerinin vektörleri (ADR 9208) için gerekli.
+
 ## Uygulama
 
 - `crates/native/style/src/far_levels.rs` (yeni), `batches.rs` (`decode`), `lib.rs`.
+- §7: `far_levels.rs` (`simplified`, `peucker`, `distance2`, `SIMPLIFY_SHARE`).
 - §6: `far_levels.rs` (`source`, `per`), `batches.rs` (`Lod.ceilings` vektör, `Lod.alone`, `Lod::ranges`), `gpu.rs`
   (tanının tavan karşılaştırması `ends_with`; `KENTOS_DIAG_ITEMS`: bir karenin çizilen öğeleri türe, düzeye ve boya
   göre, örnekliler tanım × örnek olarak).
