@@ -350,6 +350,11 @@ pub struct Store {
     column_looks: IdMap<Arc<crate::geom::column_join::Joined>>,
     /// Each opening's wall, by the opening's id (`set_hosts`, docs/adr/0341 §2): its wall's lines are cut where it is.
     opening_hosts: IdMap<f64>,
+    /// The objects the store drew anew on its own, oldest first, whose source did not change: a wall its openings cut
+    /// again or another wall joined again, a column taking its look from the walls again (`redrawn_since`).
+    /// `redrawn_gone` counts the first ones let go.
+    redrawn: Vec<f64>,
+    redrawn_gone: u64,
     /// The openings in no wall (broken, or their wall gone): each shows a warning (docs/adr/0341 §1).
     opening_loose: IdSet,
     /// The drawing's block definitions, flattened (`set_blocks`).
@@ -415,9 +420,35 @@ fn read_item(v: &Json) -> Result<(f64, String, bool, Shape), String> {
     Ok((id, layer, label, e.shape))
 }
 
+/// The fewest objects drawn anew on their own the store remembers (`Store::redrawn_since`); more, four for each object.
+const REDRAWN_KEPT: usize = 1 << 16;
+
 impl Store {
     pub fn new() -> Store {
         Store::default()
+    }
+
+    /// Where the list of the objects the store drew anew on its own ends now: a mark for [`Store::redrawn_since`].
+    pub fn redraw_mark(&self) -> u64 {
+        self.redrawn_gone + self.redrawn.len() as u64
+    }
+
+    /// The ids of the objects the store drew anew on its own since `mark`, though their source stayed the same (a wall
+    /// an opening put on it cuts, a wall a new wall joins, a column taking its look from the walls again; docs/adr/0340
+    /// §3, 0341 §2, 8041 §2): a host keeping what it drew of them draws it again. None when the list no longer reaches
+    /// back to `mark`, or the mark is another store's: everything is to be drawn again.
+    pub fn redrawn_since(&self, mark: u64) -> Option<&[f64]> {
+        let from = usize::try_from(mark.checked_sub(self.redrawn_gone)?).ok()?;
+        self.redrawn.get(from..)
+    }
+
+    /// `id` drawn anew on its own (`redrawn_since`); the list is let go once it outgrows the drawing.
+    fn redrew(&mut self, id: f64) {
+        if self.redrawn.len() >= REDRAWN_KEPT.max(4 * self.live) {
+            self.redrawn_gone += self.redrawn.len() as u64;
+            self.redrawn.clear();
+        }
+        self.redrawn.push(id);
     }
 
     /// Number of objects.
