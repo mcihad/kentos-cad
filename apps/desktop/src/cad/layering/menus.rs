@@ -9,7 +9,7 @@ impl App {
     /// in submenus by what it is about (Görünürlük, Görünüş, Veri, Kenet, Senaryo, Sıra), then the node itself
     /// (rename, add, copy, merge) and Sil. Each entry shows where the active module has it and the layer's kind is one
     /// it is about (layer_entries.rs, docs/adr/9195 §5): a data layer has no freeze, a service its own items, a raster's
-    /// and a cloud's look is their tab's. A data layer's edit session is Düzenle's Düzenleme panel's (docs/adr/9201).
+    /// and a cloud's look is their tab's. A data layer's edit session is Düzenle's Düzenleme panel's (docs/adr/9301).
     pub fn layer_menu(&self, node: &LayerNode, active: bool) -> Menu<Message> {
         let id = node.id.clone();
         let event = |e: Event| Message::Layer(e);

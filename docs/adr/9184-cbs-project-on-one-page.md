@@ -1,6 +1,6 @@
 # ADR 9184: CBS projesi tek sayfada kurulur: ad, amaç, konum ve saklama
 
-- **Güncelleme (2026-11-24, [ADR 9202](9202-cbs-new-project-simple.md)):** sahibin sözüyle (“amaç bölümü gereksiz”,
+- **Güncelleme (2026-11-24, [ADR 9302](9302-cbs-new-project-simple.md)):** sahibin sözüyle (“amaç bölümü gereksiz”,
   “wizard kaldırma ama sadeleştir”) amaç ve saklama kartları ve Kurum şablonu kalktı. Sayfa ad, il ve koordinat
   sistemidir; proje boş açılır (yalnız Açıklama), yeri ilk Kaydet'te sorulur.
 

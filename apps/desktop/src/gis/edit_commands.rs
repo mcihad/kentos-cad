@@ -1,4 +1,4 @@
-//! The ribbon's Düzenleme panel (docs/adr/9201): the active data layer's edit session opened and closed, every edited
+//! The ribbon's Düzenleme panel (docs/adr/9301): the active data layer's edit session opened and closed, every edited
 //! layer's changes saved to their sources, let go after one question, or looked at in Katman değişiklikleri. They are
 //! the session's own controls (data_edits.rs) as commands, so the ribbon, Komut ara and the command line reach them; the
 //! layer's right-click menu has none of them (the owner's word of 24 November 2026: “katman sağ tuş menüsünden

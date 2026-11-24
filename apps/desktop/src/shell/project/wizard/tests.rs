@@ -184,7 +184,7 @@ fn a_cbs_project_takes_its_provinces_zone_and_opens_on_it() {
     send(&mut app, Event::Next);
     let doc = app.document.as_ref().expect("a drawing");
     assert_eq!(doc.settings().srid, 5253);
-    // It opens empty, on its one annotation layer (docs/adr/9202).
+    // It opens empty, on its one annotation layer (docs/adr/9302).
     assert_eq!(doc.model.layers().active(), "aciklama");
     // İzmir is 0.14° east of TM27's meridian: its centre lies some 12 km east of 500 000.
     let home = doc.model.home_view().expect("a home view");
@@ -288,7 +288,7 @@ fn a_work_brings_its_unit_and_scale_and_another_type_its_own() {
     );
 }
 
-/// A CBS project is decided on one page, its name and its place, and opens empty (docs/adr/9202; the owner's word of 24
+/// A CBS project is decided on one page, its name and its place, and opens empty (docs/adr/9302; the owner's word of 24
 /// November 2026: “amaç bölümü gereksiz”, “kaydederken soruyor bu yöntem de güzel”): no layer, nothing written, its
 /// drawing tools off saying why until a layer is added; the first Kaydet asks for its file and writes it there.
 #[test]
@@ -566,8 +566,8 @@ fn axes_screens() {
     }
 }
 
-/// The CBS project's one page for the owner (docs/adr/9202): its name, province and system, and what comes after; then
-/// the empty project it opens; light 1440 × 900 and dark 1100 × 760 into `.run/gui-evidence/kullanim-9202` (never
+/// The CBS project's one page for the owner (docs/adr/9302): its name, province and system, and what comes after; then
+/// the empty project it opens; light 1440 × 900 and dark 1100 × 760 into `.run/gui-evidence/kullanim-9302` (never
 /// committed).
 ///
 /// ```text
@@ -588,8 +588,8 @@ fn cbs_page_screens() {
         send(&mut app, Event::Province(6));
         app
     };
-    usage_shots("9202", "1-tek-sayfa", page);
-    usage_shots("9202", "2-bos-proje", || {
+    usage_shots("9302", "1-tek-sayfa", page);
+    usage_shots("9302", "2-bos-proje", || {
         let mut app = page();
         let task = app.update(Message::Project(Box::new(ProjectEvent::New(Event::Next))));
         drive(&mut app, task);

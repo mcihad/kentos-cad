@@ -146,7 +146,7 @@ pub(crate) enum After {
     Stop,
     /// The drawing is left for this.
     Leave(Then),
-    /// The ribbon's Değişiklikleri geri al (docs/adr/9201): the layers' changes let go, their sessions kept open. Asked
+    /// The ribbon's Değişiklikleri geri al (docs/adr/9301): the layers' changes let go, their sessions kept open. Asked
     /// first, since letting go is no undo step.
     Rollback,
 }
@@ -290,7 +290,7 @@ impl App {
         self.dialog = Some(Dialog::Gis(crate::gis::GisDialogKind::DataEdits));
     }
 
-    /// Değişiklikleri geri al on the ribbon (docs/adr/9201): every edited layer with changes, asked about once; nothing
+    /// Değişiklikleri geri al on the ribbon (docs/adr/9301): every edited layer with changes, asked about once; nothing
     /// asked when none has any, a word while a save is under way.
     pub(crate) fn ask_data_rollback(&mut self) {
         if self.data_saving() {
@@ -784,7 +784,7 @@ impl App {
             After::Leave(_) => "Kaynağa yazılmamış katman değişiklikleri",
             After::Rollback => "Değişiklikleri geri al",
         };
-        // Letting go asks only that (docs/adr/9201): the changes are gone for good, the source stays as it was.
+        // Letting go asks only that (docs/adr/9301): the changes are gone for good, the source stays as it was.
         if matches!(ask.after, After::Rollback) {
             let question = kentos_ui::widget::Confirm::new(
                 title,

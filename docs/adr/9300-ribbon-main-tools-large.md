@@ -1,4 +1,7 @@
-# ADR 9200: Şeridin ana araçları büyük kalır, düğmeler arasında boşluk kalmaz
+# ADR 9300: Şeridin ana araçları büyük kalır, düğmeler arasında boşluk kalmaz
+
+- **Numara:** bu ADR 24 Kasım 2026'da 9200 olarak yazıldı (commit `740502a25`). `render-motoru` dalı 9200–9219'u
+  kullandığı için aynı gün 9300 oldu; eski commit iletilerindeki “ADR 9200” budur.
 
 - **Durum:** kabul edildi (2026-11-24). DESIGN.md §7.3.1'in “Pencere daralınca” kuralını ve 20 Kasım'ın UR2-004
   kuralını (küçük bölünmüş düğmenin ailesinin en uzun adı kadar yer tutması) değiştirir.
@@ -61,7 +64,7 @@
   - `every_tab_fits_1100_pixels_without_scrolling` ve `no_ribbon_button_is_an_icon_alone` yine geçer.
   - Mimari paketinin şerit sınamaları (8) ve programlar arası sınamalar (37) geçer.
 - **Resim:** `ribbon_tests::module_screens` dört modülün üçer sekmesini 1100, 1440 ve 1600 px'te çeker
-  (`.run/gui-evidence/kullanim-9200/once` ve `sonra`, karşılaştırma `karsilastirma/`, Git'e eklenmez).
+  (`.run/gui-evidence/kullanim-9300/once` ve `sonra`, karşılaştırma `karsilastirma/`, Git'e eklenmez).
 - **Yan düzeltme:** `settings_look_tests::a_click_on_a_card_a_swatch_or_a_step_writes_the_draft` paylaşılan yazı
   boyutu kilidini almıyordu; başka sınama aynı anda yazı boyutunu değiştirince tıklama boşa düşüyordu (iki koşudan
   birinde). Kilit eklendi; üç koşu üst üste geçti.

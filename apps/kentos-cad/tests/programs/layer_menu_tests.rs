@@ -252,7 +252,7 @@ fn check(module: Option<Module>, program: Option<Module>) -> Vec<String> {
                 ));
             }
         }
-        // The edit session is Düzenle's Düzenleme panel's alone (docs/adr/9201): no layer's menu starts or saves it.
+        // The edit session is Düzenle's Düzenleme panel's alone (docs/adr/9301): no layer's menu starts or saves it.
         for label in [
             "Düzenlemeyi başlat",
             "Düzenlemeyi bitir",
@@ -426,12 +426,12 @@ fn each_modules_layer_menu_pictures() {
     );
 }
 
-/// The picture of docs/adr/9201: a CBS data layer's right-click menu without the edit session (Düzenle's Düzenleme
-/// panel holds it), light at 1440×900, into `.run/gui-evidence/kullanim-9201/`. For the owner, run by hand.
+/// The picture of docs/adr/9301: a CBS data layer's right-click menu without the edit session (Düzenle's Düzenleme
+/// panel holds it), light at 1440×900, into `.run/gui-evidence/kullanim-9301/`. For the owner, run by hand.
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn the_data_layer_menu_without_its_session_picture() {
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9201");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9301");
     std::fs::create_dir_all(&out).expect("a folder");
     picture(Module::Gis, "Veri katmanı", LayerKind::Data, None, Size::new(1440.0, 900.0), &out);
 }

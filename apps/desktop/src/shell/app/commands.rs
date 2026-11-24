@@ -54,7 +54,7 @@ impl App {
         if crate::doc_tabs::COMMANDS.contains(&id) {
             return self.doc_tabs_command(id);
         }
-        // Düzenleme: the data layers' edit session (edit_commands.rs, docs/adr/9201).
+        // Düzenleme: the data layers' edit session (edit_commands.rs, docs/adr/9301).
         if let Some(task) = self.edit_command(id) {
             return task;
         }
@@ -761,7 +761,7 @@ impl App {
                 return Some(on);
             }
         }
-        // Düzenlemeyi başlat lit while the active layer is being edited (edit_commands.rs, docs/adr/9201).
+        // Düzenlemeyi başlat lit while the active layer is being edited (edit_commands.rs, docs/adr/9301).
         if let Some(on) = self.edit_checked(id) {
             return Some(on);
         }
@@ -861,7 +861,7 @@ impl App {
                 return on;
             }
         }
-        // Düzenleme's (edit_commands.rs, docs/adr/9201).
+        // Düzenleme's (edit_commands.rs, docs/adr/9301).
         if let Some(on) = self.edit_available(id) {
             return on;
         }

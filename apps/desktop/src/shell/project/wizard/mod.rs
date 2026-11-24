@@ -2,7 +2,7 @@
 //! the web's `ui/settings/NewProjectWizard.ts`): the project's type, what a CAD
 //! drawing is for, and its name, one page at a time beside a rail of the steps
 //! and what was chosen in each; a CBS project's name and place on one page, the project starting empty
-//! (docs/adr/9184, 9202). The rules are the
+//! (docs/adr/9184, 9302). The rules are the
 //! shared `kentos_project::wizard`, held by fixtures/project/v1/wizard.json.
 //! Nothing changes until Oluştur. Unsaved changes of the drawing on screen
 //! are asked about then, over the wizard, so Vazgeç there comes back here;
@@ -212,7 +212,7 @@ impl State {
         self.status = None;
     }
 
-    /// The project Oluştur makes. A CBS project starts empty (docs/adr/9202, the owner's word of 24 November 2026: a
+    /// The project Oluştur makes. A CBS project starts empty (docs/adr/9302, the owner's word of 24 November 2026: a
     /// new project comes empty, its layers are added from sources, and saving asks where): no data or drawing layer,
     /// only Açıklama for its texts and notes (a tree holds a layer at least); Veri ekle adds tables as data layers,
     /// Yeni katman makes new tables, the first Kaydet asks where the project file goes.
@@ -443,7 +443,7 @@ impl App {
         }
         let _ = self.settings.choose(&remembered);
         let system = crs::title_of(settings.srid);
-        // An empty CBS project says how its layers come and where it goes (docs/adr/9202).
+        // An empty CBS project says how its layers come and where it goes (docs/adr/9302).
         let next = if kind == Kind::Gis {
             " Katmanları Harita ▸ Veri ekle ya da Veri ▸ Yeni katman ile ekleyin; projenin yeri ilk Kaydet'te sorulur."
         } else {

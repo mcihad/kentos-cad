@@ -688,7 +688,7 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
 
 // ── CBS projesi: tek sayfa ─────────────────────────────────────────────
 
-/// A CBS project's one page (docs/adr/9184, 9202): its name and where it is, the province and the system; the project
+/// A CBS project's one page (docs/adr/9184, 9302): its name and where it is, the province and the system; the project
 /// opens empty, its layers added afterwards and its place asked at its first Kaydet, as the note says. Nothing changes
 /// until Oluştur.
 pub(super) fn decision(s: &State, current: Option<Note>) -> Element<'_, Message> {

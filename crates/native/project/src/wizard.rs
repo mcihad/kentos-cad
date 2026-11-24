@@ -115,7 +115,7 @@ pub const WORKS: [Work; 3] = [
     },
 ];
 
-/// What a new CBS project starts as, said on its page (docs/adr/9202): no layer. Layers are added from data sources
+/// What a new CBS project starts as, said on its page (docs/adr/9302): no layer. Layers are added from data sources
 /// or made as new tables; the first Kaydet asks where the project file goes (the owner's word of 24 November 2026).
 pub const CBS_START_NOTE: &str = "Proje boş açılır: katmanları Harita ▸ Veri ekle ile var olan tablolardan ya da \
      Veri ▸ Yeni katman ile yeni tablolar olarak eklersiniz. Projenin nereye kaydedileceği ilk Kaydet'te sorulur.";
@@ -248,7 +248,7 @@ fn unit_choice(id: DrawingUnit) -> &'static UnitChoice {
 fn layers(kind: Kind) -> &'static str {
     match kind {
         Kind::Cad => "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen",
-        // Docs/adr/9202: a CBS project starts empty.
+        // Docs/adr/9302: a CBS project starts empty.
         Kind::Gis => "Yok: Veri ekle ya da Yeni katman ile eklenir",
     }
 }
@@ -340,7 +340,7 @@ impl Draft {
         }
     }
 
-    /// The steps the wizard shows for this type: a CBS project's name and place on one page (docs/adr/9184, 9202); a
+    /// The steps the wizard shows for this type: a CBS project's name and place on one page (docs/adr/9184, 9302); a
     /// CAD project is asked what it is for first.
     pub fn steps(&self) -> &'static [Step] {
         match self.kind {
@@ -779,7 +779,7 @@ mod tests {
         assert_eq!(Step::Coords.name(Kind::Gis), "Konum");
     }
 
-    /// A CBS project's page asks its name and its place only (docs/adr/9184, 9202; the owner's word of 24 November
+    /// A CBS project's page asks its name and its place only (docs/adr/9184, 9302; the owner's word of 24 November
     /// 2026: “amaç bölümü gereksiz”): it starts empty, its layers added afterwards, and the first Kaydet asks where it
     /// goes. The summary says so; a CAD project keeps its three steps.
     #[test]

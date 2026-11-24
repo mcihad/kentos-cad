@@ -61,7 +61,7 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
     let kinds = command_makes(id)?;
     let layers = doc.layers();
     let Some(active) = layers.get(layers.active()) else {
-        // An empty project, a new CBS project's start (docs/adr/9202): nothing is drawn before a layer is added.
+        // An empty project, a new CBS project's start (docs/adr/9302): nothing is drawn before a layer is added.
         return layers.leaves().is_empty().then(|| {
             "Projede katman yok: önce Harita ▸ Veri ekle ile bir tablo ya da Veri ▸ Yeni katman ile yeni bir katman ekleyin."
                 .to_owned()
@@ -105,7 +105,7 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
     let leaves = layers.leaves();
     let typed = leaves.iter().find(|n| fits(n) && n.geometry.is_some());
     let other = typed.or_else(|| leaves.iter().find(|n| fits(n)));
-    // An annotation layer and no layer of the kind, a new CBS project's start (docs/adr/9202): its objects go to a
+    // An annotation layer and no layer of the kind, a new CBS project's start (docs/adr/9302): its objects go to a
     // data layer, never into the annotation turned into a drawing layer.
     if other.is_none() && geometry == LayerGeometry::Annotation {
         return Some(format!(

@@ -49,7 +49,7 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
             let (levels, overflow) = fitted(&app, tab, 1100.0);
             assert!(!overflow, "{mode} {tab}: does not fit 1100 px ({levels:?})");
             // At 1440 every button keeps its name: no panel down to icons (docs/adr/0622 §3); the tab's main tools are
-            // large, and at most one less important panel folds into its named button (docs/adr/9200: CBS's Düzenle
+            // large, and at most one less important panel folds into its named button (docs/adr/9300: CBS's Düzenle
             // folds Şablonlar, its last).
             let (levels, _) = fitted(&app, tab, 1440.0);
             let keep: Vec<bool> = groups(&app, tab).iter().map(Group::keeps).collect();
@@ -143,7 +143,7 @@ fn panels_step_down_from_the_right_and_giris_keeps_its_drawing_tools() {
 
 /// CBS's Düzenle draws a layer's four kinds of object with four large tools, Nokta, Çizgi, Çoklu çizgi and Kapalı alan
 /// (the owner's word of 24 November 2026), large at 1440 px: Oluştur is one of the tab's kept panels. At 1100 px the
-/// session's Düzenlemeyi başlat stays large and the four go small with their names (docs/adr/9201): nothing is drawn on
+/// session's Düzenlemeyi başlat stays large and the four go small with their names (docs/adr/9301): nothing is drawn on
 /// a closed layer.
 #[test]
 fn cbs_draws_a_layers_four_kinds_with_large_tools() {
@@ -493,7 +493,7 @@ fn a_menu_s_rows_do_not_repeat_its_name() {
 
 /// Each module's ribbon for the owner (the owner's rule of 24 November 2026: the main tools large, no room between
 /// buttons): CBS, Mimari, Harita and Yol, three of their tabs each at 1100, 1440 and 1600 px, light, into
-/// `.run/gui-evidence/kullanim-9200/<KENTOS_SHOT_STAGE or sonra>/`:
+/// `.run/gui-evidence/kullanim-9300/<KENTOS_SHOT_STAGE or sonra>/`:
 ///
 /// ```text
 /// cargo test -p kentos-desktop --lib ribbon_tests::module_screens -- --ignored --nocapture
@@ -509,7 +509,7 @@ fn module_screens() {
     typography::load();
     let stage = std::env::var("KENTOS_SHOT_STAGE").unwrap_or_else(|_| "sonra".to_owned());
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../.run/gui-evidence/kullanim-9200")
+        .join("../../.run/gui-evidence/kullanim-9300")
         .join(stage);
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let modules: [(&str, Workspace, Option<CadWork>, &[&str]); 4] = [

@@ -184,7 +184,7 @@ impl App {
             "Yeni nesnelerin çizildiği katman; CBS projesinde Katmanlar'da bir katmana bir kez basmak onu seçer. Kilitli katman seçilemez; kilidi Katmanlar panelinden açın.{}",
             session.unwrap_or_default()
         );
-        // The data layer's edit session is Düzenle's Düzenleme panel's (docs/adr/9201), no more this panel's (9169).
+        // The data layer's edit session is Düzenle's Düzenleme panel's (docs/adr/9301), no more this panel's (9169).
         let buttons: Vec<Button<'static, Message>> = [
             "layer.new",
             "layer.newGroup",

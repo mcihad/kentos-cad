@@ -563,9 +563,9 @@ GIS = [
           launcher=toCmd("crs.set", "Proje ayarları: koordinat sistemi")),
     ]),
     # Parsel oluştur and Plan yolu are KentOS Harita's drafting (docs/adr/0802): a CBS parcel is a Kapalı alan with
-    # its layer's form. A layer's four kinds of object are drawn with four large tools (docs/adr/9200 §3).
+    # its layer's form. A layer's four kinds of object are drawn with four large tools (docs/adr/9300 §3).
     T("edit", "Düzenle", [
-        # A data layer's edit session (docs/adr/9201): the active layer's opened and closed, every edited layer's changes
+        # A data layer's edit session (docs/adr/9301): the active layer's opened and closed, every edited layer's changes
         # saved, let go or looked at; no more in the layer's right-click menu. Kept: in a narrow window (1100 px) Oluştur's
         # tools go small and named before the session's button folds, since nothing is drawn on a closed layer.
         P("Düzenleme", "edit", [L("layer.edit"), S("layer.editSave"), S("layer.editRollback"), S("layer.editReview")],

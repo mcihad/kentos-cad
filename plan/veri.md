@@ -525,7 +525,7 @@ numaraları raporunkidir.
   ([ADR 9169](../docs/adr/9169-session-in-the-edit-tab.md))
   - Katmanlar panelinde Düzenlemeyi başlat/bitir; salt okunur bağlantıda kapalı, ipucunda nedeni.
   - İki açık oturumda alan yalnız hedefe gidiyor (sınama).
-  - 24 Kasım ([ADR 9201](../docs/adr/9201-edit-session-on-the-ribbon.md)): oturum Düzenle'nin ilk paneli Düzenleme'de
+  - 24 Kasım ([ADR 9301](../docs/adr/9301-edit-session-on-the-ribbon.md)): oturum Düzenle'nin ilk paneli Düzenleme'de
     (Düzenlemeyi başlat/bitir büyük; Değişiklikleri kaydet, geri al, incele); katman menüsündeki öğeler ve Katmanlar
     panelindeki düğme kalktı. Geri al bir kez sorar.
   - Kalan: iki oturumun PostGIS'te denenmesi, bulut rolünün gerekçesi (web iptal edildi).
@@ -612,7 +612,7 @@ numaraları raporunkidir.
   - Kalan: gerçek pencerede deneme, web.
 - [x] **VY-83 — CBS projesi tek sayfada kurulur: ad, amaç, konum ve saklama (rapor 3'ün kalanı).**
   ([ADR 9184](../docs/adr/9184-cbs-project-on-one-page.md))
-  - 24 Kasım ([ADR 9202](../docs/adr/9202-cbs-new-project-simple.md)): sahibin sözüyle sadeleşti: sayfa ad ve konumdur;
+  - 24 Kasım ([ADR 9302](../docs/adr/9302-cbs-new-project-simple.md)): sahibin sözüyle sadeleşti: sayfa ad ve konumdur;
     amaç, saklama ve Kurum şablonu kalktı; proje boş açılır, yeri ilk Kaydet'te sorulur. Aşağıdakiler geçmiştir.
   - Sihirbazın CBS adımları ikidir; ad, amaç, il ve koordinat sistemi, saklama aynı sayfada. Kartlar sonuçlarını birer
     cümleyle söyler; veri notu bağlamakla kopyalamayı ayırır.

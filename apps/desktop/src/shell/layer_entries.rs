@@ -15,7 +15,7 @@ pub use kentos_launch::LayerKind;
 /// An entry of a layer's right-click menu (cad/layering/menus.rs), placed by module and by layer kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LayerEntry {
-    /// Etkin katman yap. (A data layer's edit session is no entry: it is Düzenle's Düzenleme panel's, docs/adr/9201.)
+    /// Etkin katman yap. (A data layer's edit session is no entry: it is Düzenle's Düzenleme panel's, docs/adr/9301.)
     Activate,
     /// Gizle or Göster, Yalnızca bunu göster, Görünürlük ▸ Tüm katmanları göster.
     Visibility,

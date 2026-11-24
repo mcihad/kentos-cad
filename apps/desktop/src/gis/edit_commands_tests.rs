@@ -1,4 +1,4 @@
-//! Düzenle's Düzenleme panel (docs/adr/9201): the active data layer's edit session started and ended by Düzenlemeyi
+//! Düzenle's Düzenleme panel (docs/adr/9301): the active data layer's edit session started and ended by Düzenlemeyi
 //! başlat, whose face says Düzenlemeyi bitir while it is open; off, with why, on a drawing layer and on a read-only
 //! connection; Değişiklikleri kaydet, geri al and incele on only while something waits; geri al asked once, letting the
 //! changes go and keeping the layer open. CBS's ribbon holds the panel first in Düzenle, its tools kept large.
@@ -113,7 +113,7 @@ fn cbs_s_duzenle_opens_with_the_session_panel_and_its_tools_large() {
     let _ = app.update(Message::Run("workspace.gis"));
     let tab = app.ribbon_tabs().find(|t| t.id == "edit").expect("Düzenle");
     let first = &tab.panels[0];
-    // Kept (docs/adr/9200): nothing is drawn on a closed layer, so the session's button outlasts Oluştur's large tools.
+    // Kept (docs/adr/9300): nothing is drawn on a closed layer, so the session's button outlasts Oluştur's large tools.
     assert_eq!((first.label, first.keep), ("Düzenleme", true));
     let items: Vec<(&str, bool)> = first
         .items
@@ -126,8 +126,8 @@ fn cbs_s_duzenle_opens_with_the_session_panel_and_its_tools_large() {
     assert_eq!(items, [(TOGGLE, true), (SAVE, false), (ROLLBACK, false), (REVIEW, false)]);
 }
 
-/// The pictures of docs/adr/9201 for the owner, light at 1440×900 and dark at 1100×760, into
-/// `.run/gui-evidence/kullanim-9201/`: Düzenle with a data layer active and its session closed; open with a polygon
+/// The pictures of docs/adr/9301 for the owner, light at 1440×900 and dark at 1100×760, into
+/// `.run/gui-evidence/kullanim-9301/`: Düzenle with a data layer active and its session closed; open with a polygon
 /// drawn (Düzenlemeyi bitir lit, Kaydet, Geri al and İncele on); Değişiklikleri geri al's question.
 ///
 /// ```text
@@ -144,14 +144,14 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         (app, id)
     };
-    crate::files_testing::usage_shots("9201", "1-oturum-kapali", || fresh().0);
-    crate::files_testing::usage_shots("9201", "2-oturum-acik-degisiklik", || {
+    crate::files_testing::usage_shots("9301", "1-oturum-kapali", || fresh().0);
+    crate::files_testing::usage_shots("9301", "2-oturum-acik-degisiklik", || {
         let (mut app, id) = fresh();
         let _ = app.update(Message::Run(TOGGLE));
         assert!(draw(&mut app, &id));
         app
     });
-    crate::files_testing::usage_shots("9201", "3-geri-al-sorusu", || {
+    crate::files_testing::usage_shots("9301", "3-geri-al-sorusu", || {
         let (mut app, id) = fresh();
         let _ = app.update(Message::Run(TOGGLE));
         assert!(draw(&mut app, &id));

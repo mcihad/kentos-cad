@@ -1218,25 +1218,25 @@
       "via": [
         "cad.layers.session"
       ],
-      "note": "Düzenle'nin Düzenleme paneli etkin veri katmanını cad.layers.session start ile açar, stop ile kapatır; değişiklik varsa kapatmadan sorulur (ADR 9103, 9201)."
+      "note": "Düzenle'nin Düzenleme paneli etkin veri katmanını cad.layers.session start ile açar, stop ile kapatır; değişiklik varsa kapatmadan sorulur (ADR 9103, 9301)."
     },
     "layer.editSave": {
       "level": "semantic",
       "via": [
         "cad.layers.session"
       ],
-      "note": "Düzenlenen bütün katmanların değişiklikleri kaynaklarına cad.layers.session save'in yazıcısıyla (data_write), her kaynak tek işlemde (ADR 9103, 9201)."
+      "note": "Düzenlenen bütün katmanların değişiklikleri kaynaklarına cad.layers.session save'in yazıcısıyla (data_write), her kaynak tek işlemde (ADR 9103, 9301)."
     },
     "layer.editRollback": {
       "level": "semantic",
       "via": [
         "cad.layers.session"
       ],
-      "note": "Bir kez sorulur; değişiklikler cad.layers.session rollback ile bırakılır, katmanlar açık kalır (ADR 9201)."
+      "note": "Bir kez sorulur; değişiklikler cad.layers.session rollback ile bırakılır, katmanlar açık kalır (ADR 9301)."
     },
     "layer.editReview": {
       "level": "host",
-      "note": "Katman değişiklikleri penceresi: kaynağa yazılmamış satırlar katman katman (ADR 9123, 9201)."
+      "note": "Katman değişiklikleri penceresi: kaynağa yazılmamış satırlar katman katman (ADR 9123, 9301)."
     },
     "table.insert": {
       "level": "semantic",

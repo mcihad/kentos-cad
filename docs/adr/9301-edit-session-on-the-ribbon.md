@@ -1,4 +1,7 @@
-# ADR 9201: Veri katmanının düzenleme oturumu şeritte; katman menüsünde yok
+# ADR 9301: Veri katmanının düzenleme oturumu şeritte; katman menüsünde yok
+
+- **Numara:** bu ADR 24 Kasım 2026'da 9201 olarak yazıldı (commit `41fa3e8d5`). `render-motoru` dalı 9200–9219'u
+  kullandığı için aynı gün 9301 oldu; eski commit iletilerindeki “ADR 9201” budur.
 
 - **Durum:** kabul edildi (2026-11-24). [ADR 9103](9103-edit-session.md) §5'in “Katmanlar menüsünden açılır”
   yolunu ve [ADR 9169](9169-session-in-the-edit-tab.md)'un Katmanlar panelindeki oturum düğmesini değiştirir.
@@ -45,7 +48,7 @@ durur; katmanın menüsü onların asıl yeri değildir.
 4. **Katmanlar panelindeki oturum düğmesi kalktı** (ADR 9169 §2.1): Katman paneli düğmesi yerine döndü; alanın
    ipucu oturumu Düzenle sekmesindeki Düzenlemeyi başlat'a yönlendirir.
 5. **Şeritteki yeri:** Düzenleme, Katmanlar (etkin katman), Oluştur, Değiştir, Alan işlemleri, Şablonlar. Düzenleme,
-   Oluştur ve Değiştir korunan panellerdir (ADR 9200). Ölçüler (varsayılan yazı):
+   Oluştur ve Değiştir korunan panellerdir (ADR 9300). Ölçüler (varsayılan yazı):
    - Düzenleme 243 px, Katmanlar 263, Oluştur 436 (küçük 312), Değiştir 277, Alan işlemleri 129, Şablonlar 246;
      hepsi 1595 px.
    - 1440 px'te yalnız Şablonlar katlanır.
@@ -73,5 +76,5 @@ durur; katmanın menüsü onların asıl yeri değildir.
   1100 px'e sığar.
 - Programlar: `layer_menu_tests` (42 girişlik tablo; hiçbir katman menüsünde oturum sözü yok) ve öbür programlar arası
   sınamalar (37) geçer; CBS paketinin 57 sınaması geçer.
-- Resim: `.run/gui-evidence/kullanim-9201/` (oturum kapalı, açık ve değişiklikli, geri alma sorusu; veri katmanının
+- Resim: `.run/gui-evidence/kullanim-9301/` (oturum kapalı, açık ve değişiklikli, geri alma sorusu; veri katmanının
   menüsü). Git'e eklenmez.

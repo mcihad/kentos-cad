@@ -1,4 +1,7 @@
-# ADR 9202: CBS'nin yeni projesi sade: ad ve konum; proje boş açılır, yeri kaydederken sorulur
+# ADR 9302: CBS'nin yeni projesi sade: ad ve konum; proje boş açılır, yeri kaydederken sorulur
+
+- **Numara:** bu ADR 24 Kasım 2026'da 9202 olarak yazıldı (commit `aa6f46cec`). `render-motoru` dalı 9200–9219'u
+  kullandığı için aynı gün 9302 oldu; eski commit iletilerindeki “ADR 9202” budur.
 
 - **Durum:** kabul edildi (2026-11-24). [ADR 9184](9184-cbs-project-on-one-page.md)'ün amaç ve saklama kartlarını ve
   [ADR 9196](9196-storage-by-project-kind.md) §2'nin sihirbazdaki veri yerini kaldırır.
@@ -41,7 +44,7 @@
    `template.rs`'i (Kurum şablonu), ortak taslağın `purpose`, `data`, `storage`, `template` alanları ve kartları.
    Kurum şablonu bir değerlendirme raporunun maddesiydi (ADR 9184), sahibin doğrudan isteği değildi; gerekirse ayrı
    bir “Şablondan yeni proje” komutu olarak döner.
-6. **Yan düzeltme:** sağ tuş menüsüne yönlendiren dört ileti ADR 9201'e göre Düzenle sekmesini söyler (ortak
+6. **Yan düzeltme:** sağ tuş menüsüne yönlendiren dört ileti ADR 9301'e göre Düzenle sekmesini söyler (ortak
    çekirdeğin bütünlük denetimi ve düzenleme oturumu, CBS'nin çizim uyarısı ve bekleyen düzenlemeler iletisi).
 
 ## §3 Kanıt
@@ -53,7 +56,7 @@
   araçları nedenli kapalı, yazı açık, ilk Kaydet dosyayı sorar ve yazar); `a_cbs_project_takes_its_provinces_zone_…`.
   Çapraz takım (CBS saklama, modül, katalog, ayarlar, katman türleri, şerit, proje): 306 sınama; programlar arası 37;
   `kentos-domain` ve `kentos-project` sınamaları geçer.
-- Resim: `.run/gui-evidence/kullanim-9202/` (`once/` eski sayfa; `1-tek-sayfa`, `2-bos-proje`, açık 1440×900 ve koyu
+- Resim: `.run/gui-evidence/kullanim-9302/` (`once/` eski sayfa; `1-tek-sayfa`, `2-bos-proje`, açık 1440×900 ve koyu
   1100×760). Git'e eklenmez.
 
 ## §4 Kalan

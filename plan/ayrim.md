@@ -68,7 +68,7 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     `Module::Gis` denetimde düştü.
   - Kalan: taban AY-07'de azalır; `arch/program.rs` `kentos-launch`'a doğru taşınır.
 - [~] **AY-05 — CBS verisi veritabanında.** ([ADR 9196](../docs/adr/9196-storage-by-project-kind.md) §5)
-  - 24 Kasım ([ADR 9202](../docs/adr/9202-cbs-new-project-simple.md)): sihirbaz ad ve konumu sorar; proje boş açılır
+  - 24 Kasım ([ADR 9302](../docs/adr/9302-cbs-new-project-simple.md)): sihirbaz ad ve konumu sorar; proje boş açılır
     (yalnız Açıklama), tablolar Yeni katman ile kurulur, var olanlar Veri ekle ile eklenir, yer ilk Kaydet'te sorulur.
     (23 Kasım'ın veri yeri, proje dosyası yeri ve amaç kartları kalktı.)
   - Katmanın türü ortak tek yerdedir (`kentos_native_application::layer_kind`); kayıt, nesne tutan çizim ya da bağlı
@@ -78,7 +78,7 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
   - Bulut: sunucu CBS'yi yalnız veritabanında tutar; Buluta yükle CBS'de yalnız veritabanını sunar ve veri
     katmanlarının satırlarını aktarır (`data_take`); CBS veritabanı projesi dosyaya çevrilmez.
   - Bağlı katman sınamaları ve ortak durumları Harita (CAD) belgesine çevrildi.
-  - Kalan: Python ve MCP'de yeni CBS projesi de boş açılmalı (`cbs_start_layers`; kural 4, ADR 9202 §4); bağlı
+  - Kalan: Python ve MCP'de yeni CBS projesi de boş açılmalı (`cbs_start_layers`; kural 4, ADR 9302 §4); bağlı
     katmanın taşınmasında bağın düşmesi (eski projeler).
 - [x] **AY-06 — CAD projesinin tamamı proje dosyasında.** ([ADR 9196](../docs/adr/9196-storage-by-project-kind.md) §4)
   - Sunucu saklama türünü ortak modül tanımından alır (`kentos_launch::Module::storage`). CAD türleri saklamasız
