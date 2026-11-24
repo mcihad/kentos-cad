@@ -170,18 +170,6 @@ const MARKER_ATTRIBUTES: [wgpu::VertexAttribute; 2] =
     wgpu::vertex_attr_array![0 => Float32x4, 1 => Float32];
 const RASTER_ATTRIBUTES: [wgpu::VertexAttribute; 1] = wgpu::vertex_attr_array![0 => Float32x4];
 
-/// `KENTOS_DIAG_LEVEL=print` (a measurement's): the first far-levelled batch's scale and level, once a frame.
-fn print_level(scale: f64, lod: &kentos_native_style::batches::Lod, level: usize) {
-    static ASKED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    static FRAME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
-    if *ASKED.get_or_init(|| std::env::var("KENTOS_DIAG_LEVEL").is_ok_and(|v| v == "print")) {
-        let now = DRAWN_INSTANCES.load(std::sync::atomic::Ordering::Relaxed);
-        if FRAME.swap(now, std::sync::atomic::Ordering::Relaxed) != now {
-            eprintln!("DÜZEY ölçek {scale:.5} tavanlar {:?} düzey {level} / {}", lod.ceilings, lod.levels.len());
-        }
-    }
-}
-
 /// `KENTOS_DIAG_ITEMS` (a measurement's, plan/render.md RM-10): whether a frame's drawn items are printed by kind.
 fn diag_items_asked() -> bool {
     static ASKED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
@@ -198,7 +186,6 @@ fn parts_add(
     floats: usize,
 ) {
     use kentos_native_style::batches::CURVE_LEVELS;
-    use kentos_native_style::far_levels::FAR_CEILINGS;
     let (work, how) = match &g.own {
         Some(p) => {
             let per = u64::from(p.per_item.max(1));
@@ -224,11 +211,7 @@ fn parts_add(
     let levels = match &b.lod {
         None => "düzeysiz".to_owned(),
         Some(l) => {
-            let name = if l.ceilings[..] == FAR_CEILINGS[..] {
-                "uzak"
-            } else if l.ceilings.starts_with(&CURVE_LEVELS) && l.ceilings.ends_with(&FAR_CEILINGS) {
-                "eğri+uzak"
-            } else if l.ceilings[..] == CURVE_LEVELS[..] {
+            let name = if l.ceilings[..] == CURVE_LEVELS[..] {
                 "eğri"
             } else {
                 "başka"
@@ -1013,9 +996,6 @@ impl StyledGpu {
                     {
                         g.level = forced.min(lod.levels.len().saturating_sub(1));
                     }
-                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings.ends_with(&kentos_native_style::far_levels::FAR_CEILINGS)) {
-                        print_level(frame.scale, lod, g.level);
-                    }
                     g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
@@ -1261,9 +1241,6 @@ impl StyledGpu {
                         && let Some(lod) = &b.lod
                     {
                         g.level = forced.min(lod.levels.len().saturating_sub(1));
-                    }
-                    if let Some(lod) = b.lod.as_ref().filter(|l| l.ceilings.ends_with(&kentos_native_style::far_levels::FAR_CEILINGS)) {
-                        print_level(frame.scale, lod, g.level);
                     }
                     g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));
                     g.visible = b.in_scale(frame.scale_denominator)
@@ -1731,7 +1708,7 @@ impl StyledGpu {
                         DRAWN_INSTANCES.fetch_add(u64::from(b.count), std::sync::atomic::Ordering::Relaxed);
                         pass.draw(0..6, 0..b.count)
                     }
-                    // A solid fill's far level (kentos_native_style::far_levels, docs/adr/9207): the level's vertices.
+                    // A solid fill with levels: the level's vertices.
                     (Some(lod), false) if end == i => {
                         for r in lod.ranges(level) {
                             let (a, z) = ((r.start / AREA_FLOATS) as u32, (r.end / AREA_FLOATS) as u32);

@@ -1367,8 +1367,7 @@ struct View {
     error: Option<RenderError>,
     /// The view's own targets, when it draws into them.
     targets: Option<Targets>,
-    /// The targets of the other sample count, kept for the next switch: a moving view draws with one sample and its
-    /// settled frame with the setting's (docs/adr/9207 §8), twice a gesture.
+    /// The targets of the other sample count, kept for the next switch (the setting changed back).
     spare: Option<Targets>,
     /// Whether this frame draws into `targets` (`render`) rather than the host's pass (`draw`).
     own: bool,

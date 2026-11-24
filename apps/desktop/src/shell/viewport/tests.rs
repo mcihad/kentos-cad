@@ -644,12 +644,3 @@ fn a_move_reads_the_live_camera_and_a_press_takes_it() {
     assert!(near(app.viewport.cursor.expect("a point"), live.screen_to_world(130.0, 90.0)));
 }
 
-/// While the view moves, its frames are drawn with one sample; settled, with the setting's (docs/adr/9207 §8).
-#[test]
-fn a_moving_view_draws_with_one_sample_and_a_settled_one_with_the_settings() {
-    let settings = RenderSettings { samples: 4, ..RenderSettings::new(Rgba8::rgb(0, 0, 0)) };
-    assert_eq!(drawn_with(settings, true).samples, 1);
-    assert_eq!(drawn_with(settings, false), settings);
-    // Nothing else changes while moving.
-    assert_eq!(RenderSettings { samples: 4, ..drawn_with(settings, true) }, settings);
-}

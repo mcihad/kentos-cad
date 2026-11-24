@@ -407,8 +407,8 @@ pub struct StyledBatch {
 /// A batch's detail levels (docs/adr/1063 §3), counts of numbers from the start of its range (of its definition's,
 /// for an instanced batch): `main` drawn with the levels before `alone`, then level 0 (the fine chords of its curves)
 /// and the coarser levels; level `k + 1` drawn where the view's logical px per metre times [`Lod::scale`] is at most
-/// `ceilings[k]`, level 0 above the first ceiling. A far level (docs/adr/9207 §6) holds the main part's strokes
-/// itself, on its grid: from `alone` on a level draws without it.
+/// `ceilings[k]`, level 0 above the first ceiling. From `alone` on a level draws without the main part, when it holds
+/// the main part's strokes itself.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Lod {
     pub main: usize,
@@ -1440,13 +1440,12 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         pictures: out.pictures,
         dropped: out.dropped,
     };
-    // The model screen's far levels of plain strokes and solid fills (far_levels.rs, docs/adr/9207); paper and the PDF
-    // draw every edge.
+    // The model screen draws every edge and fill triangle at every distance, as paper and the PDF do: its far levels
+    // moved what they drew by up to half a pixel and are gone (docs/adr/9222).
     if o.hold_weights {
         // Ground-sized SVG symbols as vectors (svg_marks.rs, docs/adr/9208): a bitmap magnified close up turned their
         // slanted edges into steps.
         crate::svg_marks::add(&mut layer);
-        crate::far_levels::add(&mut layer);
     }
     Ok(layer)
 }
