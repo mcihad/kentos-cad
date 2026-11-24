@@ -487,16 +487,17 @@ impl App {
                     self.warn("Birim seçimi sırasında açık çizim değişti; dosyayı yeniden açın.");
                     return Task::none();
                 }
-                // The unit the file declares, confirmed: the drawing read in it opens as it is, not read again.
-                let declared = o
-                    .unit
-                    .as_ref()
-                    .filter(|u| u.source == UnitSource::Declared)
-                    .and_then(|u| u.declared);
+                // The unit the drawing was read in, confirmed: the one the file declares, or the survey grid's metres
+                // (docs/adr/9210). It opens as it is, not read again.
+                let as_read = o.unit.as_ref().and_then(|u| match u.source {
+                    UnitSource::Declared => u.declared,
+                    UnitSource::Grid => Some(FileUnit::M.code()),
+                    _ => None,
+                });
                 let (path, purpose, selected) =
                     (o.source_path.clone(), o.purpose.clone(), o.selected_unit);
-                if declared.is_some()
-                    && declared == selected.map(FileUnit::code)
+                if as_read.is_some()
+                    && as_read == selected.map(FileUnit::code)
                     && let Some(mut o) = self.opening.take()
                     && let Some(doc) = o.ready.take()
                 {
@@ -577,13 +578,13 @@ impl App {
                             return Task::none();
                         }
                         if o.unit.as_ref().is_some_and(asks_unit) {
-                            // An imperial unit the file declares is offered as the choice (ADR 8053).
-                            o.selected_unit = o
-                                .unit
-                                .as_ref()
-                                .filter(|u| !u.assumed)
-                                .and_then(|u| u.declared)
-                                .and_then(FileUnit::of_code);
+                            // An imperial unit the file declares is offered as the choice (ADR 8053); numbers in the
+                            // survey grid, its metres (docs/adr/9210).
+                            o.selected_unit = o.unit.as_ref().and_then(|u| match u.source {
+                                UnitSource::Grid => Some(FileUnit::M),
+                                _ if !u.assumed => u.declared.and_then(FileUnit::of_code),
+                                _ => None,
+                            });
                             o.ready = Some(doc);
                             self.opening = Some(o);
                             return Task::none();
@@ -771,13 +772,23 @@ impl App {
             if factor.is_some() {
                 confirm = confirm.on_press(Message::Opening(Event::ConfirmUnit));
             }
-            // An imperial unit the file declares is said with its name; a file that declares none, so.
-            let said = match o.unit.as_ref().filter(|u| !u.assumed) {
-                Some(u) => format!(
+            // An imperial unit the file declares is said with its name; numbers in the survey grid, why metres are
+            // offered (docs/adr/9210); a file that declares none, so.
+            let said = match o.unit.as_ref() {
+                Some(u) if u.source == UnitSource::Grid => {
+                    let declared = u
+                        .declared
+                        .and_then(kentos_commands::units::insunits)
+                        .map_or_else(|| "bildirmiyor".to_owned(), |(_, name)| format!("{name} olarak bildiriyor"));
+                    format!(
+                        "Dosya uzunluk birimini {declared} ama koordinatları ülkenin ölçme ızgarasında: değerler büyük olasılıkla metre. Metre önerildi; çizimin gerçek birimini seçin."
+                    )
+                }
+                Some(u) if !u.assumed => format!(
                     "Dosya uzunluk birimini {} olarak bildiriyor. Türkiye'deki projelerde inç ve ft çoğunlukla bir şablondan kalır; çizimin gerçek birimini seçin.",
                     u.name
                 ),
-                None => "Dosya güvenilir bir uzunluk birimi bildirmiyor. Gerçek ölçüyü bilmeden birim tahmini yapılmaz.".to_owned(),
+                _ => "Dosya güvenilir bir uzunluk birimi bildirmiyor. Gerçek ölçüyü bilmeden birim tahmini yapılmaz.".to_owned(),
             };
             return Some(Dialog::new("Çizimin birimini doğrula")
                 .push(column![label::body(o.name.clone()), label::body(said), select,
@@ -816,7 +827,9 @@ impl App {
 /// imperial one it declares, read from it, not chosen: in Türkiye's projects mostly a template's left over (a real
 /// project read as inches, 12 November 2026; the owner's choice, ADR 8053).
 fn asks_unit(u: &UnitDecision) -> bool {
+    // Metres read from where the numbers lie, whatever the file said (docs/adr/9210): asked, metres offered.
     u.assumed
+        || u.source == UnitSource::Grid
         || (u.source == UnitSource::Declared
             && u.declared.and_then(FileUnit::of_code).is_some_and(|f| {
                 matches!(
@@ -878,6 +891,35 @@ mod tests {
             app.document.as_ref().unwrap().settings().unit(),
             kentos_commands::DrawingUnit::Cm
         );
+    }
+
+    /// A survey drawing that declares millimetres (a template's) is asked with metres offered and opens in them as it
+    /// was read once they are confirmed (docs/adr/9210; the Suşehri DXF opened 12 m wide).
+    #[test]
+    fn a_survey_grid_drawing_is_asked_with_metres_offered() {
+        let dxf = "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n\
+                   0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n422000\n20\n4449000\n11\n422010\n21\n4449000\n\
+                   0\nENDSEC\n0\nEOF\n";
+        let path = std::env::temp_dir().join(format!("kentos-izgara-{}.dxf", std::process::id()));
+        std::fs::write(&path, dxf).expect("writes");
+        let mut app = app_with_drawing();
+        let task = app.start_opening(path.clone(), Purpose::File);
+        drive(&mut app, task);
+        let open = app.opening.as_ref().expect("held for its unit");
+        assert_eq!(open.selected_unit, Some(FileUnit::M), "the grid's metres offered");
+        assert!(app.opening_view().is_some(), "Çizimin birimini doğrula");
+        let task = app.opening_event(Event::ConfirmUnit);
+        drive(&mut app, task);
+        assert!(app.opening.is_none(), "opened as it was read");
+        let doc = app.document.as_ref().expect("opened");
+        assert_eq!(doc.settings().unit(), kentos_commands::DrawingUnit::M);
+        let line = doc
+            .model
+            .entities()
+            .find_map(|e| if let kentos_commands::Entity::Line(l) = e { Some(l.clone()) } else { None })
+            .expect("the line");
+        assert!((line.a.x - 422_000.0).abs() < 1e-6 && (line.b.x - line.a.x - 10.0).abs() < 1e-9, "{line:?}");
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]

@@ -231436,6 +231436,11 @@
           "const": "project",
           "description": "The file declares none, or a code no one defines: a local project's\nown unit, the numbers kept.",
           "type": "string"
+        },
+        {
+          "const": "grid",
+          "description": "The file's numbers lie in a national survey grid: read as metres,\nwhatever it declares (an `acadiso` template writes millimetres on\nsurvey drawings too) or not (docs/adr/9210). Asked as an assumed\nunit is.",
+          "type": "string"
         }
       ]
     },

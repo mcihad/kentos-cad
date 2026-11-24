@@ -142,6 +142,14 @@ pub(crate) fn unit_said(d: &UnitDecision, drawing: DrawingUnit) -> String {
             )
         }
         (UnitSource::Declared, Some(declared)) => format!("Dosya {declared} bildiriyor."),
+        // docs/adr/9210: the numbers lie in the national survey grid.
+        (UnitSource::Grid, Some(declared)) => format!(
+            "Dosya {declared} bildiriyor ama koordinatları ülkenin ölçme ızgarasında; değerler metre okundu. Birimi biliyorsanız seçin."
+        ),
+        (UnitSource::Grid, None) => {
+            "Dosya birim bildirmiyor; koordinatları ülkenin ölçme ızgarasında olduğu için değerler metre okundu. Birimi biliyorsanız seçin."
+                .to_owned()
+        }
         (UnitSource::Metres, Some(declared)) if d.assumed => format!(
             "Dosya {declared} bildiriyor; değerler ölçeklenmeden metre sayıldı. Birimi biliyorsanız seçin."
         ),

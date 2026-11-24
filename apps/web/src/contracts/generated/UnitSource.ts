@@ -3,4 +3,4 @@
 /**
  * Why a file's lengths were read in the unit they were (docs/adr/0257 §1).
  */
-export type UnitSource = "chosen" | "declared" | "metres" | "project";
+export type UnitSource = "chosen" | "declared" | "metres" | "project" | "grid";

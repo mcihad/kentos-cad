@@ -1200,6 +1200,11 @@ pub enum UnitSource {
     /// The file declares none, or a code no one defines: a local project's
     /// own unit, the numbers kept.
     Project,
+    /// The file's numbers lie in a national survey grid: read as metres,
+    /// whatever it declares (an `acadiso` template writes millimetres on
+    /// survey drawings too) or not (docs/adr/9210). Asked as an assumed
+    /// unit is.
+    Grid,
 }
 
 /// A block whose record names another unit than the file's (DXF

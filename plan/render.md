@@ -216,7 +216,12 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - WIPEOUT, IMAGE ve REGION;
   - okunamayan tarama sınırları;
   - boş ATTRIB'ler.
-- [ ] **RM-23 — Birim.** Birim yazılmamışsa kapsamdan ve yazı boylarından çıkarılır; emin olunamazsa sorulur.
+- [x] **RM-23 — Birim** ([ADR 9210](../docs/adr/9210-cad-unit-from-the-survey-grid.md)).
+  - Sayıları Türkiye'nin ölçme ızgarasında duran CAD dosyası, ister milimetre bildirsin ister bildirmesin, Aç'ta
+    metre okunuyor ve birim soruluyor (metre seçili).
+  - Suşehri DXF'i (milimetre bildiriyordu, 12 m açılıyordu) ve 6 örnek daha artık gerçek boyunda.
+  - Mimari çizimler değişmedi. Birim bildirmeyen ve orijinde duran çizim eskisi gibi soruluyor.
+  - Yazı boyundan çıkarım kullanılmadı: tek başına güvenilir değil.
 
 ## Kabul ölçütleri
 
