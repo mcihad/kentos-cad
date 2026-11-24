@@ -167,7 +167,13 @@ Bekçi genişletilmeli ya da sınır yazılı kuralla netleşmeli (CLAUDE.md §8
 
 `.github` yok; bütün denetimler elle koşuyor, `main`'e kırmızıyla gönderilebiliyor. A1 ve A3 bunun sonucu. Karar için F5.
 
-### A12 — P2 — Depo temizliği
+### A12 — P2 — Depo temizliği — [~] denetlendi, silme sahibin onayında
+
+**Durum (24 Kasım 2026):** salt okur denetim `.run/audit-stash-branch.md`'de. 30 zulanın 29'u aynı eski işin (pay ve resmî
+alanlar; ADR 8031 ile yeniden yazıldı) tekrar kayıtları, biri eski paralel çizgi denemesi: hepsi geçersiz. `adv-03b`, `adv-05d`,
+`adv-06f` ve iki `yedek/*` dalı yeniden yazılmış commit'lerle `main`'de; `origin/wip/formats-dxf` 3786 commit geride. ADR
+0580 dalının işi `main`'e başka yoldan girmiş (ADR 0644); `origin/plan/kek-extension-architecture` yalnız belge. Hiçbir şey
+silinmedi.
 
 - **30 zula** (`stash@{0…29}`), çoğu Kasım başının “clean test preservation” zulaları.
 - **`main`'e girmemiş dallar:**
@@ -258,7 +264,11 @@ Blok düzenleyici var; dış başvuru için karşılığı yok.
 
 DGN yalnız “Çizimden boykesit”in notunda geçiyor.
 
-### B10 — P1 — `plan/cad.md` 23 Ekim'den beri güncellenmemiş
+### B10 — P1 — `plan/cad.md` 23 Ekim'den beri güncellenmemiş — [x] yapıldı
+
+**Durum (24 Kasım 2026, `e8dabcfaf`):** açık maddeler kodla karşılaştırıldı: `[ ]` 161 → 20 gerçek açık madde, 92 `[~]`
+(kalanı satırında), 40 `[x]` (kanıtıyla). Kalan en değerlileri: yazdırma/PDF/pafta gibi ürün komutu olmayan ~31 araç;
+DWG gidiş-dönüşünün kanıtı ve derlem; Windows'ta Python/MCP bağlantısı; kopyada kimlik eşlemesi; ajana görünüm resmi.
 
 161 açık madde: Python CAD-PY-01…43, yapay zekâ CAD-AI-01…40, CLI, yaşam döngüsü, performans, kalite. Bir kısmı
 yapılmış olabilir (Asistan, ADR 8056; Python SDK); kodla karşılaştırılıp yeniden sıralanmalı.
