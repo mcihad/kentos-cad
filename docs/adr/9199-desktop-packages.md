@@ -191,6 +191,18 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 - Derleme: Yol dosyasında tek satır Yol'un sınamalarını 4,0 s'de derler (önce bütün masaüstü 17,4 s).
 - Sınama: çekirdek 2710, Harita 191, Yol 127, programlar 34 (toplam 3062, yok sayılan 761: önceki gibi).
 
+### §4.7 Adım 7: Mimari klasöründe olup çekirdeğin kullandığı parçalar
+
+- Mimari'ye bağlı olmayan ve çekirdeğin kullandığı beş modül çekirdeğe indi: programın kimliği (`program`), etkin kat
+  (`active_level`), IFC olguları (`ifc_facts`), kesit rozeti (`section_badge`) → `shell/`; görünüş tarifi
+  (`views_recipe`) → `cad/`. Yuvalar yine tabanı büyütmeyen yerler.
+- `program.rs`'in modül adına göre 42 dalı kabuğa geçemezdi (ADR 9195 §6'nın kalanı): modülün sözcükleri
+  `kentos_launch::Module`'e (`open_in`, `in_program`, `in_project`, `of_program`), disiplinin modülü
+  `Discipline::module`'a, CBS programında açılan CAD çiziminin sorulduğu programlar saklama türünden (dosya saklayan
+  modüller) geldi; satır içi sınamaları `program_tests.rs`'e ayrıldı. Kabuktaki dal sayısı aynı kaldı (36).
+- Bağımlılık tabanı: kabuk → Mimari 28 → 15, CAD → Mimari 7 → 3.
+- Sınama: çekirdek 2711, Harita 191, Yol 127, programlar 34, `kentos-launch` 16.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):

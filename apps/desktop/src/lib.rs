@@ -265,7 +265,7 @@ mod find_replace;
 mod fixture_search;
 #[path = "shell/zoning_badge.rs"]
 mod zoning_badge;
-#[path = "arch/section_badge.rs"]
+#[path = "shell/section_badge.rs"]
 mod section_badge;
 #[path = "arch/grids.rs"]
 mod grids;
@@ -341,7 +341,7 @@ mod scene3d_building;
 mod ifc_viewer;
 #[path = "arch/arch_ifc.rs"]
 mod arch_ifc;
-#[path = "arch/ifc_facts.rs"]
+#[path = "shell/ifc_facts.rs"]
 mod ifc_facts;
 #[path = "cad/terrain_layer.rs"]
 mod terrain_layer;
@@ -445,7 +445,7 @@ pub mod points;
 mod preview;
 #[path = "gis/processing/mod.rs"]
 pub mod processing;
-#[path = "arch/program.rs"]
+#[path = "shell/program.rs"]
 pub mod program;
 #[path = "shell/project/mod.rs"]
 pub mod project;
@@ -627,11 +627,11 @@ mod view_commands;
 pub mod viewport;
 #[path = "cad/views.rs"]
 mod views;
-#[path = "arch/views_recipe.rs"]
+#[path = "cad/views_recipe.rs"]
 mod views_recipe;
 #[path = "gis/forms/mod.rs"]
 mod forms;
-#[path = "arch/active_level.rs"]
+#[path = "shell/active_level.rs"]
 mod active_level;
 
 #[path = "cad/scene_browse.rs"]

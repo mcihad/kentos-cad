@@ -59,6 +59,46 @@ impl Module {
         }
     }
 
+    /// “KentOS Harita'da aç”: the button that starts the module's program.
+    pub const fn open_in(self) -> &'static str {
+        match self {
+            Module::Architecture => "KentOS Mimari'de aç",
+            Module::Map => "KentOS Harita'da aç",
+            Module::Gis => "KentOS GIS'te aç",
+            Module::Road => "KentOS Yol'da aç",
+        }
+    }
+
+    /// “KentOS Harita'da”: the module's program in a sentence, where something opens.
+    pub const fn in_program(self) -> &'static str {
+        match self {
+            Module::Architecture => "KentOS Mimari'de",
+            Module::Map => "KentOS Harita'da",
+            Module::Gis => "KentOS GIS'te",
+            Module::Road => "KentOS Yol'da",
+        }
+    }
+
+    /// “bu harita projesinde”: where something is in kentos-cad, by the open project's module (docs/adr/9195 §2).
+    pub const fn in_project(self) -> &'static str {
+        match self {
+            Module::Architecture => "bu mimari projede",
+            Module::Map => "bu harita projesinde",
+            Module::Gis => "bu CBS projesinde",
+            Module::Road => "bu yol projesinde",
+        }
+    }
+
+    /// “KentOS Harita'nın”: whose something is, the module's program in a sentence.
+    pub const fn of_program(self) -> &'static str {
+        match self {
+            Module::Architecture => "KentOS Mimari'nin",
+            Module::Map => "KentOS Harita'nın",
+            Module::Gis => "KentOS GIS'in",
+            Module::Road => "KentOS Yol'un",
+        }
+    }
+
     /// The module's own program's name (docs/adr/0801, 0802 §1): the one KentOS program file under this
     /// name (a link to `kentos-cad`, or `kentos-cad --modul <id>`) works only as this module.
     pub const fn program(self) -> &'static str {

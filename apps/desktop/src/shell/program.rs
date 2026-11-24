@@ -60,60 +60,36 @@ pub fn type_of(m: Module) -> Workspace {
 
 /// The module a CAD work's projects belong to.
 pub(crate) fn module_of_work(w: CadWork) -> Module {
-    Module::of_project(Some(Workspace::Cad.id()), Some(w.id())).unwrap_or(Module::Architecture)
+    // Every CAD work is a module's (kentos-launch's `cad_works`; program_tests.rs checks each): the first module
+    // answers a work no module has.
+    Module::of_project(Some(Workspace::Cad.id()), Some(w.id())).unwrap_or(Module::ALL[0])
 }
 
 /// “KentOS GIS'te aç”: a module's program as the button that starts it says it.
 pub(crate) fn open_in(m: Module) -> &'static str {
-    match m {
-        Module::Architecture => "KentOS Mimari'de aç",
-        Module::Map => "KentOS Harita'da aç",
-        Module::Gis => "KentOS GIS'te aç",
-        Module::Road => "KentOS Yol'da aç",
-    }
+    m.open_in()
 }
 
 /// “KentOS GIS'te”: a module's program in a sentence, where something opens.
 pub(crate) fn in_program(m: Module) -> &'static str {
-    match m {
-        Module::Architecture => "KentOS Mimari'de",
-        Module::Map => "KentOS Harita'da",
-        Module::Gis => "KentOS GIS'te",
-        Module::Road => "KentOS Yol'da",
-    }
+    m.in_program()
 }
 
 /// “bu CBS projesinde”: where something is in kentos-cad, by the open project's module (docs/adr/9195 §2).
 pub(crate) fn in_project(m: Module) -> &'static str {
-    match m {
-        Module::Architecture => "bu mimari projede",
-        Module::Map => "bu harita projesinde",
-        Module::Gis => "bu CBS projesinde",
-        Module::Road => "bu yol projesinde",
-    }
+    m.in_project()
 }
 
 /// Whether `module`'s program offers product command `product` to an agent (docs/adr/8056 §1).
 fn offers_product(module: Module, product: &str) -> bool {
-    use kentos_native_application::registry::{Discipline, discipline_of};
-    let own = match discipline_of(product) {
-        None | Some(Discipline::Core) => true,
-        Some(Discipline::Arch) => module == Module::Architecture,
-        Some(Discipline::Map) => module == Module::Map,
-        Some(Discipline::Gis) => module == Module::Gis,
-        Some(Discipline::Road) => module == Module::Road,
-    };
+    use kentos_native_application::registry::discipline_of;
+    let own = discipline_of(product).and_then(|d| d.module()).is_none_or(|m| m == module);
     own || catalog().routes_offer(module, product)
 }
 
 /// “KentOS Harita'nın”: whose something is, a module's program in a sentence.
 pub(crate) fn of_program(m: Module) -> &'static str {
-    match m {
-        Module::Architecture => "KentOS Mimari'nin",
-        Module::Map => "KentOS Harita'nın",
-        Module::Gis => "KentOS GIS'in",
-        Module::Road => "KentOS Yol'un",
-    }
+    m.of_program()
 }
 
 /// “KentOS Harita'da, KentOS GIS'te ve KentOS Yol'da”: a list in a sentence, commas and the last joined by “ve”.
@@ -209,11 +185,12 @@ impl App {
                 self.ask_hand_over(&opened, vec![m]);
                 Task::none()
             }
-            (None, Some(Workspace::Cad)) if program == Module::Gis => {
-                self.ask_hand_over(
-                    &opened,
-                    vec![Module::Architecture, Module::Map, Module::Road],
-                );
+            // A CAD drawing in a CBS program: the CAD modules' programs are asked (their projects are files,
+            // docs/adr/9196).
+            (None, Some(Workspace::Cad)) if program.storage() == kentos_launch::Storage::Database => {
+                let cad: Vec<Module> =
+                    Module::ALL.into_iter().filter(|m| m.storage() == kentos_launch::Storage::File).collect();
+                self.ask_hand_over(&opened, cad);
                 Task::none()
             }
             (None, Some(Workspace::Cad)) if opened.external => {
@@ -417,127 +394,5 @@ fn splits_hold<'a>(
 }
 
 #[cfg(test)]
-mod tests {
-    use std::ffi::OsString;
-    use std::path::PathBuf;
-
-    use kentos_commands::{CadWork, Workspace};
-    use kentos_launch::Module;
-
-    use super::*;
-    use crate::files_testing::app_with_drawing;
-
-    fn os(args: &[&str]) -> Vec<OsString> {
-        args.iter().map(OsString::from).collect()
-    }
-
-    #[test]
-    fn a_project_belongs_by_its_type_and_work() {
-        let mut s = crate::files_testing::drawing(0).settings().clone();
-        let mut of = |w: Option<Workspace>, work: Option<CadWork>| {
-            s.workspace = w;
-            s.cad_work = work;
-            module_of(&s)
-        };
-        assert_eq!(of(Some(Workspace::Gis), None), Some(Module::Gis));
-        assert_eq!(
-            of(Some(Workspace::Cad), Some(CadWork::Architecture)),
-            Some(Module::Architecture)
-        );
-        assert_eq!(
-            of(Some(Workspace::Cad), Some(CadWork::Map)),
-            Some(Module::Map)
-        );
-        assert_eq!(
-            of(Some(Workspace::Cad), None),
-            None,
-            "a CAD project not asked its work"
-        );
-        assert_eq!(of(None, None), None, "a project not asked its type");
-        assert_eq!(
-            of(Some(Workspace::LegacyHybrid), None),
-            None,
-            "the former Hibrit"
-        );
-        // A work on a project that is not CAD is no work.
-        assert_eq!(
-            of(Some(Workspace::Gis), Some(CadWork::Map)),
-            Some(Module::Gis)
-        );
-        assert_eq!(of(None, Some(CadWork::Map)), None);
-        // Every work is one module's, the module's own works its own.
-        for w in CadWork::ALL {
-            assert!(works_of(module_of_work(w)).contains(&w));
-        }
-        assert_eq!(works_of(Module::Architecture), [CadWork::Architecture]);
-        assert_eq!(works_of(Module::Map), [CadWork::Map]);
-        assert_eq!(works_of(Module::Road), [CadWork::Road]);
-        assert!(works_of(Module::Gis).is_empty());
-        assert_eq!(
-            Module::ALL.map(type_of),
-            [Workspace::Cad, Workspace::Cad, Workspace::Gis, Workspace::Cad]
-        );
-    }
-
-    #[test]
-    fn a_module_program_takes_only_its_own_module_and_one_file() {
-        assert_eq!(fixed_launch(Module::Gis, os(&[])), Ok(None));
-        assert_eq!(
-            fixed_launch(Module::Gis, os(&["/a/ada.kcad"])),
-            Ok(Some(PathBuf::from("/a/ada.kcad")))
-        );
-        assert_eq!(
-            fixed_launch(Module::Gis, os(&["--modul", "cbs", "/a/ada.kcad"])),
-            Ok(Some(PathBuf::from("/a/ada.kcad")))
-        );
-        let e = fixed_launch(Module::Gis, os(&["--modul=mimari", "x.kcad"]))
-            .expect_err("another module");
-        assert!(
-            e.contains("kentos-gis yalnız KentOS GIS olarak çalışır")
-                && e.contains("kentos-mimari")
-                && e.contains("--modul mimari"),
-            "{e}"
-        );
-        let e = fixed_launch(Module::Map, os(&["a.kcad", "b.kcad"])).expect_err("two files");
-        assert!(e.contains("“b.kcad” fazla"), "{e}");
-    }
-
-    #[test]
-    fn a_module_shows_its_own_recent_files_and_those_of_no_module() {
-        let mut app = app_with_drawing();
-        app.recent.add_in(
-            std::path::Path::new("/p/bina.kcad"),
-            "1".into(),
-            Some(Module::Architecture),
-        );
-        app.recent.add_in(
-            std::path::Path::new("/p/pafta.kcad"),
-            "2".into(),
-            Some(Module::Map),
-        );
-        app.recent
-            .add_in(std::path::Path::new("/p/eski.kcad"), "3".into(), None);
-        app.recent.add_in(
-            std::path::Path::new("/p/mahalle.kcad"),
-            "4".into(),
-            Some(Module::Gis),
-        );
-        let names = |app: &App| {
-            app.shown_recent()
-                .iter()
-                .map(|r| r.name.clone())
-                .collect::<Vec<_>>()
-        };
-        assert_eq!(
-            names(&app),
-            ["mahalle.kcad", "eski.kcad", "pafta.kcad", "bina.kcad"],
-            "kentos-cad shows every one"
-        );
-        app.program = Some(Module::Map);
-        assert_eq!(names(&app), ["eski.kcad", "pafta.kcad"]);
-        app.program = Some(Module::Gis);
-        assert_eq!(names(&app), ["mahalle.kcad", "eski.kcad"]);
-        app.program = Some(Module::Architecture);
-        assert_eq!(names(&app), ["eski.kcad", "bina.kcad"]);
-    }
-}
+#[path = "program_tests.rs"]
+mod tests;

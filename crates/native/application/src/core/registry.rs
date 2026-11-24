@@ -419,6 +419,19 @@ pub enum Discipline {
     Road,
 }
 
+impl Discipline {
+    /// The module whose program offers the discipline's commands; none for the core's, every module's.
+    pub const fn module(self) -> Option<kentos_launch::Module> {
+        match self {
+            Discipline::Core => None,
+            Discipline::Arch => Some(kentos_launch::Module::Architecture),
+            Discipline::Map => Some(kentos_launch::Module::Map),
+            Discipline::Gis => Some(kentos_launch::Module::Gis),
+            Discipline::Road => Some(kentos_launch::Module::Road),
+        }
+    }
+}
+
 /// The discipline whose part of the registry answers `command`, whether this build runs it or not; none for a
 /// command the registry does not know. A module's program offers the core's and its own discipline's commands to an
 /// agent (docs/adr/8056 §1).
