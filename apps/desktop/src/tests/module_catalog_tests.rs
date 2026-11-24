@@ -73,10 +73,10 @@ fn catalog_text() -> String {
     let text = serde_json::to_string_pretty(&json!({
         "format": "kentos.modules",
         "version": 1,
-        "note": "KentOS modüllerinin ortak tanımı: kimlik, program, proje türü ve işleri, \
+        "note": "KentOS modüllerinin ortak tanımı (ADR 9195 §6, CLAUDE.md §25): kimlik, program, proje türü ve işleri, \
                  bulut türleri, saklama türü (database: CBS verisi veritabanında; file: CAD projesinin tamamı proje \
-                 dosyasında), katman türleri ve şeridin modüle verdiği komutlar. İstemciler saklama türüne \
-                 göre ne yazdıklarını, katman türleri tutuldukları yeri ve yazılışlarını söyler. Hiçbir şeridin tutmadığı \
+                 dosyasında, ADR 9196), katman türleri ve şeridin modüle verdiği komutlar. İstemciler saklama türüne \
+                 göre ne yazdıklarını, katman türleri tutuldukları yeri ve yazılışlarını söyler (ADR 9197). Hiçbir şeridin tutmadığı \
                  komut her modülündür ve listelenmez. Üretici: KENTOS_WRITE_MODULES=1 cargo test -p kentos-desktop \
                  --lib module_catalog.",
         "storages": storages,

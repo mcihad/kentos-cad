@@ -120470,7 +120470,7 @@ class VolumeApprovalReport(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class VolumeBasis(_Model):
-    """What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is
+    """What a volume measures (docs/adr/1037): its rule by name, whether the volume names it (`given`) or it is
     the default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's
     version, the two lines, the sides, the stations it covers and the states its cut and fill are in; and how it is
     computed (docs/adr/1040): its method's algorithm by name and version (`kentos.end-area/1`,
@@ -120620,7 +120620,7 @@ class VolumeCurve(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class VolumeDef(_Model):
-    """An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
+    """An earthwork volume (docs/adr/0906, Kübaj): a corridor's, by a method, with the factors by stations.
     Attributes:
         approved: Its figures as approved; an approved volume's definition does not change.
         bench: The fill's foundation benched (a section method's).
@@ -120630,7 +120630,7 @@ class VolumeDef(_Model):
         history: Its approvals that ended, oldest first, each as it was approved with how it ended (docs/adr/0950; schema 173):
             never changed nor removed.
         revision: Unit: version.
-        rule: Which two lines it measures between (docs/adr/0975 §2, Netpro's names); absent: the road's top against the
+        rule: Which two lines it measures between (docs/adr/0975 §2); absent: the road's top against the
             ground, stripped when it strips (as before the rule).
         strip: The topsoil stripped by stations (a section method's).
     """
@@ -121029,7 +121029,7 @@ class VolumeReport(_Model):
         factored_fill: Unit: volume.
         gaps: Unit: m.
         approval: The approval against today's figures, where approved.
-        basis: What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer.
+        basis: What it measures and how (docs/adr/1037; ROAD-VOL-19): only in `road.volumes.query`'s answer.
         bench: The benches cut in all (m³), where the volume benches. Unit: volume.
         curve: With the curve correction (docs/adr/0934): how much it changed the cut and the fill (m³; the cut and fill above
             are the corrected ones).

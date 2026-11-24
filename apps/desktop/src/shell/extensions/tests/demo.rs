@@ -602,7 +602,7 @@ fn a_blueprint_installs_with_every_contribution_and_passes_the_desktops_own_chec
             "Alan çiz",
             "Nesne ara"
         ],
-        "with a schema, its command; the map tool draws into its layer"
+        "with a schema, its command; the map tool draws into its layer (docs/adr/8057 §23)"
     );
     assert!(
         gis.gis

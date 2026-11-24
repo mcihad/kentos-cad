@@ -198,7 +198,7 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
     );
     assert!(
         !pending.granted.contains(&Capability::UiContextMenu),
-        "an update's new capability starts ungranted"
+        "an update's new capability starts ungranted (docs/adr/8057 §121)"
     );
     let _ = gis
         .extension_review_window()
@@ -235,7 +235,7 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
     let pending = gis.extensions.review.as_ref().unwrap();
     assert!(
         !pending.granted.contains(&Capability::UiContextMenu),
-        "left out before: the person grants it, not the package"
+        "left out before: the person grants it, not the package (docs/adr/8057 §121)"
     );
     assert_eq!(pending.withheld, [Capability::UiContextMenu]);
     let _ = gis.extensions_event(Event::Grant(Capability::UiContextMenu, true));

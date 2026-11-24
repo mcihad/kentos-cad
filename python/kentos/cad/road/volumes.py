@@ -981,26 +981,25 @@ progress = _RoadVolumesProgress()
 class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQueried]):
     """``road.volumes.query`` v1. Kübajı sorgula: Yol projesinin kübaj hesaplarını bugün
     hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesap ne ölçtüğünü
-    basis'te söyler: Netpro'nun adıyla kuralı (kuralsızda yol üstü ile zemin, sıyırmada
-    sıyrılmış zemin) ve kendisinin mi olduğu, kuralın anlamının sürümü
-    (kentos.volume-rule/1), üst ve alt çizgi (road, formation; ground, topsoil), yanlar
-    (kesit yöntemlerinde şev uçları, yüzey ve ızgara yönteminde koridor yüzeyi), km
-    aralığı, kazının yerinde ve dolgunun sıkışmış olduğu ve yöntemin algoritması adı ve
-    sürümüyle (kentos.end-area/1, kurp düzeltmeli kentos.end-area-curved/1,
-    kentos.prismoidal/1, kentos.tin-overlay/1, kentos.grid-midpoint/1; toplamlar
-    satırların km sırasıyla binary64 toplamıdır). Hesaplanan her kübaj neyden
-    hesaplandığını sources'ta söyler: koridorun, aksının, boykesitinin, bölgelerinin tip
-    kesitlerinin ve dever çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti
-    (digest) ve son kabul özeti (built). Onaylı kübajın approval'ı, onay kaynaklarını
-    saklıyorsa onaydan beri değişenleri moved'da sayar: her biri türü (corridor,
-    alignment, profile, template, superelevation, surface, algorithm), kimliği
-    (algoritmada adı), onaydaki ve bugünkü sürümü (arazide özeti) ile; onaydan önce
-    saklanmayan kaynaklarda liste yoktur. Kurp düzeltmeli hesapta kazı ve dolgu
-    düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden
-    düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın satırları
-    ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta
-    yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve
-    dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve
+    basis'te söyler: kuralı (kuralsızda yol üstü ile zemin, sıyırmada sıyrılmış zemin)
+    ve kendisinin mi olduğu, kuralın anlamının sürümü (kentos.volume-rule/1), üst ve alt
+    çizgi (road, formation; ground, topsoil), yanlar (kesit yöntemlerinde şev uçları,
+    yüzey ve ızgara yönteminde koridor yüzeyi), km aralığı, kazının yerinde ve dolgunun
+    sıkışmış olduğu ve yöntemin algoritması adı ve sürümüyle (kentos.end-area/1, kurp
+    düzeltmeli kentos.end-area-curved/1, kentos.prismoidal/1, kentos.tin-overlay/1,
+    kentos.grid-midpoint/1; toplamlar satırların km sırasıyla binary64 toplamıdır).
+    Hesaplanan her kübaj neyden hesaplandığını sources'ta söyler: koridorun, aksının,
+    boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri,
+    arazinin bugünkü kaynak özeti (digest) ve son kabul özeti (built). Onaylı kübajın
+    approval'ı, onay kaynaklarını saklıyorsa onaydan beri değişenleri moved'da sayar:
+    her biri türü (corridor, alignment, profile, template, superelevation, surface,
+    algorithm), kimliği (algoritmada adı), onaydaki ve bugünkü sürümü (arazide özeti)
+    ile; onaydan önce saklanmayan kaynaklarda liste yoktur. Kurp düzeltmeli hesapta kazı
+    ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit
+    yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın
+    satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen
+    aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş
+    kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve
     düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği
     alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş
     kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin
@@ -1030,12 +1029,12 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
         expected: Expected | None = None,
     ) -> VolumesQueried:
         """Kübajı sorgula: Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini
-        verir; hiçbir şey yazmaz. Her hesap ne ölçtüğünü basis'te söyler: Netpro'nun adıyla
-        kuralı (kuralsızda yol üstü ile zemin, sıyırmada sıyrılmış zemin) ve kendisinin mi
-        olduğu, kuralın anlamının sürümü (kentos.volume-rule/1), üst ve alt çizgi (road,
-        formation; ground, topsoil), yanlar (kesit yöntemlerinde şev uçları, yüzey ve ızgara
-        yönteminde koridor yüzeyi), km aralığı, kazının yerinde ve dolgunun sıkışmış olduğu
-        ve yöntemin algoritması adı ve sürümüyle (kentos.end-area/1, kurp düzeltmeli
+        verir; hiçbir şey yazmaz. Her hesap ne ölçtüğünü basis'te söyler: kuralı (kuralsızda
+        yol üstü ile zemin, sıyırmada sıyrılmış zemin) ve kendisinin mi olduğu, kuralın
+        anlamının sürümü (kentos.volume-rule/1), üst ve alt çizgi (road, formation; ground,
+        topsoil), yanlar (kesit yöntemlerinde şev uçları, yüzey ve ızgara yönteminde koridor
+        yüzeyi), km aralığı, kazının yerinde ve dolgunun sıkışmış olduğu ve yöntemin
+        algoritması adı ve sürümüyle (kentos.end-area/1, kurp düzeltmeli
         kentos.end-area-curved/1, kentos.prismoidal/1, kentos.tin-overlay/1,
         kentos.grid-midpoint/1; toplamlar satırların km sırasıyla binary64 toplamıdır).
         Hesaplanan her kübaj neyden hesaplandığını sources'ta söyler: koridorun, aksının,

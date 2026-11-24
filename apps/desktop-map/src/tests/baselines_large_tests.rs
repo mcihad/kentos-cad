@@ -18,7 +18,7 @@ fn network_file() -> std::path::PathBuf {
     let base = [4_121_000.0, 2_652_000.0, 4_069_000.0];
     let (east, north) = ([-0.54, 0.84, 0.0], [-0.53, -0.34, 0.78]);
     let at = |r: usize, c: usize| [0, 1, 2].map(|k| base[k] + 1000.0 * (c as f64 * east[k] + r as f64 * north[k]));
-    let mut text = String::from("# 26 × 26 istasyonluk ızgara\n");
+    let mut text = String::from("# 26 × 26 istasyonluk ızgara (ADR 4560)\n");
     for r in 0..W {
         for c in 0..W {
             let i = r * W + c;

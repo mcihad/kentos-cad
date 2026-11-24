@@ -48218,7 +48218,7 @@
       "id": "road.volumes.query",
       "version": 1,
       "title": "Kübajı sorgula",
-      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesap ne ölçtüğünü basis'te söyler: Netpro'nun adıyla kuralı (kuralsızda yol üstü ile zemin, sıyırmada sıyrılmış zemin) ve kendisinin mi olduğu, kuralın anlamının sürümü (kentos.volume-rule/1), üst ve alt çizgi (road, formation; ground, topsoil), yanlar (kesit yöntemlerinde şev uçları, yüzey ve ızgara yönteminde koridor yüzeyi), km aralığı, kazının yerinde ve dolgunun sıkışmış olduğu ve yöntemin algoritması adı ve sürümüyle (kentos.end-area/1, kurp düzeltmeli kentos.end-area-curved/1, kentos.prismoidal/1, kentos.tin-overlay/1, kentos.grid-midpoint/1; toplamlar satırların km sırasıyla binary64 toplamıdır). Hesaplanan her kübaj neyden hesaplandığını sources'ta söyler: koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest) ve son kabul özeti (built). Onaylı kübajın approval'ı, onay kaynaklarını saklıyorsa onaydan beri değişenleri moved'da sayar: her biri türü (corridor, alignment, profile, template, superelevation, surface, algorithm), kimliği (algoritmada adı), onaydaki ve bugünkü sürümü (arazide özeti) ile; onaydan önce saklanmayan kaynaklarda liste yoktur. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.",
+      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesap ne ölçtüğünü basis'te söyler: kuralı (kuralsızda yol üstü ile zemin, sıyırmada sıyrılmış zemin) ve kendisinin mi olduğu, kuralın anlamının sürümü (kentos.volume-rule/1), üst ve alt çizgi (road, formation; ground, topsoil), yanlar (kesit yöntemlerinde şev uçları, yüzey ve ızgara yönteminde koridor yüzeyi), km aralığı, kazının yerinde ve dolgunun sıkışmış olduğu ve yöntemin algoritması adı ve sürümüyle (kentos.end-area/1, kurp düzeltmeli kentos.end-area-curved/1, kentos.prismoidal/1, kentos.tin-overlay/1, kentos.grid-midpoint/1; toplamlar satırların km sırasıyla binary64 toplamıdır). Hesaplanan her kübaj neyden hesaplandığını sources'ta söyler: koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest) ve son kabul özeti (built). Onaylı kübajın approval'ı, onay kaynaklarını saklıyorsa onaydan beri değişenleri moved'da sayar: her biri türü (corridor, alignment, profile, template, superelevation, surface, algorithm), kimliği (algoritmada adı), onaydaki ve bugünkü sürümü (arazide özeti) ile; onaydan önce saklanmayan kaynaklarda liste yoktur. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.",
       "aliases": [
         "kubajsor",
         "kübajsor"
@@ -232709,7 +232709,7 @@
       "type": "object"
     },
     "VolumeBasis": {
-      "description": "What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is\nthe default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's\nversion, the two lines, the sides, the stations it covers and the states its cut and fill are in; and how it is\ncomputed (docs/adr/1040): its method's algorithm by name and version (`kentos.end-area/1`,\n`kentos.end-area-curved/1`, `kentos.prismoidal/1`, `kentos.tin-overlay/1`, `kentos.grid-midpoint/1`).",
+      "description": "What a volume measures (docs/adr/1037): its rule by name, whether the volume names it (`given`) or it is\nthe default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's\nversion, the two lines, the sides, the stations it covers and the states its cut and fill are in; and how it is\ncomputed (docs/adr/1040): its method's algorithm by name and version (`kentos.end-area/1`,\n`kentos.end-area-curved/1`, `kentos.prismoidal/1`, `kentos.tin-overlay/1`, `kentos.grid-midpoint/1`).",
       "properties": {
         "algorithm": {
           "type": "string"
@@ -232857,7 +232857,7 @@
     },
     "VolumeDef": {
       "additionalProperties": false,
-      "description": "An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.",
+      "description": "An earthwork volume (docs/adr/0906, Kübaj): a corridor's, by a method, with the factors by stations.",
       "properties": {
         "approved": {
           "anyOf": [
@@ -232934,7 +232934,7 @@
               "type": "null"
             }
           ],
-          "description": "Which two lines it measures between (docs/adr/0975 §2, Netpro's names); absent: the road's top against the\nground, stripped when it strips (as before the rule)."
+          "description": "Which two lines it measures between (docs/adr/0975 §2); absent: the road's top against the\nground, stripped when it strips (as before the rule)."
         },
         "strip": {
           "description": "The topsoil stripped by stations (a section method's).",
@@ -233177,7 +233177,7 @@
               "type": "null"
             }
           ],
-          "description": "What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer."
+          "description": "What it measures and how (docs/adr/1037; ROAD-VOL-19): only in `road.volumes.query`'s answer."
         },
         "bench": {
           "description": "The benches cut in all (m³), where the volume benches.",

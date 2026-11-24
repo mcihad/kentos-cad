@@ -229,7 +229,7 @@ pub struct VolumeReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub curve: Option<VolumeCurve>,
-    /// What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer.
+    /// What it measures and how (docs/adr/1037; ROAD-VOL-19): only in `road.volumes.query`'s answer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub basis: Option<VolumeBasis>,
@@ -464,7 +464,7 @@ pub enum MaterialState {
     Compacted,
 }
 
-/// What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is
+/// What a volume measures (docs/adr/1037): its rule by name, whether the volume names it (`given`) or it is
 /// the default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's
 /// version, the two lines, the sides, the stations it covers and the states its cut and fill are in; and how it is
 /// computed (docs/adr/1040): its method's algorithm by name and version (`kentos.end-area/1`,

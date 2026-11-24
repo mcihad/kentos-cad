@@ -7,7 +7,7 @@ import type { VolumeRule } from "./VolumeRule";
 import type { VolumeStripDef } from "./VolumeStripDef";
 
 /**
- * An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
+ * An earthwork volume (docs/adr/0906, Kübaj): a corridor's, by a method, with the factors by stations.
  */
 export type VolumeDef = { id: string, name: string, corridor: string, revision?: number, method: VolumeMethod, factors?: Array<VolumeFactorDef>, 
 /**
@@ -28,7 +28,7 @@ approved?: VolumeApprovalDef,
  */
 history?: Array<VolumeApprovalDef>, 
 /**
- * Which two lines it measures between (docs/adr/0975 §2, Netpro's names); absent: the road's top against the
+ * Which two lines it measures between (docs/adr/0975 §2); absent: the road's top against the
  * ground, stripped when it strips (as before the rule).
  */
 rule?: VolumeRule, 

@@ -45,7 +45,7 @@ fn no_source_file_passes_two_thousand_lines() {
     long.sort();
     assert!(
         long.is_empty(),
-        "split these by their subjects into child files: {}",
+        "split these by their subjects into child files (docs/adr/8054 §7): {}",
         long.join(", ")
     );
 }

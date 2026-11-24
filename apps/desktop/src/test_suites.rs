@@ -839,5 +839,8 @@ mod underlay_scenes;
 #[path = "tests/source_size_tests.rs"]
 mod source_size_tests;
 #[cfg(test)]
+#[path = "tests/other_names_tests.rs"]
+mod other_names_tests;
+#[cfg(test)]
 #[path = "tests/shell_boundary_tests.rs"]
 mod shell_boundary_tests;

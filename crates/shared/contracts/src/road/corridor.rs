@@ -693,7 +693,7 @@ pub struct VolumeApprovalEnd {
     pub note: Option<String>,
 }
 
-/// An earthwork volume (docs/adr/0906, Netpro's kübaj hesabı): a corridor's, by a method, with the factors by stations.
+/// An earthwork volume (docs/adr/0906, Kübaj): a corridor's, by a method, with the factors by stations.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -728,7 +728,7 @@ pub struct VolumeDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeApprovalDef>>", optional))]
     pub history: Vec<VolumeApprovalDef>,
-    /// Which two lines it measures between (docs/adr/0975 §2, Netpro's names); absent: the road's top against the
+    /// Which two lines it measures between (docs/adr/0975 §2); absent: the road's top against the
     /// ground, stripped when it strips (as before the rule).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -765,7 +765,7 @@ pub enum VolumeRule {
 }
 
 impl VolumeRule {
-    /// Netpro's name.
+    /// The rule's name in words.
     pub fn words(self) -> &'static str {
         match self {
             VolumeRule::RoadGround => "Yol–Zemin",

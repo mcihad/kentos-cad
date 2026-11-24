@@ -653,7 +653,7 @@ mod tests {
         doc.model.show_all_layers();
         assert!(
             !doc.dirty(),
-            "nothing was hidden: not an edit"
+            "nothing was hidden: not an edit (docs/adr/0020)"
         );
     }
 

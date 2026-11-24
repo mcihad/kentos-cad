@@ -103,7 +103,7 @@ fn yalniz_degiseni_yaz_keeps_the_lines_that_come_out_as_they_are() {
     assert_eq!(state(&app), S::Stale);
     // Unticked: drawn whole, every line new.
     send(&mut app, P::Regional(false));
-    assert_eq!(whole(&app), Some(true), "the project's choice now");
+    assert_eq!(whole(&app), Some(true), "the project's choice now (docs/adr/4740)");
     rebuild(&mut app, P::Rebuild(None, false));
     let whole = drawing_uids(&app);
     assert!(whole.iter().all(|u| !before.contains(u)), "drawn whole");

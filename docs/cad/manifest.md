@@ -59,7 +59,7 @@ CBS'ye özgü olmayan 1018 satırdan 41'i: geometry 7, none 20, processing 3, qu
 | `file.export.pdf` | PDF pafta… | none | — |  |
 | `file.import.gnss` | GNSS (GPX, NMEA)… | shared | — |  |
 | `file.import.ncn` | Koordinat listesi (NCN, TXT, CSV)… | shared | — |  |
-| `file.import.ncz` | Netcad NCZ… | shared | — |  |
+| `file.import.ncz` | NCZ… | shared | — |  |
 | `file.import.photos` | Konumlu fotoğraflar… | shared | — |  |
 | `file.print` | Yazdır ve pafta çıktısı… | none | — |  |
 | `file.saveSelection` | Seçilenleri dosyaya kaydet… | shared | — |  |

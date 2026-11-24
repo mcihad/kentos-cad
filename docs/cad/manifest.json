@@ -4392,7 +4392,7 @@
   {
    "id": "file.import.ncz",
    "kind": "command",
-   "title": "Netcad NCZ…",
+   "title": "NCZ…",
    "level": "none",
    "via": [],
    "operation": null,

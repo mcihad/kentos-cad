@@ -254,7 +254,7 @@ mod tests {
         "horizontalMargin":1.5,"borderWeight":0.25,"borderColor":"#00ff00"}}]"##;
 
     #[test]
-    fn rows_are_title_header_and_data_as_autocad_names_them() {
+    fn rows_are_title_header_and_data_as_the_standard_style_names_them() {
         let t = table(json!({}));
         assert_eq!(table_style_rows(&t), [(0, 1), (1, 1), (2, 2)]);
         // No merged first row: no title; no heading: all data.
