@@ -9231,15 +9231,17 @@ class UnitSource(_StrEnum):
     - ``metres``: A project with a coordinate system reads metres.
     - ``project``: The file declares none, or a code no one defines: a local project's
     - ``grid``: The file's numbers lie in a national survey grid: read as metres,
+    - ``textHeight``: The file's letters, in the unit it declares (or the one assumed for
     """
     CHOSEN = "chosen"
     DECLARED = "declared"
     METRES = "metres"
     PROJECT = "project"
     GRID = "grid"
+    TEXT_HEIGHT = "textHeight"
 
 
-UnitSourceName = Literal["chosen", "declared", "metres", "project", "grid"]
+UnitSourceName = Literal["chosen", "declared", "metres", "project", "grid", "textHeight"]
 """The names of :class:`UnitSource`, for a plain string."""
 
 

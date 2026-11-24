@@ -231441,6 +231441,11 @@
           "const": "grid",
           "description": "The file's numbers lie in a national survey grid: read as metres,\nwhatever it declares (an `acadiso` template writes millimetres on\nsurvey drawings too) or not (docs/adr/9210). Asked as an assumed\nunit is.",
           "type": "string"
+        },
+        {
+          "const": "textHeight",
+          "description": "The file's letters, in the unit it declares (or the one assumed for\nit), are under a millimetre high, and as metres a plan's: read as\nmetres (a template's millimetres on a drawing made in metres,\ndocs/adr/9213). Asked as an assumed unit is.",
+          "type": "string"
         }
       ]
     },

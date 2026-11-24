@@ -150,6 +150,14 @@ pub(crate) fn unit_said(d: &UnitDecision, drawing: DrawingUnit) -> String {
             "Dosya birim bildirmiyor; koordinatları ülkenin ölçme ızgarasında olduğu için değerler metre okundu. Birimi biliyorsanız seçin."
                 .to_owned()
         }
+        // docs/adr/9213: the letters are a plan's as metres.
+        (UnitSource::TextHeight, Some(declared)) => format!(
+            "Dosya {declared} bildiriyor ama yazıları o birimde milimetreden küçük; değerler metre okundu. Birimi biliyorsanız seçin."
+        ),
+        (UnitSource::TextHeight, None) => {
+            "Dosya birim bildirmiyor; yazıları metre okununca bir planın yazısı boyunda olduğu için değerler metre okundu. Birimi biliyorsanız seçin."
+                .to_owned()
+        }
         (UnitSource::Metres, Some(declared)) if d.assumed => format!(
             "Dosya {declared} bildiriyor; değerler ölçeklenmeden metre sayıldı. Birimi biliyorsanız seçin."
         ),

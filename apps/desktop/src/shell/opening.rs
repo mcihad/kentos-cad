@@ -487,11 +487,11 @@ impl App {
                     self.warn("Birim seçimi sırasında açık çizim değişti; dosyayı yeniden açın.");
                     return Task::none();
                 }
-                // The unit the drawing was read in, confirmed: the one the file declares, or the survey grid's metres
-                // (docs/adr/9210). It opens as it is, not read again.
+                // The unit the drawing was read in, confirmed: the one the file declares, or metres read from where its
+                // numbers lie or from its letters' height (docs/adr/9210, 9213). It opens as it is, not read again.
                 let as_read = o.unit.as_ref().and_then(|u| match u.source {
                     UnitSource::Declared => u.declared,
-                    UnitSource::Grid => Some(FileUnit::M.code()),
+                    UnitSource::Grid | UnitSource::TextHeight => Some(FileUnit::M.code()),
                     _ => None,
                 });
                 let (path, purpose, selected) =
@@ -581,7 +581,7 @@ impl App {
                             // An imperial unit the file declares is offered as the choice (ADR 8053); numbers in the
                             // survey grid, its metres (docs/adr/9210).
                             o.selected_unit = o.unit.as_ref().and_then(|u| match u.source {
-                                UnitSource::Grid => Some(FileUnit::M),
+                                UnitSource::Grid | UnitSource::TextHeight => Some(FileUnit::M),
                                 _ if !u.assumed => u.declared.and_then(FileUnit::of_code),
                                 _ => None,
                             });
@@ -784,6 +784,16 @@ impl App {
                         "Dosya uzunluk birimini {declared} ama koordinatları ülkenin ölçme ızgarasında: değerler büyük olasılıkla metre. Metre önerildi; çizimin gerçek birimini seçin."
                     )
                 }
+                // Letters under a millimetre in the unit declared or assumed, a plan's as metres (docs/adr/9213).
+                Some(u) if u.source == UnitSource::TextHeight => {
+                    let declared = u
+                        .declared
+                        .and_then(kentos_commands::units::insunits)
+                        .map_or_else(|| "bildirmiyor".to_owned(), |(_, name)| format!("{name} olarak bildiriyor"));
+                    format!(
+                        "Dosya uzunluk birimini {declared} ama yazıları o birimde milimetreden küçük, metre okununca bir planın yazısı boyunda: değerler büyük olasılıkla metre. Metre önerildi; çizimin gerçek birimini seçin."
+                    )
+                }
                 Some(u) if !u.assumed => format!(
                     "Dosya uzunluk birimini {} olarak bildiriyor. Türkiye'deki projelerde inç ve ft çoğunlukla bir şablondan kalır; çizimin gerçek birimini seçin.",
                     u.name
@@ -829,7 +839,7 @@ impl App {
 fn asks_unit(u: &UnitDecision) -> bool {
     // Metres read from where the numbers lie, whatever the file said (docs/adr/9210): asked, metres offered.
     u.assumed
-        || u.source == UnitSource::Grid
+        || matches!(u.source, UnitSource::Grid | UnitSource::TextHeight)
         || (u.source == UnitSource::Declared
             && u.declared.and_then(FileUnit::of_code).is_some_and(|f| {
                 matches!(
@@ -919,6 +929,39 @@ mod tests {
             .find_map(|e| if let kentos_commands::Entity::Line(l) = e { Some(l.clone()) } else { None })
             .expect("the line");
         assert!((line.a.x - 422_000.0).abs() < 1e-6 && (line.b.x - line.a.x - 10.0).abs() < 1e-9, "{line:?}");
+        let _ = std::fs::remove_file(&path);
+    }
+
+    /// A plan drawn in metres in a template that declares millimetres (docs/adr/9213): its letters 0.1 mm high as
+    /// declared. Asked with metres offered; confirmed, it opens as read, 12.5 m long, not 12.5 mm.
+    #[test]
+    fn a_plan_whose_letters_are_under_a_millimetre_is_asked_with_metres_offered() {
+        let texts: String = (0..4)
+            .map(|i| format!("0\nTEXT\n8\n0\n10\n{}\n20\n1\n40\n0.1\n1\nOda {i}\n", f64::from(i) * 3.0))
+            .collect();
+        let dxf = format!(
+            "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\n\
+             ENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n12.5\n21\n0\n{texts}0\nENDSEC\n0\nEOF\n"
+        );
+        let path = std::env::temp_dir().join(format!("kentos-yazi-boyu-{}.dxf", std::process::id()));
+        std::fs::write(&path, dxf).expect("writes");
+        let mut app = app_with_drawing();
+        let task = app.start_opening(path.clone(), Purpose::File);
+        drive(&mut app, task);
+        let open = app.opening.as_ref().expect("held for its unit");
+        assert_eq!(open.selected_unit, Some(FileUnit::M), "the letters' metres offered");
+        assert!(app.opening_view().is_some(), "Çizimin birimini doğrula");
+        let task = app.opening_event(Event::ConfirmUnit);
+        drive(&mut app, task);
+        assert!(app.opening.is_none(), "opened as it was read");
+        let doc = app.document.as_ref().expect("opened");
+        assert_eq!(doc.settings().unit(), kentos_commands::DrawingUnit::M);
+        let line = doc
+            .model
+            .entities()
+            .find_map(|e| if let kentos_commands::Entity::Line(l) = e { Some(l.clone()) } else { None })
+            .expect("the line");
+        assert!((line.b.x - line.a.x - 12.5).abs() < 1e-9, "{line:?}");
         let _ = std::fs::remove_file(&path);
     }
 

@@ -1205,6 +1205,11 @@ pub enum UnitSource {
     /// survey drawings too) or not (docs/adr/9210). Asked as an assumed
     /// unit is.
     Grid,
+    /// The file's letters, in the unit it declares (or the one assumed for
+    /// it), are under a millimetre high, and as metres a plan's: read as
+    /// metres (a template's millimetres on a drawing made in metres,
+    /// docs/adr/9213). Asked as an assumed unit is.
+    TextHeight,
 }
 
 /// A block whose record names another unit than the file's (DXF

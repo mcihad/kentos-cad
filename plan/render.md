@@ -252,6 +252,20 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - Suşehri DXF'i (milimetre bildiriyordu, 12 m açılıyordu) ve 6 örnek daha artık gerçek boyunda.
   - Mimari çizimler değişmedi. Birim bildirmeyen ve orijinde duran çizim eskisi gibi soruluyor.
   - Yazı boyundan çıkarım kullanılmadı: tek başına güvenilir değil.
+  - [x] İkinci adım: yazı boyundan birim ([ADR 9213](../docs/adr/9213-cad-unit-from-letter-heights.md)). Sahibin sözü
+    (24 Kasım): “bu proje bu kadar büyütülüyor … ölçü sistemi ile mi alakalı”, “Ama Autocad kusursuz büyütebiliyor”.
+    - Milimetre bildiren iki katlı ev projesi 5 cm'lik pafta açılıyor, en derin ölçek (0,1 mm/piksel) paftanın
+      tamamında duruyordu.
+    - Yazılarının ortancası okunduğu birimde 1 mm'den küçük, metre okununca 2 cm – 2 m olan dosya metre okunuyor ve
+      birim soruluyor (metre seçili).
+    - 23 örnekten 4'ü (ev ×2, küçük apartman, palazzina) metreye geçti; milimetre projeleri (harfleri 12–30 mm)
+      değişmedi.
+- [ ] **RM-24 — Derin yakınlaşma** ([ADR 9213](../docs/adr/9213-cad-unit-from-letter-heights.md) §2). AutoCAD gibi:
+  yakınlaştırma kesinlik bitene dek sürer.
+  - Bugünkü en derin ölçek 10 000 px/m (0,1 mm/piksel), uzun çizgilerin 128 m'lik parçalarının GPU kesinliğine
+    bağlı: 100 000 px/m'de ~0,5 px, 1 000 000 px/m'de ~5 px sapma.
+  - Yol: parçalar görünüme göre yeniden kökenlenir ya da kesilir (RM-08 ve RM-09'un döşemeleriyle); sonra sınır
+    kalkar ya da kesinliğe bağlanır.
 
 ## Kabul ölçütleri
 
