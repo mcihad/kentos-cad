@@ -465,6 +465,9 @@ pub(crate) mod perf;
 #[path = "tests/render_conformance_tests.rs"]
 mod render_conformance_tests;
 #[cfg(test)]
+#[path = "tests/render_golden_tests.rs"]
+mod render_golden_tests;
+#[cfg(test)]
 #[path = "tests/point_calc_scenes.rs"]
 mod point_calc_scenes;
 #[cfg(test)]

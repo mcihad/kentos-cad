@@ -549,6 +549,34 @@ fn the_grid_spaces_its_lines_as_the_webs() {
     assert!(part.segments[..6].iter().all(|s| s.color == colors[0].0));
 }
 
+/// A drawing of numbers near the largest float, shown whole (fixtures/kcad/v2/drawing.json; plan/render.md RM-16): the
+/// view's box is not finite or far wider than its spacing can count. The grid is empty and comes back at once; its
+/// line count once ran past `u32` (an overflow in a debug build, a loop without end in a release one).
+#[test]
+fn a_grid_over_a_box_it_cannot_count_is_empty() {
+    let colors = [Rgba8([255, 255, 255, 0x0a]), Rgba8([255, 255, 255, 0x17])];
+    let origin = Vec2::new(0.0, 0.0);
+    let boxes = [
+        kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -1.0, max_x: f64::INFINITY, max_y: 1.0 },
+        kentos_render_wgpu::Bounds { min_x: f64::NAN, min_y: -1.0, max_x: 1.0, max_y: 1.0 },
+        kentos_render_wgpu::Bounds { min_x: -1e300, min_y: -1.0, max_x: 1e300, max_y: 1.0 },
+        // A spacing below the numbers' precision: x0 + i·minor never moves.
+        kentos_render_wgpu::Bounds { min_x: 4.5e15, min_y: 0.0, max_x: 4.5e15 + 64.0, max_y: 1.0 },
+    ];
+    for (k, area) in boxes.iter().enumerate() {
+        let spacing = if k == 3 { (0.1, 0.5) } else { (1.0, 5.0) };
+        let part = scene::build_grid(area, spacing, origin, colors);
+        assert!(part.segments.is_empty(), "box {k}: no grid");
+        let turned = scene::build_grid_framed(area, spacing, origin, colors, Vec2::new(1.0, 1.0), 0.3);
+        assert!(turned.segments.is_empty(), "box {k}: no turned grid");
+    }
+    // Twenty thousand lines are still drawn; more are not.
+    let wide = kentos_render_wgpu::Bounds { min_x: 0.0, min_y: 0.0, max_x: 19_990.0, max_y: 1.0 };
+    assert!(!scene::build_grid(&wide, (1.0, 5.0), origin, colors).segments.is_empty());
+    let wider = kentos_render_wgpu::Bounds { min_x: 0.0, min_y: 0.0, max_x: 20_010.0, max_y: 1.0 };
+    assert!(scene::build_grid(&wider, (1.0, 5.0), origin, colors).segments.is_empty());
+}
+
 /// A large selection's highlight (docs/adr/0123) built on several cores is
 /// the part one core builds: every kind of the sample, many times over, in
 /// runs of any length, joined in their order.
