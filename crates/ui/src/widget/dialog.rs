@@ -513,11 +513,22 @@ impl<'a, Message: Clone + 'a> From<Confirm<'a, Message>> for Element<'a, Message
             text = text.push(label::muted(detail));
         }
 
-        let cancel = button(label::body(confirm.cancel))
+        // An answer is one line, never broken in its button: the box widens to the answers instead (up to
+        // `ANSWERS_MOST`), and when they still do not fit side by side the risky answer takes a row of its own
+        // above the others, as narrow windows lay out a question's buttons.
+        let widths = Answers {
+            confirm: action_width(&confirm.confirm),
+            cancel: action_width(&confirm.cancel),
+            also: confirm.also.as_ref().map(|(also, _)| action_width(also)),
+            keep: confirm.keep.as_ref().map(|(keep, _)| action_width(keep)),
+        };
+        let (width, stacked) = widths.layout();
+
+        let cancel = button(one_line(confirm.cancel))
             .on_press(confirm.on_cancel)
             .padding(crate::theme::metrics::action())
             .style(style::button::secondary);
-        let go = button(label::body(confirm.confirm))
+        let go = button(one_line(confirm.confirm))
             .on_press(confirm.on_confirm)
             .padding(crate::theme::metrics::action())
             .style(if confirm.destructive {
@@ -526,40 +537,147 @@ impl<'a, Message: Clone + 'a> From<Confirm<'a, Message>> for Element<'a, Message
                 style::button::primary
             });
         let also: Option<Element<'a, Message>> = confirm.also.map(|(also, on_also)| {
-            button(label::body(also))
+            button(one_line(also))
                 .on_press(on_also)
                 .padding(crate::theme::metrics::action())
                 .style(style::button::secondary)
                 .into()
         });
-        let mut buttons: Vec<Element<'a, Message>> = Vec::with_capacity(5);
-        match confirm.keep {
+        let actions: Element<'a, Message> = match confirm.keep {
             // The safe answer at the right, the risky one apart at the left.
             Some((keep, on_keep)) => {
-                buttons.extend([go.into(), space::horizontal().into()]);
-                buttons.extend(also);
-                buttons.extend([
-                    cancel.into(),
-                    button(label::body(keep))
-                        .on_press(on_keep)
-                        .padding(crate::theme::metrics::action())
-                        .style(style::button::primary)
-                        .into(),
-                ]);
+                let keep = button(one_line(keep))
+                    .on_press(on_keep)
+                    .padding(crate::theme::metrics::action())
+                    .style(style::button::primary);
+                let mut safe: Vec<Element<'a, Message>> = vec![space::horizontal().into()];
+                safe.extend(also);
+                safe.extend([cancel.into(), keep.into()]);
+                if stacked {
+                    column![
+                        row![go, space::horizontal()],
+                        iced::widget::Row::with_children(safe).spacing(6)
+                    ]
+                    .spacing(8)
+                    .into()
+                } else {
+                    let mut buttons: Vec<Element<'a, Message>> = vec![go.into()];
+                    buttons.extend(safe);
+                    iced::widget::Row::with_children(buttons).spacing(6).into()
+                }
             }
             None => {
-                buttons.push(space::horizontal().into());
+                let mut buttons: Vec<Element<'a, Message>> = vec![space::horizontal().into()];
                 buttons.extend(also);
                 buttons.extend([cancel.into(), go.into()]);
+                iced::widget::Row::with_children(buttons).spacing(6).into()
             }
-        }
-        let actions = iced::widget::Row::with_children(buttons).spacing(6);
+        };
 
         container(column![row![symbol, text].spacing(14), actions].spacing(18))
-            .width(typography::scaled(420.0))
-            .padding(18)
+            .width(width)
+            .padding(CONFIRM_PAD)
             .style(style::container::dialog)
             .into()
+    }
+}
+
+/// The question box's own width and its padding: it widens only for its answers.
+const CONFIRM_WIDTH: f32 = 420.0;
+const CONFIRM_PAD: f32 = 18.0;
+/// The widest the box grows for answers side by side; past it the risky answer takes a row of its own.
+const ANSWERS_MOST: f32 = 640.0;
+/// The least room kept between the risky answer and the safe ones when they share a row.
+const ANSWERS_APART: f32 = 24.0;
+
+/// An answer's label on one line.
+fn one_line<'a>(label: Fragment<'a>) -> iced::widget::Text<'a> {
+    label::body(label).wrapping(iced::widget::text::Wrapping::None)
+}
+
+/// An answer button's width with its label on one line: the label as shaped, the action padding on both sides
+/// and the border.
+fn action_width(label: &str) -> f32 {
+    typography::measured_width(label, typography::body(), false)
+        + 2.0 * crate::theme::metrics::ACTION_PAD
+        + 2.0
+}
+
+/// The answers' button widths, for the box's width and whether the risky answer needs a row of its own.
+struct Answers {
+    confirm: f32,
+    cancel: f32,
+    also: Option<f32>,
+    keep: Option<f32>,
+}
+
+impl Answers {
+    /// The box's width and whether the risky answer (the confirm beside a safe `keep`) goes on a row of its own.
+    fn layout(&self) -> (f32, bool) {
+        let gap = 6.0;
+        let safe = self.cancel + self.also.map_or(0.0, |w| w + gap) + self.keep.map_or(0.0, |w| w + gap);
+        let side_by_side = match self.keep {
+            Some(_) => self.confirm + ANSWERS_APART + safe,
+            None => safe + gap + self.confirm,
+        };
+        let pad = 2.0 * CONFIRM_PAD;
+        let least = typography::scaled(CONFIRM_WIDTH);
+        if side_by_side + pad <= typography::scaled(ANSWERS_MOST) || self.keep.is_none() {
+            (least.max(side_by_side + pad), false)
+        } else {
+            (least.max(safe.max(self.confirm) + pad), true)
+        }
+    }
+}
+
+#[cfg(test)]
+mod confirm_tests {
+    use super::{ANSWERS_MOST, Answers, CONFIRM_PAD, CONFIRM_WIDTH};
+
+    #[test]
+    fn short_answers_keep_the_box_its_own_width() {
+        let (width, stacked) = Answers { confirm: 80.0, cancel: 70.0, also: None, keep: None }.layout();
+        assert_eq!(width, super::typography::scaled(CONFIRM_WIDTH));
+        assert!(!stacked);
+    }
+
+    #[test]
+    fn long_answers_widen_the_box_rather_than_break_a_label() {
+        // “Kaydetmeden yeni proje aç”, “Vazgeç”, “Kaydet ve yeni proje aç”: 556 px side by side with the gap and
+        // the padding, more than 420 and less than 640.
+        let answers = Answers { confirm: 210.0, cancel: 72.0, also: None, keep: Some(180.0) };
+        let (width, stacked) = answers.layout();
+        assert!(!stacked);
+        assert_eq!(width, 210.0 + 24.0 + 72.0 + 6.0 + 180.0 + 2.0 * CONFIRM_PAD);
+    }
+
+    /// The unsaved-changes question with its three long answers, light at the kit's own size: the picture the
+    /// owner sent (24 November 2026) had “Kaydet ve yeni proje aç” broken over two lines.
+    /// `cargo test -p kentos-ui --features snapshot --lib confirm_tests::picture -- --ignored`
+    #[test]
+    #[ignore = "a picture for the owner, run by hand"]
+    fn picture() {
+        use iced::{Size, Theme};
+        let ask = super::Confirm::new("Kaydedilmemiş değişiklikler var", (), ())
+            .message("“Yeni proje” çiziminde kaydedilmemiş değişiklikler var.")
+            .detail("Kaydet ile çizim önce kaydedilir, sonra devam edilir; kaydedilemezse ya da kayıt yeri seçilmezse çizim açık kalır.")
+            .confirm("Kaydetmeden yeni proje aç")
+            .destructive()
+            .keep("Kaydet ve yeni proje aç", ());
+        let mut snapshot = crate::snapshot::Snapshot::new(Size::new(760.0, 260.0)).expect("a renderer");
+        let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/onay-penceresi");
+        std::fs::create_dir_all(&out).expect("a folder");
+        let element: iced::Element<'_, ()> = iced::widget::container(ask).center(iced::Fill).into();
+        snapshot.render(element, &Theme::Light).save(out.join("kaydedilmemis.png")).expect("writes");
+    }
+
+    #[test]
+    fn answers_too_wide_for_one_row_put_the_risky_one_above() {
+        let answers = Answers { confirm: 330.0, cancel: 72.0, also: Some(150.0), keep: Some(260.0) };
+        let (width, stacked) = answers.layout();
+        assert!(stacked, "{width}");
+        assert!(width < super::typography::scaled(ANSWERS_MOST) + 1.0);
+        assert_eq!(width, 72.0 + 6.0 + 150.0 + 6.0 + 260.0 + 2.0 * CONFIRM_PAD);
     }
 }
 
