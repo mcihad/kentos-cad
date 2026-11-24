@@ -48,7 +48,7 @@ pub(crate) fn mismatch(layer: &LayerNode, data: &DataLayer, found: &kentos_nativ
 
 impl App {
     /// The data layers of `layer`'s file pointed at `path` (see the module): the layers relinked, or why none was.
-    pub(crate) fn relink_data_layers(&mut self, layer: &str, path: &Path) -> Result<Vec<String>, String> {
+    pub fn relink_data_layers(&mut self, layer: &str, path: &Path) -> Result<Vec<String>, String> {
         let doc = self.document.as_ref().ok_or("Açık çizim yok.")?;
         let node = doc.model.layers().get(layer).cloned().ok_or("Katman yok.")?;
         let data = node.data.clone().ok_or("Katman bir veri katmanı değil.")?;

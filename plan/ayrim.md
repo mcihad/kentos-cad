@@ -136,4 +136,6 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
   - Adım 12 yapıldı (ADR 9199 §4.12): `gis/` çekirdeğin ortak CBS altyapısı (QGIS'in `core`'u gibi; komutlarının çoğunu
     Harita, Yol ve Mimari de sunar); CBS modülünün kendisi `cbs/` (profili, Ağlar, Alt ağlar) ve kendi merkezi.
   - Adım 13 yapıldı (ADR 9199 §4.13): `cbs/`'nin `impl App`'leri uzantı trait'i (`cbs/ext.rs`).
-  - Sıradaki: CBS paketi; CAD çekirdeğinin kabuktan ayrılması.
+  - Adım 14 yapıldı (ADR 9199 §4.14): CBS kendi paketinde (`apps/desktop-cbs`); dört modülün dördü de paketinde, çekirdekte
+    modül kalmadı. Sınamalar: çekirdek 2446, CBS 57, Mimari 204, Harita 190, Yol 129, programlar 37.
+  - Sıradaki: CAD çekirdeğinin kabuktan ayrılması.

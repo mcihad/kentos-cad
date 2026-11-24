@@ -22,10 +22,10 @@
 //! smoothly as it goes and Durdur ends it; the drawing is not held meanwhile.
 
 pub mod object;
-mod plan;
-mod review;
-pub(crate) mod rules;
-mod running;
+pub mod plan;
+pub mod review;
+pub mod rules;
+pub mod running;
 mod tolerance_words;
 mod view;
 
@@ -38,7 +38,7 @@ mod source_tests;
 #[cfg(test)]
 mod municipal_tests;
 
-pub(crate) use plan::{Filter, texts};
+pub use plan::{Filter, texts};
 
 use crate::gis;
 use std::sync::Arc;
@@ -242,7 +242,7 @@ impl App {
 
     /// The data layers whose source changed outside the drawing since the check (docs/adr/9171), by name: what only a
     /// whole check reads again.
-    pub(crate) fn topology_sources_changed(&self) -> Vec<String> {
+    pub fn topology_sources_changed(&self) -> Vec<String> {
         let (Some(doc), Some(c)) = (self.document.as_ref(), self.topology_checked()) else {
             return Vec::new();
         };
@@ -312,7 +312,7 @@ impl App {
     /// Whether what the check read changed since (docs/adr/9146): its rules, tolerance, exceptions or profile; an
     /// object of the rules' layers added, removed, reshaped or moved to another layer; a bound layer's source. A
     /// change of style, labels or attributes alone leaves the findings as they are.
-    pub(crate) fn topology_stale(&self) -> bool {
+    pub fn topology_stale(&self) -> bool {
         let (Some(doc), Some(c)) = (self.document.as_ref(), self.topology_checked()) else {
             return false;
         };
@@ -601,7 +601,7 @@ impl App {
     }
 
     /// The rows shown now, as places in the findings.
-    pub(crate) fn topology_shown(&self) -> Vec<usize> {
+    pub fn topology_shown(&self) -> Vec<usize> {
         self.topology_checked().map_or_else(Vec::new, |c| {
             let rule = self.gis.topology.rule.filter(|&r| r < c.g.rules.len());
             plan::shown_findings(&c.findings, self.gis.topology.filter, rule)
@@ -609,7 +609,7 @@ impl App {
     }
 
     /// The finding shown over the drawing: the one chosen row's.
-    pub(crate) fn topology_problem(&self) -> Option<ProblemMark> {
+    pub fn topology_problem(&self) -> Option<ProblemMark> {
         if self.gis.topology.selected.len() != 1 {
             return None;
         }
@@ -992,7 +992,7 @@ impl App {
     /// What a trace's `topology` expectation reads: the count line and the
     /// rows (Katman, Kural, Sorun, Nesneler, Ölçü, joined by “ | ”), as the
     /// page shows them.
-    pub(crate) fn topology_seen(&self) -> Option<(String, Vec<String>)> {
+    pub fn topology_seen(&self) -> Option<(String, Vec<String>)> {
         if !self.command_expanded || self.bottom_tab != BottomTab::Topology {
             return None;
         }

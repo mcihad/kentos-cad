@@ -1,7 +1,7 @@
 {
   "format": "kentos.module-deps",
   "version": 1,
-  "note": "scripts/dev/module_deps.py'nin tabanı (ADR 9195 §6): yalnız azalır. 24 Kasım 2026'da gis çekirdek, cbs modül klasörü oldu (ADR 9199 §4.12).",
+  "note": "scripts/dev/module_deps.py'nin tabanı (ADR 9195 §6): yalnız azalır.",
   "edges": {
     "shell->cad": [
       "shell/app/commands.rs",
@@ -127,9 +127,7 @@
       "shell/windows/mod.rs",
       "shell/works/sources.rs"
     ],
-    "shell->cbs": [
-      "shell/module_profile.rs"
-    ],
+    "shell->cbs": [],
     "shell->arch": [],
     "shell->map": [],
     "shell->road": [],

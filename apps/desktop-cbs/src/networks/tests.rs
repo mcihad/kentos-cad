@@ -17,7 +17,7 @@ use crate::files_testing::drive;
 use crate::processing::Event as Processing;
 use crate::processing::dialog::RunStatus;
 
-const DRAWING: &str = include_str!("../../../../../fixtures/interaction/v1/networks.kcad");
+const DRAWING: &str = include_str!("../../../../fixtures/interaction/v1/networks.kcad");
 
 /// The app with the network traces' drawing open.
 fn app() -> App {

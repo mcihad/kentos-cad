@@ -201,24 +201,6 @@ fn saved_and_opened_again_the_raw_measurements_stay_even_without_their_file() {
     assert_eq!((doc.revision(), doc.is_dirty()), (revision, dirty), "reading writes nothing");
 }
 
-#[test]
-fn harita_edits_the_archive_gis_reads_the_point_mimari_and_yol_neither() {
-    let mut map = opened(snapshot(), Some(Module::Map));
-    assert!(map.offers("map.survey") && map.offers("map.survey.import") && map.offers("map.survey.select"));
-    assert!(!survey_rows(&mut map, 1).is_empty());
-    let mut gis = opened(snapshot(), Some(Module::Gis));
-    assert!(!gis.shows_panel(Panel::MapSurvey));
-    assert!(!gis.offers("map.survey") && !gis.offers("map.survey.import"));
-    assert!(gis.offers("map.survey.select"));
-    assert_eq!(row(&survey_rows(&mut gis, 1), "Kabul edilen nokta"), Some("kn-1 · 1. revizyon"));
-    for module in [Module::Architecture, Module::Road] {
-        let mut app = opened(snapshot(), Some(module));
-        assert!(!app.shows_panel(Panel::MapSurvey), "{module:?}");
-        assert!(!app.offers("map.survey") && !app.offers("map.survey.select"), "{module:?}");
-        assert!(survey_rows(&mut app, 1).is_empty(), "{module:?}");
-    }
-}
-
 /// The panel in the dock, wide and light, narrow and dark: the archive as it is, the second day's antenna corrected
 /// (N1 out of date), and GIS's Öznitelikler of the accepted point; `.run/gui-evidence/gnss-arsivi-*`:
 ///

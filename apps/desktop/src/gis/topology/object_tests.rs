@@ -26,26 +26,6 @@ fn opened(module: Module) -> App {
     app
 }
 
-/// The panel's Topoloji section: its title and its rows (label, value, a note).
-#[allow(clippy::type_complexity)]
-fn section(app: &App) -> Option<(String, Vec<(String, String, bool)>)> {
-    let doc = app.document.as_ref()?;
-    let panel = app.properties_panel(doc);
-    panel.sections.iter().find(|s| s.id == "topology").map(|s| {
-        (s.title.to_string(), s.rows.iter().map(|r| (r.label.to_string(), r.value.clone(), r.note)).collect())
-    })
-}
-
-#[test]
-fn gis_shows_the_section_yol_does_not() {
-    let mut gis = opened(Module::Gis);
-    gis.selection.set([Slot(1)]);
-    assert!(section(&gis).is_some());
-    let mut road = opened(Module::Road);
-    road.selection.set([Slot(1)]);
-    assert!(section(&road).is_none());
-}
-
 /// Formla düzenle (forms/entry.rs) on a building whose two 14 m sides are short of a 15 m rule: its lines say the
 /// findings after Denetle, none before.
 #[test]

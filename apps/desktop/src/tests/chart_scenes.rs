@@ -17,6 +17,9 @@
 //! ```
 //!
 //! Test code only.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use crate::gis;
 use std::path::PathBuf;
@@ -34,7 +37,7 @@ use crate::tools_screens::Pointed;
 pub(crate) const CHARTS: &str = include_str!("../../../../fixtures/interaction/v1/charts.kcad");
 
 /// The district open in `app`, the drawing fitted to it.
-pub(crate) fn open_charts(app: &mut App) {
+pub fn open_charts(app: &mut App) {
     let snapshot = DocumentSnapshotV1::from_json(CHARTS).expect("the drawing reads");
     let path =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/interaction/v1/charts.kcad");
@@ -47,7 +50,7 @@ fn ev(app: &mut App, e: Event) {
 }
 
 /// The parcels whose Kullanım is `code`.
-pub(crate) fn parcels_of(app: &App, code: &str) -> Vec<Slot> {
+pub fn parcels_of(app: &App, code: &str) -> Vec<Slot> {
     let doc = app.document.as_ref().expect("a drawing");
     doc.model
         .by_layer("parsel")

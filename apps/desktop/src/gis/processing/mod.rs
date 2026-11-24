@@ -451,8 +451,8 @@ impl App {
     }
 
     /// The open window's new layers keep the tool's own names (a test replaying a shared case, docs/adr/9189).
-    #[cfg(test)]
-    pub(crate) fn keep_tool_names(&mut self) {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn keep_tool_names(&mut self) {
         if let Some(w) = self.gis.processing.dialog.as_mut() {
             w.keep_tool_names();
         }

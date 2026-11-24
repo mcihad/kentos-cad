@@ -14,7 +14,7 @@
 include!("test_suites.rs");
 
 #[path = "gis/address/mod.rs"]
-mod address;
+pub mod address;
 #[path = "shell/aids.rs"]
 mod aids;
 #[path = "shell/alias_profile.rs"]
@@ -162,7 +162,7 @@ pub mod calc;
 #[path = "shell/catalog.rs"]
 pub mod catalog;
 #[path = "gis/charts/mod.rs"]
-mod charts;
+pub mod charts;
 #[path = "cad/clipboard.rs"]
 mod clipboard;
 #[path = "shell/cloud/mod.rs"]
@@ -191,8 +191,6 @@ pub mod drawing_menus;
 mod data_profile;
 #[path = "gis/data_profile_names.rs"]
 mod data_profile_names;
-#[path = "cbs/subnetworks_window.rs"]
-mod subnetworks_window;
 #[path = "gis/source_status.rs"]
 mod source_status;
 #[path = "gis/source_trouble.rs"]
@@ -206,9 +204,9 @@ mod standard_install;
 #[path = "shell/exchange/mod.rs"]
 pub mod exchange;
 #[path = "gis/expression/mod.rs"]
-mod expression;
+pub mod expression;
 #[path = "gis/features/mod.rs"]
-mod features;
+pub mod features;
 #[path = "cad/find_replace.rs"]
 mod find_replace;
 #[path = "shell/fixture_search.rs"]
@@ -363,8 +361,6 @@ pub mod numbers;
 pub mod module_parts;
 #[path = "shell/module_profile.rs"]
 pub mod module_profile;
-#[path = "cbs/profile.rs"]
-mod gis_profile;
 #[path = "shell/navigation.rs"]
 mod navigation;
 #[path = "shell/navigation_cards.rs"]
@@ -455,14 +451,6 @@ mod sub_object;
 mod typed_names;
 #[path = "cad/ucs.rs"]
 mod ucs;
-#[path = "cbs/state.rs"]
-mod cbs;
-#[path = "cbs/parts.rs"]
-mod cbs_parts;
-#[path = "cbs/ext.rs"]
-mod cbs_ext;
-#[path = "cbs/networks/mod.rs"]
-mod networks;
 #[path = "shell/services/mod.rs"]
 mod services;
 #[path = "cad/sheet_book.rs"]
@@ -498,7 +486,7 @@ mod data_conflict;
 #[path = "gis/data_relink.rs"]
 mod data_relink;
 #[path = "gis/data_edits.rs"]
-mod data_edits;
+pub mod data_edits;
 #[path = "gis/data_pending.rs"]
 mod data_pending;
 #[path = "gis/data_rows.rs"]
@@ -536,7 +524,7 @@ mod split_view;
 #[path = "shell/start.rs"]
 mod start;
 #[path = "gis/statistics/mod.rs"]
-mod statistics;
+pub mod statistics;
 #[path = "cad/style/mod.rs"]
 pub mod style;
 #[path = "cad/table_write.rs"]
@@ -568,7 +556,7 @@ mod tracking;
 #[path = "shell/usage.rs"]
 mod usage;
 #[path = "cad/vertices/mod.rs"]
-mod vertices;
+pub mod vertices;
 #[path = "shell/view.rs"]
 pub mod view;
 #[path = "cad/view_commands.rs"]

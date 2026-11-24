@@ -94,7 +94,7 @@ pub enum Event {
 /// What the table shows: the object, whether the table writes it, and the
 /// note when it does not.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct Target {
+pub struct Target {
     pub slot: Slot,
     pub writes: bool,
     pub note: &'static str,
@@ -138,26 +138,26 @@ impl TopologyOn {
 
 /// The tab's state, kept for as long as the app lives.
 #[derive(Default)]
-pub(crate) struct VertexPanel {
+pub struct VertexPanel {
     /// The object the row selection was made on, and its vertex count then.
     object: Option<(Slot, usize)>,
     selected: BTreeSet<At>,
     /// The last click without Shift, by the row's index.
     anchor: Option<usize>,
     /// The cell edited and the editor's text.
-    editing: Option<(Cell, Column)>,
-    text: String,
+    pub editing: Option<(Cell, Column)>,
+    pub text: String,
     /// Satır ekle's row: the vertex it goes after and its cells as typed.
-    draft: Option<(At, edit::Draft)>,
+    pub draft: Option<(At, edit::Draft)>,
     /// Whether the table has the keyboard: a row was pressed last (Delete
     /// is then the table's, not the drawing's Sil).
-    pub(crate) keyboard: bool,
+    pub keyboard: bool,
     cache: RefCell<Option<(Key, Rc<Vec<TableRow>>)>>,
 }
 
 impl VertexPanel {
     /// Whether a cell is being edited: Tab is its key then.
-    pub(crate) fn editing(&self) -> bool {
+    pub fn editing(&self) -> bool {
         self.editing.is_some()
     }
 
@@ -306,7 +306,7 @@ impl App {
     /// work (docs/adr/0172 §1): the first object of the selection that is
     /// not a point or a text, when it is a line, a polyline or an area; the
     /// table writes it when it alone is selected and its layer is not locked.
-    pub(crate) fn vertex_target(&self) -> Option<Target> {
+    pub fn vertex_target(&self) -> Option<Target> {
         let doc = self.document.as_ref()?;
         let model = &doc.model;
         let entities: Vec<&Entity> = self
@@ -339,7 +339,7 @@ impl App {
     }
 
     /// The object's rows, worked out again only when the drawing changed.
-    pub(crate) fn vertex_rows(&self, slot: Slot) -> Rc<Vec<TableRow>> {
+    pub fn vertex_rows(&self, slot: Slot) -> Rc<Vec<TableRow>> {
         let Some(doc) = &self.document else {
             return Rc::default();
         };
@@ -389,7 +389,7 @@ impl App {
 
     /// The vertices the table's selected rows name, to ring in the drawing:
     /// none while the panel does not show the table.
-    pub(crate) fn vertex_marks(&self) -> Vec<kentos_interaction::Vec2> {
+    pub fn vertex_marks(&self) -> Vec<kentos_interaction::Vec2> {
         if !self.command_expanded || self.bottom_tab != crate::bottom::BottomTab::Coords {
             return Vec::new();
         }

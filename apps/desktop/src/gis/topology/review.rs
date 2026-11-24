@@ -29,7 +29,7 @@ pub struct Recipe {
 }
 
 /// A finding's place in its life cycle as the Durum column says it (docs/adr/1260 §1), with its reason.
-pub(crate) fn state_text(c: &Checked, f: &Finding) -> String {
+pub fn state_text(c: &Checked, f: &Finding) -> String {
     let words = match c.g.state(f) {
         TopologyFindingState::Open => "Değerlendirilmedi",
         TopologyFindingState::Error => "Hata",
@@ -183,7 +183,7 @@ impl App {
     }
 
     /// The recipe shown, while the drawing is as it was planned on.
-    pub(crate) fn topology_recipe(&self) -> Option<&Recipe> {
+    pub fn topology_recipe(&self) -> Option<&Recipe> {
         let doc = self.document.as_ref()?;
         self.gis.topology.recipe.as_ref().filter(|r| {
             r.session == doc.session
@@ -234,7 +234,7 @@ impl App {
 
     /// What the recipe would do, in the project's units: its steps, the objects, the source vertices moved and the
     /// farthest, the change of the areas' sum, the open findings before and after.
-    pub(crate) fn topology_recipe_text(&self, r: &Recipe) -> String {
+    pub fn topology_recipe_text(&self, r: &Recipe) -> String {
         let format = self.format();
         let p = &r.planned;
         let removed = p.changes.iter().filter(|c| c.removed).count();

@@ -50,7 +50,7 @@ type Key = (u64, u64, u64, String);
 
 /// The join view's state in the tab.
 #[derive(Default)]
-pub(crate) struct JoinPane {
+pub struct JoinPane {
     /// The view shown instead of a layer.
     pub view: Option<String>,
     /// The cell edited (the row's id, the column) and its text.

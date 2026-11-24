@@ -98,9 +98,9 @@ mod centerline_scenes;
 #[cfg(test)]
 #[path = "tests/source_relation_scenes.rs"]
 mod source_relation_scenes;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "tests/chart_scenes.rs"]
-mod chart_scenes;
+pub mod chart_scenes;
 #[cfg(test)]
 #[path = "tests/cleanup_scenes.rs"]
 mod cleanup_scenes;
@@ -570,9 +570,9 @@ mod typing_tests;
 #[cfg(test)]
 #[path = "tests/snap_tests.rs"]
 mod snap_tests;
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[path = "gis/data_layers_tests.rs"]
-mod data_layers_tests;
+pub mod data_layers_tests;
 // What the tests on a real PostgreSQL share: its address, a table of their own, a relay that cuts a COMMIT.
 #[cfg(test)]
 #[path = "gis/pg_testing.rs"]

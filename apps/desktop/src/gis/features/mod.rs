@@ -38,14 +38,14 @@ use crate::points::{click_pick, focus_field};
 pub(crate) mod conditions;
 #[cfg(test)]
 mod chain_tests;
-pub(crate) mod data;
+pub mod data;
 pub(crate) mod data_bar;
 pub(crate) mod joins;
 #[cfg(test)]
 mod joins_tests;
 #[cfg(test)]
 mod joins_data_tests;
-pub(crate) mod outgoing;
+pub mod outgoing;
 pub(crate) mod pending_rows;
 pub(crate) mod role_fields;
 mod records;
@@ -56,7 +56,7 @@ pub(crate) mod view;
 pub(crate) mod whole;
 #[cfg(test)]
 mod whole_tests;
-pub(crate) mod write;
+pub mod write;
 
 /// The tab's words (the web's `FEATURE_TEXTS`).
 pub mod texts {
@@ -235,7 +235,7 @@ pub enum Event {
 
 /// The rows as worked out for a drawing, a selection, the view and a query.
 #[derive(Clone, Debug, Default)]
-pub(crate) struct Rows {
+pub struct Rows {
     /// The layer shown; none without layers.
     pub layer: Option<String>,
     /// The drawing's layers: id, path and object count, in the list's order.
@@ -301,14 +301,14 @@ impl std::fmt::Display for Pane {
 
 /// The tab's state, kept for as long as the app lives.
 #[derive(Default)]
-pub(crate) struct FeaturesPanel {
+pub struct FeaturesPanel {
     pub layer: Option<String>,
     /// Tablo or Form (docs/adr/0416).
     pub pane: Pane,
     pub search: String,
     pub show: Show,
     pub filter: String,
-    sort: Option<String>,
+    pub sort: Option<String>,
     descending: bool,
     anchor: Option<usize>,
     /// The cell edited (its object and the model's column) and its text.
@@ -317,9 +317,9 @@ pub(crate) struct FeaturesPanel {
     version: u64,
     cache: RefCell<Option<(Key, Rows)>>,
     /// Alan hesapla or Yapıştır while open (write.rs).
-    pub(crate) write: Option<write::WriteWindow>,
+    pub write: Option<write::WriteWindow>,
     /// The join view shown instead of a layer (joins.rs, docs/adr/0527).
-    pub(crate) join: joins::JoinPane,
+    pub join: joins::JoinPane,
     /// The columns the reader hid, by layer and attribute key (outgoing.rs).
     pub(crate) hidden: BTreeMap<String, BTreeSet<String>>,
     /// The widths the reader gave by dragging, by what the table shows and its column; for the session.
@@ -330,7 +330,7 @@ pub(crate) struct FeaturesPanel {
     /// Kaynağın tümü: the bound layer's source read whole (whole.rs).
     pub(crate) whole: whole::WholePane,
     /// A data layer's rows read from its source a page at a time (data.rs, docs/adr/9102 §5).
-    pub(crate) data: data::DataTable,
+    pub data: data::DataTable,
     /// Each layer's Ara, İfade süzgeci and order while the table shows another, and the layer the ones in the bar are
     /// of (conditions.rs, docs/adr/9132).
     pub(crate) kept: BTreeMap<conditions::Key, conditions::Conditions>,
@@ -343,13 +343,13 @@ impl FeaturesPanel {
     }
 
     /// Whether a cell is being edited: Tab is its key then.
-    pub(crate) fn editing(&self) -> bool {
+    pub fn editing(&self) -> bool {
         self.editing.is_some()
     }
 
     /// The choices as a new session starts them (the pictures start each scene from them).
-    #[cfg(test)]
-    pub(crate) fn reset(&mut self, layer: Option<String>) {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn reset(&mut self, layer: Option<String>) {
         *self = FeaturesPanel {
             layer,
             ..FeaturesPanel::default()
@@ -404,7 +404,7 @@ fn fitted_width(rows: &Rows, header: &str, j: usize) -> f32 {
 }
 
 /// A header press: ascending, then descending, then the drawing's order.
-fn next_sort(sort: &Option<String>, descending: bool, key: &str) -> (Option<String>, bool) {
+pub fn next_sort(sort: &Option<String>, descending: bool, key: &str) -> (Option<String>, bool) {
     match sort {
         Some(k) if k == key && descending => (None, false),
         Some(k) if k == key => (Some(key.to_owned()), true),
@@ -439,7 +439,7 @@ impl App {
 
     /// The rows for the drawing, the selection, the view and the query as
     /// they are, worked out again only when one of them changed.
-    pub(crate) fn feature_rows(&self, doc: &Document) -> Rows {
+    pub fn feature_rows(&self, doc: &Document) -> Rows {
         let panel = &self.gis.features;
         let view = self.viewport.camera.visible_bounds();
         let view_key = if panel.show == Show::InView {
@@ -1049,7 +1049,7 @@ impl App {
     /// What a trace's `table` expectation reads: the count, the headers after
     /// Sıra and the rows (the cells after Sıra joined by “ | ”), as the page
     /// shows them, while the tab is open.
-    pub(crate) fn features_seen(&self) -> Option<(String, Vec<String>, Vec<String>)> {
+    pub fn features_seen(&self) -> Option<(String, Vec<String>, Vec<String>)> {
         if !self.command_expanded || self.bottom_tab != crate::bottom::BottomTab::Table {
             return None;
         }
@@ -1146,7 +1146,7 @@ impl App {
 
     /// A trace's cell edit: the row's value under `header` double-clicked,
     /// `text` typed over it, Enter.
-    pub(crate) fn features_edit(
+    pub fn features_edit(
         &self,
         row: usize,
         header: &str,

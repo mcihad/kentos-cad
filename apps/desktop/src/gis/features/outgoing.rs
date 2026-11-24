@@ -111,7 +111,7 @@ impl App {
 
     /// What Kopyala writes: the rows shown as tab-separated lines, how many rows, and the headers of the fields a
     /// form keeps out; none when the table shows no row.
-    pub(crate) fn features_copy_text(&self) -> Option<(String, usize, Vec<String>)> {
+    pub fn features_copy_text(&self) -> Option<(String, usize, Vec<String>)> {
         let doc = self.document.as_ref()?;
         let rows = self.feature_rows(doc);
         if rows.shown.is_empty() {
@@ -127,7 +127,7 @@ impl App {
 
     /// What Dışa aktar ▾ writes: the sheet and its name, and the headers of the fields a form keeps out; none when
     /// the table shows no row.
-    pub(crate) fn features_sheet(&self) -> Option<(WorkbookSheet, Vec<String>)> {
+    pub fn features_sheet(&self) -> Option<(WorkbookSheet, Vec<String>)> {
         let doc = self.document.as_ref()?;
         let rows = self.feature_rows(doc);
         if rows.shown.is_empty() {

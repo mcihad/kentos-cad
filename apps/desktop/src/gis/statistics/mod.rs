@@ -106,7 +106,7 @@ type RowsKey = (Show, u64, [u64; 4]);
 
 /// What the tab shows, as last counted.
 #[derive(Default)]
-pub(crate) struct StatsNow {
+pub struct StatsNow {
     key: Option<(LayerKey, RowsKey)>,
     /// Göster's rows.
     pub rows: Vec<u32>,
@@ -173,7 +173,7 @@ impl App {
     /// selection, the view and the choices are now: the summaries start
     /// again when the data or the rows changed; the chosen field's
     /// statistics are counted at once.
-    pub(crate) fn stats_refresh(&self) {
+    pub fn stats_refresh(&self) {
         if self.stats_refresh_counted() {
             return;
         }
@@ -221,7 +221,7 @@ impl App {
     }
 
     /// Whether summaries wait to be counted while the tab is on screen (the frames count them).
-    pub(crate) fn stats_counting(&self) -> bool {
+    pub fn stats_counting(&self) -> bool {
         if !self.command_expanded || self.bottom_tab != BottomTab::Statistics {
             return false;
         }
@@ -270,7 +270,7 @@ impl App {
 
     /// What İstatistik shows while it is open, every row counted (the traces read it):
     /// its count and its summary rows (the cells joined by “ | ”).
-    pub(crate) fn statistics_seen(&self) -> Option<(String, Vec<String>)> {
+    pub fn statistics_seen(&self) -> Option<(String, Vec<String>)> {
         if !self.command_expanded || self.bottom_tab != BottomTab::Statistics {
             return None;
         }

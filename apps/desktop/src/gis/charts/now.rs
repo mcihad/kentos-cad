@@ -44,7 +44,7 @@ type RowsKey = (Show, u64, [u64; 4]);
 
 /// A column as the settings list it.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct ColumnInfo {
+pub struct ColumnInfo {
     pub key: String,
     pub label: String,
     pub kind: Kind,
@@ -53,7 +53,7 @@ pub(crate) struct ColumnInfo {
 
 /// The chart as last worked out.
 #[derive(Default)]
-pub(crate) struct ChartNow {
+pub struct ChartNow {
     key: Option<(DataKey, RowsKey, Spec)>,
     /// The spec as made whole for the columns.
     pub spec: Option<Spec>,
@@ -124,7 +124,7 @@ impl App {
     }
 
     /// Something read from the data of the source shown.
-    pub(crate) fn with_chart_data<R>(&self, read: impl FnOnce(&DataSet) -> R) -> Option<R> {
+    pub fn with_chart_data<R>(&self, read: impl FnOnce(&DataSet) -> R) -> Option<R> {
         match self.chart_data_now()? {
             DataKey::Table(_) => self
                 .gis
@@ -147,7 +147,7 @@ impl App {
 
     /// The spec kept for the source shown, made whole for its data (a
     /// table's first: its tool's suggestion).
-    pub(crate) fn whole_spec(&self) -> Option<Spec> {
+    pub fn whole_spec(&self) -> Option<Spec> {
         let p = &self.gis.charts;
         let table = self.charting_table();
         // A data layer's columns are its fields: its rows are not read for them (docs/adr/9181).
@@ -195,7 +195,7 @@ impl App {
     /// The chart as the drawing, the selection, the view and the choices are
     /// now: worked out again when its data, its rows or its spec changed,
     /// marked again when the selection did.
-    pub(crate) fn chart_refresh(&self) {
+    pub fn chart_refresh(&self) {
         if self.chart_refresh_counted() {
             return;
         }
@@ -255,7 +255,7 @@ impl App {
     }
 
     /// Whether the Grafik tab shows its numbers (else the chart).
-    pub(crate) fn chart_table_view(&self) -> bool {
+    pub fn chart_table_view(&self) -> bool {
         self.gis.charts.view == View::Table
     }
 }

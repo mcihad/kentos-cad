@@ -22,13 +22,13 @@
     nesne tutan çizim ya da bağlı katmanı proje dosyasına yazmaz (masaüstü, Python, MCP aynı kuralla,
     `kentos_native_application::layer_kind`); içe alma tabloya gider; CBS'de bağlama yok (`bound_in_gis`); bulutta CBS
     yalnız veritabanıdır ve yükleme veri katmanlarının satırlarını aktarır.
-  - Paketler (ADR 9199, AY-07): Mimari (`apps/desktop-arch`), Harita (`apps/desktop-map`) ve Yol (`apps/desktop-road`)
-    kendi paketlerinde, programlar `apps/kentos-cad`'de; Harita ile Yol'un ortak arazi işi çekirdekte (`terrain_work`).
+  - Paketler (ADR 9199, AY-07): CBS (`apps/desktop-cbs`), Mimari (`apps/desktop-arch`), Harita (`apps/desktop-map`) ve Yol
+    (`apps/desktop-road`) kendi paketlerinde, programlar `apps/kentos-cad`'de; Harita ile Yol'un ortak arazi işi çekirdekte (`terrain_work`).
     Çekirdek modülü adıyla anmaz (`module_parts`: kayıt, `ModuleParts`, `Message::Module`, `Dialog::Module`,
-    `App.modules`). Sınamalar: çekirdek `-p kentos-desktop`, Mimari `-p kentos-desktop-arch`, Harita
+    `App.modules`). Sınamalar: çekirdek `-p kentos-desktop`, CBS `-p kentos-desktop-cbs`, Mimari `-p kentos-desktop-arch`, Harita
     `-p kentos-desktop-map`, Yol `-p kentos-desktop-road`, programlar arası `-p kentos-cad`. Modül paketlerinin sınamaları
     çekirdeğin sınama kitini (`testing`: files_testing, tools_scenes, tools_screens, sahne yardımcıları) kullanır.
-    `src/gis` her modülün ortak CBS ve veri altyapısıdır (çekirdek; ADR 9199 §4.12), CBS modülünün kendisi `src/cbs`.
+    `src/gis` her modülün ortak CBS ve veri altyapısıdır (çekirdek; ADR 9199 §4.12), CBS modülünün kendisi kendi paketinde.
   - Mobil görüntüleyici ve mobil uygulama (ADR 9197, AY-08): istemciler ortak tanımda (`kentos_launch::Client`);
     görüntüleyici hiçbir şey yazmaz, mobil uygulama yalnız CBS'nin veri satırlarını sunucu komutuyla yazar; katmanın
     mobildeki davranışını masaüstündeki proje belirler: göster, düzenle, gösterme (ADR 9198; `LayerNode.mobile`,

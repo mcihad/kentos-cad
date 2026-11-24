@@ -287,7 +287,7 @@ impl App {
         self.dialog = Some(Dialog::Gis(crate::gis::GisDialogKind::DataEdits));
     }
 
-    pub(crate) fn data_edits_event(&mut self, event: Event) -> Task<Message> {
+    pub fn data_edits_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Start(id) => {
                 match self.data_session(SessionAction::Start, vec![id.clone()]) {

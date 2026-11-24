@@ -13,7 +13,7 @@ use kentos_processing::network::rules_of;
 
 use super::read::{Inputs, assemble, read_changed, read_whole, readable_in_part};
 
-const DRAWING: &str = include_str!("../../../../../fixtures/interaction/v1/networks.kcad");
+const DRAWING: &str = include_str!("../../../../fixtures/interaction/v1/networks.kcad");
 
 struct Rng(u64);
 

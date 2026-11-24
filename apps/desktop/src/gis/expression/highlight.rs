@@ -19,7 +19,7 @@ use kentos_ui::theme::{Mode, Tokens};
 
 /// What a piece of the text is painted as.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Paint {
+pub enum Paint {
     Token(Class),
     /// Under the error: the danger tone.
     Error,
@@ -99,7 +99,7 @@ pub(crate) type LineSpans = Vec<(Range<usize>, Paint)>;
 
 /// The highlighter's input: each line's spans.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct Lines(pub Arc<Vec<LineSpans>>);
+pub struct Lines(pub Arc<Vec<LineSpans>>);
 
 impl Lines {
     /// The table for a text: its tokens, then the marks over them (a mark

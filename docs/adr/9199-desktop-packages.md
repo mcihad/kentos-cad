@@ -336,6 +336,21 @@ araçlarını; `analysis` ağ ve yüzey çözümlemelerini; uygulama ve eklentil
   CBS'nin yöntemini çağırmıyor: önsöze başka yerde gerek olmadı.
 - Sınama: çekirdek 2503.
 
+### §4.14 Adım 14: CBS kendi paketinde
+
+- `apps/desktop-cbs` (`kentos-desktop-cbs`): CBS modülünün altı modülü (merkez, parçalar, önsöz, profil, ağlar, Alt
+  ağlar) ve ağların iç sınamaları; program `main`'de, programlar arası sınamalar `ctor`'la CBS'yi de kaydeder.
+  `module_profile::IN_CORE` boş: dört modülün dördü de paketinde.
+- CBS'nin kaydına dayanan çekirdek sınamaları taşındı: ortak CBS çekirdeğinin işlerini CBS projesinin alt sekmeleri ve
+  panelleri (Adres, Grafik, İstatistik, Tablo, Topoloji, Arama, köşe tablosu) üzerinden sınayan 43 sınama pakete
+  (`*_tab_tests.rs`, işleri çekirdeğin); Harita'nın GNSS arşivini dört modülde karşılaştıran sınama programlara.
+- Çekirdeğin sınama kiti büyüdü: `data_layers_tests`, `chart_scenes`; tablonun okumaları, Öznitelik tablosunun
+  sıfırlanması, işlem penceresinin araç adları `testing`'de de açık.
+- Bağımlılık tabanı: kabuk → cbs 1 → 0; CBS'nin paketi yalnız çekirdeğe bağlı.
+- Derleme: CBS dosyasında tek satır CBS'nin sınamalarını 3,3 s'de derler.
+- Sınama: çekirdek 2446, CBS 57, Mimari 204, Harita 190, Yol 129, programlar 37. Toplam 3063, öncekiyle aynı; yok
+  sayılan 762.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):
@@ -357,7 +372,6 @@ araçlarını; `analysis` ağ ve yüzey çözümlemelerini; uygulama ve eklentil
   ortak pencerelere çekirdekte kendi merkezleri verilir (durum, ileti, pencere türü; Harita'daki düzenin çekirdek içi
   benzeri), Yol'un merkezine bağları kalkar; `road_project_panel`'in `project_graph_window` bağı da çözülür.
 
-- CBS paketi: `cbs/`'nin uzantı trait'leri ve paketi (`apps/desktop-cbs`); CBS'ye dayanan çekirdek sınamalarının yeri.
-  Zaman ve grafiklerin yalnız CBS'nin olan yarısı ayrıldıkça pakete geçer.
+- Zaman ve grafiklerin yalnız CBS'nin olan yarısı (`time.*`, `chart.*`) modülleri ikiye ayrıldıkça CBS paketine geçer.
 - CAD çekirdeğinin kabuktan ayrılması (§3.1): kabuk → cad 77, CBS → cad 54 dosya.
 - Modül programlarının ayrı ikilileri ve paketlemesi: bir modülün programı yalnız kendi paketini kaydeder.

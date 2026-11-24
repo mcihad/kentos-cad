@@ -337,7 +337,7 @@ impl App {
 
     /// What the last check covered (docs/adr/9146): its layers by name, its rules, the objects, whole or what changed,
     /// the drawing's version then and now, the tolerance.
-    pub(crate) fn topology_scope(&self) -> Option<String> {
+    pub fn topology_scope(&self) -> Option<String> {
         let doc = self.document.as_ref()?;
         let c = self.topology_checked()?;
         let mut names: Vec<String> = Vec::new();

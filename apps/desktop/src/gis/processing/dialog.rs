@@ -375,8 +375,8 @@ impl ToolDialog {
 
     /// Its new layers keep the tool's own names: a test that replays a shared case through the window runs what the
     /// case runs (docs/adr/9189).
-    #[cfg(test)]
-    pub(crate) fn keep_tool_names(&mut self) {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn keep_tool_names(&mut self) {
         self.named = self
             .tool
             .parameters

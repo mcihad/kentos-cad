@@ -832,7 +832,7 @@ pub struct App {
     /// XYZ sor's places and reaches whose clouds are to be read (docs/adr/0207 §7).
     pub(crate) cloud_query_wanted: Vec<(kentos_interaction::Vec2, f64)>,
     /// The network tools' questions, asked after the update (networks/, docs/adr/0209 §12).
-    pub(crate) network_wanted: Vec<kentos_interaction::network::NetworkAsk>,
+    pub network_wanted: Vec<kentos_interaction::network::NetworkAsk>,
     /// Commands a tool asked the host to run (Ağlar from the network tools).
     pub(crate) command_wanted: Vec<&'static str>,
     /// Resim ekle asked for a picture file (docs/adr/0192 §5).
@@ -849,7 +849,7 @@ pub struct App {
     pub(crate) search: crate::search::SearchPanel,
     pub(crate) cad_inspection: crate::cad_inspection::Panel,
     /// Köşe tablosu's rows selected and cell edited (vertices/, docs/adr/0172).
-    pub(crate) vertices: crate::vertices::VertexPanel,
+    pub vertices: crate::vertices::VertexPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
     pub(crate) label_spots: crate::labels::Spots,
     /// Görünümü böl's other view (split_view.rs, docs/adr/0285 §3); none with one view.

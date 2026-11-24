@@ -245,7 +245,7 @@ pub(crate) const BINS: [u32; 8] = [0, 5, 10, 15, 20, 30, 50, 100];
 /// The tabs' choices and what was worked out from them, kept for as long as
 /// the drawing is open (the web's `charts`).
 #[derive(Default)]
-pub(crate) struct ChartsPanel {
+pub struct ChartsPanel {
     /// The layer charted and counted; none: the one at hand (pinned once a tab shows it).
     pub layer: Option<String>,
     pub show: Show,
@@ -266,9 +266,9 @@ pub(crate) struct ChartsPanel {
     /// The İşlemler table's data and the work on it.
     pub(crate) table_data: RefCell<Option<(u64, Work)>>,
     /// The chart as last worked out.
-    pub(crate) chart: RefCell<now::ChartNow>,
+    pub chart: RefCell<now::ChartNow>,
     /// İstatistik's summaries and the chosen field's statistics.
-    pub(crate) stats: RefCell<crate::statistics::StatsNow>,
+    pub stats: RefCell<crate::statistics::StatsNow>,
     /// İstatistik's Kaynağın tümü (a bound layer's whole source).
     pub(crate) whole: crate::statistics::Whole,
     /// The chart's picture as last painted.
@@ -395,7 +395,7 @@ impl App {
     }
 
     /// A İşlemler table as a chart: its tool's suggestion, else bars.
-    pub(crate) fn open_table_chart(&mut self, table: ChartTable) {
+    pub fn open_table_chart(&mut self, table: ChartTable) {
         if !self.open_bottom_tab(BottomTab::Chart) {
             return;
         }
@@ -409,7 +409,7 @@ impl App {
     }
 
     /// What the Grafik tab shows while it is open (the traces read it).
-    pub(crate) fn chart_seen(&self) -> Option<ChartSeen> {
+    pub fn chart_seen(&self) -> Option<ChartSeen> {
         if !self.command_expanded || self.bottom_tab != BottomTab::Chart {
             return None;
         }

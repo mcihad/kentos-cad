@@ -16,7 +16,7 @@ use kentos_processing::runner::world_layers;
 
 /// The objects an expression runs on, in run order (`$sıra` is the place + 1).
 #[derive(Clone, Debug, Default)]
-pub(crate) struct Objects {
+pub struct Objects {
     pub slots: Vec<Slot>,
 }
 

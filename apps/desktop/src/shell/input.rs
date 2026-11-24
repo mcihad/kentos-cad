@@ -166,11 +166,11 @@ impl View for PaperCameraView<'_> {
 
 impl App {
     /// Scope the reply before work starts, not when it finishes.
-    pub(crate) fn tool_reply(&self, task: Task<Message>) -> Task<Message> {
+    pub fn tool_reply(&self, task: Task<Message>) -> Task<Message> {
         self.scoped_reply(task, Some(self.session.runs()))
     }
 
-    pub(crate) fn document_reply(&self, task: Task<Message>) -> Task<Message> {
+    pub fn document_reply(&self, task: Task<Message>) -> Task<Message> {
         self.scoped_reply(task, None)
     }
 
@@ -254,7 +254,7 @@ impl App {
     /// drawing is open. What the tool says goes to the command line; the
     /// view changes it asks for (Kaydır, Pencere yakınlaştır) go to the
     /// camera, in order (docs/adr/0056).
-    pub(crate) fn with_tool<T>(
+    pub fn with_tool<T>(
         &mut self,
         act: impl FnOnce(&mut Session, &mut Context<'_>) -> T,
     ) -> Option<T> {

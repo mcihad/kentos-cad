@@ -46,7 +46,7 @@ pub enum Mode {
 
 /// The window while it is open.
 #[derive(Clone, Debug)]
-pub(crate) struct WriteWindow {
+pub struct WriteWindow {
     pub layer: String,
     pub mode: Mode,
     pub field: String,

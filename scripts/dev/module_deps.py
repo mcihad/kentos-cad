@@ -33,6 +33,7 @@ SRC = ROOT / "apps" / "desktop" / "src"
 # The modules that are packages of their own (docs/adr/9199): each its source folder.
 PACKAGES = {
     "arch": ROOT / "apps" / "desktop-arch" / "src",
+    "cbs": ROOT / "apps" / "desktop-cbs" / "src",
     "map": ROOT / "apps" / "desktop-map" / "src",
     "road": ROOT / "apps" / "desktop-road" / "src",
 }

@@ -39,7 +39,7 @@ impl Default for View {
 
 /// The flow while the builder is open.
 #[derive(Default)]
-pub(crate) struct FlowState {
+pub struct FlowState {
     /// The trees not connected to the result (tree 0 is the builder's text).
     pub apart: Vec<Tree>,
     pub flow: Option<Flow>,

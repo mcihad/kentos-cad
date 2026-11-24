@@ -10,14 +10,12 @@
 
 use crate::gis;
 use kentos_domain::Slot;
-use kentos_interaction::Vec2;
 use kentos_processing::address::AddressHost;
 
 use super::data::Event as Data;
 use super::providers::Event as Providers;
-use super::{Event, Question, texts};
+use super::{Event, texts};
 use crate::app::{App, Message};
-use crate::bottom::BottomTab;
 use crate::files_testing::drive;
 
 const DRAWING: &str = include_str!("../../../../../fixtures/interaction/v1/addresses.kcad");
@@ -53,40 +51,6 @@ fn find(app: &mut App, text: &str) {
 
 fn count(app: &App) -> usize {
     app.document.as_ref().expect("a drawing").model.len()
-}
-
-#[test]
-fn an_address_is_found_on_the_address_thread_and_a_row_marks_it() {
-    let mut app = app();
-    send(&mut app, Message::Run("address.search"));
-    assert_eq!(app.bottom_tab, BottomTab::Address);
-    assert_eq!(app.address_seen(), Some((String::new(), Vec::new())));
-    find(&mut app, "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara");
-    let a = &app.gis.address;
-    assert_eq!(
-        a.question,
-        Some(Question::Address(
-            "Kızılay Mah. Atatürk Blv. No:4 Çankaya/Ankara".into()
-        ))
-    );
-    let best = a.rows.first().expect("a candidate");
-    assert_eq!((best.kind.as_str(), best.score), ("Kapı", Some(100)));
-    assert_eq!(best.fields[2], "4");
-    let (line, rows) = app.address_seen().expect("the tab is open");
-    assert!(
-        line.starts_with(&format!("{} aday · En iyisi: Eşleşti (100)", rows.len())),
-        "{line}"
-    );
-    // The door at (30, 105): the row's click brings the view and the mark.
-    ev(&mut app, Event::Press(0));
-    let (at, _) = app.address_mark_label().expect("marked");
-    assert!(
-        (at.x - (E + 30.0)).abs() < 1e-9 && (at.y - (N + 105.0)).abs() < 1e-9,
-        "{at:?}"
-    );
-    // The panel closes when Adres ara runs on it again.
-    send(&mut app, Message::Run("address.search"));
-    assert!(!app.command_expanded);
 }
 
 #[test]
@@ -130,27 +94,6 @@ fn nokta_ekle_writes_one_step_and_tasi_moves_the_selected_point() {
     assert_eq!(doc.undo().as_deref(), Some(texts::MOVE));
     assert_eq!(doc.undo().as_deref(), Some(texts::ADD));
     assert_eq!(doc.len(), before);
-}
-
-#[test]
-fn a_place_is_answered_and_is_not_written() {
-    let mut app = app();
-    let task = app.address_at(Vec2::new(E + 150.0, N + 250.0));
-    drive(&mut app, task);
-    assert_eq!(app.bottom_tab, BottomTab::Address);
-    let row = app.gis.address.rows.first().expect("an address");
-    assert_eq!(row.kind, "Yol");
-    assert_eq!(row.fields[1], "Gazi Mustafa Kemal Bulvarı");
-    assert!((row.distance.expect("a distance") - 50.0).abs() < 1e-9);
-    assert_eq!(
-        app.address_seen().map(|s| s.0).as_deref(),
-        Some(texts::PLACE)
-    );
-    ev(&mut app, Event::AddPoint);
-    assert_eq!(
-        app.gis.address.said.as_ref().map(|s| s.1.as_str()),
-        Some(texts::NOT_FOR_PLACE)
-    );
 }
 
 #[test]
@@ -349,20 +292,3 @@ fn a_new_search_takes_the_last_mark_away() {
     assert!(app.address_mark_label().is_none(), "no candidate, no mark");
 }
 
-/// The municipal report's address row (docs/adr/9154): the same street in two neighbourhoods is tied and named by
-/// them, the neighbourhood added matches one, and no candidate is said apart from a tie.
-#[test]
-fn a_tie_names_its_neighbourhoods_and_no_candidate_is_said_apart() {
-    let mut app = app();
-    send(&mut app, Message::Run("address.search"));
-    find(&mut app, "Atatürk Bulvarı No:2");
-    let (line, _) = app.address_seen().expect("the tab is open");
-    assert!(line.contains("aday aynı puanda (100): "), "{line}");
-    assert!(line.contains("Cumhuriyet") && line.contains("Kızılay") && line.contains("mahalleyi ekleyerek ayırın"), "{line}");
-    find(&mut app, "Kızılay Atatürk Bulvarı No:4");
-    let (line, _) = app.address_seen().expect("the tab is open");
-    assert!(line.contains("En iyisi: Eşleşti (100)"), "{line}");
-    find(&mut app, "1203/2 Sokak No:1");
-    let (line, _) = app.address_seen().expect("the tab is open");
-    assert_eq!(line, texts::NOT_FOUND, "no candidate is no tie");
-}

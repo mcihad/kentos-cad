@@ -20,7 +20,7 @@ pub(super) type CountedKey = (LayerKey, u64);
 
 /// How a data layer's counts by its source stand.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Counted {
+pub enum Counted {
     /// No field counted yet.
     Counting,
     /// A field counted at least.

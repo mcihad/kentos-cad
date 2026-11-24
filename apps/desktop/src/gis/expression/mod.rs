@@ -50,7 +50,7 @@ use crate::app::{App, Dialog, Message};
 pub(crate) use flow::FlowEvent;
 use flow::FlowState;
 use highlight::{Lines, Paint};
-pub(crate) use objects::Objects;
+pub use objects::Objects;
 
 /// The editor's widget id: the builder gives it the keyboard when it opens.
 pub(crate) const EDITOR: &str = "expression-builder";
@@ -74,7 +74,7 @@ pub enum ViewMode {
 
 /// Where the builder's text goes back.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Target {
+pub enum Target {
     /// The processing window's expression parameter of this name.
     Processing(String),
     /// Öznitelik tablosu's İfade süzgeci (features/, docs/adr/0199 §4).
@@ -126,7 +126,7 @@ impl PartialEq for Back {
 
 /// A field's values listed in the help.
 #[derive(Clone, Debug, Default)]
-pub(crate) struct Listed {
+pub struct Listed {
     pub field: String,
     pub items: Vec<ValueItem>,
     /// How many distinct values there are (more than listed when many).
@@ -135,7 +135,7 @@ pub(crate) struct Listed {
 }
 
 /// The builder while it is open.
-pub(crate) struct Builder {
+pub struct Builder {
     pub target: Target,
     /// The field's label, beside the title.
     pub context: String,
@@ -209,7 +209,7 @@ fn used_keys(source: &str) -> Vec<String> {
 
 /// What the preview shows.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Preview {
+pub enum Preview {
     /// The value, as the core writes it ('text', 12.5, doğru, boş).
     Value(String),
     /// Why there is none (no objects, an error): in the muted tone.
@@ -285,7 +285,7 @@ fn ev(e: Event) -> Message {
 /// Today's text attributes as the builder's fields, with how many objects
 /// have each; the `@` values (docs/adr/0214 §2.3); and the unit the
 /// geometry values speak where the expression goes (docs/adr/0165 §2).
-pub(crate) fn attribute_fields(
+pub fn attribute_fields(
     fields: &[(String, usize)],
     variables: Vec<Variable>,
     world: bool,
@@ -662,7 +662,7 @@ impl Builder {
     }
 
     /// The value the preview shows, on the object it is on.
-    pub(crate) fn preview_on(
+    pub fn preview_on(
         &mut self,
         doc: Option<&kentos_domain::Document>,
         store: &kentos_geometry_core::store::Store,
@@ -1341,7 +1341,7 @@ impl App {
 
     /// Tamam: the text goes back to its field; with an error it stays.
     /// The builder over its window: in the view it was left in last (Metin or Akış), with the entries used lately.
-    pub(crate) fn show_builder(&mut self, mut builder: Builder) -> Task<Message> {
+    pub fn show_builder(&mut self, mut builder: Builder) -> Task<Message> {
         if self.builder_flow {
             builder.set_mode(ViewMode::Flow);
         }

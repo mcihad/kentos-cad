@@ -21,10 +21,10 @@
 //! `view.rs`.
 
 pub(crate) mod compare;
-pub(crate) mod data;
+pub mod data;
 pub(crate) mod engine;
 pub(crate) mod online;
-pub(crate) mod providers;
+pub mod providers;
 #[cfg(test)]
 mod tests;
 mod view;
@@ -151,7 +151,8 @@ pub(crate) struct Answerer {
     pub name: String,
     pub attribution: String,
     pub host: Option<String>,
-    /// Why its results may not be written into the drawing (Google's, ArcGIS's without storing); none when they may.
+    /// Why its results may not be written into the drawing (a provider whose terms forbid storing them); none when
+    /// they may.
     pub keeps_none: Option<String>,
 }
 
@@ -195,18 +196,18 @@ struct Stamp {
 
 /// The tab's state and the windows', kept for as long as the app lives.
 #[derive(Default)]
-pub(crate) struct State {
+pub struct State {
     pub(crate) text: String,
     /// The source chosen, by id; none: the first that can be asked.
     pub(crate) source: Option<String>,
-    pub(crate) rows: Vec<Match>,
+    pub rows: Vec<Match>,
     /// The best row's status (an address looked for).
     pub(crate) status: Option<Status>,
-    pub(crate) question: Option<Question>,
+    pub question: Option<Question>,
     pub(crate) current: Option<usize>,
     waiting: Option<u64>,
     tickets: u64,
-    pub(crate) said: Option<(Say, String)>,
+    pub said: Option<(Say, String)>,
     pub(crate) answerer: Option<Answerer>,
     /// The place marked and the drawing it is in (its session), with its words.
     mark: Option<(u64, Vec2, String)>,
@@ -545,7 +546,7 @@ impl App {
     }
 
     /// Konumdan adres's place: its address looked for in the source, the tab open on it.
-    pub(crate) fn address_at(&mut self, at: Vec2) -> Task<Message> {
+    pub fn address_at(&mut self, at: Vec2) -> Task<Message> {
         if !self.open_bottom_tab(BottomTab::Address) {
             return Task::none();
         }
@@ -744,7 +745,7 @@ impl App {
     }
 
     /// The place marked, as the drawing shows it.
-    pub(crate) fn address_mark_label(&self) -> Option<(Vec2, String)> {
+    pub fn address_mark_label(&self) -> Option<(Vec2, String)> {
         let doc = self.document.as_ref()?;
         self.gis
             .address
@@ -1090,7 +1091,7 @@ impl App {
 
     /// What a trace's `address` expectation reads: the status line and the rows (Adres, Tür, Puan, Mahalle, İlçe,
     /// joined by “ | ”), as the tab shows them.
-    pub(crate) fn address_seen(&self) -> Option<(String, Vec<String>)> {
+    pub fn address_seen(&self) -> Option<(String, Vec<String>)> {
         if !self.command_expanded || self.bottom_tab != BottomTab::Address {
             return None;
         }

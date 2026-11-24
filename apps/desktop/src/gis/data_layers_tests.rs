@@ -1,5 +1,8 @@
 //! Veri katmanı on the desktop (docs/adr/9101): a GeoPackage table added as a data layer without its rows, its columns
 //! as the layer's fields and its kind as the layer's; one undo step; the rows a view reads moved between systems.
+// The core's test kit (`testing`, docs/adr/9199 §4.11): a module package's tests use its helpers; what only the
+// core's tests use is left unused there.
+#![cfg_attr(not(test), allow(dead_code, unused_imports))]
 
 use std::path::PathBuf;
 
@@ -46,7 +49,7 @@ pub(crate) fn point_table(source: &dyn kentos_data::Source, name: &str, fields: 
 
 /// The municipal report's GeoPackage: `bakim` (kod, bedel, mahalle; bedel 0, 100, 250, NULL, 50, 100; mahalle M1, M1,
 /// M2, M2, M9, NULL) and `mahalleler` (mahalle, ad: M1 Çınar, M2 İstasyon, M3 Kale).
-pub(crate) fn municipal(tag: &str) -> std::path::PathBuf {
+pub fn municipal(tag: &str) -> std::path::PathBuf {
     let path = crate::files_testing::scratch(tag).join("Mahalle-Verileri.gpkg");
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
     let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
@@ -145,7 +148,7 @@ pub(crate) fn parcels_in(source: &dyn kentos_data::Source, table: &str, n: usize
     tx.commit().expect("commit");
 }
 
-pub(crate) fn node<'a>(app: &'a crate::app::App, name: &str) -> Option<&'a LayerNode> {
+pub fn node<'a>(app: &'a crate::app::App, name: &str) -> Option<&'a LayerNode> {
     app.document
         .as_ref()?
         .model
@@ -378,7 +381,7 @@ fn a_labelled_data_layer_keeps_its_read_for_the_label_engine_and_another_keeps_n
 }
 
 /// What the table's reads would answer: each page read as its task reads it, answered in order.
-pub(crate) fn answer_pages(app: &mut crate::app::App) {
+pub fn answer_pages(app: &mut crate::app::App) {
     use crate::features::data::DataEvent;
     for _ in 0..4 {
         let _ = app.data_table_tasks();

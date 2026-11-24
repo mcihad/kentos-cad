@@ -2904,6 +2904,7 @@ dependencies = [
  "kentos-commands",
  "kentos-desktop",
  "kentos-desktop-arch",
+ "kentos-desktop-cbs",
  "kentos-desktop-map",
  "kentos-desktop-road",
  "kentos-domain",
@@ -3103,6 +3104,31 @@ dependencies = [
  "kentos-ui",
  "rfd",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-desktop-cbs"
+version = "0.1.0"
+dependencies = [
+ "ctor",
+ "iced",
+ "iced_runtime",
+ "kentos-commands",
+ "kentos-data",
+ "kentos-data-gpkg",
+ "kentos-desktop",
+ "kentos-domain",
+ "kentos-expression",
+ "kentos-geometry-core",
+ "kentos-geopackage",
+ "kentos-interaction",
+ "kentos-kcad",
+ "kentos-launch",
+ "kentos-native-application",
+ "kentos-processing",
+ "kentos-render-wgpu",
+ "kentos-ui",
  "serde_json",
 ]
 

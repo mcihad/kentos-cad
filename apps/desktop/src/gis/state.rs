@@ -1,8 +1,8 @@
 //! The GIS work every module shares (plan/argon-tavsiye.md ADIM 06, docs/adr/8054 §6, 9199 §4.12): data layers,
 //! sources, processing, rasters, point clouds, points, Hesap, forms, topology, labels, addresses, time — their windows'
-//! and panels' state in `App::gis`, their messages under `Message::Gis`, their windows under `Dialog::Gis`. The core's,
-//! as QGIS's core library holds its data providers and processing; the CBS module's own windows (Ağlar, Alt ağlar)
-//! are its package's hub (cbs/state.rs).
+//! and panels' state in `App::gis`, their messages under `Message::Gis`, their windows under `Dialog::Gis`. They are
+//! the core's: every module uses them; the CBS module's own windows (Ağlar, Alt ağlar) are its package's hub
+//! (kentos-desktop-cbs, state.rs).
 
 use iced::{Element, Task};
 
@@ -49,7 +49,7 @@ pub struct GisUiState {
     /// Raster ekle and Raster stili (rasters/, docs/adr/0204 §8).
     pub(crate) rasters: crate::rasters::Windows,
     /// Adres arama: the Adres tab, its locators on the address thread and the address windows (address/).
-    pub(crate) address: crate::address::State,
+    pub address: crate::address::State,
     /// Zaman sürgüsü and the windows of Zaman and Senaryo (temporal/, docs/adr/0210).
     pub(crate) time: crate::temporal::State,
     /// Nokta bulutu ekle and Nokta bulutu stili (pointclouds/, docs/adr/0207 §9).
@@ -57,9 +57,9 @@ pub struct GisUiState {
     /// The bottom panel's Noktalar tab: its query and rows (points/, docs/adr/0153).
     pub points: crate::points::PointsPanel,
     /// The bottom panel's Tablo tab: its choices and rows (features/, docs/adr/0199 §4).
-    pub(crate) features: crate::features::FeaturesPanel,
+    pub features: crate::features::FeaturesPanel,
     /// The İstatistik and Grafik tabs: their choices and what was worked out (charts/, docs/adr/0227).
-    pub(crate) charts: crate::charts::ChartsPanel,
+    pub charts: crate::charts::ChartsPanel,
     /// Alanlar, while it is open (layer_fields.rs, docs/adr/0199 §3).
     pub(crate) layer_fields: Option<crate::layer_fields::Window>,
     /// The bottom panel's Topoloji tab: the last check, the chosen rows and the filter (topology/, docs/adr/0202 §5).

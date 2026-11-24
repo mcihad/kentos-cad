@@ -114,7 +114,7 @@ impl Objects {
         self.push(layer, fields)
     }
 
-    pub(crate) fn path(&mut self, layer: &str, pts: &[[f64; 2]], closed: bool) -> u32 {
+    pub fn path(&mut self, layer: &str, pts: &[[f64; 2]], closed: bool) -> u32 {
         let kind = if closed { "polygon" } else { "polyline" };
         let pts: Vec<Value> = pts.iter().map(|p| xy(*p)).collect();
         self.push(layer, json!({ "kind": kind, "pts": pts }))
@@ -152,7 +152,7 @@ impl Objects {
         )
     }
 
-    pub(crate) fn point(&mut self, layer: &str, at: [f64; 2], z: Option<f64>) -> u32 {
+    pub fn point(&mut self, layer: &str, at: [f64; 2], z: Option<f64>) -> u32 {
         let mut fields = json!({ "kind": "point", "p": xy(at) });
         if let Some(z) = z {
             fields["z"] = json!(z);

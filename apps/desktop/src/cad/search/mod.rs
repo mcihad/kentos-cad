@@ -699,7 +699,7 @@ impl App {
 
     /// What a trace's `search` expectation reads: the count line and the
     /// rows (Katman, Tür, Alan, Değer, joined by “ | ”), as the page shows them.
-    pub(crate) fn data_seen(&self) -> Option<(String, Vec<String>)> {
+    pub fn data_seen(&self) -> Option<(String, Vec<String>)> {
         if !self.command_expanded || self.bottom_tab != BottomTab::Search {
             return None;
         }

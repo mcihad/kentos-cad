@@ -107,7 +107,7 @@ pub(crate) struct Grouped {
 /// What the cells of a counted field stand for: the source's values (the count itself, shared, not copied), then the
 /// drawing's rows by their slots.
 #[derive(Clone, Debug)]
-pub(crate) struct Picker {
+pub struct Picker {
     groups: Arc<Vec<FieldGroup>>,
     drawn: Vec<Slot>,
 }

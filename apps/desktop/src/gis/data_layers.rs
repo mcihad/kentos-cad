@@ -168,7 +168,7 @@ impl App {
     }
 
     /// Adds described tables as data layers, each one undo step; their names in a sentence, or why one could not be.
-    pub(crate) fn add_data_layers(&mut self, tables: Vec<Described>) -> Result<Vec<String>, String> {
+    pub fn add_data_layers(&mut self, tables: Vec<Described>) -> Result<Vec<String>, String> {
         let Some(doc) = &mut self.document else {
             return Err("Açık çizim yok. Önce bir çizim açın ya da yeni bir proje başlatın.".into());
         };

@@ -68,7 +68,7 @@ struct Asked {
 
 /// The data layer's table.
 #[derive(Debug, Default)]
-pub(crate) struct DataTable {
+pub struct DataTable {
     asked: Option<Asked>,
     generation: u64,
     fields: Vec<String>,
@@ -88,7 +88,7 @@ pub(crate) struct DataTable {
     /// The order the headers give: the field and whether it goes down.
     order: Vec<(String, bool)>,
     /// The rows pressed, by key, and the layer they are of.
-    pub(crate) selected: BTreeSet<i64>,
+    pub selected: BTreeSet<i64>,
     selected_of: Option<String>,
     /// Ara and İfade süzgeci as Enter asked them.
     search: String,
@@ -100,8 +100,8 @@ pub(crate) struct DataTable {
     edit_text: String,
     /// The last edit sent to take its row: an answer to an earlier one is stale.
     edit_asked: u64,
-    /// The reads started, as a test answers them.
-    #[cfg(test)]
+    /// The reads started, as a test answers them (the core's tests and a module package's, `testing`).
+    #[cfg(any(test, feature = "testing"))]
     inputs: Vec<(u64, u64, LayersRows)>,
 }
 
@@ -169,8 +169,8 @@ impl DataTable {
     }
 
     /// The reads under way and their inputs (a test answers them itself).
-    #[cfg(test)]
-    pub(crate) fn pending(&mut self) -> Vec<(u64, u64, LayersRows)> {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn pending(&mut self) -> Vec<(u64, u64, LayersRows)> {
         std::mem::take(&mut self.inputs)
     }
 }
@@ -240,8 +240,8 @@ impl DataTable {
     }
 
     /// The layer the table's selection is of.
-    #[cfg(test)]
-    pub(crate) fn selected_of_for_test(&self) -> Option<&str> {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn selected_of_for_test(&self) -> Option<&str> {
         self.selected_of.as_deref()
     }
 
@@ -402,7 +402,7 @@ impl App {
             };
             data.reading.insert(page);
             let generation = data.generation;
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testing"))]
             data.inputs.push((generation, page, input.clone()));
             let node = node.clone();
             let settings = settings.clone();
