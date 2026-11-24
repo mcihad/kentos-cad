@@ -136,6 +136,13 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   çizilir. Bütün çizime yayılan 1 M kiriş bütçesi kalkar; yakında daire köşeli görünmez.
 - [~] **RM-10 — Düzey sadeleştirme.** İlk adım yapıldı:
   [ADR 9207](../docs/adr/9207-far-levels-of-strokes-and-fills.md).
+  - **24 Kasım: geri alındı** ([ADR 9222](../docs/adr/9222-quality-is-not-traded-for-speed.md)). Sahibin sözü
+    “kaliteden ödün verilmez”. Uzak düzeyler resmi değiştiriyordu: NCZ'nin açılış görünümünde 86 002 piksel farklı,
+    6 940'ı çeyrekten fazla; parsel çizgileri kalınlaşıp kümeleniyordu. Hareketteki tek örnek de kalktı. Aşağıdaki
+    ölçümler kayıt olarak duruyor.
+  - **Bundan sonra:** hız yalnız resmi değiştirmeyen yollarla aranır (döşeme ve ayıklama RM-08, iş parçacığı RM-07,
+    örnekli çizim RM-11). Daha eski düzeyler (eğri 1063, uzun çizgi 1064, blok vekili 1065, yazı bandı 0786) baştan
+    çizimle karşılaştırılır; görünür fark veren kalkar.
   - Model ekranında düz çizgilerin ve düz dolguların uzak düzeyleri (8/32/128 m ızgara, piksel kümeleme). Hiçbir nesne
     pikselinden çıkmıyor.
   - **sivas.kcad:** çizilen öğe 3,19 M → 1,56 M, tekerlek karesinde GPU 104 → 85 ms.

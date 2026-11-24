@@ -1,6 +1,8 @@
 # ADR 9207: Model ekranında düz çizgilerin ve dolguların uzak düzeyleri
 
-- **Durum:** kabul edildi (2026-11-23). Plan: [plan/render.md](../../plan/render.md) RM-10 (ilk adım).
+- **Durum:** kabul edildi (2026-11-23); **§1–§8 geri alındı** (2026-11-24, [ADR 9222](9222-quality-is-not-traded-for-speed.md):
+  sahibin sözü “kaliteden ödün verilmez”). Uzak düzeyler ve hareketteki tek örnek koddan kalktı; ölçümler kayıt olarak
+  duruyor. Plan: [plan/render.md](../../plan/render.md) RM-10 (ilk adım).
 - **İstek:** sahibin sözü (23 Kasım 2026): “lod sistemi yok … performans iyileştirmeleri optimizasyonlar sağlamamız
   gerekiyor”. Bulgu: [ADR 9200](9200-render-engine-research.md) §1.2.
 - **Sözleşmeler:**

@@ -632,8 +632,8 @@ fn a_kept_picture_is_composed_again_with_the_hover_over_it(gpu: &mut Gpu) {
         camera.center.x -= 1.0;
     }
     eprintln!("kept picture on the GPU: composed again, the hover drawn over it, 1× and 4×");
-    // A view that moves draws with one sample and its settled frame with four (docs/adr/9207 §8): back at four, the
-    // targets it had keep their picture, the same pixels as drawn whole.
+    // A frame drawn with one sample, then with four (a changed setting): back at four, the targets it had keep their
+    // picture, the same pixels as drawn whole.
     let mut settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
     settings.samples = 4;
     gpu.keep = false;

@@ -766,10 +766,8 @@ impl shader::Program<Message> for Program {
             parts: self.parts.clone(),
             origin: self.origin,
             camera,
-            // One sample while moving (docs/adr/9207 §8), unless the setting scales the last sharp picture instead
-            // (`drawing`, docs/adr/1068): its picture is the settled frame's, drawn with the setting's samples, and a
-            // frame of one sample would put it aside (`perf::stability`'s wheel test caught it).
-            settings: drawn_with(self.settings, moving && self.drawing.is_none()),
+            // The setting's samples in every frame, moving or not (docs/adr/9222: quality is not traded for speed).
+            settings: self.settings,
             status: self.status.clone(),
             styled: self.styled.clone(),
             images: self.images.clone(),
@@ -964,14 +962,6 @@ pub(crate) fn wheel_steps(delta: &mouse::ScrollDelta) -> f64 {
 }
 
 /// One frame of the drawing area, handed to the renderer.
-/// The settings a frame of the drawing area is drawn with: one sample while the view moves (docs/adr/9207 §8). The
-/// strokes smooth their own edges, and blending them into four samples was a third of a far view's frame on the GPU
-/// (81 → 55 ms, the city plan NCZ). The settled frame has the setting's count and is drawn whole again: its picture's
-/// key holds whether the view moved.
-fn drawn_with(settings: RenderSettings, moving: bool) -> RenderSettings {
-    if moving { RenderSettings { samples: 1, ..settings } } else { settings }
-}
-
 pub struct Frame {
     id: ViewId,
     parts: [Arc<ScenePart>; 7],

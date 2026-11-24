@@ -619,7 +619,7 @@ fn settings() -> Vec<SettingDescriptor> {
             .apply(SettingApply::Recreate)
             .text(
                 "Kenar yumuşatma (MSAA)",
-                "Çizimin pikseldeki örnek sayısı. Aygıtın desteklemediği bir değer istenirse desteklediği en yakın alt değer kullanılır ve nedeni gösterilir. Arayüz ve çizim alanındaki araç önizlemeleri, etiket kutuları ve işaretler bu ayardan etkilenmez. Masaüstünde görünüm kayarken ve yakınlaşırken tek örnekle çizilir, durunca bu ayarla yeniden çizilir: hareket boyunca dolgu kenarları hafif basamaklı görünebilir.",
+                "Çizimin pikseldeki örnek sayısı. Aygıtın desteklemediği bir değer istenirse desteklediği en yakın alt değer kullanılır ve nedeni gösterilir. Arayüz ve çizim alanındaki araç önizlemeleri, etiket kutuları ve işaretler bu ayardan etkilenmez.",
             ),
         boolean("graphics.hiDpi", true)
             .scope(SettingScope::Device)
