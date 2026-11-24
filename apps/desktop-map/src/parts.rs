@@ -259,6 +259,8 @@ impl ModuleParts for Map {
     fn building3d(&self) -> Option<&dyn crate::module_parts::Building3dParts> {
         None
     }
+
+    fn drawing_shown(&self, _app: &mut App) {}
 }
 
 /// İmar planı denetimi's road overlaps, hatched (docs/adr/3040).

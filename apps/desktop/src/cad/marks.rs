@@ -723,7 +723,7 @@ pub fn edge_points(e: &kentos_geometry_core::geom::intersect::Edge, camera: &Cam
 /// regions filled and outlined, its edges bold, in the danger colour on a
 /// halo; its place marked as Koordinata git marks one, its problem's name
 /// beside it.
-fn problem(
+pub fn problem(
     frame: &mut canvas::Frame,
     m: &crate::topology::ProblemMark,
     camera: &Camera,

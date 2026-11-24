@@ -192,6 +192,9 @@ pub trait ModuleParts: Sync {
     fn properties_ask(&self, app: &mut App, ask: PropertiesAsk<'_>) -> bool;
     /// What it gives 3B görünüm beside the drawing's building; none when nothing.
     fn building3d(&self) -> Option<&dyn Building3dParts>;
+    /// Another drawing comes on screen (opened, a tab brought in front): what the module kept of the drawing before
+    /// goes.
+    fn drawing_shown(&self, app: &mut App);
 }
 
 /// The parts registered so far, before [`all`] is first asked.

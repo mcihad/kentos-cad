@@ -65,7 +65,7 @@ impl App {
                     range: self.grade_marks().0.into_iter().map(|p| kentos_interaction::Vec2::new(p.x, p.y)).collect(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     extent: self.extent_mark(),
-                    problem: self.topology_problem().or_else(|| self.gis.networks.mark.clone()),
+                    problem: self.topology_problem(),
                     reach: self.impact_reach_marks(),
                     module: self.module_marks(),
                     broken: self.broken_marks(),
@@ -291,9 +291,7 @@ impl App {
             range: self.grade_marks().0.into_iter().map(|p| kentos_interaction::Vec2::new(p.x, p.y)).collect(),
             found: self.address_mark_label().or_else(|| self.data_mark_label()),
             extent: self.extent_mark(),
-            problem: self
-                .topology_problem()
-                .or_else(|| self.gis.networks.mark.clone()),
+            problem: self.topology_problem(),
             reach: self.impact_reach_marks(),
             module: self.module_marks(),
             broken: self.broken_marks(),

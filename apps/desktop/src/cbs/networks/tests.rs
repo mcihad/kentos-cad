@@ -7,6 +7,7 @@
 use crate::gis;
 use kentos_commands::DocumentSnapshotV1;
 use serde_json::json;
+use crate::cbs::CbsState;
 
 use super::Event as Networks;
 use super::window::Event;
@@ -34,7 +35,7 @@ fn send(app: &mut App, message: Message) {
 }
 
 fn window(app: &mut App, e: Event) {
-    send(app, Message::Gis(gis::Event::Networks(Networks::Window(e))));
+    send(app, Message::from(crate::cbs::Event::Networks(Networks::Window(e))));
 }
 
 fn processing(app: &mut App, e: Processing) {
@@ -52,7 +53,7 @@ fn layer(id: &str) -> serde_json::Value {
 /// Denetle's counts for the chosen network, as the window keeps them.
 fn checked(app: &App) -> (usize, usize, f64) {
     let c = app
-        .gis
+        .modules.cbs()
         .networks
         .window
         .as_ref()
@@ -66,7 +67,7 @@ fn the_window_lists_the_networks_and_checks_the_chosen_one_off_the_thread() {
     let mut app = app();
     send(&mut app, Message::Run("network.manage"));
     let names: Vec<String> = app
-        .gis
+        .modules.cbs()
         .networks
         .window
         .as_ref()
@@ -85,7 +86,7 @@ fn the_window_lists_the_networks_and_checks_the_chosen_one_off_the_thread() {
     assert_eq!((nodes, pieces), (11, 10));
     assert!((length - 580.0).abs() < 1e-9, "{length}");
     // Denetle builds the window's definition under a key of its own: the project's network is not built for it.
-    assert!(!app.gis.networks.built_for("yollar"));
+    assert!(!app.modules.cbs_mut().networks.built_for("yollar"));
 }
 
 #[test]
@@ -95,7 +96,7 @@ fn kaydet_writes_the_changed_network_as_a_project_setting() {
     window(&mut app, Event::Name("Ana yollar".into()));
     window(&mut app, Event::Save);
     assert!(
-        app.gis.networks.window.is_none(),
+        app.modules.cbs().networks.window.is_none(),
         "Kaydet closes the window"
     );
     let doc = &app.document.as_ref().expect("open").model;
@@ -276,7 +277,7 @@ fn screens() {
                         if name == "alt-aglar-guncel" {
                             send(
                                 &mut app,
-                                Message::Gis(gis::Event::Subnetworks(
+                                Message::from(crate::cbs::Event::Subnetworks(
                                     crate::subnetworks_window::Event::Update,
                                 )),
                             );

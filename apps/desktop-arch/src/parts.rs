@@ -333,6 +333,8 @@ impl ModuleParts for Architecture {
     fn building3d(&self) -> Option<&dyn Building3dParts> {
         Some(self)
     }
+
+    fn drawing_shown(&self, _app: &mut App) {}
 }
 
 impl Building3dParts for Architecture {

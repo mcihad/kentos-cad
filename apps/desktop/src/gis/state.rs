@@ -1,6 +1,8 @@
-//! The GIS (CBS) module's part of the shell (plan/argon-tavsiye.md ADIM 06, docs/adr/8054 §6): its
-//! windows' and panels' state in `App::gis`, its messages under `Message::Gis`, its windows under
-//! `Dialog::Gis`. A new window of the module is added here and in its own file; `app.rs` stays as it is.
+//! The GIS work every module shares (plan/argon-tavsiye.md ADIM 06, docs/adr/8054 §6, 9199 §4.12): data layers,
+//! sources, processing, rasters, point clouds, points, Hesap, forms, topology, labels, addresses, time — their windows'
+//! and panels' state in `App::gis`, their messages under `Message::Gis`, their windows under `Dialog::Gis`. The core's,
+//! as QGIS's core library holds its data providers and processing; the CBS module's own windows (Ağlar, Alt ağlar)
+//! are its package's hub (cbs/state.rs).
 
 use iced::{Element, Task};
 
@@ -46,8 +48,6 @@ pub struct GisUiState {
     pub(crate) attribute_values: Option<crate::attribute_values::Window>,
     /// Raster ekle and Raster stili (rasters/, docs/adr/0204 §8).
     pub(crate) rasters: crate::rasters::Windows,
-    /// The project's networks as built on the network thread, and Ağlar's window.
-    pub(crate) networks: crate::networks::State,
     /// Adres arama: the Adres tab, its locators on the address thread and the address windows (address/).
     pub(crate) address: crate::address::State,
     /// Zaman sürgüsü and the windows of Zaman and Senaryo (temporal/, docs/adr/0210).
@@ -74,8 +74,6 @@ pub struct GisUiState {
     pub(crate) layer_translate: Option<crate::layer_translate::Window>,
     /// Veri profili's window (data_profile.rs, docs/adr/0541).
     pub(crate) data_profile: Option<crate::data_profile::Window>,
-    /// Alt ağlar's window (subnetworks_window.rs, docs/adr/0557).
-    pub(crate) subnetworks_window: Option<crate::subnetworks_window::Window>,
     /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
     pub(crate) source_status: Option<crate::source_status::Window>,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
@@ -193,8 +191,6 @@ pub enum Event {
     Topology(crate::topology::Event),
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6).
     TopologyRules(crate::topology::rules::Event),
-    /// Ağ analizi: the networks' answers and Ağlar (networks/, docs/adr/0209).
-    Networks(crate::networks::Event),
     /// Adres arama: the Adres tab, Konumdan adres's answers and the address windows (address/, docs/adr/0229).
     Address(crate::address::Event),
     /// Zaman sürgüsü, Zaman ayarları and the scenarios (temporal/, docs/adr/0210).
@@ -209,8 +205,6 @@ pub enum Event {
     LayerTranslate(crate::layer_translate::Event),
     /// Veri profili's window (data_profile.rs, docs/adr/0541).
     DataProfile(crate::data_profile::Event),
-    /// Alt ağlar's window (subnetworks_window.rs, docs/adr/0557).
-    Subnetworks(crate::subnetworks_window::Event),
     /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
     SourceStatus(crate::source_status::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
@@ -302,8 +296,6 @@ pub enum GisDialogKind {
     LayerTranslate,
     /// Veri profili (data_profile.rs, docs/adr/0541); the window is `GisUiState::data_profile`.
     DataProfile,
-    /// Alt ağlar (subnetworks_window.rs, docs/adr/0557); the window is `GisUiState::subnetworks_window`.
-    Subnetworks,
     /// Kaynak durumu (source_status.rs, docs/adr/0543); the window is `GisUiState::source_status`.
     SourceStatus,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `GisUiState::layer_fields`.
@@ -316,8 +308,6 @@ pub enum GisDialogKind {
     Labelling,
     /// Topoloji kuralları (topology/rules.rs, docs/adr/0202 §6); the window is `GisUiState::topology_rules`.
     TopologyRules,
-    /// Ağlar (networks/window.rs, docs/adr/0209 §10); the window is `App::networks.window`.
-    Networks,
     /// Adres verisi (address/data.rs, docs/adr/0229 §13); the window is `App::address.data`.
     AddressData,
     /// Adres sağlayıcıları (address/providers.rs, docs/adr/0229 §13); the window is `App::address.providers`.
@@ -399,7 +389,6 @@ impl App {
             Event::LayerFields(event) => return self.layer_fields_event(event),
             Event::Topology(event) => return self.topology_event(event),
             Event::TopologyRules(event) => return self.topology_rules_event(event),
-            Event::Networks(event) => return self.networks_event(event),
             Event::Address(event) => return self.address_event(event),
             Event::Time(event) => {
                 let moved = self.time_event(event);
@@ -428,7 +417,6 @@ impl App {
             Event::LayerMerge(event) => return self.layer_merge_event(event),
             Event::LayerTranslate(event) => return self.layer_translate_event(event),
             Event::DataProfile(event) => return self.data_profile_event(event),
-            Event::Subnetworks(event) => return self.subnetworks_event(event),
             Event::SourceStatus(event) => return self.source_status_event(event),
             Event::LayerFilter(event) => return self.layer_filter_event(event),
             Event::LayerInfo(event) => return self.layer_info_event(event),
@@ -482,7 +470,6 @@ impl App {
             GisDialogKind::LayerMerge => self.layer_merge_view(),
             GisDialogKind::LayerTranslate => self.layer_translate_view(),
             GisDialogKind::DataProfile => self.data_profile_view(),
-            GisDialogKind::Subnetworks => self.subnetworks_view(),
             GisDialogKind::SourceStatus => self.source_status_view(),
             GisDialogKind::LayerFields => self.layer_fields_view(),
             GisDialogKind::LayerFilter => self.layer_filter_view(),
@@ -491,7 +478,6 @@ impl App {
             GisDialogKind::DatasetInfo => self.dataset_info_view(),
             GisDialogKind::Labelling => self.labelling_view(),
             GisDialogKind::TopologyRules => self.topology_rules_view(),
-            GisDialogKind::Networks => self.networks_view(),
             GisDialogKind::AddressData => self.address_data_view(),
             GisDialogKind::AddressProviders => self.address_providers_view(),
             GisDialogKind::AddressCompare => self.address_compare_view(),

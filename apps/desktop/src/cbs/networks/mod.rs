@@ -21,8 +21,8 @@ pub(crate) mod edge_fit;
 mod edge_fit_tests;
 pub mod window;
 
-use crate::gis;
 use std::collections::{HashMap, HashSet};
+use crate::cbs::CbsState;
 
 use iced::Task;
 use iced::futures::channel::oneshot;
@@ -145,7 +145,7 @@ impl App {
             Task::done(Message::ScopedReply {
                 document,
                 run,
-                reply: Box::new(Message::Gis(gis::Event::Networks(Event::Answered(
+                reply: Box::new(Message::from(crate::cbs::Event::Networks(Event::Answered(
                     NetworkReply {
                         ticket,
                         answer: Answer::Failed(why),
@@ -178,7 +178,7 @@ impl App {
             .as_ref()
             .map(|d| kentos_native_application::sources::stale_layers(&d.model, &def.layers()))
             .unwrap_or_default();
-        if let Some(stamp) = self.gis.networks.built.get_mut(&ask.network)
+        if let Some(stamp) = self.modules.cbs_mut().networks.built.get_mut(&ask.network)
             && stale != stamp.stale
         {
             stamp.stale.clone_from(&stale);
@@ -194,7 +194,7 @@ impl App {
             }
         }
         let (done, wait) = oneshot::channel();
-        self.gis.networks.engine.send(Job::Ask {
+        self.modules.cbs_mut().networks.engine.send(Job::Ask {
             network: ask.network,
             ticket,
             question: ask.question,
@@ -204,7 +204,7 @@ impl App {
             done,
         });
         let answer = Task::perform(wait, move |r| {
-            Message::Gis(gis::Event::Networks(Event::Answered(r.unwrap_or(
+            Message::from(crate::cbs::Event::Networks(Event::Answered(r.unwrap_or(
                 NetworkReply {
                     ticket,
                     answer: Answer::Failed("Ağların iş parçacığı yanıt vermedi.".into()),
@@ -221,7 +221,7 @@ impl App {
             return Ok(Task::none());
         };
         let model = &doc.model;
-        if self.gis.networks.fresh(key, def, model) {
+        if self.modules.cbs_mut().networks.fresh(key, def, model) {
             return Ok(Task::none());
         }
         self.spatial.sync(model);
@@ -229,7 +229,7 @@ impl App {
         let store = self.spatial.store();
         // Read again only the objects that changed since the last read of this definition over this layer tree.
         let part = self
-            .gis
+            .modules.cbs_mut()
             .networks
             .built
             .get_mut(key)
@@ -265,7 +265,7 @@ impl App {
                 )
             }
         };
-        self.gis.networks.built.insert(
+        self.modules.cbs_mut().networks.built.insert(
             key.to_owned(),
             Stamp {
                 def: def.clone(),
@@ -277,7 +277,7 @@ impl App {
             },
         );
         let (done, wait) = oneshot::channel();
-        self.gis.networks.engine.send(Job::Build {
+        self.modules.cbs_mut().networks.engine.send(Job::Build {
             network: key.to_owned(),
             name: def.name.clone(),
             rules: Box::new(rules),
@@ -287,8 +287,8 @@ impl App {
             done,
         });
         let task = Task::perform(wait, |r| match r {
-            Ok(built) => Message::Gis(gis::Event::Networks(Event::Built(built))),
-            Err(_) => Message::Gis(gis::Event::Networks(Event::Built(Built {
+            Ok(built) => Message::from(crate::cbs::Event::Networks(Event::Built(built))),
+            Err(_) => Message::from(crate::cbs::Event::Networks(Event::Built(Built {
                 network: String::new(),
                 name: String::new(),
                 problems: vec!["Ağ kurulamadı: ağların iş parçacığı yanıt vermedi.".into()],
@@ -306,7 +306,7 @@ impl App {
         match e {
             Event::Answered(reply) => {
                 if self
-                    .gis
+                    .modules.cbs()
                     .networks
                     .window
                     .as_ref()
@@ -320,7 +320,7 @@ impl App {
             Event::Built(b) => {
                 // The network thread had no last input for a read of the changed objects: read whole next time.
                 if b.again {
-                    self.gis.networks.built.remove(&b.network);
+                    self.modules.cbs_mut().networks.built.remove(&b.network);
                 }
                 // What building said, once a build (not every question) says it (the web's service).
                 for p in &b.problems {
@@ -338,20 +338,14 @@ impl App {
         }
     }
 
-    /// The commands the tools asked for, run after the update.
-    pub(crate) fn command_tasks(&mut self) -> Task<Message> {
-        let ids = std::mem::take(&mut self.command_wanted);
-        Task::batch(ids.into_iter().map(|id| self.run(id)).collect::<Vec<_>>())
-    }
-
     /// Forgets the networks the project no longer has (their threads' copies go too).
     /// The networks built from the drawing left go with it, and Denetle's mark (docs/adr/0209 §12): a network of
     /// the next drawing is built from that drawing whatever it is called.
     pub(crate) fn networks_reset(&mut self) {
-        for k in std::mem::take(&mut self.gis.networks.built).into_keys() {
-            self.gis.networks.engine.send(Job::Drop(k));
+        for k in std::mem::take(&mut self.modules.cbs_mut().networks.built).into_keys() {
+            self.modules.cbs_mut().networks.engine.send(Job::Drop(k));
         }
-        self.gis.networks.mark = None;
+        self.modules.cbs_mut().networks.mark = None;
     }
 
     /// The networks taken out of the project (Ağlar's Kaydet) are let go.
@@ -367,7 +361,7 @@ impl App {
             .map(|n| n.id.as_str())
             .collect();
         let gone: Vec<String> = self
-            .gis
+            .modules.cbs()
             .networks
             .built
             .keys()
@@ -375,8 +369,8 @@ impl App {
             .cloned()
             .collect();
         for k in gone {
-            self.gis.networks.built.remove(&k);
-            self.gis.networks.engine.send(Job::Drop(k));
+            self.modules.cbs_mut().networks.built.remove(&k);
+            self.modules.cbs_mut().networks.engine.send(Job::Drop(k));
         }
     }
 }

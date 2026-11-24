@@ -9,7 +9,6 @@
 //! Kaydet waits; Kaydet writes each changed network through
 //! `cad.network.define` (a project setting, not an undo step).
 
-use crate::gis;
 use iced::widget::{Column, Space, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
@@ -17,6 +16,7 @@ use kentos_commands::{
     NetworkDefineOperation, NetworkKind, NetworkUTurns, SubnetworkReach, networks_problem,
     next_network_id,
 };
+use crate::cbs::CbsState;
 use kentos_geometry_core::ops::network::{Checked, ProblemKind};
 use kentos_interaction::network::form::{
     CostRow, DIRECTION_DEFAULTS, DeviceRow, DirectionKind, EdgeRow, JunctionRow, NetworkForm,
@@ -31,7 +31,7 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::{label, style};
 
 use super::Event as Networks;
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind as Say};
 use crate::icons::from_web;
 use crate::topology::ProblemMark;
@@ -244,10 +244,52 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Gis(gis::Event::Networks(Networks::Window(e)))
+    Message::from(crate::cbs::Event::Networks(Networks::Window(e)))
 }
 
 impl App {
+    /// Ağlar's ε: the builder on one of the form's expressions, the layer's keys and objects.
+    /// A network's costs are the drawing's, read at each analysis: no `@` value but the
+    /// layer's (docs/adr/0214 §1).
+    pub(crate) fn open_builder_for_network(
+        &mut self,
+        field: Field,
+    ) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let layer = self.network_field_layer(field);
+        let slots: Vec<kentos_domain::Slot> = doc
+            .model
+            .by_layer(&layer)
+            .take(5000)
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .collect();
+        let mut counts: Vec<(String, usize)> = Vec::new();
+        for e in doc.model.by_layer(&layer).take(2000) {
+            for k in e.base().attrs.keys() {
+                match counts.iter_mut().find(|(n, _)| n == k) {
+                    Some((_, c)) => *c += 1,
+                    None => counts.push((k.clone(), 1)),
+                }
+            }
+        }
+        counts.sort_by(|a, b| a.0.cmp(&b.0));
+        let value = self.network_field_text(field);
+        let mut builder = crate::expression::Builder::new(
+            crate::expression::Target::Back(crate::expression::Back::new(move |text| {
+                Message::from(crate::cbs::Event::Networks(super::Event::Window(Event::Text(field, text))))
+            })),
+            TITLE.to_owned(),
+            &value,
+            // A network's costs are measured in metres (docs/adr/0165 §2).
+            crate::expression::attribute_fields(&counts, Vec::new(), false, kentos_expression::Unit::METRE),
+            crate::expression::Objects { slots },
+        );
+        builder.preview_on(Some(&doc.model), self.spatial.store());
+        self.show_builder(builder)
+    }
+
     /// The layers the window lists, by id with their paths.
     fn network_layers(&self) -> Vec<(String, String)> {
         let Some(doc) = &self.document else {
@@ -273,7 +315,7 @@ impl App {
             .iter()
             .map(|n| form_of(n, |m| format.from_metres(m)))
             .collect();
-        self.gis.networks.window = Some(Window {
+        self.modules.cbs_mut().networks.window = Some(Window {
             chosen: (!forms.is_empty()).then_some(0),
             forms,
             saved,
@@ -281,7 +323,7 @@ impl App {
             tickets: TICKETS,
             said: None,
         });
-        self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Networks));
+        self.dialog = Some(crate::cbs::dialog(crate::cbs::CbsDialogKind::Networks));
         Task::none()
     }
 
@@ -330,7 +372,7 @@ impl App {
         });
         let layers = self.network_layers();
         let format = self.format();
-        let Some(w) = self.gis.networks.window.as_mut() else {
+        let Some(w) = self.modules.cbs_mut().networks.window.as_mut() else {
             return Task::none();
         };
         w.said = None;
@@ -369,7 +411,7 @@ impl App {
             }
             Event::Save => return self.save_networks(),
             Event::Cancel => {
-                self.gis.networks.window = None;
+                self.modules.cbs_mut().networks.window = None;
                 self.dialog = None;
             }
             Event::Check => return self.check_network(),
@@ -387,13 +429,13 @@ impl App {
 
     /// Kaydet: each network taken away is removed and each new or changed one written, in the list's order.
     fn save_networks(&mut self) -> Task<Message> {
-        let Some(w) = self.gis.networks.window.clone() else {
+        let Some(w) = self.modules.cbs().networks.window.clone() else {
             return Task::none();
         };
         let now = match self.window_defs(&w) {
             Ok(now) => now,
             Err(p) => {
-                if let Some(w) = self.gis.networks.window.as_mut() {
+                if let Some(w) = self.modules.cbs_mut().networks.window.as_mut() {
                     w.said = Some((Say::Error, p));
                 }
                 return Task::none();
@@ -408,7 +450,7 @@ impl App {
                 })
             });
             if let Some(why) = unfit {
-                if let Some(w) = self.gis.networks.window.as_mut() {
+                if let Some(w) = self.modules.cbs_mut().networks.window.as_mut() {
                     w.said = Some((Say::Error, why));
                 }
                 return Task::none();
@@ -468,7 +510,7 @@ impl App {
         for s in said {
             self.say(Level::Warn, s);
         }
-        self.gis.networks.window = None;
+        self.modules.cbs_mut().networks.window = None;
         self.dialog = None;
         self.networks_follow();
         self.announce(Level::Info, format!("Ağlar kaydedildi: {} ağ.", now.len()));
@@ -478,7 +520,7 @@ impl App {
     /// Denetle: the chosen network built as the window says it, checked on the network thread.
     fn check_network(&mut self) -> Task<Message> {
         let format = self.format();
-        let Some(w) = self.gis.networks.window.as_mut() else {
+        let Some(w) = self.modules.cbs_mut().networks.window.as_mut() else {
             return Task::none();
         };
         let Some(f) = w.chosen.and_then(|i| w.forms.get(i)) else {
@@ -516,7 +558,7 @@ impl App {
 
     pub(crate) fn networks_window_answered(&mut self, reply: NetworkReply) -> Task<Message> {
         let Some(c) = self
-            .gis
+            .modules.cbs_mut()
             .networks
             .window
             .as_mut()
@@ -539,7 +581,7 @@ impl App {
     /// A problem's objects selected, the problem marked and the view on it.
     fn show_network_problem(&mut self, i: usize) -> Task<Message> {
         let Some(p) = self
-            .gis
+            .modules.cbs()
             .networks
             .window
             .as_ref()
@@ -561,7 +603,7 @@ impl App {
             })
             .collect();
         self.selection.set(slots);
-        self.gis.networks.mark = Some(ProblemMark {
+        self.modules.cbs_mut().networks.mark = Some(ProblemMark {
             at: p.at,
             label: problem_label(p.kind).to_owned(),
             regions: Vec::new(),
@@ -586,7 +628,7 @@ impl App {
     /// The text of a field the builder edits.
     pub(crate) fn network_field_text(&self, field: Field) -> String {
         let Some(f) = self
-            .gis
+            .modules.cbs()
             .networks
             .window
             .as_ref()
@@ -607,7 +649,7 @@ impl App {
     /// The layer a field's expression runs on (its row's; the first edge layer's for the closed edges).
     pub(crate) fn network_field_layer(&self, field: Field) -> String {
         let Some(f) = self
-            .gis
+            .modules.cbs()
             .networks
             .window
             .as_ref()
@@ -627,7 +669,7 @@ impl App {
     }
 
     pub(crate) fn networks_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.gis.networks.window else {
+        let Some(w) = &self.modules.cbs().networks.window else {
             return iced::widget::text("").into();
         };
         let mut list = Column::new().spacing(2);
@@ -1507,7 +1549,7 @@ impl App {
     /// The window's controls by their words (a trace's `dialog` step): the chosen network's name, tolerance and
     /// closed expression, a network by its number, the buttons.
     pub(crate) fn networks_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.gis.networks.window else {
+        let Some(w) = &self.modules.cbs().networks.window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         Ok(match control {

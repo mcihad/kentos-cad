@@ -259,7 +259,6 @@ impl App {
             self.data_pick_tasks(),
             // The counted layers' class counts, asked again when their style or data changed (layer_classes.rs).
             self.layer_classes_tasks(),
-            self.network_tasks(),
             // Konumdan adres's places, asked on the address thread or of a provider (address/).
             self.address_tasks(),
             self.command_tasks(),

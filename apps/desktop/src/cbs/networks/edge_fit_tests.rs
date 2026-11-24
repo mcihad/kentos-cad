@@ -3,15 +3,15 @@
 //! which; an empty line layer is saved as a template, a mixed layer holding lines as edges.
 
 use serde_json::json;
+use crate::cbs::CbsState;
 
 use super::Event as Networks;
 use super::window::Event;
 use crate::app::{App, Message};
-use crate::gis;
 use crate::tools_scenes::{Objects, layer, open_edited};
 
 fn window(app: &mut App, e: Event) {
-    let task = app.update(Message::Gis(gis::Event::Networks(Networks::Window(e))));
+    let task = app.update(Message::from(crate::cbs::Event::Networks(Networks::Window(e))));
     crate::files_testing::drive(app, task);
 }
 
@@ -47,7 +47,7 @@ fn park() -> App {
 }
 
 fn edge_layer(app: &App) -> String {
-    let w = app.gis.networks.window.as_ref().expect("Ağlar");
+    let w = app.modules.cbs().networks.window.as_ref().expect("Ağlar");
     w.form().expect("a network").edges.first().map(|e| e.layer.clone()).unwrap_or_default()
 }
 
@@ -77,7 +77,7 @@ fn an_area_layer_or_a_layer_without_lines_is_refused_with_its_reason() {
         let k = place(&app, id);
         window(&mut app, Event::EdgeLayer(0, k));
         window(&mut app, Event::Save);
-        let said = app.gis.networks.window.as_ref().and_then(|w| w.said_text()).unwrap_or("").to_owned();
+        let said = app.modules.cbs().networks.window.as_ref().and_then(|w| w.said_text()).unwrap_or("").to_owned();
         assert!(said.contains(words) && said.contains("kaydedilmedi"), "{id}: {said}");
         assert!(saved(&app).is_empty(), "{id}: nothing written");
         if id == "tampon" {
@@ -96,6 +96,6 @@ fn an_empty_line_template_and_a_mixed_layer_with_lines_are_saved() {
         let k = place(&app, id);
         window(&mut app, Event::EdgeLayer(0, k));
         window(&mut app, Event::Save);
-        assert_eq!(saved(&app).len(), 1, "{id}: {:?}", app.gis.networks.window.as_ref().and_then(|w| w.said_text()));
+        assert_eq!(saved(&app).len(), 1, "{id}: {:?}", app.modules.cbs().networks.window.as_ref().and_then(|w| w.said_text()));
     }
 }

@@ -255,7 +255,10 @@ impl App {
         self.photos.clear();
         self.info_card = None;
         self.gis.data_info = Default::default();
-        self.networks_reset();
+        // What the modules kept of the drawing left goes: CBS's networks built from it (networks/mod.rs).
+        for parts in crate::module_parts::all() {
+            parts.drawing_shown(self);
+        }
         self.address_reset();
         // Topoloji's last check, its chosen rows and the reason typed are the drawing's left (GIS-032).
         self.gis.topology = Default::default();

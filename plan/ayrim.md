@@ -133,4 +133,6 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
   - Adım 11 yapıldı (ADR 9199 §4.11): Mimari kendi paketinde (`apps/desktop-arch`); çekirdeğin sınama kiti `testing`
     özelliğiyle açıldı; Mimari'de tek satır 3,7 s. Sınamalar: çekirdek 2503, Mimari 204, Harita 191, Yol 129, programlar
     36. Kabuk → Mimari 0.
-  - Sıradaki: CBS paketi; CAD çekirdeğinin kabuktan ayrılması.
+  - Adım 12 yapıldı (ADR 9199 §4.12): `gis/` çekirdeğin ortak CBS altyapısı (QGIS'in `core`'u gibi; komutlarının çoğunu
+    Harita, Yol ve Mimari de sunar); CBS modülünün kendisi `cbs/` (profili, Ağlar, Alt ağlar) ve kendi merkezi.
+  - Sıradaki: `cbs/`'nin uzantı trait'leri ve paketi; CAD çekirdeğinin kabuktan ayrılması.

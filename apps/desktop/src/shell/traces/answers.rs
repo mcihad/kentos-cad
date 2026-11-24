@@ -71,9 +71,6 @@ impl App {
             Dialog::Gis(gis::GisDialogKind::DataProfile) => {
                 crate::data_profile::PROFILE_TITLE.to_owned()
             }
-            Dialog::Gis(gis::GisDialogKind::Subnetworks) => {
-                crate::subnetworks_window::SUBNETWORKS_TITLE.to_owned()
-            }
             Dialog::Gis(gis::GisDialogKind::SourceStatus) => {
                 crate::source_status::STATUS_TITLE.to_owned()
             }
@@ -91,7 +88,6 @@ impl App {
             Dialog::Gis(gis::GisDialogKind::TopologyRules) => {
                 crate::topology::rules::RULES_TITLE.to_owned()
             }
-            Dialog::Gis(gis::GisDialogKind::Networks) => crate::networks::window::TITLE.to_owned(),
             Dialog::Gis(gis::GisDialogKind::AddressData) => crate::address::data::TITLE.to_owned(),
             Dialog::Gis(gis::GisDialogKind::AddressProviders) => {
                 crate::address::providers::TITLE.to_owned()
@@ -225,7 +221,6 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::DataProfile)) => {
                 self.data_profile_control(control)
             }
-            Some(Dialog::Gis(gis::GisDialogKind::Subnetworks)) => self.subnetworks_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::SourceStatus)) => {
                 self.source_status_control(control)
             }
@@ -251,7 +246,6 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::TopologyRules)) => {
                 self.topology_rules_control(control)
             }
-            Some(Dialog::Gis(gis::GisDialogKind::Networks)) => self.networks_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::AddressData)) => {
                 self.address_data_control(control)
             }

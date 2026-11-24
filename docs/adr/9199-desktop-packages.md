@@ -285,6 +285,50 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 - Sınama: çekirdek 2503, Mimari 204, Harita 191, Yol 129, programlar 36. Toplam 3063, öncekiyle aynı; yok sayılan 762,
   yeni `arch_screens` ile bir fazla.
 
+### §4.12 Adım 12: `gis/` çekirdeğin ortak CBS altyapısı; CBS modülü `cbs/`
+
+**Çözümleme** (24 Kasım 2026, `6e3ef13e6`'dan sonra). `gis/` 84 modül, 155 bin satır; çekirdeğin 74 dosyası (kabuk 44,
+CAD 30) ona bağlı, 59 dosyası 294 yöntemini çağırıyor. Ortak katalogdaki (`catalog/v1/modules.json`) komut kümeleri
+gösteriyor ki bu klasör CBS modülü değil, bütün modüllerin ortak CBS ve veri altyapısıdır:
+
+- Çağrılan komutların çoğunu Harita da, çoğunu Yol ve Mimari de sunar: veri katmanları ve kaynaklar, işlem kutusu
+  (`processing.*`'ın 62'si Harita'da), raster ve nokta bulutu, katman süzgeci, çevirisi ve birleştirmesi, etiketler,
+  topoloji, adres, Hesap, noktalar, formlar, öznitelik tablosu.
+- Yalnız CBS'nin olanlar az: ağlar ve alt ağlar (`network.*`, `tool.net*`), zaman (`time.*`, `tool.time*`), senaryonun
+  dördü, grafikler (`chart.*`), `mesh.add`, `raster.stac`, işlem kutusunun 65 aracı (araç kayıtlıdır; komut kümesi yalnız
+  sunulup sunulmadığını söyler).
+
+**Araştırma.** QGIS'in Python API belgeleri (`qgis.org/pyqgis`, 24 Kasım 2026'da okundu) kütüphaneleri ayırır: `core`
+veri sağlayıcılarını, ifade motorunu, işlem çatısını, raster, nokta bulutu, mesh ve vektör katmanlarını, koordinat
+sistemlerini, etiketlemeyi, coğrafi kodlamayı ve STAC'ı tutar; `gui` öznitelik tablosu ve form düzenleyicilerini, harita
+araçlarını; `analysis` ağ ve yüzey çözümlemelerini; uygulama ve eklentiler bunların üstündedir.
+
+**Karar.**
+
+- `gis/` çekirdeğin klasörü olur (kabuk ve CAD çekirdeği gibi), adı ve modül adları değişmez; `module_deps.py`'de
+  `CORE = (shell, cad, gis)`, modüller `cbs, arch, map, road`. Çekirdeğin klasörleri arasındaki bağlar da izlenir ve
+  yalnız azalır (kabuk → gis 43, CAD → gis 30, gis → CAD 54); modüllere bağ izlenir (0 olmalı).
+- CBS modülünün kendisi `cbs/`'dir: profili (`gis_profile`), Ağlar ve Alt ağlar. Kendi merkezi `cbs/state.rs`
+  (`CbsUiState`, `cbs::Event`, `CbsDialogKind`; `CbsState` ile `modules.cbs()`), parçaları `cbs/parts.rs`.
+- Ortak merkez (`gis/state.rs`: `App::gis`, `Message::Gis`, `Dialog::Gis`) çekirdekte kalır; ağ ve alt ağ kısmı CBS'nin
+  merkezine geçti.
+- Zaman ve grafikler komutlarının çoğu CBS'nin olsa da modülleri Harita'yla paylaşılır (senaryonun ikisi, bir grafik
+  komutu); modül düzeyinde ortaktırlar, çekirdekte kalırlar. İkiye ayrılmaları sonraki iştir.
+
+**Uygulama.**
+
+- Taşınan: `networks/`, `subnetworks_window.rs`, `profile.rs` → `cbs/`.
+- Çözülen bağlar:
+  - İfade düzenleyicisinin `Target::Network`'ü genel `Target::Back`'e döndü (pencere metni kendi iletisiyle geri alır);
+    ağ alanının düzenleyicisini açmak ağ penceresinin işi.
+  - `command_tasks` (araçların istediği komutlar) çekirdeğe indi.
+  - Ağ denetiminin işareti CBS'nin `marks()`'ıdır (topoloji bulgusu gibi çizilir, `marks::problem`).
+  - Araçların ağ soruları `follow` kancasıyla yanıtlanır.
+  - Başka çizim ekrana gelince ağlar unutulur: yeni `drawing_shown` kancası.
+- `module_profile::profile` artık yalnız parçalara sorar; CBS'nin parçaları paketine ayrılana dek `IN_CORE`'da.
+- Taban yeniden yazıldı (sınıflama değişti): kabuk → cbs 1 (kayıt dosyası), gis → cbs 0.
+- Sınama: çekirdek 2503, Mimari 204, Harita 191, Yol 129, programlar 36.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):
@@ -306,7 +350,7 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
   ortak pencerelere çekirdekte kendi merkezleri verilir (durum, ileti, pencere türü; Harita'daki düzenin çekirdek içi
   benzeri), Yol'un merkezine bağları kalkar; `road_project_panel`'in `project_graph_window` bağı da çözülür.
 
-- CBS paketi (Harita, Yol ve Mimari ayrıldı): aynı düzenle ortak parçalar çekirdeğe, `ModuleParts`, silinen türler,
-  uzantı trait'leri, paket, sınamaların yeri. CBS ile CAD arasındaki bağ en büyüğüdür (CBS → CAD 54, CAD → CBS 30).
+- CBS paketi: `cbs/`'nin uzantı trait'leri ve paketi (`apps/desktop-cbs`); CBS'ye dayanan çekirdek sınamalarının yeri.
+  Zaman ve grafiklerin yalnız CBS'nin olan yarısı ayrıldıkça pakete geçer.
 - CAD çekirdeğinin kabuktan ayrılması (§3.1): kabuk → cad 77, CBS → cad 54 dosya.
 - Modül programlarının ayrı ikilileri ve paketlemesi: bir modülün programı yalnız kendi paketini kaydeder.

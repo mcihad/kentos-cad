@@ -4,6 +4,12 @@
 use super::*;
 
 impl App {
+    /// The commands the tools asked for, run after the update.
+    pub(crate) fn command_tasks(&mut self) -> Task<Message> {
+        let ids = std::mem::take(&mut self.command_wanted);
+        Task::batch(ids.into_iter().map(|id| self.run(id)).collect::<Vec<_>>())
+    }
+
     /// Runs a web command id: the desktop's handler, or a note that it is not here yet.
     pub fn run(&mut self, id: &'static str) -> Task<Message> {
         // Whatever runs a command closes the application menu (the web's `executed`).
@@ -401,8 +407,6 @@ impl App {
             "terrain.sheetContours" => return self.open_sheet_contours(),
             "terrain.stockpile" => return self.open_stockpile(),
             "topology.rules" => return self.open_topology_rules(),
-            // Ağlar (networks/, docs/adr/0209 §10).
-            "network.manage" => return self.open_networks(),
             // Adres arama (address/, docs/adr/0229 §13).
             "address.search" => return self.open_address_search(),
             "address.reverse" => return self.start_tool(kentos_interaction::address_reverse::ID),
@@ -558,7 +562,6 @@ impl App {
             "standards.check" | "standards.apply" => self.open_drawing_standard(),
             "review.notes" => self.open_review_notes(),
             "profile.window" => self.open_data_profile(),
-            "network.subnetworks" => self.open_subnetworks(),
             // Olay bağları (event_links_window.rs, docs/adr/0569 §5).
             "linearRef.eventLinks" => self.open_event_links(),
             // Arazi yüzeyleri and Yüzey oluştur (terrain_window.rs, plan/road.md Y2.4).

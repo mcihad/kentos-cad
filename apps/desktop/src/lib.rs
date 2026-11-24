@@ -191,7 +191,7 @@ pub mod drawing_menus;
 mod data_profile;
 #[path = "gis/data_profile_names.rs"]
 mod data_profile_names;
-#[path = "gis/subnetworks_window.rs"]
+#[path = "cbs/subnetworks_window.rs"]
 mod subnetworks_window;
 #[path = "gis/source_status.rs"]
 mod source_status;
@@ -363,7 +363,7 @@ pub mod numbers;
 pub mod module_parts;
 #[path = "shell/module_profile.rs"]
 pub mod module_profile;
-#[path = "gis/profile.rs"]
+#[path = "cbs/profile.rs"]
 mod gis_profile;
 #[path = "shell/navigation.rs"]
 mod navigation;
@@ -455,7 +455,11 @@ mod sub_object;
 mod typed_names;
 #[path = "cad/ucs.rs"]
 mod ucs;
-#[path = "gis/networks/mod.rs"]
+#[path = "cbs/state.rs"]
+mod cbs;
+#[path = "cbs/parts.rs"]
+mod cbs_parts;
+#[path = "cbs/networks/mod.rs"]
 mod networks;
 #[path = "shell/services/mod.rs"]
 mod services;

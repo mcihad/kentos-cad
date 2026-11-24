@@ -5,10 +5,11 @@ Masaüstünün kaynağında her dosyanın başka klasördeki modüllere bağlar�
 paketi (apps/desktop/src) ve kendi paketine ayrılmış modüller (ADR 9199: Harita apps/desktop-map/src). Bir modül
 paketinin dosyası o modülün klasörüdür; çekirdek modül paketlerine Cargo'nun kuralıyla da bağlanamaz.
 
-- Klasörler: shell (kabuk), cad (CAD çekirdeği), gis, arch, map, road (modüller). Sınama dosyaları sayılmaz: tests/,
-  *_tests.rs, tests.rs, sahneler ve resimler.
-- İzlenen bağlar: kabuktan cad'e ve modüllere; cad'den modüllere; modülden öbür modüllere; gis'ten cad'e. CAD
-  modüllerinin (arch, map, road) CAD çekirdeğine ve her dosyanın kabuğa bağı serbesttir.
+- Klasörler: çekirdeğin shell (kabuk), cad (CAD çekirdeği) ve gis (her modülün paylaştığı CBS ve veri çekirdeği:
+  veri katmanları, kaynaklar, işlem kutusu, raster, nokta bulutu, ifade, formlar; ADR 9199 §4.12) klasörleri; cbs, arch,
+  map, road (modüller). Sınama dosyaları sayılmaz: tests/, *_tests.rs, tests.rs, sahneler ve resimler.
+- İzlenen bağlar: kabuktan cad'e, gis'e ve modüllere; cad ile gis arasında iki yönde; cad'den ve gis'ten modüllere;
+  modülden öbür modüllere. Modüllerin çekirdeğe (cad, gis) ve her dosyanın kabuğa bağı serbesttir.
 - Modül adına göre dal: `Module::Architecture`, `Map`, `Gis`, `Road`, modül klasörlerinin ve kaydın
   (shell/module_profile.rs) dışında.
 
@@ -37,16 +38,18 @@ PACKAGES = {
 }
 BASELINE = Path(__file__).resolve().parent / "module_deps.baseline.json"
 
-MODULES = ("gis", "arch", "map", "road")
-FOLDERS = ("shell", "cad") + MODULES
+MODULES = ("cbs", "arch", "map", "road")
+# The core's folders: the shell, the CAD core and the GIS core every module shares (docs/adr/9199 §4.12).
+CORE = ("shell", "cad", "gis")
+FOLDERS = CORE + MODULES
 # The registry: the shell's one branch by module for its surfaces.
 REGISTRY = "shell/module_profile.rs"
 
 # Tracked directions: what may only shrink.
 TRACKED = (
-    [("shell", t) for t in ("cad",) + MODULES]
-    + [("cad", t) for t in MODULES]
-    + [("gis", "cad")]
+    [("shell", t) for t in ("cad", "gis") + MODULES]
+    + [("cad", t) for t in ("gis",) + MODULES]
+    + [("gis", t) for t in ("cad",) + MODULES]
     + [(m, t) for m in MODULES for t in MODULES if m != t]
 )
 
@@ -122,7 +125,7 @@ def survey() -> tuple[dict[str, list[str]], dict[str, int]]:
     """Each tracked direction's files, and the branches by module name in the shell and the CAD core."""
     owner = declared()
     edges: dict[str, list[str]] = {f"{a}->{b}": [] for a, b in TRACKED}
-    branches: dict[str, int] = {"shell": 0, "cad": 0}
+    branches: dict[str, int] = {"shell": 0, "cad": 0, "gis": 0}
     sources = [(folder, SRC / folder, SRC) for folder in FOLDERS if folder not in PACKAGES]
     sources += [(module, src, src) for module, src in PACKAGES.items()]
     for folder, top, base in sources:

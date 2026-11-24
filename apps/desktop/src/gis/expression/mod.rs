@@ -79,8 +79,9 @@ pub(crate) enum Target {
     Processing(String),
     /// Öznitelik tablosu's İfade süzgeci (features/, docs/adr/0199 §4).
     FeatureFilter,
-    /// An expression of Ağlar's form (networks/window.rs, docs/adr/0209 §10).
-    Network(crate::networks::window::Field),
+    /// A module's window's expression (Ağlar's form, the CBS module's networks/window.rs): the text goes back as the
+    /// message the window makes of it.
+    Back(Back),
     /// Katman süzgeci's condition (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter,
     /// Alan hesapla's expression (features/write.rs, docs/adr/0507).
@@ -98,6 +99,29 @@ pub(crate) enum Target {
         at: kentos_native_style::designer::LayerPath,
         key: String,
     },
+}
+
+/// Where a module's window takes the builder's text back: the message it makes of the text (docs/adr/9199 §4.12).
+#[derive(Clone)]
+pub struct Back(std::sync::Arc<dyn Fn(String) -> Message + Send + Sync>);
+
+impl Back {
+    /// The window's message of the text.
+    pub fn new(back: impl Fn(String) -> Message + Send + Sync + 'static) -> Self {
+        Self(std::sync::Arc::new(back))
+    }
+}
+
+impl std::fmt::Debug for Back {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Back")
+    }
+}
+
+impl PartialEq for Back {
+    fn eq(&self, other: &Self) -> bool {
+        std::sync::Arc::ptr_eq(&self.0, &other.0)
+    }
 }
 
 /// A field's values listed in the help.
@@ -261,7 +285,7 @@ fn ev(e: Event) -> Message {
 /// Today's text attributes as the builder's fields, with how many objects
 /// have each; the `@` values (docs/adr/0214 §2.3); and the unit the
 /// geometry values speak where the expression goes (docs/adr/0165 §2).
-fn attribute_fields(
+pub(crate) fn attribute_fields(
     fields: &[(String, usize)],
     variables: Vec<Variable>,
     world: bool,
@@ -638,7 +662,7 @@ impl Builder {
     }
 
     /// The value the preview shows, on the object it is on.
-    fn preview_on(
+    pub(crate) fn preview_on(
         &mut self,
         doc: Option<&kentos_domain::Document>,
         store: &kentos_geometry_core::store::Store,
@@ -820,46 +844,6 @@ impl App {
             Objects {
                 slots: rows.slots.clone(),
             },
-        );
-        builder.preview_on(Some(&doc.model), self.spatial.store());
-        self.show_builder(builder)
-    }
-
-    /// Ağlar's ε: the builder on one of the form's expressions, the layer's keys and objects.
-    /// A network's costs are the drawing's, read at each analysis: no `@` value but the
-    /// layer's (docs/adr/0214 §1).
-    pub(crate) fn open_builder_for_network(
-        &mut self,
-        field: crate::networks::window::Field,
-    ) -> Task<Message> {
-        let Some(doc) = &self.document else {
-            return Task::none();
-        };
-        let layer = self.network_field_layer(field);
-        let slots: Vec<Slot> = doc
-            .model
-            .by_layer(&layer)
-            .take(5000)
-            .map(|e| Slot(e.base().id))
-            .collect();
-        let mut counts: Vec<(String, usize)> = Vec::new();
-        for e in doc.model.by_layer(&layer).take(2000) {
-            for k in e.base().attrs.keys() {
-                match counts.iter_mut().find(|(n, _)| n == k) {
-                    Some((_, c)) => *c += 1,
-                    None => counts.push((k.clone(), 1)),
-                }
-            }
-        }
-        counts.sort_by(|a, b| a.0.cmp(&b.0));
-        let value = self.network_field_text(field);
-        let mut builder = Builder::new(
-            Target::Network(field),
-            crate::networks::window::TITLE.to_owned(),
-            &value,
-            // A network's costs are measured in metres (docs/adr/0165 §2).
-            attribute_fields(&counts, Vec::new(), false, Unit::METRE),
-            Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
         self.show_builder(builder)
@@ -1357,7 +1341,7 @@ impl App {
 
     /// Tamam: the text goes back to its field; with an error it stays.
     /// The builder over its window: in the view it was left in last (Metin or Akış), with the entries used lately.
-    fn show_builder(&mut self, mut builder: Builder) -> Task<Message> {
+    pub(crate) fn show_builder(&mut self, mut builder: Builder) -> Task<Message> {
         if self.builder_flow {
             builder.set_mode(ViewMode::Flow);
         }
@@ -1394,10 +1378,7 @@ impl App {
             Target::FeatureFilter => {
                 return self.features_event(crate::features::Event::Filter(text));
             }
-            Target::Network(field) => {
-                return self
-                    .networks_window_event(crate::networks::window::Event::Text(field, text));
-            }
+            Target::Back(back) => return self.update((back.0)(text)),
             Target::LayerFilter => {
                 return self.layer_filter_event(crate::layer_filters::Event::Expression(text));
             }

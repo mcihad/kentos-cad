@@ -1,7 +1,7 @@
 {
   "format": "kentos.module-deps",
   "version": 1,
-  "note": "scripts/dev/module_deps.py'nin tabanı (ADR 9195 §6): yalnız azalır.",
+  "note": "scripts/dev/module_deps.py'nin tabanı (ADR 9195 §6): yalnız azalır. 24 Kasım 2026'da gis çekirdek, cbs modül klasörü oldu (ADR 9199 §4.12).",
   "edges": {
     "shell->cad": [
       "shell/app/commands.rs",
@@ -105,7 +105,6 @@
       "shell/extensions/panel_chart.rs",
       "shell/input.rs",
       "shell/layout.rs",
-      "shell/module_profile.rs",
       "shell/module_surfaces.rs",
       "shell/open_health.rs",
       "shell/perf/clouds.rs",
@@ -127,6 +126,9 @@
       "shell/viewport/state.rs",
       "shell/windows/mod.rs",
       "shell/works/sources.rs"
+    ],
+    "shell->cbs": [
+      "shell/module_profile.rs"
     ],
     "shell->arch": [],
     "shell->map": [],
@@ -163,6 +165,7 @@
       "cad/vertices/mod.rs",
       "cad/vertices/view.rs"
     ],
+    "cad->cbs": [],
     "cad->arch": [],
     "cad->map": [],
     "cad->road": [],
@@ -222,21 +225,26 @@
       "gis/source_trouble.rs",
       "gis/topology/mod.rs"
     ],
+    "gis->cbs": [],
     "gis->arch": [],
     "gis->map": [],
     "gis->road": [],
-    "arch->gis": [],
+    "cbs->arch": [],
+    "cbs->map": [],
+    "cbs->road": [],
+    "arch->cbs": [],
     "arch->map": [],
     "arch->road": [],
-    "map->gis": [],
+    "map->cbs": [],
     "map->arch": [],
     "map->road": [],
-    "road->gis": [],
+    "road->cbs": [],
     "road->arch": [],
     "road->map": []
   },
   "branches": {
     "shell": 36,
-    "cad": 7
+    "cad": 7,
+    "gis": 0
   }
 }

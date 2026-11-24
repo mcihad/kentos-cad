@@ -324,4 +324,6 @@ impl ModuleParts for Road {
     fn building3d(&self) -> Option<&dyn crate::module_parts::Building3dParts> {
         None
     }
+
+    fn drawing_shown(&self, _app: &mut App) {}
 }
