@@ -248,8 +248,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Stil çekirdeği: noktaya verilen alan sembolü ağırlık merkezi işaretini noktada çiziyor (önce hiçbir şey).
     - NCZ okuyucusu 47 kodu MPYY uygulama imar planı sembollerine eşliyor: 4 533 nokta lejant işaretiyle.
     - Bilerek dışarıda: S101 (parklar; Netcad boş çiziyor), özel tesislerin “Ö” işaretleri (lejantta yok).
-  - [ ] Koruma bantlarının sembollü çizgi tipi ve koruma alanının deseni yok. Sahibin kararı: NCZ'nin stil kayıtları
-    çözülecek.
+  - [x] Bindirme katmanları MPYY lejantının sembolüyle ([ADR 9219](../docs/adr/9219-ncz-overlays-with-legend-symbols.md)).
+    Sahibin kararları: stil kayıtları çözülsün; bindirmeler MPYY sembolüyle, plan alanları Netcad'in renginde;
+    bindirme alanları yarı saydam.
+    - Katmanın stil kaydından çizgi tipi ve sembol numarası okunuyor; 12 alan ve 8 çizgi sembolü eşlendi.
+    - Sivas planında 65 812 nesne: 271 yarı saydam alan (kuşaklar, sitler, tescilli yapılar), 65 541 çizgi.
+    - Nesnenin saydamlığı artık kendi sembolünü de saydam çiziyor (stil çekirdeği, masaüstü).
+    - Saydamlık anahtarı kapalıyken (sahibin ayarı) kuşaklar opak çizilir (ADR 0195).
+  - [ ] KA_KORUNMA_ALANI'nın daire deseni ve 15, 31, 32 numaralı çizgi tipleri eşlenmedi.
 - [ ] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek.
 
 ### F7 — DWG ve DXF alımı

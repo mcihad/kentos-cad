@@ -199,6 +199,9 @@ struct Emitter {
     renamed: BTreeSet<String>,
     /// Symbol points drawn with the zoning legend's mark (`legend_mark`), and the codes without one, counted.
     legend: (u32, BTreeMap<String, u32>),
+    /// Objects of the overlays (protection bands, sites, registered buildings, the plan's lines) drawn with the
+    /// legend's symbol their layer's style names (`overlay_symbol`), counted.
+    overlays: u32,
     widths: u32,
     thinnest: f64,
     widest: f64,
@@ -284,6 +287,7 @@ impl Emitter {
             truncated: 0,
             renamed: BTreeSet::new(),
             legend: (0, BTreeMap::new()),
+            overlays: 0,
             widths: 0,
             thinnest: 0.0,
             widest: 0.0,
@@ -378,6 +382,16 @@ impl Emitter {
         };
         let v = |c: &format::Coord| Vec2 { x: c.x, y: c.y };
         let mut b = self.base(e, layer);
+        // An overlay layer's symbol, from its style's numbers in Netcad's library, as the zoning legend draws it
+        // (docs/adr/9219); the plan's areas keep Netcad's colours (the owner's choice).
+        if let Some((symbol, area)) = overlay_symbol(&self.fin, e) {
+            b.symbol = Some(symbol.to_owned());
+            // An area's legend symbol is filled: seen through, the plan's lines under it stay (the owner's choice).
+            if area {
+                b.look.transparency = Some(OVERLAY_TRANSPARENCY);
+            }
+            self.overlays += 1;
+        }
         let note = |b: &mut EntityBase, key: &str, value: &str| {
             if !value.is_empty() {
                 b.attrs.insert(key.to_owned(), value.to_owned());
@@ -1268,6 +1282,65 @@ fn legend_mark(code: &str) -> Option<(&'static str, Option<(&'static str, &'stat
     Some((symbol, None))
 }
 
+/// The zoning legend's symbol an overlay layer's style stands for (plan/render.md RM-18, docs/adr/9219): an area of
+/// it the area symbol its layer's symbol number names, a line (or an area of a layer without one) the line symbol its
+/// line type number names. Netcad's layer record keeps only these numbers into its library (docs/adr/9216 §4½);
+/// their meaning is read from the layers that use them in the Sivas plan.
+/// Whether it is an area symbol comes with it.
+fn overlay_symbol(h: &Header, e: &format::Entity) -> Option<(&'static str, bool)> {
+    let (line_type, symbol) = format::layer_style(h, e.layer_code)?;
+    match e.kind {
+        Kind::Polygon | Kind::Triangle => symbol
+            .and_then(overlay_area)
+            .map(|id| (id, true))
+            .or_else(|| overlay_line(line_type).map(|id| (id, false))),
+        Kind::Line | Kind::Polyline => overlay_line(line_type).map(|id| (id, false)),
+        _ => None,
+    }
+}
+
+/// How transparent an overlay area drawn with the legend's area symbol is (the owner's choice, 24 November 2026: the
+/// railway protection band's legend fill hid the railway's line under it; Netcad draws the band without a fill).
+const OVERLAY_TRANSPARENCY: f64 = 0.6;
+
+/// An overlay layer's symbol number in Netcad's library and the zoning legend's area symbol it is: the protection
+/// bands, the sites and the registered buildings. A plan area layer's symbol number is its legend mark's code
+/// (`legend_mark`), not here: those areas keep Netcad's colours and their marks come from the plan's symbol points.
+fn overlay_area(symbol: u8) -> Option<&'static str> {
+    Some(match symbol {
+        35 => "mpyy.uip.ortak-sit.1-derece-arkeolojik-sit-alani",
+        36 => "mpyy.uip.ortak-sit.2-derece-arkeolojik-sit-alani",
+        37 => "mpyy.uip.ortak-sit.3-derece-arkeolojik-sit-alani",
+        42 => "mpyy.uip.ortak-sit.tarihi-sit-alani",
+        52 => "mpyy.uip.korunacak.tescilli-anit-yapi",
+        53 => "mpyy.uip.korunacak.tescilli-bina",
+        55 => "mpyy.uip.korunacak.sit-etkilesim-gecis-alani-siniri",
+        66 => "mpyy.uip.yapi-sinirlamasi.karayollari-yol-kenari-koruma-kusagi",
+        67 => "mpyy.uip.yapi-sinirlamasi.boru-hatti-koruma-kusagi",
+        68 => "mpyy.uip.yapi-sinirlamasi.su-kanallari-koruma-kusagi",
+        71 => "mpyy.uip.yapi-sinirlamasi.demiryollari-koruma-kusagi",
+        74 => "mpyy.uip.yapi-sinirlamasi.enerji-nakil-hatti-koruma-kusagi",
+        _ => return None,
+    })
+}
+
+/// A line type number in Netcad's library and the zoning legend's line symbol it is, each read from the one plan line
+/// layer that uses it. Numbers two different lines share (15: plan approval and staging boundaries) or whose meaning
+/// is not certain (31, 32) are left out.
+fn overlay_line(line_type: u8) -> Option<&'static str> {
+    Some(match line_type {
+        11 => "mpyy.uip.yapi-duzeni.yapi-yaklasma-siniri",
+        19 => "mpyy.uip.enerji.dogalgaz-boru-hatti",
+        21 => "mpyy.uip.su.atik-su-ana-kollektoru",
+        23 => "mpyy.uip.karayollari.bisiklet-yolu",
+        29 => "mpyy.uip.ortak-planlama.ozel-proje-alani-siniri",
+        40 => "mpyy.uip.yapi-duzeni.ifraz-hatti",
+        41 => "mpyy.uip.yapi-duzeni.kademe-hatti",
+        42 => "mpyy.uip.ortak-atik.icme-suyu-ana-iletim-hatti",
+        _ => return None,
+    })
+}
+
 /// The height Netcad writes a parcel's number at from the parcel's label, metres: what its own DXF of the Sivas plan
 /// shows at the 1:1000 an NCZ opens at (docs/adr/9217).
 const PARCEL_NUMBER_HEIGHT: f64 = 3.0;
@@ -1498,6 +1571,17 @@ pub fn read(
         );
     }
     entities.extend(numbers);
+    if em.overlays > 0 {
+        report.about(
+            "Katman sembolü",
+            &format!(
+                "{} nesne katmanının Netcad stilinin karşılığı olan Mekânsal Planlar Yapım Yönetmeliği lejantı \
+                 sembolüyle çizildi (koruma kuşakları, sitler, tescilli yapılar, plan hatları). Plan alanları \
+                 Netcad'in renginde kaldı.",
+                em.overlays
+            ),
+        );
+    }
     let (marked, unmarked) = std::mem::take(&mut em.legend);
     if marked > 0 || !unmarked.is_empty() {
         let left: u32 = unmarked.values().sum();
@@ -1612,6 +1696,23 @@ mod tests {
             }
         }
         assert_eq!(found, 47);
+        // The overlays' area and line symbols, by their numbers in Netcad's library (docs/adr/9219).
+        let kind = |id: &str| {
+            items.iter().find(|i| i["id"] == id).map(|i| i["symbol"]["type"].as_str().unwrap_or("").to_owned())
+        };
+        let (mut areas, mut lines) = (0, 0);
+        for n in 0..=255u8 {
+            if let Some(id) = overlay_area(n) {
+                areas += 1;
+                assert_eq!(kind(id).as_deref(), Some("fill"), "{n}: {id}");
+                assert!(legend_mark(&format!("S{n}")).is_none(), "{n}: an overlay's number is no plan area's mark");
+            }
+            if let Some(id) = overlay_line(n) {
+                lines += 1;
+                assert_eq!(kind(id).as_deref(), Some("line"), "{n}: {id}");
+            }
+        }
+        assert_eq!((areas, lines), (12, 8));
         assert_eq!(legend_mark("S6"), Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "1")))));
         assert_eq!(legend_mark("S75"), Some(("mpyy.uip.egitim.anaokulu-alani", None)));
         assert_eq!(legend_mark("S101"), None, "Netcad draws a park's mark empty");

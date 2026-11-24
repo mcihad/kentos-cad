@@ -5,7 +5,8 @@
 - **Sahibin kararı** (24 Kasım 2026): “Yönetmelik lejantından”. Netcad'in sembol kodları KentOS'un kendi sembollerine
   eşlenir. Çizimler Mekânsal Planlar Yapım Yönetmeliği'nin lejantından alınır, Netcad'in kütüphanesinden değil.
 - **Sözleşmeler:** değişmedi. Nokta, var olan `symbol` alanıyla bir kitaplık sembolüne bağlanıyor.
-- **Stil çekirdeğinin bir kuralı değişti** (§2.1): masaüstü ve web aynı çekirdeği kullanıyor.
+- **Stil çekirdeğinin bir kuralı değişti** (§2.1). Masaüstü bu çekirdeği kullanıyor. Web duruyor
+  ([ADR 0228](0228-web-pause-desktop-and-cloud-first.md)); web'de gerekenler TODOS.md §0.2'de.
 
 ## §1 Bulgu
 
@@ -42,8 +43,8 @@ noktaya çizer, dolgularını çizmez. Alanda aynı sembol eskisi gibi hem doldu
 **Uygulama:**
 
 - Değişiklik `kentos_style_core::style::compile::layer_on` içinde.
-- Web derleyiciyi aynı çekirdekten (`styleCompile` işlemi) çağırıyor. `apps/web/src/style/compile.ts`'nin açıklaması da
-  güncellendi.
+- Web derleyiciyi aynı çekirdekten (`styleCompile` işlemi) çağırıyor, ama web duruyor. Web'in açıklaması
+  (`apps/web/src/style/compile.ts`) ve dondurulmuş vakası dönüşte güncellenir (TODOS.md §0.2).
 
 **Dondurulmuş stil yanıtları** (`fixtures/style/v1/cases.json`, 48 katman ve 160 sembol vakası):
 
@@ -96,5 +97,4 @@ işaretiyle çizildiğini ve karşılığı olmayan kodları söyler.
 - `crates/shared/style-core/src/style/compile.rs` (`layer_on`, `compile_symbol`'ün açıklaması);
   `crates/shared/style-core/src/style/tests.rs`.
 - `fixtures/style/v1/cases.json` (18. katman vakası).
-- `apps/web/src/style/compile.ts` (açıklama).
 - `crates/shared/ncz/src/emit.rs` (`legend_mark`, sembol noktası, rapor notu, sınama).

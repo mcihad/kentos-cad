@@ -14,6 +14,7 @@ use std::collections::{HashMap, HashSet};
 
 use kentos_contracts::{Entity, LayerStyle};
 use kentos_geometry_core::Vec2;
+use kentos_geometry_core::api::json::{Json, to_string as json_text};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::jsmath::{js_max, js_round};
@@ -213,6 +214,9 @@ struct Interned {
     color_index: HashMap<String, i32>,
     refs: Vec<String>,
     ref_index: HashMap<String, i32>,
+    /// Own symbols seen through (`own_seen_through`): the id each is known by here, its library symbol's and how
+    /// transparent its object is.
+    seen_through: HashMap<String, (String, f64)>,
     /// The simple look's set by colour and line weight (its bits).
     simple: HashMap<(String, u64), i32>,
     /// An object's own stroke's set by colour, weight, stroke and pattern (docs/adr/0260, 0313).
@@ -315,6 +319,16 @@ impl Interned {
         s
     }
 
+    /// An own symbol whose object is `t` transparent (its look's transparency, docs/adr/9219): the library symbol as
+    /// the style core sees it through (`seen_through`), under an id of its own. An object's transparency was kept for
+    /// its simple look and lost with a symbol of its own: an NCZ's protection band drawn with the zoning legend's
+    /// filled symbol hid the railway's line under it.
+    fn own_seen_through(&mut self, id: &str, t: f64) -> i32 {
+        let key = format!("{id}#saydam{t}");
+        self.seen_through.entry(key.clone()).or_insert_with(|| (id.to_owned(), t));
+        self.own(&key)
+    }
+
     fn own(&mut self, id: &str) -> i32 {
         if let Some(&k) = self.ref_index.get(id) {
             return k;
@@ -324,6 +338,12 @@ impl Interned {
         self.ref_index.insert(id.to_owned(), k);
         k
     }
+}
+
+/// `symbol` as its object's transparency `t` draws it, by the style core (`seen_through`, docs/adr/9219).
+fn seen_through(symbol: &Value, t: f64) -> Option<Value> {
+    let core = Json::parse(&symbol.to_string()).ok()?;
+    serde_json::from_str(&json_text(&kentos_style_core::style::seen_through::seen_through(&core, t))).ok()
 }
 
 /// A layer's bands with masks (docs/adr/0310 §2): the objects come in their drawing order, and within each order a
@@ -545,7 +565,10 @@ pub fn layer_call(
                 it.set(stroke.apply(it.lines.apply(base.look.line_pattern.as_deref().or(if stroke.line_type.is_none() { style.line_pattern.as_deref() } else { None }), leader_symbols_of(style, color, weight, opts.hairlines)))),
             ),
             _ => match &base.symbol {
-                Some(id) => (MODE_OWN, it.own(id)),
+                Some(id) => match base.look.transparency.filter(|t| *t > 0.0) {
+                    Some(t) => (MODE_OWN, it.own_seen_through(id, t)),
+                    None => (MODE_OWN, it.own(id)),
+                },
                 None if style.renderer.is_none() => (MODE_SET, s),
                 None => (MODE_RENDERER, 0),
             },
@@ -559,10 +582,15 @@ pub fn layer_call(
     let mut seen = HashSet::new();
     let mut symbols = Map::new();
     for id in used {
-        if seen.insert(id.clone())
-            && let Some(sym) = opts.library.symbol(&id)
-        {
+        if !seen.insert(id.clone()) {
+            continue;
+        }
+        if let Some(sym) = opts.library.symbol(&id) {
             symbols.insert(id, sym.clone());
+        } else if let Some((source, t)) = it.seen_through.get(&id)
+            && let Some(sym) = opts.library.symbol(source).and_then(|s| seen_through(s, *t))
+        {
+            symbols.insert(id, sym);
         }
     }
     let symbols = Value::Object(symbols);

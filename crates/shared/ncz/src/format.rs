@@ -335,6 +335,9 @@ pub struct Header {
     pub layer_names: Vec<String>,
     /// LEX.ST2, 0xFFRRGGBB.
     pub layer_colors: Vec<u32>,
+    /// LEX.ST2, each layer's line type and symbol numbers in Netcad's library (docs/adr/9216 §4½, 9219): byte 5 of the
+    /// layer's 256-byte item, and byte 17 when byte 19 says it is set. The drawings are in that library, not the file.
+    pub layer_styles: Vec<(u8, Option<u8>)>,
     /// `5.2.0.1035N`.
     pub version_name: String,
     /// TILED_XML's `SRS…`, as the reference cleans it.
@@ -377,6 +380,7 @@ impl Default for Header {
         Self {
             layer_names: Vec::new(),
             layer_colors: Vec::new(),
+            layer_styles: Vec::new(),
             version_name: String::new(),
             epsg: String::new(),
             projection_text: String::new(),
@@ -459,6 +463,15 @@ fn geometry_color(h: &Header, layer_code: u8, color_code: u8) -> Option<u32> {
 /// code 0 on it takes; none when no LEX.ST2 table covers it.
 pub fn layer_color(h: &Header, layer_code: u8) -> Option<u32> {
     geometry_color(h, layer_code, 0)
+}
+
+/// A layer's line type and symbol numbers (`Header::layer_styles`), by its code as its colour is looked up.
+pub fn layer_style(h: &Header, layer_code: u8) -> Option<(u8, Option<u8>)> {
+    let (n, code) = (h.layer_styles.len(), usize::from(layer_code));
+    if code < n {
+        return Some(h.layer_styles[code]);
+    }
+    (code >= 1 && code - 1 < n).then(|| h.layer_styles[code - 1])
 }
 
 /// `_layer_name` against the tables in `h`.
@@ -981,6 +994,9 @@ impl Parser<'_, '_> {
                 }
                 let c = |k: usize| u32::from(self.data[item + k]);
                 self.header.layer_colors.push(to_argb(c(0), c(1), c(2)));
+                let byte = |k: usize| self.data.get(item + k).copied().filter(|_| item + k < block_end);
+                let symbol = (byte(19) == Some(1)).then(|| byte(17)).flatten().filter(|&n| n != 0);
+                self.header.layer_styles.push((byte(5).unwrap_or(0), symbol));
             }
         }
     }

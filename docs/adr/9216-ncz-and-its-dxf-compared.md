@@ -97,7 +97,8 @@ DXF'in nesne çokluğu Netcad'in aktarımından geliyor:
 
 **Sonuç:** kayıtlar çizgi tiplerinin ve desenlerin çizimini değil, Netcad'in kütüphanesine numarasını taşıyor; çizim
 NCZ'de yok. Sembollerdeki gibi ancak KentOS'un MPYY sembollerine eşlenerek gösterilebilir. Bunun bir görünüm kararı
-var (plan alanlarının rengi), sahibe soruldu.
+var (plan alanlarının rengi), sahibe soruldu. Karar ve uygulama: [ADR 9219](9219-ncz-overlays-with-legend-symbols.md)
+(bindirmeler MPYY sembolüyle, bindirme alanları yarı saydam; plan alanları Netcad'in renginde).
 
 ## §5 Karar
 
@@ -111,7 +112,7 @@ var (plan alanlarının rengi), sahibe soruldu.
 - Bunlar sahibe soruldu. Kararları (24 Kasım):
   - parsel numarası yalnız eksiklere ([ADR 9217](9217-ncz-parcel-numbers-from-labels.md));
   - semboller yönetmelik lejantından KentOS'un kendi çizimiyle ([ADR 9218](9218-ncz-symbols-as-legend-marks.md));
-  - NCZ'nin çizgi tipi ve desen kayıtları çözülecek.
+  - NCZ'nin çizgi tipi ve desen kayıtları çözülecek ([ADR 9219](9219-ncz-overlays-with-legend-symbols.md)).
 
 ## Uygulama
 

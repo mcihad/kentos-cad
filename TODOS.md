@@ -2658,6 +2658,12 @@ Liste:
 - [ ] Stil düzenleyicilerinin iki uçlu çubuğu ve hizalı formu (ADR 9121; 22 Kasım 2026): web'in Sembol tasarımcısı ve
   SVG düzenleyicisi aynı düzene geçsin (geçmiş solda, görünüm sağda; Altlık, Bitmap izle, Dışa aktar yalnız Dosya
   menüsünde; ƒ etiketin ardında, birim sabit yerde; Ctrl+↑, Ctrl+↓, Ctrl+D, Delete).
+- [ ] NCZ planının sunumu (ADR 9218, 9219; 24 Kasım 2026): stil çekirdeği noktaya verilen alan sembolünün ağırlık
+  merkezi işaretlerini o noktaya çiziyor (ADR 9218 §2.1); web'in `style/compile.ts` açıklaması bunu söylesin. Web'in
+  WASM paketi yeniden derlenince `style/fixture.test.ts`'in 18. katman vakası yeni sayıları bekler (topluluk 4, sayı
+  45); eski paketle kırmızı. Nesnenin saydamlığı kendi sembolünü de saydam çizer (ADR 9219): web'in katman programı
+  (`render/styledLayer.ts`) saydam nesnenin sembolünü çekirdeğin `style::seen_through`'uyla türetsin. İşlem tarayıcıya
+  bir op olarak açılır; TS'te hesap yazılmaz (CLAUDE.md §14).
 
 ## 1. Koddan doğrulanan mevcut durum
 
