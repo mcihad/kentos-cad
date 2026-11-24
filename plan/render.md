@@ -168,7 +168,11 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     bir kez üçgenleniyor. Simge ekranda 128 pikseli geçince her yerleşimde vektör olarak çiziliyor
     (`kentos_native_style::svg_marks`, `SolidInstanced`); daha küçükken eski bitmap'i. Kenar her yakınlıkta keskin;
     yer, çizim sırası ve maske kutuları işaretinkiyle aynı.
-  - [ ] Desen karoları (tarama ve dolgu desenleri) aynı yoldan: karonun SVG'si tanım ağı, dolgu içinde örnekleme.
+  - [x] Tarama dolguları (`hatchFill`, BÖHHBÜY'de 8 simge; 1202 Resmî bina 45°) denetlendi (24 Kasım):
+    gölgelendiricide hesaplanıyorlar. Döşeme kökeninden 14 km uzaktaki alanda bile 13 çentikte (~700 px/m) çizginin
+    sapması ortalama 0,025 px; testere yok.
+  - [ ] Desen dolguları (`patternFill`, BÖHHBÜY'de 30 simge, örneğin 0633 bataklık) atlastaki karo bitmap'iyle
+    çiziliyor ve yakında büyütülür. Vektöre geçmek, alanla kırpma ister (maske ya da kalıp).
   - [ ] Yazı işaretleri RM-13'ün glif atlasına (MSDF) geçecek.
   - [ ] Asıl madde: İşaret ve simgeler GPU'da örnekli (instanced) çizilir; yol başına 50 000 işaret sınırı kalkar.
 - [ ] **RM-12 — Veri katmanları aynı döşemelere geçer.**
