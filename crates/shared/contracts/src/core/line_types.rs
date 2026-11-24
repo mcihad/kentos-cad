@@ -1,4 +1,4 @@
-//! Line types with patterns (docs/adr/0313 §1; AutoCAD's LIN and LTYPE): a
+//! Line types with patterns (docs/adr/0313 §1): a
 //! named pattern of dashes, gaps, dots and complex elements (a text or a
 //! shape placed where the pattern has come to), its unit (paper millimetres
 //! that follow the drawing's scale, or the drawing's own lengths) and the
@@ -12,7 +12,7 @@ use ts_rs::TS;
 
 use crate::LineType;
 
-/// The most elements a LIN file's pattern has (AutoCAD's LIN): a longer one is not written to a LIN file.
+/// The most elements a LIN file's pattern has: a longer one is not written to a LIN file.
 pub const MAX_PATTERN_ELEMENTS: usize = 12;
 /// The most elements a pattern the drawing keeps has (docs/adr/1001 §1): a DXF/DWG LTYPE may hold more than a LIN
 /// file's 12; one past [`MAX_PATTERN_ELEMENTS`] needs `.kcad` schema 181.
@@ -211,7 +211,7 @@ pub fn pattern_length_m(
     base * ltscale * object_scale
 }
 
-/// Whether two line type names are the same one (AutoCAD's: letters' case aside).
+/// Whether two line type names are the same one (letters' case aside).
 pub fn same_line_type_name(a: &str, b: &str) -> bool {
     a.trim().to_lowercase() == b.trim().to_lowercase()
 }

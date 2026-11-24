@@ -131,7 +131,7 @@ pub enum CrossingHatch {
     None,
 }
 
-/// A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a
+/// A pipe of the other network crossing the run in plan (docs/adr/2760), shown in a
 /// profile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter
 /// (none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration
 /// high, from its invert up (a point at its invert without a diameter), its name and invert above. With its wall

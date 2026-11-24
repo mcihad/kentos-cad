@@ -1,8 +1,8 @@
 //! KentOS Yol's terrain surface commands (plan/road.md Y2.3, docs/adr/0900 §11): `road.terrains.create` makes a
 //! surface from the drawing's points, breaklines, boundary and voids and keeps its definition in the road project's
 //! settings; `road.terrains.edit` changes a definition, accepts a surface made again from its sources, or removes
-//! one; `road.terrains.query` reads a surface's state, figures, heights at places and section along a line (Civil
-//! 3D's `FindElevationAtXY` and `SampleElevations`, OpenRoads' Analyze Point and profile of a line), with the slope and
+//! one; `road.terrains.query` reads a surface's state, figures, heights at places and section along a line (a point's
+//! height and a line's profile), with the slope and
 //! aspect; `road.terrains.contours` writes its contour lines (plan/road.md Y2.5). The surface's
 //! triangles are made by `kentos-road` (`kentos.cdt/1`) from the drawing every time; a definition is a project
 //! setting, as a network is: writing it makes the drawing dirty and is no undo step. Only a road project
@@ -244,7 +244,7 @@ pub enum TerrainPlace {
 
 /// Input of `road.terrains.contours` v1 (plan/road.md Y2.5): a surface's contour lines written as 3D polylines on a
 /// layer, every `interval` metres from `base` (0 when absent), every `majorEvery`-th level from the base a major line
-/// (thicker; 5 when absent, 0: none), as Civil 3D extracts a surface's major and minor contours. A line through a
+/// (thicker; 5 when absent, 0: none), as a surface's major and minor contours. A line through a
 /// corner is drawn once; a closed line is a closed polyline. One undo step “Eş yükselti eğrileri”.
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_contours` (an interval not above zero, a base not finite),

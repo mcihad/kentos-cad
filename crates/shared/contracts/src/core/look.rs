@@ -1,7 +1,7 @@
 //! An object's look beyond its colour and line weight (docs/adr/0260): its
 //! own line type and the scale of its pattern, its transparency, its place in
 //! its layer's drawing order and, on a block's object, the parts of its look
-//! that follow its own layer rather than the insert's (AutoCAD's BYLAYER in a
+//! that follow its own layer rather than the insert's (by layer in a
 //! block). Absent, each part is its source's: the layer's in the drawing, the
 //! insert's in a block (docs/adr/0139, 0144).
 
@@ -11,7 +11,7 @@ use ts_rs::TS;
 
 use crate::layer::LineType;
 
-/// The most transparent an object may be: AutoCAD's 90 %.
+/// The most transparent an object may be: 90 %.
 pub const MAX_TRANSPARENCY: f64 = 0.9;
 /// The largest line type scale.
 pub const MAX_LINE_TYPE_SCALE: f64 = 1000.0;
@@ -94,7 +94,7 @@ pub struct ObjectLook {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LookPart>>", optional))]
     pub by_layer: Vec<LookPart>,
-    /// An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+    /// An area's mask: it fills with the drawing's background and covers
     /// what is drawn before it; only an area has it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -108,7 +108,7 @@ pub struct ObjectLook {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct Wipeout {
-    /// Whether its boundary is drawn (AutoCAD's WIPEOUTFRAME, per mask).
+    /// Whether its boundary is drawn.
     pub frame: bool,
 }
 

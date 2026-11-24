@@ -148,7 +148,7 @@ pub struct PlotProfile {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub default_style: Option<String>,
-    /// The AutoCAD table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a
+    /// The `.ctb` or `.stb` table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a
     /// profile made in KentOS.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

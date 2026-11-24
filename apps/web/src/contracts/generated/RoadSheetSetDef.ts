@@ -2,7 +2,7 @@
 import type { RoadSheetDef } from "./RoadSheetDef";
 
 /**
- * A plan–profile sheet set (docs/adr/0908 §10; Civil 3D's view frame group): sheets along an alignment, each showing
+ * A plan–profile sheet set (docs/adr/0908 §10): sheets along an alignment, each showing
  * its stretch in plan at the set's scale (1:`scale`) and, with a profile, the profile view drawn for it; the sources'
  * revisions it was made from, so the sheets say when the alignment or the profile changed since.
  */

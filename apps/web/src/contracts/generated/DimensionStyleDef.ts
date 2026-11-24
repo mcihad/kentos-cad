@@ -27,7 +27,7 @@ height: number, arrow?: DimensionArrow,
  */
 arrowSize?: number, extOffset?: number, extBeyond?: number, textGap?: number, textPlace?: DimensionTextPlace, decimals?: number, unit?: DrawingUnit, prefix?: string, suffix?: string, font?: DrawingFont, 
 /**
- * The project text style its value is written in, by its name (AutoCAD's DIMTXSTY, docs/adr/1023): when that
+ * The project text style its value is written in, by its name: when that
  * style's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface
  * (a DXF's reader sets both). Schema 186.
  */

@@ -1,5 +1,5 @@
 //! FlatGeobuf in and out (docs/adr/0544, plan/gis.md CBS-05): one layer's features in one file with the packed Hilbert
-//! R-tree of their boxes, as GDAL, QGIS and the format's own libraries write and read it. Arcs go as circular strings
+//! R-tree of their boxes, as GDAL and the format's own libraries write and read it. Arcs go as circular strings
 //! and compound curves, exact; the system as its EPSG code.
 
 use std::collections::BTreeMap;

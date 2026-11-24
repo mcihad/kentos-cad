@@ -1,5 +1,5 @@
 //! Koşullu biçim (docs/adr/0413 §1): how the attribute table shows a layer's rows and cells by
-//! conditions, QGIS's conditional formatting. Each rule is a condition over the record (the
+//! conditions. Each rule is a condition over the record (the
 //! expression language, the layer's fields by name), where it paints (the whole row, or one field's
 //! cell), and what it gives: a background colour, a text colour, bold. The first rule that holds
 //! gives each of them for a cell; a field's rules come before the row's. The rules here are the

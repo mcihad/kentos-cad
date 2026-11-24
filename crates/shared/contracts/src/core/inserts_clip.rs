@@ -1,4 +1,4 @@
-//! An insert's clipping (docs/adr/0351 §1; plan/cad.md `CAD-REF-12`, AutoCAD's XCLIP): a block's, an external
+//! An insert's clipping (docs/adr/0351 §1; plan/cad.md `CAD-REF-12`): a block's, an external
 //! reference's or a PDF underlay's insert draws only the part of its content inside a boundary, or outside it; its
 //! frame is hidden, shown on the screen only, or drawn and plotted. The boundary is kept in the definition's
 //! coordinates, so moving, turning or scaling the insert takes it along. `cad.inserts.clip` sets, changes and removes

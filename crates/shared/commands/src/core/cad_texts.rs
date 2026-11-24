@@ -1,5 +1,5 @@
 //! The text commands (docs/adr/0325 §3): `cad.fields.edit` v1 puts fields into a text, takes them out, formats them
-//! and writes them again; `cad.texts.edit` v1 replaces letters (Bul ve değiştir), numbers texts (AutoCAD's TCOUNT),
+//! and writes them again; `cad.texts.edit` v1 replaces letters (Bul ve değiştir), numbers texts,
 //! combines texts into one (TXT2MTXT) and splits a text into its paragraphs; `cad.texts.check` v1, read only, finds
 //! double spaces, repeated words, unbalanced brackets and quotes and broken fields.
 

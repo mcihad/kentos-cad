@@ -1,4 +1,4 @@
-//! The expressions of a drawing's parameters (docs/adr/0334 §3; AutoCAD's parameter manager): numbers, units on
+//! The expressions of a drawing's parameters (docs/adr/0334 §3): numbers, units on
 //! numbers (`2.5m`, `250cm`, `30deg`), the other parameters by name, `+ - * / ^`, parentheses and a few functions.
 //! A length's value is in the drawing's unit, an angle's in the project's angle unit; the functions take and give
 //! angles in that unit. The rules are here, beside the constraints, so the file format, the documents, the commands

@@ -111,7 +111,7 @@ fn the_digests_are_saved_and_the_count_is_the_same_opened_again() {
     let before = tree(&app);
     let model = &app.document.as_ref().expect("a drawing").model;
     let bytes = kentos_kcad::encode(&model.to_snapshot_v2()).expect("encodes");
-    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\xd5"), "the file is schema 213 (docs/adr/3680)");
+    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\xd5"), "the file is schema 213");
     let back = kentos_kcad::decode(&bytes).expect("reads");
     assert_eq!(back.settings.map_work, model.map_work().cloned(), "the digests are saved whole");
     let (mut again, _) = App::boot(None);

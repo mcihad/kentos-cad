@@ -2,9 +2,9 @@
 
 /**
  * A leader's arrowhead other than the filled triangle (Dolu üçgen,
- * AutoCAD's Closed filled), which is no value but the field's absence: a
+ * Closed filled), which is no value but the field's absence: a
  * leader has one spelling (docs/adr/0146 §1). The first three are the
- * first leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`
+ * first leaders'; the others the DXF arrowheads (docs/adr/0205 §7, `.kcad`
  * schema 30).
  */
 export type LeaderArrow = "open" | "dot" | "none" | "closed" | "open30" | "open90" | "dotSmall" | "dotBlank" | "oblique" | "archTick" | "boxFilled" | "boxBlank" | "datumFilled";

@@ -1,5 +1,5 @@
 //! A terrain surface's analysis (plan/road.md Y18, docs/adr/0916; ROAD-TIN-16): `road.terrains.analysis` reads a
-//! surface's elevation, slope and aspect ranges (Civil 3D's Elevations, Slopes and Directions; their plan and 3D
+//! surface's elevation, slope and aspect ranges (their plan and 3D
 //! areas), its roughness and how a raster sampled from it would put its slope. The geometry is
 //! `kentos_road::surface`'s; nothing is kept. The desktop's handler is
 //! `crates/native/application/src/road_terrains_analysis.rs`; it and the Python SDK pass the shared cases in
@@ -163,20 +163,20 @@ pub const ROAD_TERRAINS_COMPARE: &str = "road.terrains.compare";
 pub const ROAD_TERRAINS_COMPARE_VERSION: u32 = 1;
 
 /// Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;
-/// Civil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan
+/// a TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan
 /// area of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or
 /// `grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result
-/// beside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's
+/// beside the exact one; `cutFactor` and `fillFactor` (the cut's swell, the fill's
 /// compaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.
-/// `zones` (docs/adr/3540; Civil 3D's bounded volumes): material zones, each a closed object bounding one material with
+/// `zones` (docs/adr/3540): material zones, each a closed object bounding one material with
 /// its own factors (none: the comparison's, else 1); the difference inside each, outside them all, and the adjusted
 /// volumes summed by material. Zones do not overlap; they are measured by the exact TIN–TIN alone.
-/// `sections` (docs/adr/4340; Civil 3D's sample line volumes): parallel sections `interval` metres apart, across an axis
+/// `sections` (docs/adr/4340): parallel sections `interval` metres apart, across an axis
 /// whose direction is `azimuth` (degrees from north, clockwise; none: 0), from the comparison's first place along it to
 /// its last; each section's cut and fill areas are the difference's exact integral along it where both surfaces are,
 /// the volumes the average end area between consecutive sections or, with `formula: prismoidal`, the prismoidal formula
 /// with a middle section; the exact TIN–TIN beside (`exact`), the plan areas the exact TIN's.
-/// `axis` (docs/adr/4760; Civil 3D's sample lines, Netcad's Enkesit Al): the sections stand along a drawn axis instead,
+/// `axis` (docs/adr/4760): the sections stand along a drawn axis instead,
 /// a line's or a single-part open polyline's persistent id (arcs allowed): from its start every `interval` metres while
 /// short of its end, then its end, and with `corners` its inner corners too; each square to the axis (on an arc along
 /// its radius, at a corner to the bisector), `left` metres to its left and `right` to its right; the length between two
@@ -254,13 +254,13 @@ pub struct TerrainsCompare {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub right: Option<f64>,
-    /// Sections at the axis's inner corners too (docs/adr/4760; Civil 3D's At Horizontal Geometry Points).
+    /// Sections at the axis's inner corners too (docs/adr/4760).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub corners: Option<bool>,
 }
 
-/// The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or
+/// The section method's formula (docs/adr/4340): `(A₀ + A₁)/2 · L`, or
 /// `L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -302,7 +302,7 @@ pub struct TerrainSection {
     pub ends: Option<[[f64; 2]; 2]>,
 }
 
-/// A material zone (docs/adr/3540; Civil 3D's bounded volume): the material's name (the user's; no class or value is
+/// A material zone (docs/adr/3540): the material's name (the user's; no class or value is
 /// guessed), the closed object bounding it (a straight-edged, single-part closed polyline or area, holes allowed) and
 /// its cut and fill factors (none: the comparison's, else 1; more than 0, at most 10).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

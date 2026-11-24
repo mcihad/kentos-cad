@@ -57,7 +57,7 @@ lineWeight?: number,
  */
 lineType?: LineType, 
 /**
- * An area's mask (Maske, AutoCAD's WIPEOUT; docs/adr/0310 §1): it fills with the drawing's background and covers
+ * An area's mask (Maske; docs/adr/0310 §1): it fills with the drawing's background and covers
  * what is drawn before it, its frame drawn or not. Absent: an ordinary area.
  */
 wipeout?: Wipeout, 

@@ -3,7 +3,7 @@
 //! each pipe's inverts at its ends (two attributes, or its vertices' heights), its slope the way it flows, its diameter
 //! (an attribute in a unit, against a catalogue of sizes), its cover over the crown from a terrain surface (measured at
 //! every place the pipe crosses a triangle's edge, so the least cover is exact) or from the structures' cover levels,
-//! over the pipe's top outside when its wall thickness is asked (docs/adr/3960, Civil 3D's; the wall from its own
+//! over the pipe's top outside when its wall thickness is asked (docs/adr/3960; the wall from its own
 //! attribute or from the outer diameter's, docs/adr/4780), and how it meets the others: detached parts, an end without
 //! a structure, an outlet higher than the lowest inlet.
 //! A value that would fit read in another unit is reported as a likely unit mistake, never corrected.
@@ -111,7 +111,7 @@ impl PipeUnit {
 
 /// The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
 /// optionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the
-/// pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances outside to outside.
+/// pipe's top outside (invert + diameter + wall) and the clearances outside to outside.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

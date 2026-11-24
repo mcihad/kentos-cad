@@ -1,5 +1,4 @@
-//! The constraint commands of the product command catalog (docs/adr/0335; AutoCAD's GEOMCONSTRAINT, DIMCONSTRAINT,
-//! DELCONSTRAINT and CONSTRAINTSETTINGS' sense): constraints added to and taken from the drawing by the parts they
+//! The constraint commands of the product command catalog (docs/adr/0335): constraints added to and taken from the drawing by the parts they
 //! name, the drawing solved and written with them as one undo step, and the read-only query that lists them with the
 //! solver's diagnosis.
 //!
@@ -64,7 +63,7 @@ pub struct NewConstraint {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub value: Option<String>,
-    /// A dimension that only measures (AutoCAD's reference parameter): it drives nothing.
+    /// A dimension that only measures: it drives nothing.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reference: bool,
@@ -86,7 +85,7 @@ pub enum ConstraintEdit {
     /// These dimensions drive (`reference` false: their parameter takes the value they measure now) or only
     /// measure (`reference` true: their parameter's expression is cleared).
     Mode { ids: Vec<String>, reference: bool },
-    /// The constraint's other solution (AutoCAD's flip): a tangent on the other side, a distance on the other side
+    /// The constraint's other solution: a tangent on the other side, a distance on the other side
     /// of its segment, the angle's other quadrant; the drawing solved again.
     Flip { id: String },
     /// Solves the drawing with its constraints as they are (after an edit made without them).
@@ -115,8 +114,8 @@ pub enum ConstraintEdit {
 pub struct ConstraintsEdit {
     /// What changes.
     pub edit: ConstraintEdit,
-    /// Objects (persistent ids) this solve does not move, as AutoCAD keeps the object picked first and moves the
-    /// second; they are not held afterwards.
+    /// Objects (persistent ids) this solve does not move (the object picked first stays, the
+    /// second moves); they are not held afterwards.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub hold: Vec<String>,

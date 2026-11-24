@@ -1,4 +1,4 @@
-//! Denetle's semantic command of the product command catalog (docs/adr/0306; AutoCAD's AUDIT and PURGE): what the
+//! Denetle's semantic command of the product command catalog (docs/adr/0306): what the
 //! drawing carries broken, found and on asking repaired, and the named resources nothing uses, reported and the
 //! styles among them on asking removed.
 

@@ -2070,7 +2070,7 @@
                 "type": "null"
               }
             ],
-            "description": "An area's mask (Maske, AutoCAD's WIPEOUT; docs/adr/0310 §1): it fills with the drawing's background and covers\nwhat is drawn before it, its frame drawn or not. Absent: an ordinary area."
+            "description": "An area's mask (Maske; docs/adr/0310 §1): it fills with the drawing's background and covers\nwhat is drawn before it, its frame drawn or not. Absent: an ordinary area."
           }
         },
         "required": [
@@ -5164,7 +5164,7 @@
             ]
           },
           "hold": {
-            "description": "Objects (persistent ids) this solve does not move, as AutoCAD keeps the object picked first and moves the\nsecond; they are not held afterwards.",
+            "description": "Objects (persistent ids) this solve does not move (the object picked first stays, the\nsecond moves); they are not held afterwards.",
             "items": {
               "type": "string"
             },
@@ -33158,7 +33158,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked\nobjects trimmed (or extended) at their picks, as one undo step “Buda”\n(“Uzat”), AutoCAD's TRIM and EXTEND (docs/adr/0294): the picks are clicks,\na fence (Çit) or a crossing window (Kesişen); the boundaries chosen\n(standard mode) or every shown edge (quick mode); `edgeMode` bounds along\nthe boundaries' extensions; `eraseUncut` is quick mode's erase of what no\nboundary cuts. A trim replaces the object by the pieces that stay, the first\nin its place keeping its id, its data kept when one piece is left (not\nfor a closed area); an extend gives the object its new geometry.\n\nPicks of one object are taken in their order, each on the object as the\nearlier ones left it: a trim cuts the piece the pick lies on, and takes\naway whole a piece no boundary cuts between its ends (each of its ends is\nthen an earlier cut or the object's end); an extend grows each end at\nmost once.\n\nThe fence's crossings are picks after `picks`, each object's in the\nfence's order, the objects in the drawing's order. The window's objects\ncome last: Buda takes away every piece between the boundaries that meets\nthe rectangle, Uzat grows every end inside it. A fence or a window takes\nonly shown objects; those on a locked layer are left out with a\n`layer_locked` warning counting them, and one that does nothing with a\n`trim_failed` (`extend_failed`) warning at `fence` (`crossing`). Every object\nis bounded by the drawing as it was before the command. A pick that can\ndo nothing (no boundary crosses there, the end meets none) is left out\nwith a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no\npick does anything nothing is written and that is the answer.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no pick, no fence and no window; `boundaries.uids` empty),\n`too_few_points` (a fence of fewer than two points), `invalid_uid` (the\npicks' ids, then the boundaries'), `not_finite` (a pick's, the fence's,\nthe window's, then the rectangle's x and y),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (the picks' objects, then the boundaries'),\n`layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:\nan area with holes, which would lose them), then `trim_failed`\n(`extend_failed`, at `picks`, with the first pick's reason: the core's\nwords for a kind it does not cut or grow, a closed path for Uzat, no\nboundary there; at `fence` or `crossing` when it picked nothing); on the\ndesktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked\nobjects trimmed (or extended) at their picks, as one undo step “Buda”\n(“Uzat”) (docs/adr/0294): the picks are clicks,\na fence (Çit) or a crossing window (Kesişen); the boundaries chosen\n(standard mode) or every shown edge (quick mode); `edgeMode` bounds along\nthe boundaries' extensions; `eraseUncut` is quick mode's erase of what no\nboundary cuts. A trim replaces the object by the pieces that stay, the first\nin its place keeping its id, its data kept when one piece is left (not\nfor a closed area); an extend gives the object its new geometry.\n\nPicks of one object are taken in their order, each on the object as the\nearlier ones left it: a trim cuts the piece the pick lies on, and takes\naway whole a piece no boundary cuts between its ends (each of its ends is\nthen an earlier cut or the object's end); an extend grows each end at\nmost once.\n\nThe fence's crossings are picks after `picks`, each object's in the\nfence's order, the objects in the drawing's order. The window's objects\ncome last: Buda takes away every piece between the boundaries that meets\nthe rectangle, Uzat grows every end inside it. A fence or a window takes\nonly shown objects; those on a locked layer are left out with a\n`layer_locked` warning counting them, and one that does nothing with a\n`trim_failed` (`extend_failed`) warning at `fence` (`crossing`). Every object\nis bounded by the drawing as it was before the command. A pick that can\ndo nothing (no boundary crosses there, the end meets none) is left out\nwith a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no\npick does anything nothing is written and that is the answer.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no pick, no fence and no window; `boundaries.uids` empty),\n`too_few_points` (a fence of fewer than two points), `invalid_uid` (the\npicks' ids, then the boundaries'), `not_finite` (a pick's, the fence's,\nthe window's, then the rectangle's x and y),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (the picks' objects, then the boundaries'),\n`layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:\nan area with holes, which would lose them), then `trim_failed`\n(`extend_failed`, at `picks`, with the first pick's reason: the core's\nwords for a kind it does not cut or grow, a closed path for Uzat, no\nboundary there; at `fence` or `crossing` when it picked nothing); on the\ndesktop also `slots_exhausted`.",
         "properties": {
           "boundaries": {
             "anyOf": [
@@ -33191,10 +33191,10 @@
                 "type": "null"
               }
             ],
-            "description": "AutoCAD's EDGEMODE; absent: `none`."
+            "description": "The edge mode; absent: `none`."
           },
           "eraseUncut": {
-            "description": "Buda: an object no boundary cuts goes whole where it is picked\n(AutoCAD's quick mode) instead of being left with a `trim_failed`\nwarning. Uzat ignores it.",
+            "description": "Buda: an object no boundary cuts goes whole where it is picked\ninstead of being left with a `trim_failed`\nwarning. Uzat ignores it.",
             "type": [
               "boolean",
               "null"
@@ -33443,7 +33443,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked\nobjects trimmed (or extended) at their picks, as one undo step “Buda”\n(“Uzat”), AutoCAD's TRIM and EXTEND (docs/adr/0294): the picks are clicks,\na fence (Çit) or a crossing window (Kesişen); the boundaries chosen\n(standard mode) or every shown edge (quick mode); `edgeMode` bounds along\nthe boundaries' extensions; `eraseUncut` is quick mode's erase of what no\nboundary cuts. A trim replaces the object by the pieces that stay, the first\nin its place keeping its id, its data kept when one piece is left (not\nfor a closed area); an extend gives the object its new geometry.\n\nPicks of one object are taken in their order, each on the object as the\nearlier ones left it: a trim cuts the piece the pick lies on, and takes\naway whole a piece no boundary cuts between its ends (each of its ends is\nthen an earlier cut or the object's end); an extend grows each end at\nmost once.\n\nThe fence's crossings are picks after `picks`, each object's in the\nfence's order, the objects in the drawing's order. The window's objects\ncome last: Buda takes away every piece between the boundaries that meets\nthe rectangle, Uzat grows every end inside it. A fence or a window takes\nonly shown objects; those on a locked layer are left out with a\n`layer_locked` warning counting them, and one that does nothing with a\n`trim_failed` (`extend_failed`) warning at `fence` (`crossing`). Every object\nis bounded by the drawing as it was before the command. A pick that can\ndo nothing (no boundary crosses there, the end meets none) is left out\nwith a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no\npick does anything nothing is written and that is the answer.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no pick, no fence and no window; `boundaries.uids` empty),\n`too_few_points` (a fence of fewer than two points), `invalid_uid` (the\npicks' ids, then the boundaries'), `not_finite` (a pick's, the fence's,\nthe window's, then the rectangle's x and y),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (the picks' objects, then the boundaries'),\n`layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:\nan area with holes, which would lose them), then `trim_failed`\n(`extend_failed`, at `picks`, with the first pick's reason: the core's\nwords for a kind it does not cut or grow, a closed path for Uzat, no\nboundary there; at `fence` or `crossing` when it picked nothing); on the\ndesktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked\nobjects trimmed (or extended) at their picks, as one undo step “Buda”\n(“Uzat”) (docs/adr/0294): the picks are clicks,\na fence (Çit) or a crossing window (Kesişen); the boundaries chosen\n(standard mode) or every shown edge (quick mode); `edgeMode` bounds along\nthe boundaries' extensions; `eraseUncut` is quick mode's erase of what no\nboundary cuts. A trim replaces the object by the pieces that stay, the first\nin its place keeping its id, its data kept when one piece is left (not\nfor a closed area); an extend gives the object its new geometry.\n\nPicks of one object are taken in their order, each on the object as the\nearlier ones left it: a trim cuts the piece the pick lies on, and takes\naway whole a piece no boundary cuts between its ends (each of its ends is\nthen an earlier cut or the object's end); an extend grows each end at\nmost once.\n\nThe fence's crossings are picks after `picks`, each object's in the\nfence's order, the objects in the drawing's order. The window's objects\ncome last: Buda takes away every piece between the boundaries that meets\nthe rectangle, Uzat grows every end inside it. A fence or a window takes\nonly shown objects; those on a locked layer are left out with a\n`layer_locked` warning counting them, and one that does nothing with a\n`trim_failed` (`extend_failed`) warning at `fence` (`crossing`). Every object\nis bounded by the drawing as it was before the command. A pick that can\ndo nothing (no boundary crosses there, the end meets none) is left out\nwith a `trim_failed` (`extend_failed`) warning at `picks[i]`; when no\npick does anything nothing is written and that is the answer.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no pick, no fence and no window; `boundaries.uids` empty),\n`too_few_points` (a fence of fewer than two points), `invalid_uid` (the\npicks' ids, then the boundaries'), `not_finite` (a pick's, the fence's,\nthe window's, then the rectangle's x and y),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (the picks' objects, then the boundaries'),\n`layer_locked` (a picked object, at `picks[i]`), `not_trimmable` (Buda:\nan area with holes, which would lose them), then `trim_failed`\n(`extend_failed`, at `picks`, with the first pick's reason: the core's\nwords for a kind it does not cut or grow, a closed path for Uzat, no\nboundary there; at `fence` or `crossing` when it picked nothing); on the\ndesktop also `slots_exhausted`.",
         "properties": {
           "boundaries": {
             "anyOf": [
@@ -33476,10 +33476,10 @@
                 "type": "null"
               }
             ],
-            "description": "AutoCAD's EDGEMODE; absent: `none`."
+            "description": "The edge mode; absent: `none`."
           },
           "eraseUncut": {
-            "description": "Buda: an object no boundary cuts goes whole where it is picked\n(AutoCAD's quick mode) instead of being left with a `trim_failed`\nwarning. Uzat ignores it.",
+            "description": "Buda: an object no boundary cuts goes whole where it is picked\ninstead of being left with a `trim_failed`\nwarning. Uzat ignores it.",
             "type": [
               "boolean",
               "null"
@@ -34597,7 +34597,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.join` v1: the lines, arcs and open polylines of\n`uids` meeting end to end within `tolerance` become one object each\nchain (a chain that closes, a closed area), in the place and with the\npersistent id and the data of its first object; the others go. One undo\nstep “Birleştir”. Those on a locked layer are left out with a\n`locked_skipped` warning at `uids[i]`.\n\nAs AutoCAD's JOIN (docs/adr/0296): a chain of lines on one straight line\nis that line; a chain of arcs of one circle is one arc, or the circle\nwhen it closes; any other chain a polyline. The joined object keeps all\nits first object carried; the others' elevations, measures and widths go\nwith their vertices, their attributes and label do not: a key whose value\ndiffers is said (`data_conflict`). An object of `uids` that joins nothing\nis said with why (`not_joined`). An associative dimension's point on a\njoined object follows the joined one.\n\nZincir (`chain`, docs/adr/0161 §2): `uids` is one object, the seed; the\nobjects joined end to end with it among `chain`'s objects (lines, arcs,\nopen polylines) are joined with it, up to a free end, a junction, a\nlocked object (a `chain_stopped` warning) or the start again. The seed\nkeeps its place, its id and its data.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no id; with `chain` more than one), `invalid_uid` (at `uids[i]`), then\n`chain`'s ids, `invalid_distance` (`tolerance` not over 0 or not\nfinite), `not_finite` (`chain`'s rectangle), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found`,\n`not_joinable` (a seed that is not a line, an arc or an open polyline),\n`layer_locked` (the seed), `nothing_to_join` (no chain of two),\n`join_failed` (the core's words); on the desktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.join` v1: the lines, arcs and open polylines of\n`uids` meeting end to end within `tolerance` become one object each\nchain (a chain that closes, a closed area), in the place and with the\npersistent id and the data of its first object; the others go. One undo\nstep “Birleştir”. Those on a locked layer are left out with a\n`locked_skipped` warning at `uids[i]`.\n\nJoin (docs/adr/0296): a chain of lines on one straight line\nis that line; a chain of arcs of one circle is one arc, or the circle\nwhen it closes; any other chain a polyline. The joined object keeps all\nits first object carried; the others' elevations, measures and widths go\nwith their vertices, their attributes and label do not: a key whose value\ndiffers is said (`data_conflict`). An object of `uids` that joins nothing\nis said with why (`not_joined`). An associative dimension's point on a\njoined object follows the joined one.\n\nZincir (`chain`, docs/adr/0161 §2): `uids` is one object, the seed; the\nobjects joined end to end with it among `chain`'s objects (lines, arcs,\nopen polylines) are joined with it, up to a free end, a junction, a\nlocked object (a `chain_stopped` warning) or the start again. The seed\nkeeps its place, its id and its data.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`\n(no id; with `chain` more than one), `invalid_uid` (at `uids[i]`), then\n`chain`'s ids, `invalid_distance` (`tolerance` not over 0 or not\nfinite), `not_finite` (`chain`'s rectangle), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found`,\n`not_joinable` (a seed that is not a line, an arc or an open polyline),\n`layer_locked` (the seed), `nothing_to_join` (no chain of two),\n`join_failed` (the core's words); on the desktop also `slots_exhausted`.",
         "properties": {
           "chain": {
             "anyOf": [
@@ -34817,7 +34817,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.reverse` v1, Yönü çevir (AutoCAD's REVERSE): the\nobjects of `uids` run the other way round, the same outline, as one undo\nstep “Yönü çevir”. Lines swap their ends; polylines, areas (and their\nholes), closed polylines, fit-point curves and NURBS curves run\nbackwards, their arcs turning the other way. Every object keeps its id\nand all it carries; its elevations, measures and widths go with their\nvertices, so they run backwards too; an associative dimension's point\nkeeps its place on it (docs/adr/0296). Arcs, circles and ellipses always\nrun counter-clockwise: they, and kinds with no direction, are left out\nwith a `not_reversible` warning; those on a locked layer with a\n`layer_locked` warning counting them.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (at `uids[i]`), `invalid_revision`, `revision_conflict`\n(status `conflict`), `entity_not_found`, `layer_locked` (every object on\na locked layer), `not_reversible` (none has a direction).",
+        "description": "Input of `cad.entities.reverse` v1, Yönü çevir: the\nobjects of `uids` run the other way round, the same outline, as one undo\nstep “Yönü çevir”. Lines swap their ends; polylines, areas (and their\nholes), closed polylines, fit-point curves and NURBS curves run\nbackwards, their arcs turning the other way. Every object keeps its id\nand all it carries; its elevations, measures and widths go with their\nvertices, so they run backwards too; an associative dimension's point\nkeeps its place on it (docs/adr/0296). Arcs, circles and ellipses always\nrun counter-clockwise: they, and kinds with no direction, are left out\nwith a `not_reversible` warning; those on a locked layer with a\n`layer_locked` warning counting them.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (at `uids[i]`), `invalid_revision`, `revision_conflict`\n(status `conflict`), `entity_not_found`, `layer_locked` (every object on\na locked layer), `not_reversible` (none has a direction).",
         "properties": {
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal\ntext. When given and the document is no longer at it, nothing is\nwritten and the answer is `conflict`.",
@@ -35705,7 +35705,7 @@
                 "type": "null"
               }
             ],
-            "description": "Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:\n`none`."
+            "description": "Where the hatches are drawn among their layer's objects (docs/adr/0332 §1). Absent:\n`none`."
           },
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal\ntext. When given and the document is no longer at it, nothing is\nwritten and the answer is `conflict`.",
@@ -35751,7 +35751,7 @@
             ]
           },
           "transparency": {
-            "description": "The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's\nHPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.",
+            "description": "The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.",
             "format": "double",
             "maximum": 0.9,
             "minimum": 0.0,
@@ -40614,7 +40614,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.contours` v1 (plan/road.md Y2.5): a surface's contour lines written as 3D polylines on a\nlayer, every `interval` metres from `base` (0 when absent), every `majorEvery`-th level from the base a major line\n(thicker; 5 when absent, 0: none), as Civil 3D extracts a surface's major and minor contours. A line through a\ncorner is drawn once; a closed line is a closed polyline. One undo step “Eş yükselti eğrileri”.\n\nRefusals, in this order: `not_a_road_project`, `invalid_contours` (an interval not above zero, a base not finite),\n`layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`, `revision_conflict`, `unknown_terrain`,\n`terrain_unbuildable`, `invalid_contours` (more than 10 000 levels cross the surface), `no_contours` (none does).",
+        "description": "Input of `road.terrains.contours` v1 (plan/road.md Y2.5): a surface's contour lines written as 3D polylines on a\nlayer, every `interval` metres from `base` (0 when absent), every `majorEvery`-th level from the base a major line\n(thicker; 5 when absent, 0: none), as a surface's major and minor contours. A line through a\ncorner is drawn once; a closed line is a closed polyline. One undo step “Eş yükselti eğrileri”.\n\nRefusals, in this order: `not_a_road_project`, `invalid_contours` (an interval not above zero, a base not finite),\n`layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`, `revision_conflict`, `unknown_terrain`,\n`terrain_unbuildable`, `invalid_contours` (more than 10 000 levels cross the surface), `no_contours` (none does).",
         "properties": {
           "base": {
             "format": "double",
@@ -44535,7 +44535,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,\nso it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's\nlower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre\nof elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;\noff the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red\nelevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.\nTexts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a\nmetre under the lowest elevation shown, floored; the top a metre over the highest, ceiled. `from` and `to` (internal\nstations, m) draw a view of part of the profile, as a plan–profile sheet's (docs/adr/0908 §10): the frame, the lines,\nthe curves' texts, the bands and the grades between them only, the datum and top from what is shown there.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or\n`exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the\nlowest elevation, `span` not above 0, given with `datum` or too short for the lines between two whole metres), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and\nthe geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.",
+        "description": "Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,\nso it goes to sheets and DXF as a profile view, from its first to its last PVI. The frame's\nlower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre\nof elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;\noff the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red\nelevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.\nTexts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a\nmetre under the lowest elevation shown, floored; the top a metre over the highest, ceiled. `from` and `to` (internal\nstations, m) draw a view of part of the profile, as a plan–profile sheet's (docs/adr/0908 §10): the frame, the lines,\nthe curves' texts, the bands and the grades between them only, the datum and top from what is shown there.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or\n`exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the\nlowest elevation, `span` not above 0, given with `datum` or too short for the lines between two whole metres), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and\nthe geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.",
         "properties": {
           "at": {
             "items": {
@@ -47996,7 +47996,7 @@
       "id": "road.volumes.edit",
       "version": 1,
       "title": "Kübaj hesabını düzenle",
-      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2 (curve ile kurpta kesitlerin momentleriyle etkin alan A + κQ, Pappus; yalnız endArea), prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu orandan dikken; 0,2 %20'dir dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2 (curve ile kurpta kesitlerin momentleriyle etkin alan A + κQ, Pappus; yalnız endArea), prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu orandan dikken; 0,2 %20'dir dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır: roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
       "aliases": [
         "kubaj",
         "kübaj"
@@ -53993,7 +53993,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or\n`grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result\nbeside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's\ncompaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.\n`zones` (docs/adr/3540; Civil 3D's bounded volumes): material zones, each a closed object bounding one material with\nits own factors (none: the comparison's, else 1); the difference inside each, outside them all, and the adjusted\nvolumes summed by material. Zones do not overlap; they are measured by the exact TIN–TIN alone.\n`sections` (docs/adr/4340; Civil 3D's sample line volumes): parallel sections `interval` metres apart, across an axis\nwhose direction is `azimuth` (degrees from north, clockwise; none: 0), from the comparison's first place along it to\nits last; each section's cut and fill areas are the difference's exact integral along it where both surfaces are,\nthe volumes the average end area between consecutive sections or, with `formula: prismoidal`, the prismoidal formula\nwith a middle section; the exact TIN–TIN beside (`exact`), the plan areas the exact TIN's.\n`axis` (docs/adr/4760; Civil 3D's sample lines, Netcad's Enkesit Al): the sections stand along a drawn axis instead,\na line's or a single-part open polyline's persistent id (arcs allowed): from its start every `interval` metres while\nshort of its end, then its end, and with `corners` its inner corners too; each square to the axis (on an arc along\nits radius, at a corner to the bisector), `left` metres to its left and `right` to its right; the length between two\nis their stations' difference along the axis.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing; grid without a cell, a cell not over 0, ranges or zones with grid; sections without an interval, an\ninterval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; an axis\nwithout sections or with an azimuth, widths or corners without an axis, a width not a length of 0 or more or both 0;\nmore than 10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the\ncomparison's or a zone's; a zone without a name), `unknown_terrain`, `invalid_analysis` (the same surface twice),\n`entity_not_found` (the axis), `invalid_analysis` (an axis not a line or a single-part open polyline, or without\nlength), `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged\nsingle-part closed polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'\nheights are not shown to rest on one vertical system; `assumeHeights` takes them as one and the difference is a\ndraft, `heights_assumed`), `terrain_unbuildable`, `invalid_analysis` (more than 4 000 000 cells). Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out; part of a zone off the two surfaces).",
+        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\na TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or\n`grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result\nbeside the exact one; `cutFactor` and `fillFactor` (the cut's swell, the fill's\ncompaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.\n`zones` (docs/adr/3540): material zones, each a closed object bounding one material with\nits own factors (none: the comparison's, else 1); the difference inside each, outside them all, and the adjusted\nvolumes summed by material. Zones do not overlap; they are measured by the exact TIN–TIN alone.\n`sections` (docs/adr/4340): parallel sections `interval` metres apart, across an axis\nwhose direction is `azimuth` (degrees from north, clockwise; none: 0), from the comparison's first place along it to\nits last; each section's cut and fill areas are the difference's exact integral along it where both surfaces are,\nthe volumes the average end area between consecutive sections or, with `formula: prismoidal`, the prismoidal formula\nwith a middle section; the exact TIN–TIN beside (`exact`), the plan areas the exact TIN's.\n`axis` (docs/adr/4760): the sections stand along a drawn axis instead,\na line's or a single-part open polyline's persistent id (arcs allowed): from its start every `interval` metres while\nshort of its end, then its end, and with `corners` its inner corners too; each square to the axis (on an arc along\nits radius, at a corner to the bisector), `left` metres to its left and `right` to its right; the length between two\nis their stations' difference along the axis.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing; grid without a cell, a cell not over 0, ranges or zones with grid; sections without an interval, an\ninterval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; an axis\nwithout sections or with an azimuth, widths or corners without an axis, a width not a length of 0 or more or both 0;\nmore than 10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the\ncomparison's or a zone's; a zone without a name), `unknown_terrain`, `invalid_analysis` (the same surface twice),\n`entity_not_found` (the axis), `invalid_analysis` (an axis not a line or a single-part open polyline, or without\nlength), `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged\nsingle-part closed polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'\nheights are not shown to rest on one vertical system; `assumeHeights` takes them as one and the difference is a\ndraft, `heights_assumed`), `terrain_unbuildable`, `invalid_analysis` (more than 4 000 000 cells). Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out; part of a zone off the two surfaces).",
         "properties": {
           "assumeHeights": {
             "type": "boolean"
@@ -54029,7 +54029,7 @@
             "type": "string"
           },
           "corners": {
-            "description": "Sections at the axis's inner corners too (docs/adr/4760; Civil 3D's At Horizontal Geometry Points).",
+            "description": "Sections at the axis's inner corners too (docs/adr/4760).",
             "type": [
               "boolean",
               "null"
@@ -74112,7 +74112,7 @@
             ]
           },
           "matchLines": {
-            "description": "Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the\nmiddle of their overlap, a line across the alignment and on each side \"EŞLEŞME ÇİZGİSİ KM : …\" with the other\nsheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).",
+            "description": "Match lines (docs/adr/0998): where one sheet's plan hands over to the next, at the\nmiddle of their overlap, a line across the alignment and on each side \"EŞLEŞME ÇİZGİSİ KM : …\" with the other\nsheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).",
             "type": [
               "boolean",
               "null"
@@ -74396,7 +74396,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as Civil 3D's production\nsection views and Create Section Sheets do (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn\non `layerId` in groups, each group the template's map (KentOS's technical sheet, `sys:cad-teknik`, without one) wide\nand high on the ground at 1:`scale` (the map's without it), filled in rows from the upper left as many views as fit;\nthe first group's upper left at `at`, each next under the one before. Each group is a sheet whose map shows it. The\nviews are `road.sections.draw`'s (`exaggeration`, `height`). The set is named `name` (“‹set› paftaları” without\nit) and the sheets numbered on from `first` (E-101 without it).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_section_set`, the\nsection drawing's (`invalid_label`, `invalid_places`, `no_terrain`, the layer's), `invalid_road_sheets` (a scale not\nin [1, 1 000 000], a view larger than the map at this scale, more than 500 sheets, a set's name taken),\n`unknown_template`, `invalid_options`, `not_fixed_map`, `bad_drawing_info`. Warnings: the section drawing's\n(`layer_hidden`, `section_set_stale`, `section_open` …).",
+        "description": "Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as production\nsection views (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn\non `layerId` in groups, each group the template's map (KentOS's technical sheet, `sys:cad-teknik`, without one) wide\nand high on the ground at 1:`scale` (the map's without it), filled in rows from the upper left as many views as fit;\nthe first group's upper left at `at`, each next under the one before. Each group is a sheet whose map shows it. The\nviews are `road.sections.draw`'s (`exaggeration`, `height`). The set is named `name` (“‹set› paftaları” without\nit) and the sheets numbered on from `first` (E-101 without it).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_section_set`, the\nsection drawing's (`invalid_label`, `invalid_places`, `no_terrain`, the layer's), `invalid_road_sheets` (a scale not\nin [1, 1 000 000], a view larger than the map at this scale, more than 500 sheets, a set's name taken),\n`unknown_template`, `invalid_options`, `not_fixed_map`, `bad_drawing_info`. Warnings: the section drawing's\n(`layer_hidden`, `section_set_stale`, `section_open` …).",
         "properties": {
           "at": {
             "items": {
@@ -83114,7 +83114,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.layers.translate` v1 (docs/adr/0311 §5), AutoCAD's LAYTRANS:\n\n- every layer holding objects (not a group, not drawn from a service)\n  takes the first rule whose `from` matches its name, unless its name is\n  that rule's `to` (folded): it is the standard layer itself;\n- a rule's standard layer is the first layer holding objects named `to`\n  (folded); when there is none and a layer takes the rule, it is added\n  last in `parent` (absent: the top), named `to` as written, in the\n  rule's style over its first source's; an existing one takes the rule's\n  given style;\n- the sources' objects go to their standard layer, the sources are\n  removed; a source that is the active layer gives that to its standard\n  layer; all of it one undo step “Katmanları çevir”;\n- a rule no layer takes changes nothing; nothing taken writes nothing\n  (`changed` false). Its plan is the preview: what goes where, with\n  the objects' count, the layers to add and to restyle.\n\nRefusals (`CommandError.code`), checked in this order: `no_rules`,\n`empty_name` (`rules[i].to`), `invalid_pattern` (`rules[i].from`),\n`invalid_color`, `invalid_line_weight` (`rules[i]…`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`layer_not_found`, `not_a_group` (`parent`); `service_layer` (a rule's\n`to` names a layer drawn from a service); `layer_locked` (a source or a\nstandard layer taking part locked, by itself or a group above: nothing\nis written).",
+        "description": "Input of `cad.layers.translate` v1 (docs/adr/0311 §5), the layer translation:\n\n- every layer holding objects (not a group, not drawn from a service)\n  takes the first rule whose `from` matches its name, unless its name is\n  that rule's `to` (folded): it is the standard layer itself;\n- a rule's standard layer is the first layer holding objects named `to`\n  (folded); when there is none and a layer takes the rule, it is added\n  last in `parent` (absent: the top), named `to` as written, in the\n  rule's style over its first source's; an existing one takes the rule's\n  given style;\n- the sources' objects go to their standard layer, the sources are\n  removed; a source that is the active layer gives that to its standard\n  layer; all of it one undo step “Katmanları çevir”;\n- a rule no layer takes changes nothing; nothing taken writes nothing\n  (`changed` false). Its plan is the preview: what goes where, with\n  the objects' count, the layers to add and to restyle.\n\nRefusals (`CommandError.code`), checked in this order: `no_rules`,\n`empty_name` (`rules[i].to`), `invalid_pattern` (`rules[i].from`),\n`invalid_color`, `invalid_line_weight` (`rules[i]…`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`layer_not_found`, `not_a_group` (`parent`); `service_layer` (a rule's\n`to` names a layer drawn from a service); `layer_locked` (a source or a\nstandard layer taking part locked, by itself or a group above: nothing\nis written).",
         "properties": {
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text.",
@@ -109725,7 +109725,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.qml` v1: the layer's look (its renderer, or its simple look) at `path`, a `.qml`. A QML is\nfor one geometry type: the layer's objects choose it (areas, then lines, then points; areas when it has none).\nRefusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no\nclass or rule QGIS's symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.",
+        "description": "Input of `file.export.qml` v1: the layer's look (its renderer, or its simple look) at `path`, a `.qml`. A QML is\nfor one geometry type: the layer's objects choose it (areas, then lines, then points; areas when it has none).\nRefusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no\nclass or rule the symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.",
         "properties": {
           "layer": {
             "description": "The layer's id.",
@@ -109901,7 +109901,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.import.qml` v1: the look of the QML at `path` (or its `text`) made the layer's renderer, one undo\nstep “Katman stili”: QGIS's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,\nin order:\n`invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_qml`, `layer_not_found`,\n`not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.",
+        "description": "Input of `file.import.qml` v1: the look of the QML at `path` (or its `text`) made the layer's renderer, one undo\nstep “Katman stili”: the file's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,\nin order:\n`invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_qml`, `layer_not_found`,\n`not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.",
         "properties": {
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text.",
@@ -118999,7 +118999,7 @@
       "code": "network_too_large",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Ağın normal denklemi seyrek çözümün alabileceğinden büyük (zarfı en çok 30 milyon girdi, ADR 4560)."
+      "meaning": "Ağın normal denklemi seyrek çözümün alabileceğinden büyük (zarfı en çok 30 milyon girdi)."
     },
     {
       "code": "network_disconnected",
@@ -122649,7 +122649,7 @@
     },
     {
       "unit": "grade",
-      "meaning": "Eğim oranı: düşey bölü yatay, birimsiz; 0,02 %2'dir. Boyuna eğim, enine eğim ve dever bununla yazılır, ekranda yüzdeye açıkça çevrilir (ADR 0977)."
+      "meaning": "Eğim oranı: düşey bölü yatay, birimsiz; 0,02 %2'dir. Boyuna eğim, enine eğim ve dever bununla yazılır, ekranda yüzdeye açıkça çevrilir."
     },
     {
       "unit": "ppm",
@@ -122817,7 +122817,7 @@
     },
     {
       "unit": "W/m2K",
-      "meaning": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/8038)."
+      "meaning": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri)."
     }
   ],
   "effects": [
@@ -125017,7 +125017,7 @@
     },
     "AltUnits": {
       "additionalProperties": false,
-      "description": "An alternate unit written after the value in brackets (AutoCAD's DIMALT): `2.500 [2500]`.",
+      "description": "An alternate unit written after the value in brackets: `2.500 [2500]`.",
       "properties": {
         "decimals": {
           "description": "Its decimals; absent: the project's length decimals.",
@@ -125888,7 +125888,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -128108,7 +128108,7 @@
       ]
     },
     "ArrayEdit": {
-      "description": "What changes in the array (AutoCAD ARRAYEDIT's properties, Replace, Reset; an item's erase).",
+      "description": "What changes in the array.",
       "oneOf": [
         {
           "description": "The rows, columns, count, spacing, fill or path: every item is laid out again. An item keeps its number\n(a grid's its row and column); a removed one stays removed, a kept one where it is; the places that are new\nget inserts, the ones that are gone take their inserts away. The kind may change too.",
@@ -128441,7 +128441,7 @@
           "type": "object"
         },
         {
-          "description": "Kopyala's Dizi (docs/adr/0291; AutoCAD COPY's Array): `count` places along the displacement (`dx`,\n`dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one\nmoves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.",
+          "description": "Kopyala's Dizi (docs/adr/0291): `count` places along the displacement (`dx`,\n`dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one\nmoves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.",
           "properties": {
             "count": {
               "format": "uint32",
@@ -131489,7 +131489,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -133443,7 +133443,7 @@
     },
     "CadParameter": {
       "additionalProperties": false,
-      "description": "A named parameter: a dimensional constraint's own, or the user's (AutoCAD's user parameter).",
+      "description": "A named parameter: a dimensional constraint's own, or the user's.",
       "properties": {
         "description": {
           "type": "string"
@@ -135480,7 +135480,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -135571,7 +135571,7 @@
       ]
     },
     "CleanupIgnore": {
-      "description": "A property two objects may differ in and still be the same (AutoCAD's OVERKILL “Ignore object property”).",
+      "description": "A property two objects may differ in and still be the same.",
       "enum": [
         "layer",
         "color",
@@ -137326,7 +137326,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -137648,7 +137648,7 @@
       "type": "string"
     },
     "CompareZone": {
-      "description": "A material zone (docs/adr/3540; Civil 3D's bounded volume): the material's name (the user's; no class or value is\nguessed), the closed object bounding it (a straight-edged, single-part closed polyline or area, holes allowed) and\nits cut and fill factors (none: the comparison's, else 1; more than 0, at most 10).",
+      "description": "A material zone (docs/adr/3540): the material's name (the user's; no class or value is\nguessed), the closed object bounding it (a straight-edged, single-part closed polyline or area, holes allowed) and\nits cut and fill factors (none: the comparison's, else 1; more than 0, at most 10).",
       "properties": {
         "boundary": {
           "type": "string"
@@ -137823,7 +137823,7 @@
           "$ref": "#/$defs/ConstraintId"
         },
         "reference": {
-          "description": "A dimensional constraint that only measures (AutoCAD's reference constraint): it never moves anything and its\nparameter, read-only, takes the measured value.",
+          "description": "A dimensional constraint that only measures: it never moves anything and its\nparameter, read-only, takes the measured value.",
           "type": "boolean"
         },
         "rule": {
@@ -137966,7 +137966,7 @@
           "type": "object"
         },
         {
-          "description": "The constraint's other solution (AutoCAD's flip): a tangent on the other side, a distance on the other side\nof its segment, the angle's other quadrant; the drawing solved again.",
+          "description": "The constraint's other solution: a tangent on the other side, a distance on the other side\nof its segment, the angle's other quadrant; the drawing solved again.",
           "properties": {
             "id": {
               "type": "string"
@@ -138003,7 +138003,7 @@
       "type": "string"
     },
     "ConstraintRule": {
-      "description": "What a constraint holds. The geometric kinds come first in the order AutoCAD's toolbar has them; the\ndimensional ones name the parameter that gives (or, for a reference constraint, takes) their value.",
+      "description": "What a constraint holds. The geometric kinds come first in the toolbar's order; the\ndimensional ones name the parameter that gives (or, for a reference constraint, takes) their value.",
       "oneOf": [
         {
           "additionalProperties": false,
@@ -138986,7 +138986,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -141066,7 +141066,7 @@
         },
         {
           "const": "ncz",
-          "description": "A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the\nSRS its TILED_XML block names (docs/adr/0138).",
+          "description": "An NCZ drawing's MPROJ block (datum, projection, zone) and the\nSRS its TILED_XML block names (docs/adr/0138).",
           "type": "string"
         },
         {
@@ -141792,7 +141792,7 @@
       "type": "object"
     },
     "CurveConstruction": {
-      "description": "One curve to construct: Daire's, Yay's and Elips's methods (AutoCAD's CIRCLE, ARC and ELLIPSE). A circle by\nits centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).",
+      "description": "One curve to construct: Daire's, Yay's and Elips's methods. A circle by\nits centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).",
       "oneOf": [
         {
           "description": "Daire, 2 nokta: the circle on the diameter from `a` to `b`.",
@@ -142233,7 +142233,7 @@
       "type": "object"
     },
     "CurveEdit": {
-      "description": "What changes (AutoCAD PEDIT's Close, Open, Decurve, Spline; SPLINEDIT's Close, Open, Fit data, Edit vertex,\nRefine, convert to Polyline).",
+      "description": "What changes (Close, Open, Decurve, Spline; for a spline: Close, Open, Fit data, Edit vertex,\nRefine, convert to Polyline).",
       "oneOf": [
         {
           "description": "Kapat: a polyline's last vertex joins its first (its closing edge's bulge and widths as stored); a NURBS\ncurve closes smoothly: one with fit points drawn again through them, closed, one by control points with its\nfirst `degree` control points wrapped (periodic). Its end tangents go.",
@@ -142840,7 +142840,7 @@
     },
     "CutFillSections": {
       "additionalProperties": false,
-      "description": "The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open\npolyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners\ntake sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average\nend area; docs/adr/5140: or the frustum's) and the kilometre of the axis's start (m; none: 0), which the sections'\nkilometres count from; docs/adr/5140: the cut's swell and the fill's factor of the Brückner value (none: 1; above 0,\nat most 10), KGM 2019's “yarma hacmi kabarma ya da sıkışma katsayısıyla çarpılır”.",
+      "description": "The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open\npolyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners\ntake sections too, the formula of the volume between two (none: the average\nend area; docs/adr/5140: or the frustum's) and the kilometre of the axis's start (m; none: 0), which the sections'\nkilometres count from; docs/adr/5140: the cut's swell and the fill's factor of the Brückner value (none: 1; above 0,\nat most 10), KGM 2019's “yarma hacmi kabarma ya da sıkışma katsayısıyla çarpılır”.",
       "properties": {
         "axis": {
           "type": "string"
@@ -145022,7 +145022,7 @@
     },
     "DimensionBreak": {
       "additionalProperties": false,
-      "description": "A gap in one of a dimension's lines where another object crosses it (AutoCAD's DIMBREAK), at the fraction `t` of\nthe line; its width the options' `breakSize`.",
+      "description": "A gap in one of a dimension's lines where another object crosses it, at the fraction `t` of\nthe line; its width the options' `breakSize`.",
       "properties": {
         "line": {
           "$ref": "#/$defs/BreakLine"
@@ -145679,7 +145679,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         },
         "za": {
           "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -145711,7 +145711,7 @@
       "type": "object"
     },
     "DimensionFit": {
-      "description": "Where the value goes when it does not fit between the extension lines (AutoCAD's DIMATFIT and DIMTIX): absent,\nalways between them.",
+      "description": "Where the value goes when it does not fit between the extension lines: absent,\nalways between them.",
       "oneOf": [
         {
           "const": "auto",
@@ -146370,7 +146370,7 @@
           ]
         },
         "breakSize": {
-          "description": "A break's width, times the value's height, over 0; absent: 1 (AutoCAD's DIMBREAK size).",
+          "description": "A break's width, times the value's height, over 0; absent: 1.",
           "format": "double",
           "type": [
             "number",
@@ -146397,10 +146397,10 @@
               "type": "null"
             }
           ],
-          "description": "Feet and inches in an inch or foot unit (AutoCAD's DIMLUNIT, docs/adr/0262 §2); absent: the project's, unless\nthe dimension names its own unit."
+          "description": "Feet and inches in an inch or foot unit; absent: the project's, unless\nthe dimension names its own unit."
         },
         "round": {
-          "description": "Lengths and coordinates rounded to this increment, metres, over 0 (AutoCAD's DIMRND).",
+          "description": "Lengths and coordinates rounded to this increment, metres, over 0.",
           "format": "double",
           "type": [
             "number",
@@ -147448,7 +147448,7 @@
           ]
         },
         "textStyle": {
-          "description": "The project text style its value is written in, by its name (AutoCAD's DIMTXSTY, docs/adr/1023): when that\nstyle's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface\n(a DXF's reader sets both). Schema 186.",
+          "description": "The project text style its value is written in, by its name: when that\nstyle's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface\n(a DXF's reader sets both). Schema 186.",
           "type": [
             "string",
             "null"
@@ -147484,7 +147484,7 @@
     },
     "DimensionTolerance": {
       "additionalProperties": false,
-      "description": "A tolerance (AutoCAD's DIMTOL and DIMLIM), metres; lengths and coordinates only.",
+      "description": "A tolerance, metres; lengths and coordinates only.",
       "properties": {
         "decimals": {
           "description": "Its decimals; absent: the value's.",
@@ -147522,7 +147522,7 @@
       "type": "object"
     },
     "DimensionZeros": {
-      "description": "Which zeros the number leaves out (AutoCAD's DIMZIN).",
+      "description": "Which zeros the number leaves out.",
       "oneOf": [
         {
           "enum": [
@@ -147572,7 +147572,7 @@
       "type": "string"
     },
     "DivideBlock": {
-      "description": "A block's inserts at the places instead of points (AutoCAD's Block option, docs/adr/0299 §3).",
+      "description": "A block's inserts at the places instead of points.",
       "properties": {
         "align": {
           "description": "Each insert turned by the object's direction at its place (the way the object runs from its start), on\ntop of `rotation`; true by default.",
@@ -147605,7 +147605,7 @@
       "oneOf": [
         {
           "const": "none",
-          "description": "Neither (AutoCAD's DIVIDE and MEASURE).",
+          "description": "Neither.",
           "type": "string"
         },
         {
@@ -148426,7 +148426,7 @@
       "type": "object"
     },
     "DrainagePondsAsk": {
-      "description": "The ponds asked for: at least `minDepth` deep (OpenRoads' minimum depth).",
+      "description": "The ponds asked for: at least `minDepth` deep.",
       "properties": {
         "minDepth": {
           "format": "double",
@@ -150137,7 +150137,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -154837,7 +154837,7 @@
         },
         {
           "const": "shx",
-          "description": "An AutoCAD SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).",
+          "description": "An SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).",
           "type": "string"
         },
         {
@@ -158300,7 +158300,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -159206,7 +159206,7 @@
           "type": "object"
         },
         {
-          "description": "Hizala: the hatches' lines continue the reference's (AutoCAD's hatch origin across objects, docs/adr/0331 §2):\neach takes its origin, and the angle and scale too where its pattern is the reference's.",
+          "description": "Hizala: the hatches' lines continue the reference's:\neach takes its origin, and the angle and scale too where its pattern is the reference's.",
           "properties": {
             "kind": {
               "const": "align",
@@ -159436,7 +159436,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -159566,7 +159566,7 @@
       "type": "object"
     },
     "HatchOrigin": {
-      "description": "Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).",
+      "description": "Where a pattern's lines are anchored (docs/adr/0331 §2).",
       "oneOf": [
         {
           "description": "The world's origin: neighbouring hatches line up.",
@@ -159666,7 +159666,7 @@
               "type": "null"
             }
           ],
-          "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+          "description": "Where its lines are anchored in the world (docs/adr/0331 §2): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
           "x-unit": "length"
         },
         "scale": {
@@ -160037,12 +160037,12 @@
       "oneOf": [
         {
           "const": "object",
-          "description": "Kapalı nesne (Netcad's): the smallest closed object around the point,\nthe smaller closed objects inside or across its edge its islands; the\nhatch can follow them (`associative`).",
+          "description": "Kapalı nesne: the smallest closed object around the point,\nthe smaller closed objects inside or across its edge its islands; the\nhatch can follow them (`associative`).",
           "type": "string"
         },
         {
           "const": "lines",
-          "description": "Çizgiler (AutoCAD's): the face the boundaries' line work closes\naround the point, closed groups inside it its islands; with İlişkili it\nfollows that line work (docs/adr/0328 §3).",
+          "description": "Çizgiler: the face the boundaries' line work closes\naround the point, closed groups inside it its islands; with İlişkili it\nfollows that line work (docs/adr/0328 §3).",
           "type": "string"
         }
       ]
@@ -162473,7 +162473,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -163756,7 +163756,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         },
         "yScale": {
           "description": "The factor along the definition's y axis when it is not `scale` (docs/adr/0315 §3), positive and finite;\nabsent: `scale`. A negative factor of a DXF is a mirror and a turn here.",
@@ -164068,7 +164068,7 @@
       ]
     },
     "IslandStyle": {
-      "description": "How a region's islands are taken (docs/adr/0329 §1; AutoCAD's island detection).",
+      "description": "How a region's islands are taken (docs/adr/0329 §1).",
       "oneOf": [
         {
           "const": "outer",
@@ -165667,7 +165667,7 @@
       "type": "object"
     },
     "LabelOverlap": {
-      "description": "Whether a label may cover another (QGIS's three).",
+      "description": "Whether a label may cover another.",
       "oneOf": [
         {
           "const": "never",
@@ -167945,7 +167945,7 @@
       "type": "object"
     },
     "LeaderArrow": {
-      "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nAutoCAD's Closed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
+      "description": "A leader's arrowhead other than the filled triangle (Dolu üçgen,\nClosed filled), which is no value but the field's absence: a\nleader has one spelling (docs/adr/0146 §1). The first three are the\nfirst leaders'; the others the DXF arrowheads (docs/adr/0205 §7, `.kcad`\nschema 30).",
       "oneOf": [
         {
           "const": "open",
@@ -168518,7 +168518,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -168975,7 +168975,7 @@
       ]
     },
     "LengthenChange": {
-      "description": "How the length changes (AutoCAD LENGTHEN's DElta, Percent, Total and DYnamic).",
+      "description": "How the length changes.",
       "oneOf": [
         {
           "description": "Fark: the length changed by `length` (negative shortens), or an arc's\nincluded angle by `angle` radians; exactly one of them.",
@@ -169427,7 +169427,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         },
         "za": {
           "description": "The start's elevation, m; absent = none (docs/adr/0142).",
@@ -171501,7 +171501,7 @@
       "type": "object"
     },
     "MatchProperty": {
-      "description": "A property Özellik kopyala gives (AutoCAD's MATCHPROP settings).",
+      "description": "A property Özellik kopyala gives.",
       "oneOf": [
         {
           "const": "layer",
@@ -173458,7 +173458,7 @@
       ]
     },
     "MirrorText": {
-      "description": "What a mirror does to the texts (docs/adr/0292; AutoCAD's MIRRTEXT): texts, multi-line texts, texts along a\ncurve, leaders' notes and tables.",
+      "description": "What a mirror does to the texts (docs/adr/0292): texts, multi-line texts, texts along a\ncurve, leaders' notes and tables.",
       "oneOf": [
         {
           "const": "readable",
@@ -176663,7 +176663,7 @@
       "description": "A constraint to add.",
       "properties": {
         "reference": {
-          "description": "A dimension that only measures (AutoCAD's reference parameter): it drives nothing.",
+          "description": "A dimension that only measures: it drives nothing.",
           "type": "boolean"
         },
         "rule": {
@@ -178520,7 +178520,7 @@
           "type": "array"
         },
         "closed": {
-          "description": "Its ends meet (AutoCAD's flag 1); the source's word, kept as written.",
+          "description": "Its ends meet; the source's word, kept as written.",
           "type": "boolean"
         },
         "color": {
@@ -178558,7 +178558,7 @@
           "x-unit": "length"
         },
         "fitTolerance": {
-          "description": "How far the curve may pass from its fit points, ≥ 0 (AutoCAD's 44).",
+          "description": "How far the curve may pass from its fit points, ≥ 0.",
           "format": "double",
           "type": [
             "number",
@@ -178645,7 +178645,7 @@
           "x-unit": "count"
         },
         "periodic": {
-          "description": "Periodic (AutoCAD's flag 2): kept as written.",
+          "description": "Periodic: kept as written.",
           "type": "boolean"
         },
         "symbol": {
@@ -178707,7 +178707,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -179796,7 +179796,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -182231,12 +182231,12 @@
         },
         {
           "const": "above",
-          "description": "Nesnenin üstüne: drawn right after the `reference` object (AutoCAD's DRAWORDER Above). “Nesnenin üstüne”.",
+          "description": "Nesnenin üstüne: drawn right after the `reference` object. “Nesnenin üstüne”.",
           "type": "string"
         },
         {
           "const": "under",
-          "description": "Nesnenin altına: drawn right before the `reference` object (AutoCAD's DRAWORDER Under). “Nesnenin altına”.",
+          "description": "Nesnenin altına: drawn right before the `reference` object. “Nesnenin altına”.",
           "type": "string"
         }
       ]
@@ -189094,7 +189094,7 @@
               "type": "null"
             }
           ],
-          "description": "The AutoCAD table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a\nprofile made in KentOS."
+          "description": "The `.ctb` or `.stb` table it was read from (docs/adr/1130): its format, bytes' SHA-256 and file name; absent for a\nprofile made in KentOS."
         }
       },
       "required": [
@@ -192318,7 +192318,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         },
         "zs": {
           "description": "Each vertex's elevation, m, as many as `pts`; `null` for a vertex\nwithout one (not 0); absent when no vertex has one (docs/adr/0142).",
@@ -193776,7 +193776,7 @@
     },
     "PipeDiameter": {
       "additionalProperties": false,
-      "description": "The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,\noptionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the\npipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances outside to outside.",
+      "description": "The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,\noptionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the\npipe's top outside (invert + diameter + wall) and the clearances outside to outside.",
       "properties": {
         "catalog": {
           "description": "The sizes a pipe may have, in that unit (none: any).",
@@ -193992,7 +193992,7 @@
       "type": "object"
     },
     "PipeProfileCrossing": {
-      "description": "A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a\nprofile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter\n(none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration\nhigh, from its invert up (a point at its invert without a diameter), its name and invert above. With its wall\n(docs/adr/4360): the outer wall, an ellipse its diameter plus two walls across about the same centre, and the ring\nbetween the two filled; the words above the outer wall.",
+      "description": "A pipe of the other network crossing the run in plan (docs/adr/2760), shown in a\nprofile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter\n(none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration\nhigh, from its invert up (a point at its invert without a diameter), its name and invert above. With its wall\n(docs/adr/4360): the outer wall, an ellipse its diameter plus two walls across about the same centre, and the ring\nbetween the two filled; the words above the outer wall.",
       "properties": {
         "at": {
           "items": {
@@ -195546,7 +195546,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -195758,7 +195758,7 @@
           "type": "object"
         },
         {
-          "description": "Nesne izleme: the UCS x of `x`'s point and the UCS y of `y`'s, where the alignments through the two\ncross (AutoCAD's .X and .Y point filters).",
+          "description": "Nesne izleme: the UCS x of `x`'s point and the UCS y of `y`'s, where the alignments through the two\ncross.",
           "properties": {
             "kind": {
               "const": "track",
@@ -195977,7 +195977,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         },
         "z": {
           "format": "double",
@@ -196049,7 +196049,7 @@
       "oneOf": [
         {
           "const": "around",
-          "description": "Around it, QGIS's cartographic order (top right first).",
+          "description": "Around it, the cartographic order (top right first).",
           "type": "string"
         },
         {
@@ -201023,7 +201023,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -201288,7 +201288,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -201671,7 +201671,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -203144,7 +203144,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -203897,7 +203897,7 @@
       "description": "Where a rectangle lies. Its sides run along `rotation` and across it, but for `edge`, whose edge gives them.",
       "oneOf": [
         {
-          "description": "Two opposite corners (AutoCAD RECTANG's two points).",
+          "description": "Two opposite corners.",
           "properties": {
             "a": {
               "$ref": "#/$defs/Vec2",
@@ -204241,7 +204241,7 @@
       "description": "Where a regular polygon lies.",
       "oneOf": [
         {
-          "description": "Çember içinde: the centre and the first corner (AutoCAD POLYGON's Inscribed).",
+          "description": "Çember içinde: the centre and the first corner.",
           "properties": {
             "center": {
               "$ref": "#/$defs/Vec2",
@@ -205356,7 +205356,7 @@
       "type": "object"
     },
     "RevcloudFrame": {
-      "description": "What a revision cloud goes round (AutoCAD REVCLOUD's Rectangular, Polygonal and Object).",
+      "description": "What a revision cloud goes round.",
       "oneOf": [
         {
           "description": "Two opposite corners of a rectangle whose sides run east and north.",
@@ -207455,7 +207455,7 @@
     },
     "RoadSheetSetDef": {
       "additionalProperties": false,
-      "description": "A plan–profile sheet set (docs/adr/0908 §10; Civil 3D's view frame group): sheets along an alignment, each showing\nits stretch in plan at the set's scale (1:`scale`) and, with a profile, the profile view drawn for it; the sources'\nrevisions it was made from, so the sheets say when the alignment or the profile changed since.",
+      "description": "A plan–profile sheet set (docs/adr/0908 §10): sheets along an alignment, each showing\nits stretch in plan at the set's scale (1:`scale`) and, with a profile, the profile view drawn for it; the sources'\nrevisions it was made from, so the sheets say when the alignment or the profile changed since.",
       "properties": {
         "alignment": {
           "type": "string"
@@ -207983,7 +207983,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -209296,7 +209296,7 @@
       "type": "object"
     },
     "SectionFormula": {
-      "description": "The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or\n`L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.",
+      "description": "The section method's formula (docs/adr/4340): `(A₀ + A₁)/2 · L`, or\n`L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.",
       "oneOf": [
         {
           "enum": [
@@ -212821,7 +212821,7 @@
       "oneOf": [
         {
           "const": "utf-8",
-          "description": "UTF-8, named in the .cpg (QGIS and GDAL write it so today).",
+          "description": "UTF-8, named in the .cpg.",
           "type": "string"
         },
         {
@@ -213759,7 +213759,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -215767,7 +215767,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -216836,7 +216836,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -218001,7 +218001,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -220734,7 +220734,7 @@
       "type": "object"
     },
     "SurfaceEdit": {
-      "description": "An edit of a terrain surface (docs/adr/1560), as Civil 3D's surface definition keeps them: Nokta ekle (a point at\na place no record has), Kot değiştir (every point record at the place takes the height), Kenar ekle (a TIN edge\nbetween the corners at two places; Kenar çevir is the other diagonal of two triangles) and Üçgen sil (the kept\ntriangle at the place goes).",
+      "description": "An edit of a terrain surface (docs/adr/1560), as a surface definition keeps them: Nokta ekle (a point at\na place no record has), Kot değiştir (every point record at the place takes the height), Kenar ekle (a TIN edge\nbetween the corners at two places; Kenar çevir is the other diagonal of two triangles) and Üçgen sil (the kept\ntriangle at the place goes).",
       "oneOf": [
         {
           "additionalProperties": false,
@@ -220862,7 +220862,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "Yüzey yapıştır (docs/adr/3920; `.kcad` schema 214): another surface of the project, by its id, pasted in as Civil\n3D's Paste Surface and OpenRoads' Merge do: where its kept triangles lie, this surface's records made so far go\nand its corners and edges come in; the rest is triangulated anew round it.",
+          "description": "Yüzey yapıştır (docs/adr/3920; `.kcad` schema 214): another surface of the project, by its id, pasted in: where its kept triangles lie, this surface's records made so far go\nand its corners and edges come in; the rest is triangulated anew round it.",
           "properties": {
             "op": {
               "const": "paste",
@@ -223750,7 +223750,7 @@
     },
     "TableCellStyleDef": {
       "additionalProperties": false,
-      "description": "One of a table style's cell styles (AutoCAD's Title, Header or Data), every field optional.",
+      "description": "One of a table style's cell styles, every field optional.",
       "properties": {
         "align": {
           "anyOf": [
@@ -223812,7 +223812,7 @@
           "x-unit": "paper-mm"
         },
         "textStyle": {
-          "description": "The text style its words are written in, by its name (AutoCAD's group 7).",
+          "description": "The text style its words are written in, by its name.",
           "type": [
             "string",
             "null"
@@ -224831,7 +224831,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -225823,7 +225823,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -228360,7 +228360,7 @@
           "x-unit": "paper-mm"
         },
         "mask": {
-          "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
+          "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn: what lies under it does not show.",
           "type": "boolean"
         },
         "oblique": {
@@ -228447,7 +228447,7 @@
           "x-unit": "1"
         },
         "widthFactor": {
-          "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
+          "description": "The letters' width times this, the height kept (DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
           "format": "double",
           "maximum": 100.0,
           "minimum": 0.0,
@@ -228466,7 +228466,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -228744,7 +228744,7 @@
     },
     "TextShift": {
       "additionalProperties": false,
-      "description": "The value moved from its place (AutoCAD's text moved, DIMTMOVE 2): metres along the value's own direction and\nacross it (left positive).",
+      "description": "The value moved from its place: metres along the value's own direction and\nacross it (left positive).",
       "properties": {
         "across": {
           "format": "double",
@@ -229660,7 +229660,7 @@
       "type": "object"
     },
     "TopologyProfile": {
-      "description": "A quality profile (docs/adr/1260 §2): three lengths kept apart. The check's tolerance (`TopologySettings::tolerance`)\nis the CAD nearness within which two places are one; `precision` is the step the coordinates are stored at (ArcGIS's\nXY resolution: the tolerance is at least twice it); `acceptance` is the institution's threshold: no repair moves a\nvertex of the source geometry farther than it. With a profile every exception and every error mark names its reason.",
+      "description": "A quality profile (docs/adr/1260 §2): three lengths kept apart. The check's tolerance (`TopologySettings::tolerance`)\nis the CAD nearness within which two places are one; `precision` is the step the coordinates are stored at (the\nXY resolution: the tolerance is at least twice it); `acceptance` is the institution's threshold: no repair moves a\nvertex of the source geometry farther than it. With a profile every exception and every error mark names its reason.",
       "properties": {
         "acceptance": {
           "description": "Metres, finite, at least the precision.",
@@ -230112,7 +230112,7 @@
           "type": "object"
         },
         {
-          "description": "Mirror (aynala) across the line through `a` and `b`, two different points. `text` is what becomes of the\ntexts (docs/adr/0292, AutoCAD's MIRRTEXT): readable (the default) or mirrored. A text's words and a block's\nattribute values never change; a block's own texts and attributes always read upright.",
+          "description": "Mirror (aynala) across the line through `a` and `b`, two different points. `text` is what becomes of the\ntexts (docs/adr/0292): readable (the default) or mirrored. A text's words and a block's\nattribute values never change; a block's own texts and attributes always read upright.",
           "properties": {
             "a": {
               "$ref": "#/$defs/Vec2",
@@ -230145,7 +230145,7 @@
           "type": "object"
         },
         {
-          "description": "Align (hizala, AutoCAD's ALIGN): `source` goes onto `target`. With a\nsecond pair (`source2` and `target2`, given together) the objects\nalso turn about `source` so that the direction from `source` to\n`source2` lies along the one from `target` to `target2`, and with\n`scale` they are scaled about it so that the one length becomes the\nother. The second pair's points must lie apart from the first's;\n`scale` means nothing without a second pair.",
+          "description": "Align (hizala): `source` goes onto `target`. With a\nsecond pair (`source2` and `target2`, given together) the objects\nalso turn about `source` so that the direction from `source` to\n`source2` lies along the one from `target` to `target2`, and with\n`scale` they are scaled about it so that the one length becomes the\nother. The second pair's points must lie apart from the first's;\n`scale` means nothing without a second pair.",
           "properties": {
             "kind": {
               "const": "align",
@@ -230470,7 +230470,7 @@
           "type": "object"
         },
         {
-          "description": "Every shown object whose box meets the rectangle (the tools give their\nview: AutoCAD's quick mode, “every visible edge”).",
+          "description": "Every shown object whose box meets the rectangle (the tools give their\nview: “every visible edge”).",
           "properties": {
             "kind": {
               "const": "area",
@@ -230516,7 +230516,7 @@
       ]
     },
     "TrimEdgeMode": {
-      "description": "AutoCAD's EDGEMODE: whether a boundary bounds only where it is, or along\nits natural path past its ends too.",
+      "description": "Edge mode: whether a boundary bounds only where it is, or along\nits natural path past its ends too.",
       "oneOf": [
         {
           "const": "none",
@@ -231984,7 +231984,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         },
         "words": {
           "$ref": "#/$defs/ViewMarkLabel",
@@ -234277,7 +234277,7 @@
               "type": "null"
             }
           ],
-          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+          "description": "An area's mask: it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
         }
       },
       "required": [
@@ -235708,7 +235708,7 @@
       "description": "An area's mask (docs/adr/0310 §1).",
       "properties": {
         "frame": {
-          "description": "Whether its boundary is drawn (AutoCAD's WIPEOUTFRAME, per mask).",
+          "description": "Whether its boundary is drawn.",
           "type": "boolean"
         }
       },
@@ -237173,7 +237173,7 @@
       ]
     },
     "XrefViewportOverride": {
-      "description": "A sheet viewport's own override of one of a reference's layers (docs/adr/1110 §2; AutoCAD's VP Freeze, VP Color …):\nthat map item draws the layer otherwise, whatever the drawing's own look of it. No `cad.xrefs.*` operation changes\nit: a reload, a repath and an unload keep the layer's id, `resetLayers` sets back only the drawing's own look.",
+      "description": "A sheet viewport's own override of one of a reference's layers (docs/adr/1110 §2):\nthat map item draws the layer otherwise, whatever the drawing's own look of it. No `cad.xrefs.*` operation changes\nit: a reload, a repath and an unload keep the layer's id, `resetLayers` sets back only the drawing's own look.",
       "properties": {
         "color": {
           "type": [

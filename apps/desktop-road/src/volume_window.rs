@@ -1,5 +1,4 @@
-//! Kübaj (plan/road.md Y8, `volume.editor`): a road project's earthwork volumes, as Civil 3D's sample line group
-//! volumes, OpenRoads' end area volumes report and Netpro's kübaj hesabı make them: a corridor's, by the average end
+//! Kübaj (plan/road.md Y8, `volume.editor`): a road project's earthwork volumes: a corridor's, by the average end
 //! area, the prismoidal formula or between the corridor's top surface and the terrain, with the swell and shrink
 //! factors written by stations. The volume is computed as it is typed (`road.volumes.query`'s rule): the mass diagram
 //! shows the factored running cut and fill and their difference, the sheet its rows; the warnings say why.
@@ -1257,7 +1256,7 @@ impl VolumeWindowApp for App {
         }
         let mut form = form
             .field(RULE, on_rule)
-            .help("NETPRO'nun adlarıyla: Yol ya da Formasyon, Zemin ya da Bitkisel Toprak. Formasyon üstyapı ister.")
+            .help("Kübajın kuralı: Yol ya da Formasyon, Zemin ya da Bitkisel Toprak. Formasyon üstyapı ister.")
             .field(
                 "Kurp",
                 if r.method == VolumeMethod::EndArea {

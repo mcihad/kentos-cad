@@ -1,5 +1,5 @@
-//! Named table styles (docs/adr/1126): AutoCAD's TABLESTYLE reduced to what a KentOS table can carry. A style has
-//! three cell styles, as AutoCAD's Standard has (Title, Header, Data); each may name a text style (by name), a text
+//! Named table styles (docs/adr/1126): a table style reduced to what a KentOS table can carry. A style has
+//! three cell styles, as the standard style has (Title, Header, Data); each may name a text style (by name), a text
 //! height, an alignment, a text and a fill colour, horizontal and vertical margins and its borders' weight and colour,
 //! all on the paper. A table names its style by id (`TableEntity::table_style`); where the table has none of its own,
 //! the drawing takes the style's alignment, colours and the data cells' text style ([`styled`]). Heights, margins and
@@ -20,14 +20,14 @@ pub const MAX_TABLE_STYLE_SIZE: f64 = 100.0;
 /// The longest text style name a cell style names.
 pub const MAX_TABLE_TEXT_STYLE_NAME: usize = 255;
 
-/// One of a table style's cell styles (AutoCAD's Title, Header or Data), every field optional.
+/// One of a table style's cell styles, every field optional.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TableCellStyleDef {
-    /// The text style its words are written in, by its name (AutoCAD's group 7).
+    /// The text style its words are written in, by its name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub text_style: Option<String>,

@@ -13,7 +13,7 @@ use ts_rs::TS;
 
 use crate::{DrawingFont, DrawingUnit, LineType, width_factor_ok};
 
-/// The steepest a text's letters may lean, degrees either way (AutoCAD's
+/// The steepest a text's letters may lean, degrees either way (the
 /// bound); never reached.
 pub const MAX_OBLIQUE: f64 = 85.0;
 /// A dimension's sizes when it names none, times its value's height: the look
@@ -854,7 +854,7 @@ pub struct DimensionStyleDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub font: Option<DrawingFont>,
-    /// The project text style its value is written in, by its name (AutoCAD's DIMTXSTY, docs/adr/1023): when that
+    /// The project text style its value is written in, by its name: when that
     /// style's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface
     /// (a DXF's reader sets both). Schema 186.
     #[serde(default, skip_serializing_if = "Option::is_none")]

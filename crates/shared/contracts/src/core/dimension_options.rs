@@ -16,7 +16,7 @@ pub const MAX_BREAKS: usize = 64;
 /// The largest increment, tolerance or shift a dimension takes, metres.
 pub const MAX_OPTION_LENGTH: f64 = 1.0e6;
 
-/// Where the value goes when it does not fit between the extension lines (AutoCAD's DIMATFIT and DIMTIX): absent,
+/// Where the value goes when it does not fit between the extension lines: absent,
 /// always between them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -30,7 +30,7 @@ pub enum DimensionFit {
     Outside,
 }
 
-/// Which zeros the number leaves out (AutoCAD's DIMZIN).
+/// Which zeros the number leaves out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -54,7 +54,7 @@ impl DimensionZeros {
     }
 }
 
-/// An alternate unit written after the value in brackets (AutoCAD's DIMALT): `2.500 [2500]`.
+/// An alternate unit written after the value in brackets: `2.500 [2500]`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -84,7 +84,7 @@ pub enum ToleranceKind {
     Limits,
 }
 
-/// A tolerance (AutoCAD's DIMTOL and DIMLIM), metres; lengths and coordinates only.
+/// A tolerance, metres; lengths and coordinates only.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -117,7 +117,7 @@ pub struct DimensionOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub fit: Option<DimensionFit>,
-    /// Lengths and coordinates rounded to this increment, metres, over 0 (AutoCAD's DIMRND).
+    /// Lengths and coordinates rounded to this increment, metres, over 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -125,7 +125,7 @@ pub struct DimensionOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zeros: Option<DimensionZeros>,
-    /// Feet and inches in an inch or foot unit (AutoCAD's DIMLUNIT, docs/adr/0262 §2); absent: the project's, unless
+    /// Feet and inches in an inch or foot unit; absent: the project's, unless
     /// the dimension names its own unit.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -136,7 +136,7 @@ pub struct DimensionOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub tolerance: Option<DimensionTolerance>,
-    /// A break's width, times the value's height, over 0; absent: 1 (AutoCAD's DIMBREAK size).
+    /// A break's width, times the value's height, over 0; absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
@@ -146,7 +146,7 @@ pub struct DimensionOptions {
 /// A break's default width, times the value's height.
 pub const DEFAULT_BREAK_SIZE: f64 = 1.0;
 
-/// The value moved from its place (AutoCAD's text moved, DIMTMOVE 2): metres along the value's own direction and
+/// The value moved from its place: metres along the value's own direction and
 /// across it (left positive).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -218,7 +218,7 @@ pub enum BreakLine {
     Second,
 }
 
-/// A gap in one of a dimension's lines where another object crosses it (AutoCAD's DIMBREAK), at the fraction `t` of
+/// A gap in one of a dimension's lines where another object crosses it, at the fraction `t` of
 /// the line; its width the options' `breakSize`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

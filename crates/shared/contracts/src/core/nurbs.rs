@@ -1,5 +1,5 @@
 //! A general NURBS curve (docs/adr/0259): its degree, control points,
-//! weights and knots as the source, exactly as given; what AutoCAD keeps
+//! weights and knots as the source, exactly as given; what a DXF keeps
 //! with it (whether it is closed or periodic, the fit points it was drawn
 //! through, their end tangents and tolerance) kept beside them. KentOS's own
 //! Catmull–Rom curve (`spline`) is another kind and stays as it is.
@@ -10,7 +10,7 @@ use ts_rs::TS;
 
 use crate::entity::{EntityBase, Vec2};
 
-/// The highest degree a NURBS object may have: AutoCAD writes at most 11.
+/// The highest degree a NURBS object may have: a DXF has at most 11.
 pub const MAX_NURBS_DEGREE: u32 = 11;
 /// The most control points one object may have.
 pub const MAX_NURBS_POINTS: usize = 100_000;
@@ -40,11 +40,11 @@ pub struct NurbsEntity {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub weights: Option<Vec<f64>>,
-    /// Its ends meet (AutoCAD's flag 1); the source's word, kept as written.
+    /// Its ends meet; the source's word, kept as written.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub closed: bool,
-    /// Periodic (AutoCAD's flag 2): kept as written.
+    /// Periodic: kept as written.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub periodic: bool,
@@ -58,7 +58,7 @@ pub struct NurbsEntity {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub tangents: Option<[Option<Vec2>; 2]>,
-    /// How far the curve may pass from its fit points, ≥ 0 (AutoCAD's 44).
+    /// How far the curve may pass from its fit points, ≥ 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -174,7 +174,7 @@ impl NurbsEntity {
 
 /// The clamped knots of a curve of `degree` over `n` control points with the
 /// spans equal (0, …, 0, 1, …, k, …, k): what a curve drawn by its control
-/// points gets (AutoCAD's SPLINE by control vertices, uniform knots).
+/// points gets.
 pub fn clamped_uniform_knots(degree: u32, n: usize) -> Vec<f64> {
     let p = degree as usize;
     let spans = n.saturating_sub(p);

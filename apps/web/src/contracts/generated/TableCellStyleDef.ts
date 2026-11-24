@@ -2,11 +2,11 @@
 import type { TableAlign } from "./TableAlign";
 
 /**
- * One of a table style's cell styles (AutoCAD's Title, Header or Data), every field optional.
+ * One of a table style's cell styles, every field optional.
  */
 export type TableCellStyleDef = { 
 /**
- * The text style its words are written in, by its name (AutoCAD's group 7).
+ * The text style its words are written in, by its name.
  */
 textStyle?: string, 
 /**

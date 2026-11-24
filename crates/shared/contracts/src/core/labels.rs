@@ -30,7 +30,7 @@ pub const LABEL_PINS_MAX: usize = 64;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum PointLabelMode {
-    /// Around it, QGIS's cartographic order (top right first).
+    /// Around it, the cartographic order (top right first).
     Around,
     /// On it.
     Center,
@@ -101,7 +101,7 @@ pub enum LabelAlign {
     Right,
 }
 
-/// Whether a label may cover another (QGIS's three).
+/// Whether a label may cover another.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

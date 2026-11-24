@@ -83,7 +83,7 @@ pub struct XrefSource {
     pub underlay: Option<UnderlayLook>,
 }
 
-/// The most a PDF underlay is faded, in percent (AutoCAD's limit).
+/// The most a PDF underlay is faded, in percent.
 pub const MAX_UNDERLAY_FADE: u8 = 80;
 
 fn is_true(b: &bool) -> bool {
@@ -488,7 +488,7 @@ pub struct XrefCandidate {
     pub digest: String,
 }
 
-/// A sheet viewport's own override of one of a reference's layers (docs/adr/1110 §2; AutoCAD's VP Freeze, VP Color …):
+/// A sheet viewport's own override of one of a reference's layers (docs/adr/1110 §2):
 /// that map item draws the layer otherwise, whatever the drawing's own look of it. No `cad.xrefs.*` operation changes
 /// it: a reload, a repath and an unload keep the layer's id, `resetLayers` sets back only the drawing's own look.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

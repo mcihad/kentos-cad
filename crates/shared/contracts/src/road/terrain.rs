@@ -69,7 +69,7 @@ pub struct TerrainSurfaceDef {
     pub edits: Vec<SurfaceEdit>,
 }
 
-/// An edit of a terrain surface (docs/adr/1560), as Civil 3D's surface definition keeps them: Nokta ekle (a point at
+/// An edit of a terrain surface (docs/adr/1560), as a surface definition keeps them: Nokta ekle (a point at
 /// a place no record has), Kot değiştir (every point record at the place takes the height), Kenar ekle (a TIN edge
 /// between the corners at two places; Kenar çevir is the other diagonal of two triangles) and Üçgen sil (the kept
 /// triangle at the place goes).
@@ -115,8 +115,7 @@ pub enum SurfaceEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         y: f64,
     },
-    /// Yüzey yapıştır (docs/adr/3920; `.kcad` schema 214): another surface of the project, by its id, pasted in as Civil
-    /// 3D's Paste Surface and OpenRoads' Merge do: where its kept triangles lie, this surface's records made so far go
+    /// Yüzey yapıştır (docs/adr/3920; `.kcad` schema 214): another surface of the project, by its id, pasted in: where its kept triangles lie, this surface's records made so far go
     /// and its corners and edges come in; the rest is triangulated anew round it.
     #[serde(rename_all = "camelCase")]
     Paste { terrain: String },

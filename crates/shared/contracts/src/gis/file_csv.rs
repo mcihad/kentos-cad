@@ -1,6 +1,6 @@
 //! A CSV table of objects in and out (docs/adr/0522, plan/gis.md CBS-05): the geometry as ISO WKT in its own column
 //! (arcs as circular strings, exact) or as X and Y columns, the attributes in the others; the column types in a GDAL
-//! `.csvt` beside it, the system in a `.prj`. QGIS's delimited text and GDAL's CSV driver read and write the same.
+//! `.csvt` beside it, the system in a `.prj`. GDAL's CSV driver reads and write the same.
 
 use std::collections::BTreeMap;
 

@@ -95,7 +95,7 @@ pub const UNITS: &[(&str, &str)] = &[
     ),
     (
         "grade",
-        "Eğim oranı: düşey bölü yatay, birimsiz; 0,02 %2'dir. Boyuna eğim, enine eğim ve dever bununla yazılır, ekranda yüzdeye açıkça çevrilir (ADR 0977).",
+        "Eğim oranı: düşey bölü yatay, birimsiz; 0,02 %2'dir. Boyuna eğim, enine eğim ve dever bununla yazılır, ekranda yüzdeye açıkça çevrilir.",
     ),
     ("ppm", "Milyonda bir."),
     (
@@ -173,7 +173,7 @@ pub const UNITS: &[(&str, &str)] = &[
     ("volume/h", "Saatte hacim: üretim."),
     (
         "W/m2K",
-        "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/8038).",
+        "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri).",
     ),
 ];
 
@@ -183,7 +183,7 @@ pub fn is_unit(unit: &str) -> bool {
 }
 
 /// The unit a DXF's `$INSUNITS` code names, in metres, and its name; none
-/// for a drawing without units (0) and the codes AutoCAD does not define.
+/// for a drawing without units (0) and the codes DXF does not define.
 /// The ratios are the definitions: an inch is 25.4 mm, a US survey foot
 /// 1200/3937 m (docs/adr/0165 §2, docs/adr/0257 §1).
 pub fn insunits(code: i64) -> Option<(Scale, &'static str)> {

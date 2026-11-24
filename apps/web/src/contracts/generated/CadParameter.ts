@@ -2,7 +2,7 @@
 import type { ParameterKind } from "./ParameterKind";
 
 /**
- * A named parameter: a dimensional constraint's own, or the user's (AutoCAD's user parameter).
+ * A named parameter: a dimensional constraint's own, or the user's.
  */
 export type CadParameter = { name: string, kind: ParameterKind, 
 /**

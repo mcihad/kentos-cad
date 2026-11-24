@@ -27,9 +27,9 @@ pub enum OrderTo {
     Front,
     /// Arkaya gönder: drawn before every other object of their layer. “Arkaya gönder”.
     Back,
-    /// Nesnenin üstüne: drawn right after the `reference` object (AutoCAD's DRAWORDER Above). “Nesnenin üstüne”.
+    /// Nesnenin üstüne: drawn right after the `reference` object. “Nesnenin üstüne”.
     Above,
-    /// Nesnenin altına: drawn right before the `reference` object (AutoCAD's DRAWORDER Under). “Nesnenin altına”.
+    /// Nesnenin altına: drawn right before the `reference` object. “Nesnenin altına”.
     Under,
 }
 

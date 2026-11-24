@@ -1,4 +1,4 @@
-//! Çizimi temizle's semantic command of the product command catalog (docs/adr/0305; AutoCAD's OVERKILL): what the
+//! Çizimi temizle's semantic command of the product command catalog (docs/adr/0305): what the
 //! drawing carries twice, empty, on one line or with vertices that add nothing, found within a tolerance and cleaned as
 //! one undo step, with a report of what went and how far it moved.
 
@@ -14,12 +14,12 @@ use crate::cad::{REVISION_TEXT, UID_TEXT};
 pub const CAD_ENTITIES_CLEANUP: &str = "cad.entities.cleanup";
 pub const CAD_ENTITIES_CLEANUP_VERSION: u32 = 1;
 
-/// The tolerance when none is given, metres (AutoCAD's OVERKILL's).
+/// The tolerance when none is given, metres.
 pub const CLEANUP_TOLERANCE: f64 = 1e-6;
 /// The largest tolerance, metres.
 pub const MAX_CLEANUP_TOLERANCE: f64 = 10.0;
 
-/// A property two objects may differ in and still be the same (AutoCAD's OVERKILL “Ignore object property”).
+/// A property two objects may differ in and still be the same.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

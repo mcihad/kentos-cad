@@ -1,4 +1,4 @@
-//! A layer's look in and out as OGC SLD 1.1 / SE 1.1 (docs/adr/0516, plan/gis.md CBS-17): the subset QGIS 4.2,
+//! A layer's look in and out as OGC SLD 1.1 / SE 1.1 (docs/adr/0516, plan/gis.md CBS-17): the subset the common map programs,
 //! GeoServer and MapServer share. What one side has and the other has not is named (`export_losses`,
 //! `import_losses`), never dropped silently.
 

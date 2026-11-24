@@ -1,5 +1,5 @@
 //! `cad.rasters.mosaic` v1 (docs/adr/0517; plan/gis.md `CBS-28`): many GeoTIFF files made one virtual mosaic, a
-//! GDAL VRT that KentOS, GDAL and QGIS open alike; no pixel is copied. Which file lies on top where they overlap is
+//! GDAL VRT that KentOS and GDAL open alike; no pixel is copied. Which file lies on top where they overlap is
 //! the order given, the finer pixel or the newer date; the mosaic's pixel is the finest, coarsest or mean of the
 //! files' (or one given). Optionally the mosaic is added to the drawing as a raster, as one undo step.
 

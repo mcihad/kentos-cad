@@ -2,7 +2,7 @@
 import type { DrawingUnit } from "./DrawingUnit";
 
 /**
- * An alternate unit written after the value in brackets (AutoCAD's DIMALT): `2.500 [2500]`.
+ * An alternate unit written after the value in brackets: `2.500 [2500]`.
  */
 export type AltUnits = { unit: DrawingUnit, 
 /**

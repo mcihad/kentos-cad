@@ -356,7 +356,7 @@ pub const ROAD_PROFILES_DRAW: &str = "road.profiles.draw";
 pub const ROAD_PROFILES_DRAW_VERSION: u32 = 1;
 
 /// Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,
-/// so it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's
+/// so it goes to sheets and DXF as a profile view, from its first to its last PVI. The frame's
 /// lower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre
 /// of elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;
 /// off the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red

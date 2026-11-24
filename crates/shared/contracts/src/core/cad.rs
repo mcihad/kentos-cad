@@ -72,7 +72,7 @@ pub struct PolygonCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
-    /// An area's mask (Maske, AutoCAD's WIPEOUT; docs/adr/0310 §1): it fills with the drawing's background and covers
+    /// An area's mask (Maske; docs/adr/0310 §1): it fills with the drawing's background and covers
     /// what is drawn before it, its frame drawn or not. Absent: an ordinary area.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

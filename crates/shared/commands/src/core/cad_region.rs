@@ -120,18 +120,18 @@ pub struct EntitiesBoundary {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchWay {
-    /// Kapalı nesne (Netcad's): the smallest closed object around the point,
+    /// Kapalı nesne: the smallest closed object around the point,
     /// the smaller closed objects inside or across its edge its islands; the
     /// hatch can follow them (`associative`).
     #[default]
     Object,
-    /// Çizgiler (AutoCAD's): the face the boundaries' line work closes
+    /// Çizgiler: the face the boundaries' line work closes
     /// around the point, closed groups inside it its islands; with İlişkili it
     /// follows that line work (docs/adr/0328 §3).
     Lines,
 }
 
-/// How a region's islands are taken (docs/adr/0329 §1; AutoCAD's island detection).
+/// How a region's islands are taken (docs/adr/0329 §1).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -329,7 +329,7 @@ pub enum BoxCorner {
     Center,
 }
 
-/// Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).
+/// Where a pattern's lines are anchored (docs/adr/0331 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -387,14 +387,13 @@ pub struct EntitiesHatch {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: NewLook,
-    /// The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's
-    /// HPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.
+    /// The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 0.9)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub transparency: Option<f64>,
-    /// Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:
+    /// Where the hatches are drawn among their layer's objects (docs/adr/0332 §1). Absent:
     /// `none`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

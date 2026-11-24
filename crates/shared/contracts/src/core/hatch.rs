@@ -118,7 +118,7 @@ pub struct HatchPattern {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub gradient: Option<HatchGradient>,
-    /// Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through
+    /// Where its lines are anchored in the world (docs/adr/0331 §2): every family goes through
     /// it as the definition says instead of through the world's origin. Absent: the world's origin.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -174,7 +174,7 @@ pub struct HatchPatternDef {
     pub source: Option<String>,
 }
 
-/// Whether two pattern names are the same one (AutoCAD's: letters' case aside).
+/// Whether two pattern names are the same one (letters' case aside).
 pub fn same_hatch_pattern_name(a: &str, b: &str) -> bool {
     a.trim().to_lowercase() == b.trim().to_lowercase()
 }

@@ -73,7 +73,7 @@ order?: number,
  */
 byLayer?: Array<LookPart>, 
 /**
- * An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+ * An area's mask: it fills with the drawing's background and covers
  * what is drawn before it; only an area has it.
  */
 wipeout?: Wipeout, 

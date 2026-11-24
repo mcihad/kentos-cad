@@ -2,7 +2,7 @@
 
 /**
  * Input of `file.import.qml` v1: the look of the QML at `path` (or its `text`) made the layer's renderer, one undo
- * step “Katman stili”: QGIS's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,
+ * step “Katman stili”: the file's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,
  * in order:
  * `invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_qml`, `layer_not_found`,
  * `not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.

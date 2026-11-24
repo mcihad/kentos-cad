@@ -1,5 +1,5 @@
 //! `cad.standards.check` and `cad.standards.apply` (docs/adr/0312 §1–§3): a
-//! drawing standard (AutoCAD's CAD Standards, its `.dws`) as data: the
+//! drawing standard as data: the
 //! layers an office's drawings have, each with its colour, line type, line
 //! weight, Yazdır and the names of the layers that belong to it; the names
 //! other layers may take; the fonts, text and dimension styles; the line

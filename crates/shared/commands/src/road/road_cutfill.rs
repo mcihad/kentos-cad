@@ -1,7 +1,7 @@
 //! `road.terrains.cutfill` v1 (plan/map-cad.md MAP-15, docs/adr/1840): Kazı ve dolgu bölgeleri, where a comparison
 //! surface lies below a base (cut) and above it (fill), written on a layer: each zone a solid hatch (its fill) and a
 //! closed area with its holes (its data), its plan area and volume in their attributes, the cut red and the fill blue. With an interval the difference is
-//! banded from zero, each band its own zones (a cut and fill map by depth, as Civil 3D's banding from a datum). The
+//! banded from zero, each band its own zones (a cut and fill map by depth, banded from a datum). The
 //! zones' volumes are `road.terrains.compare`'s (its exact TIN–TIN method). One undo step “Kazı ve dolgu bölgeleri”;
 //! the drawing is kept with both surfaces' stamps, so either surface changing makes it stale (`road.project.rebuild`).
 //! The shared cases are `fixtures/commands/v1/road.terrains.cutfill.json`.
@@ -75,7 +75,7 @@ pub struct TerrainsCutFill {
 
 /// The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open
 /// polyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners
-/// take sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average
+/// take sections too, the formula of the volume between two (none: the average
 /// end area; docs/adr/5140: or the frustum's) and the kilometre of the axis's start (m; none: 0), which the sections'
 /// kilometres count from; docs/adr/5140: the cut's swell and the fill's factor of the Brückner value (none: 1; above 0,
 /// at most 10), KGM 2019's “yarma hacmi kabarma ya da sıkışma katsayısıyla çarpılır”.

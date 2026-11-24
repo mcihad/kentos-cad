@@ -3,7 +3,7 @@
 //! its boundary and voids, its height tolerance and edge method. Its triangles are made again from the drawing when it
 //! is read (`kentos-road`'s `kentos.cdt/1`: exact and fast), so a surface never disagrees with its sources; `built`
 //! keeps the digest of the sources it was last made and accepted from, and a surface whose sources' digest differs
-//! is out of date (Civil 3D's “out of date”, OpenRoads' rule). Kept with the project's settings (`road`, `.kcad`
+//! is out of date. Kept with the project's settings (`road`, `.kcad`
 //! schema 158, the road project's schema).
 
 use serde::{Deserialize, Serialize};

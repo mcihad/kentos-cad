@@ -24,7 +24,7 @@ use crate::entity::{Entity, Vec2};
 pub const CAD_ENTITIES_TRANSFORM: &str = "cad.entities.transform";
 pub const CAD_ENTITIES_TRANSFORM_VERSION: u32 = 1;
 
-/// What a mirror does to the texts (docs/adr/0292; AutoCAD's MIRRTEXT): texts, multi-line texts, texts along a
+/// What a mirror does to the texts (docs/adr/0292): texts, multi-line texts, texts along a
 /// curve, leaders' notes and tables.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -74,7 +74,7 @@ pub enum Transform {
         factor: f64,
     },
     /// Mirror (aynala) across the line through `a` and `b`, two different points. `text` is what becomes of the
-    /// texts (docs/adr/0292, AutoCAD's MIRRTEXT): readable (the default) or mirrored. A text's words and a block's
+    /// texts (docs/adr/0292): readable (the default) or mirrored. A text's words and a block's
     /// attribute values never change; a block's own texts and attributes always read upright.
     Mirror {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -85,7 +85,7 @@ pub enum Transform {
         #[cfg_attr(feature = "ts", ts(optional))]
         text: Option<MirrorText>,
     },
-    /// Align (hizala, AutoCAD's ALIGN): `source` goes onto `target`. With a
+    /// Align (hizala): `source` goes onto `target`. With a
     /// second pair (`source2` and `target2`, given together) the objects
     /// also turn about `source` so that the direction from `source` to
     /// `source2` lies along the one from `target` to `target2`, and with

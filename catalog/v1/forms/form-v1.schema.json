@@ -1413,7 +1413,7 @@
   "$id": "https://kentos.dev/schemas/kentos.form/v1.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "Projenin bir formu: kimliği, adı, katmanı, taslağı ve yayınları (docs/adr/0401, 0434). Bilinmeyen alan reddedilir; yayının özeti gövdesinin kanonik JSON'unun SHA-256'sıdır.",
+  "description": "Projenin bir formu: kimliği, adı, katmanı, taslağı ve yayınları. Bilinmeyen alan reddedilir; yayının özeti gövdesinin kanonik JSON'unun SHA-256'sıdır.",
   "properties": {
     "comments": {
       "description": "The reviewers' comments on the form, oldest first (docs/adr/0441 §5).",

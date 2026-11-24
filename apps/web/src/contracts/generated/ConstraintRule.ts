@@ -3,7 +3,7 @@ import type { DistanceAxis } from "./DistanceAxis";
 import type { ElementRef } from "./ElementRef";
 
 /**
- * What a constraint holds. The geometric kinds come first in the order AutoCAD's toolbar has them; the
+ * What a constraint holds. The geometric kinds come first in the toolbar's order; the
  * dimensional ones name the parameter that gives (or, for a reference constraint, takes) their value.
  */
 export type ConstraintRule = { "kind": "coincident", a: ElementRef, b: ElementRef, } | { "kind": "horizontal", a: ElementRef, b?: ElementRef, } | { "kind": "vertical", a: ElementRef, b?: ElementRef, } | { "kind": "parallel", a: ElementRef, b: ElementRef, } | { "kind": "perpendicular", a: ElementRef, b: ElementRef, } | { "kind": "tangent", a: ElementRef, b: ElementRef, inside?: boolean, left?: boolean, } | { "kind": "concentric", a: ElementRef, b: ElementRef, } | { "kind": "collinear", a: ElementRef, b: ElementRef, } | { "kind": "equal", a: ElementRef, b: ElementRef, } | { "kind": "symmetric", a: ElementRef, b: ElementRef, axis: ElementRef, } | { "kind": "fix", a: ElementRef, } | { "kind": "distance", a: ElementRef, b: ElementRef, axis?: DistanceAxis, left?: boolean, parameter: string, } | { "kind": "angle", a: ElementRef, b: ElementRef, reverseA?: boolean, reverseB?: boolean, parameter: string, } | { "kind": "radius", a: ElementRef, parameter: string, } | { "kind": "diameter", a: ElementRef, parameter: string, };

@@ -85,7 +85,7 @@ pub enum ArrayLayout {
         fill: f64,
         rotate: bool,
     },
-    /// Kopyala's Dizi (docs/adr/0291; AutoCAD COPY's Array): `count` places along the displacement (`dx`,
+    /// Kopyala's Dizi (docs/adr/0291): `count` places along the displacement (`dx`,
     /// `dy`), 2 to 10 000, the originals at the first: the copy `k` moves `k·(dx, dy)`; with `fit` the last one
     /// moves the whole displacement and the others share it, the copy `k` moving `k·(dx, dy) / (count − 1)`.
     Line {

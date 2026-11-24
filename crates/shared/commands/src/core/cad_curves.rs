@@ -20,7 +20,7 @@ use crate::entity::Vec2;
 pub const CAD_CURVES_CONSTRUCT: &str = "cad.curves.construct";
 pub const CAD_CURVES_CONSTRUCT_VERSION: u32 = 1;
 
-/// One curve to construct: Daire's, Yay's and Elips's methods (AutoCAD's CIRCLE, ARC and ELLIPSE). A circle by
+/// One curve to construct: Daire's, Yay's and Elips's methods. A circle by
 /// its centre and radius or diameter needs no construction: `cad.circle.create` takes it (r = diameter / 2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

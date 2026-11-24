@@ -1,4 +1,4 @@
-//! A layer's value combinations (Değer bileşimleri, docs/adr/0423; ArcGIS's contingent values): a
+//! A layer's value combinations (Değer bileşimleri, docs/adr/0423): a
 //! group of listed fields whose values go together; its rows are the combinations allowed, each cell a
 //! code, any value, or empty. A record that fills a group's fields must keep one of its rows (of the
 //! record's subtype, when a row names one); a restrictive group refuses another, an advisory one warns.

@@ -7,7 +7,7 @@ import type { ConstraintRule } from "./ConstraintRule";
  */
 export type Constraint = { id: ConstraintId, rule: ConstraintRule, 
 /**
- * A dimensional constraint that only measures (AutoCAD's reference constraint): it never moves anything and its
+ * A dimensional constraint that only measures: it never moves anything and its
  * parameter, read-only, takes the measured value.
  */
 reference?: boolean, };

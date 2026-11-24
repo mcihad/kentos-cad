@@ -1,6 +1,6 @@
 //! `cad.orthophoto.seamlines` v1 (plan/map-cad.md MAP-12, docs/adr/4700): Mozaik birleşme çizgisi. Two orthophotos'
-//! seamline (birleşme çizgisi) and mosaic elements (mozaik elemanı, TUCBS Ortogörüntü) built in KentOS: each image gets the part of its footprint the mosaic uses (ArcGIS Pro's mosaic
-//! dataset seamlines: one polygon per footprint, no overlap left), the two meeting along a seam drawn through their
+//! seamline (birleşme çizgisi) and mosaic elements (mozaik elemanı, TUCBS Ortogörüntü) built in KentOS: each image gets the part of its footprint the mosaic uses (one polygon per
+//! footprint, no overlap left), the two meeting along a seam drawn through their
 //! overlap from one end to the other.
 //!
 //! - **Voronoi** (Pan, Wang, Li, Li 2009, the area Voronoi diagram with overlap): a point of the overlap goes to the

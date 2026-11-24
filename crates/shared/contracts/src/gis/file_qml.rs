@@ -1,4 +1,4 @@
-//! A layer's look in and out as a QGIS layer style file, `.qml` (docs/adr/0555, plan/gis.md CBS-17): QGIS 4.2's
+//! A layer's look in and out as a layer style file, `.qml` (docs/adr/0555, plan/gis.md CBS-17): the
 //! single symbol, categorized, graduated and rule-based renderers with simple fills, lines, markers and centroid
 //! fills. What one side has and the other has not is named (`export_losses`, `import_losses`), never dropped silently.
 
@@ -16,7 +16,7 @@ pub const FILE_IMPORT_QML_VERSION: u32 = 1;
 /// Input of `file.export.qml` v1: the layer's look (its renderer, or its simple look) at `path`, a `.qml`. A QML is
 /// for one geometry type: the layer's objects choose it (areas, then lines, then points; areas when it has none).
 /// Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no
-/// class or rule QGIS's symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.
+/// class or rule the symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -59,7 +59,7 @@ pub struct QmlExported {
 }
 
 /// Input of `file.import.qml` v1: the look of the QML at `path` (or its `text`) made the layer's renderer, one undo
-/// step “Katman stili”: QGIS's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,
+/// step “Katman stili”: the file's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,
 /// in order:
 /// `invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_qml`, `layer_not_found`,
 /// `not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.

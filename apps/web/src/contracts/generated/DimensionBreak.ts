@@ -2,7 +2,7 @@
 import type { BreakLine } from "./BreakLine";
 
 /**
- * A gap in one of a dimension's lines where another object crosses it (AutoCAD's DIMBREAK), at the fraction `t` of
+ * A gap in one of a dimension's lines where another object crosses it, at the fraction `t` of
  * the line; its width the options' `breakSize`.
  */
 export type DimensionBreak = { line: BreakLine, t: number, };

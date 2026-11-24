@@ -1,4 +1,4 @@
-//! Associative arrays (docs/adr/0300; AutoCAD's associative ARRAY): a
+//! Associative arrays (docs/adr/0300): a
 //! block's inserts laid out in rows and columns, round a centre, along a
 //! displacement or along a path, kept together as one array. The source is
 //! the block definition (`block`), its first place the insert at `p`; the

@@ -1,5 +1,5 @@
 //! `cad.leaders.edit` v1 (docs/adr/0326 §5): a leader's arms added and taken away, leaders' landings aligned
-//! (AutoCAD's MLEADERALIGN), block content leaders collected into one (MLEADERCOLLECT), a leader's note and content
+//!, block content leaders collected into one (MLEADERCOLLECT), a leader's note and content
 //! blocks, its look and style, and what its tips follow.
 
 use serde::{Deserialize, Serialize};

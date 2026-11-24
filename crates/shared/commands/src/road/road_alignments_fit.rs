@@ -1,6 +1,6 @@
 //! KentOS Yol's alignment from a drawn line (plan/road.md Y10.6, docs/adr/0908 §12; ROAD-IO-14): `road.alignments.fit`
 //! makes an alignment of a line or an open polyline of the drawing (a road project's axis drawn in DWG or DGN), element
-//! by element or by best fit, as Civil 3D's Create Alignment from Objects and Create Best Fit Alignment do; the line is
+//! by element or by best fit; the line is
 //! kept, the alignment's deviation from it said. The desktop's handler is
 //! `crates/native/application/src/road_alignments_fit.rs`; it and the Python SDK pass the shared cases in
 //! `fixtures/commands/v1/road.alignments.fit.json`.

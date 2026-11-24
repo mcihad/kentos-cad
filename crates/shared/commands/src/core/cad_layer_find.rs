@@ -1,7 +1,7 @@
 //! `cad.layers.find` and `cad.layers.translate` (docs/adr/0311 §4, §5): the
-//! layers found by a name pattern and their properties (AutoCAD's layer
+//! layers found by a name pattern and their properties (layer
 //! filters), and layers merged into a drawing standard's by rules (its
-//! LAYTRANS), its plan the preview. The name pattern is AutoCAD's `wcmatch`
+//! LAYTRANS), its plan the preview. The name pattern is a `wcmatch` pattern
 //! (`pattern_matches`), letters folded as Turkish is written.
 
 use serde::{Deserialize, Serialize};
@@ -167,7 +167,7 @@ fn split(chars: &[char]) -> Vec<&[char]> {
     out
 }
 
-/// Whether a name matches a pattern as AutoCAD's `wcmatch` reads it: `*` any
+/// Whether a name matches a pattern as a `wcmatch` pattern reads it: `*` any
 /// run, `?` one character, `#` a digit, `@` a letter, `.` neither, `[…]` one
 /// of, `[~…]` none of (`a-z` ranges), `` ` `` the next character as it is,
 /// `,` between alternatives, `~` first: anything but. Letters are compared
@@ -306,7 +306,7 @@ pub struct TranslateRule {
     pub line_weight: Option<f64>,
 }
 
-/// Input of `cad.layers.translate` v1 (docs/adr/0311 §5), AutoCAD's LAYTRANS:
+/// Input of `cad.layers.translate` v1 (docs/adr/0311 §5), the layer translation:
 ///
 /// - every layer holding objects (not a group, not drawn from a service)
 ///   takes the first rule whose `from` matches its name, unless its name is

@@ -75,7 +75,7 @@ pub struct EntityBase {
 }
 
 /// The heaviest line weight an object may have, mm: DXF's heaviest is 2.11,
-/// a Netcad pen reaches 100 (docs/adr/0139).
+/// a plotter pen reaches 100 (docs/adr/0139).
 pub const MAX_LINE_WEIGHT: f64 = 100.0;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -363,15 +363,14 @@ pub struct TextEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub align: Option<TextAlign>,
-    /// The letters' width times this, the height kept (Netcad's “sıkışma”,
-    /// DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.
+    /// The letters' width times this, the height kept (DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub width_factor: Option<f64>,
     /// The text's box is filled with the drawing area's colour before the
-    /// text is drawn (Netcad's “fon”): what lies under it does not show.
+    /// text is drawn: what lies under it does not show.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mask: bool,
@@ -889,7 +888,7 @@ impl TextRun {
     }
 }
 
-/// The least and the most a multi-line text's line spacing may be (AutoCAD's own bounds).
+/// The least and the most a multi-line text's line spacing may be.
 pub const MIN_LINE_SPACING: f64 = 0.25;
 pub const MAX_LINE_SPACING: f64 = 4.0;
 
@@ -1455,7 +1454,7 @@ pub struct AttributeDefinition {
     pub options: AttributeOptions,
 }
 
-/// An attribute definition's options (docs/adr/0317 §1; AutoCAD's ATTDEF modes, DXF group 70).
+/// An attribute definition's options (docs/adr/0317 §1).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1836,9 +1835,9 @@ pub fn leader_arrow_holds(size: f64) -> bool {
 }
 
 /// A leader's arrowhead other than the filled triangle (Dolu üçgen,
-/// AutoCAD's Closed filled), which is no value but the field's absence: a
+/// Closed filled), which is no value but the field's absence: a
 /// leader has one spelling (docs/adr/0146 §1). The first three are the
-/// first leaders'; the others AutoCAD's arrowheads (docs/adr/0205 §7, `.kcad`
+/// first leaders'; the others the DXF arrowheads (docs/adr/0205 §7, `.kcad`
 /// schema 30).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -1911,7 +1910,7 @@ impl LeaderArrow {
         }
     }
 
-    /// Whether it is one of AutoCAD's arrowheads the first leaders did not
+    /// Whether it is one of the DXF arrowheads the first leaders did not
     /// have (`.kcad` schema 30).
     pub fn is_added(self) -> bool {
         !matches!(

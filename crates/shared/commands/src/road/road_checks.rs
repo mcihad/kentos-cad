@@ -1,6 +1,6 @@
 //! KentOS Yol's design checks (plan/road.md Y21, docs/adr/0922; ROAD-ALIGN-11, ROAD-ALIGN-15, ROAD-PROFILE-13): an
-//! alignment and a profile checked against the user's design rules, Civil 3D's design check sets and OpenRoads' design
-//! standards. Every limit is the user's (the design standard's); KentOS gives none, a rule not given is not checked.
+//! alignment and a profile checked against the user's design rules (design check sets, design
+//! standards). Every limit is the user's (the design standard's); KentOS gives none, a rule not given is not checked.
 //! The desktop's handlers are `crates/native/application/src/road_alignments_check.rs` and `road_profiles_check.rs`;
 //! they and the Python SDK pass the shared cases in `fixtures/commands/v1/road.alignments.check.json` and
 //! `road.profiles.check.json`.

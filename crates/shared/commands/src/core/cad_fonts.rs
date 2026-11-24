@@ -41,7 +41,7 @@ pub enum FontMatch {
     Own,
     /// A metric twin: Arial, Helvetica, Liberation Sans as Arimo, Courier as Courier Prime.
     Equivalent,
-    /// An AutoCAD SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).
+    /// An SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).
     Shx,
     /// A face KentOS does not have: drawn in the style's face.
     Missing,

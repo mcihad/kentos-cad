@@ -1,4 +1,4 @@
-//! `cad.plotstyles.import` v1 (“Baskı stili tablosu içe aktar”, docs/adr/1130): an AutoCAD `.ctb` (colour-dependent,
+//! `cad.plotstyles.import` v1 (“Baskı stili tablosu içe aktar”, docs/adr/1130): a `.ctb` (colour-dependent,
 //! 255 pens) or `.stb` (named) plot style table read into a plot profile of the project's sheet book, every field mapped
 //! explicitly and what KentOS plots otherwise reported (lost, approximate, note); the profile keeps the file's format,
 //! SHA-256 and name. Optionally the pens are assigned to layers or paper items and the profile is applied to sheets, so

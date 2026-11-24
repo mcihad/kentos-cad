@@ -10,15 +10,15 @@ import type { LengthStyle } from "./LengthStyle";
  */
 export type DimensionOptions = { fit?: DimensionFit, 
 /**
- * Lengths and coordinates rounded to this increment, metres, over 0 (AutoCAD's DIMRND).
+ * Lengths and coordinates rounded to this increment, metres, over 0.
  */
 round?: number, zeros?: DimensionZeros, 
 /**
- * Feet and inches in an inch or foot unit (AutoCAD's DIMLUNIT, docs/adr/0262 §2); absent: the project's, unless
+ * Feet and inches in an inch or foot unit; absent: the project's, unless
  * the dimension names its own unit.
  */
 lengthStyle?: LengthStyle, alt?: AltUnits, tolerance?: DimensionTolerance, 
 /**
- * A break's width, times the value's height, over 0; absent: 1 (AutoCAD's DIMBREAK size).
+ * A break's width, times the value's height, over 0; absent: 1.
  */
 breakSize?: number, };

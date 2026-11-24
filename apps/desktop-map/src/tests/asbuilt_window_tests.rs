@@ -132,7 +132,7 @@ fn the_field_package_is_written_from_the_form() {
     let listed = zip::list(&bytes, &limits).expect("a zip");
     let mut names = kentos_commands::FIELD_PACKAGE_FILES.to_vec();
     names.push(kentos_commands::FIELD_PACKAGE_SURFACE_FILE);
-    assert_eq!(listed.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), names, "docs/adr/3220: the surface fourth");
+    assert_eq!(listed.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), names, "the surface fourth");
     let files = zip::unpack(&bytes, &listed, &limits, |_| true).expect("unpacks");
     let manifest: Value = serde_json::from_slice(&files[0].data).expect("the manifest");
     assert_eq!(manifest["notes"], serde_json::json!(["KN1 ve KN2'den başlanır.", "Kotlar TUDKA-99'a göredir."]));

@@ -14,7 +14,7 @@ import type { TextStyleDef } from "./TextStyleDef";
 import type { WallDetail } from "./WallDetail";
 
 /**
- * What `file.export.dxf` writes (an AutoCAD 2007 DXF).
+ * What `file.export.dxf` writes (a DXF of the 2007 version).
  */
 export type DxfWriteInput = { 
 /**

@@ -2,7 +2,7 @@
 import type { ToleranceKind } from "./ToleranceKind";
 
 /**
- * A tolerance (AutoCAD's DIMTOL and DIMLIM), metres; lengths and coordinates only.
+ * A tolerance, metres; lengths and coordinates only.
  */
 export type DimensionTolerance = { kind: ToleranceKind, 
 /**

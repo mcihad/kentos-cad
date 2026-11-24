@@ -18,7 +18,7 @@ pub fn form_schema() -> serde_json::Value {
         o.insert("title".into(), "KentOS formu, sürüm 1".into());
         o.insert(
             "description".into(),
-            "Projenin bir formu: kimliği, adı, katmanı, taslağı ve yayınları (docs/adr/0401, 0434). Bilinmeyen alan reddedilir; \
+            "Projenin bir formu: kimliği, adı, katmanı, taslağı ve yayınları. Bilinmeyen alan reddedilir; \
              yayının özeti gövdesinin kanonik JSON'unun SHA-256'sıdır."
                 .into(),
         );

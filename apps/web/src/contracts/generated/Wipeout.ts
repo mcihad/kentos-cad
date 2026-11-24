@@ -5,6 +5,6 @@
  */
 export type Wipeout = { 
 /**
- * Whether its boundary is drawn (AutoCAD's WIPEOUTFRAME, per mask).
+ * Whether its boundary is drawn.
  */
 frame: boolean, };

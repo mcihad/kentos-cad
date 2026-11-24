@@ -1,4 +1,4 @@
-//! The curve edit command of the product command catalog (docs/adr/0303; AutoCAD's PEDIT and SPLINEDIT, Eğriyi
+//! The curve edit command of the product command catalog (docs/adr/0303; Eğriyi
 //! düzenle): a polyline or a NURBS curve named by its persistent id, edited by what changes rather than by its new
 //! numbers; the command computes the curve (the shared core's `geom::nurbs_build`, `geom::nurbs`).
 //!
@@ -18,7 +18,7 @@ use crate::entity::Vec2;
 pub const CAD_CURVES_EDIT: &str = "cad.curves.edit";
 pub const CAD_CURVES_EDIT_VERSION: u32 = 1;
 
-/// What changes (AutoCAD PEDIT's Close, Open, Decurve, Spline; SPLINEDIT's Close, Open, Fit data, Edit vertex,
+/// What changes (Close, Open, Decurve, Spline; for a spline: Close, Open, Fit data, Edit vertex,
 /// Refine, convert to Polyline).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

@@ -21,7 +21,7 @@ pub const ROAD_DRAINAGE_DRAW_VERSION: u32 = 1;
 pub const MOST_DRAINAGE_DROPS: usize = 1000;
 pub const MOST_CATCHMENT_CELLS: u64 = 1_000_000;
 
-/// The ponds asked for: at least `minDepth` deep (OpenRoads' minimum depth).
+/// The ponds asked for: at least `minDepth` deep.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

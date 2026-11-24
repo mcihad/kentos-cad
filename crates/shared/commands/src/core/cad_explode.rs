@@ -1,4 +1,4 @@
-//! Patlat's semantic command of the product command catalog (docs/adr/0302; AutoCAD's EXPLODE): objects named by
+//! Patlat's semantic command of the product command catalog (docs/adr/0302): objects named by
 //! their persistent ids broken one level into simpler ones, the pieces computed by the command rather than given.
 //!
 //! The pieces are the shared core's (`ops::explode`, a block's `Blocks::explode`): a path its lines and arcs, an

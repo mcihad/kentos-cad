@@ -1,5 +1,4 @@
-//! The clipboard's semantic commands of the product command catalog (docs/adr/0309; AutoCAD's COPYCLIP, COPYBASE,
-//! PASTECLIP, PASTEORIG and PASTEBLOCK): a copy of objects with all they use, and that copy pasted into a drawing
+//! The clipboard's semantic commands of the product command catalog (docs/adr/0309): a copy of objects with all they use, and that copy pasted into a drawing
 //! (the same or another) with its layers, blocks and styles brought in by name, as one undo step.
 //!
 //! A copy is a [`Clip`]: the objects, the layer tree they are on, the block definitions they place, the text and

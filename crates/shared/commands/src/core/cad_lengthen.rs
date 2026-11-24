@@ -1,5 +1,5 @@
 //! The semantic lengthen command of the product command catalog
-//! (docs/adr/0298; AutoCAD's LENGTHEN, Uzat-kısalt): an object's length
+//! (docs/adr/0298; Uzat-kısalt): an object's length
 //! changed at one end, named by the object, the end and how the length
 //! changes rather than by the new geometry.
 //!
@@ -34,7 +34,7 @@ pub enum LengthenEnd {
     End,
 }
 
-/// How the length changes (AutoCAD LENGTHEN's DElta, Percent, Total and DYnamic).
+/// How the length changes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

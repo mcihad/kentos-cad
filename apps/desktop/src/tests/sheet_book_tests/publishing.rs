@@ -809,7 +809,7 @@ pub(super) fn detail_set_app(theme: &str, text: u32) -> App {
             {"name": "Poz listesi 2", "table": {"table": table, "part": 1}, "ratio": r(20.)}
         ]),
     ] {
-        let answer = kentos_native_application::call::call(&mut model, None, envelope(kentos_commands::CAD_SHEETS_DETAILS, serde_json::json!({ "options": {"values": [{"name": "kurum", "value": "KentOS"}, {"name": "birim", "value": "Proje"}, {"name": "referans", "value": "ADR 1090"}, {"name": "onaylayan", "value": "Denetçi"}, {"name": "cizim_no", "value": "D-1"}]}, "details": details })));
+        let answer = kentos_native_application::call::call(&mut model, None, envelope(kentos_commands::CAD_SHEETS_DETAILS, serde_json::json!({ "options": {"values": [{"name": "kurum", "value": "KentOS"}, {"name": "birim", "value": "Proje"}, {"name": "referans", "value": "REF 1090"}, {"name": "onaylayan", "value": "Denetçi"}, {"name": "cizim_no", "value": "D-1"}]}, "details": details })));
         assert!(matches!(answer.result, kentos_commands::CommandResult::Completed { .. }), "{answer:?}");
     }
     let (mut app, _store) = app_with_store("adv16-details");

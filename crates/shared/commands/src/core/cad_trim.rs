@@ -37,7 +37,7 @@ pub enum TrimBoundaries {
     /// inside it (docs/adr/0210).
     All,
     /// Every shown object whose box meets the rectangle (the tools give their
-    /// view: AutoCAD's quick mode, “every visible edge”).
+    /// view: “every visible edge”).
     Area {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         min: Vec2,
@@ -51,7 +51,7 @@ pub enum TrimBoundaries {
     },
 }
 
-/// AutoCAD's EDGEMODE: whether a boundary bounds only where it is, or along
+/// Edge mode: whether a boundary bounds only where it is, or along
 /// its natural path past its ends too.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -100,7 +100,7 @@ pub struct TrimPick {
 
 /// Input of `cad.entities.trim` v1 and `cad.entities.extend` v1: the picked
 /// objects trimmed (or extended) at their picks, as one undo step “Buda”
-/// (“Uzat”), AutoCAD's TRIM and EXTEND (docs/adr/0294): the picks are clicks,
+/// (“Uzat”) (docs/adr/0294): the picks are clicks,
 /// a fence (Çit) or a crossing window (Kesişen); the boundaries chosen
 /// (standard mode) or every shown edge (quick mode); `edgeMode` bounds along
 /// the boundaries' extensions; `eraseUncut` is quick mode's erase of what no
@@ -159,12 +159,12 @@ pub struct EntitiesTrim {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub crossing: Option<TrimWindow>,
-    /// AutoCAD's EDGEMODE; absent: `none`.
+    /// The edge mode; absent: `none`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub edge_mode: Option<TrimEdgeMode>,
     /// Buda: an object no boundary cuts goes whole where it is picked
-    /// (AutoCAD's quick mode) instead of being left with a `trim_failed`
+    /// instead of being left with a `trim_failed`
     /// warning. Uzat ignores it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]

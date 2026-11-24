@@ -4,7 +4,7 @@
  * Input of `file.export.qml` v1: the layer's look (its renderer, or its simple look) at `path`, a `.qml`. A QML is
  * for one geometry type: the layer's objects choose it (areas, then lines, then points; areas when it has none).
  * Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no
- * class or rule QGIS's symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.
+ * class or rule the symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.
  */
 export type ExportQml = { 
 /**

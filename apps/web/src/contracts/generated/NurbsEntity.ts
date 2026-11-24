@@ -25,11 +25,11 @@ knots: Array<number>,
  */
 weights?: Array<number>, 
 /**
- * Its ends meet (AutoCAD's flag 1); the source's word, kept as written.
+ * Its ends meet; the source's word, kept as written.
  */
 closed?: boolean, 
 /**
- * Periodic (AutoCAD's flag 2): kept as written.
+ * Periodic: kept as written.
  */
 periodic?: boolean, 
 /**
@@ -41,7 +41,7 @@ fit?: Array<Vec2>,
  */
 tangents?: [Vec2 | null, Vec2 | null], 
 /**
- * How far the curve may pass from its fit points, ≥ 0 (AutoCAD's 44).
+ * How far the curve may pass from its fit points, ≥ 0.
  */
 fitTolerance?: number, id: number, layerId: string, 
 /**
@@ -102,7 +102,7 @@ order?: number,
  */
 byLayer?: Array<LookPart>, 
 /**
- * An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+ * An area's mask: it fills with the drawing's background and covers
  * what is drawn before it; only an area has it.
  */
 wipeout?: Wipeout, };

@@ -1,5 +1,5 @@
 //! KentOS Yol's plan–profile sheets (plan/road.md Y10.5, docs/adr/0908 §10; ROAD-SEC-11): `road.sheets.plan` lays an
-//! alignment out on sheets as Civil 3D's view frames and Create Sheets do: each sheet shows a stretch of the alignment
+//! alignment out on sheets by view frames: each sheet shows a stretch of the alignment
 //! in plan (turned so it runs left to right) and, with a profile, the profile view of the same stations drawn for it in
 //! the model at the same horizontal scale; the sheet set keeps the sources' revisions. The desktop's handler is
 //! `crates/native/application/src/road_sheets.rs`; it and the Python SDK pass the shared cases in
@@ -78,7 +78,7 @@ pub struct RoadSheetsPlan {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub corridor: Option<String>,
-    /// Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the
+    /// Match lines (docs/adr/0998): where one sheet's plan hands over to the next, at the
     /// middle of their overlap, a line across the alignment and on each side "EŞLEŞME ÇİZGİSİ KM : …" with the other
     /// sheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -113,8 +113,8 @@ pub struct RoadSheetsPlan {
     pub expected_revision: Option<String>,
 }
 
-/// Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as Civil 3D's production
-/// section views and Create Section Sheets do (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn
+/// Input of `road.sheets.sections` v1: a sample line set's section views laid on sheets as production
+/// section views (docs/adr/0908 §11): the set's views (`stations`, all without them) drawn
 /// on `layerId` in groups, each group the template's map (KentOS's technical sheet, `sys:cad-teknik`, without one) wide
 /// and high on the ground at 1:`scale` (the map's without it), filled in rows from the upper left as many views as fit;
 /// the first group's upper left at `at`, each next under the one before. Each group is a sheet whose map shows it. The

@@ -25,7 +25,7 @@ use crate::layer::LineType;
 /// 6: the drawing crosses as typed columns (`kentos_kcad::columns`) with progress, not as JSON (docs/adr/0030).
 /// 7: GeoJSON read and write, Shapefile read (`readGeoJson`, `writeGeoJson`, `readShapefile`);
 ///    an import says the coordinate system its file declares (`declaredCrs`, docs/adr/0046).
-/// 8: Netcad NCZ (`NczReadOptions`, `CrsSource::Ncz`, docs/adr/0138); DXF and NCZ read in modules
+/// 8: NCZ (`NczReadOptions`, `CrsSource::Ncz`, docs/adr/0138); DXF and NCZ read in modules
 ///    of their own, loaded when such a file is imported, reporting their progress, their objects
 ///    crossing as typed columns; a layer's objects by kind and their box (`ImportLayer.kinds`,
 ///    `ImportLayer.bounds`) and where the view shows an import (`ImportResult.view`).
@@ -94,7 +94,7 @@ use crate::layer::LineType;
 ///    kind; DXF and GeoJSON leave rasters out and say so.
 /// 40: annotation heights and lines (docs/adr/0205): `.kcad` document schema 30, the settings'
 ///    `annotation`, a dimension's and a dimension style's line fields, a leader's `arrowSize` and
-///    AutoCAD's arrowheads; the columns' dimension line flags and leader arrowhead size.
+///    the DXF arrowheads; the columns' dimension line flags and leader arrowhead size.
 /// 41: point clouds (docs/adr/0207): `.kcad` document schema 31, the typed columns'
 ///    `pointcloud` kind and a raster's `url`; DXF and GeoJSON leave point clouds out and say so.
 /// 42: map services (docs/adr/0208): `.kcad` document schema 32, a layer's `service` and `feed`
@@ -342,7 +342,7 @@ pub struct ReportItem {
     pub lines: Vec<u32>,
 }
 
-/// A fact about the source file, shown before the import ("Sürüm": "AutoCAD 2000").
+/// A fact about the source file, shown before the import ("Sürüm": "DXF R2000").
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -427,7 +427,7 @@ pub enum CrsSource {
     GeoJsonCrs,
     /// A Shapefile's `.prj` (WKT).
     Prj,
-    /// A Netcad NCZ drawing's MPROJ block (datum, projection, zone) and the
+    /// An NCZ drawing's MPROJ block (datum, projection, zone) and the
     /// SRS its TILED_XML block names (docs/adr/0138).
     Ncz,
     /// A KML or KMZ file: OGC KML 2.2 makes it WGS 84 longitude, latitude (docs/adr/0222).
@@ -543,7 +543,7 @@ pub struct ImportResult {
     pub line_type_scale: Option<f64>,
 }
 
-// ── Coordinate lists (Netcad NCN, TXT, CSV) ─────────────────────────────
+// ── Coordinate lists ─────────────────────────────
 
 /// What a column of a coordinate list holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -577,7 +577,7 @@ pub enum CoordDelimiter {
     Tab,
     Semicolon,
     Comma,
-    /// One or more spaces (Netcad NCN).
+    /// One or more spaces.
     Space,
 }
 
@@ -1335,7 +1335,7 @@ pub struct DxfWriteLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_pattern: Option<String>,
-    /// Plot line weight in mm (written as AutoCAD's nearest weight).
+    /// Plot line weight in mm (written as the nearest DXF weight).
     pub line_weight: f64,
     /// Yazdır (docs/adr/0260 §4): absent, printed; `false`, written with
     /// DXF's plot switch off (290).
@@ -1349,7 +1349,7 @@ pub struct DxfWriteLayer {
     pub frozen: Option<bool>,
 }
 
-/// What `file.export.dxf` writes (an AutoCAD 2007 DXF).
+/// What `file.export.dxf` writes (a DXF of the 2007 version).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1502,7 +1502,7 @@ pub struct ExportReport {
     pub skipped: Vec<ReportItem>,
 }
 
-// ── Netcad NCZ (docs/adr/0138) ──────────────────────────────────────────
+// ── NCZ (docs/adr/0138) ──────────────────────────────────────────
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

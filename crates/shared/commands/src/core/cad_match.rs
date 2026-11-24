@@ -1,4 +1,4 @@
-//! Özellik kopyala's semantic command of the product command catalog (docs/adr/0304; AutoCAD's MATCHPROP): the
+//! Özellik kopyala's semantic command of the product command catalog (docs/adr/0304): the
 //! properties chosen of one object given to others, the values read from the source by the command rather than given.
 
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ use crate::cad::{REVISION_TEXT, UID_TEXT};
 pub const CAD_ENTITIES_MATCH: &str = "cad.entities.match";
 pub const CAD_ENTITIES_MATCH_VERSION: u32 = 1;
 
-/// A property Özellik kopyala gives (AutoCAD's MATCHPROP settings).
+/// A property Özellik kopyala gives.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -44,7 +44,7 @@ pub enum MatchProperty {
 }
 
 impl MatchProperty {
-    /// Every property, in AutoCAD's settings' order: what an input that names none gives.
+    /// Every property, in the settings' order: what an input that names none gives.
     pub const ALL: [MatchProperty; 11] = [
         MatchProperty::Layer,
         MatchProperty::Color,

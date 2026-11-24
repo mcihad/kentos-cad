@@ -1,7 +1,6 @@
 //! The semantic divide command of the product command catalog
 //! (docs/adr/0254 §5; plan/cad.md CAD-CMD-01, 05): points or a block's
-//! inserts placed along an object at equal parts or at a step (AutoCAD's
-//! DIVIDE and MEASURE), named by the object and the division rather than the
+//! inserts placed along an object at equal parts or at a step, named by the object and the division rather than the
 //! points; the step's first distance, the object's own ends and the inserts'
 //! alignment are the input's (docs/adr/0299).
 //!
@@ -53,7 +52,7 @@ pub enum Division {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum DivideEnds {
-    /// Neither (AutoCAD's DIVIDE and MEASURE).
+    /// Neither.
     #[default]
     None,
     /// The object's start.
@@ -90,7 +89,7 @@ fn is_zero(v: &f64) -> bool {
     *v == 0.0
 }
 
-/// A block's inserts at the places instead of points (AutoCAD's Block option, docs/adr/0299 §3).
+/// A block's inserts at the places instead of points.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

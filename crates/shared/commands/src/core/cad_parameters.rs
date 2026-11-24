@@ -1,4 +1,4 @@
-//! The parameter manager's command (docs/adr/0336; AutoCAD's PARAMETERS): the drawing's parameters added, changed,
+//! The parameter manager's command (docs/adr/0336): the drawing's parameters added, changed,
 //! renamed and taken away by name, the drawing solved with their new values and written with them as one undo step.
 //!
 //! A parameter is a dimension's (its constraint names it: its expression drives the dimension, or is empty when the

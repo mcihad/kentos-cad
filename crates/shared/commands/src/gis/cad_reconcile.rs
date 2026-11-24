@@ -2,7 +2,7 @@
 //!
 //! `cad.sources.reconcile` compares the layer and the table's rows with the base (`SourceBase`): each object's hashes
 //! when the two last matched. An object only the layer changed is written to the table; one only the table changed
-//! (a QGIS edit, another KentOS) is taken into the layer; one both changed the same way agrees. One both changed in
+//! (an edit in another program, another KentOS) is taken into the layer; one both changed the same way agrees. One both changed in
 //! different ways, or one side removed and the other changed, is a conflict: the fields that differ and whether the
 //! geometry does are said, and it is resolved explicitly by taking a side (`take`, `rest`); the last writer does not
 //! win. A plan says it all and writes nothing; executing with every conflict resolved takes the table's side into the

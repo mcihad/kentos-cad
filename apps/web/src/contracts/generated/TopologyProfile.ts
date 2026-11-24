@@ -2,7 +2,7 @@
 
 /**
  * A quality profile (docs/adr/1260 §2): three lengths kept apart. The check's tolerance (`TopologySettings::tolerance`)
- * is the CAD nearness within which two places are one; `precision` is the step the coordinates are stored at (ArcGIS's
+ * is the CAD nearness within which two places are one; `precision` is the step the coordinates are stored at (the
  * XY resolution: the tolerance is at least twice it); `acceptance` is the institution's threshold: no repair moves a
  * vertex of the source geometry farther than it. With a profile every exception and every error mark names its reason.
  */

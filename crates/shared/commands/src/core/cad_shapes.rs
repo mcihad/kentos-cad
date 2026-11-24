@@ -52,7 +52,7 @@ pub const MOST_SIDES: u32 = 1024;
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum RectangleFrame {
-    /// Two opposite corners (AutoCAD RECTANG's two points).
+    /// Two opposite corners.
     Corners {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         a: Vec2,
@@ -180,7 +180,7 @@ pub struct RectangleCreate {
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum RegularFrame {
-    /// Çember içinde: the centre and the first corner (AutoCAD POLYGON's Inscribed).
+    /// Çember içinde: the centre and the first corner.
     Inscribed {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         center: Vec2,
@@ -303,7 +303,7 @@ pub struct SectorCreate {
     pub expected_revision: Option<String>,
 }
 
-/// What a revision cloud goes round (AutoCAD REVCLOUD's Rectangular, Polygonal and Object).
+/// What a revision cloud goes round.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

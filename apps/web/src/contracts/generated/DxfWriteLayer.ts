@@ -28,7 +28,7 @@ visible: boolean, locked: boolean, lineType: LineType,
  */
 linePattern?: string, 
 /**
- * Plot line weight in mm (written as AutoCAD's nearest weight).
+ * Plot line weight in mm (written as the nearest DXF weight).
  */
 lineWeight: number, 
 /**

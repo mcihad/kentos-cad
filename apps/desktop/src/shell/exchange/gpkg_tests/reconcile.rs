@@ -4,7 +4,7 @@
 use super::*;
 
 /// uzlas.gpkg (docs/adr/0538) bound over a copy, the layer edited as the shared cases edit it, then the copy changed
-/// as QGIS changed it (uzlas-qgis.gpkg): both sides changed since they last matched.
+/// as another program changed it (uzlas-qgis.gpkg): both sides changed since they last matched.
 pub(super) fn reconcile_scene(name: &str) -> (App, PathBuf) {
     use kentos_commands::CallOp;
     use kentos_native_application::{ExecutionContext, registry};
@@ -62,7 +62,7 @@ pub(super) fn reconcile_scene(name: &str) -> (App, PathBuf) {
                             "pts": [{ "x": 487400.0, "y": 4420000.0 }, { "x": 487420.0, "y": 4420000.0 },
                                     { "x": 487420.0, "y": 4420020.0 }, { "x": 487400.0, "y": 4420020.0 }] }),
     );
-    std::fs::copy(gpkg("uzlas-qgis.gpkg"), &file).expect("changed in QGIS");
+    std::fs::copy(gpkg("uzlas-qgis.gpkg"), &file).expect("changed in another program");
     (app, file)
 }
 
@@ -181,7 +181,7 @@ fn reconcile_screens() {
 }
 
 /// uzlas-komsu.gpkg (docs/adr/0553) bound over a copy, both tables (four parcels side by side, three buildings), the
-/// project's relation, the layers edited as tests/all/reconcile.rs edits them, then the copy changed as QGIS changed it.
+/// project's relation, the layers edited as tests/all/reconcile.rs edits them, then the copy changed as another program changed it.
 fn komsu_scene(name: &str) -> (App, PathBuf) {
     use kentos_commands::CallOp;
     use kentos_native_application::{ExecutionContext, registry};
@@ -259,7 +259,7 @@ fn komsu_scene(name: &str) -> (App, PathBuf) {
             serde_json::json!({ "uids": [u], "attrs": { "kat": kat }, "operation": "attributes" }),
         );
     }
-    std::fs::copy(gpkg("uzlas-komsu-qgis.gpkg"), &file).expect("changed in QGIS");
+    std::fs::copy(gpkg("uzlas-komsu-qgis.gpkg"), &file).expect("changed in another program");
     (app, file)
 }
 

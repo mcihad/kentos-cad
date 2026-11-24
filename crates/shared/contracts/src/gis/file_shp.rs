@@ -21,7 +21,7 @@ pub const FILE_EXPORT_SHP_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ShpEncoding {
-    /// UTF-8, named in the .cpg (QGIS and GDAL write it so today).
+    /// UTF-8, named in the .cpg.
     #[default]
     #[serde(rename = "utf-8")]
     Utf8,

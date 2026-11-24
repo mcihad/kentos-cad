@@ -1,5 +1,5 @@
 //! The associative array's edit command of the product command catalog
-//! (docs/adr/0301; AutoCAD's ARRAYEDIT, Diziyi düzenle): an array named by its
+//! (docs/adr/0301; Diziyi düzenle): an array named by its
 //! id, edited by its layout, its first placement or its items rather than by
 //! the inserts' new geometry.
 //!
@@ -22,7 +22,7 @@ use crate::entity::Vec2;
 pub const CAD_ARRAYS_EDIT: &str = "cad.arrays.edit";
 pub const CAD_ARRAYS_EDIT_VERSION: u32 = 1;
 
-/// What changes in the array (AutoCAD ARRAYEDIT's properties, Replace, Reset; an item's erase).
+/// What changes in the array.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

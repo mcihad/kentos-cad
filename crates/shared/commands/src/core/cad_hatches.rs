@@ -1,4 +1,4 @@
-//! `cad.hatches.edit` v1 (docs/adr/0329 §4): a hatch's boundary made objects again (AutoCAD's HATCHEDIT “Recreate
+//! `cad.hatches.edit` v1 (docs/adr/0329 §4): a hatch's boundary made objects again (“Recreate
 //! boundary”), its region found again around a point (“Reselect”), islands added and taken away, its tie broken;
 //! each as one undo step named after the edit.
 
@@ -95,7 +95,7 @@ pub enum HatchEdit {
         uids: Vec<String>,
         origin: crate::HatchOrigin,
     },
-    /// Hizala: the hatches' lines continue the reference's (AutoCAD's hatch origin across objects, docs/adr/0331 §2):
+    /// Hizala: the hatches' lines continue the reference's:
     /// each takes its origin, and the angle and scale too where its pattern is the reference's.
     Align {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]

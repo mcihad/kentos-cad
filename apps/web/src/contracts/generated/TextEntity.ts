@@ -28,13 +28,12 @@ rotation: number,
  */
 align?: TextAlign, 
 /**
- * The letters' width times this, the height kept (Netcad's “sıkışma”,
- * DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.
+ * The letters' width times this, the height kept (DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.
  */
 widthFactor?: number, 
 /**
  * The text's box is filled with the drawing area's colour before the
- * text is drawn (Netcad's “fon”): what lies under it does not show.
+ * text is drawn: what lies under it does not show.
  */
 mask?: boolean, 
 /**
@@ -116,7 +115,7 @@ order?: number,
  */
 byLayer?: Array<LookPart>, 
 /**
- * An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+ * An area's mask: it fills with the drawing's background and covers
  * what is drawn before it; only an area has it.
  */
 wipeout?: Wipeout, 

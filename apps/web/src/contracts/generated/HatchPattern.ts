@@ -31,7 +31,7 @@ lines?: Array<PatternLine>,
  */
 gradient?: HatchGradient, 
 /**
- * Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through
+ * Where its lines are anchored in the world (docs/adr/0331 §2): every family goes through
  * it as the definition says instead of through the world's origin. Absent: the world's origin.
  */
 origin?: Vec2, };

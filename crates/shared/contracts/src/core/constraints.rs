@@ -1,4 +1,4 @@
-//! Geometric and dimensional constraints (docs/adr/0334; AutoCAD's GEOMCONSTRAINT, DIMCONSTRAINT and PARAMETERS):
+//! Geometric and dimensional constraints (docs/adr/0334):
 //! relations between the parts of a drawing's objects (a point on a point, a segment level, two segments parallel,
 //! a circle on a segment …) and dimensions that drive them (a distance, an angle, a radius) from a table of named
 //! parameters. They name the objects by their persistent ids and the parts by their places, as an associative
@@ -201,7 +201,7 @@ fn aligned(axis: &DistanceAxis) -> bool {
     *axis == DistanceAxis::Aligned
 }
 
-/// What a constraint holds. The geometric kinds come first in the order AutoCAD's toolbar has them; the
+/// What a constraint holds. The geometric kinds come first in the toolbar's order; the
 /// dimensional ones name the parameter that gives (or, for a reference constraint, takes) their value.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -387,7 +387,7 @@ impl ConstraintRule {
 pub struct Constraint {
     pub id: ConstraintId,
     pub rule: ConstraintRule,
-    /// A dimensional constraint that only measures (AutoCAD's reference constraint): it never moves anything and its
+    /// A dimensional constraint that only measures: it never moves anything and its
     /// parameter, read-only, takes the measured value.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
@@ -406,7 +406,7 @@ pub enum ParameterKind {
     Number,
 }
 
-/// A named parameter: a dimensional constraint's own, or the user's (AutoCAD's user parameter).
+/// A named parameter: a dimensional constraint's own, or the user's.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

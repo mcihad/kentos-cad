@@ -68,7 +68,7 @@ pub enum PointConstruction {
         distance: f64,
     },
     /// Nesne izleme: the UCS x of `x`'s point and the UCS y of `y`'s, where the alignments through the two
-    /// cross (AutoCAD's .X and .Y point filters).
+    /// cross.
     Track { x: MeasuredPoint, y: MeasuredPoint },
     /// From `from`, `distance` metres at `angle`.
     Polar {
