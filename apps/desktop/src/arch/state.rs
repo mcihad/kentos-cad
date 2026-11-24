@@ -8,21 +8,11 @@ use crate::app::{App, Message};
 
 /// The architecture (Mimari) module's windows and panels.
 pub(crate) struct ArchUiState {
-    /// The Şablonlar panel (templates_panel.rs), and the templates drawn with
-    /// in this session, the newest first (templates.rs).
-    pub(crate) templates_panel: crate::templates_panel::PanelState,
-    /// Şablon düzenleyici while it is open (template_editor.rs).
-    pub(crate) template_editor: Option<crate::template_editor::Editor>,
     /// The bottom panel's Denetim tab: the last architectural audit, the chosen finding, the group and the
     /// thresholds (arch_audit.rs, docs/adr/0703).
     pub(crate) arch_audit: crate::arch_audit::ArchAuditPanel,
     /// The device's NTv2 grid library and the grids looked for (grids.rs, docs/adr/0168 §4).
     pub(crate) grids: crate::grids::Grids,
-    /// The object template being drawn with (templates.rs, docs/adr/0176 §3):
-    /// its stamp is in the tools' context while its tool runs.
-    pub(crate) template: Option<crate::templates::TemplateRun>,
-    /// Etkin kat (active_level.rs, docs/adr/0713): the level new architectural objects go on, the session's.
-    pub(crate) active_level: crate::active_level::Chosen,
     pub(crate) arch_template: Option<crate::architecture_template::Window>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
@@ -77,10 +67,6 @@ pub enum Event {
     GridsLooked(Vec<crate::grids::Looked>),
     ToolSetting(crate::architecture_settings::Commit),
     ArchTemplate(crate::architecture_template::Event),
-    /// Şablonlar panel (templates_panel.rs).
-    TemplatesPanel(crate::templates_panel::Event),
-    /// Şablon düzenleyici (template_editor.rs).
-    TemplateEditor(crate::template_editor::Event),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
     WallStyles(crate::wall_styles::Event),
@@ -120,10 +106,6 @@ pub enum Event {
 pub enum ArchDialogKind {
     /// Read-only architectural package preview, followed by an explicit semantic apply.
     ArchTemplate,
-    /// Şablonlar → Sil (templates_panel.rs); the template is the panel's `deleting`.
-    RemoveTemplate,
-    /// Şablon düzenleyici (template_editor.rs); its form is `ArchUiState::template_editor`.
-    TemplateEditor,
     /// Bina programı (program_window.rs, docs/adr/0773); the window is `ArchUiState::program_window`.
     Program,
     /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
@@ -173,8 +155,6 @@ impl App {
             Event::ArchAudit(event) => return self.arch_audit_event(event),
             Event::GridsLooked(looked) => self.grids_looked(looked),
             Event::ToolSetting(event) => return self.tool_setting(event),
-            Event::TemplatesPanel(event) => return self.templates_panel_event(event),
-            Event::TemplateEditor(event) => return self.template_editor_event(event),
             Event::Program(event) => return self.program_event(event),
             Event::WallStyles(event) => return self.wall_styles_event(event),
             Event::WallJoins(event) => return self.wall_joins_event(event),
@@ -202,8 +182,6 @@ impl App {
     /// A window of the module (`Dialog::Arch`).
     pub(crate) fn arch_dialog_view(&self, kind: ArchDialogKind) -> Element<'_, Message> {
         match kind {
-            ArchDialogKind::RemoveTemplate => self.remove_template_question(),
-            ArchDialogKind::TemplateEditor => self.template_editor_view(),
             ArchDialogKind::Program => self.program_view(),
             ArchDialogKind::SpaceMerge => self.space_merge_question(),
             ArchDialogKind::WallStyles => self.wall_styles_view(),

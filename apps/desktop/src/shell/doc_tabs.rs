@@ -130,7 +130,7 @@ impl App {
             selection,
             views: std::mem::replace(&mut self.view_history, ViewHistory::new()),
             level: (
-                std::mem::take(&mut self.arch.active_level),
+                std::mem::take(&mut self.active_level),
                 std::mem::take(&mut self.level_view),
             ),
             calc: std::mem::take(&mut self.gis.calc).set_aside(),

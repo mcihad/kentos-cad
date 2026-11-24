@@ -286,6 +286,8 @@ impl App {
             server_quiet: false,
             server_health: None,
             terrain_work: Default::default(),
+            template_work: Default::default(),
+            active_level: Default::default(),
             modules: crate::module_parts::ModuleStates::start(),
             gis: crate::gis::GisUiState {
                 sources: crate::sources::SourcesPanel::default(),
@@ -359,12 +361,8 @@ impl App {
                 builder: None,
             },
             arch: crate::arch::ArchUiState {
-                templates_panel: crate::templates_panel::PanelState::default(),
-                template_editor: None,
                 arch_audit: Default::default(),
                 grids: crate::grids::Grids::default(),
-                template: None,
-                active_level: Default::default(),
                 arch_template: None,
                 program_window: None,
                 wall_styles: None,

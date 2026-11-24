@@ -137,7 +137,6 @@
       "shell/cloud/mod.rs",
       "shell/input.rs",
       "shell/module_profile.rs",
-      "shell/office_palettes.rs",
       "shell/project/choices.rs",
       "shell/project/heights.rs",
       "shell/project/settings.rs",
@@ -181,8 +180,7 @@
     ],
     "cad->arch": [
       "cad/properties/rows/element_types.rs",
-      "cad/properties/rows/entity.rs",
-      "cad/style/manager/update.rs"
+      "cad/properties/rows/entity.rs"
     ],
     "cad->map": [],
     "cad->road": [],

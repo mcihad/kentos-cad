@@ -195,7 +195,7 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             // The layout kept last time (yerlesim.json beside the settings, docs/adr/0115), each program's
             // own (docs/adr/0802).
             if let Some(dir) = settings::Settings::config_dir() {
-                if let Some(problem) = app.arch.templates_panel.open_personal(&dir) {
+                if let Some(problem) = app.template_work.templates_panel.open_personal(&dir) {
                     app.warn(problem);
                 }
                 // The user's tool palette (arac-paleti.json, docs/adr/1016).

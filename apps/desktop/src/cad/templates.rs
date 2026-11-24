@@ -32,7 +32,7 @@ use crate::template_members::RunMember;
 
 /// A template being drawn with: what the tools' context carries, and what
 /// its end gives back.
-pub(crate) struct TemplateRun {
+pub struct TemplateRun {
     /// The template's library id (the Şablonlar panel marks its rows) and
     /// name (the prompt says it before the tool's).
     pub(crate) id: String,
@@ -151,7 +151,7 @@ impl App {
         };
         // Another template's run gives way, its colour and weight kept as the
         // ones to give back; its tool's own options come back now.
-        let previous = self.arch.template.take();
+        let previous = self.template_work.template.take();
         let before = previous
             .as_ref()
             .map_or((self.draft.color, self.draft.line_weight), |run| run.before);
@@ -187,11 +187,11 @@ impl App {
             return Task::none();
         }
         run.runs = self.session.runs();
-        self.arch.template = Some(run);
+        self.template_work.template = Some(run);
         self.last_template = Some(id.to_owned());
         // The Şablonlar panel's first groups are personal to this device.
         if let Some(key) = self.personal_template_key(id)
-            && let Err(error) = self.arch.templates_panel.used(&key)
+            && let Err(error) = self.template_work.templates_panel.used(&key)
         {
             self.warn(format!("Şablon geçmişi kaydedilemedi: {error}"));
         }
@@ -402,7 +402,7 @@ impl App {
     /// command, the tool done) and gives back what it set.
     pub(crate) fn follow_template(&mut self) {
         if self
-            .arch
+            .template_work
             .template
             .as_ref()
             .is_some_and(|run| run.runs != self.session.runs() || !self.session.is_running())
@@ -414,7 +414,7 @@ impl App {
     /// Ends a template's run, if one is: the colour, the weight and the
     /// tool's own options it found come back.
     pub(crate) fn release_template(&mut self) {
-        if let Some(run) = self.arch.template.take() {
+        if let Some(run) = self.template_work.template.take() {
             (self.draft.color, self.draft.line_weight) = run.before;
             self.give_tool_back(&run);
         }
@@ -498,7 +498,7 @@ impl App {
     pub(crate) fn prompt(&self) -> Prompt {
         let mut prompt = self.session.prompt();
         if !self.session.nested() {
-            prompt.template = self.arch.template.as_ref().map(|run| run.name.clone());
+            prompt.template = self.template_work.template.as_ref().map(|run| run.name.clone());
         }
         prompt
     }
@@ -645,6 +645,6 @@ mod tests {
             last_said(&app),
             "“Bina” katmanı kilitli; “Kilitli bina” şablonu bu katmana çizer. Kilidi Katmanlar panelinden açın."
         );
-        assert!(app.arch.template.is_none());
+        assert!(app.template_work.template.is_none());
     }
 }

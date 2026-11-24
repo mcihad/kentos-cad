@@ -315,7 +315,7 @@ impl App {
     fn templates_group(&self, panel: &RibbonPanel) -> Option<Group<'static, Message>> {
         self.document.as_ref()?;
         let lines = self.template_menu_lines();
-        let run = self.arch.template.as_ref().map(|t| t.name.clone());
+        let run = self.template_work.template.as_ref().map(|t| t.name.clone());
         let glyph = crate::icons::from_web(Some(if run.is_some() {
             "templateDraw"
         } else {
@@ -382,7 +382,7 @@ impl App {
     /// its path, each with its tool's icon and name.
     fn template_menu_lines(&self) -> Vec<TemplateLine> {
         let lib = &self.styles.library;
-        let chosen = self.arch.template.as_ref().map(|t| t.id.as_str());
+        let chosen = self.template_work.template.as_ref().map(|t| t.id.as_str());
         let line = |id: &str| -> Option<TemplateLine> {
             let (item, _) = lib.get(id)?;
             if item.kind() != ItemKind::Template {
@@ -405,7 +405,7 @@ impl App {
         };
         let mut out = Vec::new();
         let favorites: Vec<TemplateLine> = self
-            .arch
+            .template_work
             .templates_panel
             .favorites()
             .iter()
@@ -416,7 +416,7 @@ impl App {
             out.extend(favorites);
         }
         let recent: Vec<TemplateLine> = self
-            .arch
+            .template_work
             .templates_panel
             .recent()
             .iter()

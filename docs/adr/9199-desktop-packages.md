@@ -203,6 +203,20 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 - Bağımlılık tabanı: kabuk → Mimari 28 → 15, CAD → Mimari 7 → 3.
 - Sınama: çekirdek 2711, Harita 191, Yol 127, programlar 34, `kentos-launch` 16.
 
+### §4.8 Adım 8: Yol'un tasarım denetimi Yol'a, şablonlar ve etkin kat çekirdeğe
+
+- Tasarım denetimi (`alignment.check`, plan/road.md Y21) Mimari klasöründe Mimari'nin merkezindeydi; Yol'undur: durumu,
+  iletisi ve penceresi Yol'un merkezinde, komutu, başlığı ve iz denetimi Yol'un parçalarında, sınamalarıyla Yol
+  paketinde. Yorumundaki başka uygulama atıfları temizlendi.
+- Şablonlar her modülün (AY-03: CBS'nin öğe şablonu): panel, şablonla çizme, editör ve üye yazımı `cad/`'a indi,
+  kendi merkezleri `cad/template_work.rs` (`App::template_work`, `Message::TemplateWork`, `Dialog::TemplateWork`:
+  `RemoveTemplate`, `TemplateEditor`).
+- Etkin katın durumu `App::active_level` (Mimari'nin merkezinden çıktı).
+- `shell_boundary_tests`'in “disiplin modülleri bulundu” eşiği 100'den 50'ye indi: modüller paketlerine çıktıkça
+  çekirdekte kalan sayı düşer.
+- Bağımlılık tabanı: kabuk → Mimari 15 → 14, CAD → Mimari 3 → 2. Sınama: çekirdek 2709, Harita 191, Yol 129,
+  programlar 34.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):

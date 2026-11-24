@@ -1203,8 +1203,8 @@ impl App {
                 }
             }
             // Şablon düzenleyici closes; its typing is not kept (template_editor.rs).
-            Some(Dialog::Arch(arch::ArchDialogKind::TemplateEditor)) => {
-                self.arch.template_editor = None
+            Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor)) => {
+                self.template_work.template_editor = None
             }
             Some(Dialog::Gis(gis::GisDialogKind::PointBatch)) => self.gis.points.close_batch(),
             // Formla düzenle: its Vazgeç, which asks first when something was typed (docs/adr/0443 §6).

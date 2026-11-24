@@ -407,6 +407,8 @@ pub mod module_surfaces;
 pub mod layer_entries;
 #[path = "cad/view_place.rs"]
 mod view_place;
+#[path = "cad/template_work.rs"]
+pub mod template_work;
 #[path = "cad/terrain_work.rs"]
 pub mod terrain_work;
 #[path = "shell/numbers.rs"]
@@ -591,13 +593,13 @@ pub mod style;
 pub mod table_write;
 #[path = "cad/tables/mod.rs"]
 mod tables;
-#[path = "arch/template_editor.rs"]
+#[path = "cad/template_editor.rs"]
 pub mod template_editor;
-#[path = "arch/template_members.rs"]
+#[path = "cad/template_members.rs"]
 mod template_members;
-#[path = "arch/templates.rs"]
+#[path = "cad/templates.rs"]
 mod templates;
-#[path = "arch/templates_panel.rs"]
+#[path = "cad/templates_panel.rs"]
 mod templates_panel;
 #[path = "gis/temporal/mod.rs"]
 mod temporal;

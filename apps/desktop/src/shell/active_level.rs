@@ -67,7 +67,7 @@ pub(crate) fn stepped<'a>(settings: &'a ProjectSettings, active: Option<&str>, u
 
 /// What was chosen.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) enum Chosen {
+pub enum Chosen {
     /// Nothing yet: the drawing's ground level.
     #[default]
     Ground,
@@ -99,12 +99,12 @@ impl App {
     /// Etkin kat for the open drawing, owned (the tools' context borrows the drawing mutably).
     pub(crate) fn active_level(&self) -> Option<String> {
         let doc = self.document.as_ref()?;
-        effective(&self.arch.active_level, doc.model.settings()).map(str::to_owned)
+        effective(&self.active_level, doc.model.settings()).map(str::to_owned)
     }
 
     /// Kat chosen on the status bar's menu: a level by its id, or none (Katsız).
     pub(crate) fn choose_level(&mut self, level: Option<String>) {
-        self.arch.active_level = match level {
+        self.active_level = match level {
             Some(id) => Chosen::Level(id),
             None => Chosen::Unassigned,
         };
@@ -159,20 +159,20 @@ impl App {
     /// The level and view the drawing on screen opens with, as its file says (docs/adr/0720 §1); said after an open.
     pub(crate) fn take_level_state(&mut self) {
         if let Some(doc) = &self.document {
-            (self.arch.active_level, self.level_view) = opened_with(doc.model.settings());
+            (self.active_level, self.level_view) = opened_with(doc.model.settings());
         }
         self.sync_level_view();
     }
 
     /// A tab brought in front: its own level and view (docs/adr/0720 §2).
     pub(crate) fn give_level_state(&mut self, (chosen, view): (Chosen, LevelView)) {
-        (self.arch.active_level, self.level_view) = (chosen, view);
+        (self.active_level, self.level_view) = (chosen, view);
         self.sync_level_view();
     }
 
     /// After an open: the level and view the file kept, said when they are not its ground level and all levels.
     pub(crate) fn say_level_state(&mut self) {
-        if self.arch.active_level == Chosen::Ground && self.level_view == LevelView::All {
+        if self.active_level == Chosen::Ground && self.level_view == LevelView::All {
             return;
         }
         let Some(words) = self.level_words() else {

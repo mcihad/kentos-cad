@@ -320,6 +320,8 @@ pub enum Dialog {
     MapCrs,
     /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
     TerrainWork(crate::terrain_work::TerrainDialogKind),
+    /// Şablonlar, every module's (template_work.rs, docs/adr/9199 §4.8).
+    TemplateWork(crate::template_work::TemplateDialogKind),
     /// A discipline's own windows (docs/adr/8054 §6), drawn by its `state.rs`.
     /// A module's own window (docs/adr/9199 §3.4), drawn by its parts.
     Module(crate::module_parts::ModuleDialog),
@@ -722,6 +724,8 @@ pub enum Message {
     MapCrsClose,
     /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
     TerrainWork(crate::terrain_work::Event),
+    /// Şablonlar, every module's (template_work.rs, docs/adr/9199 §4.8).
+    TemplateWork(crate::template_work::Event),
     /// A discipline's own messages (docs/adr/8054 §6), handled by its `state.rs`.
     /// A module's own message (docs/adr/9199 §3.4), handled by its parts.
     Module(crate::module_parts::ModuleEvent),
@@ -1196,6 +1200,10 @@ pub struct App {
     /// `state.rs`, so a new window of one leaves this struct as it is.
     /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
     pub terrain_work: crate::terrain_work::TerrainWorkState,
+    /// Şablonlar, every module's (template_work.rs, docs/adr/9199 §4.8).
+    pub template_work: crate::template_work::TemplateWorkState,
+    /// Etkin kat (active_level.rs, docs/adr/0715): the level drawn on, every module's that has levels.
+    pub active_level: crate::active_level::Chosen,
     /// The modules' own state, each as its module keeps it (docs/adr/9199 §3.4; map/state.rs `MapState`).
     pub modules: crate::module_parts::ModuleStates,
     pub gis: crate::gis::GisUiState,

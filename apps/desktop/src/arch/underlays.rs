@@ -176,7 +176,7 @@ impl App {
         let settings = doc.model.settings();
         let arch = settings.arch.as_ref();
         let cut = arch.map_or(kentos_commands::PLAN_CUT_HEIGHT, kentos_commands::ArchSettings::plan_cut);
-        let floor = crate::active_level::effective(&self.arch.active_level, settings)
+        let floor = crate::active_level::effective(&self.active_level, settings)
             .and_then(|id| arch.and_then(|a| a.levels.iter().find(|l| l.id == id)))
             .map_or(0.0, |l| l.elevation);
         (floor + cut, floor)

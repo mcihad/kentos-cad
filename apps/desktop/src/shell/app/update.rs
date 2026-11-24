@@ -489,7 +489,7 @@ impl App {
             self.close_paragraph(true);
             self.layers_keyboard = false;
             self.blocks_panel.keyboard = false;
-            self.arch.templates_panel.keyboard = false;
+            self.template_work.templates_panel.keyboard = false;
             self.vertices.keyboard = false;
         }
         match message {
@@ -605,7 +605,7 @@ impl App {
                     self.field = None;
                     self.layers_keyboard = false;
                     self.blocks_panel.keyboard = false;
-                    self.arch.templates_panel.keyboard = false;
+                    self.template_work.templates_panel.keyboard = false;
                     self.vertices.keyboard = false;
                 }
             }
@@ -676,6 +676,7 @@ impl App {
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::Navigator(event) => return self.navigator_event(event),
             Message::TerrainWork(inner) => return self.terrain_work_event(inner),
+            Message::TemplateWork(inner) => return self.template_work_event(inner),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::BlockCard(event) => return self.block_card_event(event),
             Message::BlockParameterGroups(event) => return self.block_parameter_groups_event(event),
@@ -933,7 +934,7 @@ impl App {
                         self.remove_layer(&id);
                     }
                 }
-                Some(Dialog::Arch(arch::ArchDialogKind::RemoveTemplate)) => self.remove_template(),
+                Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::RemoveTemplate)) => self.remove_template(),
                 Some(Dialog::Arch(arch::ArchDialogKind::SpaceMerge)) => {
                     self.space_merge_confirmed()
                 }

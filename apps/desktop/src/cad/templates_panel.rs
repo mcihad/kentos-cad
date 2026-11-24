@@ -11,7 +11,6 @@
 //! yöneticisi, copies it to Kitaplığım or the project and deletes it from an
 //! editable source, asked first: the library keeps no undo.
 
-use crate::arch;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -223,7 +222,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Arch(arch::Event::TemplatesPanel(event))
+    Message::TemplateWork(crate::template_work::Event::TemplatesPanel(event))
 }
 
 /// A listed row: a group, or a template under one.
@@ -304,7 +303,7 @@ impl App {
     /// its templates when it is open.
     fn template_lines(&self) -> Vec<Line> {
         let lib = &self.styles.library;
-        let state = &self.arch.templates_panel;
+        let state = &self.template_work.templates_panel;
         let mut lines = Vec::new();
         let mut push = |key: String, label: String, ids: Vec<String>| {
             let open = !state.closed.contains(&key);
@@ -378,8 +377,8 @@ impl App {
     pub(crate) fn templates_panel_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Search(text) => {
-                self.arch.templates_panel.query = text;
-                self.arch.templates_panel.keyboard = false;
+                self.template_work.templates_panel.query = text;
+                self.template_work.templates_panel.keyboard = false;
             }
             Event::Down => {
                 let first = self.template_lines().into_iter().find_map(|l| match l {
@@ -387,8 +386,8 @@ impl App {
                     Line::Group { .. } => None,
                 });
                 if let Some(key) = first {
-                    self.arch.templates_panel.focused = Some(key);
-                    self.arch.templates_panel.keyboard = true;
+                    self.template_work.templates_panel.focused = Some(key);
+                    self.template_work.templates_panel.keyboard = true;
                     self.layers_keyboard = false;
                     self.blocks_panel.keyboard = false;
                     self.vertices.keyboard = false;
@@ -396,8 +395,8 @@ impl App {
                 }
             }
             Event::Toggle(key) => {
-                if !self.arch.templates_panel.closed.remove(&key) {
-                    self.arch.templates_panel.closed.insert(key);
+                if !self.template_work.templates_panel.closed.remove(&key) {
+                    self.template_work.templates_panel.closed.insert(key);
                 }
             }
             Event::Draw(id) => return self.template_pressed(&id),
@@ -410,7 +409,7 @@ impl App {
             Event::ToolFromLast => self.tool_from_last_call(),
             Event::Favorite(id) => {
                 if let Some(key) = self.personal_template_key(&id)
-                    && let Err(error) = self.arch.templates_panel.personal.toggle(&key)
+                    && let Err(error) = self.template_work.templates_panel.personal.toggle(&key)
                 {
                     self.warn(format!("Şablon favorileri kaydedilemedi: {error}"));
                 }
@@ -421,7 +420,7 @@ impl App {
 
     /// A template's row pressed, or Enter on it: the drawing takes the keys.
     fn template_pressed(&mut self, id: &str) -> Task<Message> {
-        self.arch.templates_panel.keyboard = false;
+        self.template_work.templates_panel.keyboard = false;
         let task = self.draw_template(id);
         if self.session.is_running() {
             return Task::batch([task, crate::input::release_keyboard()]);
@@ -462,13 +461,13 @@ impl App {
             return self
                 .warn("Sistem şablonu silinmez; kopyasını Kitaplığım’a alıp onu düzenleyin.");
         }
-        self.arch.templates_panel.deleting = Some((id.to_owned(), item.name().to_owned()));
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::RemoveTemplate));
+        self.template_work.templates_panel.deleting = Some((id.to_owned(), item.name().to_owned()));
+        self.dialog = Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::RemoveTemplate));
     }
 
     /// The question's Sil: the template goes from its library.
     pub(crate) fn remove_template(&mut self) {
-        let Some((id, name)) = self.arch.templates_panel.deleting.take() else {
+        let Some((id, name)) = self.template_work.templates_panel.deleting.take() else {
             return;
         };
         match self.styles.library.remove(&id) {
@@ -483,7 +482,7 @@ impl App {
     /// The question Sil asks.
     pub(crate) fn remove_template_question(&self) -> Element<'_, Message> {
         let (id, name) = self
-            .arch
+            .template_work
             .templates_panel
             .deleting
             .clone()
@@ -521,11 +520,11 @@ impl App {
         }
         let at = rows
             .iter()
-            .position(|(key, _)| Some(key) == self.arch.templates_panel.focused.as_ref());
+            .position(|(key, _)| Some(key) == self.template_work.templates_panel.focused.as_ref());
         let mut step = |d: isize| {
             let n = rows.len() as isize;
             let i = at.map_or(0, |i| i as isize + d).clamp(0, n - 1);
-            self.arch.templates_panel.focused = rows.get(i as usize).map(|(key, _)| key.clone());
+            self.template_work.templates_panel.focused = rows.get(i as usize).map(|(key, _)| key.clone());
         };
         let id = at.map(|i| rows[i].1.clone());
         match press.named()? {
@@ -537,7 +536,7 @@ impl App {
                     self.ask_remove_template(&id);
                 }
             }
-            Named::Escape => self.arch.templates_panel.keyboard = false,
+            Named::Escape => self.template_work.templates_panel.keyboard = false,
             _ => return None,
         }
         Some(Task::none())
@@ -563,7 +562,7 @@ impl App {
     /// The panel's body: the search with Stil yöneticisi beside it, and the list.
     pub(crate) fn templates_panel_view(&self) -> Element<'_, Message> {
         let search = SearchBox::new(
-            self.arch.templates_panel.query.clone(),
+            self.template_work.templates_panel.query.clone(),
             "Şablon ara",
             |t| msg(Event::Search(t)),
         )
@@ -585,7 +584,7 @@ impl App {
         .width(Fill);
         let lines = self.template_lines();
         if lines.is_empty() {
-            let words = if self.arch.templates_panel.query.trim().is_empty() {
+            let words = if self.template_work.templates_panel.query.trim().is_empty() {
                 "Kitaplıkta nesne şablonu yok. Şablonlar Stil yöneticisinde ya da bir .kstil dosyasıyla gelir."
             } else {
                 "Aramayla eşleşen şablon yok. Başka bir ad deneyin."
@@ -596,12 +595,12 @@ impl App {
                 None => column![search, empty].into(),
             };
         }
-        let focused = self.arch.templates_panel.focused.clone();
+        let focused = self.template_work.templates_panel.focused.clone();
         let reveal = lines.iter().position(|l| match l {
             Line::Template { key, .. } => Some(key) == focused.as_ref(),
             Line::Group { .. } => false,
         });
-        let drawing = self.arch.template.as_ref().map(|run| run.id.clone());
+        let drawing = self.template_work.template.as_ref().map(|run| run.id.clone());
         let palette = self.style_palette();
         let list = VirtualList::new(
             lines.len(),
@@ -698,7 +697,7 @@ impl App {
             );
         let favorite = self
             .personal_template_key(id)
-            .is_some_and(|key| self.arch.templates_panel.favorites().contains(&key));
+            .is_some_and(|key| self.template_work.templates_panel.favorites().contains(&key));
         let mut face = row![picture, words];
         if favorite {
             face = face.push(icon(crate::icons::from_web(Some("starOn"))).size(14.0));
@@ -749,7 +748,7 @@ impl App {
         }
         let favorite = self
             .personal_template_key(id)
-            .is_some_and(|key| self.arch.templates_panel.favorites().contains(&key));
+            .is_some_and(|key| self.template_work.templates_panel.favorites().contains(&key));
         menu = menu
             .item(
                 if favorite {
@@ -908,7 +907,7 @@ mod tests {
     }
 
     fn send(app: &mut App, event: Event) {
-        let _ = app.update(Message::Arch(crate::arch::Event::TemplatesPanel(event)));
+        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(event)));
     }
 
     /// The rows as words: “» group (n)” and the templates' ids.
@@ -957,7 +956,7 @@ mod tests {
         send(&mut app, Event::Draw("p-parsel".into()));
         assert_eq!(app.session.tool_id(), "polygon");
         assert_eq!(
-            app.arch.template.as_ref().map(|r| r.id.as_str()),
+            app.template_work.template.as_ref().map(|r| r.id.as_str()),
             Some("p-parsel")
         );
         let _ = app.update(Message::Run("tool.cancel"));
@@ -978,16 +977,16 @@ mod tests {
         send(&mut app, Event::Favorite("p-parsel".into()));
         assert_eq!(rows(&app)[..2], ["» Favoriler (1)", "p-parsel"]);
         let key = app.personal_template_key("p-parsel").unwrap();
-        assert!(app.arch.templates_panel.favorites().contains(&key));
+        assert!(app.template_work.templates_panel.favorites().contains(&key));
         send(&mut app, Event::Search("poligon".into()));
         assert_eq!(rows(&app), ["» Kategorisiz (1)", "p-nokta"]);
         send(&mut app, Event::Search(String::new()));
         send(&mut app, Event::Favorite("p-parsel".into()));
-        assert!(app.arch.templates_panel.favorites().is_empty());
+        assert!(app.template_work.templates_panel.favorites().is_empty());
         assert_eq!(rows(&app)[0], "» Kadastro (2)");
         // An unknown id cannot be added through the UI event.
         send(&mut app, Event::Favorite("missing".into()));
-        assert!(app.arch.templates_panel.favorites().is_empty());
+        assert!(app.template_work.templates_panel.favorites().is_empty());
     }
 
     #[test]
@@ -1001,7 +1000,7 @@ mod tests {
                 .as_nanos()
         ));
         let mut app = app();
-        app.arch.templates_panel.open_personal(&folder);
+        app.template_work.templates_panel.open_personal(&folder);
         let before = app.document.as_ref().unwrap().model.revision();
         send(&mut app, Event::Favorite("p-ada".into()));
         send(&mut app, Event::Draw("p-parsel".into()));
@@ -1078,15 +1077,15 @@ mod tests {
     fn down_in_the_search_gives_the_keys_to_the_list_and_enter_draws() {
         let mut app = app();
         send(&mut app, Event::Down);
-        assert!(app.arch.templates_panel.keyboard);
+        assert!(app.template_work.templates_panel.keyboard);
         key(&mut app, Named::ArrowDown);
         key(&mut app, Named::Enter);
         // Ada sınırı was first, Parsel sınırı next.
         assert_eq!(
-            app.arch.template.as_ref().map(|r| r.id.as_str()),
+            app.template_work.template.as_ref().map(|r| r.id.as_str()),
             Some("p-parsel")
         );
-        assert!(!app.arch.templates_panel.keyboard);
+        assert!(!app.template_work.templates_panel.keyboard);
     }
 
     #[test]
@@ -1101,7 +1100,7 @@ mod tests {
         send(&mut app, Event::Remove("p-ada".into()));
         assert_eq!(
             app.dialog,
-            Some(Dialog::Arch(crate::arch::ArchDialogKind::RemoveTemplate))
+            Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::RemoveTemplate))
         );
         assert!(app.styles.library.get("p-ada").is_some(), "asked, not gone");
         let _ = app.update(Message::DialogConfirmed);

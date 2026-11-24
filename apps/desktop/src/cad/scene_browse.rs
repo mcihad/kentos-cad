@@ -76,7 +76,7 @@ impl App {
         self.line_focused = false;
         self.layers_keyboard = false;
         self.blocks_panel.keyboard = false;
-        self.arch.templates_panel.keyboard = false;
+        self.template_work.templates_panel.keyboard = false;
         self.vertices.keyboard = false;
         crate::input::release_keyboard()
     }

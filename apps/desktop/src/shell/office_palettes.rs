@@ -9,7 +9,6 @@
 //! again; one no longer published says that) and the user's own tools, each the command and input of a call the
 //! drawing's journal holds (“Son komutu araç yap”). The search of Şablonlar filters them all by title.
 
-use crate::arch;
 use iced::widget::{button, column, container, row};
 use iced::{Element, Fill, Task};
 use kentos_commands::{CallOp, PaletteState, StandardsPalettes};
@@ -198,7 +197,7 @@ impl App {
     /// the search; Son komutu araç yap at the end. Nothing when there is nothing to show and no drawing.
     pub(crate) fn office_palettes_view(&self) -> Option<Element<'_, Message>> {
         use crate::templates_panel::Event;
-        let query = crate::app::fold(self.arch.templates_panel.query());
+        let query = crate::app::fold(self.template_work.templates_panel.query());
         let shows = |title: &str| query.is_empty() || crate::app::fold(title).contains(&query);
         let personal = &self.office_palettes.personal;
         let tool_row = |words: String, press: Option<Message>, star: Option<(bool, Message)>| -> Element<'_, Message> {
@@ -218,7 +217,7 @@ impl App {
                 Some(t) if t.digest == f.digest => (
                     t.tool.title.clone(),
                     t.ready.then(|| {
-                        Message::Arch(arch::Event::TemplatesPanel(Event::Tool(t.key.clone())))
+                        Message::TemplateWork(crate::template_work::Event::TemplatesPanel(Event::Tool(t.key.clone())))
                     }),
                 ),
                 Some(t) => (
@@ -237,7 +236,7 @@ impl App {
                     press,
                     Some((
                         true,
-                        Message::Arch(arch::Event::TemplatesPanel(Event::ToolFavorite(
+                        Message::TemplateWork(crate::template_work::Event::TemplatesPanel(Event::ToolFavorite(
                             f.key.clone(),
                         ))),
                     )),
@@ -253,7 +252,7 @@ impl App {
                 any = true;
                 own = own.push(tool_row(
                     format!("{} · {}", t.title, t.command),
-                    Some(Message::Arch(arch::Event::TemplatesPanel(Event::Tool(
+                    Some(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(Event::Tool(
                         format!("kendi:{i}"),
                     )))),
                     None,
@@ -279,7 +278,7 @@ impl App {
                     Some(problem) => format!("{} — {}", t.tool.title, problem.message),
                 };
                 let press = t.ready.then(|| {
-                    Message::Arch(arch::Event::TemplatesPanel(Event::Tool(t.key.clone())))
+                    Message::TemplateWork(crate::template_work::Event::TemplatesPanel(Event::Tool(t.key.clone())))
                 });
                 let on = personal
                     .favorites
@@ -290,7 +289,7 @@ impl App {
                     press,
                     Some((
                         on,
-                        Message::Arch(arch::Event::TemplatesPanel(Event::ToolFavorite(
+                        Message::TemplateWork(crate::template_work::Event::TemplatesPanel(Event::ToolFavorite(
                             t.key.clone(),
                         ))),
                     )),
@@ -306,7 +305,7 @@ impl App {
             button(label::body("Son komutu araç yap"))
                 .padding([3, 8])
                 .style(style::button::secondary)
-                .on_press(Message::Arch(arch::Event::TemplatesPanel(
+                .on_press(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(
                     Event::ToolFromLast,
                 ))),
         );
@@ -331,11 +330,11 @@ pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
             tests::bound(app);
             let _ = app.show_templates_panel();
             let key = app.office_palettes.palettes[0].tools[0].key.clone();
-            let _ = app.update(Message::Arch(arch::Event::TemplatesPanel(
+            let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(
                 Event::ToolFavorite(key.clone()),
             )));
-            let _ = app.update(Message::Arch(arch::Event::TemplatesPanel(Event::Tool(key))));
-            let _ = app.update(Message::Arch(arch::Event::TemplatesPanel(
+            let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(Event::Tool(key))));
+            let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(
                 Event::ToolFromLast,
             )));
         }),
@@ -381,7 +380,7 @@ pub(crate) mod tests {
         assert_eq!(tools[1].problem.as_ref().map(|p| p.code.as_str()), Some("layer_not_found"));
         let before = app.document.as_ref().unwrap().entity_count();
         let key = tools[0].key.clone();
-        let _ = app.update(Message::Arch(arch::Event::TemplatesPanel(
+        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(
             crate::templates_panel::Event::Tool(key),
         )));
         let doc = app.document.as_ref().unwrap();
@@ -399,7 +398,7 @@ pub(crate) mod tests {
         bound(&mut app);
         let _ = app.show_templates_panel();
         let key = app.office_palettes.palettes[0].tools[0].key.clone();
-        let _ = app.update(Message::Arch(arch::Event::TemplatesPanel(
+        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(
             Event::ToolFavorite(key.clone()),
         )));
         assert_eq!(app.office_palettes.personal.favorites.len(), 1);
@@ -412,13 +411,13 @@ pub(crate) mod tests {
         let now = app.office_palettes.palettes[0].tools[0].digest.clone();
         assert_ne!(app.office_palettes.personal.favorites[0].digest, now);
         // Chosen again, it keeps the new recipe.
-        let _ = app.update(Message::Arch(arch::Event::TemplatesPanel(
+        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(
             Event::ToolFavorite(key.clone()),
         )));
         assert_eq!(app.office_palettes.personal.favorites[0].digest, now);
         // The office tool run, then made one of the user's own from the journal; the own tool runs the same call.
-        let _ = app.update(Message::Arch(arch::Event::TemplatesPanel(Event::Tool(key))));
-        let _ = app.update(Message::Arch(arch::Event::TemplatesPanel(
+        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(Event::Tool(key))));
+        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(
             Event::ToolFromLast,
         )));
         let own = &app.office_palettes.personal.tools;
@@ -426,7 +425,7 @@ pub(crate) mod tests {
         assert_eq!(own[0].command, "cad.line.create");
         assert_eq!(own[0].title, "Çizgi oluştur");
         let before = app.document.as_ref().unwrap().entity_count();
-        let _ = app.update(Message::Arch(arch::Event::TemplatesPanel(Event::Tool(
+        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(Event::Tool(
             "kendi:0".into(),
         ))));
         assert_eq!(app.document.as_ref().unwrap().entity_count(), before + 1);

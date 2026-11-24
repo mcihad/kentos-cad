@@ -546,7 +546,7 @@ impl App {
             k.verified = crate::data_journal::verified_of(&self.gis.data_edits, &k.layers);
         }
         // The level and view on screen go with the file, no edit of the drawing (docs/adr/0720 §1).
-        let level = (self.arch.active_level.clone(), self.level_view);
+        let level = (self.active_level.clone(), self.level_view);
         let stop = Arc::new(AtomicBool::new(false));
         let faults = self.save_faults;
         self.saving = Some(Saving {

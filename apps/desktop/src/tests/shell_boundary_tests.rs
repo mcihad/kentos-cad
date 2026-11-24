@@ -36,8 +36,10 @@ fn the_shell_reaches_a_disciplines_windows_only_through_its_state() {
             folder = None;
         }
     }
+    // The modules are found (a read that finds none passes nothing). Fewer stay in the core's crate as the modules
+    // move to packages of their own (docs/adr/9199): Harita's and Yol's left, CBS's and Mimari's are still here.
     assert!(
-        theirs.len() > 100,
+        theirs.len() > 50,
         "the disciplines' modules are found: {}",
         theirs.len()
     );

@@ -268,7 +268,7 @@ impl App {
         // A group template's members are written with every object the tool
         // writes, in its undo step (docs/adr/0176 §5, template_members.rs).
         let group = self
-            .arch
+            .template_work
             .template
             .as_ref()
             .is_some_and(|run| !run.members.is_empty())
@@ -293,7 +293,7 @@ impl App {
                 shift: self.modifiers.shift(),
                 overlap_layers: &self.overlap_layers,
                 locks: &mut self.locks,
-                template: self.arch.template.as_ref().map(|run| &run.stamp),
+                template: self.template_work.template.as_ref().map(|run| &run.stamp),
                 level: level.as_deref(),
                 refused: &mut self.bonds_refused,
             },
@@ -661,7 +661,7 @@ impl App {
                 self.line_focused = false;
                 self.layers_keyboard = false;
                 self.blocks_panel.keyboard = false;
-                self.arch.templates_panel.keyboard = false;
+                self.template_work.templates_panel.keyboard = false;
                 self.vertices.keyboard = false;
                 // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
                 let p = self.pointer_at(at);
@@ -1029,7 +1029,7 @@ impl App {
             return task;
         }
         // 1. So has the Şablonlar list, after ↓ in its search (templates_panel.rs).
-        if self.arch.templates_panel.keyboard
+        if self.template_work.templates_panel.keyboard
             && let Some(task) = self.templates_key(&press)
         {
             return task;
