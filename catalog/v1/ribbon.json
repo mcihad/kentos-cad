@@ -264,14 +264,14 @@
        },
        {
         "split": "arc",
-        "size": "small"
-       },
-       {
-        "split": "rectangle",
-        "size": "small"
+        "size": "large"
        },
        {
         "command": "tool.polygon",
+        "size": "large"
+       },
+       {
+        "split": "rectangle",
         "size": "small"
        },
        {
@@ -3683,36 +3683,6 @@
       "keep": true
      },
      {
-      "label": "Katmanlar",
-      "icon": "layers",
-      "items": [
-       {
-        "builtin": "layers"
-       }
-      ],
-      "overflow": [
-       "tool.layerOff",
-       "tool.layerIsolate",
-       "layer.unisolate",
-       "tool.layerLock",
-       "tool.layerFreeze",
-       "layer.thawAll",
-       "tool.layerMakeActive",
-       "tool.layerMatch",
-       "tool.copyToLayer",
-       "layer.merge",
-       "layer.states",
-       "layer.stateSave",
-       "layer.translate",
-       "layer.purge",
-       "layer.list"
-      ],
-      "launcher": {
-       "command": "style.layerStyle",
-       "title": "Katman stili…"
-      }
-     },
-     {
       "label": "Oluştur",
       "icon": "line",
       "items": [
@@ -3872,6 +3842,36 @@
       "launcher": {
        "command": "template.panel",
        "title": "Şablonlar paneli"
+      }
+     },
+     {
+      "label": "Katmanlar",
+      "icon": "layers",
+      "items": [
+       {
+        "builtin": "layers"
+       }
+      ],
+      "overflow": [
+       "tool.layerOff",
+       "tool.layerIsolate",
+       "layer.unisolate",
+       "tool.layerLock",
+       "tool.layerFreeze",
+       "layer.thawAll",
+       "tool.layerMakeActive",
+       "tool.layerMatch",
+       "tool.copyToLayer",
+       "layer.merge",
+       "layer.states",
+       "layer.stateSave",
+       "layer.translate",
+       "layer.purge",
+       "layer.list"
+      ],
+      "launcher": {
+       "command": "style.layerStyle",
+       "title": "Katman stili…"
       }
      }
     ]

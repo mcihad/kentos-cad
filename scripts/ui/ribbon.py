@@ -249,8 +249,9 @@ def extensions_tab():
 CAD = [
     file_tab(True),
     T("home", "Giriş", [
-        P("Çizim", "line", [L("tool.line"), L("tool.polyline"), L("tool.point"), SP("circle", "large"), SP("arc"),
-            SP("rectangle"), S("tool.polygon"), S("tool.ellipse"), S("tool.spline")],
+        # Six large tools (the owner's word of 24 November 2026: “alan ve yay çizme de büyük ikon olsun”; docs/adr/9300 §3).
+        P("Çizim", "line", [L("tool.line"), L("tool.polyline"), L("tool.point"), SP("circle", "large"), SP("arc", "large"),
+            L("tool.polygon"), SP("rectangle"), S("tool.ellipse"), S("tool.spline")],
           overflow=["tool.nurbs", "tool.xline", "tool.ray", "tool.parallel", "tool.perpIn", "tool.perpOut", "tool.donut",
             "tool.revcloud", "tool.wipeout", "tool.sector", W("tool.rangeRings", MAP), "tool.tangentLine",
             "tool.fourthCorner", "tool.divide", "tool.pointsBetween", "tool.intersectPoint", W("tool.vertexPoints", MAP_ROAD),
@@ -570,9 +571,6 @@ GIS = [
         # tools go small and named before the session's button folds, since nothing is drawn on a closed layer.
         P("Düzenleme", "edit", [L("layer.edit"), S("layer.editSave"), S("layer.editRollback"), S("layer.editReview")],
           keep=True),
-        # The active layer the session opens beside it; Şablonlar last, the first to fold in a narrow window.
-        P("Katmanlar", "layers", [B("layers")], overflow=LAYER_OVERFLOW,
-          launcher=toCmd("style.layerStyle", "Katman stili…")),
         P("Oluştur", "line", [L("tool.point"), L("tool.line"), L("tool.polyline"), L("tool.polygon"), SP("circle"),
             SP("rectangle"), S("tool.adjoin"), S("tool.text")],
           overflow=["tool.arc", "tool.ellipse", "tool.spline", "tool.vertexPoints", "tool.divide", "tool.pointsBetween",
@@ -589,6 +587,10 @@ GIS = [
           overflow=["tool.areaIntersect", "tool.boundary", "tool.polygonize", "tool.partsJoin", "tool.partsSplit",
             "tool.holeAdd", "tool.holeRemove", "tool.holeFill", "tool.toArea", "tool.toPolyline"]),
         P("Şablonlar", "templates", [B("templates")], launcher=toCmd("template.panel", "Şablonlar paneli")),
+        # Katmanlar last (the owner's word of 24 November 2026: “katmanları en sağa taşı”): the drawing tools stand right
+        # after the session's; in a narrow window it is the first panel to fold into its named button.
+        P("Katmanlar", "layers", [B("layers")], overflow=LAYER_OVERFLOW,
+          launcher=toCmd("style.layerStyle", "Katman stili…")),
     ]),
     T("data", "Veri", [
         P("Katman", "layerAdd", [NEW_LAYER, S("layer.newGroup"), S("layer.fields"), S("style.layerStyle"),

@@ -50,6 +50,11 @@
    değişti (`choosing_a_method_leaves_the_main_tools_in_place`).
 3. **CBS'nin dört büyük aracı.** Düzenle sekmesinin Oluştur paneli katmanın nesne türlerini dört büyük araçla çizer:
    Nokta, Çizgi, Çoklu çizgi, Kapalı alan. Çizgi önceden küçüktü. Panelde en çok dört büyük düğme kuralı korunur.
+4. **CAD'in Çizim paneli altı büyük araç (24 Kasım 2026, sahibin ikinci sözü: “alan ve yay çizme de büyük ikon
+   olsun cad tarafında”).** Giriş › Çizim: Çizgi, Çoklu çizgi, Nokta, Daire ▾, Yay ▾, Kapalı alan büyük; Dikdörtgen ▾,
+   Elips, Eğri küçük. Dört büyük düğme kuralının tek istisnasıdır (DESIGN.md §7.3.1). Ölçü: panel büyükken 492 px;
+   1440 px'te Çizim büyük, Değiştir, Açıklama ve Katmanlar açık, Özellikler adıyla katlı; 1100 px'te Çizim ve Değiştir
+   açık, öbür üçü katlı.
 
 ## §4 Kanıt
 

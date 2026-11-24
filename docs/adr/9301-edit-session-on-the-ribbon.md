@@ -47,13 +47,16 @@ durur; katmanın menüsü onların asıl yeri değildir.
    sınaması bunu her hücrede sınar.
 4. **Katmanlar panelindeki oturum düğmesi kalktı** (ADR 9169 §2.1): Katman paneli düğmesi yerine döndü; alanın
    ipucu oturumu Düzenle sekmesindeki Düzenlemeyi başlat'a yönlendirir.
-5. **Şeritteki yeri:** Düzenleme, Katmanlar (etkin katman), Oluştur, Değiştir, Alan işlemleri, Şablonlar. Düzenleme,
-   Oluştur ve Değiştir korunan panellerdir (ADR 9300). Ölçüler (varsayılan yazı):
-   - Düzenleme 243 px, Katmanlar 263, Oluştur 436 (küçük 312), Değiştir 277, Alan işlemleri 129, Şablonlar 246;
+5. **Şeritteki yeri:** Düzenleme, Oluştur, Değiştir, Alan işlemleri, Şablonlar, Katmanlar. İlk sırada Katmanlar
+   Düzenleme'nin yanındaydı; sahip aynı gün düzenleme ve çizim araçlarının yan yana durmasını, Katmanlar'ın en sağa
+   geçmesini istedi (“katmanları en sağa taşı”). Düzenleme, Oluştur ve Değiştir korunan panellerdir (ADR 9300).
+   Ölçüler (varsayılan yazı):
+   - Düzenleme 243 px, Oluştur 436 (küçük 312), Değiştir 277, Alan işlemleri 129, Şablonlar 246, Katmanlar 263;
      hepsi 1595 px.
-   - 1440 px'te yalnız Şablonlar katlanır.
-   - 1100 px'te Düzenlemeyi başlat büyük kalır, Oluştur'un dört aracı adlarıyla küçülür; Katmanlar, Alan işlemleri ve
-     Şablonlar katlanır. Kapalı katmana çizilmediği için oturum düğmesi çizim araçlarından sonra katlanır.
+   - 1440 px'te yalnız en sağdaki Katmanlar adıyla katlanır; 1600 px'te hepsi açıktır.
+   - 1100 px'te Düzenlemeyi başlat büyük kalır, Oluştur'un dört aracı adlarıyla küçülür, Değiştir açıktır; Alan
+     işlemleri, Şablonlar ve Katmanlar katlanır. Kapalı katmana çizilmediği için oturum düğmesi çizim araçlarından sonra
+     katlanır.
 6. **Simgeler:** kalem (Düzenlemeyi başlat), Kaynağa yaz'ın simgesi (Değişiklikleri kaydet), yeni `editsRollback`
    (geri al oku ve ayrı kalem), yeni `editsReview` (satırlar ve büyüteç). Seçenek sayfası
    `.run/gui-evidence/ikon-duzenleme-oturumu/` (A–D seçenekleri, 16 ve 20 px, açık ve koyu).
