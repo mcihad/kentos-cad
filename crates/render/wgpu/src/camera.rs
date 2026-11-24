@@ -14,13 +14,13 @@ use kentos_geometry_core::crs::map::MapProjection;
 /// Farthest zoom out: logical pixels per metre (about a whole country on screen). A camera's own limit is in pixels
 /// per world unit: this times its [`Camera::metres_per_unit`].
 pub const MIN_SCALE: f64 = 1e-4;
-/// Deepest zoom in: 10 µm per logical pixel, so a 2 mm CAD detail spans 200 pixels; a camera's own is this times its
-/// [`Camera::metres_per_unit`], so a drawing in degrees goes as deep.
+/// Deepest zoom in: 0.1 µm per logical pixel, so a 2 mm CAD detail spans 20 000 pixels; a camera's own is this times
+/// its [`Camera::metres_per_unit`], so a drawing in degrees goes as deep.
 /// Float64 source coordinates and hi/lo GPU positions remain independent of this display limit. It was 0.1 mm a pixel
-/// while the styled layers' far segment ends set the precision; the drawing area's deep scene splits them at a box round
-/// the view and rounds its circles there (plan/render.md RM-24, docs/adr/9220), and the selection's highlight, still
-/// cut at 128 m, stays within 0.4 px here (64 m × 2⁻²⁴ × 10⁵).
-pub const MAX_SCALE: f64 = 1e5;
+/// while far segment ends set the precision; from 500 px/m the drawing area draws a deep view's scene and highlight,
+/// split at a box round the view and their curves round there (plan/render.md RM-24, docs/adr/9220). What is left is
+/// the hi/lo pair's own: 2⁻⁴⁸ of a point's distance from the scene's origin, 0.016 px here for an origin 500 km away.
+pub const MAX_SCALE: f64 = 1e7;
 /// Margin a fit leaves around the box, logical pixels.
 pub const FIT_PADDING: f64 = 48.0;
 /// One CSS pixel at 96 dpi in metres: the screen scale 1:N the status bar shows.

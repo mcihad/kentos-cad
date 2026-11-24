@@ -69,6 +69,7 @@ pub(crate) fn paint(app: Option<&App>, r: &MapRequest<'_>, frame: &mut Frame) {
             0.5 / r.pixels_per_metre,
             0,
             &bounds,
+            None,
         );
         for seg in &highlighted.segments {
             let a = kentos_render_wgpu::precision::join(seg.a_hi, seg.a_lo);

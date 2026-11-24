@@ -50,6 +50,8 @@ struct HighlightKey {
     tolerance: u64,
     /// The construction lines' box (its bits): they are highlighted as clipped.
     clip: [u64; 4],
+    /// The deep view's box and tolerance (their bits; 0 without one): split at it and round in it (docs/adr/9220).
+    deep: [u64; 5],
     /// The view's theme (its id's hash): an object on a layer it hides is not highlighted in it (docs/adr/0637 §3).
     theme: u64,
 }
@@ -80,6 +82,8 @@ impl Viewport {
         clip: &Bounds,
         spatial: Option<&Spatial>,
     ) -> (Arc<ScenePart>, Arc<ScenePart>) {
+        // The deep view's box as this frame's styled scene took it (`deep_box`): the highlights split at it too.
+        let deep = self.deep.get();
         let key = HighlightKey {
             generation: self.generation,
             changes: changes(doc),
@@ -89,6 +93,10 @@ impl Viewport {
             below: fixed.layers.len(),
             tolerance: curves.tolerance.to_bits(),
             clip: [clip.min_x, clip.min_y, clip.max_x, clip.max_y].map(f64::to_bits),
+            deep: deep.map_or([0; 5], |d| {
+                let b = d.bounds;
+                [b.min_x, b.min_y, b.max_x, b.max_y, d.tolerance].map(f64::to_bits)
+            }),
             theme: self.theme.as_ref().map_or(0, |t| {
                 use std::hash::{Hash, Hasher};
                 let mut h = std::collections::hash_map::DefaultHasher::new();
@@ -118,6 +126,7 @@ impl Viewport {
                 curves.tolerance,
                 key.below,
                 clip,
+                deep.as_ref(),
             ))
         };
         let mut cache = self.highlight.borrow_mut();
@@ -144,6 +153,7 @@ impl Viewport {
                         curves.tolerance,
                         key.below,
                         clip,
+                        deep.as_ref(),
                     ))
                 } else if selection.len() >= PARALLEL_FROM {
                     let threads = std::thread::available_parallelism()
@@ -166,6 +176,7 @@ impl Viewport {
                         curves.tolerance,
                         key.below,
                         clip,
+                        deep.as_ref(),
                         threads,
                     ))
                 } else {
@@ -394,6 +405,44 @@ mod tests {
         // Its colour and layer: after every layer of the scene.
         assert!(sel.segments.iter().all(|s| s.color == accent.0));
         assert_eq!(sel.layers.len(), fixed.layers.len() + 1);
+    }
+
+    /// A deep view's highlights (plan/render.md RM-24, docs/adr/9220) are built again for its box, every piece in the
+    /// box with its ends in it, and kept while the box stays.
+    #[test]
+    fn a_deep_view_s_highlight_is_split_at_its_box() {
+        let doc = sample();
+        let viewport = Viewport::new();
+        let palette = palette(Mode::Dark);
+        let settings = RenderSettings::new(palette.background);
+        let (_, fixed, curves, _, clip) = viewport.scene(&doc, Mode::Dark, &palette, &settings);
+        let accent = Rgba8::rgb(0x4c, 0x9b, 0xe8);
+        let mut selection = Selection::new();
+        selection.set(doc.model.entities().map(|e| Slot(e.base().id)));
+        let (plain, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        // Across the sample's first line, (486 512.34, 4 420 187.52) → (486 522.44, 4 420 187.72).
+        let b = Bounds { min_x: 486_515.0, min_y: 4_420_187.0, max_x: 486_517.0, max_y: 4_420_188.5 };
+        viewport.deep.set(Some(kentos_native_style::Deep { bounds: b, tolerance: 1e-4 }));
+        let (deep, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        assert_ne!(deep.id, plain.id, "built again for the box");
+        assert!(deep.segments.len() > plain.segments.len());
+        let o = deep.origin;
+        let world = |hi: [f32; 2], lo: [f32; 2]| {
+            let p = kentos_render_wgpu::precision::join(hi, lo);
+            Vec2::new(o.x + p[0], o.y + p[1])
+        };
+        let inside = |p: Vec2| p.x >= b.min_x - 1e-6 && p.x <= b.max_x + 1e-6 && p.y >= b.min_y - 1e-6 && p.y <= b.max_y + 1e-6;
+        let mut within = 0;
+        for s in &deep.segments {
+            let (p, q) = (world(s.a_hi, s.a_lo), world(s.b_hi, s.b_lo));
+            if inside(Vec2::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0)) {
+                within += 1;
+                assert!(inside(p) && inside(q), "{p:?} → {q:?} reaches into the box from outside it");
+            }
+        }
+        assert!(within > 0, "the line's piece in the box");
+        let (again, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        assert_eq!(again.id, deep.id, "the same box: kept");
     }
 
     /// A view whose theme hides a layer highlights none of its objects (docs/adr/0637 §3): neither selected nor

@@ -473,7 +473,7 @@ fn a_highlight_draws_after_the_scene_in_one_colour() {
         max_x: 1e6,
         max_y: 1e6,
     };
-    let part = scene::build_highlight(all.iter().copied(), &style, o, 0.05, below, &clip);
+    let part = scene::build_highlight(all.iter().copied(), &style, o, 0.05, below, &clip, None);
     assert_eq!(part.layers.len(), below + 1, "one layer past the scene's");
     assert!(
         part.layers[..below]
@@ -506,13 +506,14 @@ fn a_highlight_draws_after_the_scene_in_one_colour() {
         0.05,
         below,
         &clip,
+        None,
     );
     assert!(
         hover.fills.is_empty(),
         "the hovered object is outlined only"
     );
     assert!(
-        scene::build_highlight(std::iter::empty(), &style, o, 0.05, below, &clip)
+        scene::build_highlight(std::iter::empty(), &style, o, 0.05, below, &clip, None)
             .segments
             .is_empty()
     );
@@ -570,13 +571,88 @@ fn a_highlight_built_side_by_side_is_the_one_built_in_turn() {
         max_x: origin.x + 5_000.0,
         max_y: origin.y + 5_000.0,
     };
-    let whole = build_highlight(objects.iter().copied(), &style, origin, 0.05, 3, &clip);
-    assert!(!whole.segments.is_empty() && !whole.fills.is_empty() && !whole.markers.is_empty());
-    for threads in [1, 2, 3, 7, 8, objects.len() + 5] {
-        let side = build_highlight_parallel(&objects, &style, origin, 0.05, 3, &clip, threads);
-        assert_eq!(side.layers, whole.layers, "{threads} runs: the layers");
-        assert_eq!(side.segments, whole.segments, "{threads} runs: the strokes");
-        assert_eq!(side.fills, whole.fills, "{threads} runs: the fills");
-        assert_eq!(side.markers, whole.markers, "{threads} runs: the marks");
+    // And in a deep view round one of the sample's corners (plan/render.md RM-24).
+    let deep = kentos_geometry_core::geom::deep::Deep {
+        bounds: kentos_render_wgpu::Bounds {
+            min_x: origin.x - 2.0,
+            min_y: origin.y - 2.0,
+            max_x: origin.x + 3.0,
+            max_y: origin.y + 3.0,
+        },
+        tolerance: 1e-4,
+    };
+    for deep in [None, Some(&deep)] {
+        let whole = build_highlight(objects.iter().copied(), &style, origin, 0.05, 3, &clip, deep);
+        assert!(!whole.segments.is_empty() && !whole.fills.is_empty() && !whole.markers.is_empty());
+        for threads in [1, 2, 3, 7, 8, objects.len() + 5] {
+            let side = build_highlight_parallel(&objects, &style, origin, 0.05, 3, &clip, deep, threads);
+            assert_eq!(side.layers, whole.layers, "{threads} runs: the layers");
+            assert_eq!(side.segments, whole.segments, "{threads} runs: the strokes");
+            assert_eq!(side.fills, whole.fills, "{threads} runs: the fills");
+            assert_eq!(side.markers, whole.markers, "{threads} runs: the marks");
+        }
     }
+}
+
+/// A deep view's highlight (plan/render.md RM-24, docs/adr/9220): a long line
+/// split at the view's box, a circle through the box round to the view's
+/// tolerance in it, an area's fill ring split as its outline is. Without the
+/// box, as before.
+#[test]
+fn a_deep_view_s_highlight_is_split_at_its_box_and_round_in_it() {
+    use kentos_geometry_core::geom::deep::Deep;
+
+    let objects: Vec<Entity> = serde_json::from_str(
+        r#"[{"kind":"line","layerId":"0","a":{"x":-5000,"y":0.25},"b":{"x":5000,"y":0.25},"attrs":{},"id":1},
+            {"kind":"circle","layerId":"0","c":{"x":-49.5,"y":0.3},"r":50,"attrs":{},"id":2},
+            {"kind":"polygon","layerId":"0","pts":[{"x":-400,"y":-400},{"x":400,"y":-400},{"x":400,"y":0.5},{"x":-400,"y":0.5}],"attrs":{},"id":3}]"#,
+    )
+    .expect("objects");
+    let style = scene::Highlight {
+        color: Rgba8::rgb(0x4c, 0x9b, 0xe8),
+        fill: Some(Rgba8([0x4c, 0x9b, 0xe8, 0x21])),
+        mark_size: 15.0,
+        mark_shape: 1,
+    };
+    let o = Vec2::new(0.0, 0.0);
+    let clip = kentos_render_wgpu::Bounds { min_x: -1e6, min_y: -1e6, max_x: 1e6, max_y: 1e6 };
+    let deep = Deep {
+        bounds: kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -1.0, max_x: 1.0, max_y: 1.0 },
+        tolerance: 1e-4,
+    };
+    let plain = scene::build_highlight(objects.iter(), &style, o, 0.05, 0, &clip, None);
+    let part = scene::build_highlight(objects.iter(), &style, o, 0.05, 0, &clip, Some(&deep));
+    let inside = |p: Vec2| p.x.abs() <= 1.0 + 1e-9 && p.y.abs() <= 1.0 + 1e-9;
+    let pieces = segments(&part);
+    // Every stroke reaching into the box has both its ends in it.
+    for (a, c) in &pieces {
+        if inside(Vec2::new((a.x + c.x) / 2.0, (a.y + c.y) / 2.0)) {
+            assert!(inside(*a) && inside(*c), "{a:?} → {c:?} reaches into the box from outside it");
+        }
+    }
+    // The line: one piece from edge to edge of the box.
+    assert!(pieces.iter().any(|(a, c)| (a.y - 0.25).abs() < 1e-9
+        && (a.x + 1.0).abs() < 1e-9
+        && (c.x - 1.0).abs() < 1e-9));
+    // The circle's chords in the box stray at most the tolerance.
+    let centre = Vec2::new(-49.5, 0.3);
+    let on_circle = |p: &Vec2| ((p.x - centre.x).hypot(p.y - centre.y) - 50.0).abs() < 1e-6;
+    let chords: Vec<f64> = pieces
+        .iter()
+        .filter(|(a, c)| on_circle(a) && on_circle(c))
+        .filter(|(a, c)| inside(Vec2::new((a.x + c.x) / 2.0, (a.y + c.y) / 2.0)))
+        .map(|(a, c)| 50.0 - ((a.x + c.x) / 2.0 - centre.x).hypot((a.y + c.y) / 2.0 - centre.y))
+        .collect();
+    assert!(chords.len() > 5, "{} chords in the box", chords.len());
+    assert!(chords.iter().all(|s| *s <= 1e-4 * 1.000_001), "{chords:?}");
+    // The area's fill ring has the points where its top edge crosses the box.
+    let fill_at = |part: &ScenePart, x: f64| {
+        part.fills.iter().any(|f| {
+            let p = join(f.hi, f.lo);
+            (o.x + p[0] - x).abs() < 1e-9 && (o.y + p[1] - 0.5).abs() < 1e-9
+        })
+    };
+    assert!(fill_at(&part, 1.0) && fill_at(&part, -1.0), "the fill's ring split at the box");
+    assert!(!fill_at(&plain, 1.0), "without the box as before");
+    assert!(part.segments.len() > plain.segments.len());
 }
