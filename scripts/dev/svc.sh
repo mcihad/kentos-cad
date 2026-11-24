@@ -43,8 +43,14 @@ start() {
     echo "── $(date '+%F %T') başlatıldı: $*"
   } >"$RUN/$name.log"
   # Not a group leader here (no job control in a script), so setsid does not
-  # fork: the PID below is the new group's id and `exec` keeps it.
-  setsid bash -c 'exec "$@"' _ "$@" >>"$RUN/$name.log" 2>&1 </dev/null &
+  # fork: the PID below is the new group's id and `exec` keeps it. macOS has
+  # no setsid: Python's os.setsid makes the same session and group, then execs.
+  if command -v setsid >/dev/null 2>&1; then
+    setsid bash -c 'exec "$@"' _ "$@" >>"$RUN/$name.log" 2>&1 </dev/null &
+  else
+    python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' \
+      bash -c 'exec "$@"' _ "$@" >>"$RUN/$name.log" 2>&1 </dev/null &
+  fi
   echo $! >"$RUN/$name.pid"
   echo "• $name başladı (PID $!, günlük .run/$name.log)"
 }

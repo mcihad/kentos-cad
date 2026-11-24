@@ -113,9 +113,14 @@ run: ## Üretim derlemesiyle çalıştırır: build + önizleme (http://localhos
 	@$(SVC) wait preview $(PREVIEW_URL) 30
 	@$(MAKE) status
 
-desktop: ## Masaüstü uygulaması (apps/desktop, native Iced + wgpu)
-	@$(HEAVY) cargo build -q -p kentos-desktop
-	@$(SVC) start desktop target/debug/kentos-cad
+desktop: ## Masaüstü programı kentos-cad (MODUL=mimari|harita|cbs|yol ile modülün programı, FILE=çizim.kcad)
+	@$(HEAVY) cargo build -q -p kentos-cad
+	@$(SVC) start desktop target/debug/kentos-cad $(if $(MODUL),--modul $(MODUL)) $(FILE)
+
+desktop-release: ## Masaüstü programını ve başlatıcıyı release derler (bu Mac'te ~8 dk), modül programlarının bağlantılarını koyar
+	$(HEAVY) cargo build --release -p kentos-cad -p kentos-launcher -j 10
+	python3 scripts/desktop/module_links.py target/release
+	@echo "• target/release/kentos-cad (kentos-mimari, kentos-harita, kentos-gis, kentos-yol) ve target/release/kentos-launcher"
 
 showcase: ## Arayüz bileşenleri vitrini (apps/ui-showcase)
 	@$(HEAVY) cargo build -q -p kentos-ui-showcase
@@ -208,8 +213,8 @@ build-api: ## kentosd'yi derler
 build-rust: ## Web ve sunucu Rust crate'lerini derler (masaüstü hariç)
 	$(HEAVY) cargo build
 
-build-desktop: ## Masaüstü uygulamasını, arayüz kütüphanesini ve vitrini derler
-	$(HEAVY) cargo build -p kentos-ui -p kentos-ui-showcase -p kentos-desktop
+build-desktop: ## Masaüstü programını (kentos-cad), arayüz kütüphanesini ve vitrini derler
+	$(HEAVY) cargo build -p kentos-ui -p kentos-ui-showcase -p kentos-cad
 
 catalog: ## Ürün komutu katalogunu yeniden yazar (ADR 0013; farkı okuyup commit edin)
 	$(HEAVY) env KENTOS_WRITE_CATALOG=1 cargo test -q -p kentos-commands catalog
@@ -276,7 +281,7 @@ ui-snapshots: ## Arayüz vitrinini ekransız çizer, başvuru görüntüleriyle 
 	$(HEAVY) node scripts/ui/snapshots.mjs
 
 desktop-snapshot: ## Masaüstü penceresini görüntüye çizer: .run/desktop.png (FILE=çizim.kcad; çizim alanı wgpu ister)
-	$(HEAVY) cargo build -q -p kentos-desktop
+	$(HEAVY) cargo build -q -p kentos-cad
 	mkdir -p .run && KENTOS_SNAPSHOT_BACKEND=wgpu target/debug/kentos-cad snapshot .run/desktop.png $(FILE)
 	@echo "• .run/desktop.png"
 

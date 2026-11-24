@@ -11,6 +11,9 @@ dönüşte kullanılır. Masaüstü ve ortak komutlar aynen geçerlidir.
 
 ```bash
 make                     # gruplu komut listesi; servisler: make dev/run/desktop/stop/status
+make desktop             # masaüstü programı kentos-cad (MODUL=mimari|harita|cbs|yol: modülün programı; FILE=çizim.kcad)
+make desktop-release     # programı ve başlatıcıyı release derler (bu Mac'te ~8 dk), modül programlarının bağlantılarını koyar
+cargo run -p kentos-cad -- --modul cbs   # doğrudan; kentos-desktop ADR 9199'dan beri kütüphanedir, çalıştırılmaz
 pnpm install
 pnpm dev                 # Vite; yerel çizim API olmadan çalışır
 pnpm typecheck
