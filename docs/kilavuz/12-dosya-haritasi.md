@@ -5,7 +5,7 @@
 ## 12. Dosya haritası ve başvuru
 
 ```text
-apps/web/              bağımsız TypeScript/DOM uygulaması
+apps/web/              donmuş web uygulaması (ADR 0228, F3); kod durur; portal onun h(), Signal, jeton ve sözleşme dosyalarını kullanır
 apps/api/              kentosd: HTTP/WS, auth ve yönetim CLI
 apps/desktop/          masaüstünün çekirdeği (kentos_desktop): kabuk (src/shell), CAD (src/cad; Harita ile Yol'un ortak arazi işi dahil), her modülün ortak CBS ve veri altyapısı (src/gis: veri katmanları, kaynaklar, işlem kutusu, raster, nokta bulutu, formlar …) ve sınama kiti (`testing`); Iced + KentOS UI
 apps/desktop-arch/     KentOS Mimari'nin paketi (kentos_desktop_arch): stil, tip, malzeme, modül ve seçenek pencereleri, Bina programı, Metraj, çizelgeler, Mimari denetimi, teslim, altlık, IFC (ADR 9199)

@@ -18,7 +18,7 @@ bölümler (3, 5–8, 11, 13–15, 18–20, 23, 25) aşağıdadır.
 | 0 | [Güncel karar özeti](docs/kilavuz/00-guncel-karar-ozeti.md) | Bir modüle ya da özelliğe dokunmadan önce: o alanın son kararları, ADR'leri ve açıkları (Yol, mimari, form, bulut…) |
 | 1 | [Ürün ve mevcut durum](docs/kilavuz/01-urun-ve-durum.md) | Ürünün kapsamı, modüller, neyin var neyin hedef olduğu |
 | 2 | [Çalıştırma](docs/kilavuz/02-calistirma.md) | Bir komutun, testin, ortak durum betiğinin, resim testinin tam satırı |
-| 4 | [Web mimarisi](docs/kilavuz/04-web-mimarisi.md) | Web'e dönüşte (web duruyor, ADR 0228); katmanlar, AppContext, durum kapsamları, komut, araç, çizim hattı |
+| 4 | [Web mimarisi](docs/kilavuz/04-web-mimarisi.md) | Donmuş web uygulamasının mimarisi (ADR 0228, F3); yalnız başvuru, yeni iş için kural değil |
 | 9 | [Yeni iş ekleme tarifleri](docs/kilavuz/09-yeni-is-tarifleri.md) | Komut, araç (§9.2: araç = komut), ayar, test, render, processing aracı, dosya biçimi, ayrı işletim sistemi penceresi (§9.8), yeni modül ve yeni istemci (§9.9) eklerken |
 | 10 | [Yol haritası](docs/kilavuz/10-yol-haritasi.md) | Devir notu ve faz geçmişi |
 | 12 | [Dosya haritası](docs/kilavuz/12-dosya-haritasi.md) | Hangi iş hangi dizinde |
@@ -45,7 +45,9 @@ satıra (749 KB) büyüdüğü için bölündü.
 ## Çalışırken
 
 - **Masaüstü ve bulut:** web uygulaması iptal edildi (sahibin sözü, 24 Kasım 2026; ADR 0228'in arası kalıcı oldu); web'e
-  ait adım ve not yazılmaz, TODOS.md §0.2'ye yeni satır eklenmez. Bulut portalı (`apps/portal`, ADR 9000) bunun dışındadır.
+  ait adım ve not yazılmaz, TODOS.md §0.2'ye yeni satır eklenmez. Web uygulaması donduruldu (`apps/web` kodu durur; kuralları
+  ve komutları çıkarıldı; 24 Kasım 2026, F3); web istemcisi ileride web görüntüleyici için ortak tanımda (`kentos_launch::Client::Web`)
+  kalır. Bulut portalı (`apps/portal`, ADR 9000) bunun dışındadır.
 - **Modül ve istemci ayrımı (kesin kural, 23 Kasım 2026):** §25'in sekiz kuralı her değişiklikte uygulanır; yeni
   panel, sekme, menü öğesi, komut, modül ya da istemci onlarla eklenir.
 - **Modül ve otomasyon denetimi (kesin kural, 24 Kasım 2026):** yeni yapılan ya da güncellenen her işte üç şey açıkça
@@ -85,29 +87,29 @@ satıra (749 KB) büyüdüğü için bölündü.
 
 ## 3. Teknik kısıtlar
 
-- TypeScript strict, `erasableSyntaxOnly`, `verbatimModuleSyntax`: `enum`,
-  `namespace`, constructor parameter property kullanmayın; `import type`,
-  union ve `as const` tercih edin. Web araç zinciri pnpm/Vite/TypeScript'tir.
-- Web UI çatısı DOM `h()` (`ui/dom.ts`) ve `core/signal.ts`'tir.
-  React/Vue/Lit geçişi yapmayın.
+- TypeScript kuralları bulut portalı (`apps/portal`) içindir; web uygulaması donmuştur (ADR 0228, F3). Strict,
+  `erasableSyntaxOnly`, `verbatimModuleSyntax`: `enum`, `namespace`, constructor parameter property
+  kullanmayın; `import type`, union ve `as const` tercih edin. Portalın araç zinciri pnpm/Vite/TypeScript'tir.
+- Portal UI çatısı DOM `h()` ve `Signal`'dır (`apps/portal/src/lib/dom.ts` ve `signal.ts`; ikisi de donmuş
+  `apps/web`'in `ui/dom.ts` ve `core/signal.ts`'ini yeniden dışa aktarır). React/Vue/Lit geçişi yapmayın.
 - Yeni runtime bağımlılığı veya sürüm değişikliği bakım, lisans, platform ve
   ölçüm gerekçesi ister; mevcut küçük/pure çekirdek sınırını koruyun.
-  Yeni web runtime kütüphanesi küçük, tree-shaking'e uygun, MIT/BSD lisanslı,
-  bakım altında ve DOM gerektirmeden worker'da kullanılabilir olmalı;
-  eklemeden kullanıcı onayı alın. Rust sürümleri workspace/lockfile politikasına uysun.
-- Tarayıcının ayırdığı `Ctrl+N/T/W`, `Ctrl+Shift+T`, `Alt+F/D/E`
+  Yeni portal runtime kütüphanesi küçük, tree-shaking'e uygun, MIT/BSD lisanslı
+  ve bakım altında olmalı; eklemeden kullanıcı onayı alın. Rust sürümleri workspace/lockfile politikasına uysun.
+- Portalda tarayıcının ayırdığı `Ctrl+N/T/W`, `Ctrl+Shift+T`, `Alt+F/D/E`
   kısayollarını uygulama komutuna bağlamayın.
 
 ## 5. Koordinat, birim ve gösterim
 
 - Kodda `x = doğu`, `y = kuzey`; Türk ölçmeciliği UI'ında sıra
   `Y (sağa), X (yukarı)`dır. Noktalı ondalık ve `Y,X` girişi korunur.
-- Her proje CRS/SRID taşır; metadata kaynağı `geo/crs.ts`'tir.
+- Her proje CRS/SRID taşır; metadata kaynağı `crates/native/project/src/crs.rs`'tir (kayıt `fixtures/crs/v1/registry.json`).
   SRID atamak koordinat dönüşümü değildir. Kaynak CRS bilinmiyorsa sorun;
   sessiz reprojection/fallback veya tahmin yapmayın.
 - Geometri açısı ile kuzeyden saat yönünde ölçmecilik semtini karıştırmayın.
   Birim dönüşümü açık; metre, m², dönüm (1000 m²), hektar (10000 m²).
-- UI sayıları `ctx.format` üzerinden gösterilir; `toFixed` iş kuralı değildir.
+- UI sayıları projenin ayarlarından `kentos_domain::format::Format` üzerinden gösterilir (`crates/native/domain/src/format.rs`); yuvarlama
+  ve `toFixed` iş kuralı değildir.
   Gösterim basamakları kaynak koordinatı değiştirmez; ayrıntılı doğruluk §23'tedir.
 
 ## 6. Performans
@@ -149,7 +151,7 @@ sorumluluk taşısın; başında kısa amaç yorumu olsun, 400 satır üstünde 
 2 000 satırı geçmez: `scripts/dev/source_size.py` (`make arch`) denetler; bugün aşanlar tabanda, büyüyemez, eklemeden önce bölünür.
 Signal'i sahibi değiştirir; UI command/belge API'sini kullanır.
 Sabit UI rengi, vurgu, font boyu veya CDN fontu eklemeyin; CSS jetonları,
-`readCanvasPalette()` ve yerel fontları kullanın. Katman rengi veridir;
+yerel fontları kullanın. Katman rengi veridir;
 renderer/UI davranışını sabit katman ID'sine göre dallandırmayın.
 Hata mesajı nedeni ve çözümü söylesin. Global listener/GPU/worker kaynaklarının
 dispose/cancel yolu olsun. Kullanıcının mevcut değişikliklerini koruyun.
@@ -159,9 +161,9 @@ dispose/cancel yolu olsun. Kullanıcının mevcut değişikliklerini koruyun.
 İlgili testler, sözleşme/undo/yetki, UI gerekiyorsa gerçek klavye/fare ve
 tema/yazı ölçeği kontrolü yapılır. Çalıştırılmayan kontrol ve nedenini bildirin.
 Üretim iddiası veya tamamlandı işareti için TODOS.md kabul kapılarını kullanın.
-Komut, araç, ayar, pencere, depo ya da `.kcad` alanı değiştiyse `pnpm inventory`
-çalıştırın; farkı okuyup değişiklikle aynı commit'e koyun (docs/inventory/README.md). Web uygulaması iptal edildiği için
-(ADR 0228, 24 Kasım 2026) envanter donmuştur; yeni komutların kaydı `catalog/v1/additions.json`'dadır.
+Web uygulaması iptal edilip donduruldu (ADR 0228, F3, 24 Kasım 2026): web envanteri (`docs/inventory`) donmuştur ve
+`pnpm inventory` kaldırıldı; komut, araç, ayar, pencere, depo ya da `.kcad` alanı değiştiyse yeni komutların kaydı
+`catalog/v1/additions.json`'dadır.
 Çizimi ya da projeyi değiştiren yeni araç ve komut, §9.2'deki komut, Python ve MCP bütünlüğü olmadan tamamlandı sayılmaz.
 
 ## 11. Teknik borç
@@ -201,7 +203,7 @@ doğrulamada `AppError::invalid_at` kullanın; istemci yeniden denemeyi bu alanl
 ## 14. Workspace ve tek hesaplama kaynağı
 
 Saf Rust hesap crate'leri DOM, Iced, SQLx, ağ veya host runtime bilmez.
-Web bunları WASM, desktop/server native çağırır. Rust'tan üretilen veri/komut
+Masaüstü ve sunucu bunları native çağırır (WASM bağlayıcıları donmuş web içindir). Rust'tan üretilen veri/komut
 sözleşmesi ortak olabilir; web uygulama runtime'ı ortaklaştırılmaz.
 Sıcak yollarda toplu tipli buffer kullanın; nesne başına JSON/FFI üretmeyin.
 Mevcut `jsmath`/`libm`, lint ve deterministic davranış kurallarını koruyun;
@@ -228,7 +230,7 @@ bağımsız yazılabilir otorite kurmayın. Ayrıntı TODOS.md §10–11, ADR 00
 
 Ürün komutları tipli/sürümlü, yetkili, iptal/önizleme/sonuç sözleşmeli olmalı.
 Python ve AI bunları sarar; repository/SQL/DOM'dan iş kurallarını atlamaz.
-Web processing worker'ı mevcut; kalıcı server worker ayrı teslimdir.
+Web processing worker'ı donmuş web'dedir; kalıcı server worker ayrı teslimdir.
 Server job tasarımında lease/heartbeat/fencing, idempotency, staged sonuç,
 revision/yetkiyi commit anında doğrulama ve kaynak kotaları gerekir.
 Uzun hesap API event loop/UI thread'de çalışmaz; socket kapanması işi yok etmez.
@@ -248,8 +250,8 @@ doğrulama, çalışan bir örneği bütün ürünün tamamlanması saymayın.
 
 ### 20.1 Mevcut sınırlar
 
-Stil/SVG düzenleyicisi, format pencereleri, ribbon ve ağır modüllerin mevcut
-JS/CSS/WASM yükleme sınırlarını koruyun; başlangıca gereksiz import eklemeyin.
+Ağır modülleri (stil/SVG düzenleyicisi, format pencereleri, Python, 3B, ileri analiz) başlangıçta yüklemeyin;
+ilk kullanımda yükleyin.
 
 ### 20.2 Yükleme
 
@@ -263,8 +265,7 @@ GPU kaynağı ve task temizlenir; mount/unmount tekrarları sızıntı yaratmas�
 
 ### 20.4 Ölçüm
 
-Startup ve modül açılışını üretim bundle'ında ölçün. WASM boyutu izlenir,
-ancak kaldırılmış keyfi başlangıç boyut sınırını yeniden eklemeyin.
+Başlangıç ve modül açılışını üretim (release) derlemesinde ölçün.
 Python/3D/ileri analiz sıradan 2D açılışa zorunlu yük olmamalı.
 
 ## 23. Sayısal ve kadastral doğruluk

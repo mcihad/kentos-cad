@@ -7,7 +7,7 @@
 KentOS; harita mühendisliği, kadastro, imar ve hassas CAD/GIS çalışmaları için
 geliştirilir. 18 uygulaması, imar planı, ifraz/tevhit, yol, mimari ve dijital
 ikiz projeleri gelişim yönüdür; hepsi bugün tamamlanmış ürün değildir.
-Web ve native masaüstü hedeflenir; web'e ara verildi (ADR 0228), şimdi masaüstü ve bulut. İleride görüntüleme için bir mobil
+Hedef masaüstü ve bulut; web uygulaması iptal edildi ve donduruldu (ADR 0228, F3, 24 Kasım 2026). İleride görüntüleme için bir mobil
 uygulama da yapılacak; kod ona hazır, modüler tutulur. Mobil ya da dar ekran arayüzü şu an iş değildir.
 Web kabuğunun mevcut alt sınırı 1100×600 px'tir. Arayüz Türkçe; kod,
 tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS CAD'dir.

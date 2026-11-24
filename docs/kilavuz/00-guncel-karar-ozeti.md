@@ -3555,6 +3555,11 @@
 - **Web uygulaması iptal edildi (sahibin sözü, 24 Kasım 2026: “web uygulaması iptal edildi”).** 12 Ekim'in arası kalıcı oldu:
   web'e dönülmez, TODOS.md §0.2'ye yeni satır yazılmaz, ADR'ler web adımı yazmaz. Bulut portalı (`apps/portal`, ADR 9000) bu
   kararın dışındadır. Aşağıdaki 12 Ekim kaydı geçmiştir.
+  - **Dondurma (sahibin kararı F3, 24 Kasım 2026):** `apps/web` kodu depoda donmuş durur (silinmez, düzenlenmez; portal
+    onun `h()`, `Signal`, jeton ve sözleşme dosyalarını kullanır). Web'e özgü kurallar ve komutlar CLAUDE.md'den, kılavuzdan,
+    `package.json`'dan ve `Makefile`'dan çıkarıldı; web istemcisi (`kentos_launch::Client::Web`) ileride web görüntüleyici için
+    ortak tanımda kalır. Aşağıdaki 12 Ekim kaydındaki “web'in denetimleri”, “WASM bağlayıcıları derlenir” ve “geri dönüş planı”
+    cümleleri artık geçerli değildir.
 - **Web katmanına ara (sahibin kesin kararı, 12 Ekim 2026; [ADR 0228](../../docs/adr/0228-web-pause-desktop-and-cloud-first.md)).**
   - Web'in son hâli **`1aad00d0`**'dır. Bundan sonra maddeler yalnız masaüstünde ve gerektiğinde bulutta (`kentosd`), Python'da ve
     MCP'de yapılır.

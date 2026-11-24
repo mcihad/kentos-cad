@@ -149,3 +149,14 @@ Geri dönüşte sıra şudur:
   - `pnpm py:test` (61 test);
   - envanter.
 - Commit kimliği (`git log -1 1aad00d0`) ve bağlantılar denetlendi.
+
+## Ek (24 Kasım 2026): dondurma
+
+Sahibin kararı (todos-new.md F3, “Dondur”): web uygulaması iptal edildi ve donduruldu. Kaldırılanlar: CLAUDE.md'nin web'e özgü
+kuralları (§3 TypeScript ve UI çatısı kuralları portala daraltıldı, §20 yükleme kuralları masaüstüne uyarlandı), kılavuz §2'nin
+web komutları, kök `package.json`'ın yalnız web'i çalıştıran betikleri (`dev`, `build`, `typecheck`, `test`, `e2e*`, `perf:*`,
+`inventory*`, `wasm`, `rust:wasm*`) ve `Makefile`'ın web hedefleri (`dev`, `run`, `build`, `typecheck`, `test`, `e2e*`,
+`inventory*`, `perf-*`, `wasm`); `check` ve `verify` artık Rust, masaüstü ve portal denetimlerini koşar. Kalanlar: `apps/web`
+kodu (donmuş; silinmez, düzenlenmez; portal onun `h()`, `Signal`, jeton ve sözleşme dosyalarını kullanır), ortak modül
+tanımındaki web istemcisi (`kentos_launch::Client::Web`, ileride web görüntüleyici için) ve bulut portalı (`apps/portal`) ile
+betikleri. Web'in geçmiş komutları Git'tedir; kılavuz §4 donmuş uygulamanın mimarisi olarak başvuru kalır.

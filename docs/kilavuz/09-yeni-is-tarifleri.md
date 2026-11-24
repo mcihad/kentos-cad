@@ -64,8 +64,8 @@ kalıcılık ve live-apply davranışını birlikte ekleyin. Ayar
 
 ### 9.4 Test
 
-- Web davranışında `pnpm typecheck`, ilgili Vitest testleri ve kapsamına göre
-  `pnpm test/build`; UI değişiminde tarayıcı e2e ve açık/koyu/Büyük yazı kontrolü. Web dururken (ADR 0228) bunlar koşmaz.
+- Portal (`apps/portal`) davranışında `pnpm -C apps/portal typecheck` ve `pnpm portal:test` (`make test-portal`). Web uygulaması donmuş
+  olduğundan (ADR 0228, F3) onun denetimleri yoktur.
 - Rust/hesap değişiminde ilgili native testler, clippy, WASM fixture/bağımsız
   referanslar; sözleşme değişiminde Rust → TS üretimi ve drift denetimi.
   Sözleşme tipi ürün komutu kataloğunun şemasını da değiştirir:
@@ -79,9 +79,9 @@ kalıcılık ve live-apply davranışını birlikte ekleyin. Ayar
 
 ### 9.5 Render backend
 
-WebGPU/WGSL ve WebGL2/GLSL yollarını aynı sahneyle doğrulayın; renk/alpha,
+Masaüstünde wgpu/WGSL yolunu doğrulayın (donmuş web'in WebGPU ve WebGL2 yolları için bkz. §4); renk/alpha,
 dash, piksel ölçeği, AA ve device-loss davranışını koruyun. Headless SwiftShader
-sonuçları gerçek GPU benchmark'ı değildir; mevcut `apps/web/scripts/e2e/cdp.mjs` ayarlarını kullanın.
+sonuçları gerçek GPU benchmark'ı değildir.
 
 ### 9.6 Processing aracı
 
@@ -91,7 +91,7 @@ runner üzerinden belge testi ekleyin. Ayrıntı `docs/PROCESSING.md`'dedir.
 ### 9.7 Dosya biçimi
 
 Reader/writer `crates/shared/formats`, şema `contracts`, dar binding
-`crates/wasm/formats-wasm`, web akışı `io/` ve `app/fileExchange.ts` içindedir.
+`crates/wasm/formats-wasm` içindedir (donmuş web'in akışı `apps/web/src/io/`).
 DXF (`crates/wasm/dxf-wasm`) ve Netcad NCZ (`crates/shared/ncz`, `crates/wasm/ncz-wasm`)
 kendi modüllerindedir; biçim işçisi onları ilk gerektiğinde yükler, sonuçları tipli sütunlarla
 geçer ve büyük içe aktarma iki platformda kare kare, tek geri alma adımında yazılır (ADR 0138).

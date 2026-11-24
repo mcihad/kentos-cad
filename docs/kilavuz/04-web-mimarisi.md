@@ -4,6 +4,11 @@
 
 ## 4. Web mimarisi
 
+> **Donmuş web uygulamasının mimarisi (yalnız başvuru).** Web uygulaması iptal edildi ve donduruldu (ADR 0228, sahibin
+> kararı F3, 24 Kasım 2026): `apps/web` kodu depoda durur ama geliştirilmez ve komutları kılavuzdan çıkarıldı. Bu bölüm
+> onun nasıl kurulduğunu anlatır; yeni iş için kural değildir. Bulut portalı (`apps/portal`) bunun dışındadır; yalnız
+> `h()`, `Signal`, tasarım jetonları ve üretilmiş sözleşme türleri için `apps/web`'in dosyalarını kullanır.
+
 ### 4.1 Katmanlar
 
 Temel sıra: `core → geo → model → style/processing/product → render → viewport → tools → ui → app`.
