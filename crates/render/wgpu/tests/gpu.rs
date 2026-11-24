@@ -30,6 +30,8 @@ mod hatch;
 mod weights;
 #[path = "gpu/dashes.rs"]
 mod dashes;
+#[path = "gpu/glyphs.rs"]
+mod glyphs;
 #[path = "gpu/precision.rs"]
 mod precision;
 #[path = "gpu/scene3d.rs"]
@@ -497,6 +499,20 @@ fn precise_styled_symbols_on_a_real_gpu() {
         return;
     }
     precision::tiny_symbols_keep_their_height(&mut Gpu::open());
+}
+
+/// The drawing's text on the GPU (docs/adr/9212 §4, stage 1).
+#[test]
+fn glyphs_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    let gpu = Gpu::open();
+    glyphs::a_turned_haloed_text_matches_its_outlines_drawn_whole(&gpu);
+    glyphs::a_text_of_pixels_keeps_its_size_as_a_world_text_grows(&gpu);
+    glyphs::sub_pixel_pans_move_the_text_by_the_pan(&gpu);
+    glyphs::fields_on_many_pages_draw_as_on_one(&gpu);
 }
 
 /// docs/adr/0793 §1 alone: a paper width held on the model screen, on a real GPU.

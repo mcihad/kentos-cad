@@ -1845,7 +1845,7 @@ const VECTOR_LAYERS: usize = 384;
 
 /// A frame's uniform: the camera centre in two float32 parts (docs/adr/0157
 /// §2), so the shader takes it from each batch's tile without losing digits.
-fn frame_uniform(frame: &StyledFrame) -> StyledFrameUniform {
+pub(crate) fn frame_uniform(frame: &StyledFrame) -> StyledFrameUniform {
     let hi = [frame.center[0] as f32, frame.center[1] as f32];
     StyledFrameUniform {
         offset: hi,

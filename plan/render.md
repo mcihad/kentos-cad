@@ -173,7 +173,7 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     sapması ortalama 0,025 px; testere yok.
   - [ ] Desen dolguları (`patternFill`, BÖHHBÜY'de 30 simge, örneğin 0633 bataklık) atlastaki karo bitmap'iyle
     çiziliyor ve yakında büyütülür. Vektöre geçmek, alanla kırpma ister (maske ya da kalıp).
-  - [ ] Yazı işaretleri RM-13'ün glif atlasına (MSDF) geçecek.
+  - [ ] Yazı işaretleri RM-13'ün glif atlasına (SDF, ADR 9212) geçecek.
   - [ ] Asıl madde: İşaret ve simgeler GPU'da örnekli (instanced) çizilir; yol başına 50 000 işaret sınırı kalkar.
 - [ ] **RM-12 — Veri katmanları aynı döşemelere geçer.**
   - PostGIS ve GeoPackage döşeme başına sorgulanır.
@@ -185,7 +185,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   çarpışma yüzünden düşmez. Sahibin seçimi (24 Kasım). Tasarım: [ADR 9212](../docs/adr/9212-drawing-text-on-the-gpu.md).
   Tek kanallı SDF glif atlası; ekranda 512 px'i geçen glif vektör. Yerleşim CPU'da kalıyor, yalnız çizim GPU'ya
   geçiyor.
-  - [ ] Aşama 1: atlas ve gölgelendirici (SDF üretimi, glif örneği, hale, GPU sınaması).
+  - [x] Aşama 1: atlas ve gölgelendirici (ADR 9212 §5).
+    - Alan yapımı 0,24 ms; 22 yüzün Latin ve Türkçe takımı 553 ms, 3 sayfa.
+    - Döndürülmüş, haleli yazı CPU'da bütünüyle çizilmiş referanstan ortalama 0,24 / 255 farklı.
+    - Piksel birimi yakınlaşınca boyunu koruyor; kaydırma float32 adımının altında da kayıpsız.
   - [ ] Aşama 2: nesne yazıları ve parçaları kanvastan çıkar.
   - [ ] Aşama 3: ölçü değerleri, etiketler, eğri boyunca harfler, hücreler, çağrı kutuları.
   - [ ] Aşama 4: kanvas katmanı kalkar; yazılar da canlı kamerayla çizilir.
