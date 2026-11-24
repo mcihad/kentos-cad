@@ -237,6 +237,113 @@ fn kitchen_short(app: &mut App) {
     hover(app, [0.6, 2.2]);
 }
 
+/// docs/adr/9307: the everyday families placed in one plan at 1:100 — an office with a meeting table and workstations,
+/// a classroom, a clinic room, an accessible wet room (clearances shown), a car park's bays and the landscape.
+pub(crate) fn families_plan(app: &mut App) {
+    let mut o = Objects::new();
+    for (x0, y0, x1, y1) in [
+        (0.0, 0.0, 7.0, 5.0),
+        (8.0, 0.0, 15.0, 5.0),
+        (0.0, -7.0, 7.0, -2.0),
+        (8.0, -7.0, 12.5, -2.0),
+    ] {
+        wall(
+            &mut o,
+            &[(x0 - 0.1, y0 - 0.1), (x1 + 0.1, y0 - 0.1), (x1 + 0.1, y1 + 0.1), (x0 - 0.1, y1 + 0.1)],
+            0.2,
+            true,
+        );
+    }
+    let mut put = |layer: &str, name: &str, at: [f64; 2], turn: f64, params: Value| {
+        let i = o.insert(layer, &id_of(name), at, 1.0, turn, false);
+        if !params.is_null() {
+            o.fields(i, json!({ "parameters": params }));
+        }
+    };
+    // Office: the eight-seat table, two workstations on the bottom wall, the archive cabinet on the top one.
+    put("ofis", "Toplantı masası 8 kişilik", [3.5, 3.0], 0.0, Value::Null);
+    put("ofis", "İş istasyonu", [0.1, 0.1], 0.0, Value::Null);
+    put("ofis", "İş istasyonu", [5.2, 0.1], 0.0, Value::Null);
+    put("ofis", "Arşiv dolabı", [6.9, 5.0], PI, json!({ "Genişlik": 1.4 }));
+    // Classroom: the board on the bottom wall, the teacher's desk before it, the pupils' desks facing it.
+    put("okul", "Yazı tahtası", [9.0, 0.0], 0.0, Value::Null);
+    put("okul", "Öğretmen masası", [13.2, 1.4], PI, Value::Null);
+    for (row, y) in [2.4, 3.4, 4.4].into_iter().enumerate() {
+        put("okul", "Öğrenci sırası (çift)", [8.6, y], 0.0, Value::Null);
+        put("okul", "Öğrenci sırası (çift)", [10.9, y], 0.0, Value::Null);
+        if row < 2 {
+            put("okul", "Öğrenci sırası (tek)", [13.3, y], 0.0, Value::Null);
+        }
+    }
+    // Clinic room: the beds' heads on the bottom wall, the couch, the basin.
+    put("saglik", "Hasta yatağı", [0.6, -7.0], 0.0, Value::Null);
+    put("saglik", "Hasta yatağı", [2.0, -7.0], 0.0, Value::Null);
+    put("saglik", "Muayene masası", [3.8, -7.0], 0.0, Value::Null);
+    put("saglik", "Lavabo (sağlık)", [6.2, -7.0], 0.0, Value::Null);
+    // Accessible wet room: the toilet 46 cm from the left wall, the basin, the 150 cm turning circle.
+    let shown = json!({ "Görünüş": "Boşluk zarfı" });
+    put("erisilebilir", "Erişilebilir klozet", [8.46, -7.0], 0.0, shown.clone());
+    put("erisilebilir", "Erişilebilir lavabo", [11.2, -7.0], 0.0, shown);
+    put("erisilebilir", "Dönüş alanı Ø150", [10.1, -4.6], 0.0, Value::Null);
+    // Outside: two cars and two bicycle places, the trees and shrubs.
+    put("park", "Otomobil", [13.4, -7.0], 0.0, Value::Null);
+    put("park", "Otomobil", [15.6, -7.0], 0.0, Value::Null);
+    put("park", "Bisiklet park yeri", [17.8, -7.0], 0.0, Value::Null);
+    put("park", "Bisiklet park yeri", [18.6, -7.0], 0.0, Value::Null);
+    put("bitki", "Ağaç Ø8 m", [19.8, 3.0], 0.0, Value::Null);
+    put("bitki", "Ağaç Ø5 m", [23.0, -3.0], 0.0, Value::Null);
+    put("bitki", "Ağaç Ø3 m", [21.2, -6.0], 0.0, Value::Null);
+    put("bitki", "Çalı", [16.5, -1.4], 0.0, Value::Null);
+    put("bitki", "Çalı", [16.2, -0.2], 0.0, Value::Null);
+    for (x, y, words) in [
+        (0.4, 4.4, "OFİS"),
+        (8.4, 4.6, "DERSLİK"),
+        (0.4, -2.5, "MUAYENE"),
+        (8.4, -2.5, "ERİŞİLEBİLİR WC"),
+    ] {
+        o.text("cizim", [x, y], words, 0.2, 0.0);
+    }
+    open_edited(app, o, |d| {
+        d["layers"] = json!([
+            layer("cizim", "Çizim", "fg", 0.25),
+            layer("duvar", "Duvar", "fg", 0.5),
+            layer("ofis", "Ofis", "#3BA55D", 0.25),
+            layer("okul", "Okul", "#C8A165", 0.25),
+            layer("saglik", "Sağlık", "#D14343", 0.25),
+            layer("erisilebilir", "Erişilebilir", "#12A594", 0.25),
+            layer("park", "Taşıt", "#5B6B8C", 0.25),
+            layer("bitki", "Bitki", "#3BA55D", 0.25),
+        ]);
+        d["blocks"] = library();
+        d["settings"]["plotScale"] = json!(100);
+    });
+    make_cad(app);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: E - 1.0, min_y: N - 8.0, max_x: E + 25.5, max_y: N + 7.5 },
+        24.0,
+    );
+}
+
+/// The Bloklar panel's cards of the accessible wet room's family.
+fn families_cards(app: &mut App) {
+    families_plan(app);
+    run(app, "block.panel");
+    let _ = app.update(Message::BlocksPanel(crate::blocks_panel::Event::Cards(true)));
+    let _ = app.update(Message::BlocksPanel(crate::blocks_panel::Event::Category(
+        Some("Erişilebilir".into()),
+    )));
+}
+
+/// The Bloklar panel's list of the landscape family.
+fn families_list(app: &mut App) {
+    families_plan(app);
+    run(app, "block.panel");
+    let _ = app.update(Message::BlocksPanel(crate::blocks_panel::Event::Cards(false)));
+    let _ = app.update(Message::BlocksPanel(crate::blocks_panel::Event::Category(
+        Some("Peyzaj".into()),
+    )));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("mobilya-daire", flat),
@@ -246,5 +353,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("mutfak-l-yazildi", kitchen_l),
         ("mutfak-kisa", kitchen_short),
         ("mutfak-serit", kitchen_ribbon),
+        ("blok-aileleri", families_plan),
+        ("blok-aileleri-kartlar", families_cards),
+        ("blok-aileleri-liste", families_list),
     ]
 }
