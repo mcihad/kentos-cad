@@ -219,3 +219,23 @@ küçük yazının bantları; SHX ve Unicode profilli yazılar.
     piksel dışında); alt çizgi harflerle ve harfsiz 160 piksel.
 - Masaüstü (`labels::gpu`): maskenin, alt çizginin ve dolgunun yerleri, boşluğun alt çizgisi, paralelkenar olmayan
   dörtgenin kanvasta kalması. Yazı sınamalarının 13'ü geçti.
+
+## §8 Aşama 3, ikinci adım: etiket motorunun etiketleri (24 Kasım 2026)
+
+- **GPU'ya geçenler:** etiket motorunun yerleştirdiği etiketlerin satırları, eğri boyunca harfleri, gölgeleri ve
+  dikdörtgen zeminleri (zemin ve gölgesi, 4 köşeli halka olarak paralelkenar dörtgen).
+- **Kanvasta bütünüyle kalanlar:** yuvarlak ya da elips zeminli etiket. Zemini kanvasta GPU'nun üstüne çizilir; yazısı
+  GPU'ya gitseydi zemin onu örterdi.
+- **Kanvasta kalan çizgiler:** etiketin çerçeve çizgisi, sabitlenmiş etiketin dış çizgisi ve çağrı çizgisi. Yazının
+  yanında dururlar, onu örtmezler. Aşama 4'te GPU'ya geçecekler.
+- **Denetim çizimi** (parsel etiketi “101/7”), kanvas ile GPU:
+  - yakın görünümde dörtte birden fazla sapan 54 piksel, yalnız etiketin harflerinde;
+  - nedeni, kanvasın metin sisteminin taban çizgisini dikeyde tam piksele indirmesi. GPU tam konumunu kullanıyor;
+    fark bir pikselin altında.
+
+**Derleme hızı** (sahibin kararıyla masaüstü paketi artımlı derleniyor):
+
+| Ne | Önce | Sonra |
+|---|---|---|
+| Masaüstü sınama derlemesi, küçük bir değişiklikte | 5 dk 24 sn | 1 dk 8 sn |
+| Masaüstü ikilisi, küçük bir değişiklikte | 2–10 dk | 40 sn |

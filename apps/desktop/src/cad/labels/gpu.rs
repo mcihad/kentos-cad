@@ -82,6 +82,13 @@ impl Sink {
         self.open.set(open);
     }
 
+    /// A label the label engine placed (docs/adr/0212 §3.8): its words, shadows and a rectangle behind it go to the GPU;
+    /// one with a round or elliptic background stays on the canvas whole, or its background, drawn there over the GPU,
+    /// would hide its words. Its outline and callout stay on the canvas beside its words.
+    pub(super) fn frame(&self, round: bool) {
+        self.open.set(!round);
+    }
+
     /// The spots are done: what follows (a text being written, the bands, the marks) stays on the canvas.
     pub(super) fn close(&self) {
         self.open.set(false);
@@ -212,6 +219,12 @@ impl Ink for Split<'_, '_> {
     }
 
     fn fill_ring(&mut self, ring: &[Point], color: Color, of: Option<Slot>) {
+        // A placed label's rectangle (its background, its shadow) as a quad.
+        if let (Some(sink), &[a, b, c, d]) = (self.sink, ring)
+            && sink.quad([a, b, c, d], color, self.view)
+        {
+            return;
+        }
         <Frame as Ink>::fill_ring(self.frame, ring, color, of);
     }
 
