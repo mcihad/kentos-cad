@@ -1,7 +1,7 @@
 {
  "format": "kentos.crs-convert",
  "version": 1,
- "proj": "9.7.1",
+ "proj": "9.8.1",
  "cases": [
   {
    "name": "TUREF TM30'dan ED50 TM30'a",

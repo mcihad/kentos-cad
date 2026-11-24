@@ -4,7 +4,7 @@
   "command": "cad.addresses.define",
   "commandVersion": 1,
   "title": "Adres verisi: projenin adres verisini yaz ya da sil (ADR 0229 §14)",
-  "note": "scripts/fixtures/address_define_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/contracts/src/cad_addresses.rs) KentOS kodu olmadan kurulur, kuralı bozan tanımların sözleri fixtures/geocode/v1/rules.json'dan. `expect.addressLocators` projenin adres verileridir. Adres verisi proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı yazmaz.",
+  "note": "scripts/fixtures/address_define_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/commands/src/gis/cad_addresses.rs) KentOS kodu olmadan kurulur, kuralı bozan tanımların sözleri fixtures/geocode/v1/rules.json'dan. `expect.addressLocators` projenin adres verileridir. Adres verisi proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı yazmaz.",
   "setup": {
     "format": "kentos.document",
     "version": 1,

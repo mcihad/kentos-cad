@@ -1,5 +1,5 @@
 {
-  "producedBy": "python3 scripts/fixtures/v1_identity_reference.py (Python 3.14.4; json, hashlib, uuid, decimal)",
+  "producedBy": "python3 scripts/fixtures/v1_identity_reference.py (Python 3.12.13; json, hashlib, uuid, decimal)",
   "importNamespace": "4a5259a1-97f7-4742-88ce-b747287025ed",
   "cases": [
     {

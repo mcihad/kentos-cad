@@ -1,7 +1,7 @@
 {
  "format": "kentos.service-mvt",
  "version": 1,
- "source": "GDAL 3.12.2: the MVT driver's reader",
+ "source": "GDAL 3.13.3: the MVT driver's reader",
  "tile": [
   14,
   9687,

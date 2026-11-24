@@ -6,8 +6,8 @@ property and quantity sets as the file writes them (its own in the order of thei
 in its HasPropertySets order). The broken files are made here from a sound one, so what is wrong in each is known by
 how it was made: the record and line of a reference to nothing and of a GlobalId said twice.
 
-Writes fixtures/ifc/v1/bozuk/*.ifc and fixtures/commands/v1/cad.ifc.inspect.json; --check compares instead. Runs under
-IfcOpenShell, offline:
+Writes fixtures/ifc/v1/bozuk/*.ifc and fixtures/commands/v1/cad.ifc.inspect.json; --check compares both, writing
+nothing. Runs under IfcOpenShell, offline:
 
     uv run --offline --no-project --python 3.11 --with ifcopenshell==0.9.0.post1 python -I scripts/fixtures/ifc_inspect_cases.py [--check]
 """
@@ -242,19 +242,31 @@ def record_at(lines, step):
     return next(i for i, l in enumerate(lines) if re.match(rf"#{step}\s*=", l))
 
 
+STALE = []  # under --check: the damaged files on disk that are not what broken() makes
+
+
+def put(path, text):
+    """Writes a damaged file; under --check writes nothing and notes the file when it is not this text."""
+    if "--check" in sys.argv:
+        if not path.exists() or path.read_text(encoding="utf-8") != text:
+            STALE.append(path.name)
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
 def broken():
     """Damaged files made from a sound one, and what is wrong in each by how it was made: name -> finding (none: the
     file is refused)."""
-    BROKEN.mkdir(parents=True, exist_ok=True)
     sound = (ROOT / "fixtures" / SOUND).read_text(encoding="utf-8")
     lines = sound.splitlines(keepends=True)
     f = ifcopenshell.open(str(ROOT / "fixtures" / SOUND))
     out = {}
-    (BROKEN / "step-degil.ifc").write_text("Bu bir IFC dosyası değil; bir metin dosyası.\n", encoding="utf-8")
+    put(BROKEN / "step-degil.ifc", "Bu bir IFC dosyası değil; bir metin dosyası.\n")
     out["step-degil"] = None
     schema = re.sub(r"FILE_SCHEMA\s*\(\s*\(\s*'IFC4'\s*\)\s*\)", "FILE_SCHEMA(('IFC9'))", sound, count=1)
     assert schema != sound
-    (BROKEN / "bilinmeyen-sema.ifc").write_text(schema, encoding="utf-8")
+    put(BROKEN / "bilinmeyen-sema.ifc", schema)
     out["bilinmeyen-sema"] = None
     # A reference to a record the file does not hold: the window's representation made #999999.
     window = f.by_type("IfcWindow")[0]
@@ -262,14 +274,14 @@ def broken():
     rep = f"#{window.Representation.id()}"
     assert lines[at].count(rep) == 1
     dangling = lines[:at] + [lines[at].replace(rep, "#999999")] + lines[at + 1:]
-    (BROKEN / "olmayan-basvuru.ifc").write_text("".join(dangling), encoding="utf-8")
+    put(BROKEN / "olmayan-basvuru.ifc", "".join(dangling))
     out["olmayan-basvuru"] = {"code": "reference_missing", "severity": "error", "step": window.id(), "line": at + 1}
     # A GlobalId said twice: the wall's given to the window, the later record.
     wall = f.by_type("IfcWall")[0]
     assert window.id() > wall.id()
     at = record_at(lines, window.id())
     twice = lines[:at] + [lines[at].replace(window.GlobalId, wall.GlobalId, 1)] + lines[at + 1:]
-    (BROKEN / "ayni-globalid.ifc").write_text("".join(twice), encoding="utf-8")
+    put(BROKEN / "ayni-globalid.ifc", "".join(twice))
     out["ayni-globalid"] = {"code": "global_id_duplicate", "severity": "error", "step": window.id(), "line": at + 1}
     return out
 
@@ -347,6 +359,8 @@ def main():
             "setup": SETUP, "cases": cases()}
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
+        if STALE:
+            raise SystemExit(f"{BROKEN} güncel değil ({', '.join(STALE)}): betiği --check olmadan çalıştırıp farkı okuyun.")
         if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
             raise SystemExit(f"{OUT} güncel değil: betiği --check olmadan çalıştırıp farkı okuyun.")
         print(f"{OUT.name}: {len(data['cases'])} durum güncel")
