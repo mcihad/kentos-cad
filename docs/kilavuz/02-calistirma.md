@@ -35,6 +35,8 @@ cargo run -p kentos-ui-showcase -- snapshot model.png --senaryo galeri --sayfa m
 uv run --offline --no-project --python 3.11 --with ifcopenshell==0.9.0.post1 python -I scripts/fixtures/ifc_inspect_cases.py --check   # cad.ifc.inspect'in durumları bağımsız okuyucudan (ADR 8073 §6)
 make test-module MOD=gis   # uygulama katmanının testleri tek modülle: arch | map | gis | road (testler CBS'yi kendileri açar; ADR 8054 §11)
 make fixtures-changed   # yalnız değişenin ortak komut durumları: değişen durum dosyaları ve işleyicisi değişen komutlar, tek disiplinse o modülün derlemesiyle (BASE=origin/main, FILES=a,b; komutlara eşlenemeyen değişiklikte hepsi)
+make fixtures-check     # bütün üreteçlerin --check'i sabit Python ortamında: yeşil, kırmızı, koşamayan (ONLY=ad, JOBS=4; ADR 9303)
+scripts/fixtures/py scripts/fixtures/wall_cases.py --check   # tek üreteç aynı ortamda (Python 3.12.13, scripts/fixtures/uv.lock)
 python3 scripts/fixtures/transform_command_cases.py --check   # cad.entities.transform durumlarını dönüşümlerin tanımından denetle (ADR 0037; Kauçuk levha'nınkiler levhanın çekirdekle aynı işlem sırasıyla Python ikizinden, sheet_f64.py, ADR 0158)
 python3 scripts/fixtures/edit_command_cases.py --check   # cad.entities.edit durumlarını sözleşmenin kuralından denetle (ADR 0047)
 python3 scripts/fixtures/array_command_cases.py --check   # cad.entities.array durumlarını dizilerin tanımından denetle (ADR 0047)
@@ -862,6 +864,13 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
   dosyalarında); yeni test dosyası `tests/all/`'a modül olarak eklenir. Web'in WASM paketleri
   ve derleme betikleri donduruldu (§4); `wasm-bindgen-cli` sürümü yine workspace bağımlılığıyla aynı olmalıdır
   (şu an `0.2.128`). Ağır cargo ve benchmark süreçlerini eşzamanlı koşturmayın.
+- Üreteçler (`scripts/*/*.py`, ortak durumların bağımsız başvuruları) sabit ortamda koşar: `scripts/fixtures/py
+  <betik> [--check]` ortamı `scripts/fixtures/pyproject.toml` ile `uv.lock`'tan `.run/fixtures-py`'ye kurar (uv
+  gerekir; GDAL'ın Python bağı Homebrew'un libgdal'ına karşı derlenir, sürümleri denetlenir). Kılavuzdaki
+  `python3 <betik>` ve `uv run … --with … <betik>` satırlarının betikleri de `scripts/fixtures/py <betik>` ile koşar.
+  Bir başvuru `math.sin`, `tan`, `atan2`,
+  `**` gibi C kütüphanesine giden işlevleri kullanıyorsa `import crmath as math` ile doğru yuvarlanmış karşılıklarını
+  alır; son basamağı sistemden sisteme değişmez (ADR 9303). `--check` hiçbir dosya yazmaz.
 - Ayarlar
   `apps/api/src/config.rs`: ortam değişkenleri, ardından `.env.local`.
   DB bağlantı bilgilerini, OIDC sırlarını ve token'ları log'a/depoya yazmayın;

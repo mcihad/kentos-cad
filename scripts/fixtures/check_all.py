@@ -60,9 +60,11 @@ OTHER_FORM = {
 # What a script that cannot run here says: (pattern, what it needs).
 CANNOT = [
     (re.compile(r"No module named '(qgis)[.']"), "QGIS's Python (not in this environment, ADR 9303)"),
-    (re.compile(r"KentOS'un Python SDK'sı yüklenemedi"), "the KentOS Python SDK built at this commit (maturin, ADR 0131)"),
+    (re.compile(r"KentOS'un Python SDK'sı yüklenemedi"),
+     "the KentOS Python SDK built at this commit (maturin, ADR 0131)"),
     (re.compile(r"(?:ModuleNotFoundError|ImportError): No module named '?([\w.]+)'?"), "the module {0}"),
-    (re.compile(r"psycopg2\.OperationalError|connection to server .* failed|Connection refused"), "a PostgreSQL server"),
+    (re.compile(r"psycopg2\.OperationalError|connection to server .* failed|Connection refused"),
+     "a PostgreSQL server"),
 ]
 
 
