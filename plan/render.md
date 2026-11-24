@@ -153,7 +153,8 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] MSAA'nın payı ölçüldü (ADR 9207 §7): 4× MSAA uzak görünümün işinin üçte biri (NCZ 81 → 55 ms, sivas.kcad
     70 → 42 ms kapalıyken). Çizgiler kenarı gölgelendiricide yumuşattığı için MSAA'ya ihtiyaçları yok.
   - [x] Hareket ederken tek örnek (sahibin kararı, ADR 9207 §8). Durulan kare ayarın örnek sayısıyla çizilir. Öbür
-    sayının hedefleri yedekte. Doğrudan GPU ölçümü sürüm derlemesini bekliyor.
+    sayının hedefleri yedekte. Release ölçümü (24 Kasım): tekerlek karesi NCZ'de 47–55 ms, sivas.kcad'de 42 ms;
+    yazılar GPU'dayken (RM-13) NCZ 40 ms.
   - **Sıradaki:** düzeyleri 2 kat aralıkla sıklaştırmak ve parsel dolgularının uzak düzeyi.
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
@@ -250,6 +251,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [ ] Bölge seçerek açmak (akışlı ve uzamsal süzgeçli): asıl hedef, açık.
 - [ ] **RM-21 — DWG doğrudan eşleme.** DWG kod çözücüsünün nesneleri doğrudan KentOS nesnelerine çevrilir. Bellekteki
   DXF metin köprüsü (270–463 MB) kalkar.
+  - [x] Ön adım ([ADR 9215](../docs/adr/9215-dwg-bridge-written-faster.md)): okunmayan nesneler atılınca nesne haritası
+    küçültülüyor. SİVAS AVM'nin köprü metni 11,3 s yerine 4,9 s'de yazılıyor, metin bayt bayt aynı. Kalan süre
+    kodeğin uzantı sözlüğü aramasında; düzeltme kodekte, sahibin kararı.
 - [~] **RM-22 — Alınmayanlar.** SİVAS AVM'de 8 051 öğe alınmıyor:
   - [x] “Görünmez” bayrağı doğrulandı (24 Kasım), doğru okunuyor:
     - **2 katlı ev:** DWG ve DXF'inde düz nesnelerden hiçbiri görünmez sayılmıyor.
