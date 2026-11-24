@@ -3668,16 +3668,16 @@
         "size": "large"
        },
        {
+        "command": "tool.line",
+        "size": "large"
+       },
+       {
         "command": "tool.polyline",
         "size": "large"
        },
        {
         "command": "tool.polygon",
         "size": "large"
-       },
-       {
-        "command": "tool.line",
-        "size": "small"
        },
        {
         "split": "circle",

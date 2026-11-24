@@ -502,14 +502,9 @@ impl App {
                 let current = active_entry.then(|| entries.iter().position(|e| std::ptr::eq(e, top))).flatten();
                 // A method with its own drawing shows it (Ölçülendirme's kinds); else the command's.
                 let icon = icon.map_or(command.icon, |name| crate::icons::from_web(Some(name)));
-                // As wide as the widest face the family can show (UR2-004): another member on top moves nothing. The
-                // architecture groups name each entry, so their widest would leave Mimari's ribbon short of room at
-                // 1440 px; they keep their own width.
-                let faces = entries
-                    .iter()
-                    .filter(|_| !active_entry)
-                    .map(|entry| ribbon_plan::split_face(&crate::ribbon_bar::split_entry(entry)).0);
-                let face = sized(*size, icon, label).reserve(faces);
+                // As wide as the face it shows (the owner's rule of 24 November 2026): reserving the family's longest
+                // name left empty room beside Dikdörtgen and Köşe yuvarla in every tab.
+                let face = sized(*size, icon, label);
                 // Pressing the top runs its entry and keeps the choice as it is.
                 let run = enabled(command)
                     .filter(|_| self.available(command.id))

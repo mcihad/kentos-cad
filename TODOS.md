@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 9200 (şeridin ana araçları büyük kalır): web'in `Ribbon.fit`'i korunan paneli öbürleri katlanana kadar büyük
+  tutmalı; CBS'nin Düzenle'sinde Oluştur'un dört büyük aracı (Nokta, Çizgi, Çoklu çizgi, Kapalı alan) webde de.
 - Kullanım raporu 2'nin masaüstü düzeltmeleri (`usage-reporting-2.md`): UR2-001'de Çizgi'nin Bitir'i (Enter, kısa sağ tık,
   menü) zinciri bitirip aracı kapatır ([ADR 0018](docs/adr/0018-tool-session-and-input.md) güncellemesi); web'in çizgi
   aracı hâlâ açık kalır, `line-chain`, `point-calc`, `arc-variants`, `usage-blocks-view` izleri yeni davranışı bekler.
@@ -545,6 +547,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - M15 / ADR 8015: `scripts/fixtures/ribbon_cases.py`'nin sekme listesi güncel değil (Arazi, Güzergâh, Koridor, Plan, Ölçme,
   Mimari ve bağlam sekmeleri yok); `--check` HEAD'de de kırmızı, çalıştırılırsa onları `fixtures/shell/v1/ribbon.json`'dan
   siler. Şeridi değiştiren her iş `catalog/v1/ribbon.json`'u elle değil `scripts/ui/ribbon.py` ile yazmalı.
+  ADR 9200 (24 Kasım 2026): `scripts/ui/ribbon.py` de geride: çalıştırılırsa JSON'a elle eklenen 426 satırı siler
+  (`ifc.view`, `arch.ifcExportCut`, `terrain.sheetContours`, `terrain.stockpile`, nokta bulutunun kayıt ve ağ komutları,
+  `file.openReport`, `edit.browseScene`, Mimari'nin kolon, kiriş ve giydirme cephe aileleri …). ADR 9200'ün değişikliği
+  ikisine de yazıldı; betik JSON'la eşitlenmeden `--check` güvenilmez.
 - `cargo clippy` `kentos-formats`'ta duruyor: `formats/src/report.rs:137` `expect("pushed")` (CAD-ADV-17, ADR 1010) crate'in
   `clippy::expect_used` yasağına takılıyor; aşağı akıştaki crate'ler ancak `--no-deps` ile denetlenebiliyor.
 - M14 / ADR 8014: web'in WASM çekirdeği yeniden derlenince TS 5319 desenleri ve SN55 zikzağı webde de çizilir;

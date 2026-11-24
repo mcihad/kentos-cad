@@ -147,8 +147,9 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         self
     }
 
-    /// Öbür paneller yalnız ikona inene kadar büyük düğmelerini korur
-    /// (Giriş'te Çizim ve Değiştir).
+    /// Sekmenin ana araçları: öbür paneller tek düğmeye katlanana kadar büyük
+    /// düğmelerini korur (Giriş'te Çizim ve Değiştir, CBS'nin Düzenle'sinde
+    /// Oluştur ve Değiştir; bkz. [`fit`](super::fit)).
     pub fn keep(mut self, keep: bool) -> Self {
         self.keep = keep;
         self
@@ -216,7 +217,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         !matches!(self.content, Content::Fixed(_))
     }
 
-    /// Öbür paneller yalnız ikona inene kadar büyük düğmelerini korur mu.
+    /// Öbür paneller tek düğmeye katlanana kadar büyük düğmelerini korur mu.
     pub fn keeps(&self) -> bool {
         self.keep
     }
@@ -1006,20 +1007,17 @@ mod tests {
         assert_eq!(tools_width(&[lead()], 2), tools_width(&[icon], 2));
     }
 
-    /// A small split button reserving its family's faces is as wide whichever member is on top, so the panels beside
-    /// it keep their place (UR2-004: Düzgün çokgen moved Çizgi, Taşı and Yazı).
+    /// A small split button is as wide as the face it shows and no wider (the owner's rule of 24 November 2026: no
+    /// space between buttons): its column ends where its longest name does, not where its family's longest would.
     #[test]
-    fn a_reserving_split_is_as_wide_whichever_member_is_on_top() {
-        let faces = ["Dikdörtgen", "Döndürülmüş dikdörtgen", "Düzgün çokgen"];
-        let split = |label: &str| {
-            Button::<()>::small(Icon::Button, label.to_owned()).on_press(()).menu(Menu::new).reserve(faces)
-        };
-        for level in 0..3 {
-            let widths: Vec<f32> = faces.iter().map(|face| tools_width(&[split(face)], level)).collect();
-            assert!(widths.iter().all(|w| *w == widths[0]), "level {level}: {widths:?}");
-        }
-        // Without the reservation the faces differ, as they did.
-        let bare = |label: &str| Button::<()>::small(Icon::Button, label.to_owned()).on_press(()).menu(Menu::new);
-        assert!(tools_width(&[bare("Dikdörtgen")], 1) < tools_width(&[bare("Düzgün çokgen")], 1));
+    fn a_small_split_is_as_wide_as_its_own_face() {
+        let split = |label: &str| Button::<()>::small(Icon::Button, label.to_owned()).on_press(()).menu(Menu::new);
+        let short = tools_width(&[split("Dikdörtgen")], 1);
+        let long = tools_width(&[split("Döndürülmüş dikdörtgen")], 1);
+        assert!(short < long, "{short} {long}");
+        // Its face, its arrow and their paddings: the name's own width and a fixed rest.
+        let name = |s: &str| typography::measured_width(s, typography::caption(), false);
+        let rest = short - name("Dikdörtgen");
+        assert!((long - name("Döndürülmüş dikdörtgen") - rest).abs() < 0.01, "{short} {long}");
     }
 }

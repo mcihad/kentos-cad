@@ -563,9 +563,9 @@ GIS = [
           launcher=toCmd("crs.set", "Proje ayarları: koordinat sistemi")),
     ]),
     # Parsel oluştur and Plan yolu are KentOS Harita's drafting (docs/adr/0802): a CBS parcel is a Kapalı alan with
-    # its layer's form.
+    # its layer's form. A layer's four kinds of object are drawn with four large tools (docs/adr/9200 §3).
     T("edit", "Düzenle", [
-        P("Oluştur", "line", [L("tool.point"), L("tool.polyline"), L("tool.polygon"), S("tool.line"), SP("circle"),
+        P("Oluştur", "line", [L("tool.point"), L("tool.line"), L("tool.polyline"), L("tool.polygon"), SP("circle"),
             SP("rectangle"), S("tool.adjoin"), S("tool.text")],
           overflow=["tool.arc", "tool.ellipse", "tool.spline", "tool.vertexPoints", "tool.divide", "tool.pointsBetween",
             "tool.intersectPoint", "tool.centerline", "tool.sector", "tool.rangeRings", "tool.fourthCorner"], keep=True),

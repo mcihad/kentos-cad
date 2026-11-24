@@ -387,9 +387,11 @@ mod tests {
         }
     }
 
-    /// UR2-004: at one window width, Düzgün çokgen chosen from Dikdörtgen's list moves none of Giriş's other buttons.
+    /// UR2-004 under the owner's rule of 24 November 2026 (no room kept between buttons, the main tools large): at one
+    /// window width, Düzgün çokgen chosen from Dikdörtgen's list is named on its face and leaves Çizim's large tools
+    /// where they were; the buttons after it make room for the longer name, no panel's large tools go small for it.
     #[test]
-    fn choosing_a_method_moves_no_other_ribbon_button() {
+    fn choosing_a_method_leaves_the_main_tools_in_place() {
         use kentos_ui::snapshot::Snapshot;
         use kentos_ui::theme::typography::{self, Typography};
 
@@ -428,12 +430,15 @@ mod tests {
             } else {
                 crate::files_testing::evidence(&mut snapshot, &app, "ur2-004", "acilis");
             }
-            ["Çizgi", "Nokta", "Taşı", "Yazı", "Yeni katman"]
-                .map(|caption| crate::files_testing::find_text(&mut snapshot, &app, caption).map(|r| (r.x, r.y, r.width)))
+            let face = crate::files_testing::find_text(&mut snapshot, &app, "Düzgün çokgen").is_some();
+            let places = ["Çizgi", "Çoklu çizgi", "Nokta"]
+                .map(|caption| crate::files_testing::find_text(&mut snapshot, &app, caption).map(|r| (r.x, r.y, r.width)));
+            (face, places)
         };
-        let (before, after) = (places(false), places(true));
+        let ((named_before, before), (named_after, after)) = (places(false), places(true));
         assert!(before.iter().all(Option::is_some), "{before:?}");
-        assert_eq!(before, after, "the buttons stay where they were");
+        assert!(!named_before && named_after, "the face names the member chosen");
+        assert_eq!(before, after, "Çizim's large tools stay where they were");
     }
 
     #[test]

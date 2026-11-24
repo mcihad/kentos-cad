@@ -109,20 +109,53 @@ fn panels_step_down_from_the_right_and_giris_keeps_its_drawing_tools() {
     let last = levels.len() - 1;
     assert!(levels[last] > 0, "{levels:?}");
     assert!(levels[..last].iter().all(|&l| l == 0), "{levels:?}");
-    // Narrow: the kept panels are the last to lose their large buttons: the others are small and named, or folded
-    // into their named button, first (no icon-only step, DESIGN.md §7.3.1).
+    // Narrow: the kept panels are the last to lose their large buttons (the owner's rule of 24 November 2026: the most
+    // important tools are large): every other panel is folded into its named button first (no icon-only step,
+    // DESIGN.md §7.3.1).
     let (levels, _) = ribbon::fit(&widths, &keep, 1100.0);
     for (i, &kept) in keep.iter().enumerate() {
         if kept && levels[i] > 0 {
-            // A panel whose small step saves nothing is small already: `fit` takes no step that saves less than
-            // half a pixel. Its small step may even be wider (CAD Giriş's third panel: 246.0 against 245.34, so the
-            // test failed while the ribbon did right: it keeps the large one, no wider).
-            let small = |j: usize| levels[j] >= 1 || widths[j][1] > widths[j][0] - 0.5;
+            // A panel whose fold saves nothing stays as it is: `fit` takes no step that saves less than half a pixel.
+            let folded = |j: usize| levels[j] == 3 || widths[j][3] > widths[j][usize::from(levels[j])] - 0.5;
             assert!(
-                (0..levels.len()).all(|j| keep[j] || small(j)),
-                "a kept panel shrank before the others went small: {levels:?}"
+                (0..levels.len()).all(|j| keep[j] || folded(j)),
+                "a kept panel shrank before the others folded: {levels:?}"
             );
         }
+    }
+    // At 1440 px, as at 1100, Çizim's main tools are large (the fit made them small at 1440 px and large at 1100 px).
+    for width in [1100.0, 1440.0] {
+        let (levels, _) = ribbon::fit(&widths, &keep, width);
+        assert_eq!(levels[0], 0, "Çizim at {width} px: {levels:?}");
+    }
+}
+
+/// CBS's Düzenle draws a layer's four kinds of object with four large tools, Nokta, Çizgi, Çoklu çizgi and Kapalı alan
+/// (the owner's word of 24 November 2026), and keeps them large at 1100 and 1440 px: Oluştur is the tab's kept panel.
+#[test]
+fn cbs_draws_a_layers_four_kinds_with_large_tools() {
+    use crate::catalog::{Item, Size};
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    typography::set(Typography::DEFAULT);
+    typography::load();
+    let mut app = app_with_drawing();
+    let _ = app.update(Message::Run("workspace.gis"));
+    let tab = app.ribbon_tabs().find(|t| t.id == "edit").expect("Düzenle");
+    let shown: Vec<_> = tab.panels.iter().filter(|p| app.ribbon_group("edit", p).is_some()).collect();
+    let at = shown.iter().position(|p| p.label == "Oluştur").expect("Oluştur");
+    let large: Vec<&str> = shown[at]
+        .items
+        .iter()
+        .filter_map(|i| match i {
+            Item::Command { id, size: Size::Large } => Some(*id),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(large, ["tool.point", "tool.line", "tool.polyline", "tool.polygon"]);
+    for width in [1100.0, 1440.0] {
+        let (levels, overflow) = fitted(&app, "edit", width);
+        assert!(!overflow, "{width}: {levels:?}");
+        assert_eq!(levels[at], 0, "Oluştur at {width} px: {levels:?}");
     }
 }
 
@@ -442,4 +475,64 @@ fn a_menu_s_rows_do_not_repeat_its_name() {
     }
     // Tadilat's four and Kat görünümü's three.
     assert!(seen >= 7, "{seen}");
+}
+
+/// Each module's ribbon for the owner (the owner's rule of 24 November 2026: the main tools large, no room between
+/// buttons): CBS, Mimari, Harita and Yol, three of their tabs each at 1100, 1440 and 1600 px, light, into
+/// `.run/gui-evidence/kullanim-9200/<KENTOS_SHOT_STAGE or sonra>/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib ribbon_tests::module_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn module_screens() {
+    use kentos_commands::{CadWork, Workspace};
+    use kentos_ui::snapshot::Snapshot;
+
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    typography::set(Typography::DEFAULT);
+    typography::load();
+    let stage = std::env::var("KENTOS_SHOT_STAGE").unwrap_or_else(|_| "sonra".to_owned());
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9200")
+        .join(stage);
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let modules: [(&str, Workspace, Option<CadWork>, &[&str]); 4] = [
+        ("cbs", Workspace::Gis, None, &["map", "edit", "data"]),
+        ("mimari", Workspace::Cad, Some(CadWork::Architecture), &["home", "modify", "arch"]),
+        ("harita", Workspace::Cad, Some(CadWork::Map), &["home", "plan", "survey"]),
+        ("yol", Workspace::Cad, Some(CadWork::Road), &["home", "terrain", "alignment"]),
+    ];
+    for (name, workspace, work, tabs) in modules {
+        let mut app = app_with_drawing();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from("light"))]);
+        app.apply_settings();
+        {
+            let doc = app.document.as_mut().expect("a drawing");
+            let mut settings = doc.settings().clone();
+            settings.workspace = Some(workspace);
+            settings.cad_work = work;
+            doc.model.set_settings(settings);
+        }
+        for tab in tabs {
+            if app.ribbon_tabs().all(|t| t.id != *tab) {
+                println!("{name}: no {tab} tab");
+                continue;
+            }
+            app.tab = tab;
+            for width in [1100.0, 1440.0, 1600.0] {
+                let size = Size::new(width, 240.0);
+                let _ = app.update(Message::WindowResized(size));
+                let mut snapshot = Snapshot::new(size).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("{name}-{tab}-{width}.png"));
+                snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
+    }
 }

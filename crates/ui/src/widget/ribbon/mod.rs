@@ -614,12 +614,14 @@ fn fitted<'a, Message: Clone + 'a>(
 
 /// Her panelin seviyesini genişliğe göre seçer (web'in `Ribbon.fit`'i):
 /// her panel bir adım inmeden hiçbiri iki adım inmez, önce en sağdaki.
-/// `keep` paneller öbürleri yalnız ikona inene kadar büyük düğmelerini
-/// korur; yalnız tek düğmeye katlanmak onlardan önce gelir. Genişlik
-/// kazandırmayan adım atlanır. Son adımdan artan yer geri verilir: önce
-/// `keep` paneller, sonra soldan sağa, her panel hâlâ sığan en büyük hâline
-/// döner; böylece daha çok düğme adıyla görünür. `widths[i][l]`: panelin `l`
-/// seviyesindeki genişliği. Sonuç seviyeler ve en küçük hâlin de sığmadığı.
+/// `keep` paneller (sekmenin ana araçları: Çizim, Oluştur, Değiştir) büyük
+/// düğmelerini öbür paneller tek düğmeye katlanana kadar korur; önce küçük
+/// etiketliye iner, en son katlanırlar (sahibin kuralı, 24 Kasım 2026: “en
+/// önemli araçlar büyük olur”). Genişlik kazandırmayan adım atlanır. Son
+/// adımdan artan yer geri verilir: önce `keep` paneller, sonra soldan sağa,
+/// her panel hâlâ sığan en büyük hâline döner; böylece daha çok düğme adıyla
+/// görünür. `widths[i][l]`: panelin `l` seviyesindeki genişliği. Sonuç
+/// seviyeler ve en küçük hâlin de sığmadığı.
 pub fn fit(widths: &[[f32; 4]], keep: &[bool], available: f32) -> (Vec<u8>, bool) {
     let mut levels = vec![0u8; widths.len()];
     let mut total: f32 = widths.iter().map(|w| w[0]).sum();
@@ -628,7 +630,8 @@ pub fn fit(widths: &[[f32; 4]], keep: &[bool], available: f32) -> (Vec<u8>, bool
         (levels[i] + 1..=3).find(|&l| widths[i][usize::from(l)] < here - 0.5)
     };
     let kept = |i: usize| keep.get(i).copied().unwrap_or(false);
-    let rank = |i: usize, l: u8| f32::from(l) + if kept(i) && l < 3 { 1.5 } else { 0.0 };
+    // A kept panel's every step after every other panel's (whose last, the fold, is 3); its own fold last of all.
+    let rank = |i: usize, l: u8| f32::from(l) + if kept(i) { 3.5 } else { 0.0 };
     // Tutulmayanlar önce, sağdaki önce.
     let mut order: Vec<usize> = (0..widths.len()).collect();
     order.sort_by_key(|&i| (kept(i), std::cmp::Reverse(i)));
@@ -882,4 +885,30 @@ pub(crate) fn flashed<'a, Message: 'a>(
             }),
     ]
     .into()
+}
+
+#[cfg(test)]
+mod fit_tests {
+    use super::fit;
+
+    /// A tab's main tools (a kept panel) stay large while another panel can still fold (the owner's rule of 24 November
+    /// 2026): the other panels go small, then fold, right first; only then does the kept panel go small, and it folds
+    /// last of all. Each level's width: large, small, icons (as small: no icon-only step), folded.
+    #[test]
+    fn a_kept_panel_stays_large_until_the_others_fold() {
+        let widths = [[300.0, 200.0, 200.0, 80.0], [250.0, 180.0, 180.0, 70.0], [200.0, 150.0, 150.0, 60.0]];
+        let keep = [true, false, false];
+        assert_eq!(fit(&widths, &keep, 750.0), (vec![0, 0, 0], false));
+        // The rightmost steps down first.
+        assert_eq!(fit(&widths, &keep, 700.0), (vec![0, 0, 1], false));
+        // Before the kept panel's large tools go small, the others fold (once its tools were small: [1, 1, 1]).
+        assert_eq!(fit(&widths, &keep, 600.0), (vec![0, 1, 3], false));
+        assert_eq!(fit(&widths, &keep, 450.0), (vec![0, 3, 3], false));
+        // Every other panel folded: now it goes small, and it folds last.
+        assert_eq!(fit(&widths, &keep, 400.0), (vec![1, 3, 3], false));
+        assert_eq!(fit(&widths, &keep, 220.0), (vec![3, 3, 3], false));
+        assert_eq!(fit(&widths, &keep, 200.0), (vec![3, 3, 3], true));
+        // Without a kept panel, as before: every panel small before any folds, the room left given back from the left.
+        assert_eq!(fit(&widths, &[false; 3], 600.0), (vec![1, 0, 1], false));
+    }
 }

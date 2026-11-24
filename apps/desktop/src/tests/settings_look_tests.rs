@@ -92,6 +92,9 @@ fn the_pickers_write_the_schemas_values() {
 
 #[test]
 fn a_click_on_a_card_a_swatch_or_a_step_writes_the_draft() {
+    // The words are found where they are drawn: another test changing the shared type size meanwhile moved them.
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    kentos_ui::theme::typography::set(kentos_ui::theme::typography::Typography::DEFAULT);
     let (mut app, mut snapshot) = opened(Size::new(1440.0, 900.0), &[]);
     assert_eq!(draft(&app, "appearance.theme"), Value::from("dark"));
 
