@@ -268,9 +268,58 @@ GPU p50; `docs/perf/files-desktop-msaa{1,4}-2026-11-24.json`):
   bu.
 - MSAA yalnız dolgu kenarları ve SVG simgelerinin vektörleri (ADR 9208) için gerekli.
 
+## §8 Hareket ederken tek örnek (24 Kasım 2026)
+
+**Sahibin kararı** (24 Kasım 2026): §7'nin ölçümü üzerine sorulan “hareket sırasında tek örnekle çizip durunca ayardaki
+kaliteyle yeniden çizmek” seçeneği seçildi. Ayar eklenmedi; davranış bu ADR'de ve ayarın açıklamasında yazılı.
+
+**Karar:**
+
+- Çizim alanı, görünüm hareket ederken tek örnekle çizer (`viewport::drawn_with`). Hareket: tekerlek, orta tuşla
+  kaydırma ve ikisinin ardından sembollerin durulma süresi; canlı kameranın jesti (ADR 9205) ya da uygulamanın
+  `Viewport::moving`'i.
+- Durulan kare ayarın örnek sayısıyla çizilir. Saklanan resmin anahtarı hareketi içerdiği için (ADR 1067) bu kare
+  baştan çizilir; hareketin tek örnekli resmi durulmuş resim yerine hiç gösterilmez.
+- Çizgiler kenarlarını gölgelendiricide yumuşattığı için hareket ederken değişmezler. Yalnız dolgu kenarları ve SVG
+  simgelerinin vektörleri (ADR 9208) hareket boyunca basamaklı görünür.
+- **Hedefler iki kez ayrılmasın diye** çizici öbür örnek sayısının hedeflerini yedekte tutar (`ViewState::spare`).
+  Örnek sayısı geri dönünce yedeği alır ve o hedeflerin sakladığı resim, anahtarı tutuyorsa yeniden kullanılır. Yeni
+  boy ya da ölçek yedeği düşürür.
+- Büyüteç penceresi ve pafta çıktısı etkilenmez.
+
+**Sınamalar:**
+
+- `viewport::tests::a_moving_view_draws_with_one_sample_and_a_settled_one_with_the_settings`;
+- GPU'da (`KENTOS_GPU_TESTS=1`): 4×, 1×, yine 4×. Üçüncü kare yedekteki resmi kullanır ve pikselleri bütünüyle
+  çizilmiş kareyle aynıdır.
+
+**Ölçüm:**
+
+- Hareket kareleri tek örnekle çiziliyor. `KENTOS_PERF_TRACE_VIEW` artık karenin örnek sayısını yazıyor ve yoğun
+  yapay çizimin (ADR 9208) bütün tekerlek karelerinde `örnek 1` çıkıyor.
+- Durulma güvende: `settle_at`, uygulamanın `moved_until`'ini içeriyor. O an `Event::Settled` yayınlanır ve kare
+  ayarın örnek sayısıyla çizilir.
+- Bu karelerin GPU süresinin §7'nin MSAA kapalı ölçümündeki gibi olması beklenir: NCZ 81 → 55 ms, sivas.kcad
+  70 → 42 ms. Bu bir çıkarımdır; doğrudan ölçüm için gereken sürüm derlemesi 24 Kasım'da bellek azaldığı için
+  durduruldu ve sahibin onayını bekliyor.
+- Gerçek pencere (Xvfb, debug + lavapipe, `.run/gui-evidence/render/hareket`): durulmuş kare önce ve sonra aynı
+  (31 269 renk). Hareket kareleri bu ortamda çok yavaş çizildiği için yakalanan kareler hareket bittikten sonraya
+  düşüyor; tek örneği göstermedi.
+
+**Doğruluk denetçisi** (RM-02): hareket karelerinin kenarları artık ikizinden (her zaman ayardaki örnek sayısı) farklı.
+Denetçi bayat resim aradığı için `KENTOS_PERF_SETTINGS=graphics.msaa=1` ile iki uygulamada da tek örnekle koşulur.
+
+**GPU sınamaları hakkında bir not:** `crates/render/wgpu/tests/gpu.rs` yalnız `KENTOS_GPU_TESTS=1` ile koşar, yoksa
+atlanır. Bu dalın önceki ADR'lerinde (9205–9208) “çizicinin sınamaları geçti” denen koşular GPU sınamalarını
+içermiyordu. Bu adımda koşuldular. HiDPI sınamasının hedef boyu beklentisi, 6 Kasım'dan beri (ADR 1068: taşınan parça
+ve geniş resim) eskiydi ve düzeltildi. Hedefler tek örnekte üç resim tutuyor, sınamanın amacı (mantıksal boyut) aynı.
+
 ## Uygulama
 
 - `crates/native/style/src/far_levels.rs` (yeni), `batches.rs` (`decode`), `lib.rs`.
+- §8: `apps/desktop/src/shell/viewport/mod.rs` (`drawn_with`), `crates/render/wgpu/src/renderer.rs`
+  (`ViewState::spare`), ayarın açıklaması (`crates/shared/contracts/src/core/settings/schema.rs` ve üretilen
+  `apps/web/src/contracts/generated/settingsSchema.json`), `perf/large.rs` (izde örnek sayısı), sınamalar.
 - §7: `far_levels.rs` (`simplified`, `peucker`, `distance2`, `SIMPLIFY_SHARE`).
 - §6: `far_levels.rs` (`source`, `per`), `batches.rs` (`Lod.ceilings` vektör, `Lod.alone`, `Lod::ranges`), `gpu.rs`
   (tanının tavan karşılaştırması `ends_with`; `KENTOS_DIAG_ITEMS`: bir karenin çizilen öğeleri türe, düzeye ve boya

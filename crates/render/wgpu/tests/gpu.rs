@@ -613,6 +613,29 @@ fn a_kept_picture_is_composed_again_with_the_hover_over_it(gpu: &mut Gpu) {
         camera.center.x -= 1.0;
     }
     eprintln!("kept picture on the GPU: composed again, the hover drawn over it, 1× and 4×");
+    // A view that moves draws with one sample and its settled frame with four (docs/adr/9207 §8): back at four, the
+    // targets it had keep their picture, the same pixels as drawn whole.
+    let mut settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
+    settings.samples = 4;
+    gpu.keep = false;
+    gpu.overlays = 0;
+    let whole = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+    gpu.keep = true;
+    gpu.overlays = 1;
+    let kept = |gpu: &Gpu| gpu.renderer.stats(1).expect("stats").picture_kept;
+    let first = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+    assert_eq!(first, whole);
+    settings.samples = 1;
+    let moving = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+    assert!(!kept(gpu), "one sample: its own targets, drawn");
+    settings.samples = 4;
+    let settled = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
+    assert!(kept(gpu), "four samples again: the targets kept aside, with their picture");
+    assert_eq!(settled, whole, "the same pixels as drawn whole");
+    assert_eq!(moving.len(), whole.len());
+    gpu.keep = false;
+    gpu.overlays = 0;
+    eprintln!("sample switch on the GPU: the other count's targets kept aside and their picture with them");
 }
 
 /// One grey square turned by 30° on black: its edges cross pixels at every
@@ -752,10 +775,11 @@ fn hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(gpu: &mut Gpu) {
     camera.height = 64.0;
     let rgba = gpu.draw_scaled(&[&fixed], &camera, &settings, 128, 128, 2.0);
     let stats = gpu.renderer.stats(1).expect("stats");
+    // The picture, the moved part and the wide picture (docs/adr/1067, 1068), each at the logical size.
     assert_eq!(
         stats.target_bytes,
-        64 * 64 * 4,
-        "one picture at the logical size"
+        3 * 64 * 64 * 4,
+        "the pictures at the logical size"
     );
     assert!(
         !rgba.chunks(4).any(|p| p == [255, 0, 0, 255]),

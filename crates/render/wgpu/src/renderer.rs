@@ -359,7 +359,15 @@ impl Renderer {
                 .targets
                 .as_ref()
                 .is_some_and(|t| t.size == size && t.samples == samples && t.scaled == scaled);
-            if !current {
+            let spare = state
+                .spare
+                .as_ref()
+                .is_some_and(|t| t.size == size && t.samples == samples && t.scaled == scaled);
+            if !current && spare {
+                // Back to the other sample count: its targets, with the picture they kept.
+                std::mem::swap(&mut state.targets, &mut state.spare);
+                state.working = samples;
+            } else if !current {
                 let made = make_targets(
                     device,
                     &mut self.pipelines,
@@ -371,7 +379,9 @@ impl Renderer {
                 );
                 match made {
                     Ok(targets) => {
-                        state.targets = Some(targets);
+                        // A switch of the sample count keeps the other targets; a new size or scale drops them.
+                        let old = state.targets.replace(targets);
+                        state.spare = old.filter(|t| t.size == size && t.scaled == scaled);
                         state.working = samples;
                     }
                     Err(error) => {
@@ -407,6 +417,7 @@ impl Renderer {
         } else {
             // Dropped: wgpu frees the textures once the frames using them are done.
             state.targets = None;
+            state.spare = None;
             state.working = 1;
         }
         state.own = state.targets.is_some();
@@ -1263,6 +1274,9 @@ struct View {
     error: Option<RenderError>,
     /// The view's own targets, when it draws into them.
     targets: Option<Targets>,
+    /// The targets of the other sample count, kept for the next switch: a moving view draws with one sample and its
+    /// settled frame with the setting's (docs/adr/9207 §8), twice a gesture.
+    spare: Option<Targets>,
     /// Whether this frame draws into `targets` (`render`) rather than the host's pass (`draw`).
     own: bool,
     /// The last sample count the view's targets were made with.
@@ -1393,6 +1407,7 @@ impl View {
             idle: 0,
             error: None,
             targets: None,
+            spare: None,
             own: false,
             working: 1,
             failed: None,

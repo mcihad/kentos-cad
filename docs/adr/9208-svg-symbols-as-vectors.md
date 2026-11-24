@@ -100,7 +100,8 @@ yakınlaştırılınca simgenin kenarı yaklaşık 300 piksel genişliğinde bir
   (yüksek DPI dahil);
 - ekran ölçülü ve okunamayan simgeler bitmap'te kalır.
 
-Yerel stilin (55 + 51 + 4), çizicinin (98) ve plot'un (22) bütün sınamaları geçti.
+Yerel stilin (55 + 51 + 4), çizicinin (98) ve plot'un (22) bütün sınamaları geçti. O koşularda çizicinin GPU sınamaları
+(`KENTOS_GPU_TESTS=1` ister) atlanmıştı. 24 Kasım'da bu kodla koşuldular ve geçtiler (ADR 9207 §8).
 
 **Gerçek pencere** (Xvfb, lavapipe, `.run/gui-evidence/render/rm11/{once,sonra}`): sınama çizimi 380 m'lik bir 0807
 hattı. Önce tümü gösterildi, ardından ortadaki şerareye 8, 4, 4 ve 8 çentik yakınlaşıldı.

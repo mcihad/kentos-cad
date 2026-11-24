@@ -231,9 +231,10 @@ pub(super) fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'stat
                 if tell {
                     let s = app.viewport.status().stats;
                     println!(
-                        "tekerlek: GPU {:.2} ms, MİB {:?}, ölçeklendi {}, tutuldu {}, yüklenen {} B, çizim çağrısı {}, stilli öğe {}, ölçek {:.4}",
+                        "tekerlek: GPU {:.2} ms, MİB {:?}, örnek {}, ölçeklendi {}, tutuldu {}, yüklenen {} B, çizim çağrısı {}, stilli öğe {}, ölçek {:.4}",
                         f.gpu_ms(),
                         f.split().map(|x| (x * 10.0).round() / 10.0),
+                        s.samples,
                         s.picture_zoomed,
                         s.picture_kept,
                         s.uploaded_bytes,

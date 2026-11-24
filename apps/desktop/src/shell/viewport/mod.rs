@@ -734,17 +734,18 @@ impl shader::Program<Message> for Program {
     fn draw(&self, _state: &Gesture, _cursor: mouse::Cursor, _bounds: Rectangle) -> Frame {
         // The live camera: a gesture's frames are drawn without the app's view (live.rs).
         let camera = self.live.camera();
+        let moving = self.moving || self.live.moving();
         Frame {
             id: self.id,
             parts: self.parts.clone(),
             origin: self.origin,
             camera,
-            settings: self.settings,
+            settings: drawn_with(self.settings, moving),
             status: self.status.clone(),
             styled: self.styled.clone(),
             images: self.images.clone(),
             lens: false,
-            moving: self.moving || self.live.moving(),
+            moving,
             drawing: self.drawing,
             keep: self.keep,
         }
@@ -933,6 +934,14 @@ pub(crate) fn wheel_steps(delta: &mouse::ScrollDelta) -> f64 {
 }
 
 /// One frame of the drawing area, handed to the renderer.
+/// The settings a frame of the drawing area is drawn with: one sample while the view moves (docs/adr/9207 §8). The
+/// strokes smooth their own edges, and blending them into four samples was a third of a far view's frame on the GPU
+/// (81 → 55 ms, the city plan NCZ). The settled frame has the setting's count and is drawn whole again: its picture's
+/// key holds whether the view moved.
+fn drawn_with(settings: RenderSettings, moving: bool) -> RenderSettings {
+    if moving { RenderSettings { samples: 1, ..settings } } else { settings }
+}
+
 pub struct Frame {
     id: ViewId,
     parts: [Arc<ScenePart>; 7],

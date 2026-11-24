@@ -152,8 +152,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     NCZ'de 81,5 → 74,9 ms, sivas.kcad'de 69,9 → 67,3 ms. Yarım piksel kuralı içinde kazanç küçük.
   - [x] MSAA'nın payı ölçüldü (ADR 9207 §7): 4× MSAA uzak görünümün işinin üçte biri (NCZ 81 → 55 ms, sivas.kcad
     70 → 42 ms kapalıyken). Çizgiler kenarı gölgelendiricide yumuşattığı için MSAA'ya ihtiyaçları yok.
-  - **Sıradaki (sahibin kararı bekleniyor):** hareket sırasında tek örnekle çizmek. Ayrıca düzeyleri 2 kat aralıkla
-    sıklaştırmak ve parsel dolgularının uzak düzeyi.
+  - [x] Hareket ederken tek örnek (sahibin kararı, ADR 9207 §8). Durulan kare ayarın örnek sayısıyla çizilir. Öbür
+    sayının hedefleri yedekte. Doğrudan GPU ölçümü sürüm derlemesini bekliyor.
+  - **Sıradaki:** düzeyleri 2 kat aralıkla sıklaştırmak ve parsel dolgularının uzak düzeyi.
   - Kalan, aşağıdaki asıl madde:
   - Her düzey ekran toleransıyla sadeleştirilir.
   - 1 pikselden küçük nesne düşmez, bir piksel olarak çizilir.
