@@ -3802,6 +3802,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tiny-skia",
+ "ttf-parser",
  "wgpu",
 ]
 
