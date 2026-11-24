@@ -6,6 +6,7 @@ use kentos_commands::CallOp;
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, registry};
+use crate::arch::ArchState;
 
 use super::STALE;
 use crate::app::App;
@@ -53,7 +54,7 @@ impl App {
         );
         match answer {
             Ok(v) if v["status"] == "completed" => {
-                self.arch.arch_audit.chosen.clear();
+                self.modules.arch_mut().arch_audit.chosen.clear();
                 // A dimension's tie undone measures on from the old place (UR-025): said as what it is, not fixed.
                 if command == kentos_commands::CAD_DIMENSIONS_REASSOCIATE {
                     self.say(
@@ -88,7 +89,7 @@ impl App {
     /// İstisna yap's note given: the chosen findings that are no exceptions yet marked through `cad.arch.exceptions`,
     /// with the note when one is written; one undo step; the drawing checked again (docs/adr/0732 §3).
     pub(super) fn arch_audit_except(&mut self) {
-        let Some(note) = self.arch.arch_audit.note.take() else {
+        let Some(note) = self.modules.arch_mut().arch_audit.note.take() else {
             return;
         };
         if self.arch_audit_stale() {
@@ -106,7 +107,7 @@ impl App {
         }
         // A standards package's finding is given as the package answered (docs/adr/8078).
         let given: Vec<&kentos_commands::ArchAuditFinding> =
-            self.arch.arch_audit.standards.iter().filter(|f| keys.contains(&f.key)).collect();
+            self.modules.arch().arch_audit.standards.iter().filter(|f| keys.contains(&f.key)).collect();
         let mut input = serde_json::json!({
             "operation": "mark",
             "keys": keys,
@@ -177,7 +178,7 @@ impl App {
                 return;
             }
         }
-        self.arch.arch_audit.chosen.clear();
+        self.modules.arch_mut().arch_audit.chosen.clear();
         self.arch_audit_check();
     }
 

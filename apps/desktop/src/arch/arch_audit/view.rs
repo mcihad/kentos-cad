@@ -12,6 +12,7 @@ use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, Table};
 use kentos_ui::widget::{Elided, Tip, horizontal_divider, tip};
+use crate::arch::ArchState;
 
 use super::{
     ALL, AREAS, AuditScope, CLEARS, BUTTONS, CHECK, CHECK_HINT, CLEAN, COLUMNS, EXCEPT, EXCEPT_HINT, Event,
@@ -32,7 +33,7 @@ impl App {
         let bar = iced::widget::responsive(move |room| self.arch_audit_bar(room.width))
             .height(Length::Shrink);
         let stale = self.arch_audit_stale();
-        let audited = self.arch.arch_audit.audited.as_ref();
+        let audited = self.modules.arch().arch_audit.audited.as_ref();
         let shown = self.arch_audit_shown();
         let columns = COLUMNS.iter().enumerate().map(|(i, title)| {
             let share = match i {
@@ -43,7 +44,7 @@ impl App {
                 _ => Length::FillPortion(2),
             };
             // A column dragged wider keeps its width (docs/adr/8034): a regulation finding ends with its article.
-            let width = self.arch.arch_audit.columns[i].map_or(share, Length::Fixed);
+            let width = self.modules.arch().arch_audit.columns[i].map_or(share, Length::Fixed);
             let column = TableColumn::new(*title).width(width);
             if i == 0 {
                 column.align_right()
@@ -102,9 +103,9 @@ impl App {
                             objects,
                         ],
                         ink,
-                        chosen: self.arch.arch_audit.selected == Some(i)
-                            || self.arch.arch_audit.chosen.contains(&i),
-                        current: self.arch.arch_audit.selected == Some(i),
+                        chosen: self.modules.arch().arch_audit.selected == Some(i)
+                            || self.modules.arch().arch_audit.chosen.contains(&i),
+                        current: self.modules.arch().arch_audit.selected == Some(i),
                         fix: f.fix.as_ref().map(|x| x.label.clone()),
                         exception: f.exception || f.lapsed,
                     }
@@ -113,7 +114,7 @@ impl App {
         });
         let first = lines.iter().position(|l| l.current);
         let count = lines.len();
-        let many = self.arch.arch_audit.chosen.len() > 1;
+        let many = self.modules.arch().arch_audit.chosen.len() > 1;
         let table = Table::new(columns)
             .virtualized(count, move |i| {
                 let line = &lines[i];
@@ -201,7 +202,7 @@ impl App {
             );
         }
         // The rule set by the application date (docs/adr/8078): which version of each article was read and its outcome.
-        if let Some(set) = self.arch.arch_audit.rule_set.as_ref().filter(|s| !s.rules.is_empty()) {
+        if let Some(set) = self.modules.arch().arch_audit.rule_set.as_ref().filter(|s| !s.rules.is_empty()) {
             out = out.push(
                 container(
                     row![
@@ -217,7 +218,7 @@ impl App {
         }
         // The last delivered model (docs/adr/8116): which model the EK-9 form read, how the drawing differs from the
         // delivered one, and the other model a press away.
-        if let Some(line) = &self.arch.arch_audit.delivered {
+        if let Some(line) = &self.modules.arch().arch_audit.delivered {
             let tone = if line.error.is_some() { Tone::Warning } else { Tone::Muted };
             let mut r = row![
                 icon(from_web(Some(if line.error.is_some() { "warning" } else { "ifcView" }))).size(14.0).tone(tone),
@@ -226,7 +227,7 @@ impl App {
             ]
             .spacing(8)
             .align_y(Center);
-            if let Some((words, on)) = line.switch(self.arch.arch_audit.delivered_model) {
+            if let Some((words, on)) = line.switch(self.modules.arch().arch_audit.delivered_model) {
                 let hint = if on {
                     "EK-9 formunu son teslimin IFC dosyasından, teslim edildiği gibi okur (Dijital Proje Yönetmeliği Md. 15: \
                      form teslim edilen her modelindir). Bulgular dosyanın nesnelerini gösterir; çizimde artık olmayan \
@@ -238,7 +239,7 @@ impl App {
             }
             out = out.push(container(r).padding([4, 10]).width(Fill));
         }
-        if let Some(why) = &self.arch.arch_audit.regulation_failed {
+        if let Some(why) = &self.modules.arch().arch_audit.regulation_failed {
             out = out.push(
                 container(
                     row![
@@ -253,7 +254,7 @@ impl App {
             );
         }
         // The EK-3 and EK-4 rule not run (docs/adr/8064): said, with why, so a clean table is not taken for a pass.
-        if let Some(why) = &self.arch.arch_audit.standards_failed {
+        if let Some(why) = &self.modules.arch().arch_audit.standards_failed {
             out = out.push(
                 container(
                     row![
@@ -267,7 +268,7 @@ impl App {
                 .width(Fill),
             );
         }
-        if let Some(note) = &self.arch.arch_audit.note {
+        if let Some(note) = &self.modules.arch().arch_audit.note {
             out = out.push(self.arch_audit_note_row(note));
         }
         out.push(horizontal_divider())
@@ -322,7 +323,7 @@ impl App {
     /// The bar at `width`: Denetle, the group, Kapsam, İstisnalar ▾ and Eşikler ▾; the count, Kata ver ▾, İstisna yap…
     /// and Düzelt at its end. Narrow: the count and the buttons on a second line.
     fn arch_audit_bar(&self, width: f32) -> Element<'_, Message> {
-        let audited = self.arch.arch_audit.audited.as_ref();
+        let audited = self.modules.arch().arch_audit.audited.as_ref();
         let count_of = |g: Option<ArchAuditCheck>| {
             audited.map(|a| {
                 a.findings
@@ -343,7 +344,7 @@ impl App {
             }
         }));
         let picked = self
-            .arch
+            .modules.arch()
             .arch_audit
             .group
             .and_then(|g| ArchAuditCheck::ALL.iter().position(|x| *x == g))
@@ -355,7 +356,7 @@ impl App {
                 Some(ArchAuditCheck::ALL[i - 1])
             }))
         });
-        let scope_now = match self.arch.arch_audit.scope {
+        let scope_now = match self.modules.arch().arch_audit.scope {
             AuditScope::All => 0,
             AuditScope::ActiveLevel => 1,
             AuditScope::Selection(_) => 2,
@@ -364,7 +365,7 @@ impl App {
             SCOPES
                 .iter()
                 .enumerate()
-                .map(|(i, w)| match (&self.arch.arch_audit.scope, i) {
+                .map(|(i, w)| match (&self.modules.arch().arch_audit.scope, i) {
                     (AuditScope::Selection(uids), 2) => {
                         Choice::new(format!("{w} ({})", uids.len()))
                     }
@@ -500,10 +501,10 @@ impl App {
     /// İstisnalar ▾ (docs/adr/0732 §3): how the exceptions are listed, and Eski istisnaları temizle; how many there are
     /// on its face.
     fn arch_audit_exceptions_button(&self) -> Element<'_, Message> {
-        let audited = self.arch.arch_audit.audited.as_ref();
+        let audited = self.modules.arch().arch_audit.audited.as_ref();
         let excepted = audited.map_or(0, |a| a.excepted);
         let stale = audited.map_or(0, |a| a.stale.len());
-        let now = self.arch.arch_audit.view;
+        let now = self.modules.arch().arch_audit.view;
         let menu = move || {
             let mut menu = kentos_ui::widget::Menu::new().header("Listede");
             for (i, (view, words)) in VIEWS.iter().enumerate() {
@@ -547,7 +548,7 @@ impl App {
     /// it; the values in its tip.
     fn arch_audit_limits(&self) -> Element<'_, Message> {
         let format = self.format();
-        let a = &self.arch.arch_audit;
+        let a = &self.modules.arch().arch_audit;
         let length = |v: f64| format.length(v);
         let area = |v: f64| format!("{v:.2} m²");
         let clear = |v: f64| if v > 0.0 { format.length(v) } else { "Yok".to_owned() };

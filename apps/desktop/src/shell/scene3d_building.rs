@@ -43,7 +43,7 @@ use crate::app::{App, Message};
 use crate::scene3d_window::{Event, Window};
 use crate::style::strip;
 use crate::traces::Control;
-use crate::underlays::Loaded;
+use crate::underlay_model::Loaded;
 
 /// How the viewer keys an underlay's object, `altlik:<underlay id>:<its GlobalId>`, and how Altlık modeller is asked
 /// for one, `altlik:<underlay id>:<its index in the file>` ([`App::building3d_select`]).
@@ -363,9 +363,9 @@ pub(crate) fn uid_of(key: &str) -> Option<Uuid> {
 }
 
 impl App {
-    /// The underlay models shown, as 3B görünüm takes them.
+    /// The models the modules show beside the drawing's (Mimari's underlays), as 3B görünüm takes them.
     fn building3d_shown(&self) -> Vec<Shown> {
-        self.underlays_shown().into_iter().map(|(u, l)| (u.id, u.name, l)).collect()
+        self.modules_beside()
     }
 
     /// 3B görünüm of the drawing's building: the viewer over its model, made off this thread; a drawing without a
@@ -515,13 +515,7 @@ impl App {
             && let Some((id, object)) = rest.rsplit_once(':')
             && let Ok(object) = object.parse::<usize>()
         {
-            if self.arch.underlays_window.is_none() {
-                self.open_underlays();
-            }
-            if let Some(w) = self.arch.underlays_window.as_mut() {
-                w.chosen = Some(id.to_owned());
-                w.object = Some((id.to_owned(), object));
-            }
+            self.module_choose_beside(id, object);
             return;
         }
         let Some(doc) = self.document.as_ref() else { return };
@@ -603,32 +597,13 @@ impl App {
         }
     }
 
-    /// What the findings shown in 3D depend on, as one number: the check (its drawing's state and how many it
-    /// found), the rows chosen, the group shown and whether the drawing changed since.
+    /// What the objects the modules mark in 3D depend on (Denetim's findings), as one number.
     pub(crate) fn building3d_found_key(&self) -> u64 {
-        use std::hash::{Hash, Hasher};
-        let a = &self.arch.arch_audit;
-        let mut h = std::collections::hash_map::DefaultHasher::new();
-        a.audited.as_ref().map(|x| (x.generation, x.revision, x.findings.len())).hash(&mut h);
-        a.selected.hash(&mut h);
-        a.chosen.hash(&mut h);
-        a.group.hash(&mut h);
-        self.arch_audit_stale().hash(&mut h);
-        h.finish()
+        self.modules_marked_key()
     }
 
-    /// The objects of the findings chosen in Denetim, else of all it lists (its last check, while the drawing is as it
-    /// saw it): a drawing's findings (a layer's name, a room's number) can name nearly every object, so the rows chosen
-    /// say what to look at.
+    /// The objects the modules mark in 3D (Denetim's findings chosen, else all it lists), by their keys.
     pub(crate) fn building3d_found(&self) -> std::collections::BTreeSet<String> {
-        if self.arch_audit_stale() {
-            return std::collections::BTreeSet::new();
-        }
-        let chosen = self.arch_audit_chosen();
-        if !chosen.is_empty() {
-            return chosen.into_iter().flat_map(|f| f.uids.iter().cloned()).collect();
-        }
-        let Some(a) = self.arch.arch_audit.audited.as_ref() else { return std::collections::BTreeSet::new() };
-        self.arch_audit_shown().into_iter().filter_map(|i| a.findings.get(i)).flat_map(|f| f.uids.iter().cloned()).collect()
+        self.modules_marked()
     }
 }

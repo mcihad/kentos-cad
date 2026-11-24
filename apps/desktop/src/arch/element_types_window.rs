@@ -32,8 +32,9 @@ use kentos_ui::widget::table::{self, Column as Col, Row, Table};
 use kentos_ui::widget::{Choice, Dialog as Frame, Form, ListDetails, Menu, MenuButton, Select, text_field};
 use kentos_ui::{label, style};
 use serde_json::{Map, Value};
+use crate::arch::ArchState;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::arch;
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
@@ -186,7 +187,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::ElementTypes(e))
+    Message::from(arch::Event::ElementTypes(e))
 }
 
 /// A type's use: its elements, those keeping a value of their own, those at an older version.
@@ -249,19 +250,19 @@ impl App {
             .iter()
             .find_map(|&s| doc.model.get(s).and_then(type_link).map(|l| l.id.clone()))
             .or_else(|| doc.model.element_types().first().map(|t| t.id.clone()));
-        let mut w = self.arch.element_types.take().unwrap_or_default();
+        let mut w = self.modules.arch_mut().element_types.take().unwrap_or_default();
         w.said = None;
-        self.arch.element_types = Some(w);
+        self.modules.arch_mut().element_types = Some(w);
         if let Some(id) = chosen {
             self.element_types_choose(&id);
         }
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::ElementTypes));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ElementTypes));
     }
 
     fn element_types_choose(&mut self, id: &str) {
         let Some(f) = self.element_types_format() else { return };
         let Some(t) = self.document.as_ref().and_then(|d| d.model.element_type(id).cloned()) else { return };
-        let Some(w) = self.arch.element_types.as_mut() else { return };
+        let Some(w) = self.modules.arch_mut().element_types.as_mut() else { return };
         w.chosen = Some(t.id.clone());
         w.name = t.name.clone();
         w.typed = t
@@ -284,13 +285,13 @@ impl App {
     }
 
     fn element_types_chosen(&self) -> Option<ElementType> {
-        let id = self.arch.element_types.as_ref()?.chosen.clone()?;
+        let id = self.modules.arch().element_types.as_ref()?.chosen.clone()?;
         self.document.as_ref()?.model.element_type(&id).cloned()
     }
 
     /// The values typed against the chosen type: the fields that changed (null: taken away), or why one cannot be read.
     fn element_types_change(&self) -> Option<Result<Map<String, Value>, String>> {
-        let w = self.arch.element_types.as_ref()?;
+        let w = self.modules.arch().element_types.as_ref()?;
         let t = self.element_types_chosen()?;
         let f = self.element_types_format()?;
         let mut out = Map::new();
@@ -364,7 +365,7 @@ impl App {
                 }
             }),
         };
-        if let Some(w) = self.arch.element_types.as_mut() {
+        if let Some(w) = self.modules.arch_mut().element_types.as_mut() {
             w.preview = preview;
         }
     }
@@ -385,7 +386,7 @@ impl App {
             }
             CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
                 let message = error.message;
-                match self.arch.element_types.as_mut().filter(|_| self.dialog.is_some()) {
+                match self.modules.arch_mut().element_types.as_mut().filter(|_| self.dialog.is_some()) {
                     Some(w) => w.said = Some((Kind::Error, message)),
                     None => self.warn(message),
                 }
@@ -425,7 +426,7 @@ impl App {
     }
 
     fn element_types_said(&mut self, kind: Kind, words: String) {
-        match self.arch.element_types.as_mut().filter(|_| self.dialog.is_some()) {
+        match self.modules.arch_mut().element_types.as_mut().filter(|_| self.dialog.is_some()) {
             Some(w) => w.said = Some((kind, words)),
             None => self.say(if kind == Kind::Error { Level::Warn } else { Level::Success }, words),
         }
@@ -435,12 +436,12 @@ impl App {
         match event {
             Event::Choose(id) => self.element_types_choose(&id),
             Event::Name(t) => {
-                if let Some(w) = self.arch.element_types.as_mut() {
+                if let Some(w) = self.modules.arch_mut().element_types.as_mut() {
                     w.name = t;
                 }
             }
             Event::Value(key, t) => {
-                if let Some(w) = self.arch.element_types.as_mut() {
+                if let Some(w) = self.modules.arch_mut().element_types.as_mut() {
                     match w.typed.iter_mut().find(|(k, _)| *k == key) {
                         Some(x) => x.1 = t,
                         None => w.typed.push((key, t)),
@@ -449,7 +450,7 @@ impl App {
                 self.element_types_preview();
             }
             Event::Pick(key, v) => {
-                if let Some(w) = self.arch.element_types.as_mut() {
+                if let Some(w) = self.modules.arch_mut().element_types.as_mut() {
                     match w.picked.iter_mut().find(|(k, _)| *k == key) {
                         Some(x) => x.1 = v,
                         None => w.picked.push((key, v)),
@@ -506,11 +507,11 @@ impl App {
                 if let Some(done) = self.element_types_command(op)
                     && let Some(id) = done.id
                 {
-                    if self.arch.element_types.is_none() {
-                        self.arch.element_types = Some(Window::default());
+                    if self.modules.arch().element_types.is_none() {
+                        self.modules.arch_mut().element_types = Some(Window::default());
                     }
                     self.element_types_choose(&id);
-                    self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::ElementTypes));
+                    self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ElementTypes));
                     self.element_types_said(Kind::Ok, format!("{name} tipi seçili {} elemandan yapıldı; eleman onu izliyor.", kind.words()));
                 }
             }
@@ -521,7 +522,7 @@ impl App {
                 let op = ElementTypesOperation::Remove { kind: t.id.clone(), detach: true };
                 if self.element_types_command(op).is_some() {
                     let first = self.document.as_ref().and_then(|d| d.model.element_types().first().map(|x| x.id.clone()));
-                    if let Some(w) = self.arch.element_types.as_mut() {
+                    if let Some(w) = self.modules.arch_mut().element_types.as_mut() {
                         *w = Window::default();
                     }
                     if let Some(id) = first {
@@ -586,7 +587,7 @@ impl App {
 
     fn element_types_apply(&mut self) -> Task<Message> {
         let Some(t) = self.element_types_chosen() else { return Task::none() };
-        let name = self.arch.element_types.as_ref().map(|w| w.name.trim().to_owned()).unwrap_or_default();
+        let name = self.modules.arch().element_types.as_ref().map(|w| w.name.trim().to_owned()).unwrap_or_default();
         let change = self.element_types_change();
         let mut said = Vec::new();
         if !name.is_empty() && name != t.name {
@@ -622,7 +623,7 @@ impl App {
     /// chosen type), selected.
     pub(crate) fn select_same_element_type(&mut self) {
         let from_selection = self.selected_typeable().into_iter().find_map(|(_, _, t)| t);
-        let Some(id) = from_selection.or_else(|| self.arch.element_types.as_ref().and_then(|w| w.chosen.clone())) else {
+        let Some(id) = from_selection.or_else(|| self.modules.arch().element_types.as_ref().and_then(|w| w.chosen.clone())) else {
             self.warn("Önce bir tipi izleyen eleman seçin: aynı tiptekiler onun tipiyle seçilir.");
             return;
         };
@@ -640,7 +641,7 @@ impl App {
     }
 
     pub(crate) fn element_types_view(&self) -> Element<'_, Message> {
-        let (Some(w), Some(doc), Some(f)) = (&self.arch.element_types, self.document.as_ref(), self.element_types_format())
+        let (Some(w), Some(doc), Some(f)) = (&self.modules.arch().element_types, self.document.as_ref(), self.element_types_format())
         else {
             return space::horizontal().into();
         };
@@ -775,7 +776,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn element_types_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        let Some(w) = &self.arch.element_types else {
+        let Some(w) = &self.modules.arch().element_types else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         let chosen = self.element_types_chosen();

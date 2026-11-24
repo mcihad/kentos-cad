@@ -10,6 +10,7 @@
 //! ```
 
 use kentos_commands::{ArchAuditOutcome as O, PlanNote, PlanNoteKey};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::project::plan_notes::Edit;
@@ -46,20 +47,20 @@ fn typed(whole: bool) -> App {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The storeys' findings and the storey rows of the rule set.
 #[allow(clippy::type_complexity)]
 fn storeys(app: &App) -> (Vec<String>, Vec<(String, Option<String>, O)>) {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited
         .findings
         .iter()
         .filter(|f| f.code == "paiy_storey_height_over")
         .map(|f| f.message.clone())
         .collect();
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows = set
         .rules
         .iter()
@@ -107,7 +108,7 @@ fn plan_notes_typed_in_the_settings_bind_the_storeys_over_the_regulation() {
             ("Plan notu: kat yüksekliği".to_owned(), None, O::Passed),
         ]
     );
-    let rule = app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter()
+    let rule = app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter()
         .find(|f| f.code == "paiy_storey_height_over").and_then(|f| f.rule.clone());
     assert_eq!(rule.as_deref(), Some("Plan notu · UİP 12.3.2019, plan notu 7"));
     // The notes taken away: 28/1-c's 3.60 m of 1.10.2017 holds both storeys.
@@ -158,8 +159,8 @@ fn screens() {
         let _ = app.update(Message::ActiveLevel(Some("k00".into())));
         let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_storey_height_over");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_storey_height_over");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());
         let _ = app.update(Message::Run("view.zoomExtents"));

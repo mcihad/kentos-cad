@@ -1128,8 +1128,7 @@ impl App {
                 &s.heights,
                 s.settings.has_system(),
                 self.second_record(s),
-                self.arch
-                    .grids
+                self.grids
                     .entries
                     .iter()
                     .filter(|e| {
@@ -1478,7 +1477,7 @@ impl App {
     /// project's datum choices name that this device does not have, and
     /// Ekle…. The grids are the device's, not the project's.
     fn grids_group<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let entries = &self.arch.grids.entries;
+        let entries = &self.grids.entries;
         let mut list = Column::new().spacing(10);
         for e in entries {
             let about = column![

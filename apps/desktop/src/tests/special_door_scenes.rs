@@ -17,9 +17,10 @@ use kentos_domain::Slot;
 use kentos_render_wgpu::Vec2;
 use kentos_ui::widget::docking;
 use serde_json::Value;
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
-use crate::architecture_settings::Commit;
+use crate::tool_settings::Commit;
 use crate::files_testing::make_cad;
 use crate::tools_scenes::run;
 use crate::tools_screens::Scene;
@@ -58,11 +59,11 @@ fn hover(app: &mut App, p: [f64; 2]) {
 }
 
 fn set(app: &mut App, key: &'static str, value: &str) {
-    let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
+    let _ = app.update(Message::ToolSetting(Commit {
         tool: "door",
         key,
         value: value.into(),
-    })));
+    }));
 }
 
 /// The four special doors along the fifth wall: D01 revolving, CG1 pocket, KT1 folding, the sliding door on its track.
@@ -100,12 +101,12 @@ fn types(app: &mut App) {
     plan(app);
     run(app, "arch.openingTypes");
     if let Some(i) = app
-        .arch
+        .modules.arch()
         .opening_types
         .as_ref()
         .and_then(|w| w.uses.iter().position(|u| u.kind.id == "cg1"))
     {
-        let _ = app.update(Message::Arch(arch::Event::OpeningTypes(
+        let _ = app.update(Message::from(arch::Event::OpeningTypes(
             crate::opening_types_window::Event::Choose(i),
         )));
     }

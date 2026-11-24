@@ -317,7 +317,7 @@ impl App {
                 None
             })
                 .or_else(|| self.session.preview(&format))
-                .or_else(|| self.arch_audit_preview()),
+                .or_else(|| self.module_preview()),
             None,
             None,
             doc.model
@@ -431,7 +431,7 @@ impl App {
             Panel::Assistant => self.assistant_view(),
             Panel::Extension => self.extension_panel_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
-            Panel::Properties => self.architecture_properties_view(doc),
+            Panel::Properties => self.properties_panel_view(doc),
         }
     }
 

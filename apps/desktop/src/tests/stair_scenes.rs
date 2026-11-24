@@ -17,6 +17,7 @@ use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::level_view::LevelView;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::tools_scenes::{E, N, Objects, click, hover, run, typed};
@@ -166,7 +167,7 @@ fn quantities(app: &mut App) {
     more(app);
     app.selection.clear();
     run(app, "arch.quantities");
-    let _ = app.update(Message::Arch(arch::Event::Quantities(
+    let _ = app.update(Message::from(arch::Event::Quantities(
         crate::quantities::Event::Tab(crate::quantities::Tab::Stairs),
     )));
 }
@@ -183,7 +184,7 @@ fn audit(app: &mut App) {
         .iter()
         .position(|&i| {
             let f = &app
-                .arch
+                .modules.arch()
                 .arch_audit
                 .audited
                 .as_ref()
@@ -192,7 +193,7 @@ fn audit(app: &mut App) {
             f.code == "stair_railing_missing"
         })
         .expect("the railing's finding");
-    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+    let _ = app.update(Message::from(arch::Event::ArchAudit(
         crate::arch_audit::Event::Press(row),
     )));
 }
@@ -200,7 +201,7 @@ fn audit(app: &mut App) {
 /// Düzelt: both railings in one step; checked again, the narrow stairs are left.
 fn fixed(app: &mut App) {
     audit(app);
-    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+    let _ = app.update(Message::from(arch::Event::ArchAudit(
         crate::arch_audit::Event::Fix,
     )));
 }
@@ -298,7 +299,7 @@ mod tests {
         assert_eq!(output.totals.stair_risers, 18 + 10 + 16);
         audit(&mut app);
         let codes: Vec<String> = app
-            .arch
+            .modules.arch()
             .arch_audit
             .audited
             .as_ref()
@@ -319,11 +320,11 @@ mod tests {
             codes.contains(&"stair_width_narrow".to_owned()),
             "{codes:?}"
         );
-        let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+        let _ = app.update(Message::from(arch::Event::ArchAudit(
             crate::arch_audit::Event::Fix,
         )));
         let codes: Vec<String> = app
-            .arch
+            .modules.arch()
             .arch_audit
             .audited
             .as_ref()

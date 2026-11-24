@@ -68,7 +68,7 @@ pub(crate) fn house(app: &mut App) {
 }
 
 pub(crate) fn set(app: &mut App, key: &'static str, value: &str) {
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallDimensions",
         key,
         value: value.into(),

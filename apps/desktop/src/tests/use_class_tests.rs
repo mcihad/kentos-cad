@@ -15,6 +15,7 @@
 use kentos_commands::ArchAuditOutcome as O;
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -143,12 +144,12 @@ pub(crate) fn declare(app: &mut App, uids: &[&String], value: &str) {
 pub(crate) fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The four articles' outcomes, in order.
 fn rows(app: &App) -> Vec<O> {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     ["BYKHY 49/1-a", "BYKHY 50/1-a", "BYKHY 50/1-b", "BYKHY 52"]
         .iter()
         .map(|rule| set.rules.iter().find(|r| r.rule == *rule).unwrap_or_else(|| panic!("{rule}: {:#?}", set.rules)).state)
@@ -157,7 +158,7 @@ fn rows(app: &App) -> Vec<O> {
 
 /// The new rules' findings: code and message.
 fn findings(app: &App) -> Vec<(String, String)> {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     audited
         .findings
         .iter()
@@ -205,10 +206,10 @@ fn a_hotel_room_s_wall_and_door_to_the_corridor_are_read_from_their_declarations
 fn a_33_metre_office_asks_for_sprinklers_until_they_are_declared() {
     let mut app = office(&[1; 11]);
     checked(&mut app);
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let row = |set: &kentos_commands::ArchAuditRuleSet| set.rules.iter().find(|r| r.rule == "BYKHY 96/2").expect("96/2").state;
     assert_eq!(row(set), O::Failed);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     assert!(
         audited.findings.iter().any(|f| f.code == "bykhy_sprinklers_required" && f.message.contains("33,00 m")),
         "{:?}",
@@ -219,7 +220,7 @@ fn a_33_metre_office_asks_for_sprinklers_until_they_are_declared() {
     arch.sprinklers = true;
     run(&mut app, "cad.settings.set", json!({ "arch": arch }));
     checked(&mut app);
-    assert_eq!(row(app.arch.arch_audit.rule_set.as_ref().expect("the rule set")), O::Passed);
+    assert_eq!(row(app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set")), O::Passed);
 }
 
 /// Denetim's pictures (`.run/gui-evidence/kullanim-sinifi-8107/`): the office's expert review, the hotel's failing wall.
@@ -254,11 +255,11 @@ fn screens() {
             let group = crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(
                 kentos_commands::ArchAuditCheck::Regulation,
             )));
-            let _ = app.update(Message::Arch(group));
+            let _ = app.update(Message::from(group));
             let shown = app.arch_audit_shown();
-            let findings = &app.arch.arch_audit.audited.as_ref().expect("checked").findings;
+            let findings = &app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings;
             let row = shown.iter().position(|&i| findings[i].code == code).expect("the finding shown");
-            let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
+            let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
         };
         let mut app = office(&[1, 1, 1]);
         checked(&mut app);

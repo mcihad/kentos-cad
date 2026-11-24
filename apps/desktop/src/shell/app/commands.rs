@@ -271,43 +271,10 @@ impl App {
             "style.tableStyles" => {
                 return self.table_style_window_event(crate::table_style_window::Event::Open);
             }
-            // Duvar stilleri (docs/adr/0339 §6).
-            "arch.wallStyles" => self.open_wall_styles(),
-            "arch.wallJoinCheck" => self.open_wall_joins(),
-            // Kapı ve pencere tipleri (docs/adr/0772).
-            "arch.openingTypes" => self.open_opening_types(),
-            // Eleman tipleri (docs/adr/8106).
-            "arch.elementTypes" => self.open_element_types(),
-            "arch.elementTypeFrom" => {
-                return self.element_types_event(crate::element_types_window::Event::FromSelection);
-            }
-            "arch.elementSameType" => self.select_same_element_type(),
-            // Malzemeler (docs/adr/0785).
-            "arch.materials" => self.open_materials(),
-            // Oda modülleri (docs/adr/0775).
-            "arch.modules" => self.open_room_modules(),
-            // Tasarım seçenekleri (docs/adr/0788).
-            "arch.options" => self.open_design_options(),
-            "arch.moduleExcept" => self.room_module_selection_action(false),
-            "arch.moduleRestore" => self.room_module_selection_action(true),
-            "arch.moduleAddMembers" => self.room_module_add_selection(None),
-            "arch.moduleRemoveMembers" => self.room_module_remove_selection(None),
-            "arch.openingSameType" => self.select_same_opening_type(),
-            "arch.openingDetach" => self.opening_type_action(kentos_commands::OpeningsOperation::Detach),
-            "arch.openingPush" => {
-                self.opening_type_action(kentos_commands::OpeningsOperation::Push { fields: Vec::new() });
-            }
-            "arch.openingReset" => {
-                self.opening_type_action(kentos_commands::OpeningsOperation::Reset { fields: Vec::new() });
-            }
-            "arch.tagsCheck" => self.open_tags_check(),
-            "arch.viewRefs" => self.open_view_refs(),
             "arch.sheetSet" => self.open_sheet_set(),
             "arch.navigator" => return self.show_navigator(),
             "xref.manager" => self.open_xrefs(),
             "xref.attach" => return self.start_xref_attach(),
-            "arch.template" => self.apply_arch_template(),
-            id if id.starts_with("arch.phase.") => self.set_phase_view(&id["arch.phase.".len()..]),
             // Üst kat, Alt kat (docs/adr/0720 §5).
             "view.levels.up" => self.step_level(true),
             "view.levels.down" => self.step_level(false),
@@ -317,25 +284,12 @@ impl App {
                     self.choose_level_view(view);
                 }
             }
-            // Metraj and Mahalleri birleştir (docs/adr/0342 §5).
-            "arch.quantities" => self.open_quantities(),
             // Revizyon listesi (docs/adr/0721 §4).
             "arch.revisionList" => self.place_revision_list(),
             // Emsal ve TAKS tablosu (docs/adr/8030).
             "arch.zoningTable" => self.place_zoning_table(),
             // Model kalite kontrol formu (EK-9, docs/adr/8047 §10).
             "arch.qualityForm" => return self.place_quality_form(),
-            // Dijital proje kuralları (digital_rules.rs, docs/adr/8062).
-            "arch.digitalRules" => self.open_digital_rules(),
-            // Teslim kaydı (deliveries_window.rs, docs/adr/8099).
-            "arch.deliveries" => self.open_deliveries(),
-            // Altlık modeller (underlays_window.rs, docs/adr/8101).
-            "arch.underlays" => self.open_underlays(),
-            // IFC revizyonlarını karşılaştır and BCF sorunları (docs/adr/8103).
-            "arch.ifcCompare" => self.open_ifc_compare(),
-            "arch.bcfIssues" => self.open_bcf_issues(),
-            // Gelen paketi incele (docs/adr/8104).
-            "arch.reviewPackage" => self.open_review_package(),
             // Otopark and Sığınak hesabı (docs/adr/8036).
             "arch.parkingTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Parking {})
@@ -345,7 +299,6 @@ impl App {
             "arch.shelterTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Shelter {})
             }
-            "arch.spaceMerge" => self.space_merge(),
             "style.dimensionStyles" => {
                 self.open_annotation_styles(crate::annotation_styles::Kind::Dimension)
             }
@@ -435,8 +388,6 @@ impl App {
             }
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
             "topology.check" => return self.open_topology_check(),
-            // Mimari denetim (arch_audit.rs, docs/adr/0703).
-            "arch.audit" => return self.open_arch_audit(),
             "cad.inspect" => return self.open_cad_inspection(),
             "cad.flatten" => return self.open_flatten(),
             "map.featuresCode" => return self.open_features_code(),
@@ -629,11 +580,6 @@ impl App {
             "scene3d.view" => return self.open_scene3d(),
             "ifc.view" => return self.pick_ifc_model(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
-            // IFC dışa aktar (bina) (arch_ifc.rs, docs/adr/8047).
-            "arch.ifcExport" => return self.export_ifc_building(kentos_commands::IfcView::DesignTransfer),
-            "arch.ifcExportCut" => return self.export_ifc_building(kentos_commands::IfcView::Reference),
-            // Bina programı (program_window.rs, docs/adr/0773).
-            "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).
             "lineTypes.manage" => self.open_line_types(),
             "hatchPatterns.manage" => self.open_hatch_patterns(),
@@ -802,6 +748,12 @@ impl App {
     /// commands that cannot run are drawn dimmed.
     /// A command's on or off state where it has one (the ribbon and its menus show it).
     pub fn checked(&self, id: &str) -> Option<bool> {
+        // A module's own toggles (Tadilat görünümü's phases, docs/adr/9199 §4.9).
+        for parts in crate::module_parts::all() {
+            if let Some(on) = parts.checked(self, id) {
+                return Some(on);
+            }
+        }
         Some(match id {
             "draft.ortho" => self.draft.ortho,
             "view.split" => self.split.is_some(),
@@ -825,9 +777,6 @@ impl App {
             "edit.autoSelect" => self.auto_select_on(),
             id if id.starts_with("edit.selectFilter.") => {
                 self.select_kind_checked(&id["edit.selectFilter.".len()..])
-            }
-            id if id.starts_with("arch.phase.") => {
-                self.phase_view().name() == &id["arch.phase.".len()..]
             }
             // Üst kat and Alt kat move, they are not checked (docs/adr/0720 §5).
             "view.levels.up" | "view.levels.down" => return None,

@@ -6,6 +6,7 @@
 
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -97,7 +98,7 @@ fn the_facts_carry_the_elements_ek_3_reads() {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The column's R 30 is under Ek-3/C's 60; 1. kat's walls declare nothing (eksik veri); the slab's REI 60 is over the
@@ -107,7 +108,7 @@ fn the_column_s_class_is_read_against_ek_3_c() {
     use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
     let mut app = house("R 30");
     checked(&mut app);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found: Vec<(Option<S>, &str)> = audited
         .findings
         .iter()
@@ -118,7 +119,7 @@ fn the_column_s_class_is_read_against_ek_3_c() {
     assert!(found.iter().any(|(s, m)| *s == Some(S::MissingData) && m.contains("1. kat: 4 duvarın")), "{found:#?}");
     assert_eq!(found.len(), 2, "{found:#?}");
     let row = |app: &App| {
-        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
         set.rules.iter().find(|r| r.rule == "BYKHY Ek-3").map(|r| r.state)
     };
     assert_eq!(row(&app), Some(O::Failed));
@@ -152,8 +153,8 @@ fn screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected =
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected =
             audited.findings.iter().position(|f| f.code == "bykhy_element_resistance" && f.message.contains("kolon"));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
@@ -185,7 +186,7 @@ fn ceiling(app: &mut App) -> Value {
 
 /// The ceiling's Ek-3 findings (state, message).
 fn ceiling_said(app: &App) -> Vec<(Option<kentos_commands::ArchAuditState>, String)> {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     audited
         .findings
         .iter()
@@ -266,8 +267,8 @@ fn ceiling_screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected =
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected =
             audited.findings.iter().position(|f| f.code == "bykhy_element_resistance" && f.message.contains("asma tavan"));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
@@ -314,7 +315,7 @@ fn a_load_bearing_wall_is_read_by_ek_3_b_2() {
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert_eq!(doc.undo_labels().first().map(String::as_str), Some("Yangın ve performans"));
     let wall_said = |app: &App| -> Vec<(Option<S>, String)> {
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
         audited
             .findings
             .iter()
@@ -374,8 +375,8 @@ fn bearing_screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected =
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected =
             audited.findings.iter().position(|f| f.code == "bykhy_element_resistance" && f.message.contains("Ek-3/B 2"));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);

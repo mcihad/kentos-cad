@@ -7,6 +7,7 @@
 use kentos_commands::Entity;
 use kentos_model_view::{Category, parts};
 use kentos_scene3d::Viewport;
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::scene3d_window::Event as W;
@@ -289,7 +290,7 @@ fn two_rooms_of_one_storey_that_share_ground_are_found_and_red_in_3d() {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
     let found = |app: &App| {
-        app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter().filter(|f| f.code == "digital_quality_room_overlap").cloned().collect::<Vec<_>>()
+        app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter().filter(|f| f.code == "digital_quality_room_overlap").cloned().collect::<Vec<_>>()
     };
     assert!(found(&app).is_empty(), "{:?}", found(&app));
     let (snapshot, first, square) = with_an_overlapping_room();
@@ -320,7 +321,7 @@ fn two_rooms_of_one_storey_that_share_ground_are_found_and_red_in_3d() {
 /// The overlap's row chosen in Denetim, as a click on it chooses it.
 fn choose_the_overlap(app: &mut App) {
     let at = app
-        .arch
+        .modules.arch()
         .arch_audit
         .audited
         .as_ref()
@@ -329,8 +330,8 @@ fn choose_the_overlap(app: &mut App) {
         .iter()
         .position(|f| f.code == "digital_quality_room_overlap")
         .expect("the overlap");
-    app.arch.arch_audit.chosen.clear();
-    app.arch.arch_audit.selected = Some(at);
+    app.modules.arch_mut().arch_audit.chosen.clear();
+    app.modules.arch_mut().arch_audit.selected = Some(at);
 }
 
 /// The building in 3D, wide and light, narrow and dark: the ribbon's place of 3B görünüm, the viewer with its tree and

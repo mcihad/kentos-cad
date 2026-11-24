@@ -15,6 +15,7 @@
 //! ```
 
 use serde_json::json;
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 
@@ -70,12 +71,12 @@ fn roofed() -> App {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The roof's findings' messages, in Denetim's order.
 fn said(app: &App) -> Vec<String> {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     audited.findings.iter().filter(|f| ROOF_CODES.contains(&f.code.as_str())).map(|f| f.message.clone()).collect()
 }
 
@@ -89,13 +90,13 @@ fn sivas(app: &mut App) {
 /// Düzelt on the first finding of `code`.
 fn fix(app: &mut App, code: &str) {
     let at = {
-        let a = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let a = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
         a.findings.iter().position(|f| f.code == code).unwrap_or_else(|| panic!("{code}"))
     };
-    let f = &app.arch.arch_audit.audited.as_ref().expect("checked").findings[at];
+    let f = &app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings[at];
     assert_eq!(f.fix.as_ref().map(|x| x.step.command.as_str()), Some("cad.arch.edit"), "{f:?}");
-    app.arch.arch_audit.selected = Some(at);
-    let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Fix)));
+    app.modules.arch_mut().arch_audit.selected = Some(at);
+    let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Fix)));
     app.arch_audit_standards_settle();
 }
 
@@ -127,7 +128,7 @@ fn the_roof_rules_come_from_the_standards_package_with_their_fixes() {
             "İki çatı penceresi arası 1.50 m < 2.00 m — Sivas 40/5-e-3",
         ]
     );
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let guard = audited.findings.iter().find(|f| f.code == "local_snow_guard_missing").expect("the snow guard");
     assert_eq!(guard.rule.as_deref(), Some("Sivas İmar Yön. 42/5 · RG 10.11.2022/32009"));
     // Düzelt: the snow guard given, the chimney raised; the other parts as drawn.
@@ -179,7 +180,7 @@ fn the_plan_s_roof_notes_come_before_the_regulations() {
         found.contains(&"Çatının eğimi %75 > %33 — Plan notu (UİP 12.3.2019, plan notu 12)".to_owned()),
         "{found:?}"
     );
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let row = |rule: &str| set.rules.iter().find(|r| r.rule == rule).map(|r| r.state);
     use kentos_commands::ArchAuditOutcome as O;
     assert_eq!(row("Plan notu: saçak genişliği"), Some(O::Passed));
@@ -216,10 +217,10 @@ fn the_eaves_stay_within_the_parcel() {
                 "slopes": [33.0, 33.0, 33.0, 33.0], "arch": {"level": "k01"}}]}),
         );
         checked(&mut app);
-        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
         let row = set.rules.iter().find(|r| r.rule == "PAİY 42/2").map(|r| r.state);
         assert_eq!(row, Some(outcome), "{:#?}", set.rules);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
         let over: Vec<&str> = audited
             .findings
             .iter()
@@ -252,8 +253,8 @@ fn screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k1".into())));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_chimney_low");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_chimney_low");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
@@ -340,8 +341,8 @@ fn parcel_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_eaves_over_parcel");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_eaves_over_parcel");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
@@ -386,10 +387,10 @@ fn the_eaves_stay_within_half_a_metre_of_a_projection() {
         assert_eq!(measured.len(), 1);
         assert!(measured[0].is_some_and(|v| (v - past).abs() < 1e-6), "{measured:?}");
         checked(&mut app);
-        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
         let row = set.rules.iter().find(|r| r.rule == "PAİY 42/3").map(|r| r.state);
         assert_eq!(row, Some(outcome), "{:#?}", set.rules);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
         let said: Vec<&str> = audited
             .findings
             .iter()
@@ -423,8 +424,8 @@ fn projection_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_eaves_past_projection");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_eaves_past_projection");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
@@ -470,11 +471,11 @@ fn stair_housing(height: f64) -> App {
 fn a_stair_housing_passes_the_roof_covering_by_at_most_0_60_m() {
     use kentos_commands::{ArchAuditOutcome as O, ArchAuditState};
     let row = |app: &App| {
-        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
         set.rules.iter().find(|r| r.rule == "PAİY 40/5").map(|r| r.state)
     };
     let found = |app: &App| -> Vec<(String, Option<ArchAuditState>)> {
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
         audited
             .findings
             .iter()
@@ -532,8 +533,8 @@ fn wall_screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_roof_wall_high");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_roof_wall_high");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);

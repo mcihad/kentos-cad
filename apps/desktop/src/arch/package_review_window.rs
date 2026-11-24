@@ -20,6 +20,7 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use crate::arch::ArchState;
 
 use iced::futures::channel::oneshot;
 use iced::widget::{Column, container, row, scrollable, space};
@@ -33,7 +34,7 @@ use kentos_ui::theme::typography::scaled;
 use kentos_ui::widget::table::{self, Column as Col, Row, Table};
 use kentos_ui::widget::{Dialog as Frame, Form, ListDetails, Segmented, text_field};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::arch;
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
@@ -117,7 +118,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::ReviewPackage(e))
+    Message::from(arch::Event::ReviewPackage(e))
 }
 
 /// A layer's name as the window says it.
@@ -182,16 +183,16 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        if self.arch.review_window.is_none() {
-            self.arch.review_window = Some(Window::default());
+        if self.modules.arch().review_window.is_none() {
+            self.modules.arch_mut().review_window = Some(Window::default());
         }
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::ReviewPackage));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ReviewPackage));
     }
 
     fn review_start(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else { return Task::none() };
         let mut model = doc.model.clone();
-        let Some(w) = self.arch.review_window.as_mut() else { return Task::none() };
+        let Some(w) = self.modules.arch_mut().review_window.as_mut() else { return Task::none() };
         let typed = w.system.trim().trim_start_matches("EPSG:").trim();
         let system = if typed.is_empty() {
             None
@@ -251,18 +252,18 @@ impl App {
 
     /// The chosen finding's objects shown in the IFC viewer, on the package's model.
     fn review_show(&mut self) -> Task<Message> {
-        let Some(w) = self.arch.review_window.as_ref() else { return Task::none() };
+        let Some(w) = self.modules.arch().review_window.as_ref() else { return Task::none() };
         let Some(Outcome::Done(r)) = &w.outcome else { return Task::none() };
         let Some(f) = w.chosen.and_then(|k| r.findings.get(k)) else { return Task::none() };
         let (keys, path) = (f.objects.clone(), model_path(&w.path, r));
         let Some(path) = path else {
-            if let Some(w) = self.arch.review_window.as_mut() {
+            if let Some(w) = self.modules.arch_mut().review_window.as_mut() {
                 w.said = Some((Kind::Info, "Paketin okunabilir bir modeli yok: gösterilecek nesne yok.".into()));
             }
             return Task::none();
         };
         if keys.is_empty()
-            && let Some(w) = self.arch.review_window.as_mut()
+            && let Some(w) = self.modules.arch_mut().review_window.as_mut()
         {
             w.said = Some((Kind::Info, "Bu bulgu bir nesneyi anmıyor: model yalnız açılır.".into()));
         }
@@ -272,7 +273,7 @@ impl App {
 
     /// The error findings written as a BCF file at `path` and in words beside it.
     fn review_return(&mut self, path: PathBuf) {
-        let Some(w) = self.arch.review_window.as_ref() else { return };
+        let Some(w) = self.modules.arch().review_window.as_ref() else { return };
         let Some(Outcome::Done(r)) = &w.outcome else { return };
         let errors: Vec<&ReviewFinding> = r.findings.iter().filter(|f| f.error).collect();
         let model = model_path(&w.path, r);
@@ -314,16 +315,16 @@ impl App {
             }
             CommandResult::Queued { .. } | CommandResult::Cancelled => (Kind::Warn, "Yazılmadı.".into()),
         };
-        if let Some(w) = self.arch.review_window.as_mut() {
+        if let Some(w) = self.modules.arch_mut().review_window.as_mut() {
             w.said = Some(said);
         }
     }
 
     pub(crate) fn review_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.arch.review_window.as_mut() else { return Task::none() };
+        let Some(w) = self.modules.arch_mut().review_window.as_mut() else { return Task::none() };
         match event {
             Event::Close => {
-                self.arch.review_window = None;
+                self.modules.arch_mut().review_window = None;
                 self.dialog = None;
             }
             Event::Path(t) => w.path = t,
@@ -396,7 +397,7 @@ impl App {
     }
 
     pub(crate) fn review_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.review_window else {
+        let Some(w) = &self.modules.arch().review_window else {
             return space::horizontal().into();
         };
         let head = Form::new()
@@ -545,7 +546,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn review_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.arch.review_window.is_none() {
+        if self.modules.arch().review_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

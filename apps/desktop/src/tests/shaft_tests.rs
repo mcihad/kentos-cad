@@ -14,6 +14,7 @@
 use kentos_commands::ArchAuditOutcome as O;
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -148,12 +149,12 @@ fn declare(app: &mut App, uids: &[&String], value: &str) {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The six articles' rows, in order (outcome, version).
 fn rows(app: &App) -> Vec<(String, O, Option<String>)> {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     ["BYKHY 25/3", "BYKHY 41/9", "BYKHY 62/2", "BYKHY 62/4", "BYKHY 62/6", "BYKHY 62/7"]
         .iter()
         .map(|rule| {
@@ -164,7 +165,7 @@ fn rows(app: &App) -> Vec<(String, O, Option<String>)> {
 }
 
 fn codes(app: &App) -> Vec<String> {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let mut out: Vec<String> = audited
         .findings
         .iter()
@@ -256,7 +257,7 @@ fn the_shafts_and_the_elevator_are_read_by_25_3_41_9_and_62() {
     let states: Vec<O> = rows(&app).into_iter().map(|r| r.1).collect();
     assert_eq!(states, [O::Passed, O::Failed, O::Passed, O::Passed, O::Passed, O::Passed]);
     assert_eq!(codes(&app), ["bykhy_shaft_cover_stair"]);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let cover = audited.findings.iter().find(|f| f.code == "bykhy_shaft_cover_stair").expect("41/9");
     assert!(
         cover.message.starts_with("Şaft kapısı (“Tesisat şaftı”) kaçış merdiveni yuvasına açılıyor (“Merdiven evi”)"),
@@ -310,7 +311,7 @@ fn a_lift_shaft_s_vent_is_declared_once_for_the_shaft_in_oznitelikler() {
     assert_eq!(row(&app, "Baca alanı").0, "0.2");
     checked(&mut app);
     assert_eq!(row_62_4(&app), Some(O::Failed));
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found: Vec<&kentos_commands::ArchAuditFinding> =
         audited.findings.iter().filter(|f| f.code == "bykhy_elevator_shaft_vent").collect();
     assert_eq!(found.len(), 1, "one finding for the shaft through three storeys: {found:#?}");
@@ -379,7 +380,7 @@ fn a_protected_shaft_and_a_fire_stop_are_declared_in_oznitelikler() {
     let measured = facts.shafts.iter().find(|s| s.uid == service).expect("the service shaft");
     assert_eq!(measured.protected, Some(true));
     let ek3 = |app: &App, words: &str| -> Vec<(Option<kentos_commands::ArchAuditState>, String)> {
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
         audited
             .findings
             .iter()
@@ -480,8 +481,8 @@ fn roles_screens() {
         shot(&mut app, "2-yangin-kesici", Some(3.0));
         app.selection.set(Vec::new());
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected =
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected =
             audited.findings.iter().position(|f| f.code == "bykhy_element_resistance" && f.message.contains("Ek-3/B 8"));
         shot(&mut app, "3-denetim", None);
     }
@@ -531,8 +532,8 @@ fn vent_screens() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_elevator_shaft_vent");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_elevator_shaft_vent");
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-denetim-{name}.png"));
@@ -563,8 +564,8 @@ fn screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_shaft_cover_stair");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_shaft_cover_stair");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());
@@ -652,7 +653,7 @@ fn a_lift_serving_the_basement_is_reached_through_a_protected_corridor() {
     checked(&mut app);
     let row = |app: &App| rows(app).into_iter().find(|r| r.0 == "BYKHY 62/4").map(|r| r.1);
     assert_eq!(row(&app), Some(O::Failed));
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found: Vec<&String> =
         audited.findings.iter().filter(|f| f.code == "bykhy_elevator_basement_lobby").map(|f| &f.message).collect();
     assert_eq!(found.len(), 1, "{found:#?}");
@@ -689,8 +690,8 @@ fn basement_screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_elevator_basement_lobby");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_elevator_basement_lobby");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());

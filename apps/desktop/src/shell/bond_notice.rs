@@ -56,7 +56,7 @@ impl App {
     }
 
     /// What the drawing shows over its objects: the session's preview with the refusal's bonds marked while its card
-    /// is open (unless the preview marks bonds of its own), else Mimari denetim's.
+    /// is open (unless the preview marks bonds of its own), else a module's (Mimari denetimi's chosen fixes).
     pub(crate) fn drawing_preview(
         &self,
         format: &kentos_interaction::Format,
@@ -75,7 +75,7 @@ impl App {
             }
             (Some(p), _) => Some(p),
             (None, Some(m)) => Some(m),
-            (None, None) => self.arch_audit_preview(),
+            (None, None) => self.module_preview(),
         }
     }
 

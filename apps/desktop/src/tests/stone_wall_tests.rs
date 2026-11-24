@@ -17,6 +17,7 @@
 use kentos_commands::ArchAuditOutcome as O;
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -110,7 +111,7 @@ fn near(a: f64, b: f64) -> bool {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 #[test]
@@ -178,7 +179,7 @@ fn a_traditional_stone_house_s_thick_walls_are_out_of_katlar_alani_and_the_outer
 
     // Denetim: 20/8-j and 5/8 hold on 2.7.2026.
     checked(&mut app);
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows: Vec<(&str, Option<&str>, O)> = set
         .rules
         .iter()
@@ -186,7 +187,7 @@ fn a_traditional_stone_house_s_thick_walls_are_out_of_katlar_alani_and_the_outer
         .map(|r| (r.rule.as_str(), r.version.as_deref(), r.state))
         .collect();
     assert_eq!(rows, [("PAİY 20/8-j", Some("9.10.2021"), O::Passed), ("PAİY 5/8", Some("31.12.2022"), O::Passed)]);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     assert!(!audited.findings.iter().any(|f| f.code.starts_with("paiy_masonry_")), "{:?}", audited.findings);
 
     // Betonarme: no stone walls' part.
@@ -251,7 +252,7 @@ fn sivas_counts_the_thick_walls_within_the_30_percent() {
     arch.local_rules = Some(kentos_commands::LocalRules::Sivas);
     run(&mut app, "cad.settings.set", json!({ "arch": serde_json::to_value(&arch).expect("serialises") }));
     let rows = |app: &App| -> Vec<(String, O)> {
-        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
         set.rules
             .iter()
             .filter(|r| ["PAİY 5/8", "Sivas 22/k"].contains(&r.rule.as_str()))
@@ -269,7 +270,7 @@ fn sivas_counts_the_thick_walls_within_the_30_percent() {
     run(&mut app, "cad.settings.set", json!({ "arch": serde_json::to_value(&arch).expect("serialises") }));
     checked(&mut app);
     assert_eq!(rows(&app), [("PAİY 5/8".to_owned(), O::Passed), ("Sivas 22/k".to_owned(), O::Failed)]);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let f = audited.findings.iter().find(|f| f.code == "local_masonry_walls_over").expect("Sivas's finding");
     assert!(
         f.message.contains("emsal harici 16.88 m², sınır 15.00 m²; aşan 1.88 m² emsale girer"),

@@ -38,7 +38,7 @@ pub(crate) fn open(app: &mut App, doc: Value, bounds: [f64; 4]) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Arch(arch::Event::Materials(e)));
+    let _ = app.update(Message::from(arch::Event::Materials(e)));
 }
 
 fn drawing(app: &mut App) {
@@ -76,7 +76,7 @@ fn style_picker(app: &mut App) {
     event(app, Event::Take);
     event(app, Event::Close);
     run(app, "arch.wallStyles");
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Material(2, Some("tasyunu".into())),
     )));
 }

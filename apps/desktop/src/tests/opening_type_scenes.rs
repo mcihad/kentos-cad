@@ -46,7 +46,7 @@ fn open(app: &mut App, cases: &str, bounds: [f64; 4]) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Arch(arch::Event::OpeningTypes(e)));
+    let _ = app.update(Message::from(arch::Event::OpeningTypes(e)));
 }
 
 /// The corridor's first eight K01 doors and the exception (the sixth, its frame 7 cm).
@@ -115,11 +115,11 @@ fn same(app: &mut App) {
 fn audited(app: &mut App) {
     open(app, DOORS, [-0.5, -3.5, 8.5, 4.5]);
     run(app, "arch.audit");
-    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+    let _ = app.update(Message::from(arch::Event::ArchAudit(
         crate::arch_audit::Event::Group(Some(kentos_commands::ArchAuditCheck::Doors)),
     )));
     // The first finding pressed: its door and the wall it meets selected.
-    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+    let _ = app.update(Message::from(arch::Event::ArchAudit(
         crate::arch_audit::Event::Press(0),
     )));
 }

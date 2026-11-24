@@ -16,9 +16,10 @@ use iced::Point;
 use kentos_domain::Slot;
 use kentos_render_wgpu::Vec2;
 use kentos_ui::widget::docking;
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
-use crate::architecture_settings::Commit;
+use crate::tool_settings::Commit;
 use crate::files_testing::make_cad;
 use crate::tools_scenes::run;
 use crate::tools_screens::Scene;
@@ -43,11 +44,11 @@ fn open(app: &mut App, b: [f64; 4]) {
 }
 
 fn set(app: &mut App, key: &'static str, value: &str) {
-    let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
+    let _ = app.update(Message::ToolSetting(Commit {
         tool: "door",
         key,
         value: value.into(),
-    })));
+    }));
 }
 
 /// X3, P3 and S2 along the wall.
@@ -106,12 +107,12 @@ fn types(app: &mut App) {
     plan(app);
     run(app, "arch.openingTypes");
     if let Some(i) = app
-        .arch
+        .modules.arch()
         .opening_types
         .as_ref()
         .and_then(|w| w.uses.iter().position(|u| u.kind.id == "x3"))
     {
-        let _ = app.update(Message::Arch(arch::Event::OpeningTypes(
+        let _ = app.update(Message::from(arch::Event::OpeningTypes(
             crate::opening_types_window::Event::Choose(i),
         )));
     }

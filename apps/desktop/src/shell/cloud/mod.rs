@@ -119,7 +119,6 @@ mod live_run;
 #[cfg(test)]
 mod live_forms;
 
-use crate::arch;
 use crate::gis;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -974,9 +973,6 @@ impl App {
             Some(Dialog::BlockReplace) => self.block_replace_close(),
             Some(Dialog::BlockFind) => self.block_find_close_options(),
             Some(Dialog::ArrayFind) => self.array_find_close_dialog(),
-            Some(Dialog::Arch(arch::ArchDialogKind::ArchTemplate)) => {
-                self.arch.arch_template = None
-            }
             Some(Dialog::SignIn) => self.cloud.sign_in = None,
             // Its question first, then the window, keeping where it was (portal/).
             Some(Dialog::Portal) => self.close_portal(),
@@ -1122,76 +1118,9 @@ impl App {
                 self.dialog = Some(Dialog::AnnotationStyles);
             }
             Some(Dialog::AnnotationStyles) => self.annotation_styles = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::WallStyles))
-                if self.arch.wall_styles.as_ref().is_some_and(|w| w.asking()) =>
-            {
-                let _ = self.wall_styles_event(crate::wall_styles::Event::RemoveDropped);
-                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::WallStyles));
-            }
-            // An editor with its own save: Esc is its Kapat, which asks when changes would go; over the question, Esc
-            // is Vazgeç (docs/adr/8006). It threw the changes away.
-            Some(Dialog::Arch(arch::ArchDialogKind::WallStyles)) => {
-                use crate::wall_styles::Event;
-                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::WallStyles));
-                let closing = self.arch.wall_styles.as_ref().is_some_and(|w| w.closing());
-                let _ = self.wall_styles_event(if closing {
-                    Event::Answer(crate::unsaved_close::Answer::Stay)
-                } else {
-                    Event::Close
-                });
-            }
-            Some(Dialog::Arch(arch::ArchDialogKind::Program)) => {
-                use crate::program_window::Event;
-                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Program));
-                let closing = self
-                    .arch
-                    .program_window
-                    .as_ref()
-                    .is_some_and(|w| w.closing());
-                let _ = self.program_event(if closing {
-                    Event::Answer(crate::unsaved_close::Answer::Stay)
-                } else {
-                    Event::Close
-                });
-            }
             Some(Dialog::TableStyleDefs) => self.table_style_window = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::WallJoins)) => self.arch.wall_joins = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::OpeningTypes)) => {
-                use crate::opening_types_window::Event;
-                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::OpeningTypes));
-                let closing = self.arch.opening_types.as_ref().is_some_and(|w| w.closing);
-                let _ = self.opening_types_event(if closing {
-                    Event::Answer(crate::unsaved_close::Answer::Stay)
-                } else {
-                    Event::Close
-                });
-            }
-            Some(Dialog::Arch(arch::ArchDialogKind::Materials)) => {
-                use crate::materials_window::Event;
-                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Materials));
-                let closing = self.arch.materials.as_ref().is_some_and(|w| w.closing);
-                let _ = self.materials_event(if closing {
-                    Event::Answer(crate::unsaved_close::Answer::Stay)
-                } else {
-                    Event::Close
-                });
-            }
-            Some(Dialog::Arch(arch::ArchDialogKind::RoomModules)) => self.arch.room_modules = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::DesignOptions)) => {
-                self.arch.design_options = None
-            }
-            Some(Dialog::Arch(arch::ArchDialogKind::TagsCheck)) => self.arch.tags_check = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::ViewRefs)) => self.arch.view_refs = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::DigitalRules)) => self.arch.digital_rules = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::Deliveries)) => self.arch.deliveries = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::Underlays)) => self.arch.underlays_window = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::IfcCompare)) => self.arch.ifc_compare_window = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::Bcf)) => self.arch.bcf_window = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::ReviewPackage)) => self.arch.review_window = None,
-            Some(Dialog::Arch(arch::ArchDialogKind::ElementTypes)) => self.arch.element_types = None,
             Some(Dialog::SheetSet) => self.sheet_set = None,
             Some(Dialog::Xrefs | Dialog::XrefAttach) => self.xrefs = Default::default(),
-            Some(Dialog::Arch(arch::ArchDialogKind::Quantities)) => self.arch.quantities = None,
             Some(Dialog::LayerPurge) => self.layer_purge = None,
             Some(Dialog::TakeFrom) => self.take_from = None,
             Some(Dialog::LayerList) => self.layer_list = None,

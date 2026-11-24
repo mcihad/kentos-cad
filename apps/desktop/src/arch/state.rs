@@ -1,18 +1,18 @@
-//! The architecture (Mimari) module's part of the shell (plan/argon-tavsiye.md ADIM 06, docs/adr/8054 §6): its
-//! windows' and panels' state in `App::arch`, its messages under `Message::Arch`, its windows under
-//! `Dialog::Arch`. A new window of the module is added here and in its own file; `app.rs` stays as it is.
+//! The architecture (Mimari) module's hub (plan/argon-tavsiye.md ADIM 06, docs/adr/8054 §6, 9199 §4.9): its windows'
+//! and panels' state among the modules' (`App::modules`, [`ArchState`]), its messages as the shell's
+//! (`Message::Module`), its windows numbered as the shell's (`Dialog::Module`, [`dialog`]). A new window of the module
+//! is added here and in its own file; the shell stays as it is.
 
 use iced::{Element, Task};
 
 use crate::app::{App, Message};
 
 /// The architecture (Mimari) module's windows and panels.
-pub(crate) struct ArchUiState {
+#[derive(Default)]
+pub struct ArchUiState {
     /// The bottom panel's Denetim tab: the last architectural audit, the chosen finding, the group and the
     /// thresholds (arch_audit.rs, docs/adr/0703).
     pub(crate) arch_audit: crate::arch_audit::ArchAuditPanel,
-    /// The device's NTv2 grid library and the grids looked for (grids.rs, docs/adr/0168 §4).
-    pub(crate) grids: crate::grids::Grids,
     pub(crate) arch_template: Option<crate::architecture_template::Window>,
     /// Bina programı (program_window.rs, docs/adr/0773).
     pub(crate) program_window: Option<crate::program_window::Window>,
@@ -58,14 +58,11 @@ pub(crate) struct ArchUiState {
     pub(crate) underlay_picking: bool,
 }
 
-/// The architecture (Mimari) module's messages, `Message::Arch`.
+/// The architecture (Mimari) module's messages (`Message::Module`).
 #[derive(Debug, Clone)]
 pub enum Event {
     /// The Denetim tab (arch_audit.rs, docs/adr/0703).
     ArchAudit(crate::arch_audit::Event),
-    /// The NTv2 grids the project names, looked for in the device's library (grids.rs).
-    GridsLooked(Vec<crate::grids::Looked>),
-    ToolSetting(crate::architecture_settings::Commit),
     ArchTemplate(crate::architecture_template::Event),
     /// An event of Bina programı (program_window.rs, docs/adr/0773).
     Program(crate::program_window::Event),
@@ -99,9 +96,13 @@ pub enum Event {
     ReviewPackage(crate::package_review_window::Event),
     /// Eleman tipleri and the selection's type actions (element_types_window.rs, docs/adr/8106).
     ElementTypes(crate::element_types_window::Event),
+    /// IFC dışa aktar (bina): the file chosen (arch_ifc.rs, docs/adr/8047).
+    IfcBuildingExport(Option<std::path::PathBuf>),
+    /// IFC dışa aktar (bina, kesilmiş gövde): the file chosen (arch_ifc.rs, docs/adr/8071 §4).
+    IfcBuildingExportCut(Option<std::path::PathBuf>),
 }
 
-/// The architecture (Mimari) module's windows, `Dialog::Arch`.
+/// The architecture (Mimari) module's windows (`Dialog::Module`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArchDialogKind {
     /// Read-only architectural package preview, followed by an explicit semantic apply.
@@ -148,13 +149,99 @@ pub enum ArchDialogKind {
     ElementTypes,
 }
 
+impl ArchDialogKind {
+    /// Every window, in the order their numbers go (`ModuleDialog::kind`).
+    pub const ALL: [ArchDialogKind; 21] = [
+        ArchDialogKind::ArchTemplate,
+        ArchDialogKind::Program,
+        ArchDialogKind::SpaceMerge,
+        ArchDialogKind::WallStyles,
+        ArchDialogKind::WallJoins,
+        ArchDialogKind::OpeningTypes,
+        ArchDialogKind::Materials,
+        ArchDialogKind::RoomModules,
+        ArchDialogKind::DesignOptions,
+        ArchDialogKind::Schedule,
+        ArchDialogKind::ScheduleExport,
+        ArchDialogKind::TagsCheck,
+        ArchDialogKind::ViewRefs,
+        ArchDialogKind::Quantities,
+        ArchDialogKind::DigitalRules,
+        ArchDialogKind::Deliveries,
+        ArchDialogKind::Underlays,
+        ArchDialogKind::IfcCompare,
+        ArchDialogKind::Bcf,
+        ArchDialogKind::ReviewPackage,
+        ArchDialogKind::ElementTypes,
+    ];
+
+    /// The window's number (`ModuleDialog::kind`), its place in [`Self::ALL`]; a match with no arm for the rest, so a
+    /// new window does not build without its number.
+    pub const fn number(self) -> u16 {
+        match self {
+            ArchDialogKind::ArchTemplate => 0,
+            ArchDialogKind::Program => 1,
+            ArchDialogKind::SpaceMerge => 2,
+            ArchDialogKind::WallStyles => 3,
+            ArchDialogKind::WallJoins => 4,
+            ArchDialogKind::OpeningTypes => 5,
+            ArchDialogKind::Materials => 6,
+            ArchDialogKind::RoomModules => 7,
+            ArchDialogKind::DesignOptions => 8,
+            ArchDialogKind::Schedule => 9,
+            ArchDialogKind::ScheduleExport => 10,
+            ArchDialogKind::TagsCheck => 11,
+            ArchDialogKind::ViewRefs => 12,
+            ArchDialogKind::Quantities => 13,
+            ArchDialogKind::DigitalRules => 14,
+            ArchDialogKind::Deliveries => 15,
+            ArchDialogKind::Underlays => 16,
+            ArchDialogKind::IfcCompare => 17,
+            ArchDialogKind::Bcf => 18,
+            ArchDialogKind::ReviewPackage => 19,
+            ArchDialogKind::ElementTypes => 20,
+        }
+    }
+
+    /// The window of number `kind`; none for a number the module has not.
+    pub fn of(kind: u16) -> Option<Self> {
+        Self::ALL.get(usize::from(kind)).copied()
+    }
+}
+
+/// The module's window `kind` as the shell's.
+pub fn dialog(kind: ArchDialogKind) -> crate::app::Dialog {
+    crate::app::Dialog::Module(crate::module_parts::ModuleDialog { module: kentos_launch::Module::Architecture, kind: kind.number() })
+}
+
+impl From<Event> for Message {
+    fn from(event: Event) -> Self {
+        Message::Module(crate::module_parts::ModuleEvent::new(kentos_launch::Module::Architecture, event))
+    }
+}
+
+/// The module's state among the modules' (`App::modules`).
+pub trait ArchState {
+    fn arch(&self) -> &ArchUiState;
+    fn arch_mut(&mut self) -> &mut ArchUiState;
+}
+
+impl ArchState for crate::module_parts::ModuleStates {
+    fn arch(&self) -> &ArchUiState {
+        // Every program with the module's parts starts its state (ModuleStates::start).
+        self.get::<ArchUiState>().expect("Mimari modülünün durumu başlatılmamış")
+    }
+
+    fn arch_mut(&mut self) -> &mut ArchUiState {
+        self.get_mut::<ArchUiState>().expect("Mimari modülünün durumu başlatılmamış")
+    }
+}
+
 impl App {
-    /// A message of the module (`Message::Arch`); a window's own handler is in its file.
+    /// A message of the module; a window's own handler is in its file.
     pub(crate) fn arch_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::ArchAudit(event) => return self.arch_audit_event(event),
-            Event::GridsLooked(looked) => self.grids_looked(looked),
-            Event::ToolSetting(event) => return self.tool_setting(event),
             Event::Program(event) => return self.program_event(event),
             Event::WallStyles(event) => return self.wall_styles_event(event),
             Event::WallJoins(event) => return self.wall_joins_event(event),
@@ -175,11 +262,17 @@ impl App {
             Event::ReviewPackage(event) => return self.review_event(event),
             Event::ElementTypes(event) => return self.element_types_event(event),
             Event::ArchTemplate(event) => self.architecture_template_event(event),
+            Event::IfcBuildingExport(path) => {
+                return self.ifc_building_chosen(path, kentos_commands::IfcView::DesignTransfer);
+            }
+            Event::IfcBuildingExportCut(path) => {
+                return self.ifc_building_chosen(path, kentos_commands::IfcView::Reference);
+            }
         }
         Task::none()
     }
 
-    /// A window of the module (`Dialog::Arch`).
+    /// A window of the module.
     pub(crate) fn arch_dialog_view(&self, kind: ArchDialogKind) -> Element<'_, Message> {
         match kind {
             ArchDialogKind::Program => self.program_view(),

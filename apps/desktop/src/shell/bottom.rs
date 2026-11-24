@@ -109,7 +109,7 @@ impl BottomTab {
             BottomTab::Search => plan::TAB_SEARCH,
             BottomTab::Address => plan::TAB_ADDRESS,
             BottomTab::Topology => plan::TAB_TOPOLOGY,
-            BottomTab::Audit => crate::arch_audit::TAB,
+            BottomTab::Audit => "Denetim",
             BottomTab::ExtAudit => "Eklenti denetimi",
             BottomTab::CadInspection => crate::cad_inspection::TAB,
             BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,
@@ -238,7 +238,8 @@ impl App {
             BottomTab::Search => self.data_tab(),
             BottomTab::Address => self.address_tab(),
             BottomTab::Topology => self.topology_tab(),
-            BottomTab::Audit => self.arch_audit_tab(),
+            // Denetim (Mimari denetimi): the module's tab (docs/adr/9199 §4.9).
+            BottomTab::Audit => self.module_bottom_tab_view(BottomTab::Audit),
             BottomTab::ExtAudit => self.ext_audit_tab(),
             BottomTab::CadInspection => self.cad_inspection_tab(),
             BottomTab::ServiceInfo => self.service_info_tab(),

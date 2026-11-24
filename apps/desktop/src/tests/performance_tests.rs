@@ -4,6 +4,7 @@
 //! declared and never an empty word; EK-9's 9th question is read from the model.
 
 use kentos_commands::Entity;
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 
@@ -33,7 +34,7 @@ fn run(app: &mut App, command: &str, input: serde_json::Value) -> serde_json::Va
 fn required(app: &mut App) -> Vec<(String, Vec<String>)> {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    app.arch
+    app.modules.arch()
         .arch_audit
         .audited
         .as_ref()
@@ -225,8 +226,8 @@ fn screens() {
             _ => unreachable!(),
         };
         let _ = app.update(Message::Run("arch.wallStyles"));
-        let _ = app.update(Message::Arch(crate::arch::Event::WallStyles(Styles::Choose(Some(style.clone())))));
-        let _ = app.update(Message::Arch(crate::arch::Event::WallStyles(Styles::FireRating("REI 120".into()))));
+        let _ = app.update(Message::from(crate::arch::Event::WallStyles(Styles::Choose(Some(style.clone())))));
+        let _ = app.update(Message::from(crate::arch::Event::WallStyles(Styles::FireRating("REI 120".into()))));
         shot(&mut app, "1-duvar-stili");
         run(
             &mut app,
@@ -234,7 +235,7 @@ fn screens() {
             serde_json::json!({"operation": {"kind": "wallStyle", "style": style, "fireRating": {"value": "REI 120", "basis": {"kind": "author"}}}}),
         );
         app.dialog = None;
-        app.arch.wall_styles = None;
+        app.modules.arch_mut().wall_styles = None;
         // Öznitelikler: the wall carries its style's class.
         app.selection.set(vec![wall]);
         shot(&mut app, "2-duvar-oznitelikler");
@@ -253,12 +254,12 @@ fn screens() {
         app.selection.set(Vec::new());
         let found = required(&mut app);
         assert!(!found.is_empty());
-        app.arch.arch_audit.group = Some(kentos_commands::ArchAuditCheck::Regulation);
-        let at = app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter()
+        app.modules.arch_mut().arch_audit.group = Some(kentos_commands::ArchAuditCheck::Regulation);
+        let at = app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter()
             .position(|f| f.code == "digital_required_field" && f.message.contains("Pset_WallCommon.FireRating"))
-            .or_else(|| app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter().position(|f| f.code == "digital_required_field"))
+            .or_else(|| app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter().position(|f| f.code == "digital_required_field"))
             .expect("a mandatory field finding");
-        app.arch.arch_audit.selected = Some(at);
+        app.modules.arch_mut().arch_audit.selected = Some(at);
         shot(&mut app, "4-denetim-zorunlu-alanlar");
     }
 }
@@ -277,7 +278,7 @@ fn a_wall_style_s_load_bearing_role_reaches_its_walls() {
         _ => unreachable!(),
     };
     let styles = |app: &mut App, e: Styles| {
-        let _ = app.update(Message::Arch(crate::arch::Event::WallStyles(e)));
+        let _ = app.update(Message::from(crate::arch::Event::WallStyles(e)));
     };
     let _ = app.update(Message::Run("arch.wallStyles"));
     styles(&mut app, Styles::Choose(Some(style.clone())));
@@ -289,7 +290,7 @@ fn a_wall_style_s_load_bearing_role_reaches_its_walls() {
     };
     assert_eq!(held(&app).map(|b| (b.bearing, b.basis)), Some((true, kentos_commands::DeclaredBasis::Author)));
     app.dialog = None;
-    app.arch.wall_styles = None;
+    app.modules.arch_mut().wall_styles = None;
     let row = |app: &App| {
         let doc = app.document.as_ref().expect("open");
         let rows: Vec<(String, String)> = app
@@ -321,7 +322,7 @@ fn a_wall_style_s_load_bearing_role_reaches_its_walls() {
     styles(&mut app, Styles::LoadBearing(None));
     styles(&mut app, Styles::Save);
     app.dialog = None;
-    app.arch.wall_styles = None;
+    app.modules.arch_mut().wall_styles = None;
     assert_eq!(held(&app), None);
     assert_eq!(row(&app).0, "Bilinmiyor");
     assert_eq!(facts(&app), None);
@@ -371,7 +372,7 @@ fn style_bearing_screens() {
             _ => unreachable!(),
         };
         let styles = |app: &mut App, e: Styles| {
-            let _ = app.update(Message::Arch(crate::arch::Event::WallStyles(e)));
+            let _ = app.update(Message::from(crate::arch::Event::WallStyles(e)));
         };
         let _ = app.update(Message::Run("arch.wallStyles"));
         styles(&mut app, Styles::Choose(Some(style.clone())));
@@ -379,7 +380,7 @@ fn style_bearing_screens() {
         shot(&mut app, "1-duvar-stilleri", None);
         styles(&mut app, Styles::Save);
         app.dialog = None;
-        app.arch.wall_styles = None;
+        app.modules.arch_mut().wall_styles = None;
         app.selection.set(vec![wall]);
         shot(&mut app, "2-duvar-oznitelikler", Some(2.0));
     }

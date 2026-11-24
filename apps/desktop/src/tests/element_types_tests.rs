@@ -9,6 +9,7 @@
 //! ```
 
 use std::path::PathBuf;
+use crate::arch::ArchState;
 
 use kentos_commands::{ArchChange, ArchOperation, Entity, type_link};
 use kentos_domain::Slot;
@@ -21,7 +22,7 @@ use crate::recovery::Recovery;
 use crate::settings::Settings;
 
 fn send(app: &mut App, e: Event) {
-    let task = app.update(Message::Arch(crate::arch::Event::ElementTypes(e)));
+    let task = app.update(Message::from(crate::arch::Event::ElementTypes(e)));
     drive(app, task);
 }
 
@@ -69,7 +70,7 @@ fn typed() -> (App, Vec<Slot>, String) {
     assert_eq!(cols.len(), 16, "the section building's columns");
     app.selection.set([cols[0]]);
     let _ = app.update(Message::Run("arch.elementTypeFrom"));
-    let id = app.arch.element_types.as_ref().and_then(|w| w.chosen.clone()).expect("the new type chosen");
+    let id = app.modules.arch().element_types.as_ref().and_then(|w| w.chosen.clone()).expect("the new type chosen");
     app.selection.set(cols.clone());
     send(&mut app, Event::Assign(id.clone()));
     let last = cols[15];
@@ -101,7 +102,7 @@ fn the_type_s_width_changed_fifteen_columns_follow_and_the_one_with_its_own_keep
     let next = was + 0.05;
     let f = kentos_interaction::Format::of(app.document.as_ref().expect("open").model.settings());
     send(&mut app, Event::Value("width", f.length_bare(next)));
-    let preview = app.arch.element_types.as_ref().and_then(|w| w.preview.clone()).expect("a plan");
+    let preview = app.modules.arch().element_types.as_ref().and_then(|w| w.preview.clone()).expect("a plan");
     let plan = preview.expect("it holds");
     assert_eq!(plan.report.applied.len(), 16);
     assert_eq!(plan.report.kept.len(), 1);

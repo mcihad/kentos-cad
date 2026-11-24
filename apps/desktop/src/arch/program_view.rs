@@ -29,6 +29,7 @@ use kentos_ui::style;
 use kentos_ui::theme::typography::scaled;
 use kentos_ui::widget::table::{Column as Col, Row, Table};
 use kentos_ui::widget::{Choice, Dialog as Frame, Form, ListDetails, Pairs, Segmented, Select, text_field};
+use crate::arch::ArchState;
 
 use super::{
     ADD_BRIEF, ADD_BUILDING, ADD_UNIT, ADD_WING, CANCEL, CHECK, Event, GIVE, SAVE, SHOW_ON_PLAN, STOP, TITLE, Tab,
@@ -98,7 +99,7 @@ impl App {
     }
 
     pub(crate) fn program_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.program_window else {
+        let Some(w) = &self.modules.arch().program_window else {
             return space::horizontal().into();
         };
         let tabs = Segmented::new([Tab::Buildings, Tab::Units, Tab::Briefs, Tab::Status], w.tab, |t| {

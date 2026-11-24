@@ -676,6 +676,15 @@ impl App {
         }
     }
 
+    /// A new project opens on its program's own tab: KentOS Mimari's on Mimari, where Duvar is. Other programs, and
+    /// a file opened, keep the tab as it was.
+    pub(crate) fn open_new_project_on_program_tab(&mut self) {
+        if let Some(tab) = self.program.and_then(crate::view::program_tab) {
+            self.tab = tab;
+            self.ribbon_context = false;
+        }
+    }
+
     /// Vazgeç on the unsaved question: the wizard comes back, nothing built kept.
     pub(crate) fn new_project_declined(&mut self) {
         if let Some(Window::New(s)) = &mut self.project {

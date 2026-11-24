@@ -5,6 +5,7 @@
 //! delivery is counted; a folder changed after the delivery is said, and the form goes back to the drawing.
 
 use std::path::{Path, PathBuf};
+use crate::arch::ArchState;
 
 use iced::Size;
 use kentos_commands::Entity;
@@ -19,7 +20,7 @@ use crate::bim_permit_tests::declared_building;
 use crate::use_class_tests::{checked, run};
 
 fn send(app: &mut App, e: Event) {
-    let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(e)));
+    let _ = app.update(Message::from(crate::arch::Event::ArchAudit(e)));
 }
 
 fn folder(name: &str) -> PathBuf {
@@ -71,7 +72,7 @@ fn deliver(app: &mut App, dir: &Path, carried: bool) -> String {
 
 /// The Dijital proje package's findings now: their codes, sorted.
 fn digital(app: &App) -> Vec<String> {
-    let mut codes: Vec<String> = app.arch.arch_audit.standards.iter().map(|f| f.code.clone()).filter(|c| c.starts_with("digital_")).collect();
+    let mut codes: Vec<String> = app.modules.arch().arch_audit.standards.iter().map(|f| f.code.clone()).filter(|c| c.starts_with("digital_")).collect();
     codes.sort();
     codes
 }
@@ -84,7 +85,7 @@ fn a_wall(app: &App) -> String {
 
 /// The line over the table.
 fn line(app: &App) -> crate::arch_audit::DeliveredLine {
-    app.arch.arch_audit.delivered.clone().expect("the delivered model's line")
+    app.modules.arch().arch_audit.delivered.clone().expect("the delivered model's line")
 }
 
 #[test]

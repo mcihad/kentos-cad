@@ -572,9 +572,22 @@ impl App {
             }
             other => other,
         };
-        if let Event::Opening(slot, op @ kentos_commands::OpeningsOperation::Push { .. }) = &event {
-            self.preview_opening_push_at(*slot, op.clone());
-            return;
+        // A module takes what its windows ask first or its own types answer (Tipe uygula's preview, Tip, Çizelge;
+        // docs/adr/9199 §4.9).
+        let ask = match &event {
+            Event::Opening(slot, op @ kentos_commands::OpeningsOperation::Push { .. }) => {
+                Some(crate::module_parts::PropertiesAsk::OpeningPush(*slot, op))
+            }
+            Event::ElementType(a) => Some(crate::module_parts::PropertiesAsk::ElementType(a)),
+            Event::Schedule(a) => Some(crate::module_parts::PropertiesAsk::Schedule(a)),
+            _ => None,
+        };
+        if let Some(ask) = ask {
+            for parts in crate::module_parts::all() {
+                if parts.properties_ask(self, ask) {
+                    return;
+                }
+            }
         }
         // Docs/adr/4600: Gerekçe typed in Öznitelikler › Topoloji is the tab's own words; the drawing does not change.
         if let Event::Commit(Field::TopologyReason, text) = &event {
@@ -710,7 +723,7 @@ impl App {
         let drawing = doc.path.clone();
         let model = &mut doc.model;
         let said = match event {
-            Event::Toggle(_) | Event::ToggleGroup(_) | Event::SelectObject(_) | Event::Kind(_) | Event::SurveyPoint(_) | Event::Query | Event::Guarded(_, _) | Event::TextLayoutPreview(_, _) => Vec::new(),
+            Event::Toggle(_) | Event::ToggleGroup(_) | Event::SelectObject(_) | Event::Kind(_) | Event::SurveyPoint(_) | Event::Query | Event::Guarded(_, _) | Event::TextLayoutPreview(_, _) | Event::ElementType(_) | Event::Schedule(_) => Vec::new(),
             Event::Unlink(ids) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::Unlink);
                 input.unlink = true;

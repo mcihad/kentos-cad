@@ -15,6 +15,7 @@
 
 use crate::arch;
 use std::collections::HashMap;
+use crate::arch::ArchState;
 
 use iced::widget::canvas::{self, Frame, Path, Stroke};
 use iced::widget::{Column, button, container, row};
@@ -28,7 +29,7 @@ use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Choice, Confirm, Dialog as Frame_, Elided, Select, overlay};
 use kentos_ui::{label, style};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind as Line};
 
 /// The window's title, which a trace names it by.
@@ -117,7 +118,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Arch(arch::Event::WallStyles(event))
+    Message::from(arch::Event::WallStyles(event))
 }
 
 fn shown(n: Option<f64>) -> String {
@@ -287,12 +288,12 @@ impl App {
             closing: false,
         };
         w.fill();
-        self.arch.wall_styles = Some(w);
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::WallStyles));
+        self.modules.arch_mut().wall_styles = Some(w);
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::WallStyles));
     }
 
     fn wall_styles_changed(&self) -> bool {
-        self.arch
+        self.modules.arch()
             .wall_styles
             .as_ref()
             .is_some_and(|w| {
@@ -303,11 +304,11 @@ impl App {
 
     /// Kaydet: each style removed, made or changed through `cad.styles.edit`, in one undo step.
     fn save_wall_styles(&mut self) {
-        let Some(w) = self.arch.wall_styles.clone() else {
+        let Some(w) = self.modules.arch().wall_styles.clone() else {
             return;
         };
         if w.problem().is_some() {
-            if let Some(window) = self.arch.wall_styles.as_mut() {
+            if let Some(window) = self.modules.arch_mut().wall_styles.as_mut() {
                 window.show_problem = true;
                 window.closing = false;
             }
@@ -397,7 +398,7 @@ impl App {
                 "{locked} duvar kilitli katmanda; eski görünüşüyle kaldı. Kilidi açıp stili yeniden kaydedin."
             ));
         }
-        self.arch.wall_styles = None;
+        self.modules.arch_mut().wall_styles = None;
         self.dialog = None;
     }
 
@@ -408,17 +409,17 @@ impl App {
                 return Task::none();
             }
             Event::Cancel | Event::Answer(crate::unsaved_close::Answer::Discard) => {
-                self.arch.wall_styles = None;
+                self.modules.arch_mut().wall_styles = None;
                 self.dialog = None;
                 return Task::none();
             }
             Event::Close => {
                 if self.wall_styles_changed() {
-                    if let Some(w) = self.arch.wall_styles.as_mut() {
+                    if let Some(w) = self.modules.arch_mut().wall_styles.as_mut() {
                         w.closing = true;
                     }
                 } else {
-                    self.arch.wall_styles = None;
+                    self.modules.arch_mut().wall_styles = None;
                     self.dialog = None;
                 }
                 return Task::none();
@@ -428,14 +429,14 @@ impl App {
                 return Task::none();
             }
             Event::Answer(crate::unsaved_close::Answer::Stay) => {
-                if let Some(w) = self.arch.wall_styles.as_mut() {
+                if let Some(w) = self.modules.arch_mut().wall_styles.as_mut() {
                     w.closing = false;
                 }
                 return Task::none();
             }
             _ => {}
         }
-        let Some(w) = self.arch.wall_styles.as_mut() else {
+        let Some(w) = self.modules.arch_mut().wall_styles.as_mut() else {
             return Task::none();
         };
         w.show_problem = !matches!(event, Event::Width(_));
@@ -651,7 +652,7 @@ impl App {
     }
 
     pub(crate) fn wall_styles_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.wall_styles else {
+        let Some(w) = &self.modules.arch().wall_styles else {
             return iced::widget::text("").into();
         };
         let Some(doc) = self.document.as_ref() else {

@@ -13,6 +13,7 @@
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -119,13 +120,13 @@ fn the_facts_carry_the_storeys_heights_and_what_each_door_enters() {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The two articles' findings in the tab: code, state, message; and their rows: rule, version, outcome.
 type Rows = Vec<(String, Option<String>, O)>;
 fn said(app: &App) -> (Vec<(String, Option<S>, String)>, Rows) {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited
         .findings
         .iter()
@@ -136,7 +137,7 @@ fn said(app: &App) -> (Vec<(String, Option<S>, String)>, Rows) {
         })
         .map(|f| (f.code.clone(), f.state, f.message.clone()))
         .collect();
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows = set
         .rules
         .iter()
@@ -277,8 +278,8 @@ fn screens() {
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             checked(&mut app);
-            let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-            app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == code);
+            let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+            app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == code);
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             snapshot.settle(&mut app, App::view, &mut update);
             app.selection.set(Vec::new());

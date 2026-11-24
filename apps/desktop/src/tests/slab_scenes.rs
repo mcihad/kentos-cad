@@ -17,7 +17,7 @@ use kentos_domain::Slot;
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
-use crate::architecture_settings::Commit;
+use crate::tool_settings::Commit;
 use crate::tools_scenes::{E, N, click, hover, run, typed};
 use crate::tools_screens::Scene;
 use crate::walkthrough_scenes::{rooms, view};
@@ -156,7 +156,7 @@ fn measured(app: &mut App, tab: crate::quantities::Tab) {
     }
     app.selection.clear();
     run(app, "arch.quantities");
-    let _ = app.update(Message::Arch(arch::Event::Quantities(
+    let _ = app.update(Message::from(arch::Event::Quantities(
         crate::quantities::Event::Tab(tab),
     )));
 }

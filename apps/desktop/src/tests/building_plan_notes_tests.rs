@@ -10,6 +10,7 @@
 //! ```
 
 use kentos_commands::{ArchAuditOutcome as O, PlanNoteKey};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::arch;
@@ -19,7 +20,7 @@ use crate::project::plan_notes::Edit;
 const A_SOURCE: &str = "UİP 12.3.2019, kademe hattı A alanı";
 
 fn ev(app: &mut App, e: Event) {
-    let _ = app.update(Message::Arch(arch::Event::Program(e)));
+    let _ = app.update(Message::from(arch::Event::Program(e)));
 }
 
 /// The house as A Blok and three storeys beside it as B Blok, the project's Bina yüksekliği note 9.50 m; Bina programı
@@ -63,15 +64,15 @@ fn a_note(app: &mut App, value: &str, source: &str) {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The building height's findings (message) and the rows of its notes (rule, outcome).
 fn heights(app: &App) -> (Vec<String>, Vec<(String, O)>) {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found =
         audited.findings.iter().filter(|f| f.code == "paiy_building_height_over").map(|f| f.message.clone()).collect();
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows = set
         .rules
         .iter()
@@ -178,8 +179,8 @@ fn screens() {
         ev(&mut app, Event::Close);
         app.toasts.clear();
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_building_height_over");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_building_height_over");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());
         let _ = app.update(Message::Run("view.zoomExtents"));

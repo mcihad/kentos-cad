@@ -9,10 +9,10 @@ use kentos_commands::{ElementType, ElementTypeKind, Entity, fields_off_type, typ
 use super::{Choice, Editor, Row, Section};
 use crate::app::Message;
 use crate::document::Document;
-use crate::element_types_window::Event;
+use crate::properties::ElementTypeAsk as Event;
 
 fn msg(e: Event) -> Message {
-    Message::Arch(crate::arch::Event::ElementTypes(e))
+    Message::Properties(crate::properties::Event::ElementType(e))
 }
 
 /// The rows Öznitelikler shows a type field's value in, by their names, for each kind.

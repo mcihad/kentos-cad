@@ -6,6 +6,7 @@
 use kentos_commands::{ArchAuditOutcome, ArchAuditState};
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -100,19 +101,19 @@ pub(crate) fn dated(app: &mut App, date: Option<&str>) {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The rule set's outcomes by article: `(rule, version, outcome)`.
 /// The lift articles' outcomes (the doors' rows are their own test's).
 fn outcomes(app: &App) -> Vec<(String, Option<String>, ArchAuditOutcome)> {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     set.rules.iter().filter(|r| r.rule.contains(" 34/")).map(|r| (r.rule.clone(), r.version.clone(), r.state)).collect()
 }
 
 /// The standards package's findings in the tab: code, state, message.
 fn regulation(app: &App) -> Vec<(String, Option<ArchAuditState>, String)> {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     audited
         .findings
         .iter()
@@ -152,7 +153,7 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
     // car park, docs/adr/8108; 28/2, 28/3: no roof, docs/adr/8134; 39/4, 25/1, 25/2: no site plan edge against a
     // neighbour, docs/adr/8142; 41/1, 41/2: no site plan, no projection, docs/adr/8152; 40/4, 40/5, 42/1, 58/2: no roof,
     // docs/adr/8159) out of it.
-    let line = app.arch.arch_audit.rule_set.as_ref().expect("the rule set").line();
+    let line = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set").line();
     assert_eq!(
         line,
         "Kural seti — Başvuru tarihi künyeden: 30.6.2026 · PAİY 34/1 (11.7.2021) geçti · BYKHY 24/2 (19.12.2007) kaldı \
@@ -179,7 +180,7 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
             "Bodrum kat: asansör bu kata ulaşmıyor (katta eklenti ve teknik hacim) — PAİY 34/8 (1.7.2026)".to_owned()
         )]
     );
-    let rule = app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter().find(|f| f.code == "paiy_elevator_not_serving").and_then(|f| f.rule.clone());
+    let rule = app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter().find(|f| f.code == "paiy_elevator_not_serving").and_then(|f| f.rule.clone());
     assert_eq!(rule.as_deref(), Some("PAİY 34/8 · RG 1.7.2026/33297"));
     // No date: the two versions disagree, so the finding is eksik veri, never a guess.
     dated(&mut app, None);
@@ -210,13 +211,13 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
 fn an_expert_s_approval_of_a_package_finding_is_kept_until_the_finding_changes() {
     use crate::arch_audit::Event;
     let event = |app: &mut App, e: Event| {
-        let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(e)));
+        let _ = app.update(Message::from(crate::arch::Event::ArchAudit(e)));
     };
     let mut app = building(&[("Kazan dairesi", "o")], 4);
     dated(&mut app, Some("02.07.2026"));
     checked(&mut app);
     let listed = |app: &App| {
-        let a = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let a = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
         a.findings.iter().filter(|f| f.code == "paiy_elevator_not_serving").cloned().collect::<Vec<_>>()
     };
     let asked = listed(&app);
@@ -232,7 +233,7 @@ fn an_expert_s_approval_of_a_package_finding_is_kept_until_the_finding_changes()
     assert_eq!(exceptions.len(), 1, "{exceptions:#?}");
     assert_eq!(exceptions[0].code, "paiy_elevator_not_serving");
     assert!(listed(&app).is_empty(), "the approved finding is hidden");
-    assert_eq!(app.arch.arch_audit.audited.as_ref().expect("checked").excepted, 1, "counted once");
+    assert_eq!(app.modules.arch().arch_audit.audited.as_ref().expect("checked").excepted, 1, "counted once");
     event(&mut app, Event::View(1));
     app.arch_audit_standards_settle();
     let shown = listed(&app);
@@ -328,13 +329,13 @@ fn office_storey(side: &str, rating: &str) -> App {
 #[test]
 fn the_doors_of_a_crowded_room_and_of_the_stair_are_read_by_bykhy_47() {
     let said = |app: &App| {
-        app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter()
+        app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter()
             .filter(|f| f.code.starts_with("bykhy_exit_door") || f.code.starts_with("bykhy_stair_door"))
             .map(|f| (f.code.clone(), f.message.clone(), f.rule.clone()))
             .collect::<Vec<_>>()
     };
     let rows = |app: &App| {
-        app.arch.arch_audit.rule_set.as_ref().expect("the rule set").rules.iter()
+        app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set").rules.iter()
             .filter(|r| r.rule.starts_with("BYKHY 47"))
             .map(|r| (r.rule.clone(), r.state))
             .collect::<Vec<_>>()
@@ -377,8 +378,8 @@ fn screens() {
             dated(&mut app, date);
             checked(&mut app);
             // The standards package's finding chosen, so the table shows its row.
-            let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-            app.arch.arch_audit.selected = audited
+            let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+            app.modules.arch_mut().arch_audit.selected = audited
                 .findings
                 .iter()
                 .position(|f| matches!(f.code.as_str(), "paiy_elevator_not_serving" | "regulation_date_needed"));
@@ -394,7 +395,7 @@ fn screens() {
         // The reviewer's approval of the basement holding only the boiler room, listed with İstisnalar: Göster.
         use crate::arch_audit::Event;
         let event = |app: &mut App, e: Event| {
-            let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(e)));
+            let _ = app.update(Message::from(crate::arch::Event::ArchAudit(e)));
         };
         let mut app = building(&[("Kazan dairesi", "o")], 4);
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
@@ -410,8 +411,8 @@ fn screens() {
         app.arch_audit_standards_settle();
         event(&mut app, Event::View(1));
         app.arch_audit_standards_settle();
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_elevator_not_serving");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_elevator_not_serving");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -426,8 +427,8 @@ fn screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_exit_door_swing");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_exit_door_swing");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

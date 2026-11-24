@@ -17,6 +17,7 @@
 use crate::arch;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use crate::arch::ArchState;
 
 use iced::futures::channel::mpsc;
 use iced::Task;
@@ -26,7 +27,7 @@ use kentos_commands::{
 };
 use kentos_native_application::{ExecutionContext, program_check, program_edit};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 
 // The window's look: its parts, lists and forms (DESIGN.md §7.9).
 #[path = "program_view.rs"]
@@ -213,7 +214,7 @@ pub enum Event {
 }
 
 fn msg(event: Event) -> Message {
-    Message::Arch(arch::Event::Program(event))
+    Message::from(arch::Event::Program(event))
 }
 
 fn number(t: &str, what: &str) -> Result<Option<f64>, String> {
@@ -376,12 +377,12 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
-        self.arch.program_window = Some(Window::of(&doc.model.program()));
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Program));
+        self.modules.arch_mut().program_window = Some(Window::of(&doc.model.program()));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Program));
     }
 
     pub(crate) fn program_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.arch.program_window.as_mut() else {
+        let Some(w) = self.modules.arch_mut().program_window.as_mut() else {
             return Task::none();
         };
         match event {
@@ -702,7 +703,7 @@ impl App {
                 if let Some(r) = w.running.take() {
                     r.stop.store(true, Ordering::Relaxed);
                 }
-                self.arch.program_window = None;
+                self.modules.arch_mut().program_window = None;
                 self.dialog = None;
             }
             Event::Close => {
@@ -712,7 +713,7 @@ impl App {
                     if let Some(r) = w.running.take() {
                         r.stop.store(true, Ordering::Relaxed);
                     }
-                    self.arch.program_window = None;
+                    self.modules.arch_mut().program_window = None;
                     self.dialog = None;
                 }
             }
@@ -721,14 +722,14 @@ impl App {
                 let task = self.save_program();
                 // Written: the window is the saved program again and closes; refused, it stays and says why.
                 if self
-                    .arch
+                    .modules.arch()
                     .program_window
                     .as_ref()
                     .is_some_and(|w| !w.unsaved())
                 {
-                    self.arch.program_window = None;
+                    self.modules.arch_mut().program_window = None;
                     self.dialog = None;
-                } else if let Some(w) = self.arch.program_window.as_mut() {
+                } else if let Some(w) = self.modules.arch_mut().program_window.as_mut() {
                     w.closing = false;
                 }
                 return task;
@@ -741,7 +742,7 @@ impl App {
     fn show_program_finding(&mut self, index: usize) -> Task<Message> {
         let (Some(doc), Some(finding)) = (
             self.document.as_ref(),
-            self.arch.program_window.as_ref().and_then(|w| w.checked.as_ref())
+            self.modules.arch().program_window.as_ref().and_then(|w| w.checked.as_ref())
                 .and_then(|checked| checked.findings.get(index)),
         ) else {
             return Task::none();
@@ -752,7 +753,7 @@ impl App {
         let level = level_of(first)
             .filter(|level| slots.iter().all(|&slot| level_of(slot) == Some(*level)))
             .map(str::to_owned);
-        self.arch.program_window = None;
+        self.modules.arch_mut().program_window = None;
         self.dialog = None;
         if let Some(level) = level {
             if self.active_level().as_deref() != Some(&level) {
@@ -769,7 +770,7 @@ impl App {
 
     /// Kaydet: the program as typed through `cad.program.edit`; the window stays open on what was written.
     fn save_program(&mut self) -> Task<Message> {
-        let Some(w) = &self.arch.program_window else {
+        let Some(w) = &self.modules.arch().program_window else {
             return Task::none();
         };
         let program = match w.program() {
@@ -787,21 +788,21 @@ impl App {
         if let Some(out) = self.answered(result) {
             self.output("Bina programı yazıldı.");
             let tab = self
-                .arch
+                .modules.arch()
                 .program_window
                 .as_ref()
                 .map(|w| w.tab)
                 .unwrap_or_default();
             let mut fresh = Window::of(&out.program);
             fresh.tab = tab;
-            self.arch.program_window = Some(fresh);
+            self.modules.arch_mut().program_window = Some(fresh);
         }
         Task::none()
     }
 
     /// Seçilenleri ver: the selected spaces given to the group of row `i` (the program written first).
     fn give_to_unit(&mut self, i: usize) -> Task<Message> {
-        let Some(w) = &self.arch.program_window else {
+        let Some(w) = &self.modules.arch().program_window else {
             return Task::none();
         };
         let program = match w.program() {
@@ -834,14 +835,14 @@ impl App {
         if let Some(out) = self.answered(result) {
             self.output(format!("{n} mahal bölüme verildi."));
             let tab = self
-                .arch
+                .modules.arch()
                 .program_window
                 .as_ref()
                 .map(|w| w.tab)
                 .unwrap_or_default();
             let mut fresh = Window::of(&out.program);
             fresh.tab = tab;
-            self.arch.program_window = Some(fresh);
+            self.modules.arch_mut().program_window = Some(fresh);
         }
         Task::none()
     }
@@ -852,7 +853,7 @@ impl App {
             return Task::none();
         };
         let copy = doc.model.reading_copy();
-        let Some(w) = self.arch.program_window.as_mut() else {
+        let Some(w) = self.modules.arch_mut().program_window.as_mut() else {
             return Task::none();
         };
         if let Some(r) = w.running.take() {
@@ -892,7 +893,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn program_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.arch.program_window.is_none() {
+        if self.modules.arch().program_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

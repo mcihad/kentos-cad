@@ -21,6 +21,10 @@ mod aids;
 mod alias_profile;
 #[path = "shell/module_names.rs"]
 mod module_names;
+#[path = "shell/tool_settings.rs"]
+mod tool_settings;
+#[path = "shell/underlay_model.rs"]
+mod underlay_model;
 #[path = "shell/unsaved_close.rs"]
 mod unsaved_close;
 #[path = "shell/window_pick.rs"]
@@ -133,10 +137,6 @@ mod bond_notice;
 mod arch_project;
 #[path = "arch/arch_start.rs"]
 mod arch_start;
-#[path = "arch/architecture_settings.rs"]
-mod architecture_settings;
-#[path = "arch/architecture_ribbon.rs"]
-mod architecture_ribbon;
 #[path = "arch/architecture_template.rs"]
 mod architecture_template;
 #[path = "arch/quantities/mod.rs"]
@@ -160,6 +160,8 @@ mod works;
 // Each discipline's part of the shell: its windows' state, messages and windows (docs/adr/8054 §6).
 #[path = "arch/state.rs"]
 mod arch;
+#[path = "arch/parts.rs"]
+mod arch_parts;
 #[path = "gis/state.rs"]
 pub mod gis;
 
@@ -267,7 +269,7 @@ mod fixture_search;
 mod zoning_badge;
 #[path = "shell/section_badge.rs"]
 mod section_badge;
-#[path = "arch/grids.rs"]
+#[path = "shell/grids.rs"]
 mod grids;
 #[path = "cad/history/mod.rs"]
 mod history;

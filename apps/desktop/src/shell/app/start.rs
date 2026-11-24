@@ -288,6 +288,7 @@ impl App {
             terrain_work: Default::default(),
             template_work: Default::default(),
             active_level: Default::default(),
+            grids: crate::grids::Grids::default(),
             modules: crate::module_parts::ModuleStates::start(),
             gis: crate::gis::GisUiState {
                 sources: crate::sources::SourcesPanel::default(),
@@ -360,35 +361,9 @@ impl App {
                 processing: crate::processing::Processing::default(),
                 builder: None,
             },
-            arch: crate::arch::ArchUiState {
-                arch_audit: Default::default(),
-                grids: crate::grids::Grids::default(),
-                arch_template: None,
-                program_window: None,
-                wall_styles: None,
-                wall_joins: None,
-                opening_types: None,
-                materials: None,
-                material_libraries: crate::material_library::Libraries::default(),
-                room_modules: None,
-                design_options: None,
-                tags_check: None,
-                schedule: None,
-                view_refs: None,
-                digital_rules: None,
-                deliveries: None,
-                underlays: Default::default(),
-                underlays_window: None,
-                ifc_compare_window: None,
-                bcf_window: None,
-                review_window: None,
-                element_types: None,
-                underlay_picking: false,
-                quantities: None,
-            },
         };
-        // KentOS Mimari's wall tools start on a hatched style (docs/adr/8007).
-        app.start_architecture_tools();
+        // The modules' start: KentOS Mimari's wall tools on a hatched style (docs/adr/8007).
+        app.modules_started();
         // A module's program offers its own module's copies and those of no module (docs/adr/0802).
         app.recovery.offer_only(program);
         if !app.recovery.offers.is_empty() {

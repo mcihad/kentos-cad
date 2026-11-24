@@ -7,6 +7,7 @@ use crate::app::{App, Message};
 use crate::exchange::Window;
 use crate::exchange::permit_set::Event as Permit;
 use kentos_commands::Entity;
+use crate::arch::ArchState;
 
 fn app() -> App {
     let (mut app, _) = App::boot(None);
@@ -112,16 +113,16 @@ fn the_audit_lists_a_stale_section_and_its_fix_draws_it_again() {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
     let at = {
-        let a = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let a = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
         a.findings.iter().position(|f| f.code == "digital_derived_stale").expect("the stale section")
     };
-    let f = &app.arch.arch_audit.audited.as_ref().unwrap().findings[at];
+    let f = &app.modules.arch().arch_audit.audited.as_ref().unwrap().findings[at];
     assert!(f.message.contains("— Dijital Proje Yön. 9"), "{}", f.message);
     assert!(f.rule.as_deref().is_some_and(|r| r.contains("EK-9 Tablo 9.1 satır 21 · PDF s. 239")));
-    app.arch.arch_audit.selected = Some(at);
-    let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Fix)));
+    app.modules.arch_mut().arch_audit.selected = Some(at);
+    let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Fix)));
     app.arch_audit_standards_settle();
-    let left = app.arch.arch_audit.audited.as_ref().unwrap().findings.iter().any(|f| f.code == "digital_derived_stale");
+    let left = app.modules.arch().arch_audit.audited.as_ref().unwrap().findings.iter().any(|f| f.code == "digital_derived_stale");
     assert!(!left, "drawn again");
 }
 

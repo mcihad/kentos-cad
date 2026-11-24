@@ -61,9 +61,8 @@ pub trait ModuleProfile: Sync {
 /// (module_parts.rs), and one not in this program shows the shell's own ([`NoProject`]).
 pub fn profile(module: Module) -> &'static dyn ModuleProfile {
     match module {
-        Module::Architecture => &crate::arch_profile::Architecture,
         Module::Gis => &crate::gis_profile::Gis,
-        Module::Map | Module::Road => {
+        Module::Architecture | Module::Map | Module::Road => {
             crate::module_parts::parts(module).map_or(&NoProject as &dyn ModuleProfile, |p| p.profile())
         }
     }
@@ -208,4 +207,4 @@ impl ModuleProfile for NoProject {
 
 /// The modules whose parts are still in the core's package (docs/adr/9199 §4.5): the shell takes them with the ones a
 /// program registers.
-pub(crate) const IN_CORE: &[&'static dyn crate::module_parts::ModuleParts] = &[];
+pub(crate) const IN_CORE: &[&'static dyn crate::module_parts::ModuleParts] = &[&crate::arch_parts::Architecture];

@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use crate::{
-    app, blocks_library, cloud, dialog_sizes, forms, grids, layout, material_library, processing,
+    app, blocks_library, cloud, dialog_sizes, forms, grids, layout, processing,
     program, python, python_setup, recent, recovery, settings, sheets, snapshot, sources, style,
     usage, windows,
 };
@@ -129,7 +129,7 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             // The sheets' books, by the project's key, beside them (docs/sheet/design.md §10).
             app.sheet_store = sheets::default_store();
             // The device's NTv2 grids for the projects' datum choices (docs/adr/0168 §4).
-            app.arch.grids.library = grids::Library::device();
+            app.grids.library = grids::Library::device();
             // The forms designer's section library and kept drafts (docs/adr/0441 §1, §5).
             app.gis.form_files = forms::library::FormFiles::device();
             // The projects' pending data edits, readable by the user alone (docs/adr/9111 §3).
@@ -176,8 +176,10 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
                 app.gis.sources.folders = sources::SourceFolders::open(&folder);
                 // Bloklar's libraries, beside them (docs/adr/0726 §1).
                 app.blocks_panel.library = blocks_library::Library::open(&folder);
-                // Malzemeler's library folders, beside them (docs/adr/0791).
-                app.arch.material_libraries = material_library::Libraries::open(&folder);
+                // What the modules keep beside them: Malzemeler's library folders (docs/adr/0791).
+                for parts in crate::module_parts::all() {
+                    parts.device(&mut app, &folder);
+                }
                 // The Python tab's unsaved script, kept beside them (docs/adr/0136).
                 app.python.script = python::script::Script::load(&folder);
                 // Each processing tool's last values (islemler.json), beside them.

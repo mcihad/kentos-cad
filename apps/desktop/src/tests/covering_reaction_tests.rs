@@ -11,6 +11,7 @@
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::arch;
@@ -83,15 +84,15 @@ fn building() -> App {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// 26/2's and 26/4's rows and the coverings' findings (code, state).
 #[allow(clippy::type_complexity)]
 fn said(app: &App) -> (Option<O>, Option<O>, Vec<(String, Option<S>, String)>) {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let row = |rule: &str| set.rules.iter().find(|r| r.rule == rule).map(|r| r.state);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited
         .findings
         .iter()
@@ -104,10 +105,10 @@ fn said(app: &App) -> (Option<O>, Option<O>, Vec<(String, Option<S>, String)>) {
 /// Malzemeler open, `name` chosen, its Yanıcılık sınıfı typed `class` and applied.
 fn declared(app: &mut App, name: &str, class: &str) {
     let _ = app.update(Message::Run("arch.materials"));
-    let at = app.arch.materials.as_ref().expect("the window").list.iter().position(|(m, _)| m.name == name).expect(name);
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Choose(at))));
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Reaction(class.to_owned()))));
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Apply)));
+    let at = app.modules.arch().materials.as_ref().expect("the window").list.iter().position(|(m, _)| m.name == name).expect(name);
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Choose(at))));
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Reaction(class.to_owned()))));
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Apply)));
 }
 
 #[test]
@@ -141,11 +142,11 @@ fn the_coverings_materials_reaction_classes_are_read_by_26_2_and_26_4() {
     );
     // An unreadable class is refused before Uygula, the window says why.
     let _ = app.update(Message::Run("arch.materials"));
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Reaction("A3".to_owned()))));
-    let w = app.arch.materials.as_ref().expect("the window");
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Reaction("A3".to_owned()))));
+    let w = app.modules.arch().materials.as_ref().expect("the window");
     assert!(w.declared.as_deref().is_some_and(|why| why.contains("TS EN 13501-1")), "{:?}", w.declared);
     assert!(app.materials_unapplied(), "a class typed is a change Uygula writes");
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Close)));
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Close)));
     // A2-s1,d0: zor yanıcı.
     declared(&mut app, "Alçıpan", "A2-s1,d0");
     checked(&mut app);
@@ -174,21 +175,21 @@ fn screens() {
         declared(&mut app, "Parke", "Dfl-s1");
         // The window open on Alçıpan, its class typed, not yet applied.
         let _ = app.update(Message::Run("arch.materials"));
-        let at = app.arch.materials.as_ref().expect("the window").list.iter().position(|(m, _)| m.name == "Alçıpan");
-        let _ = app.update(Message::Arch(arch::Event::Materials(Event::Choose(at.expect("Alçıpan")))));
-        let _ = app.update(Message::Arch(arch::Event::Materials(Event::Reaction("D-s2,d0".to_owned()))));
+        let at = app.modules.arch().materials.as_ref().expect("the window").list.iter().position(|(m, _)| m.name == "Alçıpan");
+        let _ = app.update(Message::from(arch::Event::Materials(Event::Choose(at.expect("Alçıpan")))));
+        let _ = app.update(Message::from(arch::Event::Materials(Event::Reaction("D-s2,d0".to_owned()))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-malzemeler-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
-        let _ = app.update(Message::Arch(arch::Event::Materials(Event::Apply)));
-        let _ = app.update(Message::Arch(arch::Event::Materials(Event::Close)));
+        let _ = app.update(Message::from(arch::Event::Materials(Event::Apply)));
+        let _ = app.update(Message::from(arch::Event::Materials(Event::Close)));
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_ceiling_reaction");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_ceiling_reaction");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);

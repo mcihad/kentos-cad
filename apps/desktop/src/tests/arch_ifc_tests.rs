@@ -22,7 +22,7 @@ fn app() -> App {
 fn the_building_goes_out_as_ifc_and_the_message_says_what_it_holds() {
     let mut app = app();
     let out = std::env::temp_dir().join(format!("kentos-desktop-bina-{}.ifc", std::process::id()));
-    let _ = app.update(Message::IfcBuildingExport(Some(out.clone())));
+    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExport(Some(out.clone()))));
     let text = std::fs::read_to_string(&out).expect("written");
     assert!(text.starts_with("ISO-10303-21;") && text.contains("FILE_SCHEMA(('IFC4X3_ADD2'));"));
     assert_eq!(text.matches("=IFCWALL(").count(), 16);
@@ -48,7 +48,7 @@ fn a_file_name_without_its_extension_gets_ifc() {
         "kentos-desktop-bina-uzantisiz-{}",
         std::process::id()
     ));
-    let _ = app.update(Message::IfcBuildingExport(Some(bare.clone())));
+    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExport(Some(bare.clone()))));
     let written = bare.with_extension("ifc");
     assert!(written.exists(), "{} written", written.display());
     let _ = std::fs::remove_file(written);
@@ -60,7 +60,7 @@ fn a_file_name_without_its_extension_gets_ifc() {
 fn the_cut_bodies_go_out_as_a_reference_view() {
     let mut app = app();
     let out = std::env::temp_dir().join(format!("kentos-desktop-bina-kesik-{}.ifc", std::process::id()));
-    let _ = app.update(Message::IfcBuildingExportCut(Some(out.clone())));
+    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExportCut(Some(out.clone()))));
     let text = std::fs::read_to_string(&out).expect("written");
     assert!(text.contains("ViewDefinition [ReferenceView]"));
     assert_eq!(text.matches("=IFCWALL(").count(), 16);
@@ -91,7 +91,7 @@ fn two_blocks_go_out_as_two_files() {
     let dir = std::env::temp_dir().join(format!("kentos-desktop-bloklar-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
     let first = dir.join("a.ifc");
-    let _ = app.update(Message::IfcBuildingExport(Some(first.clone())));
+    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExport(Some(first.clone()))));
     let a = std::fs::read_to_string(&first).expect("A written");
     let doc = &app.document.as_ref().expect("a drawing").model;
     let second = dir.join(kentos_native_application::arch_ifc::file_name_of(doc, "b"));

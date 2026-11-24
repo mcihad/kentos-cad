@@ -51,7 +51,7 @@ fn partition_preview(app: &mut App) {
     shell(app);
     run(app, "tool.wallPartition");
     for (key, value) in [("E", "150mm"), ("U", "4m")] {
-        let _ = app.tool_setting(crate::architecture_settings::Commit {
+        let _ = app.tool_setting(crate::tool_settings::Commit {
             tool: "wallPartition",
             key,
             value: value.into(),
@@ -66,17 +66,17 @@ fn partitions(app: &mut App) {
     partition_preview(app);
     typed(app, "");
     run(app, "tool.wallPartition");
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallPartition",
         key: "E",
         value: "150mm".into(),
     });
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallPartition",
         key: "U",
         value: "5m".into(),
     });
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallPartition",
         key: "B",
         value: "between".into(),
@@ -148,7 +148,7 @@ pub(crate) fn dimensions(app: &mut App) {
     tagged(app);
     run(app, "tool.wallDimensions");
     click(app, [6.0, -0.25]);
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallDimensions",
         key: "N",
         value: "all".into(),
@@ -310,7 +310,7 @@ pub(crate) fn upper_floor(app: &mut App) {
     typed(app, "");
     run(app, "tool.wallPartition");
     for (key, value) in [("E", "150mm"), ("U", "6m")] {
-        let _ = app.tool_setting(crate::architecture_settings::Commit {
+        let _ = app.tool_setting(crate::tool_settings::Commit {
             tool: "wallPartition",
             key,
             value: value.into(),
@@ -321,7 +321,7 @@ pub(crate) fn upper_floor(app: &mut App) {
     typed(app, "");
     run(app, "tool.wallPartition");
     for (key, value) in [("E", "150mm"), ("U", "4m"), ("B", "between")] {
-        let _ = app.tool_setting(crate::architecture_settings::Commit {
+        let _ = app.tool_setting(crate::tool_settings::Commit {
             tool: "wallPartition",
             key,
             value: value.into(),

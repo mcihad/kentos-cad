@@ -5,6 +5,7 @@
 use crate::arch;
 use kentos_commands::{CadWork, Workspace};
 use kentos_domain::Slot;
+use crate::arch::ArchState;
 
 use crate::app::{App, Dialog, Message};
 use crate::files_testing::app_with_drawing;
@@ -26,24 +27,24 @@ fn app() -> App {
 fn an_untouched_editor_closes_at_once() {
     let mut app = app();
     app.open_wall_styles();
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Close,
     )));
     assert!(
-        app.arch.wall_styles.is_none() && app.dialog.is_none(),
+        app.modules.arch().wall_styles.is_none() && app.dialog.is_none(),
         "nothing changed: no question"
     );
     // Bina programı compares with what it would write untouched: its numbers as text do not count as a change.
     app.open_program();
     assert_eq!(
         app.dialog,
-        Some(Dialog::Arch(arch::ArchDialogKind::Program))
+        Some(crate::arch::dialog(crate::arch::ArchDialogKind::Program))
     );
-    let _ = app.update(Message::Arch(arch::Event::Program(
+    let _ = app.update(Message::from(arch::Event::Program(
         crate::program_window::Event::Close,
     )));
     assert!(
-        app.arch.program_window.is_none() && app.dialog.is_none(),
+        app.modules.arch().program_window.is_none() && app.dialog.is_none(),
         "an untouched program closes"
     );
 }
@@ -52,19 +53,19 @@ fn an_untouched_editor_closes_at_once() {
 fn a_changed_editor_asks_and_vazgec_keeps_it() {
     let mut app = app();
     app.open_wall_styles();
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::New,
     )));
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Close,
     )));
-    let w = app.arch.wall_styles.as_ref().expect("still open");
+    let w = app.modules.arch().wall_styles.as_ref().expect("still open");
     assert!(w.closing(), "a new style unsaved: the question");
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Answer(Answer::Stay),
     )));
     let w = app
-        .arch
+        .modules.arch()
         .wall_styles
         .as_ref()
         .expect("Vazgeç keeps the window");
@@ -72,26 +73,26 @@ fn a_changed_editor_asks_and_vazgec_keeps_it() {
     // Esc is Kapat: it asks again; over the question, Esc is Vazgeç.
     app.close_dialog();
     assert!(
-        app.arch.wall_styles.as_ref().is_some_and(|w| w.closing()),
+        app.modules.arch().wall_styles.as_ref().is_some_and(|w| w.closing()),
         "Esc asks"
     );
     assert_eq!(
         app.dialog,
-        Some(Dialog::Arch(arch::ArchDialogKind::WallStyles))
+        Some(crate::arch::dialog(crate::arch::ArchDialogKind::WallStyles))
     );
     app.close_dialog();
     assert!(
-        app.arch.wall_styles.as_ref().is_some_and(|w| !w.closing()),
+        app.modules.arch().wall_styles.as_ref().is_some_and(|w| !w.closing()),
         "Esc over the question stays"
     );
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Close,
     )));
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Answer(Answer::Discard),
     )));
     assert!(
-        app.arch.wall_styles.is_none() && app.dialog.is_none(),
+        app.modules.arch().wall_styles.is_none() && app.dialog.is_none(),
         "Kaydetmeden kapat"
     );
 }
@@ -100,24 +101,24 @@ fn a_changed_editor_asks_and_vazgec_keeps_it() {
 fn kaydet_ve_kapat_writes_then_closes() {
     let mut app = app();
     app.open_program();
-    let _ = app.update(Message::Arch(arch::Event::Program(
+    let _ = app.update(Message::from(arch::Event::Program(
         crate::program_window::Event::AddUnit,
     )));
-    let _ = app.update(Message::Arch(arch::Event::Program(
+    let _ = app.update(Message::from(arch::Event::Program(
         crate::program_window::Event::Close,
     )));
     assert!(
-        app.arch
+        app.modules.arch()
             .program_window
             .as_ref()
             .is_some_and(|w| w.closing()),
         "a unit added: the question"
     );
-    let _ = app.update(Message::Arch(arch::Event::Program(
+    let _ = app.update(Message::from(arch::Event::Program(
         crate::program_window::Event::Answer(Answer::Save),
     )));
     assert!(
-        app.arch.program_window.is_none() && app.dialog.is_none(),
+        app.modules.arch().program_window.is_none() && app.dialog.is_none(),
         "saved and closed"
     );
     let program = app
@@ -151,25 +152,25 @@ fn cizimden_sec_steps_the_window_aside_and_brings_it_back() {
     app.open_room_modules();
     assert_eq!(
         app.dialog,
-        Some(Dialog::Arch(arch::ArchDialogKind::RoomModules))
+        Some(crate::arch::dialog(crate::arch::ArchDialogKind::RoomModules))
     );
     app.selection.set([Slot(1)]);
-    let _ = app.update(Message::Arch(arch::Event::RoomModules(
+    let _ = app.update(Message::from(arch::Event::RoomModules(
         crate::room_modules_window::Event::PickFromDrawing,
     )));
     assert_eq!(app.dialog, None, "the window steps aside");
     assert_eq!(app.session.tool_id(), kentos_interaction::pick_objects::ID);
-    assert!(app.arch.room_modules.is_some(), "it keeps what it held");
+    assert!(app.modules.arch().room_modules.is_some(), "it keeps what it held");
     // Esc: the selection before comes back with the window.
     app.selection.set([Slot(2)]);
     assert!(app.window_picked(false));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Arch(arch::ArchDialogKind::RoomModules))
+        Some(crate::arch::dialog(crate::arch::ArchDialogKind::RoomModules))
     );
     assert_eq!(app.selection.ids(), &[Slot(1)]);
     // Enter keeps what was picked.
-    let _ = app.update(Message::Arch(arch::Event::RoomModules(
+    let _ = app.update(Message::from(arch::Event::RoomModules(
         crate::room_modules_window::Event::PickFromDrawing,
     )));
     app.selection.set([Slot(2)]);

@@ -12,6 +12,7 @@
 //! say is said above the tables. The check writes nothing.
 
 use std::sync::Arc;
+use crate::arch::ArchState;
 
 use iced::futures::channel::oneshot;
 use iced::widget::{Column, column, row, space};
@@ -82,7 +83,7 @@ impl Default for Check {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::Underlays(e))
+    Message::from(arch::Event::Underlays(e))
 }
 
 /// A length as the tables say it: three decimals, a comma.
@@ -125,7 +126,7 @@ impl App {
     pub(crate) fn underlay_check_start(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else { return Task::none() };
         let mut model = doc.model.clone();
-        let Some(w) = self.arch.underlays_window.as_mut() else { return Task::none() };
+        let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else { return Task::none() };
         let Some(id) = w.chosen.clone() else { return Task::none() };
         let typed = w.check.tolerance.trim().replace(',', ".");
         let tolerance = if typed.is_empty() {
@@ -174,7 +175,7 @@ impl App {
 
     /// A check's answer came: kept while the window waits for it.
     pub(crate) fn underlay_checked(&mut self, id: String, outcome: Outcome) {
-        if let Some(w) = self.arch.underlays_window.as_mut()
+        if let Some(w) = self.modules.arch_mut().underlays_window.as_mut()
             && w.check.outcome.as_ref().is_some_and(|(i, o)| *i == id && matches!(o, Outcome::Running))
         {
             if let Outcome::Done { checked, .. } = &outcome {
@@ -187,15 +188,15 @@ impl App {
 
     /// A clash chosen: the drawing's object selected and shown, the file's object under Seçilen nesne.
     pub(crate) fn underlay_clash_chosen(&mut self, k: usize) {
-        let Some(w) = self.arch.underlays_window.as_mut() else { return };
+        let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else { return };
         let Some((id, Outcome::Done { checked, .. })) = w.check.outcome.clone() else { return };
         let Some(c) = checked.clashes.get(k) else { return };
         w.check.clash = Some(k);
-        let object = match self.arch.underlays.states.get(&id).map(|s| &s.1) {
+        let object = match self.modules.arch().underlays.states.get(&id).map(|s| &s.1) {
             Some(crate::underlays::State::Ready(l)) => l.model.objects.iter().position(|o| o.global_id == c.object),
             _ => None,
         };
-        if let Some(w) = self.arch.underlays_window.as_mut() {
+        if let Some(w) = self.modules.arch_mut().underlays_window.as_mut() {
             w.object = object.map(|o| (id.clone(), o));
         }
         let Some(doc) = self.document.as_ref() else { return };

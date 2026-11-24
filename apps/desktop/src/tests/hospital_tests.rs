@@ -12,6 +12,7 @@
 
 use kentos_commands::ArchAuditOutcome as O;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::App;
 use crate::use_class_tests::{building, checked, p, rect, spaces};
@@ -40,14 +41,14 @@ fn hospital(width: f64) -> App {
 
 /// The two articles' outcomes: 49/1-b, 49/2.
 fn rows(app: &App) -> [O; 2] {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     ["BYKHY 49/1-b", "BYKHY 49/2"].map(|rule| {
         set.rules.iter().find(|r| r.rule == rule).unwrap_or_else(|| panic!("{rule}: {:#?}", set.rules)).state
     })
 }
 
 fn findings(app: &App) -> Vec<(String, String)> {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     audited
         .findings
         .iter()
@@ -125,11 +126,11 @@ fn screens() {
             let group = crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(
                 kentos_commands::ArchAuditCheck::Regulation,
             )));
-            let _ = app.update(Message::Arch(group));
+            let _ = app.update(Message::from(group));
             let shown = app.arch_audit_shown();
-            let findings = &app.arch.arch_audit.audited.as_ref().expect("checked").findings;
+            let findings = &app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings;
             let row = shown.iter().position(|&i| findings[i].code == code).expect("the finding shown");
-            let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
+            let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
         };
         let mut app = hospital(1.8);
         checked(&mut app);

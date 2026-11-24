@@ -7,7 +7,6 @@
 //! window that answers here can be played; another says so.
 
 use crate::app::{App, Dialog, Message};
-use crate::arch;
 use crate::gis;
 
 /// A control of the open window, by its words.
@@ -134,10 +133,6 @@ impl App {
             Dialog::Propose => crate::propose_window::TITLE.to_owned(),
             Dialog::Scene3d => crate::scene3d_window::TITLE.to_owned(),
             Dialog::IfcViewer => crate::ifc_viewer::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::Program) => crate::program_window::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::SpaceMerge) => {
-                crate::quantities::MERGE_TITLE.to_owned()
-            }
             Dialog::Gis(gis::GisDialogKind::TableStyles) => {
                 crate::forms::table_styles::TITLE.to_owned()
             }
@@ -154,36 +149,7 @@ impl App {
             Dialog::Gis(gis::GisDialogKind::Domains) => crate::forms::domains::TITLE.to_owned(),
             Dialog::Gis(gis::GisDialogKind::FormAudit) => crate::forms::audit::TITLE.to_owned(),
             Dialog::AnnotationStyles => self.annotation_styles_title().to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::WallStyles) => crate::wall_styles::TITLE.to_owned(),
             Dialog::TableStyleDefs => crate::table_style_window::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::WallJoins) => crate::wall_joins::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::OpeningTypes) => {
-                crate::opening_types_window::TITLE.to_owned()
-            }
-            Dialog::Arch(arch::ArchDialogKind::Materials) => {
-                crate::materials_window::TITLE.to_owned()
-            }
-            Dialog::Arch(arch::ArchDialogKind::RoomModules) => {
-                crate::room_modules_window::TITLE.to_owned()
-            }
-            Dialog::Arch(arch::ArchDialogKind::DesignOptions) => {
-                crate::design_options_window::TITLE.to_owned()
-            }
-            Dialog::Arch(arch::ArchDialogKind::TagsCheck) => crate::tags_check::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::Schedule) => {
-                crate::schedule_window::TITLE.to_owned()
-            }
-            Dialog::Arch(arch::ArchDialogKind::ScheduleExport) => {
-                crate::schedule_window::EXPORT_TITLE.to_owned()
-            }
-            Dialog::Arch(arch::ArchDialogKind::ViewRefs) => crate::viewmark_refs::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::DigitalRules) => crate::digital_rules::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::Deliveries) => crate::deliveries_window::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::Underlays) => crate::underlays_window::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::IfcCompare) => crate::ifc_compare_window::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::Bcf) => crate::bcf_window::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::ReviewPackage) => crate::package_review_window::TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::ElementTypes) => crate::element_types_window::TITLE.to_owned(),
             Dialog::SheetSet => crate::sheet_set::TITLE.to_owned(),
             Dialog::Xrefs => crate::xrefs_window::TITLE.to_owned(),
             Dialog::Flatten => crate::flatten_window::TITLE.to_owned(),
@@ -214,7 +180,6 @@ impl App {
                 crate::stockpile_window::TITLE.to_owned()
             }
             Dialog::XrefAttach => crate::xrefs_window::ATTACH_TITLE.to_owned(),
-            Dialog::Arch(arch::ArchDialogKind::Quantities) => crate::quantities::TITLE.to_owned(),
             Dialog::LayerPurge => crate::layer_purge::PURGE_TITLE.to_owned(),
             Dialog::TakeFrom => crate::drawing_exchange::TAKE_TITLE.to_owned(),
             Dialog::LayerList => crate::layer_list::LIST_TITLE.to_owned(),
@@ -322,7 +287,6 @@ impl App {
             Some(Dialog::Propose) => self.propose_control(control),
             Some(Dialog::Scene3d) => self.scene3d_control(control),
             Some(Dialog::IfcViewer) => self.ifc_viewer_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::Program)) => self.program_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::TableStyles)) => {
                 self.table_styles_control(control)
             }
@@ -338,26 +302,6 @@ impl App {
             Some(Dialog::LayerPurge) => self.layer_purge_control(control),
             Some(Dialog::TakeFrom) => self.take_from_control(control),
             Some(Dialog::LayerList) => self.layer_list_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::WallJoins)) => self.wall_joins_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::OpeningTypes)) => {
-                self.opening_types_control(control)
-            }
-            Some(Dialog::Arch(arch::ArchDialogKind::Materials)) => self.materials_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::RoomModules)) => {
-                self.room_modules_control(control)
-            }
-            Some(Dialog::Arch(arch::ArchDialogKind::DesignOptions)) => {
-                self.design_options_control(control)
-            }
-            Some(Dialog::Arch(arch::ArchDialogKind::TagsCheck)) => self.tags_check_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::ViewRefs)) => self.view_refs_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::DigitalRules)) => self.digital_rules_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::Deliveries)) => self.deliveries_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::Underlays)) => self.underlays_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::IfcCompare)) => self.ifc_compare_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::Bcf)) => self.bcf_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::ReviewPackage)) => self.review_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::ElementTypes)) => self.element_types_control(control),
             Some(Dialog::SheetSet) => self.sheet_set_control(control),
             Some(Dialog::Xrefs | Dialog::XrefAttach) => self.xrefs_control(control),
             Some(Dialog::Flatten) => self.flatten_control(control),
@@ -384,9 +328,6 @@ impl App {
                 self.section_check_control(control)
             }
             Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Stockpile)) => self.stockpile_control(control),
-            Some(Dialog::Arch(arch::ArchDialogKind::Quantities)) => {
-                self.quantities_control(control)
-            }
             Some(Dialog::Gis(gis::GisDialogKind::DataCompare)) => {
                 self.data_compare_control(control)
             }

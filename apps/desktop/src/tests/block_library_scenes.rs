@@ -11,14 +11,13 @@
 //!
 //! Test code only.
 
-use crate::arch;
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
-use crate::architecture_settings::Commit;
+use crate::tool_settings::Commit;
 use crate::blocks_library::{self, Event};
 use crate::files_testing::make_cad;
 use crate::tools_scenes::{E, N, Objects, click, hover, open_edited, run, typed};
@@ -115,11 +114,11 @@ fn placed(app: &mut App) {
 }
 
 fn set(app: &mut App, key: &'static str, value: &str) {
-    let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
+    let _ = app.update(Message::ToolSetting(Commit {
         tool: "blockInsert",
         key,
         value: value.into(),
-    })));
+    }));
 }
 
 fn kentos_blocks() -> Value {

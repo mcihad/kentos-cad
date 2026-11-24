@@ -26,6 +26,7 @@
 use crate::arch;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::design_options_window::Event;
@@ -68,7 +69,7 @@ fn command(app: &mut App, name: &str, input: Value) -> Value {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Arch(arch::Event::DesignOptions(e)));
+    let _ = app.update(Message::from(arch::Event::DesignOptions(e)));
 }
 
 /// The kitchen's objects selected, Tasarım seçenekleri open with the name typed: Seçimden tanımla is the next press.
@@ -208,7 +209,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::app::Dialog;
+    
     use crate::files_testing::last_said;
 
     fn shown(app: &App, slot: u32) -> bool {
@@ -223,7 +224,7 @@ mod tests {
         define(&mut app);
         assert_eq!(
             app.dialog,
-            Some(Dialog::Arch(arch::ArchDialogKind::DesignOptions))
+            Some(crate::arch::dialog(crate::arch::ArchDialogKind::DesignOptions))
         );
         event(&mut app, Event::Define);
         let doc = &app.document.as_ref().expect("a drawing").model;
@@ -262,7 +263,7 @@ mod tests {
         run(&mut app, "arch.options");
         event(&mut app, Event::ComboName("Teklif 3".into()));
         event(&mut app, Event::ComboSave);
-        let w = app.arch.design_options.as_ref().expect("the window");
+        let w = app.modules.arch().design_options.as_ref().expect("the window");
         assert_eq!(
             w.combos.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(),
             ["Teklif 1", "Teklif 2", "Teklif 3"]
@@ -300,7 +301,7 @@ mod tests {
         let mut app = crate::files_testing::app_with_drawing();
         proposals(&mut app);
         run(&mut app, "arch.options");
-        let w = app.arch.design_options.as_ref().expect("the window");
+        let w = app.modules.arch().design_options.as_ref().expect("the window");
         assert_eq!((w.combo, w.versus), (0, 1));
         let c = w
             .combos_compared
@@ -314,7 +315,7 @@ mod tests {
         let words = crate::design_options_window::combos_words(c, &w.rows);
         assert!(words.contains("Mutfak A → B"), "{words}");
         event(&mut app, Event::Combo(1));
-        let w = app.arch.design_options.as_ref().expect("the window");
+        let w = app.modules.arch().design_options.as_ref().expect("the window");
         assert_eq!((w.combo, w.versus), (1, 0));
         let c = w
             .combos_compared

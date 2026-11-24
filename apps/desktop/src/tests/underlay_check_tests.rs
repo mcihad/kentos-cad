@@ -15,6 +15,7 @@
 //! ```
 
 use std::path::PathBuf;
+use crate::arch::ArchState;
 
 use kentos_launch::Module;
 
@@ -32,7 +33,7 @@ fn fixtures() -> PathBuf {
 }
 
 fn send(app: &mut App, e: Event) {
-    let task = app.update(Message::Arch(crate::arch::Event::Underlays(e)));
+    let task = app.update(Message::from(crate::arch::Event::Underlays(e)));
     drive(app, task);
 }
 
@@ -53,7 +54,7 @@ fn opened() -> App {
 
 /// Altlık modeller open and the structural file `name` added through Ekle…, its read waited for.
 fn added(app: &mut App, name: &str) {
-    if app.arch.underlays_window.is_none() {
+    if app.modules.arch().underlays_window.is_none() {
         let _ = app.update(Message::Run("arch.underlays"));
     }
     app.picker = Picker::File(fixtures().join("ifc/v1/statik").join(name));
@@ -63,7 +64,7 @@ fn added(app: &mut App, name: &str) {
 }
 
 fn outcome(app: &App) -> Outcome {
-    let w = app.arch.underlays_window.as_ref().expect("the window");
+    let w = app.modules.arch().underlays_window.as_ref().expect("the window");
     w.check.outcome.clone().expect("checked").1
 }
 
@@ -75,7 +76,7 @@ fn the_aligned_model_matches_and_a_shifted_one_is_found_out() {
     let Outcome::Done { checked, warnings } = outcome(&app) else { panic!("{:?}", outcome(&app)) };
     assert!(warnings.is_empty(), "{warnings:?}");
     assert_eq!((checked.matched, checked.clashes.len(), checked.unmatched.len()), (2, 0, 1));
-    assert_eq!(app.arch.underlays_window.as_ref().unwrap().check.tab, Tab::Levels);
+    assert_eq!(app.modules.arch().underlays_window.as_ref().unwrap().check.tab, Tab::Levels);
 
     // The shifted model: its clashes first; one chosen selects the drawing's column and shows the file's.
     send(&mut app, Event::Remove);
@@ -90,14 +91,14 @@ fn the_aligned_model_matches_and_a_shifted_one_is_found_out() {
     );
     let summary = crate::underlay_check_view::summary(&checked);
     assert!(summary.contains("5 çakışma") && summary.contains("1 kat ve 2 aks farklı"), "{summary}");
-    assert_eq!(app.arch.underlays_window.as_ref().unwrap().check.tab, Tab::Clashes);
+    assert_eq!(app.modules.arch().underlays_window.as_ref().unwrap().check.tab, Tab::Clashes);
     send(&mut app, Event::Clash(0));
     let doc = app.document.as_ref().expect("a drawing");
     let chosen: Vec<String> = app.selection.ids().iter().filter_map(|s| doc.model.uid(*s)).map(|u| u.to_string()).collect();
     assert_eq!(chosen, [checked.clashes[0].uid.clone()]);
-    let w = app.arch.underlays_window.as_ref().unwrap();
+    let w = app.modules.arch().underlays_window.as_ref().unwrap();
     let (_, object) = w.object.clone().expect("the file's object shown");
-    let read = match app.arch.underlays.states.values().next().map(|s| &s.1) {
+    let read = match app.modules.arch().underlays.states.values().next().map(|s| &s.1) {
         Some(crate::underlays::State::Ready(l)) => l.clone(),
         other => panic!("{other:?}"),
     };
@@ -114,7 +115,7 @@ fn a_tolerance_that_is_no_number_and_another_height_datum_are_said() {
     assert!(why.contains("bir sayı değil"), "{why}");
     // The datum file is refused at Ekle…: the window says why, and nothing is added to check.
     added(&mut app, "denetim-datum.ifc");
-    let w = app.arch.underlays_window.as_ref().unwrap();
+    let w = app.modules.arch().underlays_window.as_ref().unwrap();
     let (_, why) = w.unplaced.clone().expect("said");
     assert!(why.contains("ITRF96"), "{why}");
 }

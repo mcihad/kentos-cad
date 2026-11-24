@@ -11,7 +11,6 @@
 //! once, with the file's name, and the transforms give no value by it
 //! (`noGrid`) until it is added.
 
-use crate::arch;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -349,8 +348,7 @@ pub type Looked = (String, Result<(), Missing>);
 impl App {
     /// Izgaralar's list read again from the library.
     pub(crate) fn refresh_grids(&mut self) {
-        self.arch.grids.entries = self
-            .arch
+        self.grids.entries = self
             .grids
             .library
             .as_ref()
@@ -380,7 +378,7 @@ impl App {
             }
             Event::Picked(None) => {}
             Event::Picked(Some(path)) => {
-                let Some(library) = self.arch.grids.library.clone() else {
+                let Some(library) = self.grids.library.clone() else {
                     self.say(
                         Level::Error,
                         "Izgara eklenemedi: bu cihazda uygulama veri klasörü yok (XDG_DATA_HOME ya da HOME).",
@@ -417,11 +415,10 @@ impl App {
             }
             Event::Added(Err(why)) => self.say(Level::Error, why),
             Event::Remove(id) => {
-                let Some(library) = self.arch.grids.library.clone() else {
+                let Some(library) = self.grids.library.clone() else {
                     return Task::none();
                 };
                 let file = self
-                    .arch
                     .grids
                     .entries
                     .iter()
@@ -430,7 +427,7 @@ impl App {
                 match library.remove(&id) {
                     Ok(()) => {
                         // A project that names it may look for it again once it is added again.
-                        self.arch.grids.asked.remove(&id);
+                        self.grids.asked.remove(&id);
                         self.refresh_grids();
                         self.say(
                             Level::Success,
@@ -448,7 +445,7 @@ impl App {
     /// that were not looked for yet are read into the core on a thread of
     /// their own.
     pub(crate) fn follow_grids(&mut self) -> Task<Message> {
-        let (Some(doc), Some(library)) = (&self.document, self.arch.grids.library.clone()) else {
+        let (Some(doc), Some(library)) = (&self.document, self.grids.library.clone()) else {
             return Task::none();
         };
         let wanted: Vec<(String, String)> = doc
@@ -456,14 +453,13 @@ impl App {
             .datum_transforms
             .iter()
             .filter_map(|t| t.grid.as_ref())
-            .filter(|g| !self.arch.grids.asked.contains(&g.id))
+            .filter(|g| !self.grids.asked.contains(&g.id))
             .map(|g| (g.id.clone(), g.file.clone()))
             .collect();
         if wanted.is_empty() {
             return Task::none();
         }
-        self.arch
-            .grids
+        self.grids
             .asked
             .extend(wanted.iter().map(|(id, _)| id.clone()));
         let (done, wait) = oneshot::channel();
@@ -475,7 +471,7 @@ impl App {
             let _ = done.send(looked);
         });
         Task::perform(wait, |looked| {
-            Message::Arch(arch::Event::GridsLooked(looked.unwrap_or_default()))
+            Message::GridsLooked(looked.unwrap_or_default())
         })
     }
 
@@ -557,7 +553,7 @@ mod tests {
 
         let id = sha256(&std::fs::read(TR).expect("the grid"));
         let mut app = app_with_drawing();
-        app.arch.grids.library = Some(Library::at(crate::files_testing::scratch("izgara-proje")));
+        app.grids.library = Some(Library::at(crate::files_testing::scratch("izgara-proje")));
         // TUREF TM36's project, its second system WGS 84 by the project's grid.
         let doc = app.document.as_mut().expect("a drawing");
         let mut settings = doc.settings().clone();
@@ -592,7 +588,7 @@ mod tests {
         );
         // Izgaralar: the project's grid missing, then added.
         let _ = app.update(Message::Run("crs.set"));
-        assert!(app.arch.grids.entries.is_empty());
+        assert!(app.grids.entries.is_empty());
         let send = |app: &mut App, e: SettingsEvent| {
             let task = app.update(crate::project::settings_message(e));
             drive(app, task);
@@ -602,8 +598,8 @@ mod tests {
             SettingsEvent::Grid(Event::Picked(Some(PathBuf::from(TR)))),
         );
         assert!(last_said(&app).contains("“tr.gsb” ızgara kitaplığına eklendi"));
-        assert_eq!(app.arch.grids.entries.len(), 1);
-        let line = grid_line(&app.arch.grids.entries[0]);
+        assert_eq!(app.grids.entries.len(), 1);
+        let line = grid_line(&app.grids.entries[0]);
         assert!(
             line.contains(" KB · ") && line.ends_with(&id[..12]),
             "{line}"
@@ -613,7 +609,7 @@ mod tests {
         // Kaldır, asked in the row, then Sil.
         send(&mut app, SettingsEvent::GridAsk(Some(id.clone())));
         send(&mut app, SettingsEvent::Grid(Event::Remove(id.clone())));
-        assert!(app.arch.grids.entries.is_empty());
+        assert!(app.grids.entries.is_empty());
         assert!(
             app.log
                 .said(Level::Success, "“tr.gsb” ızgara kitaplığından kaldırıldı.")
@@ -652,7 +648,7 @@ mod tests {
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
-            app.arch.grids.library =
+            app.grids.library =
                 Some(Library::at(crate::files_testing::scratch("izgara-resim")));
             let doc = app.document.as_mut().expect("a drawing");
             let mut settings = doc.settings().clone();

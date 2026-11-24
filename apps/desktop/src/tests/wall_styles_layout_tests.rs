@@ -1,5 +1,6 @@
 //! Real widget regression for nested style-list/body scrolling and fixed actions.
 use std::sync::{Arc, Mutex};
+use crate::arch::ArchState;
 
 use iced::advanced::widget::{
     Id, Operation,
@@ -30,7 +31,7 @@ fn open(size: Size, text_size: u32, long: bool) -> App {
     app.window_size = size;
     app.open_wall_styles();
     let id = app
-        .arch
+        .modules.arch()
         .wall_styles
         .as_ref()
         .unwrap()
@@ -49,7 +50,7 @@ fn open(size: Size, text_size: u32, long: bool) -> App {
         for _ in 0..12 {
             let _ = app.wall_styles_event(Event::Add);
         }
-        let chosen = app.arch.wall_styles.as_ref().unwrap().chosen.clone();
+        let chosen = app.modules.arch().wall_styles.as_ref().unwrap().chosen.clone();
         for _ in 0..22 {
             let _ = app.wall_styles_event(Event::New);
         }
@@ -60,7 +61,7 @@ fn open(size: Size, text_size: u32, long: bool) -> App {
 
 fn view(app: &App) -> Element<'_, Message> {
     assert_typography(app);
-    if app.arch.wall_styles.is_some() {
+    if app.modules.arch().wall_styles.is_some() {
         app.wall_styles_view()
     } else {
         iced::widget::space().into()
@@ -262,7 +263,7 @@ fn short_large_wall_styles_scrolls_the_right_form_and_left_list_without_hiding_a
             &mut app,
             Input::Click(down.text(CANCEL).center()),
         );
-        assert!(app.arch.wall_styles.is_none());
+        assert!(app.modules.arch().wall_styles.is_none());
         assert_eq!(
             app.document.as_ref().unwrap().model.to_snapshot_v2(),
             before
@@ -298,7 +299,7 @@ fn wide_standard_wall_styles_keeps_its_natural_size_and_cancel_keeps_the_model()
         &mut app,
         Input::Click(actual.text(CANCEL).center()),
     );
-    assert!(app.arch.wall_styles.is_none());
+    assert!(app.modules.arch().wall_styles.is_none());
     assert_eq!(
         app.document.as_ref().unwrap().model.to_snapshot_v2(),
         before
@@ -312,7 +313,7 @@ fn width_keeps_decimal_input_focused_and_rejects_invalid_drafts_on_save() {
     let mut app = open(Size::new(1280., 800.), 14, false);
     let before = app.saved_wall_styles();
     let id = app
-        .arch
+        .modules.arch()
         .wall_styles
         .as_ref()
         .unwrap()
@@ -321,20 +322,20 @@ fn width_keeps_decimal_input_focused_and_rejects_invalid_drafts_on_save() {
         .unwrap();
     for input in ["0", "0,", "0,2", "0,28", "0,28x"] {
         let _ = app.wall_styles_event(Event::Width(input.into()));
-        let draft = app.arch.wall_styles.as_ref().unwrap();
+        let draft = app.modules.arch().wall_styles.as_ref().unwrap();
         assert_eq!(draft.width_typed, input);
         assert!(!draft.show_problem);
         assert_eq!(app.saved_wall_styles(), before);
     }
     let _ = app.wall_styles_event(Event::Save);
-    assert!(app.arch.wall_styles.as_ref().unwrap().show_problem);
+    assert!(app.modules.arch().wall_styles.as_ref().unwrap().show_problem);
     assert_eq!(app.saved_wall_styles(), before);
     let _ = app.wall_styles_event(Event::Choose(None));
     let _ = app.wall_styles_event(Event::Choose(Some(id.clone())));
-    assert_eq!(app.arch.wall_styles.as_ref().unwrap().width_typed, "0,28x");
+    assert_eq!(app.modules.arch().wall_styles.as_ref().unwrap().width_typed, "0,28x");
     let _ = app.wall_styles_event(Event::Width("0,28".into()));
     let _ = app.wall_styles_event(Event::Save);
-    assert!(app.arch.wall_styles.is_none());
+    assert!(app.modules.arch().wall_styles.is_none());
     assert_eq!(
         app.saved_wall_styles()
             .iter()

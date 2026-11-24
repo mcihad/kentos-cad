@@ -20,6 +20,7 @@
 //! ```
 
 use std::path::PathBuf;
+use crate::arch::ArchState;
 
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length, Task};
@@ -32,7 +33,7 @@ use kentos_ui::theme::typography::scaled;
 use kentos_ui::widget::table::{self, Column as Col, Row, Table};
 use kentos_ui::widget::{Dialog as Frame, Form, ListDetails, text_field};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::arch;
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
@@ -98,7 +99,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::Underlays(e))
+    Message::from(arch::Event::Underlays(e))
 }
 
 impl Typed {
@@ -136,19 +137,19 @@ impl App {
         }
         let list = self.underlay_list();
         let first = list.first();
-        let (keep, check) = self.arch.underlays_window.take().map(|w| (w.object, w.check)).unwrap_or_default();
-        self.arch.underlays_window = Some(Window {
+        let (keep, check) = self.modules.arch_mut().underlays_window.take().map(|w| (w.object, w.check)).unwrap_or_default();
+        self.modules.arch_mut().underlays_window = Some(Window {
             chosen: first.map(|u| u.id.clone()),
             typed: Typed::of(first),
             object: keep,
             check,
             ..Window::default()
         });
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Underlays));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Underlays));
     }
 
     fn underlays_said(&mut self, kind: Kind, words: impl Into<String>) {
-        if let Some(w) = self.arch.underlays_window.as_mut() {
+        if let Some(w) = self.modules.arch_mut().underlays_window.as_mut() {
             w.said = Some((kind, words.into()));
         }
     }
@@ -181,7 +182,7 @@ impl App {
         match self.underlay_edit(change) {
             Ok(done) => {
                 let added = done.underlays.iter().find(|u| u.id == done.id).cloned();
-                if let Some(w) = self.arch.underlays_window.as_mut() {
+                if let Some(w) = self.modules.arch_mut().underlays_window.as_mut() {
                     w.unplaced = None;
                     w.typed = Typed::of(added.as_ref());
                     w.chosen = Some(done.id);
@@ -189,7 +190,7 @@ impl App {
                 }
             }
             Err((code, why)) if code == kentos_commands::codes::MODEL_UNDERLAY_NOT_PLACED => {
-                if let Some(w) = self.arch.underlays_window.as_mut() {
+                if let Some(w) = self.modules.arch_mut().underlays_window.as_mut() {
                     w.unplaced = Some((file, why));
                     w.said = None;
                 }
@@ -200,13 +201,13 @@ impl App {
 
     pub(crate) fn underlays_event(&mut self, event: Event) -> Task<Message> {
         let list = self.underlay_list();
-        let Some(w) = self.arch.underlays_window.as_mut() else {
+        let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else {
             return Task::none();
         };
         let chosen = w.chosen.clone();
         match event {
             Event::Close => {
-                self.arch.underlays_window = None;
+                self.modules.arch_mut().underlays_window = None;
                 self.dialog = None;
             }
             Event::Choose(id) => {
@@ -281,7 +282,7 @@ impl App {
                 match self.underlay_edit(UnderlayChange::Remove { id }) {
                     Ok(done) => {
                         let first = done.underlays.first().cloned();
-                        if let Some(w) = self.arch.underlays_window.as_mut() {
+                        if let Some(w) = self.modules.arch_mut().underlays_window.as_mut() {
                             w.chosen = first.as_ref().map(|u| u.id.clone());
                             w.typed = Typed::of(first.as_ref());
                             w.object = None;
@@ -292,7 +293,7 @@ impl App {
                 }
             }
             Event::Pick => {
-                self.arch.underlay_picking = true;
+                self.modules.arch_mut().underlay_picking = true;
                 self.dialog = None;
                 self.session.run(Box::new(PickPoint::new("Altlık nesnesi", "Altlığın plandaki çizgisine tıklayın")));
             }
@@ -307,14 +308,14 @@ impl App {
 
     /// The point picked for an underlay object (none: given up; the window comes back); false when it was another's.
     pub(crate) fn underlays_picked(&mut self, p: Option<kentos_interaction::Vec2>) -> bool {
-        if !std::mem::take(&mut self.arch.underlay_picking) {
+        if !std::mem::take(&mut self.modules.arch_mut().underlay_picking) {
             return false;
         }
         if let Some(p) = p {
             // Eight pixels round the click, in the drawing's units.
             let reach = 8.0 / self.viewport.camera.scale.max(f64::MIN_POSITIVE);
             let found = self.underlay_object_at([p.x, p.y], reach);
-            if let Some(w) = self.arch.underlays_window.as_mut() {
+            if let Some(w) = self.modules.arch_mut().underlays_window.as_mut() {
                 match found {
                     Some((id, object)) => {
                         w.chosen = Some(id.clone());
@@ -325,12 +326,12 @@ impl App {
                 }
             }
         }
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Underlays));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Underlays));
         true
     }
 
     pub(crate) fn underlays_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.underlays_window else {
+        let Some(w) = &self.modules.arch().underlays_window else {
             return space::horizontal().into();
         };
         let list = self.underlay_list();
@@ -369,7 +370,7 @@ impl App {
     }
 
     fn underlay_status(&self, u: &ModelUnderlay) -> &'static str {
-        match self.arch.underlays.states.get(&u.id).map(|s| &s.1) {
+        match self.modules.arch().underlays.states.get(&u.id).map(|s| &s.1) {
             _ if !u.shown => "Gizli",
             Some(State::Ready(_)) => "Gösteriliyor",
             Some(State::Reading) | None => "Okunuyor…",
@@ -414,7 +415,7 @@ impl App {
         ]
         .spacing(8)
         .align_y(Center);
-        let state = self.arch.underlays.states.get(&u.id).map(|s| s.1.clone());
+        let state = self.modules.arch().underlays.states.get(&u.id).map(|s| s.1.clone());
         let mut facts = Form::new()
             .label_width(scaled(LABELS))
             .field("Dosya", label::body(u.file.clone()))
@@ -533,7 +534,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn underlays_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.arch.underlays_window.is_none() {
+        if self.modules.arch().underlays_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

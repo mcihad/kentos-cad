@@ -19,6 +19,7 @@
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::sync::Arc;
+use crate::arch::ArchState;
 
 use iced::futures::channel::oneshot;
 use iced::widget::{Column, container, row, scrollable, space};
@@ -32,7 +33,7 @@ use kentos_ui::theme::typography::scaled;
 use kentos_ui::widget::table::{self, Column as Col, Row, Table};
 use kentos_ui::widget::{Dialog as Frame, Form, ListDetails, Segmented, text_field};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::arch;
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
@@ -131,7 +132,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::IfcCompare(e))
+    Message::from(arch::Event::IfcCompare(e))
 }
 
 fn metres(v: f64) -> String {
@@ -276,16 +277,16 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        if self.arch.ifc_compare_window.is_none() {
-            self.arch.ifc_compare_window = Some(Window::default());
+        if self.modules.arch().ifc_compare_window.is_none() {
+            self.modules.arch_mut().ifc_compare_window = Some(Window::default());
         }
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::IfcCompare));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::IfcCompare));
     }
 
     fn ifc_compare_start(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else { return Task::none() };
         let mut model = doc.model.clone();
-        let Some(w) = self.arch.ifc_compare_window.as_mut() else { return Task::none() };
+        let Some(w) = self.modules.arch_mut().ifc_compare_window.as_mut() else { return Task::none() };
         let typed = w.tolerance.trim().replace(',', ".");
         let tolerance = if typed.is_empty() {
             None
@@ -328,7 +329,7 @@ impl App {
 
     /// The marked rows written as issues at `path`; the window says how it went.
     fn ifc_compare_write(&mut self, path: PathBuf) {
-        let Some(w) = self.arch.ifc_compare_window.as_ref() else { return };
+        let Some(w) = self.modules.arch().ifc_compare_window.as_ref() else { return };
         let Some(Outcome::Done(c)) = &w.outcome else { return };
         let topics: Vec<BcfTopicInput> = w.marked.iter().filter_map(|(tab, k)| topic_of(c, *tab, *k, &w.author)).collect();
         let input = BcfWrite { path: path.display().to_string(), overwrite: true, model: Some(w.newer.trim().to_owned()), topics };
@@ -348,16 +349,16 @@ impl App {
             }
             CommandResult::Queued { .. } | CommandResult::Cancelled => (Kind::Warn, "Yazılmadı.".into()),
         };
-        if let Some(w) = self.arch.ifc_compare_window.as_mut() {
+        if let Some(w) = self.modules.arch_mut().ifc_compare_window.as_mut() {
             w.said = Some(said);
         }
     }
 
     pub(crate) fn ifc_compare_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.arch.ifc_compare_window.as_mut() else { return Task::none() };
+        let Some(w) = self.modules.arch_mut().ifc_compare_window.as_mut() else { return Task::none() };
         match event {
             Event::Close => {
-                self.arch.ifc_compare_window = None;
+                self.modules.arch_mut().ifc_compare_window = None;
                 self.dialog = None;
             }
             Event::Path(Side::Older, t) => w.older = t,
@@ -444,7 +445,7 @@ impl App {
     }
 
     pub(crate) fn ifc_compare_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.ifc_compare_window else {
+        let Some(w) = &self.modules.arch().ifc_compare_window else {
             return space::horizontal().into();
         };
         let file = |side: Side, value: &str, hint: &'static str| {
@@ -593,7 +594,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn ifc_compare_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.arch.ifc_compare_window.is_none() {
+        if self.modules.arch().ifc_compare_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

@@ -14,6 +14,7 @@
 
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -252,14 +253,14 @@ fn denetim_asks_an_expert_of_the_common_rooms_trade_and_users() {
     let mut app = amenity(-3.0);
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     checked(&mut app);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found: Vec<_> = audited.findings.iter().filter(|f| f.code == "paiy_amenity_not_exempt").collect();
     assert_eq!(found.len(), 1, "{:#?}", audited.findings);
     assert_eq!(found[0].state, Some(kentos_commands::ArchAuditState::ExpertReview));
     assert!(found[0].message.contains("60.00 m², sınır 3.00 m²"), "{}", found[0].message);
     assert!(found[0].message.contains("57.00 m²'si sınırı aştığı için emsale eklendi"), "{}", found[0].message);
     assert_eq!(found[0].uids.len(), 2);
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let row = set.rules.iter().find(|r| r.rule == "PAİY 22/1-j").expect("the row");
     assert_eq!((row.state, row.version.as_deref()), (O::ExpertReview, Some("25.7.2019")));
     // The two rooms in no group: counted out by their words, but no group says they are a common area's.
@@ -267,7 +268,7 @@ fn denetim_asks_an_expert_of_the_common_rooms_trade_and_users() {
     assert!(near(report(&app).amenity_over, 57.0));
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     checked(&mut app);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let f = audited.findings.iter().find(|f| f.code == "paiy_amenity_not_exempt").expect("the finding");
     assert_eq!(f.state, None, "failed: {f:?}");
     assert!(f.message.contains("ortak alan değil"), "{}", f.message);
@@ -317,7 +318,7 @@ fn a_storey_with_no_room_counted_in_names_the_part_past_the_limit_in_its_zone_co
 pub(crate) fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// Two flats with a caretaker flat counted out: PAİY 44/1 makes none obligatory under 40 dwellings and 60 units, so
@@ -327,12 +328,12 @@ fn a_caretaker_flat_no_rule_makes_obligatory_is_a_finding_of_the_standards_packa
     let mut app = caretaker();
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     checked(&mut app);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let f = audited.findings.iter().find(|f| f.code == "paiy_caretaker_not_required").expect("the finding");
     assert_eq!(f.state, None, "failed: {f:?}");
     assert!(f.message.contains("zorunlu değil") && f.message.contains("2 konut bölümü"), "{}", f.message);
     assert_eq!(f.uids.len(), 3, "the flat's three rooms: {f:?}");
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows: Vec<(&str, kentos_commands::ArchAuditOutcome)> =
         set.rules.iter().filter(|r| r.rule.contains(" 22/1-")).map(|r| (r.rule.as_str(), r.state)).collect();
     use kentos_commands::ArchAuditOutcome as O;
@@ -396,8 +397,8 @@ fn screens() {
         let _ = app.update(Message::WindowResized(size));
         crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_caretaker_not_required");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_caretaker_not_required");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -444,8 +445,8 @@ fn amenity_screens() {
 
         crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_amenity_not_exempt");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_amenity_not_exempt");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);

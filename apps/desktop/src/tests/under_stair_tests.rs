@@ -12,6 +12,7 @@
 
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -139,7 +140,7 @@ fn the_metrekare_cetveli_writes_the_flat_s_net_without_it() {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// 31/6: the space under the stair opens into the living room: a finding naming the stair and the room; the same
@@ -149,19 +150,19 @@ fn a_low_space_under_a_stair_open_into_a_room_is_a_finding_of_31_6() {
     let mut app = duplex("Salon");
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     checked(&mut app);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let f = audited.findings.iter().find(|f| f.code == "paiy_under_stair_open").expect("the finding");
     assert!(f.message.contains("“Salon”") && f.message.contains("2.96 m²"), "{}", f.message);
     assert_eq!((f.state, f.uids.len()), (None, 2), "{f:?}");
     let row = |app: &App| {
-        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
         set.rules.iter().find(|r| r.rule == "PAİY 31/6").map(|r| r.state)
     };
     assert_eq!(row(&app), Some(kentos_commands::ArchAuditOutcome::Failed));
     let mut closed = duplex("Depo");
     crate::regulation_dates_tests::dated(&mut closed, Some("02.07.2026"));
     checked(&mut closed);
-    let audited = closed.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = closed.modules.arch().arch_audit.audited.as_ref().expect("checked");
     assert!(!audited.findings.iter().any(|f| f.code == "paiy_under_stair_open"));
     assert_eq!(row(&closed), Some(kentos_commands::ArchAuditOutcome::Passed));
 }
@@ -194,8 +195,8 @@ fn screens() {
         let _ = app.submit_line("12,0");
         crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_under_stair_open");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_under_stair_open");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());

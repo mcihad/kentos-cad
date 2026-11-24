@@ -6,6 +6,7 @@
 
 use crate::arch;
 use std::path::PathBuf;
+use crate::arch::ArchState;
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
@@ -20,7 +21,7 @@ use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::{label, style};
 
-use crate::app::{App, Dialog, Message, Picker};
+use crate::app::{App, Message, Picker};
 use crate::exchange::words;
 
 /// The windows' titles, which a trace names them by.
@@ -88,7 +89,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::Schedule(e))
+    Message::from(arch::Event::Schedule(e))
 }
 
 /// A filter list with `v` flipped: added, or taken away (none when it empties).
@@ -186,18 +187,18 @@ impl App {
             Event::Open(ref uid) | Event::Export(ref uid) => {
                 let export = matches!(event, Event::Export(_));
                 let uid = uid.clone();
-                self.arch.schedule = self.schedule_window_of(&uid, export);
-                if self.arch.schedule.is_some() {
+                self.modules.arch_mut().schedule = self.schedule_window_of(&uid, export);
+                if self.modules.arch().schedule.is_some() {
                     self.dialog = Some(if export {
-                        Dialog::Arch(arch::ArchDialogKind::ScheduleExport)
+                        crate::arch::dialog(crate::arch::ArchDialogKind::ScheduleExport)
                     } else {
-                        Dialog::Arch(arch::ArchDialogKind::Schedule)
+                        crate::arch::dialog(crate::arch::ArchDialogKind::Schedule)
                     });
                 }
                 return Task::none();
             }
             Event::Cancel => {
-                self.arch.schedule = None;
+                self.modules.arch_mut().schedule = None;
                 self.dialog = None;
                 return Task::none();
             }
@@ -209,7 +210,7 @@ impl App {
             }
             _ => {}
         }
-        let Some(w) = self.arch.schedule.as_mut() else {
+        let Some(w) = self.modules.arch_mut().schedule.as_mut() else {
             return Task::none();
         };
         match event {
@@ -302,9 +303,9 @@ impl App {
             }
             _ => {}
         }
-        if let Some(w) = self.arch.schedule.clone() {
+        if let Some(w) = self.modules.arch().schedule.clone() {
             let preview = self.schedule_preview(&w);
-            if let Some(s) = self.arch.schedule.as_mut() {
+            if let Some(s) = self.modules.arch_mut().schedule.as_mut() {
                 s.preview = preview;
             }
         }
@@ -313,7 +314,7 @@ impl App {
 
     /// Tamam: the change as one `cad.schedules.edit` step.
     fn schedule_apply(&mut self) -> Task<Message> {
-        let Some(w) = self.arch.schedule.clone() else {
+        let Some(w) = self.modules.arch().schedule.clone() else {
             return Task::none();
         };
         let Some(doc) = self.document.as_mut() else {
@@ -337,13 +338,13 @@ impl App {
                     Level::Success,
                     format!("Çizelge değişti: {rows} satır. Geri al ile dönülür."),
                 );
-                self.arch.schedule = None;
+                self.modules.arch_mut().schedule = None;
                 self.dialog = None;
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => {
-                if let Some(s) = self.arch.schedule.as_mut() {
+                if let Some(s) = self.modules.arch_mut().schedule.as_mut() {
                     s.preview = Err(error.message);
                 }
             }
@@ -354,7 +355,7 @@ impl App {
 
     /// Yaz…: the path asked (a trace gives it through `Picker::File`).
     fn schedule_write_ask(&mut self) -> Task<Message> {
-        let Some(w) = &self.arch.schedule else {
+        let Some(w) = &self.modules.arch().schedule else {
             return Task::none();
         };
         if let Picker::File(path) = &self.picker {
@@ -383,7 +384,7 @@ impl App {
     }
 
     fn schedule_written(&mut self, path: Option<PathBuf>) {
-        let (Some(path), Some(w), Some(doc)) = (path, self.arch.schedule.clone(), &self.document)
+        let (Some(path), Some(w), Some(doc)) = (path, self.modules.arch().schedule.clone(), &self.document)
         else {
             return;
         };
@@ -406,7 +407,7 @@ impl App {
                 for note in out.notes {
                     self.say(Level::Info, note);
                 }
-                self.arch.schedule = None;
+                self.modules.arch_mut().schedule = None;
                 self.dialog = None;
             }
             Err(e) => self.announce(Level::Error, format!("Çizelge yazılamadı. {}", e.message)),
@@ -470,7 +471,7 @@ impl App {
     }
 
     pub(crate) fn schedule_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.schedule else {
+        let Some(w) = &self.modules.arch().schedule else {
             return label::body("").into();
         };
         if w.export {

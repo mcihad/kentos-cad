@@ -1,10 +1,11 @@
-//! Active tool defaults, separate from the selected object's inspector.
+//! Öznitelikler's top: the running tool's settings (every module's tools: a line's, a wall's, a door's), separate
+//! from the selected object's inspector below them; a new tool brings the panel's scroll back to its top. The layer key
+//! row (Katman, docs/adr/8008) shows for a tool that writes an object with a layer key of its kind.
 #[cfg(test)]
-#[path = "../tests/architecture_settings_scroll_tests.rs"]
+#[path = "../tests/tool_settings_scroll_tests.rs"]
 mod scroll_tests;
 
 use crate::app::{App, Message};
-use crate::arch;
 use iced::widget::{column, container, scrollable};
 use iced::{Element, Fill, Task};
 use kentos_ui::label;
@@ -28,14 +29,14 @@ pub struct Commit {
 }
 
 impl App {
-    pub(crate) fn architecture_properties_view<'a>(
+    pub(crate) fn properties_panel_view<'a>(
         &'a self,
         doc: &'a crate::document::Document,
     ) -> Element<'a, Message> {
         // The inspector owns its existing single scroll. A new tool can
         // reveal the controls without resetting edits, previews or other docks.
         scrollable(column![
-            self.architecture_settings_view(),
+            self.tool_settings_view(),
             self.properties_view(doc)
         ])
         .id(PROPERTIES_SCROLL)
@@ -46,7 +47,7 @@ impl App {
         .into()
     }
 
-    pub(crate) fn architecture_settings_view(&self) -> Element<'_, Message> {
+    pub(crate) fn tool_settings_view(&self) -> Element<'_, Message> {
         let rows = self.session.settings(&self.format());
         if rows.is_empty() {
             return iced::widget::space().height(0).into();
@@ -88,16 +89,16 @@ impl App {
                     .iter()
                     .any(|choice| choice.typed == "yes" && choice.checked);
                 Cell::padded(Switch::new(on, move |on| {
-                    Message::Arch(arch::Event::ToolSetting(Commit {
+                    Message::ToolSetting(Commit {
                         tool,
                         key,
                         value: if on { "yes" } else { "no" }.into(),
-                    }))
+                    })
                 }))
                 .into()
             } else if setting.choices.is_empty() {
                 EditCell::new(setting.value, move |value| {
-                    Message::Arch(arch::Event::ToolSetting(Commit { tool, key, value }))
+                    Message::ToolSetting(Commit { tool, key, value })
                 })
                 .into()
             } else {
@@ -110,11 +111,11 @@ impl App {
                         } else {
                             menu.item(
                                 c.label.clone(),
-                                Message::Arch(arch::Event::ToolSetting(Commit {
+                                Message::ToolSetting(Commit {
                                     tool,
                                     key,
                                     value: c.typed.clone(),
-                                })),
+                                }),
                             )
                         };
                     }
@@ -138,6 +139,47 @@ impl App {
         .width(Fill)
         .into()
     }
+    /// The tool panel's Katman (docs/adr/8008): the layer the running tool writes on; its menu turns the layer key on
+    /// (Türüne göre, EK-4) or off (Etkin katman). None for a tool that writes no Mimari object.
+    pub(crate) fn layer_key_setting(&self) -> Option<iced::Element<'_, Message>> {
+        let shown = self.session.layer_shown()?.to_owned();
+        let keyed = self.memory.layer_keys;
+        let active = self.document.as_ref().map_or_else(String::new, |d| {
+            let layers = d.model.layers();
+            layers
+                .get(layers.active())
+                .map_or_else(|| layers.active().to_owned(), |l| l.name.clone())
+        });
+        Some(kentos_ui::widget::property_grid::choice(
+            shown,
+            None,
+            move || {
+                Menu::new()
+                    .header("Katman")
+                    .radio("Türüne göre (EK-4)", keyed, Some(Message::LayerKeys(true)))
+                    .radio(
+                        format!("Etkin katman ({active})"),
+                        !keyed,
+                        Some(Message::LayerKeys(false)),
+                    )
+            },
+        ))
+    }
+
+    /// Katman's menu: the layer key on or off for the session; the running tool sees it at once.
+    pub(crate) fn choose_layer_keys(&mut self, on: bool) {
+        self.memory.layer_keys = on;
+        let _ = self.with_tool(|session, cx| {
+            session.document_changed(cx);
+            session.see_layer(cx);
+        });
+        self.output(if on {
+            "Katman: mimari nesneler türlerinin EK-4 katmanına yazılır (MM-DUVA-TUGLA, MM-KAPI-GENEL …)."
+        } else {
+            "Katman: mimari nesneler etkin katmana yazılır."
+        });
+    }
+
     pub(crate) fn tool_setting(&mut self, event: Commit) -> Task<Message> {
         if self.session.tool_id() != event.tool || !self.session.is_running() {
             return Task::none();
@@ -172,11 +214,11 @@ mod tests {
         let _ = app.update(Message::DialogClosed);
         app.selection.set([Slot(1)]);
         let _ = app.update(Message::Run("tool.curveEdit"));
-        let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
+        let _ = app.update(Message::ToolSetting(Commit {
             tool: "curveEdit",
             key: "curve-action",
             value: "E".into(),
-        })));
+        }));
         assert!(
             matches!(
                 app.document.as_ref().unwrap().model.get(Slot(1)),
@@ -187,11 +229,11 @@ mod tests {
         );
         let original = Vec2::new(crate::tools_scenes::E + 10., crate::tools_scenes::N + 10.);
         let moved = Vec2::new(original.x + 3., original.y + 2.);
-        let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
+        let _ = app.update(Message::ToolSetting(Commit {
             tool: "curveEdit",
             key: "fit-edit",
             value: "T".into(),
-        })));
+        }));
         // Selecting a point still needs the actual pick, not a computed
         // location. Send it through the viewport like the user's click.
         crate::tools_scenes::click(&mut app, [10., 10.]);

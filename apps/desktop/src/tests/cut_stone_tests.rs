@@ -12,6 +12,7 @@
 
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S, BuildingStructure, StructuralSystem};
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::project::settings::Section;
@@ -79,21 +80,21 @@ fn declare(app: &mut App, system: Option<StructuralSystem>, traditional: bool) {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The findings and rows of the articles whose rule says `article` (code, state, message; rule, version, outcome).
 type Found = Vec<(String, Option<S>, String)>;
 type Rows = Vec<(String, Option<String>, O)>;
 fn of(app: &App, article: &str) -> (Found, Rows) {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited
         .findings
         .iter()
         .filter(|f| f.rule.as_deref().is_some_and(|r| r.contains(article)))
         .map(|f| (f.code.clone(), f.state, f.message.clone()))
         .collect();
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows = set
         .rules
         .iter()
@@ -213,8 +214,8 @@ fn screens() {
 
         // Denetim: 22/1-m's finding chosen, the rule set over the list.
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_traditional_not_exempt");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_traditional_not_exempt");
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("3-taslik-denetim-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");

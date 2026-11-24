@@ -14,6 +14,7 @@
 
 use kentos_commands::ArchAuditOutcome as O;
 use serde_json::json;
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::use_class_tests::{building, checked, p, rect, run, spaces};
@@ -79,7 +80,7 @@ fn east_stair(app: &mut App, east: &str) {
 }
 
 fn row(app: &App) -> O {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     set.rules.iter().find(|r| r.rule == "BYKHY 50/4").unwrap_or_else(|| panic!("50/4: {:#?}", set.rules)).state
 }
 
@@ -96,7 +97,7 @@ fn door_exit(app: &App, name: &str) -> kentos_extensions::audit_facts::building:
 }
 
 fn findings(app: &App) -> Vec<(String, String)> {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     audited.findings.iter().map(|f| (f.code.clone(), f.message.clone())).collect()
 }
 
@@ -179,8 +180,8 @@ fn screens() {
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         let _ = app.update(Message::Run("tool.escapeRoutes"));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_bedroom_escape_distance");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_bedroom_escape_distance");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));

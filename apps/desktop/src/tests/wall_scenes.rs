@@ -663,7 +663,7 @@ fn dimensions_around(app: &mut App) {
     closed_room(app);
     run(app, "tool.wallDimensions");
     click(app, [8.1, 1.0]);
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallDimensions",
         key: "N",
         value: "all".into(),
@@ -688,13 +688,13 @@ fn dimensions_around_undone(app: &mut App) {
 fn style_renamed(app: &mut App) {
     room(app, 50.0);
     run(app, "arch.wallStyles");
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Choose(Some("kentos-dis-duvar-25".into())),
     )));
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Name("Dış duvar 25 QA".into()),
     )));
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Save,
     )));
     app.selection.set([Slot(1)]);
@@ -768,7 +768,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
 
 fn architecture_options(app: &mut App) {
     rectangle_drawing(app);
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallRectangle",
         key: "E",
         value: "250mm".into(),
@@ -785,7 +785,7 @@ fn partition_preview(app: &mut App) {
     click(app, [8.0, 6.0]);
     typed(app, "");
     run(app, "tool.wallPartition");
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallPartition",
         key: "E",
         value: "150mm".into(),
@@ -822,7 +822,7 @@ fn curved(app: &mut App) {
     app.tab = "arch";
     app.command_expanded = true;
     run(app, "tool.wallPartition");
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallPartition",
         key: "E",
         value: "150mm".into(),
@@ -838,7 +838,7 @@ fn partition_arc(app: &mut App) {
 /// İki duvar arasında: the arc, then the two radial walls; the partition written between them.
 fn partition_arc_between(app: &mut App) {
     curved(app);
-    let _ = app.tool_setting(crate::architecture_settings::Commit {
+    let _ = app.tool_setting(crate::tool_settings::Commit {
         tool: "wallPartition",
         key: "B",
         value: "between".into(),

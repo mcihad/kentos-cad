@@ -664,4 +664,51 @@ impl App {
         }
         tip.body(body)
     }
+
+    /// The narrow status bar's Yardımcılar: the aids the wide one shows as lamps, the program's own
+    /// (Topoloji and Çakışma are a map's, docs/adr/0802).
+    pub fn compact_aids_menu(&self) -> Menu<Message> {
+        let mut menu = Menu::new().header("Çizim yardımcıları");
+        for (id, name) in crate::view::STATUS_AIDS {
+            if !self.shows_aid(id) {
+                continue;
+            }
+            let Some(command) = catalog().get(id) else {
+                continue;
+            };
+            let on = if id == "draft.ortho" {
+                self.ortho_shown()
+            } else {
+                self.checked(id).unwrap_or(false)
+            };
+            menu = menu
+                .check(
+                    name,
+                    on,
+                    (command.standing == Standing::Ported).then_some(Message::RunKept(id)),
+                )
+                .icon(command.icon)
+                .stay();
+            if let Some(keys) = command.shortcuts.first() {
+                menu = menu.shortcut(*keys);
+            }
+        }
+        menu = menu
+            .separator()
+            .submenu("Kenet seçenekleri", self.snap_cell_menu());
+        if self.shows_aid("draft.overlap") {
+            menu = menu.submenu("Çakışma seçenekleri", self.overlap_menu());
+        }
+        menu = menu.submenu("Seçim süzgeci türleri", self.select_filter_menu());
+        if self.shows_aid("draft.topology") {
+            menu = menu
+                .check(
+                    "Topolojik düzenlemede noktalar da",
+                    self.checked("draft.topologyPoints").unwrap_or(false),
+                    Message::RunKept("draft.topologyPoints"),
+                )
+                .stay();
+        }
+        menu
+    }
 }

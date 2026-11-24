@@ -24,6 +24,7 @@
 //!   the objects selected leaves them out.
 
 use std::collections::BTreeSet;
+use crate::arch::ArchState;
 
 use iced::Task;
 use kentos_commands::{
@@ -165,7 +166,9 @@ fn regulation_facts(doc: &kentos_domain::Document) -> Option<Value> {
 }
 
 impl App {
-    /// The facts the Dijital proje rule reads first: the CAD drawing's section alone.
+    /// The facts the Dijital proje rule reads first: the CAD drawing's section alone (the permit gate measures its own,
+    /// permit_gate.rs).
+    #[cfg(test)]
     pub(crate) fn arch_audit_standards_facts(&self) -> Option<Value> {
         standards_facts(&self.document.as_ref()?.model)
     }
@@ -179,14 +182,14 @@ impl App {
     fn arch_audit_standards_input(&self) -> Option<Input> {
         Some(Input {
             copy: self.document.as_ref()?.model.reading_copy(),
-            delivered: self.arch.arch_audit.delivered_model,
+            delivered: self.modules.arch().arch_audit.delivered_model,
         })
     }
 
     /// After a check: the last answer put back, and the rules asked again when the check was the whole drawing's.
     pub(super) fn arch_audit_standards_after_check(&mut self) {
         let doc = self.document.as_ref().map(|d| &d.model);
-        let panel = &mut self.arch.arch_audit;
+        let panel = &mut self.modules.arch_mut().arch_audit;
         let whole = matches!(panel.scope, AuditScope::All);
         let last: BTreeSet<&str> = panel.standards.iter().map(|f| f.key.as_str()).collect();
         if let Some(a) = panel.audited.as_mut() {
@@ -200,7 +203,7 @@ impl App {
 
     /// The rules' ask when a check made it due; their answer comes as [`Event::Standards`].
     pub(super) fn arch_audit_standards_task(&mut self) -> Task<Message> {
-        if !std::mem::take(&mut self.arch.arch_audit.standards_due) {
+        if !std::mem::take(&mut self.modules.arch_mut().arch_audit.standards_due) {
             return Task::none();
         }
         // The drawing now, a reading copy; its facts, its model, the file written and read back and the rules off this
@@ -208,8 +211,8 @@ impl App {
         let Some(input) = self.arch_audit_standards_input() else {
             return Task::none();
         };
-        self.arch.arch_audit.standards_generation += 1;
-        let generation = self.arch.arch_audit.standards_generation;
+        self.modules.arch_mut().arch_audit.standards_generation += 1;
+        let generation = self.modules.arch().arch_audit.standards_generation;
         Task::perform(
             async move {
                 let (sent, got) = iced::futures::channel::oneshot::channel();
@@ -225,11 +228,11 @@ impl App {
     /// The rules' answer: their findings in place of the last ones, for the ask still current. A package that gave no
     /// answer says why over the table, so a clean table is not taken for a pass.
     pub(super) fn arch_audit_standards_answer(&mut self, generation: u64, answer: Result<Value, String>) {
-        if generation != self.arch.arch_audit.standards_generation {
+        if generation != self.modules.arch().arch_audit.standards_generation {
             return;
         }
         let doc = self.document.as_ref().map(|d| &d.model);
-        let panel = &mut self.arch.arch_audit;
+        let panel = &mut self.modules.arch_mut().arch_audit;
         let last: BTreeSet<String> = panel.standards.iter().map(|f| f.key.clone()).collect();
         let (digital, regulation) = match &answer {
             Ok(v) => (part(&v["digital"]), part(&v["regulation"])),
@@ -275,9 +278,9 @@ impl App {
         let Some(input) = self.arch_audit_standards_input() else {
             return;
         };
-        self.arch.arch_audit.standards_due = false;
-        self.arch.arch_audit.standards_generation += 1;
-        let generation = self.arch.arch_audit.standards_generation;
+        self.modules.arch_mut().arch_audit.standards_due = false;
+        self.modules.arch_mut().arch_audit.standards_generation += 1;
+        let generation = self.modules.arch().arch_audit.standards_generation;
         let answer = answer(input);
         self.arch_audit_standards_answer(generation, answer);
     }

@@ -11,6 +11,7 @@
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::arch;
@@ -96,15 +97,15 @@ fn finished(app: &mut App, rooms: &[kentos_domain::Slot]) {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// 20/3's and 26/2's rows and the finishes' findings (code, state, message, objects).
 type Found = Vec<(String, Option<S>, String, usize)>;
 fn said(app: &App) -> (Option<O>, Option<O>, Found) {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let row = |rule: &str| set.rules.iter().find(|r| r.rule == rule).map(|r| r.state);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited
         .findings
         .iter()
@@ -117,10 +118,10 @@ fn said(app: &App) -> (Option<O>, Option<O>, Found) {
 /// Malzemeler open, `name` chosen, its Yanıcılık sınıfı typed `class` and applied.
 pub(crate) fn declared(app: &mut App, name: &str, class: &str) {
     let _ = app.update(Message::Run("arch.materials"));
-    let at = app.arch.materials.as_ref().expect("the window").list.iter().position(|(m, _)| m.name == name).expect(name);
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Choose(at))));
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Reaction(class.to_owned()))));
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Apply)));
+    let at = app.modules.arch().materials.as_ref().expect("the window").list.iter().position(|(m, _)| m.name == name).expect(name);
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Choose(at))));
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Reaction(class.to_owned()))));
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Apply)));
 }
 
 /// A row's note in Öznitelikler: the row after the one labelled `label`.
@@ -159,7 +160,7 @@ fn a_room_s_finishes_are_read_by_their_materials_classes() {
     declared(&mut app, "Duvar kağıdı", "F");
     declared(&mut app, "Seramik", "A1fl");
     app.dialog = None;
-    app.arch.materials = None;
+    app.modules.arch_mut().materials = None;
     app.selection.set(vec![rooms[0]]);
     assert_eq!(note_under(&app, "Duvar kaplaması"), "Malzemelerden: F.");
     assert_eq!(note_under(&app, "Döşeme kaplaması"), "Malzemelerden: A1fl.");
@@ -178,7 +179,7 @@ fn a_room_s_finishes_are_read_by_their_materials_classes() {
     // B-s1,d0, zor alevlenici: it holds.
     declared(&mut app, "Duvar kağıdı", "B-s1,d0");
     app.dialog = None;
-    app.arch.materials = None;
+    app.modules.arch_mut().materials = None;
     checked(&mut app);
     let (wall, _, found) = said(&app);
     assert_eq!(wall, Some(O::Passed));
@@ -207,7 +208,7 @@ fn screens() {
         declared(&mut app, "Duvar kağıdı", "F");
         declared(&mut app, "Seramik", "A1fl");
         app.dialog = None;
-        app.arch.materials = None;
+        app.modules.arch_mut().materials = None;
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
@@ -228,8 +229,8 @@ fn screens() {
         println!("{}", file.display());
         app.selection.set(Vec::new());
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_wall_lining_reaction");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_wall_lining_reaction");
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-denetim-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");

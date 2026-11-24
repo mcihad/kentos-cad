@@ -5,6 +5,7 @@
 
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -132,11 +133,11 @@ fn the_facts_say_what_separates_each_two_rooms() {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 fn outcome(app: &App, rule: &str) -> Option<kentos_commands::ArchAuditOutcome> {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     set.rules.iter().find(|r| r.rule == rule).map(|r| r.state)
 }
 
@@ -147,7 +148,7 @@ fn the_boiler_room_s_wall_and_the_compartment_wall_s_door_are_read_by_bykhy_24()
     use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
     let mut app = storey("EI 30", None);
     checked(&mut app);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let hazard = audited.findings.iter().find(|f| f.code == "bykhy_hazard_room_separation").expect("24/2");
     assert!(hazard.message.contains("Kazan dairesi") && hazard.message.contains("EI 30"), "{}", hazard.message);
     assert_eq!(hazard.state, None);
@@ -158,7 +159,7 @@ fn the_boiler_room_s_wall_and_the_compartment_wall_s_door_are_read_by_bykhy_24()
     assert_eq!(outcome(&app, "BYKHY 24/7"), Some(O::MissingData));
     let mut fixed = storey("REI 120", Some("EI2 60-S200C5"));
     checked(&mut fixed);
-    let audited = fixed.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = fixed.modules.arch().arch_audit.audited.as_ref().expect("checked");
     assert!(!audited.findings.iter().any(|f| f.code.starts_with("bykhy_compartment") || f.code.starts_with("bykhy_hazard")));
     assert_eq!(outcome(&fixed, "BYKHY 24/2"), Some(O::Passed));
     assert_eq!(outcome(&fixed, "BYKHY 24/7"), Some(O::Passed));
@@ -186,8 +187,8 @@ fn screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_hazard_room_separation");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_hazard_room_separation");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());

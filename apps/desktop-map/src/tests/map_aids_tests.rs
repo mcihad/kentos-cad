@@ -1,5 +1,5 @@
 //! KentOS Harita's drawing aids (docs/adr/9185): its program has the overlap lamp's options that KentOS Mimari's has not
-//! (arch/architecture_ribbon.rs keeps Mimari's half in the core).
+//! (architecture_ribbon_tests.rs keeps Mimari's half; status.rs has the menu).
 
 use crate::files_testing::{app_with_drawing, make_cad};
 

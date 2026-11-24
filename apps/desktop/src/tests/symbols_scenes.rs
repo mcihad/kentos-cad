@@ -17,7 +17,7 @@ use kentos_domain::Slot;
 use serde_json::{Value, json};
 
 use crate::app::App;
-use crate::architecture_settings::Commit;
+use crate::tool_settings::Commit;
 use crate::tools_scenes::{click, hover, run};
 use crate::tools_screens::{Pointed, Scene, open_split};
 use crate::walkthrough_scenes::{interior, view};

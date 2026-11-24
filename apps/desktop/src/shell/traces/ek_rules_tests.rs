@@ -5,6 +5,7 @@
 use super::player::AREA;
 use super::{Player, Trace, VARIANTS, scratch_file};
 use crate::app::{App, Message};
+use crate::arch::ArchState;
 
 /// One replay at a time: the trace's scratch file is shared by the tests that play it.
 static REPLAY: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -46,10 +47,10 @@ fn run(app: &mut App, command: &str, input: serde_json::Value) {
 fn rules(app: &mut App) -> Vec<String> {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.standards_failed, None);
+    assert_eq!(app.modules.arch().arch_audit.standards_failed, None);
     // EK-3's and EK-4's findings: the model's mandatory fields (docs/adr/8068) are another rule's.
     let mut out: Vec<String> =
-        app.arch.arch_audit.standards.iter().map(|f| f.code.clone()).filter(|c| c.starts_with("digital_ek")).collect();
+        app.modules.arch().arch_audit.standards.iter().map(|f| f.code.clone()).filter(|c| c.starts_with("digital_ek")).collect();
     out.sort();
     out.dedup();
     out
@@ -57,11 +58,11 @@ fn rules(app: &mut App) -> Vec<String> {
 
 /// The finding of `code` chosen and Düzelt pressed: its fix as one undo step.
 fn fix(app: &mut App, code: &str) {
-    let found = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let found = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let at = found.findings.iter().position(|f| f.code == code).unwrap_or_else(|| panic!("no {code}"));
     assert!(found.findings[at].fix.is_some(), "{code} has a fix");
-    app.arch.arch_audit.selected = Some(at);
-    let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Fix)));
+    app.modules.arch_mut().arch_audit.selected = Some(at);
+    let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Fix)));
 }
 
 fn rooms(app: &App) -> Vec<(String, String)> {
@@ -150,7 +151,7 @@ fn every_ek3_and_ek4_rule_passes_and_fails_on_the_2p1_flat() {
     // dimension_font: the drawing's typeface Arimo, Arial's metrics: no longer a warning, a note for the administration
     run(&mut app, "cad.settings.set", serde_json::json!({"drawingFont": "arimo"}));
     rules(&mut app);
-    let dims: Vec<_> = app.arch.arch_audit.standards.iter().filter(|f| f.code == DIM).collect();
+    let dims: Vec<_> = app.modules.arch().arch_audit.standards.iter().filter(|f| f.code == DIM).collect();
     assert!(dims.len() == 1 && dims[0].message.contains("K29"), "{dims:?}");
 }
 
@@ -273,7 +274,7 @@ fn screens() {
         let _ = app.update(Message::Run("arch.audit"));
         app.bottom_dragged(Some(size.height * 0.42), std::time::Instant::now());
         app.arch_audit_standards_settle();
-        let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(
+        let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(
             kentos_commands::ArchAuditCheck::Regulation,
         )))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -292,10 +293,10 @@ fn screens() {
             .arch_audit_shown()
             .into_iter()
             .position(|i| {
-                app.arch.arch_audit.audited.as_ref().is_some_and(|a| a.findings[i].code == "digital_ek3_clockwise")
+                app.modules.arch().arch_audit.audited.as_ref().is_some_and(|a| a.findings[i].code == "digital_ek3_clockwise")
             })
             .expect("the clockwise finding shown");
-        let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(at))));
+        let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(at))));
         shot(&mut snapshot, &mut app, format!("2-saat-yonu-secili-{name}.png"));
         fix(&mut app, "digital_ek3_clockwise");
         app.arch_audit_standards_settle();
@@ -316,8 +317,8 @@ fn print_the_flat_s_findings() {
     let mut app = flat();
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    println!("failed: {:?}", app.arch.arch_audit.standards_failed);
-    for f in &app.arch.arch_audit.standards {
+    println!("failed: {:?}", app.modules.arch().arch_audit.standards_failed);
+    for f in &app.modules.arch().arch_audit.standards {
         println!("{} | {} | {} | fix: {:?}", f.code, f.message, f.uids.len(), f.fix.as_ref().map(|x| &x.label));
     }
     let facts = app.arch_audit_standards_facts().expect("facts");

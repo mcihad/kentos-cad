@@ -388,7 +388,7 @@ impl App {
                         && !self.grade_picked(p)
                         && !self.pdf_import_picked(p)
                         && !self.service_info_picked(p)
-                        && !self.underlays_picked(p)
+                        && !self.module_picked(p)
                         && !self.ext_panel_point_picked(p)
                     {
                         self.calc_picked(p);
@@ -476,7 +476,7 @@ impl App {
             self.with_tool(|s, cx| s.activate(cx));
             if !self.session.settings(&self.format()).is_empty() {
                 self.docks.show(crate::app::Panel::Properties, kentos_ui::widget::docking::Side::Right);
-                return crate::architecture_settings::reveal();
+                return crate::tool_settings::reveal();
             }
         }
         Task::none()

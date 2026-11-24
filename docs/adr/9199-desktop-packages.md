@@ -217,6 +217,39 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
 - Bağımlılık tabanı: kabuk → Mimari 15 → 14, CAD → Mimari 3 → 2. Sınama: çekirdek 2709, Harita 191, Yol 129,
   programlar 34.
 
+### §4.9 Adım 9: Mimari modül arayüzünün arkasında (aynı crate'te)
+
+- Mimari klasöründe olup Mimari'nin olmayan dört parça çekirdeğe indi:
+  - NTv2 ızgara kitaplığı (`grids`, proje ayarlarının datum seçimi) → `shell/grids.rs`: `App::grids`,
+    `Message::GridsLooked`.
+  - Araç ayarları paneli (`architecture_settings` → `shell/tool_settings.rs`): her modülün araçlarının ayarları;
+    Katman anahtarı satırı ve `Message::ToolSetting` onunla.
+  - Dar durum çubuğunun Yardımcılar menüsü (`compact_aids_menu`) → `view/status.rs`.
+  - Altlık modelinin okunuşu (dosya, özet, gövdeler, plan çizgileri) → `shell/underlay_model.rs`; 3B görünüm onu
+    kullanır, ne zaman okunacağı Mimari'nin.
+  - Ruhsat yayınının kapısı (`permit_gate`) çizimin `cad` olgularını kendisi ölçer.
+- `arch/parts.rs`: 31 komut kimliği, 21 pencerenin başlığı ve iz denetimi, Esc ve Tamam'la kapanışları (kendi kaydı
+  olan dört düzenleyici önce sorar).
+- `ModuleParts`'a yeni kancalar:
+  - `started`: Mimari programının ilk duvar stili.
+  - `device`: Malzemeler kitaplığı, programın geçmiş klasörü yanında.
+  - `follow`: altlıkların okunuşu ve planı.
+  - `escape_closes`, `dialog_confirmed`: Mahalleri birleştir.
+  - `checked`: Tadilat görünümü.
+  - `picked`: altlıkta Planda seç.
+  - `preview`: Denetim'in seçili düzeltmeleri.
+  - `bottom_tab_view`: Denetim sekmesi.
+  - `properties_ask`: Öznitelikler'in Tipe uygula önizlemesi, Tip satırı ve Çizelge eylemleri. Satırlar CAD
+    çekirdeğinde kalır; soruyu kabuğun `PropertiesAsk` türü taşır, kabuk → CAD bağı büyümez.
+  - `building3d` (`Building3dParts`): 3B görünüm ve IFC görüntüleyicide çizimin yanında gösterilen modeller, işaretli
+    nesneler, seçilen altlık nesnesi.
+- `Message::Arch`, `Dialog::Arch`, `App.arch`, `Message::IfcBuildingExport(Cut)` kalktı. Yerlerine:
+  - `From<arch::Event> for Message` (213 yer) ve `arch::dialog(kind)` (42 yer);
+  - `ArchState`: `modules.arch()`, `arch_mut()` (800 erişim betikle).
+  - Dosya seçicinin cevabı Mimari'nin iletisidir. Mimari şablonu penceresinin başlığı `TITLE`'dır.
+- Bağımlılık tabanı: kabuk → Mimari 14 → 1 (kayıt dosyası), CAD → Mimari 2 → 0.
+- Sınama: çekirdek 2709, Harita 191, Yol 129, programlar 34.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):

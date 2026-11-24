@@ -9,6 +9,7 @@
 //! ```
 
 use std::path::PathBuf;
+use crate::arch::ArchState;
 
 use kentos_launch::Module;
 
@@ -26,12 +27,12 @@ fn fixture(rel: &str) -> String {
 }
 
 fn send(app: &mut App, e: Event) {
-    let task = app.update(Message::Arch(crate::arch::Event::IfcCompare(e)));
+    let task = app.update(Message::from(crate::arch::Event::IfcCompare(e)));
     drive(app, task);
 }
 
 fn bcf(app: &mut App, e: Bcf) {
-    let task = app.update(Message::Arch(crate::arch::Event::Bcf(e)));
+    let task = app.update(Message::from(crate::arch::Event::Bcf(e)));
     drive(app, task);
 }
 
@@ -60,7 +61,7 @@ fn compared(app: &mut App) {
 fn the_revisions_are_compared_written_as_issues_and_read_back_to_the_drawing() {
     let mut app = opened();
     compared(&mut app);
-    let w = app.arch.ifc_compare_window.as_ref().expect("the window");
+    let w = app.modules.arch().ifc_compare_window.as_ref().expect("the window");
     let Some(Outcome::Done(c)) = &w.outcome else { panic!("{:?}", w.outcome) };
     assert_eq!(w.tab, Tab::Changed);
     let summary = crate::ifc_compare_window::summary(c);
@@ -77,7 +78,7 @@ fn the_revisions_are_compared_written_as_issues_and_read_back_to_the_drawing() {
     let path = scratch("bcf").join("sorunlar.bcf");
     app.picker = Picker::File(path.clone());
     send(&mut app, Event::Write);
-    let said = app.arch.ifc_compare_window.as_ref().unwrap().said.clone().expect("said");
+    let said = app.modules.arch().ifc_compare_window.as_ref().unwrap().said.clone().expect("said");
     assert!(said.1.starts_with("2 sorun"), "{said:?}");
 
     // Read back: the moved wall's topic finds the drawing's wall.
@@ -85,7 +86,7 @@ fn the_revisions_are_compared_written_as_issues_and_read_back_to_the_drawing() {
     bcf(&mut app, Bcf::Path(crate::bcf_window::Field::Bcf, path.display().to_string()));
     bcf(&mut app, Bcf::Path(crate::bcf_window::Field::Model, fixture("ifc/v1/revizyon/kesit-binasi-r2.ifc")));
     bcf(&mut app, Bcf::Read);
-    let w = app.arch.bcf_window.as_ref().expect("the window");
+    let w = app.modules.arch().bcf_window.as_ref().expect("the window");
     let Some(Ok(r)) = &w.read else { panic!("{:?}", w.read) };
     assert_eq!(r.topics.len(), 2);
     let moved = r.topics.iter().position(|t| t.title.contains("Taşındı")).expect("the moved wall's topic");
@@ -101,12 +102,12 @@ fn nothing_marked_or_no_author_is_said_before_any_file() {
     let mut app = opened();
     compared(&mut app);
     send(&mut app, Event::Write);
-    let said = app.arch.ifc_compare_window.as_ref().unwrap().said.clone().expect("said");
+    let said = app.modules.arch().ifc_compare_window.as_ref().unwrap().said.clone().expect("said");
     assert!(said.1.contains("işaretleyin"), "{said:?}");
     send(&mut app, Event::Mark(0, true));
     send(&mut app, Event::Author(" ".into()));
     send(&mut app, Event::Write);
-    let said = app.arch.ifc_compare_window.as_ref().unwrap().said.clone().expect("said");
+    let said = app.modules.arch().ifc_compare_window.as_ref().unwrap().said.clone().expect("said");
     assert!(said.1.contains("Yazarı"), "{said:?}");
 }
 
@@ -152,7 +153,7 @@ fn screens() {
         bcf(&mut app, Bcf::Path(crate::bcf_window::Field::Bcf, fixture("ifc/v1/bcf/disaridan-v3.bcf")));
         bcf(&mut app, Bcf::Path(crate::bcf_window::Field::Model, fixture("ifc/v1/revizyon/kesit-binasi-r2.ifc")));
         bcf(&mut app, Bcf::Read);
-        let r = app.arch.bcf_window.as_ref().and_then(|w| w.read.clone()).and_then(Result::ok).expect("read");
+        let r = app.modules.arch().bcf_window.as_ref().and_then(|w| w.read.clone()).and_then(Result::ok).expect("read");
         let moved = r.topics.iter().position(|t| t.title.contains("kuzey")).unwrap_or(0);
         bcf(&mut app, Bcf::Choose(moved));
         bcf(&mut app, Bcf::Select);

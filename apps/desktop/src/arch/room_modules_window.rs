@@ -28,8 +28,9 @@ use kentos_interaction::Level;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::{Choice, Select};
 use kentos_ui::{label, style};
+use crate::arch::ArchState;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
 
@@ -118,7 +119,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::RoomModules(e))
+    Message::from(arch::Event::RoomModules(e))
 }
 
 /// What a source update says: the instances it reaches and what it passes by.
@@ -181,20 +182,20 @@ impl App {
             .and_then(|id| rows.iter().position(|r| r.id == id))
             .unwrap_or(0);
         let name = self
-            .arch
+            .modules.arch()
             .room_modules
             .as_ref()
             .map(|w| w.name.clone())
             .unwrap_or_default();
         // The part the window shows stays as it is read again (after a write).
         let part = self
-            .arch
+            .modules.arch()
             .room_modules
             .as_ref()
             .map(|w| w.part)
             .unwrap_or_default();
         let (repeat_from, repeat_to, repeat_loose, repeat_again) = self
-            .arch
+            .modules.arch()
             .room_modules
             .as_ref()
             .map(|w| {
@@ -206,7 +207,7 @@ impl App {
                 )
             })
             .unwrap_or_default();
-        self.arch.room_modules = Some(Window {
+        self.modules.arch_mut().room_modules = Some(Window {
             part,
             rows,
             chosen,
@@ -238,7 +239,7 @@ impl App {
                     .collect()
             })
             .unwrap_or_default();
-        let Some(w) = self.arch.room_modules.as_mut() else {
+        let Some(w) = self.modules.arch_mut().room_modules.as_mut() else {
             return;
         };
         let used: Vec<String> = w
@@ -277,7 +278,7 @@ impl App {
 
     /// The input Katları tekrarla writes; none without a chosen level.
     fn room_modules_repeat_input(&self) -> Option<ModulesOperation> {
-        let w = self.arch.room_modules.as_ref()?;
+        let w = self.modules.arch().room_modules.as_ref()?;
         let from = w.repeat_from.clone()?;
         let to: Vec<ModuleLevelTarget> = w
             .repeat_to
@@ -322,7 +323,7 @@ impl App {
             ),
             _ => None,
         };
-        if let Some(w) = self.arch.room_modules.as_mut() {
+        if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
             w.repeat_preview = preview;
         }
     }
@@ -336,13 +337,13 @@ impl App {
         let keep = self.selected_module().map(|(m, _)| m);
         self.room_modules_read(keep);
         if let (Some((_, inst)), Some(w)) =
-            (self.selected_module(), self.arch.room_modules.as_mut())
+            (self.selected_module(), self.modules.arch_mut().room_modules.as_mut())
             && let Some(row) = w.rows.get(w.chosen)
         {
             w.instance = row.instances.iter().position(|i| i.id == inst).unwrap_or(0);
         }
         self.room_modules_preview();
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::RoomModules));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::RoomModules));
     }
 
     /// The module and instance the first selected object is in.
@@ -361,7 +362,7 @@ impl App {
     }
 
     fn room_modules_chosen(&self) -> Option<(String, Option<String>)> {
-        let w = self.arch.room_modules.as_ref()?;
+        let w = self.modules.arch().room_modules.as_ref()?;
         let row = w.rows.get(w.chosen)?;
         Some((
             row.id.clone(),
@@ -395,7 +396,7 @@ impl App {
             }
             _ => None,
         };
-        if let Some(w) = self.arch.room_modules.as_mut() {
+        if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
             w.preview_same = matches!(preview, Some(Err((true, _))));
             w.preview = preview.map(|p| p.map_err(|(_, why)| why));
         }
@@ -557,31 +558,31 @@ impl App {
     pub(crate) fn room_modules_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Part(p) => {
-                if let Some(w) = self.arch.room_modules.as_mut() {
+                if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
                     w.part = p;
                 }
             }
             Event::Choose(i) => {
-                if let Some(w) = self.arch.room_modules.as_mut() {
+                if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
                     w.chosen = i;
                     w.instance = 0;
                 }
                 self.room_modules_preview();
             }
             Event::Instance(j) => {
-                if let Some(w) = self.arch.room_modules.as_mut() {
+                if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
                     w.instance = j;
                 }
                 self.room_modules_preview();
             }
             Event::Name(t) => {
-                if let Some(w) = self.arch.room_modules.as_mut() {
+                if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
                     w.name = t;
                 }
             }
             Event::Define => {
                 let name = self
-                    .arch
+                    .modules.arch()
                     .room_modules
                     .as_ref()
                     .map(|w| w.name.trim().to_owned())
@@ -606,7 +607,7 @@ impl App {
                         Level::Success,
                         format!("“{name}” modülü tanımlandı; seçim ilk örneği oldu."),
                     );
-                    if let Some(w) = self.arch.room_modules.as_mut() {
+                    if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
                         w.name.clear();
                     }
                     self.room_modules_read(done.module.map(|m| m.id));
@@ -688,7 +689,7 @@ impl App {
                     .and_then(|d| d.model.settings().arch.as_ref())
                     .map(|a| a.levels.iter().map(|l| l.id.clone()).collect())
                     .unwrap_or_default();
-                if let (Some(w), Some(l)) = (self.arch.room_modules.as_mut(), levels.get(i)) {
+                if let (Some(w), Some(l)) = (self.modules.arch_mut().room_modules.as_mut(), levels.get(i)) {
                     w.repeat_from = Some(l.clone());
                 }
                 self.room_modules_levels();
@@ -696,7 +697,7 @@ impl App {
             }
             Event::RepeatChoose(i, on) => {
                 if let Some(t) = self
-                    .arch
+                    .modules.arch_mut()
                     .room_modules
                     .as_mut()
                     .and_then(|w| w.repeat_to.get_mut(i))
@@ -707,7 +708,7 @@ impl App {
             }
             Event::RepeatPrefix(i, text) => {
                 if let Some(t) = self
-                    .arch
+                    .modules.arch_mut()
                     .room_modules
                     .as_mut()
                     .and_then(|w| w.repeat_to.get_mut(i))
@@ -718,13 +719,13 @@ impl App {
                 self.room_modules_repeat_preview();
             }
             Event::RepeatLoose(on) => {
-                if let Some(w) = self.arch.room_modules.as_mut() {
+                if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
                     w.repeat_loose = on;
                 }
                 self.room_modules_repeat_preview();
             }
             Event::RepeatAgain(on) => {
-                if let Some(w) = self.arch.room_modules.as_mut() {
+                if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
                     w.repeat_again = on;
                 }
                 self.room_modules_repeat_preview();
@@ -754,18 +755,18 @@ impl App {
                         );
                     }
                     self.say(Level::Success, format!("{said}."));
-                    if let Some(w) = self.arch.room_modules.as_mut() {
+                    if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
                         w.repeat_to.iter_mut().for_each(|t| t.chosen = false);
                     }
                 }
                 self.room_modules_read(keep);
             }
             Event::Close => {
-                self.arch.room_modules = None;
+                self.modules.arch_mut().room_modules = None;
                 self.dialog = None;
             }
             Event::PickFromDrawing => self.pick_for_window(
-                crate::app::Dialog::Arch(arch::ArchDialogKind::RoomModules),
+                crate::arch::dialog(crate::arch::ArchDialogKind::RoomModules),
                 "Oda modülünün nesneleri",
             ),
         }
@@ -776,7 +777,7 @@ impl App {
     /// pattern, `kentos_ui::widget::ListDetails`), each module's and each instance's actions beside what
     /// they act on; Katları tekrarla in a part of its own. The footer keeps the window's own: Çizimden seç and Kapat.
     pub(crate) fn room_modules_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.room_modules else {
+        let Some(w) = &self.modules.arch().room_modules else {
             return iced::widget::text("").into();
         };
         let parts = kentos_ui::widget::Segmented::new([Part::Modules, Part::Repeat], w.part, |p| {
@@ -1076,7 +1077,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.arch.room_modules.is_none() {
+        if self.modules.arch().room_modules.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

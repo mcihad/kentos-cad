@@ -86,9 +86,9 @@ impl CommandLine {
             // Öznitelik tablosu's cell, Noktalar's (features/, points/cell.rs; docs/adr/0199 §4).
             Id::new(crate::points::cell::FIELD),
         ];
-        // A new tool brings the inspector's scroll back to its top (architecture_settings::reveal,
+        // A new tool brings the inspector's scroll back to its top (tool_settings::reveal,
         // docs/adr/0686): the panel's scroll, not the command line's, so it is let be.
-        let panel = Id::new(crate::architecture_settings::PROPERTIES_SCROLL);
+        let panel = Id::new(crate::tool_settings::PROPERTIES_SCROLL);
         let mut panel_scroll = PanelScroll::default();
         let mut visit = |operation: &mut dyn Operation| {
             let bounds = Rectangle::default();

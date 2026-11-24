@@ -326,7 +326,6 @@ pub enum Dialog {
     /// A module's own window (docs/adr/9199 §3.4), drawn by its parts.
     Module(crate::module_parts::ModuleDialog),
     Gis(crate::gis::GisDialogKind),
-    Arch(crate::arch::ArchDialogKind),
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -373,8 +372,10 @@ pub enum Message {
     Run(&'static str),
     /// Etkin kat chosen on the status bar (docs/adr/0713): a level by its id; none, Katsız.
     ActiveLevel(Option<String>),
-    /// Katman anahtarı on or off (arch_start.rs, docs/adr/8008).
+    /// Katman anahtarı on or off (tool_settings.rs, docs/adr/8008).
     LayerKeys(bool),
+    /// A value of the running tool's settings committed in Öznitelikler (tool_settings.rs).
+    ToolSetting(crate::tool_settings::Commit),
     /// Kat görünümü chosen (docs/adr/0715).
     LevelView(kentos_interaction::level_view::LevelView),
     /// Run a command ticked on a menu that stays open (a checklist's row:
@@ -537,10 +538,6 @@ pub enum Message {
     Scene3d(crate::scene3d_window::Event),
     /// An event of IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12).
     IfcViewer(crate::ifc_viewer::Event),
-    /// IFC dışa aktar (bina): the file chosen (arch_ifc.rs, docs/adr/8047).
-    IfcBuildingExport(Option<std::path::PathBuf>),
-    /// IFC dışa aktar (bina, kesilmiş gövde): the file chosen (arch_ifc.rs, docs/adr/8071 §4).
-    IfcBuildingExportCut(Option<std::path::PathBuf>),
     AnnotationStyles(crate::annotation_styles::Event),
     TableStyleDefs(crate::table_style_window::Event),
     SheetSet(crate::sheet_set::Event),
@@ -722,6 +719,8 @@ pub enum Message {
     MapCrs(crate::map_crs::Choose),
     /// Harita sistemi's window closed (GIS-054).
     MapCrsClose,
+    /// The NTv2 grids the project names, looked for in the device's library (grids.rs).
+    GridsLooked(Vec<crate::grids::Looked>),
     /// The terrain work Harita and Yol share (terrain_work.rs, docs/adr/9199 §4.4).
     TerrainWork(crate::terrain_work::Event),
     /// Şablonlar, every module's (template_work.rs, docs/adr/9199 §4.8).
@@ -730,7 +729,6 @@ pub enum Message {
     /// A module's own message (docs/adr/9199 §3.4), handled by its parts.
     Module(crate::module_parts::ModuleEvent),
     Gis(crate::gis::Event),
-    Arch(crate::arch::Event),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -1204,10 +1202,11 @@ pub struct App {
     pub template_work: crate::template_work::TemplateWorkState,
     /// Etkin kat (active_level.rs, docs/adr/0715): the level drawn on, every module's that has levels.
     pub active_level: crate::active_level::Chosen,
+    /// The device's NTv2 grid library and the grids looked for (grids.rs, docs/adr/0168 §4).
+    pub grids: crate::grids::Grids,
     /// The modules' own state, each as its module keeps it (docs/adr/9199 §3.4; map/state.rs `MapState`).
     pub modules: crate::module_parts::ModuleStates,
     pub gis: crate::gis::GisUiState,
-    pub(crate) arch: crate::arch::ArchUiState,
 }
 
 impl App {

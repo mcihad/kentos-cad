@@ -17,6 +17,7 @@
 
 use crate::arch;
 use serde_json::Value;
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::arch_audit::Event;
@@ -51,14 +52,14 @@ pub(crate) fn open_flat(app: &mut App, edit: impl FnOnce(&mut Value)) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Arch(arch::Event::ArchAudit(e)));
+    let _ = app.update(Message::from(arch::Event::ArchAudit(e)));
 }
 
 /// The row of the first finding of `code`, by its place in the order shown.
 pub(crate) fn row_of(app: &App, code: &str) -> usize {
     let shown = app.arch_audit_shown();
     let findings = &app
-        .arch
+        .modules.arch()
         .arch_audit
         .audited
         .as_ref()
@@ -166,7 +167,7 @@ fn kata_ver_gives_every_object_without_a_level_one() {
     let (mut app, _) = App::boot(None);
     audited(&mut app);
     let lacking = |app: &App| {
-        app.arch
+        app.modules.arch()
             .arch_audit
             .audited
             .as_ref()
@@ -213,7 +214,7 @@ fn freeing_a_broken_dimension_is_said_as_what_it_does() {
     audited(&mut app);
     let row = row_of(&app, "arch_dimension_broken");
     let shown = app.arch_audit_shown();
-    let finding = &app.arch.arch_audit.audited.as_ref().expect("audited").findings[shown[row]];
+    let finding = &app.modules.arch().arch_audit.audited.as_ref().expect("audited").findings[shown[row]];
     assert!(finding.message.contains("değeri nesnenin bugünkü ölçüsü değil"), "{}", finding.message);
     assert!(finding.repair.starts_with("Yeniden bağla"), "{}", finding.repair);
     assert_eq!(finding.fix.as_ref().map(|f| f.label.as_str()), Some("Bağı çöz (noktalar eski yerinde, değer değişmez)"));

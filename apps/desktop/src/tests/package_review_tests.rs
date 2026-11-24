@@ -9,6 +9,7 @@
 //! ```
 
 use std::path::PathBuf;
+use crate::arch::ArchState;
 
 use kentos_launch::Module;
 
@@ -26,7 +27,7 @@ fn fixture(rel: &str) -> String {
 }
 
 fn send(app: &mut App, e: Event) {
-    let task = app.update(Message::Arch(crate::arch::Event::ReviewPackage(e)));
+    let task = app.update(Message::from(crate::arch::Event::ReviewPackage(e)));
     drive(app, task);
 }
 
@@ -47,7 +48,7 @@ fn reviewed(app: &mut App, package: &str) -> std::sync::Arc<kentos_commands::Pac
     send(app, Event::Path(fixture(package)));
     send(app, Event::System("5256".into()));
     send(app, Event::Review);
-    match app.arch.review_window.as_ref().and_then(|w| w.outcome.clone()) {
+    match app.modules.arch().review_window.as_ref().and_then(|w| w.outcome.clone()) {
         Some(Outcome::Done(r)) => r,
         other => panic!("{other:?}"),
     }
@@ -73,7 +74,7 @@ fn the_broken_package_is_found_out_and_its_wall_shown_and_returned() {
     let path = scratch("iade").join("iade-notu.bcf");
     app.picker = Picker::File(path.clone());
     send(&mut app, Event::Return);
-    let said = app.arch.review_window.as_ref().and_then(|w| w.said.clone()).expect("said");
+    let said = app.modules.arch().review_window.as_ref().and_then(|w| w.said.clone()).expect("said");
     assert!(said.1.starts_with("İade notu"), "{said:?}");
     let words = std::fs::read_to_string(path.with_extension("txt")).expect("the words");
     assert!(words.contains(WALL) && words.contains("EPSG:5256"), "{words}");
@@ -87,7 +88,7 @@ fn kentos_s_own_package_holds_on_every_layer() {
     let r = reviewed(&mut app, "bim/v1/paket/kentos");
     assert!(r.layers.iter().all(|l| l.holds == Some(true)), "{:?}", r.layers);
     send(&mut app, Event::Return);
-    let said = app.arch.review_window.as_ref().and_then(|w| w.said.clone()).expect("said");
+    let said = app.modules.arch().review_window.as_ref().and_then(|w| w.said.clone()).expect("said");
     assert!(said.1.contains("iade gerekçesi yazılmaz"), "{said:?}");
 }
 
@@ -100,7 +101,7 @@ fn structural(app: &mut App) -> std::sync::Arc<kentos_commands::PackageReviewed>
     send(app, Event::Path(file.display().to_string()));
     send(app, Event::System("5256".into()));
     send(app, Event::Review);
-    match app.arch.review_window.as_ref().and_then(|w| w.outcome.clone()) {
+    match app.modules.arch().review_window.as_ref().and_then(|w| w.outcome.clone()) {
         Some(Outcome::Done(r)) => r,
         other => panic!("{other:?}"),
     }

@@ -4,6 +4,7 @@
 
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -819,11 +820,11 @@ fn corridor_neck_screens() {
         app.arch_audit_standards_settle();
         let group =
             crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(kentos_commands::ArchAuditCheck::Regulation)));
-        let _ = app.update(Message::Arch(group));
+        let _ = app.update(Message::from(group));
         let shown = app.arch_audit_shown();
-        let findings = &app.arch.arch_audit.audited.as_ref().expect("checked").findings;
+        let findings = &app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings;
         let row = shown.iter().position(|&i| findings[i].code == "paiy_corridor_narrow").expect("the finding shown");
-        let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
+        let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));

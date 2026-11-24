@@ -206,7 +206,16 @@ pub enum Event {
     DimensionStyle(Vec<Slot>, Option<String>),
     /// Tablo stili ▾ (docs/adr/1127 §3): the tables made to follow the table style; none, no style.
     TableStyle(Vec<Slot>, Option<String>),
+    /// The Tip row's action on the selected elements (rows/element_types.rs, docs/adr/8106 §5): the module with
+    /// Eleman tipleri takes it; nothing when this program has none.
+    ElementType(ElementTypeAsk),
+    /// A schedule table's Çizelge ayarları or Dosyaya yaz (rows/entity.rs, docs/adr/0733 §5, §7): the module with the
+    /// schedules' windows takes it; nothing when this program has none.
+    Schedule(ScheduleAsk),
 }
+
+/// The asks a module takes before the panel (module_parts.rs).
+pub use crate::module_parts::{ElementTypeAsk, ScheduleAsk};
 
 /// A grid's, column's, stair's or ramp's field a cell edits (docs/adr/0343 §5): words, a length in the project's
 /// unit, degrees, a count, a per cent or paper millimetres; empty takes a nullable one away.

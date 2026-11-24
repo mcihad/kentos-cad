@@ -11,14 +11,14 @@
 //! ```
 
 use std::path::{Path, PathBuf};
+use crate::arch::ArchState;
 
 use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{Delivery, DeliveryChannel, DeliveryOutcome};
 use kentos_native_application::delivery_compare::{Compared, FileChange};
 use serde_json::{Value, json};
 
-use crate::app::{App, Dialog, Message, Picker};
-use crate::arch::ArchDialogKind;
+use crate::app::{App, Message, Picker};
 use crate::deliveries_window::{Event, Outcome};
 use crate::files_testing::{drive, scratch};
 
@@ -27,7 +27,7 @@ const REASON: &str = "Islak hacim ve giriş kapılarının temiz geçişi yeters
 const NOTE: &str = "WC kapısı 0,86 m, giriş kapısı 1,06 m: genişletin.";
 
 fn send(app: &mut App, e: Event) {
-    let task = app.update(Message::Arch(crate::arch::Event::Deliveries(e)));
+    let task = app.update(Message::from(crate::arch::Event::Deliveries(e)));
     drive(app, task);
 }
 
@@ -36,7 +36,7 @@ fn deliveries(app: &App) -> Vec<Delivery> {
 }
 
 fn said(app: &App) -> Option<String> {
-    app.arch.deliveries.as_ref().and_then(|w| w.said.as_ref()).map(|(_, s)| s.clone())
+    app.modules.arch().deliveries.as_ref().and_then(|w| w.said.as_ref()).map(|(_, s)| s.clone())
 }
 
 fn run(app: &mut App, name: &str, input: Value) -> Value {
@@ -139,7 +139,7 @@ fn a_package_is_delivered_returned_with_its_reason_on_two_doors_and_the_correcte
     let root = scratch("teslim");
     let first = first_package(&app, &root);
     let _ = app.update(Message::Run("arch.deliveries"));
-    assert_eq!(app.dialog, Some(Dialog::Arch(ArchDialogKind::Deliveries)));
+    assert_eq!(app.dialog, Some(crate::arch::dialog(crate::arch::ArchDialogKind::Deliveries)));
 
     // Without its folder Teslimi kaydet waits; the folder read names the package by its manifest.
     send(&mut app, Event::Add);
@@ -148,7 +148,7 @@ fn a_package_is_delivered_returned_with_its_reason_on_two_doors_and_the_correcte
     app.picker = Picker::File(first.clone());
     send(&mut app, Event::Pick);
     {
-        let draft = app.arch.deliveries.as_ref().and_then(|w| w.draft.as_ref()).expect("the new delivery's form");
+        let draft = app.modules.arch().deliveries.as_ref().and_then(|w| w.draft.as_ref()).expect("the new delivery's form");
         assert_eq!(draft.revision, "000", "the first delivery");
         let read = draft.read.as_ref().expect("read").as_ref().expect("the folder reads");
         let manifest = std::fs::read(first.join("yayin.json")).expect("the manifest");
@@ -178,7 +178,7 @@ fn a_package_is_delivered_returned_with_its_reason_on_two_doors_and_the_correcte
     send(&mut app, Event::Note(NOTE.into()));
     send(&mut app, Event::Bind);
     assert_eq!(said(&app).as_deref(), Some("Önce çizimde gerekçenin ilgili olduğu nesneleri seçin."));
-    assert!(app.arch.deliveries.as_ref().expect("open").answer.notes.is_empty());
+    assert!(app.modules.arch().deliveries.as_ref().expect("open").answer.notes.is_empty());
     let doc = &app.document.as_ref().expect("a drawing").model;
     let slots: Vec<_> = [&wc, &entrance]
         .iter()
@@ -208,7 +208,7 @@ fn a_package_is_delivered_returned_with_its_reason_on_two_doors_and_the_correcte
     let second = second_package(&app, &root);
     send(&mut app, Event::Add);
     {
-        let draft = app.arch.deliveries.as_ref().and_then(|w| w.draft.as_ref()).expect("the form");
+        let draft = app.modules.arch().deliveries.as_ref().and_then(|w| w.draft.as_ref()).expect("the form");
         assert_eq!((draft.revision.as_str(), draft.to.as_str(), draft.channel), ("001", TO, DeliveryChannel::Epys));
     }
     app.picker = Picker::File(second.clone());
@@ -217,7 +217,7 @@ fn a_package_is_delivered_returned_with_its_reason_on_two_doors_and_the_correcte
     send(&mut app, Event::Save);
     let list = deliveries(&app);
     assert_eq!(list.iter().map(|d| (d.number, d.revision.as_str())).collect::<Vec<_>>(), [(1, "000"), (2, "001")]);
-    assert_eq!(app.arch.deliveries.as_ref().and_then(|w| w.chosen.clone()), Some(list[1].id.clone()));
+    assert_eq!(app.modules.arch().deliveries.as_ref().and_then(|w| w.chosen.clone()), Some(list[1].id.clone()));
 
     // Öncekiyle karşılaştır: the files and the drawings of the two packages, the reason's doors.
     send(&mut app, Event::Compare);
@@ -250,7 +250,7 @@ fn a_package_is_delivered_returned_with_its_reason_on_two_doors_and_the_correcte
 }
 
 fn compared(app: &App) -> Compared {
-    let w = app.arch.deliveries.as_ref().expect("open");
+    let w = app.modules.arch().deliveries.as_ref().expect("open");
     let (_, result) = w.compared.as_ref().expect("compared");
     result.as_ref().clone().expect("the packages compare")
 }
@@ -278,7 +278,7 @@ fn the_answer_is_one_undo_step_and_a_changed_folder_is_not_compared() {
     // The first package's folder written over after its delivery: not the package the record names.
     std::fs::write(root.join("paket-000/yayin.json"), b"{\"format\":\"kentos.publish/1\",\"files\":[]}").expect("writes");
     send(&mut app, Event::Compare);
-    let w = app.arch.deliveries.as_ref().expect("open");
+    let w = app.modules.arch().deliveries.as_ref().expect("open");
     let (_, result) = w.compared.as_ref().expect("answered");
     let why = result.as_ref().clone().expect_err("refused");
     assert!(why.contains("1. teslimin paketi değil (SHA-256 farklı)"), "{why}");

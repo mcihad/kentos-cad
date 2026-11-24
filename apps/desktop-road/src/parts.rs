@@ -286,4 +286,42 @@ impl ModuleParts for Road {
     fn panel_view<'a>(&self, _app: &'a App, _panel: Panel) -> Option<Element<'a, Message>> {
         None
     }
+
+    fn started(&self, _app: &mut App) {}
+
+    fn device(&self, _app: &mut App, _history: &std::path::Path) {}
+
+    fn follow(&self, _app: &mut App) -> Task<Message> {
+        Task::none()
+    }
+
+    fn escape_closes(&self, _kind: u16) -> bool {
+        false
+    }
+
+    fn dialog_confirmed(&self, _app: &mut App, _kind: u16) {}
+
+    fn checked(&self, _app: &App, _id: &str) -> Option<bool> {
+        None
+    }
+
+    fn picked(&self, _app: &mut App, _at: Option<kentos_interaction::Vec2>) -> bool {
+        false
+    }
+
+    fn preview(&self, _app: &App) -> Option<kentos_interaction::Preview> {
+        None
+    }
+
+    fn bottom_tab_view<'a>(&self, _app: &'a App, _tab: crate::bottom::BottomTab) -> Option<Element<'a, Message>> {
+        None
+    }
+
+    fn properties_ask(&self, _app: &mut App, _ask: crate::module_parts::PropertiesAsk<'_>) -> bool {
+        false
+    }
+
+    fn building3d(&self) -> Option<&dyn crate::module_parts::Building3dParts> {
+        None
+    }
 }

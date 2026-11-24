@@ -12,8 +12,9 @@ use kentos_commands::{
 use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
+use crate::arch::ArchState;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
 use kentos_interaction::Level;
@@ -46,7 +47,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::ViewRefs(e))
+    Message::from(arch::Event::ViewRefs(e))
 }
 
 /// A mark's icon by its form.
@@ -85,8 +86,8 @@ impl App {
             })
             .unwrap_or_default();
         let chosen = refs.marks.iter().position(|m| selected.contains(&m.uid));
-        self.arch.view_refs = Some(Window { refs, chosen });
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::ViewRefs));
+        self.modules.arch_mut().view_refs = Some(Window { refs, chosen });
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ViewRefs));
     }
 
     fn view_refs_slot(&self, uid: &str) -> Option<kentos_domain::Slot> {
@@ -97,7 +98,7 @@ impl App {
     /// `cad.viewmarks.edit` on the chosen mark, and the list again.
     fn view_refs_edit(&mut self, op: ViewMarksOperation) {
         let Some(uid) = self
-            .arch
+            .modules.arch()
             .view_refs
             .as_ref()
             .and_then(|w| w.chosen.and_then(|k| w.refs.marks.get(k)))
@@ -120,7 +121,7 @@ impl App {
 
     fn view_refs_again(&mut self) {
         let refs = self.view_refs_read();
-        if let (Some(w), Some(refs)) = (self.arch.view_refs.as_mut(), refs) {
+        if let (Some(w), Some(refs)) = (self.modules.arch_mut().view_refs.as_mut(), refs) {
             w.refs = refs;
         }
     }
@@ -128,13 +129,13 @@ impl App {
     pub(crate) fn view_refs_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Choose(k) => {
-                if let Some(w) = self.arch.view_refs.as_mut() {
+                if let Some(w) = self.modules.arch_mut().view_refs.as_mut() {
                     w.chosen = Some(k);
                 }
             }
             Event::Show(k) => {
                 let uid = self
-                    .arch
+                    .modules.arch()
                     .view_refs
                     .as_ref()
                     .and_then(|w| w.refs.marks.get(k))
@@ -142,13 +143,13 @@ impl App {
                 if let Some(slot) = uid.and_then(|u| self.view_refs_slot(&u)) {
                     self.zoom_to_objects(&[f64::from(slot.0)]);
                 }
-                if let Some(w) = self.arch.view_refs.as_mut() {
+                if let Some(w) = self.modules.arch_mut().view_refs.as_mut() {
                     w.chosen = Some(k);
                 }
             }
             Event::Bind(t) => {
                 let target = self
-                    .arch
+                    .modules.arch()
                     .view_refs
                     .as_ref()
                     .and_then(|w| w.refs.targets.get(t))
@@ -161,7 +162,7 @@ impl App {
             Event::MakeView => self.view_refs_make_view(),
             Event::Go(t) => {
                 let name = self
-                    .arch
+                    .modules.arch()
                     .view_refs
                     .as_ref()
                     .and_then(|w| w.refs.targets.get(t))
@@ -172,7 +173,7 @@ impl App {
                 }
             }
             Event::Close => {
-                self.arch.view_refs = None;
+                self.modules.arch_mut().view_refs = None;
                 self.dialog = None;
             }
         }
@@ -182,7 +183,7 @@ impl App {
     /// Görünüm oluştur: the chosen detail's circle kept as a named view (“Detay 1”, its number), the detail pointed at it.
     fn view_refs_make_view(&mut self) {
         let Some(mark) = self
-            .arch
+            .modules.arch()
             .view_refs
             .as_ref()
             .and_then(|w| w.chosen.and_then(|k| w.refs.marks.get(k)))
@@ -236,7 +237,7 @@ impl App {
     }
 
     pub(crate) fn view_refs_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.view_refs else {
+        let Some(w) = &self.modules.arch().view_refs else {
             return iced::widget::text("").into();
         };
         let broken = w.refs.marks.iter().filter(|m| m.broken).count();
@@ -403,7 +404,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.arch.view_refs.is_none() {
+        if self.modules.arch().view_refs.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

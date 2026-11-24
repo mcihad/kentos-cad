@@ -8,6 +8,7 @@
 //! ```
 
 use kentos_commands::{Entity, OpeningForm};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::project::settings::Section;
@@ -127,14 +128,14 @@ fn door_type(app: &mut App) -> (usize, String) {
     use crate::opening_types_window::Event as Types;
     let _ = app.update(Message::Run("arch.openingTypes"));
     let find = |app: &App| {
-        app.arch.opening_types.as_ref().expect("the window").uses.iter().position(|u| u.kind.form == OpeningForm::Door)
+        app.modules.arch().opening_types.as_ref().expect("the window").uses.iter().position(|u| u.kind.form == OpeningForm::Door)
     };
     if find(app).is_none() {
-        let _ = app.update(Message::Arch(crate::arch::Event::OpeningTypes(Types::New(Some(OpeningForm::Door)))));
+        let _ = app.update(Message::from(crate::arch::Event::OpeningTypes(Types::New(Some(OpeningForm::Door)))));
     }
     let at = find(app).expect("a door type");
-    let id = app.arch.opening_types.as_ref().unwrap().uses[at].kind.id.clone();
-    let _ = app.update(Message::Arch(crate::arch::Event::OpeningTypes(Types::Choose(at))));
+    let id = app.modules.arch().opening_types.as_ref().unwrap().uses[at].kind.id.clone();
+    let _ = app.update(Message::from(crate::arch::Event::OpeningTypes(Types::Choose(at))));
     (at, id)
 }
 
@@ -143,10 +144,10 @@ fn the_door_type_s_class_is_written_from_its_window_with_its_basis() {
     use crate::opening_types_window::Event as Types;
     let mut app = app();
     let (_, id) = door_type(&mut app);
-    let types = |e| Message::Arch(crate::arch::Event::OpeningTypes(e));
+    let types = |e| Message::from(crate::arch::Event::OpeningTypes(e));
     let _ = app.update(types(Types::Fire("EI 60".into())));
     let _ = app.update(types(Types::FireBasis("Ürün performans beyanı (2026-01-05)".into())));
-    assert!(app.arch.opening_types.as_ref().unwrap().declared.is_none());
+    assert!(app.modules.arch().opening_types.as_ref().unwrap().declared.is_none());
     let _ = app.update(types(Types::Apply));
     let doc = &app.document.as_ref().unwrap().model;
     let t = doc.settings().arch.as_ref().unwrap().opening_types.iter().find(|t| t.id == id).expect("the type");
@@ -155,7 +156,7 @@ fn the_door_type_s_class_is_written_from_its_window_with_its_basis() {
     assert_eq!(doc.undo_labels().first().map(String::as_str), Some("Yangın ve performans"));
     // A basis whose day is none is said before Uygula.
     let _ = app.update(types(Types::FireBasis("Rapor (2026-13-01)".into())));
-    assert!(app.arch.opening_types.as_ref().unwrap().declared.as_deref().is_some_and(|w| w.contains("bir gün değil")));
+    assert!(app.modules.arch().opening_types.as_ref().unwrap().declared.as_deref().is_some_and(|w| w.contains("bir gün değil")));
 }
 
 #[test]
@@ -186,7 +187,7 @@ fn the_audit_suggests_the_exits_and_its_fix_writes_them() {
     let suggestion = |app: &mut App| {
         let _ = app.update(Message::Run("arch.audit"));
         app.arch_audit_standards_settle();
-        app.arch
+        app.modules.arch()
             .arch_audit
             .audited
             .as_ref()
@@ -269,13 +270,13 @@ fn screens() {
         app.selection.set(Vec::new());
         // Kapı ve pencere tipleri: the door type's class and basis typed.
         door_type(&mut app);
-        let types = |e| Message::Arch(crate::arch::Event::OpeningTypes(e));
+        let types = |e| Message::from(crate::arch::Event::OpeningTypes(e));
         let _ = app.update(types(Types::Fire("EI 60".into())));
         let _ = app.update(types(Types::FireBasis("Ürün performans beyanı (2026-01-05)".into())));
         shot(&mut app, "3-kapi-tipi-yangin", None);
         let _ = app.update(types(Types::Apply));
         app.dialog = None;
-        app.arch.opening_types = None;
+        app.modules.arch_mut().opening_types = None;
         // Proje ayarları › Mimari › Yangın güvenliği.
         let _ = app.update(Message::Run("file.settings"));
         let _ = app.update(settings_message(SettingsEvent::Section(Section::Arch)));
@@ -289,10 +290,10 @@ fn screens() {
         // Denetim: the exit suggestion chosen.
         let _ = app.update(Message::Run("arch.audit"));
         app.arch_audit_standards_settle();
-        app.arch.arch_audit.group = Some(kentos_commands::ArchAuditCheck::Regulation);
-        let at = app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter()
+        app.modules.arch_mut().arch_audit.group = Some(kentos_commands::ArchAuditCheck::Regulation);
+        let at = app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter()
             .position(|f| f.code == "digital_exit_suggestion").expect("the suggestion");
-        app.arch.arch_audit.selected = Some(at);
+        app.modules.arch_mut().arch_audit.selected = Some(at);
         shot(&mut app, "5-denetim-acil-cikis-onerisi", None);
     }
 }

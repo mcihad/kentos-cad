@@ -22,6 +22,7 @@
 use std::fmt;
 use std::path::PathBuf;
 use std::sync::Arc;
+use crate::arch::ArchState;
 
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length, Task};
@@ -37,7 +38,7 @@ use kentos_ui::theme::typography::scaled;
 use kentos_ui::widget::table::{self, Column as Col, Row, Table};
 use kentos_ui::widget::{Choice, Dialog as Frame, Form, ListDetails, Segmented, Select, text_field};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::arch;
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
@@ -190,7 +191,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::Deliveries(e))
+    Message::from(arch::Event::Deliveries(e))
 }
 
 /// A revision number one more than `r`'s, three digits; `r` itself when it is not one.
@@ -238,7 +239,7 @@ impl App {
             return;
         }
         let last = self.deliveries().last().cloned();
-        self.arch.deliveries = Some(Window {
+        self.modules.arch_mut().deliveries = Some(Window {
             chosen: last.as_ref().map(|d| d.id.clone()),
             draft: None,
             answer: Answer::of(last.as_ref()),
@@ -246,11 +247,11 @@ impl App {
             comparing: false,
             said: None,
         });
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Deliveries));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Deliveries));
     }
 
     fn deliveries_said(&mut self, kind: Kind, words: impl Into<String>) {
-        if let Some(w) = self.arch.deliveries.as_mut() {
+        if let Some(w) = self.modules.arch_mut().deliveries.as_mut() {
             w.said = Some((kind, words.into()));
         }
     }
@@ -273,7 +274,7 @@ impl App {
     pub(crate) fn deliveries_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Close => {
-                self.arch.deliveries = None;
+                self.modules.arch_mut().deliveries = None;
                 self.dialog = None;
             }
             Event::Pick => return self.deliveries_pick(),
@@ -290,7 +291,7 @@ impl App {
     /// A choice or a box of the window.
     fn deliveries_form(&mut self, event: Event) {
         let list = self.deliveries().to_vec();
-        let Some(w) = self.arch.deliveries.as_mut() else {
+        let Some(w) = self.modules.arch_mut().deliveries.as_mut() else {
             return;
         };
         match event {
@@ -383,7 +384,7 @@ impl App {
 
     /// Teslimi kaydet: the new delivery written.
     fn deliveries_save(&mut self) {
-        let Some(draft) = self.arch.deliveries.as_ref().and_then(|w| w.draft.clone()) else {
+        let Some(draft) = self.modules.arch().deliveries.as_ref().and_then(|w| w.draft.clone()) else {
             return;
         };
         let Some(Ok(publication)) = &draft.read else {
@@ -406,7 +407,7 @@ impl App {
         };
         match self.delivery_edit(change) {
             Ok(done) => {
-                if let Some(w) = self.arch.deliveries.as_mut() {
+                if let Some(w) = self.modules.arch_mut().deliveries.as_mut() {
                     w.draft = None;
                     w.chosen = Some(done.id);
                     w.answer = Answer::of(None);
@@ -420,13 +421,13 @@ impl App {
 
     /// Kaydı sil: the chosen record taken away (one undo step); its notes stay.
     fn deliveries_remove(&mut self) {
-        let Some(id) = self.arch.deliveries.as_ref().and_then(|w| w.chosen.clone()) else {
+        let Some(id) = self.modules.arch().deliveries.as_ref().and_then(|w| w.chosen.clone()) else {
             return;
         };
         match self.delivery_edit(DeliveryChange::Remove { id }) {
             Ok(done) => {
                 let last = self.deliveries().last().cloned();
-                if let Some(w) = self.arch.deliveries.as_mut() {
+                if let Some(w) = self.modules.arch_mut().deliveries.as_mut() {
                     w.chosen = last.as_ref().map(|d| d.id.clone());
                     w.answer = Answer::of(last.as_ref());
                     w.compared = None;
@@ -439,7 +440,7 @@ impl App {
 
     /// Cevabı yaz: the authority's answer to the chosen delivery, in place of the one it has.
     fn deliveries_respond(&mut self) {
-        let Some(w) = self.arch.deliveries.as_ref() else {
+        let Some(w) = self.modules.arch().deliveries.as_ref() else {
             return;
         };
         let Some(id) = w.chosen.clone() else {
@@ -466,7 +467,7 @@ impl App {
 
     /// Seçilenlere bağla: a review note of the typed text bound to the objects selected, held in the answer.
     fn deliveries_bind(&mut self) {
-        let Some(w) = self.arch.deliveries.as_ref() else {
+        let Some(w) = self.modules.arch().deliveries.as_ref() else {
             return;
         };
         let text = w.answer.note.trim().to_owned();
@@ -506,7 +507,7 @@ impl App {
         );
         match result {
             CommandResult::Completed { output, .. } => {
-                if let Some(w) = self.arch.deliveries.as_mut() {
+                if let Some(w) = self.modules.arch_mut().deliveries.as_mut() {
                     w.answer.notes.push(output.id);
                     w.answer.note.clear();
                     w.said = Some((
@@ -526,7 +527,7 @@ impl App {
     /// the window's thread.
     fn deliveries_compare(&mut self) -> Task<Message> {
         let list = self.deliveries();
-        let Some(id) = self.arch.deliveries.as_ref().and_then(|w| w.chosen.clone()) else {
+        let Some(id) = self.modules.arch().deliveries.as_ref().and_then(|w| w.chosen.clone()) else {
             return Task::none();
         };
         let Some(chosen) = list.iter().find(|d| d.id == id).cloned() else {
@@ -542,7 +543,7 @@ impl App {
             .as_ref()
             .map(|d| d.model.settings().review_notes.iter().filter(|n| wanted.contains(&n.id)).cloned().collect())
             .unwrap_or_default();
-        if let Some(w) = self.arch.deliveries.as_mut() {
+        if let Some(w) = self.modules.arch_mut().deliveries.as_mut() {
             w.compared = None;
             w.comparing = true;
             w.said = Some((Kind::Info, "Paketler karşılaştırılıyor…".into()));
@@ -553,7 +554,7 @@ impl App {
     }
 
     pub(crate) fn deliveries_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.deliveries else {
+        let Some(w) = &self.modules.arch().deliveries else {
             return space::horizontal().into();
         };
         let list = self.deliveries();
@@ -794,7 +795,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn deliveries_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.arch.deliveries.is_none() {
+        if self.modules.arch().deliveries.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

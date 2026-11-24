@@ -2,9 +2,10 @@
 //! rule catalog with every row's annex, table and page, narrows it, and says KentOS's decisions and the catalog's
 //! differences from the IFC 4.3 schema, each settled.
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::arch;
 use crate::digital_rules::{Asked, Event, Listed};
+use crate::arch::ArchState;
 
 fn open() -> App {
     let mut app = crate::permit_set_tests::building();
@@ -13,14 +14,14 @@ fn open() -> App {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Arch(arch::Event::DigitalRules(e)));
+    let _ = app.update(Message::from(arch::Event::DigitalRules(e)));
 }
 
 #[test]
 fn the_window_lists_the_architectural_model_s_rules_and_narrows_them() {
     let mut app = open();
-    assert_eq!(app.dialog, Some(Dialog::Arch(arch::ArchDialogKind::DigitalRules)));
-    let w = app.arch.digital_rules.as_ref().expect("the window");
+    assert_eq!(app.dialog, Some(crate::arch::dialog(crate::arch::ArchDialogKind::DigitalRules)));
+    let w = app.modules.arch().digital_rules.as_ref().expect("the window");
     assert!(w.filter.architecture, "the architectural model's rules first");
     let (all, shown) = (w.rules.len(), w.shown.len());
     assert!(shown > 300 && shown < all, "{shown} of {all}");
@@ -28,7 +29,7 @@ fn the_window_lists_the_architectural_model_s_rules_and_narrows_them() {
     event(&mut app, Event::Annex(6));
     event(&mut app, Event::Asked(Asked::Mandatory));
     event(&mut app, Event::Words("duvar yangın".into()));
-    let rows = app.arch.digital_rules.as_ref().unwrap().rows();
+    let rows = app.modules.arch().digital_rules.as_ref().unwrap().rows();
     assert_eq!(
         rows,
         [[
@@ -40,13 +41,13 @@ fn the_window_lists_the_architectural_model_s_rules_and_narrows_them() {
         ]]
     );
     event(&mut app, Event::Choose(0));
-    assert_eq!(app.arch.digital_rules.as_ref().unwrap().chosen, Some(0));
+    assert_eq!(app.modules.arch().digital_rules.as_ref().unwrap().chosen, Some(0));
     // Every rule, not only the architectural model's.
     event(&mut app, Event::Words(String::new()));
     event(&mut app, Event::Architecture(false));
-    let more = app.arch.digital_rules.as_ref().unwrap().shown.len();
+    let more = app.modules.arch().digital_rules.as_ref().unwrap().shown.len();
     event(&mut app, Event::Architecture(true));
-    let fewer = app.arch.digital_rules.as_ref().unwrap().shown.len();
+    let fewer = app.modules.arch().digital_rules.as_ref().unwrap().shown.len();
     assert!(more > fewer, "{more} > {fewer}");
 }
 
@@ -54,28 +55,28 @@ fn the_window_lists_the_architectural_model_s_rules_and_narrows_them() {
 fn decisions_and_schema_differences_are_listed_each_settled() {
     let mut app = open();
     event(&mut app, Event::List(Listed::Decisions));
-    let w = app.arch.digital_rules.as_ref().unwrap();
+    let w = app.modules.arch().digital_rules.as_ref().unwrap();
     let rows = w.rows();
     assert_eq!(rows.len(), w.decisions.len());
     let pdfa = rows.iter().find(|r| r[0] == "K13").expect("the PDF/A part's decision");
     assert_eq!(pdfa[3], "açık (KentOS: PDF/A-2b)", "an open point keeps no value");
     assert!(w.open_decisions() > 0);
     event(&mut app, Event::List(Listed::Findings));
-    let rows = app.arch.digital_rules.as_ref().unwrap().rows();
+    let rows = app.modules.arch().digital_rules.as_ref().unwrap().rows();
     assert!(!rows.is_empty());
     assert!(rows.iter().all(|r| r[2] != "karar yok"), "{rows:?}");
     // The filter narrows the differences too: Tablo 6.92's misspelled class, cited with its page.
     event(&mut app, Event::Words("distrubition".into()));
-    let rows = app.arch.digital_rules.as_ref().unwrap().rows();
+    let rows = app.modules.arch().digital_rules.as_ref().unwrap().rows();
     assert_eq!(rows.len(), 1, "{rows:?}");
     assert_eq!(rows[0][1], "EK-6 Tablo 6.92 · PDF s. 150–151");
     assert_eq!(rows[0][2], "K30");
     event(&mut app, Event::List(Listed::Decisions));
     event(&mut app, Event::Words("datum".into()));
-    let rows = app.arch.digital_rules.as_ref().unwrap().rows();
+    let rows = app.modules.arch().digital_rules.as_ref().unwrap().rows();
     assert_eq!(rows.iter().map(|r| r[0].as_str()).collect::<Vec<_>>(), ["K11"]);
     event(&mut app, Event::Close);
-    assert!(app.dialog.is_none() && app.arch.digital_rules.is_none());
+    assert!(app.dialog.is_none() && app.modules.arch().digital_rules.is_none());
 }
 
 /// The window and its place on the ribbon, light and dark; `.run/gui-evidence/dijital-kurallar-8062/`:
@@ -112,13 +113,13 @@ fn screens() {
         crate::tools_screens::open_more(&mut snapshot, &mut app, "Proje");
         shot(&mut snapshot, &mut app, format!("2-proje-menusu-{name}.png"));
         crate::tools_screens::press_caption(&mut snapshot, &mut app, "Dijital proje kuralları", false, false);
-        assert_eq!(app.dialog, Some(Dialog::Arch(arch::ArchDialogKind::DigitalRules)), "the menu's item opens it");
+        assert_eq!(app.dialog, Some(crate::arch::dialog(crate::arch::ArchDialogKind::DigitalRules)), "the menu's item opens it");
         shot(&mut snapshot, &mut app, format!("3-kurallar-{name}.png"));
         event(&mut app, Event::Annex(6));
         event(&mut app, Event::Asked(Asked::Mandatory));
         event(&mut app, Event::Words("ifcwall".into()));
         let fire = app
-            .arch
+            .modules.arch()
             .digital_rules
             .as_ref()
             .and_then(|w| w.rows().iter().position(|r| r[2] == "Pset_WallCommon.FireRating"))
@@ -131,7 +132,7 @@ fn screens() {
         event(&mut app, Event::Words(String::new()));
         event(&mut app, Event::List(Listed::Decisions));
         let k13 = app
-            .arch
+            .modules.arch()
             .digital_rules
             .as_ref()
             .and_then(|w| w.decisions.iter().position(|d| d.id == "K13"))

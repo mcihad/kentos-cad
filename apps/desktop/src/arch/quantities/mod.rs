@@ -20,8 +20,9 @@ use kentos_ui::theme::typography;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::table;
 use kentos_ui::widget::{Choice, Dialog as Frame, Menu, Select};
+use crate::arch::ArchState;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
 
@@ -95,7 +96,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::Quantities(e))
+    Message::from(arch::Event::Quantities(e))
 }
 
 /// A table: its heading, the columns that hold numbers, its rows as the window shows them and as a sheet's cells.
@@ -195,14 +196,14 @@ impl App {
             return;
         }
         let answer = self.quantities_read(None, None);
-        self.arch.quantities = Some(Window {
+        self.modules.arch_mut().quantities = Some(Window {
             tab: Tab::Spaces,
             level: None,
             building: None,
             answer,
             exact: false,
         });
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Quantities));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Quantities));
     }
 
     /// Mahalleri birleştir (`arch.spaceMerge`): the spaces selected made one. Nothing is written before the decision
@@ -237,7 +238,7 @@ impl App {
                     said.push_str(&format!(" {}", w.message));
                 }
                 self.space_merging = Some((input, said));
-                self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::SpaceMerge));
+                self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::SpaceMerge));
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
@@ -945,7 +946,7 @@ impl App {
         tab: Tab,
         format: WorkbookFormat,
     ) -> Vec<WorkbookSheet> {
-        let exact = self.arch.quantities.as_ref().is_some_and(|w| w.exact);
+        let exact = self.modules.arch().quantities.as_ref().is_some_and(|w| w.exact);
         self.quantities_tables(q)
             .into_iter()
             .enumerate()
@@ -1004,12 +1005,12 @@ impl App {
     }
 
     pub(crate) fn quantities_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.arch.quantities.as_ref() else {
+        let Some(w) = self.modules.arch().quantities.as_ref() else {
             return Task::none();
         };
         match event {
             Event::Tab(t) => {
-                if let Some(w) = self.arch.quantities.as_mut() {
+                if let Some(w) = self.modules.arch_mut().quantities.as_mut() {
                     w.tab = t;
                 }
             }
@@ -1024,7 +1025,7 @@ impl App {
                     ),
                 };
                 let answer = self.quantities_read(level.as_ref(), building.as_ref());
-                if let Some(w) = self.arch.quantities.as_mut() {
+                if let Some(w) = self.modules.arch_mut().quantities.as_mut() {
                     w.level = level;
                     w.building = building;
                     w.answer = answer;
@@ -1046,7 +1047,7 @@ impl App {
                 return iced::clipboard::write(lines.join("\n"));
             }
             Event::Exact(on) => {
-                if let Some(w) = self.arch.quantities.as_mut() {
+                if let Some(w) = self.modules.arch_mut().quantities.as_mut() {
                     w.exact = on;
                 }
                 return Task::none();
@@ -1059,7 +1060,7 @@ impl App {
                 return crate::table_write::save(sheets, format, "metraj".to_owned());
             }
             Event::Close => {
-                self.arch.quantities = None;
+                self.modules.arch_mut().quantities = None;
                 self.dialog = None;
             }
         }
@@ -1067,7 +1068,7 @@ impl App {
     }
 
     pub(crate) fn quantities_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.quantities else {
+        let Some(w) = &self.modules.arch().quantities else {
             return text("").into();
         };
         let levels = self.quantities_levels();
@@ -1293,7 +1294,7 @@ impl App {
         })
         .into();
         // Sayılar (docs/adr/0733 §7): the worked-out numbers as shown, or to 15 significant digits.
-        let exact = self.arch.quantities.as_ref().is_some_and(|w| w.exact);
+        let exact = self.modules.arch().quantities.as_ref().is_some_and(|w| w.exact);
         let export: Element<'_, Message> = row![
             export,
             crate::exchange::words::check(
@@ -1366,7 +1367,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.arch.quantities.is_none() {
+        if self.modules.arch().quantities.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

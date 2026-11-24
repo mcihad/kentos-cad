@@ -33,8 +33,10 @@ impl App {
             None => arch_ifc::file_name(&doc.model),
         };
         let (title, then): (&str, fn(Option<PathBuf>) -> Message) = match view {
-            IfcView::DesignTransfer => ("IFC dışa aktar (bina)", Message::IfcBuildingExport),
-            IfcView::Reference => ("IFC dışa aktar (bina, kesilmiş gövde)", Message::IfcBuildingExportCut),
+            IfcView::DesignTransfer => ("IFC dışa aktar (bina)", |p| crate::arch::Event::IfcBuildingExport(p).into()),
+            IfcView::Reference => {
+                ("IFC dışa aktar (bina, kesilmiş gövde)", |p| crate::arch::Event::IfcBuildingExportCut(p).into())
+            }
         };
         Task::perform(
             async move {

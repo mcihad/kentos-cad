@@ -16,12 +16,12 @@
 //! ```
 
 use std::path::{Path, PathBuf};
+use crate::arch::ArchState;
 
 use kentos_commands::UnderlayPlacement;
 use serde_json::{Value, json};
 
-use crate::app::{App, Dialog, Message, Picker};
-use crate::arch::ArchDialogKind;
+use crate::app::{App, Message, Picker};
 use crate::files_testing::{drive, scratch};
 use crate::underlays::{Loaded, State};
 use crate::underlays_window::Event;
@@ -34,7 +34,7 @@ fn fixture(rel: &str) -> PathBuf {
 }
 
 fn send(app: &mut App, e: Event) {
-    let task = app.update(Message::Arch(crate::arch::Event::Underlays(e)));
+    let task = app.update(Message::from(crate::arch::Event::Underlays(e)));
     drive(app, task);
 }
 
@@ -66,7 +66,7 @@ fn house_on_the_map() -> (App, PathBuf) {
 
 /// Altlık modeller open and `file` added through Ekle…, its read waited for.
 fn added(app: &mut App, file: &Path) {
-    if app.arch.underlays_window.is_none() {
+    if app.modules.arch().underlays_window.is_none() {
         let _ = app.update(Message::Run("arch.underlays"));
     }
     app.picker = Picker::File(file.to_path_buf());
@@ -84,7 +84,7 @@ fn settle(app: &mut App) {
 fn loaded(app: &App, i: usize) -> std::sync::Arc<Loaded> {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let id = &doc.underlays()[i].id;
-    match app.arch.underlays.states.get(id).map(|s| &s.1) {
+    match app.modules.arch().underlays.states.get(id).map(|s| &s.1) {
         Some(State::Ready(l)) => l.clone(),
         other => panic!("not read: {other:?}"),
     }
@@ -152,7 +152,7 @@ fn a_file_on_another_system_is_said_and_placed_at_the_origin_only_when_asked() {
     for (file, words) in [(fixture(BSI43), ["EPSG:32760", "EPSG:5256"]), (fixture(BSI2X3), ["harita dönüşümü", "IfcMapConversion"])] {
         let before = app.document.as_ref().expect("a drawing").model.underlays().len();
         added(&mut app, &file);
-        let w = app.arch.underlays_window.as_ref().expect("open");
+        let w = app.modules.arch().underlays_window.as_ref().expect("open");
         let (kept, why) = w.unplaced.clone().expect("not placed, said");
         assert_eq!(kept, file.display().to_string());
         assert!(words.iter().all(|x| why.contains(x)), "{why}");
@@ -162,7 +162,7 @@ fn a_file_on_another_system_is_said_and_placed_at_the_origin_only_when_asked() {
         let doc = &app.document.as_ref().expect("a drawing").model;
         assert_eq!(doc.underlays().len(), before + 1);
         assert_eq!(doc.underlays()[before].placement, UnderlayPlacement::Origin);
-        assert!(app.arch.underlays_window.as_ref().expect("open").unplaced.is_none());
+        assert!(app.modules.arch().underlays_window.as_ref().expect("open").unplaced.is_none());
         let l = loaded(&app, before);
         assert!(!l.bodies.is_empty());
         assert_eq!(l.bodies.len() + l.not_shown.len(), l.with_shape());
@@ -190,10 +190,10 @@ fn an_object_is_found_in_the_plan_and_in_3d_and_a_changed_file_is_said() {
     let id = app.document.as_ref().expect("a drawing").model.underlays()[0].id.clone();
     // Planda seç: a click on the west wall's outer face.
     send(&mut app, Event::Pick);
-    assert!(app.arch.underlay_picking && app.dialog.is_none(), "the window steps aside for the click");
+    assert!(app.modules.arch().underlay_picking && app.dialog.is_none(), "the window steps aside for the click");
     assert!(app.underlays_picked(Some(kentos_interaction::Vec2::new(0.0, 2.5))));
-    assert_eq!(app.dialog, Some(Dialog::Arch(ArchDialogKind::Underlays)));
-    let (got, object) = app.arch.underlays_window.as_ref().expect("open").object.clone().expect("found");
+    assert_eq!(app.dialog, Some(crate::arch::dialog(crate::arch::ArchDialogKind::Underlays)));
+    let (got, object) = app.modules.arch().underlays_window.as_ref().expect("open").object.clone().expect("found");
     assert_eq!(got, id);
     let l = loaded(&app, 0);
     assert_eq!(l.model.objects[object].class, "IfcWall");
@@ -208,23 +208,23 @@ fn an_object_is_found_in_the_plan_and_in_3d_and_a_changed_file_is_said() {
     let v = b.viewer.view().expect("the model shown");
     assert!(v.input().objects.iter().any(|o| o.label.ends_with("(altlık model)")), "the underlay's project in the tree");
     println!("3B: {} kaynak, {} üçgen", w3.scene_sources(), w3.scene_triangles());
-    app.arch.underlays_window.as_mut().expect("open").object = None;
+    app.modules.arch_mut().underlays_window.as_mut().expect("open").object = None;
     app.building3d_select(Some(format!("{}{id}:{object}", crate::scene3d_building::UNDERLAY_OWNER)));
-    assert_eq!(app.arch.underlays_window.as_ref().expect("open").object, Some((id.clone(), object)));
+    assert_eq!(app.modules.arch().underlays_window.as_ref().expect("open").object, Some((id.clone(), object)));
     // The file changed on disk: said, not shown, until Yeniden oku.
     let mut bytes = std::fs::read(&path).expect("the file");
     bytes.extend_from_slice(b"\n/* sonradan eklendi */\n");
     std::fs::write(&path, &bytes).expect("writes");
-    app.arch.underlays.states.clear();
+    app.modules.arch_mut().underlays.states.clear();
     settle(&mut app);
-    match app.arch.underlays.states.get(&id).map(|s| &s.1) {
+    match app.modules.arch().underlays.states.get(&id).map(|s| &s.1) {
         Some(State::Failed(why)) => assert!(why.contains("değişmiş"), "{why}"),
         other => panic!("not said: {other:?}"),
     }
     send(&mut app, Event::Reload);
     settle(&mut app);
     assert_eq!(app.document.as_ref().expect("a drawing").model.underlays()[0].sha256, kentos_commands::encoding::sha256_hex(&bytes));
-    assert!(matches!(app.arch.underlays.states.get(&id).map(|s| &s.1), Some(State::Ready(_))));
+    assert!(matches!(app.modules.arch().underlays.states.get(&id).map(|s| &s.1), Some(State::Ready(_))));
 }
 
 /// The interior wall of the house (its axis on x = 8) by its persistent id.
@@ -273,7 +273,7 @@ fn screens() {
         send(&mut app, Event::Discipline("Mimari".into()));
         send(&mut app, Event::Revision("R1".into()));
         send(&mut app, Event::Apply);
-        app.arch.underlay_picking = true;
+        app.modules.arch_mut().underlay_picking = true;
         let _ = app.underlays_picked(Some(kentos_interaction::Vec2::new(0.0, 2.5)));
         shot(&mut app, &mut snapshot, "1-kendi-modeli");
 

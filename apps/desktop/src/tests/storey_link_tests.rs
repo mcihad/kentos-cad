@@ -12,6 +12,7 @@
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
 use kentos_launch::Module;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -110,15 +111,15 @@ fn stair(app: &mut App) {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The atriums' findings (state, message) and the rows of 24/5 and 24/6 (outcome, note).
 #[allow(clippy::type_complexity)]
 fn said(app: &App) -> (Vec<(Option<S>, String)>, Vec<(String, O, String)>) {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited.findings.iter().filter(|f| f.code == "bykhy_atrium").map(|f| (f.state, f.message.clone())).collect();
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows = set
         .rules
         .iter()
@@ -191,8 +192,8 @@ fn screens() {
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_atrium");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_atrium");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());

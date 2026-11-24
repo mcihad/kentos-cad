@@ -11,6 +11,7 @@
 
 use kentos_commands::ArchAuditOutcome as O;
 use serde_json::json;
+use crate::arch::ArchState;
 
 use crate::app::App;
 use crate::use_class_tests::{building, checked, p, rect, run, spaces};
@@ -46,7 +47,7 @@ fn hotel() -> (App, String) {
 }
 
 fn row(app: &App) -> O {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     set.rules.iter().find(|r| r.rule == "BYKHY 50/3").unwrap_or_else(|| panic!("50/3: {:#?}", set.rules)).state
 }
 
@@ -64,7 +65,7 @@ fn a_deep_hotel_room_with_one_door_fails_and_a_second_door_passes() {
     assert!(d > 17.0 && d < 18.0, "{d}");
     checked(&mut app);
     assert_eq!(row(&app), O::Failed);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     assert!(
         audited
             .findings
@@ -106,11 +107,11 @@ fn screens() {
         checked(&mut app);
         let group =
             crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(kentos_commands::ArchAuditCheck::Regulation)));
-        let _ = app.update(Message::Arch(group));
+        let _ = app.update(Message::from(group));
         let shown = app.arch_audit_shown();
-        let findings = &app.arch.arch_audit.audited.as_ref().expect("checked").findings;
+        let findings = &app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings;
         let row = shown.iter().position(|&i| findings[i].code == "bykhy_hotel_room_distance").expect("the finding shown");
-        let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
+        let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));

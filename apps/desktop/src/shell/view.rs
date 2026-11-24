@@ -271,7 +271,6 @@ impl App {
                 overlay::modal(ask, Message::DialogClosed)
             }
             Asking::RemoveLayer => self.remove_layer_question(),
-            Asking::Arch(inner) => self.arch_dialog_view(inner),
             Asking::SourceDiscard => self.bound_discard_question(),
             Asking::Gis(inner) => self.gis_dialog_view(inner),
             Asking::CloudRename => self.rename_view(),

@@ -14,6 +14,7 @@
 
 use std::path::PathBuf;
 use std::sync::Arc;
+use crate::arch::ArchState;
 
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
@@ -25,7 +26,7 @@ use kentos_ui::theme::typography::scaled;
 use kentos_ui::widget::table::{self, Column as Col, Row, Table};
 use kentos_ui::widget::{Dialog as Frame, Form, ListDetails, text_field};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::arch;
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
@@ -68,7 +69,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::Bcf(e))
+    Message::from(arch::Event::Bcf(e))
 }
 
 /// A BCF date as the window says it: its day and time, the zone as written.
@@ -83,14 +84,14 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        if self.arch.bcf_window.is_none() {
-            self.arch.bcf_window = Some(Window::default());
+        if self.modules.arch().bcf_window.is_none() {
+            self.modules.arch_mut().bcf_window = Some(Window::default());
         }
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Bcf));
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Bcf));
     }
 
     fn bcf_read_now(&mut self) {
-        let Some(w) = self.arch.bcf_window.as_ref() else { return };
+        let Some(w) = self.modules.arch().bcf_window.as_ref() else { return };
         let model = (!w.model.trim().is_empty()).then(|| w.model.trim().to_owned());
         let input = BcfRead { path: w.path.trim().to_owned(), model };
         let Some(doc) = self.document.as_mut() else { return };
@@ -101,7 +102,7 @@ impl App {
             }
             CommandResult::Queued { .. } | CommandResult::Cancelled => Err("Okunmadı.".into()),
         };
-        if let Some(w) = self.arch.bcf_window.as_mut() {
+        if let Some(w) = self.modules.arch_mut().bcf_window.as_mut() {
             w.chosen = read.as_ref().ok().and_then(|r| (!r.topics.is_empty()).then_some(0));
             w.read = Some(read);
             w.said = None;
@@ -110,7 +111,7 @@ impl App {
 
     /// The chosen topic's objects the drawing holds, selected and shown.
     fn bcf_select(&mut self) {
-        let Some(w) = self.arch.bcf_window.as_ref() else { return };
+        let Some(w) = self.modules.arch().bcf_window.as_ref() else { return };
         let Some(Ok(r)) = &w.read else { return };
         let Some(t) = w.chosen.and_then(|k| r.topics.get(k)) else { return };
         let gids: Vec<&String> = t.viewpoints.iter().flat_map(|v| &v.selection).collect();
@@ -129,16 +130,16 @@ impl App {
         if !ids.is_empty() {
             self.navigating(|app| app.zoom_to_objects(&ids));
         }
-        if let Some(w) = self.arch.bcf_window.as_mut() {
+        if let Some(w) = self.modules.arch_mut().bcf_window.as_mut() {
             w.said = Some(said);
         }
     }
 
     pub(crate) fn bcf_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.arch.bcf_window.as_mut() else { return Task::none() };
+        let Some(w) = self.modules.arch_mut().bcf_window.as_mut() else { return Task::none() };
         match event {
             Event::Close => {
-                self.arch.bcf_window = None;
+                self.modules.arch_mut().bcf_window = None;
                 self.dialog = None;
             }
             Event::Path(Field::Bcf, t) => w.path = t,
@@ -186,7 +187,7 @@ impl App {
     }
 
     pub(crate) fn bcf_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.bcf_window else {
+        let Some(w) = &self.modules.arch().bcf_window else {
             return space::horizontal().into();
         };
         let file = |field: Field, value: &str, hint: &'static str, pick: &'static str| {
@@ -323,7 +324,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn bcf_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.arch.bcf_window.is_none() {
+        if self.modules.arch().bcf_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

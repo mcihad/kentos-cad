@@ -6,6 +6,7 @@
 //! export offers Görüntüle. Denetim's chosen finding paints its objects in the viewer (docs/adr/8074 §2).
 
 use std::path::PathBuf;
+use crate::arch::ArchState;
 
 use kentos_commands::Entity;
 use kentos_model_view::Category;
@@ -442,7 +443,7 @@ fn a_chosen_finding_paints_its_objects_in_the_viewer() {
     opened(&mut app, path.clone());
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    let a = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let a = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let at = a
         .findings
         .iter()
@@ -450,8 +451,8 @@ fn a_chosen_finding_paints_its_objects_in_the_viewer() {
         .unwrap_or_else(|| panic!("{:#?}", a.findings.iter().map(|f| (&f.code, &f.message)).collect::<Vec<_>>()));
     let walls: std::collections::BTreeSet<String> = a.findings[at].uids.iter().cloned().collect();
     assert!(!walls.is_empty(), "the finding names its walls");
-    app.arch.arch_audit.chosen.clear();
-    app.arch.arch_audit.selected = Some(at);
+    app.modules.arch_mut().arch_audit.chosen.clear();
+    app.modules.arch_mut().arch_audit.selected = Some(at);
     app.follow_ifc_viewer();
     let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
     let painted: std::collections::BTreeSet<String> = v
@@ -775,18 +776,18 @@ fn ek9_screens() {
         // Denetim: the form's findings from the file, in Mevzuat.
         let _ = app.update(Message::Run("arch.audit"));
         app.arch_audit_standards_settle();
-        app.arch.arch_audit.group = Some(ArchAuditCheck::Regulation);
+        app.modules.arch_mut().arch_audit.group = Some(ArchAuditCheck::Regulation);
         let position = |app: &App, code: &str, words: &str| {
-            app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter().position(|f| f.code == code && f.message.contains(words))
+            app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter().position(|f| f.code == code && f.message.contains(words))
         };
-        app.arch.arch_audit.selected = position(&app, "digital_project_info_missing", "");
+        app.modules.arch_mut().arch_audit.selected = position(&app, "digital_project_info_missing", "");
         shot(&mut main, &mut app, App::view, "1-denetim-proje-bilgileri");
         // IFC modeli: the drawing's file, the walls without a fire rating painted.
         let path = exported(&mut app, &format!("ek9-{name}"));
         let _ = app.update(Message::Run("ifc.view"));
         opened(&mut app, path.clone());
-        app.arch.arch_audit.chosen.clear();
-        app.arch.arch_audit.selected = position(&app, "digital_required_field", "Pset_WallCommon.FireRating");
+        app.modules.arch_mut().arch_audit.chosen.clear();
+        app.modules.arch_mut().arch_audit.selected = position(&app, "digital_required_field", "Pset_WallCommon.FireRating");
         app.follow_ifc_viewer();
         shot(&mut apart, &mut app, App::ifc_viewer_shown, "2-ifc-modeli-bulgu");
         send(&mut app, Event::Viewer(V::Close));

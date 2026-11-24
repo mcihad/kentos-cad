@@ -13,6 +13,7 @@
 //! ```
 
 use kentos_commands::{ArchAuditOutcome as O, PlanNoteKey};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::project::plan_notes::Edit;
@@ -48,20 +49,20 @@ fn typed(height: &str, storeys: &str) -> App {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The plan limits' findings (code, message) and rows (rule, outcome).
 #[allow(clippy::type_complexity)]
 fn limits(app: &App) -> (Vec<(String, String)>, Vec<(String, O)>) {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited
         .findings
         .iter()
         .filter(|f| f.code == "paiy_building_height_over" || f.code == "paiy_storey_count_over")
         .map(|f| (f.code.clone(), f.message.clone()))
         .collect();
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows = set
         .rules
         .iter()
@@ -144,14 +145,14 @@ fn typed_alone(key: PlanNoteKey, value: &str) -> App {
 
 /// The conversion's findings (message, state) and its row's outcome.
 fn conversion(app: &App) -> (Vec<(String, Option<kentos_commands::ArchAuditState>)>, O) {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited
         .findings
         .iter()
         .filter(|f| f.code == "paiy_height_storeys_conversion")
         .map(|f| (f.message.clone(), f.state))
         .collect();
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let row = set.rules.iter().find(|r| r.rule == "PAİY 9/1-c").unwrap_or_else(|| panic!("9/1-c: {:#?}", set.rules));
     (found, row.state)
 }
@@ -220,8 +221,8 @@ fn screens() {
         send(&mut app, SettingsEvent::Save);
         app.toasts.clear();
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_building_height_over");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_building_height_over");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -250,8 +251,8 @@ fn conversion_screens() {
         let _ = app.update(Message::WindowResized(size));
         app.toasts.clear();
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_height_storeys_conversion");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_height_storeys_conversion");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
@@ -281,9 +282,9 @@ fn raised(by: f64) -> App {
 
 /// The subasman's findings and its rows (rule, outcome): 4/1-yyy's and the plan's notes'.
 fn plinth(app: &App) -> (Vec<String>, Vec<(String, O)>) {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited.findings.iter().filter(|f| f.code == "paiy_plinth_level").map(|f| f.message.clone()).collect();
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows = set
         .rules
         .iter()
@@ -401,10 +402,10 @@ fn the_plan_s_basement_note_counts_the_storeys_under_the_ground_storey() {
         doc.set_settings(settings);
         crate::projection_tests::plan_notes(&mut app, &[(PlanNoteKey::BasementsMost, most)]);
         checked(&mut app);
-        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
         let row = set.rules.iter().find(|r| r.rule == "Plan notu: bodrum kat adedi").map(|r| r.state);
         assert_eq!(row, Some(outcome), "{:#?}", set.rules);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
         let said = audited.findings.iter().any(|f| f.code == "paiy_basement_count_over" && f.message.contains("2 > 1"));
         assert_eq!(said, outcome == O::Failed);
     }

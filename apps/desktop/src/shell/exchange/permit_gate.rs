@@ -81,7 +81,12 @@ impl App {
     /// The facts the rule reads: the drawing's `cad` section and, from the check's report, the package — the files it
     /// would write, the sheets with their papers, PDF/A or not, one file a sheet or one for all (docs/adr/8066).
     fn permit_gate_facts(&self) -> Option<Value> {
-        let mut facts = self.arch_audit_standards_facts()?;
+        // The drawing's `cad` section, measured as Mimari denetimi's Dijital proje rules read it.
+        let cad = kentos_processing::audit_facts::cad::measure(&self.document.as_ref()?.model);
+        let mut facts = serde_json::to_value(
+            kentos_extensions::audit_facts::ProjectAuditFacts::new(0.0, Vec::new(), false).with_cad(cad),
+        )
+        .ok()?;
         if let Some(Window::SheetPublish(s)) = &self.exchange
             && let Some(report) = s.planned()
         {

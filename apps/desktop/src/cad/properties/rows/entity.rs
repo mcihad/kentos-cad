@@ -915,16 +915,16 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                         label: "Çizelge ayarları…",
                         icon: "settings",
                         message: (!locked).then(|| {
-                            Message::Arch(crate::arch::Event::Schedule(
-                                crate::schedule_window::Event::Open(uid.clone()),
-                            ))
+                            Message::Properties(Event::Schedule(crate::properties::ScheduleAsk::Settings(
+                                uid.clone(),
+                            )))
                         }),
                     },
                     Choice::Action {
                         label: "Dosyaya yaz…",
                         icon: "tableFile",
-                        message: Some(Message::Arch(crate::arch::Event::Schedule(
-                            crate::schedule_window::Event::Export(uid.clone()),
+                        message: Some(Message::Properties(Event::Schedule(
+                            crate::properties::ScheduleAsk::Export(uid.clone()),
                         ))),
                     },
                 ];

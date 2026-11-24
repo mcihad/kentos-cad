@@ -11,6 +11,7 @@
 
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
 use serde_json::json;
+use crate::arch::ArchState;
 
 use crate::app::App;
 use crate::use_class_tests::{building, checked, p, rect, run, spaces};
@@ -70,9 +71,9 @@ fn scene() -> (App, Vec<String>) {
 /// 20/3's row and its inner insulation findings (state, message, objects).
 #[allow(clippy::type_complexity)]
 fn said(app: &App) -> (Option<O>, Vec<(Option<S>, String, usize)>) {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let row = set.rules.iter().find(|r| r.rule == "BYKHY 20/3").map(|r| r.state);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited
         .findings
         .iter()
@@ -119,7 +120,7 @@ fn a_wall_s_insulation_inside_its_load_bearing_layer_is_read_by_20_3() {
     crate::finish_reaction_tests::declared(&mut app, "EPS", "F");
     crate::finish_reaction_tests::declared(&mut app, "Taş yünü", "A1");
     app.dialog = None;
-    app.arch.materials = None;
+    app.modules.arch_mut().materials = None;
     checked(&mut app);
     let (row, found) = said(&app);
     assert_eq!(row, Some(O::Failed));
@@ -130,7 +131,7 @@ fn a_wall_s_insulation_inside_its_load_bearing_layer_is_read_by_20_3() {
     // EPS B-s1,d0, zor alevlenici: 20/3 holds.
     crate::finish_reaction_tests::declared(&mut app, "EPS", "B-s1,d0");
     app.dialog = None;
-    app.arch.materials = None;
+    app.modules.arch_mut().materials = None;
     checked(&mut app);
     let (row, found) = said(&app);
     assert_eq!((row, found.len()), (Some(O::Passed), 0), "{found:#?}");
@@ -160,13 +161,13 @@ fn screens() {
         crate::finish_reaction_tests::declared(&mut app, "EPS", "F");
         crate::finish_reaction_tests::declared(&mut app, "Taş yünü", "A1");
         app.dialog = None;
-        app.arch.materials = None;
+        app.modules.arch_mut().materials = None;
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_wall_insulation_reaction");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_wall_insulation_reaction");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));

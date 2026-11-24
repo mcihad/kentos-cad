@@ -11,6 +11,7 @@
 
 use kentos_commands::ArchAuditOutcome as O;
 use serde_json::json;
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::use_class_tests::{building, checked, p, rect, run, spaces};
@@ -75,14 +76,14 @@ fn balcony(app: &mut App, depth: f64) -> String {
 
 /// 41/1's and 41/2's rows.
 fn rows(app: &App) -> [O; 2] {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     ["PAİY 41/1", "PAİY 41/2"].map(|rule| {
         set.rules.iter().find(|r| r.rule == rule).unwrap_or_else(|| panic!("{rule}: {:#?}", set.rules)).state
     })
 }
 
 fn said(app: &App, code: &str) -> Vec<String> {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     audited.findings.iter().filter(|f| f.code == code).map(|f| f.message.clone()).collect()
 }
 
@@ -180,8 +181,8 @@ fn screens() {
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_projection_over");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_projection_over");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -245,13 +246,13 @@ fn the_plan_s_projection_note_comes_before_41_1() {
     let (mut app, _) = scene(2.0);
     plan_notes(&mut app, &[(kentos_commands::PlanNoteKey::ProjectionMost, "2,50")]);
     checked(&mut app);
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let row = |rule: &str| set.rules.iter().find(|r| r.rule == rule).map(|r| r.state);
     assert_eq!((row("PAİY 41/1"), row("Plan notu: çıkma")), (Some(O::Passed), Some(O::Passed)));
     let (mut app, _) = scene(1.2);
     plan_notes(&mut app, &[(kentos_commands::PlanNoteKey::ProjectionMost, "0")]);
     checked(&mut app);
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let over: Vec<&str> =
         audited.findings.iter().filter(|f| f.code == "paiy_projection_over").map(|f| f.message.as_str()).collect();
     assert_eq!(over.len(), 1, "{over:?}");

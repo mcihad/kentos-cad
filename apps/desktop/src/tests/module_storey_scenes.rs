@@ -28,6 +28,7 @@
 use crate::arch;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::make_cad;
@@ -71,7 +72,7 @@ fn edit(app: &mut App, op: Value) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Arch(arch::Event::RoomModules(e)));
+    let _ = app.update(Message::from(arch::Event::RoomModules(e)));
 }
 
 /// The duplex defined and placed again in the basement, 30 m right.
@@ -105,7 +106,7 @@ fn repeat(app: &mut App) {
     // The project lists its levels 1. kat, zemin, 2. kat, bodrum: the ground floor is the second.
     event(app, Event::RepeatFrom(1));
     let k1 = app
-        .arch
+        .modules.arch()
         .room_modules
         .as_ref()
         .and_then(|w| w.repeat_to.iter().position(|t| t.level == "kat1"))
@@ -129,13 +130,13 @@ fn floors(app: &mut App) {
 fn place(app: &mut App) {
     two(app);
     run(app, "tool.modulePlace");
-    let _ = app.update(Message::Arch(arch::Event::ToolSetting(
-        crate::architecture_settings::Commit {
+    let _ = app.update(Message::ToolSetting(
+        crate::tool_settings::Commit {
             tool: "modulePlace",
             key: "L",
             value: "kat2".into(),
         },
-    )));
+    ));
     hover(app, [16.0 - E, 0.0 - N]);
 }
 
@@ -169,7 +170,7 @@ fn again(app: &mut App) {
     run(app, "arch.modules");
     event(app, Event::RepeatFrom(1));
     let k2 = app
-        .arch
+        .modules.arch()
         .room_modules
         .as_ref()
         .and_then(|w| w.repeat_to.iter().position(|t| t.level == "kat2"))
@@ -183,13 +184,13 @@ fn single(app: &mut App) {
     two(app);
     run(app, "tool.modulePlace");
     for (key, value) in [("L", "kat2"), ("K", "1")] {
-        let _ = app.update(Message::Arch(arch::Event::ToolSetting(
-            crate::architecture_settings::Commit {
+        let _ = app.update(Message::ToolSetting(
+            crate::tool_settings::Commit {
                 tool: "modulePlace",
                 key,
                 value: value.into(),
             },
-        )));
+        ));
     }
     hover(app, [16.0 - E, 0.0 - N]);
 }
@@ -224,7 +225,7 @@ mod tests {
 
     fn plan(app: &App) -> kentos_commands::ModulesEdited {
         match &app
-            .arch
+            .modules.arch()
             .room_modules
             .as_ref()
             .expect("the window")

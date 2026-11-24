@@ -125,4 +125,8 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     (`terrain_work`); proje ağacının sözcükleri profilden.
   - Adım 5–6 yapıldı (ADR 9199 §4.5–4.6): Yol modül arayüzünün arkasında, sonra kendi paketinde (`apps/desktop-road`);
     Yol'da tek satır 4,0 s. Sınamalar: çekirdek 2710, Harita 191, Yol 127, programlar 34.
-  - Sıradaki: Mimari paketi, sonra CBS; CAD çekirdeğinin kabuktan ayrılması.
+  - Adım 7–8 yapıldı (ADR 9199 §4.7–4.8): Mimari klasöründe olup çekirdeğin kullandığı parçalar çekirdekte; Yol'un
+    tasarım denetimi Yol'da; şablonlar ve etkin kat çekirdekte.
+  - Adım 9 yapıldı (ADR 9199 §4.9): Mimari modül arayüzünün arkasında; ızgaralar, araç ayarları, altlık okunuşu
+    çekirdekte; on bir yeni kanca. Taban: kabuk → Mimari 14 → 1, CAD → Mimari 2 → 0.
+  - Sıradaki: Mimari kendi paketinde, sonra CBS; CAD çekirdeğinin kabuktan ayrılması.

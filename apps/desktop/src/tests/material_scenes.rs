@@ -47,7 +47,7 @@ fn open(app: &mut App, doc: Value, bounds: [f64; 4]) {
 }
 
 fn event(app: &mut App, e: Event) {
-    let _ = app.update(Message::Arch(arch::Event::Materials(e)));
+    let _ = app.update(Message::from(arch::Event::Materials(e)));
 }
 
 /// The cases' walls and slabs.
@@ -94,7 +94,7 @@ fn props(app: &mut App) {
 fn quantities(app: &mut App) {
     drawing(app);
     run(app, "arch.quantities");
-    let _ = app.update(Message::Arch(arch::Event::Quantities(
+    let _ = app.update(Message::from(arch::Event::Quantities(
         crate::quantities::Event::Tab(crate::quantities::Tab::Materials),
     )));
 }

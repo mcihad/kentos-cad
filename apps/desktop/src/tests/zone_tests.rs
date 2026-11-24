@@ -10,6 +10,7 @@
 
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S, Zone};
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::project::settings::Section;
@@ -56,21 +57,21 @@ fn office() -> App {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
 }
 
 /// The storeys' findings (code, state, message) and their rows (rule, version, outcome).
 type Found = Vec<(String, Option<S>, String)>;
 type Rows = Vec<(String, Option<String>, O)>;
 fn storeys(app: &App) -> (Found, Rows) {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     let found = audited
         .findings
         .iter()
         .filter(|f| f.rule.as_deref().is_some_and(|r| r.contains("28/1")))
         .map(|f| (f.code.clone(), f.state, f.message.clone()))
         .collect();
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     let rows = set
         .rules
         .iter()
@@ -169,8 +170,8 @@ fn screens() {
         let _ = app.update(Message::ActiveLevel(Some("k00".into())));
         let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_storey_height_over");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_storey_height_over");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());
         let _ = app.update(Message::Run("view.zoomExtents"));

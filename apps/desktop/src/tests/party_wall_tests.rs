@@ -11,6 +11,7 @@
 
 use kentos_commands::ArchAuditOutcome as O;
 use serde_json::json;
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::use_class_tests::{building, checked, declare, p, rect, run, spaces};
@@ -78,13 +79,13 @@ fn parcel(app: &mut App) {
 
 /// 39/4's, 25/1's and 25/2's outcomes, in order.
 fn rows(app: &App) -> [O; 3] {
-    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
     ["PAİY 39/4", "BYKHY 25/1", "BYKHY 25/2"]
         .map(|rule| set.rules.iter().find(|r| r.rule == rule).unwrap_or_else(|| panic!("{rule}: {:#?}", set.rules)).state)
 }
 
 fn said(app: &App, code: &str) -> Vec<String> {
-    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
     audited.findings.iter().filter(|f| f.code == code).map(|f| f.message.clone()).collect()
 }
 
@@ -176,8 +177,8 @@ fn screens() {
         println!("{}", file.display());
         let _ = app.submit_line("");
         checked(&mut app);
-        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
-        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_party_wall_opening");
+        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_party_wall_opening");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);

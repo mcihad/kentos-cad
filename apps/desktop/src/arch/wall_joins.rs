@@ -11,8 +11,9 @@ use kentos_interaction::Level;
 use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
+use crate::arch::ArchState;
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
 
@@ -39,7 +40,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::WallJoins(e))
+    Message::from(arch::Event::WallJoins(e))
 }
 
 impl App {
@@ -66,15 +67,15 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        self.arch.wall_joins = self.wall_joins_read();
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::WallJoins));
+        self.modules.arch_mut().wall_joins = self.wall_joins_read();
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::WallJoins));
     }
 
     pub(crate) fn wall_joins_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Show(i) => {
                 let Some(issue) = self
-                    .arch
+                    .modules.arch()
                     .wall_joins
                     .as_ref()
                     .and_then(|w| w.issues.get(i))
@@ -96,7 +97,7 @@ impl App {
             }
             Event::Apply(i) => {
                 let Some(fix) = self
-                    .arch
+                    .modules.arch()
                     .wall_joins
                     .as_ref()
                     .and_then(|w| w.issues.get(i))
@@ -123,11 +124,11 @@ impl App {
                     | CommandResult::NeedsInput { error } => self.warn(error.message),
                     _ => {}
                 }
-                self.arch.wall_joins = self.wall_joins_read();
+                self.modules.arch_mut().wall_joins = self.wall_joins_read();
             }
-            Event::Refresh => self.arch.wall_joins = self.wall_joins_read(),
+            Event::Refresh => self.modules.arch_mut().wall_joins = self.wall_joins_read(),
             Event::Close => {
-                self.arch.wall_joins = None;
+                self.modules.arch_mut().wall_joins = None;
                 self.dialog = None;
             }
         }
@@ -135,7 +136,7 @@ impl App {
     }
 
     pub(crate) fn wall_joins_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.wall_joins else {
+        let Some(w) = &self.modules.arch().wall_joins else {
             return iced::widget::text("").into();
         };
         let summary = if w.issues.is_empty() {
@@ -207,7 +208,7 @@ impl App {
         &self,
         control: Control<'_>,
     ) -> Result<Option<Message>, String> {
-        if self.arch.wall_joins.is_none() {
+        if self.modules.arch().wall_joins.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

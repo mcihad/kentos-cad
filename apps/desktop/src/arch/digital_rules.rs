@@ -17,6 +17,7 @@
 //! ```
 
 use std::sync::Arc;
+use crate::arch::ArchState;
 
 use iced::widget::Column;
 use iced::{Element, Fill, Task};
@@ -28,7 +29,7 @@ use kentos_ui::label;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Form};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::arch;
 use crate::road_dialog::{self, RoadDialog, col};
 use crate::traces::Control;
@@ -123,7 +124,7 @@ pub enum Event {
 }
 
 fn msg(e: Event) -> Message {
-    Message::Arch(arch::Event::DigitalRules(e))
+    Message::from(arch::Event::DigitalRules(e))
 }
 
 impl Window {
@@ -294,17 +295,17 @@ fn value_words(d: &Decision) -> String {
 impl App {
     /// Dijital proje kuralları (`arch.digitalRules`): the base profile's rules, the architectural model's first.
     pub(crate) fn open_digital_rules(&mut self) {
-        self.arch.digital_rules = Some(Window::new());
-        self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::DigitalRules));
+        self.modules.arch_mut().digital_rules = Some(Window::new());
+        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::DigitalRules));
     }
 
     pub(crate) fn digital_rules_event(&mut self, event: Event) -> Task<Message> {
         if let Event::Close = event {
-            self.arch.digital_rules = None;
+            self.modules.arch_mut().digital_rules = None;
             self.dialog = None;
             return Task::none();
         }
-        let Some(w) = self.arch.digital_rules.as_mut() else {
+        let Some(w) = self.modules.arch_mut().digital_rules.as_mut() else {
             return Task::none();
         };
         match event {
@@ -335,7 +336,7 @@ impl App {
     }
 
     pub(crate) fn digital_rules_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.digital_rules else {
+        let Some(w) = &self.modules.arch().digital_rules else {
             return iced::widget::text("").into();
         };
         let profile = &kentos_ifc::catalog::base().profile;
@@ -466,7 +467,7 @@ impl App {
 
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn digital_rules_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        if self.arch.digital_rules.is_none() {
+        if self.modules.arch().digital_rules.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
         Ok(match control {

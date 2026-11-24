@@ -14,9 +14,10 @@
 use crate::arch;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
+use crate::arch::ArchState;
 
 use crate::app::{App, Message};
-use crate::architecture_settings::Commit;
+use crate::tool_settings::Commit;
 use crate::tools_scenes::{E, N, Objects, click, hover, run, typed};
 use crate::tools_screens::Scene;
 use crate::wall_scenes::opened;
@@ -43,11 +44,11 @@ fn view_on(app: &mut App, a: [f64; 2], b: [f64; 2]) {
 
 /// A setting of the running tool, as its row in Etkin aracın ayarları commits it.
 fn set(app: &mut App, tool: &'static str, key: &'static str, value: &str) {
-    let _ = app.update(Message::Arch(arch::Event::ToolSetting(Commit {
+    let _ = app.update(Message::ToolSetting(Commit {
         tool,
         key,
         value: value.into(),
-    })));
+    }));
 }
 
 /// An empty plan on Zemin kat, the command line open.
@@ -172,7 +173,7 @@ fn duplicates(app: &mut App) {
         .iter()
         .position(|&i| {
             let f = &app
-                .arch
+                .modules.arch()
                 .arch_audit
                 .audited
                 .as_ref()
@@ -181,7 +182,7 @@ fn duplicates(app: &mut App) {
             f.code == "arch_grid_label_duplicate"
         })
         .expect("the grid's finding");
-    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+    let _ = app.update(Message::from(arch::Event::ArchAudit(
         crate::arch_audit::Event::Press(row),
     )));
 }
@@ -189,7 +190,7 @@ fn duplicates(app: &mut App) {
 /// Düzelt: the grid lying on B deleted in one step; checked again, the other B is left.
 fn duplicates_fixed(app: &mut App) {
     duplicates(app);
-    let _ = app.update(Message::Arch(arch::Event::ArchAudit(
+    let _ = app.update(Message::from(arch::Event::ArchAudit(
         crate::arch_audit::Event::Fix,
     )));
 }
@@ -276,7 +277,7 @@ mod tests {
         let mut app = app_with_drawing();
         duplicates(&mut app);
         let codes = |app: &App| -> Vec<String> {
-            app.arch
+            app.modules.arch()
                 .arch_audit
                 .audited
                 .as_ref()

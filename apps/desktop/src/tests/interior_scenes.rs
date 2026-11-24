@@ -70,7 +70,7 @@ fn settings(app: &mut App) {
     plan(app);
     run(app, "tool.interiorDimensions");
     for (key, value) in [("F", "skins"), ("K", "centers"), ("T", "yes")] {
-        let _ = app.tool_setting(crate::architecture_settings::Commit {
+        let _ = app.tool_setting(crate::tool_settings::Commit {
             tool: "interiorDimensions",
             key,
             value: value.into(),

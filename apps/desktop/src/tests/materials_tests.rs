@@ -1,6 +1,7 @@
 use super::*;
 use crate::arch;
 use crate::files_testing::{app_with_drawing, make_cad};
+use crate::arch::ArchState;
 
 const CASES: &str = include_str!("../../../../fixtures/commands/v1/cad.materials.edit.json");
 
@@ -26,17 +27,17 @@ fn the_window_counts_what_is_bound_and_previews_a_change_before_one_undo_step() 
     let _ = app.update(Message::Run("arch.materials"));
     assert_eq!(
         app.dialog,
-        Some(Dialog::Arch(arch::ArchDialogKind::Materials))
+        Some(crate::arch::dialog(crate::arch::ArchDialogKind::Materials))
     );
-    let w = app.arch.materials.as_ref().unwrap();
+    let w = app.modules.arch().materials.as_ref().unwrap();
     let (m, u) = &w.list[0];
     assert_eq!(m.id, "tugla");
     assert_eq!((u.styles.len(), u.walls, u.slabs), (1, 4, 0));
     assert_eq!(w.list[1].1.slabs, 2);
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Pattern(
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Pattern(
         "ANSI32".into(),
     ))));
-    let w = app.arch.materials.as_ref().unwrap();
+    let w = app.modules.arch().materials.as_ref().unwrap();
     let Some(Ok(done)) = &w.preview else {
         panic!("{:?}", w.preview);
     };
@@ -54,7 +55,7 @@ fn the_window_counts_what_is_bound_and_previews_a_change_before_one_undo_step() 
         before,
         "the preview wrote nothing"
     );
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Apply)));
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Apply)));
     let style = &model(&app).settings().wall_styles[0];
     assert_eq!(
         style.components[1].hatch.as_ref().unwrap().pattern,
@@ -94,10 +95,10 @@ fn kentos_library_materials_are_taken_in_one_undo_step_the_projects_kept() {
     let mut app = app();
     let before = model(&app).to_snapshot_v2();
     let _ = app.update(Message::Run("arch.materials"));
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Tab(
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Tab(
         Tab::Library,
     ))));
-    let w = app.arch.materials.as_ref().unwrap();
+    let w = app.modules.arch().materials.as_ref().unwrap();
     assert!(matches!(
         w.entries[0].place,
         crate::material_library::Place::Kentos("kentos-temel")
@@ -111,7 +112,7 @@ fn kentos_library_materials_are_taken_in_one_undo_step_the_projects_kept() {
         before,
         "the preview wrote nothing"
     );
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Take)));
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Take)));
     assert_eq!(model(&app).materials().len(), 21);
     assert_eq!(
         model(&app).materials()[0].id,
@@ -126,14 +127,14 @@ fn kentos_library_materials_are_taken_in_one_undo_step_the_projects_kept() {
 fn replacing_from_the_library_counts_what_follows_and_export_writes_a_file_read_back() {
     let mut app = app();
     let _ = app.update(Message::Run("arch.materials"));
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Tab(
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Tab(
         Tab::Library,
     ))));
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::PickAll(true))));
-    let _ = app.update(Message::Arch(arch::Event::Materials(Event::Conflict(
+    let _ = app.update(Message::from(arch::Event::Materials(Event::PickAll(true))));
+    let _ = app.update(Message::from(arch::Event::Materials(Event::Conflict(
         Conflict::Replace,
     ))));
-    let Some(Ok(plan)) = &app.arch.materials.as_ref().unwrap().take_preview else {
+    let Some(Ok(plan)) = &app.modules.arch().materials.as_ref().unwrap().take_preview else {
         panic!()
     };
     assert_eq!(plan.report.replaced, ["betonarme", "tugla"]);
@@ -161,10 +162,10 @@ fn replacing_from_the_library_counts_what_follows_and_export_writes_a_file_read_
 fn a_wall_style_component_is_bound_in_duvar_stilleri_and_saved_in_one_step() {
     let mut app = app();
     let _ = app.update(Message::Run("arch.wallStyles"));
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Material(2, Some("betonarme".into())),
     )));
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Save,
     )));
     let style = &model(&app).settings().wall_styles[0];
@@ -180,10 +181,10 @@ fn a_wall_style_component_is_bound_in_duvar_stilleri_and_saved_in_one_step() {
     );
     // Left again: its text and look stay, unbound.
     let _ = app.update(Message::Run("arch.wallStyles"));
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Material(2, None),
     )));
-    let _ = app.update(Message::Arch(arch::Event::WallStyles(
+    let _ = app.update(Message::from(arch::Event::WallStyles(
         crate::wall_styles::Event::Save,
     )));
     let c = &model(&app).settings().wall_styles[0].components[2];

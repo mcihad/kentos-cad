@@ -2,7 +2,6 @@
 //! of every message.
 
 use super::*;
-use crate::arch;
 use crate::gis;
 
 impl App {
@@ -274,8 +273,8 @@ impl App {
             self.follow_tracking(),
             // The grids the project's datum choices name, read into the core (grids.rs).
             self.follow_grids(),
-            // The underlay models' files read and their plan at the active level drawn (underlays.rs).
-            self.follow_underlays(),
+            // The modules' work that follows the window: Mimari's underlay models read, their plan drawn (underlays.rs).
+            self.modules_follow(),
             // The rows round a bound layer's part, the obstacles of its labels at the part's edge (band_ghosts.rs).
             self.follow_bands(),
             // The drawing's new calls join Komut geçmişi before the log is followed (history/).
@@ -412,18 +411,14 @@ impl App {
             }
             // Esc in a window's text box closes the window, as Esc beside it does (DESIGN.md §7.9): F1 stayed open over
             // its search box (plan G11), and the editors with their own save ask first (docs/adr/8006).
-            if matches!(
-                self.dialog,
-                Some(
-                    Dialog::Gis(gis::GisDialogKind::AttributeValues)
-                        | Dialog::BlockDefine
-                        | Dialog::Shortcuts
-                        | Dialog::Arch(arch::ArchDialogKind::WallStyles)
-                        | Dialog::Arch(arch::ArchDialogKind::Program)
-                        | Dialog::Arch(arch::ArchDialogKind::OpeningTypes)
-                        | Dialog::Arch(arch::ArchDialogKind::Materials)
+            let module_closes = matches!(self.dialog, Some(Dialog::Module(d))
+                if crate::module_parts::parts(d.module).is_some_and(|p| p.escape_closes(d.kind)));
+            if module_closes
+                || matches!(
+                    self.dialog,
+                    Some(Dialog::Gis(gis::GisDialogKind::AttributeValues) | Dialog::BlockDefine | Dialog::Shortcuts)
                 )
-            ) {
+            {
                 self.close_dialog();
             }
             return Task::none();
@@ -500,6 +495,7 @@ impl App {
             Message::ApplyTemplate(id) => self.apply_template(&id),
             Message::ActiveLevel(level) => self.choose_level(level),
             Message::LayerKeys(on) => self.choose_layer_keys(on),
+            Message::ToolSetting(event) => return self.tool_setting(event),
             Message::LevelView(view) => self.choose_level_view(view),
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
@@ -554,7 +550,6 @@ impl App {
             Message::QualityFormRows(rows) => self.quality_form_rows(rows),
             Message::Search(event) => return self.data_event(event),
             Message::History(event) => return self.calls_event(event),
-            Message::Arch(inner) => return self.arch_event(inner),
             Message::CadInspection(event) => return self.cad_inspection_event(event),
             Message::Recover(Some(path)) => return self.recover_path(path),
             Message::Recover(None) => {}
@@ -618,6 +613,7 @@ impl App {
                     self.dialog = None;
                 }
             }
+            Message::GridsLooked(looked) => self.grids_looked(looked),
             Message::Module(event) => return self.module_event(event),
             Message::Key(press) => return self.key(press),
             Message::CursorValueInput { token, text, pasted } => {
@@ -701,12 +697,6 @@ impl App {
             Message::PictureWritten(written) => self.picture_written(written),
             Message::Scene3d(event) => return self.scene3d_event(event),
             Message::IfcViewer(event) => return self.ifc_viewer_event(event),
-            Message::IfcBuildingExport(path) => {
-                return self.ifc_building_chosen(path, kentos_commands::IfcView::DesignTransfer);
-            }
-            Message::IfcBuildingExportCut(path) => {
-                return self.ifc_building_chosen(path, kentos_commands::IfcView::Reference);
-            }
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::TableStyleDefs(event) => return self.table_style_window_event(event),
             Message::SheetSet(event) => return self.sheet_set_event(event),
@@ -935,8 +925,11 @@ impl App {
                     }
                 }
                 Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::RemoveTemplate)) => self.remove_template(),
-                Some(Dialog::Arch(arch::ArchDialogKind::SpaceMerge)) => {
-                    self.space_merge_confirmed()
+                // A module's question (Mahalleri birleştir, quantities.rs).
+                Some(Dialog::Module(d)) => {
+                    if let Some(parts) = crate::module_parts::parts(d.module) {
+                        parts.dialog_confirmed(self, d.kind);
+                    }
                 }
                 Some(Dialog::SourceDiscard) => self.bound_discard(),
                 _ => {}

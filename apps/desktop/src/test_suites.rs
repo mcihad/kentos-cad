@@ -12,6 +12,9 @@ mod acceptance_gis_tests;
 #[path = "tests/acceptance_tests.rs"]
 mod acceptance_tests;
 #[cfg(test)]
+#[path = "tests/architecture_ribbon_tests.rs"]
+mod architecture_ribbon_tests;
+#[cfg(test)]
 #[path = "tests/measure_probe_tests.rs"]
 mod measure_probe_tests;
 #[cfg(test)]

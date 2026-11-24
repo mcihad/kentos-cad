@@ -147,7 +147,7 @@ fn quantities(app: &mut App) {
 fn quantities_walls(app: &mut App) {
     spaces(app);
     run(app, "arch.quantities");
-    let _ = app.update(Message::Arch(arch::Event::Quantities(
+    let _ = app.update(Message::from(arch::Event::Quantities(
         crate::quantities::Event::Tab(crate::quantities::Tab::Walls),
     )));
 }
