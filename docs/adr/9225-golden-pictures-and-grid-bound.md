@@ -129,11 +129,17 @@ genişlemesidir.
 - **Önce:** program `scene.rs:312`'de taşma paniğiyle kapandı (`o/app.log`).
 - **Sonra:** çizimin tamamı görünüyor, durum çubuğunda “1 nesne çizimin geri kalanından çok uzakta” (`s/c2-tumu.png`).
 
-## §4 Bu işte görülüp sonraya kalan
+## §4 Bu işte görülen, hata olmayan
 
-Sahibin ayarlarıyla (Saydamlık kapalı) aynı katmanda, alandan **sonra** yazılmış yazı alanın dolgusunun **altında**
-kalıyor (`drawing.kcad`, “Ada 101 / Parsel 7”). Main'in ucunda da böyle. Çizim sırası işi RM-15'in ilk maddesi
-oldu.
+Sahibin ayarlarıyla (Saydamlık kapalı) `drawing.kcad`'de alandan sonra yazılmış “Ada 101 / Parsel 7” yazısı alanın
+içinde görünmüyor. İlk bakışta çizim sırası hatası sanıldı.
+
+- **Ölçüldü:** yazının ve opak dolgunun rengi aynı katman rengi, (224, 108, 117). Alanın içindeki 16 500 pikselin hepsi
+  bu renkte.
+- **Yazı üstte çiziliyor:** yazılar her karede resmin ve katmanların üstüne çiziliyor
+  ([ADR 9212](9212-drawing-text-on-the-gpu.md) §5).
+- **Sonuç:** aynı renkteki yazı aynı renkteki opak dolgunun üstünde görünmez, bir CAD'de de öyle. Hata değil;
+  fikstürün renkleri böyle.
 
 ## Uygulama
 
