@@ -571,8 +571,8 @@ pub(crate) fn backdrop_note(backdrop: Backdrop) -> &'static str {
             "Temaya uyar: koyu temada arduvaz, aydınlıkta kâğıt, gecede gece haritası, yüksek \
              karşıtlıkta siyah."
         }
-        Backdrop::Slate => "AutoCAD'in koyu gri-mavi model alanı; göz yormaz.",
-        Backdrop::Black => "Klasik AutoCAD: saf siyah zemin, parlak çizgiler.",
+        Backdrop::Slate => "Koyu gri-mavi model alanı; göz yormaz.",
+        Backdrop::Black => "Klasik CAD: saf siyah zemin, parlak çizgiler.",
         Backdrop::Paper => "Beyaza yakın zemin; çıktıya en yakın görünüm.",
     }
 }

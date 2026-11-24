@@ -1,6 +1,6 @@
 //! Öznitelik tablosu: yuvanın alt alanında, aktif katmanın kayıtları.
 //!
-//! ArcGIS'teki öznitelik tablosu gibi: araç çubuğunda katman, arama, filtre
+//! Araç çubuğunda katman, arama, filtre
 //! ve seçim eylemleri; başlığa tıklayarak sıralama; satıra tıklayarak seçim
 //! (Shift aralık seçer, Ctrl satırı seçime ekler ya da çıkarır).
 

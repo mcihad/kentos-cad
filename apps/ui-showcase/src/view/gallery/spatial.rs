@@ -167,7 +167,7 @@ impl Showcase {
                 "Nesne yakalama",
                 "kentos_ui::spatial::query",
                 "Nokta girişi alan araçlarda imlece en yakın köşe yakalanır. İşaretler \
-                 AutoCAD'deki nesne yakalama işaretlerini izler.",
+                 CAD'de alışılmış nesne yakalama işaretleridir.",
                 snaps,
                 Some(
                     "if let Some(snap) = query::snap(&layers, &viewport, cursor, query::SNAP_TOLERANCE) {\n    \

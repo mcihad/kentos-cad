@@ -42,7 +42,7 @@ impl Showcase {
             entry(
                 "Nesne inceleyici",
                 "kentos_ui::widget::Inspector",
-                "ArcGIS'teki öznitelik bölmesi ve CAD'deki Özellikler paleti gibi: her alan \
+                "CBS'nin öznitelik bölmesi ve CAD'in Özellikler paleti gibi: her alan \
                  türü kendi düzenleyicisiyle. Üstte arama, kategorili ya da alfabetik görünüm \
                  ve boş alanları gizleme; kategoriler başlığa tıklanarak daralır. Değişen \
                  alanlar solda çizgiyle işaretlenir ve ↺ ile ilk değerine döner. Takvim, saat \

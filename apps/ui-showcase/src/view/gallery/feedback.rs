@@ -175,8 +175,8 @@ impl Showcase {
             entry(
                 "Durum ağacı",
                 "kentos_ui::widget::StatusTree",
-                "Kaynaklar ve onlardan üretilenler bir ağaçta, hâlleriyle (Civil 3D'nin Prospector'ı, \
-                 OpenRoads'un Explorer'ı). Güncel satır sessizdir; güncel olmayan ya da kurulamayan satır hapını \
+                "Kaynaklar ve onlardan üretilenler bir ağaçta, hâlleriyle (yol ve arazi modelinin \
+                 gezgini). Güncel satır sessizdir; güncel olmayan ya da kurulamayan satır hapını \
                  taşır, nedeni ipucundadır. Dikkat isteyen bir şey taşıyan dal açık başlar. Üstteki haplar \
                  sayılarıyla süzer, sağdaki düğme hepsini birden yeniler; satırın düğmesi yalnız onu.",
                 container(self.status_tree_sample())
@@ -249,7 +249,7 @@ impl Showcase {
             entry(
                 "Özellikler penceresi",
                 "kentos_ui::widget::PropertiesDialog",
-                "Solunda bölüm listesi olan pencere (QGIS'in katman özellikleri gibi). \
+                "Solunda bölüm listesi olan pencere (katman özellikleri gibi). \
                  Değişiklikler taslakta tutulur: Uygula yazar ve açık kalır, Tamam yazar ve \
                  kapatır, İptal atar. Taslak farklıyken Uygula etkindir ve altta not görünür. \
                  Vitrinde katmanın menüsündeki \"Özellikler…\" açar.",

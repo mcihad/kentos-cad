@@ -2541,7 +2541,7 @@ impl Showcase {
 
     /// Komut kutusuna yazılanı çalıştırır: önce etkin istemin seçenekleri,
     /// sonra "enlem, boylam", sonra komutlar. Boş Enter yarım kalan çizimi
-    /// bitirir; etkin komut yokken son komutu yineler (AutoCAD'deki gibi).
+    /// bitirir; etkin komut yokken son komutu yineler (CAD'de alışılan davranış).
     fn submit(&mut self, input: &str) -> Task<Message> {
         if input.is_empty() {
             if !self.draft.is_empty() {

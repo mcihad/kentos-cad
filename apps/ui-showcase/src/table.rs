@@ -50,7 +50,7 @@ impl Column {
     }
 
     /// Sütunun genişliği: başlığa ve en uzun hücreye göre, sınırlar içinde.
-    /// ArcGIS'teki gibi tablo açılırken içeriğe sığdırılır. Genişlik 12
+    /// Tablo açılırken içeriğe sığdırılır. Genişlik 12
     /// piksellik gövde metnine göre, seçili yazı ailesinin harf genişliğiyle
     /// hesaplanır; tablo onu yazı boyutuna göre büyütür.
     pub fn width(self, layers: &[Layer], layer: &Layer) -> f32 {

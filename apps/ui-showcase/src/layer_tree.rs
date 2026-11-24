@@ -2,7 +2,7 @@
 //!
 //! Gruplar katmanları ve başka grupları toplar; derinlik sınırsızdır. Her
 //! grubun ve katmanın kendi görünürlüğü vardır. Bir katman, kendisi ve
-//! bütün üst grupları görünürse çizilir (ArcGIS'teki gibi): grubu kapatmak
+//! bütün üst grupları görünürse çizilir: grubu kapatmak
 //! içindekilerin işaretlerini değiştirmez, açınca eski hâlleriyle görünürler.
 //! Alt katmanlar kütüphanenin `Sublayer`larıdır; görünürlükleri katmanda
 //! tutulur.

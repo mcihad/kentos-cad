@@ -286,8 +286,8 @@ impl Showcase {
         ))
     }
 
-    /// Harita üstündeki kayan pencereler; açık olan vurgulanır. AutoCAD'in
-    /// Görünüm sekmesindeki "Paletler" grubu gibi.
+    /// Harita üstündeki kayan pencereler; açık olan vurgulanır. Görünüm
+    /// sekmesindeki "Paletler" grubu.
     /// Düzen sekmelerinin cetvelleri ve kılavuzları.
     fn sheet_group(&self) -> Group<'_, Message> {
         let guides = self.sheets.sheet().map_or(0, |sheet| sheet.guides.len());

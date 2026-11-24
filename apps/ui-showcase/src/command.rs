@@ -1,7 +1,7 @@
 //! Komut kutusu: komut kataloğu ve yazılanın çözümlenmesi.
 //!
 //! Komutlar büyük/küçük harf ve Türkçe karakter duyarsızdır: "çizgi",
-//! "Çizgi" ve "CIZGI" aynı komuttur. AutoCAD'in İngilizce kısaltmaları da
+//! "Çizgi" ve "CIZGI" aynı komuttur. Klasik CAD'in İngilizce kısaltmaları da
 //! (L, PL, C, ZE...) kabul edilir. Komut yerine "enlem, boylam" yazılabilir:
 //! çizim sürerken nokta ekler, yoksa görünümü oraya ortalar.
 

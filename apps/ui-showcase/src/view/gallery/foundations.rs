@@ -141,7 +141,7 @@ impl Showcase {
                 "Model alanı renkleri",
                 "kentos_ui::spatial::model_space::Style",
                 "Zemin arayüzün temasından bağımsız seçilir: temaya uyan (koyu temada \
-                 arduvaz, aydınlıkta kâğıt), arduvaz, klasik AutoCAD siyahı ya da kâğıt. Seçim \
+                 arduvaz, aydınlıkta kâğıt), arduvaz, klasik CAD siyahı ya da kâğıt. Seçim \
                  ve tutamaçlar vurgu rengindedir; katman renkleri kâğıt zeminde biraz \
                  koyulaştırılır. Tablo o anki zemini gösterir.",
                 color_table(&model),
