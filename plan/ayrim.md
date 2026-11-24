@@ -107,7 +107,7 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     - mobilde CAD düzenleme kararı;
     - mobil uygulamanın teknolojisi.
   - AY-07'nin paketleri mobilin kullanacağı ortak crate'leri arayüzsüz tutar.
-- [~] **AY-07 — Paketlere bölme (uzun soluklu).** ([ADR 9199](../docs/adr/9199-desktop-packages.md))
+- [x] **AY-07 — Paketlere bölme (uzun soluklu).** ([ADR 9199](../docs/adr/9199-desktop-packages.md))
   - CAD çekirdeği ayrı paket. Sonra Harita, Mimari, Yol ve CBS masaüstü paketleri, en az bağlıdan başlayarak.
   - Her adımda bağımlılık denetimi ve derleme süresi ölçülür.
   - Hepsi bir arada program bütün paketleri, modül programı yalnız kendininkini taşır.
@@ -138,4 +138,9 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
   - Adım 13 yapıldı (ADR 9199 §4.13): `cbs/`'nin `impl App`'leri uzantı trait'i (`cbs/ext.rs`).
   - Adım 14 yapıldı (ADR 9199 §4.14): CBS kendi paketinde (`apps/desktop-cbs`); dört modülün dördü de paketinde, çekirdekte
     modül kalmadı. Sınamalar: çekirdek 2446, CBS 57, Mimari 204, Harita 190, Yol 129, programlar 37.
-  - Sıradaki: CAD çekirdeğinin kabuktan ayrılması.
+  - Adım 15 yapıldı (ADR 9199 §4.15): modül programı (`kentos-mimari` …, `--modul`) yalnız kendi paketini, `kentos-cad`
+    dördünü de kaydeder.
+  - Teslim tamam: dört modül kendi paketinde, çekirdekte modül yok (ADR 9199 §3.1'e göre çekirdek “CAD çekirdeği”
+    paketidir); her adımda taban ve derleme süresi ölçüldü.
+  - Ayrı iş (sahibin kararı, ADR 9199 §5): çekirdeğin katmanlarını (kabuk, CAD, ortak CBS) ayrı crate'lere bölmek; kabuk
+    → cad 77, kabuk → gis 43, CAD ↔ gis 30/54 dosya. O güne dek bağları `module_deps.py` izler, yalnız azalırlar.

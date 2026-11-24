@@ -20,6 +20,7 @@ test = false
 
 [dependencies]
 kentos-desktop = { path = "../desktop" }
+kentos-launch = { path = "../../crates/native/launch" }
 kentos-desktop-arch = { path = "../desktop-arch" }
 kentos-desktop-cbs = { path = "../desktop-cbs" }
 kentos-desktop-map = { path = "../desktop-map" }

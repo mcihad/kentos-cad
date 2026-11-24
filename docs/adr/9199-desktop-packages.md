@@ -351,6 +351,17 @@ araçlarını; `analysis` ağ ve yüzey çözümlemelerini; uygulama ve eklentil
 - Sınama: çekirdek 2446, CBS 57, Mimari 204, Harita 190, Yol 129, programlar 37. Toplam 3063, öncekiyle aynı; yok
   sayılan 762.
 
+### §4.15 Adım 15: Modül programı yalnız kendi paketini kaydeder
+
+- `kentos-cad`'in `main`'i başladığı adı (`kentos-mimari`, `kentos-harita`, `kentos-gis`, `kentos-yol`; ADR 0802'nin
+  tek dosyaya bağlantıları) ya da `--modul`'ü okur: bir modülün programı yalnız o modülün paketini, `kentos-cad` dördünü
+  de kaydeder. Eşleşme joker kolsuz: yeni modül paketi buraya girmeden derlenmez. `snapshot` ve `kullan` hepsini alır.
+- Pencere açmadan doğrulandı: `kentos-mimari --modul harita` ve bilinmeyen modül nedenini söyleyerek 2 ile reddedilir.
+  Programlar arası sınamalar dört modülü kaydeder (`ctor`).
+- AY-07'nin teslimi böylece tamam: dört modül kendi paketinde, çekirdekte modül yok (§3.1: çekirdek artık “CAD çekirdeği”
+  paketidir), hepsi bir arada program hepsini, modül programı yalnız kendininkini taşır; her adımda taban ve derleme
+  süresi ölçüldü.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):
@@ -373,5 +384,13 @@ araçlarını; `analysis` ağ ve yüzey çözümlemelerini; uygulama ve eklentil
   benzeri), Yol'un merkezine bağları kalkar; `road_project_panel`'in `project_graph_window` bağı da çözülür.
 
 - Zaman ve grafiklerin yalnız CBS'nin olan yarısı (`time.*`, `chart.*`) modülleri ikiye ayrıldıkça CBS paketine geçer.
-- CAD çekirdeğinin kabuktan ayrılması (§3.1): kabuk → cad 77, CBS → cad 54 dosya.
-- Modül programlarının ayrı ikilileri ve paketlemesi: bir modülün programı yalnız kendi paketini kaydeder.
+- **Çekirdeğin katmanları** (kabuk, CAD çekirdeği ve ortak CBS çekirdeği ayrı crate'ler; 24 Kasım 2026'da ölçüldü):
+  kabuk 105 modül (198 bin satır), CAD 112 (146 bin), ortak CBS 81 (149 bin). Kabuk CAD'in 112 modülünden 91'ini
+  adlandırır (kabuk → cad 77 dosya; `style` 12, `crs` 9, `labels`, `layering`, `marks`, `properties` 5'er modülden), ortak
+  CBS'ye 43 dosyayla bağlıdır; CAD ile ortak CBS birbirine iki yönde bağlıdır (CAD → gis 30, gis → CAD 54). Crate'lere
+  bölmek için `App`'in CAD ve CBS durumu, iletileri ve pencereleri modüllerinki gibi silinmiş türlere döner ve CAD ile
+  ortak CBS arasındaki döngü kırılır (ya da ikisi bir crate kalır). Bu, modül paketlerinin toplamından büyük ayrı bir
+  iştir; amacı (CAD'siz bir CBS programı mı, yalnız derleme süresi mi) sahibin kararıdır. O güne dek
+  `module_deps.py` bu bağları izler, yalnız azalırlar.
+- Modül programlarının ayrı ikilileri ve paketlemesi (isteğe bağlı): bugün tek dosya ve bağlantılar (ADR 0802), her
+  program kendi paketini kaydeder (§4.15); ayrı ikili, dağıtım boyutu ölçülünce karar verilir.
