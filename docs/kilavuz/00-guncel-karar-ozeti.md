@@ -13,8 +13,8 @@
   - CBS: veri ve öznitelikler veritabanında; proje dosyası yapıyı, stilleri, ayarları ve açıklamaları tutar ve dosyaya,
     veritabanına ya da buluta kaydedilir. CAD (Mimari, Harita, Yol): tamamı proje dosyasında; dosyaya ya da buluta
     (yalnız dosya revizyonu). Eski projelere taşıma yazılmaz (uygulama geliştirmede).
-  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır. AY-02, AY-03, AY-04, AY-05 ve AY-06 bitti
-    (AY-05'in kalanı ADR 9196 §6'da): ekran
+  - Uygulama sırası AY-02…AY-07; kurallar şimdiden yeni her işe uygulanır. AY-02…AY-07 bitti (AY-05'in kalanı ADR 9196
+    §6'da; çekirdeğin katmanlarını crate'lere bölmek ADR 9199 §5'te, sahibin kararı): ekran
     açık projeyi izler; katman menüsü modül × katman türü tablosundandır (ADR 9195 §5, `layer_entries.rs`); her
     modülün profili kendi klasöründedir, ortak katalog `catalog/v1/modules.json`, bağımlılık denetimi
     `scripts/dev/module_deps.py --check` (ADR 9195 §6); CAD türünün bulut projesi yalnız dosyadır (ADR 9196 §4).
