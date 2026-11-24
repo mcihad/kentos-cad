@@ -209,6 +209,12 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 ### F7 — DWG ve DXF alımı
 
 - [ ] **RM-20 — Akışlı DXF okuyucu.** Bellek sınırlı kalır; 256 MiB sınırı kalkar.
+  - Ölçüm (24 Kasım, release, geçici bir örnekle): bugünkü okuyucu 657 MB'lık imar planı DXF'ini (USB) 1 GiB sınırla
+    okuyor. 1 milyon nesne sınırında 7,7 s ve en çok 2,1 GB; sınırsız 3 199 462 nesne, 9,4 s ve 5,2 GB.
+    Ayrıştırma darboğaz değil. Darboğaz nesne sayısı: NCZ'deki 453 534 nesne, DXF'e aktarılırken parçalanmış.
+  - DWG köprüsü 1 GiB'lik DXF metnine izin veriyor, kullanıcının seçtiği DXF ise 256 MiB'te reddediliyor.
+  - **Sahibin kararı gerekiyor:** dosyayı reddetmek mi, yoksa ilk 1 milyon nesneyle raporlu açmak mı (masaüstünde 1 M
+    nesne ~2,8 GB, 3,2 M ~9 GB)? Bölge seçerek açmak (akışlı ve uzamsal süzgeçli) üçüncü yol.
 - [ ] **RM-21 — DWG doğrudan eşleme.** DWG kod çözücüsünün nesneleri doğrudan KentOS nesnelerine çevrilir. Bellekteki
   DXF metin köprüsü (270–463 MB) kalkar.
 - [~] **RM-22 — Alınmayanlar.** SİVAS AVM'de 8 051 öğe alınmıyor:
