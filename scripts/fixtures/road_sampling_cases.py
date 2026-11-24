@@ -20,7 +20,7 @@ z(s) = z0 + g·s + c·s²/2 + a·sin(2π·s/λ) + the code's own dz; no section 
 """
 
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 from pathlib import Path
 
@@ -176,8 +176,8 @@ def divisions():
             return abs(p["r"])
         def at(s):
             d = s - p["sc"]
-            h = math.sqrt(max(p["radius"] ** 2 - d * d, 0.0))
-            return p["radius"] ** 2 / h ** 3
+            h = math.sqrt(max(p["radius"] * p["radius"] - d * d, 0.0))
+            return p["radius"] * p["radius"] / math.pow(h, 3)
         return max(at(p["s0"]), at(p["s1"]))
     def run(name, pieces, t, region):
         out = []

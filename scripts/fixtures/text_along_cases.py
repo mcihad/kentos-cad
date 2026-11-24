@@ -69,7 +69,7 @@ widths, read as data from the font recorder's table
   angle, half a turn less when it reads upside down.
 """
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import re
 import sys
 from pathlib import Path

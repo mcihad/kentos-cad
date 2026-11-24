@@ -52,7 +52,7 @@ ADR 0728 adds, and writes cad.walls.edit.length.json:
 import argparse
 import copy
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 from pathlib import Path
 

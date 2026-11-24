@@ -70,7 +70,7 @@ The new kinds:
 """
 
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 from pathlib import Path
 

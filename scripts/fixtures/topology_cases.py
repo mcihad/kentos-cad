@@ -65,7 +65,7 @@ vertex by vertex, then the ends object by object, the start first.
 """
 
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import random
 import sys
 from pathlib import Path

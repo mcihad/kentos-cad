@@ -50,7 +50,7 @@ so every length is an exact fraction; a turn's angle is checked as floats within
 
 import argparse
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 from fractions import Fraction as F
 from pathlib import Path
 

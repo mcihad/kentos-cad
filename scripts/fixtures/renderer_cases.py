@@ -21,7 +21,7 @@ The Rust core (`crates/shared/style-core/tests/all/renderers.rs`) must give the 
 `--check` says whether the file holds what this script writes.
 """
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import struct
 import sys
 from pathlib import Path
@@ -80,7 +80,7 @@ EXPONENT = {"area": 0.5, "radius": 1.0, "flannery": 0.57}
 
 def size_at(t, lo, hi, e):
     t = min(1.0, max(0.0, t))
-    return lo + (hi - lo) * (t if e == 1.0 else t ** e)
+    return lo + (hi - lo) * (t if e == 1.0 else math.pow(t, e))
 
 
 def class_of(v, breaks):

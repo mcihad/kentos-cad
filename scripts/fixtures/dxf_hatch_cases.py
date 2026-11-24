@@ -21,7 +21,7 @@ fixtures/formats/v1/dxf-hatch/out/*.dxf). `--check` reads both files here and ch
   (modulo the spacing) and the dashes, within 1e-9 of the size;
 - a gradient keeps its name, angle and two true colours.
 """
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 from pathlib import Path
 
@@ -362,7 +362,7 @@ def bulge_points(a, b, bulge, n=360):
     sweep = 4 * math.atan(bulge)
     r = chord / (2 * math.sin(abs(sweep) / 2))
     mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
-    d = math.sqrt(max(r * r - (chord / 2) ** 2, 0.0))
+    d = math.sqrt(max(r * r - math.pow(chord / 2, 2), 0.0))
     nx, ny = -(b[1] - a[1]) / chord, (b[0] - a[0]) / chord
     side = 1 if (bulge > 0) == (abs(sweep) < math.pi) else -1
     c = (mid[0] + side * d * nx, mid[1] + side * d * ny)

@@ -31,7 +31,7 @@ written here:
 import argparse
 import copy
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 from fractions import Fraction
 from pathlib import Path
@@ -236,7 +236,7 @@ def settle(state, changed):
 
 
 def dist2(a, b):
-    return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
+    return math.pow(a[0] - b[0], 2) + math.pow(a[1] - b[1], 2)
 
 
 def host_of(state, o):

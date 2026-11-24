@@ -18,7 +18,7 @@ of their arcs, its area within its chords' loss of the exact one.
     python3 scripts/fixtures/geometry_generator_cases.py --check   # compares it with the one on disk
 """
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 from fractions import Fraction as F
 from pathlib import Path

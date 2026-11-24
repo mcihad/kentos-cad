@@ -22,7 +22,7 @@ measured advances (the first face's, `paragraph_cases.py` reads them from the da
 
 import argparse
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 from pathlib import Path
 

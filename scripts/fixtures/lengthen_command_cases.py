@@ -26,7 +26,7 @@ Plans compare within 1e-9 (`within`); writes compare what is exact.
 """
 import copy
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 from pathlib import Path
 

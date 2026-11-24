@@ -18,7 +18,7 @@ keeps a nested insert as one while its composed axes stay square (a turn, two fa
 they shear.
 """
 import json
-import math
+import crmath as math  # correctly rounded: the same digits on every system (docs/adr/9303)
 import sys
 
 OUT = "fixtures/blocks/v1/scales.json"
@@ -128,7 +128,7 @@ def ellipse_of(c, u, v, m):
     direction, from the singular values of [m·u | m·v]."""
     U, V = lin(m, u), lin(m, v)
     # x(t) − c = U cos t + V sin t; |x − c|² extremes at tan 2t = 2 U·V / (U·U − V·V).
-    uu, vv, uv = U[0] ** 2 + U[1] ** 2, V[0] ** 2 + V[1] ** 2, U[0] * V[0] + U[1] * V[1]
+    uu, vv, uv = U[0] * U[0] + U[1] * U[1], V[0] * V[0] + V[1] * V[1], U[0] * V[0] + U[1] * V[1]
     t = 0.5 * math.atan2(2 * uv, uu - vv)
     a = (U[0] * math.cos(t) + V[0] * math.sin(t), U[1] * math.cos(t) + V[1] * math.sin(t))
     b = (-U[0] * math.sin(t) + V[0] * math.cos(t), -U[1] * math.sin(t) + V[1] * math.cos(t))
