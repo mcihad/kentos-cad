@@ -155,9 +155,20 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait PayWindowApp {
+    fn open_pay(&mut self);
+    fn refresh_pay(&mut self);
+    fn pay_event(&mut self, event: Event) -> Task<Message>;
+    fn save_pay(&mut self) -> Task<Message>;
+    fn remove_pay(&mut self) -> Task<Message>;
+    fn pay_view(&self) -> Element<'_, Message>;
+    fn pay_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl PayWindowApp for App {
     /// Poz metrajı: the window on the road project's pay item book, or an empty one.
-    pub(crate) fn open_pay(&mut self) {
+    fn open_pay(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -216,7 +227,7 @@ impl App {
         };
     }
 
-    pub(crate) fn pay_event(&mut self, event: Event) -> Task<Message> {
+    fn pay_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.modules.road_mut().pay_window.as_mut() else {
             return Task::none();
         };
@@ -325,7 +336,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn pay_view(&self) -> Element<'_, Message> {
+    fn pay_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().pay_window else {
             return iced::widget::text("").into();
         };
@@ -457,7 +468,7 @@ impl App {
         Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn pay_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn pay_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().pay_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

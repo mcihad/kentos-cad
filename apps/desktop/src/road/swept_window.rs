@@ -176,9 +176,19 @@ fn chosen(app: &App) -> (Vec<String>, Option<String>) {
     (uids, path)
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait SweptWindowApp {
+    fn open_swept(&mut self);
+    fn preview_swept(&mut self);
+    fn swept_event(&mut self, event: Event) -> Task<Message>;
+    fn draw_swept(&mut self) -> Task<Message>;
+    fn swept_view(&self) -> Element<'_, Message>;
+    fn swept_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl SweptWindowApp for App {
     /// Araç izi: the window on the road project's first junction, or on the selected path.
-    pub(crate) fn open_swept(&mut self) {
+    fn open_swept(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -227,7 +237,7 @@ impl App {
         w.warnings = warnings;
     }
 
-    pub(crate) fn swept_event(&mut self, event: Event) -> Task<Message> {
+    fn swept_event(&mut self, event: Event) -> Task<Message> {
         let (picked, path) = chosen(self);
         let Some(w) = self.modules.road_mut().swept_window.as_mut() else {
             return Task::none();
@@ -309,7 +319,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn swept_view(&self) -> Element<'_, Message> {
+    fn swept_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().swept_window else {
             return iced::widget::text("").into();
         };
@@ -467,7 +477,7 @@ impl App {
         Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn swept_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn swept_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().swept_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

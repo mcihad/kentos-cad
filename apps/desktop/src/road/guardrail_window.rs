@@ -133,9 +133,21 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait GuardrailWindowApp {
+    fn open_guardrails(&mut self);
+    fn refresh_guardrail(&mut self);
+    fn guardrail_event(&mut self, event: Event) -> Task<Message>;
+    fn save_guardrail(&mut self) -> Task<Message>;
+    fn draw_guardrail(&mut self) -> Task<Message>;
+    fn remove_guardrail(&mut self) -> Task<Message>;
+    fn guardrail_view(&self) -> Element<'_, Message>;
+    fn guardrail_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl GuardrailWindowApp for App {
     /// Otokorkuluk: the window on the road project's first guardrail, or a new one on its first corridor.
-    pub(crate) fn open_guardrails(&mut self) {
+    fn open_guardrails(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -184,7 +196,7 @@ impl App {
         };
     }
 
-    pub(crate) fn guardrail_event(&mut self, event: Event) -> Task<Message> {
+    fn guardrail_event(&mut self, event: Event) -> Task<Message> {
         let kept = self
             .document
             .as_ref()
@@ -327,7 +339,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn guardrail_view(&self) -> Element<'_, Message> {
+    fn guardrail_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().guardrail_window else {
             return iced::widget::text("").into();
         };
@@ -450,7 +462,7 @@ impl App {
         Frame::new(TITLE).scroll(body).footer(footer).width(1060.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn guardrail_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn guardrail_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().guardrail_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

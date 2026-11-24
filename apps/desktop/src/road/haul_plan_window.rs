@@ -15,6 +15,7 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road_ext::*;
 use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, Path, Stroke, Text};
@@ -164,9 +165,18 @@ fn grouped(v: f64, places: usize) -> String {
     out
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait HaulPlanWindowApp {
+    fn open_haul_plan(&mut self);
+    fn haul_plan_event(&mut self, event: Event) -> Task<Message>;
+    fn approve_haul(&mut self, on: bool) -> Task<Message>;
+    fn haul_plan_view(&self) -> Element<'_, Message>;
+    fn haul_plan_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl HaulPlanWindowApp for App {
     /// Taşıma planı: the window on the road project's first mass haul diagram.
-    pub(crate) fn open_haul_plan(&mut self) {
+    fn open_haul_plan(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -187,7 +197,7 @@ impl App {
         let _ = self.haul_plan_event(Event::Preview);
     }
 
-    pub(crate) fn haul_plan_event(&mut self, event: Event) -> Task<Message> {
+    fn haul_plan_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::OpenFleet => {
                 self.open_haul_fleet();
@@ -326,7 +336,7 @@ impl App {
         self.haul_plan_event(Event::Preview)
     }
 
-    pub(crate) fn haul_plan_view(&self) -> Element<'_, Message> {
+    fn haul_plan_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().haul_plan_window else {
             return iced::widget::text("").into();
         };
@@ -623,7 +633,7 @@ impl App {
         d.view()
     }
 
-    pub(crate) fn haul_plan_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn haul_plan_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.road().haul_plan_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };

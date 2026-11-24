@@ -293,9 +293,24 @@ fn chosen_row(w: &mut Window) -> Option<&mut Row> {
     w.chosen.and_then(|i| w.rows.get_mut(i))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait HaulWindowApp {
+    fn open_hauls(&mut self);
+    fn new_haul(&mut self);
+    fn refresh_haul(&mut self);
+    fn haul_volumes(&self) -> Vec<(String, String)>;
+    fn haul_event(&mut self, event: Event) -> Task<Message>;
+    fn blank_haul_edit(operation: RoadEditOperation, id: &str) -> HaulsEdit;
+    fn haul_write(&mut self, edit: HaulsEdit) -> bool;
+    fn save_hauls(&mut self) -> Task<Message>;
+    fn road_haul_view(&self) -> Element<'_, Message>;
+    fn haul_editor<'a>(&'a self, w: &'a Window, r: &'a Row, volumes: &[(String, String)]) -> Element<'a, Message>;
+    fn haul_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl HaulWindowApp for App {
     /// Brükner: the window on the road project's mass haul diagrams.
-    pub(crate) fn open_hauls(&mut self) {
+    fn open_hauls(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -316,7 +331,7 @@ impl App {
     }
 
     /// Brükner oluştur from the ribbon: the window with a new diagram of the first volume.
-    pub(crate) fn new_haul(&mut self) {
+    fn new_haul(&mut self) {
         self.open_hauls();
         if self.modules.road().haul_window.is_some() {
             let _ = self.haul_event(Event::New);
@@ -345,7 +360,7 @@ impl App {
             .map_or_else(Vec::new, |d| d.model.road_volumes().iter().map(|v| (v.id.clone(), v.name.clone())).collect())
     }
 
-    pub(crate) fn haul_event(&mut self, event: Event) -> Task<Message> {
+    fn haul_event(&mut self, event: Event) -> Task<Message> {
         let volumes = self.haul_volumes();
         let Some(w) = self.modules.road_mut().haul_window.as_mut() else {
             return Task::none();
@@ -590,7 +605,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn road_haul_view(&self) -> Element<'_, Message> {
+    fn road_haul_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().haul_window else {
             return iced::widget::text("").into();
         };
@@ -839,7 +854,7 @@ impl App {
         container(col).padding(iced::Padding::default().right(14)).into()
     }
 
-    pub(crate) fn haul_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn haul_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.road().haul_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };

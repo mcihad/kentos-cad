@@ -467,12 +467,16 @@ mod open_report_window;
 pub mod module_surfaces;
 #[path = "shell/layer_entries.rs"]
 pub mod layer_entries;
+#[path = "cad/view_place.rs"]
+mod view_place;
 #[path = "cad/terrain_work.rs"]
 pub mod terrain_work;
 #[path = "shell/numbers.rs"]
 pub mod numbers;
 #[path = "road/parts.rs"]
 mod road_parts;
+#[path = "road/ext.rs"]
+mod road_ext;
 #[path = "shell/module_parts.rs"]
 pub mod module_parts;
 #[path = "shell/module_profile.rs"]

@@ -1,6 +1,7 @@
 //! Kübaj (volume_window.rs, plan/road.md Y8): the window computes the volume as it is typed, writes through
 //! `road.volumes.edit` (one undo step) and writes the sheet as a file; and its pictures.
 
+use crate::road_ext::*;
 use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::road;

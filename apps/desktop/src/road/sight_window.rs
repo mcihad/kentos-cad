@@ -90,9 +90,17 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait SightWindowApp {
+    fn open_sight(&mut self);
+    fn sight_event(&mut self, event: Event) -> Task<Message>;
+    fn sight_view(&self) -> Element<'_, Message>;
+    fn sight_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl SightWindowApp for App {
     /// Görüş mesafesi: the window on the road project's first profile.
-    pub(crate) fn open_sight(&mut self) {
+    fn open_sight(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -113,7 +121,7 @@ impl App {
         let _ = self.sight_event(Event::Preview);
     }
 
-    pub(crate) fn sight_event(&mut self, event: Event) -> Task<Message> {
+    fn sight_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.modules.road_mut().sight_window.as_mut() else {
             return Task::none();
         };
@@ -145,7 +153,7 @@ impl App {
         self.sight_event(Event::Preview)
     }
 
-    pub(crate) fn sight_view(&self) -> Element<'_, Message> {
+    fn sight_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().sight_window else {
             return iced::widget::text("").into();
         };
@@ -218,7 +226,7 @@ impl App {
         d.view()
     }
 
-    pub(crate) fn sight_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn sight_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().sight_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

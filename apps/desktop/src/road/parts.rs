@@ -2,6 +2,7 @@
 //! usage-trace answers, its 37 commands (the editors, LandXML, IFC and glTF among them) and its alignments drawn over
 //! the drawing. The terrain work it shares with Harita is the core's (terrain_work.rs).
 
+use crate::road_ext::*;
 use std::any::Any;
 use std::sync::Arc;
 

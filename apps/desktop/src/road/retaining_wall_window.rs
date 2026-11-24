@@ -142,9 +142,21 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait RetainingWallWindowApp {
+    fn open_retaining_walls(&mut self);
+    fn refresh_retaining_wall(&mut self);
+    fn retaining_wall_event(&mut self, event: Event) -> Task<Message>;
+    fn save_retaining_wall(&mut self) -> Task<Message>;
+    fn draw_retaining_wall(&mut self) -> Task<Message>;
+    fn remove_retaining_wall(&mut self) -> Task<Message>;
+    fn retaining_wall_view(&self) -> Element<'_, Message>;
+    fn retaining_wall_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl RetainingWallWindowApp for App {
     /// İstinat duvarı: the window on the road project's first wall, or a new one on its first corridor.
-    pub(crate) fn open_retaining_walls(&mut self) {
+    fn open_retaining_walls(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -193,7 +205,7 @@ impl App {
         };
     }
 
-    pub(crate) fn retaining_wall_event(&mut self, event: Event) -> Task<Message> {
+    fn retaining_wall_event(&mut self, event: Event) -> Task<Message> {
         let kept = self
             .document
             .as_ref()
@@ -325,7 +337,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn retaining_wall_view(&self) -> Element<'_, Message> {
+    fn retaining_wall_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().retaining_wall_window else {
             return iced::widget::text("").into();
         };
@@ -466,7 +478,7 @@ impl App {
         Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn retaining_wall_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn retaining_wall_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().retaining_wall_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

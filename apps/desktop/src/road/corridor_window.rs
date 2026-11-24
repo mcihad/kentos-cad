@@ -295,9 +295,29 @@ type Named = Vec<(String, String)>;
 /// The project's alignments (id, name, revision), profiles and schedules (id, name, alignment), surfaces and templates.
 type Names = (Vec<(String, String, u32)>, Vec<(String, String, String)>, Named, Vec<(String, String, String)>, Named);
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait CorridorWindowApp {
+    fn open_corridors(&mut self);
+    fn new_corridor(&mut self);
+    fn corridor_slope_plan(&mut self);
+    fn refresh_corridor(&mut self);
+    fn corridor_names(&self) -> Names;
+    fn corridor_event(&mut self, event: Event) -> Task<Message>;
+    fn blank_corridor_edit(operation: RoadEditOperation, id: &str) -> CorridorsEdit;
+    fn corridor_write(&mut self, edit: CorridorsEdit) -> bool;
+    fn chosen_saved_corridor(&mut self, what: &str) -> Option<CorridorDef>;
+    fn reload_corridors(&mut self);
+    fn rebind_corridor(&mut self) -> Task<Message>;
+    fn draw_corridor(&mut self) -> Task<Message>;
+    fn save_corridors(&mut self) -> Task<Message>;
+    fn road_corridor_view(&self) -> Element<'_, Message>;
+    fn corridor_editor<'a>(&'a self, w: &'a Window, r: &'a Row, stale: bool) -> Element<'a, Message>;
+    fn corridor_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl CorridorWindowApp for App {
     /// Koridor: the window on the road project's corridors.
-    pub(crate) fn open_corridors(&mut self) {
+    fn open_corridors(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -321,7 +341,7 @@ impl App {
     }
 
     /// Koridor oluştur from the ribbon: the window with a new corridor on the first alignment.
-    pub(crate) fn new_corridor(&mut self) {
+    fn new_corridor(&mut self) {
         self.open_corridors();
         if self.modules.road().corridor_window.is_some() {
             let _ = self.corridor_event(Event::New);
@@ -329,7 +349,7 @@ impl App {
     }
 
     /// Şevli plan from the ribbon: the window on the first corridor, to draw it.
-    pub(crate) fn corridor_slope_plan(&mut self) {
+    fn corridor_slope_plan(&mut self) {
         self.open_corridors();
     }
 
@@ -392,7 +412,7 @@ impl App {
         })
     }
 
-    pub(crate) fn corridor_event(&mut self, event: Event) -> Task<Message> {
+    fn corridor_event(&mut self, event: Event) -> Task<Message> {
         let (alignments, profiles, surfaces, _, templates) = self.corridor_names();
         let Some(w) = self.modules.road_mut().corridor_window.as_mut() else {
             return Task::none();
@@ -698,7 +718,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn road_corridor_view(&self) -> Element<'_, Message> {
+    fn road_corridor_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().corridor_window else {
             return iced::widget::text("").into();
         };
@@ -1017,7 +1037,7 @@ impl App {
         container(col).padding(iced::Padding::default().right(14)).into()
     }
 
-    pub(crate) fn corridor_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn corridor_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.road().corridor_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };

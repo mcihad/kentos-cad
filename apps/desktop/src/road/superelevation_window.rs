@@ -24,6 +24,7 @@
 //! then sets), each one undo step, and closes. The rates, runoffs, widths and limits come from the standard or the
 //! project: nothing is filled in for the user.
 
+use crate::road_ext::*;
 use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
@@ -303,9 +304,28 @@ fn msg(event: Event) -> Message {
     Message::from(road::Event::Superelevations(event))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait SuperelevationWindowApp {
+    fn open_superelevations(&mut self);
+    fn new_superelevation(&mut self);
+    fn refresh_superelevation(&mut self);
+    fn superelevation_alignments(&self) -> Vec<(String, String, u32)>;
+    fn superelevation_event(&mut self, event: Event) -> Task<Message>;
+    fn superelevation_write(
+        &mut self,
+        edit: SuperelevationsEdit,
+    ) -> bool;
+    fn blank_edit(operation: RoadEditOperation, id: &str) -> SuperelevationsEdit;
+    fn rebind_superelevation(&mut self) -> Task<Message>;
+    fn save_superelevations(&mut self) -> Task<Message>;
+    fn road_superelevation_view(&self) -> Element<'_, Message>;
+    fn superelevation_form<'a>(&'a self, w: &'a Window, r: &'a Row) -> Form<'a, Message>;
+    fn superelevation_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl SuperelevationWindowApp for App {
     /// Dever: the window on the road project's superelevation schedules.
-    pub(crate) fn open_superelevations(&mut self) {
+    fn open_superelevations(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -327,7 +347,7 @@ impl App {
     }
 
     /// Dever oluştur from the ribbon: the window with a new schedule on the first alignment.
-    pub(crate) fn new_superelevation(&mut self) {
+    fn new_superelevation(&mut self) {
         self.open_superelevations();
         if self.modules.road().superelevation_window.is_some() {
             let _ = self.superelevation_event(Event::New);
@@ -335,7 +355,7 @@ impl App {
     }
 
     /// The chosen schedule built again as typed, and its alignment's curves.
-    pub(crate) fn refresh_superelevation(&mut self) {
+    fn refresh_superelevation(&mut self) {
         let Some(doc) = &self.document else { return };
         let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
@@ -385,7 +405,7 @@ impl App {
         })
     }
 
-    pub(crate) fn superelevation_event(&mut self, event: Event) -> Task<Message> {
+    fn superelevation_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::OpenWiden => {
                 self.open_widening();
@@ -633,7 +653,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn road_superelevation_view(&self) -> Element<'_, Message> {
+    fn road_superelevation_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().superelevation_window else {
             return iced::widget::text("").into();
         };
@@ -843,7 +863,7 @@ impl App {
             .help("Örneğin 200, 1:200 demektir. Sınırlar standardındır; KentOS sayı vermez.")
     }
 
-    pub(crate) fn superelevation_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn superelevation_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.road().superelevation_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };

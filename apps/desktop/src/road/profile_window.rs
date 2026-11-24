@@ -24,6 +24,7 @@
 //! and `road.profiles.create` (the new ones), each one undo step, and closes. Aksa yeniden bağla rebinds a saved,
 //! stale profile (`road.profiles.edit rebind`).
 
+use crate::road_ext::*;
 use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
@@ -567,9 +568,31 @@ pub(crate) fn status(r: &Row, stale: bool, ground: &Ground) -> (String, bool) {
     (words, false)
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ProfileWindowApp {
+    fn open_profiles(&mut self);
+    fn new_profile(&mut self);
+    fn refresh_ground(&mut self);
+    fn profile_alignments(&self) -> Vec<(String, String)>;
+    fn profile_surfaces(&self) -> Vec<(String, String)>;
+    fn profile_event(&mut self, event: Event) -> Task<Message>;
+    fn refresh_profile_impact(&mut self);
+    fn rebind_profile(&mut self) -> Task<Message>;
+    fn draw_profile(&mut self) -> Task<Message>;
+    fn save_profiles(&mut self) -> Task<Message>;
+    fn profile_write<T: serde::Serialize>(
+        &mut self,
+        write: impl FnOnce(&mut ExecutionContext<'_>) -> kentos_commands::CommandResult<T>,
+    ) -> bool;
+    fn road_profile_view(&self) -> Element<'_, Message>;
+    fn profile_draw_row<'a>(&'a self, w: &'a Window, saved: bool) -> Element<'a, Message>;
+    fn road_profile_editor<'a>(&'a self, w: &'a Window, r: &'a Row, stale: bool) -> Element<'a, Message>;
+    fn profile_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl ProfileWindowApp for App {
     /// Boykesit: the window on the road project's profiles.
-    pub(crate) fn open_profiles(&mut self) {
+    fn open_profiles(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -596,7 +619,7 @@ impl App {
     }
 
     /// Boykesit oluştur from the ribbon: the window with a new profile on the first alignment.
-    pub(crate) fn new_profile(&mut self) {
+    fn new_profile(&mut self) {
         self.open_profiles();
         if self.modules.road().profile_window.is_some() {
             let _ = self.profile_event(Event::New);
@@ -641,7 +664,7 @@ impl App {
         })
     }
 
-    pub(crate) fn profile_event(&mut self, event: Event) -> Task<Message> {
+    fn profile_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::OpenLengths => {
                 self.open_profile_lengths();
@@ -1080,7 +1103,7 @@ impl App {
         self.answered(result).is_some()
     }
 
-    pub(crate) fn road_profile_view(&self) -> Element<'_, Message> {
+    fn road_profile_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().profile_window else {
             return iced::widget::text("").into();
         };
@@ -1419,7 +1442,7 @@ impl App {
         container(col).padding(iced::Padding::default().right(14)).into()
     }
 
-    pub(crate) fn profile_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn profile_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.road().profile_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };

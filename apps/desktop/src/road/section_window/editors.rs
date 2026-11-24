@@ -5,8 +5,25 @@ use crate::road::RoadState;
 use super::*;
 use iced::widget::column;
 
-impl App {
-    pub(crate) fn road_section_view(&self) -> Element<'_, Message> {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait EditorsApp {
+    fn road_section_view(&self) -> Element<'_, Message>;
+    fn section_draw_row<'a>(
+        &'a self,
+        w: &'a Window,
+        saved: bool,
+    ) -> Element<'a, Message>;
+    fn section_set_editor<'a>(
+        &'a self,
+        w: &'a Window,
+        r: &'a SetRow,
+        stale: bool,
+    ) -> Element<'a, Message>;
+    fn section_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl EditorsApp for App {
+    fn road_section_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().section_window else {
             return iced::widget::text("").into();
         };
@@ -84,7 +101,7 @@ impl App {
             .modal(msg(Event::Cancel))
     }
 
-    pub(super) fn section_draw_row<'a>(
+    fn section_draw_row<'a>(
         &'a self,
         w: &'a Window,
         saved: bool,
@@ -115,7 +132,7 @@ impl App {
         .into()
     }
 
-    pub(super) fn section_set_editor<'a>(
+    fn section_set_editor<'a>(
         &'a self,
         w: &'a Window,
         r: &'a SetRow,
@@ -290,7 +307,7 @@ impl App {
         container(col).padding(iced::Padding::default().right(14)).into()
     }
 
-    pub(crate) fn section_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn section_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.road().section_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };

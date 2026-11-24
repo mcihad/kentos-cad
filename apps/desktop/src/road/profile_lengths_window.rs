@@ -106,9 +106,17 @@ impl Lengths {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait ProfileLengthsWindowApp {
+    fn open_profile_lengths(&mut self);
+    fn refresh_profile_lengths(&mut self);
+    fn profile_lengths_event(&mut self, event: Event);
+    fn profile_lengths_view<'a>(&'a self, x: &'a Lengths) -> Element<'a, Message>;
+}
+
+impl ProfileLengthsWindowApp for App {
     /// Kurp boyu öner… from Boykesit: the window on the chosen profile, the values typed before kept.
-    pub(crate) fn open_profile_lengths(&mut self) {
+    fn open_profile_lengths(&mut self) {
         let Some(w) = self.modules.road_mut().profile_window.as_mut() else {
             return;
         };
@@ -118,7 +126,7 @@ impl App {
     }
 
     /// The suggestion read again on the chosen profile as typed.
-    pub(crate) fn refresh_profile_lengths(&mut self) {
+    fn refresh_profile_lengths(&mut self) {
         let Some(doc) = &self.document else { return };
         let Some(w) = self.modules.road_mut().profile_window.as_mut() else {
             return;
@@ -148,7 +156,7 @@ impl App {
     }
 
     /// An event of the window.
-    pub(crate) fn profile_lengths_event(&mut self, event: Event) {
+    fn profile_lengths_event(&mut self, event: Event) {
         let Some(w) = self.modules.road_mut().profile_window.as_mut() else {
             return;
         };
@@ -187,7 +195,7 @@ impl App {
     }
 
     /// The window over Boykesit's.
-    pub(crate) fn profile_lengths_view<'a>(&'a self, x: &'a Lengths) -> Element<'a, Message> {
+    fn profile_lengths_view<'a>(&'a self, x: &'a Lengths) -> Element<'a, Message> {
         let field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &x.fields[k]).on_input(move |t| msg(Event::Field(k, t)));
         let form = Form::new()
             .label_width(140.0)

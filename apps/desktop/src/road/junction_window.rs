@@ -262,9 +262,22 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait JunctionWindowApp {
+    fn open_junctions(&mut self);
+    fn refresh_junction(&mut self);
+    fn junction_event(&mut self, event: Event) -> Task<Message>;
+    fn save_junction(&mut self) -> Task<Message>;
+    fn tie_junction(&mut self) -> Task<Message>;
+    fn draw_junction(&mut self) -> Task<Message>;
+    fn remove_junction(&mut self) -> Task<Message>;
+    fn junction_view(&self) -> Element<'_, Message>;
+    fn junction_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl JunctionWindowApp for App {
     /// Kavşak: the window on the road project's first junction, or a new one on its first two alignments.
-    pub(crate) fn open_junctions(&mut self) {
+    fn open_junctions(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -335,7 +348,7 @@ impl App {
             .then(|| w.overlap_input().and_then(|q| road_junctions_overlap::preview(&doc.model, &q)));
     }
 
-    pub(crate) fn junction_event(&mut self, event: Event) -> Task<Message> {
+    fn junction_event(&mut self, event: Event) -> Task<Message> {
         let kept = self
             .document
             .as_ref()
@@ -498,7 +511,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn junction_view(&self) -> Element<'_, Message> {
+    fn junction_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().junction_window else {
             return iced::widget::text("").into();
         };
@@ -835,7 +848,7 @@ impl App {
         Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn junction_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn junction_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().junction_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

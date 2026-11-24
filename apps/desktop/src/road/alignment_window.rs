@@ -452,9 +452,30 @@ fn chain_words(e: &core::ChainError) -> String {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait AlignmentWindowApp {
+    fn open_alignments(&mut self);
+    fn new_alignment(&mut self);
+    fn selected_path(&self) -> Option<Vec<[f64; 2]>>;
+    fn alignment_event(&mut self, event: Event) -> Task<Message>;
+    fn refresh_alignment_impact(&mut self);
+    fn ask_point(&mut self) -> Task<Message>;
+    fn label_alignment(&mut self) -> Task<Message>;
+    fn reverse_alignment(&mut self) -> Task<Message>;
+    fn reload_alignments(&mut self);
+    fn save_alignments(&mut self) -> Task<Message>;
+    fn alignment_write<T: serde::Serialize>(
+        &mut self,
+        write: impl FnOnce(&mut ExecutionContext<'_>) -> kentos_commands::CommandResult<T>,
+    ) -> bool;
+    fn alignment_view(&self) -> Element<'_, Message>;
+    fn alignment_editor<'a>(&'a self, w: &'a Window, r: &'a Row) -> Element<'a, Message>;
+    fn alignment_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl AlignmentWindowApp for App {
     /// Güzergâh: the window on the road project's alignments.
-    pub(crate) fn open_alignments(&mut self) {
+    fn open_alignments(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -476,7 +497,7 @@ impl App {
     }
 
     /// Yeni aks from the ribbon: the window with a new alignment, its PIs from a selected line when there is one.
-    pub(crate) fn new_alignment(&mut self) {
+    fn new_alignment(&mut self) {
         self.open_alignments();
         if self.modules.road().alignment_window.is_some() {
             let _ = self.alignment_event(Event::New);
@@ -500,7 +521,7 @@ impl App {
         }
     }
 
-    pub(crate) fn alignment_event(&mut self, event: Event) -> Task<Message> {
+    fn alignment_event(&mut self, event: Event) -> Task<Message> {
         let path = matches!(event, Event::FromSelection).then(|| self.selected_path()).flatten();
         let Some(w) = self.modules.road_mut().alignment_window.as_mut() else {
             return Task::none();
@@ -966,7 +987,7 @@ impl App {
         self.answered(result).is_some()
     }
 
-    pub(crate) fn alignment_view(&self) -> Element<'_, Message> {
+    fn alignment_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().alignment_window else {
             return iced::widget::text("").into();
         };
@@ -1188,7 +1209,7 @@ impl App {
             .into()
     }
 
-    pub(crate) fn alignment_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn alignment_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.road().alignment_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };

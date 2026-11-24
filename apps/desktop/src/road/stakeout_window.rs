@@ -159,9 +159,19 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait StakeoutWindowApp {
+    fn open_stakeout(&mut self);
+    fn refresh_stakeout(&mut self);
+    fn stakeout_event(&mut self, event: Event) -> Task<Message>;
+    fn stakeout_sent(&mut self, path: Option<PathBuf>);
+    fn road_stakeout_view(&self) -> Element<'_, Message>;
+    fn stakeout_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl StakeoutWindowApp for App {
     /// Aplikasyon cetveli: the window on the road project's first corridor.
-    pub(crate) fn open_stakeout(&mut self) {
+    fn open_stakeout(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -208,7 +218,7 @@ impl App {
         };
     }
 
-    pub(crate) fn stakeout_event(&mut self, event: Event) -> Task<Message> {
+    fn stakeout_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.modules.road_mut().stakeout_window.as_mut() else {
             return Task::none();
         };
@@ -281,7 +291,7 @@ impl App {
     }
 
     /// The file chosen: the points written by `road.stakeout.send` (the dialog asked before writing over).
-    pub(crate) fn stakeout_sent(&mut self, path: Option<PathBuf>) {
+    fn stakeout_sent(&mut self, path: Option<PathBuf>) {
         let Some(mut path) = path else { return };
         let Some(w) = self.modules.road().stakeout_window.as_ref() else {
             return;
@@ -306,7 +316,7 @@ impl App {
         }
     }
 
-    pub(crate) fn road_stakeout_view(&self) -> Element<'_, Message> {
+    fn road_stakeout_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().stakeout_window else {
             return iced::widget::text("").into();
         };
@@ -440,7 +450,7 @@ impl App {
         Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn stakeout_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn stakeout_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().stakeout_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

@@ -1,6 +1,7 @@
 //! Boykesit (profile_window.rs, plan/road.md Y4): the window writes through `road.profiles`, each write one undo step;
 //! and its pictures.
 
+use crate::road_ext::*;
 use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::profile_window::Event as W;

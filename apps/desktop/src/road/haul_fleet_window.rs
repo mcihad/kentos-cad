@@ -195,9 +195,17 @@ impl Fleet {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait HaulFleetWindowApp {
+    fn open_haul_fleet(&mut self);
+    fn refresh_haul_fleet(&mut self);
+    fn haul_fleet_event(&mut self, event: Event);
+    fn haul_fleet_view<'a>(&'a self, x: &'a Fleet) -> Element<'a, Message>;
+}
+
+impl HaulFleetWindowApp for App {
     /// Kamyon filosu… from Taşıma planı: the window on its diagram and objective, the values typed before kept.
-    pub(crate) fn open_haul_fleet(&mut self) {
+    fn open_haul_fleet(&mut self) {
         let Some(w) = self.modules.road_mut().haul_plan_window.as_mut() else {
             return;
         };
@@ -209,7 +217,7 @@ impl App {
     }
 
     /// The fleet read again with the values as typed.
-    pub(crate) fn refresh_haul_fleet(&mut self) {
+    fn refresh_haul_fleet(&mut self) {
         let Some(doc) = &self.document else { return };
         let Some(w) = self.modules.road_mut().haul_plan_window.as_mut() else {
             return;
@@ -240,7 +248,7 @@ impl App {
     }
 
     /// An event of the window.
-    pub(crate) fn haul_fleet_event(&mut self, event: Event) {
+    fn haul_fleet_event(&mut self, event: Event) {
         let Some(w) = self.modules.road_mut().haul_plan_window.as_mut() else {
             return;
         };
@@ -269,7 +277,7 @@ impl App {
     }
 
     /// The window over Taşıma planı's.
-    pub(crate) fn haul_fleet_view<'a>(&'a self, x: &'a Fleet) -> Element<'a, Message> {
+    fn haul_fleet_view<'a>(&'a self, x: &'a Fleet) -> Element<'a, Message> {
         let field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &x.fields[k]).on_input(move |t| msg(Event::Field(k, t)));
         let ok = x.result.as_ref().and_then(|r| r.as_ref().ok());
         let mut form = Form::new()

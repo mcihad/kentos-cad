@@ -90,9 +90,17 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait PlatformWaterWindowApp {
+    fn open_platform_water(&mut self);
+    fn platform_water_event(&mut self, event: Event) -> Task<Message>;
+    fn platform_water_view(&self) -> Element<'_, Message>;
+    fn platform_water_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl PlatformWaterWindowApp for App {
     /// Platform suyu: the window on the road project's first corridor.
-    pub(crate) fn open_platform_water(&mut self) {
+    fn open_platform_water(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -113,7 +121,7 @@ impl App {
         let _ = self.platform_water_event(Event::Preview);
     }
 
-    pub(crate) fn platform_water_event(&mut self, event: Event) -> Task<Message> {
+    fn platform_water_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.modules.road_mut().platform_water_window.as_mut() else {
             return Task::none();
         };
@@ -152,7 +160,7 @@ impl App {
         self.platform_water_event(Event::Preview)
     }
 
-    pub(crate) fn platform_water_view(&self) -> Element<'_, Message> {
+    fn platform_water_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().platform_water_window else {
             return iced::widget::text("").into();
         };
@@ -221,7 +229,7 @@ impl App {
         d.view()
     }
 
-    pub(crate) fn platform_water_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn platform_water_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().platform_water_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

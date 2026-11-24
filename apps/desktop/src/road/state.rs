@@ -4,6 +4,7 @@
 //! tree) is the core's (terrain_work.rs, docs/adr/9199 §4.4). A new window of the module is added here and in its own
 //! file; `app.rs` stays as it is.
 
+use crate::road_ext::*;
 use iced::{Element, Task};
 
 use crate::app::{App, Message};
@@ -250,9 +251,15 @@ impl RoadState for crate::module_parts::ModuleStates {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait StateApp {
+    fn road_event(&mut self, event: Event) -> Task<Message>;
+    fn road_dialog_view(&self, kind: RoadDialogKind) -> Element<'_, Message>;
+}
+
+impl StateApp for App {
     /// A message of the module; a window's own handler is in its file.
-    pub(crate) fn road_event(&mut self, event: Event) -> Task<Message> {
+    fn road_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::LandxmlExport(path) => self.landxml_chosen(path),
             Event::LandxmlMachine(path) => self.landxml_machine_chosen(path),
@@ -285,7 +292,7 @@ impl App {
     }
 
     /// A window of the module.
-    pub(crate) fn road_dialog_view(&self, kind: RoadDialogKind) -> Element<'_, Message> {
+    fn road_dialog_view(&self, kind: RoadDialogKind) -> Element<'_, Message> {
         match kind {
             RoadDialogKind::Alignments => self.alignment_view(),
             RoadDialogKind::Profiles => self.road_profile_view(),

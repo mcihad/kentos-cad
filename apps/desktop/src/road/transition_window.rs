@@ -17,6 +17,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road_ext::*;
 use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
@@ -88,10 +89,18 @@ impl Transition {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait TransitionWindowApp {
+    fn open_transition(&mut self);
+    fn refresh_transition(&mut self);
+    fn transition_event(&mut self, event: Event);
+    fn transition_view<'a>(&'a self, x: &'a Transition) -> Element<'a, Message>;
+}
+
+impl TransitionWindowApp for App {
     /// Geçiş öner… from Dever: the window on the chosen schedule, the template, the speed and the relative gradient
     /// from Dever's Denetim.
-    pub(crate) fn open_transition(&mut self) {
+    fn open_transition(&mut self) {
         let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
         };
@@ -106,7 +115,7 @@ impl App {
     }
 
     /// The proposal read again on the chosen schedule as typed.
-    pub(crate) fn refresh_transition(&mut self) {
+    fn refresh_transition(&mut self) {
         let Some(doc) = &self.document else { return };
         let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
@@ -127,7 +136,7 @@ impl App {
     }
 
     /// An event of the window.
-    pub(crate) fn transition_event(&mut self, event: Event) {
+    fn transition_event(&mut self, event: Event) {
         let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
         };
@@ -161,7 +170,7 @@ impl App {
     }
 
     /// The window over Dever's.
-    pub(crate) fn transition_view<'a>(&'a self, x: &'a Transition) -> Element<'a, Message> {
+    fn transition_view<'a>(&'a self, x: &'a Transition) -> Element<'a, Message> {
         let templates: Vec<(String, String)> = self
             .document
             .as_ref()

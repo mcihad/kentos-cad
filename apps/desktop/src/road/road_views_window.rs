@@ -145,10 +145,19 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait RoadViewsWindowApp {
+    fn open_road_views(&mut self);
+    fn refresh_road_views(&mut self);
+    fn road_views_event(&mut self, event: Event) -> Task<Message>;
+    fn road_views_view(&self) -> Element<'_, Message>;
+    fn road_views_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl RoadViewsWindowApp for App {
     /// Görünüşler: the window on the road project's first alignment, its first profile and its first corridor or
     /// section set.
-    pub(crate) fn open_road_views(&mut self) {
+    fn open_road_views(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -231,7 +240,7 @@ impl App {
         w.set_station(s);
     }
 
-    pub(crate) fn road_views_event(&mut self, event: Event) -> Task<Message> {
+    fn road_views_event(&mut self, event: Event) -> Task<Message> {
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -302,7 +311,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn road_views_view(&self) -> Element<'_, Message> {
+    fn road_views_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().road_views_window else {
             return iced::widget::text("").into();
         };
@@ -474,7 +483,7 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn road_views_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn road_views_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().road_views_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

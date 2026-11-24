@@ -12,14 +12,24 @@ use kentos_native_application::{ExecutionContext, road_landxml};
 
 use crate::app::{App, Message};
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait RoadExchangeApp1 {
+    fn export_landxml(&mut self) -> Task<Message>;
+    fn export_landxml_machine(&mut self) -> Task<Message>;
+    fn ask_landxml(&mut self, title: &'static str, then: fn(Option<PathBuf>) -> Message) -> Task<Message>;
+    fn landxml_chosen(&mut self, path: Option<PathBuf>) -> Task<Message>;
+    fn landxml_machine_chosen(&mut self, path: Option<PathBuf>) -> Task<Message>;
+    fn landxml_written(&mut self, path: Option<PathBuf>, machine_control: bool) -> Task<Message>;
+}
+
+impl RoadExchangeApp1 for App {
     /// LandXML ver from the ribbon: where to write the file.
-    pub(crate) fn export_landxml(&mut self) -> Task<Message> {
+    fn export_landxml(&mut self) -> Task<Message> {
         self.ask_landxml("LandXML ver", |path| Message::from(crate::road::Event::LandxmlExport(path)))
     }
 
     /// Makine kontrolüne ver from the ribbon (docs/adr/1031): where to write the file.
-    pub(crate) fn export_landxml_machine(&mut self) -> Task<Message> {
+    fn export_landxml_machine(&mut self) -> Task<Message> {
         self.ask_landxml("Makine kontrolüne ver", |path| Message::from(crate::road::Event::LandxmlMachine(path)))
     }
 
@@ -48,12 +58,12 @@ impl App {
     }
 
     /// The file chosen: every surface and alignment with its profiles written (the dialog asked before writing over).
-    pub(crate) fn landxml_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
+    fn landxml_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
         self.landxml_written(path, false)
     }
 
     /// Makine kontrolüne ver's file chosen (docs/adr/1031).
-    pub(crate) fn landxml_machine_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
+    fn landxml_machine_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
         self.landxml_written(path, true)
     }
 
@@ -92,9 +102,15 @@ impl App {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait RoadExchangeApp2 {
+    fn import_landxml_alignments(&mut self) -> Task<Message>;
+    fn landxml_alignments_chosen(&mut self, path: Option<PathBuf>) -> Task<Message>;
+}
+
+impl RoadExchangeApp2 for App {
     /// LandXML'den aks al from the ribbon: which file.
-    pub(crate) fn import_landxml_alignments(&mut self) -> Task<Message> {
+    fn import_landxml_alignments(&mut self) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -117,7 +133,7 @@ impl App {
     }
 
     /// The file chosen: every alignment of it taken in with its profiles (`road.alignments.import`, one undo step).
-    pub(crate) fn landxml_alignments_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
+    fn landxml_alignments_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
         let Some(path) = path else { return Task::none() };
         let Some(doc) = self.document.as_mut() else { return Task::none() };
         let input = kentos_commands::AlignmentsImport {
@@ -136,9 +152,17 @@ impl App {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait RoadExchangeApp3 {
+    fn export_ifc(&mut self) -> Task<Message>;
+    fn ifc_chosen(&mut self, path: Option<PathBuf>) -> Task<Message>;
+    fn export_gltf(&mut self) -> Task<Message>;
+    fn gltf_chosen(&mut self, path: Option<PathBuf>) -> Task<Message>;
+}
+
+impl RoadExchangeApp3 for App {
     /// IFC ver from the ribbon: where to write the file.
-    pub(crate) fn export_ifc(&mut self) -> Task<Message> {
+    fn export_ifc(&mut self) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -163,7 +187,7 @@ impl App {
     }
 
     /// The file chosen: every alignment with its profiles (`file.export.ifc`; the dialog asked before writing over).
-    pub(crate) fn ifc_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
+    fn ifc_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
         let Some(mut path) = path else { return Task::none() };
         if path.extension().is_none() {
             path.set_extension("ifc");
@@ -188,7 +212,7 @@ impl App {
     }
 
     /// glTF ver from the ribbon (plan/road.md Y12.3, `gltf.export`): where to write the scene.
-    pub(crate) fn export_gltf(&mut self) -> Task<Message> {
+    fn export_gltf(&mut self) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -214,7 +238,7 @@ impl App {
 
     /// The file chosen: every surface and corridor that builds (`file.export.gltf`; the dialog asked before writing
     /// over).
-    pub(crate) fn gltf_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
+    fn gltf_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
         let Some(mut path) = path else { return Task::none() };
         if path.extension().is_none() {
             path.set_extension("glb");

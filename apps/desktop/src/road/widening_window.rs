@@ -17,6 +17,7 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::road_ext::*;
 use crate::road::RoadState;
 use crate::road;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
@@ -139,10 +140,19 @@ impl Widen {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait WideningWindowApp {
+    fn open_widening(&mut self);
+    fn refresh_widening(&mut self);
+    fn widening_event(&mut self, event: Event);
+    fn widening_view<'a>(&'a self, w: &'a crate::superelevation_window::Window, x: &'a Widen) -> Element<'a, Message>;
+    fn widening_vehicle(&self, x: &Widen) -> Option<(WideningVehicle, WideningRoad)>;
+}
+
+impl WideningWindowApp for App {
     /// Genişletme öner… from Dever: the window on the chosen schedule, the vehicle from Araç izi if it holds one, the
     /// template and speed from Dever's Denetim.
-    pub(crate) fn open_widening(&mut self) {
+    fn open_widening(&mut self) {
         let swept: Option<([String; 5], bool)> = self.modules.road().swept_window.as_ref().map(|s| {
             ([s.fields[0].clone(), s.fields[1].clone(), s.fields[3].clone(), s.fields[4].clone(), s.fields[5].clone()], s.trailer)
         });
@@ -163,7 +173,7 @@ impl App {
     }
 
     /// The suggestion read again on the chosen schedule as typed.
-    pub(crate) fn refresh_widening(&mut self) {
+    fn refresh_widening(&mut self) {
         let Some(doc) = &self.document else { return };
         let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
@@ -186,7 +196,7 @@ impl App {
     }
 
     /// An event of the window.
-    pub(crate) fn widening_event(&mut self, event: Event) {
+    fn widening_event(&mut self, event: Event) {
         let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
         };
@@ -226,7 +236,7 @@ impl App {
     }
 
     /// The window over Dever's.
-    pub(crate) fn widening_view<'a>(&'a self, w: &'a crate::superelevation_window::Window, x: &'a Widen) -> Element<'a, Message> {
+    fn widening_view<'a>(&'a self, w: &'a crate::superelevation_window::Window, x: &'a Widen) -> Element<'a, Message> {
         let templates: Vec<(String, String)> = self
             .document
             .as_ref()

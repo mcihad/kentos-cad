@@ -324,9 +324,32 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait CulvertWindowApp {
+    fn open_culverts(&mut self);
+    fn refresh_culvert(&mut self);
+    fn culvert_event(&mut self, event: Event) -> Task<Message>;
+    fn save_culvert(&mut self) -> Task<Message>;
+    fn draw_culvert(&mut self) -> Task<Message>;
+    fn remove_culvert(&mut self) -> Task<Message>;
+    fn culvert_view(&self) -> Element<'_, Message>;
+    fn culvert_frame<'a>(&'a self, w: &'a Window, body: kentos_ui::widget::grow::Grows<'a, Message>) -> Element<'a, Message>;
+    fn hydraulics_view<'a>(
+        &'a self,
+        w: &'a Window,
+        body: kentos_ui::widget::grow::Grows<'a, Message>,
+    ) -> kentos_ui::widget::grow::Grows<'a, Message>;
+    fn closure_view<'a>(
+        &'a self,
+        w: &'a Window,
+        body: kentos_ui::widget::grow::Grows<'a, Message>,
+    ) -> kentos_ui::widget::grow::Grows<'a, Message>;
+    fn culvert_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl CulvertWindowApp for App {
     /// Menfez: the window on the road project's first culvert, or a new one on its first corridor.
-    pub(crate) fn open_culverts(&mut self) {
+    fn open_culverts(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -387,7 +410,7 @@ impl App {
         w.closure = w.closure_input().map(|asked| asked.and_then(|q| road_culverts_closure::preview(&doc.model, &q)));
     }
 
-    pub(crate) fn culvert_event(&mut self, event: Event) -> Task<Message> {
+    fn culvert_event(&mut self, event: Event) -> Task<Message> {
         let kept = self
             .document
             .as_ref()
@@ -541,7 +564,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn culvert_view(&self) -> Element<'_, Message> {
+    fn culvert_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().culvert_window else {
             return iced::widget::text("").into();
         };
@@ -915,7 +938,7 @@ impl App {
         )
     }
 
-    pub(crate) fn culvert_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn culvert_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().culvert_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

@@ -441,9 +441,29 @@ fn chosen_row(w: &mut Window) -> Option<&mut Row> {
     w.chosen.and_then(|i| w.rows.get_mut(i))
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait VolumeWindowApp {
+    fn open_volumes(&mut self);
+    fn new_volume(&mut self);
+    fn volume_sheet(&mut self);
+    fn refresh_volume(&mut self);
+    fn volume_surface_named(&self, name: &str) -> Result<Option<String>, String>;
+    fn volume_surfaces(&self) -> Vec<(String, String)>;
+    fn volume_corridors(&self) -> Vec<(String, String)>;
+    fn volume_event(&mut self, event: Event) -> Task<Message>;
+    fn blank_volume_edit(operation: RoadEditOperation, id: &str) -> VolumesEdit;
+    fn volume_write(&mut self, edit: VolumesEdit) -> bool;
+    fn approve_volume(&mut self, on: bool) -> Task<Message>;
+    fn write_volume_sheet(&mut self) -> Task<Message>;
+    fn save_volumes(&mut self) -> Task<Message>;
+    fn road_volume_view(&self) -> Element<'_, Message>;
+    fn volume_form<'a>(&'a self, w: &'a Window, r: &'a Row, corridors: &[(String, String)]) -> kentos_ui::widget::Form<'a, Message>;
+    fn volume_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl VolumeWindowApp for App {
     /// Kübaj: the window on the road project's earthwork volumes.
-    pub(crate) fn open_volumes(&mut self) {
+    fn open_volumes(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -486,7 +506,7 @@ impl App {
     }
 
     /// Kübaj hesabı oluştur from the ribbon: the window with a new volume of the first corridor.
-    pub(crate) fn new_volume(&mut self) {
+    fn new_volume(&mut self) {
         self.open_volumes();
         if self.modules.road().volume_window.is_some() {
             let _ = self.volume_event(Event::New);
@@ -494,7 +514,7 @@ impl App {
     }
 
     /// Kübaj cetveli from the ribbon: the window on the first volume, to write its sheet.
-    pub(crate) fn volume_sheet(&mut self) {
+    fn volume_sheet(&mut self) {
         self.open_volumes();
     }
 
@@ -630,7 +650,7 @@ impl App {
             .map_or_else(Vec::new, |d| d.model.road_corridors().iter().map(|c| (c.id.clone(), c.name.clone())).collect())
     }
 
-    pub(crate) fn volume_event(&mut self, event: Event) -> Task<Message> {
+    fn volume_event(&mut self, event: Event) -> Task<Message> {
         let corridors = self.volume_corridors();
         let Some(w) = self.modules.road_mut().volume_window.as_mut() else {
             return Task::none();
@@ -948,7 +968,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn road_volume_view(&self) -> Element<'_, Message> {
+    fn road_volume_view(&self) -> Element<'_, Message> {
         use kentos_ui::widget::{Banner, Form};
         let Some(w) = &self.modules.road().volume_window else {
             return iced::widget::text("").into();
@@ -1372,7 +1392,7 @@ impl App {
         form
     }
 
-    pub(crate) fn volume_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn volume_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.road().volume_window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };

@@ -105,9 +105,19 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait RoadAlignmentFitWindowApp {
+    fn open_road_alignment_fit(&mut self);
+    fn refresh_road_alignment_fit(&mut self);
+    fn road_alignment_fit_event(&mut self, event: Event) -> Task<Message>;
+    fn make_road_alignment_fit(&mut self) -> Task<Message>;
+    fn road_alignment_fit_view(&self) -> Element<'_, Message>;
+    fn road_alignment_fit_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl RoadAlignmentFitWindowApp for App {
     /// Çizgiden aks: the window on the one selected line or open polyline.
-    pub(crate) fn open_road_alignment_fit(&mut self) {
+    fn open_road_alignment_fit(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -161,7 +171,7 @@ impl App {
         };
     }
 
-    pub(crate) fn road_alignment_fit_event(&mut self, event: Event) -> Task<Message> {
+    fn road_alignment_fit_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.modules.road_mut().road_alignment_fit_window.as_mut() else {
             return Task::none();
         };
@@ -211,7 +221,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn road_alignment_fit_view(&self) -> Element<'_, Message> {
+    fn road_alignment_fit_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().road_alignment_fit_window else {
             return iced::widget::text("").into();
         };
@@ -286,7 +296,7 @@ impl App {
         Frame::new(TITLE).scroll(body).footer(footer).width(960.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn road_alignment_fit_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn road_alignment_fit_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().road_alignment_fit_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

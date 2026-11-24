@@ -107,9 +107,19 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait RouteWindowApp {
+    fn open_route(&mut self);
+    fn refresh_route(&mut self);
+    fn route_event(&mut self, event: Event) -> Task<Message>;
+    fn draw_route(&mut self) -> Task<Message>;
+    fn route_view(&self) -> Element<'_, Message>;
+    fn route_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl RouteWindowApp for App {
     /// Ön güzergâh: the window on the road project's first surface, its places and limits to be written.
-    pub(crate) fn open_route(&mut self) {
+    fn open_route(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -155,7 +165,7 @@ impl App {
         };
     }
 
-    pub(crate) fn route_event(&mut self, event: Event) -> Task<Message> {
+    fn route_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.modules.road_mut().route_window.as_mut() else {
             return Task::none();
         };
@@ -210,7 +220,7 @@ impl App {
         Task::none()
     }
 
-    pub(crate) fn route_view(&self) -> Element<'_, Message> {
+    fn route_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().route_window else {
             return iced::widget::text("").into();
         };
@@ -305,7 +315,7 @@ impl App {
         Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn route_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn route_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().route_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

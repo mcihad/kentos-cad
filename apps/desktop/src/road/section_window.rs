@@ -533,9 +533,30 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait SectionWindowApp {
+    fn open_sections(&mut self);
+    fn new_section_set(&mut self);
+    fn new_template(&mut self);
+    fn refresh_sections(&mut self);
+    fn section_names(&self) -> Names;
+    fn section_event(&mut self, event: Event) -> Task<Message>;
+    fn chosen_saved_set(&mut self, what: &str) -> Option<SectionSetDef>;
+    fn rebind_set(&mut self) -> Task<Message>;
+    fn reload_sections(&mut self);
+    fn section_place(&mut self, def: &kentos_commands::SectionSetDef) -> Option<[f64; 2]>;
+    fn draw_sections(&mut self) -> Task<Message>;
+    fn section_sheets(&mut self) -> Task<Message>;
+    fn save_sections(&mut self) -> Task<Message>;
+    fn section_write<T: serde::Serialize>(
+        &mut self,
+        write: impl FnOnce(&mut ExecutionContext<'_>) -> kentos_commands::CommandResult<T>,
+    ) -> bool;
+}
+
+impl SectionWindowApp for App {
     /// Enkesit: the window on the road project's templates and sample line sets.
-    pub(crate) fn open_sections(&mut self) {
+    fn open_sections(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -572,7 +593,7 @@ impl App {
     }
 
     /// Kesit takımı oluştur from the ribbon: the window with a new set on the first alignment.
-    pub(crate) fn new_section_set(&mut self) {
+    fn new_section_set(&mut self) {
         self.open_sections();
         if self.modules.road().section_window.is_some() {
             let _ = self.section_event(Event::NewSet);
@@ -580,7 +601,7 @@ impl App {
     }
 
     /// Tip kesit oluştur from the ribbon: the window with a new template.
-    pub(crate) fn new_template(&mut self) {
+    fn new_template(&mut self) {
         self.open_sections();
         if self.modules.road().section_window.is_some() {
             let _ = self.section_event(Event::NewTemplate);
@@ -637,7 +658,7 @@ impl App {
         })
     }
 
-    pub(crate) fn section_event(&mut self, event: Event) -> Task<Message> {
+    fn section_event(&mut self, event: Event) -> Task<Message> {
         let (alignments, profiles, surfaces) = self.section_names();
         let revisions: Vec<(String, u32)> = self.document.as_ref().map_or_else(Vec::new, |d| {
             d.model.road_alignments().iter().map(|a| (a.id.clone(), a.revision)).collect()
@@ -1346,7 +1367,7 @@ struct Plan<'a> {
 }
 
 #[path = "section_window/editors.rs"]
-mod editors;
+pub(crate) mod editors;
 
 #[path = "section_window/charts.rs"]
 mod charts;

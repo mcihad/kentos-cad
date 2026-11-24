@@ -148,9 +148,20 @@ impl Window {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait RoadSheetsWindowApp {
+    fn open_road_sheets(&mut self);
+    fn refresh_road_sheets(&mut self);
+    fn road_sheets_event(&mut self, event: Event) -> Task<Message>;
+    fn road_sheets_input(&mut self) -> Result<RoadSheetsPlan, String>;
+    fn make_road_sheets(&mut self) -> Task<Message>;
+    fn road_sheets_view(&self) -> Element<'_, Message>;
+    fn road_sheets_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
+}
+
+impl RoadSheetsWindowApp for App {
     /// Yol paftaları: the window on the road project's first alignment built from its PIs.
-    pub(crate) fn open_road_sheets(&mut self) {
+    fn open_road_sheets(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -205,7 +216,7 @@ impl App {
         };
     }
 
-    pub(crate) fn road_sheets_event(&mut self, event: Event) -> Task<Message> {
+    fn road_sheets_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.modules.road_mut().road_sheets_window.as_mut() else {
             return Task::none();
         };
@@ -293,7 +304,7 @@ impl App {
         self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1)))
     }
 
-    pub(crate) fn road_sheets_view(&self) -> Element<'_, Message> {
+    fn road_sheets_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.road().road_sheets_window else {
             return iced::widget::text("").into();
         };
@@ -477,7 +488,7 @@ impl App {
         Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
     }
 
-    pub(crate) fn road_sheets_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn road_sheets_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.road().road_sheets_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
