@@ -390,7 +390,13 @@ araçlarını; `analysis` ağ ve yüzey çözümlemelerini; uygulama ve eklentil
   CBS'ye 43 dosyayla bağlıdır; CAD ile ortak CBS birbirine iki yönde bağlıdır (CAD → gis 30, gis → CAD 54). Crate'lere
   bölmek için `App`'in CAD ve CBS durumu, iletileri ve pencereleri modüllerinki gibi silinmiş türlere döner ve CAD ile
   ortak CBS arasındaki döngü kırılır (ya da ikisi bir crate kalır). Bu, modül paketlerinin toplamından büyük ayrı bir
-  iştir; amacı (CAD'siz bir CBS programı mı, yalnız derleme süresi mi) sahibin kararıdır. O güne dek
-  `module_deps.py` bu bağları izler, yalnız azalırlar.
+  iştir. **Karar (24 Kasım 2026, sahip): şimdilik beklenir.** Gerekçe:
+  - Hiçbir program bir katmanı bırakamaz: CBS'nin açıklamaları CAD çekirdeğinin, Harita ortak CBS altyapısını kullanır.
+  - Derleme kazancı işin küçük bir payına düşer: son 400 masaüstü commit'inin 314'ü çekirdeğe, 206'sı kabuğa dokunur
+    (kabuk en altta kalacağından kabuktaki değişiklik yine her şeyi derletir); yalnız CAD'e ya da ortak CBS'ye
+    dokunan 108'dir.
+  - Beklemek borcu büyütmez: `module_deps.py` bu bağları izler, yalnız azalırlar.
+  - Yeniden ele alınma ölçütleri: çekirdekteki derleme süresi (tek satırda 14,7 s) işi yavaşlatırsa ya da bir katmanı
+    taşımayan bir program istenirse. Derleme süresi hedef olursa önce kabuğun sık değişen bölümleri ölçülür.
 - Modül programlarının ayrı ikilileri ve paketlemesi (isteğe bağlı): bugün tek dosya ve bağlantılar (ADR 0802), her
   program kendi paketini kaydeder (§4.15); ayrı ikili, dağıtım boyutu ölçülünce karar verilir.

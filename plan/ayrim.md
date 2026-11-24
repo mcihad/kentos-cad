@@ -142,5 +142,6 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     dördünü de kaydeder.
   - Teslim tamam: dört modül kendi paketinde, çekirdekte modül yok (ADR 9199 §3.1'e göre çekirdek “CAD çekirdeği”
     paketidir); her adımda taban ve derleme süresi ölçüldü.
-  - Ayrı iş (sahibin kararı, ADR 9199 §5): çekirdeğin katmanlarını (kabuk, CAD, ortak CBS) ayrı crate'lere bölmek; kabuk
-    → cad 77, kabuk → gis 43, CAD ↔ gis 30/54 dosya. O güne dek bağları `module_deps.py` izler, yalnız azalırlar.
+  - Ayrı iş, şimdilik bekliyor (sahibin kararı, 24 Kasım 2026; gerekçe ve yeniden ele alınma ölçütleri ADR 9199 §5):
+    çekirdeğin katmanlarını (kabuk, CAD, ortak CBS) ayrı crate'lere bölmek; kabuk → cad 77, kabuk → gis 43, CAD ↔ gis
+    30/54 dosya. Bağları `module_deps.py` izler, yalnız azalırlar.
