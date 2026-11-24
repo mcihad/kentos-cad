@@ -31,8 +31,15 @@ const OPERATIONS: &str = include_str!("../../../../catalog/v1/operations.json");
 /// web's would say otherwise (docs/adr/0053: the desktop reads a zipped
 /// Shapefile; docs/adr/0058: no search box in the ribbon yet, Esc cancels first).
 /// The desktop's own titles of commands the frozen web inventory names otherwise: the tab row's search looks
-/// through the menus (Menülerde ara), as Office's search box does, not through a list of commands.
-const DESKTOP_TITLES: &[(&str, &str)] = &[("view.commandSearch", "Menülerde ara")];
+/// through the menus (Menülerde ara), not through a list of commands. The sheet designer centres the chosen items on
+/// the page, the margins or the selection at once (Hizala ▾, docs/adr/9305); the web chose there what the other
+/// alignments go by.
+const DESKTOP_TITLES: &[(&str, &str)] = &[
+    ("view.commandSearch", "Menülerde ara"),
+    ("sheet.alignTo.page", "Sayfanın ortasına hizala"),
+    ("sheet.alignTo.margins", "Kenar boşluklarının ortasına hizala"),
+    ("sheet.alignTo.selection", "Seçimin ortasına hizala"),
+];
 
 /// The desktop's own icons of commands of the frozen web inventory: Nokta draws a solid dot, as a layer without a
 /// point symbol now draws its points (docs/adr/1540).
@@ -54,6 +61,18 @@ const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
     (
         "view.fullscreen",
         "Uygulamayı ekranın tamamına yayar; aynı düğme ya da, iptal edilecek komut ve seçim yokken, Esc çıkar.",
+    ),
+    (
+        "sheet.alignTo.page",
+        "Paftada seçili öğeleri yatayda sayfanın ortasına getirir.",
+    ),
+    (
+        "sheet.alignTo.margins",
+        "Paftada seçili öğeleri yatayda kenar boşluklarının içinde kalan alanın ortasına getirir.",
+    ),
+    (
+        "sheet.alignTo.selection",
+        "Paftada seçili öğeleri yatayda seçimin ortasına getirir; en az iki öğe seçilir.",
     ),
 ];
 

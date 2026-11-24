@@ -94,7 +94,7 @@ CBS'ye özgü olmayan 1018 satırdan 41'i: geometry 7, none 20, processing 3, qu
 | `tool.stakeout` | Aplikasyon | none | — |  |
 | `tool.stationOffset` | Dik ayak ölç | shared | — |  |
 
-## Masaüstünde olmayan CAD tarafı öğeleri — 13
+## Masaüstünde olmayan CAD tarafı öğeleri — 11
 
 Envanterin masaüstü sütunu web'in donduğu gündeki hâlidir (ADR 0228); ekler masaüstündedir.
 
@@ -105,8 +105,6 @@ Envanterin masaüstü sütunu web'in donduğu gündeki hâlidir (ADR 0228); ekle
 - `map.profile` Boy kesit al… (pending)
 - `map.sheet` Pafta bölümlemesi… (pending)
 - `sheet.grid` Karelaj (pending)
-- `sheet.zoomIn` Yakınlaştır (partial)
-- `sheet.zoomOut` Uzaklaştır (partial)
 - `tool.stakeout` Aplikasyon (pending)
 - `tool.subdivide` İfraz (pending)
 - `workspace.disaster` Afet Analizi (pending)

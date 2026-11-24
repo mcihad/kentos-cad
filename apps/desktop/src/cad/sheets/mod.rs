@@ -1403,3 +1403,10 @@ mod print_check_tests;
 mod map_survey_scope_tests;
 
 mod mode;
+
+/// The designer's work as catalog commands (docs/adr/9305).
+mod commands;
+pub(crate) use commands::COMMANDS;
+#[cfg(test)]
+#[path = "command_tests.rs"]
+mod command_tests;

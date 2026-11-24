@@ -10186,7 +10186,7 @@
    "mcp": null,
    "note": "Paftanın görünümü.",
    "scope": "none",
-   "desktop": "partial",
+   "desktop": "implemented",
    "tests": 0
   },
   {
@@ -10200,7 +10200,7 @@
    "mcp": null,
    "note": "Paftanın görünümü.",
    "scope": "none",
-   "desktop": "partial",
+   "desktop": "implemented",
    "tests": 0
   },
   {

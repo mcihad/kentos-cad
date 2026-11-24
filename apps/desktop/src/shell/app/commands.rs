@@ -92,6 +92,10 @@ impl App {
                 kentos_sheet_ui::Message::MapFitDrawing
             } else { kentos_sheet_ui::Message::MapFitSelection }));
         }
+        // The sheet designer's work from Komut ara, the command line and quick access (sheets/commands.rs).
+        if let Some(task) = self.sheet_command(id) {
+            return task;
+        }
         if id.starts_with("cloud.") {
             return self.cloud_command(id);
         }
@@ -765,6 +769,10 @@ impl App {
         if let Some(on) = self.edit_checked(id) {
             return Some(on);
         }
+        // The paper's Seç and El (sheets/commands.rs).
+        if let Some(on) = self.sheet_checked(id) {
+            return Some(on);
+        }
         Some(match id {
             "draft.ortho" => self.draft.ortho,
             "view.split" => self.split.is_some(),
@@ -863,6 +871,10 @@ impl App {
         }
         // Düzenleme's (edit_commands.rs, docs/adr/9301).
         if let Some(on) = self.edit_available(id) {
+            return on;
+        }
+        // The sheet designer's: a sheet in front and the chosen items each needs (sheets/commands.rs).
+        if let Some(on) = self.sheet_available(id) {
             return on;
         }
         let doc = self.document.as_ref().map(|doc| &doc.model);
@@ -972,6 +984,9 @@ impl App {
         }
         if crate::edit_commands::COMMANDS.contains(&id) {
             return self.edit_why(id);
+        }
+        if crate::sheets::COMMANDS.contains(&id) {
+            return self.sheet_why(id);
         }
         match id {
             "layer.new" | "layer.newGroup" => self.tree_locked().map(str::to_owned),
