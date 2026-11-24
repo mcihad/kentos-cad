@@ -26,9 +26,13 @@ Bu incelemede düzeltilenler ayrıca yazılı (bölüm H); doğrulanmayanlar bö
 
 ### A1 — P0 — Üreteçlerin `--check`'i kırmızı
 
-825 betikten 506'sı yeşil, **40'ı kırmızı**. 258'i bu makinede koşamıyor: mpmath 91, pyproj 29, shapely 24, ifcopenshell
-13, scipy 6, ezdxf 6 betikte eksik; 102'si de çalışırken import hatası veriyor. 21'i `--check`'i başka biçimde alıyor,
-koşturulmadı.
+825 betikten 506'sı yeşil, **40'ı kırmızı**. 258'i bu makinede koşamıyor:
+
+- 156'sı başında yazılı bir paketi bulamıyor: mpmath 91, pyproj 29, shapely 24, ifcopenshell 13, scipy 6, ezdxf 6,
+  sympy 1 betikte (13 betikte birden çok paket eksik);
+- 102'si de çalışırken import hatası veriyor.
+
+21'i `--check`'i başka biçimde alıyor, koşturulmadı.
 
 Kırmızıların sınıfları (fark, depodan ayrı bir kopyada betik yazdırılarak ölçüldü):
 
@@ -98,13 +102,18 @@ diye koşan komut modüllerin sınamalarını atlıyor.
 - `tool.centerline`, `tool.edgeShift`, `tool.stationLabels`, `crs.points`, `file.import.ncn`, `file.export.dxf`
   açıklamaları.
 
-**Kod:** metin sabitlerinde 191 satır, yorumlarda 871 satır. Örnek yardım metni:
-`apps/desktop-road/src/volume_window.rs:1260` “NETPRO'nun adlarıyla”.
+**Kod** (`git grep` ile sayıldı; ADR, plan ve örnek dosyaları hariç):
+
+- Rust (`crates/`, `apps/`, sınamalar dahil): yorumlarda 831 satır; kodda 27 dosyada 55 satır, 46'sı metin sabiti.
+  Örnek yardım metni: `apps/desktop-road/src/volume_window.rs:1260` “NETPRO'nun adlarıyla”.
+- Python paketi (`python/kentos`): 153 satır, 132'si `cad/types.py`'de. Belge dizgileri `help()`'te ve SDK belgesinde
+  kullanıcıya görünür; örnek “AutoCAD's DIMZIN”, “AutoCAD's OVERKILL”, “A Netcad NCZ drawing's MPROJ block”.
+- Üreteçler (`scripts/fixtures`): 449 satır, çoğu doğrulamanın kaynağını söyleyen not.
 
 **Öneri:**
 
-- Arayüz metinlerini hemen temizle; yorumlar kuralın dediği gibi dokunuldukça.
-- Bekçi sınaması ekle: katalog ve masaüstü metin sabitleri.
+- Arayüz metinlerini ve Python paketinin belge dizgilerini hemen temizle; yorumlar kuralın dediği gibi dokunuldukça.
+- Bekçi sınaması ekle: katalog, masaüstü metin sabitleri ve `python/kentos`.
 - Biçim ve protokol adlarını ayrı tut (F4).
 
 ### A7 — P2 — Arayüz metninde ADR atfı
@@ -354,8 +363,10 @@ Yalnız rampa eğimi denetleniyor. TSE metni ücretli, bekleniyor (`bim-plan.md`
 
 ### D6 — P2 — Blok kitaplığı küçük
 
-KentOS'un temel kitaplığında 40 blok var (kapı, pencere, mobilya, ıslak hacim, mutfak, asansör, otopark yeri). Yok
-olanlar: ofis, okul ve hastane donatısı, engelli WC, peyzaj, üretici katalogları.
+Temel kitaplıkta (`catalog/v1/blocks/kentos-temel.kblok`) 40 blok var: kapı, pencere, ev mobilyası ve tek bir
+çalışma masası, ıslak hacim, mutfak, asansör, otopark yeri, kot ve kuzey işaretleri. Öbür kitaplık (`kentos-ofis.kblok`)
+4 bloklu bir büro kitaplığı örneği. Yok olanlar: ofis, okul ve hastane donatısı, engelli WC, peyzaj (ağaç, araç),
+üretici katalogları.
 
 ### D7 — P2 — Sunum çıktısı yok
 
