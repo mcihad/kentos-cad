@@ -26,6 +26,8 @@ impl Viewport {
             underlay_part: RefCell::new(None),
             status: Arc::new(Mutex::new(Status::default())),
             styled: RefCell::new(crate::style::scene::StyledCache::default()),
+            deep_styled: RefCell::new(crate::style::scene::StyledCache::default()),
+            deep: std::cell::Cell::new(None),
             line_types: RefCell::new(None),
             phasings: RefCell::new(None),
             zoomed_at: None,
@@ -354,7 +356,7 @@ impl Viewport {
             images: styling.map(|s| s.styles.images.clone()),
             settle_at: styling
                 .filter(|s| {
-                    s.screen_symbols || self.styled.try_borrow().is_ok_and(|c| c.scales_with_view())
+                    s.screen_symbols || self.styled_in_use().try_borrow().is_ok_and(|c| c.scales_with_view())
                 })
                 .and_then(|_| self.settling())
                 .max(self.moved_until()),
@@ -463,6 +465,8 @@ impl Viewport {
                 }
             }
         };
+        // Deep, the view's own scene of the objects round it, their paths split at its box (plan/render.md RM-24).
+        let deep = self.deep_box();
         let look = crate::style::scene::Look {
             phasing,
             line_types,
@@ -481,6 +485,7 @@ impl Viewport {
             origin: self.draw_origin(doc),
             view_build: kentos_native_style::View {
                 map: self.camera.map,
+                deep,
                 ..s.view_build
             },
             view_colors: s.view_colors,
@@ -512,10 +517,10 @@ impl Viewport {
             );
         }
         // A filter calling an extension's function worked out again with its answers: its layer is drawn again.
-        self.styled
-            .borrow_mut()
-            .filters_at(s.spatial.filters_version());
-        let scene = self.styled.borrow_mut().scene_themed(
+        let cache = self.styled_in_use();
+        cache.borrow_mut().filters_at(s.spatial.filters_version());
+        cache.borrow_mut().set_only(deep);
+        let scene = cache.borrow_mut().scene_themed(
             self.generation,
             &doc.model,
             nodes,
@@ -532,7 +537,7 @@ impl Viewport {
             2,
         );
         // The masks cutting with a layer's placed labels (docs/adr/0226 §3).
-        let asks = self.styled.borrow().label_masks().to_vec();
+        let asks = cache.borrow().label_masks().to_vec();
         let scene = with_mask_labels(scene, &asks, s.labels, &doc.model, look.origin);
         // The pictures the style engine made (heat maps, docs/adr/0213 §2.6): handed to the atlas by
         // key, the ones no longer drawn let go.
@@ -624,16 +629,43 @@ impl Viewport {
         if !screen || self.settling().is_none() {
             return now;
         }
-        match self.styled.try_borrow().ok().and_then(|c| c.built_scale()) {
+        match self.styled_in_use().try_borrow().ok().and_then(|c| c.built_scale()) {
             Some((built, true)) => built,
             _ => now,
+        }
+    }
+
+    /// The deep view's box (plan/render.md RM-24): from [`DEEP_PX_PER_M`] in, the view and three times its size round
+    /// it, kept while the view stays in it and has not zoomed twenty times into it; none again below half the
+    /// threshold, so a view at the threshold does not switch back and forth.
+    fn deep_box(&self) -> Option<Bounds> {
+        let unit = self.camera.metres_per_unit;
+        let unit = if unit.is_finite() && unit > 0.0 { unit } else { 1.0 };
+        let px_per_m = self.camera.scale / unit;
+        let was = self.deep.get();
+        let deep = px_per_m >= if was.is_some() { DEEP_PX_PER_M / 2.0 } else { DEEP_PX_PER_M };
+        let view = self.camera.visible_bounds();
+        let next = deep.then(|| match was {
+            Some(b) if !clip_stale(&view, &b) => b,
+            _ => construction_clip(&view),
+        });
+        self.deep.set(next);
+        next
+    }
+
+    /// The styled layers the view draws: the deep view's scene while there is one, else the drawing's.
+    fn styled_in_use(&self) -> &RefCell<crate::style::scene::StyledCache> {
+        if self.deep.get().is_some() {
+            &self.deep_styled
+        } else {
+            &self.styled
         }
     }
 
     /// The layers whose Nokta yoğunluğu left dots out since last asked, each once (docs/adr/0213 §2.4):
     /// name and count.
     pub fn take_dropped(&self) -> Vec<(String, u64)> {
-        self.styled
+        self.styled_in_use()
             .try_borrow_mut()
             .map(|mut c| c.take_dropped())
             .unwrap_or_default()

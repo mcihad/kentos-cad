@@ -354,6 +354,11 @@ pub struct Viewport {
     status: Arc<Mutex<Status>>,
     /// The drawing's layers through the style engine, as last built (docs/adr/0090).
     styled: RefCell<crate::style::scene::StyledCache>,
+    /// A deep view's scene (plan/render.md RM-24): the objects its box meets, their paths split at the box's edge;
+    /// drawn instead of `styled` while the view is deeper than [`DEEP_PX_PER_M`].
+    deep_styled: RefCell<crate::style::scene::StyledCache>,
+    /// The deep view's box while the view is deep (`Viewport::deep_box`).
+    deep: std::cell::Cell<Option<Bounds>>,
     /// The project's line types as the style engine draws them, by the drawing's session and generation: made again
     /// only when the drawing changed, not every frame (docs/adr/0313 §3).
     line_types: RefCell<Option<KeptLineTypes>>,
@@ -453,6 +458,12 @@ fn construction_clip(view: &Bounds) -> Bounds {
         max_y: view.max_y + 3.0 * h,
     }
 }
+
+/// From this deep (logical pixels per metre) a view draws its deep scene (plan/render.md RM-24), back below half of
+/// it. A segment is placed on the GPU as well as its ends are near the camera (2⁻²⁴ of their distance): a 2 km
+/// segment through a view at 10 000 px/m was off by 0.6 px. From here the view's box is a few dozen metres wide and
+/// holds few objects, so its scene builds in a moment.
+pub(crate) const DEEP_PX_PER_M: f64 = 500.0;
 
 /// Whether the construction lines must be clipped again: the view left the
 /// box, or zoomed in so far that the box holds needlessly long lines.

@@ -884,3 +884,57 @@ fn a_table_whose_words_alone_changed_leaves_its_part() {
         assert_eq!(rebuilt, 1, "{n}: the table's part again");
     }
 }
+
+/// plan/render.md RM-24: a deep view's scene builds only the objects its box meets, and splits their edges where they
+/// cross the box's edge, so the pieces in the view have their ends near it.
+#[test]
+fn a_deep_view_builds_the_objects_its_box_meets_split_at_its_edge() {
+    use kentos_native_style::batches::BatchKind;
+    let library = kentos_native_style::system::library();
+    let doc = drawing(400, None);
+    let mut spatial = Spatial::of(&doc.model);
+    spatial.sync(&doc.model);
+    // The numbers the strokes of a scene hold: as many as its segments, six a segment.
+    let strokes = |scene: &StyledScene| -> usize {
+        scene
+            .layers
+            .iter()
+            .flat_map(|p| &p.layer.batches)
+            .filter(|b| matches!(b.kind, BatchKind::Stroke { .. }))
+            .map(|b| b.range.len())
+            .sum()
+    };
+    let deep_scene = |deep: Bounds| {
+        let mut cache = StyledCache::default();
+        cache.set_only(Some(deep));
+        let mut l = look(&doc);
+        l.view_build.deep = Some(deep);
+        let view = Bounds {
+            min_x: deep.min_x + 0.4,
+            min_y: deep.min_y + 0.4,
+            max_x: deep.max_x - 0.4,
+            max_y: deep.max_y - 0.4,
+        };
+        cache.scene(1, &doc.model, spatial.store(), &library, &l, &view, 1000.0, true, 1)
+    };
+    let whole = StyledCache::default().scene(1, &doc.model, spatial.store(), &library, &look(&doc), &VIEW, 1.0, true, 1);
+    // In the first parcel, clear of its edges and of the first road below it: the parcel and the road, whose box
+    // meets it, as they are.
+    let inside = deep_scene(Bounds {
+        min_x: 486_010.0,
+        min_y: 4_420_010.0,
+        max_x: 486_012.0,
+        max_y: 4_420_012.0,
+    });
+    // Across the parcel's lower edge, which the road crosses too: each split once more on both sides.
+    let across = deep_scene(Bounds {
+        min_x: 486_011.5,
+        min_y: 4_419_999.0,
+        max_x: 486_013.5,
+        max_y: 4_420_001.0,
+    });
+    let (w, i, a) = (strokes(&whole), strokes(&inside), strokes(&across));
+    assert!(i > 0 && i * 50 < w, "the deep scene holds the parcel and the road alone: {i} of {w}");
+    // Parcel 4 + road 2 segments; split, parcel 6 + road 4.
+    assert_eq!(i / 6 * 10, a / 6 * 6, "{i} → {a}");
+}

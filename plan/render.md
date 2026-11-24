@@ -330,8 +330,10 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Adım 1, çekirdek: `geom::deep::split_at_box` (kenar kutu sınırında bölünür; noktalar kenarın üstünde) ve stil
     çekirdeğinin `View::deep`'i (yollar ve halkalar bölünür; bloklar açılarak çizilir, uzak düzeyler kapanır).
     Kutuyu kesmeyen yol olduğu gibi kalır. Sınamalar: geometri 6, stil çekirdeği 2.
-  - [ ] Adım 2, masaüstü: derin sahne (kutudaki nesneler, ayrı önbellek), sınır 10⁷ px/m, gerçek pencere kanıtı.
-  - [ ] Adım 3: yayların yalnız kutudaki açı aralığı 0,25 piksellik kirişle.
+  - [x] Adım 2, masaüstü ([ADR 9220](../docs/adr/9220-deep-view-scene.md)): 500 px/m'den derin sahne; yalnız kutunun
+    değdiği nesneler, ayrı önbellekte. 627 ve 10 000 px/m'de resim düzenli sahneninkiyle aynı (0 piksel fark).
+  - [ ] Adım 3: yayların yalnız kutudaki açı aralığı 0,25 piksellik kirişle (RM-09 ile); sonra sınır 10⁴ → 10⁷ px/m.
+    Stilli yol daireleri en çok 72 kirişle çiziyor: ekranda 263 pikseli geçen yarıçapta sapma çeyrek pikseli aşıyor.
 
 ## Kabul ölçütleri
 
