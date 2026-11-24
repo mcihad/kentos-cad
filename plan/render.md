@@ -243,15 +243,11 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Yazılan: ağırlık merkezi tek parselde kalan 1 117'sine, Netcad'in kuralıyla (ağırlık merkezine ortalı, 3 m).
       1 106'sı Netcad'in etiketiyle aynı yerde ve aynı metinde, farklı numara yok.
     - Atlanan: üst üste parsellerdeki 1 199'u. Orada Netcad başka bir alandan numara yazıyor, o alan okunamıyor.
-  - [ ] Netcad sembol kodları (`S84`, 6 664 nokta) çizimsiz. Sahibin kararı: yönetmelik lejantından KentOS'un kendi
-    sembolleri.
-    - Bulgu (24 Kasım): Netcad'in DXF'i planda kullanılan 53 kodun çizimini blok olarak taşıyor. Bunlar kullanım
-      alanlarının lejant işaretleri: üçgen içinde ANA/İLK/ORTA/LİSE, kare içinde TİCK/BHA/İHA/ASM, cami kubbesi,
-      kitap. Taslak tabaka: `.run/rm18-semboller/tabaka.png`, yalnız tanıma için.
-    - KentOS'un sistem kütüphanesinde bu işaretler MPYY alan sembollerinin `centroidMarker` katmanı olarak var. UİP
-      kademesinde 208 alan dolgusu, 72 çizgi, 13 nokta işareti.
-    - Sıradaki: kod → MPYY sembolü tablosu (yönetmeliğin lejant adlarıyla) ve bu işaretlerden türetilen nokta
-      sembolleri.
+  - [x] Netcad sembol kodları lejant işaretiyle ([ADR 9218](../docs/adr/9218-ncz-symbols-as-legend-marks.md), sahibin
+    kararı: yönetmelik lejantından).
+    - Stil çekirdeği: noktaya verilen alan sembolü ağırlık merkezi işaretini noktada çiziyor (önce hiçbir şey).
+    - NCZ okuyucusu 47 kodu MPYY uygulama imar planı sembollerine eşliyor: 4 533 nokta lejant işaretiyle.
+    - Bilerek dışarıda: S101 (parklar; Netcad boş çiziyor), özel tesislerin “Ö” işaretleri (lejantta yok).
   - [ ] Koruma bantlarının sembollü çizgi tipi ve koruma alanının deseni yok. Sahibin kararı: NCZ'nin stil kayıtları
     çözülecek.
 - [ ] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek.

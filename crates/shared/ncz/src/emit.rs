@@ -197,6 +197,8 @@ struct Emitter {
     by_name: HashMap<String, usize>,
     truncated: u32,
     renamed: BTreeSet<String>,
+    /// Symbol points drawn with the zoning legend's mark (`legend_mark`), and the codes without one, counted.
+    legend: (u32, BTreeMap<String, u32>),
     widths: u32,
     thinnest: f64,
     widest: f64,
@@ -281,6 +283,7 @@ impl Emitter {
             by_name: HashMap::new(),
             truncated: 0,
             renamed: BTreeSet::new(),
+            legend: (0, BTreeMap::new()),
             widths: 0,
             thinnest: 0.0,
             widest: 0.0,
@@ -395,7 +398,23 @@ impl Emitter {
                             note(&mut b, "Ad", &e.name);
                         }
                     }
-                    Kind::Symbol => note(&mut b, "Sembol", &e.label),
+                    Kind::Symbol => {
+                        note(&mut b, "Sembol", &e.label);
+                        // The zoning legend's mark the code stands for, from KentOS's MPYY symbols (docs/adr/9218).
+                        match legend_mark(e.label.trim()) {
+                            Some((symbol, read)) => {
+                                b.symbol = Some(symbol.to_owned());
+                                if let Some((key, value)) = read {
+                                    b.attrs.insert(key.to_owned(), value.to_owned());
+                                }
+                                self.legend.0 += 1;
+                            }
+                            None if !e.label.trim().is_empty() => {
+                                *self.legend.1.entry(e.label.trim().to_owned()).or_default() += 1;
+                            }
+                            None => {}
+                        }
+                    }
                     _ => note(&mut b, "Blok", &e.label),
                 }
                 self.grow(v(c));
@@ -1184,6 +1203,71 @@ fn wrapped(text: &str, width: f64, height: f64, font: Font) -> Vec<String> {
 /// thousandths (`PROGRESS_TOTAL`), and may stop it (`Err(STOPPED)`). A file
 /// that holds no NCZ blocks at all is refused with the reason; one whose
 /// blocks hold no geometry reads as empty, and the report says why.
+/// The zoning legend's mark a Netcad zoning plan's symbol code stands for (plan/render.md RM-18, docs/adr/9218): the
+/// Mekânsal Planlar Yapım Yönetmeliği area symbol of KentOS's system library (MPYY, uygulama imar planı) whose centroid
+/// mark it is, drawn at the point (a fill symbol on a point draws its centroid marks there), and the attribute that
+/// mark reads (a trade area's level: T1, T2).
+///
+/// Read from the Sivas plan: each code stands inside one kind of area (S75 in 63 kindergarten areas, S96 in the 277
+/// mosque areas…), and its drawing in Netcad's own DXF is that legend's mark (ANA in a triangle, a dome). Netcad's
+/// drawings are not copied: the marks are KentOS's own of the regulation's legend. Codes without one stay a point with
+/// their code: S101 (2 141 points in parks, which Netcad draws empty), the private institutions' Ö marks (S180, S181,
+/// S185), which the legend has no row for, and S15 (one point).
+fn legend_mark(code: &str) -> Option<(&'static str, Option<(&'static str, &'static str)>)> {
+    let symbol = match code {
+        // A trade area's mark reads its level: T1, T2.
+        "S6" => return Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "1")))),
+        "S7" => return Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "2")))),
+        "S1" => "mpyy.uip.ortak-ozel-kanun.teknoloji-gelistirme-bolgesi",
+        "S9" => "mpyy.uip.calisma.ticaret-konut-alani",
+        "S10" => "mpyy.uip.calisma.ticaret-turizm-alani",
+        "S12" => "mpyy.uip.calisma.belediye-hizmet-alani",
+        "S13" => "mpyy.uip.calisma.idari-hizmet-alani",
+        "S14" => "mpyy.uip.calisma.resmi-kurum-alani",
+        "S16" => "mpyy.uip.calisma.akaryakit-ve-servis-istasyonu-alani",
+        "S17" => "mpyy.uip.calisma.kucuk-sanayi-alani",
+        "S18" => "mpyy.uip.calisma.depolama-alani",
+        "S20" => "mpyy.uip.calisma.pazar-alani",
+        "S21" => "mpyy.uip.calisma.askeri-alan",
+        "S22" => "mpyy.uip.calisma.beton-santrali",
+        "S25" => "mpyy.uip.turizm.otel-alani",
+        "S32" => "mpyy.uip.turizm.gunubirlik-tesis-alani",
+        "S59" => "mpyy.uip.bugunku.tarimsal-nitelikli-alan",
+        "S75" => "mpyy.uip.egitim.anaokulu-alani",
+        "S76" => "mpyy.uip.egitim.ilkokul-alani",
+        "S77" => "mpyy.uip.egitim.ortaokul-alani",
+        "S78" => "mpyy.uip.egitim.lise-alani",
+        "S79" => "mpyy.uip.egitim.ozel-egitim-alani",
+        "S80" => "mpyy.uip.egitim.mesleki-ve-teknik-ogretim-tesisi-alani",
+        "S81" => "mpyy.uip.egitim.yuksek-ogretim-tesisi-alani",
+        "S82" => "mpyy.uip.egitim.halk-egitim-merkezi",
+        "S83" => "mpyy.uip.saglik.saglik-tesisi-alani",
+        "S84" => "mpyy.uip.saglik.ozel-saglik-tesisi-alani",
+        "S86" => "mpyy.uip.saglik.aile-sagligi-merkezi",
+        "S87" => "mpyy.uip.sosyal-kulturel.sosyal-tesis-alani",
+        "S88" => "mpyy.uip.sosyal-kulturel.kulturel-tesis-alani",
+        "S90" => "mpyy.uip.sosyal-kulturel.acik-spor-tesisi-alani",
+        "S91" => "mpyy.uip.sosyal-kulturel.kapali-spor-tesisi-alani",
+        "S96" => "mpyy.uip.ibadet.cami",
+        "S103" => "mpyy.uip.acik-yesil.rekreasyon-alani",
+        "S108" => "mpyy.uip.acik-yesil.meydan",
+        "S113" => "mpyy.uip.acik-yesil.mezarlik-alani",
+        "S114" => "mpyy.uip.acik-yesil.korunacak-bahce",
+        "S118" => "mpyy.uip.karayollari.genel-otopark-alani",
+        "S122" => "mpyy.uip.ortak-karayollari.terminal-otogar",
+        "S146" => "mpyy.uip.enerji.yenilenebilir-enerji-kaynaklarina-dayali-uretim-tesisi-alani",
+        "S152" => "mpyy.uip.enerji.trafo-alani",
+        "S153" => "mpyy.uip.karayollari.elektronik-haberlesme-altyapi-alani",
+        "S155" => "mpyy.uip.ortak-atik.su-kaynaklari-toplama-yeri-kaptaj-alani",
+        "S160" => "mpyy.uip.ortak-atik.teknik-altyapi-alani",
+        "S164" => "mpyy.uip.calisma.ticaret-turizm-konut-alani",
+        "S165" => "mpyy.uip.calisma.toplu-isyerleri",
+        "S175" => "mpyy.uip.calisma.ticaret-alani",
+        _ => return None,
+    };
+    Some((symbol, None))
+}
+
 /// The height Netcad writes a parcel's number at from the parcel's label, metres: what its own DXF of the Sivas plan
 /// shows at the 1:1000 an NCZ opens at (docs/adr/9217).
 const PARCEL_NUMBER_HEIGHT: f64 = 3.0;
@@ -1414,6 +1498,19 @@ pub fn read(
         );
     }
     entities.extend(numbers);
+    let (marked, unmarked) = std::mem::take(&mut em.legend);
+    if marked > 0 || !unmarked.is_empty() {
+        let left: u32 = unmarked.values().sum();
+        let codes: Vec<String> = unmarked.iter().map(|(code, n)| format!("{code} ({n})")).collect();
+        report.about(
+            "Plan sembolü",
+            &format!(
+                "{marked} sembol noktası Mekânsal Planlar Yapım Yönetmeliği lejantının işaretiyle çizildi (KentOS'un \
+                 MPYY sembolleri). {left} nokta yalnız kodunu taşıyor; lejantta karşılığı olmayan kodlar: {}.",
+                if codes.is_empty() { "yok".to_owned() } else { codes.join(", ") }
+            ),
+        );
+    }
     for e in &mut entities {
         e.base_mut().id = 0;
     }
@@ -1492,6 +1589,33 @@ mod tests {
             face: Default::default(),
             path: None,
         })
+    }
+
+    /// Every legend mark a code stands for is a symbol of KentOS's system library, an area symbol of the uygulama
+    /// imar planı with a centroid mark (docs/adr/9218); a trade area's level is read by its mark.
+    #[test]
+    fn the_legend_marks_are_the_system_librarys_area_symbols() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../native/style/assets/system-library.kstil");
+        let library: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("the library")).expect("json");
+        let items = library["items"].as_array().expect("items");
+        let mut found = 0;
+        for n in 0..=200 {
+            let code = format!("S{n}");
+            let Some((id, read)) = legend_mark(&code) else { continue };
+            found += 1;
+            let item = items.iter().find(|i| i["id"] == id).unwrap_or_else(|| panic!("{code}: {id} is not in the library"));
+            let layers = item["symbol"]["layers"].as_array().expect("layers");
+            assert_eq!(item["symbol"]["type"], "fill", "{code}");
+            assert!(layers.iter().any(|l| l["type"] == "centroidMarker"), "{code}: {id} has a centroid mark");
+            if let Some((key, _)) = read {
+                assert!(item.to_string().contains(&format!("[{key}]")), "{code}: its mark reads {key}");
+            }
+        }
+        assert_eq!(found, 47);
+        assert_eq!(legend_mark("S6"), Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "1")))));
+        assert_eq!(legend_mark("S75"), Some(("mpyy.uip.egitim.anaokulu-alani", None)));
+        assert_eq!(legend_mark("S101"), None, "Netcad draws a park's mark empty");
+        assert_eq!(legend_mark("S180"), None, "a private institution's Ö mark has no row in the legend");
     }
 
     #[test]

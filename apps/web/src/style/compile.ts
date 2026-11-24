@@ -29,8 +29,9 @@ const styleCompile = op<(input: unknown) => Primitives>('styleCompile');
  * Draws a symbol on an object's geometry. A symbol of another class adapts,
  * so any symbol can be given to any object: a line symbol on an area draws
  * its edges, a marker symbol sits at an area's inside point or a line's
- * middle, a fill symbol fills a closed line; a fill symbol on an open line
- * or a point, and a line symbol on a point, draw nothing.
+ * middle, a fill symbol fills a closed line, and on a point draws its
+ * centroid marks there (the point stands for an area, docs/adr/9218); a fill
+ * symbol on an open line, and a line symbol on a point, draw nothing.
  */
 export function compileSymbol(symbol: Symbol, entity: Entity, opts: CompileOptions = {}): Primitives {
   return styleCompile({

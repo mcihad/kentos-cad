@@ -82,7 +82,7 @@ DXF'in nesne çokluğu Netcad'in aktarımından geliyor:
   - NCZ'nin çizgi tipi ve desen kayıtlarının çözülmesi.
 - Bunlar sahibe soruldu. Kararları (24 Kasım):
   - parsel numarası yalnız eksiklere ([ADR 9217](9217-ncz-parcel-numbers-from-labels.md));
-  - semboller yönetmelik lejantından KentOS'un kendi çizimiyle;
+  - semboller yönetmelik lejantından KentOS'un kendi çizimiyle ([ADR 9218](9218-ncz-symbols-as-legend-marks.md));
   - NCZ'nin çizgi tipi ve desen kayıtları çözülecek.
 
 ## Uygulama

@@ -860,6 +860,32 @@ fn one_symbol_draws_nothing_on_text_and_dimensions() {
     );
 }
 
+/// A point stands for an area at the area's own point (an NCZ plan's legend mark, docs/adr/9218): a fill symbol on
+/// it draws its centroid marks there and none of its fills; on an area the same symbol fills and marks the centroid.
+#[test]
+fn a_fill_symbol_on_a_point_draws_its_centroid_marks_there() {
+    let symbol = r##"{"type":"fill","layers":[{"id":"f","type":"simpleFill","color":"#00A9E6"},{"id":"c","type":"centroidMarker","marker":{"type":"marker","layers":[{"id":"m","type":"shape","shape":"triangle","size":10.5,"fill":"paper","stroke":"ink","strokeWidth":0.3}]}}]}"##;
+    let call = |entity: &str| {
+        let input = format!(
+            r#"{{"symbol":{symbol},"entity":{entity},"layerName":"","kindLabel":"","vertices":null,"plotScale":1000,"assets":{{}}}}"#
+        );
+        Json::parse(&compile_one(&Json::parse(&input).expect("input")).expect("compile")).expect("output")
+    };
+    let point = call(r#"{"id":1,"layerId":"a","attrs":{},"kind":"point","p":{"x":12.5,"y":-4}}"#);
+    let count = |out: &Json, key: &str| match out.get(key) {
+        Json::Arr(items) => items.len(),
+        _ => 0,
+    };
+    assert_eq!((count(&point, "fills"), count(&point, "strokes"), count(&point, "markers")), (0, 0, 1), "the mark alone");
+    let Json::Arr(marks) = point.get("markers") else { panic!("markers") };
+    let at = marks[0].get("at");
+    assert_eq!((number(at.get("x")), number(at.get("y"))), (Some(12.5), Some(-4.0)), "at the point itself");
+    let area = call(
+        r#"{"id":1,"layerId":"a","attrs":{},"kind":"polygon","pts":[{"x":0,"y":0},{"x":10,"y":0},{"x":10,"y":10},{"x":0,"y":10}]}"#,
+    );
+    assert_eq!((count(&area, "fills"), count(&area, "markers")), (1, 1), "an area is filled and marked");
+}
+
 /// A leader (docs/adr/0146 §5) through its set: its line and landing
 /// stroked with the line symbol, its filled arrowhead with the fill symbol,
 /// solid; an open arrowhead's sides are strokes, no fill.
