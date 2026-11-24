@@ -68,6 +68,10 @@ fn whole_layers_as_frozen() {
         .as_array()
         .unwrap_or_else(|| panic!("layers"));
     let mut numbers_checked = 0;
+    // `KENTOS_WRITE_STYLE_CASES=1`: a change meant to change the layers' numbers writes them anew (the web that
+    // recorded them is paused, ADR 0228); the batches must still be the frozen ones.
+    let writing = std::env::var_os("KENTOS_WRITE_STYLE_CASES").is_some();
+    let mut rewritten: Vec<Vec<f32>> = Vec::new();
     for (i, c) in cases.iter().enumerate() {
         let mut store = Store::new();
         store
@@ -120,6 +124,11 @@ fn whole_layers_as_frozen() {
         assert_eq!(batches, c["batches"], "katman {i}: topluluklar");
         let want = nums(&c["data"]);
         assert_eq!(out.data.len(), want.len(), "katman {i}: sayılar");
+        if writing {
+            rewritten.push(out.data.clone());
+            numbers_checked += want.len();
+            continue;
+        }
         for (k, (got, want)) in out.data.iter().zip(&want).enumerate() {
             // The fixture's numbers are float32 values in their fewest digits, read through a double.
             assert_eq!(
@@ -131,4 +140,50 @@ fn whole_layers_as_frozen() {
         numbers_checked += want.len();
     }
     assert!(numbers_checked > 10_000, "{numbers_checked}");
+    if writing {
+        write_layer_numbers(&rewritten);
+    }
+}
+
+/// The layers' `data` written anew in fixtures/style/v1/cases.json, each number that changed as the fewest digits of
+/// its float32 (the recorder's form), every other byte of the file as it was: a case is one line of the `layers` list.
+fn write_layer_numbers(layers: &[Vec<f32>]) {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/style/v1/cases.json");
+    let text = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{path}: {e}"));
+    let start = text.find("\n \"layers\": [\n").expect("the layers' list");
+    let (head, rest) = text.split_at(start);
+    let mut out = String::with_capacity(text.len());
+    out.push_str(head);
+    let mut case = 0;
+    let mut changed = 0;
+    for line in rest.split_inclusive('\n') {
+        let Some(at) = line.find("\"data\":[").filter(|_| line.trim_start().starts_with('{') && case < layers.len()) else {
+            out.push_str(line);
+            continue;
+        };
+        let open = at + "\"data\":[".len();
+        let close = open + line[open..].find(']').expect("the data's end");
+        let old: Vec<&str> = if close > open { line[open..close].split(',').collect() } else { Vec::new() };
+        assert_eq!(old.len(), layers[case].len(), "katman {case}: sayılar");
+        let new: Vec<String> = old
+            .iter()
+            .zip(&layers[case])
+            .map(|(was, now)| {
+                let same = num(&serde_json::from_str::<Json>(was).expect("a number")) as f32;
+                if same.to_bits() == now.to_bits() {
+                    (*was).to_owned()
+                } else {
+                    changed += 1;
+                    if now.is_nan() { "\"NaN\"".to_owned() } else { format!("{now}") }
+                }
+            })
+            .collect();
+        out.push_str(&line[..open]);
+        out.push_str(&new.join(","));
+        out.push_str(&line[close..]);
+        case += 1;
+    }
+    assert_eq!(case, layers.len(), "every case's line");
+    std::fs::write(path, out).unwrap_or_else(|e| panic!("{path}: {e}"));
+    println!("{changed} sayı yeniden yazıldı");
 }

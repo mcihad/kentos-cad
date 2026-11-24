@@ -7,7 +7,11 @@ struct StrokeOut {
   @location(2) s0: f32,
   @location(3) @interpolate(flat) ends: u32,
   @location(4) @interpolate(flat) halfW: f32,
+  @location(5) @interpolate(flat) joins: vec4f,
 };
+// A join's turn from its code (docs/adr/9226): 1024 steps a half turn, 1024 straight on; 0 is no code.
+fn turnOf(code: u32) -> f32 { return (f32(code) - 1024.0) * (3.14159265 / 1024.0); }
+// mt.y: the ends (bits 0, 1: the path's start and end take the caps), then the start's and the end's join codes.
 fn strokeVertex(vi: u32, seg: vec4f, mt: vec2f, low: vec4f) -> StrokeOut {
   let halfW = max(st.a.x * weightK(), 1.0) * 0.5;
   let blur = max(st.b.x * unitK(), 1.0);
@@ -27,8 +31,24 @@ fn strokeVertex(vi: u32, seg: vec4f, mt: vec2f, low: vec4f) -> StrokeOut {
   o.local = vec2f(along, across);
   o.len = len;
   o.s0 = mt.x * frame.pxPerM;
-  o.ends = u32(mt.y + 0.5);
+  let packed = u32(mt.y + 0.5);
+  o.ends = packed & 3u;
   o.halfW = halfW;
+  // A join is split along its bisector (docs/adr/9226): each segment draws its own side of the joint, the union of
+  // the two, so a seen-through line is not drawn twice at its corners. The sides' normals in the segment's own axes
+  // (along, across); zero where the segment draws its whole end (no code, or a segment too short for its two
+  // bisectors to keep apart within its band).
+  let cs = (packed >> 2u) & 2047u;
+  let ce = (packed >> 13u) & 2047u;
+  let ts = turnOf(cs);
+  let te = turnOf(ce);
+  let reach = select(0.0, abs(tan(0.5 * ts)), cs != 0u) + select(0.0, abs(tan(0.5 * te)), ce != 0u);
+  var joins = vec4f(0.0);
+  if (len > ext * reach + 1.0) {
+    if (cs != 0u) { joins = vec4f(normalize(vec2f(1.0 + cos(ts), -sin(ts))), joins.zw); }
+    if (ce != 0u) { joins = vec4f(joins.xy, normalize(vec2f(1.0 + cos(te), sin(te)))); }
+  }
+  o.joins = joins;
   return o;
 }
 @vertex fn strokeVs(@builtin(vertex_index) vi: u32, @location(0) seg: vec4f, @location(1) mt: vec2f) -> StrokeOut {
@@ -52,6 +72,10 @@ fn capCover(x: f32, y: f32, cap: u32, halfW: f32) -> f32 {
 }
 @fragment fn strokeFs(i: StrokeOut) -> @location(0) vec4f {
   let x = i.local.x;
+  // The joins' sides (docs/adr/9226): the segment before draws behind the start's bisector, the one after beyond the
+  // end's; a hundredth of a pixel on the line is drawn by both, so no pixel is left out.
+  if (dot(vec2f(x, i.local.y), i.joins.xy) < -0.01) { discard; }
+  if (dot(vec2f(x - i.len, i.local.y), i.joins.zw) > 0.01) { discard; }
   let y = abs(i.local.y);
   var a: f32;
   if (x < 0.0) {

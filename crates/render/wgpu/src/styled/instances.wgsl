@@ -11,7 +11,17 @@ fn placedBy(m: vec4f, p: vec2f) -> vec2f {
   // camera's parts off each before they meet), so no digit of a far insert is lost.
   let a = placedBy(m, seg.xy);
   let b = placedBy(m, seg.zw);
-  return strokeVertex(vi % 6u, vec4f(t.xy, t.xy), vec2f(mt.x * k.x, mt.y), vec4f(t.zw + a, t.zw + b));
+  return strokeVertex(vi % 6u, vec4f(t.xy, t.xy), vec2f(mt.x * k.x, mirroredJoins(mt.y, m)), vec4f(t.zw + a, t.zw + b));
+}
+// A mirrored insert turns its joins the other way (docs/adr/9226): each code's turn negated, 2048 less the code.
+fn mirroredJoins(packed: f32, m: vec4f) -> f32 {
+  if (m.x * m.w - m.y * m.z >= 0.0) { return packed; }
+  let v = u32(packed + 0.5);
+  let cs = (v >> 2u) & 2047u;
+  let ce = (v >> 13u) & 2047u;
+  let ms = select(0u, 2048u - cs, cs != 0u);
+  let me = select(0u, 2048u - ce, ce != 0u);
+  return f32((v & 3u) | (ms << 2u) | (me << 13u));
 }
 @vertex fn areaVsInstanced(@location(0) p: vec2f, @location(2) m: vec4f, @location(3) t: vec4f, @location(4) k: vec2f) -> AreaOut {
   let d = placedBy(m, p);

@@ -440,7 +440,9 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
         let n = [-dir[1], dir[0]];
         let ext = half_w + 0.5 * blur + 1.0;
         let s0 = seg[4] * view.px_per_m;
-        let ends = (seg[5] + 0.5) as u32;
+        let meta = (seg[5] + 0.5) as u32;
+        let ends = meta & 3;
+        let joins = joins_of(meta, len, ext, view.m[0] * view.m[3] - view.m[1] * view.m[2] < 0.0);
         let at = |along: f64, across: f64| {
             [
                 a[0] + dir[0] * along + n[0] * across,
@@ -457,7 +459,12 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
         rows_of(&quad, w, h, |px, py| {
             let p = [f64::from(px) + 0.5 - a[0], f64::from(py) + 0.5 - a[1]];
             let x = p[0] * dir[0] + p[1] * dir[1];
-            let y = (p[0] * n[0] + p[1] * n[1]).abs();
+            let across = p[0] * n[0] + p[1] * n[1];
+            // The joins' sides, as `stroke.wgsl` splits them (docs/adr/9226).
+            if x * joins[0] + across * joins[1] < -0.01 || (x - len) * joins[2] + across * joins[3] > 0.01 {
+                return;
+            }
+            let y = across.abs();
             if x < -ext || x > len + ext || y > ext {
                 return;
             }
@@ -490,6 +497,37 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
             over(pixmap, px, py, straight(st.color, cov));
         }
     }
+}
+
+/// A segment's joins as `stroke.wgsl` reads them (docs/adr/9226): the normals of its start's and its end's sides in
+/// its own axes (along, across), zero where it draws its whole end. `flipped`: the picture's y runs the other way from
+/// the world's, so a turn shows the other way round.
+fn joins_of(meta: u32, len: f64, ext: f64, flipped: bool) -> [f64; 4] {
+    let turn = |code: u32| {
+        let t = (f64::from(code) - 1024.0) * (std::f64::consts::PI / 1024.0);
+        if flipped { -t } else { t }
+    };
+    let (cs, ce) = ((meta >> 2) & 2047, (meta >> 13) & 2047);
+    let (ts, te) = (turn(cs), turn(ce));
+    let reach = if cs != 0 { (0.5 * ts).tan().abs() } else { 0.0 } + if ce != 0 { (0.5 * te).tan().abs() } else { 0.0 };
+    let mut joins = [0.0; 4];
+    if len > ext * reach + 1.0 {
+        let unit = |x: f64, y: f64| {
+            let l = x.hypot(y);
+            [x / l, y / l]
+        };
+        if cs != 0 {
+            let [x, y] = unit(1.0 + ts.cos(), -ts.sin());
+            joins[0] = x;
+            joins[1] = y;
+        }
+        if ce != 0 {
+            let [x, y] = unit(1.0 + te.cos(), te.sin());
+            joins[2] = x;
+            joins[3] = y;
+        }
+    }
+    joins
 }
 
 // ── Fills (`fill.wgsl`) ───────────────────────────────────────────────────
