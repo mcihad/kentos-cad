@@ -39,18 +39,24 @@ adı ve rengi ikisini de doğruluyor.
 | 71 | KST_DEMIRYOLU_KORU | demiryolları koruma kuşağı |
 | 74 | KST_ENERJI_NAKIL_HAT | enerji nakil hattı koruma kuşağı |
 
-**Çizgi tipi → çizgi sembolü (8):**
+**Çizgi tipi → çizgi sembolü (11):**
 
 | Numara | Katman | MPYY sembolü |
 |---|---|---|
 | 11 | SNR_YAPIYAK | yapı yaklaşma sınırı |
+| 15 | SNR_PLANONAMA_TUM, SNR_PLANONAMA_ETAP | plan onama sınırı (Netcad ikisini aynı çizgi tipiyle çiziyor) |
 | 19 | HAT_DOGALGAZ | doğalgaz boru hattı |
 | 21 | HAT_ATIKSU | atık su ana kollektörü |
 | 23 | HAT_BISIKLET | bisiklet yolu |
 | 29 | SNR_OZEL_PROJE_ALANI | özel proje alanı sınırı |
+| 32 | SNR_GOB | gecekondu önleme bölgesi sınırı |
 | 40 | HAT_IFRAZ | ifraz hattı |
 | 41 | HAT_KADEME, HAT_KITLE | kademe hattı |
 | 42 | HAT_ANA_ICME_SUYU | içme suyu ana iletim hattı |
+| 45 | SNR_RISKLI_ALAN | riskli alan sınırı (uygulama planı lejantında satırı yok; nazım planınki) |
+
+**Çizgi tipi → alan sembolü (1):** 13, TESCILLI_PARSEL → tescilli parsel. Katmanın sembol numarası yok. Netcad
+tescilli parseli tarıyor: DXF'inde 188 parsel, 188 tarama.
 
 Plan alanlarının sembol numarası alanın lejant kodudur (PL_CAMI 96). O kod burada değil, ADR 9218'deki sembol
 noktalarında kullanılır.
@@ -61,8 +67,9 @@ noktalarında kullanılır.
 
 Okuyucu (`overlay_symbol`) nesneye katmanının kaydından bir lejant sembolü verir:
 
-- **Alan** (çokgen, üçgen): katmanın sembol numarası alan tablosundaysa o alan sembolü. Değilse ve çizgi tipi çizgi
-  tablosundaysa o çizgi sembolü; alanın kenarları çizilir (SNR_OZEL_PROJE_ALANI).
+- **Alan** (çokgen, üçgen): katmanın sembol numarası alan tablosundaysa o alan sembolü. Değilse çizgi tipinin alan
+  sembolü (tescilli parsel). O da yoksa ve çizgi tipi çizgi tablosundaysa o çizgi sembolü; alanın kenarları çizilir
+  (SNR_OZEL_PROJE_ALANI, plan onama sınırı).
 - **Çizgi:** çizgi tipinin çizgi sembolü.
 - **Rapor:** açılış raporunun “Katman sembolü” notu kaç nesnenin böyle çizildiğini söyler.
 
@@ -105,42 +112,54 @@ kuşak da opak çizilir; bu kural değişmedi. Sahibin ayarında anahtar kapalı
 
 ## §3 Sonuç (SIVAS_UIP_2025_06_HAZIRAN.NCZ)
 
-Lejant sembolüyle çizilen nesne: **65 812.**
+Lejant sembolüyle çizilen nesne: **69 142.**
 
-**Yarı saydam alanlar (271):**
+**Yarı saydam alanlar (471):**
 
 | Ne | Sayı |
 |---|---|
+| tescilli parsel | 200 |
 | tescilli bina | 148 |
 | tescilli anıt yapı | 71 |
 | koruma kuşakları: enerji nakil hattı 22, demiryolu 9, karayolu 4, boru hattı 2, su kanalı 1 | 38 |
 | arkeolojik ve tarihi sitler: 1. derece 8, 3. derece 3, 2. derece 1, tarihi 1 | 13 |
 | sit etkileşim geçiş alanı | 1 |
 
-**Çizgiler (65 541):**
+**Çizgiler (68 671):**
 
 | Ne | Sayı |
 |---|---|
 | doğalgaz boru hattı | 41 609 |
 | yapı yaklaşma sınırı | 20 251 |
+| plan onama sınırı (3 082 çizgi, 45 alanın kenarı) | 3 127 |
 | kademe hattı (HAT_KADEME 1 974, HAT_KITLE 232: Netcad ikisini aynı çizgi tipiyle çiziyor) | 2 206 |
 | ifraz hattı | 1 366 |
 | atık su ana kollektörü | 78 |
 | bisiklet yolu | 20 |
 | özel proje alanı sınırı (alanların kenarı) | 9 |
 | içme suyu ana iletim hattı | 2 |
+| riskli alan sınırı | 2 |
+| gecekondu önleme bölgesi sınırı | 1 |
 
-**Açık kalan:**
+**Bilerek eşlenmeyenler:**
 
-- KA_KORUNMA_ALANI'nın daire deseni: katmanın kaydında sembol numarası yok, çizgi tipi 31.
-- 15, 31 ve 32 numaralı çizgi tiplerine MPYY'de karşılık seçilmedi; bu katmanlar düz çizgiyle kaldı.
+- **31, KA_KORUNMA_ALANI:** Netcad'in “daire deseni” desen değil, sınır boyunca iri noktalar. DXF'te 255 noktanın
+  her biri 16 eş merkezli daire (yarıçap 1,125–1,5 m). 4 080 dairenin hepsinin merkezi sınırın üstünde.
+  - Lejantta böyle noktalı sınırı olan birkaç satır var: sit alanları, kesin korunacak hassas alan… Katman adı hangisi
+    olduğunu söylemiyor.
+  - Yanlış lejant anlamı, düz çizgiden kötü. Düz çizgiyle kaldı; anlamı sahibe soruldu.
+- **4:** demiryolu kuşağı ile SNR_REZERV_YAPI aynı çizgi tipini kullanıyor. Kuşak alan sembolünü alıyor; rezerv yapı
+  düz kaldı. Bu numarayı rezerv yapıya vermek, başka planlarda bu çizgi tipini kullanan her çizgiye o anlamı verirdi.
+- **22** (JEO_SNR_FORMASYON): lejantta karşılığı yok.
+- **6** (PL_TGB): plan alanı; Netcad'in renginde.
 
 ## §4 Kanıt
 
 **Sınamalar:**
 
-- `kentos-ncz` (26 sınama geçti): `the_legend_marks_are_the_system_librarys_area_symbols`. Bindirme tablolarının 12
-  alan ve 8 çizgi kimliğinin hepsi sistem kitaplığında; alan kimlikleri alan, çizgi kimlikleri çizgi sembolü.
+- `kentos-ncz` (26 sınama geçti): `the_legend_marks_are_the_system_librarys_area_symbols`. Bindirme tablolarının 13
+  alan ve 11 çizgi kimliğinin hepsi sistem kitaplığında; alan kimlikleri alan, çizgi kimlikleri çizgi sembolü. Bir
+  çizgi tipi ya alanın ya çizginin.
 - `kentos-style-core` (79 birim, 9 bütünleşik sınama geçti), `seen_through` için üç sınama:
   - her katman ve her işaretin her katmanı saydamlaşıyor, işaretin taşıyıcısına dokunulmuyor;
   - aralık dışındaki saydamlık en yakın uca çekiliyor;
@@ -159,6 +178,10 @@ Lejant sembolüyle çizilen nesne: **65 812.**
 - Kuşağın altındaki mor ve yeşil hatlar ve parsel çizgileri görünüyor. Mor hattın piksel sayısı 886 → 856.
 - Değişen piksel: 1 296 000'in 127 102'si.
 - Sahibin kendi ayarıyla (Saydamlık kapalı) aynı görünümde kuşak opak #F57A7A. Bu, ADR 0195'in kuralı.
+- İkinci tur (`.run/gui-evidence/render/rm18-stil2/once-sonra-tescil.png`), (586 611; 4 401 186) çevresi:
+  - Görünümün çoğunu kaplayan tescilli parsel yarı saydam taramayla çiziliyor. Netcad'in DXF'inde bu parsel 377 378
+    m² ve Netcad onu da tarıyor.
+  - Plan onama sınırı, mor düz çizgi yerine lejantın mavi halkalarıyla çiziliyor.
 
 ## Uygulama
 

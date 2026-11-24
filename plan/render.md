@@ -251,11 +251,13 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Bindirme katmanları MPYY lejantının sembolüyle ([ADR 9219](../docs/adr/9219-ncz-overlays-with-legend-symbols.md)).
     Sahibin kararları: stil kayıtları çözülsün; bindirmeler MPYY sembolüyle, plan alanları Netcad'in renginde;
     bindirme alanları yarı saydam.
-    - Katmanın stil kaydından çizgi tipi ve sembol numarası okunuyor; 12 alan ve 8 çizgi sembolü eşlendi.
-    - Sivas planında 65 812 nesne: 271 yarı saydam alan (kuşaklar, sitler, tescilli yapılar), 65 541 çizgi.
+    - Katmanın stil kaydından çizgi tipi ve sembol numarası okunuyor; 13 alan ve 11 çizgi sembolü eşlendi.
+    - Sivas planında 69 142 nesne: 471 yarı saydam alan (kuşaklar, sitler, tescilli yapılar ve parseller), 68 671 çizgi
+      (plan onama sınırı dahil).
     - Nesnenin saydamlığı artık kendi sembolünü de saydam çiziyor (stil çekirdeği, masaüstü).
     - Saydamlık anahtarı kapalıyken (sahibin ayarı) kuşaklar opak çizilir (ADR 0195).
-  - [ ] KA_KORUNMA_ALANI'nın daire deseni ve 15, 31, 32 numaralı çizgi tipleri eşlenmedi.
+  - [ ] KA_KORUNMA_ALANI (sınır boyunca iri noktalar, çizgi tipi 31): lejanttaki karşılığı sahibe soruldu. Çizgi
+    tipi 4 (demiryolu kuşağı ile rezerv yapı ortak) ve 22 (jeolojik formasyon) bilerek düz.
 - [ ] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek.
 
 ### F7 — DWG ve DXF alımı

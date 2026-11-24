@@ -1283,8 +1283,9 @@ fn legend_mark(code: &str) -> Option<(&'static str, Option<(&'static str, &'stat
 }
 
 /// The zoning legend's symbol an overlay layer's style stands for (plan/render.md RM-18, docs/adr/9219): an area of
-/// it the area symbol its layer's symbol number names, a line (or an area of a layer without one) the line symbol its
-/// line type number names. Netcad's layer record keeps only these numbers into its library (docs/adr/9216 §4½);
+/// it the area symbol its layer's symbol number names (or, without one, its line type's area symbol), a line (or an
+/// area of a layer without either) the line symbol its line type number names. Netcad's layer record keeps only these
+/// numbers into its library (docs/adr/9216 §4½);
 /// their meaning is read from the layers that use them in the Sivas plan.
 /// Whether it is an area symbol comes with it.
 fn overlay_symbol(h: &Header, e: &format::Entity) -> Option<(&'static str, bool)> {
@@ -1292,6 +1293,7 @@ fn overlay_symbol(h: &Header, e: &format::Entity) -> Option<(&'static str, bool)
     match e.kind {
         Kind::Polygon | Kind::Triangle => symbol
             .and_then(overlay_area)
+            .or_else(|| overlay_area_of_line(line_type))
             .map(|id| (id, true))
             .or_else(|| overlay_line(line_type).map(|id| (id, false))),
         Kind::Line | Kind::Polyline => overlay_line(line_type).map(|id| (id, false)),
@@ -1330,13 +1332,27 @@ fn overlay_area(symbol: u8) -> Option<&'static str> {
 fn overlay_line(line_type: u8) -> Option<&'static str> {
     Some(match line_type {
         11 => "mpyy.uip.yapi-duzeni.yapi-yaklasma-siniri",
+        // The plan's approval boundaries, whole and by stage: Netcad draws both with this line type.
+        15 => "mpyy.uip.ortak-planlama.plan-onama-siniri",
         19 => "mpyy.uip.enerji.dogalgaz-boru-hatti",
         21 => "mpyy.uip.su.atik-su-ana-kollektoru",
         23 => "mpyy.uip.karayollari.bisiklet-yolu",
         29 => "mpyy.uip.ortak-planlama.ozel-proje-alani-siniri",
+        32 => "mpyy.uip.ozel-kanun.gecekondu-onleme-bolgesi-siniri",
         40 => "mpyy.uip.yapi-duzeni.ifraz-hatti",
         41 => "mpyy.uip.yapi-duzeni.kademe-hatti",
         42 => "mpyy.uip.ortak-atik.icme-suyu-ana-iletim-hatti",
+        // The implementation plan's legend has no row for it; the master plan's is the regulation's.
+        45 => "mpyy.nip.ozel-kanun.riskli-alan-siniri",
+        _ => return None,
+    })
+}
+
+/// An area of a layer without a symbol number and the zoning legend's area symbol its line type stands for: the
+/// registered parcels, which Netcad hatches (its DXF: 188 parcels, 188 hatches).
+fn overlay_area_of_line(line_type: u8) -> Option<&'static str> {
+    Some(match line_type {
+        13 => "mpyy.uip.korunacak.tescilli-parsel",
         _ => return None,
     })
 }
@@ -1707,12 +1723,17 @@ mod tests {
                 assert_eq!(kind(id).as_deref(), Some("fill"), "{n}: {id}");
                 assert!(legend_mark(&format!("S{n}")).is_none(), "{n}: an overlay's number is no plan area's mark");
             }
+            if let Some(id) = overlay_area_of_line(n) {
+                areas += 1;
+                assert_eq!(kind(id).as_deref(), Some("fill"), "{n}: {id}");
+                assert!(overlay_line(n).is_none(), "{n}: a line type is an area's or a line's, not both");
+            }
             if let Some(id) = overlay_line(n) {
                 lines += 1;
                 assert_eq!(kind(id).as_deref(), Some("line"), "{n}: {id}");
             }
         }
-        assert_eq!((areas, lines), (12, 8));
+        assert_eq!((areas, lines), (13, 11));
         assert_eq!(legend_mark("S6"), Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "1")))));
         assert_eq!(legend_mark("S75"), Some(("mpyy.uip.egitim.anaokulu-alani", None)));
         assert_eq!(legend_mark("S101"), None, "Netcad draws a park's mark empty");
