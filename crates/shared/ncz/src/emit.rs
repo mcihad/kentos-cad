@@ -51,6 +51,19 @@ const WORLD: f64 = 100_000_000.0;
 /// plan note's text gets is worked out for it, `symbols::plan_note`).
 const LINE_PITCH: f64 = 1.45;
 
+/// Why a circle's or an arc's radius is no radius, if it is not.
+fn radius(r: f64) -> Result<(), &'static str> {
+    if !r.is_finite() {
+        Err("yarıçapı sayı değil")
+    } else if r <= 0.0 {
+        Err("yarıçapı sıfır ya da eksi")
+    } else if r > WORLD {
+        Err("yarıçapı 100 000 km'den büyük")
+    } else {
+        Ok(())
+    }
+}
+
 /// What the report calls a record kind.
 fn kind_words(k: Kind) -> &'static str {
     match k {
@@ -198,6 +211,9 @@ struct Emitter {
     /// Sheets drawn as their cell, and those that keep the file's box, by why.
     framed: u32,
     boxed: BTreeMap<Kept, u32>,
+    /// Records not taken, by kind and reason: how many, and the first one's place when it has one (plan/render.md
+    /// RM-17): the report says where to look in the source.
+    skipped: BTreeMap<(&'static str, &'static str), (u32, Option<Vec2>)>,
 }
 
 impl format::Sink for Emitter {
@@ -234,7 +250,16 @@ impl format::Sink for Emitter {
                     }
                 }
             }
-            Err(why) => self.report.skip(kind_words(e.kind), why, 0),
+            Err(why) => {
+                let at = e.coords.first().filter(|c| {
+                    c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD
+                });
+                let entry = self.skipped.entry((kind_words(e.kind), why)).or_insert((0, None));
+                entry.0 += 1;
+                if entry.1.is_none() {
+                    entry.1 = at.map(|c| Vec2 { x: c.x, y: c.y });
+                }
+            }
         }
         true
     }
@@ -268,6 +293,7 @@ impl Emitter {
             zone: Err(Kept::Unsaid),
             framed: 0,
             boxed: BTreeMap::new(),
+            skipped: BTreeMap::new(),
         }
     }
 
@@ -466,9 +492,7 @@ impl Emitter {
             }
             Kind::Circle => {
                 let c = e.coords.first().filter(|c| finite(c)).ok_or(BAD)?;
-                if !(e.radius.is_finite() && e.radius > 0.0 && e.radius <= WORLD) {
-                    return Err("yarıçapı sayı değil ya da sıfır");
-                }
+                radius(e.radius)?;
                 self.grow(v(c));
                 self.push(
                     layer,
@@ -618,8 +642,9 @@ impl Emitter {
     /// The arc the plugin draws (`_approximate_arc`): the angles in degrees
     /// when either is past a full turn in radians, radians otherwise; the end
     /// brought past the start a turn at a time; nothing when the sweep is
-    /// empty, over ten turns, or ends where it began (its chord check). More
-    /// than a whole turn that does not close covers the circle: a circle.
+    /// empty or over ten turns. A whole turn or more covers the circle: a
+    /// circle, also when its ends meet (the reference's chord check lets that
+    /// fall); ends that meet after next to no sweep are no arc.
     fn arc(&mut self, e: &format::Entity, layer: usize, b: EntityBase) -> Result<(), &'static str> {
         let c = e
             .coords
@@ -629,8 +654,9 @@ impl Emitter {
             })
             .ok_or("koordinatı sayı değil ya da ±100 000 km dışında")?;
         let (r, start, end) = (e.radius, e.start_angle, e.end_angle);
-        if !(r.is_finite() && r > 0.0 && r <= WORLD && start.is_finite() && end.is_finite()) {
-            return Err("yarıçapı ya da açıları sayı değil");
+        radius(r)?;
+        if !(start.is_finite() && end.is_finite()) {
+            return Err("açıları sayı değil");
         }
         let radians = start.abs() <= TAU + 0.001 && end.abs() <= TAU + 0.001;
         let (s_deg, mut e_deg) = if radians {
@@ -648,8 +674,11 @@ impl Emitter {
             turns += 1;
         }
         let sweep = e_deg - s_deg;
-        if sweep <= 0.0 || sweep > 3600.0 {
-            return Err("yay açıklığı boş ya da on turdan fazla");
+        if sweep <= 0.0 {
+            return Err("açıklığı boş");
+        }
+        if sweep > 3600.0 {
+            return Err("açıklığı on turdan geniş");
         }
         // The plugin's last point is `start + sweep * steps / steps`, and a
         // chord under a nanometre between its ends is no arc to it.
@@ -657,8 +686,11 @@ impl Emitter {
         let last = s_deg + sweep * steps / steps;
         let (a, z) = (rad(s_deg), rad(last));
         let chord = hypot(cos(z) * r - cos(a) * r, sin(z) * r - sin(a) * r);
-        if chord < 1e-9 {
-            return Err("yayın iki ucu aynı noktada (tam tur)");
+        // Ends that meet: a sweep near a whole turn (359.999…°) covers the circle, as more than a turn does; one near
+        // nothing is no arc at all. The reference lets both fall (plan/render.md RM-17: a full turn was lost).
+        let closed = chord < 1e-9;
+        if closed && sweep < 180.0 {
+            return Err("açıklığı boş");
         }
         let centre = Vec2 { x: c.x, y: c.y };
         for p in [
@@ -673,7 +705,7 @@ impl Emitter {
         ] {
             self.grow(p);
         }
-        if sweep >= 360.0 {
+        if sweep >= 360.0 || closed {
             self.full_turns += 1;
             self.push(
                 layer,
@@ -863,6 +895,14 @@ impl Emitter {
 
     /// The report's lines for what the reference counts or lets fall.
     fn tally(&mut self, header: &Header, tables: &[attributes::Table]) {
+        for (&(what, why), &(n, at)) in &self.skipped {
+            // `+ 0.0` writes a negative zero as 0; the file's easting is Y, its northing X.
+            let reason = match at {
+                Some(at) => format!("{why}; ilki Y {:.0}, X {:.0} yakınında", at.x + 0.0, at.y + 0.0),
+                None => why.to_owned(),
+            };
+            self.report.skip_n(what, &reason, 0, n);
+        }
         for (t, &n) in header.dropped.iter().enumerate() {
             self.report.skip_n(
                 &type_words(t),
@@ -874,7 +914,15 @@ impl Emitter {
         for (t, &n) in header.unsupported.iter().enumerate() {
             self.report.skip_n(
                 &format!("NCZ türü {t}"),
-                "bu okuyucunun tanımadığı geometri türü; okunmadı",
+                "geometri türünü ne bu okuyucu ne başvuru okuyucuları tanıyor; içeriği okunmadı",
+                0,
+                n as u32,
+            );
+        }
+        for (t, &n) in header.empty.iter().enumerate() {
+            self.report.note_n(
+                &format!("NCZ türü {t}"),
+                "kayıt boş: başlığından sonrası sıfır, çizimde karşılığı yok",
                 0,
                 n as u32,
             );
@@ -968,7 +1016,7 @@ impl Emitter {
         }
         self.report.note_n(
             "Yay",
-            "tam turdan geniş olduğu için daire olarak alındı",
+            "tam tur ya da daha geniş olduğu için daire olarak alındı",
             0,
             self.full_turns,
         );
@@ -1229,6 +1277,52 @@ mod tests {
         let p = Place::new(Vec2 { x: 100.0, y: 50.0 }, 0.5, 90.0);
         assert_eq!(p.apply((10.0, 0.0)), Vec2 { x: 100.0, y: 55.0 });
         assert_eq!(p.apply((0.0, 10.0)), Vec2 { x: 95.0, y: 50.0 });
+    }
+
+    /// The city plan NCZ lost a whole turn whose ends meet (plan/render.md RM-17); what still falls says why and where.
+    #[test]
+    fn a_full_turn_whose_ends_meet_is_a_circle_and_what_falls_says_where() {
+        use crate::format::Sink;
+        let mut em = Emitter::new(&NczReadOptions::default());
+        let arc = |x: f64, y: f64, r: f64, a0: f64, a1: f64| format::Entity {
+            radius: r,
+            start_angle: a0,
+            end_angle: a1,
+            ..record(Kind::Arc, &[(x, y, 0.0)])
+        };
+        let circle = |x: f64, y: f64, r: f64| format::Entity { radius: r, ..record(Kind::Circle, &[(x, y, 0.0)]) };
+        let pi = std::f64::consts::PI;
+        for e in [
+            // A whole turn short of a hair, in radians: its ends meet.
+            arc(100.0, 200.0, 5.0, -pi, pi - 1e-13),
+            // Next to no sweep: no arc.
+            arc(300.0, 400.0, 5.0, 1.0, 1.0 + 1e-13),
+            // A radius of nothing; two that are no number.
+            arc(500.0, 600.0, 0.0, 0.0, 1.0),
+            circle(700.0, 800.0, f64::NAN),
+            circle(701.0, 801.0, f64::NAN),
+        ] {
+            em.entity(&e);
+        }
+        assert!(
+            matches!(em.out.as_slice(), [Entity::Circle(c)] if c.r == 5.0 && c.c == Vec2 { x: 100.0, y: 200.0 }),
+            "{:?}",
+            em.out
+        );
+        em.tally(&Header::default(), &[]);
+        let report = std::mem::take(&mut em.report).import();
+        let skipped: Vec<(&str, u32, &str)> =
+            report.skipped.iter().map(|i| (i.what.as_str(), i.count, i.reason.as_str())).collect();
+        for want in [
+            ("Yay", 1, "açıklığı boş; ilki Y 300, X 400 yakınında"),
+            ("Yay", 1, "yarıçapı sıfır ya da eksi; ilki Y 500, X 600 yakınında"),
+            ("Daire", 2, "yarıçapı sayı değil; ilki Y 700, X 800 yakınında"),
+        ] {
+            assert!(skipped.contains(&want), "{want:?} in {skipped:?}");
+        }
+        assert!(report.notes.iter().any(|i| i.what == "Yay"
+            && i.count == 1
+            && i.reason == "tam tur ya da daha geniş olduğu için daire olarak alındı"));
     }
 
     /// A record of `kind` on one layer whose vertices the file gave (x easting, y northing, z).

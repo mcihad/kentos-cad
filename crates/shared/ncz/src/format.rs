@@ -349,8 +349,11 @@ pub struct Header {
     pub datum: u8,
     /// The zone byte: the central meridian for 3°.
     pub zone: u8,
-    /// Geometry records of a type the reference does not read, by type byte.
+    /// Geometry records of a type the reference does not read, by type byte; those with nothing past their header are
+    /// `empty` instead.
     pub unsupported: [u64; 256],
+    /// Records of a type the reference does not read whose body is all zeros: no object (plan/render.md RM-17).
+    pub empty: [u64; 256],
     /// Geometry records of a type it reads that produced nothing: too short,
     /// a coordinate outside ±100 000 km, no text, no height, fewer than two
     /// points, no area. By type byte.
@@ -382,6 +385,7 @@ impl Default for Header {
             datum: 0,
             zone: 0,
             unsupported: [0; 256],
+            empty: [0; 256],
             dropped: [0; 256],
             smart_marks: 0,
             swept_blocks: 0,
@@ -1088,7 +1092,14 @@ impl Parser<'_, '_> {
             15 => self.parse_smart_object(offset, block_size),
             _ => {
                 if self.mode == Mode::Entities {
-                    self.header.unsupported[usize::from(t)] += 1;
+                    // A record with nothing past its header holds no object (the city plan NCZ: three of type 0 and
+                    // the file's last, of type 14; plan/render.md RM-17): not a loss.
+                    let body = self.data.get(offset + 7..(offset + block_size + 1).min(self.size())).unwrap_or(&[]);
+                    if body.iter().all(|&b| b == 0) {
+                        self.header.empty[usize::from(t)] += 1;
+                    } else {
+                        self.header.unsupported[usize::from(t)] += 1;
+                    }
                 }
                 return;
             }
@@ -1946,6 +1957,40 @@ mod tests {
         let bytes = [0xDD, 0xDE, 0xD0, 0xF0, 0xFD, 0xFE, 0xC7, 0x80, b'a'];
         assert_eq!(decode(&bytes), "İŞĞğışÇ\u{80}a");
         assert_eq!(strip_nul_space(b"\0 ab \0"), b"ab");
+    }
+
+    /// A record of a type no reader knows with nothing past its header holds no object: counted apart, not as lost
+    /// (the city plan NCZ: three of type 0 and the file's last, of type 14; plan/render.md RM-17).
+    #[test]
+    fn a_record_of_an_unknown_type_with_nothing_past_its_header_is_empty_not_lost() {
+        // A geometry block: its tag, its size (the four bytes past it and its body, less its type's two), its type
+        // twice, then its body.
+        let block = |t: u8, body: &[u8]| {
+            let mut b = vec![GEOMETRY];
+            b.extend(u32::try_from(body.len() + 2).expect("small").to_le_bytes());
+            b.extend([t, t]);
+            b.extend(body);
+            b
+        };
+        for (t, body, empty) in [(14u8, vec![0u8; 79], true), (0, vec![0, 0, 0x1e, 0, 0x35, 0x0d], false)] {
+            let data = block(t, &body);
+            let mut header = Header::default();
+            let mut parser = Parser {
+                data: &data,
+                mode: Mode::Entities,
+                header: &mut header,
+                sink: None,
+                fin: None,
+                span: ENTITY_SPAN,
+                entity: Entity::default(),
+                record: 0,
+                appended: 0,
+                stopped: false,
+            };
+            parser.parse_geometry(0, 6 + body.len(), 0);
+            let t = usize::from(t);
+            assert_eq!((header.empty[t], header.unsupported[t]), if empty { (1, 0) } else { (0, 1) }, "type {t}");
+        }
     }
 
     #[test]

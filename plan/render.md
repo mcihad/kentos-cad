@@ -194,10 +194,12 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F6 — NCZ alımı
 
-- [ ] **RM-17 — Alınmayan 18 nesne.** Bugün alınmayanlar ve yapılacak iş:
-  - Tam tur yay: daire olarak alınacak.
-  - Sıfır yarıçaplı daireler ve geçersiz yaylar.
-  - Tanınmayan 0 ve 14 türleri; 8 türü de okunmuyor.
+- [x] **RM-17 — Alınmayan 18 nesne** ([ADR 9209](../docs/adr/9209-ncz-records-not-taken.md)).
+  - Uçları çakışan tam tur yay artık daire. Dosyadaki “tam tur” yayı aslında açıklığı boş bir yaymış.
+  - Sıfır yarıçaplı daireler ve geçersiz yaylar ayrı nedenleri ve ilklerinin yeriyle raporlanıyor.
+  - 0 ve 14 türlerinden üç kayıt boş çıktı; “Bilgi” olarak sayılıyor. İçi dolu üç 0 türü kaydı hiçbir okuyucu
+    tanımıyor.
+  - “Alınmadı” 18 → 15.
 - [ ] **RM-18 — NCZ ↔ DXF denkliği.** Aynı planın NCZ'si (72 MB) ile DXF'i (657 MB) karşılaştırılır:
   - katman başına nesne sayısı;
   - kapsam;
