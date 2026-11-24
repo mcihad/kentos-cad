@@ -139,6 +139,10 @@ fn builds_the_web_s_batches() {
     let layer_id = f["layer"]["id"].as_str().unwrap();
     let layer_name = f["layer"]["name"].as_str().unwrap().to_owned();
     let mut problems = Vec::new();
+    // `KENTOS_WRITE_STYLE_BATCHES=1`: a change meant to change the strokes' segments (docs/adr/9226: the joins' codes)
+    // writes them anew; everything else must still be the web's record (the web that recorded it is paused, ADR 0228).
+    let writing = std::env::var_os("KENTOS_WRITE_STYLE_BATCHES").is_some();
+    let mut segments: Vec<Vec<Value>> = Vec::new();
     for c in f["cases"].as_array().unwrap() {
         let id = c["id"].as_str().unwrap();
         let style: LayerStyle = serde_json::from_value(c["style"].clone()).expect("style");
@@ -255,11 +259,17 @@ fn builds_the_web_s_batches() {
             },
         )
         .expect("decode");
-        problems.extend(check(
-            &layer.to_json(),
-            &e["batches"],
-            &format!("{id}.batches"),
-        ));
+        let mut got = layer.to_json();
+        if writing {
+            // The segments as now, the rest compared as recorded.
+            for (g, w) in got.as_array_mut().into_iter().flatten().zip(e["batches"].as_array().into_iter().flatten()) {
+                if let Some(now) = g.get("segments").cloned() {
+                    segments.push(now.as_array().cloned().unwrap_or_default());
+                    g["segments"] = w["segments"].clone();
+                }
+            }
+        }
+        problems.extend(check(&got, &e["batches"], &format!("{id}.batches")));
     }
     assert!(
         problems.is_empty(),
@@ -267,6 +277,54 @@ fn builds_the_web_s_batches() {
         problems.len(),
         problems.join("\n")
     );
+    if writing {
+        write_segments(&segments);
+    }
+}
+
+/// The strokes' segments written anew in fixtures/style/v1/batches.json, each number that changed on its own line as
+/// the record writes a whole number, every other byte of the file as it was: the `"segments": [` lists in the file's
+/// order are the batches' in the cases'.
+fn write_segments(lists: &[Vec<Value>]) {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/style/v1/batches.json");
+    let text = std::fs::read_to_string(&path).expect("batches.json");
+    let mut out = String::with_capacity(text.len());
+    let mut lines = text.split_inclusive('\n');
+    let mut list = 0;
+    let mut changed = 0;
+    while let Some(line) = lines.next() {
+        out.push_str(line);
+        if !line.trim_end().ends_with("\"segments\": [") {
+            continue;
+        }
+        let now = &lists[list];
+        list += 1;
+        let mut k = 0;
+        for line in lines.by_ref() {
+            let body = line.trim();
+            if body.starts_with(']') {
+                assert_eq!(k, now.len(), "list {list}: its numbers");
+                out.push_str(line);
+                break;
+            }
+            let was: f64 = body.trim_end_matches(',').parse().expect("a number");
+            let value = now[k].as_f64().expect("a number");
+            // The numbers are float32's, as the GPU gets them.
+            if (value as f32).to_bits() == (was as f32).to_bits() {
+                out.push_str(line);
+            } else {
+                assert!(value.fract() == 0.0 && value.abs() < 16_777_216.0, "a segment's code is whole: {value}");
+                let indent = &line[..line.len() - line.trim_start().len()];
+                let comma = if body.ends_with(',') { "," } else { "" };
+                out.push_str(&format!("{indent}{}{comma}\n", value as i64));
+                changed += 1;
+            }
+            k += 1;
+        }
+    }
+    assert_eq!(list, lists.len(), "every list");
+    std::fs::write(&path, out).expect("batches.json written");
+    println!("{changed} sayı yeniden yazıldı");
 }
 
 /// A large layer drawn in parts (the desktop's parts of a layer, docs/adr/0121):

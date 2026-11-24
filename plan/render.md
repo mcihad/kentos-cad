@@ -235,10 +235,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F5 — CAD görünümü
 
-- [ ] **RM-15 — Çizgi ve dolgu gösterimi.**
-  - Çizgi kalınlığı ekranda: en az 1 piksel, kenar yumuşatmalı.
-  - Çizgi tipleri ve taramalar gölgelendiricide.
-  - Maskeler.
+- [~] **RM-15 — Çizgi ve dolgu gösterimi.**
+  - Çizgi kalınlığı ekranda en az 1 piksel ve kenar yumuşatmalı; çizgi tipleri ve taramalar gölgelendiricide: stilli
+    yolda zaten öyleymiş (ADR 0793, 1122).
+  - [x] Adım 1 ([ADR 9226](../docs/adr/9226-line-joins-drawn-once.md)): köşeler bir kez çizilir. Her segment köşenin
+    açıortayına kadar kendi tarafını çiziyor; yarı saydam çizginin köşelerindeki düğümler ve kısa kirişli dairenin
+    opaklaşması gitti. GPU'da her piksel kapsüllerin analitik birleşimine 3 düzey içinde eşit.
+  - [ ] Maskeler (WIPEOUT, RM-22 ile).
+  - [ ] Desen dolguları vektör (RM-11'in açığı).
 - [x] **RM-16 — Görsel uygunluk paketi.**
   - Küçük fikstürler sabit kameralarda çizilip altın görüntülerle karşılaştırılır.
   - Büyük dosyalar yalnız yerelde koşar.

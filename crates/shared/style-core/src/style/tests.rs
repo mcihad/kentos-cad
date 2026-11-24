@@ -703,12 +703,27 @@ fn a_pattern_runs_on_along_a_path_past_its_vertices() {
     let (_, data) = build(&p, &[path(false)], v(0.0, 0.0));
     let d: Vec<f32> = data.chunks(6).map(|s| s[4]).collect();
     assert_eq!(d, [0.0, 5.0]);
-    // Only the path's own ends take the caps: 1 the start, 2 the end.
-    let ends: Vec<f32> = data.chunks(6).map(|s| s[5]).collect();
-    assert_eq!(ends, [1.0, 2.0]);
+    // Only the path's own ends take the caps: 1 the start, 2 the end (the low two bits).
+    let ends: Vec<u32> = data.chunks(6).map(|s| s[5] as u32 & 3).collect();
+    assert_eq!(ends, [1, 2]);
+    // docs/adr/9226: above them the joins' codes, the start's and the end's. The vertex at (3, 4) turns 36.87° left:
+    // 210 steps of 1024 a half turn, code 1234, the first segment's end and the second's start.
+    let meta: Vec<u32> = data.chunks(6).map(|s| s[5] as u32).collect();
+    assert_eq!(meta, [1 + 8192 * 1234, 2 + 4 * 1234]);
     let (_, data) = build(&p, &[path(true)], v(0.0, 0.0));
     let d: Vec<f32> = data.chunks(6).map(|s| s[4]).collect();
     assert_eq!(d, [0.0, 5.0, 11.0]);
+    // Closed, every vertex is a join, the closing one too; a join's code is the same in both its segments.
+    let meta: Vec<u32> = data.chunks(6).map(|s| s[5] as u32).collect();
+    let codes: Vec<[u32; 2]> = meta.iter().map(|m| [(m >> 2) & 2047, (m >> 13) & 2047]).collect();
+    assert!(meta.iter().all(|m| m & 3 == 0), "no caps: {meta:?}");
+    for k in 0..3 {
+        assert_ne!(codes[k][1], 0);
+        assert_eq!(codes[k][1], codes[(k + 1) % 3][0], "join {k}");
+    }
+    // Left turns all round: 36.87°, 163.9° and 159.8°, a whole turn.
+    let turns: u32 = codes.iter().map(|c| c[1] - 1024).sum();
+    assert_eq!(turns, 2048);
 }
 
 #[test]

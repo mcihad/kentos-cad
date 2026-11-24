@@ -27,6 +27,8 @@ mod compose_timing;
 mod hatch;
 #[path = "gpu/weights.rs"]
 mod weights;
+#[path = "gpu/joins.rs"]
+mod joins;
 #[path = "gpu/dashes.rs"]
 mod dashes;
 #[path = "gpu/glyphs.rs"]
@@ -516,6 +518,16 @@ fn glyphs_on_a_real_gpu() {
     glyphs::masks_and_underlines_draw_under_and_over_the_letters(&gpu);
     glyphs::rings_and_lines_cover_their_areas(&gpu);
     glyphs::holes_stay_open_and_screen_marks_stay_put(&gpu);
+}
+
+/// docs/adr/9226 alone: a seen-through polyline's corners drawn once, on a real GPU.
+#[test]
+fn joins_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1 to run the GPU test (a skipped test is not a pass)");
+        return;
+    }
+    joins::seen_through_corners_are_drawn_once(&mut Gpu::open());
 }
 
 /// docs/adr/0793 §1 alone: a paper width held on the model screen, on a real GPU.

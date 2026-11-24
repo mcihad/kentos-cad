@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::signed_area;
-use kentos_geometry_core::jsmath::{cos, js_cmp, js_hypot, js_max, js_round, sin, stable_sort};
+use kentos_geometry_core::jsmath::{atan2, cos, js_cmp, js_hypot, js_max, js_round, sin, stable_sort};
 use kentos_geometry_core::triangulate::triangulate_many;
 
 use super::prim::{EffectSpec, FillPaint, Look, MarkerStyle, Sink, StrokeStyle, group_key, num};
@@ -806,14 +806,54 @@ impl BatchSink {
 /// from the tile's base `t`, its start's length along the path (`along`), its end caps when the path is `open`.
 fn push_segments(out: &mut Vec<f64>, pts: &[Vec2], along: &[f64], kept: &[usize], open: bool, [tx, ty]: [f64; 2]) {
     let count = kept.len().saturating_sub(1);
-    for (j, w) in kept.windows(2).enumerate() {
-        let (a, b) = (pts[w[0]], pts[w[1]]);
-        if js_hypot(b.x - a.x, b.y - a.y) < 1e-12 {
-            continue;
-        }
+    let drawn: Vec<(usize, usize, usize)> = kept
+        .windows(2)
+        .enumerate()
+        .filter(|(_, w)| js_hypot(pts[w[1]].x - pts[w[0]].x, pts[w[1]].y - pts[w[0]].y) >= 1e-12)
+        .map(|(j, w)| (j, w[0], w[1]))
+        .collect();
+    let joins = joins(&drawn.iter().map(|&(_, a, b)| (pts[a], pts[b])).collect::<Vec<_>>(), !open);
+    for (&(j, a, b), [start, end]) in drawn.iter().zip(joins) {
+        let (pa, pb) = (pts[a], pts[b]);
         let ends = if open && j == 0 { 1.0 } else { 0.0 } + if open && j + 1 == count { 2.0 } else { 0.0 };
-        out.extend([a.x - tx, a.y - ty, b.x - tx, b.y - ty, along[w[0]], ends]);
+        out.extend([pa.x - tx, pa.y - ty, pb.x - tx, pb.y - ty, along[a], segment_meta(ends, start, end)]);
     }
+}
+
+/// Steps of a half turn in a join's code (docs/adr/9226): a right angle and half of it are whole steps.
+const TURN_STEPS: f64 = 1024.0;
+
+/// The turn at a join from the direction `a` to `b`, as a stroke segment's numbers carry it (docs/adr/9226): 1 to
+/// 2047, 1024 straight on, counter-clockwise above; 0 for none (a turn back on itself, or no turn to tell).
+fn turn_code(a: (Vec2, Vec2), b: (Vec2, Vec2)) -> f64 {
+    let (dx0, dy0) = (a.1.x - a.0.x, a.1.y - a.0.y);
+    let (dx1, dy1) = (b.1.x - b.0.x, b.1.y - b.0.y);
+    let turn = atan2(dx0 * dy1 - dy0 * dx1, dx0 * dx1 + dy0 * dy1);
+    let steps = js_round(turn / std::f64::consts::PI * TURN_STEPS);
+    if steps.is_finite() && steps.abs() < TURN_STEPS { steps + TURN_STEPS } else { 0.0 }
+}
+
+/// Each drawn segment's join codes, at its start and its end: the turn from the segment before it and to the one after
+/// it; a closed path's first and last segments meet. 0 where none meets (an open path's ends).
+fn joins(segments: &[(Vec2, Vec2)], closed: bool) -> Vec<[f64; 2]> {
+    let n = segments.len();
+    (0..n)
+        .map(|k| {
+            let before = if k > 0 { Some(k - 1) } else if closed && n > 1 { Some(n - 1) } else { None };
+            let after = if k + 1 < n { Some(k + 1) } else if closed && n > 1 { Some(0) } else { None };
+            [
+                before.map_or(0.0, |b| turn_code(segments[b], segments[k])),
+                after.map_or(0.0, |a| turn_code(segments[k], segments[a])),
+            ]
+        })
+        .collect()
+}
+
+/// A stroke segment's last number (docs/adr/9226): its `ends` (1 a path's start, 2 its end: the caps) and the codes of
+/// its joins, the start's and the end's ([`turn_code`]), in 24 bits a float holds whole. A renderer that reads only
+/// `ends & 1` and `ends & 2` draws as before.
+fn segment_meta(ends: f64, start: f64, end: f64) -> f64 {
+    ends + 4.0 * start + 8192.0 * end
 }
 
 impl Sink for BatchSink {
@@ -911,16 +951,24 @@ impl Sink for BatchSink {
             }
             None => data,
         };
-        for i in 0..count {
+        // The segments that draw, each with the turns at its joins (docs/adr/9226).
+        let drawn: Vec<usize> = (0..count)
+            .filter(|&i| {
+                let (a, b) = (path[i], path[(i + 1) % n]);
+                js_hypot(b.x - a.x, b.y - a.y) >= 1e-12
+            })
+            .collect();
+        let joins = joins(
+            &drawn.iter().map(|&i| (path[i], path[(i + 1) % n])).collect::<Vec<_>>(),
+            closed,
+        );
+        for (&i, [start, end]) in drawn.iter().zip(joins) {
             let a = path[i];
             let b = path[(i + 1) % n];
             let len = js_hypot(b.x - a.x, b.y - a.y);
-            if len < 1e-12 {
-                continue;
-            }
             let ends = if !closed && i == 0 { 1.0 } else { 0.0 }
                 + if !closed && i + 1 == count { 2.0 } else { 0.0 };
-            out.extend([a.x - tx, a.y - ty, b.x - tx, b.y - ty, d, ends]);
+            out.extend([a.x - tx, a.y - ty, b.x - tx, b.y - ty, d, segment_meta(ends, start, end)]);
             grow_box(bounds, a.x - ox, a.y - oy);
             d += len;
         }
