@@ -327,6 +327,11 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Uygulamada bütün katmanlar stil motorundan geçiyor (`cad/style/scene.rs`); ham CAD sahnesi (`build_fixed`,
       `build_curves`) yalnız stil kitaplığı yokken. Derin sahne önce stilli yolda kurulur, ham yol ve seçim vurgusu
       aynı kutuyla ardından gelir. Derin sahne, döşemeler gelince (RM-08) en ince döşeme düzeyi olur.
+  - [x] Adım 1, çekirdek: `geom::deep::split_at_box` (kenar kutu sınırında bölünür; noktalar kenarın üstünde) ve stil
+    çekirdeğinin `View::deep`'i (yollar ve halkalar bölünür; bloklar açılarak çizilir, uzak düzeyler kapanır).
+    Kutuyu kesmeyen yol olduğu gibi kalır. Sınamalar: geometri 6, stil çekirdeği 2.
+  - [ ] Adım 2, masaüstü: derin sahne (kutudaki nesneler, ayrı önbellek), sınır 10⁷ px/m, gerçek pencere kanıtı.
+  - [ ] Adım 3: yayların yalnız kutudaki açı aralığı 0,25 piksellik kirişle.
 
 ## Kabul ölçütleri
 
