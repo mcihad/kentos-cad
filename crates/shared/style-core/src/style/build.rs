@@ -502,18 +502,12 @@ pub struct View {
     pub cad_phase: bool,
     /// Deep zoom (plan/render.md RM-24): a box round the view and the curves' tolerance in it. Every path's and
     /// ring's segments are split where they cross the box's edge (`geom::deep`), so the pieces in the view have their
-    /// ends near it; circles and arcs are round to the tolerance in the box; inserts are drawn out and the far levels
-    /// left off. None: the drawing as it is.
+    /// ends near it; circles, arcs, ellipses and bulged edges are round to the tolerance in and near the box; inserts
+    /// are drawn out and the far levels left off. None: the drawing as it is.
     pub deep: Option<Deep>,
 }
 
-/// A deep view (plan/render.md RM-24, docs/adr/9220): the box round it and how far a chord may stray from its curve
-/// in the box (a quarter pixel at the view's scale), world units.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Deep {
-    pub bounds: Bounds,
-    pub tolerance: f64,
-}
+pub use kentos_geometry_core::geom::deep::Deep;
 
 impl PartialEq for View {
     fn eq(&self, o: &Self) -> bool {
@@ -878,6 +872,9 @@ fn output_parts(
     {
         return parts;
     }
+    // A deep view's bulged edges as points, round in its box; a CAD line type's dash is still measured on `s` itself.
+    let refined = cx.deep.and_then(|d| deep::refined(s, &d));
+    let s = refined.as_ref().unwrap_or(s);
     let tolerance = (cx.plot_precision).then_some(js_max(env.plot_scale,1e-6) * 0.005 / 1000.);
     match styled_parts_precision(s, clip, buf, tolerance) {
         Ok(parts) => match cx.deep {

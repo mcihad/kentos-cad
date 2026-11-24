@@ -313,7 +313,7 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       birim soruluyor (metre seçili).
     - 23 örnekten 4'ü (ev ×2, küçük apartman, palazzina) metreye geçti; milimetre projeleri (harfleri 12–30 mm)
       değişmedi.
-- [ ] **RM-24 — Derin yakınlaşma** ([ADR 9213](../docs/adr/9213-cad-unit-from-letter-heights.md) §2). AutoCAD gibi:
+- [x] **RM-24 — Derin yakınlaşma** ([ADR 9213](../docs/adr/9213-cad-unit-from-letter-heights.md) §2). AutoCAD gibi:
   yakınlaştırma kesinlik bitene dek sürer.
   - Bugünkü en derin ölçek 10 000 px/m (0,1 mm/piksel), uzun çizgilerin 128 m'lik parçalarının GPU kesinliğine
     bağlı: 100 000 px/m'de ~0,5 px, 1 000 000 px/m'de ~5 px sapma.
@@ -341,8 +341,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     değdiği nesneler, ayrı önbellekte. 627 ve 10 000 px/m'de resim düzenli sahneninkiyle aynı (0 piksel fark).
   - [x] Adım 3 (ADR 9220 §2.4): derin sahnede daire ve yaylar kutuda çeyrek piksellik kirişle; sınır 10⁴ → 10⁵ px/m
     (10 µm/piksel). ~650 px/m'de önce 72-genin köşesi, sonra pürüzsüz yay.
-  - [ ] Adım 4: seçim vurgusu ve ham yol kutuyla bölünür, bombeli kenarlar ve elipsler kutuda yuvarlak; sonra sınır
-    10⁷ px/m.
+  - [x] Adım 4 (ADR 9220 §2.5):
+    - Seçim vurgusu kutuyla bölünür.
+    - Bombeli kenarlar ve elipsler kutuda yuvarlak.
+    - Kutunun yanından geçen yayın kaba kirişi artık kutuyu kesmiyor.
+    - Sınır 10⁵ → 10⁷ px/m.
+    - Evin DXF'inde 1 644 px/m'de 72 kirişli yayın 12 piksellik sapması gitti; vurgu çizginin üstünde, 10⁷'ye kadar.
+    - Ham CAD yolu uygulamada çizim için kullanılmadığından (her alan stil kitaplığıyla çiziyor) 128 m'lik
+      parçalarında kaldı.
 
 - [x] **RM-25 — Düzenleme hemen görünür** ([ADR 9221](../docs/adr/9221-objects-the-store-draws-anew.md)). Sahibin
   24 Kasım bildirimi: Mimari'de pencere ve kapı ancak yakınlaştırınca görünüyordu, duvar kesilmiyordu.

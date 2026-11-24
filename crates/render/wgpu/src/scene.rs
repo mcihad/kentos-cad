@@ -27,6 +27,7 @@
 //! dimension the core cannot lay out is counted, not guessed at.
 
 use std::collections::{BTreeMap, HashMap};
+use std::f64::consts::TAU;
 use std::ops::Range;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -40,6 +41,7 @@ use kentos_geometry_core::entity::{
 use kentos_geometry_core::geom::arc::sweep;
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::bulge::has_bulges;
+use kentos_geometry_core::geom::deep::{Deep, arc_in_box, bulge_path_in_box, ellipse_in_box, split_at_box};
 use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::geom::hatch::hatch_lines;
 use kentos_geometry_core::geom::hatch_pattern::pattern_pieces;
@@ -566,6 +568,11 @@ pub struct Highlight {
 /// draws it after the scene's layers (the scene has `below`). A dimension is
 /// highlighted by its layout's lines, a construction line inside `clip`
 /// (the construction part's box); text is the host's.
+///
+/// In a deep view (`deep`, plan/render.md RM-24) every segment and fill ring
+/// is split where it crosses the view's box and its curves are round in it
+/// (`geom::deep`): the pieces in the view have their ends near it, so they lie
+/// where the deep view's scene draws its objects however deep the view.
 pub fn build_highlight<'a>(
     objects: impl IntoIterator<Item = &'a Entity>,
     style: &Highlight,
@@ -573,16 +580,17 @@ pub fn build_highlight<'a>(
     tolerance: f64,
     below: usize,
     clip: &Bounds,
+    deep: Option<&Deep>,
 ) -> ScenePart {
     let tol = highlight_tolerance(tolerance);
-    let mut b = Builder::new(origin);
+    let mut b = Builder::new(origin).deep(deep);
     for _ in 0..below {
         let start = b.start();
         b.finish(start);
     }
     let start = b.start();
     for entity in objects {
-        highlight_one(&mut b, entity, style, tol, clip);
+        highlight_one(&mut b, entity, style, tol, clip, deep);
     }
     b.finish(start);
     b.into_part(tol, BTreeMap::new())
@@ -591,6 +599,7 @@ pub fn build_highlight<'a>(
 /// [`build_highlight`] for many objects (a large selection): built in runs
 /// on up to `threads` cores side by side, then joined in their order, so
 /// the part is the one [`build_highlight`] makes of the same list.
+#[allow(clippy::too_many_arguments)]
 pub fn build_highlight_parallel(
     objects: &[&Entity],
     style: &Highlight,
@@ -598,6 +607,7 @@ pub fn build_highlight_parallel(
     tolerance: f64,
     below: usize,
     clip: &Bounds,
+    deep: Option<&Deep>,
     threads: usize,
 ) -> ScenePart {
     let threads = threads.clamp(1, objects.len().max(1));
@@ -609,6 +619,7 @@ pub fn build_highlight_parallel(
             tolerance,
             below,
             clip,
+            deep,
         );
     }
     let tol = highlight_tolerance(tolerance);
@@ -618,9 +629,9 @@ pub fn build_highlight_parallel(
             .chunks(run)
             .map(|list| {
                 s.spawn(move || {
-                    let mut b = Builder::new(origin);
+                    let mut b = Builder::new(origin).deep(deep);
                     for entity in list {
-                        highlight_one(&mut b, entity, style, tol, clip);
+                        highlight_one(&mut b, entity, style, tol, clip, deep);
                     }
                     b
                 })
@@ -649,6 +660,21 @@ pub fn build_highlight_parallel(
     b.into_part(tol, BTreeMap::new())
 }
 
+/// An ellipse's points in a deep view (`geom::deep::ellipse_in_box`), and
+/// whether it is whole: then a ring, its first point not repeated
+/// (`ellipse_points`' form).
+fn deep_ellipse(e: &kentos_contracts::EllipseEntity, d: &Deep) -> (Vec<Vec2>, bool) {
+    let major = v(&e.major);
+    let minor = Vec2::new(-major.y * e.ratio, major.x * e.ratio);
+    let whole = e.t0 == e.t1;
+    let span = if whole { TAU } else { sweep(e.t0, e.t1) };
+    let mut pts = ellipse_in_box(v(&e.c), major, minor, e.t0, span, &d.bounds, d.tolerance);
+    if whole {
+        pts.pop();
+    }
+    (pts, whole)
+}
+
 /// The chord tolerance a highlight's curves take: the curves part's, else a metre.
 fn highlight_tolerance(tolerance: f64) -> f64 {
     if tolerance.is_finite() && tolerance > 0.0 {
@@ -658,9 +684,21 @@ fn highlight_tolerance(tolerance: f64) -> f64 {
     }
 }
 
-/// One object's highlight in `b`.
-fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, clip: &Bounds) {
+/// One object's highlight in `b`: its curves within `tol`, or in a deep view
+/// round in its box (`geom::deep`).
+fn highlight_one(
+    b: &mut Builder,
+    entity: &Entity,
+    style: &Highlight,
+    tol: f64,
+    clip: &Bounds,
+    deep: Option<&Deep>,
+) {
     let color = style.color;
+    let bent = |pts: &[Vec2], bulges: Option<&[f64]>, closed: bool| match deep {
+        Some(d) => bulge_path_in_box(pts, bulges, closed, &d.bounds, d.tolerance),
+        None => bulge_path(pts, bulges, closed, tol),
+    };
     match entity {
         Entity::Point(p) => {
             b.marker(v(&p.p), color, style.mark_size, style.mark_shape);
@@ -671,30 +709,29 @@ fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, 
         }
         Entity::Line(l) => b.segment(v(&l.a), v(&l.b), color),
         Entity::Polyline(p) => {
-            b.path(
-                &bulge_path(&points(&p.pts), p.bulges.as_deref(), false, tol),
-                false,
-                color,
-            );
+            b.path(&bent(&points(&p.pts), p.bulges.as_deref(), false), false, color);
             // Every part of a multi-part polyline (docs/adr/0174).
             for q in p.parts.iter().flatten() {
-                b.path(
-                    &bulge_path(&points(&q.pts), q.bulges.as_deref(), false, tol),
-                    false,
-                    color,
-                );
+                b.path(&bent(&points(&q.pts), q.bulges.as_deref(), false), false, color);
             }
         }
         Entity::Polygon(p) => {
-            let mut rings = vec![bulge_path(&points(&p.pts), p.bulges.as_deref(), true, tol)];
+            let mut rings = vec![bent(&points(&p.pts), p.bulges.as_deref(), true)];
             rings.extend(
                 p.holes
                     .iter()
                     .flatten()
-                    .map(|h| bulge_path(&points(&h.pts), h.bulges.as_deref(), true, tol)),
+                    .map(|h| bent(&points(&h.pts), h.bulges.as_deref(), true)),
             );
             b.polygon(&rings, color, style.fill);
-            for rings in other_parts(p, tol) {
+            for q in p.parts.iter().flatten() {
+                let mut rings = vec![bent(&points(&q.pts), q.bulges.as_deref(), true)];
+                rings.extend(
+                    q.holes
+                        .iter()
+                        .flatten()
+                        .map(|h| bent(&points(&h.pts), h.bulges.as_deref(), true)),
+                );
                 b.polygon(&rings, color, style.fill);
             }
         }
@@ -704,17 +741,29 @@ fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, 
             b.polygon(&rings, color, style.fill);
         }
         Entity::Circle(c) if valid_radius(c.r) => {
-            b.path(&circle_ring(v(&c.c), c.r, tol), true, color);
+            let ring = match deep {
+                Some(d) => {
+                    let mut ring = arc_in_box(v(&c.c), c.r, 0.0, TAU, &d.bounds, d.tolerance);
+                    ring.pop();
+                    ring
+                }
+                None => circle_ring(v(&c.c), c.r, tol),
+            };
+            b.path(&ring, true, color);
         }
         Entity::Arc(a) if valid_radius(a.r) => {
-            b.path(
-                &arc_points(v(&a.c), a.r, a.a0, sweep(a.a0, a.a1), tol),
-                false,
-                color,
-            );
+            let (c, sweep) = (v(&a.c), sweep(a.a0, a.a1));
+            let pts = match deep {
+                Some(d) => arc_in_box(c, a.r, a.a0, sweep, &d.bounds, d.tolerance),
+                None => arc_points(c, a.r, a.a0, sweep, tol),
+            };
+            b.path(&pts, false, color);
         }
         Entity::Ellipse(e) => {
-            let (pts, closed) = ellipse_points(v(&e.c), v(&e.major), e.ratio, e.t0, e.t1, tol);
+            let (pts, closed) = match deep {
+                Some(d) => deep_ellipse(e, d),
+                None => ellipse_points(v(&e.c), v(&e.major), e.ratio, e.t0, e.t1, tol),
+            };
             b.path(&pts, closed, color);
         }
         Entity::Spline(s) => {
@@ -932,6 +981,8 @@ fn finite(p: Vec2) -> bool {
 /// Appends a part's arrays, layer by layer.
 struct Builder {
     origin: Vec2,
+    /// A deep view's box (plan/render.md RM-24): segments and fill rings are split where they cross its edge.
+    deep: Option<Bounds>,
     fills: Vec<FillVertex>,
     segments: Vec<SegmentInstance>,
     markers: Vec<MarkerInstance>,
@@ -946,6 +997,7 @@ impl Builder {
     fn new(origin: Vec2) -> Self {
         Self {
             origin,
+            deep: None,
             fills: Vec::new(),
             segments: Vec::new(),
             markers: Vec::new(),
@@ -972,6 +1024,12 @@ impl Builder {
         });
     }
 
+    /// Splits what it builds at a deep view's box (`geom::deep::split_at_box`).
+    fn deep(mut self, deep: Option<&Deep>) -> Self {
+        self.deep = deep.map(|d| d.bounds);
+        self
+    }
+
     fn into_part(self, tolerance: f64, not_drawn: BTreeMap<&'static str, usize>) -> ScenePart {
         ScenePart {
             id: NEXT_PART.fetch_add(1, Ordering::Relaxed),
@@ -985,9 +1043,25 @@ impl Builder {
         }
     }
 
-    /// A straight segment, cut into pieces no longer than `MAX_SEGMENT_LENGTH`.
+    /// A straight segment, split where it crosses a deep view's box: the piece
+    /// in it has its ends near the view (`geom::deep`).
     fn segment(&mut self, a: Vec2, b: Vec2, color: Rgba8) {
         if !(finite(a) && finite(b)) || a == b {
+            return;
+        }
+        match self.deep.and_then(|d| split_at_box(&[a, b], false, &d)) {
+            Some(points) => {
+                for w in points.windows(2) {
+                    self.cut(w[0], w[1], color);
+                }
+            }
+            None => self.cut(a, b, color),
+        }
+    }
+
+    /// A straight segment, cut into pieces no longer than `MAX_SEGMENT_LENGTH`.
+    fn cut(&mut self, a: Vec2, b: Vec2, color: Rgba8) {
+        if a == b {
             return;
         }
         let length = (b.x - a.x).hypot(b.y - a.y);
@@ -1061,7 +1135,11 @@ impl Builder {
                 continue;
             }
             let start = self.ring_pts.len();
-            self.ring_pts.extend_from_slice(ring);
+            // In a deep view the ring's edges are split at its box, as its outline's are.
+            match self.deep.and_then(|d| split_at_box(ring, true, &d)) {
+                Some(split) => self.ring_pts.extend_from_slice(&split),
+                None => self.ring_pts.extend_from_slice(ring),
+            }
             self.ring_ranges.push(start..self.ring_pts.len());
         }
         triangulate_into(&self.ring_pts, &self.ring_ranges, &mut self.indices);

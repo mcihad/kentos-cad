@@ -1,6 +1,6 @@
 # ADR 9220: Derin görünümün sahnesi: yollar görünüm kutusunda bölünür
 
-- **Durum:** kabul edildi (2026-11-24). Plan: [plan/render.md](../../plan/render.md) RM-24, 1.–3. adım.
+- **Durum:** kabul edildi (2026-11-24). Plan: [plan/render.md](../../plan/render.md) RM-24, 1.–4. adım (bitti).
 - **İstek:** sahibin 23 Kasım isteği (“AutoCAD kusursuz büyütebiliyor”, “çapraz çizgiler çok yakında testere gibi”).
 - **Sözleşmeler:** değişmedi.
 
@@ -68,12 +68,47 @@ pikseli geçen dairede sapma çeyrek pikseli aşıyor.
   altında (64 m × 2⁻²⁴ × 10⁵).
 - Kesinlik sınamaları bu yolların kendi sınırına (10⁴) bağlandı. 10⁷ onlar da kutuya geçince gelir.
 
-### §2.5 Kalan
+### §2.5 Seçim vurgusu, bombeli kenarlar, elipsler; sınır 10⁷ (4. adım)
 
-- Seçim vurgusu ve ham CAD yolu aynı kutuyla bölünür; sonra sınır 10⁷ px/m.
-- Bombeli kenarlı çoklu çizgi ve alanlar (DXF'in LWPOLYLINE yayları), elipsler, eğriler: derin sahnede bugün eski
-  kirişleriyle çiziliyor, yalnız kutuda bölünüyor.
+**Vurgu.** Seçim ve üzerinde durulan nesnenin vurgusu (`scene::build_highlight`) derin görünümde aynı kutuyu alır:
+
+- çizicinin `Builder`'ı her kenarı ve dolgu halkasını kutunun sınırında böler (`split_at_box`), sonra 128 m'lik
+  parçalara ayırır;
+- daire, yay, bombeli kenar ve elips kutuda çeyrek piksellik kirişle çizilir;
+- vurgunun anahtarı kutuyu ve toleransı tutar: kutu değişince vurgu yeniden kurulur, değişmeyince önbellekte kalır.
+
+Önce vurgu, kirişlenmiş çizimden ayrı yerde duruyordu: ~1 640 px/m'de 12 piksel, 10⁵'te yüzlerce piksel.
+
+**Bombeli kenarlar ve elipsler.**
+
+- Stil çekirdeği bombeli kenarlı çoklu çizgi ve alanı (`deep::refined`) yaylarını noktaya çevirerek çizer, sonra keser.
+  Noktalar `geom::deep::bulge_path_in_box`'tan gelir; köşeler aynı kalır.
+- CAD çizgi tipinin kesik evresi kaynak eğri üzerinden ölçüldüğü için (ADR 1122) kesikler kaymaz.
+- Geniş çoklu çizgi (bant) köşelerine bağlı olduğundan olduğu gibi kalır.
+- Elips `geom::deep::ellipse_in_box` ile çizilir: daireninkiyle aynı yol, yarı büyük eksenin kirişiyle.
+
+**Kaba kirişin kutuyu kesmesi düzeltildi.** 3. adımın `arc_in_box`'ı kutunun dışında kalan yay parçasını kaba çiziyordu.
+
+- Sorun: kutuya iç yüzünden yakın geçen bir yayın 5°'lik kirişi kutunun içinden geçebiliyordu. Bu, görünümde olmayan
+  yayın yerine görünümde düz bir çizgi demek.
+- Çözüm: yay artık kutunun bir kaba kirişin sapmasının 1,25 katı kadar genişletilmiş hâlinde de ince çizilir. Dışında
+  kalan kaba kirişler kutuya giremez (sınama `a_curve_passing_beside_the_box_never_has_a_chord_across_it`).
+- Seyreltme yalnız ince parçalara uygulanır.
+
+**Sınır:** `MAX_SCALE` 10⁵ → **10⁷ px/m** (0,1 µm/piksel; 2 mm 20 000 piksel).
+
+- Kalan hata iki float32 parçanın kendi tabanı: noktanın sahne kökenine uzaklığının 2⁻⁴⁸'i.
+- Kökenin verinin yanında (belgenin çapası) olduğu olağan durumda 10⁷'de 10⁻⁴ pikselin altında.
+- Köken 4 400 km uzakta, örneğin (0, 0) ise 0,3 piksele kadar.
+- Kesinlik sınamaları bu tabanı ve ekran pikselinin kendi float32'sini (2⁻²⁴) sınır olarak taşıyor (`bound`). Yakın
+  kökenle sınır binde bir piksel.
+- 128 m parçalarının sınamaları kendi sınırlarında (10⁴) kaldı. Ham CAD yolu uygulamada çizim için kullanılmıyor; her
+  alan stil kitaplığıyla çiziyor (`view/area.rs`, `split_view.rs`).
+
+**Kalan:**
+
 - Olağan yakınlıkta (500 px/m'nin altında) büyük daireler hâlâ 72 kiriş: RM-09.
+- Eğriler (spline, NURBS) derin sahnede kendi kirişleriyle çizilip kutuda bölünüyor, kutuda yuvarlanmıyor.
 
 ## §3 Kanıt
 
@@ -111,6 +146,33 @@ pikseli geçen dairede sapma çeyrek pikseli aşıyor.
   - ~650 px/m'de önce iki kirişin köşede kırılması, sonra pürüzsüz yay (`orta/once-sonra-05-daire-orta.png`).
   - 10⁴ px/m'de önce kiriş, sonra gerçek daire. Aralarındaki 1,6 cm, kirişin bu noktadaki sapması (en çok 2,1 cm).
 
+**4. adım** (`.run/gui-evidence/render/rm24b/`): Xvfb, iki katlı evin DXF'i (metre). Terasın 5,57 m'lik bombeli yayı
+(PROIEZIONI, ortası 2 474,819 / 1 401,217) üç aşamada yakınlaştırıldı. Önce: main'in ucu (3. adım). Sonra: 4. adım.
+
+- **1 644 px/m** (ölçek durum çubuğundan): `once-sonra-20-yay.png`, `bindirme-20-yay.png`. Önce yay 72 kirişle çiziliyor:
+  iki köşe görünür ve ortada kiriş yaydan 11–12 piksel içeride. Ölçüldü: önce ile sonra arasındaki yatay fark uçlarda 1,
+  ortada 12 piksel; 5,3 mm × 1 644 px/m / sin 46°.
+- **Aynı ölçek, yay seçili** (`once-sonra-21-secim.png`): önce vurgu çizimden ayrı, sonra tam üstünde.
+- **~1,1·10⁵ px/m** (`once-sonra-22-derin.png`): önce vurgu ile çizim yüzlerce piksel ayrı; eski program 10⁵'te
+  durmuş. Sonra tek çizgi.
+- **~9,9·10⁶ px/m** (`once-sonra-23-en-derin.png`): eski program yerinde kaldı (çizgi iki aşamada da x = 595,5'te).
+  Yeni program bir kez daha ~90 kat derine indi; çizgi bağlantı noktasından 148 piksel uzaklaştı. Vurgu yine çizginin
+  üstünde.
+
+**4. adımın sınamaları:**
+
+- `kentos-geometry-core` `geom::deep` (13): yeni üçü yayın yanından geçince kirişin kutuyu kesmemesi (daire ve elips),
+  elipsin kutuda yuvarlak ve eğrisinin üstünde olması, bombeli yolun köşelerini koruması.
+- `kentos-style-core` `style::build::deep` (5): elips ve bombeli alan kutuda yuvarlak; geniş çoklu çizgi olduğu gibi;
+  bombeli çoklu çizgi derin görünümde ince çiziliyor.
+- `kentos-render-wgpu`:
+  - `tests/scene.rs` `a_deep_view_s_highlight_is_split_at_its_box_and_round_in_it`; derin vurgunun çok çekirdekte kurulanı
+    tek çekirdektekiyle aynı.
+  - `tests/precision.rs` `a_deep_view_s_highlight_stays_on_its_exact_place_at_the_deepest_zoom`: 20 km'lik çizgiler
+    10⁷'de 0,05 pikselin içinde. 128 m parçalarıyla 1 pikselden çok sapıyor.
+  - Bütün hedefler ve GPU sınamaları geçti.
+- `kentos-desktop`: `viewport::highlight::tests::a_deep_view_s_highlight_is_split_at_its_box`.
+
 ## Uygulama
 
 - `crates/shared/geometry-core/src/geom/deep.rs` (yeni), `geom/mod.rs`.
@@ -124,3 +186,11 @@ pikseli geçen dairede sapma çeyrek pikseli aşıyor.
 - 3. adım: `geom::deep::{arc_in_box, step_for, COARSE_STEP, MOST_POINTS}`; stil çekirdeğinin `Deep` (kutu ve
   tolerans) ve `build/deep.rs`'in `curve`'ü; masaüstünde `DEEP_TOLERANCE_PX` ve ölçekle bayatlama;
   `crates/render/wgpu/src/camera.rs` (`MAX_SCALE`); `tests/precision.rs` ve `tests/gpu.rs` (ham yolun sınırı).
+- 4. adım:
+  - `geom::deep::{Deep, ellipse_in_box, bulge_path_in_box}`, iç `Conic` ve `in_box`. `Deep` buraya taşındı; stil
+    çekirdeği onu yeniden veriyor.
+  - Stil çekirdeği `build/deep.rs`: `curve`'ün elipsi, `refined`; `output_parts`'ın inceltilmiş şekli.
+  - `crates/render/wgpu/src/scene.rs`: `Builder::deep`, `segment` ve `cut`, `fill`'in halkaları;
+    `build_highlight(_parallel)`'ın `deep`'i, `highlight_one`, `deep_ellipse`.
+  - `camera.rs` (`MAX_SCALE` 10⁷); `tests/{precision,scene}.rs`.
+  - Masaüstü: `viewport/highlight.rs` (anahtarın `deep`'i, `Viewport::deep`) ve `cad/sheet_model.rs`.
