@@ -428,8 +428,8 @@ impl App {
         let mut toggle =
             kentos_ui::widget::status_bar::Toggle::new(name, runs && on).compact(compact);
         if let Some(command) = command {
-            if let Some(keys) = command.shortcuts.first() {
-                toggle = toggle.shortcut(*keys);
+            if let Some(keys) = crate::keymap::first_key(command) {
+                toggle = toggle.shortcut(keys);
             }
             let note = match id {
                 "draft.snap" => self.snap_note(),
@@ -689,8 +689,8 @@ impl App {
                 )
                 .icon(command.icon)
                 .stay();
-            if let Some(keys) = command.shortcuts.first() {
-                menu = menu.shortcut(*keys);
+            if let Some(keys) = crate::keymap::first_key(command) {
+                menu = menu.shortcut(keys);
             }
         }
         menu = menu

@@ -494,8 +494,8 @@ fn headed_menu_of(
             Some(on) if !command.id.starts_with("tool.") => menu.check(title, on, run),
             _ => menu.item(title, run).icon(command.icon),
         };
-        if let Some(keys) = command.shortcuts.first() {
-            menu = menu.shortcut(*keys);
+        if let Some(keys) = crate::keymap::first_key(command) {
+            menu = menu.shortcut(keys);
         }
         menu = row_off(menu, off.get(k), &mut said).0;
     }
@@ -577,8 +577,8 @@ fn enabled(command: &Command) -> Option<Message> {
 
 fn tip(command: &Command) -> Tip {
     let tip = Tip::new(command.title).body(command.note());
-    match command.shortcuts.first() {
-        Some(keys) => tip.detail(*keys),
+    match crate::keymap::first_key(command) {
+        Some(keys) => tip.detail(keys),
         None => tip,
     }
 }
@@ -596,7 +596,8 @@ impl App {
         }
         all_line_commands(self.classic_names())
             .filter(|(id, _)| self.offers(id))
-            .map(|(id, line)| self.module_line(id, line))
+            // The user's own names too (keymap.rs, docs/adr/9308).
+            .map(|(id, line)| crate::keymap::user_line(id, self.module_line(id, line)))
             .collect()
     }
 

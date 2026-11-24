@@ -82,6 +82,8 @@ impl ModuleProfile for Architecture {
             | AppSetting::NewProjects
             | AppSetting::NewProjectType
             | AppSetting::NewProjectUnit => false,
+            // The user's keys and names are the person's, every program's (docs/adr/9308).
+            AppSetting::Shortcuts => true,
         }
     }
 

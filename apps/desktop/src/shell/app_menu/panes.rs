@@ -32,8 +32,8 @@ impl App {
                     let entry = entry
                         .on_hover(event(Event::Show(Pane::Overview)))
                         .on_press_maybe(self.menu_runs(id).then(|| event(Event::Run(id))));
-                    match catalog().get(id).and_then(|c| c.shortcuts.first()) {
-                        Some(chord) => entry.shortcut(*chord),
+                    match catalog().get(id).and_then(crate::keymap::first_key) {
+                        Some(chord) => entry.shortcut(chord),
                         None => entry,
                     }
                 }
@@ -367,7 +367,7 @@ impl App {
                 let runs = self.menu_runs(f.id);
                 let trailing: Element<'_, Message> = match (runs, catalog().get(f.id)) {
                     (true, Some(c)) => {
-                        label::caption(c.shortcuts.first().copied().unwrap_or("")).into()
+                        label::caption(crate::keymap::first_key(c).unwrap_or_default()).into()
                     }
                     _ => soon("Yakında"),
                 };

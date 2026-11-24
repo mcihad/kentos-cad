@@ -70,6 +70,8 @@ fn scored_commands(q: &str, names: Option<&crate::module_names::Names>) -> Vec<(
     if q.is_empty() {
         return Vec::new();
     }
+    // The user's own names find their commands too (keymap.rs, docs/adr/9308).
+    let keymap = crate::keymap::active();
     let mut scored: Vec<(f64, &'static Command)> = catalog()
         .commands()
         .iter()
@@ -78,7 +80,7 @@ fn scored_commands(q: &str, names: Option<&crate::module_names::Names>) -> Vec<(
             let aliases = names
                 .and_then(|n| n.aliases_of(command.id, command.aliases))
                 .unwrap_or_else(|| command.aliases.to_vec());
-            for alias in aliases {
+            for alias in aliases.into_iter().chain(keymap.names_of(command.id)) {
                 let alias = fold_turkish(alias);
                 if alias == q {
                     score = score.min(0.0);
@@ -236,7 +238,7 @@ impl App {
                     icon: command.icon,
                     title: command.title.into(),
                     detail: detail.into(),
-                    shortcut: command.shortcuts.first().map(|s| (*s).into()),
+                    shortcut: crate::keymap::first_key(command).map(Into::into),
                     enabled: runs,
                     revealable: home.is_some(),
                 }

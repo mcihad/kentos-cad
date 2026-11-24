@@ -48,6 +48,8 @@ impl App {
         let (names, codes) = (s.bool("graphics.pointNames"), s.bool("graphics.pointCodes"));
         self.spatial
             .set_point_texts(self.document.as_ref().map(|d| &d.model), names, codes);
+        // The user's keys and names at once, no restart (keymap.rs, docs/adr/9308).
+        self.apply_keymap();
         self.apply_appearance();
     }
 

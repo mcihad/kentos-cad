@@ -67,6 +67,9 @@ pub enum AppSetting {
     NewProjectType,
     /// Yeni projeler › Çizim birimi (`newProjects.drawingUnit`): a map's works are in metres (docs/adr/0802).
     NewProjectUnit,
+    /// The Kısayollar section (settings_keys.rs, docs/adr/9308): the user's keys and names, the person's in every
+    /// program.
+    Shortcuts,
 }
 
 /// The application menu's İçe aktar and Dışa aktar formats a program lists.
@@ -246,9 +249,13 @@ impl App {
         self.surfaces().is_none_or(|s| s.setting(setting))
     }
 
-    /// Whether Uygulama ayarları has `section` here: Yeni projeler is the one only some programs have.
+    /// Whether Uygulama ayarları has `section` here: Yeni projeler and Kısayollar are placed by the profile.
     pub fn shows_settings_section(&self, section: SettingsSection) -> bool {
-        section != SettingsSection::NewProjects || self.shows_setting(AppSetting::NewProjects)
+        match section {
+            SettingsSection::NewProjects => self.shows_setting(AppSetting::NewProjects),
+            SettingsSection::Shortcuts => self.shows_setting(AppSetting::Shortcuts),
+            _ => true,
+        }
     }
 
     /// Whether the active module's layer menu has `entry`, whatever the layer (its kind decides too, layer_entries.rs).

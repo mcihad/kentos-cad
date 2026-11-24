@@ -2,7 +2,9 @@
 //! ui/dialogs.ts; docs/inventory/parity-audit.md H1, H2): what each mouse
 //! action does, then every command with a key by the web's categories, with
 //! its icon and command line names; a search over all of it. The keys are
-//! the catalog's, as the web binds them.
+//! the catalog's as the web binds them, and the user's where they gave their
+//! own (keymap.rs, docs/adr/9308: marked “kullanıcının”); Kısayolları
+//! değiştir… opens Uygulama ayarları › Kısayollar.
 
 use iced::widget::{Column, Row, column, container, row};
 use iced::{Center, Element, Fill, Task, Theme};
@@ -158,30 +160,42 @@ fn plain_chord(text: &str) -> String {
         .join("+")
 }
 
-/// One command's row: its icon, title, first two command line names and keys.
+/// One command's row: its icon, title, the user's names and its first two command line names, and keys.
 struct Line {
     icon: kentos_ui::icon::Icon,
     title: &'static str,
-    aliases: Vec<&'static str>,
+    aliases: Vec<String>,
     chords: Vec<String>,
     /// The keys as the web writes them (`Ctrl+S`): the search finds them too, ⌘ shown on macOS or not.
     plain: Vec<String>,
+    /// Its keys or names are the user's (keymap.rs).
+    user: bool,
 }
 
 /// The commands with keys the program offers (`offers`: a module's program its own, docs/adr/0802; its keys run
 /// nothing else), by category in the catalog's order, those the search finds (its title, keys or names).
 fn groups(query: &str, offers: impl Fn(&str) -> bool) -> Vec<(&'static str, Vec<Line>)> {
+    let keymap = crate::keymap::active();
     let mut out: Vec<(&'static str, Vec<Line>)> = Vec::new();
     for c in catalog().commands() {
-        if c.shortcuts.is_empty() || !offers(c.id) {
+        // The keys as they work now: the user's where they gave their own (keymap.rs).
+        let keys = keymap.keys_of(c);
+        if keys.is_empty() || !offers(c.id) {
             continue;
         }
+        let names = keymap.names_of(c.id);
+        let user = !names.is_empty() || keymap.keys_source(c.id) == crate::keymap::Source::User;
         let line = Line {
             icon: c.icon,
             title: c.title,
-            aliases: c.aliases.iter().take(2).copied().collect(),
-            chords: c.shortcuts.iter().map(|s| chord(s)).collect(),
-            plain: c.shortcuts.iter().map(|s| plain_chord(s)).collect(),
+            aliases: names
+                .into_iter()
+                .chain(c.aliases.iter().take(2).copied())
+                .map(str::to_owned)
+                .collect(),
+            chords: keys.iter().map(|s| chord(s)).collect(),
+            plain: keys.iter().map(|s| plain_chord(s)).collect(),
+            user,
         };
         let found = query.is_empty()
             || fold_turkish(line.title).contains(query)
@@ -212,8 +226,8 @@ pub(crate) fn listed(app: &App, query: &str) -> Vec<&'static str> {
         .collect()
 }
 
-/// A key as a cap.
-fn kbd<'a>(key: String) -> Element<'a, Message> {
+/// A key as a cap (Kısayollar' keys too, settings_keys.rs).
+pub(crate) fn kbd<'a>(key: String) -> Element<'a, Message> {
     container(label::caption(key))
         .padding([1, 6])
         .style(|theme: &Theme| {
@@ -300,6 +314,9 @@ impl App {
                         name = name.push(
                             label::mono_caption(l.aliases.join(", ")).style(style::text::muted),
                         );
+                    }
+                    if l.user {
+                        name = name.push(label::caption("kullanıcının").style(style::text::muted));
                     }
                     let keys = l
                         .chords
@@ -391,6 +408,15 @@ impl App {
                     right: 12.0,
                     ..iced::Padding::ZERO
                 }))
+                // The user's own keys and names (settings_keys.rs, docs/adr/9308).
+                .aside(
+                    iced::widget::button(label::body("Kısayolları değiştir…"))
+                        .padding(kentos_ui::theme::metrics::action())
+                        .on_press(Message::Settings(crate::settings_view::Edit::Keys(
+                            crate::settings_keys::KeysEdit::Open,
+                        )))
+                        .style(style::button::ghost),
+                )
                 .action(
                     iced::widget::button(iced::widget::text("Kapat"))
 .padding(kentos_ui::theme::metrics::action())

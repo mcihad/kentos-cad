@@ -30,6 +30,8 @@ pub enum Section {
     Snap,
     NewProjects,
     Engine,
+    /// Kısayollar: the user's keys and names for the commands (settings_keys.rs, docs/adr/9308).
+    Shortcuts,
     /// Yapay zekâ: the user's own AI agents (assistant/settings.rs, docs/adr/8056 §4).
     Ai,
     /// Python ve eklentiler: the user's optional Python (python_setup.rs, plan/eklenti.md ADIM 18A).
@@ -38,11 +40,12 @@ pub enum Section {
 }
 
 impl Section {
-    pub const ALL: [Section; 7] = [
+    pub const ALL: [Section; 8] = [
         Self::Appearance,
         Self::Snap,
         Self::NewProjects,
         Self::Engine,
+        Self::Shortcuts,
         Self::Ai,
         Self::Python,
         Self::File,
@@ -55,6 +58,7 @@ impl Section {
             Self::Snap => "Kenetleme",
             Self::NewProjects => "Yeni projeler",
             Self::Engine => "Çizim motoru",
+            Self::Shortcuts => "Kısayollar",
             Self::Ai => "Yapay zekâ",
             Self::Python => "Python ve eklentiler",
             Self::File => "Ayar dosyası",
@@ -67,6 +71,7 @@ impl Section {
             Self::Snap => Icon::Magnet,
             Self::NewProjects => Icon::DocumentNew,
             Self::Engine => Icon::Cube,
+            Self::Shortcuts => crate::icons::from_web(Some("keyboard")),
             Self::Ai => crate::icons::from_web(Some("assistant")),
             Self::Python => crate::icons::from_web(Some("terminal")),
             Self::File => Icon::Open,
@@ -80,6 +85,7 @@ impl Section {
             Self::Snap => "Kenetleme ve seçim",
             Self::NewProjects => "Yeni proje varsayılanları",
             Self::Engine => "Çizim motoru",
+            Self::Shortcuts => "Kısayollar ve takma adlar",
             Self::Ai => "Yapay zekâ ajanları",
             Self::Python => "Python ve eklentiler",
             Self::File => "Ayar dosyası",
@@ -100,6 +106,9 @@ impl Section {
             }
             Self::Engine => {
                 "Çizim alanını ekran kartında çizerken kenar yumuşatma, çözünürlük, sembol boyutu ve çizgi kalınlığı. Bu cihaza özgüdür; menüler, paneller ve pencereler her zaman tam kalitede çizilir."
+            }
+            Self::Shortcuts => {
+                "Komutlara kendi tuşlarınızı ve komut satırı adlarınızı verin. Sizindir: her programda ve her projede aynıdır, ayar dosyasıyla taşınır; Kaydet ile hemen geçerli olur."
             }
             Self::Ai => {
                 "Asistan panelinin konuştuğu yapay zekâ ajanları: sağlayıcı, model ve kendi API anahtarınız. Biri varsayılandır. Bu bölüm kendi Kaydet'iyle hemen yazılır; ayar dosyasıyla dışa aktarılmaz."
@@ -186,6 +195,10 @@ impl Section {
                 "graphics.transparency",
                 "graphics.highlightColor",
                 "graphics.highlightWidth",
+            ],
+            Self::Shortcuts => &[
+                kentos_commands::SHORTCUTS_SETTING,
+                kentos_commands::ALIASES_SETTING,
             ],
             Self::Ai | Self::Python | Self::File => &[],
         }
@@ -354,6 +367,7 @@ impl App {
             Section::Snap => snap_section(&fields, self.grid_titles()),
             Section::NewProjects => self.new_projects_section(&fields),
             Section::Engine => self.engine_section(&fields),
+            Section::Shortcuts => self.shortcuts_section(draft),
             Section::Ai => self.ai_section(),
             Section::Python => self.python_section(),
             Section::File => self.file_section(draft),

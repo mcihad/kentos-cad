@@ -229,6 +229,8 @@ mod info_card;
 mod input;
 #[path = "shell/keys.rs"]
 pub mod keys;
+#[path = "shell/keymap.rs"]
+pub mod keymap;
 #[path = "shell/keytips.rs"]
 mod keytips;
 #[path = "cad/label_picture.rs"]
@@ -437,6 +439,8 @@ mod selection_roles;
 mod selection_commands;
 #[path = "shell/settings.rs"]
 pub mod settings;
+#[path = "shell/settings_keys.rs"]
+pub mod settings_keys;
 #[path = "shell/settings_look.rs"]
 mod settings_look;
 #[path = "shell/settings_sections.rs"]

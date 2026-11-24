@@ -533,8 +533,8 @@ impl App {
                             names.join(" · ")
                         ));
                         // The shortcut starts the command itself, not the method on top (UR2-003).
-                        match command.shortcuts.first().filter(|_| top.option.is_none()) {
-                            Some(keys) => tip.detail(*keys),
+                        match crate::keymap::first_key(command).filter(|_| top.option.is_none()) {
+                            Some(keys) => tip.detail(keys),
                             None => tip,
                         }
                     }

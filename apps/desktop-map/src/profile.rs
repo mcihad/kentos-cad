@@ -80,6 +80,8 @@ impl ModuleProfile for Map {
         match setting {
             AppSetting::Geographic | AppSetting::FormOnCreate | AppSetting::NewProjects => true,
             AppSetting::NewProjectType | AppSetting::NewProjectUnit => false,
+            // The user's keys and names are the person's, every program's (docs/adr/9308).
+            AppSetting::Shortcuts => true,
         }
     }
 

@@ -303,8 +303,8 @@ impl App {
                 } else {
                     "levelDown"
                 })));
-                if let Some(keys) = crate::catalog::catalog().get(id).and_then(|c| c.shortcuts.first()) {
-                    menu = menu.shortcut(*keys);
+                if let Some(keys) = crate::catalog::catalog().get(id).and_then(crate::keymap::first_key) {
+                    menu = menu.shortcut(keys);
                 }
             }
             menu = menu.separator().header("Kat görünümü");

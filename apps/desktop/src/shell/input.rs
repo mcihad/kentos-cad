@@ -772,6 +772,10 @@ impl App {
 
     /// A key no text box captured, by ADR 0018's order (see the module).
     pub(crate) fn key(&mut self, press: KeyPress) -> Task<Message> {
+        // Uygulama ayarları › Kısayollar waits for a key: whatever is pressed is the key given (settings_keys.rs).
+        if let Some(task) = self.record_key(&press) {
+            return task;
+        }
         // The ribbon's key tips take every key while they show; Alt pressed
         // alone arms them, shown when it is let go (ribbon_keys.rs).
         if let Some(task) = self.key_tips_key(&press) {
@@ -1145,15 +1149,11 @@ impl App {
 }
 
 /// The command a chord runs while a text field has the keyboard: one the web
-/// binds with `allowInInput` (the inventory's `shortcutsInInput`). They are
-/// all chords (Ctrl, Alt, F-keys), so they reach every command, as the
-/// drawing's shortcuts do (ADR 0017).
+/// binds with `allowInInput` (the inventory's `shortcutsInInput`), by its key
+/// or by one the user gave it (keymap.rs). They are all chords (Ctrl, Alt,
+/// F-keys), so they reach every command, as the drawing's shortcuts do (ADR 0017).
 fn shortcut_in_input(chord: &str) -> Option<&'static str> {
-    catalog()
-        .commands()
-        .iter()
-        .find(|c| c.shortcuts_in_input.contains(&chord))
-        .map(|c| c.id)
+    crate::keymap::active().command_in_input(chord)
 }
 
 /// A task that takes the keyboard from every text box: the drawing has it

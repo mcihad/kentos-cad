@@ -585,19 +585,24 @@ fn each_program_has_its_own_settings_sections() {
         );
     }
     // Uygulama ayarları: Yeni projeler is not KentOS Mimari's; the type is kentos-cad's alone, and so is the unit
-    // (a map's works are in metres).
+    // (a map's works are in metres). Kısayollar is every program's: the user's keys are the person's (docs/adr/9308).
     let rows = [
         AppSetting::Geographic,
         AppSetting::FormOnCreate,
         AppSetting::NewProjects,
         AppSetting::NewProjectType,
         AppSetting::NewProjectUnit,
+        AppSetting::Shortcuts,
     ];
+    let shortcuts = &rows[5..];
+    let harita = [&rows[..3], shortcuts].concat();
+    let yol = [AppSetting::Geographic, AppSetting::NewProjects, AppSetting::Shortcuts];
     for (program, shown) in [
         (None, &rows[..]),
-        (MIMARI, &[][..]),
-        (HARITA, &rows[..3]),
-        (GIS, &rows[..3]),
+        (MIMARI, shortcuts),
+        (HARITA, &harita[..]),
+        (GIS, &harita[..]),
+        (Some(Module::Road), &yol[..]),
     ] {
         let app = started(program);
         for row in rows {

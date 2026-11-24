@@ -263,15 +263,30 @@ impl App {
         self.settings.bool(SETTING)
     }
 
-    /// Starts what a profile name typed in the command line names, when the
-    /// profile is on and the name is not one of the user's models; none
-    /// otherwise, and the line goes on as before. KentOS's own names never
-    /// reach here: the profile left them out.
+    /// Starts what a profile name typed in the command line names: the
+    /// user's own names first (keymap.rs, docs/adr/9308), then the classic
+    /// profile's when it is on; a name that is one of the user's models is
+    /// left to them. None otherwise, and the line goes on as before. KentOS's
+    /// own names never reach here: neither profile holds them.
     pub(crate) fn run_profile_name(&mut self, text: &str) -> Option<Task<Message>> {
+        if let Some(id) = crate::keymap::active().command_named(text) {
+            return self.run_named(text, id, None);
+        }
         if !self.classic_names() {
             return None;
         }
         let name = *classic().find(text)?;
+        self.run_named(text, name.command, name.option)
+    }
+
+    /// Runs what a profile's name starts: its command, or the tool's method. None for a name that is one of the
+    /// user's models (the line runs the model); a command this program does not offer is said.
+    fn run_named(
+        &mut self,
+        text: &str,
+        command: &'static str,
+        option: Option<&'static str>,
+    ) -> Option<Task<Message>> {
         let folded = fold(text);
         if self
             .user_models()
@@ -281,22 +296,22 @@ impl App {
         }
         // A module's program runs only its own commands (docs/adr/0802).
         if let Some(why) = catalog()
-            .get(name.command)
+            .get(command)
             .and_then(|c| self.not_offered(c.id, c.title))
         {
             self.error(why);
             return Some(Task::none());
         }
         self.remember(text);
-        let task = match name.option.and_then(|option| method(name.command, option)) {
+        let task = match option.and_then(|option| method(command, option)) {
             Some(entry) => {
                 let option = entry.option.unwrap_or_default();
                 self.run_method(entry.id, option, entry.label)
             }
-            None => self.run(name.command),
+            None => self.run(command),
         };
         // As a tool typed by its KentOS name: the drawing takes the keyboard.
-        if name.command.starts_with("tool.") && self.session.is_running() {
+        if command.starts_with("tool.") && self.session.is_running() {
             self.line_focused = false;
             return Some(Task::batch([task, release_keyboard()]));
         }

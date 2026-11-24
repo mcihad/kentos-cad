@@ -81,8 +81,8 @@ pub(crate) fn rows_menu(rows: &[Row], folded: bool) -> Menu<Message> {
         Row::Command(id) => match catalog().get(id) {
             Some(command) => {
                 let menu = menu.check(command.title, folded, Message::Run(command.id));
-                match command.shortcuts.first() {
-                    Some(keys) => menu.shortcut(*keys),
+                match crate::keymap::first_key(command) {
+                    Some(keys) => menu.shortcut(keys),
                     None => menu,
                 }
             }
@@ -168,8 +168,8 @@ pub(crate) fn split_list(
         };
         // A shortcut starts its command as it is, so only the command's own row shows it: a method row is the command
         // with an option given (UR2-003: Shift+L beside Merkez and Eliptik yay started neither).
-        let menu = match command.shortcuts.first().filter(|_| entry.option.is_none()) {
-            Some(keys) => menu.shortcut(*keys),
+        let menu = match crate::keymap::first_key(command).filter(|_| entry.option.is_none()) {
+            Some(keys) => menu.shortcut(keys),
             None => menu,
         };
         crate::view::row_off(menu, off.get(k), &mut said).0

@@ -326,8 +326,8 @@ impl App {
             Some(on) => menu.check(title, on, on_press),
             None => menu.item(title, on_press).icon(command.icon),
         };
-        match command.shortcuts.first() {
-            Some(keys) => menu.shortcut(*keys),
+        match crate::keymap::first_key(command) {
+            Some(keys) => menu.shortcut(keys),
             None => menu,
         }
     }

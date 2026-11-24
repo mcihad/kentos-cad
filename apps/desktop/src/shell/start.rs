@@ -128,10 +128,8 @@ impl App {
 
     pub(crate) fn start_view(&self) -> Element<'_, Message> {
         let action = |id: &'static str, glyph: Icon, title: &'static str, sub: String| {
-            let chord = catalog()
-                .get(id)
-                .and_then(|c| c.shortcuts.first().copied())
-                .unwrap_or("");
+            // Its key as the user's keymap gives it (keymap.rs).
+            let chord = catalog().get(id).and_then(crate::keymap::first_key).unwrap_or_default();
             let face = row![
                 container(icon(glyph).size(22.0).tone(Tone::Accent))
                     .center(36)

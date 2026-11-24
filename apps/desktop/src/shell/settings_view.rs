@@ -24,7 +24,7 @@ use crate::settings::schema;
 use crate::settings_sections::Section;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 63] = [
+pub const KEYS: [&str; 65] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -88,6 +88,9 @@ pub const KEYS: [&str; 63] = [
     "newProjects.workspace",
     "newProjects.drawingUnit",
     "newProjects.drawingFont",
+    // The user's keys and names (settings_keys.rs, docs/adr/9308).
+    kentos_commands::SHORTCUTS_SETTING,
+    kentos_commands::ALIASES_SETTING,
 ];
 
 /// The snap kinds, in the web's order (docs/adr/0029, 0163).
@@ -125,6 +128,8 @@ pub struct SettingsDraft {
     pub note: Option<(bool, String)>,
     /// The section shown (settings_sections.rs).
     pub section: Section,
+    /// Kısayollar' search, chosen command and what waits for an answer (settings_keys.rs).
+    pub keys: crate::settings_keys::KeysPage,
 }
 
 impl SettingsDraft {
@@ -154,6 +159,8 @@ pub enum Edit {
     Agents(crate::assistant::AgentsEdit),
     /// Python ve eklentiler (python_setup.rs): written at once, apart from the draft.
     Python(crate::python_setup::PythonEdit),
+    /// Kısayollar (settings_keys.rs): into the draft's keys and names.
+    Keys(crate::settings_keys::KeysEdit),
 }
 
 impl App {
@@ -194,6 +201,7 @@ impl App {
             reset: false,
             note: None,
             section,
+            keys: Default::default(),
         });
         self.dialog = Some(crate::app::Dialog::Settings);
     }
@@ -204,6 +212,9 @@ impl App {
         }
         if let Edit::Python(edit) = edit {
             return self.python_edit(edit);
+        }
+        if let Edit::Keys(edit) = edit {
+            return self.keys_edit(edit);
         }
         let Some(draft) = &mut self.settings_draft else {
             return Task::none();
@@ -304,7 +315,7 @@ impl App {
             }
             Edit::Save => return self.save_settings(),
             // Taken above, before the draft.
-            Edit::Agents(_) | Edit::Python(_) => {}
+            Edit::Agents(_) | Edit::Python(_) | Edit::Keys(_) => {}
         }
         Task::none()
     }
@@ -764,6 +775,7 @@ mod tests {
             (Section::Snap, "kenetleme"),
             (Section::NewProjects, "yeni-projeler"),
             (Section::Engine, "cizim-motoru"),
+            (Section::Shortcuts, "kisayollar"),
             (Section::Ai, "yapay-zeka"),
             (Section::File, "ayar-dosyasi"),
         ];

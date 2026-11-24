@@ -132,7 +132,9 @@ impl ModuleProfile for NoProject {
             | AppSetting::FormOnCreate
             | AppSetting::NewProjects
             | AppSetting::NewProjectType
-            | AppSetting::NewProjectUnit => true,
+            | AppSetting::NewProjectUnit
+            // The user's keys and names are the person's (docs/adr/9308).
+            | AppSetting::Shortcuts => true,
         }
     }
 

@@ -45,6 +45,9 @@ mod option_contract_tests;
 #[path = "tests/alias_profile_scenes.rs"]
 mod alias_profile_scenes;
 #[cfg(test)]
+#[path = "tests/keymap_tests.rs"]
+mod keymap_tests;
+#[cfg(test)]
 #[path = "tests/import_decision_scenes.rs"]
 mod import_decision_scenes;
 #[cfg(test)]

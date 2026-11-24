@@ -65,8 +65,8 @@ impl App {
         });
         let shortcut = crate::catalog::catalog()
             .get("edit.cycleSelection")
-            .and_then(|c| c.shortcuts.first())
-            .map(|s| crate::shortcuts::chord(s));
+            .and_then(crate::keymap::first_key)
+            .map(|s| crate::shortcuts::chord(&s));
         let words = format!(
             "Burada üst üste {n} nesne var. {}Tıklayın: listeden seçin.",
             shortcut.map_or(String::new(), |s| format!("{s}: sıradakini seç. "))

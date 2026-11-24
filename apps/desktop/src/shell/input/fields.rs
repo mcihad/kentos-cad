@@ -585,11 +585,9 @@ impl App {
         } else {
             chord
         };
-        // A module's program runs only its own commands' shortcuts (docs/adr/0802).
-        let command = catalog()
-            .commands()
-            .iter()
-            .find(|c| c.shortcuts.contains(&chord) && self.offers(c.id))?;
+        // A module's program runs only its own commands' shortcuts (docs/adr/0802); the user's keys over the
+        // catalog's (keymap.rs, docs/adr/9308).
+        let command = crate::keymap::active().command_for(chord, |id| self.offers(id))?;
         if !keys::is_chorded(chord) && command.standing != Standing::Ported {
             return None;
         }
