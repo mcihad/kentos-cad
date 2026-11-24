@@ -343,6 +343,7 @@ pub fn masks_and_underlines_draw_under_and_over_the_letters(gpu: &Gpu) {
     let mask = GlyphQuad {
         transform: [w * c, w * s, -h * s, h * c, -(w * c - h * s) / 2.0, -(w * s + h * c) / 2.0],
         color: Rgba8([255, 0, 0, 255]),
+        triangle: false,
     };
     let alone = GlyphText {
         unit: GlyphUnit::Px { turns: false },
@@ -370,11 +371,13 @@ pub fn masks_and_underlines_draw_under_and_over_the_letters(gpu: &Gpu) {
         under: vec![GlyphQuad {
             transform: [8.0, 0.0, 0.0, 2.0, -4.0 - m[0], -1.0 - m[1]],
             color: Rgba8([255, 0, 0, 255]),
-        }],
+        triangle: false,
+    }],
         over: vec![GlyphQuad {
             transform: [8.0, 0.0, 0.0, 0.1, -4.0 - m[0], -0.05 - m[1]],
             color: Rgba8([0, 200, 0, 255]),
-        }],
+        triangle: false,
+    }],
         ..world([E, N], &text, 0.0)
     };
     let rgba = draw(gpu, &mut glyphs, std::slice::from_ref(&lettered), &frame);
@@ -392,6 +395,53 @@ pub fn masks_and_underlines_draw_under_and_over_the_letters(gpu: &Gpu) {
     assert!(ink_alone > 50 && ink + 40 >= ink_alone, "{ink} of {ink_alone}");
     assert!(green_alone > 100 && green == green_alone, "{green} of {green_alone}");
     keep(&rgba, "maske-alt-cizgi-gpu");
+}
+
+/// Rings as their triangles with their outline just inside, and lines as segments (docs/adr/9212 §9): a hexagon, a
+/// concave L and a line 2 px wide cover their areas, their edges smoothed.
+pub fn rings_and_lines_cover_their_areas(gpu: &Gpu) {
+    let mut glyphs = GlyphGpu::new(&gpu.device, FORMAT);
+    let red = Rgba8([255, 0, 0, 255]);
+    let frame = view([E, N], 20.0);
+    let cover = |shapes: Vec<GlyphQuad>, glyphs: &mut GlyphGpu| {
+        let text = GlyphText {
+            unit: GlyphUnit::Px { turns: false },
+            glyphs: Vec::new(),
+            under: shapes,
+            ..world([E, N], &layout("O", 1.0, 0.0), 0.0)
+        };
+        let rgba = draw(gpu, glyphs, std::slice::from_ref(&text), &frame);
+        let shares: Vec<f64> = rgba
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|p| ((f64::from(p[0]) - f64::from(p[1])) / 255.0).clamp(0.0, 1.0))
+            .collect();
+        let edge = shares.iter().filter(|s| (0.15..0.85).contains(*s)).count();
+        (shares.iter().sum::<f64>(), edge, rgba)
+    };
+    let hexagon: Vec<[f64; 2]> = (0..6)
+        .map(|i| {
+            let a = f64::from(i) * std::f64::consts::PI / 3.0 + 0.2;
+            [50.0 * a.cos(), 50.0 * a.sin()]
+        })
+        .collect();
+    let (area, edge, _) = cover(GlyphQuad::ring(&hexagon, 1.0, red), &mut glyphs);
+    let exact = 1.5 * 3f64.sqrt() * 50.0 * 50.0;
+    eprintln!("glyphs: a hexagon of {exact:.0} px² covers {area:.0}, {edge} pixels of its edge partly");
+    // The triangles fill to the edge; the outline smooths its outer half pixel (about a pixel of the edge in three).
+    assert!((area - exact).abs() < 0.01 * exact && edge > 80, "{area} {edge}");
+    // A concave L, clockwise: 80 × 80 less its upper right 50 × 50.
+    let l = [[-40.0, -40.0], [-40.0, 40.0], [-10.0, 40.0], [-10.0, -10.0], [40.0, -10.0], [40.0, -40.0]];
+    let (area, _, _) = cover(GlyphQuad::ring(&l, 1.0, red), &mut glyphs);
+    eprintln!("glyphs: a concave L of 3900 px² covers {area:.0}");
+    assert!((area - 3900.0).abs() < 0.015 * 3900.0, "{area}");
+    let line = GlyphQuad::segment([-60.0, -70.0], [60.0, -50.0], 2.0, red).expect("a segment");
+    let (area, _, rgba) = cover(vec![line], &mut glyphs);
+    let exact = 2.0 * 120f64.hypot(20.0);
+    eprintln!("glyphs: a line of {exact:.0} px² covers {area:.0}");
+    assert!((area - exact).abs() < 0.03 * exact, "{area}");
+    keep(&rgba, "cizgi-gpu");
 }
 
 /// Fields on pages of 160 px (a dozen and more of them, the texture made again as they come) draw as on one page.

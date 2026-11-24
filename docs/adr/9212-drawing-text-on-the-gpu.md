@@ -239,3 +239,44 @@ küçük yazının bantları; SHX ve Unicode profilli yazılar.
 |---|---|---|
 | Masaüstü sınama derlemesi, küçük bir değişiklikte | 5 dk 24 sn | 1 dk 8 sn |
 | Masaüstü ikilisi, küçük bir değişiklikte | 2–10 dk | 40 sn |
+
+## §9 Aşama 4: yazıların kanvası boşaldı (24 Kasım 2026)
+
+**GPU'ya geçenler:** çizim yazılarının boyamasında kanvasa giden son parçalar.
+
+- **Çizgiler:** etiketin çerçevesi, sabitlenmiş etiketin dış çizgisi, çağrı çizgisi, SHX harflerinin çizgileri, büyütülmüş
+  öncü okunun çizgileri. Her parça kanvasınki kadar (1,2 px) geniş, kenarı yumuşatılmış bir dörtgen.
+- **Halkalar:** yuvarlak ve elips zeminler, SHX yazının maskesi, ok uçları ve paralelkenar olmayan dörtgenler.
+  - Çekirdeğin üçgenlemesiyle (`triangulate_into`, içbükey halka da olur) üçgen yelpazesi olarak çiziliyorlar.
+  - Kenarlarını, halkanın yarım pikselinin içine çekilmiş 1 px'lik bir dış çizgi yumuşatıyor; alan büyümüyor.
+- **Okunamayacak kadar küçük yazının bantları:** gerçek boy kipinin bant ağı dahil.
+- **Unicode profilli yazılar:** paylaşılan glif planından (`GlyphPlace::of`). Maskesi, harfleri renk renk, çizgileri.
+- **Yazılmakta olan paragrafın önizlemesi.**
+
+Boyama başlarken her şey GPU'ya açılıyor. Yere göre açıp kapamak kalktı.
+
+**Kanvasta kalanlar:**
+
+- ekranın kendi işaretleri: kuzey oku, ölçek çubuğu, eksenler (RM-14, ekrana sabit oldukları için);
+- harfi çizim yüzlerinde olmayan parça (sistem yazı tipine düşen);
+- glif planı kurulamayan Unicode yazının hata işareti.
+
+**Sınamalar:**
+
+- **GPU:**
+  - çekirdeğin üçgenlemesiyle altıgen 6 495 px² yerine 6 531 px² örtüyor (%0,55);
+  - içbükey L 3 900 px², 2 px'lik çizgi 243 px², ikisi de tam.
+  - Kenar yumuşaması tek yanlı: üçgenler içi tam doldurur, dış çizgi dıştaki yarım pikseli yumuşatır.
+- **Masaüstü:** çoklu çizginin parçaları (kapalıysa bir fazla), beşgenin yelpazesi ve dış çizgisi. Yazı ve sahne
+  sınamalarının 40'ı geçti.
+
+**Gerçek pencere**, kanvas ile GPU, dört oturum aynı anda dört sanal ekranda:
+
+| Çizim, görünüm | Farklı piksel | Dörtte birden fazla sapan |
+|---|---|---|
+| Denetim çizimi, açılış | %0,48 | 213 |
+| Denetim çizimi, yakın | %0,28 | 54 |
+| Ev projesi, açılış (bantlar dahil) | %0,36 | 152 |
+| Ev projesi, 4 / 8 / 12 adım | %0,07 / 0,04 / 0,13 | 47 / 0 / 200 |
+
+Fark aşama 2 ve 3'tekiyle aynı: küçük harflerin kenarı ve taban çizgisinin piksele yuvarlanması.

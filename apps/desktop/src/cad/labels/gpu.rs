@@ -1,11 +1,12 @@
-//! The drawing's text on the GPU (docs/adr/9212 §4, stages 2 and 3): the pieces of text objects, a block's texts,
-//! multi-line texts with their masks, dimension values and a table's cells with their fills go to the drawing area's
-//! renderer as glyphs and flat quads (`kentos_render_wgpu::glyphs`) instead of onto the canvas. Placing and layout stay
-//! the canvas's own, to the glyph: a piece is shaped as the canvas shapes it (`shaped`: Iced's text at [`REFERENCE`])
-//! and each glyph's face is found among the drawing's faces by its bytes; a mask, an underline and a fill are the
-//! canvas's rectangles. A piece with a glyph from a face that is not the drawing's (the text system fell back to another
-//! for a letter they lack) stays on the canvas, as does what the label engine places (its labels, their frames and
-//! callouts), the texts too small to read, SHX and Unicode-profile texts.
+//! The drawing's text on the GPU (docs/adr/9212 §4, stages 2 to 4): every text the labels paint goes to the drawing
+//! area's renderer as glyphs, flat quads, rings and lines (`kentos_render_wgpu::glyphs`) instead of onto the canvas:
+//! text objects, a block's texts, multi-line texts with their masks, dimension values, a table's cells with their fills,
+//! the label engine's labels with their frames and callouts, SHX texts' strokes, Unicode-profile texts, the bands of the
+//! texts too small to read and a text being written. Placing and layout stay the canvas's own, to the glyph: a piece is
+//! shaped as the canvas shapes it (`shaped`: Iced's text at [`REFERENCE`]) and each glyph's face is found among the
+//! drawing's faces by its bytes. A piece with a glyph from a face that is not the drawing's (the text system fell back to
+//! another for a letter they lack) stays on the canvas, as do the screen's own marks (grid north, the scale bar, the
+//! axes: RM-14).
 //!
 //! The canvas draws its picture in the frame's draw, before the scene is prepared (Iced draws the widgets, then
 //! prepares and renders their primitives): a painting leaves its texts in the [`GlyphSlot`] and the scene draws them
@@ -19,6 +20,9 @@ use std::sync::{Arc, PoisonError};
 use iced::advanced::graphics::text::cosmic_text::fontdb;
 use kentos_geometry_core::text::shaping::FontId;
 use kentos_render_wgpu::glyphs::{GlyphKey, GlyphPlace, GlyphQuad, GlyphSet, GlyphText, GlyphUnit};
+
+/// A line's width on the canvas (`Ink::stroke_line`'s), logical px.
+const LINE: f64 = 1.2;
 
 /// Whether the drawing area's texts go to its renderer: `KENTOS_DIAG_TEXT=canvas` keeps them all on the canvas, for a
 /// measurement or a comparison.
@@ -60,38 +64,10 @@ impl Sink {
         Sink { slot, texts: RefCell::new(Vec::new()), open: Cell::new(false) }
     }
 
-    /// A painting starts.
+    /// A painting starts: everything it draws but the screen's marks may go to the GPU (since stage 4).
     pub(super) fn begin(&self) {
         self.texts.borrow_mut().clear();
-        self.open.set(false);
-    }
-
-    /// A spot's painting starts: whether its pieces and quads may go to the GPU. The label engine's labels draw their
-    /// frames and callouts as rings and lines (stage 3's second step).
-    pub(super) fn spot(&self, spot: &LabelSpot) {
-        let open = match spot {
-            LabelSpot::Text { .. }
-            | LabelSpot::PieceText { .. }
-            | LabelSpot::ParagraphMask { .. }
-            | LabelSpot::Dimension { .. }
-            | LabelSpot::PieceDimension { .. }
-            | LabelSpot::Cell { .. } => true,
-            LabelSpot::Line { unicode, .. } => unicode.is_none(),
-            _ => false,
-        };
-        self.open.set(open);
-    }
-
-    /// A label the label engine placed (docs/adr/0212 §3.8): its words, shadows and a rectangle behind it go to the GPU;
-    /// one with a round or elliptic background stays on the canvas whole, or its background, drawn there over the GPU,
-    /// would hide its words. Its outline and callout stay on the canvas beside its words.
-    pub(super) fn frame(&self, round: bool) {
-        self.open.set(!round);
-    }
-
-    /// The spots are done: what follows (a text being written, the bands, the marks) stays on the canvas.
-    pub(super) fn close(&self) {
-        self.open.set(false);
+        self.open.set(true);
     }
 
     /// The painting is done: its texts to the renderer, placed at `placed_px` (the view's map pixels a metre).
@@ -116,15 +92,15 @@ impl Sink {
         let pen = Pen::of(piece, run.as_deref());
         let mut under = Vec::new();
         if piece.mask > 0.0 {
-            under.push(GlyphQuad { transform: pen.mask(piece), color: rgba(Color { a: 1.0, ..halo }) });
+            under.push(GlyphQuad { transform: pen.mask(piece), color: rgba(Color { a: 1.0, ..halo }), triangle: false });
         }
         let mut over = Vec::new();
         if piece.underline > 0.0 {
             let [halo_bar, bar] = pen.underline(piece);
             if halo.a > 0.0 {
-                over.push(GlyphQuad { transform: halo_bar, color: rgba(halo) });
+                over.push(GlyphQuad { transform: halo_bar, color: rgba(halo), triangle: false });
             }
-            over.push(GlyphQuad { transform: bar, color: rgba(piece.color) });
+            over.push(GlyphQuad { transform: bar, color: rgba(piece.color), triangle: false });
         }
         self.texts.borrow_mut().push(GlyphText {
             at: [at.x, at.y],
@@ -158,9 +134,135 @@ impl Sink {
             halo: Rgba8([0; 4]),
             halo_px: 0.0,
             glyphs: Vec::new(),
-            under: vec![GlyphQuad { transform: [e1[0], -e1[1], e2[0], -e2[1], 0.0, 0.0], color: rgba(color) }],
+            under: vec![GlyphQuad { transform: [e1[0], -e1[1], e2[0], -e2[1], 0.0, 0.0], color: rgba(color), triangle: false }],
             over: Vec::new(),
         });
+        true
+    }
+}
+
+impl Sink {
+    /// A text of no glyphs anchored at the screen's `p` (the view's), its shapes in pixels from it, y up.
+    fn shapes(&self, p: Point, view: &Camera, under: Vec<GlyphQuad>) {
+        if under.is_empty() {
+            return;
+        }
+        let at = view.screen_to_map(f64::from(p.x), f64::from(p.y));
+        self.texts.borrow_mut().push(GlyphText {
+            at: [at.x, at.y],
+            unit: GlyphUnit::Px { turns: true },
+            color: Rgba8([0; 4]),
+            halo: Rgba8([0; 4]),
+            halo_px: 0.0,
+            glyphs: Vec::new(),
+            under,
+            over: Vec::new(),
+        });
+    }
+
+    /// A line of the screen `width` px wide (a frame's outline, a callout, an SHX letter's stroke): true when it went.
+    fn stroke(&self, pts: &[Point], closed: bool, color: Color, width: f64, view: &Camera) -> bool {
+        if !self.open.get() {
+            return false;
+        }
+        let Some(&first) = pts.first() else {
+            return true;
+        };
+        let at = |p: &Point| [f64::from(p.x - first.x), -f64::from(p.y - first.y)];
+        let color = rgba(color);
+        let ends = pts.len() + usize::from(closed && pts.len() > 2);
+        let quads = (1..ends)
+            .filter_map(|i| GlyphQuad::segment(at(&pts[i - 1]), at(&pts[i % pts.len()]), width, color))
+            .collect();
+        self.shapes(first, view, quads);
+        true
+    }
+
+    /// A ring of the screen filled (a round frame, an SHX text's mask, an arrowhead): true when it went.
+    fn ring(&self, ring: &[Point], color: Color, view: &Camera) -> bool {
+        if !self.open.get() {
+            return false;
+        }
+        let Some(&first) = ring.first() else {
+            return true;
+        };
+        let pts: Vec<[f64; 2]> = ring.iter().map(|p| [f64::from(p.x - first.x), -f64::from(p.y - first.y)]).collect();
+        self.shapes(first, view, GlyphQuad::ring(&pts, 1.0, rgba(color)));
+        true
+    }
+
+    /// A text of the Unicode profile (docs/adr/0914) from its own glyph plan: its mask, its glyphs run by run in their
+    /// colours, its rules. A plan that failed keeps its mark on the canvas.
+    fn unicode(&self, piece: &unicode::Piece<'_>, view: &Camera) -> bool {
+        if !self.open.get() {
+            return false;
+        }
+        let Ok(plan) = &piece.text.plan else {
+            return false;
+        };
+        let [x, y] = piece.camera.world_to_screen(piece.at);
+        let at = view.screen_to_map(x, y);
+        let k = piece.camera.scale;
+        // The plan's model offsets from the text's point, as the canvas puts them on the screen (y up).
+        let scaled = |m: [f64; 6]| m.map(|v| v * k);
+        let mut texts: Vec<GlyphText> = Vec::new();
+        for g in &plan.glyphs {
+            let color = rgba(unicode::color(piece, g.glyph.scalars.start));
+            let place = GlyphPlace { transform: scaled(GlyphPlace::of(g).transform), ..GlyphPlace::of(g) };
+            match texts.last_mut() {
+                Some(t) if t.color == color => t.glyphs.push(place),
+                _ => texts.push(GlyphText {
+                    at: [at.x, at.y],
+                    unit: GlyphUnit::Px { turns: true },
+                    color,
+                    halo: Rgba8([0; 4]),
+                    halo_px: 0.0,
+                    glyphs: vec![place],
+                    under: Vec::new(),
+                    over: Vec::new(),
+                }),
+            }
+        }
+        if texts.is_empty() {
+            texts.push(GlyphText {
+                at: [at.x, at.y],
+                unit: GlyphUnit::Px { turns: true },
+                color: rgba(piece.color),
+                halo: Rgba8([0; 4]),
+                halo_px: 0.0,
+                glyphs: Vec::new(),
+                under: Vec::new(),
+                over: Vec::new(),
+            });
+        }
+        let corner = |p: [f64; 2]| [p[0] * k, p[1] * k];
+        let quad = |c: [[f64; 2]; 4], color: Rgba8| {
+            let [a, b, _, d] = c.map(corner);
+            GlyphQuad::spanned(a, [b[0] - a[0], b[1] - a[1]], [d[0] - a[0], d[1] - a[1]], color)
+        };
+        if let Some(mask) = piece.text.mask_outline() {
+            texts[0].under.push(quad(mask, rgba(piece.halo)));
+        }
+        let last = texts.len() - 1;
+        for rule in &plan.rules {
+            let color = rgba(piece.runs.get(rule.run).copied().unwrap_or(piece.color));
+            texts[last].over.push(quad(rule.corners, color));
+        }
+        self.texts.borrow_mut().extend(texts);
+        true
+    }
+
+    /// The bands of the texts too small to read (docs/adr/0626 §6, 0786 §4), as the canvas strokes them: true when
+    /// they went.
+    pub(super) fn bands(&self, looks: &[(Color, f32, Vec<[Point; 2]>)], view: &Camera) -> bool {
+        if !self.open.get() {
+            return false;
+        }
+        for (color, thick, segments) in looks {
+            for [a, b] in segments {
+                self.stroke(&[*a, *b], false, *color, f64::from(*thick), view);
+            }
+        }
         true
     }
 }
@@ -192,17 +294,25 @@ impl Ink for Split<'_, '_> {
     }
 
     fn shaped(&mut self, piece: &unicode::Piece<'_>) {
+        if self.sink.is_some_and(|sink| sink.unicode(piece, self.view)) {
+            return;
+        }
         <Frame as Ink>::shaped(self.frame, piece);
     }
 
     fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>) {
-        if self.sink.is_some_and(|sink| sink.quad(quad, color, self.view)) {
+        if self.sink.is_some_and(|sink| sink.quad(quad, color, self.view) || sink.ring(&quad, color, self.view)) {
             return;
         }
         <Frame as Ink>::fill_quad(self.frame, quad, color, of);
     }
 
     fn stroke_segments(&mut self, segments: &[[Point; 2]], color: Color, width: f32) {
+        if let Some(sink) = self.sink
+            && sink.bands(&[(color, width, segments.to_vec())], self.view)
+        {
+            return;
+        }
         <Frame as Ink>::stroke_segments(self.frame, segments, color, width);
     }
 
@@ -219,16 +329,22 @@ impl Ink for Split<'_, '_> {
     }
 
     fn fill_ring(&mut self, ring: &[Point], color: Color, of: Option<Slot>) {
-        // A placed label's rectangle (its background, its shadow) as a quad.
+        // A placed label's rectangle (its background, its shadow) as a quad, any other ring as its triangles.
         if let (Some(sink), &[a, b, c, d]) = (self.sink, ring)
             && sink.quad([a, b, c, d], color, self.view)
         {
+            return;
+        }
+        if self.sink.is_some_and(|sink| sink.ring(ring, color, self.view)) {
             return;
         }
         <Frame as Ink>::fill_ring(self.frame, ring, color, of);
     }
 
     fn stroke_line(&mut self, pts: &[Point], closed: bool, color: Color, of: Option<Slot>) {
+        if self.sink.is_some_and(|sink| sink.stroke(pts, closed, color, LINE, self.view)) {
+            return;
+        }
         <Frame as Ink>::stroke_line(self.frame, pts, closed, color, of);
     }
 }
@@ -468,6 +584,33 @@ mod tests {
         assert!((c + 20.0).abs() < 1e-5 && d.abs() < 1e-5, "y up to the left: {c} {d}");
         let last = turned.last().expect("glyphs").transform;
         assert!(last[4].abs() < 1e-4 && last[5] > width * 0.7, "the last letter up the screen: {last:?}");
+    }
+
+    /// Lines and rings of the screen go as segments and triangles: a polyline's segments (one more closed), a ring's
+    /// fan with its outline, anchored where they start.
+    #[test]
+    fn lines_and_rings_go_as_segments_and_triangles() {
+        let sink = Sink::new(GlyphSlot::default());
+        let view = Camera::default();
+        sink.begin();
+        let pts = [Point::new(10.0, 10.0), Point::new(40.0, 10.0), Point::new(40.0, 30.0)];
+        assert!(sink.stroke(&pts, false, Color::BLACK, LINE, &view));
+        assert!(sink.stroke(&pts, true, Color::BLACK, LINE, &view));
+        let pentagon: Vec<Point> = (0..5)
+            .map(|i| {
+                let a = i as f32 * std::f32::consts::TAU / 5.0;
+                Point::new(100.0 + 20.0 * a.cos(), 100.0 + 20.0 * a.sin())
+            })
+            .collect();
+        assert!(sink.ring(&pentagon, Color::BLACK, &view));
+        sink.publish(1.0);
+        let set = sink.slot.get();
+        let counts: Vec<(usize, usize)> =
+            set.texts.iter().map(|t| (t.under.len(), t.under.iter().filter(|q| q.triangle).count())).collect();
+        assert_eq!(counts, [(2, 0), (3, 0), (3 + 5, 3)]);
+        // The first segment from the anchor (the polyline's first point) along x, 1.2 px wide, y up.
+        let first = set.texts[0].under[0].transform;
+        assert!((first[0] - 30.0).abs() < 1e-9 && (first[3] - LINE).abs() < 1e-9 && (first[5] + LINE / 2.0).abs() < 1e-9, "{first:?}");
     }
 
     /// A piece goes with its mask under its letters and its underline over them; a quad that is no parallelogram, and

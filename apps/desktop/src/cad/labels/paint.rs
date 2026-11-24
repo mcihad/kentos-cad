@@ -340,9 +340,6 @@ impl Labels<'_> {
                     | LabelSpot::Cell { slot, .. } => *slot,
                 };
                 self.current.set(Some(slot));
-                if let Some(sink) = &self.gpu {
-                    sink.spot(spot);
-                }
                 let Some(entity) = self.doc.get(slot) else {
                     continue;
                 };
@@ -846,7 +843,6 @@ impl Labels<'_> {
                         entity,
                     ) => {
                         current = self.placed_frame(entity, layer, *class, *state, slot);
-                        self.gpu_frame(current.as_ref());
                         if let Some(c) = &current {
                             self.placed_backdrop(
                                 frame,
@@ -870,7 +866,6 @@ impl Labels<'_> {
                         _,
                     ) => {
                         if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
-                            self.gpu_frame(Some(c));
                             self.placed_text(frame, c, text, *at, *angle, *size as f32);
                         }
                     }
@@ -886,7 +881,6 @@ impl Labels<'_> {
                         _,
                     ) => {
                         if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
-                            self.gpu_frame(Some(c));
                             self.placed_backdrop(
                                 frame,
                                 c,
@@ -937,9 +931,6 @@ impl Labels<'_> {
         }
         if let Some(m) = memo.as_deref_mut() {
             m.end();
-        }
-        if let Some(sink) = &self.gpu {
-            sink.close();
         }
         let frame = &mut *frame.ink;
         // The view's own camera again for what follows.

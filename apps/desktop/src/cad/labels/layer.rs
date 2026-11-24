@@ -186,11 +186,13 @@ impl Widget<Message, Theme, Renderer> for Layer<'_> {
                 sink.begin();
             }
             self.labels.paint_texts(&mut super::gpu::Split { frame, sink, view: &self.labels.view }, margin);
+            let looks = self.labels.band_looks();
+            // The bands with the texts on the GPU (docs/adr/9212 §9), else as one mesh.
+            let on_gpu = sink.is_some_and(|sink| sink.bands(&looks, &self.labels.view));
             if let Some(sink) = sink {
                 sink.publish(self.labels.view.map_px());
             }
-            let looks = self.labels.band_looks();
-            *state.bands.borrow_mut() = band_mesh(&looks, Vector::new(margin, margin), size);
+            *state.bands.borrow_mut() = if on_gpu { None } else { band_mesh(&looks, Vector::new(margin, margin), size) };
         });
         let to_view = moved(&made, &self.labels.view) - Vector::new(margin, margin);
         renderer.with_layer(bounds, |renderer| {

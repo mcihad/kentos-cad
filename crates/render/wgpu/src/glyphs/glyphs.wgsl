@@ -38,15 +38,18 @@ fn twisted(d: vec2f) -> vec2f {
     @location(2) m: vec4f, @location(3) quad: vec4f, @location(4) uv: vec4f, @location(5) color: vec4f,
     @location(6) halo: vec4f, @location(7) haloPx: f32, @location(8) flags: u32) -> GlyphOut {
   var corners = array<vec2f, 6>(vec2f(0.0, 0.0), vec2f(1.0, 0.0), vec2f(1.0, 1.0), vec2f(0.0, 0.0), vec2f(1.0, 1.0), vec2f(0.0, 1.0));
-  var c = corners[vi];
   let px = (flags & 0x10000u) != 0u;
   let solid = (flags & 0x40000u) != 0u;
+  let triangle = (flags & 0x80000u) != 0u;
+  // A triangle is the square's first half; its second collapses onto a corner.
+  var c = corners[vi];
+  if (triangle && vi >= 3u) { c = corners[0]; }
   var k = frame.pxPerM;
   if (px) { k = frame.dpr * frame.grow.x; }
   // A flat quad grows a device pixel each side, so its edges are smoothed outside it as well as in: its sides' lengths
   // in device pixels, and the unit square's corners moved out by a pixel of each.
   var lens = vec2f(1.0);
-  if (solid) {
+  if (solid && !triangle) {
     lens = max(vec2f(length(vec2f(m.x, m.y)) * quad.z, length(vec2f(m.z, m.w)) * quad.w) * k, vec2f(1e-3));
     c = c * (1.0 + 2.0 / lens) - 1.0 / lens;
   }
@@ -57,13 +60,14 @@ fn twisted(d: vec2f) -> vec2f {
   let a = twisted(((at.xy - frame.offset) + (at.zw - frame.offsetLo)) * frame.pxPerM);
   var o: GlyphOut;
   o.pos = vec4f((a + d) / (0.5 * frame.viewport), 0.0, 1.0);
-  o.page = flags & 0x4ffffu;
+  o.page = flags & 0xcffffu;
   o.color = color;
   o.halo = halo;
   if (solid) {
-    // A quad's place on its unit square and its sides in device pixels.
+    // A quad's place on its unit square and its sides in device pixels; a triangle covers what it covers.
     o.uv = c;
     o.k = lens;
+    if (triangle) { o.uv = vec2f(0.5); o.k = vec2f(1e6); }
     return o;
   }
   o.uv = uv.xy + vec2f(c.x, 1.0 - c.y) * uv.zw;

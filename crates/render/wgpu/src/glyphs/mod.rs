@@ -18,12 +18,81 @@ pub use atlas::{GlyphAtlas, GlyphKey, Lookup, Slot};
 pub use gpu::{GlyphGpu, GlyphLayer};
 
 /// A flat quadrilateral drawn with a text (docs/adr/9212 §7): a mask under its letters, an underline over them, a
-/// table cell's fill. The unit square's place from the text's anchor, in the text's unit, as [`GlyphPlace::transform`]
-/// (a parallelogram), and its colour; its edges smoothed over a device pixel.
+/// table cell's fill, a line's piece. The unit square's place from the text's anchor, in the text's unit, as
+/// [`GlyphPlace::transform`] (a parallelogram), and its colour; its edges smoothed over a device pixel. A
+/// `triangle` is the square's half (0, 0), (1, 0), (1, 1) alone, its edges hard: a ring's fan, its outline drawn
+/// over it smooths them (docs/adr/9212 §9).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GlyphQuad {
     pub transform: [f64; 6],
     pub color: Rgba8,
+    pub triangle: bool,
+}
+
+impl GlyphQuad {
+    /// A parallelogram from `origin` along `x` and `y` (the text's unit).
+    pub fn spanned(origin: [f64; 2], x: [f64; 2], y: [f64; 2], color: Rgba8) -> GlyphQuad {
+        GlyphQuad { transform: [x[0], x[1], y[0], y[1], origin[0], origin[1]], color, triangle: false }
+    }
+
+    /// The triangle `a`, `b`, `c` (the text's unit).
+    pub fn triangle(a: [f64; 2], b: [f64; 2], c: [f64; 2], color: Rgba8) -> GlyphQuad {
+        GlyphQuad {
+            transform: [b[0] - a[0], b[1] - a[1], c[0] - b[0], c[1] - b[1], a[0], a[1]],
+            color,
+            triangle: true,
+        }
+    }
+
+    /// A filled ring (the text's unit; convex or not, no holes): its triangles, then its outline `edge` wide laid just
+    /// inside it, so its edge is smoothed where it lies (half a smoothed pixel either side) and it grows no larger.
+    pub fn ring(points: &[[f64; 2]], edge: f64, color: Rgba8) -> Vec<GlyphQuad> {
+        let pts: Vec<kentos_geometry_core::Vec2> =
+            points.iter().map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])).collect();
+        if pts.len() < 3 {
+            return Vec::new();
+        }
+        let mut indices = Vec::new();
+        // One ring: the outer one, no holes.
+        let outer = 0..pts.len();
+        kentos_geometry_core::triangulate::triangulate_into(&pts, std::slice::from_ref(&outer), &mut indices);
+        let mut out: Vec<GlyphQuad> = indices
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .map(|t| GlyphQuad::triangle(points[t[0] as usize], points[t[1] as usize], points[t[2] as usize], color))
+            .collect();
+        // Inside is left of each edge on a counter-clockwise ring (y up), right on a clockwise one.
+        let twice_area: f64 = (0..points.len())
+            .map(|i| {
+                let (a, b) = (points[i], points[(i + 1) % points.len()]);
+                a[0] * b[1] - b[0] * a[1]
+            })
+            .sum();
+        let side = if twice_area >= 0.0 { 1.0 } else { -1.0 };
+        for i in 0..points.len() {
+            let (a, b) = (points[i], points[(i + 1) % points.len()]);
+            let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
+            let length = dx.hypot(dy);
+            if length <= 0.0 || !length.is_finite() {
+                continue;
+            }
+            let (nx, ny) = (-dy / length * side * edge / 2.0, dx / length * side * edge / 2.0);
+            out.extend(GlyphQuad::segment([a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], edge, color));
+        }
+        out
+    }
+
+    /// The segment `a` → `b` `width` wide (the text's unit), its ends butt.
+    pub fn segment(a: [f64; 2], b: [f64; 2], width: f64, color: Rgba8) -> Option<GlyphQuad> {
+        let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
+        let length = dx.hypot(dy);
+        if !(length > 0.0 && length.is_finite() && width > 0.0) {
+            return None;
+        }
+        let (nx, ny) = (-dy / length * width, dx / length * width);
+        Some(GlyphQuad::spanned([a[0] - nx / 2.0, a[1] - ny / 2.0], [dx, dy], [nx, ny], color))
+    }
 }
 
 use std::sync::Arc;

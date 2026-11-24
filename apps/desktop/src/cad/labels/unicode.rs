@@ -20,7 +20,7 @@ fn screen(piece: &Piece<'_>, p: [f64; 2]) -> Point {
         (y - p[1] * piece.camera.scale) as f32,
     )
 }
-fn color(piece: &Piece<'_>, scalar: u32) -> Color {
+pub(super) fn color(piece: &Piece<'_>, scalar: u32) -> Color {
     let i = piece.text.runs.partition_point(|r| r.end <= scalar);
     piece
         .text

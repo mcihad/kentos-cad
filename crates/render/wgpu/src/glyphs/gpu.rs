@@ -57,6 +57,8 @@ const PX_UNIT: u32 = 1 << 16;
 const TURNS: u32 = 1 << 17;
 /// A flat quad's instance: its colour over the unit square, no field sampled.
 const SOLID: u32 = 1 << 18;
+/// A flat quad's half: the triangle (0, 0), (1, 0), (1, 1), its edges hard.
+const TRIANGLE: u32 = 1 << 19;
 /// A layer's origin is its first anchor on a grid this coarse: its numbers stay small, and whole in float32.
 const ORIGIN_GRID: f64 = 65536.0;
 
@@ -342,7 +344,7 @@ impl GlyphGpu {
                     color: shown(srgb, q.color),
                     halo: [0; 4],
                     halo_px: 0.0,
-                    flags: SOLID | unit,
+                    flags: SOLID | unit | if q.triangle { TRIANGLE } else { 0 },
                 }
             };
             instances.extend(text.under.iter().map(quad));

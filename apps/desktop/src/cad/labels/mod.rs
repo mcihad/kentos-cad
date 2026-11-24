@@ -1173,16 +1173,6 @@ impl Labels<'_> {
         frame.fill_quad(quad, color, of);
     }
 
-    /// The label engine's label `c` goes to the GPU unless its background is round (labels/gpu.rs, docs/adr/9212 §8).
-    fn gpu_frame(&self, c: Option<&Placed>) {
-        if let Some(sink) = &self.gpu {
-            let round = c
-                .and_then(|c| c.background.as_ref())
-                .is_some_and(|b| b.shape != kentos_commands::LabelShape::Rect);
-            sink.frame(round);
-        }
-    }
-
     fn ink_of(&self, name: Option<&str>) -> Color {
         match name {
             None | Some("fg" | "fg-dim") => self.colors.label,

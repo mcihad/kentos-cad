@@ -181,7 +181,7 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F4 — Bütün çizim içeriği motorda
 
-- [~] **RM-13 — CAD yazıları GPU glif atlasında.** TTF ve SHX yazılar atlastan çizilir; hiçbir çizim yazısı
+- [x] **RM-13 — CAD yazıları GPU glif atlasında.** TTF ve SHX yazılar atlastan çizilir; hiçbir çizim yazısı
   çarpışma yüzünden düşmez. Sahibin seçimi (24 Kasım). Tasarım: [ADR 9212](../docs/adr/9212-drawing-text-on-the-gpu.md).
   Tek kanallı SDF glif atlası; ekranda 512 px'i geçen glif vektör. Yerleşim CPU'da kalıyor, yalnız çizim GPU'ya
   geçiyor.
@@ -199,7 +199,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       sapan piksel yok.
     - [x] İkinci adım (ADR 9212 §8): etiket motorunun etiketleri, eğri boyunca harfleri, gölgeleri ve dikdörtgen
       zeminleri GPU'da. Yuvarlak zeminli etiket ile çerçeve ve çağrı çizgileri kanvasta (aşama 4).
-  - [ ] Aşama 4: kanvas katmanı kalkar; yazılar da canlı kamerayla çizilir.
+  - [x] Aşama 4 (ADR 9212 §9): yazıların kanvası boşaldı. Çizgiler, halkalar (üçgenleme ve yumuşatılmış dış çizgi),
+    bantlar, Unicode yazılar ve önizleme GPU'da; yazılar canlı kamerayla çiziliyor. Kanvasta yalnız ekran işaretleri
+    (RM-14) ve sistem yazı tipine düşen parça kaldı.
 - [ ] **RM-14 — iced katmanları kalkar.** Etiketler, servis etiketleri, arazi, hat, onaylı katman ve işaretler motora
   taşınır.
 
