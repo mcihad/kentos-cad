@@ -1,0 +1,676 @@
+{
+  "environment": {
+    "commit": "0e09d4677",
+    "date": "2026-11-24",
+    "dirtyTree": true,
+    "machine": {
+      "cpu": "13th Gen Intel(R) Core(TM) i5-13500",
+      "kernel": "7.0.0-42-generic",
+      "memoryGb": 23.0,
+      "os": "Ubuntu 26.04.1 LTS",
+      "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+      "threads": 20
+    },
+    "machineText": "13th Gen Intel(R) Core(TM) i5-13500, 20 iş parçacığı, 23 GB; Ubuntu 26.04.1 LTS (7.0.0-42-generic); rustc 1.100.0 (0ef1bc386 2026-11-09)"
+  },
+  "gpu": {
+    "backend": "Vulkan",
+    "driver": "Intel open-source Mesa driver",
+    "driverInfo": "Mesa 26.0.8-1ubuntu0.3",
+    "name": "Intel(R) UHD Graphics 770 (ADL-S GT1)"
+  },
+  "label": "rm13-kanvas",
+  "rows": [
+    {
+      "burst": {
+        "in": {
+          "burstFrame": {
+            "gpuMs": 42.27206700000001,
+            "uiMs": 0.272581,
+            "viewMs": 0.0
+          },
+          "framesAfter": {
+            "frames": 15,
+            "gpuMax": 43.071813,
+            "gpuP50": 13.358974,
+            "gpuP95": 42.616168,
+            "gpuP99": 43.071813,
+            "uiMax": 46.88744,
+            "uiOverBudget": 1,
+            "uiP50": 0.180543,
+            "uiP95": 0.203535,
+            "uiP95Parts": [
+              0.0,
+              0.0003,
+              0.0,
+              0.0,
+              0.203235
+            ],
+            "uiP99": 46.88744,
+            "viewP50": 0.0,
+            "viewsBuilt": 1
+          },
+          "lastChangeMs": 356.357902,
+          "notches": 14,
+          "scale": 0.26010788534641877
+        },
+        "out": {
+          "burstFrame": {
+            "gpuMs": 51.066799,
+            "uiMs": 0.285224,
+            "viewMs": 0.0
+          },
+          "framesAfter": {
+            "frames": 14,
+            "gpuMax": 75.957681,
+            "gpuP50": 12.71342,
+            "gpuP95": 69.664421,
+            "gpuP99": 75.957681,
+            "uiMax": 93.55411699999999,
+            "uiOverBudget": 1,
+            "uiP50": 0.16120500000000001,
+            "uiP95": 0.18346400000000002,
+            "uiP95Parts": [
+              0.0,
+              0.000311,
+              0.0,
+              0.0,
+              0.183153
+            ],
+            "uiP99": 93.55411699999999,
+            "viewP50": 0.0,
+            "viewsBuilt": 1
+          },
+          "lastChangeMs": 429.17571599999997,
+          "notches": 14,
+          "scale": 0.031851882599958574
+        }
+      },
+      "bytes": 115917953,
+      "drawn": {
+        "drawCalls": 803,
+        "markers": 0,
+        "pictureKept": false,
+        "residentBytes": 161416580,
+        "segments": 207606,
+        "styledItems": 1347255,
+        "triangles": 0
+      },
+      "everything": {
+        "box": [
+          567657.7579878883,
+          4391844.970219825,
+          603071.6772895206,
+          4412597.275768033
+        ],
+        "frame": {
+          "gpuMs": 12.772705,
+          "uiMs": 98.990559,
+          "viewMs": 0.40884200000000004
+        },
+        "originInView": false,
+        "scale": 0.03185188259995861
+      },
+      "file": "sivas.kcad",
+      "frames": {
+        "imleç": {
+          "frames": 60,
+          "gpuMax": 14.423177,
+          "gpuP50": 11.96959,
+          "gpuP95": 13.774837,
+          "gpuP99": 13.931377999999999,
+          "uiMax": 1.390505,
+          "uiOverBudget": 0,
+          "uiP50": 0.922714,
+          "uiP95": 1.193729,
+          "uiP95Parts": [
+            0.052586,
+            0.290816,
+            0.25211199999999995,
+            0.465663,
+            0.132552
+          ],
+          "uiP99": 1.326076,
+          "viewP50": 0.23872100000000002,
+          "viewsBuilt": 60
+        },
+        "kaydırma": {
+          "frames": 40,
+          "gpuMax": 17.410647,
+          "gpuP50": 12.998934,
+          "gpuP95": 14.48781,
+          "gpuP99": 17.410647,
+          "uiMax": 0.208281,
+          "uiOverBudget": 0,
+          "uiP50": 0.167122,
+          "uiP95": 0.19503700000000002,
+          "uiP95Parts": [
+            0.050121,
+            0.000043,
+            0.0,
+            0.0,
+            0.144873
+          ],
+          "uiP99": 0.208281,
+          "viewP50": 0.0,
+          "viewsBuilt": 0
+        },
+        "tekerlek": {
+          "frames": 32,
+          "gpuMax": 68.942768,
+          "gpuP50": 41.400273,
+          "gpuP95": 52.008054,
+          "gpuP99": 68.942768,
+          "uiMax": 1.253735,
+          "uiOverBudget": 0,
+          "uiP50": 0.17065799999999998,
+          "uiP95": 0.196555,
+          "uiP95Parts": [
+            0.055967,
+            0.000041,
+            0.0,
+            0.0,
+            0.140547
+          ],
+          "uiP99": 1.253735,
+          "viewP50": 0.0,
+          "viewsBuilt": 1
+        }
+      },
+      "memory": {
+        "peakMb": 2754.58984375,
+        "residentBootMb": 174.90625,
+        "residentEndMb": 2566.33203125,
+        "residentOpenMb": 2558.2890625
+      },
+      "objects": 999975,
+      "onGpu": true,
+      "open": {
+        "firstFrame": {
+          "gpuMs": 233.06606499999998,
+          "uiMs": 1311.596726,
+          "viewMs": 347.802122
+        },
+        "framesWhileOpening": {
+          "frames": 117,
+          "gpuMax": 55.0632,
+          "gpuP50": 12.252905,
+          "gpuP95": 14.014268999999999,
+          "gpuP99": 16.206225,
+          "uiMax": 1.795352,
+          "uiOverBudget": 0,
+          "uiP50": 0.103058,
+          "uiP95": 0.738754,
+          "uiP95Parts": [
+            0.0,
+            0.03956,
+            0.218339,
+            0.380854,
+            0.10000099999999999
+          ],
+          "uiP99": 0.854711,
+          "viewP50": 0.0,
+          "viewsBuilt": 37
+        },
+        "settledMs": 4781.777578,
+        "threadMs": 3144.514873,
+        "toFirstFrameMs": 4689.44345
+      },
+      "openFit": [
+        567657.7579878883,
+        4391844.970219825,
+        603071.6772895206,
+        4412597.275768033
+      ],
+      "select": {
+        "frame": {
+          "gpuMs": 13.736349,
+          "uiMs": 4.231628,
+          "viewMs": 0.292737
+        },
+        "selected": 0,
+        "viewMs": 0.292737
+      }
+    },
+    {
+      "burst": {
+        "in": {
+          "burstFrame": {
+            "gpuMs": 63.421327,
+            "uiMs": 0.266853,
+            "viewMs": 0.0
+          },
+          "framesAfter": {
+            "frames": 13,
+            "gpuMax": 65.525217,
+            "gpuP50": 14.253820000000001,
+            "gpuP95": 49.113043000000005,
+            "gpuP99": 65.525217,
+            "uiMax": 185.482144,
+            "uiOverBudget": 1,
+            "uiP50": 0.187127,
+            "uiP95": 0.19844599999999998,
+            "uiP95Parts": [
+              0.0,
+              0.000143,
+              0.0,
+              0.0,
+              0.19830299999999998
+            ],
+            "uiP99": 185.482144,
+            "viewP50": 0.0,
+            "viewsBuilt": 1
+          },
+          "lastChangeMs": 584.404323,
+          "notches": 14,
+          "scale": 0.2567312022221991
+        },
+        "out": {
+          "burstFrame": {
+            "gpuMs": 51.543051999999996,
+            "uiMs": 0.288669,
+            "viewMs": 0.0
+          },
+          "framesAfter": {
+            "frames": 13,
+            "gpuMax": 86.689662,
+            "gpuP50": 15.218117,
+            "gpuP95": 72.15195,
+            "gpuP99": 86.689662,
+            "uiMax": 198.404366,
+            "uiOverBudget": 1,
+            "uiP50": 0.17268799999999998,
+            "uiP95": 0.364422,
+            "uiP95Parts": [
+              0.0,
+              0.00021899999999999998,
+              0.0,
+              0.0,
+              0.364203
+            ],
+            "uiP99": 198.404366,
+            "viewP50": 0.0,
+            "viewsBuilt": 1
+          },
+          "lastChangeMs": 595.3965380000001,
+          "notches": 14,
+          "scale": 0.03143838604522451
+        }
+      },
+      "bytes": 72103583,
+      "drawn": {
+        "drawCalls": 684,
+        "markers": 0,
+        "pictureKept": false,
+        "residentBytes": 233205028,
+        "segments": 213295,
+        "styledItems": 701712,
+        "triangles": 0
+      },
+      "everything": {
+        "box": [
+          567604.7607920868,
+          4391591.844065534,
+          603484.4652520218,
+          4412617.096413067
+        ],
+        "frame": {
+          "gpuMs": 21.263703,
+          "uiMs": 72.853827,
+          "viewMs": 0.39600300000000005
+        },
+        "originInView": false,
+        "scale": 0.03143838604522456
+      },
+      "file": "SIVAS_UIP_2025_06_HAZIRAN.NCZ",
+      "frames": {
+        "imleç": {
+          "frames": 60,
+          "gpuMax": 15.069427999999998,
+          "gpuP50": 12.75737,
+          "gpuP95": 14.628253,
+          "gpuP99": 14.901975,
+          "uiMax": 1.271229,
+          "uiOverBudget": 0,
+          "uiP50": 0.8772849999999999,
+          "uiP95": 1.156955,
+          "uiP95Parts": [
+            0.049291,
+            0.307335,
+            0.3135,
+            0.342888,
+            0.14394099999999999
+          ],
+          "uiP99": 1.253355,
+          "viewP50": 0.262534,
+          "viewsBuilt": 60
+        },
+        "kaydırma": {
+          "frames": 40,
+          "gpuMax": 20.746493,
+          "gpuP50": 18.871576,
+          "gpuP95": 19.320376,
+          "gpuP99": 20.746493,
+          "uiMax": 0.194183,
+          "uiOverBudget": 0,
+          "uiP50": 0.178873,
+          "uiP95": 0.186786,
+          "uiP95Parts": [
+            0.058201,
+            0.000063,
+            0.0,
+            0.0,
+            0.128522
+          ],
+          "uiP99": 0.194183,
+          "viewP50": 0.0,
+          "viewsBuilt": 0
+        },
+        "tekerlek": {
+          "frames": 32,
+          "gpuMax": 57.902887,
+          "gpuP50": 54.570566,
+          "gpuP95": 56.053923,
+          "gpuP99": 57.902887,
+          "uiMax": 63.116073,
+          "uiOverBudget": 1,
+          "uiP50": 0.178301,
+          "uiP95": 0.20212200000000002,
+          "uiP95Parts": [
+            0.048986,
+            0.000041,
+            0.0,
+            0.0,
+            0.153095
+          ],
+          "uiP99": 63.116073,
+          "viewP50": 0.0,
+          "viewsBuilt": 1
+        }
+      },
+      "memory": {
+        "peakMb": 2521.8671875,
+        "residentBootMb": 176.84375,
+        "residentEndMb": 2521.8671875,
+        "residentOpenMb": 2440.30078125
+      },
+      "objects": 453534,
+      "onGpu": true,
+      "open": {
+        "firstFrame": {
+          "gpuMs": 225.532773,
+          "uiMs": 658.5175869999999,
+          "viewMs": 198.965564
+        },
+        "framesWhileOpening": {
+          "frames": 96,
+          "gpuMax": 54.136504,
+          "gpuP50": 12.554627,
+          "gpuP95": 14.721756000000001,
+          "gpuP99": 36.492889,
+          "uiMax": 1.908182,
+          "uiOverBudget": 0,
+          "uiP50": 0.103826,
+          "uiP95": 0.732363,
+          "uiP95Parts": [
+            0.0,
+            0.055816000000000004,
+            0.17726499999999998,
+            0.396302,
+            0.10298
+          ],
+          "uiP99": 0.90792,
+          "viewP50": 0.0,
+          "viewsBuilt": 18
+        },
+        "settledMs": 3879.858427,
+        "threadMs": 2744.219707,
+        "toFirstFrameMs": 3640.2222589999997
+      },
+      "openFit": [
+        567604.7607920868,
+        4391591.844065534,
+        603484.4652520218,
+        4412617.096413067
+      ],
+      "select": {
+        "frame": {
+          "gpuMs": 76.326659,
+          "uiMs": 10.567257,
+          "viewMs": 5.718253000000001
+        },
+        "selected": 1,
+        "viewMs": 5.718253000000001
+      }
+    },
+    {
+      "burst": {
+        "in": {
+          "burstFrame": {
+            "gpuMs": 27.804431,
+            "uiMs": 0.272454,
+            "viewMs": 0.0
+          },
+          "framesAfter": {
+            "frames": 15,
+            "gpuMax": 27.992006,
+            "gpuP50": 13.550229999999999,
+            "gpuP95": 24.420866,
+            "gpuP99": 27.992006,
+            "uiMax": 47.210591,
+            "uiOverBudget": 1,
+            "uiP50": 0.16649200000000003,
+            "uiP95": 0.188339,
+            "uiP95Parts": [
+              0.0,
+              0.000415,
+              0.0,
+              0.0,
+              0.187924
+            ],
+            "uiP99": 47.210591,
+            "viewP50": 0.0,
+            "viewsBuilt": 1
+          },
+          "lastChangeMs": 315.497035,
+          "notches": 14,
+          "scale": 1.252132118374545
+        },
+        "out": {
+          "burstFrame": {
+            "gpuMs": 21.389562,
+            "uiMs": 0.265332,
+            "viewMs": 0.0
+          },
+          "framesAfter": {
+            "frames": 14,
+            "gpuMax": 28.970161,
+            "gpuP50": 14.109461,
+            "gpuP95": 24.054069000000002,
+            "gpuP99": 28.970161,
+            "uiMax": 43.071179,
+            "uiOverBudget": 1,
+            "uiP50": 0.16836500000000001,
+            "uiP95": 0.191805,
+            "uiP95Parts": [
+              0.0,
+              0.000447,
+              0.0,
+              0.0,
+              0.191358
+            ],
+            "uiP99": 43.071179,
+            "viewP50": 0.0,
+            "viewsBuilt": 1
+          },
+          "lastChangeMs": 299.645403,
+          "notches": 14,
+          "scale": 0.15333162691698676
+        }
+      },
+      "bytes": 32577344,
+      "drawn": {
+        "drawCalls": 272,
+        "markers": 0,
+        "pictureKept": false,
+        "residentBytes": 23357648,
+        "segments": 3067,
+        "styledItems": 259012,
+        "triangles": 0
+      },
+      "everything": {
+        "box": [
+          -3515.3479728787834,
+          -4022.7756086423547,
+          3841.2556364385155,
+          288.14193192389985
+        ],
+        "frame": {
+          "gpuMs": 30.535424,
+          "uiMs": 246.01235400000002,
+          "viewMs": 37.480125
+        },
+        "originInView": true,
+        "scale": 0.15333162691698698
+      },
+      "file": "SİVAS AVM_2015.06.11.dwg",
+      "frames": {
+        "imleç": {
+          "frames": 60,
+          "gpuMax": 15.242042000000001,
+          "gpuP50": 11.645097,
+          "gpuP95": 12.840086000000001,
+          "gpuP99": 13.723535,
+          "uiMax": 2.1920260000000003,
+          "uiOverBudget": 0,
+          "uiP50": 1.845695,
+          "uiP95": 2.035172,
+          "uiP95Parts": [
+            0.046672000000000005,
+            0.894304,
+            0.5756920000000001,
+            0.38991299999999995,
+            0.128591
+          ],
+          "uiP99": 2.070012,
+          "viewP50": 0.469466,
+          "viewsBuilt": 60
+        },
+        "kaydırma": {
+          "frames": 40,
+          "gpuMax": 15.597268,
+          "gpuP50": 13.046001,
+          "gpuP95": 15.075697,
+          "gpuP99": 15.597268,
+          "uiMax": 0.289184,
+          "uiOverBudget": 0,
+          "uiP50": 0.17701599999999998,
+          "uiP95": 0.193248,
+          "uiP95Parts": [
+            0.054465,
+            0.000041,
+            0.0,
+            0.0,
+            0.138742
+          ],
+          "uiP99": 0.289184,
+          "viewP50": 0.0,
+          "viewsBuilt": 0
+        },
+        "tekerlek": {
+          "frames": 32,
+          "gpuMax": 28.433889999999998,
+          "gpuP50": 16.856867,
+          "gpuP95": 17.722711,
+          "gpuP99": 28.433889999999998,
+          "uiMax": 5.237055,
+          "uiOverBudget": 0,
+          "uiP50": 0.18474600000000002,
+          "uiP95": 0.210172,
+          "uiP95Parts": [
+            0.052633,
+            0.00004,
+            0.0,
+            0.0,
+            0.157499
+          ],
+          "uiP99": 5.237055,
+          "viewP50": 0.0,
+          "viewsBuilt": 1
+        }
+      },
+      "memory": {
+        "peakMb": 3719.31640625,
+        "residentBootMb": 176.203125,
+        "residentEndMb": 3108.81640625,
+        "residentOpenMb": 3101.734375
+      },
+      "objects": 601619,
+      "onGpu": true,
+      "open": {
+        "firstFrame": {
+          "gpuMs": 87.05073100000001,
+          "uiMs": 940.045754,
+          "viewMs": 76.808645
+        },
+        "framesWhileOpening": {
+          "frames": 780,
+          "gpuMax": 85.936454,
+          "gpuP50": 12.262718000000001,
+          "gpuP95": 14.209203,
+          "gpuP99": 24.209775999999998,
+          "uiMax": 2.150442,
+          "uiOverBudget": 0,
+          "uiP50": 0.099463,
+          "uiP95": 0.130741,
+          "uiP95Parts": [
+            0.0,
+            0.000381,
+            0.0,
+            0.0,
+            0.13036
+          ],
+          "uiP99": 0.6945009999999999,
+          "viewP50": 0.0,
+          "viewsBuilt": 28
+        },
+        "settledMs": 24016.224729,
+        "threadMs": 22904.174537,
+        "toFirstFrameMs": 23955.081021
+      },
+      "openFit": [
+        -241.87508378440987,
+        -2073.363541885225,
+        349.52951416061,
+        -1726.804641848294
+      ],
+      "select": {
+        "frame": {
+          "gpuMs": 33.988379,
+          "uiMs": 43.440726,
+          "viewMs": 2.212163
+        },
+        "selected": 1,
+        "viewMs": 2.212163
+      }
+    },
+    {
+      "failed": true,
+      "file": "deneme_suşehri.dxf",
+      "stderrTail": [
+        "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+        "the drawing opened",
+        "thread 'perf::files::child' (907174) panicked at apps/desktop/src/shell/perf/large.rs:328:5:",
+        ""
+      ]
+    }
+  ],
+  "setup": {
+    "burstNotches": 14,
+    "profile": "release (lto thin)",
+    "window": [
+      1440.0,
+      900.0
+    ]
+  }
+}

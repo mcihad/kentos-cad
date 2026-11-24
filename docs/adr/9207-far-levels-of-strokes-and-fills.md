@@ -299,9 +299,12 @@ kaliteyle yeniden çizmek” seçeneği seçildi. Ayar eklenmedi; davranış bu 
   yapay çizimin (ADR 9208) bütün tekerlek karelerinde `örnek 1` çıkıyor.
 - Durulma güvende: `settle_at`, uygulamanın `moved_until`'ini içeriyor. O an `Event::Settled` yayınlanır ve kare
   ayarın örnek sayısıyla çizilir.
-- Bu karelerin GPU süresinin §7'nin MSAA kapalı ölçümündeki gibi olması beklenir: NCZ 81 → 55 ms, sivas.kcad
-  70 → 42 ms. Bu bir çıkarımdır; doğrudan ölçüm için gereken sürüm derlemesi 24 Kasım'da bellek azaldığı için
-  durduruldu ve sahibin onayını bekliyor.
+- **Doğrudan ölçüm** (24 Kasım, toplu ölçüm; release, UHD 770, `perf::files`, `KENTOS_PERF_TRACE_VIEW`):
+  - Bütün tekerlek kareleri `örnek 1` ile çizildi.
+  - Yazılar henüz kanvastayken (`KENTOS_DIAG_TEXT=canvas`) kare süresinin ortancası: NCZ 47–55 ms (§7'de 4× ile 81),
+    sivas.kcad 42 ms (70). §7'nin MSAA kapalı ölçümünden çıkarılan 55 ve 42 ms tuttu.
+  - Yazılar GPU'dayken (ADR 9212) NCZ'nin tekerlek karesi 40 ms'ye iniyor. Ayrıntı ADR 9212 §6'da.
+  - Ham sonuçlar: `docs/perf/files-desktop-rm13-{kanvas,gpu}-2026-11-24.json`.
 - Gerçek pencere (Xvfb, debug + lavapipe, `.run/gui-evidence/render/hareket`): durulmuş kare önce ve sonra aynı
   (31 269 renk). Hareket kareleri bu ortamda çok yavaş çizildiği için yakalanan kareler hareket bittikten sonraya
   düşüyor; tek örneği göstermedi.

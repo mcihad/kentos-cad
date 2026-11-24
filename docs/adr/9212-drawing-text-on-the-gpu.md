@@ -182,9 +182,34 @@ Bunlar aşama 3'ün işi.
 - Fark yalnız harf kenarlarının yumuşatmasında: kanvasın glif önbelleği ipuçlu (hinted) bitmap çizer, GPU alanı.
 - Yer, boy ve kalınlık aynı. Büyütülmüş kesitler: `kesit-plan-basliklari.png`, `kesit-buyuk-rakam.png`.
 
-**Ölçüm:** kare süreleri (yakın ve uzak tekerlek karesi) release derlemesiyle, ADR 9207 §8'in ölçümüyle birlikte
-toplu ölçülecek (sahibin seçimi, 24 Kasım: “Sonra toplu ölç”). Ölçüm koşumunun tekerlek satırı artık GPU'nun çizdiği
-glif sayısını da yazıyor (`glif`).
+**Ölçüm** (24 Kasım, toplu ölçüm, sahibin seçimi: “Sonra toplu ölç”). Ortam: release, UHD 770, `perf::files`. Aynı
+ikili iki kez koşuldu: yazılar kanvasta (`KENTOS_DIAG_TEXT=canvas`) ve GPU'da. Ham sonuçlar
+`docs/perf/files-desktop-rm13-{kanvas,gpu}-2026-11-24.json`.
+
+**Tekerlek karesi**, ortanca. Uzak: açılış görünümü. Yakın: 8 çentik içerisi, ölçek ×2,1. Her biri 14 kare, hepsi tek
+örnekle (ADR 9207 §8). Kaynak: `KENTOS_PERF_TRACE_VIEW` izi.
+
+| Dosya | GPU'nun çizdiği glif | Yazı kanvasta, uzak / yakın | Yazı GPU'da, uzak / yakın |
+|---|---|---|---|
+| NCZ (453 534 nesne) | 111 020 | 47,2 / 55,2 ms | 40,7 / 40,4 ms |
+| sivas.kcad (1 M nesne) | 1 601 | 42,0 / 41,8 ms | 40,1 / 41,0 ms |
+| SİVAS AVM DWG | 5 086 | 17,4 / 16,7 ms | 17,0 / 16,2 ms |
+
+**Öbür kareler**, ortanca:
+
+| Kare | NCZ | sivas.kcad | DWG |
+|---|---|---|---|
+| Kaydırma | 18,9 → 14,1 ms | 13,0 → 12,2 ms | 13,0 → 12,0 ms |
+| “Tümünü göster” | 21,3 → 11,3 ms | 12,8 → 11,3 ms | 30,5 → 24,8 ms |
+
+**Okuma:**
+
+- Yazısı çok olan çizimde fark büyük: NCZ'nin yüz bin harfi kanvasta her karede 7–15 ms tutuyordu.
+- Harfi az olan çizimde fark ölçüm gürültüsü kadar. sivas.kcad'in kare süresi uzak çizgilerin (ADR 9207) süresi.
+- Bellek ve çizim çağrısı değişmedi: tepe bellek aynı, glif katmanı bir çizim çağrısı ekliyor.
+
+**Ölçülemeyen:** Suşehri DXF. Açılışta birim soruluyor (ADR 9210). Koşum soruyu kapatınca çizim açılmadı. Koşum artık
+önerilen birimi onaylıyor; dosya bir sonraki release ölçümünde.
 
 ## §7 Aşama 3, birinci adım: maskeler, alt çizgiler, ölçü değerleri ve hücreler (24 Kasım 2026)
 
