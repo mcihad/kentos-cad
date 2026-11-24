@@ -8,6 +8,8 @@ part far more (the area is a sum of each edge's area to the equator: 6·10⁻⁷
 web). The geometry core keeps every target's answers equal bit for bit with `libm` (docs/adr/0008), so the copy here
 calls `libm` the same way on every target: each transcendental method call becomes a method of the crate's own `Lm`
 trait (`x.lm_sin()`, `y.lm_atan2(x)`), which calls `libm`. Nothing else changes; the binary `geodsolve` is left out.
+The Rust files are written as rustfmt formats them (the toolchain's, edition 2018): `cargo fmt --all` formats this path
+dependency too, so the copy is kept in the form it leaves (docs/adr/9303).
 
   python3 scripts/vendor/geographiclib.py           write the copy
   python3 scripts/vendor/geographiclib.py --check   fail when the copy is not what the release and the rule give
@@ -17,6 +19,7 @@ import argparse
 import hashlib
 import io
 import re
+import subprocess
 import sys
 import tarfile
 import urllib.request
@@ -158,6 +161,18 @@ def patch(text):
     return "\n".join(lines)
 
 
+def rustfmt(text):
+    """The Rust source as `cargo fmt --all` leaves it: the toolchain's rustfmt, the crate's edition, its defaults."""
+    try:
+        done = subprocess.run(["rustfmt", "--edition", "2018", "--emit", "stdout"], input=text, capture_output=True,
+                              text=True, cwd=ROOT, check=False)
+    except FileNotFoundError:
+        raise SystemExit("rustfmt bulunamadı: depo kökünde rust-toolchain.toml'un araç zinciriyle çalıştırın") from None
+    if done.returncode != 0:
+        raise SystemExit(f"rustfmt biçimleyemedi: {done.stderr.strip()}")
+    return done.stdout
+
+
 def files():
     """The copy's files: name → text."""
     out = {"Cargo.toml": CARGO, "KENTOS.md": NOTE, "src/lm.rs": LM}
@@ -174,7 +189,7 @@ def files():
                     if "\nmod lm;" not in text:
                         raise SystemExit("src/lib.rs'de `mod geomath;` yok: modül yerini elle bulun")
                 out[path] = patch(text) if path.startswith("src/") else text
-    return out
+    return {name: rustfmt(text) if name.endswith(".rs") else text for name, text in out.items()}
 
 
 def main():
