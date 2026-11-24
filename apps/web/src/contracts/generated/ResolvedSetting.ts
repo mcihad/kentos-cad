@@ -10,7 +10,7 @@ export type ResolvedSetting = { key: string,
  * What was asked for: the value of the most specific layer that holds a
  * valid one. The preference is never lost when it cannot be used.
  */
-requested: boolean | number | string, 
+requested: boolean | number | string | Record<string, string | Array<string>>, 
 /**
  * The layer `requested` came from (`default` when none holds one).
  */
@@ -18,7 +18,7 @@ source: SettingScope,
 /**
  * What is used.
  */
-effective: boolean | number | string, 
+effective: boolean | number | string | Record<string, string | Array<string>>, 
 /**
  * Why `effective` differs from `requested`; none when they are equal.
  */

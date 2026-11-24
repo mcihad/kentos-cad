@@ -62,6 +62,11 @@ fn groups() -> Vec<SettingGroup> {
         ),
         group("display", "Gösterim", "Koordinatların yazılışı."),
         group(
+            "keyboard",
+            "Klavye",
+            "Komutların kısayolları ve komut satırına yazılan takma adlar: kişinin, her programda aynı.",
+        ),
+        group(
             "newProjects",
             "Yeni projeler",
             "Yeni projelerde önerilen başlangıç değerleri; açık projeyi değiştirmez.",
@@ -174,8 +179,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Açıkken sağ tuşa kısaca basmak çalışan komutu onaylar (Enter), basılı tutmak menüyü açar. Kapalıyken sağ tık her zaman o anki işin menüsünü açar. Tutamaçla taşırken sağ tık hiçbir zaman noktayı imlecin yerine bırakmaz.",
             ),
         // Off by default (docs/adr/0622 §7): on, every product command the drawing runs, and every selection
-        // made, is written to the Python console as the SDK's code (FreeCAD's “Show script commands in Python
-        // console”); the console's own runs are not.
+        // made, is written to the Python console as the SDK's code; the console's own runs are not.
         boolean("drafting.pythonEcho", false)
             .hosts(&[Desktop])
             .text(
@@ -533,6 +537,21 @@ fn settings() -> Vec<SettingDescriptor> {
             "Coğrafi koordinatlar",
             "İkinci koordinat sistemi coğrafiyken enlem ve boylamın yazılışı: 40°45′12.3456″K ya da 40.7534293°K.",
         ),
+        // ── Keyboard ────────────────────────────────────────────────────
+        // The user's keys and typed names (docs/adr/9308): the person's, every program and module alike; what an
+        // entry means is read where it is used, so one this version cannot read is kept, not lost.
+        map("keyboard.shortcuts", 2000)
+            .hosts(&[Desktop])
+            .text(
+                "Kısayollar",
+                "Komutlara verdiğiniz tuşlar: komut ve tuşları. Listede olmayan komut kendi tuşlarını kullanır; boş liste komutun tuşlarını kaldırır. Bir komuta verilen tuş başka hiçbir komutun olmaz.",
+            ),
+        map("keyboard.aliases", 500)
+            .hosts(&[Desktop])
+            .text(
+                "Takma adlar",
+                "Komut satırına yazdığınız adlar: ad ve başlattığı komut. KentOS'un kendi adları değişmez; sizin adlarınız klasik CAD komut adlarından önce gelir.",
+            ),
         // ── New projects ────────────────────────────────────────────────
         integer("newProjects.srid", 5256)
             .range(1.0, 999_999.0)
@@ -934,6 +953,13 @@ fn number(key: &str, default: i64) -> Build {
 /// Free text of at most `max` characters.
 fn text(key: &str, default: &str, max: u32) -> Build {
     let mut b = build(key, SettingType::Text, json!(default));
+    b.0.max = Some(f64::from(max));
+    b
+}
+
+/// Texts by text, at most `max` entries, empty at first (docs/adr/9308).
+fn map(key: &str, max: u32) -> Build {
+    let mut b = build(key, SettingType::Map, json!({}));
     b.0.max = Some(f64::from(max));
     b
 }

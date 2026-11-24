@@ -8,7 +8,7 @@ export type PolicyRule = {
 /**
  * The value everyone gets; the control is shown locked.
  */
-value?: boolean | number | string, min?: number, max?: number, 
+value?: boolean | number | string | Record<string, string | Array<string>>, min?: number, max?: number, 
 /**
  * The values that may be used (a subset of the setting's own).
  */

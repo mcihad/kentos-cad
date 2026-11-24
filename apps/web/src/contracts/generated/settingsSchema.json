@@ -23,6 +23,11 @@
       "description": "Koordinatların yazılışı."
     },
     {
+      "id": "keyboard",
+      "title": "Klavye",
+      "description": "Komutların kısayolları ve komut satırına yazılan takma adlar: kişinin, her programda aynı."
+    },
+    {
       "id": "newProjects",
       "title": "Yeni projeler",
       "description": "Yeni projelerde önerilen başlangıç değerleri; açık projeyi değiştirmez."
@@ -1092,6 +1097,38 @@
       "group": "display",
       "title": "Coğrafi koordinatlar",
       "description": "İkinci koordinat sistemi coğrafiyken enlem ve boylamın yazılışı: 40°45′12.3456″K ya da 40.7534293°K.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "keyboard.shortcuts",
+      "type": "map",
+      "default": {},
+      "max": 2000.0,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "keyboard",
+      "title": "Kısayollar",
+      "description": "Komutlara verdiğiniz tuşlar: komut ve tuşları. Listede olmayan komut kendi tuşlarını kullanır; boş liste komutun tuşlarını kaldırır. Bir komuta verilen tuş başka hiçbir komutun olmaz.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "keyboard.aliases",
+      "type": "map",
+      "default": {},
+      "max": 500.0,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "keyboard",
+      "title": "Takma adlar",
+      "description": "Komut satırına yazdığınız adlar: ad ve başlattığı komut. KentOS'un kendi adları değişmez; sizin adlarınız klasik CAD komut adlarından önce gelir.",
       "sensitive": false,
       "apply": "live"
     },

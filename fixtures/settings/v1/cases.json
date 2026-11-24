@@ -1,7 +1,7 @@
 {
   "format": "kentos.settings-cases",
   "version": 1,
-  "note": "Tipli ayarların ortak durumları (TODOS.md SET-01..05; docs/adr/0023). Web apps/web/src/core/settings (settings.test.ts), masaüstü ve ileride sunucu crates/shared/contracts/src/settings (tests/settings.rs) bu dosyayı okur; iki taraf aynı hata kodunu vermelidir. values: bir değerin doğrulanması (anahtar yoksa unknown_key). writes: bir katmana yazma (anahtar, sonra katman, sonra değer). resolve: katmanlar, kurum politikası ve aygıt kısıtlarıyla istenen ve etkin değer; expect yalnız adı geçen ayarları, diagnostics bütün tanıları sırasız karşılaştırır. files: saklanan ayar belgesi; text ham metin, document JSON nesnesi olarak yazılır; eski anahtarlar bugünkülerine okunur (ADR 0126), emekli anahtarlar sessizce düşer (ADR 0155). presets: hazır ayarın tanınması ve doldurduğu değerler. Kod değişikliği iki uygulamada ve burada birlikte yapılır.",
+  "note": "Tipli ayarların ortak durumları (TODOS.md SET-01..05; docs/adr/0023). Web apps/web/src/core/settings (settings.test.ts), masaüstü ve ileride sunucu crates/shared/contracts/src/settings (tests/settings.rs) bu dosyayı okur; iki taraf aynı hata kodunu vermelidir. values: bir değerin doğrulanması (anahtar yoksa unknown_key). writes: bir katmana yazma (anahtar, sonra katman, sonra değer). resolve: katmanlar, kurum politikası ve aygıt kısıtlarıyla istenen ve etkin değer; expect yalnız adı geçen ayarları, diagnostics bütün tanıları sırasız karşılaştırır. files: saklanan ayar belgesi; text ham metin, document JSON nesnesi olarak yazılır; eski anahtarlar bugünkülerine okunur (ADR 0126), emekli anahtarlar sessizce düşer (ADR 0155). presets: hazır ayarın tanınması ve doldurduğu değerler. chords: kısayolun tek yazılışı ve KentOS'un kendine ayırdığı tuşlar; aliases: takma adın Türkçe büyük harfle saklanışı (ADR 9308; web dondurulduğu için yalnız Rust çalıştırıcısı okur). Kod değişikliği iki uygulamada ve burada birlikte yapılır.",
   "values": [
     { "name": "anahtar açık", "key": "drafting.ortho", "value": true, "expect": { "value": true } },
     { "name": "vurgu: hazır renk", "key": "appearance.accent", "value": "navy", "expect": { "value": "navy" } },
@@ -50,6 +50,20 @@
     {"name": "metin: sınırın üstünde", "key": "cloud.server", "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "expect": {"error": "out_of_range"}},
     {"name": "metin: sayı değil", "key": "cloud.server", "value": 8787, "expect": {"error": "wrong_type"}},
     {"name": "metin: null değil", "key": "cloud.server", "value": null, "expect": {"error": "wrong_type"}},
+    {"name": "kısayollar: boş eşlem", "key": "keyboard.shortcuts", "value": {}, "expect": {"value": {}}},
+    {"name": "kısayollar: komut ve tuşları", "key": "keyboard.shortcuts", "value": {"tool.line": ["Ctrl+Shift+L", "F9"], "view.layers": []}, "expect": {"value": {"tool.line": ["Ctrl+Shift+L", "F9"], "view.layers": []}}},
+    {"name": "kısayollar: bu sürümün okuyamadığı giriş saklanır (anlamını kullanan söyler)", "key": "keyboard.shortcuts", "value": {"tool.yok": ["Ctrl+F99"]}, "expect": {"value": {"tool.yok": ["Ctrl+F99"]}}},
+    {"name": "kısayollar: dizi eşlem değil", "key": "keyboard.shortcuts", "value": [["tool.line", "F9"]], "expect": {"error": "wrong_type"}},
+    {"name": "kısayollar: metin eşlem değil", "key": "keyboard.shortcuts", "value": "tool.line=F9", "expect": {"error": "wrong_type"}},
+    {"name": "kısayollar: tuş sayı değil", "key": "keyboard.shortcuts", "value": {"tool.line": [9]}, "expect": {"error": "wrong_type"}},
+    {"name": "kısayollar: giriş nesne değil", "key": "keyboard.shortcuts", "value": {"tool.line": {"key": "F9"}}, "expect": {"error": "wrong_type"}},
+    {"name": "kısayollar: bir komuta en çok 8 tuş", "key": "keyboard.shortcuts", "value": {"tool.line": ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9"]}, "expect": {"error": "out_of_range"}},
+    {"name": "kısayollar: 128 karakterden uzun anahtar", "key": "keyboard.shortcuts", "value": {"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk": ["F9"]}, "expect": {"error": "out_of_range"}},
+    {"name": "kısayollar: 128 karakterden uzun tuş", "key": "keyboard.shortcuts", "value": {"tool.line": ["FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"]}, "expect": {"error": "out_of_range"}},
+    {"name": "kısayollar: boş anahtar", "key": "keyboard.shortcuts", "value": {"": ["F9"]}, "expect": {"error": "out_of_range"}},
+    {"name": "kısayollar: tür, uzunluktan önce denetlenir", "key": "keyboard.shortcuts", "value": {"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk": 9}, "expect": {"error": "wrong_type"}},
+    {"name": "takma adlar: ad ve komut", "key": "keyboard.aliases", "value": {"ÇZ": "tool.line", "KTM": "view.layers"}, "expect": {"value": {"ÇZ": "tool.line", "KTM": "view.layers"}}},
+    {"name": "takma adlar: null değil", "key": "keyboard.aliases", "value": null, "expect": {"error": "wrong_type"}},
     { "name": "bilinmeyen anahtar", "key": "graphics.fxaa", "value": true, "expect": { "error": "unknown_key" } }
   ],
   "writes": [
@@ -70,7 +84,9 @@
     {"name": "metin tercihi kullanıcı katmanında", "layer": "user", "key": "cloud.server", "value": "http://localhost:8787", "expect": {"value": "http://localhost:8787"}},
     {"name": "metin tercihi projeye yazılmaz", "layer": "project", "key": "cloud.server", "value": "http://localhost:8787", "expect": {"error": "wrong_scope"}},
     { "name": "önce katman, sonra değer", "layer": "user", "key": "graphics.msaa", "value": "çok", "expect": { "error": "wrong_scope" } },
-    { "name": "önce anahtar", "layer": "project", "key": "graphics.fxaa", "value": true, "expect": { "error": "unknown_key" } }
+    { "name": "önce anahtar", "layer": "project", "key": "graphics.fxaa", "value": true, "expect": { "error": "unknown_key" } },
+    {"name": "kısayollar kullanıcı katmanında", "layer": "user", "key": "keyboard.shortcuts", "value": {"tool.line": ["F9"]}, "expect": {"value": {"tool.line": ["F9"]}}},
+    {"name": "takma adlar projeye yazılmaz", "layer": "project", "key": "keyboard.aliases", "value": {"ÇZ": "tool.line"}, "expect": {"error": "wrong_scope"}}
   ],
   "resolve": [
     {
@@ -375,7 +391,9 @@
           { "layer": "user", "key": "appearance.uiFont", "code": "not_allowed" }
         ]
       }
-    }
+    },
+    {"name": "kısayollar ve takma adlar dosyayla taşınır; okunamayan giriş de saklanır", "document": {"format": "kentos.settings", "version": 1, "user": {"keyboard.shortcuts": {"tool.line": ["Ctrl+Shift+L"], "tool.gelecek": ["Ctrl+F30"]}, "keyboard.aliases": {"ÇZ": "tool.line"}}}, "expect": {"user": {"keyboard.shortcuts": {"tool.line": ["Ctrl+Shift+L"], "tool.gelecek": ["Ctrl+F30"]}, "keyboard.aliases": {"ÇZ": "tool.line"}}, "device": {}, "migrations": 0, "diagnostics": []}},
+    {"name": "biçimi bozuk kısayollar alınmaz ve söylenir; takma adlar kalır", "document": {"format": "kentos.settings", "version": 1, "user": {"keyboard.shortcuts": ["tool.line", "F9"], "keyboard.aliases": {"ÇZ": "tool.line"}}}, "expect": {"user": {"keyboard.aliases": {"ÇZ": "tool.line"}}, "device": {}, "migrations": 0, "diagnostics": [{"layer": "user", "key": "keyboard.shortcuts", "code": "wrong_type"}]}}
   ],
   "presets": {
     "matching": [
@@ -389,5 +407,52 @@
       { "name": "Hızlı yalnız grafik değerlerini doldurur", "preset": "fast", "expect": { "graphics.msaa": 1, "graphics.hiDpi": false } },
       { "name": "Kaliteli", "preset": "quality", "expect": { "graphics.msaa": 4, "graphics.hiDpi": true } }
     ]
-  }
+  },
+  "chords": [
+    {"name": "büyük harfe ve sıraya getirilir", "text": "shift+ctrl+l", "expect": {"chord": "Ctrl+Shift+L"}},
+    {"name": "Alt, Ctrl'den sonra yazılır", "text": "Alt+Ctrl+N", "expect": {"chord": "Ctrl+Alt+N"}},
+    {"name": "tek harf", "text": "g", "expect": {"chord": "G"}},
+    {"name": "işlev tuşu", "text": "f5", "expect": {"chord": "F5"}},
+    {"name": "işlev tuşu: F24'e kadar", "text": "Shift+F24", "expect": {"chord": "Shift+F24"}},
+    {"name": "işlev tuşu: F25 yok", "text": "F25", "expect": {"error": "unknown_key"}},
+    {"name": "işlev tuşu: başında sıfır yok", "text": "F05", "expect": {"error": "unknown_key"}},
+    {"name": "adlı tuşun öbür yazılışı", "text": "ctrl+del", "expect": {"chord": "Ctrl+Delete"}},
+    {"name": "sayfa tuşu", "text": "ctrl+pageup", "expect": {"chord": "Ctrl+PageUp"}},
+    {"name": "artı tuşu: Ctrl++", "text": "Ctrl++", "expect": {"chord": "Ctrl++"}},
+    {"name": "artı ile Shift yazılmaz", "text": "Shift++", "expect": {"chord": "+", "reserved": "value"}},
+    {"name": "eksi ile Shift yazılmaz", "text": "Ctrl+Shift+-", "expect": {"chord": "Ctrl+-"}},
+    {"name": "Ctrl ile virgül", "text": "ctrl+,", "expect": {"chord": "Ctrl+,"}},
+    {"name": "Ctrl ile rakam", "text": "Ctrl+1", "expect": {"chord": "Ctrl+1"}},
+    {"name": "Türkçe harf tuş değildir", "text": "Ctrl+Ş", "expect": {"error": "unknown_key"}},
+    {"name": "tuşsuz değiştirici", "text": "Ctrl+", "expect": {"error": "no_key"}},
+    {"name": "yalnız değiştirici", "text": "Shift", "expect": {"error": "no_key"}},
+    {"name": "boş", "text": "  ", "expect": {"error": "no_key"}},
+    {"name": "aynı değiştirici iki kez", "text": "Ctrl+Ctrl+L", "expect": {"error": "bad_modifier"}},
+    {"name": "bilinmeyen değiştirici", "text": "Hyper+L", "expect": {"error": "bad_modifier"}},
+    {"name": "boş değiştirici", "text": "Ctrl++L", "expect": {"error": "no_key"}},
+    {"name": "Esc KentOS'un", "text": "Esc", "expect": {"chord": "Esc", "reserved": "escape"}},
+    {"name": "Esc değiştiriciyle de", "text": "ctrl+escape", "expect": {"chord": "Ctrl+Esc", "reserved": "escape"}},
+    {"name": "Enter KentOS'un", "text": "Shift+Enter", "expect": {"chord": "Shift+Enter", "reserved": "enter"}},
+    {"name": "Tab KentOS'un", "text": "Ctrl+Tab", "expect": {"chord": "Ctrl+Tab", "reserved": "tab"}},
+    {"name": "boşluk tek başına KentOS'un", "text": "Space", "expect": {"chord": "Space", "reserved": "space"}},
+    {"name": "Shift ile boşluk kullanılabilir", "text": "Shift+Space", "expect": {"chord": "Shift+Space"}},
+    {"name": "geri silme tek başına KentOS'un", "text": "backspace", "expect": {"chord": "Backspace", "reserved": "backspace"}},
+    {"name": "ok tuşu tek başına KentOS'un", "text": "Down", "expect": {"chord": "Down", "reserved": "arrow"}},
+    {"name": "ok tuşu Ctrl ile kullanılabilir", "text": "Ctrl+Up", "expect": {"chord": "Ctrl+Up"}},
+    {"name": "rakam değer başlatır", "text": "5", "expect": {"chord": "5", "reserved": "value"}},
+    {"name": "Shift ile rakam değer işareti yazar", "text": "Shift+2", "expect": {"chord": "Shift+2", "reserved": "value"}},
+    {"name": "virgül tek başına değerin", "text": ",", "expect": {"chord": ",", "reserved": "value"}},
+    {"name": "eksi tek başına değerin", "text": "-", "expect": {"chord": "-", "reserved": "value"}}
+  ],
+  "aliases": [
+    {"name": "Türkçe büyük harfe getirilir", "text": "çiz", "expect": {"alias": "ÇİZ"}},
+    {"name": "noktasız ı büyük I olur", "text": "ızgara", "expect": {"alias": "IZGARA"}},
+    {"name": "baştaki ve sondaki boşluk atılır", "text": "  dk2 ", "expect": {"alias": "DK2"}},
+    {"name": "32 karakter olur", "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "expect": {"alias": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}},
+    {"name": "33 karakter olmaz", "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "expect": {"error": "too_long"}},
+    {"name": "boş", "text": "", "expect": {"error": "empty"}},
+    {"name": "rakamla başlamaz", "text": "3d", "expect": {"error": "digit_first"}},
+    {"name": "boşluk olmaz", "text": "iki ad", "expect": {"error": "bad_character"}},
+    {"name": "işaret olmaz", "text": "ÇZ-2", "expect": {"error": "bad_character"}}
+  ]
 }

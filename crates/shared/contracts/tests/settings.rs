@@ -1,15 +1,17 @@
 //! The typed settings (docs/adr/0023): the shared cases every host runs
 //! (`fixtures/settings/v1/cases.json`; the web runs them in
 //! `apps/web/src/core/settings/settings.test.ts`), the schema's own rules, and
-//! the generated files the web reads.
+//! the generated files the web reads. The user's keys and typed names
+//! (docs/adr/9308): how a chord and a name are written, the keys KentOS keeps.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use kentos_contracts::{
-    ResolvedSetting, SettingConstraint, SettingDiagnostic, SettingErrorCode, SettingScope,
-    SettingType, SettingsFile, SettingsLayers, SettingsPolicy, check_write, resolve, same_value,
-    settings_schema,
+    ALIASES_SETTING, AliasError, ChordError, ReservedKey, ResolvedSetting, SHORTCUTS_SETTING,
+    SettingConstraint, SettingDiagnostic, SettingErrorCode, SettingScope, SettingType,
+    SettingsFile, SettingsLayers, SettingsPolicy, alias_entries, check_write, normalize_alias,
+    normalize_chord, reserved_key, resolve, same_value, settings_schema, shortcut_entries,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -389,6 +391,12 @@ fn every_setting_is_described_completely() {
                 "{}: a text has a length limit, and choices only beside a colour",
                 d.key
             ),
+            // The user's keys and typed names (docs/adr/9308): a limit on the entries, no choices.
+            SettingType::Map => assert!(
+                d.min.is_none() && d.max.is_some() && d.choices.is_empty(),
+                "{}: a map has a limit on its entries and no choices",
+                d.key
+            ),
         }
         assert!(
             !d.color || d.kind == SettingType::Text,
@@ -518,4 +526,116 @@ fn generated_settings_files_are_current() {
             path.display()
         );
     }
+}
+
+// ── The user's keys and typed names (docs/adr/9308) ───────────────────────
+
+#[derive(Deserialize)]
+struct KeymapCases {
+    chords: Vec<ChordCase>,
+    aliases: Vec<AliasCase>,
+}
+
+#[derive(Deserialize)]
+struct ChordCase {
+    name: String,
+    text: String,
+    expect: ChordExpect,
+}
+
+#[derive(Deserialize)]
+struct ChordExpect {
+    #[serde(default)]
+    chord: Option<String>,
+    #[serde(default)]
+    error: Option<ChordError>,
+    /// Kept by KentOS for itself, and why.
+    #[serde(default)]
+    reserved: Option<ReservedKey>,
+}
+
+#[derive(Deserialize)]
+struct AliasCase {
+    name: String,
+    text: String,
+    expect: AliasExpect,
+}
+
+#[derive(Deserialize)]
+struct AliasExpect {
+    #[serde(default)]
+    alias: Option<String>,
+    #[serde(default)]
+    error: Option<AliasError>,
+}
+
+fn keymap_cases() -> KeymapCases {
+    serde_json::from_str(CASES).expect("the case file's chords and aliases read")
+}
+
+/// A chord is written one way whatever was typed, or refused with its reason; the keys KentOS keeps are named.
+#[test]
+fn chords_are_written_one_way_and_kentos_keeps_its_own_keys() {
+    let cases = keymap_cases();
+    assert!(cases.chords.len() >= 20);
+    for c in &cases.chords {
+        match (normalize_chord(&c.text), &c.expect) {
+            (Ok(chord), ChordExpect { chord: Some(want), error: None, reserved }) => {
+                assert_eq!(&chord, want, "{}", c.name);
+                assert_eq!(reserved_key(&chord), *reserved, "{}: kept by KentOS", c.name);
+                assert_eq!(normalize_chord(&chord).as_ref(), Ok(&chord), "{}: written once", c.name);
+            }
+            (Err(code), ChordExpect { chord: None, error: Some(want), .. }) => {
+                assert_eq!(code, *want, "{}", c.name);
+            }
+            (got, _) => panic!("{}: {got:?}", c.name),
+        }
+    }
+    for code in [ChordError::NoKey, ChordError::UnknownKey, ChordError::BadModifier] {
+        assert!(!code.message().is_empty());
+    }
+}
+
+/// A typed name is kept in Turkish upper case, or refused with its reason.
+#[test]
+fn typed_names_are_kept_in_turkish_upper_case() {
+    let cases = keymap_cases();
+    assert!(cases.aliases.len() >= 8);
+    for c in &cases.aliases {
+        match (normalize_alias(&c.text), &c.expect) {
+            (Ok(alias), AliasExpect { alias: Some(want), error: None }) => {
+                assert_eq!(&alias, want, "{}", c.name);
+                assert_eq!(normalize_alias(&alias).as_ref(), Ok(&alias), "{}: written once", c.name);
+            }
+            (Err(code), AliasExpect { alias: None, error: Some(want) }) => assert_eq!(code, *want, "{}", c.name),
+            (got, _) => panic!("{}: {got:?}", c.name),
+        }
+    }
+}
+
+/// The two settings are the user's, the desktop's, empty at first; their entries are read as written, an entry
+/// whose shape is not this version's left for the host to name.
+#[test]
+fn the_keys_and_names_settings_keep_their_entries_as_written() {
+    let schema = settings_schema();
+    for key in [SHORTCUTS_SETTING, ALIASES_SETTING] {
+        let d = schema.get(key).expect("described");
+        assert_eq!((d.kind, d.scope), (SettingType::Map, SettingScope::User), "{key}");
+        assert_eq!(d.default, serde_json::json!({}), "{key}");
+    }
+    let shortcuts = serde_json::json!({ "tool.line": ["Ctrl+Shift+L", "F9"], "view.layers": [], "x.y": "F5" });
+    assert_eq!(
+        shortcut_entries(&shortcuts),
+        vec![
+            ("tool.line".to_owned(), Some(vec!["Ctrl+Shift+L".to_owned(), "F9".to_owned()])),
+            ("view.layers".to_owned(), Some(Vec::new())),
+            ("x.y".to_owned(), None),
+        ]
+    );
+    let aliases = serde_json::json!({ "ÇZ": "tool.line", "BOŞ": ["tool.line"] });
+    assert_eq!(
+        alias_entries(&aliases),
+        vec![("BOŞ".to_owned(), None), ("ÇZ".to_owned(), Some("tool.line".to_owned()))]
+    );
+    assert!(shortcut_entries(&serde_json::json!([])).is_empty());
 }

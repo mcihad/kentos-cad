@@ -2,6 +2,8 @@
 
 /**
  * The value's type. `enum` values are text from [`SettingDescriptor::choices`];
- * `text` is free text of at most `max` characters (a server's address).
+ * `text` is free text of at most `max` characters (a server's address);
+ * `map` is texts by text, each a text or a list of texts, at most `max` of them
+ * (the user's keys and typed names, docs/adr/9308).
  */
-export type SettingType = "boolean" | "integer" | "number" | "enum" | "text";
+export type SettingType = "boolean" | "integer" | "number" | "enum" | "text" | "map";

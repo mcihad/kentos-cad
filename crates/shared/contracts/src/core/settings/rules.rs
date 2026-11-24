@@ -7,16 +7,16 @@
 //!
 //! Checks run in a fixed order, so both hosts report the same code for a
 //! value wrong in two ways: the key, the layer, the type, whole number, the
-//! range (a text's length), the choices.
+//! range (a text's length, a map's entries and their lengths), the choices.
 
 use std::collections::BTreeMap;
 
 use serde_json::{Map, Value, json};
 
 use super::{
-    ResolveReason, ResolvedSetting, SETTINGS_FORMAT, SETTINGS_VERSION, SettingConstraint,
-    SettingDescriptor, SettingDiagnostic, SettingErrorCode, SettingScope, SettingType,
-    SettingsFile, SettingsLayer, SettingsPolicy, SettingsPreset, SettingsSchema,
+    MAP_LIST_MAX, MAP_TEXT_MAX, ResolveReason, ResolvedSetting, SETTINGS_FORMAT, SETTINGS_VERSION,
+    SettingConstraint, SettingDescriptor, SettingDiagnostic, SettingErrorCode, SettingScope,
+    SettingType, SettingsFile, SettingsLayer, SettingsPolicy, SettingsPreset, SettingsSchema,
 };
 
 use SettingErrorCode as Code;
@@ -53,6 +53,7 @@ impl SettingDescriptor {
                 }
                 number(n)
             }
+            SettingType::Map => map(value, self.max)?,
         };
         if !self.choices.is_empty() && !self.choices.iter().any(|c| same_value(&c.value, &value)) {
             // A colour where one may be given instead (the accent).
@@ -70,6 +71,36 @@ impl SettingDescriptor {
     pub fn choice_values(&self) -> Vec<Value> {
         self.choices.iter().map(|c| c.value.clone()).collect()
     }
+}
+
+/// A map's value as it is kept (docs/adr/9308): texts by text, each a text or a list of texts; the shape and the
+/// lengths are checked here, the type before the length, and what an entry means where it is used.
+fn map(value: &Value, max: Option<f64>) -> Result<Value, SettingErrorCode> {
+    let entries = value.as_object().ok_or(Code::WrongType)?;
+    let long = |text: &str| text.chars().count() > MAP_TEXT_MAX;
+    for entry in entries.values() {
+        match entry {
+            Value::String(_) => {}
+            Value::Array(items) if items.iter().all(Value::is_string) => {}
+            _ => return Err(Code::WrongType),
+        }
+    }
+    if max.is_some_and(|max| entries.len() as f64 > max) {
+        return Err(Code::OutOfRange);
+    }
+    for (key, entry) in entries {
+        let too_long = match entry {
+            Value::String(text) => long(text),
+            Value::Array(items) => {
+                items.len() > MAP_LIST_MAX || items.iter().filter_map(Value::as_str).any(long)
+            }
+            _ => false,
+        };
+        if key.is_empty() || long(key) || too_long {
+            return Err(Code::OutOfRange);
+        }
+    }
+    Ok(value.clone())
 }
 
 /// Whether a layer may hold a setting of `scope`: its own layer or a more

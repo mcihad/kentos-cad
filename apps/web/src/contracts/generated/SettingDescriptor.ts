@@ -12,13 +12,13 @@ export type SettingDescriptor = {
 /**
  * Stable dotted name, `group.name` in camelCase (`graphics.msaa`); never reused.
  */
-key: string, type: SettingType, default: boolean | number | string, 
+key: string, type: SettingType, default: boolean | number | string | Record<string, string | Array<string>>, 
 /**
  * Smallest value of a number, inclusive.
  */
 min?: number, 
 /**
- * Largest value of a number, inclusive; the most characters of a text.
+ * Largest value of a number, inclusive; the most characters of a text; the most entries of a map.
  */
 max?: number, 
 /**

@@ -28,9 +28,11 @@ use serde_json::Value;
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+mod keymap;
 mod rules;
 mod schema;
 
+pub use keymap::*;
 pub use rules::*;
 pub use schema::settings_schema;
 
@@ -68,7 +70,9 @@ pub enum SettingScope {
 }
 
 /// The value's type. `enum` values are text from [`SettingDescriptor::choices`];
-/// `text` is free text of at most `max` characters (a server's address).
+/// `text` is free text of at most `max` characters (a server's address);
+/// `map` is texts by text, each a text or a list of texts, at most `max` of them
+/// (the user's keys and typed names, docs/adr/9308).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -80,7 +84,16 @@ pub enum SettingType {
     Number,
     Enum,
     Text,
+    /// Texts by text, each a text or a list of at most [`MAP_LIST_MAX`] texts; no text, the keys' too, longer than
+    /// [`MAP_TEXT_MAX`] characters. What an entry means is read where it is used: an entry a newer version wrote is
+    /// kept, not lost (docs/adr/9308).
+    Map,
 }
+
+/// The most characters of a map's key or of one of its texts.
+pub const MAP_TEXT_MAX: usize = 128;
+/// The most texts of one entry of a map.
+pub const MAP_LIST_MAX: usize = 8;
 
 /// How a change takes effect.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -130,13 +143,13 @@ pub struct SettingDescriptor {
     pub key: String,
     #[serde(rename = "type")]
     pub kind: SettingType,
-    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string"))]
+    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string | Record<string, string | Array<string>>"))]
     pub default: Value,
     /// Smallest value of a number, inclusive.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub min: Option<f64>,
-    /// Largest value of a number, inclusive; the most characters of a text.
+    /// Largest value of a number, inclusive; the most characters of a text; the most entries of a map.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub max: Option<f64>,
@@ -385,7 +398,7 @@ impl Default for SettingsFile {
 pub struct PolicyRule {
     /// The value everyone gets; the control is shown locked.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "boolean | number | string"))]
+    #[cfg_attr(feature = "ts", ts(optional, type = "boolean | number | string | Record<string, string | Array<string>>"))]
     pub value: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -472,12 +485,12 @@ pub struct ResolvedSetting {
     pub key: String,
     /// What was asked for: the value of the most specific layer that holds a
     /// valid one. The preference is never lost when it cannot be used.
-    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string"))]
+    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string | Record<string, string | Array<string>>"))]
     pub requested: Value,
     /// The layer `requested` came from (`default` when none holds one).
     pub source: SettingScope,
     /// What is used.
-    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string"))]
+    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string | Record<string, string | Array<string>>"))]
     pub effective: Value,
     /// Why `effective` differs from `requested`; none when they are equal.
     #[serde(default, skip_serializing_if = "Option::is_none")]
