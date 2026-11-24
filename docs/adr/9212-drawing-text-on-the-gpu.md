@@ -185,3 +185,37 @@ Bunlar aşama 3'ün işi.
 **Ölçüm:** kare süreleri (yakın ve uzak tekerlek karesi) release derlemesiyle, ADR 9207 §8'in ölçümüyle birlikte
 toplu ölçülecek (sahibin seçimi, 24 Kasım: “Sonra toplu ölç”). Ölçüm koşumunun tekerlek satırı artık GPU'nun çizdiği
 glif sayısını da yazıyor (`glif`).
+
+## §7 Aşama 3, birinci adım: maskeler, alt çizgiler, ölçü değerleri ve hücreler (24 Kasım 2026)
+
+**Düz dörtgen** (`GlyphQuad`): glif katmanı artık yazıyla birlikte düz dörtgen de çiziyor. Birim kareyi bir
+paralelkenara götüren dönüşüm ve renk taşır.
+
+- Yazının **altındakiler** gliflerden önce (maske, hücre dolgusu), **üstündekiler** sonra (alt çizgi ve halesi)
+  çizilir. Sıra kanvasınkiyle aynı: kanvas da alt çizgiyi harflerden sonra, inen harflerin kuyruğunun üstüne çizer.
+- **Kenarlar:** dörtgen her yanda bir aygıt pikseli büyütülür, kenarı bir piksel boyunca yumuşatılır. Böylece
+  döndürülmüş maske de dişsiz çizilir.
+
+**GPU'ya geçenler:**
+
+- **Maskeli yazı:** maske, kanvasın dikdörtgeni. Yazının kutusu boyunun onda biri kadar geniş; 1,15'i üstte, 0,23'ü
+  altta; harflerle birlikte eğilir, genişlik çarpanıyla daralmaz. Ortalanmış ölçü değerinde yalnız yanlarda genişler.
+- **Alt çizgi:** tabandan boyun 0,12'si aşağıda, 0,06'sı kalınlıkta (en az bir piksel); halesi çevresinde.
+  - Kesir çizgisi, boşluğun altındaki çizgi olarak çizilir; o da gider.
+- **Ölçü değerleri** (maskeleriyle).
+- **Maskeli çok satırlı yazı:** maske de satırlar da GPU'da.
+- **Tablo hücreleri:** sözcükleri ve dolguları GPU'da.
+  - Kanvasın `fill_quad`'ı, bulunulan yer GPU'ya açıksa ve dörtgen bir paralelkenarsa (maske ve hücre öyledir) düz
+    dörtgen olur. Değilse kanvasta kalır.
+
+**Kanvasta kalanlar** (ikinci adım): etiket motorunun etiketleri, çerçeveleri ve çağrı çizgileri; okunamayacak kadar
+küçük yazının bantları; SHX ve Unicode profilli yazılar.
+
+**Sınamalar:**
+
+- GPU (UHD 770):
+  - 30° döndürülmüş 120 × 40 px'lik maske 4 800 px² örtüyor; kenarında kısmen örtülü 222 piksel var.
+  - Harfler maskenin üstünde, alt çizgi harflerin üstünde: mürekkep maskeyle ve maskesiz aynı (alt çizginin geçtiği 8
+    piksel dışında); alt çizgi harflerle ve harfsiz 160 piksel.
+- Masaüstü (`labels::gpu`): maskenin, alt çizginin ve dolgunun yerleri, boşluğun alt çizgisi, paralelkenar olmayan
+  dörtgenin kanvasta kalması. Yazı sınamalarının 13'ü geçti.

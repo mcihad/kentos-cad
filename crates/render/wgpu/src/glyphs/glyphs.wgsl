@@ -38,21 +38,35 @@ fn twisted(d: vec2f) -> vec2f {
     @location(2) m: vec4f, @location(3) quad: vec4f, @location(4) uv: vec4f, @location(5) color: vec4f,
     @location(6) halo: vec4f, @location(7) haloPx: f32, @location(8) flags: u32) -> GlyphOut {
   var corners = array<vec2f, 6>(vec2f(0.0, 0.0), vec2f(1.0, 0.0), vec2f(1.0, 1.0), vec2f(0.0, 0.0), vec2f(1.0, 1.0), vec2f(0.0, 1.0));
-  let c = corners[vi];
-  let e = quad.xy + c * quad.zw;
+  var c = corners[vi];
   let px = (flags & 0x10000u) != 0u;
+  let solid = (flags & 0x40000u) != 0u;
   var k = frame.pxPerM;
   if (px) { k = frame.dpr * frame.grow.x; }
+  // A flat quad grows a device pixel each side, so its edges are smoothed outside it as well as in: its sides' lengths
+  // in device pixels, and the unit square's corners moved out by a pixel of each.
+  var lens = vec2f(1.0);
+  if (solid) {
+    lens = max(vec2f(length(vec2f(m.x, m.y)) * quad.z, length(vec2f(m.z, m.w)) * quad.w) * k, vec2f(1e-3));
+    c = c * (1.0 + 2.0 / lens) - 1.0 / lens;
+  }
+  let e = quad.xy + c * quad.zw;
   var d = (vec2f(m.x * e.x + m.z * e.y, m.y * e.x + m.w * e.y) + offset) * k;
   if (!px || (flags & 0x20000u) != 0u) { d = twisted(d); }
   // The anchor less the camera part by part: the high parts first, exact near the camera, then the low ones.
   let a = twisted(((at.xy - frame.offset) + (at.zw - frame.offsetLo)) * frame.pxPerM);
   var o: GlyphOut;
   o.pos = vec4f((a + d) / (0.5 * frame.viewport), 0.0, 1.0);
-  o.uv = uv.xy + vec2f(c.x, 1.0 - c.y) * uv.zw;
-  o.page = flags & 0xffffu;
+  o.page = flags & 0x4ffffu;
   o.color = color;
   o.halo = halo;
+  if (solid) {
+    // A quad's place on its unit square and its sides in device pixels.
+    o.uv = c;
+    o.k = lens;
+    return o;
+  }
+  o.uv = uv.xy + vec2f(c.x, 1.0 - c.y) * uv.zw;
   // A field px in device px: the em's device px over the field's (for a narrowed or leaning text the mean of its
   // axes). Never under the share that keeps the field's reach half a pixel: its box's edge stays clear of ink.
   let perField = max(sqrt(abs(m.x * m.w - m.z * m.y)) * k / EM_PX, 0.5 / SPREAD_PX);
@@ -64,7 +78,14 @@ fn twisted(d: vec2f) -> vec2f {
 }
 
 @fragment fn glyphFs(i: GlyphOut) -> @location(0) vec4f {
-  let v = textureSampleLevel(pages, pageSmp, i.uv, i.page, 0.0).r;
+  if ((i.page & 0x40000u) != 0u) {
+    // A flat quad: covered by how far inside its nearest side the pixel is, over a pixel.
+    let inside = min(i.uv, vec2f(1.0) - i.uv) * i.k;
+    let cover = clamp(inside.x + 0.5, 0.0, 1.0) * clamp(inside.y + 0.5, 0.0, 1.0) * i.color.a;
+    if (cover < 0.002) { discard; }
+    return vec4f(i.color.rgb * cover, cover);
+  }
+  let v = textureSampleLevel(pages, pageSmp, i.uv, i.page & 0xffffu, 0.0).r;
   // Device px from the edge, inside positive.
   let d = (v - 0.5) * (2.0 * SPREAD_PX) * i.k.x;
   let ink = clamp(d + 0.5, 0.0, 1.0) * i.color.a;

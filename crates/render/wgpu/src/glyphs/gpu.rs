@@ -10,7 +10,7 @@ use wgpu::util::DeviceExt;
 
 use super::atlas::{GlyphAtlas, Lookup};
 use super::sdf::{EM_PX, SPREAD_PX};
-use super::{GlyphText, GlyphUnit};
+use super::{GlyphQuad, GlyphText, GlyphUnit};
 use crate::Rgba8;
 use crate::styled::StyledFrame;
 
@@ -55,6 +55,8 @@ const ATTRIBUTES: [wgpu::VertexAttribute; 9] = wgpu::vertex_attr_array![
 ];
 const PX_UNIT: u32 = 1 << 16;
 const TURNS: u32 = 1 << 17;
+/// A flat quad's instance: its colour over the unit square, no field sampled.
+const SOLID: u32 = 1 << 18;
 /// A layer's origin is its first anchor on a grid this coarse: its numbers stay small, and whole in float32.
 const ORIGIN_GRID: f64 = 65536.0;
 
@@ -156,6 +158,11 @@ fn write(queue: &wgpu::Queue, texture: &wgpu::Texture, page: u32, x: u32, y: u32
         wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(width), rows_per_image: Some(height) },
         wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
     );
+}
+
+fn shown(srgb_target: bool, c: Rgba8) -> [u8; 4] {
+    let [r, g, b, a] = c.0;
+    if srgb_target { [srgb_to_linear(r), srgb_to_linear(g), srgb_to_linear(b), a] } else { [r, g, b, a] }
 }
 
 fn srgb_to_linear(c: u8) -> u8 {
@@ -283,8 +290,7 @@ impl GlyphGpu {
 
     /// A colour as the target takes it: on a gamma-correct target in linear light.
     fn shown(&self, c: Rgba8) -> [u8; 4] {
-        let [r, g, b, a] = c.0;
-        if self.srgb_target { [srgb_to_linear(r), srgb_to_linear(g), srgb_to_linear(b), a] } else { [r, g, b, a] }
+        shown(self.srgb_target, c)
     }
 
     fn bind(&self, device: &wgpu::Device, frame: &wgpu::Buffer) -> wgpu::BindGroup {
@@ -311,12 +317,35 @@ impl GlyphGpu {
             [(t.at[0] / ORIGIN_GRID).round() * ORIGIN_GRID, (t.at[1] / ORIGIN_GRID).round() * ORIGIN_GRID]
         });
         let mut instances = Vec::new();
+        let srgb = self.srgb_target;
         for text in texts {
             let (color, halo) = (self.shown(text.color), self.shown(text.halo));
             let unit = match text.unit {
                 GlyphUnit::World => 0,
                 GlyphUnit::Px { turns } => PX_UNIT | if turns { TURNS } else { 0 },
             };
+            let quad = |q: &GlyphQuad| {
+                let [a, b, c, d, e, f] = q.transform;
+                let (anchor, offset) = if unit == 0 {
+                    ([text.at[0] + e, text.at[1] + f], [0.0; 2])
+                } else {
+                    (text.at, [e as f32, f as f32])
+                };
+                let rel = [anchor[0] - origin[0], anchor[1] - origin[1]];
+                let hi = [rel[0] as f32, rel[1] as f32];
+                Instance {
+                    at: [hi[0], hi[1], (rel[0] - f64::from(hi[0])) as f32, (rel[1] - f64::from(hi[1])) as f32],
+                    offset,
+                    linear: [a as f32, b as f32, c as f32, d as f32],
+                    quad: [0.0, 0.0, 1.0, 1.0],
+                    uv: [0.0; 4],
+                    color: shown(srgb, q.color),
+                    halo: [0; 4],
+                    halo_px: 0.0,
+                    flags: SOLID | unit,
+                }
+            };
+            instances.extend(text.under.iter().map(quad));
             for g in &text.glyphs {
                 let Lookup::Ready(slot) = self.atlas.lookup(g.key, deadline) else {
                     continue;
@@ -342,6 +371,7 @@ impl GlyphGpu {
                     flags: slot.page | unit,
                 });
             }
+            instances.extend(text.over.iter().map(quad));
         }
         let pending = self.atlas.take_pending();
         self.upload(device, queue);

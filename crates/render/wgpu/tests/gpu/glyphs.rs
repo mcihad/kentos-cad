@@ -8,7 +8,7 @@ use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::text::shaping::{OutlineOp, placed};
 use kentos_render_wgpu::Rgba8;
-use kentos_render_wgpu::glyphs::{GlyphAtlas, GlyphGpu, GlyphPlace, GlyphText, GlyphUnit};
+use kentos_render_wgpu::glyphs::{GlyphAtlas, GlyphGpu, GlyphPlace, GlyphQuad, GlyphText, GlyphUnit};
 use kentos_render_wgpu::styled::StyledFrame;
 
 const E: f64 = 487_012.346;
@@ -48,6 +48,8 @@ fn world(at: [f64; 2], layout: &placed::Layout, halo_px: f32) -> GlyphText {
         halo: HALO,
         halo_px,
         glyphs: layout.glyphs.iter().map(GlyphPlace::of).collect(),
+        under: Vec::new(),
+        over: Vec::new(),
     }
 }
 
@@ -329,6 +331,67 @@ pub fn sub_pixel_pans_move_the_text_by_the_pan(gpu: &Gpu) {
         // (the field's own sampling as the letters cross the pixel grid).
         assert!((moved[0] + pan).abs() < 0.05 && (moved[1] - pan).abs() < 0.05, "{pan}: {moved:?}");
     }
+}
+
+/// Flat quads with a text (docs/adr/9212 §7): a mask turned 30° under its letters covers its parallelogram's area,
+/// its edges smoothed over a pixel; the letters are drawn over it and an underline over them.
+pub fn masks_and_underlines_draw_under_and_over_the_letters(gpu: &Gpu) {
+    let mut glyphs = GlyphGpu::new(&gpu.device, FORMAT);
+    let (w, h) = (120.0f64, 40.0f64);
+    let (s, c) = 30f64.to_radians().sin_cos();
+    // The unit square onto a 120 × 40 px box turned 30°, its middle on the anchor (pixels, y up).
+    let mask = GlyphQuad {
+        transform: [w * c, w * s, -h * s, h * c, -(w * c - h * s) / 2.0, -(w * s + h * c) / 2.0],
+        color: Rgba8([255, 0, 0, 255]),
+    };
+    let alone = GlyphText {
+        unit: GlyphUnit::Px { turns: false },
+        glyphs: Vec::new(),
+        under: vec![mask],
+        ..world([E, N], &layout("O", 1.0, 0.0), 0.0)
+    };
+    let frame = view([E, N], 20.0);
+    let rgba = draw(gpu, &mut glyphs, std::slice::from_ref(&alone), &frame);
+    // How much of each pixel the mask covers: over the grey, red less green is 255 a whole pixel.
+    let share = |p: &[u8; 4]| ((f64::from(p[0]) - f64::from(p[1])) / 255.0).clamp(0.0, 1.0);
+    let pixels = rgba.as_chunks::<4>().0;
+    let area: f64 = pixels.iter().map(share).sum();
+    let edge = pixels.iter().filter(|p| (0.15..0.85).contains(&share(p))).count();
+    eprintln!("glyphs: a mask of {} px² covers {area:.0}, {edge} pixels of its edge partly", w * h);
+    assert!((area - w * h).abs() < 0.01 * w * h, "{area}");
+    assert!(edge > 200, "smoothed edges: {edge}");
+    // The letters over the mask, the underline over them.
+    let text = layout("OO", 1.2, 0.0);
+    let m = middle(&text);
+    let ink_at = |rgba: &[u8], colour: [u8; 3]| {
+        rgba.as_chunks::<4>().0.iter().filter(|p| (0..3).all(|i| p[i].abs_diff(colour[i]) < 30)).count()
+    };
+    let lettered = GlyphText {
+        under: vec![GlyphQuad {
+            transform: [8.0, 0.0, 0.0, 2.0, -4.0 - m[0], -1.0 - m[1]],
+            color: Rgba8([255, 0, 0, 255]),
+        }],
+        over: vec![GlyphQuad {
+            transform: [8.0, 0.0, 0.0, 0.1, -4.0 - m[0], -0.05 - m[1]],
+            color: Rgba8([0, 200, 0, 255]),
+        }],
+        ..world([E, N], &text, 0.0)
+    };
+    let rgba = draw(gpu, &mut glyphs, std::slice::from_ref(&lettered), &frame);
+    let ink_colour = [INK.0[0], INK.0[1], INK.0[2]];
+    let letters = GlyphText { under: Vec::new(), over: Vec::new(), ..lettered.clone() };
+    let underline = GlyphText { glyphs: Vec::new(), under: Vec::new(), ..lettered.clone() };
+    let (alone, bar) = (
+        draw(gpu, &mut glyphs, std::slice::from_ref(&letters), &frame),
+        draw(gpu, &mut glyphs, std::slice::from_ref(&underline), &frame),
+    );
+    let (ink, ink_alone) = (ink_at(&rgba, ink_colour), ink_at(&alone, ink_colour));
+    let (green, green_alone) = (ink_at(&rgba, [0, 200, 0]), ink_at(&bar, [0, 200, 0]));
+    eprintln!("glyphs: ink {ink} over the mask, {ink_alone} alone; underline {green} over the letters, {green_alone} alone");
+    // The letters whole over the mask (the underline takes its own row off them), the underline whole over them.
+    assert!(ink_alone > 50 && ink + 40 >= ink_alone, "{ink} of {ink_alone}");
+    assert!(green_alone > 100 && green == green_alone, "{green} of {green_alone}");
+    keep(&rgba, "maske-alt-cizgi-gpu");
 }
 
 /// Fields on pages of 160 px (a dozen and more of them, the texture made again as they come) draw as on one page.

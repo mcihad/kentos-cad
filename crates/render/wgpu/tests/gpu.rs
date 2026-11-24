@@ -513,6 +513,7 @@ fn glyphs_on_a_real_gpu() {
     glyphs::a_text_of_pixels_keeps_its_size_as_a_world_text_grows(&gpu);
     glyphs::sub_pixel_pans_move_the_text_by_the_pan(&gpu);
     glyphs::fields_on_many_pages_draw_as_on_one(&gpu);
+    glyphs::masks_and_underlines_draw_under_and_over_the_letters(&gpu);
 }
 
 /// docs/adr/0793 §1 alone: a paper width held on the model screen, on a real GPU.

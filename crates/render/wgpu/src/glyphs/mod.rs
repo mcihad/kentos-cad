@@ -17,6 +17,15 @@ pub mod sdf;
 pub use atlas::{GlyphAtlas, GlyphKey, Lookup, Slot};
 pub use gpu::{GlyphGpu, GlyphLayer};
 
+/// A flat quadrilateral drawn with a text (docs/adr/9212 §7): a mask under its letters, an underline over them, a
+/// table cell's fill. The unit square's place from the text's anchor, in the text's unit, as [`GlyphPlace::transform`]
+/// (a parallelogram), and its colour; its edges smoothed over a device pixel.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GlyphQuad {
+    pub transform: [f64; 6],
+    pub color: Rgba8,
+}
+
 use std::sync::Arc;
 
 use kentos_geometry_core::text::shaping::placed::PlacedGlyph;
@@ -85,6 +94,9 @@ pub struct GlyphText {
     pub halo: Rgba8,
     pub halo_px: f32,
     pub glyphs: Vec<GlyphPlace>,
+    /// Quads drawn before its glyphs (a mask, a cell's fill), and after them (an underline and its halo).
+    pub under: Vec<GlyphQuad>,
+    pub over: Vec<GlyphQuad>,
 }
 
 #[cfg(test)]

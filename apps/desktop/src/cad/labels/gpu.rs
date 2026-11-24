@@ -1,10 +1,11 @@
-//! The drawing's text on the GPU (docs/adr/9212 §4, stage 2): the pieces of text objects, of a block's texts and of
-//! the lines of a multi-line text without a mask go to the drawing area's renderer as glyphs
-//! (`kentos_render_wgpu::glyphs`) instead of onto the canvas. Placing and layout stay the canvas's own, to the glyph:
-//! a piece is shaped as the canvas shapes it (`shaped`: Iced's text at [`REFERENCE`]) and each glyph's face is found
-//! among the drawing's faces by its bytes. A piece with a mask or an underline, or with a glyph from a face that is not
-//! the drawing's (the text system fell back to another for a letter they lack), stays on the canvas, as does
-//! everything else the labels draw: dimension values, the label engine's labels, cells, bands, masks.
+//! The drawing's text on the GPU (docs/adr/9212 §4, stages 2 and 3): the pieces of text objects, a block's texts,
+//! multi-line texts with their masks, dimension values and a table's cells with their fills go to the drawing area's
+//! renderer as glyphs and flat quads (`kentos_render_wgpu::glyphs`) instead of onto the canvas. Placing and layout stay
+//! the canvas's own, to the glyph: a piece is shaped as the canvas shapes it (`shaped`: Iced's text at [`REFERENCE`])
+//! and each glyph's face is found among the drawing's faces by its bytes; a mask, an underline and a fill are the
+//! canvas's rectangles. A piece with a glyph from a face that is not the drawing's (the text system fell back to another
+//! for a letter they lack) stays on the canvas, as does what the label engine places (its labels, their frames and
+//! callouts), the texts too small to read, SHX and Unicode-profile texts.
 //!
 //! The canvas draws its picture in the frame's draw, before the scene is prepared (Iced draws the widgets, then
 //! prepares and renders their primitives): a painting leaves its texts in the [`GlyphSlot`] and the scene draws them
@@ -13,12 +14,11 @@
 //! until the labels are placed again.
 
 use super::*;
-use std::collections::HashSet;
 use std::sync::{Arc, PoisonError};
 
 use iced::advanced::graphics::text::cosmic_text::fontdb;
 use kentos_geometry_core::text::shaping::FontId;
-use kentos_render_wgpu::glyphs::{GlyphKey, GlyphPlace, GlyphSet, GlyphText, GlyphUnit};
+use kentos_render_wgpu::glyphs::{GlyphKey, GlyphPlace, GlyphQuad, GlyphSet, GlyphText, GlyphUnit};
 
 /// Whether the drawing area's texts go to its renderer: `KENTOS_DIAG_TEXT=canvas` keeps them all on the canvas, for a
 /// measurement or a comparison.
@@ -53,37 +53,30 @@ pub(super) struct Sink {
     slot: GlyphSlot,
     texts: RefCell<Vec<GlyphText>>,
     open: Cell<bool>,
-    /// The objects whose multi-line text has a mask (a `ParagraphMask` comes before its lines): their lines stay on the
-    /// canvas over it.
-    masked: RefCell<HashSet<u32>>,
 }
 
 impl Sink {
     pub(super) fn new(slot: GlyphSlot) -> Sink {
-        Sink {
-            slot,
-            texts: RefCell::new(Vec::new()),
-            open: Cell::new(false),
-            masked: RefCell::new(HashSet::new()),
-        }
+        Sink { slot, texts: RefCell::new(Vec::new()), open: Cell::new(false) }
     }
 
     /// A painting starts.
     pub(super) fn begin(&self) {
         self.texts.borrow_mut().clear();
-        self.masked.borrow_mut().clear();
         self.open.set(false);
     }
 
-    /// A spot's painting starts: whether its pieces may go to the GPU.
+    /// A spot's painting starts: whether its pieces and quads may go to the GPU. The label engine's labels draw their
+    /// frames and callouts as rings and lines (stage 3's second step).
     pub(super) fn spot(&self, spot: &LabelSpot) {
         let open = match spot {
-            LabelSpot::ParagraphMask { slot, .. } => {
-                self.masked.borrow_mut().insert(slot.0);
-                false
-            }
-            LabelSpot::Text { .. } | LabelSpot::PieceText { .. } => true,
-            LabelSpot::Line { slot, unicode: None, .. } => !self.masked.borrow().contains(&slot.0),
+            LabelSpot::Text { .. }
+            | LabelSpot::PieceText { .. }
+            | LabelSpot::ParagraphMask { .. }
+            | LabelSpot::Dimension { .. }
+            | LabelSpot::PieceDimension { .. }
+            | LabelSpot::Cell { .. } => true,
+            LabelSpot::Line { unicode, .. } => unicode.is_none(),
             _ => false,
         };
         self.open.set(open);
@@ -99,25 +92,67 @@ impl Sink {
         self.slot.put(std::mem::take(&mut *self.texts.borrow_mut()), placed_px);
     }
 
-    /// The piece as glyphs, when it may go: true when it went (or has nothing to draw).
+    /// The piece as glyphs with its mask and underline, when it may go: true when it went (or has nothing to draw).
     fn take(&self, piece: &Piece<'_>, halo: Color, view: &Camera) -> bool {
-        if !self.open.get() || piece.mask > 0.0 || piece.underline > 0.0 || piece.size < SMALLEST {
+        if !self.open.get() || piece.size < SMALLEST {
             return false;
         }
-        if piece.text.trim().is_empty() {
+        let blank = piece.text.trim().is_empty();
+        if blank && piece.underline <= 0.0 {
             return true;
         }
-        let Some(run) = run(piece.text, piece.font) else {
+        let run = if blank { None } else { run(piece.text, piece.font) };
+        if !blank && run.is_none() {
             return false;
-        };
+        }
         let at = view.screen_to_map(f64::from(piece.at.x), f64::from(piece.at.y));
+        let pen = Pen::of(piece, run.as_deref());
+        let mut under = Vec::new();
+        if piece.mask > 0.0 {
+            under.push(GlyphQuad { transform: pen.mask(piece), color: rgba(Color { a: 1.0, ..halo }) });
+        }
+        let mut over = Vec::new();
+        if piece.underline > 0.0 {
+            let [halo_bar, bar] = pen.underline(piece);
+            if halo.a > 0.0 {
+                over.push(GlyphQuad { transform: halo_bar, color: rgba(halo) });
+            }
+            over.push(GlyphQuad { transform: bar, color: rgba(piece.color) });
+        }
         self.texts.borrow_mut().push(GlyphText {
             at: [at.x, at.y],
             unit: GlyphUnit::Px { turns: true },
             color: rgba(piece.color),
             halo: rgba(halo),
             halo_px: if halo.a > 0.0 { HALO } else { 0.0 },
-            glyphs: places(piece, &run),
+            glyphs: run.map(|r| pen.glyphs(&r)).unwrap_or_default(),
+            under,
+            over,
+        });
+        true
+    }
+
+    /// A quadrilateral of the screen filled (a multi-line text's mask, a cell's fill), when its spot may send it and
+    /// it is a parallelogram (as those are): true when it went.
+    fn quad(&self, quad: [Point; 4], color: Color, view: &Camera) -> bool {
+        if !self.open.get() {
+            return false;
+        }
+        let [p0, p1, p2, p3] = quad.map(|p| [f64::from(p.x), f64::from(p.y)]);
+        let (e1, e2) = ([p1[0] - p0[0], p1[1] - p0[1]], [p3[0] - p0[0], p3[1] - p0[1]]);
+        if (p0[0] + e1[0] + e2[0] - p2[0]).abs() > 0.5 || (p0[1] + e1[1] + e2[1] - p2[1]).abs() > 0.5 {
+            return false;
+        }
+        let at = view.screen_to_map(p0[0], p0[1]);
+        self.texts.borrow_mut().push(GlyphText {
+            at: [at.x, at.y],
+            unit: GlyphUnit::Px { turns: true },
+            color: rgba(color),
+            halo: Rgba8([0; 4]),
+            halo_px: 0.0,
+            glyphs: Vec::new(),
+            under: vec![GlyphQuad { transform: [e1[0], -e1[1], e2[0], -e2[1], 0.0, 0.0], color: rgba(color) }],
+            over: Vec::new(),
         });
         true
     }
@@ -154,6 +189,9 @@ impl Ink for Split<'_, '_> {
     }
 
     fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>) {
+        if self.sink.is_some_and(|sink| sink.quad(quad, color, self.view)) {
+            return;
+        }
         <Frame as Ink>::fill_quad(self.frame, quad, color, of);
     }
 
@@ -274,36 +312,87 @@ fn drawing_face(id: fontdb::ID) -> Option<FontId> {
     face
 }
 
-/// The piece's glyphs' places from its anchor, in pixels with y up, as the canvas draws it (labels/turned.rs): its
-/// glyphs from where its anchor puts the text, leaning (the lean over the width factor: the letters lean before they
-/// are narrowed), narrowed by the width factor, turned by its angle.
-pub(super) fn places(piece: &Piece<'_>, run: &Run) -> Vec<GlyphPlace> {
-    let s = f64::from(piece.size);
-    let narrow = f64::from(piece.width_factor);
-    let lean = f64::from(piece.lean) / narrow;
-    let along = match piece.anchor {
-        Anchor::LeftBaseline => 0.0,
-        Anchor::CenterBaseline | Anchor::CenterMiddle => -f64::from(run.width) * s / 2.0,
-    };
-    // The baseline from the anchor, down: a text centred halfway up has its line's top half its size over it.
-    let down = match piece.anchor {
-        Anchor::LeftBaseline | Anchor::CenterBaseline => 0.0,
-        Anchor::CenterMiddle => -s / 2.0 + f64::from(run.baseline) * s,
-    };
-    let (sin, cos) = f64::from(piece.angle).sin_cos();
-    // A vector of the text's own frame (y down) on the screen, y up.
-    let out = |x: f64, y: f64| {
+/// A piece's own frame as the canvas draws it (labels/turned.rs): y down from its anchor, its letters from where the
+/// anchor puts the text; onto the screen's pixels from the anchor, y up. Its letters lean (by the lean over the width
+/// factor: they lean before they are narrowed) and are narrowed by the width factor; its mask leans with them and is
+/// not narrowed; its underline is narrowed and does not lean; all turn by its angle.
+pub(super) struct Pen {
+    size: f64,
+    narrow: f64,
+    lean: f64,
+    along: f64,
+    down: f64,
+    sin: f64,
+    cos: f64,
+}
+
+impl Pen {
+    pub(super) fn of(piece: &Piece<'_>, run: Option<&Run>) -> Pen {
+        let s = f64::from(piece.size);
+        let width = run.map_or(0.0, |r| f64::from(r.width));
+        let (sin, cos) = f64::from(piece.angle).sin_cos();
+        Pen {
+            size: s,
+            narrow: f64::from(piece.width_factor),
+            lean: f64::from(piece.lean),
+            along: match piece.anchor {
+                Anchor::LeftBaseline => 0.0,
+                Anchor::CenterBaseline | Anchor::CenterMiddle => -width * s / 2.0,
+            },
+            // The baseline from the anchor, down: a text centred halfway up has its line's top half its size over it.
+            down: match piece.anchor {
+                Anchor::LeftBaseline | Anchor::CenterBaseline => 0.0,
+                Anchor::CenterMiddle => -s / 2.0 + run.map_or(0.0, |r| f64::from(r.baseline)) * s,
+            },
+            sin,
+            cos,
+        }
+    }
+
+    /// A vector of the frame (y down), leant by `lean` and narrowed by `narrow`, on the screen (y up).
+    fn out(&self, x: f64, y: f64, narrow: f64, lean: f64) -> [f64; 2] {
         let x = (x - lean * y) * narrow;
-        [cos * x - sin * y, -(sin * x + cos * y)]
-    };
-    let (ex, ey) = (out(s, 0.0), out(0.0, -s));
-    run.glyphs
-        .iter()
-        .map(|(key, [x, y])| {
-            let p = out(along + s * f64::from(*x), down - s * f64::from(*y));
-            GlyphPlace { key: *key, transform: [ex[0], ex[1], ey[0], ey[1], p[0], p[1]] }
-        })
-        .collect()
+        [self.cos * x - self.sin * y, -(self.sin * x + self.cos * y)]
+    }
+
+    /// The rectangle `x`, `y` (its top left in the frame), `w` × `h` as the unit square's place.
+    fn rect(&self, [x, y, w, h]: [f64; 4], narrow: f64, lean: f64) -> [f64; 6] {
+        let (o, ex, ey) = (self.out(x, y, narrow, lean), self.out(w, 0.0, narrow, lean), self.out(0.0, h, narrow, lean));
+        [ex[0], ex[1], ey[0], ey[1], o[0], o[1]]
+    }
+
+    /// The glyphs' places: each glyph's em square from its pen.
+    pub(super) fn glyphs(&self, run: &Run) -> Vec<GlyphPlace> {
+        let (s, lean) = (self.size, self.lean / self.narrow);
+        let (ex, ey) = (self.out(s, 0.0, self.narrow, lean), self.out(0.0, -s, self.narrow, lean));
+        run.glyphs
+            .iter()
+            .map(|(key, [x, y])| {
+                let p = self.out(self.along + s * f64::from(*x), self.down - s * f64::from(*y), self.narrow, lean);
+                GlyphPlace { key: *key, transform: [ex[0], ex[1], ey[0], ey[1], p[0], p[1]] }
+            })
+            .collect()
+    }
+
+    /// The mask (docs/adr/0145): the text's box a tenth of its height wider all round, 1.15 of it over the anchor and
+    /// 0.23 under; a centred value's (docs/adr/0147) wider on its sides only.
+    pub(super) fn mask(&self, piece: &Piece<'_>) -> [f64; 6] {
+        let m = self.size * 0.1;
+        let v = if piece.anchor == Anchor::CenterBaseline { 0.0 } else { m };
+        let rect = [self.along - m, -self.size * 1.15 - v, f64::from(piece.mask) + 2.0 * m, self.size * 1.38 + 2.0 * v];
+        self.rect(rect, 1.0, self.lean)
+    }
+
+    /// The underline (docs/adr/0182 §3): 0.12 of the size under the baseline, 0.06 thick (a pixel at least), and its
+    /// halo HALO round it.
+    pub(super) fn underline(&self, piece: &Piece<'_>) -> [[f64; 6]; 2] {
+        let (top, thick) = (self.size * 0.12, (self.size * 0.06).max(1.0));
+        let (long, h) = (f64::from(piece.underline), f64::from(HALO));
+        [
+            self.rect([self.along - h, self.down + top - h, long + 2.0 * h, thick + 2.0 * h], self.narrow, 0.0),
+            self.rect([self.along, self.down + top, long, thick], self.narrow, 0.0),
+        ]
+    }
 }
 
 #[cfg(test)]
@@ -349,15 +438,17 @@ mod tests {
         let left = piece("Ada 12", Anchor::LeftBaseline, 0.0);
         let run = run(left.text, left.font).expect("drawn on the GPU");
         let width = f64::from(run.width) * 20.0;
-        let places = super::places(&left, &run);
+        let places = Pen::of(&left, Some(&*run)).glyphs(&run);
         let first = places[0].transform;
         assert_eq!(first[..4], [20.0, 0.0, 0.0, 20.0], "an em of 20 px, upright, y up");
         assert!(first[4].abs() < 1e-6 && first[5].abs() < 1e-6, "{first:?}");
-        let centred = super::places(&piece("Ada 12", Anchor::CenterBaseline, 0.0), &run);
+        let mid = piece("Ada 12", Anchor::CenterBaseline, 0.0);
+        let centred = Pen::of(&mid, Some(&*run)).glyphs(&run);
         assert!((centred[0].transform[4] + width / 2.0).abs() < 1e-4, "half its width left");
         // Turned a quarter to the left on the screen (a world rotation of 90°: the angle is the screen's, clockwise):
         // its letters go up the screen, their tops to the left.
-        let turned = super::places(&piece("Ada 12", Anchor::LeftBaseline, -std::f32::consts::FRAC_PI_2), &run);
+        let up = piece("Ada 12", Anchor::LeftBaseline, -std::f32::consts::FRAC_PI_2);
+        let turned = Pen::of(&up, Some(&*run)).glyphs(&run);
         let [a, b, c, d, _, _] = turned[0].transform;
         // (The angle is a float32's: a quarter turn leaves a millionth of a pixel.)
         assert!(a.abs() < 1e-5 && (b - 20.0).abs() < 1e-5, "x along up: {a} {b}");
@@ -366,9 +457,10 @@ mod tests {
         assert!(last[4].abs() < 1e-4 && last[5] > width * 0.7, "the last letter up the screen: {last:?}");
     }
 
-    /// A piece with a mask or an underline, and every piece of a spot that may not send them, stays on the canvas.
+    /// A piece goes with its mask under its letters and its underline over them; a quad that is no parallelogram, and
+    /// every piece and quad of a spot that may not send them, stay on the canvas.
     #[test]
-    fn a_masked_underlined_or_other_spots_piece_stays_on_the_canvas() {
+    fn a_piece_goes_with_its_mask_and_underline_and_other_spots_stay_on_the_canvas() {
         drawing_fonts::load();
         let sink = Sink::new(GlyphSlot::default());
         let view = Camera::default();
@@ -376,12 +468,29 @@ mod tests {
         assert!(!sink.take(&plain, Color::WHITE, &view), "not open before a text's spot");
         sink.open.set(true);
         assert!(sink.take(&plain, Color::WHITE, &view));
-        assert!(!sink.take(&Piece { mask: 30.0, ..plain }, Color::WHITE, &view));
-        assert!(!sink.take(&Piece { underline: 30.0, ..plain }, Color::WHITE, &view));
+        assert!(sink.take(&Piece { mask: 30.0, underline: 30.0, ..plain }, Color::WHITE, &view));
+        // A fraction's bar: an underline under a blank.
+        assert!(sink.take(&Piece { text: " ", underline: 12.0, ..plain }, Color::WHITE, &view));
+        let square = [Point::new(0.0, 0.0), Point::new(10.0, 0.0), Point::new(10.0, 5.0), Point::new(0.0, 5.0)];
+        assert!(sink.quad(square, Color::WHITE, &view));
+        let kite = [Point::new(0.0, 0.0), Point::new(10.0, 0.0), Point::new(14.0, 9.0), Point::new(0.0, 5.0)];
+        assert!(!sink.quad(kite, Color::WHITE, &view), "no parallelogram");
         sink.publish(1.0);
         let set = sink.slot.get();
-        assert_eq!((set.version, set.texts.len()), (1, 1));
-        assert_eq!(set.texts[0].halo_px, HALO);
+        assert_eq!((set.version, set.texts.len()), (1, 4));
+        let [plain, masked, bar, fill] = [&set.texts[0], &set.texts[1], &set.texts[2], &set.texts[3]];
+        assert_eq!((plain.under.len(), plain.over.len(), plain.halo_px), (0, 0, HALO));
+        // The mask: 30 px and a tenth of the 20 px size each side, 1.38 of the size and a tenth over and under each,
+        // its top left 1.15 and a tenth of the size over the baseline (y up from the anchor).
+        let mask = masked.under[0].transform;
+        assert!((mask[0] - 34.0).abs() < 1e-9 && (mask[3] + 31.6).abs() < 1e-9, "{mask:?}");
+        assert!((mask[4] + 2.0).abs() < 1e-9 && (mask[5] - 25.0).abs() < 1e-9, "{mask:?}");
+        // The underline's halo, then the bar: 2.4 px under the baseline, 1.2 thick.
+        assert_eq!(masked.over.len(), 2);
+        let line = masked.over[1].transform;
+        assert!((line[0] - 30.0).abs() < 1e-9 && (line[3] + 1.2).abs() < 1e-9 && (line[5] + 2.4).abs() < 1e-9, "{line:?}");
+        assert!(bar.glyphs.is_empty() && bar.over.len() == 2, "a blank's underline alone");
+        assert_eq!(fill.under[0].transform, [10.0, 0.0, 0.0, -5.0, 0.0, 0.0], "the screen's quad, y up");
         // A painting with nothing for the GPU after one with texts empties the set; another such does not count.
         sink.publish(1.0);
         sink.publish(1.0);

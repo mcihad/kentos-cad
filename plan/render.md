@@ -193,7 +193,11 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - Glifler kanvasınkiyle aynı (Iced'in şekillendirmesi); yazılar aynı karede sahnenin üstüne çiziliyor.
     - Ev projesinde kanvasla fark piksellerin %0,04–0,35'i, yalnız kenar yumuşatmasında.
     - Kare süreleri toplu ölçümde.
-  - [ ] Aşama 3: ölçü değerleri, etiketler, eğri boyunca harfler, hücreler, çağrı kutuları.
+  - [~] Aşama 3: ölçü değerleri, etiketler, eğri boyunca harfler, hücreler, çağrı kutuları.
+    - [x] Birinci adım (ADR 9212 §7): GPU'da düz dörtgenler (maske, alt çizgi, dolgu); maskeli yazılar, ölçü değerleri,
+      maskeli paragraflar ve tablo hücreleri GPU'da. Denetim çiziminde kanvasla yakın görünümde dörtte birden fazla
+      sapan piksel yok.
+    - [ ] İkinci adım: etiket motorunun etiketleri, çerçeveleri ve çağrı çizgileri; eğri boyunca harfler.
   - [ ] Aşama 4: kanvas katmanı kalkar; yazılar da canlı kamerayla çizilir.
 - [ ] **RM-14 — iced katmanları kalkar.** Etiketler, servis etiketleri, arazi, hat, onaylı katman ve işaretler motora
   taşınır.
