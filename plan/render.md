@@ -337,6 +337,15 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [ ] Adım 4: seçim vurgusu ve ham yol kutuyla bölünür, bombeli kenarlar ve elipsler kutuda yuvarlak; sonra sınır
     10⁷ px/m.
 
+- [x] **RM-25 — Düzenleme hemen görünür** ([ADR 9221](../docs/adr/9221-objects-the-store-draws-anew.md)). Sahibin
+  24 Kasım bildirimi: Mimari'de pencere ve kapı ancak yakınlaştırınca görünüyordu, duvar kesilmiyordu.
+  - Neden: çizim önbelleği yalnız belgenin değişen nesnelerini yeniden kuruyordu. Duvarın boşluğu ise açıklıklarından
+    türüyor.
+  - Çözüm: geometri deposu kendiliğinden yeniden çizdiklerini (açıklıkla kesilen ya da yeni duvara bağlanan duvarlar,
+    kolonlar) sayıyor; önbellek onların parçalarını da yeniden kuruyor.
+  - Kural (sahibin sözü “kaliteden ödün verilmez”): her önbellek baştan kurulanın aynısını çizer. Her render
+    değişikliğinden sonra düzenlemeler de gerçek pencerede, kamera kıpırdatılmadan denenir.
+
 ## Kabul ölçütleri
 
 | Ölçüt | Hedef |

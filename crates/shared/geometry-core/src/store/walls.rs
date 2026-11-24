@@ -481,3 +481,39 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
         .fold(0.0, crate::jsmath::js_max);
     assert!(far > 4.0, "{far}");
 }
+
+/// A wall the store draws anew on its own, its source the same (docs/adr/0340 §3, 0341 §2), is named in the list of the
+/// objects drawn anew (`redrawn_since`), so a host keeping what it drew of it draws it again: cut by a window put on
+/// it, closed when the window is taken off, joined to a new wall at its end. A mark the list does not reach gives none.
+#[test]
+fn a_wall_its_openings_or_another_wall_change_is_named_as_drawn_anew() {
+    let mut s = Store::new();
+    s.put_json(r##"[{"id":1,"layerId":"duvar","kind":"wall","pts":[{"x":0,"y":0},{"x":6,"y":0}],"width":0.25,"justify":"center"}]"##)
+        .unwrap();
+    let whole = s.get(1.0).unwrap().expanded.clone();
+    // A window on another layer: the wall's source stays, its drawing is cut.
+    let mark = s.redraw_mark();
+    s.put_json(
+        r##"[{"id":2,"layerId":"pencere","kind":"opening","at":3,"width":1.2,"form":"window",
+              "place":[{"x":2.4,"y":0.125},{"x":2.4,"y":-0.125},{"x":3.6,"y":0.125},{"x":3.6,"y":-0.125}],"frame":0.06}]"##,
+    )
+    .unwrap();
+    s.set_hosts([(2.0, Some(1.0))]);
+    assert_ne!(s.get(1.0).unwrap().expanded, whole, "the wall is cut");
+    assert!(s.redrawn_since(mark).expect("the list reaches back").contains(&1.0));
+    // Taken off: the wall closes, named again.
+    let mark = s.redraw_mark();
+    s.remove(&[2.0]);
+    assert_eq!(s.get(1.0).unwrap().expanded, whole, "the wall whole again");
+    assert!(s.redrawn_since(mark).expect("the list reaches back").contains(&1.0));
+    // A wall joined at its end: the first wall's corner changes, and it is named.
+    let mark = s.redraw_mark();
+    s.put_json(r##"[{"id":3,"layerId":"duvar","kind":"wall","pts":[{"x":6,"y":0},{"x":6,"y":4}],"width":0.25,"justify":"center"}]"##)
+        .unwrap();
+    assert_ne!(s.get(1.0).unwrap().expanded, whole, "joined at its end");
+    assert!(s.redrawn_since(mark).expect("the list reaches back").contains(&1.0));
+    // Nothing since now; a mark from another store's future: none.
+    assert_eq!(s.redrawn_since(s.redraw_mark()), Some(&[][..]));
+    assert_eq!(s.redrawn_since(s.redraw_mark() + 5), None);
+}
+

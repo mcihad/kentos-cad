@@ -939,3 +939,42 @@ fn a_deep_view_builds_the_objects_its_box_meets_split_at_its_edge() {
     // Parcel 4 + road 2 segments; split, parcel 6 + road 4.
     assert_eq!(i / 6 * 10, a / 6 * 6, "{i} → {a}");
 }
+
+/// What a scene draws: each part's batches in turn, their keys and numbers (as bits, NaN included).
+fn drawn_of(scene: &StyledScene) -> Vec<(u64, Vec<u32>)> {
+    scene
+        .layers
+        .iter()
+        .flat_map(|part| {
+            part.layer
+                .batches
+                .iter()
+                .map(|b| (b.key, part.layer.data[b.range.clone()].iter().map(|v| v.to_bits()).collect()))
+        })
+        .collect()
+}
+
+/// docs/adr/0341 §2: a wall's gaps come from its doors and windows, its own source the same. A door moved along its wall
+/// (on another layer) draws the wall again at once, as a new cache draws it, not only after a zoom rebuilds the walls
+/// (the owner, 24 November 2026: a window put on a wall did not show until the view was zoomed or moved).
+#[test]
+fn a_door_moved_along_its_wall_draws_the_wall_again() {
+    let library = kentos_native_style::system::library();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/openings.json")).expect("the openings' drawing");
+    let mut doc = Document::from_v2(snapshot, None).expect("opens");
+    let mut spatial = Spatial::of(&doc.model);
+    let mut cache = StyledCache::default();
+    let before = scene_of(&mut cache, &doc, &mut spatial, &library);
+    // The door (slot 2, layer kapi) moves a metre along the wall (slot 1, layer duvar).
+    let Some(Entity::Opening(mut door)) = doc.model.get(Slot(2)).cloned() else {
+        panic!("a door");
+    };
+    door.opening.at += 1.0;
+    assert!(doc.model.update(Slot(2), Entity::Opening(door)));
+    let after = scene_of(&mut cache, &doc, &mut spatial, &library);
+    let fresh = scene_of(&mut StyledCache::default(), &doc, &mut Spatial::of(&doc.model), &library);
+    assert_ne!(drawn_of(&after), drawn_of(&before), "the wall's gap moved");
+    assert_eq!(drawn_of(&after), drawn_of(&fresh), "drawn as a new cache draws it");
+}
+

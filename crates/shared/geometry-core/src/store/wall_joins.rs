@@ -167,6 +167,7 @@ impl Store {
                 it.veiled = None;
             }
             self.loosen(slot);
+            self.redrew(f64::from_bits(key));
         }
     }
 
@@ -419,6 +420,7 @@ impl Store {
                 it.veiled = None;
             }
             self.loosen(slot);
+            self.redrew(f64::from_bits(key));
         }
         let solved = {
             let ins: Vec<WallIn<'_>> = context
@@ -504,6 +506,7 @@ impl Store {
                 it.veiled = None;
             }
             self.loosen(slot);
+            self.redrew(f64::from_bits(key));
         }
         self.settle_columns(&dirty, full);
     }

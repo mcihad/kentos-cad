@@ -98,6 +98,9 @@ pub struct StyledCache {
     /// its generation (every change to it, the layer tree's included).
     drawing: Option<u64>,
     mark: Option<ChangeMark>,
+    /// The geometry store's mark of the objects it drew anew on its own (`Store::redraw_mark`): a wall an opening
+    /// put on it cuts changes no source of its own, so the journal does not name it.
+    redraw: Option<u64>,
     generation: Option<u64>,
     look: Option<Look>,
     library: u64,
@@ -427,6 +430,7 @@ impl StyledCache {
         };
         if self.drawing == Some(drawing)
             && self.generation == Some(generation)
+            && self.redraw == Some(store.redraw_mark())
             && self.look.as_ref() == Some(look)
             && self.library == library.version()
             && self.scene.under == under
@@ -461,6 +465,7 @@ impl StyledCache {
             self.table_prints.clear();
             self.time_hidden.clear();
             self.mark = None;
+            self.redraw = None;
             self.drawing = Some(drawing);
             all = true;
         }
@@ -495,6 +500,27 @@ impl StyledCache {
                     }
                 }
             }
+        }
+        // What the store drew anew on its own, its source the same (docs/adr/0340 §3, 0341 §2, 8041 §2): a wall a
+        // door or a window put on it cuts, or taken off it closes, a wall a new one joins, a column taking its look
+        // from the walls. Its part is built again as a changed object's; a list that no longer reaches back, all.
+        match self.redraw.map(|m| store.redrawn_since(m)) {
+            Some(None) => all = true,
+            Some(Some(ids)) if !all => {
+                for &id in ids {
+                    let slot = Slot(id as u32);
+                    if let Some(e) = doc.get(slot)
+                        && let Some(l) = self.layers.get(e.base().layer_id.as_str())
+                        && let Some(place) = doc.place(slot)
+                    {
+                        dirty_part(&mut dirty, &e.base().layer_id, place / l.run);
+                    }
+                    if let Some((layer, part)) = self.slot_part.get(&slot) {
+                        dirty_part(&mut dirty, layer, *part);
+                    }
+                }
+            }
+            _ => {}
         }
         // A definition changed (an edit, an undo, another editor's; docs/adr/0144): the
         // parts holding an insert of it, or of one placing it, are built again.
@@ -1070,6 +1096,7 @@ impl StyledCache {
         // A composition changes with the layer tree alone: the same parts, a new opacity.
         self.scene.compose = compose;
         self.mark = Some(doc.change_mark());
+        self.redraw = Some(store.redraw_mark());
         self.generation = Some(generation);
         self.look = Some(look.clone());
         self.library = library.version();
