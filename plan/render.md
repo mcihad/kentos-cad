@@ -256,8 +256,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
       (plan onama sınırı dahil).
     - Nesnenin saydamlığı artık kendi sembolünü de saydam çiziyor (stil çekirdeği, masaüstü).
     - Saydamlık anahtarı kapalıyken (sahibin ayarı) kuşaklar opak çizilir (ADR 0195).
-  - [ ] KA_KORUNMA_ALANI (sınır boyunca iri noktalar, çizgi tipi 31): lejanttaki karşılığı sahibe soruldu. Çizgi
-    tipi 4 (demiryolu kuşağı ile rezerv yapı ortak) ve 22 (jeolojik formasyon) bilerek düz.
+  - [x] KA_KORUNMA_ALANI (sınır boyunca iri noktalar, çizgi tipi 31): sahibin kararı (24 Kasım) düz çizgi kalsın;
+    anlamı belli olunca eşlenir. Çizgi tipi 4 (demiryolu kuşağı ile rezerv yapı ortak) ve 22 (jeolojik formasyon)
+    bilerek düz.
 - [ ] **RM-19 — Bellek.** Büyük NCZ açılırken en yüksek kullanım 3,8 GB; 1,5 GB'ın altına inecek.
 
 ### F7 — DWG ve DXF alımı

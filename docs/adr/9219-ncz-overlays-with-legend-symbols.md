@@ -147,7 +147,8 @@ Lejant sembolüyle çizilen nesne: **69 142.**
   her biri 16 eş merkezli daire (yarıçap 1,125–1,5 m). 4 080 dairenin hepsinin merkezi sınırın üstünde.
   - Lejantta böyle noktalı sınırı olan birkaç satır var: sit alanları, kesin korunacak hassas alan… Katman adı hangisi
     olduğunu söylemiyor.
-  - Yanlış lejant anlamı, düz çizgiden kötü. Düz çizgiyle kaldı; anlamı sahibe soruldu.
+  - Yanlış lejant anlamı, düz çizgiden kötü. Sahibin kararı (24 Kasım): “Düz çizgi kalsın”; anlamı belli olunca
+    eşlenir.
 - **4:** demiryolu kuşağı ile SNR_REZERV_YAPI aynı çizgi tipini kullanıyor. Kuşak alan sembolünü alıyor; rezerv yapı
   düz kaldı. Bu numarayı rezerv yapıya vermek, başka planlarda bu çizgi tipini kullanan her çizgiye o anlamı verirdi.
 - **22** (JEO_SNR_FORMASYON): lejantta karşılığı yok.
