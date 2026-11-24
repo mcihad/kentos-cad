@@ -126,16 +126,26 @@ status() {
   [ "$any" -eq 1 ] || echo "  (çalışan servis yok)"
 }
 
+# The lock is BSD-style on the descriptor this shell keeps open: flock on Linux, lockf on macOS (it has no flock;
+# without this the lock was silently skipped there). The command does not inherit the descriptor, so a process it
+# leaves behind cannot hold the lock after it ends.
 heavy() {
-  if ! command -v flock >/dev/null 2>&1; then
+  exec 9>"$LOCK"
+  if command -v flock >/dev/null 2>&1; then
+    if ! flock -n 9; then
+      echo "• başka bir ağır iş sürüyor (kilit $LOCK); bitmesi bekleniyor…"
+      flock -w 1800 9 || { echo "• kilit 30 dk içinde boşalmadı; vazgeçildi" >&2; exit 1; }
+    fi
+  elif command -v lockf >/dev/null 2>&1; then
+    if ! lockf -s -t 0 9; then
+      echo "• başka bir ağır iş sürüyor (kilit $LOCK); bitmesi bekleniyor…"
+      lockf -s -t 1800 9 || { echo "• kilit 30 dk içinde boşalmadı; vazgeçildi" >&2; exit 1; }
+    fi
+  else
+    echo "• ne flock ne lockf var: ağır iş kilitsiz koşuyor; aynı anda ikincisini başlatmayın" >&2
     exec "$@"
   fi
-  exec 9>"$LOCK"
-  if ! flock -n 9; then
-    echo "• başka bir ağır iş sürüyor (kilit $LOCK); bitmesi bekleniyor…"
-    flock -w 1800 9 || { echo "• kilit 30 dk içinde boşalmadı; vazgeçildi" >&2; exit 1; }
-  fi
-  nice -n 10 "$@"
+  nice -n 10 "$@" 9>&-
 }
 
 cmd=${1:-}

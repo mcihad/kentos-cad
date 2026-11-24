@@ -67,23 +67,34 @@ Kırmızıların sınıfları (fark, depodan ayrı bir kopyada betik yazdırıla
 3. Son basamak farkını kanıtla, sonra yeniden yaz. CLAUDE.md §23.4: beklenen örnek hataya göre yenilenmez.
 4. Eskimiş örnekleri yeniden yaz ve ilgili Rust sınamalarını koş.
 
-### A2 — P0 — Ağır iş kilidi macOS'ta yok
+### A2 — P0 — Ağır iş kilidi macOS'ta yok — [x] yapıldı
+
+**Durum (24 Kasım 2026):** `heavy` `flock` yoksa macOS'un `lockf`'uyla aynı tanıtıcıyı kilitliyor; ikisi de yoksa uyarıyla
+kilitsiz koşuyor. Komut tanıtıcıyı devralmıyor. İki işle denendi: ikincisi “başka bir ağır iş sürüyor” deyip bekledi.
 
 `scripts/dev/svc.sh heavy`, `flock` yoksa komutu kilitsiz koşar (`exec "$@"`). Bu Mac'te `flock` yok; yani CLAUDE.md'nin
 “ağır iş tek tek” kuralı fiilen işlemiyor, iki derleme aynı anda koşabiliyor. macOS'ta `/usr/bin/lockf` var; ya da
 `mkdir` kilidi kullanılabilir.
 
-### A3 — P1 — `pnpm arch:deps`, dolayısıyla `pnpm rust:test`, kırmızı
+### A3 — P1 — `pnpm arch:deps`, dolayısıyla `pnpm rust:test`, kırmızı — [x] yapıldı
+
+**Durum (24 Kasım 2026):** `crates/vendor/` altındakiler crates.io sürümlerinin yerinde yamasıdır; artık grup aranmıyor,
+dış bağımlılık gibi adına göre denetleniyor. `pnpm arch:deps`: “Bağımlılık yönü temiz: 85 crate, 108 crate × hedef”.
 
 `crates/vendor/block` hiçbir bağımlılık grubuna ait değil (30 bulgu). ADR 9196 bunu “önceden vardı” diye kaydetmiş ama
 kapatılmamış.
 
-### A4 — P1 — `pnpm rust:test:desktop` paket ayrımından sonra eksik
+### A4 — P1 — `pnpm rust:test:desktop` paket ayrımından sonra eksik — [x] yapıldı
+
+**Durum (24 Kasım 2026):** betiğe dört modül paketi, `kentos-cad` ve `RUST_MIN_STACK=67108864` eklendi; kılavuz satırı da.
+Takımın tamamı uzun olduğu için koşturulmadı.
 
 Betikte `kentos-desktop-arch`, `-cbs`, `-map`, `-road` ve `kentos-cad` (programlar arası sınamalar) yok; masaüstü takımı
 diye koşan komut modüllerin sınamalarını atlıyor.
 
-### A5 — P1 — Kılavuz taşınmış sınamaları eski paketle çağırıyor
+### A5 — P1 — Kılavuz taşınmış sınamaları eski paketle çağırıyor — [x] yapıldı
+
+**Durum (24 Kasım 2026):** sekiz çağrı `-p kentos-desktop-arch`'a çevrildi; `material_library` da o pakette.
 
 `docs/kilavuz/02-calistirma.md` şu sınamaları `-p kentos-desktop` ile çağırıyor; hepsi `-p kentos-desktop-arch`'ta:
 

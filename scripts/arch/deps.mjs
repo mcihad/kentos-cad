@@ -195,6 +195,9 @@ const GROUPS = [
 const meta = JSON.parse(cargo(['metadata', '--format-version', '1', '--locked', '--no-deps']));
 const members = meta.packages.map((p) => ({ name: p.name, path: relative(ROOT, p.manifest_path) }));
 const groupOfPath = (path) => GROUPS.find((g) => path.startsWith(g.path));
+// crates/vendor/ holds crates.io releases patched in place ([patch.crates-io], scripts/vendor/*.py): third-party code
+// like the registry's, judged by name with the group's forbid list, never a workspace group of its own.
+const VENDOR = 'crates/vendor/';
 const matches = (name, pattern) => (pattern.endsWith('*') ? name.startsWith(pattern.slice(0, -1)) : name === pattern);
 
 const problems = [];
@@ -219,7 +222,8 @@ for (const member of members) {
       stack.push(m[2]);
       if (depth === 0) continue;
       const where = `${stack.join(' → ')} [${target === HOST ? 'makine' : target}]`;
-      const local = m[3]?.startsWith('/') ? relative(ROOT, m[3]) : null;
+      const path = m[3]?.startsWith('/') ? relative(ROOT, m[3]) : null;
+      const local = path && !`${path}/`.startsWith(VENDOR) ? path : null;
       if (local) {
         const used = groupOfPath(`${local}/`);
         if (!used) problems.push(`${where}: ${local} hiçbir gruba ait değil.`);
