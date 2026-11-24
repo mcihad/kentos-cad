@@ -92,7 +92,7 @@ impl App {
                 kentos_sheet_ui::Message::MapFitDrawing
             } else { kentos_sheet_ui::Message::MapFitSelection }));
         }
-        // The sheet designer's work from Komut ara, the command line and quick access (sheets/commands.rs).
+        // The sheet designer's work from Komut ara and the command line (sheets/commands.rs).
         if let Some(task) = self.sheet_command(id) {
             return task;
         }

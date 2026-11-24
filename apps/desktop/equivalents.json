@@ -80,8 +80,8 @@
     "sheet.undo": { "desktop": "implemented", "where": "Ctrl+Z, pafta kipinin kendi geri alması (crates/sheet-ui/src/update.rs)" },
     "sheet.ungroup": { "desktop": "implemented", "where": "Grubu çöz, Ctrl+Shift+G (crates/sheet-ui/src/ribbon.rs, crates/sheet-ui/src/update.rs)" },
     "sheet.variables": { "desktop": "implemented", "where": "Pafta › Değişkenler (crates/sheet-ui/src/ribbon.rs)" },
-    "sheet.zoomIn": { "desktop": "implemented", "where": "Komut ara, komut satırı ve hızlı erişim; + tuşu, sayfanın ortasında bir adım; fare tekerleği imlecin çevresinde (apps/desktop/src/cad/sheets/commands.rs, crates/sheet-ui/src/update.rs, ADR 9305)" },
-    "sheet.zoomOut": { "desktop": "implemented", "where": "Komut ara, komut satırı ve hızlı erişim; − tuşu, sayfanın ortasında bir adım; fare tekerleği imlecin çevresinde (apps/desktop/src/cad/sheets/commands.rs, crates/sheet-ui/src/update.rs, ADR 9305)" },
+    "sheet.zoomIn": { "desktop": "implemented", "where": "Komut ara ve komut satırı; + tuşu, sayfanın ortasında bir adım; fare tekerleği imlecin çevresinde (apps/desktop/src/cad/sheets/commands.rs, crates/sheet-ui/src/update.rs, ADR 9305)" },
+    "sheet.zoomOut": { "desktop": "implemented", "where": "Komut ara ve komut satırı; − tuşu, sayfanın ortasında bir adım; fare tekerleği imlecin çevresinde (apps/desktop/src/cad/sheets/commands.rs, crates/sheet-ui/src/update.rs, ADR 9305)" },
     "sheet.zoomPage": { "desktop": "implemented", "where": "Pafta › Görünüm › Sığdır, Ctrl+0 (crates/sheet-ui/src/ribbon.rs, crates/sheet-ui/src/update.rs)" },
     "sheet.zoomReal": { "desktop": "implemented", "where": "Görünüm › Gerçek, Ctrl+1 (crates/sheet-ui/src/ribbon.rs, crates/sheet-ui/src/update.rs)" },
     "sheet.zoomSelection": { "desktop": "implemented", "where": "Görünüm › Seçim (crates/sheet-ui/src/ribbon.rs)" }

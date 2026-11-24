@@ -14,8 +14,8 @@ Donmuş web envanterinde (`docs/inventory/web.json`) 59 `sheet.*` komutu vardır
 çalıştırıyordu: Modele dön, Yeni pafta ve Şablondan pafta. Eklerden gelen Pafta seti, Çizime sığdır, Seçime sığdır, Kat
 planı paftaları, Detay paftaları ve Baskı stili tablosu da çalışıyordu.
 
-Kalan 56 komut `Standing::OnTheWeb` idi. Komut ara, komut satırı ve hızlı erişim “web'de var; masaüstüne henüz
-taşınmadı” diyordu. Oysa pafta tasarımcısı (`kentos-sheet-ui`) bu işlerin biri dışında hepsini kendi şeridinden,
+Kalan 56 komut `Standing::OnTheWeb` idi. Komut ara ve komut satırı “web'de var; masaüstüne henüz taşınmadı”
+diyordu. Oysa pafta tasarımcısı (`kentos-sheet-ui`) bu işlerin biri dışında hepsini kendi şeridinden,
 paftalar listesinden, öğe ağacından ve tuşlarından yapıyordu. ADR 0247 bu yerleri `apps/desktop/equivalents.json`'a
 yazmıştı, ama katalog onları çalıştıramıyordu.
 
@@ -170,6 +170,9 @@ Pafta kitabını değiştiren işlerin kanalları:
    `kind.grids`'ine karelaj yazabilir. Bu tek iş, arayüzün kanaldan geride kaldığı yerdir.
 6. **Manifest:** `sheet.preflight`'ın `catalog/v1/operations.json`'da `via`'sı yoktur. Bu yüzden “Okuma, Python'da yok”
    listesinde durur, oysa `file.preflight.sheets` aynı işi görür. `via` bu işin dosyası değildir.
+7. **Hızlı erişim ve tuş ipuçları** pafta komutlarına ulaşmaz. Çubuğa ekleme, kataloğun şerit düğmesinin sağ tıkından
+   ya da sabit önerilerden yapılır; tuş ipuçları da katalogdan kurulan şeridindir. Pafta sekmesi ise tasarımcının
+   kendi gruplarıdır (`ribbon_groups`), katalogdan kurulmaz. Çubuğa bir pafta komutu konmuş olsaydı artık çalışırdı.
 
 ## Doğrulama
 

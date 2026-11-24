@@ -1,8 +1,8 @@
-//! The sheet designer's work as catalog commands (docs/adr/9305): Komut ara, the command line, quick access and the key
-//! tips run the messages the Pafta tab, the sheets' list, the item tree and the designer's keys send, so a command
-//! that says “Sola hizala” does what Hizala ▾ › Sola does. A command on the paper needs a sheet in front whose paper is
-//! not given over to the model; without one it is off and its tip says what to do. Karelaj (`sheet.grid`) waits: the
-//! designer cannot put a grid on a map yet.
+//! The sheet designer's work as catalog commands (docs/adr/9305): Komut ara and the command line run the messages the
+//! Pafta tab, the sheets' list, the item tree and the designer's keys send, so a command that says “Sola hizala” does
+//! what Hizala ▾ › Sola does. A command on the paper needs a sheet in front whose paper is not given over to the model;
+//! without one it is off and Komut ara says what to do. Karelaj (`sheet.grid`) waits: the designer cannot put a grid
+//! on a map yet.
 
 use iced::Task;
 use iced::keyboard::{Key, Modifiers, key::Named};
