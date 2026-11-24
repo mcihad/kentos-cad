@@ -41,6 +41,12 @@ Okunmayan nesneler atıldıktan sonra nesne haritası küçültülür (`objects.
   - Asıl düzeltme kodekte: sahip → uzantı sözlüğü dizini bir kez kurulmalı.
   - Bağımlılık sahibin seçimiyle yazarının deposundan, sabit bir sürümde. Bu yüzden iki yol var: yazara bir düzeltme
     önermek ya da çatallı bir kopyaya geçmek. Karar sahibin; bu işte kodeğe dokunulmadı.
+  - **Sahibin kararı (24 Kasım): yazara öner.** Yazarın kurallarıyla açıldı: issue hakanaktt/acadrust#651, PR #652.
+    - Önce kırmızı sınama commit'i: süre oranı 14,2.
+    - Sonra düzeltme: yazıcı sözlüklerin sahiplerini yazma başında bir kez topluyor. Sınamanın oranı 4,1.
+    - Aynı DWG yazarın ana dalında, okunmayanlar atılmadan (507 811 nesne, 447 MB DXF): 112,3 s → 2,95 s.
+    - Kodeğin bütün sınamaları geçti: 3 271.
+    - Birleşince sabit sürüm yükseltilecek. Ana dal bizim sürümümüzden 552 commit ileride; yükseltme ayrı bir iş.
 - **Köprünün kendisi** (çöz → DXF metni yaz → oku) RM-21'in doğrudan eşlemesiyle kalkacak.
 - **İkinci DXF okuması** (1,7 s) çizim ölçeği 1'den farklıyken gerekli: stillerin kâğıt boyları ölçekle okunuyor.
 

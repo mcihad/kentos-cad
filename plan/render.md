@@ -271,7 +271,9 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   DXF metin köprüsü (270–463 MB) kalkar.
   - [x] Ön adım ([ADR 9215](../docs/adr/9215-dwg-bridge-written-faster.md)): okunmayan nesneler atılınca nesne haritası
     küçültülüyor. SİVAS AVM'nin köprü metni 11,3 s yerine 4,9 s'de yazılıyor, metin bayt bayt aynı. Kalan süre
-    kodeğin uzantı sözlüğü aramasında; düzeltme kodekte, sahibin kararı.
+    kodeğin uzantı sözlüğü aramasında.
+  - [~] Kodek düzeltmesi yazara önerildi (sahibin kararı): hakanaktt/acadrust#651, PR #652. Yazarın ana dalında aynı
+    DWG'nin DXF'i 112,3 s yerine 2,95 s'de yazılıyor. Birleşince sabit sürüm yükseltilecek.
 - [~] **RM-22 — Alınmayanlar.** SİVAS AVM'de 8 051 öğe alınmıyor:
   - [x] “Görünmez” bayrağı doğrulandı (24 Kasım), doğru okunuyor:
     - **2 katlı ev:** DWG ve DXF'inde düz nesnelerden hiçbiri görünmez sayılmıyor.
