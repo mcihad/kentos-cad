@@ -48,7 +48,7 @@ fn a_bound_layer_and_its_copy_make_the_same_classes_and_legend() {
     let setup = json!({
         "format": "kentos.document", "version": 1, "name": "Lejant",
         "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                      "plotScale": 1000, "workspace": "gis" },
+                      "plotScale": 1000, "workspace": "cad" },
         "origin": { "x": 0.0, "y": 0.0 },
         "layers": [{ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false,
                      "expanded": true, "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
