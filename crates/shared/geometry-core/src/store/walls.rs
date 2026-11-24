@@ -523,3 +523,30 @@ fn a_wall_its_openings_or_another_wall_change_is_named_as_drawn_anew() {
     assert!(s.redrawn_since(mark).expect("the list reaches back").contains(&4.0));
 }
 
+/// docs/adr/9224: another detail of the walls (a zoom across 1:30 or 1:75, docs/adr/0339 §4) draws a door and a
+/// window otherwise too, not only their wall. Each object drawn for the view is named as drawn anew, whatever its
+/// layer: on a layer of its own a window kept its jambs at the old detail while its wall took the new one.
+#[test]
+fn another_detail_names_every_object_drawn_for_it_as_drawn_anew() {
+    let mut s = Store::new();
+    s.set_wall_view(View::new(Detail::Schematic, 100.0));
+    s.put_json(r##"[{"id":1,"layerId":"duvar","kind":"wall","pts":[{"x":0,"y":0},{"x":6,"y":0}],"width":0.25,"justify":"center"},
+                    {"id":2,"layerId":"pencere","kind":"opening","at":3,"width":1.2,"form":"window",
+                     "place":[{"x":2.4,"y":0.125},{"x":2.4,"y":-0.125},{"x":3.6,"y":0.125},{"x":3.6,"y":-0.125}],"frame":0.06},
+                    {"id":3,"layerId":"cizim","kind":"line","a":{"x":0,"y":2},"b":{"x":6,"y":2}}]"##)
+        .unwrap();
+    s.set_hosts([(2.0, Some(1.0))]);
+    let window = s.get(2.0).unwrap().expanded.clone();
+    let mark = s.redraw_mark();
+    s.set_wall_view(View::new(Detail::Detailed, 20.0));
+    assert_ne!(s.get(2.0).unwrap().expanded, window, "the window is drawn otherwise in detail");
+    let named = s.redrawn_since(mark).expect("the list reaches back");
+    assert!(named.contains(&1.0) && named.contains(&2.0), "the wall and its window: {named:?}");
+    assert!(!named.contains(&3.0), "a line does not follow the walls' view");
+    assert_eq!(s.following_view().collect::<Vec<_>>(), vec![1.0, 2.0]);
+    // The same view again: nothing.
+    let mark = s.redraw_mark();
+    s.set_wall_view(View::new(Detail::Detailed, 20.0));
+    assert_eq!(s.redrawn_since(mark), Some(&[][..]));
+}
+

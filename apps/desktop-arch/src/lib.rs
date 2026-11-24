@@ -103,6 +103,9 @@ mod quantities_scenes;
 #[path = "tests/wall_style_scenes.rs"]
 mod wall_style_scenes;
 #[cfg(test)]
+#[path = "tests/render_conformance_tests.rs"]
+mod render_conformance_tests;
+#[cfg(test)]
 #[path = "tests/arch_audit_exception_scenes.rs"]
 mod arch_audit_exception_scenes;
 #[cfg(test)]

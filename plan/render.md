@@ -252,7 +252,17 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     - geri alma.
 
     Depo günlüğü kapatılınca sınama ilk düzenlemede kırmızı.
-  - [ ] Sabit kameralı altın görüntüler; düzenlemeli gerçek pencere senaryoları (kapı, pencere, duvar, çizgi).
+  - [x] Adım 2 ([ADR 9224](../docs/adr/9224-visual-conformance-edits-and-details.md)): ikiz uygulama sınaması. Bir
+    düzenlemenin ya da yakınlaştırmanın hemen alınan resmi, düzenlenmiş belgeyi baştan açan ikinci uygulamanınkiyle
+    piksel piksel karşılaştırılır (GPU, `KENTOS_GPU_TESTS=1`).
+    - Çekirdekte 7 CAD durumu, Mimari paketinde 9 durum (katman anahtarı açık). Hepsinde fark 0.
+    - Sınama yeni bir hata buldu: duvar ayrıntısı değişince (1:30, 1:75) önbellek yalnız duvarları yeniden
+      kuruyordu. Ayrı katmandaki kapı ve pencere eski ayrıntının sövesinde kalıyordu (gerçek pencerede 77 piksel).
+      Depo artık ayrıntıyla yeniden açtığı her nesneyi sayıyor.
+    - Gerçek pencere senaryosu `fixtures/interaction/real/duzenleme-hemen-gorunur.txt` ve `scripts/usage/real/same.py`.
+      Oda, pencere, kapı, Delete, Ctrl+Z, bölme duvarı ve çizgi; hemen alınan resim tekerlekten sonrakiyle aynı.
+    - Xvfb'de tuşlar senaryoda `fit` olmadığı için ulaşmıyormuş; program sorunu değil.
+  - [ ] Sabit kameralı altın görüntüler (çizimin görünüşü değişince sınama söyler).
 
 ### F6 — NCZ alımı
 
