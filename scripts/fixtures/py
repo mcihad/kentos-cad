@@ -1,0 +1,43 @@
+#!/bin/sh
+# Bir üreteci (ya da herhangi bir betiği) üreteçlerin sabit Python ortamında çalıştırır (docs/adr/9303):
+#
+#     scripts/fixtures/py scripts/fixtures/wall_cases.py --check
+#     scripts/fixtures/py scripts/fixtures/check_all.py            # make fixtures-check'in yaptığı
+#
+# Ortam scripts/fixtures/pyproject.toml ile uv.lock'tan .run/fixtures-py'ye kurulur (uv ilk çalıştırmada kurar,
+# kilit değişince eşitler). GDAL'ın Python bağı Homebrew'un libgdal'ına karşı derlendiği için ikisinin sürümü
+# denetlenir: farklıysa betik koşmadan durur ve ne yapılacağını söyler.
+set -eu
+root=$(cd "$(dirname "$0")/../.." && pwd)
+uv=$(command -v uv || echo "$HOME/.local/bin/uv")
+if [ ! -x "$uv" ]; then
+    echo "uv bulunamadı: https://docs.astral.sh/uv/ ile kurun (ADR 9303)." >&2
+    exit 2
+fi
+env="${UV_PROJECT_ENVIRONMENT:-$root/.run/fixtures-py}"
+export UV_PROJECT_ENVIRONMENT="$env"
+# Bir üreteç bulduğunda kendini başka bir Python'la (eski düzenin uygulama paketi, .run/pyref) yeniden başlatmasın.
+export KENTOS_QGIS_PYTHON=1
+"$uv" sync --project "$root/scripts/fixtures" --locked --quiet
+py="$env/bin/python"
+# Homebrew'un libgdal'ı Homebrew'un Arrow'una bağlı; pyarrow kendi Arrow'unu getirir. İkisi bir süreçte yüklenince
+# Arrow dosya sistemini iki kez kaydeder ve pyarrow düşer. macOS'ta GDAL'ın aradığı Arrow kütüphaneleri pyarrow'un
+# aynı sürümdeki kopyalarına yönlendirilir: süreçte tek Arrow kalır.
+if [ "$(uname)" = Darwin ]; then
+    arrow="$env/arrow-libs"
+    mkdir -p "$arrow"
+    for lib in "$env"/lib/python3.12/site-packages/pyarrow/libarrow*.dylib \
+               "$env"/lib/python3.12/site-packages/pyarrow/libparquet*.dylib; do
+        if [ -e "$lib" ]; then ln -sf "$lib" "$arrow/"; fi
+    done
+    export DYLD_LIBRARY_PATH="$arrow${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+fi
+"$py" -I -c '
+import sys
+from osgeo import gdal
+lib = gdal.VersionInfo("RELEASE_NAME")
+if lib != gdal.__version__:
+    sys.exit(f"GDAL uyuşmuyor: Python bağı {gdal.__version__}, kütüphane {lib}. pyproject.toml'"'"'daki gdal sürümünü "
+             f"{lib} yapın, `uv lock` ve `uv cache clean gdal` çalıştırın (ADR 9303).")
+' || exit 2
+exec "$py" "$@"

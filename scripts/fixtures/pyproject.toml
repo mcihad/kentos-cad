@@ -1,0 +1,73 @@
+# Üreteçlerin (scripts/*/*.py: ortak durumların bağımsız başvuruları) sabit Python ortamı (docs/adr/9303).
+# Ürünün çalışma bağımlılığı değildir; yalnız başvuruları yazan ve `--check`'lerini koşan geliştirme aracıdır.
+# Sürümlerin ve lisansların gerekçesi ADR 9303'tedir. Bir sürümü değiştirmek beklenen örnekleri değiştirebilir:
+# değiştirdikten sonra `make fixtures-check`'i koşun ve kırmızıları ADR 9303'ün sınıflarıyla okuyun.
+#
+#     scripts/fixtures/py scripts/fixtures/<üreteç>.py [--check]     # tek üreteç bu ortamda
+#     make fixtures-check                                              # hepsinin --check'i, özetle
+#
+# Ortam .run/fixtures-py'dedir (sarmalayıcı UV_PROJECT_ENVIRONMENT ile verir); `uv lock` uv.lock'u buradan yazar.
+[project]
+name = "kentos-fixture-generators"
+version = "1"
+description = "KentOS CAD'in ortak durum üreteçlerinin sabit ortamı (geliştirme aracı)"
+requires-python = "==3.12.*"
+dependencies = [
+    # Yüksek duyarlıklı başvuru ve doğru yuvarlanmış temel işlevler (crmath.py).
+    "mpmath==1.4.1",
+    "sympy==1.14.0",
+    "numpy==2.5.4",
+    "scipy==1.18.1",
+    # PROJ 9.8.1'i ve onun EPSG veritabanını içinde taşır (crs_vertical_cases'in alan sınırları bu veritabanınındır).
+    "pyproj==3.8.0",
+    "shapely==2.2.0",
+    "triangle==20250106",
+    "matplotlib==3.11.2",
+    # GDAL'ın Python bağı kaynaktan, Homebrew'un libgdal'ına karşı derlenir: ikisinin sürümü aynı olmalı (py denetler).
+    "gdal[numpy]==3.13.3",
+    "ifcopenshell==0.9.0.post1",
+    "ifctester==0.9.0",
+    "bcf-client==0.9.0",
+    "xsdata==26.10",
+    "lark==1.3.1",
+    "pytest==9.2.0",
+    "ezdxf==1.4.5",
+    "fonttools==4.68.0",
+    "brotli==1.2.1",
+    "laspy[laszip]==2.7.0",
+    "laszip==0.3.0",
+    "pillow==13.0.0",
+    "pyarrow==26.0.0",
+    "zstandard==0.25.0",
+    "lz4==4.4.5",
+    "geopandas==1.2.0",
+    "openpyxl==3.1.5",
+    "pypdf==7.1.1",
+    "jsonschema==4.26.0",
+    "h5py==3.16.0",
+    "netcdf4==1.7.2",
+    "zarr==3.4.2",
+    "numcodecs==0.17.1",
+    "eccodes==2.50.1",
+    "eccodeslib==2.50.0.34",
+    "trimesh==5.2.2",
+    "owslib==0.35.0",
+    "botocore==1.44.10",
+    "psycopg2-binary==2.9.13",
+    "scikit-learn==1.9.1",
+    "libpysal==4.15.1",
+    "esda==2.10.0",
+    "pointpats==2.6.0",
+    "kneed==0.9.0",
+]
+
+[tool.uv]
+package = false
+# sympy 1.14.0 mpmath'i <1.4 diye sınırlar; başvuruların çoğu mpmath 1.4.1 ile yazıldı ve sympy'nin kullanılan yüzü
+# (sembol, türev, sayısal değer) 1.4.1'le de aynı sonucu verir: constraint_*_cases'in --check'i bu ortamda yeşil.
+override-dependencies = ["mpmath==1.4.1"]
+# Bu Mac (Apple Silicon) ve olası bir Linux denetim makinesi için çözülür.
+environments = [
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]

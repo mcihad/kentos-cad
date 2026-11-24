@@ -46,7 +46,7 @@ PORTAL_URL := http://localhost:$(PORTAL_PORT)
 		restart status logs logs-api logs-desktop \
 		db-status db-start db-stop db-setup db-migrate kentosd \
 		build-portal build-api build-rust build-desktop catalog \
-		check verify test-rust test-portal test-desktop test-module fixtures-changed fmt fmt-check arch ui-snapshots desktop-snapshot \
+		check verify test-rust test-portal test-desktop test-module fixtures-changed fixtures-check fmt fmt-check arch ui-snapshots desktop-snapshot \
 		clean clean-rust
 
 ##@ Yardım
@@ -196,6 +196,9 @@ test-module: ## Uygulama katmanı testleri tek modülle: make test-module MOD=ar
 
 fixtures-changed: ## Yalnız değişenin ortak komut durumları (BASE=origin/main, FILES=a,b; eşlenemeyen değişiklikte hepsi)
 	$(HEAVY) node scripts/dev/changed-fixtures.mjs
+
+fixtures-check: ## Bütün üreteçlerin --check'i sabit Python ortamında; özet: yeşil, kırmızı, koşamayan (ADR 9303; ONLY=ad, JOBS=4)
+	$(HEAVY) scripts/fixtures/py scripts/fixtures/check_all.py $(if $(JOBS),-j $(JOBS),) $(ONLY)
 
 fmt: ## Rust kaynaklarını biçimler
 	cargo fmt --all
