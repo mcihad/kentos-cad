@@ -486,6 +486,9 @@ impl Viewport {
             view_build: kentos_native_style::View {
                 map: self.camera.map,
                 deep,
+                // Curves round to a quarter pixel at every zoom short of the deep view, which rounds its own
+                // (plan/render.md RM-09): the tolerance at its threshold, in world units.
+                curve_tolerance: Some(DEEP_TOLERANCE_PX / (DEEP_PX_PER_M * self.metres_a_unit())),
                 ..s.view_build
             },
             view_colors: s.view_colors,
@@ -639,10 +642,14 @@ impl Viewport {
     /// size round it, its curves round to a quarter pixel there; kept while the view stays in the box and its scale
     /// within twice the one the tolerance was made at; none again below half the threshold, so a view at the threshold
     /// does not switch back and forth.
-    fn deep_box(&self) -> Option<kentos_native_style::Deep> {
+    /// Metres a world unit is (1 when the camera's is not a positive number).
+    fn metres_a_unit(&self) -> f64 {
         let unit = self.camera.metres_per_unit;
-        let unit = if unit.is_finite() && unit > 0.0 { unit } else { 1.0 };
-        let px_per_m = self.camera.scale / unit;
+        if unit.is_finite() && unit > 0.0 { unit } else { 1.0 }
+    }
+
+    fn deep_box(&self) -> Option<kentos_native_style::Deep> {
+        let px_per_m = self.camera.scale / self.metres_a_unit();
         let was = self.deep.get();
         let deep = px_per_m >= if was.is_some() { DEEP_PX_PER_M / 2.0 } else { DEEP_PX_PER_M };
         let view = self.camera.visible_bounds();

@@ -1295,6 +1295,9 @@ impl GeometryStore {
                 line_lod: false,
                 block_proxy: false,
                 cad_phase: false,
+                // The desktop's deep view and round curves (plan/render.md RM-24, RM-09); the web is paused (ADR 0228).
+                deep: None,
+                curve_tolerance: None,
             },
             frame,
         )

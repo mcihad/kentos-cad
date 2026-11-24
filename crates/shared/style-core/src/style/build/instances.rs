@@ -137,10 +137,13 @@ impl Instancer {
                 let mut rec = BatchSink::recorder();
                 rec.set_line_lod(view.line_lod && !view.plot_precision);
                 rec.set_block_proxy(view.block_proxy && !view.plot_precision);
+                // A definition is in its own units, its inserts scaled: its curves keep the drawing's own chords.
+                let curve_tolerance = cx.curve_tolerance.take();
                 for (k, piece) in flat.pieces.iter().enumerate() {
                     let shape = &piece.shape;
                     // A construction line is clipped to the view's box, which a definition's base knows nothing of.
                     if matches!(shape, Shape::Xline { .. } | Shape::Ray { .. }) {
+                        cx.curve_tolerance = curve_tolerance;
                         return None;
                     }
                     let (fills, strokes) = view.hides(shape);
@@ -148,6 +151,7 @@ impl Instancer {
                     let set = sets.and_then(|s| s.get(k)).copied().unwrap_or(simple);
                     draw_object(shape, [MODE_SET, set, set, color], program, values, env, None, buf, &mut rec, cx);
                 }
+                cx.curve_tolerance = curve_tolerance;
                 rec.into_def(*made).map(Arc::new)
             })
             .clone();

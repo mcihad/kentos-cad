@@ -87,6 +87,20 @@ pub(super) fn refined(s: &Shape, d: &Deep) -> Option<Shape> {
     }
 }
 
+/// Curves round to `tolerance` all along, as a deep view rounds them in its box (`curve`, `refined`): the screen's
+/// own outside a deep view (`View::curve_tolerance`, plan/render.md RM-09).
+pub(super) fn everywhere(tolerance: f64) -> Deep {
+    Deep {
+        bounds: Bounds {
+            min_x: f64::NEG_INFINITY,
+            min_y: f64::NEG_INFINITY,
+            max_x: f64::INFINITY,
+            max_y: f64::INFINITY,
+        },
+        tolerance,
+    }
+}
+
 /// `g` with every path and ring split where it crosses the edge of `b`; a mark as it is.
 pub(super) fn split(g: Geom, b: &Bounds) -> Geom {
     let ring = |r: Vec<Vec2>| split_at_box(&r, true, b).unwrap_or(r);
@@ -274,4 +288,34 @@ mod tests {
         assert!(plain > 0.0, "the arc is drawn");
         assert!(deep > plain, "finer in the box: {plain} → {deep}");
     }
+
+    /// plan/render.md RM-09: outside a deep view the screen's curves are round to its tolerance all along, a big circle
+    /// with as many chords as keep every one within it; without one, the drawing's 72 chords a turn.
+    #[test]
+    fn the_screen_s_curves_are_round_to_its_tolerance_everywhere() {
+        let (c, r, tol) = (Vec2::new(10.0, -3.0), 22.0, 5e-4);
+        let Some(parts) = curve(&Shape::Circle { c, r }, &everywhere(tol)) else {
+            panic!("a circle");
+        };
+        let [Geom::Line(paths)] = parts.as_slice() else {
+            panic!("one line");
+        };
+        let ring = &paths[0].0;
+        // Every chord's middle within the tolerance of the circle, the closing one too.
+        let worst = (0..ring.len())
+            .map(|i| {
+                let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
+                r - ((a.x + b.x) / 2.0 - c.x).hypot((a.y + b.y) / 2.0 - c.y)
+            })
+            .fold(0.0, f64::max);
+        assert!(worst <= tol * 1.000_001, "{worst}");
+        // 2 acos(1 − tol / r) a chord: about 466 a turn for 22 m at half a millimetre.
+        assert!((460..=470).contains(&ring.len()), "{}", ring.len());
+        // A view with the tolerance draws more segments than one without; a deep view's box takes precedence.
+        let json = r#"[{"id":1,"layerId":"a","kind":"circle","attrs":{},"c":{"x":10,"y":-3},"r":22}]"#;
+        let plain = segments_of(json, View::default());
+        let round = segments_of(json, View { curve_tolerance: Some(tol), ..View::default() });
+        assert!(round > 6.0 * plain, "{plain} → {round}");
+    }
 }
+

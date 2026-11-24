@@ -132,8 +132,16 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 - [ ] **RM-08 — Dünya döşemeleri ve görünüm ayıklaması.** Çizim sırası korunur.
   - En uzak görünümde tıklamanın isabet sorgusu (RM-06'dan) en yakını önce arayacak. Bugün aday kutusu nesnelerin
     sekizde birini geçince bütün nesneler belge sırasıyla geziliyor: 601 619 nesnede 37 ms.
-- [ ] **RM-09 — Eğriler görünüme göre çizilir.** Daireler, yaylar ve elipsler GPU'da ya da döşeme başına görünüme göre
+- [~] **RM-09 — Eğriler görünüme göre çizilir.** Daireler, yaylar ve elipsler GPU'da ya da döşeme başına görünüme göre
   çizilir. Bütün çizime yayılan 1 M kiriş bütçesi kalkar; yakında daire köşeli görünmez.
+  - [x] Adım 1 ([ADR 9223](../docs/adr/9223-screen-curves-round-at-every-zoom.md)): ekranın daire, yay, elips ve bombeli
+    kenarları derin görünümün eşiğindeki çeyrek piksele yuvarlanır (metrede 0,5 mm); 500 px/m'nin altında her yakınlıkta
+    yuvarlak, üstünü derin sahne alır. Evin terası 495 px/m'de 2,6 piksellik kirişten kurtuldu. Bedeli: büyük eğri çok
+    kiriş (22 m'lik daire 466).
+  - [ ] Bloklardaki eğriler (tanımın toleransı en büyük örneğin ölçeğinden).
+  - [ ] Eğri duvarlar: deponun gövde adımı sabit 5°; derin görünümde bile köşeli (5 m'de 5 000 px/m'de ~24 piksel).
+  - [ ] Spline ve NURBS kutuda ve ekranda toleransla.
+  - [ ] GPU'da analitik eğriler (belleği kiriş sayısından kurtarır; RM-15 ile).
 - [~] **RM-10 — Düzey sadeleştirme.** İlk adım yapıldı:
   [ADR 9207](../docs/adr/9207-far-levels-of-strokes-and-fills.md).
   - **24 Kasım: geri alındı** ([ADR 9222](../docs/adr/9222-quality-is-not-traded-for-speed.md)). Sahibin sözü
