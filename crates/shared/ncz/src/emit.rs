@@ -1184,6 +1184,182 @@ fn wrapped(text: &str, width: f64, height: f64, font: Font) -> Vec<String> {
 /// thousandths (`PROGRESS_TOTAL`), and may stop it (`Err(STOPPED)`). A file
 /// that holds no NCZ blocks at all is refused with the reason; one whose
 /// blocks hold no geometry reads as empty, and the report says why.
+/// The height Netcad writes a parcel's number at from the parcel's label, metres: what its own DXF of the Sivas plan
+/// shows at the 1:1000 an NCZ opens at (docs/adr/9217).
+const PARCEL_NUMBER_HEIGHT: f64 = 3.0;
+
+/// The fewest `ada/parsel` labelled areas that make a layer a cadastre's (docs/adr/9217).
+const LEAST_PARCELS: usize = 10;
+
+/// Whether a label is a parcel's `ada/parsel`: the layers whose areas mostly carry one are the cadastre's. A plan's
+/// areas carry labels too (`70`, `İRT_A952`, `OA_2_1`), and Netcad writes none of them on the plan.
+fn block_and_parcel(label: &str) -> bool {
+    label.trim().split_once('/').is_some_and(|(ada, _)| !ada.is_empty() && ada.chars().all(|c| c.is_ascii_digit()))
+        && parcel_number(label).is_some()
+}
+
+/// A parcel's number as Netcad writes it on the plan from the parcel's label: the parcel's part of `ada/parsel`
+/// (`1588/10` → `10`, `103/TH4` → `TH4`), a label without an ada whole (`6587`); none for words (`TESCİL HARİCİ`).
+fn parcel_number(label: &str) -> Option<&str> {
+    let label = label.trim();
+    let number = match label.split_once('/') {
+        Some((ada, parsel)) if !ada.is_empty() && ada.chars().all(|c| c.is_ascii_digit()) => parsel,
+        Some(_) => return None,
+        None => label,
+    };
+    (!number.is_empty()
+        && number.chars().count() <= 16
+        && !number.chars().any(char::is_whitespace)
+        && number.chars().any(|c| c.is_ascii_digit()))
+    .then_some(number)
+}
+
+/// A ring's area centroid (its first point the origin of the sums, for precision at map coordinates).
+fn area_centroid(pts: &[Vec2]) -> Option<Vec2> {
+    let o = *pts.first()?;
+    let (mut a, mut cx, mut cy) = (0.0, 0.0, 0.0);
+    for i in 0..pts.len() {
+        let (p, q) = (pts[i], pts[(i + 1) % pts.len()]);
+        let (px, py, qx, qy) = (p.x - o.x, p.y - o.y, q.x - o.x, q.y - o.y);
+        let c = px * qy - qx * py;
+        a += c;
+        cx += (px + qx) * c;
+        cy += (py + qy) * c;
+    }
+    (a.abs() > 1e-12 && a.is_finite()).then(|| Vec2 { x: o.x + cx / (3.0 * a), y: o.y + cy / (3.0 * a) })
+}
+
+/// Whether `p` is inside the ring (even-odd).
+fn in_ring(pts: &[Vec2], p: Vec2) -> bool {
+    let mut odd = false;
+    for i in 0..pts.len() {
+        let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
+        if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y) {
+            odd = !odd;
+        }
+    }
+    odd
+}
+
+/// The parcel numbers Netcad shows from the parcels' labels that no text shows (plan/render.md RM-18, docs/adr/9216
+/// §4, 9217); how many parcels a text of their layer numbers already, and how many were left without one.
+///
+/// Netcad writes each parcel's number at the area centroid of the parcel, centred, 3 m high, whether or not a text of
+/// its own numbers it: the Sivas plan's DXF shows the number twice on most of its parcels. The owner's choice (24
+/// November 2026): only the parcels no text numbers get it. A layer is a cadastre's when at least [`LEAST_PARCELS`] of
+/// its areas, and most of its labelled ones, carry an `ada/parsel` label.
+///
+/// Only a parcel whose centroid lies in it alone gets it. Where parcels lie over one another (an old parcel under its
+/// divisions), Netcad does not write the label's number: on 183 of the Sivas plan's 1 199 such parcels it writes another
+/// one, from a field this reader cannot tie to the parcel (docs/adr/0138). A number left out is better than a wrong one.
+fn parcel_numbers(entities: &[Entity]) -> (Vec<Entity>, usize, usize) {
+    struct Area<'a> {
+        ring: &'a [Vec2],
+        bounds: [f64; 4],
+        /// Its label and the number it writes, for a parcel's label.
+        parcel: Option<(&'a str, &'a str)>,
+        shown: bool,
+    }
+    // Each layer's areas, its labelled ones and how many of those carry `ada/parsel`.
+    let mut layers: BTreeMap<&str, (Vec<Area<'_>>, usize, usize)> = BTreeMap::new();
+    for e in entities {
+        let Entity::Polygon(p) = e else { continue };
+        if p.pts.len() < 3 {
+            continue;
+        }
+        let label = p.base.attrs.get("Etiket");
+        let entry = layers.entry(p.base.layer_id.as_str()).or_default();
+        entry.1 += usize::from(label.is_some());
+        entry.2 += usize::from(label.is_some_and(|l| block_and_parcel(l)));
+        let bounds = p.pts.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, q| {
+            [b[0].min(q.x), b[1].min(q.y), b[2].max(q.x), b[3].max(q.y)]
+        });
+        let parcel = label.and_then(|l| parcel_number(l).map(|n| (l.trim(), n)));
+        entry.0.push(Area { ring: &p.pts, bounds, parcel, shown: false });
+    }
+    layers.retain(|_, (_, labelled, slashed)| *slashed >= LEAST_PARCELS && 2 * *slashed >= *labelled);
+    if layers.is_empty() {
+        return (Vec::new(), 0, 0);
+    }
+    // The areas by the 64 m cells their boxes cover; a point is looked for in its own cell's.
+    const CELL: f64 = 64.0;
+    let cell = |v: f64| (v / CELL).floor() as i64;
+    let mut grids: HashMap<&str, HashMap<(i64, i64), Vec<usize>>> = HashMap::new();
+    for (layer, (areas, _, _)) in &layers {
+        let grid = grids.entry(layer).or_default();
+        for (i, a) in areas.iter().enumerate() {
+            for x in cell(a.bounds[0])..=cell(a.bounds[2]) {
+                for y in cell(a.bounds[1])..=cell(a.bounds[3]) {
+                    grid.entry((x, y)).or_default().push(i);
+                }
+            }
+        }
+    }
+    let inside = |a: &Area<'_>, p: Vec2| {
+        (a.bounds[0]..=a.bounds[2]).contains(&p.x) && (a.bounds[1]..=a.bounds[3]).contains(&p.y) && in_ring(a.ring, p)
+    };
+    for e in entities {
+        let Entity::Text(t) = e else { continue };
+        let layer = t.base.layer_id.as_str();
+        let (Some((areas, _, _)), Some(grid)) = (layers.get_mut(layer), grids.get(layer)) else { continue };
+        let text = t.text.trim();
+        for &i in grid.get(&(cell(t.p.x), cell(t.p.y))).map_or(&[][..], Vec::as_slice) {
+            let a = &areas[i];
+            if !a.shown && a.parcel.is_some_and(|(label, number)| text == number || text == label) && inside(a, t.p) {
+                areas[i].shown = true;
+            }
+        }
+    }
+    let mut out = Vec::new();
+    let (mut shown, mut shared) = (0, 0);
+    for (layer, (areas, _, _)) in &layers {
+        let grid = &grids[layer];
+        for (i, a) in areas.iter().enumerate() {
+            let Some((_, number)) = a.parcel else { continue };
+            if a.shown {
+                shown += 1;
+                continue;
+            }
+            let Some(at) = area_centroid(a.ring) else { continue };
+            let alone = grid
+                .get(&(cell(at.x), cell(at.y)))
+                .is_some_and(|near| near.iter().filter(|&&j| inside(&areas[j], at)).eq([&i]));
+            if !alone {
+                shared += 1;
+                continue;
+            }
+            out.push(Entity::Text(TextEntity {
+                annotative: None,
+                base: EntityBase {
+                    look: Default::default(),
+                    id: 0,
+                    layer_id: (*layer).to_owned(),
+                    color: None,
+                    attrs: BTreeMap::new(),
+                    label: None,
+                    symbol: None,
+                    line_weight: None,
+                    label_pins: Vec::new(),
+                    attachments: Vec::new(),
+                },
+                p: at,
+                text: number.to_owned(),
+                height: PARCEL_NUMBER_HEIGHT,
+                rotation: 0.0,
+                align: Some(TextAlign::MiddleCenter),
+                width_factor: None,
+                mask: false,
+                label_of: None,
+                label_scale: None,
+                paragraph: Default::default(),
+                face: Default::default(),
+                path: None,
+            }));
+        }
+    }
+    (out, shown, shared)
+}
+
 pub fn read(
     bytes: &[u8],
     opts: &NczReadOptions,
@@ -1221,6 +1397,23 @@ pub fn read(
     }
     let layers = em.layers();
     let mut entities = std::mem::take(&mut em.out);
+    let (numbers, shown, shared) = parcel_numbers(&entities);
+    if !numbers.is_empty() || shared > 0 {
+        report.about(
+            "Parsel numarası",
+            &format!(
+                "{} parselin numarası yalnız alanın etiketindeydi; Netcad'in gösterdiği gibi alanın ağırlık merkezine \
+                 {} m yüksekliğinde yazıldı. Numarası bir yazıyla zaten görünen {} parsele dokunulmadı. Ağırlık \
+                 merkezi başka bir parselin içinde de kalan {} parsele yazılmadı: üst üste parsellerde Netcad'in \
+                 gösterdiği numara etiketten değil, bu dosyada parsele bağlanamayan bir alandan geliyor.",
+                numbers.len(),
+                PARCEL_NUMBER_HEIGHT,
+                shown,
+                shared
+            ),
+        );
+    }
+    entities.extend(numbers);
     for e in &mut entities {
         e.base_mut().id = 0;
     }
@@ -1249,6 +1442,111 @@ pub fn read(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn base(layer: &str, label: Option<&str>) -> EntityBase {
+        EntityBase {
+            look: Default::default(),
+            id: 0,
+            layer_id: layer.into(),
+            color: None,
+            attrs: label.map(|l| BTreeMap::from([("Etiket".to_owned(), l.to_owned())])).unwrap_or_default(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        }
+    }
+
+    /// A 20 m square parcel at `x`, labelled.
+    fn parcel(layer: &str, x: f64, label: &str) -> Entity {
+        let pts = [(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)].map(|(a, b)| Vec2 { x: x + a, y: b });
+        Entity::Polygon(PathEntity {
+            space_separator: None,
+            ms: None,
+            base: base(layer, Some(label)),
+            pts: pts.to_vec(),
+            bulges: None,
+            holes: None,
+            zs: None,
+            parts: None,
+            closed: true,
+            widths: None,
+        })
+    }
+
+    fn text(layer: &str, x: f64, y: f64, s: &str) -> Entity {
+        Entity::Text(TextEntity {
+            annotative: None,
+            base: base(layer, None),
+            p: Vec2 { x, y },
+            text: s.into(),
+            height: 2.5,
+            rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
+            label_of: None,
+            label_scale: None,
+            paragraph: Default::default(),
+            face: Default::default(),
+            path: None,
+        })
+    }
+
+    #[test]
+    fn a_parcels_number_is_the_part_after_its_block() {
+        assert_eq!(parcel_number("1588/10"), Some("10"));
+        assert_eq!(parcel_number(" 103/TH4 "), Some("TH4"));
+        assert_eq!(parcel_number("6587"), Some("6587"));
+        assert_eq!(parcel_number("TESCİL HARİCİ"), None);
+        assert_eq!(parcel_number("KORUNMA"), None);
+        assert_eq!(parcel_number("A/5"), None, "a block is a number");
+        assert_eq!(parcel_number("12/"), None);
+        assert!(block_and_parcel("1588/10") && !block_and_parcel("6587") && !block_and_parcel("OA_2_1"));
+    }
+
+    /// Of twelve parcels, the eight a text of their layer numbers keep only it; the four others get their number at
+    /// their centroid, centred, 3 m high. A layer of a few labelled areas, or of words, gets none.
+    #[test]
+    fn only_the_parcels_no_text_numbers_get_their_label_written() {
+        let mut all = Vec::new();
+        for i in 0..12 {
+            let x = f64::from(i) * 30.0;
+            all.push(parcel("KADASTRO", x, &format!("101/{i}")));
+            if i % 3 != 0 {
+                // The number inside, as Netcad's own texts are; one of them the whole label.
+                all.push(text("KADASTRO", x + 8.0, 9.0, &if i == 1 { "101/1".to_owned() } else { i.to_string() }));
+            }
+        }
+        // The number of another parcel inside this one does not number it; nor does a text of another layer.
+        all.push(text("KADASTRO", 3.0 * 30.0 + 5.0, 5.0, "7"));
+        all.push(text("YAZI", 6.0 * 30.0 + 5.0, 5.0, "6"));
+        for i in 0..5 {
+            all.push(parcel("AZ", 1000.0 + f64::from(i) * 30.0, &format!("5/{i}")));
+        }
+        for i in 0..12 {
+            all.push(parcel("PLAN", 2000.0 + f64::from(i) * 30.0, "KONUT"));
+            // A plan's areas numbered without a block: Netcad writes none of them.
+            all.push(parcel("PL_KONUT", 3000.0 + f64::from(i) * 30.0, &(70 + i).to_string()));
+        }
+        // A parcel under another (its centroid in both): not written, whatever the label says.
+        all.push(parcel("KADASTRO", 400.0, "101/40"));
+        all.push(parcel("KADASTRO", 405.0, "101/41"));
+        let (numbers, shown, shared) = parcel_numbers(&all);
+        assert_eq!((shown, shared), (8, 2));
+        let written: Vec<(&str, f64, f64)> = numbers
+            .iter()
+            .map(|e| match e {
+                Entity::Text(t) => {
+                    assert_eq!((t.height, t.align, t.base.layer_id.as_str()), (3.0, Some(TextAlign::MiddleCenter), "KADASTRO"));
+                    (t.text.as_str(), t.p.x, t.p.y)
+                }
+                _ => panic!("a text"),
+            })
+            .collect();
+        assert_eq!(written, [("0", 10.0, 10.0), ("3", 100.0, 10.0), ("6", 190.0, 10.0), ("9", 280.0, 10.0)]);
+    }
 
     #[test]
     fn black_and_white_are_ink() {
