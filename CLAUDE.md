@@ -48,6 +48,17 @@ satıra (749 KB) büyüdüğü için bölündü.
   ait adım ve not yazılmaz, TODOS.md §0.2'ye yeni satır eklenmez. Bulut portalı (`apps/portal`, ADR 9000) bunun dışındadır.
 - **Modül ve istemci ayrımı (kesin kural, 23 Kasım 2026):** §25'in sekiz kuralı her değişiklikte uygulanır; yeni
   panel, sekme, menü öğesi, komut, modül ya da istemci onlarla eklenir.
+- **Modül ve otomasyon denetimi (kesin kural, 24 Kasım 2026):** yeni yapılan ya da güncellenen her işte üç şey açıkça
+  saptanır. Eksik bulunan aynı işte tamamlanır, sonraya bırakılmaz:
+  1. **Modüller:** Mimari, Harita, Yol (CAD) ve CBS projelerinin her biri bu özelliği taşıyacak mı? Her modül için var ya
+     da yok, gerekçesiyle (§25 kural 2); yeni modül eklendikçe o da. Var denen her modülde çalışır ve sınanır.
+  2. **Kanallar:** MCP, Python, eklenti ve yapay zekâ ajanı aynı işi yapabiliyor mu? Her biri için var ya da yok.
+  3. **Tam uyum:** her kanal işi arayüzle aynı komutla yapar; doğrulama, yetki, önizleme ve sonuç aynıdır. Kanal kendi
+     hesabını yazmaz.
+
+  Karar tablosu (modül × var/yok, kanal × var/yok) işin ADR'sine yazılır. “Yok” yalnız gerekçeyle yazılır; örneğin geri
+  al, yinele ve dosya işleri eklentiye kapalıdır. Var olan bir işe dokunulunca aynı denetim onun için de yapılır.
+  Kanalların nerede bağlandığı ve hangi sınamanın koşacağı §9.2'dedir; biri kırmızıyken iş bitmiş sayılmaz.
 - **Ağır iş tek tek:** derleme, test ve ölçüm `scripts/dev/svc.sh heavy <komut>` ile ortak kilidin altında koşar
   (`scripts/dev/svc.sh heavy cargo test -p kentos-desktop --lib …`); ikincisi bekler, masaüstü aç kalmaz.
 - **Masaüstü testleri** `RUST_MIN_STACK=67108864` ister. Pencere resimleri `#[ignore]` `screens` testleridir:
@@ -66,7 +77,7 @@ satıra (749 KB) büyüdüğü için bölündü.
   her dosyada eski atıflar da aynı işte temizlenir; yeni kodda hiç yazılmaz. Dosya biçimi adları (DXF, DWG, LandXML,
   GeoPackage…) uygulama adı sayılmaz.
 - **Araç = komut** (§9.2): çizimi değiştiren her iş anlamsal komutla yapılır; katalog, ≥20 bağımsız başvurulu ortak durum,
-  Python, MCP ve manifest olmadan bitmiş sayılmaz.
+  modüllerin kararı, Python, MCP, yapay zekâ ajanı, eklenti ve manifest olmadan bitmiş sayılmaz.
 - **Pencere düzeni** (DESIGN.md §7.19): Yol pencereleri `road_dialog::RoadDialog` iskeletindedir; çizim alanı
   `widget::picture::Picture` görüntüleyicisidir (ADR 0937), tablolar kitin veri tablosudur (ADR 0938).
 - **Kabul:** görünür ayar, anlaşılır önizleme, az işlem, tek onay/Esc/undo; planlar yalnız kanıtlanan alt maddelerle

@@ -8,7 +8,8 @@
 
 Registry/handler, enable/watch, gerekiyorsa alias/kısayol ve menü kaydı ekleyin;
 aynı iş için UI ve otomasyonda ayrı iş kuralı yazmayın. Belgeyi değiştiren ürün komutu §9.2'deki bütünlükle gelir: katalog
-ve yetenekler, ortak durumlar ve bağımsız başvuru, Python SDK, MCP, manifest.
+ve yetenekler, ortak durumlar ve bağımsız başvuru, modüllerin kararı, Python SDK, MCP ve yapay zekâ ajanı, eklenti,
+manifest.
 
 ### 9.2 Araç
 
@@ -29,13 +30,27 @@ eksikse araç bitmiş sayılmaz:
 - **Ortak durumlar:** `fixtures/commands/v1/<komut>.json`, en az 20 durum, KentOS kodu olmadan yazılmış bağımsız başvurudan
   (`scripts/fixtures/<konu>_cases.py --check`); yetenek testi (`capabilities.rs`: her kod bir durumda ya da gerekçesiyle, tür
   denemeleri) geçer.
-- **Python ve MCP:** `python3 scripts/python/sdk.py` ile `kentos.cad` yeniden üretilir ve `pnpm py:test` geçer (ortak durumlar
-  tipli katmandan da); MCP aracı katalogdan gelir, var olanı değiştiren komut `crates/native/mcp/src/tools.rs`'in yıkıcı
-  listesine yazılır.
+- **Modüller** (CLAUDE.md'nin modül ve otomasyon kuralı, 24 Kasım 2026): komut her modülün profilinde ve komut kümesinde
+  ayrı ayrı var ya da yoktur (`apps/desktop-*/src/profile.rs`, `catalog/v1/modules.json`:
+  `KENTOS_WRITE_MODULES=1 cargo test -p kentos-desktop --lib module_catalog`); matris sınaması `cargo test -p kentos-cad`
+  geçer. Komutun modülü kayıttaki bölümüdür (`kentos_native_application::registry::discipline_of`).
+- **Python:** `python3 scripts/python/sdk.py` ile `kentos.cad` yeniden üretilir ve `pnpm py:test` geçer (ortak durumlar
+  tipli katmandan da).
+- **MCP ve yapay zekâ ajanı:** ikisi aynı araç katmanından çalışır (`kentos_headless::agent_tools`, ADR 8056 §2, §4); araç
+  katalogdan gelir, komut modülünün kapısından çalışır: `cad.run` her modülün çekirdeği; `arch.run`, `map.run`,
+  `gis.run`, `road.run`. Var olanı değiştiren komut `agent_tools.rs`'in `DESTRUCTIVE` listesine yazılır; yazan komut
+  önce `plan`, sonra aynı girdiyle `execute` edilir.
+- **Eklenti:** eklentinin kodu komutu `run` ya da `call` ile çalıştırır; okuyan komut `document.read`, yazan
+  `document.write` izni ister (ADR 8057; `apps/desktop/src/shell/extensions/runner.rs`). Başsız konakta yalnız
+  `headless-python` bildiren eklenti çalışır. Geri al, yinele ve dosya işleri eklentiye kapalıdır (`not_for_extensions`).
+  `kentos.ext` değişince eklenti SDK'sı yeniden üretilir: `KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- sdk_pack`.
 - **Manifest:** aracın düzeyi `catalog/v1/operations.json`'da `semantic`, `via`'sı komut; `python3 scripts/cad/manifest.py`
   (ADR 0244). Yeni araç `geometry` ya da `none` düzeyinde gelmez.
 - **Kanıt:** izler değişmeden geçer; araç komutla çalışırken resimlenir (`kentos-cad kullan …`); aracın yazması kayıtta komutun
-  adıyla görünür. Web dururken (ADR 0228) web'in işleyicisi ve aracı TODOS.md §0.2'ye yazılır.
+  adıyla görünür.
+- **Karar tablosu:** işin ADR'si iki tablo taşır: modüller (Mimari, Harita, Yol, CBS: var ya da yok) ve kanallar (Python,
+  MCP, yapay zekâ ajanı, eklenti: var ya da yok). Var satırı nasıl ulaşıldığını yazar (`kentos.cad.<ad>`, `<kapı>.run`,
+  `run` ve izin); yok satırı gerekçesini. Var olan bir işe dokunan iş, o işin tablosunu da tamamlar.
 
 Var olan `geometry` ve `none` düzeyindeki araçlar borçtur: `docs/cad/manifest.md` onları sayar; dokunulan araç bu kurala getirilir.
 
