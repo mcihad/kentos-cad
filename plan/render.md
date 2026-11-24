@@ -236,8 +236,6 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 ### F5 — CAD görünümü
 
 - [ ] **RM-15 — Çizgi ve dolgu gösterimi.**
-  - **Önce (ADR 9225 §4):** sahibin ayarıyla (Saydamlık kapalı) aynı katmanda alandan sonra yazılmış yazı, alanın
-    dolgusunun altında kalıyor. Çizim sırası belge sırasına uymalı.
   - Çizgi kalınlığı ekranda: en az 1 piksel, kenar yumuşatmalı.
   - Çizgi tipleri ve taramalar gölgelendiricide.
   - Maskeler.
