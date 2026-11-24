@@ -422,6 +422,8 @@ pub const PORTED: &[&str] = &[
     "processing.model.builtin.parcelSheet",
     "processing.newModel",
     "map.edgeLengths",
+    // Parsel alan çizelgesi: KentOS Harita's window and its table (docs/adr/9306).
+    "map.parcelReport",
     // The dock's İşlemler tab: the toolbox and this session's runs (docs/adr/0084, part 2).
     "processing.toolbox",
     "processing.history",

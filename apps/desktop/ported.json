@@ -296,6 +296,7 @@
     "processing.model.builtin.parcelSheet",
     "processing.newModel",
     "map.edgeLengths",
+    "map.parcelReport",
     "processing.toolbox",
     "processing.history",
     "draft.tracking",

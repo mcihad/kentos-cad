@@ -68,6 +68,8 @@ mod parcel_boundaries_marks;
 mod parcel_boundaries_window;
 #[path = "parcel_register_window.rs"]
 mod parcel_register_window;
+#[path = "parcel_report_window.rs"]
+mod parcel_report_window;
 #[path = "parcels_check_window.rs"]
 mod parcels_check_window;
 #[path = "pipes_check_rules.rs"]
@@ -200,6 +202,9 @@ mod parcel_boundaries_window_tests;
 #[cfg(test)]
 #[path = "tests/parcel_register_window_tests.rs"]
 mod parcel_register_window_tests;
+#[cfg(test)]
+#[path = "tests/parcel_report_window_tests.rs"]
+mod parcel_report_window_tests;
 #[cfg(test)]
 #[path = "tests/parcels_check_window_tests.rs"]
 mod parcels_check_window_tests;

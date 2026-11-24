@@ -19,6 +19,7 @@ pub(crate) use crate::overlap_window::OverlapWindowApp;
 pub(crate) use crate::parcel_boundaries_marks::ParcelBoundariesMarksApp;
 pub(crate) use crate::parcel_boundaries_window::ParcelBoundariesWindowApp;
 pub(crate) use crate::parcel_register_window::ParcelRegisterWindowApp;
+pub(crate) use crate::parcel_report_window::ParcelReportWindowApp;
 pub(crate) use crate::parcels_check_window::ParcelsCheckWindowApp;
 pub(crate) use crate::pipes_check_window::PipesCheckWindowApp;
 pub(crate) use crate::pipes_marks::PipesMarksApp;

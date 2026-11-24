@@ -17,21 +17,21 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 284 | 257 | 48 | 51 | 640 |
+| semantic | 285 | 257 | 48 | 51 | 641 |
 | geometry | 1 | 5 | 1 | 2 | 9 |
 | processing | 0 | 132 | 25 | 2 | 159 |
-| none | 0 | 14 | 6 | 2 | 22 |
+| none | 0 | 14 | 5 | 2 | 21 |
 | query | 12 | 30 | 2 | 9 | 53 |
 | session | 26 | 72 | 60 | 9 | 167 |
 | host | 5 | 24 | 14 | 1 | 44 |
-| **toplam** | 328 | 534 | 156 | 76 | 1094 |
+| **toplam** | 329 | 534 | 155 | 76 | 1094 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 1018 satırdan 40'i: geometry 7, none 20, processing 3, query 10.
+CBS'ye özgü olmayan 1018 satırdan 39'i: geometry 7, none 19, processing 3, query 10.
 
 ### Sonucu çağıran hesaplar (geometry) — 7
 
@@ -45,7 +45,7 @@ CBS'ye özgü olmayan 1018 satırdan 40'i: geometry 7, none 20, processing 3, qu
 | `transform.edgematch` | Kenar eşleme… | shared | cad.entities.edit `edgematch` |  |
 | `transform.fit` | Vektör oturtma… | shared | cad.entities.transform | Dönüşüm araçta kontrol noktalarından çözülür. |
 
-### Ürün komutu yok (none) — 20
+### Ürün komutu yok (none) — 19
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -64,7 +64,6 @@ CBS'ye özgü olmayan 1018 satırdan 40'i: geometry 7, none 20, processing 3, qu
 | `file.print` | Yazdır ve pafta çıktısı… | none | — |  |
 | `file.saveSelection` | Seçilenleri dosyaya kaydet… | shared | — |  |
 | `file.takeFrom` | Başka çizimden al… | shared | — |  |
-| `map.parcelReport` | Parsel alan çizelgesi | none | — |  |
 | `map.profile` | Boy kesit al… | none | — |  |
 | `map.sheet` | Pafta bölümlemesi… | none | — |  |
 | `pointcloud.vpcSave` | Sanal bulut olarak kaydet… | shared | — |  |
@@ -93,14 +92,13 @@ CBS'ye özgü olmayan 1018 satırdan 40'i: geometry 7, none 20, processing 3, qu
 | `tool.stakeout` | Aplikasyon | none | — |  |
 | `tool.stationOffset` | Dik ayak ölç | shared | — |  |
 
-## Masaüstünde olmayan CAD tarafı öğeleri — 11
+## Masaüstünde olmayan CAD tarafı öğeleri — 10
 
 Envanterin masaüstü sütunu web'in donduğu gündeki hâlidir (ADR 0228); ekler masaüstündedir.
 
 - `analysis.volume` Hacim hesabı… (pending)
 - `file.export.pdf` PDF pafta… (pending)
 - `file.print` Yazdır ve pafta çıktısı… (pending)
-- `map.parcelReport` Parsel alan çizelgesi (pending)
 - `map.profile` Boy kesit al… (pending)
 - `map.sheet` Pafta bölümlemesi… (pending)
 - `sheet.grid` Karelaj (pending)

@@ -45,6 +45,8 @@ impl ModuleParts for Map {
         Some(match id {
             "survey.baselines" => app.open_baselines(),
             "parcels.check" => app.open_parcels_check(),
+            // Parsel alan çizelgesi (parcel_report_window.rs, docs/adr/9306).
+            "map.parcelReport" => app.open_parcel_report(),
             "pipes.check" => app.open_pipes_check(),
             "asbuilt.check" => app.open_asbuilt(),
             "map.survey.adjustment" => app.open_survey_network(),
@@ -127,6 +129,7 @@ impl ModuleParts for Map {
             K::ScanNetwork => crate::scan_network_window::TITLE,
             K::CloudPlace => crate::cloud_place_window::TITLE,
             K::Cogo => crate::cogo::COGO_TITLE,
+            K::ParcelReport => crate::parcel_report_window::TITLE,
         }
         .to_owned()
     }
@@ -155,6 +158,7 @@ impl ModuleParts for Map {
             K::ScanNetwork => app.scan_network_control(control),
             K::CloudPlace => app.cloud_place_control(control),
             K::Cogo => app.cogo_control(control),
+            K::ParcelReport => app.parcel_report_control(control),
         }
     }
 

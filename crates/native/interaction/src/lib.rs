@@ -340,6 +340,9 @@ pub mod reshape_by;
 pub mod opening_codes_tool;
 #[path = "map/parcel_tool.rs"]
 pub mod parcel_tool;
+// Parsel alan çizelgesini yerleştir: the window's table hung from the cursor (docs/adr/9306).
+#[path = "map/parcel_table_place.rs"]
+pub mod parcel_table_place;
 #[path = "gis/calc_tables.rs"]
 pub mod calc_tables;
 #[path = "arch/joinery_list_tool.rs"]

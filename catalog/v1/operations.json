@@ -973,7 +973,12 @@
       "level": "processing"
     },
     "map.parcelReport": {
-      "level": "none"
+      "level": "semantic",
+      "via": [
+        "cad.parcels.report",
+        "cad.parcels.table"
+      ],
+      "note": "Pencere cad.parcels.report'un çizelgesini gösterir (salt okunur): köşeler saat yönünde, en kuzeydekinden, noktaların adlarıyla ya da yeni numarayla; Y, X, kenar, koordinatlardan alan, tapu alanı ayrı. Tabloyu yerleştir tabloyu cad.parcels.table ile tek adımda yazar; CSV kaydet tablonun sözlerini yazar (ADR 9306)."
     },
     "map.profile": {
       "level": "none"

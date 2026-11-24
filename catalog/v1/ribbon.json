@@ -925,6 +925,10 @@
         "size": "small"
        },
        {
+        "command": "map.parcelReport",
+        "size": "small"
+       },
+       {
         "command": "readjustment.distribute",
         "size": "small"
        },
@@ -7751,9 +7755,6 @@
    "map.sheet": [
     "harita",
     "cbs"
-   ],
-   "map.parcelReport": [
-    "harita"
    ],
    "tool.subdivide": [
     "harita"

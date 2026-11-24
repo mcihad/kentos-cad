@@ -74,6 +74,11 @@ const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
         "sheet.alignTo.selection",
         "Paftada seçili öğeleri yatayda seçimin ortasına getirir; en az iki öğe seçilir.",
     ),
+    // The frozen inventory has no words for it (docs/adr/9306).
+    (
+        "map.parcelReport",
+        "Seçili parselleri, seçimde alan yoksa parsel katmanını listeler: köşeler saat yönünde, noktaların adlarıyla ya da yeni numarayla, Y, X ve kenarlarıyla; alan köşe koordinatlarından, tapu alanı ayrı. Tabloyu çizime yerleştirir ya da CSV kaydeder.",
+    ),
 ];
 
 /// The desktop's own command: the web has no Python console (python/,

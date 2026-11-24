@@ -18,6 +18,7 @@ pub(crate) struct MapUiState {
     pub(crate) map_survey: crate::map_survey_panel::PanelState,
     pub(crate) baselines: crate::baselines_window::State,
     pub(crate) parcels_check: crate::parcels_check_window::State,
+    pub(crate) parcel_report: crate::parcel_report_window::State,
     pub(crate) parcel_boundaries: crate::parcel_boundaries_window::State,
     pub(crate) parcel_register: crate::parcel_register_window::State,
     /// Sınır grafiği left on the drawing by Çizimde göster (docs/adr/2220), until İşareti kaldır.
@@ -53,6 +54,7 @@ pub(crate) enum Event {
     MapSurvey(crate::map_survey_panel::Event),
     Baselines(crate::baselines_window::Event),
     ParcelsCheck(crate::parcels_check_window::Event),
+    ParcelReport(crate::parcel_report_window::Event),
     ParcelBoundaries(crate::parcel_boundaries_window::Event),
     ParcelRegister(crate::parcel_register_window::Event),
     PipesCheck(crate::pipes_check_window::Event),
@@ -114,11 +116,13 @@ pub(crate) enum MapDialogKind {
     CloudPlace,
     /// Kayıtlı ölçüleri denetle (cogo.rs, docs/adr/0180); the window is `MapUiState::cogo`.
     Cogo,
+    /// Parsel alan çizelgesi (parcel_report_window.rs, docs/adr/9306); its state is `MapUiState::parcel_report`.
+    ParcelReport,
 }
 
 impl MapDialogKind {
     /// Every window, in the order their numbers go (`ModuleDialog::kind`).
-    pub(crate) const ALL: [MapDialogKind; 19] = [
+    pub(crate) const ALL: [MapDialogKind; 20] = [
         MapDialogKind::Baselines,
         MapDialogKind::ParcelsCheck,
         MapDialogKind::ParcelBoundaries,
@@ -138,6 +142,7 @@ impl MapDialogKind {
         MapDialogKind::ScanNetwork,
         MapDialogKind::CloudPlace,
         MapDialogKind::Cogo,
+        MapDialogKind::ParcelReport,
     ];
 
     /// The window's number (`ModuleDialog::kind`), its place in [`Self::ALL`]; a match with no arm for the rest, so a
@@ -163,6 +168,7 @@ impl MapDialogKind {
             MapDialogKind::ScanNetwork => 16,
             MapDialogKind::CloudPlace => 17,
             MapDialogKind::Cogo => 18,
+            MapDialogKind::ParcelReport => 19,
         }
     }
 
@@ -214,6 +220,7 @@ impl StateApp for App {
             Event::MapSurvey(e) => self.map_survey_event(e),
             Event::Baselines(event) => self.baselines_event(event),
             Event::ParcelsCheck(event) => self.parcels_check_event(event),
+            Event::ParcelReport(event) => self.parcel_report_event(event),
             Event::ParcelBoundaries(event) => self.parcel_boundaries_event(event),
             Event::ParcelRegister(event) => self.parcel_register_event(event),
             Event::PipesCheck(event) => self.pipes_check_event(event),
@@ -256,6 +263,7 @@ impl StateApp for App {
             MapDialogKind::ScanNetwork => self.scan_network_view(),
             MapDialogKind::CloudPlace => self.cloud_place_view(),
             MapDialogKind::Cogo => self.cogo_view(),
+            MapDialogKind::ParcelReport => self.parcel_report_view(),
         }
     }
 }

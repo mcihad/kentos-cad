@@ -12,7 +12,7 @@
     "analysis.volume": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "file.export.pdf": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "file.print": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
-    "map.parcelReport": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "map.parcelReport": { "desktop": "implemented", "where": "Harita › Plan › Ada ve parsel › Parsel alan çizelgesi (apps/desktop-map/src/parcel_report_window.rs, cad.parcels.report ve cad.parcels.table, ADR 9306)" },
     "map.profile": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "map.sheet": { "desktop": "pending", "where": "apps/desktop/src/shell/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "tool.stakeout": { "desktop": "implemented", "where": "Aplikasyon penceresi (calc.stakeout), seçili noktalar hedef satırlarında (apps/desktop/src/gis/calc/mod.rs, UR2-053)" },

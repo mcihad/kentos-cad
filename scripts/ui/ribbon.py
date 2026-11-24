@@ -334,8 +334,10 @@ CAD = [
     ], works=ROAD),
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),
+        # Parsel alan çizelgesi beside Parsel alan denetimi: a parcel's corners, Y, X, edges and area as a table (ADR 9306).
         P("Ada ve parsel", "parcel", [L("tool.parcel"), L("tool.boundary"), S("tool.polygonize"), S("tool.adjoin"),
-            S("parcels.check"), S("readjustment.distribute"), S("tool.topology"), S("topology.cleanReport")]),
+            S("parcels.check"), S("map.parcelReport"), S("readjustment.distribute"), S("tool.topology"),
+            S("topology.cleanReport")]),
         P("İmar planı", "zoningCheck", [S("zoning.check"), S("scenario.create"), S("scenario.impact")]),
         P("Alan işlemleri", "areaUnion", [S("tool.areaUnion"), S("tool.areaSubtract"), S("tool.areaIntersect"),
             S("tool.areaSplit"), S("tool.partsJoin"), S("tool.partsSplit")],
@@ -990,9 +992,10 @@ MODULES = {
         "draft.overlap.layers", "draft.topologyPoints", "data.domains", "data.subtypes", "data.layerRules",
         "data.layerIndexes", "data.tableStyles", "data.duplicate", "data.contingents", "processing.history", "layer.dataset"],
     "only": {
-        # A map's terrain, sheets and parcels (some still to come); İfraz, Aplikasyon and the parcel table are Harita's.
+        # A map's terrain, sheets and parcels (some still to come); İfraz and Aplikasyon are Harita's (the parcel table is
+        # on Harita's ribbon, Plan › Ada ve parsel).
         "analysis.slope": ["harita", "cbs"], "analysis.volume": ["harita", "cbs"], "map.contours": ["harita", "cbs"],
-        "map.profile": ["harita", "cbs"], "map.sheet": ["harita", "cbs"], "map.parcelReport": ["harita"],
+        "map.profile": ["harita", "cbs"], "map.sheet": ["harita", "cbs"],
         "tool.subdivide": ["harita"], "tool.stakeout": ["harita"],
         # Çakışma's lamp (a parcel's neighbours) and the sheet's atlas (a page for each feature).
         "draft.overlap": ["harita", "cbs"], "sheet.atlas": ["harita", "cbs"],
