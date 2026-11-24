@@ -103,7 +103,16 @@ diye koşan komut modüllerin sınamalarını atlıyor.
 - `materials_window` (2),
 - `module_storey_scenes` (2).
 
-### A6 — P1 — Arayüzde başka uygulama adı (10 Kasım kesin kuralı)
+### A6 — P1 — Arayüzde başka uygulama adı (10 Kasım kesin kuralı) — [~] arayüz temiz, bekçi kuruldu
+
+**Durum (24 Kasım 2026; `f544a00a2`, `b9e46348a`, `5309a56bc`, `43b145b28`, ADR 9304):** katalog metinleri, masaüstü
+metinleri, sözleşmelerin belge yorumları ve Python SDK'sı temizlendi. `NETCAD` arama takma adı kalktı, `file.import.ncz`'nin
+adı “NCZ…” oldu. Bekçi (`other_names_tests.rs`) katalog metinlerini, masaüstü metinlerini ve `python/kentos`'u sınıyor;
+protokol ve imza adları gerekçeleriyle izinli listede (F4). **Kalan:**
+- vitrin (`apps/ui-showcase`) metinleri ve pafta tasarımcısının PDF iletisi (`crates/sheet-ui/src/export_pdf.rs:32`);
+- `crates/shared/services` hata iletileri (F4);
+- katalog notları (`names-mimari.json`, `style-exchange.json`) ve iki örnek dosya adı (`uzlas-qgis.gpkg`);
+- ~700 yorum satırı (dokunuldukça) ve Python belge dizgilerindeki ~4 400 ADR atfı (sözleşme yorumlarından geliyor).
 
 **Katalog metinleri (26 yer; araç ipuçlarında görünür):**
 
@@ -127,7 +136,10 @@ diye koşan komut modüllerin sınamalarını atlıyor.
 - Bekçi sınaması ekle: katalog, masaüstü metin sabitleri ve `python/kentos`.
 - Biçim ve protokol adlarını ayrı tut (F4).
 
-### A7 — P2 — Arayüz metninde ADR atfı
+### A7 — P2 — Arayüz metninde ADR atfı — [x] yapıldı
+
+**Durum (24 Kasım 2026):** `tool.hatch`, `tool.railing` ve planı tanıma açıklamalarındaki atıflar kalktı; bekçi arayüz
+metinlerinde ADR atfını da yakalıyor (sınama iletileri, yorumlar ve geliştirici notları serbest).
 
 `tool.hatch` açıklaması “(docs/adr/0186)”, `tool.railing` açıklaması “(docs/adr/8045 §3)” diyor; ipuçlarında görünüyor.
 Kural: ipucu ve arayüz metni ADR'ye atıf yapmaz.
