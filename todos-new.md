@@ -144,7 +144,21 @@ metinlerinde ADR atfını da yakalıyor (sınama iletileri, yorumlar ve gelişti
 `tool.hatch` açıklaması “(docs/adr/0186)”, `tool.railing` açıklaması “(docs/adr/8045 §3)” diyor; ipuçlarında görünüyor.
 Kural: ipucu ve arayüz metni ADR'ye atıf yapmaz.
 
-### A8 — P1 — Pafta kipinin 52 katalog komutu “bekliyor”
+### A8 — P1 — Pafta kipinin 52 katalog komutu “bekliyor” — [x] yapıldı (boşluklar aşağıda)
+
+**Durum (24 Kasım 2026; `0461ea7b2`, `785fc14c7`, `8799c3afd`, `ed12374df`, `5e280fb53`, ADR 9305):** 56 pafta komutundan 55'i
+katalogdan tasarımcının kendi iletisini çalıştırıyor; önde pafta yokken Komut ara ve komut satırı ne yapılacağını
+söylüyor. Yakınlaştır ve Uzaklaştır artık sahnenin ortasına göre adım adım. Dört modülün hepsinde var; `sheet.atlas`
+yalnız Harita ve CBS'de. Değişiklikler Python, MCP, ajan ve eklentiden `cad.sheets.edit`, `file.publish.sheets`,
+`file.export.atlas` ve `file.preflight.sheets` ile yapılabiliyor. Karelaj (`sheet.grid`) bekliyor.
+
+**Bulunan boşluklar (yeni maddeler):**
+- **A8b — P1:** tasarımcı değişiklikleri `cad.sheets.edit`'ten geçirmiyor; aynı çekirdek işlemi kendi kopyasına
+  uygulayıp bütün pafta kitabını `Document::set_sheets` ile yazıyor. Geçmişte komut ve girdisi görünmüyor, sürüm denetimi
+  (`expectedRevision`) yok, tekrar oynatılamıyor (CLAUDE.md §25 kural 6).
+- **A8c — P2:** SVG ve PNG dışa aktarma, `.kpafta` alışverişi ve Şablon olarak kaydet için ürün komutu yok.
+- **A8d — P2:** Karelaj tasarımcıda yok (kanallar `setItemProps` ile yapabiliyor); hızlı erişim ve tuş ipuçları pafta
+  komutlarına ulaşmıyor (Pafta sekmesi katalogdan kurulmuyor).
 
 Bekleyen komutlar: `sheet.align.*`, `sheet.distribute.*`, `sheet.group`/`ungroup`, `sheet.order.*`,
 `sheet.export.png`/`svg`/`kpafta`, `sheet.pageSetup`, `sheet.variables`, `sheet.grid`, `sheet.atlas`, yakınlaştırma
