@@ -47,9 +47,24 @@ ADR 9207 hız için iki ödün verdi:
 
 ### §2.1 Kalanlar ve bedeli
 
-- **Daha eski düzeyler.** Eğri düzeyleri (ADR 1063), uzun çizgi düzeyleri (1064), küçük blok vekili (1065) ve okunamaz
-  yazı bandı (0786) bu kararın dışında kaldı. Her biri baştan çizimle karşılaştırılıp ölçülecek; görünür fark veren
-  kalkar (plan RM-10).
+- **Daha eski düzeyler ölçüldü** (24 Kasım akşamı, `perf::stability`'nin kısayol karşılaştırması). Gerçek GPU,
+  10 000 nesnelik karma çizim, her kısayol açık ve kapalı; “görünür” 64'ten büyük fark:
+
+  | Kısayol | Görünür fark | En büyük | Karar |
+  |---|---|---|---|
+  | Blok örnekleme (1063 §2) | hiçbir görünümde 0 | 5 | kalır, birebir |
+  | Blok vekili (1065) | 0; en uzakta 1 444 piksel hafifçe | 49 | kalır |
+  | Eğri düzeyleri (1063 §3) | uzakta 4 788, 4 px/m'de 1 172 | 194 | kalır, aşağıya bakın |
+  | Çizgi düzeyleri (1064) | uzakta 668, en uzakta 308 | 98 | kalır, aşağıya bakın |
+
+  **Eğri ve çizgi düzeyleri:** geometride çizilen eğriden ve yoldan en çok çeyrek piksel sapıyorlar. Farkın nerede
+  olduğu 12 kat büyütmede görüldü (`.run/gui-evidence/render/kalite/egri-duzeyleri-yakin.png`):
+  - düzeyler açıkken küçük daireler çizginin kendi kalınlığında, ince halkalar;
+  - kapalıyken her daire onlarca kısa kirişle çiziliyor ve kirişlerin yumuşatılmış kenarları üst üste biniyor; daireler
+    kalın ve parlak görünüyor.
+
+  Yani kapalı resim daha doğru değil, daha kötü. Düzeyler kaldırılmadı.
+- **Okunamaz yazı bandı (0786)** henüz ölçülmedi.
 - **Bedel ölçülmedi, tahmin:** ADR 9207'nin release ölçümlerine göre (UHD 770) NCZ'nin uzak görünüm karesi GPU'da
   ~47–55 ms'den, düzeylerden önceki ~87–105 ms'ye döner. Sahibin msaa=1 ayarıyla §8'in payı yok.
 

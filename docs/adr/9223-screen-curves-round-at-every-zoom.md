@@ -86,6 +86,9 @@ Yay görünümün ortasında; çentik ve bağlama ADR 9220'nin yöntemiyle.
 - `once-sonra-50-yay-495.png`, `bindirme-50-yay-495.png` (önce kırmızı, sonra yeşil).
 - Önce yay 72 kirişle çiziliyor. Ölçüldü: önce ile sonra arasındaki yatay fark kiriş köşelerinde 0, aralarında 4
   piksele kadar; dikine 2,8 piksel, yani 5,3 mm × 495 px/m.
+- **Kısa kirişler eğriyi kalınlaştırıyor mu?** 45 px/m'de evin planı önce ve sonra
+  (`once-sonra-51-yay-45-yakin.png`): yaylar aynı kalınlıkta, yalnız daha yuvarlak. Alanın toplam mürekkebi %0,06
+  değişti.
 
 ## Uygulama
 
