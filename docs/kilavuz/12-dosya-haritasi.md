@@ -7,8 +7,9 @@
 ```text
 apps/web/              bağımsız TypeScript/DOM uygulaması
 apps/api/              kentosd: HTTP/WS, auth ve yönetim CLI
-apps/desktop/          masaüstünün çekirdeği (kentos_desktop): kabuk, CAD ve henüz paketine ayrılmamış modüller; Iced + KentOS UI
+apps/desktop/          masaüstünün çekirdeği (kentos_desktop): kabuk, CAD (Harita ile Yol'un ortak arazi işi dahil) ve henüz paketine ayrılmamış modüller (Mimari, CBS); Iced + KentOS UI
 apps/desktop-map/      KentOS Harita'nın paketi (kentos_desktop_map): pencereleri, Harita işi, GNSS arşivi; çekirdeğe modül arayüzüyle (ADR 9199)
+apps/desktop-road/     KentOS Yol'un paketi (kentos_desktop_road): eksen, boykesit, enkesit, koridor, hacim, yapılar, LandXML/IFC/glTF (ADR 9199)
 apps/kentos-cad/       programlar (kentos-cad; modül adlarıyla KentOS Mimari, Harita, GIS) ve programlar arası sınamalar (tests/programs)
 apps/launcher/         KentOS Launcher (kentos-launcher): manifestlerden uygulamalar, son dosyalar
 apps/ui-showcase/      KentOS UI bileşen vitrini

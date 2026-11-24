@@ -44,7 +44,7 @@ pub struct Window {
     revision: String,
     rename_nested: bool,
     nested_uses: usize,
-    preview: Option<String>,
+    pub preview: Option<String>,
     name: String,
     base: Vec2,
     rows: Vec<Row>,

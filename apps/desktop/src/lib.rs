@@ -162,8 +162,6 @@ mod works;
 mod arch;
 #[path = "gis/state.rs"]
 pub mod gis;
-#[path = "road/state.rs"]
-pub mod road;
 
 #[path = "shell/app_menu/mod.rs"]
 pub mod app_menu;
@@ -218,7 +216,7 @@ mod charts;
 #[path = "cad/clipboard.rs"]
 mod clipboard;
 #[path = "shell/cloud/mod.rs"]
-mod cloud;
+pub mod cloud;
 #[path = "shell/command_bar.rs"]
 mod command_bar;
 #[path = "cad/crs.rs"]
@@ -317,40 +315,8 @@ mod layer_merge;
 mod joins_window;
 #[path = "gis/event_links_window.rs"]
 mod event_links_window;
-#[path = "road/alignment_layer.rs"]
-mod alignment_layer;
 #[path = "shell/approved_layer.rs"]
 pub mod approved_layer;
-#[path = "road/alignment_window.rs"]
-mod alignment_window;
-#[path = "road/profile_lengths_window.rs"]
-mod profile_lengths_window;
-#[path = "road/profile_window.rs"]
-mod profile_window;
-#[path = "road/section_window.rs"]
-mod section_window;
-#[path = "road/superelevation_window.rs"]
-mod superelevation_window;
-#[path = "road/transition_window.rs"]
-mod transition_window;
-#[path = "road/widening_window.rs"]
-mod widening_window;
-#[path = "road/corridor_window.rs"]
-mod corridor_window;
-#[path = "road/volume_window.rs"]
-mod volume_window;
-#[path = "road/haul_window.rs"]
-mod haul_window;
-#[path = "road/stakeout_window.rs"]
-mod stakeout_window;
-#[path = "road/road_alignment_fit_window.rs"]
-mod road_alignment_fit_window;
-#[path = "road/guardrail_window.rs"]
-mod guardrail_window;
-#[path = "road/culvert_window.rs"]
-mod culvert_window;
-#[path = "road/retaining_wall_window.rs"]
-mod retaining_wall_window;
 #[path = "cad/platform_window.rs"]
 mod platform_window;
 #[path = "cad/terrain_cloud_window.rs"]
@@ -359,46 +325,20 @@ mod terrain_cloud_window;
 mod drainage_window;
 #[path = "arch/design_check_window.rs"]
 mod design_check_window;
-#[path = "road/platform_water_window.rs"]
-mod platform_water_window;
-#[path = "road/haul_fleet_window.rs"]
-mod haul_fleet_window;
-#[path = "road/haul_plan_window.rs"]
-mod haul_plan_window;
-#[path = "road/sight_window.rs"]
-mod sight_window;
 #[path = "shell/propose_window.rs"]
-mod propose_window;
+pub mod propose_window;
 #[path = "shell/picture.rs"]
 pub mod picture;
 #[path = "shell/road_dialog.rs"]
 pub mod road_dialog;
-#[path = "road/swept_window.rs"]
-mod swept_window;
 #[path = "cad/surface_analysis_window.rs"]
 mod surface_analysis_window;
-#[path = "road/pay_window.rs"]
-mod pay_window;
-#[path = "road/route_window.rs"]
-mod route_window;
-#[path = "road/junction_window.rs"]
-mod junction_window;
 #[path = "shell/scene3d_window.rs"]
 mod scene3d_window;
 #[path = "shell/scene3d_building.rs"]
 mod scene3d_building;
 #[path = "shell/ifc_viewer.rs"]
 mod ifc_viewer;
-#[path = "road/road_profile_fit_window.rs"]
-mod road_profile_fit_window;
-#[path = "road/road_place.rs"]
-mod road_place;
-#[path = "road/road_sheets_window.rs"]
-mod road_sheets_window;
-#[path = "road/road_views_window.rs"]
-mod road_views_window;
-#[path = "road/road_exchange.rs"]
-mod road_exchange;
 #[path = "arch/arch_ifc.rs"]
 mod arch_ifc;
 #[path = "arch/ifc_facts.rs"]
@@ -473,18 +413,12 @@ mod view_place;
 pub mod terrain_work;
 #[path = "shell/numbers.rs"]
 pub mod numbers;
-#[path = "road/parts.rs"]
-mod road_parts;
-#[path = "road/ext.rs"]
-mod road_ext;
 #[path = "shell/module_parts.rs"]
 pub mod module_parts;
 #[path = "shell/module_profile.rs"]
 pub mod module_profile;
 #[path = "arch/profile.rs"]
 mod arch_profile;
-#[path = "road/profile.rs"]
-mod road_profile;
 #[path = "gis/profile.rs"]
 mod gis_profile;
 #[path = "shell/navigation.rs"]
@@ -656,7 +590,7 @@ mod statistics;
 #[path = "cad/style/mod.rs"]
 pub mod style;
 #[path = "cad/table_write.rs"]
-mod table_write;
+pub mod table_write;
 #[path = "cad/tables/mod.rs"]
 mod tables;
 #[path = "arch/template_editor.rs"]

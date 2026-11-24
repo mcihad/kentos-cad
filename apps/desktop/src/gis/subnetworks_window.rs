@@ -43,7 +43,7 @@ pub struct Window {
     /// The network's id.
     network: String,
     report: Result<SubnetworksFound, String>,
-    preview: Result<SubnetworksUpdated, String>,
+    pub preview: Result<SubnetworksUpdated, String>,
     chosen: Option<Pick>,
 }
 

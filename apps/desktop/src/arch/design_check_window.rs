@@ -75,7 +75,7 @@ pub struct Window {
     pub(crate) kinks: bool,
     pub(crate) alignment_fields: [String; 7],
     pub(crate) profile_fields: [String; 8],
-    pub(crate) preview: Option<Result<Read, String>>,
+    pub preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
     pub(crate) list: Listed,
 }

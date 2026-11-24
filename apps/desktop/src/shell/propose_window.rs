@@ -45,7 +45,7 @@ pub(crate) const BALANCED: &str = "Dengeli";
 /// A read: the proposal, the profile as it is and the ground, each as (station, elevation) to draw.
 #[derive(Debug, Clone)]
 pub struct Read {
-    pub(crate) answer: ProfileProposed,
+    pub answer: ProfileProposed,
     pub(crate) was: Vec<[f64; 2]>,
     pub(crate) proposed: Vec<[f64; 2]>,
     pub(crate) ground: Vec<(f64, Option<f64>)>,
@@ -57,7 +57,7 @@ pub struct Window {
     pub(crate) most: String,
     pub(crate) ends: bool,
     pub(crate) balanced: bool,
-    pub(crate) preview: Option<Result<Read, String>>,
+    pub preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
     pub(crate) detail: Detail,
 }

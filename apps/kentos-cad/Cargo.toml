@@ -21,6 +21,7 @@ test = false
 [dependencies]
 kentos-desktop = { path = "../desktop" }
 kentos-desktop-map = { path = "../desktop-map" }
+kentos-desktop-road = { path = "../desktop-road" }
 
 # The programs' tests (tests/programs, docs/adr/9199 §4.2): every module registered, the core with its test helpers.
 [dev-dependencies]

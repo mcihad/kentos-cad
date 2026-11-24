@@ -1027,7 +1027,7 @@ pub struct App {
     pub(crate) form_clipboard:
         Option<(kentos_commands::FormItem, Vec<kentos_commands::LayerField>)>,
     /// Kırmızı kot önerisi (propose_window.rs, plan/road.md Y25).
-    pub(crate) propose_window: Option<Box<crate::propose_window::Window>>,
+    pub propose_window: Option<Box<crate::propose_window::Window>>,
     /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
     pub(crate) scene3d_window: Option<Box<crate::scene3d_window::Window>>,
     /// IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12): none until a file is opened in it.

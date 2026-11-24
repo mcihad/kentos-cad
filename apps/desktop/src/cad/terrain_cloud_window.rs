@@ -70,7 +70,7 @@ pub struct Window {
     pub surface: Option<String>,
     pub(crate) layer: Option<String>,
     pub(crate) fields: [String; 4],
-    pub(crate) preview: Option<Result<TerrainsFromCloudWritten, String>>,
+    pub preview: Option<Result<TerrainsFromCloudWritten, String>>,
     pub(crate) warnings: Vec<String>,
 }
 

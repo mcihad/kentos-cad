@@ -5,5 +5,6 @@
 
 fn main() -> std::process::ExitCode {
     kentos_desktop_map::register();
+    kentos_desktop_road::register();
     kentos_desktop::program_main(std::env::args_os())
 }

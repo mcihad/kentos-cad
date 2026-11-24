@@ -116,7 +116,7 @@ pub struct Window {
     /// The drawing's own profile or mapping asked to be taken out: the question is open.
     removing: Option<Removal>,
     report: Result<ProfilesReport, String>,
-    preview: Result<ProfilesApplied, String>,
+    pub preview: Result<ProfilesApplied, String>,
     /// What the migration would do; an empty error: the profile has no later release.
     migration: Result<ProfilesMigrated, String>,
     /// What the last migration did: its losses are said until the window changes profile.

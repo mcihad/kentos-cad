@@ -123,6 +123,6 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     çekirdeğe bağlı.
   - Adım 4 yapıldı (ADR 9199 §4.4): Harita ile Yol'un ortak arazi işi (15 modül) çekirdekte, kendi merkeziyle
     (`terrain_work`); proje ağacının sözcükleri profilden.
-  - Sıradaki: Yol paketi: Yol'un `ModuleParts`'ı (dosya seçici sonuçları, görünüm alanında
-    seçme ve 3B dışa aktarım yeni kancalar), uzantı trait'leri, paket. Ardından Mimari, CBS; CAD çekirdeğinin kabuktan
-    ayrılması.
+  - Adım 5–6 yapıldı (ADR 9199 §4.5–4.6): Yol modül arayüzünün arkasında, sonra kendi paketinde (`apps/desktop-road`);
+    Yol'da tek satır 4,0 s. Sınamalar: çekirdek 2710, Harita 191, Yol 127, programlar 34.
+  - Sıradaki: Mimari paketi, sonra CBS; CAD çekirdeğinin kabuktan ayrılması.

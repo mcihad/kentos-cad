@@ -55,7 +55,7 @@ pub struct Window {
     pub(crate) culvert: Option<String>,
     pub(crate) fields: [String; 6],
     pub(crate) layer: Option<String>,
-    pub(crate) preview: Option<Result<DrainageQueried, String>>,
+    pub preview: Option<Result<DrainageQueried, String>>,
     pub(crate) warnings: Vec<String>,
 }
 

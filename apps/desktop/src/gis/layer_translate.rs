@@ -42,7 +42,7 @@ pub struct Window {
     pub rules: Vec<RuleRow>,
     /// The preview, read again after every change of the rules (a plan on
     /// a large drawing is not made for every frame).
-    preview: Result<LayersTranslated, String>,
+    pub preview: Result<LayersTranslated, String>,
 }
 
 #[derive(Debug, Clone)]

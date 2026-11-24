@@ -264,7 +264,7 @@ impl<'a> RoadDialog<'a> {
 
 /// The terrain surface a road answer was computed on, in words (docs/adr/1040): its id, its digest of now to eight
 /// digits and whether it was accepted from it ("arazi t-1 (5e1f02aa…, kabul edilmedi)").
-pub(crate) fn surface_source_words(g: &kentos_commands::RoadSurfaceSource) -> String {
+pub fn surface_source_words(g: &kentos_commands::RoadSurfaceSource) -> String {
     match &g.digest {
         Some(d) => format!(
             "arazi {} ({}…, {})",
@@ -278,7 +278,7 @@ pub(crate) fn surface_source_words(g: &kentos_commands::RoadSurfaceSource) -> St
 
 /// What a corridor's results are computed from in a line (docs/adr/1038, 1040): "Kaynaklar: koridor c-1 (3), aks g-1
 /// (1), boykesit b-1 (1), tip kesit tk-1 (1), tk-2 (2), dever d-1 (1), arazi t-1 (…)".
-pub(crate) fn chain_words(
+pub fn chain_words(
     corridor: &kentos_commands::RoadSource,
     alignment: &kentos_commands::RoadSource,
     profile: &kentos_commands::RoadSource,
@@ -306,7 +306,7 @@ pub(crate) fn chain_words(
 }
 
 /// What an earthwork volume is computed from in a line (docs/adr/1040).
-pub(crate) fn volume_sources_words(s: &kentos_commands::VolumeSources) -> String {
+pub fn volume_sources_words(s: &kentos_commands::VolumeSources) -> String {
     chain_words(&s.corridor, &s.alignment, &s.profile, &s.templates, s.superelevation.as_ref(), Some(&s.surface))
 }
 
@@ -341,7 +341,7 @@ pub struct Col<'a> {
 
 /// A command's words on heights not shown to rest on one vertical system (docs/adr/1029) as a window says them: its
 /// own choice (`choice`, “Kotlar › Aynı say”) where the command names its field `assumeHeights`.
-pub(crate) fn heights_words(text: &str, choice: &str) -> String {
+pub fn heights_words(text: &str, choice: &str) -> String {
     text.replace("aynı saymak için assumeHeights verin", &format!("aynı saymak için {choice} seçin"))
         .replace(" (assumeHeights)", &format!(" ({choice})"))
 }

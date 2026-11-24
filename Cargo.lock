@@ -2904,6 +2904,7 @@ dependencies = [
  "kentos-commands",
  "kentos-desktop",
  "kentos-desktop-map",
+ "kentos-desktop-road",
  "kentos-domain",
  "kentos-interaction",
  "kentos-launch",
@@ -3087,6 +3088,34 @@ dependencies = [
  "kentos-plot",
  "kentos-processing",
  "kentos-render-wgpu",
+ "kentos-sheet",
+ "kentos-sheet-ui",
+ "kentos-ui",
+ "rfd",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-desktop-road"
+version = "0.1.0"
+dependencies = [
+ "ctor",
+ "iced",
+ "iced_runtime",
+ "kentos-commands",
+ "kentos-desktop",
+ "kentos-domain",
+ "kentos-formats",
+ "kentos-geometry-core",
+ "kentos-interaction",
+ "kentos-kcad",
+ "kentos-launch",
+ "kentos-native-application",
+ "kentos-plot",
+ "kentos-processing",
+ "kentos-render-wgpu",
+ "kentos-road",
  "kentos-sheet",
  "kentos-sheet-ui",
  "kentos-ui",

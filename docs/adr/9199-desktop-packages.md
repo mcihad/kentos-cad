@@ -180,6 +180,17 @@ Her adım kendi alt bölümünde, ölçümüyle yazılır.
   onları programın kaydettikleriyle birleştirir.
 - Bağımlılık tabanı: kabuk → Yol 4 → 1 (kayıt dosyası). Sınama: çekirdek 2837, Harita 191, programlar 34.
 
+### §4.6 Adım 6: Yol kendi paketinde
+
+- `apps/desktop-road` (`kentos-desktop-road`): Yol'un 33 modülü (iç içe dört dosyasıyla) ve 32 sınama dosyası; program
+  `main`'de, programlar arası sınamalar `ctor`'la Yol'u da kaydeder. Paketine ayrılmamış modül kalmayınca
+  `module_profile::IN_CORE` boşaldı (Mimari ve CBS ayrılana kadar onlar profil eşleşmesiyle çekirdekte).
+- Taşınmayan iki sınama dosyası Yol'a bölündü: `typing_tests`'in Hakediş sınaması (`road_typing_tests`), Yol
+  pencerelerinin resimlerini sınayan `picture_tests` (komut kimliğiyle açtığı için yol taramasında görünmüyordu).
+- Bağımlılık tabanı: kabuk → Yol 1 → 0; Yol'un paketi yalnız çekirdeğe bağlı.
+- Derleme: Yol dosyasında tek satır Yol'un sınamalarını 4,0 s'de derler (önce bütün masaüstü 17,4 s).
+- Sınama: çekirdek 2710, Harita 191, Yol 127, programlar 34 (toplam 3062, yok sayılan 761: önceki gibi).
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):

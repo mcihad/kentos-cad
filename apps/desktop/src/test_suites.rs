@@ -255,9 +255,6 @@ mod constraint_screens;
 #[path = "tests/form_fit_screens.rs"]
 mod form_fit_screens;
 #[cfg(test)]
-#[path = "tests/junction_window_tests.rs"]
-mod junction_window_tests;
-#[cfg(test)]
 #[path = "tests/scene3d_window_tests.rs"]
 mod scene3d_window_tests;
 #[cfg(test)]
@@ -284,9 +281,6 @@ mod zones_tests;
 #[cfg(test)]
 #[path = "tests/zoning_parcel_tests.rs"]
 mod zoning_parcel_tests;
-#[cfg(test)]
-#[path = "tests/road_project_panel_tests.rs"]
-mod road_project_panel_tests;
 #[cfg(test)]
 #[path = "tests/road_project_regional_tests.rs"]
 mod road_project_regional_tests;
@@ -378,15 +372,6 @@ mod stockpile_window_tests;
 #[path = "tests/map_menus_tests.rs"]
 mod map_menus_tests;
 #[cfg(test)]
-#[path = "tests/route_window_tests.rs"]
-mod route_window_tests;
-#[cfg(test)]
-#[path = "tests/pay_window_tests.rs"]
-mod pay_window_tests;
-#[cfg(test)]
-#[path = "tests/retaining_wall_window_tests.rs"]
-mod retaining_wall_window_tests;
-#[cfg(test)]
 #[path = "tests/platform_window_tests.rs"]
 mod platform_window_tests;
 #[cfg(test)]
@@ -402,24 +387,6 @@ mod design_check_window_tests;
 #[path = "tests/extract_window_tests.rs"]
 mod extract_window_tests;
 #[cfg(test)]
-#[path = "tests/platform_water_window_tests.rs"]
-mod platform_water_window_tests;
-#[cfg(test)]
-#[path = "tests/haul_fleet_window_tests.rs"]
-mod haul_fleet_window_tests;
-#[cfg(test)]
-#[path = "tests/haul_plan_window_tests.rs"]
-mod haul_plan_window_tests;
-#[cfg(test)]
-#[path = "tests/sight_window_tests.rs"]
-mod sight_window_tests;
-#[cfg(test)]
-#[path = "tests/propose_window_tests.rs"]
-mod propose_window_tests;
-#[cfg(test)]
-#[path = "tests/swept_window_tests.rs"]
-mod swept_window_tests;
-#[cfg(test)]
 #[path = "tests/surface_analysis_window_tests.rs"]
 mod surface_analysis_window_tests;
 #[cfg(test)]
@@ -431,63 +398,6 @@ mod compare_sections_tests;
 #[cfg(test)]
 #[path = "tests/dxf_attribute_names_tests.rs"]
 mod dxf_attribute_names_tests;
-#[cfg(test)]
-#[path = "tests/culvert_window_tests.rs"]
-mod culvert_window_tests;
-#[cfg(test)]
-#[path = "tests/guardrail_window_tests.rs"]
-mod guardrail_window_tests;
-#[cfg(test)]
-#[path = "tests/road_profile_fit_window_tests.rs"]
-mod road_profile_fit_window_tests;
-#[cfg(test)]
-#[path = "tests/road_alignment_fit_window_tests.rs"]
-mod road_alignment_fit_window_tests;
-#[cfg(test)]
-#[path = "tests/alignment_window_tests.rs"]
-mod alignment_window_tests;
-#[cfg(test)]
-#[path = "tests/profile_lengths_window_tests.rs"]
-mod profile_lengths_window_tests;
-#[cfg(test)]
-#[path = "tests/picture_tests.rs"]
-mod picture_tests;
-#[cfg(test)]
-#[path = "tests/profile_window_tests.rs"]
-mod profile_window_tests;
-#[cfg(test)]
-#[path = "tests/section_window_tests.rs"]
-mod section_window_tests;
-#[cfg(test)]
-#[path = "tests/superelevation_window_tests.rs"]
-mod superelevation_window_tests;
-#[cfg(test)]
-#[path = "tests/transition_window_tests.rs"]
-mod transition_window_tests;
-#[cfg(test)]
-#[path = "tests/widening_window_tests.rs"]
-mod widening_window_tests;
-#[cfg(test)]
-#[path = "tests/corridor_window_tests.rs"]
-mod corridor_window_tests;
-#[cfg(test)]
-#[path = "tests/volume_window_tests.rs"]
-mod volume_window_tests;
-#[cfg(test)]
-#[path = "tests/haul_window_tests.rs"]
-mod haul_window_tests;
-#[cfg(test)]
-#[path = "tests/stakeout_window_tests.rs"]
-mod stakeout_window_tests;
-#[cfg(test)]
-#[path = "tests/road_sheets_window_tests.rs"]
-mod road_sheets_window_tests;
-#[cfg(test)]
-#[path = "tests/road_views_window_tests.rs"]
-mod road_views_window_tests;
-#[cfg(test)]
-#[path = "tests/road_exchange_tests.rs"]
-mod road_exchange_tests;
 #[cfg(test)]
 #[path = "tests/digital_rules_tests.rs"]
 mod digital_rules_tests;

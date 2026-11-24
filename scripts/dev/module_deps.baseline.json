@@ -159,9 +159,7 @@
       "shell/view/status.rs"
     ],
     "shell->map": [],
-    "shell->road": [
-      "shell/module_profile.rs"
-    ],
+    "shell->road": [],
     "cad->gis": [
       "cad/block_attributes.rs",
       "cad/block_editor/review.rs",

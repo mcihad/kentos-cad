@@ -76,7 +76,7 @@ fn message(event: Event) -> Message {
     Message::Project(Box::new(event))
 }
 
-pub(crate) use settings::Event as SettingsEvent;
+pub use settings::Event as SettingsEvent;
 
 /// A Proje ayarları event as the app's message (grids.rs sends Izgaralar's).
 pub(crate) fn settings_message(e: SettingsEvent) -> Message {

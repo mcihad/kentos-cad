@@ -11,6 +11,7 @@ ctor::declarative::ctor! {
     #[ctor(unsafe)]
     fn register() {
         kentos_desktop_map::register();
+        kentos_desktop_road::register();
     }
 }
 

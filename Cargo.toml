@@ -139,6 +139,7 @@ members = [
     "apps/ui-showcase",
     "apps/desktop",
     "apps/desktop-map",
+    "apps/desktop-road",
     "apps/kentos-cad",
     # KentOS Launcher (docs/adr/0800): KentOS's programs and others from their manifests, in one window.
     "apps/launcher",

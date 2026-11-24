@@ -143,7 +143,7 @@ impl App {
     }
 
     /// What the drawing area is drawn on.
-    pub(crate) fn canvas(&self) -> Canvas {
+    pub fn canvas(&self) -> Canvas {
         match self.backdrop {
             // A CAD project's drawing is dark whatever the theme (docs/adr/0165 §5).
             Backdrop::ByType

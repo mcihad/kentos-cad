@@ -3,7 +3,6 @@
 //! the window only for a message or a frame a widget asks for; the fields that keep what is typed sent neither, and
 //! the letter waited for the caret's next blink or a timer. Each key here must be drawn at its own frame.
 
-use crate::road::RoadState;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
@@ -119,11 +118,6 @@ fn find(snapshot: &mut Snapshot, app: &App, caption: &str) -> (Vec<Rectangle>, V
     (f.inputs.clone(), f.texts.clone())
 }
 
-/// Every text field the window shows: where it is.
-fn inputs(snapshot: &mut Snapshot, app: &App) -> Vec<Rectangle> {
-    find(snapshot, app, "").0
-}
-
 /// The text field on `caption`'s row, right of it.
 fn field_beside(snapshot: &mut Snapshot, app: &App, caption: &str) -> Point {
     let (inputs, texts) = find(snapshot, app, caption);
@@ -192,56 +186,6 @@ fn the_inspector_s_text_cell_draws_each_key_at_once() {
     snapshot.settle(&mut app, App::view, &mut update);
     let at = field_beside(&mut snapshot, &app, "Metin");
     assert_eq!(keys(&mut app, &mut snapshot, at, "ab"), [true, true]);
-}
-
-/// Poz metraj's grid: a new item's number, digit by digit.
-#[test]
-fn the_pay_grid_draws_each_key_at_once() {
-    let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.pay.query.json")).expect("cases");
-    let snapshot_v2: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
-    let doc = crate::document::Document::from_v2(snapshot_v2, None).expect("opens");
-    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    let _ = app.update(Message::Run("payItems.editor"));
-    let mut snapshot = offscreen(Size::new(1440.0, 900.0));
-    snapshot.settle(&mut app, App::view, &mut update);
-    let items = app.modules.road().pay_window.as_ref().map_or(0, |w| w.items.len());
-    let add = *find(&mut snapshot, &app, "Poz ekle")
-        .1
-        .first()
-        .expect("Poz ekle is shown");
-    snapshot.input(&mut app, App::view, &mut update, Input::Click(add.center()));
-    assert_eq!(
-        app.modules.road().pay_window.as_ref().map_or(0, |w| w.items.len()),
-        items + 1,
-        "Poz ekle added a row"
-    );
-    // The items' grid: its cells (a row's height, not the form's taller fields) left of the rules' table; the new
-    // item is its first column's last row. Its window grew and moved, so it is found again, not by where it was.
-    let cells: Vec<Rectangle> = inputs(&mut snapshot, &app)
-        .into_iter()
-        .filter(|f| f.height < 20.0 && f.x < 1000.0)
-        .collect();
-    let first = cells.iter().map(|f| f.x).fold(f32::INFINITY, f32::min);
-    let new = cells
-        .into_iter()
-        .filter(|f| (f.x - first).abs() < 0.5)
-        .max_by(|a, b| a.y.total_cmp(&b.y))
-        .expect("the new item's number");
-    assert_eq!(
-        keys(&mut app, &mut snapshot, new.center(), "15"),
-        [true, true]
-    );
-    assert_eq!(
-        app.modules.road()
-            .pay_window
-            .as_ref()
-            .map(|w| w.items[items][0].clone()),
-        Some(String::new()),
-        "the cell keeps it until Enter"
-    );
 }
 
 fn crowded() -> App {

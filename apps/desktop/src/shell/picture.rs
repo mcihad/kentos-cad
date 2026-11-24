@@ -25,14 +25,14 @@ pub fn picture<'a>(content: impl Into<Element<'a, Message>>, name: impl Into<Str
 }
 
 /// The saved file's name from the picture's: what a file name cannot hold dropped.
-pub(crate) fn file_name(name: &str) -> String {
+pub fn file_name(name: &str) -> String {
     let kept: String = name.chars().map(|c| if matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') { '-' } else { c }).collect();
     let kept = kept.trim();
     format!("{}.png", if kept.is_empty() { "Çizim" } else { kept })
 }
 
 /// Writes the picture's PNG to `path`.
-pub(crate) fn write(saved: &Saved, path: &Path) -> std::io::Result<()> {
+pub fn write(saved: &Saved, path: &Path) -> std::io::Result<()> {
     std::fs::write(path, saved.png.as_slice())
 }
 
@@ -71,7 +71,7 @@ impl App {
 
 /// A grid's step from the pixels: the finest 1, 2, 2,5 or 5 × 10ⁿ at least `least` (data units for the least pixels
 /// between lines). Zoomed in, the drawing is laid out larger and finer lines come in (docs/adr/0937 §3).
-pub(crate) fn step(least: f64) -> f64 {
+pub fn step(least: f64) -> f64 {
     if !(least.is_finite() && least > 0.0) {
         return 1.0;
     }
@@ -80,7 +80,7 @@ pub(crate) fn step(least: f64) -> f64 {
 }
 
 /// The decimals a grid of `step` is labelled with.
-pub(crate) fn decimals(step: f64) -> usize {
+pub fn decimals(step: f64) -> usize {
     let mut d = 0;
     while d < 4 && (step * 10f64.powi(d as i32)).fract().abs() > 1e-6 {
         d += 1;
@@ -91,8 +91,8 @@ pub(crate) fn decimals(step: f64) -> usize {
 /// The part of a chart shown while a picture zooms it (all of it otherwise): its axis labels stay on it, on a
 /// backdrop over the drawing where they had to move in (docs/adr/0937 §3).
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct Shown {
-    pub(crate) part: iced::Rectangle,
+pub struct Shown {
+    pub part: iced::Rectangle,
     /// Zoomed in: the part is less than the whole. Fitted, nothing moves.
     pub(crate) zoomed: bool,
 }
@@ -102,33 +102,33 @@ pub(crate) struct Shown {
 const SCROLLBAR: f32 = 14.0;
 
 impl Shown {
-    pub(crate) fn of(size: iced::Size) -> Self {
+    pub fn of(size: iced::Size) -> Self {
         let part = kentos_ui::widget::picture::visible().unwrap_or(iced::Rectangle::new(iced::Point::ORIGIN, size));
         let zoomed = part.width < size.width - 0.5 || part.height < size.height - 0.5;
         Self { part, zoomed }
     }
 
     /// The left labels' x: their own, or the part's left edge where the view has moved past it.
-    pub(crate) fn left(&self, own: f32) -> f32 {
+    pub fn left(&self, own: f32) -> f32 {
         if self.zoomed { own.max(self.part.x + 4.0) } else { own }
     }
 
     /// The bottom labels' top: their own, or `height` over the part's bottom edge (above the scrollbar).
-    pub(crate) fn bottom(&self, own: f32, height: f32) -> f32 {
+    pub fn bottom(&self, own: f32, height: f32) -> f32 {
         if self.zoomed { own.min(self.part.y + self.part.height - height - SCROLLBAR) } else { own }
     }
 
-    pub(crate) fn has_x(&self, x: f32) -> bool {
+    pub fn has_x(&self, x: f32) -> bool {
         x >= self.part.x - 40.0 && x <= self.part.x + self.part.width + 40.0
     }
 
-    pub(crate) fn has_y(&self, y: f32) -> bool {
+    pub fn has_y(&self, y: f32) -> bool {
         y >= self.part.y - 20.0 && y <= self.part.y + self.part.height + 20.0
     }
 }
 
 /// A label written at `at` (its left, or its middle when `centred`), on a backdrop when `backdrop`.
-pub(crate) fn label(
+pub fn label(
     frame: &mut iced::widget::canvas::Frame,
     words: String,
     at: iced::Point,

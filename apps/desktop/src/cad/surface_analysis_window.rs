@@ -132,7 +132,7 @@ impl std::fmt::Display for Mode {
 /// What was read last.
 #[derive(Debug, Clone)]
 #[allow(clippy::large_enum_variant)]
-pub(crate) enum Read {
+pub enum Read {
     Analysis(TerrainsAnalysed),
     Compare(TerrainsCompared),
     Quality(TerrainsQualityRead),
@@ -180,7 +180,7 @@ pub struct Window {
     /// The result's tab: the chart or the content; the content's table shown (one at a time, DESIGN.md §7.19).
     pub(crate) tab: Tab,
     pub(crate) list: &'static str,
-    pub(crate) preview: Option<Result<Read, String>>,
+    pub preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
     /// A repair asked (Kalite: the spikes left out, or everything taken back) and its difference, before it is written.
     pub(crate) repair: Option<(TerrainsRepair, Result<TerrainsRepaired, String>)>,

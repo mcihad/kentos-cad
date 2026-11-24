@@ -18,9 +18,9 @@ fn app() -> App {
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    crate::program_scenes::command(&mut app, "road.corridors.draw", json!({"corridor": "c-1", "layerId": "0"}));
-    crate::program_scenes::command(&mut app, "road.guardrails.draw", json!({"guardrail": "o-1", "layerId": "korkuluk", "labels": true}));
-    crate::program_scenes::command(&mut app, "road.templates.edit", json!({"template": "tk-2", "operation": "set", "name": "Tip 2b"}));
+    crate::files_testing::command(&mut app, "road.corridors.draw", json!({"corridor": "c-1", "layerId": "0"}));
+    crate::files_testing::command(&mut app, "road.guardrails.draw", json!({"guardrail": "o-1", "layerId": "korkuluk", "labels": true}));
+    crate::files_testing::command(&mut app, "road.templates.edit", json!({"template": "tk-2", "operation": "set", "name": "Tip 2b"}));
     app
 }
 
@@ -132,10 +132,10 @@ fn map_app() -> App {
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    crate::program_scenes::command(&mut app, "road.terrains.zeroline", json!({"base": "Düz", "comparison": "Tümsek", "layerId": "sifir"}));
+    crate::files_testing::command(&mut app, "road.terrains.zeroline", json!({"base": "Düz", "comparison": "Tümsek", "layerId": "sifir"}));
     let surface = json!({"id": "t-10", "name": "Tümsek", "points": {"layers": ["tumsek"]},
                          "edits": [{"op": "setHeight", "x": 6000.0, "y": 0.0, "z": 119.0}]});
-    crate::program_scenes::command(&mut app, "road.terrains.edit", json!({"operation": "set", "surface": surface}));
+    crate::files_testing::command(&mut app, "road.terrains.edit", json!({"operation": "set", "surface": surface}));
     app
 }
 
@@ -152,11 +152,11 @@ fn a_map_project_s_cut_and_fill_zones_go_stale_and_are_drawn_again() {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let count = |app: &App| app.document.as_ref().map_or(0, |d| d.model.entities().filter(|e| e.base().layer_id == "kazi-dolgu").count());
-    crate::program_scenes::command(&mut app, "road.terrains.cutfill", json!({"base": "Düz", "comparison": "Tümsek", "layerId": "kazi-dolgu"}));
+    crate::files_testing::command(&mut app, "road.terrains.cutfill", json!({"base": "Düz", "comparison": "Tümsek", "layerId": "kazi-dolgu"}));
     assert_eq!(count(&app), 4, "a cut and a fill zone, each a hatch and an area");
     let surface = json!({"id": "t-10", "name": "Tümsek", "points": {"layers": ["tumsek"]},
                          "edits": [{"op": "setHeight", "x": 6000.0, "y": 0.0, "z": 119.0}]});
-    crate::program_scenes::command(&mut app, "road.terrains.edit", json!({"operation": "set", "surface": surface}));
+    crate::files_testing::command(&mut app, "road.terrains.edit", json!({"operation": "set", "surface": surface}));
     let t = tree(&app);
     let zones = t.nodes.iter().find(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).expect("the zones");
     assert_eq!(zones.state, S::Stale, "{zones:?}");
@@ -290,7 +290,7 @@ fn pipe_profile() -> Value {
 
 /// P1's material written: an attribute the profile does not read, so the profile drawn again has as many objects.
 fn pipe_material(app: &mut App) {
-    crate::program_scenes::command(
+    crate::files_testing::command(
         app,
         "cad.entities.set",
         json!({"uids": ["0192f640-1640-7000-8000-0000000000f1"], "attrs": {"Malzeme": "PVC"}, "operation": "attributes"}),
@@ -305,7 +305,7 @@ fn a_pipe_profile_goes_stale_when_its_network_changes_and_is_drawn_again() {
     use kentos_commands::RoadNodeKind as N;
     let mut app = pipes_app();
     let count = |app: &App| app.document.as_ref().map_or(0, |d| d.model.entities().filter(|e| e.base().layer_id == "profil").count());
-    crate::program_scenes::command(&mut app, "cad.pipes.profile", pipe_profile());
+    crate::files_testing::command(&mut app, "cad.pipes.profile", pipe_profile());
     let drawn = count(&app);
     assert_eq!(drawn, 112, "the shared case's objects");
     let t = tree(&app);
@@ -344,7 +344,7 @@ fn pipe_profile_screens() {
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        crate::program_scenes::command(&mut app, "cad.pipes.profile", pipe_profile());
+        crate::files_testing::command(&mut app, "cad.pipes.profile", pipe_profile());
         pipe_material(&mut app);
         let _ = app.update(Message::Run("view.zoomExtents"));
         app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::RoadProject));

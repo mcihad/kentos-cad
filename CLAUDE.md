@@ -51,7 +51,7 @@ satıra (749 KB) büyüdüğü için bölündü.
   (`scripts/dev/svc.sh heavy cargo test -p kentos-desktop --lib …`); ikincisi bekler, masaüstü aç kalmaz.
 - **Masaüstü testleri** `RUST_MIN_STACK=67108864` ister. Pencere resimleri `#[ignore]` `screens` testleridir:
   `cargo test -p kentos-desktop --lib <modül>_tests::screens -- --ignored --nocapture`. Kendi paketine ayrılan modülün
-  testleri onun paketindedir (Harita: `cargo test -p kentos-desktop-map`), programlar arası olanlar (yüzey matrisi,
+  testleri onun paketindedir (Harita `-p kentos-desktop-map`, Yol `-p kentos-desktop-road`), programlar arası olanlar (yüzey matrisi,
   katman menüsü, izler) `cargo test -p kentos-cad`'dedir; program `cargo build -p kentos-cad` (ADR 9199).
 - **GUI kanıtı:** resimler `.run/gui-evidence/` altına yazılır, Git'e eklenmez; görüntü yokluğu doğrulama başarısı
   sayılmaz. Resim bakılarak gözden geçirilir, kusur düzeltilir, yeniden çekilir.

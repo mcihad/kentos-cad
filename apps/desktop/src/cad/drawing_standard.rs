@@ -54,7 +54,7 @@ pub struct Window {
     pub rename: bool,
     pub styles: bool,
     report: Result<StandardsReport, String>,
-    preview: Result<StandardsApplied, String>,
+    pub preview: Result<StandardsApplied, String>,
     conflicts: Result<StandardsConflictsReport, String>,
     chosen_conflict: Option<usize>,
     /// The finding pressed: its whole message shown under the table.

@@ -22,9 +22,10 @@
     nesne tutan çizim ya da bağlı katmanı proje dosyasına yazmaz (masaüstü, Python, MCP aynı kuralla,
     `kentos_native_application::layer_kind`); içe alma tabloya gider; CBS'de bağlama yok (`bound_in_gis`); bulutta CBS
     yalnız veritabanıdır ve yükleme veri katmanlarının satırlarını aktarır.
-  - Paketler (ADR 9199, AY-07): Harita kendi paketinde (`apps/desktop-map`), programlar `apps/kentos-cad`'de; çekirdek
-    modülü adıyla anmaz (`module_parts`: kayıt, `ModuleParts`, `Message::Module`, `Dialog::Module`, `App.modules`).
-    Sınamalar: çekirdek `-p kentos-desktop`, Harita `-p kentos-desktop-map`, programlar arası `-p kentos-cad`.
+  - Paketler (ADR 9199, AY-07): Harita (`apps/desktop-map`) ve Yol (`apps/desktop-road`) kendi paketlerinde, programlar
+    `apps/kentos-cad`'de; Harita ile Yol'un ortak arazi işi çekirdekte (`terrain_work`). Çekirdek modülü adıyla anmaz
+    (`module_parts`: kayıt, `ModuleParts`, `Message::Module`, `Dialog::Module`, `App.modules`). Sınamalar: çekirdek
+    `-p kentos-desktop`, Harita `-p kentos-desktop-map`, Yol `-p kentos-desktop-road`, programlar arası `-p kentos-cad`.
   - Mobil görüntüleyici ve mobil uygulama (ADR 9197, AY-08): istemciler ortak tanımda (`kentos_launch::Client`);
     görüntüleyici hiçbir şey yazmaz, mobil uygulama yalnız CBS'nin veri satırlarını sunucu komutuyla yazar; katmanın
     mobildeki davranışını masaüstündeki proje belirler: göster, düzenle, gösterme (ADR 9198; `LayerNode.mobile`,

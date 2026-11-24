@@ -81,7 +81,7 @@ pub struct Window {
     pub surface: Option<String>,
     pub(crate) fields: [String; 15],
     pub(crate) layer: Option<String>,
-    pub(crate) preview: Preview,
+    pub preview: Preview,
 }
 
 #[derive(Debug, Clone)]
