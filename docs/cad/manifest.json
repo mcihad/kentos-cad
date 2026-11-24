@@ -10004,11 +10004,13 @@
    "kind": "command",
    "title": "Ön denetim",
    "level": "query",
-   "via": [],
+   "via": [
+    "file.preflight.sheets"
+   ],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.file.preflight.sheets",
+   "mcp": "file.preflight.sheets",
+   "note": "Pafta tasarımcısının Ön denetim sekmesi; Python, MCP, ajan ve eklenti file.preflight.sheets ile (ADR 9305).",
    "scope": "none",
    "desktop": "implemented",
    "tests": 0

@@ -91,7 +91,11 @@
     },
     {
       "match": "sheet.preflight",
-      "level": "query"
+      "level": "query",
+      "via": [
+        "file.preflight.sheets"
+      ],
+      "note": "Pafta tasarımcısının Ön denetim sekmesi; Python, MCP, ajan ve eklenti file.preflight.sheets ile (ADR 9305)."
     },
     {
       "match": "sheet.export.pdf",
