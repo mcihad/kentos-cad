@@ -42,6 +42,8 @@ struct State {
     made: Cell<Option<(Camera, f32)>>,
     /// The texts too small to read, as one mesh made with the picture (docs/adr/0786 §4): drawn with it, kept with it.
     bands: std::cell::RefCell<Option<mesh::Cache>>,
+    /// What the screen's marks last sent to the area's renderer were drawn for (`Labels::marks_key`, docs/adr/9214).
+    marks: Cell<u64>,
 }
 
 impl Layer<'_> {
@@ -204,8 +206,15 @@ impl Widget<Message, Theme, Renderer> for Layer<'_> {
                         renderer.draw_mesh_cache(bands.clone());
                     }
                 });
-                // The marks follow the screen, not the drawing.
-                if self.labels.map_marks.is_some() {
+                // The marks follow the screen, not the drawing: the area's renderer draws them, sent again when they
+                // change (docs/adr/9214), else they are drawn here.
+                if self.labels.marks.is_some() {
+                    let key = self.labels.marks_key(bounds.size());
+                    if state.marks.get() != key {
+                        state.marks.set(key);
+                        self.labels.paint_marks(&mut Frame::new(renderer, bounds.size()));
+                    }
+                } else if self.labels.map_marks.is_some() {
                     let mut frame = Frame::new(renderer, bounds.size());
                     self.labels.paint_marks(&mut frame);
                     renderer.draw_geometry(frame.into_geometry());

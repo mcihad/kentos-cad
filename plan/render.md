@@ -202,8 +202,16 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
   - [x] Aşama 4 (ADR 9212 §9): yazıların kanvası boşaldı. Çizgiler, halkalar (üçgenleme ve yumuşatılmış dış çizgi),
     bantlar, Unicode yazılar ve önizleme GPU'da; yazılar canlı kamerayla çiziliyor. Kanvasta yalnız ekran işaretleri
     (RM-14) ve sistem yazı tipine düşen parça kaldı.
-- [ ] **RM-14 — iced katmanları kalkar.** Etiketler, servis etiketleri, arazi, hat, onaylı katman ve işaretler motora
-  taşınır.
+- [x] **RM-14 — iced katmanları kalkar.** Etiketler, servis etiketleri, arazi, hat, onaylı katman ve işaretler motora
+  taşınır. (ADR 9214)
+  - Katmanlar ortak bir boyama yüzeyiyle (`Paint`: kanvas ya da `GpuFrame`) çiziliyor. Sıralı yuvalarla glif
+    katmanına gidiyorlar ve canlı kamerayla taşınıyorlar.
+  - Ekran işaretleri ekrana çapalı. 0,0 işareti haritaya çapalı.
+  - Delikli dolgular ve köşe birleşimleri GPU'da. Arayüz yazı tipleri atlasta; tanınmayan yazı tipinin harfleri dış
+    hatlarıyla dolduruluyor.
+  - Önce/sonra gerçek pencerede: farklar harf kenarlarında.
+  - Kanvasta kalanlar: tutamaçlar, kenet işaretleri, artı imleç, araç önizlemesi ve kartlar. Hareket boyunca gizliler;
+    çizim iş parçacığıyla (RM-07) ele alınacak.
 
 ### F5 — CAD görünümü
 

@@ -120,13 +120,21 @@ impl App {
 
     /// The selected rows' outlines over the drawing, while the table shows their layer.
     pub(crate) fn data_selection_layer(&self, color: Color) -> Option<Element<'_, Message>> {
-        let outlines = self.gis.data_selection.outlines.as_ref().filter(|o| o.objects > 0)?;
-        self.gis.data_selection.of.as_ref()?;
+        let slot = &self.gpu_layers.selection;
+        let Some(outlines) = self.gis.data_selection.outlines.as_ref().filter(|o| o.objects > 0) else {
+            slot.clear();
+            return None;
+        };
+        if self.gis.data_selection.of.is_none() {
+            slot.clear();
+            return None;
+        }
         Some(
             canvas::Canvas::new(Layer {
                 outlines,
                 camera: self.viewport.camera,
                 color,
+                gpu: crate::labels::gpu_text().then(|| slot.clone()),
             })
             .width(Fill)
             .height(Fill)
@@ -139,13 +147,13 @@ struct Layer<'a> {
     outlines: &'a Approved,
     camera: Camera,
     color: Color,
+    /// Where it goes for the area's renderer (plan/render.md RM-14); none: drawn on the canvas.
+    gpu: Option<crate::labels::GlyphSlot>,
 }
 
-impl canvas::Program<Message> for Layer<'_> {
-    type State = ();
-
-    fn draw(&self, _: &(), renderer: &Renderer, _: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
-        let mut frame = canvas::Frame::new(renderer, bounds.size());
+impl Layer<'_> {
+    /// The selected rows' outlines, and a ring a point.
+    fn paint(&self, frame: &mut impl crate::gpu_frame::Paint) {
         let screen = |p: [f64; 2]| {
             let s = self.camera.world_to_screen(Vec2::new(p[0], p[1]));
             Point::new(s[0] as f32, s[1] as f32)
@@ -166,6 +174,35 @@ impl canvas::Program<Message> for Layer<'_> {
         for p in &self.outlines.points {
             frame.stroke(&Path::circle(screen(*p), 6.0), stroke);
         }
+    }
+
+    /// What its picture depends on: the outlines and the view.
+    fn key(&self, bounds: Rectangle) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        (self.outlines.version, self.outlines.objects, self.outlines.lines.len()).hash(&mut h);
+        for p in [Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)] {
+            for c in self.camera.world_to_screen(p) {
+                c.to_bits().hash(&mut h);
+            }
+        }
+        for c in [bounds.width, bounds.height, self.color.r, self.color.g, self.color.b, self.color.a] {
+            c.to_bits().hash(&mut h);
+        }
+        h.finish()
+    }
+}
+
+impl canvas::Program<Message> for Layer<'_> {
+    type State = ();
+
+    fn draw(&self, _: &(), renderer: &Renderer, _: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+        if let Some(slot) = &self.gpu {
+            crate::gpu_frame::publish(slot, self.key(bounds), self.camera, bounds.size(), |f| self.paint(f));
+            return Vec::new();
+        }
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        self.paint(&mut frame);
         vec![frame.into_geometry()]
     }
 }

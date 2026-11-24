@@ -53,16 +53,29 @@ impl Approved {
     }
 }
 
-/// The layer while `approved` goes with the selection's version `version`; none otherwise.
-pub(crate) fn layer<'a>(approved: Option<&'a Approved>, version: u64, camera: &Camera, color: Color) -> Option<Element<'a, Message>> {
-    let approved = approved.filter(|a| a.version == version && a.objects > 0)?;
-    Some(canvas::Canvas::new(Layer { approved, camera: *camera, color }).width(Fill).height(Fill).into())
+/// The layer while `approved` goes with the selection's version `version`; none otherwise (its `slot` emptied). Drawn
+/// by the area's renderer through `slot` (plan/render.md RM-14), unless `KENTOS_DIAG_TEXT=canvas`.
+pub(crate) fn layer<'a>(
+    approved: Option<&'a Approved>,
+    version: u64,
+    camera: &Camera,
+    color: Color,
+    slot: &crate::labels::GlyphSlot,
+) -> Option<Element<'a, Message>> {
+    let Some(approved) = approved.filter(|a| a.version == version && a.objects > 0) else {
+        slot.clear();
+        return None;
+    };
+    let gpu = crate::labels::gpu_text().then(|| slot.clone());
+    Some(canvas::Canvas::new(Layer { approved, camera: *camera, color, gpu }).width(Fill).height(Fill).into())
 }
 
 struct Layer<'a> {
     approved: &'a Approved,
     camera: Camera,
     color: Color,
+    /// Where it goes for the area's renderer; none: drawn on the canvas.
+    gpu: Option<crate::labels::GlyphSlot>,
 }
 
 /// The picture of a view.
@@ -90,42 +103,51 @@ impl Layer<'_> {
     }
 }
 
+impl Layer<'_> {
+    /// The approved outlines, dashed, and a ring a point.
+    fn paint(&self, frame: &mut impl crate::gpu_frame::Paint) {
+        let screen = |p: [f64; 2]| {
+            let s = self.camera.world_to_screen(Vec2::new(p[0], p[1]));
+            Point::new(s[0] as f32, s[1] as f32)
+        };
+        let dashed = Stroke {
+            line_dash: LineDash { segments: &[7.0, 4.0], offset: 0 },
+            ..Stroke::default().with_width(1.8).with_color(self.color)
+        };
+        // Each outline its own path: a dashed stroke of one path joins its parts' ends (two shapes showed a solid
+        // line from one to the next).
+        for line in &self.approved.lines {
+            let path = Path::new(|b| {
+                let mut pts = line.iter().map(|p| screen(*p));
+                if let Some(first) = pts.next() {
+                    b.move_to(first);
+                    for p in pts {
+                        b.line_to(p);
+                    }
+                }
+            });
+            frame.stroke(&path, dashed);
+        }
+        for p in &self.approved.points {
+            let ring = Path::circle(screen(*p), 6.0);
+            frame.stroke(&ring, Stroke::default().with_width(1.8).with_color(self.color));
+        }
+    }
+}
+
 impl canvas::Program<Message> for Layer<'_> {
     type State = State;
 
     fn draw(&self, state: &State, renderer: &Renderer, _theme: &Theme, bounds: Rectangle, _cursor: mouse::Cursor) -> Vec<canvas::Geometry> {
         let key = self.key(bounds);
+        if let Some(slot) = &self.gpu {
+            crate::gpu_frame::publish(slot, key, self.camera, bounds.size(), |f| self.paint(f));
+            return Vec::new();
+        }
         if state.key.get() != key {
             state.cache.clear();
             state.key.set(key);
         }
-        vec![state.cache.draw(renderer, bounds.size(), |frame| {
-            let screen = |p: [f64; 2]| {
-                let s = self.camera.world_to_screen(Vec2::new(p[0], p[1]));
-                Point::new(s[0] as f32, s[1] as f32)
-            };
-            let dashed = Stroke {
-                line_dash: LineDash { segments: &[7.0, 4.0], offset: 0 },
-                ..Stroke::default().with_width(1.8).with_color(self.color)
-            };
-            // Each outline its own path: a dashed stroke of one path joins its parts' ends (two shapes showed a solid
-            // line from one to the next).
-            for line in &self.approved.lines {
-                let path = Path::new(|b| {
-                    let mut pts = line.iter().map(|p| screen(*p));
-                    if let Some(first) = pts.next() {
-                        b.move_to(first);
-                        for p in pts {
-                            b.line_to(p);
-                        }
-                    }
-                });
-                frame.stroke(&path, dashed);
-            }
-            for p in &self.approved.points {
-                let ring = Path::circle(screen(*p), 6.0);
-                frame.stroke(&ring, Stroke::default().with_width(1.8).with_color(self.color));
-            }
-        })]
+        vec![state.cache.draw(renderer, bounds.size(), |frame| self.paint(frame))]
     }
 }

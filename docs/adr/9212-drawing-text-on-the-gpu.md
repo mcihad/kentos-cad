@@ -282,7 +282,8 @@ Boyama başlarken her şey GPU'ya açılıyor. Yere göre açıp kapamak kalktı
 
 **Kanvasta kalanlar:**
 
-- ekranın kendi işaretleri: kuzey oku, ölçek çubuğu, eksenler (RM-14, ekrana sabit oldukları için);
+- ekranın kendi işaretleri: kuzey oku, ölçek çubuğu, eksenler (RM-14, ekrana sabit oldukları için). ADR 9214 ile
+  onlar da glif katmanına geçti;
 - harfi çizim yüzlerinde olmayan parça (sistem yazı tipine düşen);
 - glif planı kurulamayan Unicode yazının hata işareti.
 

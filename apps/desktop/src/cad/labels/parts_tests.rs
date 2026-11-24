@@ -92,6 +92,7 @@ fn bands(
         moving: false,
         held: None,
         gpu: None,
+        marks: None,
     };
     let mut ink = Collect {
         doc,

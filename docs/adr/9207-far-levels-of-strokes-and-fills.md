@@ -309,6 +309,10 @@ kaliteyle yeniden çizmek” seçeneği seçildi. Ayar eklenmedi; davranış bu 
   (31 269 renk). Hareket kareleri bu ortamda çok yavaş çizildiği için yakalanan kareler hareket bittikten sonraya
   düşüyor; tek örneği göstermedi.
 
+**Tekerlekte ölçeklenen resim** (ADR 1068, 24 Kasım'da ADR 9214 §3 ile düzeldi): `graphics.wheelZoomScaled` açıkken
+hareket kareleri ayarın örnek sayısıyla çizilir. Tek örnekli kare, ayarın ölçeklediği keskin resmi bir kenara koyuyordu
+ve resim hiç ölçeklenmiyordu.
+
 **Doğruluk denetçisi** (RM-02): hareket karelerinin kenarları artık ikizinden (her zaman ayardaki örnek sayısı) farklı.
 Denetçi bayat resim aradığı için `KENTOS_PERF_SETTINGS=graphics.msaa=1` ile iki uygulamada da tek örnekle koşulur.
 

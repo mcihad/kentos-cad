@@ -182,9 +182,10 @@ pub struct Styling<'a> {
     /// The labels placed this frame: the masks cutting with a layer's labels take
     /// their boxes (docs/adr/0226 §3).
     pub labels: Option<&'a kentos_interaction::spatial::LabelParts>,
-    /// The drawing's text the labels' painting sends the area's renderer (labels/gpu.rs, docs/adr/9212 §4); none:
-    /// the canvas draws it all.
-    pub glyphs: Option<&'a crate::labels::GlyphSlot>,
+    /// What the overlays' painting sends the area's renderer, bottom first: the drawing's text (labels/gpu.rs,
+    /// docs/adr/9212 §4), the layers over the drawing and the screen's marks (gpu_frame.rs, docs/adr/9214). None: the
+    /// canvas draws them all.
+    pub glyphs: &'a [crate::labels::GlyphSlot],
 }
 
 /// The scene with its masks' label boxes (docs/adr/0226 §3): each source layer's
@@ -589,8 +590,8 @@ struct Program {
     other: Option<usize>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
     passive: bool,
-    /// The drawing's text for the renderer (labels/gpu.rs, docs/adr/9212 §4).
-    glyphs: Option<crate::labels::GlyphSlot>,
+    /// The overlays for the renderer, bottom first (labels/gpu.rs, gpu_frame.rs; docs/adr/9212 §4, 9214).
+    glyphs: Vec<crate::labels::GlyphSlot>,
 }
 
 impl Program {
@@ -750,7 +751,10 @@ impl shader::Program<Message> for Program {
             parts: self.parts.clone(),
             origin: self.origin,
             camera,
-            settings: drawn_with(self.settings, moving),
+            // One sample while moving (docs/adr/9207 §8), unless the setting scales the last sharp picture instead
+            // (`drawing`, docs/adr/1068): its picture is the settled frame's, drawn with the setting's samples, and a
+            // frame of one sample would put it aside (`perf::stability`'s wheel test caught it).
+            settings: drawn_with(self.settings, moving && self.drawing.is_none()),
             status: self.status.clone(),
             styled: self.styled.clone(),
             images: self.images.clone(),
@@ -972,8 +976,9 @@ pub struct Frame {
     drawing: Option<u64>,
     /// A picture of an earlier frame may serve (`FrameInput::keep_picture`).
     keep: bool,
-    /// The drawing's text for the renderer (labels/gpu.rs, docs/adr/9212 §4); none in Büyüteç's window.
-    glyphs: Option<crate::labels::GlyphSlot>,
+    /// The overlays for the renderer, bottom first (labels/gpu.rs, gpu_frame.rs; docs/adr/9212 §4, 9214); none in
+    /// Büyüteç's window.
+    glyphs: Vec<crate::labels::GlyphSlot>,
 }
 
 impl fmt::Debug for Frame {
@@ -1053,9 +1058,10 @@ impl shader::Primitive for Frame {
                         &kentos_render_wgpu::styled::NoImages,
                     ),
                 };
-                // The drawing's text over the picture (docs/adr/9212 §4): an empty set takes the last away.
-                let glyphs = self.glyphs.as_ref().map(crate::labels::GlyphSlot::get).unwrap_or_default();
-                let glyphs_pending = renderer.prepare_glyphs(device, queue, self.id, &glyphs);
+                // The overlays over the picture in the stack's order (docs/adr/9212 §4, 9214): an empty list takes the
+                // last away.
+                let sets: Vec<_> = self.glyphs.iter().map(crate::labels::GlyphSlot::get).collect();
+                let glyphs_pending = renderer.prepare_glyphs(device, queue, self.id, &sets);
                 Status {
                     stats: renderer.stats(self.id).unwrap_or_default(),
                     error: prepared
@@ -1146,7 +1152,7 @@ impl shader::Program<Message> for Lens {
             moving: false,
             drawing: None,
             keep: true,
-            glyphs: None,
+            glyphs: Vec::new(),
         }
     }
 }

@@ -159,9 +159,18 @@ impl App {
                         .marks(&doc.model, &self.viewport.camera, &colors, key);
                     (marks, key)
                 });
-                let service_labels = services
-                    .as_ref()
-                    .and_then(|(marks, key)| crate::services::overlay::layer(marks.clone(), *key));
+                let service_labels = match services.as_ref() {
+                    Some((marks, key)) => crate::services::overlay::layer(
+                        marks.clone(),
+                        *key,
+                        self.viewport.camera,
+                        &self.gpu_layers.services,
+                    ),
+                    None => {
+                        self.gpu_layers.services.clear();
+                        None
+                    }
+                };
                 let credits = services
                     .as_ref()
                     .map(|(marks, _)| self.credits_view(marks))
@@ -197,6 +206,20 @@ impl App {
                 let skip_labels = std::env::var("KENTOS_DIAG_SKIP").is_ok_and(|s| s.contains("labels"));
                 // This frame's placed labels: the masks' shapes (docs/adr/0226 §3).
                 let spots = self.label_spots.last();
+                // What the overlays below send the area's renderer, in their stack's order (gpu_frame.rs,
+                // docs/adr/9214): drawn over the picture, under the marks, grips and cards left on the canvas.
+                let layers = &self.gpu_layers;
+                let mut glyphs = vec![
+                    layers.terrain.clone(),
+                    layers.alignment.clone(),
+                    layers.approved.clone(),
+                    layers.services.clone(),
+                ];
+                glyphs.extend(self.data_label_glyphs());
+                glyphs.extend([layers.selection.clone(), layers.edits.clone()]);
+                if !skip_labels {
+                    glyphs.extend([self.label_spots.glyphs().clone(), self.label_spots.marks().clone()]);
+                }
                 let area = self.viewport.view(
                     doc,
                     self.canvas(),
@@ -206,8 +229,8 @@ impl App {
                     self.session.cursor(),
                     Some(crate::viewport::Styling {
                         labels: spots.as_deref(),
-                        // The texts the labels' painting sends it (labels/gpu.rs), drawn over the picture.
-                        glyphs: (!skip_labels).then(|| self.label_spots.glyphs()),
+                        // The texts and shapes the overlays' painting sends it (labels/gpu.rs, gpu_frame.rs).
+                        glyphs: &glyphs,
                         ..self.styles.styling(&self.spatial, &self.settings)
                     }),
                 );
@@ -228,6 +251,7 @@ impl App {
                             &self.viewport.camera,
                             mark_colors(self.canvas()).fg,
                             Tokens::of(&self.theme()).danger,
+                            &self.gpu_layers.terrain,
                         ))
                         // A road project's alignments, km and curve points (alignment_layer.rs, plan/road.md Y3).
                         .extend(crate::alignment_layer::layer(
@@ -238,6 +262,7 @@ impl App {
                                 accent: Tokens::of(&self.theme()).accent,
                                 warning: Tokens::of(&self.theme()).warning,
                             },
+                            &self.gpu_layers.alignment,
                         ))
                         // Harita işi's approved shapes of the objects whose geometry changed (approved_layer.rs,
                         // docs/adr/4480), while Değişenler's selection stands.
@@ -246,6 +271,7 @@ impl App {
                             self.selection.version(),
                             &self.viewport.camera,
                             Tokens::of(&self.theme()).warning,
+                            &self.gpu_layers.approved,
                         ))
                         .extend(service_labels)
                         // The data layers' labels under the drawing's own (data_labels.rs, docs/adr/9101 §6).

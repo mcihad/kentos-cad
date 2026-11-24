@@ -264,14 +264,44 @@ impl Labels<'_> {
     /// Grid north and the scale bar over the text, or a CAD project's coordinate axes, as the web's overlay
     /// (map_marks.rs); a sheet's map has its own, a twisted view draws them on its own camera.
     pub(super) fn paint_marks(&self, frame: &mut impl Ink) {
-        if self.fence.is_none()
-            && self.turned.is_none()
-            && let Some(lift) = self.map_marks
-        {
-            let ucs = self.format.ucs.map(|u| u[2]);
-            let per_unit = crate::map_marks::metres_per_unit(self.doc.settings(), &self.view);
-            frame.marks(&self.view, &self.colors, self.format.axes, ucs, lift, per_unit);
+        if self.fence.is_none() && self.turned.is_none() {
+            self.marks_of(frame, &self.view);
         }
+    }
+
+    /// Grid north and the scale bar or the axes of `camera`: through the drawing area's renderer when its labels go
+    /// there (`marks`, docs/adr/9214), else on `frame`. Without them the renderer's are taken away.
+    pub(super) fn marks_of(&self, frame: &mut impl Ink, camera: &Camera) {
+        let Some(lift) = self.map_marks else {
+            if let Some(slot) = &self.marks {
+                slot.clear();
+            }
+            return;
+        };
+        let ucs = self.format.ucs.map(|u| u[2]);
+        let per_unit = crate::map_marks::metres_per_unit(self.doc.settings(), camera);
+        match &self.marks {
+            Some(slot) => {
+                let mut gpu = crate::gpu_frame::GpuFrame::on_screen(frame.size());
+                crate::map_marks::paint(&mut gpu, camera, &self.colors, self.format.axes, ucs, lift, per_unit);
+                slot.put(gpu.finish(), camera.map_px());
+            }
+            None => frame.marks(camera, &self.colors, self.format.axes, ucs, lift, per_unit),
+        }
+    }
+
+    /// What the screen's marks depend on (labels/layer.rs draws them again when it changes): the view, the area's
+    /// size, the lift and the look.
+    pub(super) fn marks_key(&self, size: Size) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut key = std::collections::hash_map::DefaultHasher::new();
+        let c = &self.view;
+        (c.center.x.to_bits(), c.center.y.to_bits(), c.scale.to_bits(), c.width.to_bits(), c.height.to_bits())
+            .hash(&mut key);
+        (c.twist.to_bits(), size.width.to_bits(), size.height.to_bits(), self.map_marks.map(f32::to_bits)).hash(&mut key);
+        crate::map_marks::metres_per_unit(self.doc.settings(), c).to_bits().hash(&mut key);
+        format!("{:?}{:?}", self.colors, self.format).hash(&mut key);
+        key.finish()
     }
 
     /// The texts; under true sizes those `margin` pixels round the view too (docs/adr/0626 §7, labels/layer.rs).

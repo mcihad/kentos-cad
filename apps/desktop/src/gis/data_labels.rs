@@ -89,9 +89,20 @@ impl App {
                     format,
                     self.color_mode(),
                     self.label_size(),
-                    self.label_engine(),
+                    // Through the area's renderer as the drawing's own (docs/adr/9214).
+                    crate::labels::Engine { gpu: crate::labels::gpu_text(), ..self.label_engine() },
                 )
             })
+            .collect()
+    }
+
+    /// The slots the data layers' labels send the area's renderer, in their layers' order (docs/adr/9214).
+    pub(crate) fn data_label_glyphs(&self) -> Vec<crate::labels::GlyphSlot> {
+        let view = crate::data_view::service();
+        self.gis.data_labels
+            .iter()
+            .filter(|d| d.labelled && view.drawn_read(&d.layer) == Some(d.read))
+            .map(|d| d.spots.glyphs().clone())
             .collect()
     }
 

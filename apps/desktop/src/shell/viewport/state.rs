@@ -364,7 +364,7 @@ impl Viewport {
             live: self.live_for_view(),
             other: self.other,
             passive: self.passive,
-            glyphs: styling.and_then(|s| s.glyphs.cloned()),
+            glyphs: styling.map(|s| s.glyphs.to_vec()).unwrap_or_default(),
         })
         .width(Fill)
         .height(Fill)

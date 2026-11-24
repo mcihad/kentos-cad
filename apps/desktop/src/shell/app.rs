@@ -841,6 +841,8 @@ pub struct App {
     pub(crate) vertices: crate::vertices::VertexPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
     pub(crate) label_spots: crate::labels::Spots,
+    /// What the drawing area's overlays send its renderer (shell/gpu_frame.rs, plan/render.md RM-14).
+    pub(crate) gpu_layers: crate::gpu_frame::GpuLayers,
     /// Görünümü böl's other view (split_view.rs, docs/adr/0285 §3); none with one view.
     pub(crate) split: Option<crate::split_view::Split>,
     /// The map services' labels and credits for the view, as last worked out (services/overlay.rs).

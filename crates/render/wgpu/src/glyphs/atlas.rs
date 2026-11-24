@@ -19,7 +19,35 @@ pub const PAGE: u32 = 2048;
 /// Pixels left clear between fields: the sampler reads half a pixel past a field's box.
 const GAP: u32 = 1;
 
-/// A glyph of a bundled face: the geometry core's font index and the glyph's id in it.
+/// The first id of the faces given besides the bundled ones ([`extra_face`]).
+pub const EXTRA_FACES: u16 = 0x4000;
+
+/// The faces given besides the bundled ones, by their bytes.
+static EXTRA: std::sync::Mutex<Vec<&'static [u8]>> = std::sync::Mutex::new(Vec::new());
+
+/// The id of a face the geometry core does not bundle (an interface's: the drawing area's marks are lettered in it,
+/// docs/adr/9214), given by its bytes; the same bytes, the same id.
+pub fn extra_face(bytes: &'static [u8]) -> FontId {
+    let mut all = EXTRA.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let i = match all.iter().position(|b| std::ptr::eq(*b, bytes)) {
+        Some(i) => i,
+        None => {
+            all.push(bytes);
+            all.len() - 1
+        }
+    };
+    FontId(EXTRA_FACES + u16::try_from(i).unwrap_or(u16::MAX - EXTRA_FACES))
+}
+
+/// A face's bytes: a bundled one's or one given.
+fn face_bytes(font: FontId) -> Option<&'static [u8]> {
+    match font.0.checked_sub(EXTRA_FACES) {
+        Some(i) => EXTRA.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(usize::from(i)).copied(),
+        None => font_bytes(font),
+    }
+}
+
+/// A glyph of a bundled face (or one given, [`extra_face`]): the geometry core's font index and the glyph's id in it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct GlyphKey {
     pub font: FontId,
@@ -140,7 +168,7 @@ impl GlyphAtlas {
     fn face(&mut self, font: FontId) -> Option<&Face<'static>> {
         self.faces
             .entry(font)
-            .or_insert_with(|| font_bytes(font).and_then(|bytes| Face::parse(bytes, 0).ok()))
+            .or_insert_with(|| face_bytes(font).and_then(|bytes| Face::parse(bytes, 0).ok()))
             .as_ref()
     }
 

@@ -318,9 +318,20 @@ pub(super) fn open(app: &mut App, h: &mut Harness, file: &Path) -> Value {
         }
     };
     let worker = (done_at - t0).as_secs_f64() * 1000.0;
-    let first = h.frame_with(app, &[], |app| {
+    let mut first = h.frame_with(app, &[], |app| {
         let _ = app.update(done);
     });
+    // A unit the drawing's own evidence offers (its survey grid, its letters; docs/adr/9210, 9213) is taken as offered:
+    // the question waits for the user, not for the drawing. The frame after it is the drawing's first. Without this the
+    // Suşehri DXF never opened (24 Nov).
+    if app.opening.is_some() {
+        let rx = drive(app.opening_event(crate::opening::Event::ConfirmUnit));
+        first = h.frame_with(app, &[], |app| {
+            while let Ok((_, m)) = rx.recv_timeout(Duration::from_secs(600)) {
+                let _ = app.update(m);
+            }
+        });
+    }
     let placed = ms(t0);
     // The project's questions (its type, its CAD work) are not part of the drawing's frames.
     app.dialog = None;

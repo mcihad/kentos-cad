@@ -44,8 +44,11 @@ fn twisted(d: vec2f) -> vec2f {
   // A triangle is the square's first half; its second collapses onto a corner.
   var c = corners[vi];
   if (triangle && vi >= 3u) { c = corners[0]; }
+  let screen = (flags & 0x100000u) != 0u;
   var k = frame.pxPerM;
   if (px) { k = frame.dpr * frame.grow.x; }
+  // A screen's mark neither grows with a gesture nor turns with the view.
+  if (screen) { k = frame.dpr; }
   // A flat quad grows a device pixel each side, so its edges are smoothed outside it as well as in: its sides' lengths
   // in device pixels, and the unit square's corners moved out by a pixel of each.
   var lens = vec2f(1.0);
@@ -56,8 +59,12 @@ fn twisted(d: vec2f) -> vec2f {
   let e = quad.xy + c * quad.zw;
   var d = (vec2f(m.x * e.x + m.z * e.y, m.y * e.x + m.w * e.y) + offset) * k;
   if (!px || (flags & 0x20000u) != 0u) { d = twisted(d); }
-  // The anchor less the camera part by part: the high parts first, exact near the camera, then the low ones.
-  let a = twisted(((at.xy - frame.offset) + (at.zw - frame.offsetLo)) * frame.pxPerM);
+  // The anchor less the camera part by part: the high parts first, exact near the camera, then the low ones; a screen
+  // anchor is the area's logical pixels from its top left, neither moved nor grown nor turned.
+  var a = twisted(((at.xy - frame.offset) + (at.zw - frame.offsetLo)) * frame.pxPerM);
+  if (screen) {
+    a = vec2f(at.x * frame.dpr - 0.5 * frame.viewport.x, 0.5 * frame.viewport.y - at.y * frame.dpr);
+  }
   var o: GlyphOut;
   o.pos = vec4f((a + d) / (0.5 * frame.viewport), 0.0, 1.0);
   o.page = flags & 0xcffffu;

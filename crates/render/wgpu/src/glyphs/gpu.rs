@@ -59,6 +59,8 @@ const TURNS: u32 = 1 << 17;
 const SOLID: u32 = 1 << 18;
 /// A flat quad's half: the triangle (0, 0), (1, 0), (1, 1), its edges hard.
 const TRIANGLE: u32 = 1 << 19;
+/// Anchored on the screen: logical pixels from the area's top left, y down (`GlyphUnit::Screen`).
+const SCREEN: u32 = 1 << 20;
 /// A layer's origin is its first anchor on a grid this coarse: its numbers stay small, and whole in float32.
 const ORIGIN_GRID: f64 = 65536.0;
 
@@ -325,6 +327,16 @@ impl GlyphGpu {
             let unit = match text.unit {
                 GlyphUnit::World => 0,
                 GlyphUnit::Px { turns } => PX_UNIT | if turns { TURNS } else { 0 },
+                GlyphUnit::Screen => PX_UNIT | SCREEN,
+            };
+            // A screen anchor is pixels as they are; a map one from the layer's origin in two float32 parts.
+            let anchored = |anchor: [f64; 2]| {
+                if unit & SCREEN != 0 {
+                    return [anchor[0] as f32, anchor[1] as f32, 0.0, 0.0];
+                }
+                let rel = [anchor[0] - origin[0], anchor[1] - origin[1]];
+                let hi = [rel[0] as f32, rel[1] as f32];
+                [hi[0], hi[1], (rel[0] - f64::from(hi[0])) as f32, (rel[1] - f64::from(hi[1])) as f32]
             };
             let quad = |q: &GlyphQuad| {
                 let [a, b, c, d, e, f] = q.transform;
@@ -333,10 +345,8 @@ impl GlyphGpu {
                 } else {
                     (text.at, [e as f32, f as f32])
                 };
-                let rel = [anchor[0] - origin[0], anchor[1] - origin[1]];
-                let hi = [rel[0] as f32, rel[1] as f32];
                 Instance {
-                    at: [hi[0], hi[1], (rel[0] - f64::from(hi[0])) as f32, (rel[1] - f64::from(hi[1])) as f32],
+                    at: anchored(anchor),
                     offset,
                     linear: [a as f32, b as f32, c as f32, d as f32],
                     quad: [0.0, 0.0, 1.0, 1.0],
@@ -359,10 +369,8 @@ impl GlyphGpu {
                 } else {
                     (text.at, [e as f32, f as f32])
                 };
-                let rel = [anchor[0] - origin[0], anchor[1] - origin[1]];
-                let hi = [rel[0] as f32, rel[1] as f32];
                 instances.push(Instance {
-                    at: [hi[0], hi[1], (rel[0] - f64::from(hi[0])) as f32, (rel[1] - f64::from(hi[1])) as f32],
+                    at: anchored(anchor),
                     offset,
                     linear: [a as f32, b as f32, c as f32, d as f32],
                     quad: slot.em,

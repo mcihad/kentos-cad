@@ -444,6 +444,51 @@ pub fn rings_and_lines_cover_their_areas(gpu: &Gpu) {
     keep(&rgba, "cizgi-gpu");
 }
 
+/// The overlays' shapes (docs/adr/9214): a polygon keeps its hole, and a shape anchored on the screen stays where it is
+/// whatever the view (a pan, a turn), where one on the map moves with it.
+pub fn holes_stay_open_and_screen_marks_stay_put(gpu: &Gpu) {
+    let mut glyphs = GlyphGpu::new(&gpu.device, FORMAT);
+    let red = Rgba8([255, 0, 0, 255]);
+    let shares = |rgba: &[u8]| -> Vec<f64> {
+        rgba.as_chunks::<4>().0.iter().map(|p| ((f64::from(p[0]) - f64::from(p[1])) / 255.0).clamp(0.0, 1.0)).collect()
+    };
+    let shape = |unit: GlyphUnit, at: [f64; 2], under: Vec<GlyphQuad>| GlyphText {
+        at,
+        unit,
+        glyphs: Vec::new(),
+        under,
+        ..world([E, N], &layout("O", 1.0, 0.0), 0.0)
+    };
+    // An 80 px square with a 40 px square hole: 4 800 px², its middle open.
+    let square = |r: f64| vec![[-r, -r], [r, -r], [r, r], [-r, r]];
+    let frame = view([E, N], 20.0);
+    let holed = shape(GlyphUnit::Px { turns: false }, [E, N], GlyphQuad::polygon(&[square(40.0), square(20.0)], 1.0, red));
+    let rgba = draw(gpu, &mut glyphs, std::slice::from_ref(&holed), &frame);
+    let covered = shares(&rgba);
+    let area: f64 = covered.iter().sum();
+    let middle = covered[(H / 2 * W + W / 2) as usize];
+    eprintln!("glyphs: a square with a hole of 4800 px² covers {area:.0}; its middle {middle:.2}");
+    keep(&rgba, "delikli-gpu");
+    assert!((area - 4800.0).abs() < 0.015 * 4800.0 && middle < 0.01, "{area} {middle}");
+    // A 20 px square on the screen at (60, 50), y down: the same pixels panned and turned.
+    let mark = shape(GlyphUnit::Screen, [60.0, 50.0], GlyphQuad::polygon(&[vec![[0.0, 0.0], [20.0, 0.0], [20.0, -20.0], [0.0, -20.0]]], 1.0, red));
+    let here = draw(gpu, &mut glyphs, std::slice::from_ref(&mark), &frame);
+    let moved = StyledFrame { twist: 0.4, ..view([E + 37.25, N - 12.5], 55.0) };
+    let there = draw(gpu, &mut glyphs, std::slice::from_ref(&mark), &moved);
+    let (count, _, centre) = inked(&here);
+    let worst = here.iter().zip(&there).map(|(p, q)| p.abs_diff(*q)).max().unwrap_or(0);
+    eprintln!("glyphs: a screen mark of {count} pixels about {centre:?}; panned and turned, the most a channel differs {worst}");
+    assert!(worst == 0, "{worst}");
+    assert!((centre[0] - 70.0).abs() < 0.6 && (centre[1] - 60.0).abs() < 0.6, "{centre:?}");
+    // On the map the same square moves with the pan.
+    let on_map = shape(GlyphUnit::Px { turns: false }, [E, N], mark.under.clone());
+    let a = draw(gpu, &mut glyphs, std::slice::from_ref(&on_map), &frame);
+    let b = draw(gpu, &mut glyphs, std::slice::from_ref(&on_map), &view([E + 1.0, N], 20.0));
+    let (_, _, ca) = inked(&a);
+    let (_, _, cb) = inked(&b);
+    assert!((ca[0] - cb[0] - 20.0).abs() < 0.6, "a metre's pan at 20 px a metre: {ca:?} {cb:?}");
+}
+
 /// Fields on pages of 160 px (a dozen and more of them, the texture made again as they come) draw as on one page.
 pub fn fields_on_many_pages_draw_as_on_one(gpu: &Gpu) {
     let lines = ["ABCDEFGHIJKLM", "NOPQRSTUVWXYZ", "abcdefghijklm", "nopqrstuvwxyz", "0123456789 ğüşıöç", "ĞÜŞİÖÇ &@%"];

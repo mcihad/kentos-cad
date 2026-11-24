@@ -635,6 +635,8 @@ mod event_links_window;
 mod alignment_layer;
 #[path = "shell/approved_layer.rs"]
 mod approved_layer;
+#[path = "shell/gpu_frame.rs"]
+mod gpu_frame;
 #[path = "road/alignment_window.rs"]
 mod alignment_window;
 #[path = "road/profile_lengths_window.rs"]

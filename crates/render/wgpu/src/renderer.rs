@@ -672,27 +672,21 @@ impl Renderer {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         view: ViewId,
-        set: &crate::glyphs::GlyphSet,
+        sets: &[crate::glyphs::GlyphSet],
     ) -> bool {
         let format = self.format;
         let Some(state) = self.views.get_mut(&view) else {
             return false;
         };
-        if set.texts.is_empty() {
-            state.glyphs = None;
-            state.stats.glyphs = 0;
+        state.glyphs.truncate(sets.len());
+        state.stats.glyphs = 0;
+        if sets.iter().all(|s| s.texts.is_empty()) {
+            state.glyphs.clear();
             return false;
         }
         let gpu = self.glyphs.get_or_insert_with(|| crate::glyphs::GlyphGpu::new(device, format));
         gpu.ensure(device, 1);
-        if state.glyphs.as_ref().is_none_or(|(version, layer)| *version != set.version || layer.pending) {
-            let deadline = std::time::Instant::now() + GLYPH_BUDGET;
-            let layer = gpu.layer(device, queue, &set.texts, Some(deadline));
-            state.glyphs = Some((set.version, layer));
-        }
-        let Some((_, layer)) = state.glyphs.as_mut() else {
-            return false;
-        };
+        let deadline = std::time::Instant::now() + GLYPH_BUDGET;
         let h = state.host;
         let frame = StyledFrame {
             center: h.center,
@@ -704,12 +698,27 @@ impl Renderer {
             twist: h.twist,
             map: h.map,
         };
-        let grow = if set.placed_px > 0.0 { (h.scale / set.placed_px) as f32 } else { 1.0 };
-        gpu.prepare(device, queue, layer, &frame, grow);
-        state.stats.glyphs = u64::from(layer.len());
-        state.stats.draw_calls += u32::from(!layer.is_empty());
-        state.stats.resident_bytes += layer.bytes();
-        layer.pending
+        let mut pending = false;
+        for (i, set) in sets.iter().enumerate() {
+            if state.glyphs.get(i).is_none_or(|(version, layer)| *version != set.version || layer.pending) {
+                let layer = gpu.layer(device, queue, &set.texts, Some(deadline));
+                if i < state.glyphs.len() {
+                    state.glyphs[i] = (set.version, layer);
+                } else {
+                    state.glyphs.push((set.version, layer));
+                }
+            }
+            let Some((_, layer)) = state.glyphs.get_mut(i) else {
+                continue;
+            };
+            let grow = if set.placed_px > 0.0 { (h.scale / set.placed_px) as f32 } else { 1.0 };
+            gpu.prepare(device, queue, layer, &frame, grow);
+            state.stats.glyphs += u64::from(layer.len());
+            state.stats.draw_calls += u32::from(!layer.is_empty());
+            state.stats.resident_bytes += layer.bytes();
+            pending |= layer.pending;
+        }
+        pending
     }
 
     /// Whether `view` draws into its own targets this frame: the host then
@@ -731,9 +740,11 @@ impl Renderer {
             self.styled.as_ref().map(|g| (g, 1)),
             state.parts.len(),
         );
-        // The texts over everything (docs/adr/9212 §5).
-        if let (Some(gpu), Some((_, layer))) = (&self.glyphs, &state.glyphs) {
-            gpu.draw(pass, layer, 1);
+        // The texts and overlays over everything (docs/adr/9212 §5, RM-14), a set after another.
+        if let Some(gpu) = &self.glyphs {
+            for (_, layer) in &state.glyphs {
+                gpu.draw(pass, layer, 1);
+            }
         }
     }
 
@@ -1029,10 +1040,14 @@ impl Renderer {
         }
         // The texts over the picture and the overlays, at the host's resolution (docs/adr/9212 §5): a kept, moved or
         // scaled picture keeps none of them, so they move with the camera whatever the picture does.
-        if let (Some(gpu), Some((_, layer))) = (&self.glyphs, &state.glyphs) {
+        if let Some(gpu) = &self.glyphs
+            && !state.glyphs.is_empty()
+        {
             let [x, y, w, h] = state.viewport;
             pass.set_viewport(x, y, w, h, 0.0, 1.0);
-            gpu.draw(&mut pass, layer, 1);
+            for (_, layer) in &state.glyphs {
+                gpu.draw(&mut pass, layer, 1);
+            }
         }
     }
 
@@ -1399,8 +1414,9 @@ struct View {
     /// The host's camera and area this frame (the picture's may be on whole pixels or scaled): the texts are drawn at
     /// it, over the picture.
     host: Drawn,
-    /// The view's texts on the GPU (docs/adr/9212 §5) and the version of the set they were built from.
-    glyphs: Option<(u64, crate::glyphs::GlyphLayer)>,
+    /// The view's texts and overlays on the GPU (docs/adr/9212 §5, plan/render.md RM-14), a layer a set in the order
+    /// drawn, each with the version of the set it was built from.
+    glyphs: Vec<(u64, crate::glyphs::GlyphLayer)>,
 }
 
 /// The target and camera a frame is drawn at.
@@ -1514,7 +1530,7 @@ impl View {
             zoom_content: None,
             zoom: None,
             host: Drawn::default(),
-            glyphs: None,
+            glyphs: Vec::new(),
         }
     }
 

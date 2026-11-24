@@ -46,6 +46,7 @@ mod gpu;
 mod layer;
 mod unicode;
 pub use gpu::{GlyphSlot, on as gpu_text};
+pub(crate) use gpu::text_run;
 #[cfg(test)]
 mod parts_tests;
 
@@ -57,7 +58,7 @@ mod parts_tests;
 /// it is, its labels on their ground, and placed again when the view settles (docs/adr/0597): a large drawing's
 /// overview is not placed every frame.
 #[derive(Default)]
-pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>, GlyphSlot);
+pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>, GlyphSlot, GlyphSlot);
 
 /// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only), the
 /// view's scale they were placed at, and which placing they are: a count of placings, which the labels' picture is
@@ -85,6 +86,11 @@ impl Spots {
     /// The texts its labels' last painting sent to the drawing area's renderer (docs/adr/9212 §4, stage 2).
     pub fn glyphs(&self) -> &GlyphSlot {
         &self.2
+    }
+
+    /// The screen's marks (grid north, the scale bar, the axes) its layer last sent the renderer (RM-14).
+    pub fn marks(&self) -> &GlyphSlot {
+        &self.3
     }
 
     /// The key the kept labels were asked for (a test's).
@@ -495,6 +501,7 @@ fn build<'a>(
             _ => None,
         },
         gpu: engine.gpu.then(|| gpu::Sink::new(kept.glyphs().clone())),
+        marks: engine.gpu.then(|| kept.marks().clone()),
     };
     // True sizes keep their picture while the view moves (docs/adr/0626 §7); a twisted view's turns as a picture.
     if true_size && labels.turned.is_none() {
@@ -714,6 +721,8 @@ struct Labels<'a> {
     /// Where the pieces that may go to the drawing area's renderer go (docs/adr/9212 §4, stage 2); none: all on the
     /// canvas.
     gpu: Option<gpu::Sink>,
+    /// Where the screen's marks go to the drawing area's renderer (docs/adr/9214); none: on the canvas.
+    marks: Option<GlyphSlot>,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -794,6 +803,7 @@ pub fn paint_in_map(
         moving: false,
         held: None,
         gpu: None,
+        marks: None,
     }
     .paint(frame);
 }
@@ -888,6 +898,7 @@ fn collect(
         moving: false,
         held: None,
         gpu: None,
+        marks: None,
     }
     .paint(&mut list);
     list.labels
@@ -994,11 +1005,7 @@ impl canvas::Program<Message> for Labels<'_> {
             if let Some(sink) = sink {
                 sink.publish(self.view.map_px());
             }
-            if let Some(lift) = self.map_marks {
-                let ucs = self.format.ucs.map(|u| u[2]);
-                let per_unit = crate::map_marks::metres_per_unit(self.doc.settings(), &area);
-                frame.marks(&area, &self.colors, self.format.axes, ucs, lift, per_unit);
-            }
+            self.marks_of(frame, &area);
         })]
     }
 }

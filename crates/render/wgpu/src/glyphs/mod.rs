@@ -14,7 +14,7 @@ pub mod atlas;
 mod gpu;
 pub mod sdf;
 
-pub use atlas::{GlyphAtlas, GlyphKey, Lookup, Slot};
+pub use atlas::{EXTRA_FACES, GlyphAtlas, GlyphKey, Lookup, Slot, extra_face};
 pub use gpu::{GlyphGpu, GlyphLayer};
 
 /// A flat quadrilateral drawn with a text (docs/adr/9212 §7): a mask under its letters, an underline over them, a
@@ -62,23 +62,37 @@ impl GlyphQuad {
             .iter()
             .map(|t| GlyphQuad::triangle(points[t[0] as usize], points[t[1] as usize], points[t[2] as usize], color))
             .collect();
-        // Inside is left of each edge on a counter-clockwise ring (y up), right on a clockwise one.
-        let twice_area: f64 = (0..points.len())
-            .map(|i| {
-                let (a, b) = (points[i], points[(i + 1) % points.len()]);
-                a[0] * b[1] - b[0] * a[1]
-            })
-            .sum();
-        let side = if twice_area >= 0.0 { 1.0 } else { -1.0 };
-        for i in 0..points.len() {
-            let (a, b) = (points[i], points[(i + 1) % points.len()]);
-            let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
-            let length = dx.hypot(dy);
-            if length <= 0.0 || !length.is_finite() {
-                continue;
-            }
-            let (nx, ny) = (-dy / length * side * edge / 2.0, dx / length * side * edge / 2.0);
-            out.extend(GlyphQuad::segment([a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], edge, color));
+        out.extend(outline(points, edge, color, false));
+        out
+    }
+
+    /// A filled polygon (the text's unit): its outer ring, then its holes. Its triangles, then each ring's outline
+    /// `edge` wide laid just inside the filled part, as [`GlyphQuad::ring`]'s.
+    pub fn polygon(rings: &[Vec<[f64; 2]>], edge: f64, color: Rgba8) -> Vec<GlyphQuad> {
+        let Some(outer) = rings.first() else {
+            return Vec::new();
+        };
+        if rings.len() == 1 {
+            return GlyphQuad::ring(outer, edge, color);
+        }
+        let mut pts = Vec::new();
+        let mut ranges = Vec::new();
+        for ring in rings {
+            ranges.push(pts.len()..pts.len() + ring.len());
+            pts.extend(ring.iter().map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])));
+        }
+        let mut indices = Vec::new();
+        kentos_geometry_core::triangulate::triangulate_into(&pts, &ranges, &mut indices);
+        let at = |i: u32| [pts[i as usize].x, pts[i as usize].y];
+        let mut out: Vec<GlyphQuad> = indices
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .map(|t| GlyphQuad::triangle(at(t[0]), at(t[1]), at(t[2]), color))
+            .collect();
+        // The outer ring's inside is the filled part; a hole's outside is.
+        for (n, ring) in rings.iter().enumerate() {
+            out.extend(outline(ring, edge, color, n > 0));
         }
         out
     }
@@ -120,6 +134,9 @@ pub enum GlyphUnit {
     /// Logical pixels from the world anchor: the text keeps its size on screen; it `turns` with the view, or stays
     /// as it was placed on the screen.
     Px { turns: bool },
+    /// Logical pixels on the screen, the anchor too (from the area's top left, y down): the screen's own marks (grid
+    /// north, the scale bar, the axes; plan/render.md RM-14). Neither the camera nor a gesture moves them.
+    Screen,
 }
 
 /// A glyph of a text: which one, and where its em square goes.
@@ -142,6 +159,30 @@ impl GlyphPlace {
             transform: then(&placed.transform, &own),
         }
     }
+}
+
+/// A ring's outline `edge` wide laid just inside the part it bounds (inside it, or outside it for a hole).
+fn outline(points: &[[f64; 2]], edge: f64, color: Rgba8, hole: bool) -> Vec<GlyphQuad> {
+    // Inside is left of each edge on a counter-clockwise ring (y up), right on a clockwise one.
+    let twice_area: f64 = (0..points.len())
+        .map(|i| {
+            let (a, b) = (points[i], points[(i + 1) % points.len()]);
+            a[0] * b[1] - b[0] * a[1]
+        })
+        .sum();
+    let side = if (twice_area >= 0.0) != hole { 1.0 } else { -1.0 };
+    let mut out = Vec::with_capacity(points.len());
+    for i in 0..points.len() {
+        let (a, b) = (points[i], points[(i + 1) % points.len()]);
+        let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
+        let length = dx.hypot(dy);
+        if length <= 0.0 || !length.is_finite() {
+            continue;
+        }
+        let (nx, ny) = (-dy / length * side * edge / 2.0, dx / length * side * edge / 2.0);
+        out.extend(GlyphQuad::segment([a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], edge, color));
+    }
+    out
 }
 
 /// `outer` after `inner`.
