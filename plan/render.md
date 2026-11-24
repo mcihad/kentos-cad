@@ -181,8 +181,14 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
 
 ### F4 — Bütün çizim içeriği motorda
 
-- [ ] **RM-13 — CAD yazıları GPU glif atlasında.** TTF ve SHX yazılar atlastan çizilir; hiçbir çizim yazısı
-  çarpışma yüzünden düşmez.
+- [~] **RM-13 — CAD yazıları GPU glif atlasında.** TTF ve SHX yazılar atlastan çizilir; hiçbir çizim yazısı
+  çarpışma yüzünden düşmez. Sahibin seçimi (24 Kasım). Tasarım: [ADR 9212](../docs/adr/9212-drawing-text-on-the-gpu.md).
+  Tek kanallı SDF glif atlası; ekranda 512 px'i geçen glif vektör. Yerleşim CPU'da kalıyor, yalnız çizim GPU'ya
+  geçiyor.
+  - [ ] Aşama 1: atlas ve gölgelendirici (SDF üretimi, glif örneği, hale, GPU sınaması).
+  - [ ] Aşama 2: nesne yazıları ve parçaları kanvastan çıkar.
+  - [ ] Aşama 3: ölçü değerleri, etiketler, eğri boyunca harfler, hücreler, çağrı kutuları.
+  - [ ] Aşama 4: kanvas katmanı kalkar; yazılar da canlı kamerayla çizilir.
 - [ ] **RM-14 — iced katmanları kalkar.** Etiketler, servis etiketleri, arazi, hat, onaylı katman ve işaretler motora
   taşınır.
 
