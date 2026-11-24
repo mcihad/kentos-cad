@@ -249,7 +249,7 @@ fn print_items(parts: &std::collections::BTreeMap<String, (u64, u32)>, total: u6
         return;
     }
     let mut rows: Vec<_> = parts.iter().collect();
-    rows.sort_by(|a, b| b.1.0.cmp(&a.1.0));
+    rows.sort_by_key(|r| std::cmp::Reverse(r.1.0));
     let work: u64 = rows.iter().map(|r| r.1.0).sum();
     eprintln!("ÖĞELER sayılan {total}, iş (örnekliler tanım × örnek) {work}");
     for (key, (items, batches)) in rows.iter().take(24) {
