@@ -54,6 +54,9 @@ kaynağı değişmeden açılımı değişenler (`redrew`).
   - etiketi gelen ya da giden mahaller, kendi adlarını artık çizen ya da çizmeyenler (`set_tagged_spaces`);
   - çizim yazı tipi değişince yeniden ölçülen yazılar ve bloklar (`set_font`).
 - Duvar görünümü (`set_wall_view`), bloklar ve zaman penceresi önbelleğin kendi anahtarlarıyla zaten yeniden kuruluyor.
+  **Düzeltme (25 Kasım):** duvar görünümünde bu yalnız duvarlar için doğruydu. Ayrıntı değişince kapı, pencere ve
+  görünümü izleyen öbür nesneler eski ayrıntıda kalıyordu. Depo artık onları da bu listeye yazıyor
+  ([ADR 9224](9224-visual-conformance-edits-and-details.md)).
 - `redraw_mark()` listenin sonunu verir. `redrawn_since(mark)` o işaretten beri yeniden çizilenleri verir.
 - Liste nesne sayısının dört katını (en az 65 536) aşınca bırakılır. Ulaşamadığı işarete `None` döner, ve önbellek her
   şeyi yeniden kurar.

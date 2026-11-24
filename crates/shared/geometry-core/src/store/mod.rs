@@ -795,7 +795,9 @@ impl Store {
     }
 
     /// What walls are drawn for (docs/adr/0339 §3): the detail the drawing's scale asks and the scale, which sizes their
-    /// patterns on paper. A change expands every wall again; the same view changes nothing.
+    /// patterns on paper. A change expands every object that follows the view again (walls, doors and windows, spaces,
+    /// columns …, [`Store::follows_view`]) and names them as drawn anew ([`Store::redrawn_since`], docs/adr/9224): a
+    /// door on a layer of its own changes with its wall. The same view changes nothing.
     pub fn set_wall_view(&mut self, view: crate::geom::wall::View) {
         if view == self.wall_view {
             return;
@@ -819,10 +821,15 @@ impl Store {
             let fresh = self.slots[*s as usize]
                 .as_ref()
                 .map(|it| self.wall_expansion(it.id, &it.shape));
+            let mut id = None;
             if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh) {
                 it.bounds = bounds;
                 it.expanded = expanded;
                 it.veiled = None;
+                id = Some(it.id);
+            }
+            if let Some(id) = id {
+                self.redrew(id);
             }
             self.loosen(*s);
         }
@@ -831,6 +838,17 @@ impl Store {
 
     pub fn wall_view(&self) -> crate::geom::wall::View {
         self.wall_view
+    }
+
+    /// The objects whose pieces follow the walls' view ([`Store::follows_view`]): what another detail draws otherwise.
+    /// A view that draws the walls at a detail of its own (a split view's, docs/adr/0696) builds them again when its
+    /// detail changes, not only the walls (docs/adr/9224).
+    pub fn following_view(&self) -> impl Iterator<Item = f64> + '_ {
+        self.slots
+            .iter()
+            .flatten()
+            .filter(|it| self.follows_view(&it.shape))
+            .map(|it| it.id)
     }
 
     /// Whether an object's pieces follow the walls' view: the walls, the architectural objects and a space's label

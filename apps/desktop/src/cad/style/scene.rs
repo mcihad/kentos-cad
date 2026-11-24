@@ -540,15 +540,22 @@ impl StyledCache {
         if !changed.is_empty() {
             self.blocks = doc.blocks().to_vec();
         }
-        // The walls' detail or scale changed (docs/adr/0339 §4): the parts holding a wall again.
+        // The walls' detail or scale changed (docs/adr/0339 §4): the parts holding an object drawn for it again, not
+        // only the walls: a door or a window on a layer of its own, a space's label, a column (docs/adr/9224; a door
+        // kept its jambs at the old detail while its wall took the new one). The store names them when its own view
+        // changes (above); a view with a detail of its own (a split view's) asks here.
         if self.wall_view != Some(walls) {
             if !all && self.wall_view.is_some() {
-                for e in doc.entities() {
-                    if let Entity::Wall(_) = e
+                for id in store.following_view() {
+                    let slot = Slot(id as u32);
+                    if let Some(e) = doc.get(slot)
                         && let Some(l) = self.layers.get(e.base().layer_id.as_str())
-                        && let Some(place) = doc.place(Slot(e.base().id))
+                        && let Some(place) = doc.place(slot)
                     {
                         dirty_part(&mut dirty, &e.base().layer_id, place / l.run);
+                    }
+                    if let Some((layer, part)) = self.slot_part.get(&slot) {
+                        dirty_part(&mut dirty, layer, *part);
                     }
                 }
             }

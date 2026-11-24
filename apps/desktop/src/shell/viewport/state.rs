@@ -665,6 +665,14 @@ impl Viewport {
         next
     }
 
+    /// The styled scenes built anew at the next frame, as a drawing opened afresh builds them: the visual conformance
+    /// check's own (plan/render.md RM-16), to tell a kept part that missed an edit from a drawing that draws differently.
+    #[cfg(any(test, feature = "testing"))]
+    pub fn forget_styled(&self) {
+        *self.styled.borrow_mut() = Default::default();
+        *self.deep_styled.borrow_mut() = Default::default();
+    }
+
     /// The styled layers the view draws: the deep view's scene while there is one, else the drawing's.
     fn styled_in_use(&self) -> &RefCell<crate::style::scene::StyledCache> {
         if self.deep.get().is_some() {

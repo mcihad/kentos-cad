@@ -194,6 +194,12 @@ mod explode_scenes;
 #[cfg(any(test, feature = "testing"))]
 #[path = "shell/files_testing.rs"]
 pub mod files_testing;
+#[cfg(any(test, feature = "testing"))]
+#[path = "shell/window_testing.rs"]
+pub mod window_testing;
+#[cfg(any(test, feature = "testing"))]
+#[path = "shell/render_testing.rs"]
+pub mod render_testing;
 #[cfg(test)]
 #[path = "tests/hatch_scenes.rs"]
 mod hatch_scenes;
@@ -455,6 +461,9 @@ mod parts_scenes;
 #[cfg(test)]
 #[path = "shell/perf/mod.rs"]
 pub(crate) mod perf;
+#[cfg(test)]
+#[path = "tests/render_conformance_tests.rs"]
+mod render_conformance_tests;
 #[cfg(test)]
 #[path = "tests/point_calc_scenes.rs"]
 mod point_calc_scenes;

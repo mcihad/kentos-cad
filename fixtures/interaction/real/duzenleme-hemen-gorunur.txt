@@ -1,0 +1,153 @@
+# Düzenleme hemen görünür (plan/render.md RM-16, docs/adr/9224). Sahibin 24 Kasım bildirimi: pencere ve kapı ancak
+# yakınlaştırınca görünüyordu (docs/adr/9221). Her düzenlemenin resmi hemen alınır, kamera kıpırdatılmadan; sonra
+# tekerlek bir çentik içeri ve geri döner ve resim yeniden alınır. İkisi aynı olmalı:
+#   scripts/usage/real/session.sh fixtures/interaction/real/duzenleme-hemen-gorunur.txt .run/gui-evidence/render/rm16/s --modul mimari
+#   python3 -I scripts/usage/real/same.py .run/gui-evidence/render/rm16/s 120,180,810,590 a1-pencere a2-kapi a3-sil a4-geri a5-duvar a6-cizgi
+# Oda iç ölçüsüyle 10 × 7 m, 1:50 (75 piksel bir metre); tekerleğin gidiş dönüşü 1:37'ye varıp döner, duvarların ayrıntı
+# eşiklerinden (1:30, 1:75) uzak. Son iki resim duvar ayrıntısının değiştiği uzaklaşma ve yakınlaşmadır (b1, b2).
+fit KentOS Mimari
+wait 1500
+settle 60000
+click 353 343   # Başlangıç: Yeni proje
+wait 1500
+settle 60000
+click 88 70     # Mimari: Oda
+wait 800
+move 500 450
+type 0,0
+key Return
+wait 400
+type 10,7
+key Return
+wait 1000
+key Escape
+key Escape
+key Home
+wait 1500
+settle 30000
+move 300 885
+settle 30000
+shot a0-oda
+# Pencere alt duvara, 2,5 m'ye.
+click 210 75    # Pencere
+wait 800
+click 337 748
+wait 800
+key Escape
+key Escape
+move 300 885
+wait 1500
+settle 30000
+shot a1-pencere
+wheel 526 476 1
+wait 1000
+wheel 526 476 -1
+wait 1000
+move 300 885
+settle 30000
+shot a1-pencere-tekerlek
+# Kapı üst duvara, 7 m'ye.
+click 153 75    # Kapı
+wait 800
+click 677 202
+wait 800
+key Escape
+key Escape
+move 300 885
+wait 1500
+settle 30000
+shot a2-kapi
+wheel 526 476 1
+wait 1000
+wheel 526 476 -1
+wait 1000
+move 300 885
+settle 30000
+shot a2-kapi-tekerlek
+# Kapı seçilip Delete ile silinir.
+click 677 202
+wait 800
+key Delete
+wait 800
+key Escape
+move 300 885
+wait 1500
+settle 30000
+shot a3-sil
+wheel 526 476 1
+wait 1000
+wheel 526 476 -1
+wait 1000
+move 300 885
+settle 30000
+shot a3-sil-tekerlek
+# Geri al: kapı geri gelir.
+key ctrl+z
+wait 800
+move 300 885
+wait 1500
+settle 30000
+shot a4-geri
+wheel 526 476 1
+wait 1000
+wheel 526 476 -1
+wait 1000
+move 300 885
+settle 30000
+shot a4-geri-tekerlek
+# Bölme duvarı 5 m'de, iki ucu dış duvarlara bağlanır.
+click 32 75     # Duvar
+wait 800
+move 500 450
+type 5,0
+key Return
+wait 400
+type 5,7
+key Return
+wait 400
+key Escape
+key Escape
+move 300 885
+wait 1500
+settle 30000
+shot a5-duvar
+wheel 526 476 1
+wait 1000
+wheel 526 476 -1
+wait 1000
+move 300 885
+settle 30000
+shot a5-duvar-tekerlek
+# Düz çizgi: Giriş › Çizgi, iki tık.
+click 336 20    # Giriş
+wait 800
+click 32 70     # Çizgi
+wait 800
+click 250 300
+wait 400
+click 450 600
+wait 400
+key Escape
+key Escape
+move 300 885
+wait 1500
+settle 30000
+shot a6-cizgi
+wheel 526 476 1
+wait 1000
+wheel 526 476 -1
+wait 1000
+move 300 885
+settle 30000
+shot a6-cizgi-tekerlek
+# Duvar ayrıntısı: dört çentik dışarı (1:50 → 1:166, şematik), sonra yedi çentik içeri (1:20, ayrıntılı).
+wheel 526 476 -4
+wait 1500
+move 300 885
+settle 30000
+shot b1-uzak
+wheel 526 476 7
+wait 1500
+move 300 885
+settle 30000
+shot b2-yakin

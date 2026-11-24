@@ -47,7 +47,7 @@ mod file;
 mod files;
 // The drawing area's shortcuts against frames drawn afresh, twin apps on the same input (plan/render.md RM-02).
 mod oracle;
-mod frame;
+pub(crate) mod frame;
 // A large mixed 2D drawing: open, frames, keys, commands, cancel, memory (docs/adr/1062).
 mod large;
 // Where the 10⁶ mixed drawing's slow frames go, for a sampling profiler (docs/adr/1066 §1).
