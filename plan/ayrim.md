@@ -135,4 +135,5 @@ Sıra: AY-01 → AY-02 → AY-03 → AY-04 → AY-05 ve AY-06 → AY-07; AY-08 (
     36. Kabuk → Mimari 0.
   - Adım 12 yapıldı (ADR 9199 §4.12): `gis/` çekirdeğin ortak CBS altyapısı (QGIS'in `core`'u gibi; komutlarının çoğunu
     Harita, Yol ve Mimari de sunar); CBS modülünün kendisi `cbs/` (profili, Ağlar, Alt ağlar) ve kendi merkezi.
-  - Sıradaki: `cbs/`'nin uzantı trait'leri ve paketi; CAD çekirdeğinin kabuktan ayrılması.
+  - Adım 13 yapıldı (ADR 9199 §4.13): `cbs/`'nin `impl App`'leri uzantı trait'i (`cbs/ext.rs`).
+  - Sıradaki: CBS paketi; CAD çekirdeğinin kabuktan ayrılması.

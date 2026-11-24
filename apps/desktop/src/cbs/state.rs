@@ -3,6 +3,7 @@
 //! shell's (`Message::Module`, `Dialog::Module`). The GIS work every module shares (data layers, sources, processing,
 //! rasters, point clouds, forms, topology …) is the core's hub (gis/state.rs).
 
+use crate::cbs_ext::*;
 use iced::{Element, Task};
 
 use crate::app::{App, Message};
@@ -81,9 +82,15 @@ impl CbsState for crate::module_parts::ModuleStates {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait CbsStateApp {
+    fn cbs_event(&mut self, event: Event) -> Task<Message>;
+    fn cbs_dialog_view(&self, kind: CbsDialogKind) -> Element<'_, Message>;
+}
+
+impl CbsStateApp for App {
     /// A message of the module; a window's own handler is in its file.
-    pub(crate) fn cbs_event(&mut self, event: Event) -> Task<Message> {
+    fn cbs_event(&mut self, event: Event) -> Task<Message>{
         match event {
             Event::Networks(event) => self.networks_event(event),
             Event::Subnetworks(event) => self.subnetworks_event(event),
@@ -91,7 +98,7 @@ impl App {
     }
 
     /// A window of the module.
-    pub(crate) fn cbs_dialog_view(&self, kind: CbsDialogKind) -> Element<'_, Message> {
+    fn cbs_dialog_view(&self, kind: CbsDialogKind) -> Element<'_, Message>{
         match kind {
             CbsDialogKind::Networks => self.networks_view(),
             CbsDialogKind::Subnetworks => self.subnetworks_view(),

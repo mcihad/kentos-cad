@@ -329,6 +329,13 @@ araçlarını; `analysis` ağ ve yüzey çözümlemelerini; uygulama ve eklentil
 - Taban yeniden yazıldı (sınıflama değişti): kabuk → cbs 1 (kayıt dosyası), gis → cbs 0.
 - Sınama: çekirdek 2503, Mimari 204, Harita 191, Yol 129, programlar 36.
 
+### §4.13 Adım 13: CBS modülünün `App` yöntemleri uzantı trait'i
+
+- `cbs/`'nin `impl App` bloklu dört dosyası (merkez, ağlar, Ağlar penceresi, Alt ağlar) dört trait oldu (betikle,
+  gövdeler değişmeden); adlar `cbs/ext.rs`'te, dosyalar `use crate::cbs_ext::*` ile alır. Çekirdeğin hiçbir dosyası
+  CBS'nin yöntemini çağırmıyor: önsöze başka yerde gerek olmadı.
+- Sınama: çekirdek 2503.
+
 ## §5 Kalan
 
 **Yol paketinin çözümlemesi** (23 Kasım 2026, `a9f546a0e`'den sonra):

@@ -459,6 +459,8 @@ mod ucs;
 mod cbs;
 #[path = "cbs/parts.rs"]
 mod cbs_parts;
+#[path = "cbs/ext.rs"]
+mod cbs_ext;
 #[path = "cbs/networks/mod.rs"]
 mod networks;
 #[path = "shell/services/mod.rs"]

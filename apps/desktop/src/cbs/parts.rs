@@ -3,6 +3,7 @@
 //! forgotten when another drawing comes on screen, and Ağ denetimi's mark on the drawing. The GIS work it shares with
 //! the other modules (data layers, sources, processing, rasters …) is the core's.
 
+use crate::cbs_ext::*;
 use std::any::Any;
 use std::sync::Arc;
 

@@ -8,6 +8,7 @@
 //! (the document's change journal). Questions go to the network thread in
 //! order; their answers come back to the running tool, or to Ağlar's Denetle.
 
+use crate::cbs_ext::*;
 mod engine;
 pub(crate) mod read;
 #[cfg(test)]
@@ -122,9 +123,19 @@ impl State {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait NetworksApp {
+    fn network_tasks(&mut self) -> Task<Message>;
+    fn network_ask(&mut self, ask: NetworkAsk) -> Task<Message>;
+    fn network_build(&mut self, key: &str, def: &NetworkDef) -> Result<Task<Message>, String>;
+    fn networks_event(&mut self, e: Event) -> Task<Message>;
+    fn networks_reset(&mut self);
+    fn networks_follow(&mut self);
+}
+
+impl NetworksApp for App {
     /// The networks' questions the tools asked: each network built first when it must be, the questions to its thread.
-    pub(crate) fn network_tasks(&mut self) -> Task<Message> {
+    fn network_tasks(&mut self) -> Task<Message>{
         let asks = std::mem::take(&mut self.network_wanted);
         Task::batch(
             asks.into_iter()
@@ -134,7 +145,7 @@ impl App {
     }
 
     /// One question: its network built when it must be, then asked; the answer comes back as a message.
-    pub(crate) fn network_ask(&mut self, ask: NetworkAsk) -> Task<Message> {
+    fn network_ask(&mut self, ask: NetworkAsk) -> Task<Message>{
         let ticket = ask.ticket;
         let Some(doc) = self.document.as_ref() else {
             return Task::none();
@@ -216,7 +227,7 @@ impl App {
 
     /// Builds network `key` as `def` says when it is not built so already: the drawing read here, the graph on the
     /// network thread. What building says comes back as a message.
-    fn network_build(&mut self, key: &str, def: &NetworkDef) -> Result<Task<Message>, String> {
+    fn network_build(&mut self, key: &str, def: &NetworkDef) -> Result<Task<Message>, String>{
         let Some(doc) = self.document.as_ref() else {
             return Ok(Task::none());
         };
@@ -302,7 +313,7 @@ impl App {
         Ok(self.document_reply(task))
     }
 
-    pub(crate) fn networks_event(&mut self, e: Event) -> Task<Message> {
+    fn networks_event(&mut self, e: Event) -> Task<Message>{
         match e {
             Event::Answered(reply) => {
                 if self
@@ -341,7 +352,7 @@ impl App {
     /// Forgets the networks the project no longer has (their threads' copies go too).
     /// The networks built from the drawing left go with it, and Denetle's mark (docs/adr/0209 §12): a network of
     /// the next drawing is built from that drawing whatever it is called.
-    pub(crate) fn networks_reset(&mut self) {
+    fn networks_reset(&mut self){
         for k in std::mem::take(&mut self.modules.cbs_mut().networks.built).into_keys() {
             self.modules.cbs_mut().networks.engine.send(Job::Drop(k));
         }
@@ -349,7 +360,7 @@ impl App {
     }
 
     /// The networks taken out of the project (Ağlar's Kaydet) are let go.
-    pub(crate) fn networks_follow(&mut self) {
+    fn networks_follow(&mut self){
         let Some(doc) = self.document.as_ref() else {
             return;
         };

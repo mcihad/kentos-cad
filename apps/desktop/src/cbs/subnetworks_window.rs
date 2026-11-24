@@ -4,6 +4,7 @@
 //! under it what no controller reaches, what two reach, and whether the attribute the network names for them is up to
 //! date. A row selects its objects; Güncelle writes the names in one undo step and the window reads again.
 
+use crate::cbs_ext::*;
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -99,9 +100,32 @@ fn failure<T>(result: CommandResult<T>, fallback: &str) -> Result<T, String> {
     }
 }
 
-impl App {
+/// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
+pub(crate) trait SubnetworksWindowApp {
+    fn open_subnetworks(&mut self);
+    fn refresh_subnetworks(&mut self);
+    fn subnetworks_event(&mut self, event: Event) -> Task<Message>;
+    fn show_subnetwork(&mut self, pick: Pick);
+    fn update_subnetworks(&mut self) -> bool;
+    fn subnetworks_view(&self) -> Element<'_, Message>;
+    fn objects_row<'a>(
+        &self,
+        words_: &'a str,
+        objects: &SubnetworkObjects,
+        pick: Pick,
+        chosen: Option<Pick>,
+    ) -> Element<'a, Message>;
+    #[cfg(test)]
+    fn subnetworks_report(&self) -> Option<&SubnetworksFound>;
+    fn subnetworks_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String>;
+}
+
+impl SubnetworksWindowApp for App {
     /// Alt ağlar (`network.subnetworks`): the window on the first network that defines subnetworks.
-    pub(crate) fn open_subnetworks(&mut self) {
+    fn open_subnetworks(&mut self){
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -121,7 +145,7 @@ impl App {
     }
 
     /// The subnetworks and the preview read again.
-    fn refresh_subnetworks(&mut self) {
+    fn refresh_subnetworks(&mut self){
         let (Some(w), Some(doc)) = (&self.modules.cbs().subnetworks_window, &self.document) else {
             return;
         };
@@ -153,7 +177,7 @@ impl App {
         }
     }
 
-    pub(crate) fn subnetworks_event(&mut self, event: Event) -> Task<Message> {
+    fn subnetworks_event(&mut self, event: Event) -> Task<Message>{
         let Some(w) = self.modules.cbs_mut().subnetworks_window.as_mut() else {
             return Task::none();
         };
@@ -191,7 +215,7 @@ impl App {
     }
 
     /// A row's objects selected and brought into view.
-    fn show_subnetwork(&mut self, pick: Pick) {
+    fn show_subnetwork(&mut self, pick: Pick){
         let Some(Ok(r)) = self
             .modules.cbs()
             .subnetworks_window
@@ -222,7 +246,7 @@ impl App {
     }
 
     /// Writes the subnetworks' names; whether it wrote (what it did said).
-    pub(crate) fn update_subnetworks(&mut self) -> bool {
+    fn update_subnetworks(&mut self) -> bool{
         let Some(input) = self
             .modules.cbs()
             .subnetworks_window
@@ -253,7 +277,7 @@ impl App {
         true
     }
 
-    pub(crate) fn subnetworks_view(&self) -> Element<'_, Message> {
+    fn subnetworks_view(&self) -> Element<'_, Message>{
         let Some(w) = &self.modules.cbs().subnetworks_window else {
             return iced::widget::text("").into();
         };
@@ -428,7 +452,7 @@ impl App {
         objects: &SubnetworkObjects,
         pick: Pick,
         chosen: Option<Pick>,
-    ) -> Element<'a, Message> {
+    ) -> Element<'a, Message>{
         let face = row![
             container(label::caption(words_)).width(Fill),
             label::caption(objects.count.to_string()),
@@ -447,15 +471,15 @@ impl App {
 
     /// The window's report (tests read it).
     #[cfg(test)]
-    pub(crate) fn subnetworks_report(&self) -> Option<&SubnetworksFound> {
+    fn subnetworks_report(&self) -> Option<&SubnetworksFound>{
         self.modules.cbs().subnetworks_window.as_ref()?.report.as_ref().ok()
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    pub(crate) fn subnetworks_control(
+    fn subnetworks_control(
         &self,
         control: Control<'_>,
-    ) -> Result<Option<Message>, String> {
+    ) -> Result<Option<Message>, String>{
         if self.modules.cbs().subnetworks_window.is_none() {
             return Err(format!("{SUBNETWORKS_TITLE} penceresi açık değil"));
         }
