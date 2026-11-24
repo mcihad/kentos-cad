@@ -139,7 +139,11 @@ Araştırma, bulgular ve hedef mimari: [ADR 9200](../docs/adr/9200-render-engine
     yuvarlak, üstünü derin sahne alır. Evin terası 495 px/m'de 2,6 piksellik kirişten kurtuldu. Bedeli: büyük eğri çok
     kiriş (22 m'lik daire 466).
   - [ ] Bloklardaki eğriler (tanımın toleransı en büyük örneğin ölçeğinden).
-  - [ ] Eğri duvarlar: deponun gövde adımı sabit 5°; derin görünümde bile köşeli (5 m'de 5 000 px/m'de ~24 piksel).
+  - [ ] Eğri duvarlar. Yüz çizgileri bombeli tutuluyor (`wall::Line::shape`) ve yuvarlanıyor; ama gövdenin dolgu
+    halkaları `Line::outline`'ın sabit 5°'lik kirişleri. Dolgu kenarı yuvarlak çizginin içine kaçıyor (5 m'de
+    5 000 px/m'de ~24 piksel). Aynı halkalar odaların alanlarını besliyor; adımı inceltmek oda alanlarını ve 8 ortak
+    fikstürün (eğri duvarlı) beklenen değerlerini değiştirir. Mimari'nin bir kararı: bombeli dolgu halkası
+    (taramanın sınırı) ya da üreticilerle birlikte fikstürlerin yenilenmesi.
   - [ ] Spline ve NURBS kutuda ve ekranda toleransla.
   - [ ] GPU'da analitik eğriler (belleği kiriş sayısından kurtarır; RM-15 ile).
 - [~] **RM-10 — Düzey sadeleştirme.** İlk adım yapıldı:
