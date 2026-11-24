@@ -777,7 +777,9 @@ def renovation_trace() -> list[dict]:
     opt = flat.option
     s: list[dict] = [{"note": "§ Çizgiden duvar: Çiftler, Kaynağı koru, kilitli altlık",
                       "drag": [at(-1, -1), at(10, 8)], "expect": {"selected": list(range(1, 12))}},
-                     {"run": "tool.wallFromLines"}] + typed("M", "K") + opt("E", "0.3")
+                     {"run": "tool.wallFromLines"}] + typed("B", "K") + opt("E", "0.3")
+    # Yöntem's letter became B with the one-letter options (ADR 8003); the trace says which value it picks.
+    s[3]["note"] = "Yöntem B (ADR 8003): Çiftler"
     s += [{"key": "Enter", "expect": {"entities": 16}}, {"key": "Esc"}, {"key": "Esc", "expect": {"tool": "select", "objects": [
         {"id": 12, "kind": "wall", "points": [at(0, -0.125), at(9, -0.125)]},
         {"id": 16, "kind": "wall", "points": [at(4.075, 7), at(4.075, 0)]}]}}, {"shot": "duvarlar"}]
