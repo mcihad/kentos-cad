@@ -37,7 +37,7 @@ yorumları (bunlardan Python SDK ve katalog şemaları üretilir).
 | `apps/desktop/src/shell/services/feed_window.rs:49, 933`, `services/window.rs:68`, `services/info.rs:57, 191` | ArcGIS REST, `ArcGIS where` | servis türü adı; sorgu söz dizimi ipucu |
 | `crates/shared/contracts/src/core/shape_resource.rs:79–94, 153, 184–185` | `AutoCAD-86 …` | SHX dosyasının ilk baytları (tanıma imzası) |
 | `crates/shared/geometry-core/src/text/shx.rs:63–66, 162, 788, 907–909`, `crates/native/dwg/src/lib.rs:86`, `crates/shared/formats/src/dxf/{mod.rs:803,preflight.rs:48}` (`AutoCAD Binary DXF`) | imza baytları | biçimin kendi imzası |
-| `docs/inventory/web.json` `file.export.dxf` açıklaması | “AutoCAD 2007 DXF'i” | DXF sürüm adı; “DXF (2007 sürümü)” yazılabilir |
+| `docs/inventory/web.json` `file.export.dxf` açıklaması | “AutoCAD 2007 DXF'i” | **Değişti (sahibin kararı F4, 24 Kasım 2026):** “DXF (2007 sürümü)”; izinli listeden çıktı |
 | `crates/shared/contracts/src/core/settings/schema.rs:162` | ayar anahtarı `drafting.autocadAliases` | saklanan anahtar; yeniden adlandırma taşıma ister |
 | `python/kentos/services.py`, `cad/layers.py`, `cad/types.py` | ArcGIS | yukarıdaki servis türünden üretilen belgeler |
 

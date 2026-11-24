@@ -4049,7 +4049,7 @@
       "title": "DXF…",
       "category": "Dosya",
       "icon": "exportDxf",
-      "description": "Seçili, görünen ya da bütün nesneleri katmanlarıyla AutoCAD 2007 DXF'i olarak yazar (UTF-8, metre): koordinatlar tam, yuvarlanmadan; ölçüler çizgi ve yazıya patlatılır. Etiket, öznitelik ve semboller KentOS verisi olarak yazılır ve KentOS'a geri okunur.",
+      "description": "Seçili, görünen ya da bütün nesneleri katmanlarıyla DXF (2007 sürümü) olarak yazar (UTF-8, metre): koordinatlar tam, yuvarlanmadan; ölçüler çizgi ve yazıya patlatılır. Etiket, öznitelik ve semboller KentOS verisi olarak yazılır ve KentOS'a geri okunur.",
       "aliases": [
         "DXFYAZ",
         "DXFVER",

@@ -30,7 +30,7 @@ const NAMES: [&str; 12] = [
 ];
 
 /// (file ending, name, why): a name kept because it is a protocol, a service type or a file signature.
-const ALLOWED: [(&str, &str, &str); 11] = [
+const ALLOWED: [(&str, &str, &str); 10] = [
     ("contracts/src/core/shape_resource.rs", "AutoCAD-86", "the first bytes of an SHX shape file, read to recognise it"),
     ("contracts/src/gis/service.rs", "ArcGIS", "the ArcGIS REST service kind, its token kind and the parameters it asks for"),
     ("commands/src/catalog/annotation.rs", "ArcGIS REST", "the service kind a layer is added from"),
@@ -40,7 +40,6 @@ const ALLOWED: [(&str, &str, &str); 11] = [
     ("python/kentos/services.py", "ArcGIS", "the service kind and its query words"),
     ("python/kentos/cad/layers.py", "ArcGIS REST", "the service kind a layer is added from"),
     ("python/kentos/cad/types.py", "ArcGIS", "the service kind and its query words, generated from the contracts"),
-    ("web.json", "AutoCAD 2007 DXF", "the DXF version the export writes, named as the format's own version"),
     ("web.json", "ArcGIS", "the service kind, its token kind and its identify records"),
 ];
 
