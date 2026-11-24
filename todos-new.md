@@ -154,7 +154,11 @@ harfi, katalog, modül, ayarlar, Mimari şeridi ve programlar arası sınamalar 
 - `fixtures/shell/v1/ribbon.json` da eski (`ribbon_cases`).
 - Tek kaynak seçilmeli: JSON mı, betik mi?
 
-### A10 — P2 — 2 000 satırı aşan 61 üretim dosyası
+### A10 — P2 — 2 000 satırı aşan 61 üretim dosyası — [x] bekçi kuruldu (bölme işi ayrı)
+
+**Durum (24 Kasım 2026):** `scripts/dev/source_size.py` sınırı `crates/` ve `apps/`'in bütün Rust dosyalarına uyguluyor
+(`crates/vendor/` dış kod). Bugün aşan 71 dosya (sınamalar dahil) tabanda ve büyüyemez; yeni dosya aşamaz; taban yalnız
+küçülür. `make arch` ve `pnpm rust:test` koşuyor. Dosyaların bölünmesi, dokunuldukça yapılacak.
 
 ADR 8054'ün bekçisi yalnız `apps/desktop/src`'yi sınıyor; dosyalar `crates/` altında. En büyükleri:
 
@@ -187,7 +191,10 @@ onayıyla (24 Kasım 2026) 30 zula, 6 yerel ve 2 uzak dal silindi; karmaları `.
 - ADR 0777 ve 0796 `main`'de; bu dalların içeriği büyük olasılıkla başka commit'lerle girmiş. Tek tek doğrulanıp ya
   silinmeli ya birleştirilmeli.
 
-### A13 — P1 — `origin/render-motoru` birleştirilmeyi bekliyor
+### A13 — P1 — `origin/render-motoru` birleştirilmeyi bekliyor — ⏸ dalın işi sürüyor
+
+**Durum (24 Kasım 2026):** sahip: “render motoru dalında halen çalışma var bitince birleştireceğiz”. Dala dokunulmaz;
+iş bitince birleştirilir.
 
 Dal 45 commit önde; ADR 9200–9219'u kullanıyor. Bugün `main`'deki üç ADR aynı numaraları almıştı; 9300–9302'ye
 taşındı (`63f67c86d`). ADR numarası seçmeden önce birleşmemiş dallar da denetlenmeli.

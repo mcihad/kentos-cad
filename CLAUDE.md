@@ -145,7 +145,8 @@ tamamlanmış veya mevzuata uygun diye sunulmaz.
 ## 8. Kod kuralları
 
 Çevredeki adlandırmayı/üslubu koruyun; yorum nedenini anlatsın. Tek dosya tek
-sorumluluk taşısın; başında kısa amaç yorumu olsun, 400 satır üstünde ayrıştırmayı değerlendirin.
+sorumluluk taşısın; başında kısa amaç yorumu olsun, 400 satır üstünde ayrıştırmayı değerlendirin. Hiçbir Rust dosyası
+2 000 satırı geçmez: `scripts/dev/source_size.py` (`make arch`) denetler; bugün aşanlar tabanda, büyüyemez, eklemeden önce bölünür.
 Signal'i sahibi değiştirir; UI command/belge API'sini kullanır.
 Sabit UI rengi, vurgu, font boyu veya CDN fontu eklemeyin; CSS jetonları,
 `readCanvasPalette()` ve yerel fontları kullanın. Katman rengi veridir;

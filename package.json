@@ -20,7 +20,7 @@
     "perf:kcad": "pnpm -C apps/web perf:kcad",
     "inventory": "pnpm -C apps/web inventory",
     "inventory:check": "pnpm -C apps/web inventory:check",
-    "rust:test": "cargo test && cargo clippy --all-targets -- -D warnings && node scripts/arch/deps.mjs",
+    "rust:test": "cargo test && cargo clippy --all-targets -- -D warnings && node scripts/arch/deps.mjs && python3 scripts/dev/source_size.py",
     "rust:test:desktop": "RUST_MIN_STACK=67108864 cargo test -p kentos-ui -p kentos-ui-showcase -p kentos-render-wgpu -p kentos-sheet-ui -p kentos-desktop -p kentos-desktop-arch -p kentos-desktop-cbs -p kentos-desktop-map -p kentos-desktop-road -p kentos-cad -p kentos-launcher && cargo clippy -p kentos-ui -p kentos-ui-showcase -p kentos-render-wgpu -p kentos-sheet-ui -p kentos-desktop -p kentos-desktop-arch -p kentos-desktop-cbs -p kentos-desktop-map -p kentos-desktop-road -p kentos-cad -p kentos-launcher --all-targets -- -D warnings",
     "arch:deps": "node scripts/arch/deps.mjs",
     "rust:wasm": "cargo build -p kentos-geometry-wasm --target wasm32-unknown-unknown --profile ${KENTOS_WASM_PROFILE:-wasm} && wasm-bindgen --target web --out-dir apps/web/src/wasm/pkg target/wasm32-unknown-unknown/${KENTOS_WASM_PROFILE:-wasm}/kentos_geometry_wasm.wasm",

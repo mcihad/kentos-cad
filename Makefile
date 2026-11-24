@@ -258,8 +258,9 @@ fmt: ## Rust kaynaklarını biçimler
 fmt-check: ## Rust biçim denetimi
 	cargo fmt --all -- --check
 
-arch: ## Crate bağımlılık yönü denetimi (ADR 0010)
+arch: ## Crate bağımlılık yönü (ADR 0010) ve kaynak boyu (2 000 satır; taban yalnız küçülür) denetimi
 	pnpm arch:deps
+	python3 scripts/dev/source_size.py
 
 e2e: ## Tarayıcı duman testi (başsız Chrome)
 	$(HEAVY) pnpm e2e
